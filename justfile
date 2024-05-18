@@ -2,7 +2,7 @@
 # ^ A shebang isn't required, but allows a justfile to be executed
 #   like a script, with `./justfile test`, for example.
 
-export exec := if arch() != "aarch64" { "godot.osx.tools.64" } else { "godot.osx.tools.arm64" }
+export exec := if arch() != "aarch64" { "godot.macos.editor.arm64" } else { "godot.macos.editor.arm64" }
 export editor_folder := "editor"
 export godot_folder := "godot"
 export ios_folder := "export/ios"
@@ -22,6 +22,6 @@ edit:
     ./$editor_folder/$exec --path project --editor
 
 #build editor
-_build_editor:
-    cd $godot_folder && scons platform=osx arch=$arch --jobs=$jobs
+build_editor:
+    cd $godot_folder && scons platform=macos arch=$arch --jobs=$jobs
     mv $godot_folder/bin/$exec $editor_folder/$exec
