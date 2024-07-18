@@ -33,14 +33,32 @@ debug "TTY: $tty"
 debug "Hostname: $hostname"
 debug "PWD: $pwd"
 debug "File path: $file_path"
-
-pane_id=$(wezterm cli list --format json | jq --arg tty "$tty" --arg opening_cwd "file://$hostname$pwd" --arg file_path "file://$hostname$file_path" -r '.[] | .cwd as $running_cwd | select((.tty_name != $tty) and (.title | startswith("hx")) and (($opening_cwd | contains($running_cwd)) or ($file_path | contains($running_cwd)))) | .pane_id')
+get_helix_pane_id() {
+    wezterm_output=$(wezterm cli list)
+    debug "WezTerm output: $wezterm_output"
+    
+    if [ -z "$wezterm_output" ]; then
+        debug "WezTerm output is empty"
+        return 1
+    fi
+    
+    pane_id=$(echo "$wezterm_output" | awk '$6 == "hx" {print $3}' | head -n 1)
+    
+    if [ -z "$pane_id" ]; then
+        debug "No Helix pane ID found"
+        return 1
+    fi
+    
+    echo "$pane_id"
+    return 0
+}
+pane_id=$(get_helix_pane_id)
 
 debug "Detected Helix pane ID: $pane_id"
 
 if [ -z "$pane_id" ]; then
     debug "No existing Helix instance found, creating new one"
-    hx "$file_path" "+$LINE:$COL"
+    wezterm cli spawn hx "$file_path" "+$LINE:$COL"
 else
     debug "Existing Helix instance found (Pane ID: $pane_id)"
     echo ":open ${file_path}\r" | wezterm cli send-text --pane-id "$pane_id" --no-paste
