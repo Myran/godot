@@ -52,18 +52,25 @@ get_helix_pane_id() {
     echo "$pane_id"
     return 0
 }
+
 pane_id=$(get_helix_pane_id)
 
 debug "Detected Helix pane ID: $pane_id"
 
 if [ -z "$pane_id" ]; then
     debug "No existing Helix instance found, creating new one"
-    wezterm cli spawn hx "$file_path" "+$LINE:$COL"
+    wezterm cli spawn --cwd "$pwd" -- hx "$FILE:$LINE:$COL"
 else
     debug "Existing Helix instance found (Pane ID: $pane_id)"
-    echo ":open ${file_path}\r" | wezterm cli send-text --pane-id "$pane_id" --no-paste
-    echo ":$LINE\r" | wezterm cli send-text --pane-id "$pane_id" --no-paste
+    # Enter normal mode, then command mode
+    wezterm cli send-text --pane-id "$pane_id" --no-paste $'\x1b'
+    #wezterm cli send-text --pane-id "$pane_id" --no-paste ":"
+    # Send the open command
+    wezterm cli send-text --pane-id "$pane_id" --no-paste ":open $FILE:$LINE:$COL"
+    wezterm cli send-text --pane-id "$pane_id" --no-paste $'\x0d'  # Enter key
+    # Send the goto line command
+#    wezterm cli send-text --pane-id "$pane_id" --no-paste ":$LINE"
+#   wezterm cli send-text --pane-id "$pane_id" --no-paste $'\x0d'  # Enter key
     wezterm cli activate-pane --pane-id "$pane_id"
 fi
-
 debug "Script execution completed"
