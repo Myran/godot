@@ -22,6 +22,7 @@ export APPLE_TEAM_ID := env_var_or_default("APPLE_TEAM_ID", "123")
 export APPLE_ID := env_var_or_default("APPLE_ID", "123")
 export APP_STORE_CONNECT_API_KEY_PATH := env_var_or_default("APP_STORE_CONNECT_API_KEY_PATH", "123")
 export IOS_PROVISIONING_PROFILE_UUID := env_var_or_default("IOS_PROVISIONING_PROFILE_UUID", "123")
+#export ANDROID_GRADLE_DIR := "build/gradle"
 #export EDITOR_SCALE := env_var_or_default("EDITOR_SCALE", "3.0")
 
 # Godot submodule settings
@@ -113,23 +114,21 @@ install-android-template:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "installing android gradle for custom builds"
-    #mkdir templates/build
-    unzip -o templates/android_source.zip -d templates/build
-    rm -rf project/android/
+    rm -rf project/android
     mkdir project/android
-    cd templates/
-    mv "build" "../project/android"
-    cd ..
-    chmod +x project/android/build
-    echo {{GODOT_BUILD_VERSION}} >> project/android/.build_version
+    unzip -o templates/android_source.zip -d project/android/build
+    chmod +x project/android
+    md5=$(md5sum templates/android_source.zip | awk NF=1)
+    rp=$(realpath templates/android_source.zip)
+    echo "$rp [$md5]"  >> project/android/.build_version
     touch project/android/.gdignore
-    echo "Done installing android template"
+    echo "Done installing android template in "
 
 build-android: pre-build
     @echo "Building and exporting for Android..."
     echo $ANDROID_KEYSTORE | base64 -d > android.keystore
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "Android" export/android/{{GAME_NAME}}_debug.apk
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-release "Android" export/android/{{GAME_NAME}}.apk
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "Android" ../export/android/{{GAME_NAME}}_debug.apk --headless
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-release "Android" ../export/android/{{GAME_NAME}}.apk --headless
 
 # Build and export for iOS
 build-ios: pre-build

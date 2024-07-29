@@ -15,3 +15,5 @@ templates/godot.macos.template_release.arm64
 templates/iphone.zip
 export/android/gametwo.apk
 editor/editor_data/export_templates/4.3.rc/android_source.zip
+editor/editor_data/cache
+editor/editor_data/shader_cache
