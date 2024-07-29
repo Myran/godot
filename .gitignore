@@ -6,3 +6,12 @@ editor/editor_data/cache
 .gradle/
 build/
 */build/
+project/android_
+templates/android_debug.apk
+templates/android_release.apk
+templates/android_source.zip
+templates/godot.macos.template_debug.arm64
+templates/godot.macos.template_release.arm64
+templates/iphone.zip
+export/android/gametwo.apk
+editor/editor_data/export_templates/4.3.rc/android_source.zip
