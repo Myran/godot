@@ -43,8 +43,8 @@ asset_library/available_urls = {
 "godotengine.org (Official)": "https://godotengine.org/asset-library/api"
 }
 asset_library/use_threads = true
-export/android/android_sdk_path = ""
-export/android/debug_keystore = ""
+export/android/android_sdk_path = "/Users/mattiasmyhrman/Library/Android/sdk"
+export/android/debug_keystore = "/Users/mattiasmyhrman/repos/gametwo/editor/editor_data/keystores/debug.keystore"
 export/android/debug_keystore_user = "androiddebugkey"
 export/android/debug_keystore_pass = "android"
 export/android/force_system_user = false
@@ -129,7 +129,7 @@ text_editor/theme/highlighting/gdscript/node_reference_color = Color(0.39, 0.76,
 text_editor/theme/highlighting/gdscript/annotation_color = Color(1, 0.7, 0.45, 1)
 text_editor/theme/highlighting/gdscript/string_name_color = Color(1, 0.76, 0.65, 1)
 text_editor/help/sort_functions_alphabetically = true
-export/android/java_sdk_path = ""
+export/android/java_sdk_path = "/opt/homebrew/Cellar/openjdk@17/17.0.12"
 export/android/use_wifi_for_remote_debug = false
 export/android/wifi_remote_debug_host = "localhost"
 editors/3d_gizmos/gizmo_settings/path3d_tilt_disk_size = 0.8

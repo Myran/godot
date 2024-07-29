@@ -1,0 +1,41 @@
+stages:
+  - validate
+  - build
+  - test
+  - deploy
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+validate:
+  stage: validate
+  script:
+    - just validate-env
+
+build:
+  stage: build
+  script:
+    - just install-deps
+    - just build-editor
+    - just build-templates
+    - just build-android
+    - just build-ios
+  artifacts:
+    paths:
+      - editor/
+      - export/
+      - templates/
+
+test:
+  stage: test
+  script:
+    - just lint
+
+deploy:
+  stage: deploy
+  only:
+    - master
+  script:
+    - just update-version
+    - just deploy-ios
+    - just deploy-android
