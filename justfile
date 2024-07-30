@@ -65,10 +65,16 @@ install-deps:
     brew install scons
     brew install yasm
     brew install pipx
+    brew install ninja
     pipx install "gdtoolkit==4.*"
     pipx inject gdtoolkit setuptools
 #   pip3 install "gdtoolkit==4.*" # For linting and formatting
-
+install-ios-deps:
+    cd extras/MoltenVK
+    ./fetchDependencies --ios
+    make ios
+    cd../..
+    cp -R extras/MoltenVk/Package/Latest/MoltenVK/Static/MoltenVK.xcframework export/ios
 # Build Godot editor
 build-editor: validate-env
     @echo "Building Godot editor..."
@@ -96,6 +102,49 @@ pre-build:
     just update-project-settings
 
 # Export project for different platforms
+
+# Build and package iOS templates
+build-and-package-ios-templates: validate-env
+    @echo "============================="
+    @echo "BUILDING IOS EXECUTABLES"
+    @echo "============================="
+    # Build debug and release templates
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_debug arch=arm64 --jobs={{jobs}}
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_release arch=arm64 --jobs={{jobs}}
+
+    @echo "=========================="
+    @echo "PREPARING IOS TEMPLATES"
+    @echo "=========================="
+    # Change access permissions
+    chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*.a
+    # Create necessary directories
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64
+    # Copy binaries to appropriate locations
+    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a
+    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_debug.arm64.a {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64/libgodot.a
+
+    # Copying to current xcode framework
+    chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*
+    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
+    # cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_debug.arm64.a export/ios/{{GAME_NAME}}-debug.xcframework/ios-arm64/libgodot.debug.a
+
+
+
+    @echo "=========================="
+    @echo "PACKAGING IOS TEMPLATES"
+    @echo "=========================="
+    # Remove old template if it exists
+    rm -f templates/ios.zip
+    # Create templates directory if it doesn't exist
+    mkdir -p templates
+    # Package the template
+    cd {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode && zip -9 -r ../../../../templates/ios.zip *
+
+    @echo "iOS templates built and packaged successfully."
+
+
+
 export-project platform: pre-build
     @echo "Exporting project for {{platform}}..."
     mkdir -p export/{{platform}}
