@@ -202,12 +202,12 @@ build-android BUILD_TYPE="apk": pre-build
 build-android-apk: (build-android "apk")
 build-android-aab: (build-android "aab")
 
-# Build and export for iOS
+# Build and export for iOS TODO: should be done with xcodeproj directly
 build-ios: pre-build
     @echo "Building and exporting for iOS..."
-    echo $IOS_PROVISIONING_PROFILE | base64 -d > profile.mobileprovision
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "iOS" export/ios/{{GAME_NAME}}.ipa
-
+    #echo $IOS_PROVISIONING_PROFILE | base64 -d > profile.mobileprovision
+    #./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "iOS" export/ios/{{GAME_NAME}}.ipa
+    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace -scheme {{GAME_NAME}} -configuration Debug
 # Save iOS PCK file
 save-ios: pre-build
     @echo "Saving iOS PCK file..."
@@ -216,7 +216,7 @@ save-ios: pre-build
 # Save iOS PCK file directly to app
 save-ios-to-app: pre-build
     @echo "Saving iOS PCK file directly to app..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --no-window --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
 # Save Android APK
 #save-android: pre-build
