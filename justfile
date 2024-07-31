@@ -211,7 +211,7 @@ build-ios: pre-build
 # Save iOS PCK file
 save-ios: pre-build
     @echo "Saving iOS PCK file..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --no-window --export-pack ios ../export/ios/{{GAME_NAME}}.pck
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/{{GAME_NAME}}.pck
 
 # Save iOS PCK file directly to app
 save-ios-to-app: pre-build
@@ -235,10 +235,15 @@ format:
 
 # Update version
 update-version:
-    @echo "Updating version..."
-    sed -i '' 's/^version_code .*/version_code {{timestamp}}/' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's/^application\/version .*/application\/version "1.0.{{timestamp}}"/' {{PROJECT_PATH}}/export_presets.cfg
+    #!/bin/bash
+    echo "Updating versions..."
+    # Update iOS version
+    sed -i '' "s/^application\/version=.*/application\/version=\"1.0.$(date +'%Y%m%d%H%M%S')\"/" {{PROJECT_PATH}}/export_presets.cfg
 
+    # Update Android version code and name
+    sed -i '' "s/^version\/code=.*/version\/code=$(date +'%Y%m%d%H%M%S')/" {{PROJECT_PATH}}/export_presets.cfg
+    sed -i '' "s/^version\/name=.*/version\/name=\"1.0.$(date +'%Y%m%d%H%M%S')\"/" {{PROJECT_PATH}}/export_presets.cfg    
+    
 # Deploy to App Store
 deploy-ios: build-ios
     @echo "Deploying to App Store..."
