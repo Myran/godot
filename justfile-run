@@ -1,0 +1,41 @@
+# Run-related commands for Godot 4 Projects
+
+# Run project on different targets
+run target:
+    @echo "Running project on {{target}}..."
+    just _run_{{target}}
+
+# Run on desktop
+_run_desktop:
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
+
+# Run on Android
+_run_android: pre-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    IP="{{ANDROID_DEVICE_IP}}"
+    PORT="5555"
+    echo "Connecting to Android device at ${IP}:${PORT}"
+    ping ${IP} -c 3
+    adb kill-server
+    adb start-server
+    adb tcpip ${PORT}
+    adb connect ${IP}:${PORT}
+    adb -s ${IP}:${PORT} uninstall {{ANDROID_PACKAGE_NAME}}
+    adb -s ${IP}:${PORT} install export/android/{{GAME_NAME}}.apk
+    adb -s ${IP}:${PORT} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+
+# Run on iOS (requires additional setup with Xcode)
+_run_ios device="iPhone": pre-build
+    @echo "Running on iOS {{device}}..."
+    # Add commands to build and run on iOS device using Xcode CLI tools
+    # Example (adjust as needed):
+    # xcodebuild -project export/ios/{{GAME_NAME}}.xcodeproj -scheme {{GAME_NAME}} -destination 'platform=iOS,name={{device}}' build run
+
+# Run on iPad
+_run_ipad: pre-build
+    just _run_ios "iPad"
+
+# Run on iPhone
+_run_iphone: pre-build
+    just _run_ios "iPhone"
