@@ -22,7 +22,11 @@ export APPLE_TEAM_ID := env_var_or_default("APPLE_TEAM_ID", "123")
 export APPLE_ID := env_var_or_default("APPLE_ID", "123")
 export APP_STORE_CONNECT_API_KEY_PATH := env_var_or_default("APP_STORE_CONNECT_API_KEY_PATH", "123")
 export IOS_PROVISIONING_PROFILE_UUID := env_var_or_default("IOS_PROVISIONING_PROFILE_UUID", "123")
-#export ANDROID_GRADLE_DIR := "build/gradle"
+
+# Define a new variable for the build type
+#BUILD_TYPE := "apk"
+
+export ANDROID_GRADLE_DIR := "build/gradle"
 #export EDITOR_SCALE := env_var_or_default("EDITOR_SCALE", "3.0")
 
 # Godot submodule settings
@@ -91,7 +95,7 @@ build-templates: validate-env
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_release.* templates/
 
 # Run Godot editor
-run-editor:
+edit:
     @echo "Running Godot editor..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor
 
@@ -173,11 +177,30 @@ install-android-template:
     touch project/android/.gdignore
     echo "Done installing android template in "
 
-build-android: pre-build
-    @echo "Building and exporting for Android..."
+#build-android: pre-build
+#    @echo "Building and exporting for Android..."
+#    echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+#    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "Android" ../export/android/{{GAME_NAME}}_debug.apk --headless
+#    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-release "Android" ../export/android/{{GAME_NAME}}.apk --headless
+
+# Updated build-android recipe
+build-android BUILD_TYPE="apk": pre-build
+    @echo "Building and exporting for Android ({{BUILD_TYPE}})..."
     echo $ANDROID_KEYSTORE | base64 -d > android.keystore
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-debug "Android" ../export/android/{{GAME_NAME}}_debug.apk --headless
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-release "Android" ../export/android/{{GAME_NAME}}.apk --headless
+    
+    # Debug build
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
+        --export-debug "Android {{BUILD_TYPE}}" \
+        ../export/android/{{GAME_NAME}}_debug.{{BUILD_TYPE}} --headless
+    
+    # Release build
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
+        --export-release "Android {{BUILD_TYPE}}" \
+        ../export/android/{{GAME_NAME}}.{{BUILD_TYPE}} --headless
+
+# Alias commands for easier use
+build-android-apk: (build-android "apk")
+build-android-aab: (build-android "aab")
 
 # Build and export for iOS
 build-ios: pre-build
@@ -196,9 +219,9 @@ save-ios-to-app: pre-build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --no-window --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
 # Save Android APK
-save-android: pre-build
-    @echo "Saving Android APK..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --verbose --headless --export-debug "Android" ../export/android/{{GAME_NAME}}.apk
+#save-android: pre-build
+#    @echo "Saving Android APK..."
+#    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --verbose --headless --export-debug "Android" ../export/android/{{GAME_NAME}}.apk
 
 # Lint GDScript files
 lint:
