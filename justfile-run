@@ -25,17 +25,58 @@ _run_android: pre-build
     adb -s ${IP}:${PORT} install export/android/{{GAME_NAME}}.apk
     adb -s ${IP}:${PORT} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
 
-# Run on iOS (requires additional setup with Xcode)
-_run_ios device="iPhone": pre-build
-    @echo "Running on iOS {{device}}..."
-    # Add commands to build and run on iOS device using Xcode CLI tools
-    # Example (adjust as needed):
-    # xcodebuild -project export/ios/{{GAME_NAME}}.xcodeproj -scheme {{GAME_NAME}} -destination 'platform=iOS,name={{device}}' build run
 
-# Run on iPad
+# Run on iOS devices
+_run_ios device="iPhone": pre-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running on iOS {{device}}..."
+    
+    # Get the device identifier based on the device type
+    if [ "{{device}}" = "iPhone" ]; then
+        DEVICE_ID="C3BD7DBD-38DE-4A4E-8724-B4F49A1E4713"
+    elif [ "{{device}}" = "iPad" ]; then
+        DEVICE_ID="A4045434-B5F5-48B5-8654-C128A403149A"
+    else
+        echo "Unknown device type: {{device}}"
+        exit 1
+    fi
+    
+    # Extract the bundle identifier from the Xcode project
+    cd export/ios
+    BUNDLE_ID=$(xcodebuild -showBuildSettings -project {{GAME_NAME}}.xcodeproj | grep PRODUCT_BUNDLE_IDENTIFIER | awk '{print $3}')
+    cd ../..
+    
+    if [ -z "$BUNDLE_ID" ]; then
+        echo "Error: Could not extract bundle identifier from Xcode project."
+        exit 1
+    fi
+    
+    echo "Extracted bundle identifier: $BUNDLE_ID"
+    
+    # Install the app on the selected device
+    echo "Installing app on {{device}}..."
+    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
+    
+    # Launch the app on the selected device
+    echo "Launching app on {{device}}..."
+    if ! xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}; then
+        echo "Error: Failed to launch the app. Here's some diagnostic information:"
+        echo "1. Checking if the app is installed:"
+        xcrun devicectl device list_apps --device ${DEVICE_ID} | grep ${BUNDLE_ID} || echo "App not found in installed apps list."
+        echo "2. Checking device logs:"
+        xcrun devicectl device tail system_log --device ${DEVICE_ID} --num-entries 20
+        echo "3. Checking provisioning profile:"
+        security cms -D -i export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app/embedded.mobileprovision || echo "No embedded provisioning profile found."
+        exit 1
+    fi
+    
+    echo "App launched successfully on {{device}}."
+
+# Run on iPad (uses the _run_ios command with "iPad" as the device)
 _run_ipad: pre-build
     just _run_ios "iPad"
 
-# Run on iPhone
+# Run on iPhone (uses the _run_ios command with "iPhone" as the device)
 _run_iphone: pre-build
     just _run_ios "iPhone"
