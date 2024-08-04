@@ -1,6 +1,6 @@
-[submodule "godot"]
-	path = godot
-	url = https://github.com/godotengine/godot.git
 [submodule "extras/MoltenVK"]
 	path = extras/MoltenVK
 	url = https://github.com/KhronosGroup/MoltenVK.git
+[submodule "firebase"]
+	path = firebase
+	url = https://github.com/firebase/firebase-cpp-sdk.git
