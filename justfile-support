@@ -1,6 +1,9 @@
 # Supportive commands for Godot 4 Projects
 
 # Validate environment variables
+clean-xcode:
+    rm -rf ~/Library/Developer/Xcode/DerivedData/
+
 validate-env:
     #!/usr/bin/env bash
     set -euo pipefail
