@@ -18,3 +18,9 @@ editor/editor_data/export_templates/4.3.rc/android_source.zip
 editor/editor_data/cache
 editor/editor_data/shader_cache
 export/ios/DerivedData
+export/ios/Pods
+export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a
+export/ios/gametwo.xcframework/ios-arm64/libgodot.a
+export/android/gametwo.aab
+export/android/gametwo_debug.aab
+export/android/gametwo_debug.apk
