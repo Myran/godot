@@ -1,4 +1,2 @@
 CompileFlags:
 	Add: [-std=c++17]
-	CompilationDatabase: godot/
-	- -Iinclude/firebase/firebase_cpp_sdk/include
