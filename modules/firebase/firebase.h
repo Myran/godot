@@ -1,9 +1,9 @@
 #ifndef Firebase_h
 #define Firebase_h
 
-#include "core/reference.h"
+#include "core/object/ref_counted.h"
 #include "firebase/app.h"
-#include "firebase/admob/types.h"
+#include "firebase/gma/types.h"
 #if defined(__ANDROID__)
 /// An Android Activity from Java.
 typedef jobject AppActivity;
@@ -13,23 +13,20 @@ typedef id AppActivity;
 #else
 /// A void pointer for stub classes.
 typedef void *AppActivity;
-#endif  // __ANDROID__, TARGET_OS_IPHONE
+#endif // __ANDROID__, TARGET_OS_IPHONE
 
+class Firebase : public RefCounted {
+	GDCLASS(Firebase, RefCounted);
 
-class Firebase : public Reference {
-    GDCLASS(Firebase, Reference);
-    
-    protected:
-    static firebase::App* app_ptr;
-    static void _bind_methods();
-    static void createApplication();
+protected:
+	static firebase::App *app_ptr;
+	static void _bind_methods();
+	static void createApplication();
 
-    public:
-    
-    Firebase();
-    static firebase::App* AppId();
-    static AppActivity GetAppActivity();
-
+public:
+	Firebase();
+	static firebase::App *AppId();
+	static AppActivity GetAppActivity();
 };
 
 #endif // Firebase_h

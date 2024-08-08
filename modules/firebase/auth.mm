@@ -2,7 +2,7 @@
 #if defined(__APPLE__)
 #import "app_delegate.h"
 #endif
-#include "core/object.h"
+#include "core/object/object.h"
 
 
 bool FirebaseAuth::inited = false;
