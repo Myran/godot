@@ -8,7 +8,7 @@
 #endif
 #if defined(__APPLE__)
 #import "app_delegate.h"
-#include "core/object.h"
+#include "core/object/object.h"
 AppActivity _instance;
 #endif
 
