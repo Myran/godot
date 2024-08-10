@@ -1,6 +1,9 @@
 # Supportive commands for Godot 4 Projects
 
 # Validate environment variables
+update-clangd:
+    cd godot && scons compiledb=yes compile_commands.json
+
 clean-xcode:
     rm -rf ~/Library/Developer/Xcode/DerivedData/
 
