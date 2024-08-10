@@ -24,3 +24,5 @@ export/ios/gametwo.xcframework/ios-arm64/libgodot.a
 export/android/gametwo.aab
 export/android/gametwo_debug.aab
 export/android/gametwo_debug.apk
+firebase/firebase_cpp_sdk
+firebase/firebase_cpp_sdk
