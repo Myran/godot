@@ -4,6 +4,7 @@
 #include "core/object/ref_counted.h"
 #include "firebase.h"
 #include "firebase/auth.h"
+#include "firebase/auth/user.h"
 #include "scene/main/node.h"
 
 class FirebaseAuth : public RefCounted {
@@ -35,9 +36,9 @@ public:
 	String photo_url();
 	void sign_out();
 
-	void OnCreateUserCallback(const firebase::Future<firebase::auth::User *> &result, void *user_data);
-	void OnLinkUserCallback(const firebase::Future<firebase::auth::User *> &result, void *user_data);
-	void OnUnLinkUserCallback(const firebase::Future<firebase::auth::User *> &result, void *user_data);
+	void OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
+	void OnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
+	void OnUnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult> &result, void *user_data);
 };
 
 #endif // FirebaseAuth_h

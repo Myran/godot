@@ -1,7 +1,7 @@
 #ifndef FirebaseMessaging_h
 #define FirebaseMessaging_h
 
-#include "core/reference.h"
+#include "core/object/ref_counted.h"
 #include "firebase/messaging.h"
 #include "firebase.h"
 
@@ -14,8 +14,8 @@ class FirebaseMessagingListener : public firebase::messaging::Listener {
     void OnTokenReceived(const char* token);
 };
 
-class FirebaseMessaging : public Reference {
-    GDCLASS(FirebaseMessaging, Reference);
+class FirebaseMessaging : public RefCounted {
+    GDCLASS(FirebaseMessaging, RefCounted);
     
     protected:
     static bool inited;

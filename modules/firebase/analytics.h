@@ -1,12 +1,12 @@
 #ifndef FirebaseAnalytics_h
 #define FirebaseAnalytics_h
 
-#include "core/reference.h"
+#include "core/object/ref_counted.h"
 #include "firebase/analytics.h"
 #include "firebase.h"
 
-class FirebaseAnalytics : public Reference {
-    GDCLASS(FirebaseAnalytics, Reference);
+class FirebaseAnalytics : public RefCounted{
+    GDCLASS(FirebaseAnalytics, RefCounted);
     
     protected:
     static bool inited;
