@@ -1,7 +1,7 @@
 #ifndef FirebaseDatabase_h
 #define FirebaseDatabase_h
 
-#include "core/reference.h"
+#include "core/object/ref_counted.h"
 #include "firebase/database.h"
 #include "firebase.h"
 
@@ -19,8 +19,8 @@ public:
     void OnChildRemoved(const firebase::database::DataSnapshot & snapshot);
 };
 
-class FirebaseDatabase : public Reference {
-    GDCLASS(FirebaseDatabase, Reference);
+class FirebaseDatabase : public RefCounted {
+    GDCLASS(FirebaseDatabase, RefCounted);
     
     protected:
     static bool inited;

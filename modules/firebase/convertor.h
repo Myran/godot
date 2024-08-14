@@ -1,8 +1,8 @@
 #ifndef FirebaseConvertor_h
 #define FirebaseConvertor_h
 
-#include "core/reference.h"
-#include "firebase/functions.h"
+#include "core/object/ref_counted.h"
+#include "functions.h"
 #include "firebase.h"
 
 class Convertor {

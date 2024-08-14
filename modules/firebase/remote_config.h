@@ -1,12 +1,12 @@
 #ifndef FirebaseRemoteConfig_h
 #define FirebaseRemoteConfig_h
 
-#include "core/reference.h"
+#include "core/object/ref_counted.h"
 #include "firebase/remote_config.h"
 #include "firebase.h"
 
-class FirebaseRemoteConfig : public Reference {
-    GDCLASS(FirebaseRemoteConfig, Reference);
+class FirebaseRemoteConfig : public RefCounted {
+    GDCLASS(FirebaseRemoteConfig, RefCounted);
     
     protected:
     static bool inited;
