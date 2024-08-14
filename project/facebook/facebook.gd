@@ -1,20 +1,20 @@
 extends Node
 
 signal fb_inited
-signal login_success(token)
-signal login_cancelled
-signal login_failed(error)
-signal request_success(result)
-signal request_cancelled
-signal request_failed(error)
-signal logged_out
+signal fb_login_success(token)
+signal fb_login_cancelled
+signal fb_login_failed(error)
+signal fb_request_success(result)
+signal fb_request_cancelled
+signal fb_request_failed(error)
+signal fb_logged_out
 
 var _fb = null
 var token = null
 var user = null
 
 func _ready():
-	pause_mode = Node.PAUSE_MODE_PROCESS
+#	pause_mode = Node.PAUSE_MODE_PROCESS	
 	if not ProjectSettings.has_setting('Facebook/FB_APP_ID'):
 		push_error('Facebook/FB_APP_ID not found! Set it in engine.cfg!')
 		return
@@ -24,7 +24,7 @@ func _ready():
 		_fb.init(app_id)
 		_fb.setFacebookCallbackId(get_instance_id())
 		print('Facebook plugin Android inited')
-		emit_signal('fb_inited')
+		fb_inited.emit()
 
 
 
@@ -33,7 +33,7 @@ func _ready():
 		_fb.init(app_id)
 		_fb.setFacebookCallbackId(self)
 		print('Facebook plugin iOS inited')
-		emit_signal('fb_inited')
+		fb_inited.emit()
 	else:
 		print('Facebook plugin not found!')
 
@@ -62,7 +62,7 @@ func logout():
 	if _fb != null:
 		_fb.logout()
 		print("_fb logout sent")
-		emit_signal('logged_out')
+		fb_logged_out.emit()
 
 func is_logged_in():
 	if _fb != null:
@@ -198,28 +198,28 @@ func set_advertiser_tracking(enabled: bool) -> void:
 func login_success(tkn):
 	token = tkn
 	print('Facebook login success: %s'%tkn)
-	emit_signal('login_success', tkn)
+	fb_login_success.emit(tkn)
 
 func login_cancelled():
 	token = null
 	user = null
 	print('Facebook login cancelled')
-	emit_signal('login_cancelled')
+	fb_login_cancelled.emit()
 
 func login_failed(error):
 	token = null
 	user = null
 	print('Facebook login failed: %s'%error)
-	emit_signal('login_failed', error)
+	fb_login_failed.emit(error)
 
 func request_success(result):
 	#print('Facebook request finished: %s'%var2str(result))
-	emit_signal('request_success', result)
+	fb_request_success.emit(result)
 
 func request_cancelled():
 	push_warning('Facebook request cancelled')
-	emit_signal('request_cancelled')
+	fb_request_cancelled.emit()
 
 func request_failed(err):
-	push_error('Facebook request failed: %s'%var2str(err))
-	emit_signal('request_failed', err)
+	push_error('Facebook request failed: %s'%var_to_str(err))
+	fb_request_failed.emit(err)

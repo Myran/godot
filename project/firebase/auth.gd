@@ -70,9 +70,9 @@ func _ready():
 
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
 		print("facebook singleton exists")
-		facebook.login_success.connect(facebook_login_success)
-		facebook.login_failed.connect(facebook_login_failed)
-		facebook.login_cancelled.connect(facebook_login_cancelled)
+		facebook.fb_login_success.connect(facebook_login_success)
+		facebook.fb_login_failed.connect(facebook_login_failed)
+		facebook.fb_login_cancelled.connect(facebook_login_cancelled)
 		#facebook.connect("login_success",self,"facebook_login_success")
 		#facebook.connect("login_failed",self,"facebook_login_failed")
 		#facebook.connect("login_cancelled",self,"facebook_login_cancelled")

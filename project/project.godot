@@ -15,6 +15,23 @@ run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+auth="*res://firebase/auth.gd"
+facebook="*res://facebook/facebook.gd"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/size/initial_position_type=0
+window/size/always_on_top=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/stretch/scale_mode="integer"
+window/per_pixel_transparency/allowed=true
+window/handheld/orientation=5
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/open-external-editor/plugin.cfg")
