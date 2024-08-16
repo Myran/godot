@@ -1,2 +1,6 @@
 CompileFlags:
-	Add: [-std=c++17]
+  Add: 
+    - "-std=c++17"
+    - "-include"
+    - "firebase/firebase_cpp_sdk/include/firebase/internal/platform.h"
+    
