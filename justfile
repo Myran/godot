@@ -143,7 +143,7 @@ build-android-aab: (build-android "aab")
 # Build and export for iOS
 build-ios: pre-build
     @echo "Building and exporting for iOS..."
-    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace -scheme {{GAME_NAME}} -configuration Debug
+    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace -scheme {{GAME_NAME}} -configuration Debug -destination "generic/platform=iOS"
 
 # Save iOS PCK file
 save-ios: pre-build

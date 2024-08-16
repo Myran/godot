@@ -1,0 +1,42 @@
+# Uncomment the next line to define a global platform for your project
+  platform :ios, '13.0'
+
+target 'gametwo' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  #use_frameworks!
+  #use_modular_headers!
+  use_frameworks! :linkage => :static
+  #pod 'Firebase/AdMob', '6.11.0'
+  #pod 'Firebase/Analytics', '6.11.0'
+  #pod 'Firebase/Auth', '6.11.0'
+  #pod 'Firebase/Firestore', '6.11.0'
+  #pod 'Firebase/Functions', '6.11.0'
+  #pod 'Firebase/Messaging', '6.11.0'
+  #pod 'Firebase/Storage', '6.11.0'
+  #pod 'Firebase/DynamicLinks', '6.11.0'
+  #pod 'Firebase/Database', '6.11.0'
+  #pod 'Firebase/RemoteConfig', '6.11.0'
+  #pod 'FBSDKCoreKit', '6.0.0'
+  #pod 'FBSDKLoginKit', '6.0.0'
+  #pod 'FBSDKShareKit', '6.0.0'
+  # Pods for gameone
+  #pod 'Firebase/AdMob', '8.10.0'
+
+  #pod 'Google-Mobile-Ads-SDK', '7.69.0-cppsdk'
+
+  pod 'FirebaseAppCheck', '11.0.0'
+  pod 'FirebaseAuth', '11.0.0'
+  pod 'FirebaseFirestore', '11.0.0'
+  pod 'FirebaseAuth', '11.0.0'
+  pod 'FirebaseFunctions', '11.0.0'
+  pod 'FirebaseMessaging', '11.0.0'
+  pod 'FirebaseStorage', '11.0.0'
+  pod 'FirebaseDynamicLinks', '11.0.0'
+  pod 'FirebaseDatabase', '11.0.0'
+  pod 'FirebaseRemoteConfig', '11.0.0'
+
+  pod 'FBSDKCoreKit', '12.3.1'
+  pod 'FBSDKLoginKit', '12.3.1'
+  pod 'FBSDKShareKit', '12.3.1'
+ 
+end

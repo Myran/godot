@@ -91,7 +91,6 @@ update-project-settings:
 # Clean build artifacts
 clean:
     @echo "Cleaning build artifacts..."
-    rm -rf editor/* templates/* export/*
     cd {{GODOT_SUBMODULE_PATH}} && scons --clean
 
 # Update all submodules
@@ -138,3 +137,8 @@ create-release version:
     git commit -m "Bump version to {{version}}"
     git tag -a v{{version}} -m "Release {{version}}"
     git push origin main --tags
+
+# Update MoltenVK ios
+update-moltenvk:
+    cd extras/MoltenVK && make ios
+    cp -R extras/MoltenVK/Package/Release/MoltenVK/static/MoltenVK.xcframework export/ios
