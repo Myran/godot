@@ -4,8 +4,9 @@ env.add_source_files(env.modules_sources,"*.cpp")
 env.add_source_files(env.modules_sources,"*.mm")
 
 #env.Append(CPPPATH="#modules/firebase")
-#env.Append(CPPPATH="#/firebase")
 env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
+#env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk")
+#env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 
 if env['platform'] == 'iphone':
     print("iphone")
