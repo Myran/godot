@@ -1,18 +1,21 @@
 [gd_scene load_steps=3 format=3 uid="uid://m6t1nopbg0a5"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_x22wo"]
-[ext_resource type="Script" path="res://margin_container.gd" id="2_boeph"]
+[ext_resource type="PackedScene" uid="uid://du5rvnc3ulg1w" path="res://debug/scene_debug.tscn" id="2_rlp5v"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_x22wo")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_boeph")
+[node name="CanvasLayerDebug" type="CanvasLayer" parent="."]
 
-[node name="ColorRect" type="ColorRect" parent="MarginContainer"]
-layout_mode = 2
+[node name="PopupDebug" type="Popup" parent="CanvasLayerDebug"]
+unique_name_in_owner = true
+mode = 4
+size = Vector2i(1080, 1920)
+visible = true
+always_on_top = true
+content_scale_mode = 2
+content_scale_aspect = 4
+content_scale_stretch = 1
+
+[node name="Control" parent="CanvasLayerDebug/PopupDebug" instance=ExtResource("2_rlp5v")]

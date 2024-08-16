@@ -62,7 +62,8 @@ func check_provider_connection(provider_name):
 func _ready():
 	if ClassDB.class_exists("FirebaseAuth") and true:
 		print("Auth exists data source")
-		firebase_auth = ClassDB.instance("FirebaseAuth")
+#		firebase_auth = ClassDB.instance("FirebaseAuth")
+		firebase_auth = ClassDB.instantiate("FirebaseAuth")
 		print("Auth created")
 		firebase_auth.connect("logged_in",self,"logged_in")
 	else:

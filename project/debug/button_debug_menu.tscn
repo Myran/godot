@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://yftmen1pc7rw"]
+
+[ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://debug/theme_debugmenu.tres" id="1_vvkks"]
+
+[node name="Button" type="Button"]
+size_flags_vertical = 8
+theme = ExtResource("1_vvkks")
+text = "TestButton
+"
