@@ -69,3 +69,7 @@ _run_iphone *args="":
 # Run on iPad
 _run_ipad *args="":
     just _run_ios "iPad" {{args}}
+
+# Save and run iphone
+save-and-run-iphone:
+    just save-ios-to-app && just run iphone;

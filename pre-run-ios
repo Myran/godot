@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+#/opt/homebrew/bin/just save-ios
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
+$parent_path/editor/godot.macos.editor.arm64 --path /Users/mattiasmyhrman/repos/gametwo/project --headless --export-pack ios ../export/ios/gametwo.pck

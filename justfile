@@ -1,3 +1,5 @@
+#!/usr/bin/env just --justfile
+
 # Main build Justfile for Godot 4 Projects
 # Import other Justfiles
 import "justfile-run"
