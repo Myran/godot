@@ -61,8 +61,8 @@ void FirebaseRemoteConfig::set_defaults(const Dictionary& params)
         ckv.key = ((String)key).utf8().get_data();
         if(val.get_type() == Variant::INT)
             ckv.value = firebase::Variant((int)val);
-        else if(val.get_type() == Variant::REAL)
-            ckv.value = firebase::Variant((double)val);
+        //else if(val.get_type() == Variant::REAL)
+          //  ckv.value = firebase::Variant((double)val);
         else
             ckv.value = Convertor::toFirebaseVariant((String)val);
         pars[i] = ckv;

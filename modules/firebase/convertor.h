@@ -4,6 +4,7 @@
 #include "core/object/ref_counted.h"
 #include "functions.h"
 #include "firebase.h"
+#include "firebase/variant.h"
 
 class Convertor {
     public:

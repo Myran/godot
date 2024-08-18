@@ -1,6 +1,5 @@
 #include "database.h"
 #include "convertor.h"
-
 bool FirebaseDatabase::inited = false;
 firebase::database::Database *FirebaseDatabase::database = NULL;
 firebase::database::DatabaseReference FirebaseDatabase::dbref;
@@ -110,8 +109,8 @@ void FirebaseDatabase::SetValue(const Array& keys, const Variant& value)
     firebase::database::DatabaseReference ref = GetReferenceToPath(keys);
     if(value.get_type() == Variant::INT)
         ref.SetValue(firebase::Variant((int)value));
-    else if(value.get_type() == Variant::REAL)
-        ref.SetValue(firebase::Variant((double)value));
+   // else if(value.get_type() == Variant::REAL)
+     //   ref.SetValue(firebase::Variant((double)value));
     else
         ref.SetValue(Convertor::toFirebaseVariant((String)value));
 }
@@ -132,8 +131,8 @@ void FirebaseDatabase::UpdateChildren(const Array& paths, const Dictionary& para
         std::string strKey = std::string(((String)key).utf8().get_data());
         if(val.get_type() == Variant::INT)
             entryValues[strKey] = firebase::Variant((int)val);
-        else if(val.get_type() == Variant::REAL)
-            entryValues[strKey] = firebase::Variant((double)val);
+        //else if(val.get_type() == Variant::REAL)
+          //  entryValues[strKey] = firebase::Variant((double)val);
         else
             entryValues[strKey] = Convertor::toFirebaseVariant((String)val);
     }
