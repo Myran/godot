@@ -1,11 +1,12 @@
 extends Node
 
+signal fb_respons(res)
+signal apple_auth_respons(res)
 
 var firebase_auth
 var godot_apple_auth
 
-signal fb_respons(res)
-signal apple_auth_respons(res)
+
 #signal cred_recieved (res)
 
 var apple_aut_res = null
@@ -32,11 +33,8 @@ func is_connected_to_facebook():
 func is_connected_to_apple():
 	return check_provider_connection("apple.com")
 
-
 func is_apple_logged_in():
 	await Engine.get_main_loop().process_frame
-	
-	
 	if !auth.is_apple_available():
 		return false
 	godot_apple_auth.credential()
@@ -64,19 +62,20 @@ func _ready():
 		print("Auth exists data source")
 #		firebase_auth = ClassDB.instance("FirebaseAuth")
 		firebase_auth = ClassDB.instantiate("FirebaseAuth")
-		print("Auth created")
-		firebase_auth.connect("logged_in",self,"logged_in")
+		print("Firebase Auth created")
+		firebase_auth.connect("logged_in",Callable(self,"logged_in"))
+		#firebase_auth.connect("account_linked",Callable(self,"account_linked"))
 	else:
 		print("FirebaseAuth datasource does NOT exist")
 
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
 		print("facebook singleton exists")
-		facebook.fb_login_success.connect(facebook_login_success)
-		facebook.fb_login_failed.connect(facebook_login_failed)
-		facebook.fb_login_cancelled.connect(facebook_login_cancelled)
-		#facebook.connect("login_success",self,"facebook_login_success")
-		#facebook.connect("login_failed",self,"facebook_login_failed")
-		#facebook.connect("login_cancelled",self,"facebook_login_cancelled")
+		#facebook.fb_login_success.connect(facebook_login_success)
+		#facebook.fb_login_failed.connect(facebook_login_failed)
+		#facebook.fb_login_cancelled.connect(facebook_login_cancelled)
+		facebook.connect("login_success",Callable(self,"facebook_login_success"))
+		facebook.connect("login_failed",Callable(self,"facebook_login_failed"))
+		facebook.connect("login_cancelled",Callable(self,"facebook_login_cancelled"))
 	else:
 		print("Facebook singleton does not exist")
 
@@ -156,7 +155,7 @@ func log_out_facebook():
 	print("AUTH: facebook logout done")
 	return facebook.is_logged_in()
 
-func unlink_Facebook():
+func unlink_facebook():
 	print("Auth: unlink facebook")
 	firebase_auth.unlink_provider("facebook.com")
 	var res = await firebase_auth.account_unlinked
@@ -166,7 +165,7 @@ func unlink_Facebook():
 		print("Auth: Facebook account unlink unsuccessful error:",res)
 
 
-func link_Facebook():
+func link_facebook():
 	print("Auth: link to facebook started")
 	print("Auth: attempt fb login")
 	var login_resp = facebook.login()

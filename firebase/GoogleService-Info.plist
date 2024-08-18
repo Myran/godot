@@ -26,5 +26,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:308611281726:ios:c1b2f39901375e7692f26f</string>
+	<key>DATABASE_URL</key>
+	<string>https://gametwo-89299-default-rtdb.europe-west1.firebasedatabase.app</string>
 </dict>
 </plist>
