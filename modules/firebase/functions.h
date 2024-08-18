@@ -4,13 +4,14 @@
 #include "core/object/ref_counted.h"
 //#include "functions.h"
 #include "firebase.h"
+#include "firebase/variant.h"
 
 class FirebaseFunctions : public RefCounted {
     GDCLASS(FirebaseFunctions, RefCounted);
     
     protected:
     static bool inited;
-    static firebase::functions::Functions* functions;
+//    static firebase::functions::Functions* functions;
     static void _bind_methods();
 
     public:

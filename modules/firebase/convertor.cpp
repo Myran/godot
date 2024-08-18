@@ -58,8 +58,8 @@ firebase::Variant Convertor::toFirebaseVariant(const Dictionary& arg)
         firebase::Variant fkey = toFirebaseVariant((String)key);
         if(val.get_type() == Variant::INT) {
             map[fkey] = firebase::Variant((int)val);
-        } else if(val.get_type() == Variant::REAL) {
-            map[fkey] = firebase::Variant((double)val);
+       // } else if(val.get_type() == Variant::REAL) {
+         //   map[fkey] = firebase::Variant((double)val);
         } else if (val.get_type() == Variant::STRING) {
             map[fkey] = toFirebaseVariant((String)val);
         } else if(val.get_type() == Variant::BOOL) {

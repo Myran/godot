@@ -64,8 +64,8 @@ void FirebaseAnalytics::log_params(const String& event, const Dictionary& params
         }
         if(val.get_type() == Variant::INT)
             pars[i] = firebase::analytics::Parameter(strKey.c_str(), firebase::Variant((int)val));
-        else if(val.get_type() == Variant::REAL)
-            pars[i] = firebase::analytics::Parameter(strKey.c_str(), firebase::Variant((double)val));
+       // else if(val.get_type() == Variant::REAL)
+         //   pars[i] = firebase::analytics::Parameter(strKey.c_str(), firebase::Variant((double)val));
         else if (val.get_type() == Variant::STRING)
             pars[i] = firebase::analytics::Parameter(strKey.c_str(), Convertor::toFirebaseVariant((String)val));
         else if(val.get_type() == Variant::BOOL)
