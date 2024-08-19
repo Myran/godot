@@ -68,6 +68,11 @@ pre-build:
 
 # Build and package iOS templates
 build-and-package-ios-templates: validate-env
+    just build-ios-template
+    just package-ios-template
+
+# build ios template
+build-ios-template:
     @echo "============================="
     @echo "BUILDING IOS EXECUTABLES"
     @echo "============================="
@@ -87,6 +92,8 @@ build-and-package-ios-templates: validate-env
     chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*
     cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
 
+# Package ios template
+package-ios-template:
     @echo "=========================="
     @echo "PACKAGING IOS TEMPLATES"
     @echo "=========================="
