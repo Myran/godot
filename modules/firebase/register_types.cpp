@@ -3,7 +3,7 @@
 #include "register_types.h"
 #include "core/object/class_db.h"
 #include "firebase.h"
-#include "analytics.h"
+//#include "analytics.h"
 //#include "admob.h"
 #include "auth.h"
 #include "modules/register_module_types.h"
@@ -20,7 +20,7 @@ void initialize_firebase_module(ModuleInitializationLevel p_level) {
 			return;
 	}
 	ClassDB::register_class<Firebase>();
-	ClassDB::register_class<FirebaseAnalytics>();
+//	ClassDB::register_class<FirebaseAnalytics>();
 	//ClassDB::register_class<FirebaseAdmob>();
 
 	// startar med bara firebase
