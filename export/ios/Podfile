@@ -24,8 +24,9 @@ target 'gametwo' do
 
   #pod 'Google-Mobile-Ads-SDK', '7.69.0-cppsdk'
 
-  pod 'FirebaseAppCheck', '11.0.0'
-  pod 'FirebaseAuth', '11.0.0'
+  #pod 'FirebaseAppCheck', '11.0.0'
+#  pod 'FirebaseAnalytics', '11.0.0'
+ # pod 'FirebaseAuth', '11.0.0'
   pod 'FirebaseFirestore', '11.0.0'
   pod 'FirebaseAuth', '11.0.0'
   pod 'FirebaseFunctions', '11.0.0'
