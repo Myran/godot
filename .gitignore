@@ -26,3 +26,5 @@ export/android/gametwo_debug.aab
 export/android/gametwo_debug.apk
 firebase/firebase_cpp_sdk
 firebase/firebase_cpp_sdk
+templates
+export/ios_old
