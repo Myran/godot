@@ -15,23 +15,23 @@ if env['platform'] == 'iphone':
 
 if env['platform'] == 'android':
     print("android")
-    if env['android_arch'] == 'armv7':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_app.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_analytics.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_remote_config.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_database.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_auth.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_admob.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_functions.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/c++/libfirebase_messaging.a")])
-    elif env['android_arch'] == 'arm64v8':
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_app.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_analytics.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_remote_config.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_database.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_auth.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_admob.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_functions.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/c++/libfirebase_messaging.a")])
+    if env['arch'] == 'arm32':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_auth.a")])
+#       env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_admob.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_messaging.a")])
+    elif env['arch'] == 'arm64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_auth.a")])
+#        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_admob.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_messaging.a")])
     else:
         print('WARN: Unsupported architecture for firebase module: '+env['android_arch'])
