@@ -7,6 +7,15 @@
 #include "core/object/object.h"
 
 
+#if !defined(TRUE)
+    #define TRUE	1
+#endif
+
+#if !defined(FALSE)
+    #define FALSE	0
+#endif
+
+
 bool FirebaseAuth::inited = false;
 firebase::auth::Auth* FirebaseAuth::auth = NULL;
 firebase::auth::User::UserProfile FirebaseAuth::profile;
