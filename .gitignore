@@ -31,3 +31,5 @@ export/ios_old
 export/ios/gametwo.pck
 export/ios/gametwo.xcworkspace/xcuserdata/mattiasmyhrman.xcuserdatad/UserInterfaceState.xcuserstate
 export/ios/gametwo.xcworkspace/xcuserdata/mattiasmyhrman.xcuserdatad/UserInterfaceState.xcuserstate
+editor/editor_data/export_templates/4.3.rc/ios.zip
+gradle/.build_version
