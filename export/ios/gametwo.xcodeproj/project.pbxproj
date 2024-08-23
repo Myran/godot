@@ -17,10 +17,8 @@
 		0D64305F2C6FDA0B008465EA /* firebase_installations.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6430522C6FDA08008465EA /* firebase_installations.xcframework */; };
 		0D6430602C6FDA0B008465EA /* firebase.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6430532C6FDA09008465EA /* firebase.xcframework */; };
 		0D6430612C6FDA0B008465EA /* firebase_auth.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6430542C6FDA0A008465EA /* firebase_auth.xcframework */; };
-		0D6430622C6FDA0C008465EA /* firebase_analytics.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6430552C6FDA0B008465EA /* firebase_analytics.xcframework */; };
 		0D6430682C6FEB34008465EA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0D6430672C6FEB34008465EA /* GoogleService-Info.plist */; };
 		1FF8DBB11FBA9DE1009DE660 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8DBB01FBA9DE1009DE660 /* dummy.cpp */; };
-		452D09411E3EB1691DCD642D /* Pods_gametwo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96D010AB2D46BAE796168753 /* Pods_gametwo.framework */; };
 		9039D3BE24C093AC0020482C /* MoltenVK in Frameworks */ = {isa = PBXBuildFile; fileRef = 9039D3BD24C093AC0020482C /* MoltenVK */; };
 		90DD2D9E24B36E8000717FE1 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DD2D9D24B36E8000717FE1 /* Launch Screen.storyboard */; };
 		D07CD44E1C5D589C00B7FB28 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D07CD44D1C5D589C00B7FB28 /* Images.xcassets */; };
@@ -28,6 +26,7 @@
 		D0BCFE7818AEBFEB004A7AAE /* gametwo.pck in Resources */ = {isa = PBXBuildFile; fileRef = D0BCFE7718AEBFEB004A7AAE /* gametwo.pck */; };
 		DEADBEEF2F582BE20003B888 /* godot in Frameworks */ = {isa = PBXBuildFile; fileRef = DEADBEEF1F582BE20003B888 /* godot */; };
 		F965960D2BC2C3A800579C7E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F965960C2BC2C3A800579C7E /* PrivacyInfo.xcprivacy */; };
+		FC8E63EFEC6DDDC683ADEFA4 /* Pods_gametwo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18C59E812FCFAFA9D93021C2 /* Pods_gametwo.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,23 +53,22 @@
 		0D6430522C6FDA08008465EA /* firebase_installations.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = firebase_installations.xcframework; sourceTree = "<group>"; };
 		0D6430532C6FDA09008465EA /* firebase.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = firebase.xcframework; sourceTree = "<group>"; };
 		0D6430542C6FDA0A008465EA /* firebase_auth.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = firebase_auth.xcframework; sourceTree = "<group>"; };
-		0D6430552C6FDA0B008465EA /* firebase_analytics.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = firebase_analytics.xcframework; sourceTree = "<group>"; };
 		0D6430672C6FEB34008465EA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../firebase/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		1437B5602B39DA153CC108A7 /* Pods-gametwo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gametwo.debug.xcconfig"; path = "Target Support Files/Pods-gametwo/Pods-gametwo.debug.xcconfig"; sourceTree = "<group>"; };
+		18C59E812FCFAFA9D93021C2 /* Pods_gametwo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_gametwo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F1575711F582BE20003B888 /* dylibs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dylibs; path = gametwo/dylibs; sourceTree = "<group>"; };
 		1FF4C1881F584E6300A41E41 /* gametwo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = gametwo.entitlements; sourceTree = "<group>"; };
 		1FF8DBB01FBA9DE1009DE660 /* dummy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dummy.cpp; sourceTree = "<group>"; };
+		46A8F0B4E32302D87DA7442D /* Pods-gametwo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gametwo.release.xcconfig"; path = "Target Support Files/Pods-gametwo/Pods-gametwo.release.xcconfig"; sourceTree = "<group>"; };
 		9039D3BD24C093AC0020482C /* MoltenVK */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK; path = MoltenVK.xcframework; sourceTree = "<group>"; };
 		90DD2D9D24B36E8000717FE1 /* Launch Screen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
-		96D010AB2D46BAE796168753 /* Pods_gametwo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_gametwo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D07CD44D1C5D589C00B7FB28 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		D0BCFE3418AEBDA2004A7AAE /* gametwo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = gametwo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0BCFE4318AEBDA2004A7AAE /* gametwo-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "gametwo-Info.plist"; sourceTree = "<group>"; };
 		D0BCFE4518AEBDA2004A7AAE /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D0BCFE7718AEBFEB004A7AAE /* gametwo.pck */ = {isa = PBXFileReference; lastKnownFileType = file; path = gametwo.pck; sourceTree = "<group>"; };
+		D8C6D17FC508ABF00A9AED10 /* Pods-gametwo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gametwo.debug.xcconfig"; path = "Target Support Files/Pods-gametwo/Pods-gametwo.debug.xcconfig"; sourceTree = "<group>"; };
 		DEADBEEF1F582BE20003B888 /* godot */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = godot; path = gametwo.xcframework; sourceTree = "<group>"; };
 		F965960C2BC2C3A800579C7E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		FD8F978AF1577239D9B102D1 /* Pods-gametwo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-gametwo.release.xcconfig"; path = "Target Support Files/Pods-gametwo/Pods-gametwo.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,9 +87,8 @@
 				0D6430612C6FDA0B008465EA /* firebase_auth.xcframework in Frameworks */,
 				0D6430592C6FDA0B008465EA /* firebase_remote_config.xcframework in Frameworks */,
 				0D6430562C6FDA0B008465EA /* firebase_dynamic_links.xcframework in Frameworks */,
-				0D6430622C6FDA0C008465EA /* firebase_analytics.xcframework in Frameworks */,
 				0D64305D2C6FDA0B008465EA /* firebase_database.xcframework in Frameworks */,
-				452D09411E3EB1691DCD642D /* Pods_gametwo.framework in Frameworks */,
+				FC8E63EFEC6DDDC683ADEFA4 /* Pods_gametwo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,7 +99,6 @@
 			isa = PBXGroup;
 			children = (
 				0D6430672C6FEB34008465EA /* GoogleService-Info.plist */,
-				0D6430552C6FDA0B008465EA /* firebase_analytics.xcframework */,
 				0D6430542C6FDA0A008465EA /* firebase_auth.xcframework */,
 				0D6430502C6FDA05008465EA /* firebase_database.xcframework */,
 				0D6430492C6FD9FC008465EA /* firebase_dynamic_links.xcframework */,
@@ -136,7 +132,7 @@
 			children = (
 				9039D3BD24C093AC0020482C /* MoltenVK */,
 				DEADBEEF1F582BE20003B888 /* godot */,
-				96D010AB2D46BAE796168753 /* Pods_gametwo.framework */,
+				18C59E812FCFAFA9D93021C2 /* Pods_gametwo.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -165,8 +161,8 @@
 		E226A74BB70166342F976B98 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1437B5602B39DA153CC108A7 /* Pods-gametwo.debug.xcconfig */,
-				FD8F978AF1577239D9B102D1 /* Pods-gametwo.release.xcconfig */,
+				D8C6D17FC508ABF00A9AED10 /* Pods-gametwo.debug.xcconfig */,
+				46A8F0B4E32302D87DA7442D /* Pods-gametwo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -178,14 +174,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0BCFE7118AEBDA3004A7AAE /* Build configuration list for PBXNativeTarget "gametwo" */;
 			buildPhases = (
+				60E8E53B3D7D47E0C1EB8BD6 /* [CP] Check Pods Manifest.lock */,
 				0D6430692C70C3A0008465EA /* ShellScript */,
-				5C063E9D8D86F3CF52AF0405 /* [CP] Check Pods Manifest.lock */,
 				D0BCFE3018AEBDA2004A7AAE /* Sources */,
 				D0BCFE3118AEBDA2004A7AAE /* Frameworks */,
 				D0BCFE3218AEBDA2004A7AAE /* Resources */,
 				90A13CD024AA68E500E8464F /* Embed Frameworks */,
-				8B43B689971A476C37F0F643 /* [CP] Embed Pods Frameworks */,
-				CC943B1BEAE9EED4C333D34C /* [CP] Copy Pods Resources */,
+				C84B9352DDBF882F70D3DE18 /* [CP] Embed Pods Frameworks */,
+				734C85DC470D21F322B4B49E /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -202,7 +198,8 @@
 		D0BCFE2C18AEBDA2004A7AAE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 				ORGANIZATIONNAME = GodotEngine;
 				TargetAttributes = {
 					D0BCFE3318AEBDA2004A7AAE = {
@@ -263,7 +260,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# echo \"Saving ios pck..\"\n#${SRCROOT}/../../pre-run-ios.sh\n${SRCROOT}/../../pre-run-ios\n";
 		};
-		5C063E9D8D86F3CF52AF0405 /* [CP] Check Pods Manifest.lock */ = {
+		60E8E53B3D7D47E0C1EB8BD6 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -285,33 +282,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8B43B689971A476C37F0F643 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-gametwo/Pods-gametwo-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBAEMKit/FBAEMKit.framework/FBAEMKit",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKCoreKit/FBSDKCoreKit.framework/FBSDKCoreKit",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.framework/FBSDKCoreKit_Basics",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKLoginKit/FBSDKLoginKit.framework/FBSDKLoginKit",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKShareKit/FBSDKShareKit.framework/FBSDKShareKit",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBAEMKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit_Basics.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKLoginKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKShareKit.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gametwo/Pods-gametwo-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		CC943B1BEAE9EED4C333D34C /* [CP] Copy Pods Resources */ = {
+		734C85DC470D21F322B4B49E /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -371,6 +342,32 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gametwo/Pods-gametwo-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		C84B9352DDBF882F70D3DE18 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-gametwo/Pods-gametwo-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBAEMKit/FBAEMKit.framework/FBAEMKit",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKCoreKit/FBSDKCoreKit.framework/FBSDKCoreKit",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKCoreKit_Basics/FBSDKCoreKit_Basics.framework/FBSDKCoreKit_Basics",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKLoginKit/FBSDKLoginKit.framework/FBSDKLoginKit",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/FBSDKShareKit/FBSDKShareKit.framework/FBSDKShareKit",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBAEMKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKCoreKit_Basics.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKLoginKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSDKShareKit.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-gametwo/Pods-gametwo-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -400,26 +397,41 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_BITCODE = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/**";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
@@ -433,6 +445,7 @@
 				LD_CLASSIC_1500 = "-ld_classic";
 				LD_CLASSIC_1501 = "-ld_classic";
 				LD_CLASSIC_1510 = "-ld_classic";
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "$(LD_CLASSIC_$(XCODE_VERSION_ACTUAL))  ";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -443,26 +456,40 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/**";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -482,9 +509,9 @@
 		};
 		D0BCFE7218AEBDA3004A7AAE /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1437B5602B39DA153CC108A7 /* Pods-gametwo.debug.xcconfig */;
+			baseConfigurationReference = D8C6D17FC508ABF00A9AED10 /* Pods-gametwo.debug.xcconfig */;
 			buildSettings = {
-				ARCHS = arm64;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = gametwo/gametwo.entitlements;
@@ -518,9 +545,9 @@
 		};
 		D0BCFE7318AEBDA3004A7AAE /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FD8F978AF1577239D9B102D1 /* Pods-gametwo.release.xcconfig */;
+			baseConfigurationReference = 46A8F0B4E32302D87DA7442D /* Pods-gametwo.release.xcconfig */;
 			buildSettings = {
-				ARCHS = arm64;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = gametwo/gametwo.entitlements;

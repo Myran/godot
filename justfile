@@ -47,7 +47,13 @@ build-editor: validate-env
     mv {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.editor.* editor/
 
 # Build export templates
-build-templates: validate-env
+build-templates:
+    just build-and-package-ios-templates
+    just build-android-templates
+    just install-android-template
+
+# build macos
+build-macos-templates: validate-env
     @echo "Building export templates..."
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_debug --jobs={{jobs}}
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_release --jobs={{jobs}}
@@ -165,12 +171,13 @@ save-ios-to-app: pre-build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
 # Full build and deploy process
-full-process: validate-env
+build-all: validate-env
     @echo "Running full build and deploy process..."
     just install-deps
     just build-editor
     just build-templates
     just update-version
     just format
-    just build-android
+    just build-android apk
+    just build-android aab
     just build-ios
