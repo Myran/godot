@@ -2,9 +2,9 @@
 
 # Main build Justfile for Godot 4 Projects
 # Import other Justfiles
-import "justfile-run"
-import "justfile-cicd"
-import "justfile-support"
+import "justfile-run.justfile"
+import "justfile-cicd.justfile"
+import "justfile-support.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
 
