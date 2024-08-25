@@ -1,0 +1,38 @@
+ext.customBuildScript = { Project project ->
+    // Your custom Gradle configurations go here
+    android {
+        defaultConfig {
+            // Example: Set a custom application ID
+          //  applicationId "com.yourdomain.yourgame"
+        }
+        
+        // Example: Add a new build type
+        buildTypes {
+            beta {
+                minifyEnabled true
+               // proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            }
+        }
+    }
+
+    dependencies {
+        // Example: Add a custom dependency
+      //  implementation 'com.example:custom-library:1.0.0'
+    }
+
+    // Example: Apply a custom plugin
+    //apply plugin: 'com.example.custom-plugin'
+
+    // Custom tasks
+    task customTask {
+        doLast {
+            println "This is a custom task to show that custom config works"
+        }
+    }
+
+    // Hooks
+    project.afterEvaluate {
+        // Add any tasks that should run after the build configuration is evaluated
+        println "Running post-evaluation tasks..."
+    }
+}
