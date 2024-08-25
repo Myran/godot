@@ -75,13 +75,13 @@ update-version:
 # Update export presets
 update-export-presets:
     @echo "Updating export presets..."
-    sed -i '' 's#keystore/path=".*"#keystore/path="{{KEYSTORE_PATH}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#keystore/password=".*"#keystore/password="{{KEYSTORE_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#keystore/alias=".*"#keystore/alias="{{GAME_NAME}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#keystore/alias_password=".*"#keystore/alias_password="{{KEY_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#application/identifier=".*"#application/identifier="{{IOS_BUNDLE_IDENTIFIER}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#application/signature=".*"#application/signature="{{APPLE_TEAM_ID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-    sed -i '' 's#provisioning_profile/uuid=".*"#provisioning_profile/uuid="{{IOS_PROVISIONING_PROFILE_UUID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#keystore/path=".*"#keystore/path="{{KEYSTORE_PATH}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#keystore/password=".*"#keystore/password="{{KEYSTORE_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#keystore/alias=".*"#keystore/alias="{{GAME_NAME}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#keystore/alias_password=".*"#keystore/alias_password="{{KEY_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#application/identifier=".*"#application/identifier="{{IOS_BUNDLE_IDENTIFIER}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#application/signature=".*"#application/signature="{{APPLE_TEAM_ID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+#    sed -i '' 's#provisioning_profile/uuid=".*"#provisioning_profile/uuid="{{IOS_PROVISIONING_PROFILE_UUID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
 
 # Update project settings
 update-project-settings:
