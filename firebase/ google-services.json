@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "308611281726",
+    "firebase_url": "https://gametwo-89299-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "gametwo-89299",
+    "storage_bucket": "gametwo-89299.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308611281726:android:354110186e98804b92f26f",
+        "android_client_info": {
+          "package_name": "com.primaryhive.gametwo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhP7ayqN5NoDvdWomS7k4idS_ZaXH07Yk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
