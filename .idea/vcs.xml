@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/Demos/Cube/include/volk" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/SPIRV-Cross" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/Volk" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/Vulkan-Headers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/Vulkan-Tools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/cereal" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/glslang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/glslang/External/googletest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/glslang/External/spirv-tools" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/External/glslang/External/spirv-tools/external/spirv-headers" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/MoltenVKShaderConverter/SPIRV-Cross" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/extras/MoltenVK/MoltenVKShaderConverter/glslang" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/godot" vcs="Git" />
+  </component>
+</project>
