@@ -33,3 +33,4 @@ export/ios/gametwo.xcworkspace/xcuserdata/mattiasmyhrman.xcuserdatad/UserInterfa
 export/ios/gametwo.xcworkspace/xcuserdata/mattiasmyhrman.xcuserdatad/UserInterfaceState.xcuserstate
 editor/editor_data/export_templates/4.3.rc/ios.zip
 gradle/.build_version
+.idea/gametwo.iml
