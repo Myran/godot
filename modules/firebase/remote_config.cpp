@@ -9,12 +9,15 @@ firebase::remote_config::RemoteConfig *rc = NULL;
 
 FirebaseRemoteConfig::FirebaseRemoteConfig() {
     if(!inited) {
+        print_line("[RemConf] Init remote config");
         user_data = this;
         firebase::App* app = Firebase::AppId();
         if(app != NULL) {
             rc = ::firebase::remote_config::RemoteConfig::GetInstance(app);
             rc->FetchAndActivate().OnCompletion([](const ::firebase::Future<bool>& future)  {
-                print_line("[RemConf] On Completion test remote config");
+               //std::function<void (const Future<bool> &)>
+                 print_line("[RemConf] On Completion test remote config");
+                //FirebaseRemoteConfig* frc = static_cast<FirebaseRemoteConfig*>(user_data);
                 FirebaseRemoteConfig *frc = (FirebaseRemoteConfig*)user_data;
                 if(future.status() == firebase::kFutureStatusComplete) {
                          // activate preloaded configs
