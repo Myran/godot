@@ -15,20 +15,22 @@ _run_desktop:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
 # Run on Android
-_run_android: pre-build
-    #!/usr/bin/env bash
-    set -euo pipefail
-    IP="{{ANDROID_DEVICE_IP}}"
-    PORT="5555"
-    echo "Connecting to Android device at ${IP}:${PORT}"
-    ping ${IP} -c 3
-    adb kill-server
-    adb start-server
-    adb tcpip ${PORT}
-    adb connect ${IP}:${PORT}
-    adb -s ${IP}:${PORT} uninstall {{ANDROID_PACKAGE_NAME}}
-    adb -s ${IP}:${PORT} install export/android/{{GAME_NAME}}.apk
-    adb -s ${IP}:${PORT} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+_run_android:
+    adb -s 246d2c533a037ece shell am start -a android.intent.action.MAIN -n com.primaryhive.gametwo/com.godot.game.GodotApp
+#_run_android: pre-build
+#    #!/usr/bin/env bash
+#    set -euo pipefail
+#    IP="{{ANDROID_DEVICE_IP}}"
+#    PORT="5555"
+#    echo "Connecting to Android device at ${IP}:${PORT}"
+#    ping ${IP} -c 3
+#    adb kill-server
+#    adb start-server
+#    adb tcpip ${PORT}
+#    adb connect ${IP}:${PORT}
+#    adb -s ${IP}:${PORT} uninstall {{ANDROID_PACKAGE_NAME}}
+#    adb -s ${IP}:${PORT} install export/android/{{GAME_NAME}}.apk
+#    adb -s ${IP}:${PORT} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
 
 # Run on iOS devices
 _run_ios device debug="": pre-build

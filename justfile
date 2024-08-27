@@ -181,3 +181,54 @@ build-all: validate-env
     just build-android apk
     just build-android aab
     just build-ios
+# Replace a string in a file with given text, only if there's exactly one occurrence
+replace-in-file FILE SEARCH REPLACE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    input_file="{{FILE}}"
+    search_string="{{SEARCH}}"
+    replacement_text="{{REPLACE}}"
+
+    # Check if input file exists
+    if [ ! -f "$input_file" ]; then
+        echo "Error: Input file '$input_file' not found" >&2
+        exit 1
+    fi
+
+    # Count occurrences of the search string
+    occurrences=$(grep -c "$search_string" "$input_file" || true)
+
+    if [ "$occurrences" -eq 0 ]; then
+        echo "Error: No occurrences of '$search_string' found in '$input_file'" >&2
+        exit 1
+    elif [ "$occurrences" -gt 1 ]; then
+        echo "Error: Multiple occurrences ($occurrences) of '$search_string' found in '$input_file'. No changes made." >&2
+        exit 1
+    fi
+
+    # Create a temporary file
+    temp_file=$(mktemp)
+
+    # Perform the replacement of the single occurrence
+    if sed 's/'"$(printf '%s' "$search_string" | sed 's/[\/&]/\\&/g')"'/'"$(printf '%s' "$replacement_text" | sed 's/[\/&]/\\&/g')"'/' "$input_file" > "$temp_file"
+    then
+        # Move the temporary file to replace the original
+        mv "$temp_file" "$input_file"
+        echo "Successfully replaced the single occurrence of '$search_string' in '$input_file'"
+    else
+        echo "Error occurred during replacement" >&2
+        rm "$temp_file"
+        exit 1
+    fi
+
+# Example usage
+example:
+    @just replace-in-file "example.txt" "old_text" "new_text"
+insert-firebase-dependencies:
+    cp firebase/google-services.json project/android/build/
+    cp firebase/firebase-config.gradle project/android/build/
+    just replace-in-file project/android/build/build.gradle "//ADD_FIREBASE_CONFIG_HERE_" "apply from: 'firebase-config.gradle'"
+    
+    
+    
