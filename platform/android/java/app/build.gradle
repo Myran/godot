@@ -5,7 +5,7 @@ plugins {
 }
 
 apply from: 'config.gradle'
-
+//ADD_FIREBASE_CONFIG_HERE_
 allprojects {
     repositories {
         google()
