@@ -228,7 +228,21 @@ example:
 insert-firebase-dependencies:
     cp firebase/google-services.json project/android/build/
     cp firebase/firebase-config.gradle project/android/build/
-    just replace-in-file project/android/build/build.gradle "//ADD_FIREBASE_CONFIG_HERE_" "apply from: 'firebase-config.gradle'"
-    
-    
-    
+//    just replace-in-file project/android/build/build.gradle "//ADD_FIREBASE_CONFIG_HERE_" "apply from: 'firebase-config.gradle'"
+    just replace-in-file project/android/build/build.gradle "//ADD_FIREBASE_DEPENDENCIES_HERE_" "   implementation platform("com.google.firebase:firebase-bom:33.1.2")
+   implementation "com.google.firebase:firebase-auth"
+   implementation "com.google.firebase:firebase-messaging"
+   implementation "com.google.firebase:firebase-database"
+   implementation "com.google.firebase:firebase-config"
+   implementation "com.google.firebase:firebase-analytics"
+    just replace-in-file project/android/build/build.gradle "//ADD_FIREBASE_PLUGINS_HERE_" "apply plugin: 'com.google.gms.google-services'"
+    just replace-in-file project/android/bild/build.gradle "//ADD_FIREBASE_BUILDSCRIPT_HERE_" "buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.2'        
+    }
+}"
+  
