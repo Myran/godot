@@ -1,11 +1,12 @@
 // Gradle build config for Godot Engine's Android port.
+//ADD_FIREBASE_BUILDSCRIPT_HERE_
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
 
 apply from: 'config.gradle'
-//ADD_FIREBASE_CONFIG_HERE_
+
 allprojects {
     repositories {
         google()
@@ -33,7 +34,7 @@ configurations {
 dependencies {
     implementation "androidx.fragment:fragment:$versions.fragmentVersion"
     implementation "androidx.core:core-splashscreen:$versions.splashscreenVersion"
-
+//ADD_FIREBASE_DEPENDENCIES_HERE_
     if (rootProject.findProject(":lib")) {
         implementation project(":lib")
     } else if (rootProject.findProject(":godot:lib")) {
@@ -299,3 +300,4 @@ if (rootProject.tasks.findByPath("copyDevAARToAppModule") != null) {
 if (rootProject.tasks.findByPath("copyReleaseAARToAppModule") != null) {
     preBuild.mustRunAfter(rootProject.tasks.named("copyReleaseAARToAppModule"))
 }
+//ADD_FIREBASE_PLUGINS_HERE_
