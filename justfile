@@ -181,71 +181,47 @@ build-all: validate-env
     just build-android apk
     just build-android aab
     just build-ios
-# Replace a string in a file with given text, only if there's exactly one occurrence
-replace-in-file FILE SEARCH REPLACE:
+
+replace TARGET_FILE PATTERN REPLACEMENT_FILE:
     #!/usr/bin/env bash
     set -euo pipefail
+    python3 tools/replace_content.py "{{TARGET_FILE}}" "{{PATTERN}}" "{{REPLACEMENT_FILE}}"
 
-    input_file="{{FILE}}"
-    search_string="{{SEARCH}}"
-    replacement_text="{{REPLACE}}"
-
-    # Check if input file exists
-    if [ ! -f "$input_file" ]; then
-        echo "Error: Input file '$input_file' not found" >&2
-        exit 1
-    fi
-
-    # Count occurrences of the search string
-    occurrences=$(grep -c "$search_string" "$input_file" || true)
-
-    if [ "$occurrences" -eq 0 ]; then
-        echo "Error: No occurrences of '$search_string' found in '$input_file'" >&2
-        exit 1
-    elif [ "$occurrences" -gt 1 ]; then
-        echo "Error: Multiple occurrences ($occurrences) of '$search_string' found in '$input_file'. No changes made." >&2
-        exit 1
-    fi
-
-    # Create a temporary file
-    temp_file=$(mktemp)
-
-    # Perform the replacement of the single occurrence
-    if sed 's/'"$(printf '%s' "$search_string" | sed 's/[\/&]/\\&/g')"'/'"$(printf '%s' "$replacement_text" | sed 's/[\/&]/\\&/g')"'/' "$input_file" > "$temp_file"
-    then
-        # Move the temporary file to replace the original
-        mv "$temp_file" "$input_file"
-        echo "Successfully replaced the single occurrence of '$search_string' in '$input_file'"
-    else
-        echo "Error occurred during replacement" >&2
-        rm "$temp_file"
-        exit 1
-    fi
-
-# Example usage
-example:
-    @just replace-in-file "example.txt" "old_text" "new_text"
 insert-firebase-dependencies:
     cp firebase/google-services.json project/android/build/
-    just replace-in-file "project/android/build/build.gradle" "//ADD_FIREBASE_DEPENDENCIES_HERE_" "\
-        implementation \"com.google.firebase:firebase-bom:33.1.2\"\n\
-        implementation \"com.google.firebase:firebase-auth\"\n\
-        implementation \"com.google.firebase:firebase-messaging\"\n\
-        implementation \"com.google.firebase:firebase-database\"\n\
-        implementation \"com.google.firebase:firebase-config\"\n\
-        implementation \"com.google.firebase:firebase-analytics\"\
-    "
-    just replace-in-file "project/android/build/build.gradle" "//ADD_FIREBASE_PLUGINS_HERE_" "\
-        apply plugin: \"com.google.gms.google-services\"\
-    "
-    just replace-in-file "project/android/build/build.gradle" "//ADD_FIREBASE_BUILDSCRIPT_HERE_" "\
-        buildscript {\n\
-            repositories {\n\
-                google()\n\
-                mavenCentral()\n\
-            }\n\
-            dependencies {\n\
-                classpath \"com.google.gms:google-services:4.4.2\"\n\
-            }\n\
-        }\
-    "  
+
+    @echo "Preparing Firebase dependencies..."
+
+    echo 'implementation platform ("com.google.firebase:firebase-bom:33.1.2")' > temp_dependencies.txt
+    echo 'implementation "com.google.firebase:firebase-auth"' >> temp_dependencies.txt
+    echo 'implementation "com.google.firebase:firebase-messaging"' >> temp_dependencies.txt
+    echo 'implementation "com.google.firebase:firebase-database"' >> temp_dependencies.txt
+    echo 'implementation "com.google.firebase:firebase-config"' >> temp_dependencies.txt
+    echo 'implementation "com.google.firebase:firebase-analytics"' >> temp_dependencies.txt
+    
+    @echo "Preparing Firebase plugin..."
+
+    echo 'apply plugin: "com.google.gms.google-services"' > temp_plugin.txt
+    
+    @echo "Preparing Firebase buildscript..."
+    echo 'buildscript {' > temp_buildscript.txt
+    echo '    repositories {' >> temp_buildscript.txt
+    echo '        google()' >> temp_buildscript.txt
+    echo '        mavenCentral()' >> temp_buildscript.txt
+    echo '    }' >> temp_buildscript.txt
+    echo '    dependencies {' >> temp_buildscript.txt
+    echo '        classpath "com.google.gms:google-services:4.4.2"' >> temp_buildscript.txt
+    echo '    }' >> temp_buildscript.txt
+    echo '}' >> temp_buildscript.txt
+    
+    @echo "Inserting Firebase configurations..."
+
+    just replace project/android/build/build.gradle  //ADD_FIREBASE_BUILDSCRIPT_HERE_ temp_buildscript.txt    
+    just replace project/android/build/build.gradle  //ADD_FIREBASE_DEPENDENCIES_HERE_ temp_dependencies.txt
+    just replace project/android/build/build.gradle  //ADD_FIREBASE_PLUGINS_HERE_ temp_plugin.txt
+
+    @echo "Cleaning up temporary files..."
+
+    rm temp_dependencies.txt temp_plugin.txt temp_buildscript.txt   
+
+    @echo "Firebase dependencies inserted successfully."
