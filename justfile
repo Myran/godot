@@ -178,6 +178,7 @@ build-all: validate-env
     just build-templates
     just update-version
     just format
+    just insert-firebase-dependencies
     just build-android apk
     just build-android aab
     just build-ios
