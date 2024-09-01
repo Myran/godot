@@ -14,24 +14,6 @@ run target *args='':
 _run_desktop:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
-# Run on Android
-_run_android:
-    adb -s 246d2c533a037ece shell am start -a android.intent.action.MAIN -n com.primaryhive.gametwo/com.godot.game.GodotApp
-#_run_android: pre-build
-#    #!/usr/bin/env bash
-#    set -euo pipefail
-#    IP="{{ANDROID_DEVICE_IP}}"
-#    PORT="5555"
-#    echo "Connecting to Android device at ${IP}:${PORT}"
-#    ping ${IP} -c 3
-#    adb kill-server
-#    adb start-server
-#    adb tcpip ${PORT}
-#    adb connect ${IP}:${PORT}
-#    adb -s ${IP}:${PORT} uninstall {{ANDROID_PACKAGE_NAME}}
-#    adb -s ${IP}:${PORT} install export/android/{{GAME_NAME}}.apk
-#    adb -s ${IP}:${PORT} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-
 # Run on iOS devices
 _run_ios device debug="": pre-build
     #!/usr/bin/env bash
@@ -75,3 +57,38 @@ _run_ipad *args="":
 # Save and run iphone
 save-and-run-iphone:
     just save-ios-to-app && just run iphone;
+
+
+# Check if package exists, uninstall if it does, then install and run
+_run_android build_type="release":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
+    if adb -s 246d2c533a037ece shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
+        echo "Package exists. Uninstalling..."
+        adb -s 246d2c533a037ece uninstall {{ANDROID_PACKAGE_NAME}}
+    else
+        echo "Package does not exist."
+    fi
+    
+    echo "Installing {{build_type}} APK..."
+    if [ "{{build_type}}" = "debug" ]; then
+        adb -s 246d2c533a037ece install export/android/{{GAME_NAME}}_debug.apk
+    else
+        adb -s 246d2c533a037ece install export/android/{{GAME_NAME}}.apk
+    fi
+    
+    echo "Running the app..."
+    adb -s 246d2c533a037ece shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+
+# Run Android debug version
+_run_android_debug:
+    just _run_android debug
+
+# Install and run on Android (release version)
+install_and_run_android:
+    just _run_android
+
+# Install and run on Android (debug version)
+install_and_run_android_debug:
+    just _run_android debug
