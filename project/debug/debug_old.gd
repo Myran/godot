@@ -60,11 +60,11 @@ func _ready():
 		db = ClassDB.instantiate("FirebaseDatabase")
 		print("RealTime Database instance: ",db)
 		#db.get_value.connect(self,get_value)
-		db.connect("get_value",Callable(self,"get_value"))
-		db.connect("child_changed",Callable(self,"child_changed"))
-		db.connect("child_moved",Callable(self,"child_moved"))
-		db.connect("child_removed",Callable(self,"child_removed"))
-		db.connect("child_added",Callable(self,"child_added"))
+		db.connect("get_value",Callable(self,"get_value"),CONNECT_DEFERRED)
+		db.connect("child_changed",Callable(self,"child_changed"),CONNECT_DEFERRED)
+		db.connect("child_moved",Callable(self,"child_moved"),CONNECT_DEFERRED)
+		db.connect("child_removed",Callable(self,"child_removed"),CONNECT_DEFERRED)
+		db.connect("child_added",Callable(self,"child_added"),CONNECT_DEFERRED)
 		#db.connect("child_changed",self,"child_changed")
 		#db.connect("child_moved",self,"child_moved")
 		#db.connect("child_removed",self,"child_removed")
@@ -77,11 +77,11 @@ func _ready():
 		#remote_config.loaded(remote_config_loaded)
 		remote_config.connect("loaded",Callable(self,"remote_config_loaded"))
 #
-	if ClassDB.class_exists("FirebaseMessaging"):
-		print("Messaging exists")
-		messaging = ClassDB.instantiate("FirebaseMessaging")
-		messaging.connect("token",Callable(self,"messaging_token"))
-		messaging.connect("message",Callable(self,"messaging_message"))
+	#if ClassDB.class_exists("FirebaseMessaging"):
+		#print("Messaging exists")
+		#messaging = ClassDB.instantiate("FirebaseMessaging")
+		#messaging.connect("token",Callable(self,"messaging_token"))
+		#messaging.connect("message",Callable(self,"messaging_message"))
 #
 #	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
 #		print("facebook singleton exists")
@@ -134,8 +134,8 @@ func _on_Button_set_value_pressed():
 	count = count + 1
 func _on_Button_get_value_pressed():
 	printt("Get_value pressed")
-	var retval = db.get_value(["tom"])
-	status_label.text = str("RTDB: Get Value: ",retval)
+	db.get_value(["tom"])
+	#status_label.text = str("RTDB: Get Value: ",retval)
 
 func child_moved(key,value):
 	printt("child moved",key,"value",value)
@@ -148,7 +148,8 @@ func child_removed(key,value):
 
 func child_changed(key,value):
 	printt("Child changed:","key:",key,"value",value)
-	status_label.text = str("Value changed: ",key,"\n","value: ",value)
+	status_label.call_deferred("set_text",str("Value changed: ",key,"\n","value: ",value))
+	#status_label.text = str("Value changed: ",key,"\n","value: ",value)
 
 func get_value(key,value):
 	printt("key:",key,"Value:",value)
@@ -180,8 +181,8 @@ func logged_in(res):
 func _on_Button_sign_in_anon_pressed():
 	print("button: sign in anon")
 	var retval = await auth.login()
-	print("login result:",retval)
-	%DebugRichTextLabel.text = str("login result: ",retval)
+	print(str("login result: ",retval))	
+	status_label.call_deferred("set_text",str("login result: ",retval))
 	#_auth.sign_in_anonymously()
 	#var auth_res = await _auth.logged_in()
 	#if auth_res =="":
