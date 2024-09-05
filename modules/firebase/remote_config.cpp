@@ -14,6 +14,7 @@ FirebaseRemoteConfig::FirebaseRemoteConfig() {
         firebase::App* app = Firebase::AppId();
         if(app != NULL) {
             rc = ::firebase::remote_config::RemoteConfig::GetInstance(app);
+            print_line("[RemConf] Remote config instance found");
             rc->FetchAndActivate().OnCompletion([](const ::firebase::Future<bool>& future)  {
                //std::function<void (const Future<bool> &)>
                  print_line("[RemConf] On Completion test remote config");
@@ -56,6 +57,7 @@ void FirebaseRemoteConfig::set_instant_fetching()
 }
 void FirebaseRemoteConfig::set_defaults(const Dictionary& params)
 {
+    print_line("[RemConf] set defaults Started");
     firebase::remote_config::ConfigKeyValueVariant pars[params.size()];
     for(int i=0; i<params.size(); i++) {
         Variant key = params.get_key_at_index(i);
