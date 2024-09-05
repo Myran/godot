@@ -83,11 +83,11 @@ func _ready():
 		#messaging.connect("token",Callable(self,"messaging_token"))
 		#messaging.connect("message",Callable(self,"messaging_message"))
 #
-#	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
-#		print("facebook singleton exists")
-#		var _ret = facebook.connect("login_success",self,"facebook_login_success")
-#	else:
-#		print("Facebook singleton does not exist")
+	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
+		print("facebook singleton exists")
+		#var _ret = facebook.connect("login_success",Callable(self,"facebook_login_success"),CONNECT_DEFERRED)
+	else:
+		print("Facebook singleton does not exist")
 #
 #	if Engine.has_singleton("GodotAppleAuth"):
 #		print("Apple singleton exist")

@@ -12,13 +12,15 @@ signal fb_logged_out
 var _fb = null
 var token = null
 var user = null
+const _APP_ID = 642469723185335
 
 func _ready():
 #	pause_mode = Node.PAUSE_MODE_PROCESS	
-	if not ProjectSettings.has_setting('Facebook/FB_APP_ID'):
-		push_error('Facebook/FB_APP_ID not found! Set it in engine.cfg!')
-		return
-	var app_id = ProjectSettings.get_setting('Facebook/FB_APP_ID')
+	#if not ProjectSettings.has_setting('Facebook/FB_APP_ID'):
+		#push_error('Facebook/FB_APP_ID not found! Set it in engine.cfg!')
+		#return
+	#var app_id = ProjectSettings.get_setting('Facebook/FB_APP_ID')
+	var app_id = _APP_ID
 	if(Engine.has_singleton("GodotFacebook")):  # Android
 		_fb = Engine.get_singleton("GodotFacebook")
 		_fb.init(app_id)
