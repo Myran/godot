@@ -195,39 +195,44 @@ func facebook_login_success(res):
 	emit_signal("fb_success",res)
 
 func _on_Button_sign_in_facebook_pressed():
-	print("button: sign in facebook")
-	facebook.login()
-	var res = await fb_success
-	print("fb login success")
-	status_label.text = str("FB:",res)
-	_auth.sign_in_facebook(res)
-	var auth_res = await _auth.logged_in()
-	if auth_res =="":
-		print("Firebase auth login success")
-	else:
-		print("Firebase auth login failed with error: ",auth_res)
+	auth.sign_in_facebook()
+	
+	#print("button: sign in facebook")
+	#facebook.login()
+	#var res = await fb_success
+	#print("fb login success")
+	#status_label.text = str("FB:",res)
+	#_auth.sign_in_facebook(res)
+	#var auth_res = await _auth.logged_in()
+	#if auth_res =="":
+		#print("Firebase auth login success")
+	#else:
+		#print("Firebase auth login failed with error: ",auth_res)
 
 func _on_Button_unlink_Facebook_pressed():
-	print("Button: unlink facebook")
-	_auth.unlink_provider("facebook.com")
-	var res = await auth.account_unlinked()
-	if res == "":
-		print("Facebook account unlinked successfully")
-	else:
-		print("Facebook account unlink unsuccessful error:",res)
+	auth.unlink_facebook()
+	
+	#print("Button: unlink facebook")
+	#_auth.unlink_provider("facebook.com")
+	#var res = await auth.account_unlinked()
+	#if res == "":
+		#print("Facebook account unlinked successfully")
+	#else:
+		#print("Facebook account unlink unsuccessful error:",res)
 
 func _on_Button_link_Facebook_pressed():
-	print("button: link to facebook")
-	facebook.login()
-	var res = await fb_success
-	print("fb login success")
-	status_label.text = str("FB:",res)
-	_auth.link_to_facebook(res)
-	var link_res = await auth.account_linked()
-	if link_res == "":
-		print("Facebook account linked successfully")
-	else:
-		print("Facebook account link unsuccessful error:",res)
+	auth.link_facebook()
+	#print("button: link to facebook")
+	#facebook.login()
+	#var res = await fb_success
+	#print("fb login success")
+	#status_label.text = str("FB:",res)
+	#_auth.link_to_facebook(res)
+	#var link_res = await auth.account_linked()
+	#if link_res == "":
+		#print("Facebook account linked successfully")
+	#else:
+		#print("Facebook account link unsuccessful error:",res)
 
 
 func _on_Auth_Apple_login_pressed():
@@ -285,7 +290,8 @@ func _on_Auth_fb_has_provider_pressed():
 	status_label.text= str("Auth: Is account connected to facebook:", is_connected_to_facebook())
 func _on_Button_sign_out_pressed():
 	print("button: sign out")
-	_auth.sign_out()
+	#_auth.sign_out()
+	auth.log_out_facebook()
 
 func _on_Button_get_all_info_pressed():
 	print("button: show all info")

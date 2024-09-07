@@ -12,7 +12,7 @@ signal fb_logged_out
 var _fb = null
 var token = null
 var user = null
-const _APP_ID = 642469723185335
+const _APP_ID = 914537337160544
 
 func _ready():
 #	pause_mode = Node.PAUSE_MODE_PROCESS	

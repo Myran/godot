@@ -39,5 +39,7 @@ target 'gametwo' do
   pod 'FBSDKCoreKit', '12.3.1'
   pod 'FBSDKLoginKit', '12.3.1'
   pod 'FBSDKShareKit', '12.3.1'
- 
+
+   # pod 'FBSDKLoginKit'
+     
 end

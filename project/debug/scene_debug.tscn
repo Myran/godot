@@ -121,8 +121,23 @@ text = "Analytics: All Tracking events
 
 [node name="Button9" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
 layout_mode = 2
+text = "Facebook: Sign in"
 
 [node name="Button10" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
+layout_mode = 2
+text = "Facebook: link account"
+
+[node name="Button11" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
+layout_mode = 2
+text = "Facebook: unlink
+"
+
+[node name="Button12" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
+layout_mode = 2
+text = "Facebook: log out
+"
+
+[node name="Button13" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
 layout_mode = 2
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer"]
@@ -148,3 +163,7 @@ layout_mode = 2
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button6" to="Popup" method="_on_Button_set_value_pressed"]
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button7" to="Popup" method="_on_Button_delete_pressed"]
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button8" to="Popup" method="_on_Button_send_all_tracking_events_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button9" to="Popup" method="_on_Button_sign_in_facebook_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button10" to="Popup" method="_on_Button_link_Facebook_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button11" to="Popup" method="_on_Button_unlink_Facebook_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button12" to="Popup" method="_on_Button_sign_out_pressed"]
