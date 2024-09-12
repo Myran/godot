@@ -34,3 +34,5 @@ export/ios/gametwo.xcworkspace/xcuserdata/mattiasmyhrman.xcuserdatad/UserInterfa
 editor/editor_data/export_templates/4.3.rc/ios.zip
 gradle/.build_version
 .idea/gametwo.iml
+.godot/shader_cache
+convertion/project

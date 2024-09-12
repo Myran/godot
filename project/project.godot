@@ -19,6 +19,8 @@ config/icon="res://assets/frame.png"
 
 auth="*res://firebase/auth.gd"
 facebook="*res://facebook/facebook.gd"
+debug="*res://autoloads/debug.gd"
+data_source="*res://autoloads/data_source.tscn"
 
 [display]
 
