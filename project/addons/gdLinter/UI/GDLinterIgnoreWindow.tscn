@@ -212,7 +212,7 @@ text = "Max Line Length"
 [node name="MixedTabsAndSpaces" type="CheckBox" parent="PanelContainer/TabContainer/Format/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Mixed Tabs And Spaces"
+text = "Mixed TabBar And Spaces"
 
 [node name="Misc" type="MarginContainer" parent="PanelContainer/TabContainer"]
 unique_name_in_owner = true
