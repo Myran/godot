@@ -140,5 +140,6 @@ create-release version:
 
 # Update MoltenVK ios
 update-moltenvk:
+    @echo "./fetchdepencies --ios needed on fresh build, not included...."
     cd extras/MoltenVK && make ios
     cp -R extras/MoltenVK/Package/Release/MoltenVK/static/MoltenVK.xcframework export/ios
