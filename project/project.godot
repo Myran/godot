@@ -19,8 +19,12 @@ config/icon="res://assets/frame.png"
 
 auth="*res://firebase/auth.gd"
 facebook="*res://facebook/facebook.gd"
-debug="*res://autoloads/debug.gd"
 data_source="*res://autoloads/data_source.tscn"
+rng="*res://seededRNGsingleton.gd"
+ui="*res://cardtest/ui.gd"
+core="*res://cardtest/core.gd"
+card_controller="*res://cardtest/card_controller.gd"
+debug="*res://autoloads/debug.tscn"
 
 [display]
 

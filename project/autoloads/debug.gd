@@ -12,7 +12,7 @@ enum DEBUG_EVENT_TYPE {EVENT_OPEN_DEBUG_MENU,EVENT_OPEN_GAME_SELECTOR,EVENT_RESE
 @export var use_local_battle_db = false
 #export (bool) var toggle_orientation = false
 #export (bool) var force_game_selector_at_start = false
-#export (int) var asset_variant = 0
+@export var asset_variant = 0
 
 
 

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4dasglnd56n5"]
+
+[ext_resource type="Script" path="res://autoloads/debug.gd" id="1_1eu6t"]
+
+[node name="debug" type="Node"]
+script = ExtResource("1_1eu6t")
+use_local_battle_db = true

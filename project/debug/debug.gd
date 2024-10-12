@@ -294,9 +294,9 @@ func _on_Button_sign_out_pressed():
 	auth.log_out_facebook()
 
 func _on_Button_get_all_info_pressed():
-	print("button: show all info")
-	%DebugRichTextLabel.text = str("Name: ",auth.user_name(),"\n","Email: ",auth.email(),"\n","uid: ",auth.uid(),"\n") #,"photourl: ",auth.avatar_url())
-	print("providers: ", _auth.providers())
+	print("button: show all info (Not implemented)")
+	#%DebugRichTextLabel.text = str("Name: ",auth.user_name(),"\n","Email: ",auth.email(),"\n","uid: ",auth.uid(),"\n") #,"photourl: ",auth.avatar_url())
+	#print("providers: ", auth.providers())
 func is_connected_to_facebook():
 	return check_provider_connection("facebook.com")
 func is_connected_to_apple():
