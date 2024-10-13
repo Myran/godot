@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://cardtest/clicker/brickSpecial01.png" type="Texture2D" id=1]
+[ext_resource path="res://cardtest/clicker/Block.gd" type="Script" id=2]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 32, 32 )
+
+[node name="Block" type="TouchScreenButton"]
+position = Vector2( -1, 0 )
+normal = ExtResource( 1 )
+shape = SubResource( 1 )
+script = ExtResource( 2 )
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="Tween_2" type="Tween" parent="."]

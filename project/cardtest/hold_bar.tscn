@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://cardtest/hold_button.tscn" type="PackedScene" id=1]
+[ext_resource path="res://cardtest/ui_bar_2.png" type="Texture2D" id=2]
+[ext_resource path="res://cardtest/hold_bar.gd" type="Script" id=3]
+
+[node name="hold_bar" type="NinePatchRect"]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -540.0
+offset_right = 540.0
+offset_bottom = 94.0
+texture = ExtResource( 2 )
+region_rect = Rect2( 0, 0, 701, 179 )
+patch_margin_left = 47
+patch_margin_top = 54
+patch_margin_right = 44
+patch_margin_bottom = 40
+script = ExtResource( 3 )
+
+[node name="h_box_container_buttons" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = 27.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 85
+alignment = 1
+
+[node name="hold_button_1" parent="h_box_container_buttons" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 67.0
+offset_top = 0.0
+offset_right = 188.0
+offset_bottom = 121.0
+
+[node name="hold_button_2" parent="h_box_container_buttons" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 273.0
+offset_top = 0.0
+offset_right = 394.0
+offset_bottom = 121.0
+
+[node name="hold_button_3" parent="h_box_container_buttons" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 479.0
+offset_top = 0.0
+offset_right = 600.0
+offset_bottom = 121.0
+
+[node name="hold_button_4" parent="h_box_container_buttons" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 685.0
+offset_top = 0.0
+offset_right = 806.0
+offset_bottom = 121.0
+
+[node name="hold_button_5" parent="h_box_container_buttons" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 891.0
+offset_top = 0.0
+offset_right = 1012.0
+offset_bottom = 121.0

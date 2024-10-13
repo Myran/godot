@@ -1,0 +1,36 @@
+extends ability
+class_name ability_troll
+var health_add
+var attack_add
+
+
+func _init(_health_add = 1,_attack_add = 1):
+	health_add = _health_add
+	attack_add = _attack_add
+
+func condition(_tempus,_u_pos,_u_side,_battle_context,_event):
+	return false
+func actions(_tempus,_u_pos,_u_side,_battle_context,_event):
+	pass
+
+func draft_condition(_tempus,_pos,_draft_context,event,_u):
+	if _tempus != "post":
+		return false
+	if event.solve_type != draft.SOLVE_TYPE.CORE:
+		return false
+	if event.event_type != core.EVENT_TYPE.LINEUP_ADD_CARD:
+		return false
+		
+	var added_card = event.data[0]
+	if added_card == _u:
+		return true
+	return false
+func draft_action(_tempus,_pos,_context,_event,_u):
+	var evil_count = 0
+	for i_pos in _context.lineup:
+		var _lineup_card = _context.lineup[i_pos]
+		if _lineup_card == _u:
+			continue
+		if _lineup_card.card_info.tribe.match("evil"):
+			evil_count = evil_count + 1
+	_context.add_event({solve_type = draft.SOLVE_TYPE.CORE,event_type = core.EVENT_TYPE.CARD_STAT_CHANGE,data = {"card" : _u, "health" : health_add * evil_count, "attack" : attack_add * evil_count}})

@@ -1,0 +1,295 @@
+[gd_scene load_steps=21 format=3 uid="uid://p3jcv583ul0m"]
+
+[ext_resource type="PackedScene" uid="uid://chct61d1ltevk" path="res://cardtest/canvas_layer_blur.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://cardtest/animator.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://be4xxw25pacvf" path="res://cardtest/holder_base.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://dhiyo0eu8i1md" path="res://cardtest/canvas_layer_unhandled_events.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://cardtest/canvas_layer_background.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://cardtest/card_4.tscn" id="6"]
+[ext_resource type="Script" path="res://cardtest/popup_card.gd" id="7"]
+[ext_resource type="Script" path="res://cardtest/recruit.gd" id="10"]
+[ext_resource type="Script" path="res://cardtest/popup_faction.gd" id="13"]
+[ext_resource type="PackedScene" uid="uid://du4fnkya6ut3g" path="res://cardtest/faction.tscn" id="14"]
+[ext_resource type="PackedScene" uid="uid://dcv3m1dhyg1ye" path="res://bottom_bar_prepare.tscn" id="24"]
+[ext_resource type="PackedScene" uid="uid://bp1by1h2xq2dr" path="res://bottom_bar_draft.tscn" id="26"]
+[ext_resource type="Script" path="res://zen/safe_zone.gd" id="30"]
+[ext_resource type="PackedScene" path="res://cardtest/canvas_layer_anim.tscn" id="31"]
+[ext_resource type="PackedScene" uid="uid://ghcbx8rl2fe4" path="res://cardtest/draft.tscn" id="33"]
+[ext_resource type="PackedScene" path="res://cardtest/canvas_layer_top_bar.tscn" id="36"]
+
+[sub_resource type="Animation" id="18"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="19"]
+resource_name = "blur"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(0.287175, 1),
+"update": 0,
+"values": [0.0, 3.0]
+}
+
+[sub_resource type="Animation" id="20"]
+resource_name = "unblur"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(0.233258, 0.287175),
+"update": 0,
+"values": [3.0, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_dhbtr"]
+_data = {
+"RESET": SubResource("18"),
+"blur": SubResource("19"),
+"unblur": SubResource("20")
+}
+
+[node name="recruit" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("10")
+
+[node name="canvas_layer_pop" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="popup_card" type="Control" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("7")
+card_popup = ExtResource("6")
+
+[node name="color_rect" type="ColorRect" parent="canvas_layer_pop/popup_card"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2000.0
+offset_top = -2000.0
+offset_right = 2000.0
+offset_bottom = 2000.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="popup_faction" type="Control" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("13")
+
+[node name="faction" parent="canvas_layer_pop/popup_faction" instance=ExtResource("14")]
+layout_mode = 1
+
+[node name="canvas_layer_top_bar" parent="." instance=ExtResource("36")]
+unique_name_in_owner = true
+layer = 3
+
+[node name="v_box_container" parent="canvas_layer_top_bar" index="0"]
+anchors_preset = 10
+offset_bottom = 4.0
+grow_horizontal = 2
+
+[node name="ui_bar_10" parent="canvas_layer_top_bar/v_box_container" index="0"]
+layout_mode = 2
+
+[node name="safe_zone_2" parent="canvas_layer_top_bar/v_box_container" index="1"]
+layout_mode = 2
+
+[node name="safe_zone" parent="canvas_layer_top_bar" index="1"]
+anchors_preset = 15
+
+[node name="ui_bar_9" parent="canvas_layer_top_bar/safe_zone" index="0"]
+layout_mode = 2
+
+[node name="canvas_layer_battle" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 3
+
+[node name="canvas_layer_game" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2
+
+[node name="safe_zone" type="MarginContainer" parent="canvas_layer_game"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("30")
+
+[node name="main_area" type="VBoxContainer" parent="canvas_layer_game/safe_zone"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="margin_container_top" type="MarginContainer" parent="canvas_layer_game/safe_zone/main_area"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="holder_enemy" parent="canvas_layer_game/safe_zone/main_area" groups=["anim"] instance=ExtResource("3")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 6
+texture = null
+
+[node name="animator" parent="canvas_layer_game/safe_zone/main_area/holder_enemy" instance=ExtResource("2")]
+anim_layer_name = "canvas_layer_anim_game"
+attach_point_name = "enemies"
+
+[node name="ally_container" type="VBoxContainer" parent="canvas_layer_game/safe_zone/main_area"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="holder_allies" parent="canvas_layer_game/safe_zone/main_area/ally_container" groups=["anim"] instance=ExtResource("3")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+mouse_filter = 2
+texture = null
+
+[node name="animator" parent="canvas_layer_game/safe_zone/main_area/ally_container/holder_allies" instance=ExtResource("2")]
+anim_layer_name = "canvas_layer_anim_game"
+attach_point_name = "allies"
+
+[node name="holder_draft" parent="canvas_layer_game/safe_zone/main_area/ally_container" groups=["anim"] instance=ExtResource("33")]
+unique_name_in_owner = true
+layout_mode = 2
+texture = null
+
+[node name="v_box_container" parent="canvas_layer_game/safe_zone/main_area/ally_container/holder_draft" index="0"]
+anchor_right = 0.0
+anchor_bottom = 0.0
+
+[node name="hold_bar" parent="canvas_layer_game/safe_zone/main_area/ally_container/holder_draft/v_box_container" index="0"]
+texture = null
+
+[node name="animator" parent="canvas_layer_game/safe_zone/main_area/ally_container/holder_draft" instance=ExtResource("2")]
+anim_layer_name = "canvas_layer_anim_game"
+attach_point_name = "allies"
+
+[node name="margin_container_bottom" type="MarginContainer" parent="canvas_layer_game/safe_zone/main_area"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="canvas_layer_anim_game" parent="." instance=ExtResource("31")]
+min_dist = 2.0
+
+[node name="attach_points" parent="canvas_layer_anim_game" index="0"]
+layout_mode = 3
+anchors_preset = 15
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="allies" type="Control" parent="canvas_layer_anim_game/attach_points" index="0"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = 340.0
+offset_right = 20.0
+offset_bottom = 380.0
+
+[node name="enemies" type="Control" parent="canvas_layer_anim_game/attach_points" index="1"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_top = -580.0
+offset_right = 20.0
+offset_bottom = -540.0
+
+[node name="default" parent="canvas_layer_anim_game/attach_points" index="2"]
+anchors_preset = 0
+
+[node name="canvas_layer_bottom_bar" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="bottom_bar_draft" parent="canvas_layer_bottom_bar" groups=["anim"] instance=ExtResource("26")]
+unique_name_in_owner = true
+texture = null
+
+[node name="bottom_bar_prepare" parent="canvas_layer_bottom_bar" groups=["anim"] instance=ExtResource("24")]
+unique_name_in_owner = true
+texture = null
+
+[node name="canvas_layer_background" parent="." instance=ExtResource("5")]
+unique_name_in_owner = true
+
+[node name="canvas_layer_blur" parent="." instance=ExtResource("1")]
+unique_name_in_owner = true
+layer = 4
+
+[node name="blur" parent="canvas_layer_blur" index="0"]
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="animation_player_blur" parent="canvas_layer_blur" index="1"]
+libraries = {
+"": SubResource("AnimationLibrary_dhbtr")
+}
+
+[node name="canvas_layer_unhandled_events" parent="." instance=ExtResource("4")]
+unique_name_in_owner = true
+
+[connection signal="visibility_changed" from="canvas_layer_pop/popup_card" to="canvas_layer_pop/popup_card" method="_on_popup_card_about_to_show"]
+[connection signal="visibility_changed" from="canvas_layer_pop/popup_faction" to="canvas_layer_pop/popup_faction" method="_on_popup_faction_about_to_show"]
+
+[editable path="canvas_layer_top_bar"]
+[editable path="canvas_layer_game/safe_zone/main_area/ally_container/holder_draft"]
+[editable path="canvas_layer_game/safe_zone/main_area/ally_container/holder_draft/v_box_container/draft_container"]
+[editable path="canvas_layer_anim_game"]
+[editable path="canvas_layer_blur"]

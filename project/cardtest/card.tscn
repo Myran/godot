@@ -1,0 +1,550 @@
+[gd_scene load_steps=19 format=2]
+
+[ext_resource path="res://cardtest/card_image_base.tscn" type="PackedScene" id=1]
+[ext_resource path="res://cardtest/dot.png" type="Texture2D" id=2]
+[ext_resource path="res://cardtest/panel_card.tres" type="StyleBox" id=3]
+[ext_resource path="res://cardtest/card.gd" type="Script" id=4]
+[ext_resource path="res://cardtest/font_card_title.tres" type="FontFile" id=5]
+[ext_resource path="res://cardtest/font_card_text.tres" type="FontFile" id=6]
+[ext_resource path="res://zen/safe_zone.tscn" type="PackedScene" id=7]
+[ext_resource path="res://cardtest/tag.tscn" type="PackedScene" id=8]
+
+[sub_resource type="Environment" id=6]
+background_mode = 4
+glow_enabled = true
+glow_blend_mode = 0
+glow_high_quality = true
+
+[sub_resource type="Animation" id=7]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:material:shader_param/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 1.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ true ]
+}
+tracks/2/type = "animation"
+tracks/2/path = NodePath("animation_player_float")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"clips": PackedStringArray( "RESET" ),
+"times": PackedFloat32Array( -0.1 )
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_rect:material:shader_param/vignette_intensity")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
+
+[sub_resource type="Animation" id=14]
+resource_name = "floating"
+length = 10.0
+loop = true
+tracks/0/type = "animation"
+tracks/0/path = NodePath("animation_player_float")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"clips": PackedStringArray( "floating" ),
+"times": PackedFloat32Array( 0 )
+}
+
+[sub_resource type="Animation" id=17]
+resource_name = "regular"
+length = 2.0
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:material:shader_param/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 1.9 ),
+"transitions": PackedFloat32Array( 1, 1 ),
+"update": 0,
+"values": [ 1.0, 0.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 1.9 ),
+"transitions": PackedFloat32Array( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/2/type = "animation"
+tracks/2/path = NodePath("animation_player_float")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = false
+tracks/2/keys = {
+"clips": PackedStringArray( "floating" ),
+"times": PackedFloat32Array( 0.2 )
+}
+
+[sub_resource type="Animation" id=8]
+resource_name = "reveal"
+length = 2.0
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:material:shader_param/progress")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.1 ),
+"transitions": PackedFloat32Array( 1, 1 ),
+"update": 0,
+"values": [ 1.0, 0.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.1 ),
+"transitions": PackedFloat32Array( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/2/type = "animation"
+tracks/2/path = NodePath("animation_player_float")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"clips": PackedStringArray( "show" ),
+"times": PackedFloat32Array( 0.2 )
+}
+
+[sub_resource type="Animation" id=11]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:material:shader_param/speed")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 1.0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_rect:material:shader_param/vignette_intensity")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 1.0 ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_image:material:shader_param/progress")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 1.0 ]
+}
+
+[sub_resource type="Animation" id=12]
+resource_name = "floating"
+length = 10.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:position:y")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 5, 10 ),
+"transitions": PackedFloat32Array( 1, 1, 1 ),
+"update": 0,
+"values": [ 0.0, -25.0, 0.0 ]
+}
+
+[sub_resource type="Animation" id=13]
+resource_name = "show"
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:self_modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:material:shader_param/strengthScale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = false
+tracks/1/keys = {
+"times": PackedFloat32Array( 0.001, 0.1 ),
+"transitions": PackedFloat32Array( 1, 1 ),
+"update": 0,
+"values": [ 0.0, 100.0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2/texture_rect:material:shader_param/vignette_intensity")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = false
+tracks/2/keys = {
+"times": PackedFloat32Array( 0, 0.1, 0.2 ),
+"transitions": PackedFloat32Array( 0.466516, 0.466516, 1 ),
+"update": 0,
+"values": [ 1.0, -0.3, 1.0 ]
+}
+
+[sub_resource type="Animation" id=15]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ) ]
+}
+
+[sub_resource type="Animation" id=16]
+resource_name = "fadein"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.5 ),
+"transitions": PackedFloat32Array( 0.267943, 0.435275 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.5 ),
+"transitions": PackedFloat32Array( 0.153894, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ), Vector2( 1, 1 ) ]
+}
+
+[node name="card" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+input_pass_on_modal_close_click = false
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 4 )
+
+[node name="safe_zone" parent="." instance=ExtResource( 7 )]
+
+[node name="v_box_container" type="VBoxContainer" parent="safe_zone"]
+offset_right = 1080.0
+offset_bottom = 1920.0
+mouse_filter = 2
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="panel_container" type="PanelContainer" parent="safe_zone/v_box_container"]
+offset_top = 16.0
+offset_right = 1080.0
+offset_bottom = 310.0
+mouse_filter = 1
+size_flags_horizontal = 5
+size_flags_vertical = 6
+theme_override_styles/panel = ExtResource( 3 )
+
+[node name="label" type="Label" parent="safe_zone/v_box_container/panel_container"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 1060.0
+offset_bottom = 274.0
+size_flags_horizontal = 5
+theme_override_colors/font_color = Color( 0.835294, 0.835294, 0.835294, 1 )
+theme_override_fonts/font = ExtResource( 5 )
+text = "Belathiel, Corrupted Beastmaster"
+align = 1
+valign = 1
+autowrap = true
+uppercase = true
+
+[node name="button_close" type="TextureButton" parent="safe_zone/v_box_container/panel_container"]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 1060.0
+offset_bottom = 274.0
+texture_normal = ExtResource( 2 )
+expand = true
+
+[node name="card_image_base" parent="safe_zone/v_box_container" instance=ExtResource( 1 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 354.0
+offset_right = 1080.0
+offset_bottom = 1566.0
+custom_minimum_size = Vector2( 1080, 1212 )
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 6
+
+[node name="v_box_container" parent="safe_zone/v_box_container/card_image_base" index="0"]
+mouse_filter = 2
+
+[node name="texture_image_2" parent="safe_zone/v_box_container/card_image_base/v_box_container" index="0"]
+self_modulate = Color( 1, 1, 1, 0 )
+pivot_offset = Vector2( 540, 512 )
+mouse_filter = 2
+
+[node name="texture_rect" parent="safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2" index="0"]
+mouse_filter = 2
+
+[node name="texture_image" parent="safe_zone/v_box_container/card_image_base/v_box_container/texture_image_2" index="1"]
+mouse_filter = 2
+
+[node name="v_box_container" type="VBoxContainer" parent="safe_zone/v_box_container"]
+offset_top = 1608.0
+offset_right = 1080.0
+offset_bottom = 1920.0
+size_flags_vertical = 10
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="margin_container" type="MarginContainer" parent="safe_zone/v_box_container/v_box_container"]
+offset_right = 1080.0
+offset_bottom = 54.0
+mouse_filter = 1
+theme_override_constants/margin_bottom = 54
+
+[node name="panel_container_2" type="PanelContainer" parent="safe_zone/v_box_container/v_box_container"]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_top = 74.0
+offset_right = 1080.0
+offset_bottom = 183.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+size_flags_horizontal = 5
+size_flags_vertical = 4
+theme_override_styles/panel = ExtResource( 3 )
+
+[node name="label" type="Label" parent="safe_zone/v_box_container/v_box_container/panel_container_2"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 1060.0
+offset_bottom = 89.0
+size_flags_horizontal = 5
+theme_override_colors/font_color = Color( 0.823529, 0.823529, 0.823529, 1 )
+theme_override_fonts/font = ExtResource( 6 )
+text = "Gain +1 / +1 when any Beast upgrade "
+align = 1
+valign = 1
+autowrap = true
+
+[node name="h_box_container" type="HBoxContainer" parent="safe_zone/v_box_container/v_box_container"]
+offset_top = 203.0
+offset_right = 1080.0
+offset_bottom = 312.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 5
+size_flags_vertical = 4
+alignment = 1
+
+[node name="panel_container_3" type="PanelContainer" parent="safe_zone/v_box_container/v_box_container/h_box_container"]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = 142.0
+offset_right = 318.0
+offset_bottom = 109.0
+mouse_filter = 1
+size_flags_horizontal = 0
+size_flags_vertical = 5
+theme_override_styles/panel = ExtResource( 3 )
+
+[node name="label" type="Label" parent="safe_zone/v_box_container/v_box_container/h_box_container/panel_container_3"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 156.0
+offset_bottom = 89.0
+size_flags_horizontal = 4
+size_flags_vertical = 5
+theme_override_colors/font_color = Color( 0.823529, 0.823529, 0.823529, 1 )
+theme_override_fonts/font = ExtResource( 6 )
+text = "Human"
+align = 1
+valign = 1
+
+[node name="panel_container_5" type="PanelContainer" parent="safe_zone/v_box_container/v_box_container/h_box_container"]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = 326.0
+offset_right = 508.0
+offset_bottom = 109.0
+mouse_filter = 1
+size_flags_horizontal = 0
+size_flags_vertical = 5
+theme_override_styles/panel = ExtResource( 3 )
+
+[node name="label" type="Label" parent="safe_zone/v_box_container/v_box_container/h_box_container/panel_container_5"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 162.0
+offset_bottom = 89.0
+size_flags_horizontal = 4
+size_flags_vertical = 5
+theme_override_colors/font_color = Color( 0.823529, 0.823529, 0.823529, 1 )
+theme_override_fonts/font = ExtResource( 6 )
+text = "Corrupt"
+align = 1
+valign = 1
+
+[node name="panel_container_4" type="PanelContainer" parent="safe_zone/v_box_container/v_box_container/h_box_container"]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = 516.0
+offset_right = 682.0
+offset_bottom = 109.0
+mouse_filter = 1
+size_flags_horizontal = 0
+size_flags_vertical = 5
+theme_override_styles/panel = ExtResource( 3 )
+
+[node name="label" type="Label" parent="safe_zone/v_box_container/v_box_container/h_box_container/panel_container_4"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 146.0
+offset_bottom = 89.0
+size_flags_horizontal = 4
+size_flags_vertical = 5
+theme_override_colors/font_color = Color( 0.823529, 0.823529, 0.823529, 1 )
+theme_override_fonts/font = ExtResource( 6 )
+text = "Nature"
+align = 1
+valign = 1
+
+[node name="tag" parent="safe_zone/v_box_container/v_box_container/h_box_container" instance=ExtResource( 8 )]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = 690.0
+offset_right = 937.0
+mouse_filter = 1
+
+[node name="label" parent="safe_zone/v_box_container/v_box_container/h_box_container/tag" index="0"]
+offset_right = 227.0
+text = "Beastmaster"
+
+[node name="button" parent="safe_zone/v_box_container/v_box_container/h_box_container/tag" index="1"]
+offset_right = 227.0
+
+[node name="world_environment" type="WorldEnvironment" parent="."]
+environment = SubResource( 6 )
+
+[node name="animation_player_beam" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 7 )
+anims/floating = SubResource( 14 )
+anims/regular = SubResource( 17 )
+anims/reveal = SubResource( 8 )
+next/floating = "floating"
+
+[node name="animation_player_float" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 11 )
+anims/floating = SubResource( 12 )
+anims/show = SubResource( 13 )
+next/show = "floating"
+
+[node name="animation_player_fadein" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 15 )
+anims/fadein = SubResource( 16 )
+
+[editable path="safe_zone/v_box_container/card_image_base"]
+[editable path="safe_zone/v_box_container/v_box_container/h_box_container/tag"]

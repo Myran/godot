@@ -1,0 +1,221 @@
+[gd_scene load_steps=13 format=2]
+
+[ext_resource path="res://cardtest/vignette.tscn" type="PackedScene" id=1]
+[ext_resource path="res://cardtest/card_image.tscn" type="PackedScene" id=2]
+[ext_resource path="res://cardtest/card_frame.tscn" type="PackedScene" id=3]
+[ext_resource path="res://zen/safe_zone.tscn" type="PackedScene" id=4]
+[ext_resource path="res://cardtest/card.gd" type="Script" id=5]
+[ext_resource path="res://cardtest/card_info_full.tscn" type="PackedScene" id=6]
+[ext_resource path="res://cardtest/test_image_1.png" type="Texture2D" id=7]
+
+[sub_resource type="Shader" id=11]
+code = "shader_type canvas_item;
+
+uniform float vignette_intensity = 0.4;
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D mask;
+
+float vignette(vec2 uv){
+	uv *= 1.0 - uv.xy;
+	float vignette = uv.x * uv.y * 15.0;
+	return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment(){
+	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec4 text = texture(TEXTURE, UV);
+	
+	text.rgba *= (vignette_rgb.rgba);
+	text.rgba *= (1.0 - vignette(UV));
+	
+	vec4 mask_color = texture(mask, UV).rgba;
+	if (mask_color.a == 0.0)
+	{
+		text.a = 0.0;
+	}
+	COLOR = vec4((text.rgb)*color.rgb,text.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id=15]
+shader = SubResource( 11 )
+shader_param/vignette_intensity = 1.0
+shader_param/vignette_opacity = 1.0
+shader_param/vignette_rgb = Color( 0, 0, 0, 1 )
+shader_param/mask = ExtResource( 7 )
+
+[sub_resource type="Environment" id=6]
+background_mode = 4
+glow_enabled = true
+glow_blend_mode = 0
+glow_high_quality = true
+
+[sub_resource type="Animation" id=13]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 1 ) ]
+}
+
+[sub_resource type="Animation" id=14]
+resource_name = "scale_up"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("safe_zone:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.329877, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ), Vector2( 1, 1 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("safe_zone:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.353553, 1 ),
+"update": 0,
+"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+}
+
+[node name="card" type="AspectRatioContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -170.0
+offset_right = 171.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+input_pass_on_modal_close_click = false
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch_mode = 3
+script = ExtResource( 5 )
+
+[node name="safe_zone" parent="." instance=ExtResource( 4 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = -249.5
+offset_right = 1670.5
+offset_bottom = 1920.0
+pivot_offset = Vector2( 1024, 1024 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_right = 150
+theme_override_constants/margin_top = 150
+theme_override_constants/margin_left = 150
+theme_override_constants/margin_bottom = 150
+
+[node name="card_image" parent="safe_zone" instance=ExtResource( 2 )]
+offset_left = 150.0
+offset_top = 150.0
+offset_right = 1770.0
+offset_bottom = 1770.0
+texture = ExtResource( 7 )
+stretch_mode = 6
+
+[node name="frame" parent="safe_zone" instance=ExtResource( 3 )]
+visible = false
+offset_left = 150.0
+offset_top = 150.0
+offset_right = 1770.0
+offset_bottom = 1770.0
+stretch_mode = 6
+
+[node name="vignette" parent="safe_zone" instance=ExtResource( 1 )]
+material = SubResource( 15 )
+offset_left = 150.0
+offset_top = 150.0
+offset_right = 1770.0
+offset_bottom = 1770.0
+
+[node name="card_info" parent="safe_zone" instance=ExtResource( 6 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 401.0
+offset_top = 1269.0
+offset_right = 1518.0
+offset_bottom = 1770.0
+size_flags_horizontal = 4
+__meta__ = {
+"_edit_use_anchors_": true
+}
+
+[node name="panel_name" parent="safe_zone/card_info" index="0"]
+offset_left = 14.0
+offset_top = 0.0
+offset_right = 1102.0
+offset_bottom = 180.0
+
+[node name="tags" parent="safe_zone/card_info" index="2"]
+offset_left = 138.0
+offset_top = 140.0
+offset_right = 978.0
+offset_bottom = 239.0
+
+[node name="stats" parent="safe_zone/card_info" index="3"]
+offset_left = 0.0
+offset_top = 199.0
+offset_right = 1117.0
+offset_bottom = 441.0
+
+[node name="margin_container_bottom" parent="safe_zone/card_info" index="4"]
+offset_top = 401.0
+offset_right = 1117.0
+offset_bottom = 501.0
+theme_override_constants/margin_bottom = 100
+
+[node name="center_container" type="CenterContainer" parent="."]
+offset_left = -249.5
+offset_right = 1670.5
+offset_bottom = 1920.0
+mouse_filter = 2
+
+[node name="button" type="Button" parent="."]
+self_modulate = Color( 1, 1, 1, 0 )
+offset_left = -249.5
+offset_right = 1670.5
+offset_bottom = 1920.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="world_environment" type="WorldEnvironment" parent="."]
+environment = SubResource( 6 )
+
+[node name="animation_player" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 13 )
+anims/scale_up = SubResource( 14 )
+
+[connection signal="pressed" from="button" to="." method="_on_button_pressed"]
+
+[editable path="safe_zone/card_info"]

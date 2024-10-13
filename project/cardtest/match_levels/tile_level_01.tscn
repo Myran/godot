@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://cardtest/clicker/tileset_test2.res" type="TileSet" id=1]
+
+[node name="TileMap" type="TileMap"]
+position = Vector2( 105, 119 )
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 210, 238 )
+cell_custom_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+cell_tile_origin = 1
+compatibility_mode = true
+centered_textures = true
+format = 1
+tile_data = PackedInt32Array( 0, 6, 0, 1, 6, 0, 2, 6, 0, 3, 6, 0, 4, 6, 0, 65536, 4, 0, 65537, 1, 0, 65538, 0, 0, 65539, 1, 0, 65540, 4, 0, 131072, 4, 0, 131073, 2, 0, 131074, 0, 0, 131075, 2, 0, 131076, 4, 0, 196608, 6, 0, 196609, 3, 0, 196610, 6, 0, 196611, 3, 0, 196612, 6, 0 )

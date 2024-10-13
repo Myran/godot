@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="level_factory" load_steps=8 format=3 uid="uid://b4fke525yywsh"]
+
+[ext_resource type="Script" path="res://level_factory.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://i0smf7jo8623" path="res://draft_levels/draft_level_0.tscn" id="2_36hps"]
+[ext_resource type="PackedScene" path="res://cardtest/match_levels/tile_level_01.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://cardtest/match_levels/tile_level_02.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://cardtest/match_levels/tile_level_03.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://cardtest/match_levels/tile_level_04.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://cardtest/match_levels/tile_level_05.tscn" id="7"]
+
+[resource]
+script = ExtResource("1")
+tilemap_levels = {
+"default": ExtResource("2_36hps"),
+"level_01": ExtResource("3"),
+"level_02": ExtResource("4"),
+"level_03": ExtResource("5"),
+"level_04": ExtResource("6"),
+"level_05": ExtResource("7"),
+"tile_level_04": null
+}

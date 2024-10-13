@@ -1,0 +1,19 @@
+[gd_resource type="Shader" format=2]
+
+[resource]
+code = "shader_type canvas_item;
+render_mode skip_vertex_transform, unshaded;
+
+uniform vec2 offset = vec2(0.,128.);
+varying flat vec4 color;
+
+void vertex() {
+	VERTEX = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy + offset;
+	color = COLOR;
+}
+
+void fragment() {
+	float a = texture(TEXTURE, UV).a;
+	COLOR.rgb = color.rgb;
+	COLOR.a = color.a * a;
+}"

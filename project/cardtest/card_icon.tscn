@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://cardtest/frame_icon.png" type="Texture2D" id=1]
+[ext_resource path="res://cardtest/card_image_small_base.tscn" type="PackedScene" id=4]
+
+[node name="sprite" type="Sprite2D" groups=["card"]]
+position = Vector2( 186, 241 )
+scale = Vector2( 0.35, 0.35 )
+texture = ExtResource( 1 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="card_image_base" parent="." instance=ExtResource( 4 )]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -282.0
+offset_top = -282.0
+offset_right = -282.0
+offset_bottom = -282.0

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://cardtest/animator.gd" type="Script" id=1]
+
+[node name="animator" type="Node" groups=["animator"]]
+script = ExtResource( 1 )

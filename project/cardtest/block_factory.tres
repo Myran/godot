@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="block_factory" load_steps=15 format=3 uid="uid://034uyxaore0y"]
+
+[ext_resource type="Script" path="res://cardtest/block_factory.gd" id="1"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_upgrade_2.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_upgrade_3.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_upgrade_1.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block1.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block2.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block3.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/BlockEmpty.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block4.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_card.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_locked.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_item.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_passtrough.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://cardtest/clicker/Block_nospace.tscn" id="14"]
+
+[resource]
+script = ExtResource("1")
+upgrade_blocks = [ExtResource("4"), ExtResource("2"), ExtResource("3")]
+blockTypes = [ExtResource("8"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("9"), ExtResource("10")]
+locked_block_scene = ExtResource("11")
+nospace_block_scene = ExtResource("14")
+passtrough_block_scene = ExtResource("13")
+item_block_scene = ExtResource("12")

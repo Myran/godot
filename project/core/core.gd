@@ -1,5 +1,5 @@
 extends Control 
-class_name draft
+#class_name draft
 
 @onready var card_pop = get_node("%popup_card")
 @onready var faction_pop = get_node("%popup_faction")
@@ -49,6 +49,7 @@ var current_battle
 var last_touch_pos = null
 var _seed = 1
 func _ready():
+	await data_source.activate_card_cache()
 	rng.seededRNG.reset(_seed)
 	holder_draft.setup()
 	set_gamestate(core.GAME_STATE.START)

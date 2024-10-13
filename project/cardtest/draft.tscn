@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3 uid="uid://ghcbx8rl2fe4"]
+
+[ext_resource type="PackedScene" uid="uid://cr5eu45tpbwcl" path="res://cardtest/draft_container.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://cardtest/hold_bar.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://cardtest/ui_bar_2.png" id="3"]
+[ext_resource type="Script" path="res://cardtest/draft.gd" id="4"]
+
+[node name="draft" type="NinePatchRect"]
+self_modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(1080, 1130)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -540.0
+offset_top = -140.0
+offset_right = 540.0
+offset_bottom = 960.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("3")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 47
+patch_margin_top = 54
+patch_margin_right = 44
+patch_margin_bottom = 40
+script = ExtResource("4")
+
+[node name="v_box_container" type="VBoxContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+alignment = 2
+
+[node name="hold_bar" parent="v_box_container" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+
+[node name="margin_container" type="MarginContainer" parent="v_box_container"]
+layout_mode = 2
+
+[node name="draft_container" parent="v_box_container" instance=ExtResource("1")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="margin_container_2" type="MarginContainer" parent="v_box_container"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+mouse_filter = 2

@@ -22,7 +22,7 @@
 [ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://cardtest/test_board_pattern_3.png" id="18_prbo0"]
 [ext_resource type="Script" path="res://cardtest/holder_base.gd" id="19_3dmvw"]
 [ext_resource type="PackedScene" path="res://cardtest/grid_pos.tscn" id="20_hocuu"]
-[ext_resource type="PackedScene" path="res://bottom_bar_draft.tscn" id="23_cgod3"]
+[ext_resource type="PackedScene" uid="uid://bp1by1h2xq2dr" path="res://bottom_bar_draft.tscn" id="23_cgod3"]
 [ext_resource type="Script" path="res://cardtest/canvas_ui_anim_layer.gd" id="24_b1kph"]
 [ext_resource type="PackedScene" uid="uid://dcv3m1dhyg1ye" path="res://bottom_bar_prepare.tscn" id="24_fhaw5"]
 [ext_resource type="Script" path="res://cardtest/canvas_layer_unhandled_events.gd" id="26_7xkfu"]
@@ -663,7 +663,6 @@ size_flags_vertical = 4
 [node name="CanvasLayer_bottom_bar" type="CanvasLayer" parent="."]
 
 [node name="bottom_bar_draft" parent="CanvasLayer_bottom_bar" instance=ExtResource("23_cgod3")]
-anchors_preset = 12
 
 [node name="bottom_bar_prepare" parent="CanvasLayer_bottom_bar" instance=ExtResource("24_fhaw5")]
 

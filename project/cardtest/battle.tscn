@@ -1,0 +1,676 @@
+[gd_scene load_steps=39 format=2]
+
+[ext_resource path="res://cardtest/icon_test_7.png" type="Texture2D" id=1]
+[ext_resource path="res://cardtest/icon_test_13.png" type="Texture2D" id=2]
+[ext_resource path="res://cardtest/icon_test_11.png" type="Texture2D" id=3]
+[ext_resource path="res://cardtest/icon_test_12.png" type="Texture2D" id=4]
+[ext_resource path="res://cardtest/icon_test_9.png" type="Texture2D" id=5]
+[ext_resource path="res://cardtest/icon_test_1.png" type="Texture2D" id=6]
+[ext_resource path="res://cardtest/icon_test_8.png" type="Texture2D" id=7]
+[ext_resource path="res://cardtest/icon_test_2.png" type="Texture2D" id=8]
+[ext_resource path="res://cardtest/icon_test_4.png" type="Texture2D" id=9]
+[ext_resource path="res://cardtest/popup_card.gd" type="Script" id=10]
+[ext_resource path="res://cardtest/location_3.png" type="Texture2D" id=11]
+[ext_resource path="res://cardtest/icon_test_10.png" type="Texture2D" id=12]
+[ext_resource path="res://cardtest/icon_test_5.png" type="Texture2D" id=13]
+[ext_resource path="res://cardtest/icon_test_6.png" type="Texture2D" id=14]
+[ext_resource path="res://cardtest/unittest.png" type="Texture2D" id=15]
+[ext_resource path="res://cardtest/recruit.gd" type="Script" id=16]
+[ext_resource path="res://cardtest/card_image_0_15.png" type="Texture2D" id=17]
+[ext_resource path="res://cardtest/card_image_0_13.png" type="Texture2D" id=18]
+[ext_resource path="res://cardtest/card_image_0_12.png" type="Texture2D" id=19]
+[ext_resource path="res://cardtest/card_image_0_14.png" type="Texture2D" id=20]
+[ext_resource path="res://cardtest/popup_faction.gd" type="Script" id=21]
+[ext_resource path="res://cardtest/icon_test_3.png" type="Texture2D" id=22]
+[ext_resource path="res://zen/blur.tscn" type="PackedScene" id=23]
+[ext_resource path="res://cardtest/card_image_0_4.png" type="Texture2D" id=24]
+[ext_resource path="res://cardtest/faction.tscn" type="PackedScene" id=25]
+[ext_resource path="res://cardtest/card_icon.tscn" type="PackedScene" id=26]
+[ext_resource path="res://cardtest/card_2.tscn" type="PackedScene" id=27]
+[ext_resource path="res://cardtest/card_image_0_9.png" type="Texture2D" id=28]
+[ext_resource path="res://cardtest/card_image_0_6.png" type="Texture2D" id=29]
+[ext_resource path="res://cardtest/card_image_0_16.png" type="Texture2D" id=30]
+[ext_resource path="res://cardtest/card_image_0_10.png" type="Texture2D" id=31]
+[ext_resource path="res://cardtest/image 14.png" type="Texture2D" id=32]
+[ext_resource path="res://cardtest/card_image_0_1.png" type="Texture2D" id=33]
+
+[sub_resource type="Animation" id=1]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("../../canvas_layer/blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../../canvas_layer/background_color:color")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=2]
+resource_name = "blur"
+length = 0.25
+tracks/0/type = "value"
+tracks/0/path = NodePath("../../canvas_layer/blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.164938, 0.0669859 ),
+"update": 0,
+"values": [ 0.0, 3.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../../canvas_layer/background_color:color")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.267943, 0.066986 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 0.470588 ) ]
+}
+
+[sub_resource type="Animation" id=17]
+resource_name = "unblur"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath("../../canvas_layer/blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.1 ),
+"transitions": PackedFloat32Array( 0.0669859, 0.164938 ),
+"update": 0,
+"values": [ 3.0, 0.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../../canvas_layer/background_color:color")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.1 ),
+"transitions": PackedFloat32Array( 0.066986, 0.267943 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0.470588 ), Color( 0, 0, 0, 0 ) ]
+}
+
+[sub_resource type="Shader" id=15]
+code = "shader_type canvas_item;
+
+uniform float vignette_intensity = 0.4;
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D mask;
+
+float vignette(vec2 uv){
+	uv *= 1.0 - uv.xy;
+	float vignette = uv.x * uv.y * 15.0;
+	return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment(){
+	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec4 text = texture(TEXTURE, UV);
+	
+	text.rgba *= (vignette_rgb.rgba);
+	text.rgba *= (1.0 - vignette(UV));
+	
+	vec4 mask_color = texture(mask, UV).rgba;
+	if (mask_color.a == 0.0)
+	{
+		text.a = 0.0;
+	}
+	COLOR = vec4((text.rgb)*color.rgb,text.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id=16]
+shader = SubResource( 15 )
+shader_param/vignette_intensity = 3.0
+shader_param/vignette_opacity = 0.139
+shader_param/vignette_rgb = Color( 0, 0, 0, 1 )
+
+[node name="recruit" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 16 )
+__meta__ = {
+"_edit_horizontal_guides_": [  ],
+"_edit_vertical_guides_": [  ]
+}
+
+[node name="animation_player_blur" type="AnimationPlayer" parent="."]
+root_node = NodePath("../canvas_layer_pop/popup_card")
+anims/RESET = SubResource( 1 )
+anims/blur = SubResource( 2 )
+anims/unblur = SubResource( 17 )
+
+[node name="canvas_layer" type="CanvasLayer" parent="."]
+
+[node name="blur" parent="canvas_layer" instance=ExtResource( 23 )]
+
+[node name="background_color" type="ColorRect" parent="canvas_layer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0, 0, 0, 0 )
+
+[node name="canvas_layer_pop" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="popup_card" type="Popup" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -540.0
+offset_top = -960.0
+offset_right = 540.0
+offset_bottom = 960.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 10 )
+
+[node name="card_2" parent="canvas_layer_pop/popup_card" instance=ExtResource( 27 )]
+
+[node name="safe_zone" parent="canvas_layer_pop/popup_card/card_2" index="0"]
+offset_left = -420.0
+offset_right = 1500.0
+
+[node name="card_info" parent="canvas_layer_pop/popup_card/card_2/safe_zone" index="3"]
+offset_top = 1687.0
+
+[node name="stat_container" parent="canvas_layer_pop/popup_card/card_2/safe_zone/card_info/stats/panel_container/margin_container" index="0"]
+offset_left = 510.0
+offset_right = 646.0
+
+[node name="center_container" parent="canvas_layer_pop/popup_card/card_2" index="1"]
+offset_left = -420.0
+offset_right = 1500.0
+
+[node name="button" parent="canvas_layer_pop/popup_card/card_2" index="2"]
+offset_left = -420.0
+offset_right = 1500.0
+
+[node name="popup_faction" type="Popup" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 21 )
+
+[node name="faction" parent="canvas_layer_pop/popup_faction" instance=ExtResource( 25 )]
+
+[node name="texture_rect" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 11 )
+stretch_mode = 7
+
+[node name="texture_rect_2" type="TextureRect" parent="."]
+material = SubResource( 16 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 11 )
+expand = true
+
+[node name="sprite" parent="." instance=ExtResource( 26 )]
+position = Vector2( 543, 1215 )
+
+[node name="card_image" parent="sprite/card_image_base" index="0"]
+texture = ExtResource( 31 )
+
+[node name="sprite_2" parent="." instance=ExtResource( 26 )]
+position = Vector2( 339.18, 1003.12 )
+
+[node name="card_image" parent="sprite_2/card_image_base" index="0"]
+texture = ExtResource( 18 )
+
+[node name="sprite_3" parent="." instance=ExtResource( 26 )]
+position = Vector2( -434.94, 469 )
+
+[node name="sprite_4" parent="." instance=ExtResource( 26 )]
+position = Vector2( 760.18, 998.12 )
+
+[node name="card_image" parent="sprite_4/card_image_base" index="0"]
+texture = ExtResource( 32 )
+
+[node name="sprite_5" parent="." instance=ExtResource( 26 )]
+position = Vector2( 543.06, 1633 )
+
+[node name="card_image" parent="sprite_5/card_image_base" index="0"]
+texture = ExtResource( 24 )
+
+[node name="sprite_6" parent="." instance=ExtResource( 26 )]
+position = Vector2( 2100.12, -5.93999 )
+
+[node name="sprite_7" parent="." instance=ExtResource( 26 )]
+position = Vector2( 961.06, 1215 )
+
+[node name="card_image" parent="sprite_7/card_image_base" index="0"]
+texture = ExtResource( 19 )
+
+[node name="sprite_8" parent="." instance=ExtResource( 26 )]
+position = Vector2( 132.06, 1005 )
+
+[node name="card_image" parent="sprite_8/card_image_base" index="0"]
+texture = ExtResource( 17 )
+
+[node name="sprite_9" parent="." instance=ExtResource( 26 )]
+position = Vector2( 1880.12, 785.06 )
+
+[node name="sprite_10" parent="." instance=ExtResource( 26 )]
+position = Vector2( 339.06, 1215 )
+
+[node name="sprite_11" parent="." instance=ExtResource( 26 )]
+position = Vector2( -243.94, 229 )
+
+[node name="sprite_12" parent="." instance=ExtResource( 26 )]
+position = Vector2( 756.06, 1424 )
+
+[node name="sprite_13" parent="." instance=ExtResource( 26 )]
+position = Vector2( 2378.12, 223.06 )
+
+[node name="sprite_14" parent="." instance=ExtResource( 26 )]
+position = Vector2( 125.06, 1432 )
+
+[node name="card_image" parent="sprite_14/card_image_base" index="0"]
+texture = ExtResource( 28 )
+
+[node name="sprite_15" parent="." instance=ExtResource( 26 )]
+position = Vector2( 755.06, 1215 )
+
+[node name="card_image" parent="sprite_15/card_image_base" index="0"]
+texture = ExtResource( 20 )
+
+[node name="sprite_16" parent="." instance=ExtResource( 26 )]
+position = Vector2( 333.06, 1430 )
+
+[node name="card_image" parent="sprite_16/card_image_base" index="0"]
+texture = ExtResource( 29 )
+
+[node name="sprite_17" parent="." instance=ExtResource( 26 )]
+position = Vector2( 329.06, 1634 )
+
+[node name="card_image" parent="sprite_17/card_image_base" index="0"]
+texture = ExtResource( 33 )
+
+[node name="sprite_18" parent="." instance=ExtResource( 26 )]
+position = Vector2( 2375.12, 959.06 )
+
+[node name="sprite_19" parent="." instance=ExtResource( 26 )]
+position = Vector2( 2266.12, 467.06 )
+
+[node name="sprite_20" parent="." instance=ExtResource( 26 )]
+position = Vector2( 958.06, 1630 )
+
+[node name="card_image" parent="sprite_20/card_image_base" index="0"]
+texture = ExtResource( 30 )
+
+[node name="sprite_21" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1583, 1478 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_22" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1281, 1474 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_23" parent="." instance=ExtResource( 26 )]
+position = Vector2( -990, 1474 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_24" parent="." instance=ExtResource( 26 )]
+position = Vector2( 1455.06, 1334 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_25" parent="." instance=ExtResource( 26 )]
+position = Vector2( 1887.12, 1412.06 )
+
+[node name="sprite_26" parent="." instance=ExtResource( 26 )]
+position = Vector2( -988, 1795 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_27" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1599, 1795 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_28" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1292.06, 1795 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_32" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1370.88, 491.06 )
+
+[node name="sprite_33" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1570.94, 491 )
+
+[node name="sprite_34" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1767.82, 491.06 )
+
+[node name="sprite_35" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1967.88, 491 )
+
+[node name="sprite_36" parent="." instance=ExtResource( 26 )]
+position = Vector2( -2166.94, 491 )
+
+[node name="sprite_37" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1370.88, 276.12 )
+
+[node name="sprite_38" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1570.94, 276.06 )
+
+[node name="sprite_39" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1767.82, 276.12 )
+
+[node name="sprite_40" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1967.88, 276.06 )
+
+[node name="sprite_41" parent="." instance=ExtResource( 26 )]
+position = Vector2( -2166.94, 276.06 )
+
+[node name="sprite_31" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1583, 2376 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_52" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1281, 2372 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_53" parent="." instance=ExtResource( 26 )]
+position = Vector2( -990, 2372 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_54" parent="." instance=ExtResource( 26 )]
+position = Vector2( -988, 2693 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_55" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1599, 2693 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_56" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1292.06, 2693 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_57" parent="." instance=ExtResource( 26 )]
+position = Vector2( 929.12, 386.06 )
+
+[node name="sprite_58" parent="." instance=ExtResource( 26 )]
+position = Vector2( 729.06, 386 )
+
+[node name="sprite_59" parent="." instance=ExtResource( 26 )]
+position = Vector2( 532.18, 386.06 )
+
+[node name="sprite_60" parent="." instance=ExtResource( 26 )]
+position = Vector2( 332.12, 386 )
+
+[node name="sprite_61" parent="." instance=ExtResource( 26 )]
+position = Vector2( 133.06, 386 )
+
+[node name="sprite_62" parent="." instance=ExtResource( 26 )]
+position = Vector2( 929.12, 171.12 )
+
+[node name="sprite_63" parent="." instance=ExtResource( 26 )]
+position = Vector2( 729.06, 171.06 )
+
+[node name="sprite_64" parent="." instance=ExtResource( 26 )]
+position = Vector2( 532.18, 171.12 )
+
+[node name="sprite_65" parent="." instance=ExtResource( 26 )]
+position = Vector2( 332.12, 171.06 )
+
+[node name="sprite_66" parent="." instance=ExtResource( 26 )]
+position = Vector2( 133.06, 171.06 )
+
+[node name="sprite_42" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1370.88, 68.06 )
+
+[node name="sprite_43" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1570.94, 68.0001 )
+
+[node name="sprite_44" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1767.82, 68.06 )
+
+[node name="sprite_45" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1967.88, 68.0001 )
+
+[node name="sprite_46" parent="." instance=ExtResource( 26 )]
+position = Vector2( -2166.94, 68.0001 )
+
+[node name="sprite_47" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1370.88, -146.88 )
+
+[node name="sprite_48" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1570.94, -146.94 )
+
+[node name="sprite_49" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1767.82, -146.88 )
+
+[node name="sprite_50" parent="." instance=ExtResource( 26 )]
+position = Vector2( -1967.88, -146.94 )
+
+[node name="sprite_51" parent="." instance=ExtResource( 26 )]
+position = Vector2( -2166.94, -146.94 )
+
+[node name="sprite_29" parent="." instance=ExtResource( 26 )]
+position = Vector2( 1390, 1741 )
+
+[node name="sprite_30" parent="." instance=ExtResource( 26 )]
+position = Vector2( 1890.06, 1624.06 )
+
+[node name="all_icon_button" type="TextureButton" parent="."]
+self_modulate = Color( 1, 1, 1, 0 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = 10.0
+texture_normal = ExtResource( 15 )
+expand = true
+stretch_mode = 5
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="icon_test_1" type="Sprite2D" parent="."]
+position = Vector2( -719, 784 )
+texture = ExtResource( 6 )
+
+[node name="icon_test_3" type="Sprite2D" parent="."]
+position = Vector2( -957, 791 )
+texture = ExtResource( 22 )
+
+[node name="icon_test_1" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 59, -455 )
+texture = ExtResource( 6 )
+
+[node name="icon_test_2" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1090, 423 )
+texture = ExtResource( 8 )
+
+[node name="icon_test_3" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1500, 642 )
+texture = ExtResource( 22 )
+
+[node name="icon_test_4" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 352, -646 )
+texture = ExtResource( 9 )
+
+[node name="icon_test_5" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1083, 843 )
+texture = ExtResource( 13 )
+
+[node name="icon_test_6" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1500, 201 )
+texture = ExtResource( 14 )
+
+[node name="icon_test_7" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 354, 562 )
+texture = ExtResource( 1 )
+
+[node name="icon_test_8" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 151, -240 )
+texture = ExtResource( 7 )
+
+[node name="icon_test_9" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1911, 630 )
+texture = ExtResource( 5 )
+
+[node name="icon_test_10" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1709, 842 )
+texture = ExtResource( 12 )
+
+[node name="icon_test_11" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 490, 215 )
+texture = ExtResource( 3 )
+
+[node name="icon_test_12" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 8, 206 )
+texture = ExtResource( 4 )
+
+[node name="icon_test_15" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 558, 1444 )
+texture = ExtResource( 4 )
+
+[node name="icon_test_13" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1918, 204 )
+texture = ExtResource( 2 )
+
+[node name="icon_test_14" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1090, -16.9401 )
+texture = ExtResource( 8 )
+
+[node name="icon_test_8" type="Sprite2D" parent="."]
+position = Vector2( -295, 1149 )
+texture = ExtResource( 7 )
+
+[node name="sprite_67" parent="." instance=ExtResource( 26 )]
+position = Vector2( 543, 775.06 )
+
+[node name="sprite_68" parent="." instance=ExtResource( 26 )]
+position = Vector2( 961.06, 775.06 )
+
+[node name="sprite_69" parent="." instance=ExtResource( 26 )]
+position = Vector2( 339.06, 775.06 )
+
+[node name="sprite_70" parent="." instance=ExtResource( 26 )]
+position = Vector2( 755.06, 775.06 )
+
+[connection signal="about_to_popup" from="canvas_layer_pop/popup_card" to="canvas_layer_pop/popup_card" method="_on_popup_card_about_to_show"]
+[connection signal="gui_input" from="canvas_layer_pop/popup_card" to="canvas_layer_pop/popup_card" method="_on_popup_card_gui_input"]
+[connection signal="pressed" from="canvas_layer_pop/popup_card/card_2/button" to="." method="_on_button_pressed"]
+[connection signal="about_to_popup" from="canvas_layer_pop/popup_faction" to="canvas_layer_pop/popup_faction" method="_on_popup_faction_about_to_show"]
+[connection signal="pressed" from="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/panel_container/button_back" to="." method="_on_button_back_pressed"]
+[connection signal="gui_input" from="all_icon_button" to="." method="_on_all_icon_button_gui_input"]
+
+[editable path="canvas_layer_pop/popup_card/card_2"]
+[editable path="canvas_layer_pop/popup_card/card_2/safe_zone/card_info"]
+[editable path="canvas_layer_pop/popup_faction/faction"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base_5"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base_6"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base_3"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base_4"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/grid_container/card_image_base_2"]
+[editable path="sprite"]
+[editable path="sprite/card_image_base"]
+[editable path="sprite_2"]
+[editable path="sprite_2/card_image_base"]
+[editable path="sprite_3"]
+[editable path="sprite_4"]
+[editable path="sprite_4/card_image_base"]
+[editable path="sprite_5"]
+[editable path="sprite_5/card_image_base"]
+[editable path="sprite_6"]
+[editable path="sprite_7"]
+[editable path="sprite_7/card_image_base"]
+[editable path="sprite_8"]
+[editable path="sprite_8/card_image_base"]
+[editable path="sprite_9"]
+[editable path="sprite_11"]
+[editable path="sprite_12"]
+[editable path="sprite_13"]
+[editable path="sprite_14"]
+[editable path="sprite_14/card_image_base"]
+[editable path="sprite_15"]
+[editable path="sprite_15/card_image_base"]
+[editable path="sprite_16"]
+[editable path="sprite_16/card_image_base"]
+[editable path="sprite_17"]
+[editable path="sprite_17/card_image_base"]
+[editable path="sprite_18"]
+[editable path="sprite_19"]
+[editable path="sprite_20"]
+[editable path="sprite_20/card_image_base"]
+[editable path="sprite_21"]
+[editable path="sprite_22"]
+[editable path="sprite_23"]
+[editable path="sprite_24"]
+[editable path="sprite_26"]
+[editable path="sprite_27"]
+[editable path="sprite_28"]
+[editable path="sprite_32"]
+[editable path="sprite_33"]
+[editable path="sprite_34"]
+[editable path="sprite_35"]
+[editable path="sprite_36"]
+[editable path="sprite_37"]
+[editable path="sprite_38"]
+[editable path="sprite_39"]
+[editable path="sprite_40"]
+[editable path="sprite_41"]
+[editable path="sprite_31"]
+[editable path="sprite_52"]
+[editable path="sprite_53"]
+[editable path="sprite_54"]
+[editable path="sprite_55"]
+[editable path="sprite_56"]
+[editable path="sprite_57"]
+[editable path="sprite_58"]
+[editable path="sprite_59"]
+[editable path="sprite_60"]
+[editable path="sprite_61"]
+[editable path="sprite_62"]
+[editable path="sprite_63"]
+[editable path="sprite_64"]
+[editable path="sprite_65"]
+[editable path="sprite_66"]
+[editable path="sprite_42"]
+[editable path="sprite_43"]
+[editable path="sprite_44"]
+[editable path="sprite_45"]
+[editable path="sprite_46"]
+[editable path="sprite_47"]
+[editable path="sprite_48"]
+[editable path="sprite_49"]
+[editable path="sprite_50"]
+[editable path="sprite_51"]
+[editable path="sprite_29"]
+[editable path="sprite_67"]
+[editable path="sprite_68"]
+[editable path="sprite_70"]
