@@ -18,8 +18,8 @@ const cardType = 5
 func _ready():
 	core.connect("event", Callable(self, "_on_core_event"))
 	debug.connect(debug.SIGNAL_DEBUG, Callable(self, "_on_debug_event"))
-	if OS.has_feature("editor"):
-		call_deferred("setup_level")
+	#if OS.has_feature("editor"):
+		#call_deferred("setup_level")
 		#setup_level()
 func _on_debug_event(event,_data = null):
 	match event:
@@ -50,6 +50,7 @@ func setup_level(level_name  = "default"):
 	current_level = new_level
 	current_level_name = level_name
 	refillDistance = Vector2(0,current_level.tile_set.tile_size.y)
+	print("RefillDistance set to: ",refillDistance)
 	create_blocks_from_level()
 
 
@@ -90,6 +91,7 @@ func addToGrid(gridPos,block,refill = 0):
 	current_level.add_child(block)
 	var refillPos = refillDistance * refill
 	print("refill pos :",refillPos)
+	print("final position: ",(current_level.map_to_local(gridPos) -refillPos))
 	block.position = current_level.map_to_local(gridPos) -refillPos
 
 func getGridPos(block):

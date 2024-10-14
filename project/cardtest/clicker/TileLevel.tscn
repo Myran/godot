@@ -10,6 +10,6 @@ format = 2
 script = ExtResource("2")
 _block_factory = ExtResource("3")
 
-[node name="Layer0" type="TileMapLayer" parent="."]
+[node name="Layer1" type="TileMapLayer" parent="."]
 use_parent_material = true
 tile_set = ExtResource("1")

@@ -1,6 +1,7 @@
 [gd_resource type="EditorSettings" format=3]
 
 [resource]
+interface/editor/use_native_file_dialogs = true
 interface/editor/show_update_spinner = false
 interface/theme/preset = "Custom"
 interface/theme/base_color = Color(0.145098, 0.145098, 0.145098, 1)
@@ -37,6 +38,7 @@ text_editor/theme/highlighting/breakpoint_color = Color(1, 0.301961, 0.337255, 1
 text_editor/theme/highlighting/code_folding_color = Color(0.501961, 0.501961, 0.501961, 1)
 text_editor/theme/highlighting/search_result_color = Color(0.407843, 0.223529, 0.105882, 1)
 text_editor/theme/highlighting/search_result_border_color = Color(1, 1, 1, 0)
+run/window_placement/screen = -3
 run/bottom_panel/action_on_play = 0
 network/connection/network_mode = 1
 project_manager/default_renderer = "mobile"
