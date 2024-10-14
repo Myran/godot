@@ -182,9 +182,6 @@ anchor_bottom = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_5/margin_container/frame" index="9"]
-expand_mode = 1
-
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_5/margin_container/frame" index="12"]
 offset_right = 192.0
 offset_bottom = 192.0
@@ -267,9 +264,6 @@ anchor_bottom = 0.0
 [node name="margin_container" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_6" index="3"]
 anchor_right = 0.0
 anchor_bottom = 0.0
-
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_6/margin_container/frame" index="9"]
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_6/margin_container/frame" index="12"]
 offset_right = 192.0
@@ -354,9 +348,6 @@ anchor_bottom = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_3/margin_container/frame" index="9"]
-expand_mode = 1
-
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_3/margin_container/frame" index="12"]
 offset_right = 192.0
 offset_bottom = 192.0
@@ -439,9 +430,6 @@ anchor_bottom = 0.0
 [node name="margin_container" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_4" index="3"]
 anchor_right = 0.0
 anchor_bottom = 0.0
-
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_4/margin_container/frame" index="9"]
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_4/margin_container/frame" index="12"]
 offset_right = 192.0
@@ -526,9 +514,6 @@ anchor_bottom = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base/margin_container/frame" index="9"]
-expand_mode = 1
-
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base/margin_container/frame" index="12"]
 offset_right = 192.0
 offset_bottom = 192.0
@@ -611,9 +596,6 @@ anchor_bottom = 0.0
 [node name="margin_container" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_2" index="3"]
 anchor_right = 0.0
 anchor_bottom = 0.0
-
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_2/margin_container/frame" index="9"]
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_2/margin_container/frame" index="12"]
 offset_right = 192.0
@@ -698,9 +680,6 @@ anchor_bottom = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_7/margin_container/frame" index="9"]
-expand_mode = 1
-
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_7/margin_container/frame" index="12"]
 offset_right = 192.0
 offset_bottom = 192.0
@@ -783,9 +762,6 @@ anchor_bottom = 0.0
 [node name="margin_container" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_8" index="3"]
 anchor_right = 0.0
 anchor_bottom = 0.0
-
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_8/margin_container/frame" index="9"]
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_8/margin_container/frame" index="12"]
 offset_right = 192.0
@@ -870,9 +846,6 @@ anchor_bottom = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_9/margin_container/frame" index="9"]
-expand_mode = 1
-
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_9/margin_container/frame" index="12"]
 offset_right = 192.0
 offset_bottom = 192.0
@@ -955,9 +928,6 @@ anchor_bottom = 0.0
 [node name="margin_container" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_10" index="3"]
 anchor_right = 0.0
 anchor_bottom = 0.0
-
-[node name="frame_29" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_10/margin_container/frame" index="9"]
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="safe_zone/v_box_container/scroll_container/grid_container/card_image_base_10/margin_container/frame" index="12"]
 offset_right = 192.0

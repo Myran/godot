@@ -1,17 +1,37 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=4 format=3 uid="uid://lgn87db8aaun"]
 
-[ext_resource path="res://cardtest/clicker/brickSpecial01.png" type="Texture2D" id=1]
-[ext_resource path="res://cardtest/clicker/Block.gd" type="Script" id=2]
+[ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://cardtest/clicker/brickSpecial01.png" id="1"]
+[ext_resource type="Script" path="res://cardtest/clicker/Block.gd" id="2"]
 
-[sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 32, 32 )
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(64, 64)
 
 [node name="Block" type="TouchScreenButton"]
-position = Vector2( -1, 0 )
-normal = ExtResource( 1 )
-shape = SubResource( 1 )
-script = ExtResource( 2 )
+position = Vector2(-1, 0)
+texture_normal = ExtResource("1")
+shape = SubResource("1")
+script = ExtResource("2")
 
 [node name="Tween" type="Tween" parent="."]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+script = null
 
 [node name="Tween_2" type="Tween" parent="."]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+physics_interpolation_mode = 0
+auto_translate_mode = 0
+editor_description = ""
+script = null

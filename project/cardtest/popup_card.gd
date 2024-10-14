@@ -26,3 +26,8 @@ func setup_card(_card):
 func show_card(_card):
 	setup_card(_card)
 	show()
+
+
+func _on_visibility_changed() -> void:
+	if visible == true:
+		_on_popup_card_about_to_show()

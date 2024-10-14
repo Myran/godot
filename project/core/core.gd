@@ -1,27 +1,26 @@
 extends Control 
 #class_name draft
 
-@onready var card_pop = get_node("%popup_card")
-@onready var faction_pop = get_node("%popup_faction")
+#@onready var card_pop = get_node("%popup_card")
+# @onready var faction_pop = get_node("%popup_faction")
 #@onready var holder_draft = get_node("%holder_draft")
-@export var holder_draft : Node
-
 #@onready var holder_allies = get_node("%holder_allies")
-@export var holder_allies : Control
-
 #@onready var holder_enemy = get_node("%holder_enemy")
-@export var holder_enemy : Control
 #@onready var bottom_bar_draft = get_node("%bottom_bar_draft")
 #@onready var bottom_bar_prepare = get_node("%bottom_bar_prepare")
+#@onready var blur_layer = get_node("%canvas_layer_blur")
+#@onready var top_bar = get_node("%canvas_layer_top_bar")
+#@onready var battle_layer = get_node("%canvas_layer_battle")
+#@onready var unhandled_layer = get_node("canvas_layer_unhandled_events")
+@export var card_pop : Control
+@export var holder_draft : Node
+@export var holder_allies : Control
+@export var holder_enemy : Control
 @export var bottom_bar_draft : Control
 @export var bottom_bar_prepare : Control
-#@onready var blur_layer = get_node("%canvas_layer_blur")
 @export var blur_layer : CanvasLayer
-#@onready var top_bar = get_node("%canvas_layer_top_bar")
 @export var top_bar : CanvasLayer
-#@onready var battle_layer = get_node("%canvas_layer_battle")
 @export var battle_layer : CanvasLayer
-#@onready var unhandled_layer = get_node("canvas_layer_unhandled_events")
 @export var unhandled_layer : CanvasLayer
 
 enum TAP_STATE {IDLE,PRESSING,UNPRESSING,HOLDING}

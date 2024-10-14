@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://be4xxw25pacvf" path="res://cardtest/holder_base.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://dhiyo0eu8i1md" path="res://cardtest/canvas_layer_unhandled_events.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://cardtest/canvas_layer_background.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://cardtest/card_4.tscn" id="6"]
+[ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://cardtest/card_4.tscn" id="6"]
 [ext_resource type="Script" path="res://cardtest/popup_card.gd" id="7"]
 [ext_resource type="Script" path="res://cardtest/recruit.gd" id="10"]
 [ext_resource type="Script" path="res://cardtest/popup_faction.gd" id="13"]

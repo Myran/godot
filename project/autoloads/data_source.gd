@@ -163,7 +163,7 @@ func get_db_sheet(sheet_name,is_dictionary = false):
 		result = await get_db_value(_name)
 		#print("DB RESULT: ",result)
 	else:
-		await get_tree().process_frame
+		#await get_tree().process_frame
 		result = local_data[_name]
 	#print("result received: ",result)
 	if is_dictionary:
