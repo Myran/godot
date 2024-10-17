@@ -1,10 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://d338rr1bjxwmx"]
 
-[ext_resource type="TileSet" path="res://cardtest/clicker/tileset_test2.res" id="1"]
+[ext_resource type="TileSet" uid="uid://cmfsq5byjdxd" path="res://cardtest/clicker/tileset_test2.res" id="1"]
 [ext_resource type="PackedScene" uid="uid://i0smf7jo8623" path="res://draft_levels/draft_level_0.tscn" id="2_no7w5"]
 
 [node name="TileMap" type="TileMap"]
-position = Vector2(95, 115)
 tile_set = ExtResource("1")
 format = 2
 

@@ -92,7 +92,11 @@ func addToGrid(gridPos,block,refill = 0):
 	var refillPos = refillDistance * refill
 	print("refill pos :",refillPos)
 	print("final position: ",(current_level.map_to_local(gridPos) -refillPos))
-	block.position = current_level.map_to_local(gridPos) -refillPos
+	#block.position = (current_level.map_to_local(gridPos) -refillPos)
+	block.position = gridToWorldPos(gridPos)-refillPos
+	#block.position=block.to_global(block.position)
+	var magic_number = 3.3 # nåt med skalan är fel
+	#block.position = block.position * magic_number
 
 func getGridPos(block):
 
@@ -123,7 +127,7 @@ func gridToWorldPos(gridPos):
 func moveBlocks():
 	blocks_moving = allBlocks().duplicate()
 	for blockIterator in blocks_moving:
-		blockIterator.moveToPosition(current_level.map_to_local(getGridPos(blockIterator)))
+		blockIterator.moveToPosition(gridToWorldPos(getGridPos(blockIterator)))
 	await self.cards_done_moving
 
 func removeFromGrid(block,destroy = true):
