@@ -1,8 +1,6 @@
-[gd_resource type="ShaderMaterial" load_steps=3 format=2]
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://rhk2qvgrtjfa"]
 
-[ext_resource path="res://cardtest/corners.png" type="Texture2D" id=1]
-
-[sub_resource type="Shader" id=15]
+[sub_resource type="Shader" id="15"]
 code = "shader_type canvas_item;
 
 uniform float vignette_intensity = 0.4;
@@ -33,8 +31,4 @@ void fragment(){
 "
 
 [resource]
-shader = SubResource( 15 )
-shader_param/vignette_intensity = 1.0
-shader_param/vignette_opacity = 1.0
-shader_param/vignette_rgb = Color( 0, 0, 0, 0 )
-shader_param/mask = ExtResource( 1 )
+shader = SubResource("15")
