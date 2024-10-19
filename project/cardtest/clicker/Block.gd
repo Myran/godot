@@ -9,14 +9,14 @@ var card_base = null
 @export var moveSpeed: float = 0.05
 var merge_speed = 0.15
 var top_move_speed = 0.15
-var block_tween
-var shake_tween 
+#var block_tween
+#var shake_tween 
 var unit_info
 signal shake_done
 
 func init_card(_card_info,_card_level = 1):
-	block_tween = create_tween()
-	shake_tween = create_tween()
+	#block_tween = create_tween()
+
 	card_info = _card_info
 	level = _card_level
 
@@ -35,7 +35,8 @@ func init_card(_card_info,_card_level = 1):
 	base.set_card_level(unit_info.level)
 
 func shake(left = true):
-
+	var shake_tween = create_tween()
+	var block_tween = create_tween()
 	block_tween.interpolate_property(self,"modulate",self.modulate,Color(0,0,0,0),1.2,Tween.TRANS_QUINT)
 	block_tween.start()
 	if left:

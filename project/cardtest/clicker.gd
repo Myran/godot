@@ -2,7 +2,7 @@ extends Node
 var level
 const CARD_MERGE_AMOUNT = 3
 const SPAWN_HEIGHT = 0
-var directions = [Vector2(1,0),Vector2(-1,0),Vector2(0,1),Vector2(0,-1)]
+var directions = [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]
 var gravityVector = Vector2i(0,1)
 var refillCounter = []
 var merging_cards = []
@@ -95,7 +95,7 @@ func update_blocks():
 	solveGravity()
 	while refill():
 		solveGravity()
-	await level.moveBlocks().completed
+	await level.moveBlocks() #.completed
 	refillCounter.clear()
 	var matches = find_match()
 	if matches.size():
