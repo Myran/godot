@@ -1,12 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://c4dasglnd56n5"]
+[gd_scene load_steps=3 format=3 uid="uid://yoaqbpn00ldx"]
 
-[ext_resource type="Script" path="res://autoloads/debug.gd" id="1_1eu6t"]
+[ext_resource type="Script" path="res://debug.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://p3jcv583ul0m" path="res://cardtest/battle_3.tscn" id="2"]
 
-[node name="debug" type="Node" node_paths=PackedStringArray("popup_debug", "v_box_container_buttons")]
-script = ExtResource("1_1eu6t")
+[node name="debug" type="Node"]
+script = ExtResource("1")
+forced_level = "res://zen/levels/level_6.tscn"
+test_scene = ExtResource("2")
 use_local_battle_db = true
-popup_debug = NodePath("canvas_layer_pop/popup_debug")
-v_box_container_buttons = NodePath("canvas_layer_pop/popup_debug/color_rect/v_box_container_buttons")
+force_game_selector_at_start = true
+asset_variant = 1
 
 [node name="canvas_layer_pop" type="CanvasLayer" parent="."]
 layer = 4
