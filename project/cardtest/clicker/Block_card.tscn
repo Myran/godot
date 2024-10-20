@@ -20,7 +20,7 @@ uniform float vignette_intensity = 0.4;
 uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
 uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform sampler2D mask;
-
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
 float vignette(vec2 uv){
 	uv *= 1.0 - uv.xy;
 	float vignette = uv.x * uv.y * 15.0;
@@ -30,10 +30,10 @@ float vignette(vec2 uv){
 void fragment(){
 	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
 	vec4 text = texture(TEXTURE, UV);
-	
+
 	text.rgba *= (vignette_rgb.rgba);
 	text.rgba *= (1.0 - vignette(UV));
-	
+
 	vec4 mask_color = texture(mask, UV).rgba;
 	if (mask_color.a == 0.0)
 	{
@@ -45,6 +45,9 @@ void fragment(){
 
 [sub_resource type="ShaderMaterial" id="12"]
 shader = SubResource("11")
+shader_parameter/vignette_intensity = 0.4
+shader_parameter/vignette_opacity = 0.5
+shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
 
 [node name="Block" type="TouchScreenButton"]
 texture_normal = ExtResource("1_q5hjc")
@@ -88,6 +91,9 @@ offset_left = 26.0
 offset_top = -28.0
 offset_right = -21.0
 offset_bottom = 34.0
+
+[node name="frame_28" parent="card_sprite/card_image_base/margin_container/frame" index="8"]
+visible = true
 
 [node name="frame_30" parent="card_sprite/card_image_base/margin_container/frame" index="10"]
 offset_bottom = 0.0

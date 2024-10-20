@@ -628,8 +628,6 @@ layout_mode = 2
 [node name="draft_container" type="CenterContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 8
 mouse_filter = 2
 script = ExtResource("5_c76if")
 
@@ -651,8 +649,9 @@ _level_factory = ExtResource("8_oqud3")
 _block_factory = ExtResource("9_goeof")
 
 [node name="margin_container_2" type="MarginContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container"]
-custom_minimum_size = Vector2(0, 20)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
+size_flags_vertical = 8
 mouse_filter = 2
 
 [node name="MarginContainer_bottom_bar" type="MarginContainer" parent="CanvasLayer_game/main_area"]

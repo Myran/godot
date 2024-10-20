@@ -29,5 +29,6 @@ func show_card(_card):
 
 
 func _on_visibility_changed() -> void:
+	pass
 	if visible == true:
 		_on_popup_card_about_to_show()

@@ -5,6 +5,7 @@
 [node name="debug" type="Node" node_paths=PackedStringArray("popup_debug", "v_box_container_buttons")]
 script = ExtResource("1_1eu6t")
 use_local_battle_db = true
+asset_variant = 1
 popup_debug = NodePath("canvas_layer_pop/popup_debug")
 v_box_container_buttons = NodePath("canvas_layer_pop/popup_debug/color_rect/v_box_container_buttons")
 
@@ -25,6 +26,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="v_box_container_buttons" type="VBoxContainer" parent="canvas_layer_pop/popup_debug/color_rect"]
 unique_name_in_owner = true

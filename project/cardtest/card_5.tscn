@@ -1,131 +1,128 @@
-[gd_scene load_steps=23 format=2]
+[gd_scene load_steps=24 format=3 uid="uid://7be3b3x4imut"]
 
-[ext_resource path="res://cardtest/icon_health_4.png" type="Texture2D" id=1]
-[ext_resource path="res://cardtest/card_frame.tscn" type="PackedScene" id=2]
-[ext_resource path="res://cardtest/vignette.tscn" type="PackedScene" id=3]
-[ext_resource path="res://zen/safe_zone.tscn" type="PackedScene" id=4]
-[ext_resource path="res://cardtest/card_image.tscn" type="PackedScene" id=5]
-[ext_resource path="res://cardtest/card.gd" type="Script" id=6]
-[ext_resource path="res://cardtest/card_image_0_1.png" type="Texture2D" id=7]
-[ext_resource path="res://cardtest/shader_vignette_outer.tres" type="Material" id=8]
-[ext_resource path="res://cardtest/icon_level.tscn" type="PackedScene" id=9]
-[ext_resource path="res://cardtest/font_card_stat_num.tres" type="FontFile" id=10]
-[ext_resource path="res://cardtest/card_tag.tscn" type="PackedScene" id=11]
-[ext_resource path="res://cardtest/icon_level_2.png" type="Texture2D" id=12]
-[ext_resource path="res://cardtest/card_info_full.gd" type="Script" id=13]
-[ext_resource path="res://cardtest/panel_card.tres" type="StyleBox" id=14]
-[ext_resource path="res://cardtest/icon_attack_5.png" type="Texture2D" id=15]
-[ext_resource path="res://cardtest/panel_container_level_top.gd" type="Script" id=16]
-[ext_resource path="res://cardtest/card_level_icon.gd" type="Script" id=17]
-[ext_resource path="res://cardtest/font_card_text.tres" type="FontFile" id=18]
-[ext_resource path="res://cardtest/font_card_title.tres" type="FontFile" id=19]
+[ext_resource type="Texture2D" uid="uid://daojxpn51scuf" path="res://cardtest/icon_health_4.png" id="1"]
+[ext_resource type="PackedScene" uid="uid://bo664q2ju0asl" path="res://cardtest/card_frame.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://y0tserwc84jj" path="res://cardtest/vignette.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://zen/safe_zone.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://b5cydk8slpk8v" path="res://cardtest/card_image.tscn" id="5"]
+[ext_resource type="Script" path="res://cardtest/card.gd" id="6"]
+[ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://cardtest/card_image_0_1.png" id="7"]
+[ext_resource type="Material" uid="uid://bwen154cg06im" path="res://cardtest/shader_vignette_outer.tres" id="8"]
+[ext_resource type="PackedScene" path="res://cardtest/icon_level.tscn" id="9"]
+[ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://cardtest/font_card_stat_num.tres" id="10"]
+[ext_resource type="PackedScene" path="res://cardtest/card_tag.tscn" id="11"]
+[ext_resource type="Texture2D" uid="uid://bquhbagfu1wg0" path="res://cardtest/icon_level_2.png" id="12"]
+[ext_resource type="Script" path="res://cardtest/card_info_full.gd" id="13"]
+[ext_resource type="StyleBox" path="res://cardtest/panel_card.tres" id="14"]
+[ext_resource type="Texture2D" uid="uid://bmqgs2goqum13" path="res://cardtest/icon_attack_5.png" id="15"]
+[ext_resource type="Script" path="res://cardtest/panel_container_level_top.gd" id="16"]
+[ext_resource type="Script" path="res://cardtest/card_level_icon.gd" id="17"]
+[ext_resource type="FontFile" path="res://cardtest/font_card_text.tres" id="18"]
+[ext_resource type="FontFile" path="res://cardtest/font_card_title.tres" id="19"]
 
-[sub_resource type="Environment" id=6]
+[sub_resource type="Environment" id="6"]
 background_mode = 4
 glow_enabled = true
 glow_blend_mode = 0
-glow_high_quality = true
 
-[sub_resource type="Animation" id=13]
+[sub_resource type="Animation" id="13"]
 length = 0.001
 tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
 tracks/0/path = NodePath("safe_zone:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
 tracks/0/keys = {
-"times": PackedFloat32Array( 0 ),
-"transitions": PackedFloat32Array( 1 ),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [ Vector2( 1, 1 ) ]
+"values": [Vector2(1, 1)]
 }
 tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
 tracks/1/path = NodePath("safe_zone:modulate")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
 tracks/1/keys = {
-"times": PackedFloat32Array( 0 ),
-"transitions": PackedFloat32Array( 1 ),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [ Color( 1, 1, 1, 1 ) ]
+"values": [Color(1, 1, 1, 1)]
 }
 
-[sub_resource type="Animation" id=14]
+[sub_resource type="Animation" id="14"]
 resource_name = "scale_up"
 length = 0.2
 tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
 tracks/0/path = NodePath("safe_zone:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
 tracks/0/keys = {
-"times": PackedFloat32Array( 0, 0.2 ),
-"transitions": PackedFloat32Array( 0.329877, 1 ),
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(0.329877, 1),
 "update": 0,
-"values": [ Vector2( 0, 0 ), Vector2( 1, 1 ) ]
+"values": [Vector2(0, 0), Vector2(1, 1)]
 }
 tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
 tracks/1/path = NodePath("safe_zone:modulate")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
-tracks/1/imported = false
-tracks/1/enabled = true
 tracks/1/keys = {
-"times": PackedFloat32Array( 0, 0.2 ),
-"transitions": PackedFloat32Array( 0.353553, 1 ),
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(0.353553, 1),
 "update": 0,
-"values": [ Color( 1, 1, 1, 0 ), Color( 1, 1, 1, 1 ) ]
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_gt7x4"]
+_data = {
+"RESET": SubResource("13"),
+"scale_up": SubResource("14")
 }
 
 [node name="card" type="AspectRatioContainer"]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -170.0
 offset_right = 171.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-input_pass_on_modal_close_click = false
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 stretch_mode = 1
-script = ExtResource( 6 )
+script = ExtResource("6")
 
 [node name="button" type="Button" parent="."]
-self_modulate = Color( 1, 1, 1, 0 )
-offset_left = -249.5
-offset_right = 1670.5
-offset_bottom = 1920.0
-mouse_filter = 1
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 1
 
-[node name="safe_zone" parent="." instance=ExtResource( 4 )]
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = -249.5
-offset_right = 1670.5
-offset_bottom = 1920.0
-pivot_offset = Vector2( 1024, 1024 )
+[node name="safe_zone" parent="." instance=ExtResource("4")]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/margin_top = 120
 theme_override_constants/margin_bottom = 120
 
-[node name="card_image" parent="safe_zone" instance=ExtResource( 5 )]
+[node name="card_image" parent="safe_zone" instance=ExtResource("5")]
 unique_name_in_owner = true
-offset_top = 120.0
-offset_right = 1920.0
-offset_bottom = 1800.0
+layout_mode = 2
 mouse_filter = 2
-texture = ExtResource( 7 )
+texture = ExtResource("7")
 stretch_mode = 6
 
-[node name="vignette" parent="safe_zone/card_image" instance=ExtResource( 3 )]
+[node name="vignette" parent="safe_zone/card_image" instance=ExtResource("3")]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = 0.0
@@ -133,98 +130,125 @@ offset_bottom = 0.0
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone"]
 visible = false
-offset_top = 120.0
-offset_right = 1920.0
-offset_bottom = 1800.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/margin_top = -100
 theme_override_constants/margin_bottom = -100
 
-[node name="frame" parent="safe_zone/margin_container" instance=ExtResource( 2 )]
-offset_top = -100.0
-offset_right = 1920.0
-offset_bottom = 1780.0
+[node name="frame" parent="safe_zone/margin_container" instance=ExtResource("2")]
+layout_mode = 2
 mouse_filter = 2
+expand_mode = 1
 stretch_mode = 6
+
+[node name="frame_20" parent="safe_zone/margin_container/frame" index="0"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_22" parent="safe_zone/margin_container/frame" index="1"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_23" parent="safe_zone/margin_container/frame" index="2"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_24" parent="safe_zone/margin_container/frame" index="3"]
+layout_mode = 0
+expand_mode = 1
 
 [node name="frame_21" parent="safe_zone/margin_container/frame" index="4"]
 visible = true
+layout_mode = 0
+expand_mode = 1
 
-[node name="vignette_2" parent="safe_zone/margin_container/frame" instance=ExtResource( 3 )]
-material = ExtResource( 8 )
+[node name="frame_25" parent="safe_zone/margin_container/frame" index="5"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_26" parent="safe_zone/margin_container/frame" index="6"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_27" parent="safe_zone/margin_container/frame" index="7"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_28" parent="safe_zone/margin_container/frame" index="8"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_29" parent="safe_zone/margin_container/frame" index="9"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_30" parent="safe_zone/margin_container/frame" index="10"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="frame_31" parent="safe_zone/margin_container/frame" index="11"]
+layout_mode = 0
+expand_mode = 1
+
+[node name="nine_patch_rect" parent="safe_zone/margin_container/frame" index="12"]
+layout_mode = 0
+
+[node name="vignette_2" parent="safe_zone/margin_container/frame" instance=ExtResource("3")]
+material = ExtResource("8")
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = 0.0
 offset_bottom = 0.0
 
-[node name="safe_zone_2" parent="." instance=ExtResource( 4 )]
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = -249.5
-offset_right = 1670.5
-offset_bottom = 1920.0
-pivot_offset = Vector2( 1024, 1024 )
+[node name="safe_zone_2" parent="." instance=ExtResource("4")]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/margin_top = 56
 
 [node name="card_info" type="VBoxContainer" parent="safe_zone_2"]
 unique_name_in_owner = true
-offset_top = 56.0
-offset_right = 1920.0
-offset_bottom = 1920.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/separation = -40
-script = ExtResource( 13 )
-__meta__ = {
-"_edit_use_anchors_": true
-}
-tag_scene = ExtResource( 11 )
+script = ExtResource("13")
+tag_scene = ExtResource("11")
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info"]
-offset_right = 1920.0
-offset_bottom = 25.0
+layout_mode = 2
 theme_override_constants/margin_top = 25
 
 [node name="panel_name" type="PanelContainer" parent="safe_zone_2/card_info"]
-offset_top = -15.0
-offset_right = 1920.0
-offset_bottom = 836.0
-mouse_filter = 1
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_styles/panel = ExtResource( 14 )
+mouse_filter = 1
+theme_override_styles/panel = ExtResource("14")
 
 [node name="h_box_container" type="HBoxContainer" parent="safe_zone_2/card_info/panel_name"]
-offset_left = 20.0
-offset_right = 1900.0
-offset_bottom = 831.0
-mouse_filter = 2
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 alignment = 1
 
 [node name="icon_level" type="TextureRect" parent="safe_zone_2/card_info/panel_name/h_box_container"]
-offset_left = 416.0
-offset_right = 556.0
-offset_bottom = 140.0
-mouse_filter = 2
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
-texture = ExtResource( 12 )
+mouse_filter = 2
+texture = ExtResource("12")
 stretch_mode = 6
-script = ExtResource( 17 )
+script = ExtResource("17")
 
 [node name="label_level" type="Label" parent="safe_zone_2/card_info/panel_name/h_box_container/icon_level"]
 unique_name_in_owner = true
+layout_mode = 0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
@@ -234,321 +258,216 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_colors/font_color = Color( 0, 0, 0, 1 )
-theme_override_colors/font_outline_color = Color( 0, 0, 0, 0 )
-theme_override_colors/font_shadow_color = Color( 0, 0, 0, 1 )
-theme_override_fonts/font = ExtResource( 10 )
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0)
+theme_override_fonts/font = ExtResource("10")
 text = "2"
-align = 1
-valign = 1
+horizontal_alignment = 1
+vertical_alignment = 1
 uppercase = true
 
 [node name="v_box_container" type="VBoxContainer" parent="safe_zone_2/card_info/panel_name/h_box_container"]
-offset_left = 564.0
-offset_right = 1464.0
-offset_bottom = 831.0
+layout_mode = 2
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info/panel_name/h_box_container/v_box_container"]
-offset_right = 900.0
-offset_bottom = 24.0
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_top = 24
 
 [node name="label_card_name" type="Label" parent="safe_zone_2/card_info/panel_name/h_box_container/v_box_container"]
 unique_name_in_owner = true
-offset_top = 32.0
-offset_right = 900.0
-offset_bottom = 120.0
-custom_minimum_size = Vector2( 900, 0 )
+custom_minimum_size = Vector2(900, 0)
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 1
-theme_override_colors/font_color = Color( 0.835294, 0.835294, 0.835294, 1 )
-theme_override_fonts/font = ExtResource( 19 )
+theme_override_colors/font_color = Color(0.835294, 0.835294, 0.835294, 1)
+theme_override_fonts/font = ExtResource("19")
 text = "Argothian Vampire"
-align = 1
-valign = 1
-autowrap = true
+horizontal_alignment = 1
+vertical_alignment = 1
 uppercase = true
 
 [node name="margin_container_name" type="MarginContainer" parent="safe_zone_2/card_info"]
-offset_top = 796.0
-offset_right = 1920.0
-offset_bottom = 1648.0
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/margin_bottom = 40
 
 [node name="tags" type="VBoxContainer" parent="safe_zone_2/card_info"]
-offset_left = 540.0
-offset_top = 1608.0
-offset_right = 1380.0
-offset_bottom = 1687.0
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 alignment = 1
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info/tags"]
 visible = false
-offset_right = 640.0
-offset_bottom = 54.0
-mouse_filter = 1
+layout_mode = 2
 theme_override_constants/margin_bottom = 54
 
 [node name="panel_container_2" type="PanelContainer" parent="safe_zone_2/card_info/tags"]
-offset_right = 840.0
-offset_bottom = 71.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
+layout_mode = 2
 size_flags_horizontal = 5
 size_flags_vertical = 4
-theme_override_styles/panel = ExtResource( 14 )
+mouse_filter = 1
+theme_override_styles/panel = ExtResource("14")
 
 [node name="label_rules_text" type="Label" parent="safe_zone_2/card_info/tags/panel_container_2"]
 unique_name_in_owner = true
-offset_left = 20.0
-offset_right = 820.0
-offset_bottom = 51.0
-custom_minimum_size = Vector2( 800, 0 )
+custom_minimum_size = Vector2(800, 0)
+layout_mode = 2
 size_flags_horizontal = 5
-theme_override_colors/font_color = Color( 0.823529, 0.823529, 0.823529, 1 )
-theme_override_fonts/font = ExtResource( 18 )
+theme_override_colors/font_color = Color(0.823529, 0.823529, 0.823529, 1)
+theme_override_fonts/font = ExtResource("18")
 text = "Gain +1 / +1 when any undead is drafted"
-align = 1
-valign = 1
-autowrap = true
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="h_box_container_tags" type="HBoxContainer" parent="safe_zone_2/card_info/tags"]
 unique_name_in_owner = true
-offset_top = 79.0
-offset_right = 840.0
-offset_bottom = 79.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_horizontal = 5
 size_flags_vertical = 4
 alignment = 1
 
 [node name="stats" type="VBoxContainer" parent="safe_zone_2/card_info"]
 show_behind_parent = true
-offset_left = 390.0
-offset_top = 1647.0
-offset_right = 1530.0
-offset_bottom = 1879.0
-mouse_filter = 2
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+mouse_filter = 2
 alignment = 1
 
 [node name="panel_container" type="PanelContainer" parent="safe_zone_2/card_info/stats"]
-offset_right = 1140.0
-offset_bottom = 232.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-theme_override_styles/panel = ExtResource( 14 )
+theme_override_styles/panel = ExtResource("14")
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info/stats/panel_container"]
-offset_left = 20.0
-offset_right = 1120.0
-offset_bottom = 212.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_horizontal = 4
 
 [node name="stat_container" type="HBoxContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container"]
-offset_right = 1100.0
-offset_bottom = 212.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 80
 alignment = 1
 
 [node name="panel_container_attack" type="PanelContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container"]
-offset_right = 285.0
-offset_bottom = 212.0
-grow_horizontal = 0
+layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = ExtResource( 14 )
+theme_override_styles/panel = ExtResource("14")
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_attack"]
-offset_left = 20.0
-offset_right = 265.0
-offset_bottom = 192.0
+layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="h_box_container_2" type="HBoxContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_attack/margin_container"]
-offset_right = 245.0
-offset_bottom = 192.0
+layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 
 [node name="icon_attack_2" type="TextureRect" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_attack/margin_container/h_box_container_2"]
-offset_top = 21.0
-offset_right = 150.0
-offset_bottom = 171.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-texture = ExtResource( 15 )
+texture = ExtResource("15")
 stretch_mode = 7
 
 [node name="label_attack" type="Label" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_attack/margin_container/h_box_container_2"]
 unique_name_in_owner = true
-offset_left = 170.0
-offset_right = 245.0
-offset_bottom = 192.0
+layout_mode = 2
 size_flags_vertical = 5
-theme_override_fonts/font = ExtResource( 10 )
+theme_override_fonts/font = ExtResource("10")
 text = "4"
-align = 1
-valign = 1
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="panel_container_level" type="PanelContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container"]
 unique_name_in_owner = true
-self_modulate = Color( 1, 1, 1, 0 )
-offset_left = 365.0
-offset_top = 43.0
-offset_right = 740.0
-offset_bottom = 168.0
-grow_horizontal = 2
-grow_vertical = 2
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
 size_flags_horizontal = 7
 size_flags_vertical = 4
-theme_override_styles/panel = ExtResource( 14 )
-script = ExtResource( 16 )
+theme_override_styles/panel = ExtResource("14")
+script = ExtResource("16")
 
 [node name="h_box_container" type="HBoxContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level"]
-offset_left = 20.0
-offset_right = 355.0
-offset_bottom = 105.0
-grow_horizontal = 2
-grow_vertical = 2
-custom_minimum_size = Vector2( 335, 0 )
+custom_minimum_size = Vector2(335, 0)
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="icon_level_1" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource( 9 )]
+[node name="icon_level_1" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource("9")]
 unique_name_in_owner = true
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 105.0
-offset_bottom = 105.0
+layout_mode = 2
 
-[node name="icon_level_2" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource( 9 )]
+[node name="icon_level_2" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource("9")]
 unique_name_in_owner = true
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 115.0
-offset_top = 0.0
-offset_right = 220.0
-offset_bottom = 105.0
+layout_mode = 2
 
-[node name="icon_level_3" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource( 9 )]
+[node name="icon_level_3" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource("9")]
 unique_name_in_owner = true
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 230.0
-offset_top = 0.0
-offset_right = 335.0
-offset_bottom = 105.0
+layout_mode = 2
 
-[node name="icon_level_4" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource( 9 )]
+[node name="icon_level_4" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource("9")]
 unique_name_in_owner = true
 visible = false
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 345.0
-offset_top = 0.0
-offset_right = 450.0
-offset_bottom = 105.0
+layout_mode = 2
 
-[node name="icon_level_5" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource( 9 )]
+[node name="icon_level_5" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_level/h_box_container" instance=ExtResource("9")]
 unique_name_in_owner = true
 visible = false
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 460.0
-offset_top = 0.0
-offset_right = 565.0
-offset_bottom = 105.0
+layout_mode = 2
 
 [node name="panel_container_health" type="PanelContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container"]
-offset_left = 820.0
-offset_right = 1100.0
-offset_bottom = 212.0
+layout_mode = 2
 size_flags_vertical = 4
-theme_override_styles/panel = ExtResource( 14 )
+theme_override_styles/panel = ExtResource("14")
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_health"]
-offset_left = 20.0
-offset_right = 260.0
-offset_bottom = 192.0
+layout_mode = 2
 
 [node name="h_box_container" type="HBoxContainer" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_health/margin_container"]
-offset_right = 240.0
-offset_bottom = 192.0
+layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 alignment = 2
 
 [node name="label_health" type="Label" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_health/margin_container/h_box_container"]
 unique_name_in_owner = true
-offset_right = 70.0
-offset_bottom = 192.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 size_flags_vertical = 1
-theme_override_fonts/font = ExtResource( 10 )
+theme_override_fonts/font = ExtResource("10")
 text = "6"
 
 [node name="icon_health" type="TextureRect" parent="safe_zone_2/card_info/stats/panel_container/margin_container/stat_container/panel_container_health/margin_container/h_box_container"]
-offset_left = 90.0
-offset_top = 21.0
-offset_right = 240.0
-offset_bottom = 171.0
+layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
-texture = ExtResource( 1 )
+texture = ExtResource("1")
 stretch_mode = 7
 
 [node name="margin_container_bottom" type="MarginContainer" parent="safe_zone_2/card_info"]
-offset_top = 1839.0
-offset_right = 1920.0
-offset_bottom = 1864.0
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_override_constants/margin_bottom = 25
 
 [node name="center_container" type="CenterContainer" parent="."]
-offset_left = -249.5
-offset_right = 1670.5
-offset_bottom = 1920.0
+layout_mode = 2
 mouse_filter = 2
 
 [node name="world_environment" type="WorldEnvironment" parent="."]
-environment = SubResource( 6 )
+environment = SubResource("6")
 
 [node name="animation_player" type="AnimationPlayer" parent="."]
-anims/RESET = SubResource( 13 )
-anims/scale_up = SubResource( 14 )
+libraries = {
+"": SubResource("AnimationLibrary_gt7x4")
+}
 
 [connection signal="pressed" from="button" to="." method="_on_button_pressed"]
 
