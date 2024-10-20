@@ -1,2 +1,2 @@
 extends Node
-var seededRNG = deterministicRNG.new()
+var seededRNG = DeterministicRNG.new()
