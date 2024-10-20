@@ -127,6 +127,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = 0.0
 offset_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="margin_container" type="MarginContainer" parent="safe_zone"]
 visible = false
@@ -140,60 +142,60 @@ theme_override_constants/margin_bottom = -100
 [node name="frame" parent="safe_zone/margin_container" instance=ExtResource("2")]
 layout_mode = 2
 mouse_filter = 2
-expand_mode = 1
 stretch_mode = 6
 
 [node name="frame_20" parent="safe_zone/margin_container/frame" index="0"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_22" parent="safe_zone/margin_container/frame" index="1"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_23" parent="safe_zone/margin_container/frame" index="2"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_24" parent="safe_zone/margin_container/frame" index="3"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_21" parent="safe_zone/margin_container/frame" index="4"]
 visible = true
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_25" parent="safe_zone/margin_container/frame" index="5"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_26" parent="safe_zone/margin_container/frame" index="6"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_27" parent="safe_zone/margin_container/frame" index="7"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_28" parent="safe_zone/margin_container/frame" index="8"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_29" parent="safe_zone/margin_container/frame" index="9"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_30" parent="safe_zone/margin_container/frame" index="10"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="frame_31" parent="safe_zone/margin_container/frame" index="11"]
-layout_mode = 0
-expand_mode = 1
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="nine_patch_rect" parent="safe_zone/margin_container/frame" index="12"]
-layout_mode = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
 
 [node name="vignette_2" parent="safe_zone/margin_container/frame" instance=ExtResource("3")]
 material = ExtResource("8")
@@ -202,6 +204,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = 0.0
 offset_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="safe_zone_2" parent="." instance=ExtResource("4")]
 layout_mode = 2

@@ -300,65 +300,46 @@ mouse_filter = 2
 [node name="frame" parent="v_box_container_2/safe_zone/margin_container" instance=ExtResource("2")]
 layout_mode = 2
 mouse_filter = 2
-expand_mode = 1
 
 [node name="frame_20" parent="v_box_container_2/safe_zone/margin_container/frame" index="0"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_22" parent="v_box_container_2/safe_zone/margin_container/frame" index="1"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_23" parent="v_box_container_2/safe_zone/margin_container/frame" index="2"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_24" parent="v_box_container_2/safe_zone/margin_container/frame" index="3"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_21" parent="v_box_container_2/safe_zone/margin_container/frame" index="4"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_25" parent="v_box_container_2/safe_zone/margin_container/frame" index="5"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_26" parent="v_box_container_2/safe_zone/margin_container/frame" index="6"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_27" parent="v_box_container_2/safe_zone/margin_container/frame" index="7"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_28" parent="v_box_container_2/safe_zone/margin_container/frame" index="8"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_29" parent="v_box_container_2/safe_zone/margin_container/frame" index="9"]
+visible = false
 self_modulate = Color(1, 1, 1, 0.537255)
-layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -367,22 +348,16 @@ offset_left = -510.0
 offset_top = -553.5
 offset_right = 510.0
 offset_bottom = 476.5
-expand_mode = 1
 
 [node name="frame_30" parent="v_box_container_2/safe_zone/margin_container/frame" index="10"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_31" parent="v_box_container_2/safe_zone/margin_container/frame" index="11"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="v_box_container_2/safe_zone/margin_container/frame" index="12"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
 

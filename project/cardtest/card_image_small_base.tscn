@@ -3,10 +3,10 @@
 [ext_resource type="PackedScene" path="res://cardtest/icon_level_small.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://cardtest/card_image_0_1.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://cardtest/testart/ui_test_1.png" id="3"]
-[ext_resource type="PackedScene" path="res://cardtest/card_frame.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://bo664q2ju0asl" path="res://cardtest/card_frame.tscn" id="5"]
 [ext_resource type="PackedScene" uid="uid://y0tserwc84jj" path="res://cardtest/vignette.tscn" id="6"]
 [ext_resource type="PackedScene" uid="uid://b5cydk8slpk8v" path="res://cardtest/card_image.tscn" id="7"]
-[ext_resource type="FontFile" path="res://cardtest/font_card_stat_num.tres" id="8"]
+[ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://cardtest/font_card_stat_num.tres" id="8"]
 [ext_resource type="StyleBox" path="res://cardtest/panel_card.tres" id="9"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://cardtest/testart/ui_test_8.png" id="10"]
 [ext_resource type="PackedScene" path="res://cardtest/panel_container_level_top.tscn" id="11"]
@@ -99,84 +99,57 @@ theme_override_constants/margin_bottom = -32
 [node name="frame" parent="margin_container" instance=ExtResource("5")]
 layout_mode = 2
 mouse_filter = 2
-expand_mode = 1
 
 [node name="frame_20" parent="margin_container/frame" index="0"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_22" parent="margin_container/frame" index="1"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_23" parent="margin_container/frame" index="2"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_24" parent="margin_container/frame" index="3"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_21" parent="margin_container/frame" index="4"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_25" parent="margin_container/frame" index="5"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_26" parent="margin_container/frame" index="6"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_27" parent="margin_container/frame" index="7"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_28" parent="margin_container/frame" index="8"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_29" parent="margin_container/frame" index="9"]
-visible = true
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="frame_30" parent="margin_container/frame" index="10"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
 offset_bottom = 19.0
-expand_mode = 1
 
 [node name="frame_31" parent="margin_container/frame" index="11"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
-expand_mode = 1
 
 [node name="nine_patch_rect" parent="margin_container/frame" index="12"]
-layout_mode = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
 
@@ -230,7 +203,6 @@ vertical_alignment = 1
 uppercase = true
 
 [node name="panel_container_level" type="PanelContainer" parent="panel_container_level"]
-visible = false
 self_modulate = Color(1, 1, 1, 0)
 layout_mode = 2
 size_flags_horizontal = 4
