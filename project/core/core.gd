@@ -94,6 +94,7 @@ func _on_debug_event(event,_data):
 			current_draft_upgrade_level = 0
 
 func new_event(event_type,data,solve_type):
+	printt("New event: ", event_type,data,solve_type)
 	var _context = create_draft_context()
 	var event = context.event.new(solve_type,event_type,data)
 	_context.add_event(event)

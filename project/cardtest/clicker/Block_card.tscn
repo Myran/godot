@@ -56,6 +56,7 @@ script = ExtResource("2_gsp75")
 moveSpeed = 0.03
 
 [node name="area_2d" type="Area2D" parent="."]
+position = Vector2(0, 1)
 
 [node name="collision_shape_2d" type="CollisionShape2D" parent="area_2d"]
 shape = SubResource("RectangleShape2D_lqhum")

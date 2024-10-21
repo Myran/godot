@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://cardtest/top_bar.gd" id="3_jg5gr"]
 [ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://cardtest/card_4.tscn" id="3_qxw11"]
 [ext_resource type="Script" path="res://cardtest/draft.gd" id="3_ytbtw"]
-[ext_resource type="PackedScene" path="res://cardtest/hold_bar.tscn" id="4_0gw5k"]
+[ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://cardtest/hold_bar.tscn" id="4_0gw5k"]
 [ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://cardtest/ui_bar_1.png" id="4_vn1jd"]
 [ext_resource type="Texture2D" uid="uid://qwrxynpphf4j" path="res://zen/zen_assets/counter_icon_life.png" id="4_y87xh"]
 [ext_resource type="Script" path="res://cardtest/draft_container.gd" id="5_c76if"]
@@ -86,7 +86,7 @@ _data = {
 }
 
 [sub_resource type="RectangleShape2D" id="1"]
-size = Vector2(4800, 3161.5)
+size = Vector2(4888, 3161.5)
 
 [node name="Core" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "blur_layer", "top_bar", "battle_layer", "unhandled_layer")]
 layout_mode = 3
@@ -95,6 +95,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_xyr2d")
 card_pop = NodePath("CanvasLayer_popup_card/popup_card")
 holder_draft = NodePath("CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft")
@@ -108,6 +109,7 @@ battle_layer = NodePath("CanvasLayer_battle")
 unhandled_layer = NodePath("CanvasLayer_unhandled_events")
 
 [node name="CanvasLayer_popup_card" type="CanvasLayer" parent="."]
+layer = 10
 
 [node name="popup_card" type="Control" parent="CanvasLayer_popup_card"]
 unique_name_in_owner = true
@@ -119,6 +121,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 script = ExtResource("2_xsnym")
 card_popup = ExtResource("3_qxw11")
 
@@ -295,10 +298,9 @@ anchor_bottom = 1.0
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -15.0
-offset_bottom = -696.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 alignment = 1
 
 [node name="MarginContainer_top_bar" type="MarginContainer" parent="CanvasLayer_game/main_area"]
@@ -447,6 +449,7 @@ attach_point_name = "enemies"
 [node name="ally_container" type="VBoxContainer" parent="CanvasLayer_game/main_area"]
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="holder_allies" type="TextureRect" parent="CanvasLayer_game/main_area/ally_container"]
 self_modulate = Color(1, 1, 1, 0.74902)
@@ -732,7 +735,7 @@ script = ExtResource("26_7xkfu")
 [node name="area_2d" type="Area2D" parent="CanvasLayer_unhandled_events"]
 
 [node name="collision_shape_2d" type="CollisionShape2D" parent="CanvasLayer_unhandled_events/area_2d"]
-position = Vector2(523, 906.25)
+position = Vector2(567, 906.25)
 shape = SubResource("1")
 
 [node name="CanvasLayer_battle" type="CanvasLayer" parent="."]
