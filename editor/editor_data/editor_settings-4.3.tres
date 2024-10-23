@@ -148,5 +148,6 @@ metadata/script_setup_templates_dictionary = {
 "ColorRect": "0NodeDefault",
 "Control": "0NodeDefault",
 "MarginContainer": "0NodeDefault",
-"Node": "0NodeDefault"
+"Node": "0NodeDefault",
+"Window": "0NodeDefault"
 }

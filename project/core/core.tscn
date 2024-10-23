@@ -25,7 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://dcr3jtraqbu5k" path="res://cardtest/animator.tscn" id="15_8txby"]
 [ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://cardtest/test_board_pattern_3.png" id="18_prbo0"]
 [ext_resource type="Script" path="res://cardtest/holder_base.gd" id="19_3dmvw"]
-[ext_resource type="PackedScene" path="res://cardtest/grid_pos.tscn" id="20_hocuu"]
+[ext_resource type="PackedScene" uid="uid://dfnkpi4ikp2p7" path="res://cardtest/grid_pos.tscn" id="20_hocuu"]
 [ext_resource type="PackedScene" uid="uid://bp1by1h2xq2dr" path="res://bottom_bar_draft.tscn" id="23_cgod3"]
 [ext_resource type="Script" path="res://cardtest/canvas_ui_anim_layer.gd" id="24_b1kph"]
 [ext_resource type="PackedScene" uid="uid://dcv3m1dhyg1ye" path="res://bottom_bar_prepare.tscn" id="24_fhaw5"]
@@ -334,111 +334,31 @@ columns = 5
 [node name="grid_pos_1" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_1" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_1/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_2" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_2" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_2/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_3" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_3" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_3/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_4" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_4" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_4/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_5" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_5" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_5/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_6" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_6" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_6/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_7" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_7" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_7/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_8" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_8" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_8/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_9" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_9" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_9/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_10" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_10" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_10/center_container" index="0"]
 layout_mode = 2
 
 [node name="animator" parent="CanvasLayer_game/main_area/holder_enemy" instance=ExtResource("15_8txby")]
@@ -481,111 +401,31 @@ columns = 5
 [node name="grid_pos_1" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_1" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_1/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_2" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_2" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_2/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_3" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_3" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_3/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_4" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_4" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_4/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_5" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_5" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_5/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_6" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_6" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_6/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_7" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_7" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_7/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_8" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_8" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_8/center_container" index="0"]
 layout_mode = 2
 
 [node name="grid_pos_9" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_9" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_9/center_container" index="0"]
-layout_mode = 2
-
 [node name="grid_pos_10" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container" instance=ExtResource("20_hocuu")]
-layout_mode = 2
-
-[node name="center_container" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_10" index="0"]
-layout_mode = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="attach_point" parent="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_10/center_container" index="0"]
 layout_mode = 2
 
 [node name="holder_draft" type="NinePatchRect" parent="CanvasLayer_game/main_area/ally_container/holder_allies"]
@@ -742,24 +582,3 @@ shape = SubResource("1")
 [connection signal="visibility_changed" from="CanvasLayer_popup_card/popup_card" to="CanvasLayer_popup_card/popup_card" method="_on_visibility_changed"]
 [connection signal="pressed" from="CanvasLayer_top_bar/safe_zone/ui_bar_9/button_debug" to="CanvasLayer_top_bar/safe_zone/ui_bar_9" method="_on_button_debug_pressed"]
 [connection signal="input_event" from="CanvasLayer_unhandled_events/area_2d" to="CanvasLayer_unhandled_events" method="_on_area_2d_input_event"]
-
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_1"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_2"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_3"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_4"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_5"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_6"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_7"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_8"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_9"]
-[editable path="CanvasLayer_game/main_area/holder_enemy/grid_container/grid_pos_10"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_1"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_2"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_3"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_4"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_5"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_6"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_7"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_8"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_9"]
-[editable path="CanvasLayer_game/main_area/ally_container/holder_allies/grid_container/grid_pos_10"]

@@ -37,14 +37,18 @@ func init_card(_card_info,_card_level = 1):
 func shake(left = true):
 	var shake_tween = create_tween()
 	var block_tween = create_tween()
-	block_tween.interpolate_property(self,"modulate",self.modulate,Color(0,0,0,0),1.2,Tween.TRANS_QUINT)
-	block_tween.start()
+	block_tween.tween_property(self,"modulate",Color(0,0,0,0),1.2).set_trans(Tween.TRANS_QUINT)
+	#block_tween.start()
 	if left:
-		shake_tween.interpolate_property(self,"rotation_degrees", wrapi(0, 0, 360), wrapi(120, 0, 360), 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
+		#shake_tween.interpolate_property(self,"rotation_degrees", wrapi(0, 0, 360), wrapi(120, 0, 360), 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
+		self.rotation_degrees = wrapi(0, 0, 360)  # Set initial rotation if needed
+		shake_tween.tween_property(self, "rotation_degrees", wrapi(120, 0, 360), 1.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
 	else:
-		shake_tween.interpolate_property(self,"rotation_degrees",360, 140, 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
-	shake_tween.start()
-	await block_tween.tween_completed
+		#shake_tween.interpolate_property(self,"rotation_degrees",360, 140, 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
+		self.rotation_degrees = 360  # Set initial rotation
+		shake_tween.tween_property(self, "rotation_degrees", 140, 1.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
+	#shake_tween.start()
+	await block_tween.finished
 	queue_free()
 
 
