@@ -100,59 +100,6 @@ theme_override_constants/margin_bottom = -32
 layout_mode = 2
 mouse_filter = 2
 
-[node name="frame_20" parent="margin_container/frame" index="0"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_22" parent="margin_container/frame" index="1"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_23" parent="margin_container/frame" index="2"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_24" parent="margin_container/frame" index="3"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_21" parent="margin_container/frame" index="4"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_25" parent="margin_container/frame" index="5"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_26" parent="margin_container/frame" index="6"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_27" parent="margin_container/frame" index="7"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_28" parent="margin_container/frame" index="8"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_29" parent="margin_container/frame" index="9"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="frame_30" parent="margin_container/frame" index="10"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_bottom = 19.0
-
-[node name="frame_31" parent="margin_container/frame" index="11"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
-[node name="nine_patch_rect" parent="margin_container/frame" index="12"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
 [node name="panel_container_level" type="PanelContainer" parent="."]
 self_modulate = Color(1, 1, 1, 0.529412)
 layout_mode = 0
@@ -343,5 +290,3 @@ offset_top = 0.0
 offset_bottom = 158.0
 grow_horizontal = 1
 grow_vertical = 1
-
-[editable path="margin_container/frame"]

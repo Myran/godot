@@ -1,53 +1,15 @@
-[gd_scene load_steps=11 format=3 uid="uid://bq0pntsljc8cf"]
+[gd_scene load_steps=7 format=3 uid="uid://bq0pntsljc8cf"]
 
 [ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://cardtest/clicker/brickSpecial01.png" id="1_q5hjc"]
 [ext_resource type="PackedScene" uid="uid://cw02l4pxn753q" path="res://cardtest/card_image_small_base.tscn" id="2"]
 [ext_resource type="Script" path="res://cardtest/clicker/Block.gd" id="2_gsp75"]
 [ext_resource type="Texture2D" uid="uid://b813wdy8g6sw7" path="res://cardtest/frame_icon.png" id="3"]
-[ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://cardtest/testart/ui_test_13.png" id="6"]
-[ext_resource type="Texture2D" uid="uid://cx5cm6bkt8yew" path="res://cardtest/testart/ui_test_7.png" id="6_j7g1c"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(64, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lqhum"]
 size = Vector2(200, 220)
-
-[sub_resource type="Shader" id="11"]
-code = "shader_type canvas_item;
-
-uniform float vignette_intensity = 0.4;
-uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
-uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
-uniform sampler2D mask;
-uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
-float vignette(vec2 uv){
-	uv *= 1.0 - uv.xy;
-	float vignette = uv.x * uv.y * 15.0;
-	return pow(vignette, vignette_intensity * vignette_opacity);
-}
-
-void fragment(){
-	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
-	vec4 text = texture(TEXTURE, UV);
-
-	text.rgba *= (vignette_rgb.rgba);
-	text.rgba *= (1.0 - vignette(UV));
-
-	vec4 mask_color = texture(mask, UV).rgba;
-	if (mask_color.a == 0.0)
-	{
-		text.a = 0.0;
-	}
-	COLOR = vec4((text.rgb)*color.rgb,text.a);
-}
-"
-
-[sub_resource type="ShaderMaterial" id="12"]
-shader = SubResource("11")
-shader_parameter/vignette_intensity = 0.4
-shader_parameter/vignette_opacity = 0.5
-shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
 
 [node name="Block" type="TouchScreenButton"]
 texture_normal = ExtResource("1_q5hjc")
@@ -79,71 +41,4 @@ offset_top = -282.0
 offset_right = -282.0
 offset_bottom = -282.0
 
-[node name="control" parent="card_sprite/card_image_base" index="1"]
-offset_left = 26.0
-offset_right = -21.0
-
-[node name="card_image" parent="card_sprite/card_image_base/control" index="0"]
-offset_bottom = 197.0
-
-[node name="vignette" parent="card_sprite/card_image_base" index="2"]
-material = SubResource("12")
-offset_left = 26.0
-offset_top = -28.0
-offset_right = -21.0
-offset_bottom = 34.0
-
-[node name="frame_29" parent="card_sprite/card_image_base/margin_container/frame" index="9"]
-visible = false
-
-[node name="frame_30" parent="card_sprite/card_image_base/margin_container/frame" index="10"]
-offset_bottom = 0.0
-
-[node name="label_level" parent="card_sprite/card_image_base/panel_container_level/icon_level" index="0"]
-anchor_top = 0.0
-anchor_bottom = 1.0
-offset_top = 0.0
-offset_bottom = 0.0
-size_flags_vertical = 0
-vertical_alignment = 0
-
-[node name="icon_attack_2" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container/h_box_container_2" index="0"]
-texture = ExtResource("6")
-stretch_mode = 7
-
-[node name="ui_test_12" type="TextureRect" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container/h_box_container_2/icon_attack_2" index="0"]
-layout_mode = 0
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -54.5
-offset_top = -53.5
-offset_right = 54.5
-offset_bottom = 53.5
-mouse_filter = 2
-texture = ExtResource("6_j7g1c")
-
-[node name="label_attack" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container/h_box_container_2/icon_attack_2" index="1"]
-offset_left = 54.0
-text = "4"
-
-[node name="panel_container_health" parent="card_sprite/card_image_base/stat_container_3" index="2"]
-size_flags_vertical = 8
-
-[node name="label_health" parent="card_sprite/card_image_base/stat_container_3/panel_container_health/margin_container/h_box_container/icon_health" index="0"]
-text = "4"
-
-[node name="panel_container_level_top" parent="card_sprite/card_image_base" index="6"]
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -281.081
-offset_top = -80.1621
-offset_right = 282.919
-offset_bottom = 85.8379
-
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]
-
-[editable path="card_sprite/card_image_base"]
-[editable path="card_sprite/card_image_base/vignette"]
-[editable path="card_sprite/card_image_base/margin_container/frame"]
