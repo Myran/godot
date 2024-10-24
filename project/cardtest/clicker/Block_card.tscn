@@ -58,7 +58,7 @@ shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 texture_normal = ExtResource("1_q5hjc")
 shape = SubResource("1")
 script = ExtResource("2_gsp75")
-moveSpeed = 0.03
+moveSpeed = 0.01
 
 [node name="area_2d" type="Area2D" parent="."]
 position = Vector2(0, 1)
@@ -86,6 +86,8 @@ offset_bottom = -282.0
 
 [node name="vignette" parent="card_sprite/card_image_base" index="2"]
 material = SubResource("ShaderMaterial_vrcp5")
+offset_right = 0.215942
+pivot_offset = Vector2(-317.797, 1179.32)
 
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]
 

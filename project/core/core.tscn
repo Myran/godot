@@ -466,6 +466,7 @@ size_flags_vertical = 8
 
 [node name="margin_container" type="MarginContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container"]
 layout_mode = 2
+theme_override_constants/margin_bottom = 25
 
 [node name="draft_container" type="CenterContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container"]
 unique_name_in_owner = true
