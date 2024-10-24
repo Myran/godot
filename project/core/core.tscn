@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://ddv8p7xpjy08i"]
+[gd_scene load_steps=37 format=3 uid="uid://ddv8p7xpjy08i"]
 
 [ext_resource type="Script" path="res://core/core.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://cardtest/ui_bar_2.png" id="2_3txpi"]
@@ -30,6 +30,7 @@
 [ext_resource type="Script" path="res://cardtest/canvas_ui_anim_layer.gd" id="24_b1kph"]
 [ext_resource type="PackedScene" uid="uid://dcv3m1dhyg1ye" path="res://bottom_bar_prepare.tscn" id="24_fhaw5"]
 [ext_resource type="Script" path="res://cardtest/canvas_layer_unhandled_events.gd" id="26_7xkfu"]
+[ext_resource type="PackedScene" uid="uid://bosauwoip2osq" path="res://cardtest/canvas_layer_background.tscn" id="31_y2xby"]
 
 [sub_resource type="Animation" id="Animation_awx8l"]
 length = 0.001
@@ -579,6 +580,8 @@ position = Vector2(567, 906.25)
 shape = SubResource("1")
 
 [node name="CanvasLayer_battle" type="CanvasLayer" parent="."]
+
+[node name="canvas_layer_background" parent="." instance=ExtResource("31_y2xby")]
 
 [connection signal="visibility_changed" from="CanvasLayer_popup_card/popup_card" to="CanvasLayer_popup_card/popup_card" method="_on_visibility_changed"]
 [connection signal="pressed" from="CanvasLayer_top_bar/safe_zone/ui_bar_9/button_debug" to="CanvasLayer_top_bar/safe_zone/ui_bar_9" method="_on_button_debug_pressed"]
