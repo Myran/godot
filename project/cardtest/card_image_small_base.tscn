@@ -9,8 +9,8 @@
 [ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://cardtest/font_card_stat_num.tres" id="8"]
 [ext_resource type="StyleBox" path="res://cardtest/panel_card.tres" id="9"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://cardtest/testart/ui_test_8.png" id="10"]
+[ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://cardtest/testart/ui_test_13.png" id="10_7tvvh"]
 [ext_resource type="PackedScene" path="res://cardtest/panel_container_level_top.tscn" id="11"]
-[ext_resource type="Texture2D" uid="uid://cx5cm6bkt8yew" path="res://cardtest/testart/ui_test_7.png" id="12"]
 [ext_resource type="Script" path="res://cardtest/card_image_small_base.gd" id="13"]
 
 [sub_resource type="StyleBoxFlat" id="2"]
@@ -69,22 +69,26 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -36.0
-offset_top = -1.0
-offset_right = 36.0
-offset_bottom = 298.0
+offset_left = -108.5
+offset_top = -4.0
+offset_right = 109.5
+offset_bottom = 146.0
 mouse_filter = 2
 texture = ExtResource("2")
-stretch_mode = 6
+expand_mode = 3
+stretch_mode = 5
 
 [node name="vignette" parent="." instance=ExtResource("6")]
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 1
-grow_vertical = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.033
+anchor_top = -0.053
+anchor_right = 0.982
+anchor_bottom = 1.041
+offset_left = 0.104
+offset_top = 0.136002
+offset_right = 0.215973
+offset_bottom = 0.00799561
 
 [node name="margin_container" type="MarginContainer" parent="."]
 layout_mode = 0
@@ -182,15 +186,16 @@ visible = false
 layout_mode = 2
 
 [node name="stat_container_3" type="HBoxContainer" parent="."]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -287.0
 offset_top = 137.0
-offset_right = 287.0
-offset_bottom = 327.0
+offset_right = 308.0
+offset_bottom = 351.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 7
@@ -208,6 +213,7 @@ theme_override_styles/panel = ExtResource("9")
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_constants/margin_bottom = 50
 
 [node name="h_box_container_2" type="HBoxContainer" parent="stat_container_3/panel_container_attack/margin_container"]
 layout_mode = 2
@@ -220,15 +226,21 @@ layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 mouse_filter = 2
-texture = ExtResource("12")
+texture = ExtResource("10_7tvvh")
 
 [node name="label_attack" type="Label" parent="stat_container_3/panel_container_attack/margin_container/h_box_container_2/icon_attack_2"]
 unique_name_in_owner = true
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -192.0
+offset_left = 57.0
+offset_top = -205.0
+offset_right = 2.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 0
 size_flags_horizontal = 4
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("8")
