@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bq0pntsljc8cf"]
+[gd_scene load_steps=10 format=3 uid="uid://bq0pntsljc8cf"]
 
 [ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://cardtest/clicker/brickSpecial01.png" id="1_q5hjc"]
 [ext_resource type="PackedScene" uid="uid://cw02l4pxn753q" path="res://cardtest/card_image_small_base.tscn" id="2"]
@@ -10,6 +10,49 @@ size = Vector2(64, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lqhum"]
 size = Vector2(200, 220)
+
+[sub_resource type="Shader" id="Shader_fqkis"]
+resource_local_to_scene = true
+code = "shader_type canvas_item;
+
+uniform float vignette_intensity = 0.4;
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D mask;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+
+float vignette(vec2 uv){
+	uv *= 1.0 - uv.xy;
+	float vignette = uv.x * uv.y * 15.0;
+	return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment(){
+	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec4 text = texture(TEXTURE, UV);
+	
+	text.rgba *= (vignette_rgb.rgba);
+	text.rgba *= (1.0 - vignette(UV));
+	
+	vec4 mask_color = texture(mask, UV).rgba;
+	if (mask_color.a == 0.0)
+	{
+		text.a = 0.0;
+	}
+	COLOR = vec4((text.rgb)*color.rgb,text.a);
+}
+"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ntg2t"]
+load_path = "res://.godot/imported/corners.png-95d080a72b143c84ac683f75aabe20d4.ctex"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrcp5"]
+resource_local_to_scene = true
+shader = SubResource("Shader_fqkis")
+shader_parameter/vignette_intensity = 1.0
+shader_parameter/vignette_opacity = 1.0
+shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
+shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 
 [node name="Block" type="TouchScreenButton"]
 texture_normal = ExtResource("1_q5hjc")
@@ -41,4 +84,10 @@ offset_top = -282.0
 offset_right = -282.0
 offset_bottom = -282.0
 
+[node name="vignette" parent="card_sprite/card_image_base" index="2"]
+material = SubResource("ShaderMaterial_vrcp5")
+
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]
+
+[editable path="card_sprite/card_image_base"]
+[editable path="card_sprite/card_image_base/vignette"]

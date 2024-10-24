@@ -92,7 +92,7 @@ func enact(battle_events):
 			battle.EVENT_TYPE.END_OF_TURN:
 				print("end of turn")
 				await back_tween.finished
-	await get_tree().create_timer(0.25).timeout
+	await get_tree().create_timer(1.25).timeout
 	for side in [allies,enemies]:
 		for k in side.keys():
 			side[k].queue_free()

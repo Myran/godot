@@ -34,21 +34,33 @@ func init_card(_card_info,_card_level = 1):
 	base.set_card_attack(unit_info.current_attack)
 	base.set_card_level(unit_info.level)
 
+
+	
+
+	
+	
 func shake(left = true):
 	var shake_tween = create_tween()
 	var block_tween = create_tween()
-	block_tween.tween_property(self,"modulate",Color(0,0,0,0),1.2).set_trans(Tween.TRANS_QUINT)
+	var fade_length = 1.1
+	block_tween.tween_property(self,"modulate",Color(0,0,0,0),fade_length).set_trans(Tween.TRANS_QUINT)
 	#block_tween.start()
+	var vignette = %card_image_base.get_vignette_shader_node()
+	var vig_tween = create_tween()
+	vig_tween.tween_property(vignette.material,"shader_parameter/vignette_rgb",Color(0,0,0,0),fade_length).set_trans(Tween.TRANS_QUINT)
+	vig_tween.chain().tween_callback(func(): vignette.material.set_shader_parameter("vignette_rgb",Color(0,0,0,1)))
 	if left:
 		#shake_tween.interpolate_property(self,"rotation_degrees", wrapi(0, 0, 360), wrapi(120, 0, 360), 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
 		self.rotation_degrees = wrapi(0, 0, 360)  # Set initial rotation if needed
-		shake_tween.tween_property(self, "rotation_degrees", wrapi(120, 0, 360), 1.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
+		shake_tween.tween_property(self, "rotation_degrees", wrapi(120, 0, 360), fade_length).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
 	else:
 		#shake_tween.interpolate_property(self,"rotation_degrees",360, 140, 1.5, Tween.TRANS_BOUNCE, Tween.EASE_IN_OUT)
 		self.rotation_degrees = 360  # Set initial rotation
-		shake_tween.tween_property(self, "rotation_degrees", 140, 1.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
+		shake_tween.tween_property(self, "rotation_degrees", 140, fade_length).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_IN_OUT)
 	#shake_tween.start()
 	await block_tween.finished
+	#await vig_tween.finished
+	
 	queue_free()
 
 

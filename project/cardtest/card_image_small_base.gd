@@ -19,3 +19,6 @@ func set_card_level(_lvl = 1):
 	else:
 		get_node("%icon_level").visible = true
 	get_node("%label_level").text = str(_lvl)
+
+func get_vignette_shader_node():
+	return %vignette

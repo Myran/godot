@@ -1,9 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://cw02l4pxn753q"]
+[gd_scene load_steps=17 format=3 uid="uid://cw02l4pxn753q"]
 
 [ext_resource type="PackedScene" path="res://cardtest/icon_level_small.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://cardtest/card_image_0_1.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://cardtest/testart/ui_test_1.png" id="3"]
 [ext_resource type="PackedScene" uid="uid://bo664q2ju0asl" path="res://cardtest/card_frame.tscn" id="5"]
+[ext_resource type="Texture2D" uid="uid://co1tc6hk6ct7c" path="res://cardtest/corners.png" id="5_hvbbg"]
 [ext_resource type="PackedScene" uid="uid://y0tserwc84jj" path="res://cardtest/vignette.tscn" id="6"]
 [ext_resource type="PackedScene" uid="uid://b5cydk8slpk8v" path="res://cardtest/card_image.tscn" id="7"]
 [ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://cardtest/font_card_stat_num.tres" id="8"]
@@ -31,6 +32,44 @@ expand_margin_right = 20.0
 expand_margin_bottom = 20.0
 shadow_color = Color(0, 0, 0, 0.266667)
 shadow_size = 48
+
+[sub_resource type="Shader" id="Shader_kj12v"]
+code = "shader_type canvas_item;
+
+uniform float vignette_intensity = 0.4;
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D mask;
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+
+float vignette(vec2 uv){
+	uv *= 1.0 - uv.xy;
+	float vignette = uv.x * uv.y * 15.0;
+	return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment(){
+	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec4 text = texture(TEXTURE, UV);
+	
+	text.rgba *= (vignette_rgb.rgba);
+	text.rgba *= (1.0 - vignette(UV));
+	
+	vec4 mask_color = texture(mask, UV).rgba;
+	if (mask_color.a == 0.0)
+	{
+		text.a = 0.0;
+	}
+	COLOR = vec4((text.rgb)*color.rgb,text.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jb31c"]
+shader = SubResource("Shader_kj12v")
+shader_parameter/vignette_intensity = 1.0
+shader_parameter/vignette_opacity = 1.0
+shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
+shader_parameter/mask = ExtResource("5_hvbbg")
 
 [node name="card_image_base" type="ColorRect"]
 custom_minimum_size = Vector2(512, 512)
@@ -79,6 +118,8 @@ expand_mode = 3
 stretch_mode = 5
 
 [node name="vignette" parent="." instance=ExtResource("6")]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_jb31c")
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.033
