@@ -58,7 +58,6 @@ shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 texture_normal = ExtResource("1_q5hjc")
 shape = SubResource("1")
 script = ExtResource("2_gsp75")
-moveSpeed = 0.01
 
 [node name="area_2d" type="Area2D" parent="."]
 position = Vector2(0, 1)

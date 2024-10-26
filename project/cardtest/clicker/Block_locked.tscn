@@ -7,7 +7,6 @@
 size = Vector2(200, 204)
 
 [node name="Block" instance=ExtResource("2")]
-moveSpeed = 0.03
 
 [node name="area_2d" type="Area2D" parent="." index="0"]
 

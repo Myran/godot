@@ -65,13 +65,14 @@ func shake(left = true):
 
 
 func moveToPosition(newPosition):
+	printt("movetoposition: ",self)
 	var time = abs(((newPosition-position).y / texture_normal.get_height()) * moveSpeed)
 	var sceneTween = create_tween()
 	sceneTween.tween_property(self,"position",newPosition,time)
 	sceneTween.tween_callback(Callable(core, "emit_signal").bind(core.SIGNAL_EVENT,core.EVENT_TYPE.CARD_FINISHED_MOVING,self))
 	if time != 0 and object_type == core.OBJECT_TYPE.CARD:
-		sceneTween.tween_property(self,"scale",Vector2(1.05,1.05),0.08)
-		sceneTween.tween_property(self,"scale",Vector2(1,1),0.08)
+		sceneTween.chain().tween_property(self,"scale",Vector2(1.05,1.05),0.08)
+		sceneTween.chain().tween_property(self,"scale",Vector2(1,1),0.08)
 
 func merge_into_position(merge_pos):
 	var sceneTween = create_tween()

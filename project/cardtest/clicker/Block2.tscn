@@ -1,10 +1,9 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=4 format=3 uid="uid://cs6r37r5si37h"]
 
-[ext_resource path="res://cardtest/clicker/Block.tscn" type="PackedScene" id=1]
-[ext_resource path="res://cardtest/clicker/block_heart.png" type="Texture2D" id=2]
-[ext_resource path="res://cardtest/clicker/tapped_heart.png" type="Texture2D" id=3]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://cardtest/clicker/Block.tscn" id="1"]
+[ext_resource type="Texture2D" uid="uid://ci5rc8hd5f752" path="res://cardtest/clicker/block_heart.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://d0u23re3gncar" path="res://cardtest/clicker/tapped_heart.png" id="3"]
 
-[node name="Block" groups=["block"] instance=ExtResource( 1 )]
-normal = ExtResource( 2 )
-pressed = ExtResource( 3 )
-type = 2
+[node name="Block" groups=["block"] instance=ExtResource("1")]
+texture_normal = ExtResource("2")
+texture_pressed = ExtResource("3")
