@@ -97,12 +97,12 @@ static func solve_event(event,_context):
 	var ret_context = _context
 	match event.type:
 		EVENT_TYPE.FIND_NEXT_UNIT:
-			var active_side = _context.allies if _context.allied_turn else _context.enemies
-			var sel_unit_pos = find_next_unactive_on_side(active_side)
+			var _active_side = _context.allies if _context.allied_turn else _context.enemies
+			var sel_unit_pos = find_next_unactive_on_side(_active_side)
 			if sel_unit_pos == null:
 				print("All units activated, clearing list!")
-				active_side.activated_units.clear()
-			sel_unit_pos = find_next_unactive_on_side(active_side)
+				_active_side.activated_units.clear()
+			sel_unit_pos = find_next_unactive_on_side(_active_side)
 			_context.add_event( {TYPE: EVENT_TYPE.SELECT_ACTIVE_UNIT, "sel_unit_pos" : sel_unit_pos, "allied_side" : _context.allied_turn })
 		EVENT_TYPE.ADD_LINEUP:
 			var side = _context.allies if event.allied_side else _context.enemies
@@ -110,9 +110,9 @@ static func solve_event(event,_context):
 			print("Lineup added",side.lineup)
 		EVENT_TYPE.SELECT_ACTIVE_UNIT:
 			printt("Activated unit: ", event)
-			var active_side = _context.allies if event.allied_side else _context.enemies
-			var sel_unit = active_side.lineup[event.sel_unit_pos]
-			active_side.activated_units.append(sel_unit)
+			var _active_side = _context.allies if event.allied_side else _context.enemies
+			var sel_unit = _active_side.lineup[event.sel_unit_pos]
+			_active_side.activated_units.append(sel_unit)
 			_context.current_unit = sel_unit
 		EVENT_TYPE.COMBAT:
 			var attacking_side = _context.allies if event.allied_attack else _context.enemies
@@ -124,9 +124,10 @@ static func solve_event(event,_context):
 			_context.add_event({TYPE: EVENT_TYPE.DAMAGE, "damage_amount" : defending_unit.current_attack, "target" : event.attacker, "side" : event.allied_attack})
 		EVENT_TYPE.DAMAGE:
 			print("Damage event",event)
-			var unit_side = _context.allies if event.side else _context.enemies
-			var u = unit_side.lineup[event.target]
-			var new_health = u.current_health - event.damage_amount
+			#var unit_side = _context.allies if event.side else _context.enemies
+			#var u = unit_side.lineup[event.target]
+			#adda skydd och annat här ?
+			#var new_health = u.current_health - event.damage_amount
 			var health_change = -event.damage_amount
 			_context.add_event({TYPE: EVENT_TYPE.STAT_CHANGE,"stat" : "current_health","target" : event.target, "side" : event.side ,"change" : health_change})
 			#u.current_health = new_health

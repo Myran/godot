@@ -16,8 +16,8 @@ const cardType = 5
 @export var _block_factory: block_factory
 
 func _ready():
-	core.connect("event", Callable(self, "_on_core_event"))
-	debug.connect(debug.SIGNAL_DEBUG, Callable(self, "_on_debug_event"))
+	core.event.connect(_on_core_event)
+	debug.debug_event.connect(_on_debug_event)
 	#if OS.has_feature("editor"):
 		#call_deferred("setup_level")
 		#setup_level()
@@ -94,9 +94,7 @@ func addToGrid(gridPos,block,refill = 0):
 	print("final position: ",(current_level.map_to_local(gridPos) -refillPos))
 	#block.position = (current_level.map_to_local(gridPos) -refillPos)
 	block.position = gridToWorldPos(gridPos)-refillPos
-	#block.position=block.to_global(block.position)
-	var magic_number = 3.3 # nåt med skalan är fel
-	#block.position = block.position * magic_number
+
 
 func getGridPos(block):
 
@@ -127,7 +125,7 @@ func gridToWorldPos(gridPos):
 func moveBlocks():
 	blocks_moving = allBlocks().duplicate()
 	for blockIterator in blocks_moving:
-		blockIterator.moveToPosition(gridToWorldPos(getGridPos(blockIterator)))
+		blockIterator.move_to_position(gridToWorldPos(getGridPos(blockIterator)))
 	await self.cards_done_moving
 
 func removeFromGrid(block,destroy = true):

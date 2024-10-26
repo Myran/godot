@@ -54,6 +54,7 @@ func _ready():
 	if ClassDB.class_exists("FirebaseDatabase"):
 		print("Firebase RealTime Database exists singleton")
 		db = ClassDB.instantiate("FirebaseDatabase")
+		#db.connect("get_value",get_value)
 		db.connect("get_value", Callable(self, "get_value"))
 		db.connect("child_changed", Callable(self, "child_changed"))
 		db.connect("child_moved", Callable(self, "child_moved"))

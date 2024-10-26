@@ -1,8 +1,8 @@
-[gd_scene load_steps=28 format=3 uid="uid://0kaefxjko40k"]
+[gd_scene load_steps=26 format=3 uid="uid://0kaefxjko40k"]
 
 [ext_resource type="Script" path="res://core/card/card.gd" id="1_kx5r1"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://assets/card_images/card_image_0_1.png" id="2_p2tcb"]
-[ext_resource type="Texture2D" uid="uid://co1tc6hk6ct7c" path="res://assets/corners.png" id="3_ricu1"]
+[ext_resource type="Material" uid="uid://cjohunbemkph7" path="res://assets/shaders/card_vignette.tres" id="3_siq1b"]
 [ext_resource type="StyleBox" path="res://core/card/panel_card.tres" id="4_elc7a"]
 [ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://assets/testart/ui_test_1.png" id="5_bde0u"]
 [ext_resource type="Script" path="res://core/card/card_level_icon.gd" id="6_bsedo"]
@@ -35,44 +35,6 @@ _data = {
 "RESET": SubResource("13"),
 "scale_up": SubResource("14")
 }
-
-[sub_resource type="Shader" id="11"]
-code = "shader_type canvas_item;
-
-uniform float vignette_intensity = 0.4;
-uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
-uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
-uniform sampler2D mask;
-uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
-
-float vignette(vec2 uv){
-	uv *= 1.0 - uv.xy;
-	float vignette = uv.x * uv.y * 15.0;
-	return pow(vignette, vignette_intensity * vignette_opacity);
-}
-
-void fragment(){
-	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
-	vec4 text = texture(TEXTURE, UV);
-	
-	text.rgba *= (vignette_rgb.rgba);
-	text.rgba *= (1.0 - vignette(UV));
-	
-	vec4 mask_color = texture(mask, UV).rgba;
-	if (mask_color.a == 0.0)
-	{
-		text.a = 0.0;
-	}
-	COLOR = vec4((text.rgb)*color.rgb,text.a);
-}
-"
-
-[sub_resource type="ShaderMaterial" id="12"]
-shader = SubResource("11")
-shader_parameter/vignette_intensity = 1.0
-shader_parameter/vignette_opacity = 1.0
-shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
-shader_parameter/mask = ExtResource("3_ricu1")
 
 [sub_resource type="FontFile" id="15"]
 fallbacks = Array[Font]([ExtResource("9_ql8ra"), ExtResource("9_ql8ra")])
@@ -251,7 +213,7 @@ stretch_mode = 5
 
 [node name="vignette" type="ColorRect" parent="v_box_container_2/card_image"]
 unique_name_in_owner = true
-material = SubResource("12")
+material = ExtResource("3_siq1b")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

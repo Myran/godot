@@ -192,7 +192,8 @@ func _on_Button_sign_in_anon_pressed():
 
 
 func facebook_login_success(res):
-	emit_signal("fb_success",res)
+	#emit_signal("fb_success",res)
+	fb_success.emit(res)
 
 func _on_Button_sign_in_facebook_pressed():
 	auth.sign_in_facebook()

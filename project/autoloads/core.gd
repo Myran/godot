@@ -9,5 +9,7 @@ enum OBJECT_TYPE{TEST,CARD,CARD_HOLDER,BACKGROUND,BLOCK_LOCKED,BLOCK_UPGRADE,EMP
 var clicker = null
 signal event
 
+func action(core_event : EVENT_TYPE,args):
+	event.emit(core_event,args)
 func _ready():
 	print("core autoload ready")

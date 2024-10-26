@@ -2,14 +2,14 @@
 
 [ext_resource type="Script" path="res://core/core.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
-[ext_resource type="Script" path="res://zen/safe_zone.gd" id="2_t1pgp"]
+[ext_resource type="Script" path="res://core/safe_zone.gd" id="2_t1pgp"]
 [ext_resource type="Script" path="res://core/popup_card.gd" id="2_xsnym"]
 [ext_resource type="Script" path="res://core/top_bar.gd" id="3_jg5gr"]
 [ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://core/card/card.tscn" id="3_qxw11"]
 [ext_resource type="Script" path="res://core/draft.gd" id="3_ytbtw"]
 [ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://core/hold_bar.tscn" id="4_0gw5k"]
 [ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="4_vn1jd"]
-[ext_resource type="Texture2D" uid="uid://qwrxynpphf4j" path="res://zen/zen_assets/counter_icon_life.png" id="4_y87xh"]
+[ext_resource type="Texture2D" uid="uid://qwrxynpphf4j" path="res://assets/ui/icons/counter_icon_life.png" id="4_y87xh"]
 [ext_resource type="Script" path="res://core/draft_container.gd" id="5_c76if"]
 [ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="5_uee54"]
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
@@ -20,7 +20,7 @@
 [ext_resource type="Resource" uid="uid://b4fke525yywsh" path="res://core/levels_default.tres" id="8_oqud3"]
 [ext_resource type="Resource" uid="uid://034uyxaore0y" path="res://core/block_factory.tres" id="9_goeof"]
 [ext_resource type="Texture2D" uid="uid://cfhj53a8a5lqn" path="res://assets/ui/icons/arrow_1.png" id="9_w0xo1"]
-[ext_resource type="Material" uid="uid://cmsbx1qdbm8sk" path="res://zen/zen_assets/shadermaterial_blur.tres" id="11_fb2bi"]
+[ext_resource type="Material" uid="uid://cmsbx1qdbm8sk" path="res://assets/shaders/shadermaterial_blur.tres" id="11_fb2bi"]
 [ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://assets/test_board_pattern_3.png" id="18_prbo0"]
 [ext_resource type="Script" path="res://core/holder_base.gd" id="19_3dmvw"]
 [ext_resource type="PackedScene" uid="uid://dfnkpi4ikp2p7" path="res://core/grid_pos.tscn" id="20_hocuu"]
@@ -42,7 +42,7 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/path = NodePath("blur:material:shader_parameter/amount")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -58,7 +58,7 @@ length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/path = NodePath("blur:material:shader_parameter/amount")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -74,7 +74,7 @@ length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("blur:material:shader_param/amount")
+tracks/0/path = NodePath("blur:material:shader_parameter/amount")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {

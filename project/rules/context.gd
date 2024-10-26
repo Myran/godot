@@ -5,8 +5,8 @@ var events = []
 var unresolved_events = []
 var event_list = []
 
-func add_event(event):
-	unresolved_events.append(event)
+func add_event(_event):
+	unresolved_events.append(_event)
 	return self
 	
 class event:

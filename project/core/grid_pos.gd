@@ -15,7 +15,7 @@ func set_card(card):
 	get_node("%attach_point").add_child(card)
 	pos_card_in_holder()
 	card.holder = self
-	card.context = cards.CONTEXT.LINEUP
+	card.block_context = cards.CONTEXT.LINEUP
 	return true
 func get_card():
 	return _content

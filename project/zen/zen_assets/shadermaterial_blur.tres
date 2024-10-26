@@ -1,7 +1,0 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://cmsbx1qdbm8sk"]
-
-[ext_resource type="Shader" path="res://zen/zen_assets/shadermaterial_blur.gdshader" id="1_s742t"]
-
-[resource]
-shader = ExtResource("1_s742t")
-shader_parameter/amount = 0.0

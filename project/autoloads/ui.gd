@@ -5,6 +5,7 @@ signal event
 
 const SIGNAL_EVENT = "event"
 func action(type : EVENT_TYPE,args):
-	emit_signal(SIGNAL_EVENT,type,args)
+	event.emit(type,args)
+	
 func _ready():
 	print("ui autoload ready")

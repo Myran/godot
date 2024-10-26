@@ -17,4 +17,4 @@ func _ready():
 
 
 func _on_button_debug_pressed():
-	debug.emit_signal(debug.SIGNAL_DEBUG,debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU,null)
+	debug.action(debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU,null)

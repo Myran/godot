@@ -41,9 +41,11 @@ func _ready():
 	holder_draft.setup()
 	set_gamestate(core.GAME_STATE.START)
 	blur_layer.unblur()
-	ui.connect(ui.SIGNAL_EVENT, Callable(self, "new_event").bind(SOLVE_TYPE.UI))
-	core.connect(core.SIGNAL_EVENT, Callable(self, "new_event").bind(SOLVE_TYPE.CORE))
-	debug.connect(debug.SIGNAL_DEBUG, Callable(self, "_on_debug_event"))
+	#ui.connect(ui.SIGNAL_EVENT, Callable(self, "new_event").bind(SOLVE_TYPE.UI))
+	#ui.event.connect(Callable(self,"new_event").bind(SOLVE_TYPE.UI))
+	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
+	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
+	debug.debug_event.connect(_on_debug_event)
 	
 	enacter = battle_enacter.new(battle_layer,holder_allies,holder_enemy)
 	add_child(enacter)
@@ -190,7 +192,7 @@ func resolve_core_event(event_type,_data,current_context):
 				update_context_units(current_context)
 				if trip_card == card:
 					new_card = await card_controller.create_unit_from_id(card.card_info.id,card.level+1)
-					new_card.context = cards.CONTEXT.LINEUP
+					new_card.block_context = cards.CONTEXT.LINEUP
 					holder.set_card(new_card)
 					new_card.show_upgrade()
 					merge_pos = new_card.get_global_position()
@@ -235,9 +237,10 @@ func resolve_ui_event(_event_type,_data,current_context):
 			# create battle events and result
 			var allies = holder_allies.get_current_lineup()
 			var enemies = holder_enemy.get_current_lineup()
-			var _battle = await battle.new()
-			var prep_allies = _battle.prepare_lineup_from_holder(allies)
-			var prep_enemies = _battle.prepare_lineup_from_holder(enemies)
+			#var _battle = await battle.new()
+			var _battle = battle.new()
+			var prep_allies = battle.prepare_lineup_from_holder(allies)
+			var prep_enemies = battle.prepare_lineup_from_holder(enemies)
 			var battle_result = _battle.battle_start(prep_allies,prep_enemies)
 			current_battle = battle_result
 			ui.action(ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
@@ -300,7 +303,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 										return
 								core.OBJECT_TYPE.CARD_HOLDER:
 									var interacted_holder = interacted_object
-									match dragging_card.context:
+									match dragging_card.block_context:
 										cards.CONTEXT.LINEUP:
 											var prev_holder = dragging_card.holder
 											if interacted_holder.set_card(dragging_card):
@@ -319,7 +322,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 														update_draft = true
 
 							if not release_handled:
-								match dragging_card.context:
+								match dragging_card.block_context:
 									cards.CONTEXT.LINEUP:
 										dragging_card.holder.pos_card_in_holder()
 									cards.CONTEXT.DRAFT:

@@ -10,8 +10,8 @@ extends NinePatchRect
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	for btn in h_box_container_buttons.get_children():
-		btn.connect("toggled", Callable(self, "on_hold_toggle").bind(btn))
+		btn.toggled.connect(on_hold_toggle.bind(btn))
 func on_hold_toggle(state,btn):
-	print("toggle: ",btn,state)
+	print("button toggle: ",btn,state)
 	var col = btn.get_index()
 	ui.action(ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED,[btn.pressed,col])

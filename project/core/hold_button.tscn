@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://d2oupj88p1q2k"]
+
+[ext_resource type="Texture2D" uid="uid://b0dwmsirr6g6f" path="res://assets/ui/icons/button_triangle_green.png" id="1_jnxg3"]
+[ext_resource type="Texture2D" uid="uid://jjrtubxin7hi" path="res://assets/ui/icons/button_triangle_red.png" id="2_71t6m"]
+
+[node name="hold_button" type="TextureButton"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -60.0
+offset_right = 60.0
+offset_bottom = 60.0
+pivot_offset = Vector2(60, 60)
+size_flags_horizontal = 5
+size_flags_vertical = 5
+toggle_mode = true
+texture_normal = ExtResource("1_jnxg3")
+texture_pressed = ExtResource("2_71t6m")
+stretch_mode = 5

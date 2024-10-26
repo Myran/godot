@@ -7,8 +7,8 @@ var gravityVector = Vector2i(0,1)
 var refillCounter = []
 var merging_cards = []
 
-signal level_done
-signal block_collected
+#signal level_done
+#signal block_collected
 signal merge_card_done
 signal merge_move_done
 
@@ -114,7 +114,7 @@ func merge_matched_cards(cluster):
 	var card_id = cluster[0].card_info.id
 	var new_level = int(cluster[0].level)+1
 	var new_card = await card_controller.create_unit_from_id(card_id,new_level)
-	new_card.context = cards.CONTEXT.DRAFT
+	new_card.block_context = cards.CONTEXT.DRAFT
 	var cluster_pos = level.getGridPos(cluster[1])
 	for block in cluster:
 		block.merge_into_position(level.gridToWorldPos(cluster_pos))

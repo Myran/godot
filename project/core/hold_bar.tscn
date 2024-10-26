@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b6avfnw2ou7lu"]
 
-[ext_resource type="PackedScene" path="res://hold_button.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://core/hold_button.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2"]
 [ext_resource type="Script" path="res://core/hold_bar.gd" id="3"]
 

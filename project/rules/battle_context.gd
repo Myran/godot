@@ -27,12 +27,12 @@ func solve_events():
 			solve_events()
 
 
-static func broadcast_event(responder,_context,event):
-	for side in [_context.allies,_context.enemies]:
-		for pos in side.lineup:
-			var _u = side.lineup[pos]
-			var _u_side = true if side == _context.allies else false
-			_u.call(responder,pos,_u_side,_context,event)
+static func broadcast_event(responder,_context,_event):
+	for _side in [_context.allies,_context.enemies]:
+		for pos in _side.lineup:
+			var _u = _side.lineup[pos]
+			var _u_side = true if _side == _context.allies else false
+			_u.call(responder,pos,_u_side,_context,_event)
 
 class side:
 	var lineup = {}
