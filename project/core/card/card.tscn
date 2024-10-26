@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://0kaefxjko40k"]
+[gd_scene load_steps=28 format=3 uid="uid://0kaefxjko40k"]
 
 [ext_resource type="Script" path="res://core/card/card.gd" id="1_kx5r1"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://assets/card_images/card_image_0_1.png" id="2_p2tcb"]
@@ -16,6 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="14_5eikb"]
 [ext_resource type="Texture2D" uid="uid://yfr83ovhs38a" path="res://assets/testart/draft_background_test_2.png" id="15_tokug"]
 [ext_resource type="Script" path="res://core/card_info_full.gd" id="16_rl3pn"]
+[ext_resource type="PackedScene" uid="uid://drbh6exh0meuq" path="res://core/card/card_tag.tscn" id="17_dg3l5"]
 
 [sub_resource type="Environment" id="6"]
 background_mode = 4
@@ -579,6 +580,7 @@ size_flags_vertical = 4
 mouse_filter = 2
 alignment = 2
 script = ExtResource("16_rl3pn")
+tag_scene = ExtResource("17_dg3l5")
 
 [node name="margin_container_name" type="MarginContainer" parent="v_box_container/stats/panel_container_2/panel_container/margin_container/card_info"]
 visible = false
