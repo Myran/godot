@@ -178,7 +178,7 @@ func get_db_value(value):
 		recieved = await self.value_received
 		retval = recieved.value
 	return retval
-
+"""
 func get_zen_progression():
 	return await get_db_sheet(zen_progression)
 
@@ -298,7 +298,7 @@ func login():
 
 #func addtest(tab):
 #	return str(tab,"_",test_group)
-
+"""
 func get_value(key,value):
 	#printt("key:",key,"Value:",value)
 	emit_signal("value_received",{"key":key,"value":value})
@@ -405,7 +405,7 @@ func create_arena_card(card_data):
 func remove_card_from_collection():
 	pass
 
-
+"""
 func get_arena_card_data(card_uid):
 	print("TTT Get arena card data:",card_uid)
 	assert(auth,"Auth not available")
@@ -452,7 +452,7 @@ func get_arena_deck(deck_number = 0):
 	var deck = test_json_conv.get_data()
 	print("deck:",deck)
 	return deck
-
+"""
 func remove_event_lineups(event):
 	db.set_db_root(["events",event])
 	db.remove_value(["lineups"])
@@ -468,7 +468,7 @@ func get_event_lineups_data(event):
 	else:
 		print("database not available!")
 
-func save_event_lineup_data(event,lineup,level = 1,player_data = null,lives = 3,lineup_uuid = null):
+func save_event_lineup_data(event,lineup,level = 1,p_data = null,lives = 3,lineup_uuid = null):
 
 	var json_data = JSON.stringify(lineup)
 	db.set_db_root(["events",event])
@@ -479,9 +479,9 @@ func save_event_lineup_data(event,lineup,level = 1,player_data = null,lives = 3,
 		pushString = lineup_uuid
 	var path = [str("lineups","/",pushString)]
 	var data = {"lineup_level":level,"lineup_data":json_data,"lives":lives}
-	if player_data:
-		data.name = player_data.name
-		data.avatar_id = player_data.avatar_id
+	if p_data:
+		data.name = p_data.name
+		data.avatar_id = p_data.avatar_id
 
 
 	db.update_children(path,data)
