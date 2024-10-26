@@ -1,36 +1,41 @@
-[gd_scene load_steps=37 format=3 uid="uid://ddv8p7xpjy08i"]
+[gd_scene load_steps=45 format=3 uid="uid://ddv8p7xpjy08i"]
 
 [ext_resource type="Script" path="res://core/core.gd" id="1_xyr2d"]
-[ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://cardtest/ui_bar_2.png" id="2_3txpi"]
+[ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
 [ext_resource type="Script" path="res://zen/safe_zone.gd" id="2_t1pgp"]
-[ext_resource type="Script" path="res://cardtest/popup_card.gd" id="2_xsnym"]
-[ext_resource type="Script" path="res://cardtest/top_bar.gd" id="3_jg5gr"]
-[ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://cardtest/card_4.tscn" id="3_qxw11"]
-[ext_resource type="Script" path="res://cardtest/draft.gd" id="3_ytbtw"]
-[ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://cardtest/hold_bar.tscn" id="4_0gw5k"]
-[ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://cardtest/ui_bar_1.png" id="4_vn1jd"]
+[ext_resource type="Script" path="res://core/popup_card.gd" id="2_xsnym"]
+[ext_resource type="Script" path="res://core/top_bar.gd" id="3_jg5gr"]
+[ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://core/card/card.tscn" id="3_qxw11"]
+[ext_resource type="Script" path="res://core/draft.gd" id="3_ytbtw"]
+[ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://core/hold_bar.tscn" id="4_0gw5k"]
+[ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="4_vn1jd"]
 [ext_resource type="Texture2D" uid="uid://qwrxynpphf4j" path="res://zen/zen_assets/counter_icon_life.png" id="4_y87xh"]
-[ext_resource type="Script" path="res://cardtest/draft_container.gd" id="5_c76if"]
-[ext_resource type="FontFile" path="res://cardtest/font_card_title.tres" id="5_uee54"]
-[ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://cardtest/icon_upgrade.png" id="6_3jr07"]
-[ext_resource type="Script" path="res://cardtest/clicker.gd" id="6_mq18b"]
-[ext_resource type="FontFile" path="res://cardtest/font_card_text.tres" id="7_8b5nu"]
-[ext_resource type="Script" path="res://cardtest/tilemap_controller.gd" id="7_e68m3"]
-[ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://cardtest/icon_coins.png" id="8_h0xc7"]
-[ext_resource type="Resource" uid="uid://b4fke525yywsh" path="res://cardtest/levels_default.tres" id="8_oqud3"]
-[ext_resource type="Resource" uid="uid://034uyxaore0y" path="res://cardtest/block_factory.tres" id="9_goeof"]
+[ext_resource type="Script" path="res://core/draft_container.gd" id="5_c76if"]
+[ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="5_uee54"]
+[ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
+[ext_resource type="Script" path="res://core/clicker/clicker.gd" id="6_mq18b"]
+[ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_8b5nu"]
+[ext_resource type="Script" path="res://core/clicker/tilemap_controller.gd" id="7_e68m3"]
+[ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="8_h0xc7"]
+[ext_resource type="Resource" uid="uid://b4fke525yywsh" path="res://core/levels_default.tres" id="8_oqud3"]
+[ext_resource type="Resource" uid="uid://034uyxaore0y" path="res://core/block_factory.tres" id="9_goeof"]
 [ext_resource type="Texture2D" uid="uid://cfhj53a8a5lqn" path="res://assets/ui/icons/arrow_1.png" id="9_w0xo1"]
-[ext_resource type="Script" path="res://cardtest/canvas_layer_blur.gd" id="10_pdprm"]
 [ext_resource type="Material" uid="uid://cmsbx1qdbm8sk" path="res://zen/zen_assets/shadermaterial_blur.tres" id="11_fb2bi"]
-[ext_resource type="PackedScene" uid="uid://dcr3jtraqbu5k" path="res://cardtest/animator.tscn" id="15_8txby"]
-[ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://cardtest/test_board_pattern_3.png" id="18_prbo0"]
-[ext_resource type="Script" path="res://cardtest/holder_base.gd" id="19_3dmvw"]
-[ext_resource type="PackedScene" uid="uid://dfnkpi4ikp2p7" path="res://cardtest/grid_pos.tscn" id="20_hocuu"]
-[ext_resource type="PackedScene" uid="uid://bp1by1h2xq2dr" path="res://bottom_bar_draft.tscn" id="23_cgod3"]
-[ext_resource type="Script" path="res://cardtest/canvas_ui_anim_layer.gd" id="24_b1kph"]
-[ext_resource type="PackedScene" uid="uid://dcv3m1dhyg1ye" path="res://bottom_bar_prepare.tscn" id="24_fhaw5"]
-[ext_resource type="Script" path="res://cardtest/canvas_layer_unhandled_events.gd" id="26_7xkfu"]
-[ext_resource type="PackedScene" uid="uid://bosauwoip2osq" path="res://cardtest/canvas_layer_background.tscn" id="31_y2xby"]
+[ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://assets/test_board_pattern_3.png" id="18_prbo0"]
+[ext_resource type="Script" path="res://core/holder_base.gd" id="19_3dmvw"]
+[ext_resource type="PackedScene" uid="uid://dfnkpi4ikp2p7" path="res://core/grid_pos.tscn" id="20_hocuu"]
+[ext_resource type="Script" path="res://core/canvas_layer_blur.gd" id="24_iuvqy"]
+[ext_resource type="Script" path="res://core/canvas_ui_anim_layer.gd" id="26_f286b"]
+[ext_resource type="Script" path="res://core/bottom_bar_draft.gd" id="28_tf1de"]
+[ext_resource type="Texture2D" uid="uid://b8rfgb42ejraw" path="res://assets/ui/ui_button_round.png" id="29_pjcx5"]
+[ext_resource type="Texture2D" uid="uid://dp1o5y0achq26" path="res://assets/testart/icon_attacking_3.png" id="30_vxtce"]
+[ext_resource type="Texture2D" uid="uid://dlrk7bifsc01u" path="res://assets/testart/icon_twirl.png" id="31_i7330"]
+[ext_resource type="Texture2D" uid="uid://c83h23662qwhv" path="res://assets/testart/prepare_background_test_1.png" id="32_hrch1"]
+[ext_resource type="Script" path="res://core/bottom_bar_prepare.gd" id="32_lyjxj"]
+[ext_resource type="Texture2D" uid="uid://c1e08fanf64kf" path="res://assets/testart/icon_lock.png" id="33_55enf"]
+[ext_resource type="Texture2D" uid="uid://4kptx0p3ydv2" path="res://assets/testart/prepare_background_test_2.png" id="33_af07s"]
+[ext_resource type="Script" path="res://core/canvas_layer_unhandled_events.gd" id="33_xudeo"]
+[ext_resource type="Script" path="res://core/canvas_layer_background.gd" id="34_ohwbi"]
 
 [sub_resource type="Animation" id="Animation_awx8l"]
 length = 0.001
@@ -88,6 +93,43 @@ _data = {
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(4888, 3161.5)
+
+[sub_resource type="Animation" id="Animation_4ex81"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../background_draft:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="2"]
+resource_name = "show"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("../background_draft:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_okyyo"]
+_data = {
+"RESET": SubResource("Animation_4ex81"),
+"show": SubResource("2")
+}
 
 [node name="Core" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "blur_layer", "top_bar", "battle_layer", "unhandled_layer")]
 layout_mode = 3
@@ -362,10 +404,6 @@ layout_mode = 2
 [node name="grid_pos_10" parent="CanvasLayer_game/main_area/holder_enemy/grid_container" instance=ExtResource("20_hocuu")]
 layout_mode = 2
 
-[node name="animator" parent="CanvasLayer_game/main_area/holder_enemy" instance=ExtResource("15_8txby")]
-anim_layer_name = "CanvasLayer_anim_game"
-attach_point_name = "enemies"
-
 [node name="ally_container" type="VBoxContainer" parent="CanvasLayer_game/main_area"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -379,10 +417,6 @@ size_flags_vertical = 4
 texture = ExtResource("18_prbo0")
 stretch_mode = 4
 script = ExtResource("19_3dmvw")
-
-[node name="animator" parent="CanvasLayer_game/main_area/ally_container/holder_allies" instance=ExtResource("15_8txby")]
-anim_layer_name = "CanvasLayer_anim_game"
-attach_point_name = "allies"
 
 [node name="grid_container" type="GridContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies"]
 layout_mode = 0
@@ -449,10 +483,6 @@ patch_margin_right = 44
 patch_margin_bottom = 40
 script = ExtResource("3_ytbtw")
 
-[node name="animator" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft" instance=ExtResource("15_8txby")]
-anim_layer_name = "CanvasLayer_anim_game"
-attach_point_name = "allies"
-
 [node name="v_box_container" type="VBoxContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft"]
 layout_mode = 0
 anchor_right = 1.0
@@ -503,7 +533,7 @@ custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 
 [node name="CanvasLayer_blur" type="CanvasLayer" parent="."]
-script = ExtResource("10_pdprm")
+script = ExtResource("24_iuvqy")
 
 [node name="blur" type="ColorRect" parent="CanvasLayer_blur"]
 material = ExtResource("11_fb2bi")
@@ -518,7 +548,7 @@ libraries = {
 }
 
 [node name="CanvasLayer_anim_game" type="CanvasLayer" parent="."]
-script = ExtResource("24_b1kph")
+script = ExtResource("26_f286b")
 
 [node name="attach_points" type="Control" parent="CanvasLayer_anim_game"]
 layout_mode = 3
@@ -565,13 +595,374 @@ size_flags_vertical = 4
 
 [node name="CanvasLayer_bottom_bar" type="CanvasLayer" parent="."]
 
-[node name="bottom_bar_draft" parent="CanvasLayer_bottom_bar" groups=["anim"] instance=ExtResource("23_cgod3")]
+[node name="bottom_bar_draft" type="NinePatchRect" parent="CanvasLayer_bottom_bar" groups=["anim"]]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -187.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("2_3txpi")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 47
+patch_margin_top = 54
+patch_margin_right = 44
+patch_margin_bottom = 40
+axis_stretch_horizontal = 1
+script = ExtResource("28_tf1de")
 
-[node name="bottom_bar_prepare" parent="CanvasLayer_bottom_bar" groups=["anim"] instance=ExtResource("24_fhaw5")]
+[node name="ui_button_round" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -130.0
+offset_right = 130.0
+offset_bottom = 130.0
+pivot_offset = Vector2(-344, -1169.5)
+texture = ExtResource("29_pjcx5")
+expand_mode = 1
+
+[node name="icon_twirl" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_button_round"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -55.5
+offset_top = -55.5
+offset_right = 55.5
+offset_bottom = 55.5
+texture = ExtResource("30_vxtce")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_to_battle" type="Button" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_button_round"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ui_bar_11" type="NinePatchRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft"]
+layout_mode = 0
+anchor_bottom = 1.0
+offset_left = 82.0
+offset_top = 42.0
+offset_right = 352.0
+offset_bottom = -30.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("4_vn1jd")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 54
+patch_margin_top = 63
+patch_margin_right = 53
+patch_margin_bottom = 52
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="margin_container_2" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="h_box_container" type="HBoxContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2"]
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+
+[node name="icon_upgrade" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2/h_box_container"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("6_3jr07")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_2" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2/h_box_container"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("7_8b5nu")
+text = "UPGRADE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="margin_container" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2/h_box_container"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 20
+
+[node name="label_4" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2/h_box_container"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_uee54")
+text = "13"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="icon_coins_4" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/margin_container_2/h_box_container"]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+texture = ExtResource("8_h0xc7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_upgrade" type="Button" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ui_bar_13" type="NinePatchRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft"]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -367.0
+offset_top = 38.0
+offset_right = -93.0
+offset_bottom = -34.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("4_vn1jd")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 54
+patch_margin_top = 63
+patch_margin_right = 53
+patch_margin_bottom = 52
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="margin_container_2" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="h_box_container" type="HBoxContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2"]
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+
+[node name="icon_upgrade" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/h_box_container"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("31_i7330")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_2" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/h_box_container"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("7_8b5nu")
+text = "UPGRADE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="margin_container" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/h_box_container"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+
+[node name="label_4" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/h_box_container"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_uee54")
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="icon_coins_4" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/h_box_container"]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+texture = ExtResource("8_h0xc7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_reroll" type="Button" parent="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+
+[node name="bottom_bar_prepare" type="NinePatchRect" parent="CanvasLayer_bottom_bar" groups=["anim"]]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -187.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("2_3txpi")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 47
+patch_margin_top = 54
+patch_margin_right = 44
+patch_margin_bottom = 40
+axis_stretch_horizontal = 1
+script = ExtResource("32_lyjxj")
+
+[node name="ui_bar_13" type="NinePatchRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare"]
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -354.0
+offset_top = -56.5
+offset_right = -108.0
+offset_bottom = 58.5
+texture = ExtResource("4_vn1jd")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 54
+patch_margin_top = 63
+patch_margin_right = 53
+patch_margin_bottom = 52
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="margin_container_2" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_bar_13"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="icon_attacking_3" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_bar_13"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("30_vxtce")
+stretch_mode = 6
+
+[node name="icon_lock_6" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_bar_13"]
+visible = false
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -123.0
+offset_top = -57.5
+offset_right = 123.0
+offset_bottom = 57.5
+rotation = 180.0
+scale = Vector2(0.8, 0.8)
+pivot_offset = Vector2(123, 57)
+texture = ExtResource("33_55enf")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_battle" type="Button" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_bar_13"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="h_box_container" type="HBoxContainer" parent="CanvasLayer_bottom_bar/bottom_bar_prepare"]
+layout_mode = 0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_right = 370.0
+size_flags_vertical = 4
+
+[node name="icon_upgrade" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/h_box_container"]
+visible = false
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("6_3jr07")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_2" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/h_box_container"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("7_8b5nu")
+text = "UPGRADE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="margin_container" type="MarginContainer" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/h_box_container"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="icon_coins_4" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/h_box_container"]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+texture = ExtResource("8_h0xc7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_4" type="Label" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/h_box_container"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_uee54")
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ui_button_round_2" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -223.5
+offset_right = 130.0
+offset_bottom = 36.5
+texture = ExtResource("29_pjcx5")
+expand_mode = 1
+
+[node name="icon_twirl" type="TextureRect" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_button_round_2"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -65.0
+offset_top = -65.0
+offset_right = 65.0
+offset_bottom = 65.0
+texture = ExtResource("31_i7330")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_draft" type="Button" parent="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_button_round_2"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
 
 [node name="CanvasLayer_unhandled_events" type="CanvasLayer" parent="."]
 layer = -1
-script = ExtResource("26_7xkfu")
+script = ExtResource("33_xudeo")
 
 [node name="area_2d" type="Area2D" parent="CanvasLayer_unhandled_events"]
 
@@ -581,8 +972,50 @@ shape = SubResource("1")
 
 [node name="CanvasLayer_battle" type="CanvasLayer" parent="."]
 
-[node name="canvas_layer_background" parent="." instance=ExtResource("31_y2xby")]
+[node name="canvas_layer_background" type="CanvasLayer" parent="."]
+layer = -5
+script = ExtResource("34_ohwbi")
+
+[node name="animation_player" type="AnimationPlayer" parent="canvas_layer_background"]
+root_node = NodePath("../background_prepare2")
+libraries = {
+"": SubResource("AnimationLibrary_okyyo")
+}
+
+[node name="background_prepare2" type="TextureRect" parent="canvas_layer_background"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("32_hrch1")
+stretch_mode = 7
+
+[node name="background_draft" type="TextureRect" parent="canvas_layer_background"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("33_af07s")
+stretch_mode = 7
+
+[node name="background_prepare" type="TextureRect" parent="canvas_layer_background"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("32_hrch1")
+expand_mode = 5
+stretch_mode = 6
 
 [connection signal="visibility_changed" from="CanvasLayer_popup_card/popup_card" to="CanvasLayer_popup_card/popup_card" method="_on_visibility_changed"]
 [connection signal="pressed" from="CanvasLayer_top_bar/safe_zone/ui_bar_9/button_debug" to="CanvasLayer_top_bar/safe_zone/ui_bar_9" method="_on_button_debug_pressed"]
+[connection signal="pressed" from="CanvasLayer_bottom_bar/bottom_bar_draft/ui_button_round/button_to_battle" to="CanvasLayer_bottom_bar/bottom_bar_draft" method="_on_button_to_battle_pressed"]
+[connection signal="pressed" from="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_11/button_upgrade" to="CanvasLayer_bottom_bar/bottom_bar_draft" method="_on_button_upgrade_pressed"]
+[connection signal="pressed" from="CanvasLayer_bottom_bar/bottom_bar_draft/ui_bar_13/margin_container_2/button_reroll" to="CanvasLayer_bottom_bar/bottom_bar_draft" method="_on_button_reroll_pressed"]
+[connection signal="pressed" from="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_bar_13/button_battle" to="CanvasLayer_bottom_bar/bottom_bar_prepare" method="_on_button_battle_pressed"]
+[connection signal="pressed" from="CanvasLayer_bottom_bar/bottom_bar_prepare/ui_button_round_2/button_draft" to="CanvasLayer_bottom_bar/bottom_bar_prepare" method="_on_button_draft_pressed"]
 [connection signal="input_event" from="CanvasLayer_unhandled_events/area_2d" to="CanvasLayer_unhandled_events" method="_on_area_2d_input_event"]

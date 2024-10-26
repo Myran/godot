@@ -1,0 +1,400 @@
+[gd_scene load_steps=27 format=2]
+
+[ext_resource type="Texture2D" uid="uid://dh8c20k1sgqn" path="res://assets/testart/location_3.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://dsllujqgfvrmf" path="res://cardtest/TOBEREMOVED/unittest.png" id="2"]
+[ext_resource type="Script" path="res://cardtest/TOBEREMOVED/recruit.gd" id="3"]
+[ext_resource type="PackedScene" uid="uid://bbcs6sw67xk2j" path="res://cardtest/TOBEREMOVED/card.tscn" id="4"]
+[ext_resource type="Script" path="res://core/popup_card.gd" id="5"]
+[ext_resource type="PackedScene" path="res://zen/blur.tscn" id="6"]
+[ext_resource type="PackedScene" uid="uid://du4fnkya6ut3g" path="res://cardtest/TOBEREMOVED/faction.tscn" id="7"]
+[ext_resource type="Script" path="res://cardtest/TOBEREMOVED/popup_faction.gd" id="8"]
+[ext_resource type="PackedScene" uid="uid://c7hc0ux6v7ve5" path="res://cardtest/TOBEREMOVED/card_icon.tscn" id="9"]
+[ext_resource type="Texture2D" uid="uid://c7ijme10adeks" path="res://assets/testart/icon_test_4.png" id="10"]
+[ext_resource type="Texture2D" uid="uid://bacdv12tb61vd" path="res://assets/testart/icon_test_2.png" id="11"]
+[ext_resource type="Texture2D" uid="uid://ba0fsiqneh4qc" path="res://assets/testart/icon_test_1.png" id="12"]
+[ext_resource type="Texture2D" uid="uid://bpvd8fc6srvje" path="res://assets/testart/icon_test_9.png" id="17"]
+[ext_resource type="Texture2D" uid="uid://bdd133qx2pg5a" path="res://assets/testart/icon_test_10.png" id="18"]
+[ext_resource type="Texture2D" uid="uid://3r4kldrofgpn" path="res://assets/testart/icon_test_11.png" id="19"]
+[ext_resource type="Texture2D" uid="uid://46ivphckscxn" path="res://assets/testart/icon_test_12.png" id="20"]
+[ext_resource type="Texture2D" uid="uid://olrl46hpeyr5" path="res://assets/testart/icon_test_5.png" id="21"]
+[ext_resource type="Texture2D" uid="uid://p1cqawvkhh5k" path="res://assets/testart/icon_test_8.png" id="22"]
+[ext_resource type="Texture2D" uid="uid://drso8eh4d37je" path="res://assets/testart/icon_test_6.png" id="23"]
+[ext_resource type="Texture2D" uid="uid://djf6um5hinyf2" path="res://assets/testart/icon_test_3.png" id="24"]
+[ext_resource type="Texture2D" uid="uid://dv565hhkk83d3" path="res://assets/testart/icon_test_13.png" id="25"]
+[ext_resource type="Texture2D" uid="uid://cq4hv158oi67r" path="res://assets/testart/icon_test_7.png" id="26"]
+
+[sub_resource type="Animation" id=1]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("../../canvas_layer/blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../../canvas_layer/background_color:color")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0 ),
+"transitions": PackedFloat32Array( 1 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=2]
+resource_name = "blur"
+length = 0.25
+tracks/0/type = "value"
+tracks/0/path = NodePath("../../canvas_layer/blur:material:shader_param/amount")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.164938, 0.0669859 ),
+"update": 0,
+"values": [ 0.0, 3.0 ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../../canvas_layer/background_color:color")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PackedFloat32Array( 0, 0.2 ),
+"transitions": PackedFloat32Array( 0.267943, 0.066986 ),
+"update": 0,
+"values": [ Color( 0, 0, 0, 0 ), Color( 0, 0, 0, 0.470588 ) ]
+}
+
+[sub_resource type="Shader" id=15]
+code = "shader_type canvas_item;
+
+uniform float vignette_intensity = 0.4;
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform sampler2D mask;
+
+float vignette(vec2 uv){
+	uv *= 1.0 - uv.xy;
+	float vignette = uv.x * uv.y * 15.0;
+	return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment(){
+	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
+	vec4 text = texture(TEXTURE, UV);
+	
+	text.rgba *= (vignette_rgb.rgba);
+	text.rgba *= (1.0 - vignette(UV));
+	
+	vec4 mask_color = texture(mask, UV).rgba;
+	if (mask_color.a == 0.0)
+	{
+		text.a = 0.0;
+	}
+	COLOR = vec4((text.rgb)*color.rgb,text.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id=16]
+shader = SubResource( 15 )
+shader_param/vignette_intensity = 3.0
+shader_param/vignette_opacity = 0.139
+shader_param/vignette_rgb = Color( 0, 0, 0, 1 )
+
+[node name="recruit" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 3 )
+
+[node name="animation_player_blur" type="AnimationPlayer" parent="."]
+root_node = NodePath("../canvas_layer_pop/popup_card")
+anims/RESET = SubResource( 1 )
+anims/blur = SubResource( 2 )
+
+[node name="canvas_layer" type="CanvasLayer" parent="."]
+
+[node name="blur" parent="canvas_layer" instance=ExtResource( 6 )]
+
+[node name="background_color" type="ColorRect" parent="canvas_layer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0, 0, 0, 0 )
+
+[node name="canvas_layer_pop" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="popup_card" type="Popup" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 5 )
+
+[node name="card" parent="canvas_layer_pop/popup_card" instance=ExtResource( 4 )]
+
+[node name="popup_faction" type="Popup" parent="canvas_layer_pop"]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 8 )
+
+[node name="faction" parent="canvas_layer_pop/popup_faction" instance=ExtResource( 7 )]
+
+[node name="v_box_container" parent="canvas_layer_pop/popup_faction/faction/safe_zone" index="0"]
+offset_right = 1080.0
+
+[node name="texture_rect" type="TextureRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 1 )
+stretch_mode = 7
+
+[node name="texture_rect_2" type="TextureRect" parent="."]
+material = SubResource( 16 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 1 )
+expand = true
+
+[node name="sprite" parent="." instance=ExtResource( 9 )]
+position = Vector2( 545, 413 )
+
+[node name="sprite_2" parent="." instance=ExtResource( 9 )]
+position = Vector2( 336.12, 208.12 )
+
+[node name="sprite_3" parent="." instance=ExtResource( 9 )]
+position = Vector2( -435, 469 )
+
+[node name="sprite_4" parent="." instance=ExtResource( 9 )]
+position = Vector2( 757.12, 203.12 )
+
+[node name="sprite_5" parent="." instance=ExtResource( 9 )]
+position = Vector2( 540, 838 )
+
+[node name="sprite_6" parent="." instance=ExtResource( 9 )]
+position = Vector2( 2100.06, -5.93999 )
+
+[node name="sprite_7" parent="." instance=ExtResource( 9 )]
+position = Vector2( 958, 420 )
+
+[node name="sprite_8" parent="." instance=ExtResource( 9 )]
+position = Vector2( 129, 210 )
+
+[node name="sprite_9" parent="." instance=ExtResource( 9 )]
+position = Vector2( 1880.06, 785.06 )
+
+[node name="sprite_10" parent="." instance=ExtResource( 9 )]
+position = Vector2( 336, 424 )
+
+[node name="sprite_11" parent="." instance=ExtResource( 9 )]
+position = Vector2( -244, 229 )
+
+[node name="sprite_12" parent="." instance=ExtResource( 9 )]
+position = Vector2( 753, 629 )
+
+[node name="sprite_13" parent="." instance=ExtResource( 9 )]
+position = Vector2( 2378.06, 223.06 )
+
+[node name="sprite_14" parent="." instance=ExtResource( 9 )]
+position = Vector2( 122, 637 )
+
+[node name="sprite_15" parent="." instance=ExtResource( 9 )]
+position = Vector2( 752, 417 )
+
+[node name="sprite_16" parent="." instance=ExtResource( 9 )]
+position = Vector2( 330, 635 )
+
+[node name="sprite_17" parent="." instance=ExtResource( 9 )]
+position = Vector2( 329, 840 )
+
+[node name="sprite_18" parent="." instance=ExtResource( 9 )]
+position = Vector2( 2375.06, 959.06 )
+
+[node name="sprite_19" parent="." instance=ExtResource( 9 )]
+position = Vector2( 2266.06, 467.06 )
+
+[node name="sprite_20" parent="." instance=ExtResource( 9 )]
+position = Vector2( 955, 835 )
+
+[node name="sprite_21" parent="." instance=ExtResource( 9 )]
+position = Vector2( 257, 1356 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_22" parent="." instance=ExtResource( 9 )]
+position = Vector2( 559, 1352 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_23" parent="." instance=ExtResource( 9 )]
+position = Vector2( 850, 1352 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_24" parent="." instance=ExtResource( 9 )]
+position = Vector2( 1455, 1334 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_25" parent="." instance=ExtResource( 9 )]
+position = Vector2( 1887.06, 1412.06 )
+
+[node name="sprite_26" parent="." instance=ExtResource( 9 )]
+position = Vector2( 852, 1673 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_27" parent="." instance=ExtResource( 9 )]
+position = Vector2( 241, 1673 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_28" parent="." instance=ExtResource( 9 )]
+position = Vector2( 548, 1673 )
+scale = Vector2( 0.5, 0.5 )
+
+[node name="sprite_29" parent="." instance=ExtResource( 9 )]
+position = Vector2( 1390, 1741 )
+
+[node name="sprite_30" parent="." instance=ExtResource( 9 )]
+position = Vector2( 1890.06, 1624.06 )
+
+[node name="texture_button" type="TextureButton" parent="."]
+self_modulate = Color( 1, 1, 1, 0 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = 10.0
+texture_normal = ExtResource( 2 )
+expand = true
+stretch_mode = 5
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="icon_test_1" type="Sprite2D" parent="."]
+position = Vector2( -719, 784 )
+texture = ExtResource( 12 )
+
+[node name="icon_test_3" type="Sprite2D" parent="."]
+position = Vector2( -957, 791 )
+texture = ExtResource( 24 )
+
+[node name="icon_test_1" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 59, -455 )
+texture = ExtResource( 12 )
+
+[node name="icon_test_2" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1087, -368 )
+texture = ExtResource( 11 )
+
+[node name="icon_test_3" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1497, -153 )
+texture = ExtResource( 24 )
+
+[node name="icon_test_4" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 352, -646 )
+texture = ExtResource( 10 )
+
+[node name="icon_test_5" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1080, 48 )
+texture = ExtResource( 21 )
+
+[node name="icon_test_6" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1497, -594 )
+texture = ExtResource( 23 )
+
+[node name="icon_test_7" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 354, 562 )
+texture = ExtResource( 26 )
+
+[node name="icon_test_8" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 151, -240 )
+texture = ExtResource( 22 )
+
+[node name="icon_test_9" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1908, -165 )
+texture = ExtResource( 17 )
+
+[node name="icon_test_10" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1706, 47 )
+texture = ExtResource( 18 )
+
+[node name="icon_test_11" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 490, 215 )
+texture = ExtResource( 19 )
+
+[node name="icon_test_12" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 8, 206 )
+texture = ExtResource( 20 )
+
+[node name="icon_test_13" type="Sprite2D" parent="icon_test_3"]
+position = Vector2( 1915, -581 )
+texture = ExtResource( 25 )
+
+[node name="icon_test_8" type="Sprite2D" parent="."]
+position = Vector2( -295, 1149 )
+texture = ExtResource( 22 )
+
+[connection signal="about_to_popup" from="canvas_layer_pop/popup_card" to="canvas_layer_pop/popup_card" method="_on_popup_card_about_to_show"]
+[connection signal="pressed" from="canvas_layer_pop/popup_card/card/safe_zone/v_box_container/panel_container/button_close" to="." method="_on_button_close_pressed"]
+[connection signal="pressed" from="canvas_layer_pop/popup_card/card/safe_zone/v_box_container/v_box_container/h_box_container/tag/button" to="." method="_on_button_pressed"]
+[connection signal="about_to_popup" from="canvas_layer_pop/popup_faction" to="canvas_layer_pop/popup_faction" method="_on_popup_faction_about_to_show"]
+[connection signal="pressed" from="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/panel_container/button_back" to="." method="_on_button_back_pressed"]
+[connection signal="pressed" from="texture_button" to="." method="_on_texture_button_pressed"]
+
+[editable path="canvas_layer_pop/popup_card/card"]
+[editable path="canvas_layer_pop/popup_card/card/safe_zone/v_box_container/card_image_base"]
+[editable path="canvas_layer_pop/popup_card/card/safe_zone/v_box_container/v_box_container/h_box_container/tag"]
+[editable path="canvas_layer_pop/popup_faction/faction"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_5"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_5/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_6"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_6/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_3"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_3/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_4"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_4/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_2"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_2/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_7"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_7/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_8"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_8/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_9"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_9/margin_container/frame"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_10"]
+[editable path="canvas_layer_pop/popup_faction/faction/safe_zone/v_box_container/scroll_container/grid_container/card_image_base_10/margin_container/frame"]
+[editable path="sprite"]
+[editable path="sprite_2"]
+[editable path="sprite_3"]
+[editable path="sprite_4"]
+[editable path="sprite_6"]
+[editable path="sprite_7"]
+[editable path="sprite_8"]
+[editable path="sprite_9"]
+[editable path="sprite_11"]
+[editable path="sprite_12"]
+[editable path="sprite_13"]
+[editable path="sprite_14"]
+[editable path="sprite_16"]
+[editable path="sprite_17"]
+[editable path="sprite_18"]
+[editable path="sprite_19"]
+[editable path="sprite_21"]
+[editable path="sprite_22"]
+[editable path="sprite_23"]
+[editable path="sprite_24"]
+[editable path="sprite_26"]
+[editable path="sprite_27"]
+[editable path="sprite_28"]
+[editable path="sprite_29"]

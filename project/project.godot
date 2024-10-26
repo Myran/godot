@@ -21,10 +21,10 @@ auth="*res://firebase/auth.gd"
 facebook="*res://facebook/facebook.gd"
 data_source="*res://autoloads/data_source.tscn"
 rng="*res://seededRNGsingleton.gd"
-ui="*res://cardtest/ui.gd"
-core="*res://cardtest/core.gd"
-card_controller="*res://cardtest/card_controller.gd"
+ui="*res://autoloads/ui.gd"
+core="*res://autoloads/core.gd"
 debug="*res://autoloads/debug.tscn"
+card_controller="*res://autoloads/card_controller.tscn"
 
 [display]
 

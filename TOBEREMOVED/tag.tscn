@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://bkph1rushq6d3"]
+
+[ext_resource type="StyleBox" path="res://core/card/panel_card.tres" id="1_gs3x2"]
+[ext_resource type="Script" path="res://core/tag.gd" id="2_tw7u6"]
+[ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="3_bvk7d"]
+
+[node name="tag" type="PanelContainer"]
+offset_left = 661.0
+offset_right = 767.0
+offset_bottom = 109.0
+size_flags_horizontal = 0
+size_flags_vertical = 5
+theme_override_styles/panel = ExtResource("1_gs3x2")
+script = ExtResource("2_tw7u6")
+
+[node name="label" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 5
+theme_override_colors/font_color = Color(0.823529, 0.823529, 0.823529, 1)
+theme_override_fonts/font = ExtResource("3_bvk7d")
+text = "Evil"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="button" type="Button" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[connection signal="pressed" from="button" to="." method="_on_button_pressed"]

@@ -1,9 +1,0 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://bwen154cg06im"]
-
-[ext_resource type="Shader" uid="uid://d1adih5tarm6y" path="res://cardtest/shader_vignette_outer_shader.tres" id="2"]
-
-[resource]
-shader = ExtResource("2")
-shader_parameter/vignette_intensity = 0.4
-shader_parameter/vignette_opacity = 0.5
-shader_parameter/vignette_rgb = Color(0, 0, 0, 1)

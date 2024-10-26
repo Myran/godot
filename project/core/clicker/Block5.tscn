@@ -1,0 +1,9 @@
+[gd_scene load_steps=4 format=3 uid="uid://bbsyj2xkdxn8p"]
+
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/Block.tscn" id="1"]
+[ext_resource type="Texture2D" uid="uid://dp0boeryeds2t" path="res://core/clicker/block_time.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://cpjysec88hd1" path="res://core/clicker/tapped_time.png" id="3"]
+
+[node name="Block" instance=ExtResource("1")]
+texture_normal = ExtResource("2")
+texture_pressed = ExtResource("3")

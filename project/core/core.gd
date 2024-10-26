@@ -1,5 +1,5 @@
 extends Control 
-
+class_name draft
 @export var card_pop : Control
 @export var holder_draft : Node
 @export var holder_allies : Control

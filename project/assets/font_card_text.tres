@@ -1,0 +1,11 @@
+[gd_resource type="FontFile" load_steps=2 format=2]
+
+[ext_resource type="FontFile" uid="uid://ddg2qxa5w06ai" path="res://assets/fonts/Quintessential/Quintessential-Regular.ttf" id="1"]
+
+[resource]
+size = 33
+outline_size = 5
+outline_color = Color( 0.113725, 0.113725, 0.113725, 1 )
+use_mipmaps = true
+use_filter = true
+font_data = ExtResource( 1 )

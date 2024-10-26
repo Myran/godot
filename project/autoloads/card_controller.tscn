@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dxecdrg5jp67t"]
+
+[ext_resource type="Script" path="res://autoloads/card_controller.gd" id="1_7tt1d"]
+
+[node name="Node" type="Node"]
+script = ExtResource("1_7tt1d")
+card_scene_name = "res://core/clicker/Block_card.tscn"
+card_image_folder = "res://assets/card_images/"

@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3 uid="uid://bevg7ast50f83"]
+
+[ext_resource type="Script" path="res://cardtest/TOBEREMOVED/canvas_ui_anim_layer.gd" id="1"]
+
+[node name="canvas_layer_anim" type="CanvasLayer"]
+script = ExtResource("1")
+use_animate = true
+
+[node name="attach_points" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="default" type="Control" parent="attach_points"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = -600.0
+offset_bottom = -600.0
+size_flags_horizontal = 4
+size_flags_vertical = 4

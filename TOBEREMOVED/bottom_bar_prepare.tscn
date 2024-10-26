@@ -1,0 +1,173 @@
+[gd_scene load_steps=12 format=3 uid="uid://do351c5i6usnu"]
+
+[ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="1_uvk26"]
+[ext_resource type="Script" path="res://core/bottom_bar_prepare.gd" id="2_f6n24"]
+[ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="3_wy0uv"]
+[ext_resource type="Texture2D" uid="uid://dp1o5y0achq26" path="res://assets/testart/icon_attacking_3.png" id="4_n8yia"]
+[ext_resource type="Texture2D" uid="uid://c1e08fanf64kf" path="res://assets/testart/icon_lock.png" id="5_5f480"]
+[ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_ynhyr"]
+[ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_yikpc"]
+[ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="8_h0au7"]
+[ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="9_0bo4t"]
+[ext_resource type="Texture2D" uid="uid://b8rfgb42ejraw" path="res://assets/ui/ui_button_round.png" id="10_j1kuw"]
+[ext_resource type="Texture2D" uid="uid://dlrk7bifsc01u" path="res://assets/testart/icon_twirl.png" id="11_a3ls6"]
+
+[node name="bottom_bar_prepare" type="NinePatchRect"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -187.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = ExtResource("1_uvk26")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 47
+patch_margin_top = 54
+patch_margin_right = 44
+patch_margin_bottom = 40
+axis_stretch_horizontal = 1
+script = ExtResource("2_f6n24")
+
+[node name="ui_bar_13" type="NinePatchRect" parent="."]
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -354.0
+offset_top = -56.5
+offset_right = -108.0
+offset_bottom = 58.5
+texture = ExtResource("3_wy0uv")
+region_rect = Rect2(0, 0, 701, 179)
+patch_margin_left = 54
+patch_margin_top = 63
+patch_margin_right = 53
+patch_margin_bottom = 52
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[node name="margin_container_2" type="MarginContainer" parent="ui_bar_13"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="icon_attacking_3" type="TextureRect" parent="ui_bar_13"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("4_n8yia")
+stretch_mode = 6
+
+[node name="icon_lock_6" type="TextureRect" parent="ui_bar_13"]
+visible = false
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -123.0
+offset_top = -57.5
+offset_right = 123.0
+offset_bottom = 57.5
+rotation = 180.0
+scale = Vector2(0.8, 0.8)
+pivot_offset = Vector2(123, 57)
+texture = ExtResource("5_5f480")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_battle" type="Button" parent="ui_bar_13"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="h_box_container" type="HBoxContainer" parent="."]
+layout_mode = 0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_right = 370.0
+size_flags_vertical = 4
+
+[node name="icon_upgrade" type="TextureRect" parent="h_box_container"]
+visible = false
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("6_ynhyr")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_2" type="Label" parent="h_box_container"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("7_yikpc")
+text = "UPGRADE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="margin_container" type="MarginContainer" parent="h_box_container"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="icon_coins_4" type="TextureRect" parent="h_box_container"]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+texture = ExtResource("8_h0au7")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_4" type="Label" parent="h_box_container"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("9_0bo4t")
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ui_button_round_2" type="TextureRect" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -130.0
+offset_top = -223.5
+offset_right = 130.0
+offset_bottom = 36.5
+texture = ExtResource("10_j1kuw")
+expand_mode = 1
+
+[node name="icon_twirl" type="TextureRect" parent="ui_button_round_2"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -65.0
+offset_top = -65.0
+offset_right = 65.0
+offset_bottom = 65.0
+texture = ExtResource("11_a3ls6")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="button_draft" type="Button" parent="ui_button_round_2"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[connection signal="pressed" from="ui_bar_13/button_battle" to="." method="_on_button_battle_pressed"]
+[connection signal="pressed" from="ui_button_round_2/button_draft" to="." method="_on_button_draft_pressed"]
