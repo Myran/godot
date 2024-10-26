@@ -4,6 +4,7 @@ enum EVENT_TYPE{TEST,TOUCH,DRAG,UPGRADE,TAP_TAG,TAP_POP_CARD,REROLL,START_BATTLE
 signal event
 
 const SIGNAL_EVENT = "event"
-
+func action(type : EVENT_TYPE,args):
+	emit_signal(SIGNAL_EVENT,type,args)
 func _ready():
 	print("ui autoload ready")

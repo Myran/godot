@@ -240,7 +240,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 			var prep_enemies = _battle.prepare_lineup_from_holder(enemies)
 			var battle_result = _battle.battle_start(prep_allies,prep_enemies)
 			current_battle = battle_result
-			ui.emit_signal(ui.SIGNAL_EVENT,ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
+			ui.action(ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
 			#save result
 			# new state, close input
 			# enact battle

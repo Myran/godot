@@ -99,6 +99,6 @@ func show_upgrade():
 
 func _on_area_2d_input_event(_viewport, _event, _shape_idx):
 	if _event is InputEventScreenTouch:
-		ui.emit_signal(ui.SIGNAL_EVENT,ui.EVENT_TYPE.TOUCH,[self,_event])
+		ui.action(ui.EVENT_TYPE.TOUCH,[self,_event])
 	elif _event is InputEventScreenDrag:
-		ui.emit_signal(ui.SIGNAL_EVENT,ui.EVENT_TYPE.DRAG,[self,_event])
+		ui.action(ui.EVENT_TYPE.DRAG,[self,_event])

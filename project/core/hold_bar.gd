@@ -14,4 +14,4 @@ func _ready():
 func on_hold_toggle(state,btn):
 	print("toggle: ",btn,state)
 	var col = btn.get_index()
-	ui.emit_signal(ui.SIGNAL_EVENT,ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED,[btn.pressed,col])
+	ui.action(ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED,[btn.pressed,col])
