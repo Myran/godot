@@ -13,7 +13,6 @@ func show_card():
 
 
 func _on_button_pressed():
-	#ui.emit_signal(ui.SIGNAL_EVENT,ui.EVENT_TYPE.TAP_POP_CARD,[self])
 	ui.action(ui.EVENT_TYPE.TAP_POP_CARD,[self])
 func setup_card(card):
 	print("CARD: setup card in card",card)

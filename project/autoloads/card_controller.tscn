@@ -4,5 +4,5 @@
 
 [node name="Node" type="Node"]
 script = ExtResource("1_7tt1d")
-card_scene_name = "res://core/clicker/Block_card.tscn"
+card_scene_name = "res://core/clicker/blocks/Block_card.tscn"
 card_image_folder = "res://assets/card_images/"

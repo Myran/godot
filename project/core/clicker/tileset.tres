@@ -1,11 +1,11 @@
 [gd_resource type="TileSet" load_steps=7 format=2]
 
-[ext_resource type="Texture2D" uid="uid://ukdwg87ku437" path="res://core/clicker/brickSpecial03.png" id="1"]
-[ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://core/clicker/brickSpecial01.png" id="2"]
-[ext_resource type="Texture2D" uid="uid://trvawa02d53t" path="res://core/clicker/brickSpecial09.png" id="3"]
-[ext_resource type="Texture2D" uid="uid://4vpqh73jep0r" path="res://core/clicker/brickSpecial08.png" id="4"]
-[ext_resource type="Texture2D" uid="uid://djjh2o0jid38c" path="res://core/clicker/brickSpecial10.png" id="5"]
-[ext_resource type="Texture2D" uid="uid://da08vna43j8sh" path="res://core/clicker/brickSpecial02.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://ukdwg87ku437" path="res://assets/testart/brickSpecial03.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://assets/testart/brickSpecial01.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://trvawa02d53t" path="res://assets/testart/brickSpecial09.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://4vpqh73jep0r" path="res://assets/testart/brickSpecial08.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://djjh2o0jid38c" path="res://assets/testart/brickSpecial10.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://da08vna43j8sh" path="res://assets/testart/brickSpecial02.png" id="6"]
 
 [resource]
 0/name = "Empty"

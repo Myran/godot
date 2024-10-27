@@ -41,8 +41,6 @@ func _ready():
 	holder_draft.setup()
 	set_gamestate(core.GAME_STATE.START)
 	blur_layer.unblur()
-	#ui.connect(ui.SIGNAL_EVENT, Callable(self, "new_event").bind(SOLVE_TYPE.UI))
-	#ui.event.connect(Callable(self,"new_event").bind(SOLVE_TYPE.UI))
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
@@ -226,12 +224,11 @@ func resolve_ui_event(_event_type,_data,current_context):
 				state = core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED
 			else:
 				state = core.EVENT_TYPE.DRAFT_COLUMN_UNLOCKED
-			core.emit_signal(core.SIGNAL_EVENT,state,[col])
+			core.action(state,[col])
 
 		ui.EVENT_TYPE.TRANSITION:
 			var state = _data
-			core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.GAME_STATE_TRANSITION,state)
-			
+			core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,state)
 		ui.EVENT_TYPE.START_BATTLE:
 			print("Start battle")
 			# create battle events and result
@@ -248,7 +245,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 			# new state, close input
 			# enact battle
 		ui.EVENT_TYPE.REROLL:
-			core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.REROLL_DRAFT,[])
+			core.action(core.EVENT_TYPE.REROLL_DRAFT,[])
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
 			blur_layer.unblur()
@@ -257,8 +254,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 		ui.EVENT_TYPE.UPGRADE:
 			#check cost here
 			current_draft_upgrade_level += 1
-			core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.UPGRADE,[current_draft_upgrade_level])
-
+			core.action(core.EVENT_TYPE.UPGRADE,[current_draft_upgrade_level])
 		ui.EVENT_TYPE.TOUCH:
 			var interacted_object = _data[0]
 			var event = _data[1]
@@ -287,7 +283,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 							card_pop.show_card(interacted_object)
 							update_draft = true
 						if interacted_object.object_type == core.OBJECT_TYPE.BLOCK_LOCKED:
-							core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,[interacted_object,true])
+							core.action(core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,[interacted_object,true])
 							update_draft = true
 
 					TAP_STATE.HOLDING:
@@ -338,7 +334,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 				last_touch_pos = null
 
 				if update_draft:
-					core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.UPDATE_DRAFT_AREA,[])
+					core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA,[])
 
 
 func set_gamestate(new_state):
@@ -361,7 +357,7 @@ func set_gamestate(new_state):
 func start_game():
 	print("Start Game")
 	ui_state = UI_STATE.WAITING
-	core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.PREPARE])
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.PREPARE])
 
 func mode_draft():
 	print("Draft mode")
@@ -388,15 +384,15 @@ func mode_pre_battle():
 	bottom_bar_draft.visible = false
 	bottom_bar_prepare.visible = false
 	await get_tree().create_timer(0.5).timeout
-	core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.BATTLE])
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.BATTLE])
 
 func mode_battle():
 	print("Battle Mode")
-	core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.BATTLE,[current_battle])
+	core.action(core.EVENT_TYPE.BATTLE,[current_battle])
 
 func mode_post_battle():
 	print("Post Battle Mode")
 	ui_state = UI_STATE.WAITING
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
-	core.emit_signal(core.SIGNAL_EVENT,core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.PREPARE])
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.PREPARE])

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://2485kigtabyg"]
+
+[ext_resource type="Texture2D" uid="uid://tyku3tpybm2i" path="res://assets/testart/tile_test_7.png" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="2"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(200, 204)
+
+[node name="Block" instance=ExtResource("2")]
+
+[node name="area_2d" type="Area2D" parent="." index="0"]
+
+[node name="collision_shape_2d" type="CollisionShape2D" parent="area_2d" index="0"]
+shape = SubResource("1")
+
+[node name="icon_test_4" type="Sprite2D" parent="." index="1"]
+scale = Vector2(0.65, 0.75)
+texture = ExtResource("1")
+
+[connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]

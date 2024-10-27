@@ -1,0 +1,596 @@
+[gd_scene load_steps=31 format=3 uid="uid://bq0pntsljc8cf"]
+
+[ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://assets/testart/brickSpecial01.png" id="1_icdyc"]
+[ext_resource type="Script" path="res://core/clicker/blocks/Block.gd" id="2_hduhw"]
+[ext_resource type="Texture2D" uid="uid://b813wdy8g6sw7" path="res://assets/frames/frame_icon.png" id="3_nr3f2"]
+[ext_resource type="Script" path="res://core/card/card_image_small_base.gd" id="4_41kja"]
+[ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://assets/card_images/card_image_0_1.png" id="5_k658a"]
+[ext_resource type="Texture2D" uid="uid://bfmr148pn8d1e" path="res://assets/frames/Frame 21.png" id="6_mb5m6"]
+[ext_resource type="Texture2D" uid="uid://bhcv0333fjvdy" path="res://assets/frames/Frame 20.png" id="7_8ejgu"]
+[ext_resource type="Texture2D" uid="uid://s5hh3c0yu80v" path="res://assets/frames/Frame 22.png" id="8_lcuw1"]
+[ext_resource type="Texture2D" uid="uid://chekjac4tcym4" path="res://assets/testart/frame_test_1.png" id="9_0bn0w"]
+[ext_resource type="Texture2D" uid="uid://smqymnuotfqk" path="res://assets/testart/frame_test_2.png" id="10_q5s5h"]
+[ext_resource type="Texture2D" uid="uid://db63d6qs5kw0j" path="res://assets/testart/frame_test_3.png" id="11_1lb2m"]
+[ext_resource type="Texture2D" uid="uid://my1rtsa8rlq4" path="res://assets/testart/frame_test_4.png" id="12_tc7xc"]
+[ext_resource type="Texture2D" uid="uid://dkgm5sdyers1u" path="res://assets/testart/frame_test_5.png" id="13_x2ypn"]
+[ext_resource type="Texture2D" uid="uid://c0444sjqgce1g" path="res://assets/testart/frame_test_6.png" id="14_yie6n"]
+[ext_resource type="Texture2D" uid="uid://dssewd2tl6lne" path="res://assets/testart/frame_test_7.png" id="15_ta612"]
+[ext_resource type="Texture2D" uid="uid://cmjwj8asnnxv3" path="res://assets/testart/frame_test_8.png" id="16_yai70"]
+[ext_resource type="Texture2D" uid="uid://bevyntjwbghal" path="res://assets/testart/frame_test_9.png" id="17_3iaep"]
+[ext_resource type="StyleBox" path="res://core/card/panel_card.tres" id="18_mbxnw"]
+[ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://assets/testart/ui_test_1.png" id="19_uw7j3"]
+[ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://assets/font_card_stat_num.tres" id="20_bqdh2"]
+[ext_resource type="PackedScene" path="res://core/card/icon_level_small.tscn" id="21_jjbty"]
+[ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="22_ex0kp"]
+[ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="23_rgpv2"]
+[ext_resource type="Script" path="res://core/card/panel_container_level_top.gd" id="24_vnba5"]
+
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(64, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lqhum"]
+size = Vector2(200, 220)
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 20
+border_width_top = 20
+border_width_right = 20
+border_width_bottom = 20
+border_color = Color(0.121569, 0.121569, 0.121569, 0)
+border_blend = true
+corner_radius_top_left = 200
+corner_radius_top_right = 200
+corner_radius_bottom_right = 200
+corner_radius_bottom_left = 200
+expand_margin_left = 20.0
+expand_margin_top = 20.0
+expand_margin_right = 20.0
+expand_margin_bottom = 20.0
+shadow_color = Color(0, 0, 0, 0.266667)
+shadow_size = 48
+
+[sub_resource type="Shader" id="Shader_aydyb"]
+resource_local_to_scene = true
+code = "shader_type canvas_item;
+
+// Configurable parameters for the vignette effect
+uniform float vignette_intensity = 0.4;     // Controls how strong the darkening effect is
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;  // Controls the overall opacity of the effect
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);  // Color of the vignette (default: black)
+
+// Input textures
+uniform sampler2D mask;  // Mask texture for controlling where the vignette appears
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;  // Screen texture using new syntax
+
+// Calculate the vignette effect based on UV coordinates
+float vignette(vec2 uv) {
+    // Scale UV coordinates based on distance from center
+    uv *= 1.0 - uv.xy;
+
+    // Calculate vignette intensity
+    float vignette = uv.x * uv.y * 15.0;
+
+    // Apply configurable intensity and opacity
+    return pow(vignette, vignette_intensity * vignette_opacity);
+}
+
+void fragment() {
+    // Get the screen color and texture color at current UV
+    vec4 color = texture(screen_tex, SCREEN_UV);
+    vec4 text = texture(TEXTURE, UV);
+
+    // Apply vignette color and intensity
+    text.rgba *= vignette_rgb.rgba;
+    text.rgba *= (1.0 - vignette(UV));
+
+    // Apply mask if provided
+    vec4 mask_color = texture(mask, UV).rgba;
+    if (mask_color.a == 0.0) {
+        text.a = 0.0;
+    }
+
+    // Output final color with alpha
+    COLOR = vec4((text.rgb) * color.rgb, text.a);
+}
+
+// Alternative version with circular vignette:
+/*
+float circular_vignette(vec2 uv) {
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);
+    return smoothstep(0.8, 0.1, dist * (vignette_intensity + 1.0));
+}
+*/
+"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ntg2t"]
+load_path = "res://.godot/imported/corners.png-95d080a72b143c84ac683f75aabe20d4.ctex"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_spy1b"]
+resource_local_to_scene = true
+shader = SubResource("Shader_aydyb")
+shader_parameter/vignette_intensity = 1.0
+shader_parameter/vignette_opacity = 1.0
+shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
+shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
+
+[node name="Block" type="TouchScreenButton"]
+texture_normal = ExtResource("1_icdyc")
+shape = SubResource("1")
+script = ExtResource("2_hduhw")
+card_image_folder = "res://assets/card_images/"
+
+[node name="area_2d" type="Area2D" parent="."]
+position = Vector2(0, 1)
+
+[node name="collision_shape_2d" type="CollisionShape2D" parent="area_2d"]
+shape = SubResource("RectangleShape2D_lqhum")
+
+[node name="card_sprite" type="Sprite2D" parent="." groups=["card"]]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0)
+scale = Vector2(0.37, 0.37)
+texture = ExtResource("3_nr3f2")
+
+[node name="card_image_base" type="ColorRect" parent="card_sprite"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(512, 512)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -282.0
+offset_top = -282.0
+offset_right = -282.0
+offset_bottom = -282.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+script = ExtResource("4_41kja")
+
+[node name="panel_container" type="PanelContainer" parent="card_sprite/card_image_base"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("2")
+
+[node name="control" type="Control" parent="card_sprite/card_image_base"]
+clip_contents = true
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 38.0
+offset_right = -34.0
+mouse_filter = 2
+
+[node name="card_image" type="TextureRect" parent="card_sprite/card_image_base/control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -108.5
+offset_top = -4.0
+offset_right = 109.5
+offset_bottom = 146.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+texture = ExtResource("5_k658a")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="vignette" type="ColorRect" parent="card_sprite/card_image_base"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_spy1b")
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.033
+anchor_top = -0.053
+anchor_right = 0.982
+anchor_bottom = 1.041
+offset_left = 0.104
+offset_top = 0.136002
+offset_right = 0.215942
+offset_bottom = 0.00799561
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(-317.797, 1179.32)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="margin_container" type="MarginContainer" parent="card_sprite/card_image_base"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = -33
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = -32
+
+[node name="frame" type="TextureRect" parent="card_sprite/card_image_base/margin_container"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+texture = ExtResource("6_mb5m6")
+expand_mode = 1
+
+[node name="frame_20" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("7_8ejgu")
+expand_mode = 1
+
+[node name="frame_22" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("8_lcuw1")
+expand_mode = 1
+
+[node name="frame_23" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("9_0bn0w")
+expand_mode = 1
+
+[node name="frame_24" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("10_q5s5h")
+expand_mode = 1
+
+[node name="frame_21" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("6_mb5m6")
+expand_mode = 1
+
+[node name="frame_25" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("11_1lb2m")
+expand_mode = 1
+
+[node name="frame_26" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("12_tc7xc")
+expand_mode = 1
+
+[node name="frame_27" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("13_x2ypn")
+expand_mode = 1
+
+[node name="frame_28" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("14_yie6n")
+expand_mode = 1
+
+[node name="frame_29" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("15_ta612")
+expand_mode = 1
+
+[node name="frame_30" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("16_yai70")
+expand_mode = 1
+
+[node name="frame_31" type="TextureRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("17_3iaep")
+expand_mode = 1
+
+[node name="nine_patch_rect" type="NinePatchRect" parent="card_sprite/card_image_base/margin_container/frame"]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("6_mb5m6")
+region_rect = Rect2(0, 0, 1258, 1258)
+patch_margin_left = 107
+patch_margin_top = 93
+patch_margin_right = 85
+patch_margin_bottom = 99
+
+[node name="panel_container_level" type="PanelContainer" parent="card_sprite/card_image_base"]
+self_modulate = Color(1, 1, 1, 0.529412)
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -275.0
+offset_top = 179.0
+offset_right = 275.0
+offset_bottom = 359.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("18_mbxnw")
+
+[node name="icon_level" type="TextureRect" parent="card_sprite/card_image_base/panel_container_level"]
+unique_name_in_owner = true
+self_modulate = Color(0.784314, 0.784314, 0.784314, 1)
+custom_minimum_size = Vector2(100, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("19_uw7j3")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="label_level" type="Label" parent="card_sprite/card_image_base/panel_container_level/icon_level"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -81.0
+offset_bottom = 81.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("20_bqdh2")
+theme_override_font_sizes/font_size = 150
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
+uppercase = true
+
+[node name="panel_container_level" type="PanelContainer" parent="card_sprite/card_image_base/panel_container_level"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="h_box_container" type="HBoxContainer" parent="card_sprite/card_image_base/panel_container_level/panel_container_level"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="icon_level_1" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="icon_level_2" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+layout_mode = 2
+
+[node name="icon_level_3" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+layout_mode = 2
+
+[node name="icon_level_4" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+visible = false
+layout_mode = 2
+
+[node name="icon_level_5" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+visible = false
+layout_mode = 2
+
+[node name="stat_container_3" type="HBoxContainer" parent="card_sprite/card_image_base"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -287.0
+offset_top = 137.0
+offset_right = 308.0
+offset_bottom = 351.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 7
+mouse_filter = 2
+alignment = 1
+
+[node name="panel_container_attack" type="PanelContainer" parent="card_sprite/card_image_base/stat_container_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("18_mbxnw")
+
+[node name="margin_container" type="MarginContainer" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/margin_bottom = 50
+
+[node name="h_box_container_2" type="HBoxContainer" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="icon_attack_2" type="TextureRect" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container/h_box_container_2"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+texture = ExtResource("22_ex0kp")
+
+[node name="label_attack" type="Label" parent="card_sprite/card_image_base/stat_container_3/panel_container_attack/margin_container/h_box_container_2/icon_attack_2"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 57.0
+offset_top = -205.0
+offset_right = 2.0
+offset_bottom = 26.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 4
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("20_bqdh2")
+theme_override_font_sizes/font_size = 150
+text = "1"
+horizontal_alignment = 1
+
+[node name="margin_container_2" type="MarginContainer" parent="card_sprite/card_image_base/stat_container_3"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_right = 176
+
+[node name="panel_container_health" type="PanelContainer" parent="card_sprite/card_image_base/stat_container_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("18_mbxnw")
+
+[node name="margin_container" type="MarginContainer" parent="card_sprite/card_image_base/stat_container_3/panel_container_health"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="h_box_container" type="HBoxContainer" parent="card_sprite/card_image_base/stat_container_3/panel_container_health/margin_container"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 20
+alignment = 2
+
+[node name="icon_health" type="TextureRect" parent="card_sprite/card_image_base/stat_container_3/panel_container_health/margin_container/h_box_container"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+texture = ExtResource("23_rgpv2")
+
+[node name="label_health" type="Label" parent="card_sprite/card_image_base/stat_container_3/panel_container_health/margin_container/h_box_container/icon_health"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -192.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("20_bqdh2")
+theme_override_font_sizes/font_size = 150
+text = "1"
+horizontal_alignment = 1
+
+[node name="panel_container_level_top" type="PanelContainer" parent="card_sprite/card_image_base"]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.529412)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -198.0
+offset_top = -50.4324
+offset_right = 198.0
+offset_bottom = 107.568
+grow_horizontal = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("18_mbxnw")
+script = ExtResource("24_vnba5")
+
+[node name="panel_container_level" type="PanelContainer" parent="card_sprite/card_image_base/panel_container_level_top"]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="h_box_container" type="HBoxContainer" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="icon_level_1" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 0
+
+[node name="icon_level_2" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 0
+
+[node name="icon_level_3" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 0
+
+[node name="icon_level_4" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 0
+
+[node name="icon_level_5" parent="card_sprite/card_image_base/panel_container_level_top/panel_container_level/h_box_container" instance=ExtResource("21_jjbty")]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 0
+
+[connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]
