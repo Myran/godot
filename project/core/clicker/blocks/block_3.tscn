@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://ca6ji26d3tg31"]
 
-[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://bj365dwwy6g3s" path="res://assets/testart/block_nurture.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://dtrxytn8r6b5l" path="res://assets/testart/tapped_nurture.png" id="3"]
 

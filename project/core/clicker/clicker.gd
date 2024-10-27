@@ -1,16 +1,19 @@
 extends Node
-var level
+
+signal merge_card_done
+signal merge_move_done
+
+const GRAVITY_VECTOR = Vector2i(0,1)
 const CARD_MERGE_AMOUNT = 3
 const SPAWN_HEIGHT = 0
 var directions = [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]
-var gravityVector = Vector2i(0,1)
-var refillCounter = []
+var level
+var refill_counter = []
 var merging_cards = []
 
 #signal level_done
 #signal block_collected
-signal merge_card_done
-signal merge_move_done
+
 
 var rerollables  = [core.OBJECT_TYPE.CARD,core.OBJECT_TYPE.BLOCK_ITEM]
 var columns_locked = []
@@ -29,7 +32,7 @@ func has_card(card):
 
 func get_all_cards():
 	return level.allBlocks()
-	
+
 func remove_rerollables():
 	for block in level.allBlocks():
 		var pos = level.getGridPos(block)
@@ -44,30 +47,38 @@ func _on_core_event(event_type,_data):
 			var col = _data[0]
 			print("Draft coloumn locked: ",col)
 			columns_locked.append(col)
+
 		core.EVENT_TYPE.DRAFT_COLUMN_UNLOCKED:
 			var col = _data[0]
 			print("Draft coloumn unlocked: ",col)
 			columns_locked.erase(col)
+
 		core.EVENT_TYPE.MERGE_CARD_DONE:
 			emit_signal("merge_card_done")
+
 		core.EVENT_TYPE.CARD_MERGE_MOVE_FINISHED:
 			var card = _data
 			merging_cards.erase(card)
 			level.removeFromGrid(card)
 			if merging_cards.size() == 0:
 				emit_signal("merge_move_done")
+
 		core.EVENT_TYPE.REROLL_DRAFT:
 			remove_rerollables()
 			update_blocks()
+
 		core.EVENT_TYPE.DRAFT_ADD_BLOCK:
 			var match_info = _data[0]
 			level.addToGrid(match_info.pos,match_info.block)
+
 		core.EVENT_TYPE.UPGRADE:
 			var upgrade_level = _data[0]
 			remove_upgrade_blocks(upgrade_level)
 			update_blocks()
+
 		core.EVENT_TYPE.UPDATE_DRAFT_AREA:
 			update_blocks()
+
 		core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT:
 			var block = _data[0]
 			var destroy = false
@@ -75,6 +86,7 @@ func _on_core_event(event_type,_data):
 				destroy = _data[1]
 			if level.getGridPos(block) != null:
 				level.removeFromGrid(block,destroy)
+
 		core.EVENT_TYPE.DRAFT_MERGE:
 			var matches = _data[0]
 			var merge_info = await merge_matched_cards(matches)
@@ -83,7 +95,7 @@ func _on_core_event(event_type,_data):
 			merge_info.block.show_upgrade()
 			await self.merge_card_done
 			update_blocks()
-			pass
+
 func remove_upgrade_blocks(upgrade_level):
 	for block in level.allBlocks():
 		if block.object_type == core.OBJECT_TYPE.BLOCK_UPGRADE:
@@ -92,11 +104,11 @@ func remove_upgrade_blocks(upgrade_level):
 
 
 func update_blocks():
-	solveGravity()
+	solve_gravity()
 	while refill():
-		solveGravity()
+		solve_gravity()
 	await level.moveBlocks() #.completed
-	refillCounter.clear()
+	refill_counter.clear()
 	var matches = find_match()
 	if matches.size():
 		core.emit_signal("event",core.EVENT_TYPE.DRAFT_MERGE,[matches])
@@ -105,7 +117,7 @@ func update_blocks():
 func find_match():
 	for block in level.allBlocks():
 		if block != null and block.object_type == core.OBJECT_TYPE.CARD:
-			var cluster = addNeighbourCards(block,[block])
+			var cluster = add_neighbour_cards(block,[block])
 			if cluster.size() >= CARD_MERGE_AMOUNT:
 				return cluster
 	return []
@@ -127,69 +139,69 @@ func merge_matched_cards(cluster):
 
 
 
-func addNeighbourCards(block,cluster = []):
+func add_neighbour_cards(block,cluster = []):
 
-	var startPos = level.getGridPos(block)
+	var start_pos = level.getGridPos(block)
 
-	if startPos == null:
+	if start_pos == null:
 		return cluster
 
 	for direction in directions:
-		var neighbourPos = startPos + direction
+		var neighbour_pos = start_pos + direction
 
-		if level.hasPos(neighbourPos):
-			var neighbour = level.getBlock(neighbourPos)
+		if level.hasPos(neighbour_pos):
+			var neighbour = level.getBlock(neighbour_pos)
 			if neighbour.object_type == core.OBJECT_TYPE.CARD and not cluster.has(neighbour):
 				if neighbour.level == block.level and neighbour.card_info.id == block.card_info.id:
 					cluster.append(neighbour)
-					addNeighbourCards(neighbour,cluster)
+					add_neighbour_cards(neighbour,cluster)
 
 	return cluster
 
 
 func refill():
-	var refillAction = false
+	var refill_action = false
 
 	for x in level.gridWidth:
 
-		var testPos = Vector2i(x,SPAWN_HEIGHT)
+		var test_pos = Vector2i(x,SPAWN_HEIGHT)
 
-		if level.getBlock(testPos):
-			var testBlock = level.getBlock(testPos)
-			while (testPos.y < level.gridHeight):
-				if testBlock.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
-					testPos = testPos + gravityVector
-					if level.hasPos(testPos):
-						testBlock = level.getBlock(testPos)
+		if level.getBlock(test_pos):
+			var test_block = level.getBlock(test_pos)
+			while (test_pos.y < level.gridHeight):
+				if test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
+					test_pos = test_pos + GRAVITY_VECTOR
+					if level.hasPos(test_pos):
+						test_block = level.getBlock(test_pos)
 				else:
 					break
-			if testBlock.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
-				refillCounter.append(x)
-				level.addToGrid(testPos,level.createBlock(),refillCounter.count(x))
-				refillAction = true
-	return refillAction
+			if test_block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
+				refill_counter.append(x)
+				level.addToGrid(test_pos,level.createBlock(),refill_counter.count(x))
+				refill_action = true
+	return refill_action
 
 
-func solveGravity():
+func solve_gravity():
 
-	var gravityAction = true
+	var gravity_action = true
 
-	while gravityAction:
-		gravityAction = false
+	while gravity_action:
+		gravity_action = false
 
 		for block in level.allBlocks():
 
 			if block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
 
-				var testPos = level.getGridPos(block)-gravityVector
-				if level.hasPos(testPos):
-					var testBlock = level.getBlock(testPos)
-					while testBlock.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
-							testPos = testPos - gravityVector
-							if level.hasPos(testPos):
-								testBlock = level.getBlock(testPos)
+				var test_pos = level.getGridPos(block)-GRAVITY_VECTOR
+				if level.hasPos(test_pos):
+					var test_block = level.getBlock(test_pos)
+					while test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
+							test_pos = test_pos - GRAVITY_VECTOR
+							if level.hasPos(test_pos):
+								test_block = level.getBlock(test_pos)
 							else:
 								break
-					if ![core.OBJECT_TYPE.BLOCK_PASSTROUGH,core.OBJECT_TYPE.EMPTY_SPACE].has(testBlock.object_type):
-						level.switchBlocks(block,testBlock)
-						gravityAction = true
+					if ![core.OBJECT_TYPE.BLOCK_PASSTROUGH,core.OBJECT_TYPE.EMPTY_SPACE].has(test_block.object_type):
+						level.switchBlocks(block,test_block)
+						gravity_action = true

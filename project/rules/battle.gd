@@ -1,9 +1,24 @@
-extends Node
-class_name battle
-const TYPE = "type"
-enum EVENT_TYPE{COMBAT,DEATH,ADD_LINEUP,DAMAGE,STAT_CHANGE,SELECT_ACTIVE_UNIT,FIND_NEXT_UNIT,START_OF_TURN,END_OF_TURN}
+class_name battle extends Node
+
 enum BATTLE_ACTION{ATTACK_REGULAR}
-enum TEMPUS{PRE,POST}
+enum TEMPUS{
+	PRE,
+	POST
+	}
+enum EVENT_TYPE{
+	COMBAT,
+	DEATH,
+	ADD_LINEUP,
+	DAMAGE,
+	STAT_CHANGE,
+	SELECT_ACTIVE_UNIT,
+	FIND_NEXT_UNIT,
+	START_OF_TURN,
+	END_OF_TURN
+	}
+
+const TYPE = "type"
+
 var current_context
 
 static func duplicate_resource(res):
@@ -44,7 +59,7 @@ func battle_solver(allied_lineup, enemies_lineup):
 			current_context = solve_death_test(current_context)
 			current_context.solve_events()
 			current_context = switch_side(current_context)
-			current_context = end_of_turn_(current_context)
+			current_context = end_of_turn(current_context)
 	return current_context.event_list
 
 
@@ -55,7 +70,7 @@ static func start_of_turn(_context):
 	_context.add_event({TYPE: EVENT_TYPE.START_OF_TURN})
 	return _context
 
-static func end_of_turn_(_context):
+static func end_of_turn(_context):
 	_context.add_event({TYPE: EVENT_TYPE.END_OF_TURN})
 	return _context
 
@@ -97,31 +112,49 @@ static func solve_event(event,_context):
 	var ret_context = _context
 	match event.type:
 		EVENT_TYPE.FIND_NEXT_UNIT:
-			var _active_side = _context.allies if _context.allied_turn else _context.enemies
-			var sel_unit_pos = find_next_unactive_on_side(_active_side)
+			var act_side = _context.allies if _context.allied_turn else _context.enemies
+			var sel_unit_pos = find_next_unactive_on_side(act_side)
 			if sel_unit_pos == null:
 				print("All units activated, clearing list!")
-				_active_side.activated_units.clear()
-			sel_unit_pos = find_next_unactive_on_side(_active_side)
-			_context.add_event( {TYPE: EVENT_TYPE.SELECT_ACTIVE_UNIT, "sel_unit_pos" : sel_unit_pos, "allied_side" : _context.allied_turn })
+				act_side.activated_units.clear()
+			sel_unit_pos = find_next_unactive_on_side(act_side)
+			_context.add_event( {
+				TYPE: EVENT_TYPE.SELECT_ACTIVE_UNIT,
+				"sel_unit_pos" : sel_unit_pos,
+				"allied_side" : _context.allied_turn
+				})
+
 		EVENT_TYPE.ADD_LINEUP:
 			var side = _context.allies if event.allied_side else _context.enemies
 			side.lineup = event.lineup
 			print("Lineup added",side.lineup)
+
 		EVENT_TYPE.SELECT_ACTIVE_UNIT:
 			printt("Activated unit: ", event)
-			var _active_side = _context.allies if event.allied_side else _context.enemies
-			var sel_unit = _active_side.lineup[event.sel_unit_pos]
-			_active_side.activated_units.append(sel_unit)
+			var act_side = _context.allies if event.allied_side else _context.enemies
+			var sel_unit = act_side.lineup[event.sel_unit_pos]
+			act_side.activated_units.append(sel_unit)
 			_context.current_unit = sel_unit
+
 		EVENT_TYPE.COMBAT:
 			var attacking_side = _context.allies if event.allied_attack else _context.enemies
 			var defending_side = _context.enemies if event.allied_attack else _context.allies
 			var attacking_unit = attacking_side.lineup[event.attacker]
 			var defending_unit = defending_side.lineup[event.defender]
 			print("Combat event",event)
-			_context.add_event({TYPE: EVENT_TYPE.DAMAGE, "damage_amount" : attacking_unit.current_attack, "target" : event.defender, "side" : !event.allied_attack})
-			_context.add_event({TYPE: EVENT_TYPE.DAMAGE, "damage_amount" : defending_unit.current_attack, "target" : event.attacker, "side" : event.allied_attack})
+			_context.add_event({
+				TYPE: EVENT_TYPE.DAMAGE,
+				"damage_amount" : attacking_unit.current_attack,
+				"target" : event.defender,
+				"side" : !event.allied_attack
+				})
+			_context.add_event({
+				TYPE: EVENT_TYPE.DAMAGE,
+				"damage_amount" : defending_unit.current_attack,
+				"target" : event.attacker,
+				"side" : event.allied_attack
+				})
+
 		EVENT_TYPE.DAMAGE:
 			print("Damage event",event)
 			#var unit_side = _context.allies if event.side else _context.enemies
@@ -129,8 +162,15 @@ static func solve_event(event,_context):
 			#adda skydd och annat här ?
 			#var new_health = u.current_health - event.damage_amount
 			var health_change = -event.damage_amount
-			_context.add_event({TYPE: EVENT_TYPE.STAT_CHANGE,"stat" : "current_health","target" : event.target, "side" : event.side ,"change" : health_change})
+			_context.add_event({
+				TYPE: EVENT_TYPE.STAT_CHANGE,
+				"stat" : "current_health",
+				"target" : event.target,
+				"side" : event.side ,
+				"change" : health_change
+				})
 			#u.current_health = new_health
+
 		EVENT_TYPE.STAT_CHANGE:
 			print("Stat_change",event)
 			if !event.has("change"):
@@ -145,7 +185,14 @@ static func solve_event(event,_context):
 				push_warning(str("Stats change error",event))
 			var new_stat = current_stat+event.change
 			u.set(event.stat,new_stat)
-			_context.add_event({TYPE: EVENT_TYPE.STAT_CHANGE,"stat" : "current_health","new_stat" : new_stat,"target" : event.target, "side" : event.side})
+			_context.add_event({
+				TYPE: EVENT_TYPE.STAT_CHANGE,
+				"stat" : "current_health",
+				"new_stat" : new_stat,
+				"target" : event.target,
+				"side" : event.side
+				})
+
 		EVENT_TYPE.DEATH:
 			var unit_side = _context.allies if event.side else _context.enemies
 			var u = unit_side.lineup[event.pos]
@@ -176,8 +223,8 @@ static func create_event_attack_regular(attacker_unit,_context):
 static func solve_death_test(_context):
 	for side in [_context.allies,_context.enemies]:
 		for pos in side.lineup:
-			var _u = side.lineup[pos]
-			if _u.current_health <= 0:
+			var u = side.lineup[pos]
+			if u.current_health <= 0:
 				var event = {}
 				event.type = EVENT_TYPE.DEATH
 				event.side = true if side == _context.allies else false
@@ -193,8 +240,8 @@ static func find_combat_target(lineup):
 
 static func find_next_unactive_on_side(side):
 	for pos in side.lineup:
-		var _unit = side.lineup[pos]
-		if !side.activated_units.has(_unit):
+		var u = side.lineup[pos]
+		if !side.activated_units.has(u):
 			return pos
 	return null
 

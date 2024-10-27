@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=2]
 
-[ext_resource type="Texture2D" uid="uid://x6awbowjm58c" path="res://assets/testart/tile_test_5.png" id="1"]
-[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://c7ijme10adeks" path="res://assets/testart/icon_test_4.png" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="2"]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 100, 110 )
@@ -16,8 +16,8 @@ moveSpeed = 0.03
 shape = SubResource( 1 )
 
 [node name="icon_test_4" type="Sprite2D" parent="." index="2"]
+self_modulate = Color( 0.12549, 0.32549, 0.65098, 0 )
 rotation = 3.14159
-scale = Vector2( 0.65, 0.75 )
 texture = ExtResource( 1 )
 
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]

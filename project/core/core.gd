@@ -37,7 +37,7 @@ var last_touch_pos = null
 var _seed = 1
 func _ready():
 	await data_source.activate_card_cache()
-	rng.seededRNG.reset(_seed)
+	rng.seeded_rng.reset(_seed)
 	holder_draft.setup()
 	set_gamestate(core.GAME_STATE.START)
 	blur_layer.unblur()
@@ -84,7 +84,7 @@ func _on_debug_event(event,_data):
 func new_event(event_type,data,solve_type):
 	printt("New event: ", event_type,data,solve_type)
 	var _context = create_draft_context()
-	var event = context.event.new(solve_type,event_type,data)
+	var event = context.Event.new(solve_type,event_type,data)
 	_context.add_event(event)
 	_context.solve_events()
 

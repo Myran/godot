@@ -5,12 +5,7 @@ signal apple_auth_respons(res)
 
 var firebase_auth
 var godot_apple_auth
-
-
-#signal cred_recieved (res)
-
 var apple_aut_res = null
-
 
 func uid():
 	return firebase_auth.uid()

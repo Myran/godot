@@ -1,9 +1,13 @@
-extends context
-class_name battle_context
-enum BATTLE_STATE{PRE_BATTLE,BATTLE,POST_BATTLE}
 
-var allies = side.new()
-var enemies = side.new()
+class_name battle_context extends context
+enum BATTLE_STATE{
+	PRE_BATTLE,
+	BATTLE,
+	POST_BATTLE
+	}
+
+var allies = Side.new()
+var enemies = Side.new()
 
 var battle_state = BATTLE_STATE.BATTLE
 var allied_turn = true
@@ -30,11 +34,11 @@ func solve_events():
 static func broadcast_event(responder,_context,_event):
 	for _side in [_context.allies,_context.enemies]:
 		for pos in _side.lineup:
-			var _u = _side.lineup[pos]
-			var _u_side = true if _side == _context.allies else false
-			_u.call(responder,pos,_u_side,_context,_event)
+			var u = _side.lineup[pos]
+			var u_side = true if _side == _context.allies else false
+			u.call(responder,pos,u_side,_context,_event)
 
-class side:
+class Side:
 	var lineup = {}
 	var dead_units = {}
 	var activated_units = []

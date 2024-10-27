@@ -1,5 +1,4 @@
-extends Resource
-class_name unit_data
+class_name UnitData extends Resource
 
 var max_health = 1
 var max_attack = 1
@@ -21,27 +20,26 @@ func set_current_attack(new_attack):
 	if max_attack<new_attack:
 		max_attack = new_attack
 	current_attack = new_attack
-	
-	
+
 func init_with_info(_card_info):
 	card_info = _card_info
 	var abilities_string = card_info.abilities
-	var new_abilities = abilities_handler.parse_abilities(abilities_string)
+	var new_abilities = AbilitiesHandler.parse_abilities(abilities_string)
 	for _ab in new_abilities:
 		if _ab != null:
 			add_ability(_ab)
-		
+	var ability
 	if card_info.id == str(2):
-		var _ability = ability_health_on_death.new(2)
-		add_ability(_ability)
+		ability = AbilityHealthOnDeath.new(2)
+		add_ability(ability)
 	if card_info.id == str(12):
-		var _ability = ability_troll.new()
-		add_ability(_ability)
+		ability = AbilityTroll.new()
+		add_ability(ability)
 
-	
 #Implies on of each ability maximum?
 func add_ability(_ability):
 	abilities.append(_ability)
+
 func remove_ability(_ability):
 	abilities.erase(_ability)
 
@@ -60,7 +58,7 @@ func select_action(_battle_context):
 
 func draft_post_event_response(pos,_context,event,_u):
 	check_draft_abilities("post",pos,_context,event,_u)
-	
+
 func draft_pre_event_response(pos,_context,event,_u):
 	check_draft_abilities("pre",pos,_context,event,_u)
 
@@ -74,7 +72,7 @@ func check_abilities(tempus,_u_pos,_u_side,_battle_context,_event):
 	for _ability in abilities:
 		if _ability.condition(tempus,_u_pos,_u_side,_battle_context,_event):
 			_ability.actions(tempus,_u_pos,_u_side,_battle_context,_event)
-		pass
+
 
 func check_draft_abilities(tempus,pos,_context,event,_u):
 	for _ability in abilities:

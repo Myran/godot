@@ -1,5 +1,5 @@
-extends Node
-class_name battle_enacter
+class_name battle_enacter extends Node
+
 var battle_layer
 var holder_allies
 var holder_enemy
@@ -8,17 +8,17 @@ func _init(_battle_layer,_holder_allies,_holder_enemy):
 	battle_layer = _battle_layer
 	holder_allies = _holder_allies
 	holder_enemy = _holder_enemy
-	
+
 func enact(battle_events):
 	printt("Start animating battle")
 	printt("current battle events",battle_events)
-	
+
 	var back_tween
 	var allies = holder_allies.get_current_lineup(true,battle_layer)
 	var enemies = holder_enemy.get_current_lineup(true,battle_layer)
 	holder_allies.hide_lineup()
 	holder_enemy.hide_lineup()
-	
+
 	for event in battle_events:
 		printt("current event:",event)
 		match event.type:
@@ -85,15 +85,18 @@ func enact(battle_events):
 				var dying_u = side[event.pos]
 				side.erase(event.pos)
 				dying_u.shake(event.side)
+
 			battle.EVENT_TYPE.START_OF_TURN:
 				await get_tree().create_timer(0.1).timeout
 				print("start of turn")
-				pass
+
 			battle.EVENT_TYPE.END_OF_TURN:
 				print("end of turn")
 				await back_tween.finished
+
 	await get_tree().create_timer(1.25).timeout
 	for side in [allies,enemies]:
 		for k in side.keys():
 			side[k].queue_free()
-	core.emit_signal("event",core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])
+	#core.emit_signal("event",core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cs6r37r5si37h"]
 
-[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://ci5rc8hd5f752" path="res://assets/testart/block_heart.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://d0u23re3gncar" path="res://assets/testart/tapped_heart.png" id="3"]
 

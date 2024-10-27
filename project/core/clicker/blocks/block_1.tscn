@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cprc5ar46k3k3"]
 
-[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://4svilqk4kf52" path="res://assets/testart/block_thought.png" id="2"]
 
 [node name="Block" groups=["block"] instance=ExtResource("1")]

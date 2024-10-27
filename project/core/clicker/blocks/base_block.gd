@@ -23,7 +23,7 @@ func init_card(_card_info,_card_level = 1):
 	card_info = _card_info
 	level = _card_level
 
-	unit_info = unit_data.new()
+	unit_info = UnitData.new()
 	unit_info.init_with_info(_card_info)
 	unit_info.upgrade_unit_to_level(_card_level)
 

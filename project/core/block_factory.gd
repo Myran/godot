@@ -42,7 +42,7 @@ func create_upgrade_block(upgrade_level):
 
 func createBlock():
 	var randomBlock
-	var rand = rng.seededRNG.next() % freq_item
+	var rand = rng.seeded_rng.next() % freq_item
 	if rand == 0:
 		randomBlock = create_item_block()
 	else:

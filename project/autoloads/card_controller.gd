@@ -1,8 +1,8 @@
 extends Node
-
+const CARD_IMAGE_PREFIX = "card_image_"
 @export_file("*.tscn") var card_scene_name : String
 @export_dir var card_image_folder : String
-const CARD_IMAGE_PREFIX = "card_image_"
+
 
 var current_level = 1
 var current_pool = ["card_1","card_2","card_3"]
@@ -39,7 +39,7 @@ func select_id_from_level(lvl):
 		if int(card.upgrade_level) == sel_lvl:
 			cards_with_level.append(card)
 
-	var picked_card_id = cards_with_level[rng.seededRNG.next() % cards_with_level.size()].id
+	var picked_card_id = cards_with_level[rng.seeded_rng.next() % cards_with_level.size()].id
 	return picked_card_id
 
 

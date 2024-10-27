@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://dqnjhbo3g3bdb"]
 
-[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/Block.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://ci7vf8rxng6pu" path="res://assets/testart/tile_test_10.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="1"]
