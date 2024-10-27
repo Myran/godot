@@ -54,32 +54,54 @@ shadow_size = 48
 resource_local_to_scene = true
 code = "shader_type canvas_item;
 
-uniform float vignette_intensity = 0.4;
-uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
-uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
-uniform sampler2D mask;
-uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;
+// Configurable parameters for the vignette effect
+uniform float vignette_intensity = 0.4;     // Controls how strong the darkening effect is
+uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;  // Controls the overall opacity of the effect
+uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);  // Color of the vignette (default: black)
 
-float vignette(vec2 uv){
-	uv *= 1.0 - uv.xy;
-	float vignette = uv.x * uv.y * 15.0;
-	return pow(vignette, vignette_intensity * vignette_opacity);
+// Input textures
+uniform sampler2D mask;  // Mask texture for controlling where the vignette appears
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;  // Screen texture using new syntax
+
+// Calculate the vignette effect based on UV coordinates
+float vignette(vec2 uv) {
+    // Scale UV coordinates based on distance from center
+    uv *= 1.0 - uv.xy;
+
+    // Calculate vignette intensity
+    float vignette = uv.x * uv.y * 15.0;
+
+    // Apply configurable intensity and opacity
+    return pow(vignette, vignette_intensity * vignette_opacity);
 }
 
-void fragment(){
-	vec4 color = texture(SCREEN_TEXTURE, SCREEN_UV);
-	vec4 text = texture(TEXTURE, UV);
-	
-	text.rgba *= (vignette_rgb.rgba);
-	text.rgba *= (1.0 - vignette(UV));
-	
-	vec4 mask_color = texture(mask, UV).rgba;
-	if (mask_color.a == 0.0)
-	{
-		text.a = 0.0;
-	}
-	COLOR = vec4((text.rgb)*color.rgb,text.a);
+void fragment() {
+    // Get the screen color and texture color at current UV
+    vec4 color = texture(screen_tex, SCREEN_UV);
+    vec4 text = texture(TEXTURE, UV);
+
+    // Apply vignette color and intensity
+    text.rgba *= vignette_rgb.rgba;
+    text.rgba *= (1.0 - vignette(UV));
+
+    // Apply mask if provided
+    vec4 mask_color = texture(mask, UV).rgba;
+    if (mask_color.a == 0.0) {
+        text.a = 0.0;
+    }
+
+    // Output final color with alpha
+    COLOR = vec4((text.rgb) * color.rgb, text.a);
 }
+
+// Alternative version with circular vignette:
+/*
+float circular_vignette(vec2 uv) {
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);
+    return smoothstep(0.8, 0.1, dist * (vignette_intensity + 1.0));
+}
+*/
 "
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ntg2t"]
