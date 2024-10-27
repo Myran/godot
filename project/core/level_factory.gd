@@ -1,5 +1,4 @@
-extends Resource
-class_name level_factory
+class_name LevelFactory extends Resource
 @export var tilemap_levels: Dictionary
 
 

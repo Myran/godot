@@ -1,6 +1,7 @@
-class_name battle extends Node
+class_name Battle extends Node
 
 enum BATTLE_ACTION{ATTACK_REGULAR}
+
 enum TEMPUS{
 	PRE,
 	POST
@@ -37,7 +38,7 @@ func battle_start(allies_lineup,enemies_lineup):
 
 
 func battle_solver(allied_lineup, enemies_lineup):
-	current_context = battle_context.new(self)
+	current_context = BattleContext.new(self)
 	var dup_allies = duplicate_resource(allied_lineup)
 	var dup_enemies = duplicate_resource(enemies_lineup)
 
@@ -48,9 +49,9 @@ func battle_solver(allied_lineup, enemies_lineup):
 	current_context.add_event(event_enemies)
 
 	current_context.solve_events()
-	while current_context.battle_state == battle_context.BATTLE_STATE.BATTLE:
+	while current_context.battle_state == BattleContext.BATTLE_STATE.BATTLE:
 		current_context = solve_win_conditions(current_context)
-		if current_context.battle_state == battle_context.BATTLE_STATE.BATTLE:
+		if current_context.battle_state == BattleContext.BATTLE_STATE.BATTLE:
 			current_context = start_of_turn(current_context)
 			current_context = find_next_unit(current_context)
 			current_context.solve_events()
@@ -105,7 +106,7 @@ static func solve_win_conditions(_context):
 	else:
 		print("Win conditions not met, continue battle")
 		return _context
-	_context.battle_state = battle_context.BATTLE_STATE.POST_BATTLE
+	_context.battle_state = BattleContext.BATTLE_STATE.POST_BATTLE
 	return _context
 
 static func solve_event(event,_context):

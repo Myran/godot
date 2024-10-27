@@ -16,7 +16,7 @@ func resize_window():
 	update_safe_area()
 
 func update_safe_area():
-	# Turn off debugging godot 3->4 
+		# Turn off debugging godot 3->4
 	# var rect = DisplayServer.get_display_safe_area()
 	var window_size = get_window().get_size()
 	var rect = get_window().get_visible_rect()
@@ -28,13 +28,13 @@ func update_safe_area():
 	var aspect_y = screen_size.y / window_size.y
 	var aspect_x = screen_size.x / window_size.x
 
-	var topLeft = Vector2(rect.position.x * aspect_x, rect.position.y * aspect_y)
-	var bottomRight = Vector2(-offset.x * aspect_x, -offset.y * aspect_y)
+	var top_left = Vector2(rect.position.x * aspect_x, rect.position.y * aspect_y)
+	var bottom_right = Vector2(-offset.x * aspect_x, -offset.y * aspect_y)
 
-	offset_left = topLeft.x
-	offset_top = topLeft.y
-	offset_right = bottomRight.x
-	offset_bottom = bottomRight.y
+	offset_left = top_left.x
+	offset_top = top_left.y
+	offset_right = bottom_right.x
+	offset_bottom = bottom_right.y
 	#print("Screen size: ",screen_size)
 	#print("Window size: ",window_size)
 	#print("Safe Area:", rect )

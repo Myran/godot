@@ -54,7 +54,7 @@ func upgrade_stats_to_new_level(_level):
 	current_health = max_health
 
 func select_action(_battle_context):
-	return {"action" : battle.BATTLE_ACTION.ATTACK_REGULAR}
+	return {"action" : Battle.BATTLE_ACTION.ATTACK_REGULAR}
 
 func draft_post_event_response(pos,_context,event,_u):
 	check_draft_abilities("post",pos,_context,event,_u)
@@ -63,10 +63,10 @@ func draft_pre_event_response(pos,_context,event,_u):
 	check_draft_abilities("pre",pos,_context,event,_u)
 
 func pre_event_response(_u_pos,_u_side,_battle_context,_event):
-	check_abilities(battle.TEMPUS.PRE,_u_pos,_u_side,_battle_context,_event)
+	check_abilities(Battle.TEMPUS.PRE,_u_pos,_u_side,_battle_context,_event)
 
 func post_event_response(_u_pos,_u_side,_battle_context,_event):
-	check_abilities(battle.TEMPUS.POST,_u_pos,_u_side,_battle_context,_event)
+	check_abilities(Battle.TEMPUS.POST,_u_pos,_u_side,_battle_context,_event)
 
 func check_abilities(tempus,_u_pos,_u_side,_battle_context,_event):
 	for _ability in abilities:

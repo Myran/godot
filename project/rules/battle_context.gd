@@ -1,5 +1,5 @@
+class_name BattleContext extends Context
 
-class_name battle_context extends context
 enum BATTLE_STATE{
 	PRE_BATTLE,
 	BATTLE,

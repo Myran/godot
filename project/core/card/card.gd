@@ -1,19 +1,15 @@
 extends AspectRatioContainer
+
 @onready var card_info = $"%card_info"
 @onready var card_image = $"%card_image"
 
 
 func show_card():
-	#$animation_player_fadein.play("fadein")
-	#$animation_player_beam.play("reveal")
-	#$animation_player_beam.play("regular")
 	$animation_player.play("scale_up")
-	pass
-
-
 
 func _on_button_pressed():
 	ui.action(ui.EVENT_TYPE.TAP_POP_CARD,[self])
+
 func setup_card(card):
 	print("CARD: setup card in card",card)
 

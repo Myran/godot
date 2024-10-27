@@ -126,7 +126,7 @@ func merge_matched_cards(cluster):
 	var card_id = cluster[0].card_info.id
 	var new_level = int(cluster[0].level)+1
 	var new_card = await card_controller.create_unit_from_id(card_id,new_level)
-	new_card.block_context = cards.CONTEXT.DRAFT
+	new_card.block_context = Cards.CONTEXT.DRAFT
 	var cluster_pos = level.get_grid_pos(cluster[1])
 	for block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))

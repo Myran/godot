@@ -1,4 +1,4 @@
-class_name draft_context extends context
+class_name DraftContext extends Context
 
 var lineup = {}
 var draft_area = {}

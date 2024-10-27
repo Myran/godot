@@ -1,4 +1,4 @@
-class_name context extends Resource
+class_name Context extends Resource
 
 var events = []
 var unresolved_events = []

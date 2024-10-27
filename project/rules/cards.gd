@@ -1,5 +1,5 @@
 
-class_name cards extends Resource
+class_name Cards extends Resource
 
 enum CONTEXT{
 	NOT_SET,

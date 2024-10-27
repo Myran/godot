@@ -1,5 +1,15 @@
-extends Control 
-class_name draft
+class_name draft extends Control
+
+signal merge_done
+
+enum TAP_STATE {IDLE,PRESSING,UNPRESSING,HOLDING}
+enum UI_STATE{WAITING,HOLDING,LOCKED}
+enum SOLVE_TYPE{CORE,UI}
+
+const TAP_TIME = 0.25
+
+
+
 @export var card_pop : Control
 @export var holder_draft : Node
 @export var holder_allies : Control
@@ -11,13 +21,9 @@ class_name draft
 @export var battle_layer : CanvasLayer
 @export var unhandled_layer : CanvasLayer
 
-enum TAP_STATE {IDLE,PRESSING,UNPRESSING,HOLDING}
-enum UI_STATE{WAITING,HOLDING,LOCKED}
 
-enum SOLVE_TYPE{CORE,UI}
 
-const tap_time = 0.25
-signal merge_done
+
 
 var main = null
 var tap_timer = 0
@@ -44,20 +50,20 @@ func _ready():
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
-	
-	enacter = battle_enacter.new(battle_layer,holder_allies,holder_enemy)
+
+	enacter = BattleEnacter.new(battle_layer,holder_allies,holder_enemy)
 	add_child(enacter)
 
 func _input(event):
 	if (event is InputEventScreenDrag and (tap_state == TAP_STATE.HOLDING or tap_state == TAP_STATE.PRESSING)):
 		last_touch_pos = event.position
-		
+
 func _process(delta):
 	if tap_state == TAP_STATE.PRESSING:
 		tap_timer = tap_timer + delta
 		if holding_item and last_touch_pos and tap_timer> 0.15:
 			holding_item.set_global_position(lerp(holding_item.get_global_position(),last_touch_pos,0.25))
-		if tap_timer > tap_time:
+		if tap_timer > TAP_TIME:
 			if holding_item:
 				tap_state = TAP_STATE.HOLDING
 				tap_timer = 0
@@ -83,15 +89,15 @@ func _on_debug_event(event,_data):
 
 func new_event(event_type,data,solve_type):
 	printt("New event: ", event_type,data,solve_type)
-	var _context = create_draft_context()
-	var event = context.Event.new(solve_type,event_type,data)
-	_context.add_event(event)
-	_context.solve_events()
+	var draft_context = create_draft_context()
+	var event = Context.Event.new(solve_type,event_type,data)
+	draft_context.add_event(event)
+	draft_context.solve_events()
 
 func create_draft_context():
-	var _context = draft_context.new(self)
-	_context = update_context_units(_context)
-	return _context
+	var draft_context = DraftContext.new(self)
+	draft_context = update_context_units(draft_context)
+	return draft_context
 
 func update_context_units(_context):
 	_context.lineup = holder_allies.get_current_lineup()
@@ -109,31 +115,27 @@ func solve_event(event,_context):
 				core.clicker._on_core_event(event.event_type,event.data)
 		SOLVE_TYPE.UI:
 			resolve_ui_event(event.event_type,event.data,_context)
-			pass
 	return ret_context
-	
-
-
 
 func resolve_core_event(event_type,_data,current_context):
 	print("event:",core.EVENT_TYPE.keys()[event_type])
 	match event_type:
 		core.EVENT_TYPE.CARD_STAT_CHANGE:
-			var _card = _data.card
+			var card = _data.card
 			if _data.has("health"):
-				var _health_amount = _data.health
-				var current_health = _card.unit_info.current_health
-				var new_health = current_health + _health_amount
-				_card.unit_info.current_health = new_health
-				_card.card_base.set_card_health(new_health)
+				var health_amount = _data.health
+				var current_health = card.unit_info.current_health
+				var new_health = current_health + health_amount
+				card.unit_info.current_health = new_health
+				card.card_base.set_card_health(new_health)
 			if _data.has("attack"):
-				var _attack_amount = _data.attack
-				var current_attack = _card.unit_info.current_attack
-				var new_attack = current_attack + _attack_amount
-				_card.unit_info.current_attack = new_attack
-				_card.card_base.set_card_attack(new_attack)
-			_card.show_upgrade()
-			
+				var attack_amount = _data.attack
+				var current_attack = card.unit_info.current_attack
+				var new_attack = current_attack + attack_amount
+				card.unit_info.current_attack = new_attack
+				card.card_base.set_card_attack(new_attack)
+			card.show_upgrade()
+
 		core.EVENT_TYPE.CARD_FINISHED_MOVING_TOP:
 			var card = _data
 			card.queue_free()
@@ -145,7 +147,7 @@ func resolve_core_event(event_type,_data,current_context):
 		core.EVENT_TYPE.GAME_STATE_TRANSITION:
 			var new_state = _data[0]
 			set_gamestate(new_state)
-			
+
 		core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD:
 			var card = _data[0]
 			var pos = _data[1]
@@ -175,13 +177,12 @@ func resolve_core_event(event_type,_data,current_context):
 					current_context.solve_events()
 					break
 
-			
 		core.EVENT_TYPE.LINEUP_MERGE:
 			var card = _data[0]
 			var tripples = _data[1]
 			var new_card
 			var merge_pos
-			
+
 			for trip_card in tripples:
 				merging_tripples.append(trip_card)
 				var lineup_pos = holder_allies.get_card_position(trip_card)
@@ -190,7 +191,7 @@ func resolve_core_event(event_type,_data,current_context):
 				update_context_units(current_context)
 				if trip_card == card:
 					new_card = await card_controller.create_unit_from_id(card.card_info.id,card.level+1)
-					new_card.block_context = cards.CONTEXT.LINEUP
+					new_card.block_context = Cards.CONTEXT.LINEUP
 					holder.set_card(new_card)
 					new_card.show_upgrade()
 					merge_pos = new_card.get_global_position()
@@ -209,9 +210,6 @@ func resolve_core_event(event_type,_data,current_context):
 		core.EVENT_TYPE.RESET_UNITS:
 			pass
 
-
-
-	
 func resolve_ui_event(_event_type,_data,current_context):
 	if ui_state == UI_STATE.LOCKED: return
 	#print("event:",ui.EVENT_TYPE.keys()[_event_type])
@@ -235,10 +233,10 @@ func resolve_ui_event(_event_type,_data,current_context):
 			var allies = holder_allies.get_current_lineup()
 			var enemies = holder_enemy.get_current_lineup()
 			#var _battle = await battle.new()
-			var _battle = battle.new()
-			var prep_allies = battle.prepare_lineup_from_holder(allies)
-			var prep_enemies = battle.prepare_lineup_from_holder(enemies)
-			var battle_result = _battle.battle_start(prep_allies,prep_enemies)
+			var battle_instance = Battle.new()
+			var prep_allies = Battle.prepare_lineup_from_holder(allies)
+			var prep_enemies = Battle.prepare_lineup_from_holder(enemies)
+			var battle_result = battle_instance.battle_start(prep_allies,prep_enemies)
 			current_battle = battle_result
 			ui.action(ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
 			#save result
@@ -300,13 +298,13 @@ func resolve_ui_event(_event_type,_data,current_context):
 								core.OBJECT_TYPE.CARD_HOLDER:
 									var interacted_holder = interacted_object
 									match dragging_card.block_context:
-										cards.CONTEXT.LINEUP:
+										Cards.CONTEXT.LINEUP:
 											var prev_holder = dragging_card.holder
 											if interacted_holder.set_card(dragging_card):
 												prev_holder.remove_card()
 												release_handled = true
 
-										cards.CONTEXT.DRAFT:
+										Cards.CONTEXT.DRAFT:
 											if is_instance_valid(dragging_card):
 												if core.clicker.has_card(dragging_card):
 													release_handled = interacted_holder.set_card(dragging_card)
@@ -319,9 +317,9 @@ func resolve_ui_event(_event_type,_data,current_context):
 
 							if not release_handled:
 								match dragging_card.block_context:
-									cards.CONTEXT.LINEUP:
+									Cards.CONTEXT.LINEUP:
 										dragging_card.holder.pos_card_in_holder()
-									cards.CONTEXT.DRAFT:
+									Cards.CONTEXT.DRAFT:
 										var pos = dragging_card.get_global_position()
 										dragging_card.set_as_top_level(false)
 										dragging_card.set_global_position(pos)

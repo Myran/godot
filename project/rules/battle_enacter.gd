@@ -1,4 +1,4 @@
-class_name battle_enacter extends Node
+class_name BattleEnacter extends Node
 
 var battle_layer
 var holder_allies
@@ -22,13 +22,13 @@ func enact(battle_events):
 	for event in battle_events:
 		printt("current event:",event)
 		match event.type:
-			battle.EVENT_TYPE.ADD_LINEUP:
+			Battle.EVENT_TYPE.ADD_LINEUP:
 				print("Add lineup")
-			battle.EVENT_TYPE.FIND_NEXT_UNIT:
+			Battle.EVENT_TYPE.FIND_NEXT_UNIT:
 				print("Find next unit")
-			battle.EVENT_TYPE.SELECT_ACTIVE_UNIT:
+			Battle.EVENT_TYPE.SELECT_ACTIVE_UNIT:
 				print("Select active unit")
-			battle.EVENT_TYPE.COMBAT:
+			Battle.EVENT_TYPE.COMBAT:
 				print("Combat")
 				var attacker = allies[event.attacker] if event.allied_attack else enemies[event.attacker]
 				var defender = enemies[event.defender] if event.allied_attack else allies[event.defender]
@@ -63,13 +63,13 @@ func enact(battle_events):
 				back_tween.play()
 
 
-			battle.EVENT_TYPE.DAMAGE:
+			Battle.EVENT_TYPE.DAMAGE:
 				print("Damage",event)
 				var u = allies[event.target] if event.side else enemies[event.target]
 				printt("Damage target:",u,"Damage",event.damage_amount)
 
 
-			battle.EVENT_TYPE.STAT_CHANGE:
+			Battle.EVENT_TYPE.STAT_CHANGE:
 				print("Stat Change",event)
 				if !event.has("new_stat"): continue
 				var unit_side = allies if event.side else enemies
@@ -79,18 +79,18 @@ func enact(battle_events):
 					"current_health":
 						u.card_base.set_card_health(event.new_stat)
 
-			battle.EVENT_TYPE.DEATH:
+			Battle.EVENT_TYPE.DEATH:
 				print("Death")
 				var side = allies if event.side else enemies
 				var dying_u = side[event.pos]
 				side.erase(event.pos)
 				dying_u.shake(event.side)
 
-			battle.EVENT_TYPE.START_OF_TURN:
+			Battle.EVENT_TYPE.START_OF_TURN:
 				await get_tree().create_timer(0.1).timeout
 				print("start of turn")
 
-			battle.EVENT_TYPE.END_OF_TURN:
+			Battle.EVENT_TYPE.END_OF_TURN:
 				print("end of turn")
 				await back_tween.finished
 

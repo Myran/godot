@@ -12,31 +12,31 @@ const FREQ_ITEM = 5
 func create_locked_block():
 	var locked_block = locked_block_scene.instantiate()
 	locked_block.object_type = core.OBJECT_TYPE.BLOCK_LOCKED
-	locked_block.block_context = cards.CONTEXT.DRAFT
+	locked_block.block_context = Cards.CONTEXT.DRAFT
 	return locked_block
 
 func create_item_block():
 	var locked_block = item_block_scene.instantiate()
 	locked_block.object_type = core.OBJECT_TYPE.BLOCK_ITEM
-	locked_block.block_context = cards.CONTEXT.DRAFT
+	locked_block.block_context = Cards.CONTEXT.DRAFT
 	return locked_block
 
 func create_nospace_block():
 	var nospace_block = nospace_block_scene.instantiate()
 	nospace_block.object_type = core.OBJECT_TYPE.BLOCK_NOSPACE
-	nospace_block.block_context = cards.CONTEXT.DRAFT
+	nospace_block.block_context = Cards.CONTEXT.DRAFT
 	return nospace_block
 
 func create_passtrough_block():
 	var nospace_block = passtrough_block_scene.instantiate()
 	nospace_block.object_type = core.OBJECT_TYPE.BLOCK_PASSTROUGH
-	nospace_block.block_context = cards.CONTEXT.DRAFT
+	nospace_block.block_context = Cards.CONTEXT.DRAFT
 	return nospace_block
 
 func create_upgrade_block(upgrade_level):
 	var upgrade_block = upgrade_blocks[upgrade_level-1].instantiate()
 	upgrade_block.object_type = core.OBJECT_TYPE.BLOCK_UPGRADE
-	upgrade_block.block_context = cards.CONTEXT.DRAFT
+	upgrade_block.block_context = Cards.CONTEXT.DRAFT
 	upgrade_block.level = upgrade_level
 	return upgrade_block
 
@@ -47,7 +47,7 @@ func create_block():
 		random_block = create_item_block()
 	else:
 		random_block = await card_controller.get_card_from_pool()
-		random_block.block_context = cards.CONTEXT.DRAFT
+		random_block.block_context = Cards.CONTEXT.DRAFT
 	return random_block
 
 func create_empty_space():

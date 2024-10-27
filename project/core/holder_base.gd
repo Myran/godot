@@ -1,7 +1,5 @@
 extends TextureRect
 
-
-#var target_pos
 var current_pos = null
 var is_moving = false
 
