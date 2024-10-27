@@ -26,20 +26,20 @@ func setup():
 		core.clicker = self
 
 func has_card(card):
-	if level.getGridPos(card) == null:
+	if level.get_grid_pos(card) == null:
 		return false
 	return true
 
 func get_all_cards():
-	return level.allBlocks()
+	return level.all_blocks()
 
 func remove_rerollables():
-	for block in level.allBlocks():
-		var pos = level.getGridPos(block)
+	for block in level.all_blocks():
+		var pos = level.get_grid_pos(block)
 		var col = pos.x
 		if not col in columns_locked:
 			if rerollables.has(block.object_type):
-					level.removeFromGrid(block,true)
+					level.remove_from_grid(block,true)
 
 func _on_core_event(event_type,_data):
 	match event_type:
@@ -59,7 +59,7 @@ func _on_core_event(event_type,_data):
 		core.EVENT_TYPE.CARD_MERGE_MOVE_FINISHED:
 			var card = _data
 			merging_cards.erase(card)
-			level.removeFromGrid(card)
+			level.remove_from_grid(card)
 			if merging_cards.size() == 0:
 				emit_signal("merge_move_done")
 
@@ -69,7 +69,7 @@ func _on_core_event(event_type,_data):
 
 		core.EVENT_TYPE.DRAFT_ADD_BLOCK:
 			var match_info = _data[0]
-			level.addToGrid(match_info.pos,match_info.block)
+			level.add_to_grid(match_info.pos,match_info.block)
 
 		core.EVENT_TYPE.UPGRADE:
 			var upgrade_level = _data[0]
@@ -84,8 +84,8 @@ func _on_core_event(event_type,_data):
 			var destroy = false
 			if _data.size()>1:
 				destroy = _data[1]
-			if level.getGridPos(block) != null:
-				level.removeFromGrid(block,destroy)
+			if level.get_grid_pos(block) != null:
+				level.remove_from_grid(block,destroy)
 
 		core.EVENT_TYPE.DRAFT_MERGE:
 			var matches = _data[0]
@@ -97,17 +97,17 @@ func _on_core_event(event_type,_data):
 			update_blocks()
 
 func remove_upgrade_blocks(upgrade_level):
-	for block in level.allBlocks():
+	for block in level.all_blocks():
 		if block.object_type == core.OBJECT_TYPE.BLOCK_UPGRADE:
 			if block.level == upgrade_level:
-				level.removeFromGrid(block,true)
+				level.remove_from_grid(block,true)
 
 
 func update_blocks():
 	solve_gravity()
 	while refill():
 		solve_gravity()
-	await level.moveBlocks() #.completed
+	await level.move_blocks() #.completed
 	refill_counter.clear()
 	var matches = find_match()
 	if matches.size():
@@ -115,7 +115,7 @@ func update_blocks():
 
 
 func find_match():
-	for block in level.allBlocks():
+	for block in level.all_blocks():
 		if block != null and block.object_type == core.OBJECT_TYPE.CARD:
 			var cluster = add_neighbour_cards(block,[block])
 			if cluster.size() >= CARD_MERGE_AMOUNT:
@@ -127,9 +127,9 @@ func merge_matched_cards(cluster):
 	var new_level = int(cluster[0].level)+1
 	var new_card = await card_controller.create_unit_from_id(card_id,new_level)
 	new_card.block_context = cards.CONTEXT.DRAFT
-	var cluster_pos = level.getGridPos(cluster[1])
+	var cluster_pos = level.get_grid_pos(cluster[1])
 	for block in cluster:
-		block.merge_into_position(level.gridToWorldPos(cluster_pos))
+		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
 		merging_cards.append(block)
 
 	return {
@@ -141,7 +141,7 @@ func merge_matched_cards(cluster):
 
 func add_neighbour_cards(block,cluster = []):
 
-	var start_pos = level.getGridPos(block)
+	var start_pos = level.get_grid_pos(block)
 
 	if start_pos == null:
 		return cluster
@@ -149,8 +149,8 @@ func add_neighbour_cards(block,cluster = []):
 	for direction in directions:
 		var neighbour_pos = start_pos + direction
 
-		if level.hasPos(neighbour_pos):
-			var neighbour = level.getBlock(neighbour_pos)
+		if level.has_pos(neighbour_pos):
+			var neighbour = level.get_block(neighbour_pos)
 			if neighbour.object_type == core.OBJECT_TYPE.CARD and not cluster.has(neighbour):
 				if neighbour.level == block.level and neighbour.card_info.id == block.card_info.id:
 					cluster.append(neighbour)
@@ -162,22 +162,21 @@ func add_neighbour_cards(block,cluster = []):
 func refill():
 	var refill_action = false
 
-	for x in level.gridWidth:
-
+	for x in level.GRID_WIDTH:
 		var test_pos = Vector2i(x,SPAWN_HEIGHT)
 
-		if level.getBlock(test_pos):
-			var test_block = level.getBlock(test_pos)
-			while (test_pos.y < level.gridHeight):
+		if level.get_block(test_pos):
+			var test_block = level.get_block(test_pos)
+			while (test_pos.y < level.GRID_HEIGTH):
 				if test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
 					test_pos = test_pos + GRAVITY_VECTOR
-					if level.hasPos(test_pos):
-						test_block = level.getBlock(test_pos)
+					if level.has_pos(test_pos):
+						test_block = level.get_block(test_pos)
 				else:
 					break
 			if test_block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
 				refill_counter.append(x)
-				level.addToGrid(test_pos,level.createBlock(),refill_counter.count(x))
+				level.add_to_grid(test_pos,level.create_block(),refill_counter.count(x))
 				refill_action = true
 	return refill_action
 
@@ -189,19 +188,19 @@ func solve_gravity():
 	while gravity_action:
 		gravity_action = false
 
-		for block in level.allBlocks():
+		for block in level.all_blocks():
 
 			if block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
 
-				var test_pos = level.getGridPos(block)-GRAVITY_VECTOR
-				if level.hasPos(test_pos):
-					var test_block = level.getBlock(test_pos)
+				var test_pos = level.get_grid_pos(block)-GRAVITY_VECTOR
+				if level.has_pos(test_pos):
+					var test_block = level.get_block(test_pos)
 					while test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
 							test_pos = test_pos - GRAVITY_VECTOR
-							if level.hasPos(test_pos):
-								test_block = level.getBlock(test_pos)
+							if level.has_pos(test_pos):
+								test_block = level.get_block(test_pos)
 							else:
 								break
 					if ![core.OBJECT_TYPE.BLOCK_PASSTROUGH,core.OBJECT_TYPE.EMPTY_SPACE].has(test_block.object_type):
-						level.switchBlocks(block,test_block)
+						level.switch_blocks(block,test_block)
 						gravity_action = true

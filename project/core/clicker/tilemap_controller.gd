@@ -1,19 +1,16 @@
 extends Control
-
+signal cards_done_moving
+const GRID_WIDTH = 5 # max five cards in row
+const GRID_HEIGTH = 5
 
 @export var _level_factory: Resource
+@export var _block_factory: block_factory
+
 var current_level = null
 var current_level_name = null
-
-signal cards_done_moving
 var blocks_moving
-var blockGrid = {}
-var refillDistance
-const gridWidth = 5 # max five cards in row
-const gridHeight = 5
-const freq_item = 5
-const cardType = 5
-@export var _block_factory: block_factory
+var block_grid = {}
+var refill_distance
 
 func _ready():
 	core.event.connect(_on_core_event)
@@ -49,16 +46,16 @@ func setup_level(level_name  = "default"):
 	get_parent().add_child(new_level)
 	current_level = new_level
 	current_level_name = level_name
-	refillDistance = Vector2(0,current_level.tile_set.tile_size.y)
-	print("RefillDistance set to: ",refillDistance)
+	refill_distance = Vector2(0,current_level.tile_set.tile_size.y)
+	print("RefillDistance set to: ",refill_distance)
 	create_blocks_from_level()
 
 
 
 func create_blocks_from_level():
-	for tilePos in current_level.get_used_cells():
+	for tile_pos in current_level.get_used_cells():
 		var block
-		match current_level.get_cell_source_id((tilePos)):
+		match current_level.get_cell_source_id((tile_pos)):
 			0:
 			#block = upgradeblock
 				block = _block_factory.create_locked_block()
@@ -73,8 +70,8 @@ func create_blocks_from_level():
 			5:
 				block = _block_factory.create_passtrough_block()
 			_:
-				block = await _block_factory.createBlock()
-		addToGrid(tilePos,block)
+				block = await _block_factory.create_block()
+		add_to_grid(tile_pos,block)
 	current_level.clear()
 
 
@@ -82,56 +79,56 @@ func create_upgrade_block(upgrade_level):
 	return _block_factory.create_upgrade_block(upgrade_level)
 
 
-func createBlock():
-	return await _block_factory.createBlock()
+func create_block():
+	return await _block_factory.create_block()
 
-func addToGrid(gridPos,block,refill = 0):
+func add_to_grid(grid_pos,block,refill = 0):
 
-	blockGrid[gridPos] = block
+	block_grid[grid_pos] = block
 	current_level.add_child(block)
-	var refillPos = refillDistance * refill
-	print("refill pos :",refillPos)
-	print("final position: ",(current_level.map_to_local(gridPos) -refillPos))
+	var refill_pos = refill_distance * refill
+	print("refill pos :",refill_pos)
+	print("final position: ",(current_level.map_to_local(grid_pos) -refill_pos))
 	#block.position = (current_level.map_to_local(gridPos) -refillPos)
-	block.position = gridToWorldPos(gridPos)-refillPos
+	block.position = grid_to_world_pos(grid_pos)-refill_pos
 
 
-func getGridPos(block):
+func get_grid_pos(block):
 
-	for gridPos in blockGrid.keys():
-		if blockGrid[gridPos] == block:
-			return gridPos
+	for grid_pos in block_grid.keys():
+		if block_grid[grid_pos] == block:
+			return grid_pos
 	#return null
 
-func switchBlocks(blockA,blockB):
+func switch_blocks(block_a,block_b):
 
-	var posA = getGridPos(blockA)
-	var posB = getGridPos(blockB)
-	blockGrid[posA] = blockB
-	blockGrid[posB] = blockA
+	var pos_a = get_grid_pos(block_a)
+	var pos_b = get_grid_pos(block_b)
+	block_grid[pos_a] = block_b
+	block_grid[pos_b] = block_a
 
-func getBlock(gridPos):
-	return blockGrid[gridPos]
+func get_block(grid_pos):
+	return block_grid[grid_pos]
 
-func hasPos(pos):
-	return blockGrid.has(pos)
+func has_pos(pos):
+	return block_grid.has(pos)
 
-func allBlocks():
-	return blockGrid.values()
+func all_blocks():
+	return block_grid.values()
 
-func gridToWorldPos(gridPos):
-	return current_level.map_to_local(gridPos)
+func grid_to_world_pos(grid_pos):
+	return current_level.map_to_local(grid_pos)
 
-func moveBlocks():
-	blocks_moving = allBlocks().duplicate()
-	for blockIterator in blocks_moving:
-		blockIterator.move_to_position(gridToWorldPos(getGridPos(blockIterator)))
+func move_blocks():
+	blocks_moving = all_blocks().duplicate()
+	for block_iterator in blocks_moving:
+		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))
 	await self.cards_done_moving
 
-func removeFromGrid(block,destroy = true):
-	var remove_pos = getGridPos(block)
+func remove_from_grid(block,destroy = true):
+	var remove_pos = get_grid_pos(block)
 	var empty_space = _block_factory.create_empty_space()
-	addToGrid(remove_pos,empty_space)
+	add_to_grid(remove_pos,empty_space)
 	if destroy:
 		if block.get_parent():
 			block.get_parent().remove_child(block)
