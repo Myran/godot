@@ -1,12 +1,7 @@
-[gd_resource type="Resource" script_class="block_factory" load_steps=15 format=3 uid="uid://034uyxaore0y"]
+[gd_resource type="Resource" script_class="block_factory" load_steps=10 format=3 uid="uid://034uyxaore0y"]
 
 [ext_resource type="Script" path="res://core/block_factory.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://c6qd386np6ht3" path="res://core/clicker/blocks/block_empty.tscn" id="1_i7ye2"]
-[ext_resource type="PackedScene" uid="uid://cprc5ar46k3k3" path="res://core/clicker/blocks/block_1.tscn" id="2_dm728"]
-[ext_resource type="PackedScene" uid="uid://cs6r37r5si37h" path="res://core/clicker/blocks/block_2.tscn" id="3_g7ncy"]
-[ext_resource type="PackedScene" uid="uid://ca6ji26d3tg31" path="res://core/clicker/blocks/block_3.tscn" id="4_kg6yp"]
-[ext_resource type="PackedScene" uid="uid://buts24pmixmt0" path="res://core/clicker/blocks/block_4.tscn" id="5_tctjd"]
-[ext_resource type="PackedScene" uid="uid://bq0pntsljc8cf" path="res://core/clicker/blocks/block_base_card.tscn" id="6_x3j5j"]
 [ext_resource type="PackedScene" uid="uid://bbkpu8u2sgdyr" path="res://core/clicker/blocks/block_items.tscn" id="7_q60pi"]
 [ext_resource type="PackedScene" uid="uid://2485kigtabyg" path="res://core/clicker/blocks/block_lock.tscn" id="8_svlm3"]
 [ext_resource type="PackedScene" path="res://core/clicker/blocks/block_void.tscn" id="9_h70if"]
@@ -18,8 +13,9 @@
 [resource]
 script = ExtResource("1")
 upgrade_blocks = [ExtResource("12_y1qa4"), ExtResource("13_vqevx"), ExtResource("14_4bnb6")]
-blockTypes = [ExtResource("1_i7ye2"), ExtResource("2_dm728"), ExtResource("3_g7ncy"), ExtResource("4_kg6yp"), ExtResource("5_tctjd"), ExtResource("6_x3j5j")]
+block_types = [ExtResource("1_i7ye2")]
 locked_block_scene = ExtResource("8_svlm3")
 nospace_block_scene = ExtResource("9_h70if")
 passtrough_block_scene = ExtResource("10_hjfyp")
 item_block_scene = ExtResource("7_q60pi")
+empty_block_scene = ExtResource("1_i7ye2")

@@ -1,13 +1,13 @@
-extends Resource
-class_name block_factory
-const freq_item = 5
+class_name block_factory extends Resource
+const FREQ_ITEM = 5
 
 @export var upgrade_blocks : Array # (Array, PackedScene)
-@export var blockTypes : Array  # (Array, PackedScene)
+#@export var block_types : Array  # (Array, PackedScene)
 @export var locked_block_scene: PackedScene
 @export var nospace_block_scene: PackedScene
 @export var passtrough_block_scene: PackedScene
 @export var item_block_scene: PackedScene
+@export var empty_block_scene : PackedScene
 
 func create_locked_block():
 	var locked_block = locked_block_scene.instantiate()
@@ -41,16 +41,17 @@ func create_upgrade_block(upgrade_level):
 	return upgrade_block
 
 func create_block():
-	var randomBlock
-	var rand = rng.seeded_rng.next() % freq_item
+	var random_block
+	var rand = rng.seeded_rng.next() % FREQ_ITEM
 	if rand == 0:
-		randomBlock = create_item_block()
+		random_block = create_item_block()
 	else:
-		randomBlock = await card_controller.get_card_from_pool()
-		randomBlock.block_context = cards.CONTEXT.DRAFT
-	return randomBlock
+		random_block = await card_controller.get_card_from_pool()
+		random_block.block_context = cards.CONTEXT.DRAFT
+	return random_block
 
 func create_empty_space():
-	var empty_space = blockTypes[0].instantiate()
+	#var empty_space = block_types[0].instantiate()
+	var empty_space = empty_block_scene.instantiate()
 	empty_space.object_type = core.OBJECT_TYPE.EMPTY_SPACE
 	return empty_space
