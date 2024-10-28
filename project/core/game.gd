@@ -157,7 +157,7 @@ func resolve_core_event(event_type,_data,current_context):
 				#trip_card.queue_free()
 			for trip_card in tripples:
 				trip_card.move_to_on_top(merge_pos)
-			await self.merge_done
+			await merge_done
 			current_context.add_event({solve_type = SOLVE_TYPE.CORE,event_type = core.EVENT_TYPE.LINEUP_ADD_CARD,data = [new_card]})
 			current_context.solve_events()
 
