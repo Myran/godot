@@ -8,12 +8,12 @@ const GRID_HEIGTH = 5
 
 var current_level = null
 var current_level_name = null
-var blocks_moving
+var blocks_moving = []
 var block_grid = {}
 var refill_distance
 
 func _ready():
-	core.event.connect(_on_core_event)
+	#core.event.connect(_on_core_event)
 	debug.debug_event.connect(_on_debug_event)
 
 func _on_debug_event(event,_data = null):
@@ -24,13 +24,18 @@ func _on_debug_event(event,_data = null):
 			var lvl_name = _data[0]
 			setup_level(lvl_name)
 
-func _on_core_event(_event,_data):
-	if _event == core.EVENT_TYPE.CARD_FINISHED_MOVING:
-		var card = _data
-		if blocks_moving == null : return
-		blocks_moving.erase(card)
-		if blocks_moving.size() == 0:
-			emit_signal("cards_done_moving")
+func on_core_event(_event,_data):
+	match _event:
+		core.EVENT_TYPE.CARD_FINISHED_MOVING:
+			var card = _data
+			if blocks_moving == null : return
+			blocks_moving.erase(card)
+			if blocks_moving.is_empty():
+				#cards_done_moving.emit()
+				core.action(core.EVENT_TYPE.DRAFT_MOVEMENT_DONE,[])
+				printt("all cards done moving")
+		core.EVENT_TYPE.DRAFT_MOVEMENT_DONE:
+			cards_done_moving.emit()
 
 func setup_level(level_name  = "default"):
 	var new_level = _level_factory.create_level(level_name)

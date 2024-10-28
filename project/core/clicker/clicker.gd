@@ -10,6 +10,7 @@ var directions = [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]
 var level
 var refill_counter = []
 var merging_cards = []
+var is_merging = false
 
 
 var rerollables  = [core.OBJECT_TYPE.CARD,core.OBJECT_TYPE.BLOCK_ITEM]
@@ -21,7 +22,9 @@ func setup(_level_controller):
 	#core.connect("event",self,"_on_core_event")
 	#core.event.connect(_on_core_event)
 	
-
+func is_steady():
+	return level.blocks_moving.is_empty() and is_merging == false
+	
 func has_card(card):
 	if level.get_grid_pos(card) == null:
 		return false
@@ -51,14 +54,14 @@ func on_core_event(event_type,_data):
 			columns_locked.erase(col)
 
 		core.EVENT_TYPE.MERGE_CARD_DONE:
-			emit_signal("merge_card_done")
+			merge_card_done.emit()
 
 		core.EVENT_TYPE.CARD_MERGE_MOVE_FINISHED:
 			var card = _data
 			merging_cards.erase(card)
 			level.remove_from_grid(card)
-			if merging_cards.size() == 0:
-				emit_signal("merge_move_done")
+			if merging_cards.is_empty():
+				merge_move_done.emit()
 
 		core.EVENT_TYPE.REROLL_DRAFT:
 			remove_rerollables()
@@ -85,13 +88,15 @@ func on_core_event(event_type,_data):
 				level.remove_from_grid(block,destroy)
 
 		core.EVENT_TYPE.DRAFT_MERGE:
+			is_merging = true
 			var matches = _data[0]
 			var merge_info = await merge_matched_cards(matches)
 			await self.merge_move_done
-			core.emit_signal("event",core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
+			core.action(core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
 			merge_info.block.show_upgrade()
 			await self.merge_card_done
 			update_blocks()
+			is_merging = false
 
 func remove_upgrade_blocks(upgrade_level):
 	for block in level.all_blocks():
@@ -104,11 +109,11 @@ func update_blocks():
 	solve_gravity()
 	while refill():
 		solve_gravity()
-	await level.move_blocks() #.completed
+	await level.move_blocks()
 	refill_counter.clear()
 	var matches = find_match()
 	if matches.size():
-		core.emit_signal("event",core.EVENT_TYPE.DRAFT_MERGE,[matches])
+		core.action(core.EVENT_TYPE.DRAFT_MERGE,[matches])
 
 
 func find_match():

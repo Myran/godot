@@ -1,9 +1,10 @@
 extends TouchScreenButton
+
 const CARD_IMAGE_PREFIX = "card_image_"
+
 @export_dir var card_image_folder : String
-
-
 @export var move_speed: float = 0.05
+
 var object_type = core.OBJECT_TYPE.CARD
 var holder = null
 var block_context = Cards.CONTEXT.NOT_SET
@@ -12,13 +13,9 @@ var card_info = null
 var card_base = null
 var merge_speed = 0.15
 var top_move_speed = 0.15
-#var block_tween
-#var shake_tween
 var unit_info
-#signal shake_done
 
 func init_card(_card_info,_card_level = 1):
-	#block_tween = create_tween()
 
 	card_info = _card_info
 	level = _card_level
@@ -75,7 +72,7 @@ func shake(left = true):
 
 
 func move_to_position(new_position):
-	printt("move_to_position: ",self)
+	#printt("move_to_position: ",self)
 	var time = abs(((new_position-position).y / texture_normal.get_height()) * move_speed)
 	var scene_tween = create_tween()
 	scene_tween.tween_property(self,"position",new_position,time)

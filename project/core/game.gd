@@ -24,7 +24,7 @@ var current_draft_upgrade_level = 0
 var merging_tripples = []
 var current_battle
 var inputs = InputHandler.new()
-
+var contexts = []
 
 func _input(event: InputEvent) -> void:
 	inputs.input(event)
@@ -50,9 +50,13 @@ func new_event(event_type,data,solve_type):
 	printt("New event: ", event_type,data,solve_type)
 	var draft_context = create_draft_context()
 	var event = Context.Event.new(solve_type,event_type,data)
+	contexts.append(draft_context)
 	draft_context.add_event(event)
 	draft_context.solve_events()
-
+	contexts.erase(draft_context)
+	if contexts.is_empty() and clicker.is_steady() and ui_state == UI_STATE.LOCKED:
+		core.action(core.EVENT_TYPE.DRAFT_STEADY,[])
+	
 func create_draft_context():
 	var draft_context = DraftContext.new(self)
 	draft_context = update_context_units(draft_context)
@@ -69,10 +73,11 @@ func solve_event(event,_context):
 	var ret_context = _context
 	match event.solve_type:
 		SOLVE_TYPE.CORE:
-			resolve_core_event(event.event_type,event.data,_context)
-			clicker.on_core_event(event.event_type,event.data)
+			await resolve_core_event(event.event_type,event.data,_context)
+			await clicker.on_core_event(event.event_type,event.data)
+			await level_controller.on_core_event(event.event_type,event.data)
 		SOLVE_TYPE.UI:
-			resolve_ui_event(event.event_type,event.data,_context)
+			await resolve_ui_event(event.event_type,event.data,_context)
 	return ret_context
 
 func resolve_core_event(event_type,_data,current_context):
@@ -171,6 +176,9 @@ func resolve_core_event(event_type,_data,current_context):
 
 		core.EVENT_TYPE.RESET_UNITS:
 			pass
+		core.EVENT_TYPE.DRAFT_STEADY:
+			print("Steady state! unlock")
+			ui_state = UI_STATE.WAITING
 
 func resolve_ui_event(_event_type,_data,current_context):
 	if ui_state == UI_STATE.LOCKED: return
@@ -203,6 +211,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 			ui.action(ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
 
 		ui.EVENT_TYPE.REROLL:
+			ui_state = UI_STATE.LOCKED
 			core.action(core.EVENT_TYPE.REROLL_DRAFT,[])
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
@@ -210,6 +219,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 
 		ui.EVENT_TYPE.UPGRADE:
 			#check cost here
+			ui_state = UI_STATE.LOCKED
 			current_draft_upgrade_level += 1
 			core.action(core.EVENT_TYPE.UPGRADE,[current_draft_upgrade_level])
 		ui.EVENT_TYPE.TOUCH:
@@ -289,6 +299,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 				inputs.last_touch_pos = null
 
 				if update_draft:
+					ui_state = UI_STATE.LOCKED
 					core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA,[])
 
 
