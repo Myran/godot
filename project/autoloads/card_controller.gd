@@ -10,6 +10,7 @@ var rules
 
 func get_card_image_name(card_id):
 	return str(card_image_folder,CARD_IMAGE_PREFIX,debug.asset_variant,"_",card_id,".png")
+
 func setup():
 	rules = await data_source.get_rules_data()
 	await data_source.activate_card_cache()

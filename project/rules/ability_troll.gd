@@ -16,7 +16,7 @@ func actions(_tempus,_u_pos,_u_side,_battle_context,_event):
 func draft_condition(_tempus,_pos,_draft_context,event,_u):
 	if _tempus != "post":
 		return false
-	if event.solve_type != draft.SOLVE_TYPE.CORE:
+	if event.solve_type != Game.SOLVE_TYPE.CORE:
 		return false
 	if event.event_type != core.EVENT_TYPE.LINEUP_ADD_CARD:
 		return false
@@ -35,7 +35,7 @@ func draft_action(_tempus,_pos,_context,_event,_u):
 		if lineup_card.card_info.tribe.match("evil"):
 			evil_count = evil_count + 1
 	_context.add_event({
-		solve_type = draft.SOLVE_TYPE.CORE,
+		solve_type = Game.SOLVE_TYPE.CORE,
 		event_type = core.EVENT_TYPE.CARD_STAT_CHANGE,
 		data = {
 			"card" : _u,

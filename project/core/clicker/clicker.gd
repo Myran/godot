@@ -11,15 +11,12 @@ var level
 var refill_counter = []
 var merging_cards = []
 
-#signal level_done
-#signal block_collected
-
 
 var rerollables  = [core.OBJECT_TYPE.CARD,core.OBJECT_TYPE.BLOCK_ITEM]
 var columns_locked = []
-func setup():
+func setup(_level_controller):
 	card_controller.setup()
-	level = get_node("%level_controller")
+	level = _level_controller
 	level.setup_level()
 	#core.connect("event",self,"_on_core_event")
 	if core.clicker == null:

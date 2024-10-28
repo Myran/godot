@@ -15,9 +15,7 @@ var refill_distance
 func _ready():
 	core.event.connect(_on_core_event)
 	debug.debug_event.connect(_on_debug_event)
-	#if OS.has_feature("editor"):
-		#call_deferred("setup_level")
-		#setup_level()
+
 func _on_debug_event(event,_data = null):
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL:
@@ -26,7 +24,6 @@ func _on_debug_event(event,_data = null):
 			var lvl_name = _data[0]
 			setup_level(lvl_name)
 
-
 func _on_core_event(_event,_data):
 	if _event == core.EVENT_TYPE.CARD_FINISHED_MOVING:
 		var card = _data
@@ -34,7 +31,6 @@ func _on_core_event(_event,_data):
 		blocks_moving.erase(card)
 		if blocks_moving.size() == 0:
 			emit_signal("cards_done_moving")
-
 
 func setup_level(level_name  = "default"):
 	var new_level = _level_factory.create_level(level_name)
@@ -49,8 +45,6 @@ func setup_level(level_name  = "default"):
 	refill_distance = Vector2(0,current_level.tile_set.tile_size.y)
 	print("RefillDistance set to: ",refill_distance)
 	create_blocks_from_level()
-
-
 
 func create_blocks_from_level():
 	for tile_pos in current_level.get_used_cells():
@@ -74,10 +68,8 @@ func create_blocks_from_level():
 		add_to_grid(tile_pos,block)
 	current_level.clear()
 
-
 func create_upgrade_block(upgrade_level):
 	return _block_factory.create_upgrade_block(upgrade_level)
-
 
 func create_block():
 	return await _block_factory.create_block()
@@ -91,7 +83,6 @@ func add_to_grid(grid_pos,block,refill = 0):
 	print("final position: ",(current_level.map_to_local(grid_pos) -refill_pos))
 	#block.position = (current_level.map_to_local(gridPos) -refillPos)
 	block.position = grid_to_world_pos(grid_pos)-refill_pos
-
 
 func get_grid_pos(block):
 

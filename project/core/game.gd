@@ -1,4 +1,4 @@
-class_name draft extends Control
+class_name Game extends Control
 
 signal merge_done
 
@@ -21,7 +21,7 @@ const TAP_TIME = 0.25
 @export var battle_layer : CanvasLayer
 @export var unhandled_layer : CanvasLayer
 @export var clicker : Node
-
+@export var level_controller : Control
 
 
 
@@ -45,7 +45,7 @@ var _seed = 1
 func _ready():
 	await data_source.activate_card_cache()
 	rng.seeded_rng.reset(_seed)
-	clicker.setup()
+	clicker.setup(level_controller)
 	set_gamestate(core.GAME_STATE.START)
 	blur_layer.unblur()
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
