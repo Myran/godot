@@ -20,6 +20,7 @@ const TAP_TIME = 0.25
 @export var top_bar : CanvasLayer
 @export var battle_layer : CanvasLayer
 @export var unhandled_layer : CanvasLayer
+@export var clicker : Node
 
 
 
@@ -44,7 +45,7 @@ var _seed = 1
 func _ready():
 	await data_source.activate_card_cache()
 	rng.seeded_rng.reset(_seed)
-	holder_draft.setup()
+	clicker.setup()
 	set_gamestate(core.GAME_STATE.START)
 	blur_layer.unblur()
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))

@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3 uid="uid://ddv8p7xpjy08i"]
+[gd_scene load_steps=41 format=3 uid="uid://ddv8p7xpjy08i"]
 
 [ext_resource type="Script" path="res://core/core.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" path="res://core/popup_card.gd" id="2_xsnym"]
 [ext_resource type="Script" path="res://core/top_bar.gd" id="3_jg5gr"]
 [ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://core/card/card.tscn" id="3_qxw11"]
-[ext_resource type="Script" path="res://core/draft.gd" id="3_ytbtw"]
 [ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://core/hold_bar.tscn" id="4_0gw5k"]
 [ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="4_vn1jd"]
 [ext_resource type="Script" path="res://core/draft_container.gd" id="5_c76if"]
@@ -128,7 +127,7 @@ _data = {
 "show": SubResource("Animation_bktm3")
 }
 
-[node name="Core" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "blur_layer", "top_bar", "battle_layer", "unhandled_layer")]
+[node name="Core" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "blur_layer", "top_bar", "battle_layer", "unhandled_layer", "clicker")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -147,6 +146,7 @@ blur_layer = NodePath("CanvasLayer_blur")
 top_bar = NodePath("CanvasLayer_top_bar")
 battle_layer = NodePath("CanvasLayer_battle")
 unhandled_layer = NodePath("CanvasLayer_unhandled_events")
+clicker = NodePath("CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container/draft_container/clicker")
 
 [node name="CanvasLayer_popup_card" type="CanvasLayer" parent="."]
 layer = 10
@@ -184,7 +184,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 texture = ExtResource("4_vn1jd")
-region_rect = Rect2(21, 23.25, 674, 150.5)
+region_rect = Rect2(21, 32.25, 674, 141.5)
 patch_margin_left = 47
 patch_margin_right = 44
 axis_stretch_horizontal = 1
@@ -343,7 +343,6 @@ patch_margin_left = 47
 patch_margin_top = 54
 patch_margin_right = 44
 patch_margin_bottom = 40
-script = ExtResource("3_ytbtw")
 
 [node name="v_box_container" type="VBoxContainer" parent="CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft"]
 layout_mode = 0
