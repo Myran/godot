@@ -21,4 +21,4 @@ content_scale_stretch = 1
 
 [node name="Control" parent="CanvasLayerDebug/PopupDebug" instance=ExtResource("2_rlp5v")]
 
-[node name="Core" parent="." instance=ExtResource("3_325an")]
+[node name="Game" parent="." instance=ExtResource("3_325an")]

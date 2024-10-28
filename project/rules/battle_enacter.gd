@@ -98,5 +98,3 @@ func enact(battle_events):
 	for side in [allies,enemies]:
 		for k in side.keys():
 			side[k].queue_free()
-	#core.emit_signal("event",core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])
-	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])

@@ -16,7 +16,6 @@ const TAP_TIME = 0.25
 @export var holder_enemy : Control
 @export var bottom_bar_draft : Control
 @export var bottom_bar_prepare : Control
-@export var blur_layer : CanvasLayer
 @export var top_bar : CanvasLayer
 @export var battle_layer : CanvasLayer
 @export var unhandled_layer : CanvasLayer
@@ -24,36 +23,33 @@ const TAP_TIME = 0.25
 @export var level_controller : Control
 
 
-
-
-var main = null
+#var main = null
+var last_touch_pos = null
 var tap_timer = 0
 var holding_item = null
 var last_item = null
 var tap_state = TAP_STATE.IDLE
 var dragging_cargo = null
 var drag_start_pos = null
+
 var ui_state = UI_STATE.WAITING
 var current_gamestate
-var enacter
 
 var current_draft_upgrade_level = 0
 var merging_tripples = []
 var current_battle
-var last_touch_pos = null
+
 var _seed = 1
 func _ready():
 	await data_source.activate_card_cache()
 	rng.seeded_rng.reset(_seed)
 	clicker.setup(level_controller)
 	set_gamestate(core.GAME_STATE.START)
-	blur_layer.unblur()
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
 
-	enacter = BattleEnacter.new(battle_layer,holder_allies,holder_enemy)
-	add_child(enacter)
+
 
 func _input(event):
 	if (event is InputEventScreenDrag and (tap_state == TAP_STATE.HOLDING or tap_state == TAP_STATE.PRESSING)):
@@ -205,7 +201,11 @@ func resolve_core_event(event_type,_data,current_context):
 
 		core.EVENT_TYPE.BATTLE:
 			var battle_events = _data[0]
-			enacter.enact(battle_events)
+			var enacter = BattleEnacter.new(battle_layer,holder_allies,holder_enemy)
+			add_child(enacter)
+			await enacter.enact(battle_events)
+			enacter.queue_free()
+			core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION,[core.GAME_STATE.POSTBATTLE])
 
 		core.EVENT_TYPE.RESET_UNITS:
 			pass
@@ -246,7 +246,6 @@ func resolve_ui_event(_event_type,_data,current_context):
 			core.action(core.EVENT_TYPE.REROLL_DRAFT,[])
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
-			blur_layer.unblur()
 			card_pop.hide()
 
 		ui.EVENT_TYPE.UPGRADE:
@@ -277,7 +276,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 				match tap_state:
 					TAP_STATE.PRESSING:
 						if interacted_object.object_type == core.OBJECT_TYPE.CARD:
-							blur_layer.blur()
+
 							card_pop.show_card(interacted_object)
 							update_draft = true
 						if interacted_object.object_type == core.OBJECT_TYPE.BLOCK_LOCKED:

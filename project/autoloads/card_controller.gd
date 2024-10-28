@@ -5,14 +5,14 @@ const CARD_IMAGE_PREFIX = "card_image_"
 
 
 var current_level = 1
-var current_pool = ["card_1","card_2","card_3"]
-var rules
+# = ["card_1","card_2","card_3"]
+var _rules
 
 func get_card_image_name(card_id):
 	return str(card_image_folder,CARD_IMAGE_PREFIX,debug.asset_variant,"_",card_id,".png")
 
 func setup():
-	rules = await data_source.get_rules_data()
+	_rules = await data_source.get_rules_data()
 	await data_source.activate_card_cache()
 
 func get_card_from_pool():
@@ -49,9 +49,9 @@ func select_recruited_unit_level(recruit_lvl):
 	match recruit_lvl:
 		1: return 1
 		2:
-			if roll <= int(rules.chance_lvl_2_star_1): return 1
-			if roll <= int(rules.chance_lvl_2_star_2): return 2
+			if roll <= int(_rules.chance_lvl_2_star_1): return 1
+			if roll <= int(_rules.chance_lvl_2_star_2): return 2
 		3:
-			if roll <= int(rules.chance_lvl_3_star_1): return 1
-			if roll <= int(rules.chance_lvl_3_star_2): return 2
-			if roll <= int(rules.chance_lvl_3_star_3): return 3
+			if roll <= int(_rules.chance_lvl_3_star_1): return 1
+			if roll <= int(_rules.chance_lvl_3_star_2): return 2
+			if roll <= int(_rules.chance_lvl_3_star_3): return 3
