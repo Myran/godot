@@ -2,13 +2,8 @@ class_name Game extends Control
 
 signal merge_done
 
-enum TAP_STATE {IDLE,PRESSING,UNPRESSING,HOLDING}
 enum UI_STATE{WAITING,HOLDING,LOCKED}
 enum SOLVE_TYPE{CORE,UI}
-
-const TAP_TIME = 0.25
-
-
 
 @export var card_pop : Control
 @export var holder_draft : Node
@@ -22,62 +17,29 @@ const TAP_TIME = 0.25
 @export var clicker : Node
 @export var level_controller : Control
 
-
-#var main = null
-var last_touch_pos = null
-var tap_timer = 0
-var holding_item = null
-var last_item = null
-var tap_state = TAP_STATE.IDLE
-var dragging_cargo = null
-var drag_start_pos = null
-
 var ui_state = UI_STATE.WAITING
 var current_gamestate
 
 var current_draft_upgrade_level = 0
 var merging_tripples = []
 var current_battle
+var inputs = InputHandler.new()
 
-var _seed = 1
+
+func _input(event: InputEvent) -> void:
+	inputs.input(event)
+
+func _process(delta: float) -> void:
+	inputs.process(delta)
+
 func _ready():
 	await data_source.activate_card_cache()
-	rng.seeded_rng.reset(_seed)
+	rng.start_with_base_seed()
 	clicker.setup(level_controller)
 	set_gamestate(core.GAME_STATE.START)
 	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
-
-
-
-func _input(event):
-	if (event is InputEventScreenDrag and (tap_state == TAP_STATE.HOLDING or tap_state == TAP_STATE.PRESSING)):
-		last_touch_pos = event.position
-
-func _process(delta):
-	if tap_state == TAP_STATE.PRESSING:
-		tap_timer = tap_timer + delta
-		if holding_item and last_touch_pos and tap_timer> 0.15:
-			holding_item.set_global_position(lerp(holding_item.get_global_position(),last_touch_pos,0.25))
-		if tap_timer > TAP_TIME:
-			if holding_item:
-				tap_state = TAP_STATE.HOLDING
-				tap_timer = 0
-				holding()
-	elif tap_state == TAP_STATE.HOLDING:
-		if last_touch_pos and dragging_cargo:
-				dragging_cargo.set_global_position(lerp(dragging_cargo.get_global_position(),last_touch_pos,0.99))
-
-func holding():
-	var pos = holding_item.get_global_position()
-	holding_item.set_as_top_level(true)
-	holding_item.set_global_position(pos)# prova addera offset från event på kortet
-	dragging_cargo = holding_item
-	dragging_cargo.set_process_input(false)
-	holding_item = null
-	#unhandled_layer.input_handling(true)
-
 
 func _on_debug_event(event,_data):
 	match event:
@@ -232,16 +194,14 @@ func resolve_ui_event(_event_type,_data,current_context):
 			# create battle events and result
 			var allies = holder_allies.get_current_lineup()
 			var enemies = holder_enemy.get_current_lineup()
-			#var _battle = await battle.new()
+
 			var battle_instance = Battle.new()
 			var prep_allies = Battle.prepare_lineup_from_holder(allies)
 			var prep_enemies = Battle.prepare_lineup_from_holder(enemies)
 			var battle_result = battle_instance.battle_start(prep_allies,prep_enemies)
 			current_battle = battle_result
 			ui.action(ui.EVENT_TYPE.TRANSITION,[core.GAME_STATE.PREBATTLE])
-			#save result
-			# new state, close input
-			# enact battle
+
 		ui.EVENT_TYPE.REROLL:
 			core.action(core.EVENT_TYPE.REROLL_DRAFT,[])
 
@@ -259,35 +219,33 @@ func resolve_ui_event(_event_type,_data,current_context):
 			var update_draft = false
 
 			if event.pressed == true:
-				match tap_state:
-					TAP_STATE.IDLE:
+				match inputs.tap_state:
+					core.TAP_STATE.IDLE:
 						match interacted_object.object_type:
 							core.OBJECT_TYPE.CARD:
-								tap_state = TAP_STATE.PRESSING
-								#unhandled_layer.input_handling(false)
-								holding_item = interacted_object
-								drag_start_pos = interacted_object.position
+								inputs.tap_state = core.TAP_STATE.PRESSING
+								inputs.holding_item = interacted_object
+								inputs.drag_start_pos = interacted_object.position
 							core.OBJECT_TYPE.CARD_HOLDER:
 								pass
 							core.OBJECT_TYPE.BLOCK_LOCKED:
-								tap_state = TAP_STATE.PRESSING
+								inputs.tap_state = core.TAP_STATE.PRESSING
 
 			elif event.pressed == false:
-				match tap_state:
-					TAP_STATE.PRESSING:
+				match inputs.tap_state:
+					core.TAP_STATE.PRESSING:
 						if interacted_object.object_type == core.OBJECT_TYPE.CARD:
-
 							card_pop.show_card(interacted_object)
 							update_draft = true
 						if interacted_object.object_type == core.OBJECT_TYPE.BLOCK_LOCKED:
 							core.action(core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,[interacted_object,true])
 							update_draft = true
 
-					TAP_STATE.HOLDING:
-						if dragging_cargo.object_type == core.OBJECT_TYPE.CARD:
-							dragging_cargo.set_process_input(true)
+					core.TAP_STATE.HOLDING:
+						if inputs.dragging_cargo.object_type == core.OBJECT_TYPE.CARD:
+							inputs.dragging_cargo.set_process_input(true)
 							var release_handled = false
-							var dragging_card = dragging_cargo
+							var dragging_card = inputs.dragging_cargo
 							match interacted_object.object_type:
 								core.OBJECT_TYPE.BACKGROUND:
 									pass
@@ -324,11 +282,11 @@ func resolve_ui_event(_event_type,_data,current_context):
 										dragging_card.set_global_position(pos)
 										update_draft = true
 
-				tap_state = TAP_STATE.IDLE
-				tap_timer = 0
-				dragging_cargo = null
-				holding_item = null
-				last_touch_pos = null
+				inputs.tap_state = core.TAP_STATE.IDLE
+				inputs.tap_timer = 0
+				inputs.dragging_cargo = null
+				inputs.holding_item = null
+				inputs.last_touch_pos = null
 
 				if update_draft:
 					core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA,[])

@@ -2,6 +2,8 @@ extends Node
 
 signal event
 
+enum TAP_STATE {IDLE,PRESSING,UNPRESSING,HOLDING}
+
 enum GAME_STATE{
 	START,
 	DRAFT,
