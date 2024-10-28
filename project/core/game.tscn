@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
 [ext_resource type="Script" path="res://core/clicker/clicker.gd" id="6_mq18b"]
 [ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_8b5nu"]
-[ext_resource type="Script" path="res://core/clicker/tilemap_controller.gd" id="7_e68m3"]
+[ext_resource type="Script" path="res://core/clicker/level_controller.gd" id="7_e68m3"]
 [ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="8_h0xc7"]
 [ext_resource type="Resource" uid="uid://b4fke525yywsh" path="res://core/levels_default.tres" id="8_oqud3"]
 [ext_resource type="Resource" uid="uid://034uyxaore0y" path="res://core/block_factory.tres" id="9_goeof"]
