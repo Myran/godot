@@ -73,11 +73,11 @@ func solve_event(event,_context):
 	var ret_context = _context
 	match event.solve_type:
 		SOLVE_TYPE.CORE:
-			await resolve_core_event(event.event_type,event.data,_context)
-			await clicker.on_core_event(event.event_type,event.data)
-			await level_controller.on_core_event(event.event_type,event.data)
+			resolve_core_event(event.event_type,event.data,_context)
+			clicker.on_core_event(event.event_type,event.data)
+			level_controller.on_core_event(event.event_type,event.data)
 		SOLVE_TYPE.UI:
-			await resolve_ui_event(event.event_type,event.data,_context)
+			resolve_ui_event(event.event_type,event.data,_context)
 	return ret_context
 
 func resolve_core_event(event_type,_data,current_context):

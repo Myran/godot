@@ -31,11 +31,7 @@ func on_core_event(_event,_data):
 			if blocks_moving == null : return
 			blocks_moving.erase(card)
 			if blocks_moving.is_empty():
-				#cards_done_moving.emit()
-				core.action(core.EVENT_TYPE.DRAFT_MOVEMENT_DONE,[])
-				printt("all cards done moving")
-		core.EVENT_TYPE.DRAFT_MOVEMENT_DONE:
-			cards_done_moving.emit()
+				cards_done_moving.emit()
 
 func setup_level(level_name  = "default"):
 	var new_level = _level_factory.create_level(level_name)
