@@ -19,8 +19,8 @@ func setup(_level_controller):
 	level = _level_controller
 	level.setup_level()
 	#core.connect("event",self,"_on_core_event")
-	if core.clicker == null:
-		core.clicker = self
+	#core.event.connect(_on_core_event)
+	
 
 func has_card(card):
 	if level.get_grid_pos(card) == null:
@@ -38,7 +38,7 @@ func remove_rerollables():
 			if rerollables.has(block.object_type):
 					level.remove_from_grid(block,true)
 
-func _on_core_event(event_type,_data):
+func on_core_event(event_type,_data):
 	match event_type:
 		core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED:
 			var col = _data[0]

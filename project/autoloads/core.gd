@@ -1,8 +1,15 @@
 extends Node
 
-
 signal event
-enum GAME_STATE{START,DRAFT,PREPARE,PREBATTLE,BATTLE,POSTBATTLE}
+
+enum GAME_STATE{
+	START,
+	DRAFT,
+	PREPARE,
+	PREBATTLE,
+	BATTLE,
+	POSTBATTLE}
+
 enum EVENT_TYPE{
 	TEST,
 	UPDATE_DRAFT_AREA,
@@ -35,9 +42,9 @@ enum OBJECT_TYPE{
 	BLOCK_PASSTROUGH,
 	BLOCK_ITEM}
 
-var clicker = null
 
 func action(core_event : EVENT_TYPE,args):
 	event.emit(core_event,args)
+
 func _ready():
 	print("core autoload ready")

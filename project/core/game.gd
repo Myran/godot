@@ -102,8 +102,8 @@ func create_draft_context():
 
 func update_context_units(_context):
 	_context.lineup = holder_allies.get_current_lineup()
-	if core.clicker:
-		_context.draft_area = core.clicker.get_all_cards()
+	if clicker:
+		_context.draft_area = clicker.get_all_cards()
 	return _context
 
 
@@ -112,8 +112,7 @@ func solve_event(event,_context):
 	match event.solve_type:
 		SOLVE_TYPE.CORE:
 			resolve_core_event(event.event_type,event.data,_context)
-			if core.clicker:
-				core.clicker._on_core_event(event.event_type,event.data)
+			clicker.on_core_event(event.event_type,event.data)
 		SOLVE_TYPE.UI:
 			resolve_ui_event(event.event_type,event.data,_context)
 	return ret_context
@@ -307,7 +306,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 
 										Cards.CONTEXT.DRAFT:
 											if is_instance_valid(dragging_card):
-												if core.clicker.has_card(dragging_card):
+												if clicker.has_card(dragging_card):
 													release_handled = interacted_holder.set_card(dragging_card)
 													if release_handled:
 														current_context.add_event({solve_type = SOLVE_TYPE.CORE,event_type = core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,data = [dragging_card]})
