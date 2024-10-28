@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-
+@export var animation_player : AnimationPlayer
 func _ready():
 	core.connect("event", Callable(self, "_on_core_event"))
 
@@ -10,6 +10,6 @@ func _on_core_event(event_type,_data):
 			var new_state = _data[0]
 			match new_state:
 				core.GAME_STATE.DRAFT:
-					$animation_player.play("show")
+					animation_player.play("show")
 				core.GAME_STATE.PREPARE:
-					$animation_player.play_backwards("show")
+					animation_player.play_backwards("show")

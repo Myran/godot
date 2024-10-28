@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="level_factory" load_steps=8 format=3 uid="uid://b4fke525yywsh"]
+[gd_resource type="Resource" script_class="LevelFactory" load_steps=8 format=3 uid="uid://b4fke525yywsh"]
 
 [ext_resource type="Script" path="res://core/level_factory.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://i0smf7jo8623" path="res://core/match_levels/draft_level_0.tscn" id="2_p83vp"]

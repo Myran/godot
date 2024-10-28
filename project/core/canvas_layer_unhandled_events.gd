@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 var object_type = core.OBJECT_TYPE.BACKGROUND
+
 func input_handling(new_state):
 	print("Unhandled input handling disabled")
 	$area_2d/collision_shape_2d.disabled = new_state
