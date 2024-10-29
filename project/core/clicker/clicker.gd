@@ -1,6 +1,6 @@
 extends Node
 
-signal merge_card_done
+#signal merge_card_done
 signal merge_move_done
 
 const GRAVITY_VECTOR = Vector2i(0,1)
@@ -53,8 +53,8 @@ func on_core_event(event_type,_data):
 			print("Draft coloumn unlocked: ",col)
 			columns_locked.erase(col)
 
-		core.EVENT_TYPE.MERGE_CARD_DONE:
-			merge_card_done.emit()
+#		core.EVENT_TYPE.MERGE_CARD_DONE:
+#			merge_card_done.emit()
 
 		core.EVENT_TYPE.CARD_MERGE_MOVE_FINISHED:
 			var card = _data
@@ -93,8 +93,9 @@ func on_core_event(event_type,_data):
 			var merge_info = await merge_matched_cards(matches)
 			await self.merge_move_done
 			core.action(core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
-			merge_info.block.show_upgrade()
-			await self.merge_card_done
+			var tween = merge_info.block.show_upgrade()
+			await tween.finished
+			#await self.merge_card_done
 			update_blocks()
 			is_merging = false
 
@@ -133,6 +134,7 @@ func merge_matched_cards(cluster):
 	for block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
 		merging_cards.append(block)
+		#add the awaiter
 
 	return {
 		"block" : new_card,

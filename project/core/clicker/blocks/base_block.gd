@@ -99,7 +99,8 @@ func show_upgrade():
 	var scene_tween = create_tween()
 	scene_tween.tween_property(self,"scale",Vector2(1.1,1.1),0.2)
 	scene_tween.tween_property(self,"scale",Vector2(1,1),0.2)
-	scene_tween.tween_callback(func(): core.action(core.EVENT_TYPE.MERGE_CARD_DONE,self))
+	return scene_tween
+# 	scene_tween.tween_callback(func(): core.action(core.EVENT_TYPE.MERGE_CARD_DONE,self))
 
 
 func _on_area_2d_input_event(_viewport, _event, _shape_idx):
