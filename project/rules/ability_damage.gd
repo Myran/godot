@@ -12,7 +12,7 @@ func actions(_tempus,_u_pos,_u_side,_battle_context,_event):
 	pass
 
 func draft_condition(_tempus,_pos,_draft_context,event,_u):
-	if event.solve_type == draft.SOLVE_TYPE.CORE:
+	if event.solve_type == Game.SOLVE_TYPE.CORE:
 		if event.event_type == core.EVENT_TYPE.LINEUP_ADD_CARD:
 			print("add card event")
 			return true
