@@ -36,7 +36,7 @@ class All:
 	extends Count
 
 	func _init():
-		super._init(0)
+		super(0)
 
 
 class SequenceBreak:
