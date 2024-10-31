@@ -5,11 +5,20 @@ const TAP_TIME = 0.25
 var last_touch_pos = null
 var tap_timer = 0
 var holding_item = null
-var last_item = null
 var tap_state = core.TAP_STATE.IDLE
 var dragging_cargo = null
-var drag_start_pos = null
+#var drag_start_pos = null
 
+func reset_inputs():
+	last_touch_pos = null
+	tap_timer = 0
+	holding_item = null
+	tap_state = core.TAP_STATE.IDLE
+	dragging_cargo = null
+	#drag_start_pos = null
+	
+
+	
 func input(event):
 	if (event is InputEventScreenDrag and (tap_state == core.TAP_STATE.HOLDING or tap_state == core.TAP_STATE.PRESSING)):
 		last_touch_pos = event.position

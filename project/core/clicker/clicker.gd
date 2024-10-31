@@ -1,7 +1,6 @@
 extends Node
 
-#signal merge_card_done
-signal merge_move_done
+signal merge_completed
 
 const GRAVITY_VECTOR = Vector2i(0,1)
 const CARD_MERGE_AMOUNT = 3
@@ -9,21 +8,17 @@ const SPAWN_HEIGHT = 0
 var directions = [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]
 var level
 var refill_counter = []
-var merging_cards = []
-var is_merging = false
 
 
 var rerollables  = [core.OBJECT_TYPE.CARD,core.OBJECT_TYPE.BLOCK_ITEM]
 var columns_locked = []
+
 func setup(_level_controller):
 	card_controller.setup()
 	level = _level_controller
 	level.setup_level()
-	#core.connect("event",self,"_on_core_event")
-	#core.event.connect(_on_core_event)
-	
-func is_steady():
-	return level.blocks_moving.is_empty() and is_merging == false
+
+
 	
 func has_card(card):
 	if level.get_grid_pos(card) == null:
@@ -53,15 +48,6 @@ func on_core_event(event_type,_data):
 			print("Draft coloumn unlocked: ",col)
 			columns_locked.erase(col)
 
-#		core.EVENT_TYPE.MERGE_CARD_DONE:
-#			merge_card_done.emit()
-
-		core.EVENT_TYPE.CARD_MERGE_MOVE_FINISHED:
-			var card = _data
-			merging_cards.erase(card)
-			level.remove_from_grid(card)
-			if merging_cards.is_empty():
-				merge_move_done.emit()
 
 		core.EVENT_TYPE.REROLL_DRAFT:
 			remove_rerollables()
@@ -88,16 +74,17 @@ func on_core_event(event_type,_data):
 				level.remove_from_grid(block,destroy)
 
 		core.EVENT_TYPE.DRAFT_MERGE:
-			is_merging = true
 			var matches = _data[0]
 			var merge_info = await merge_matched_cards(matches)
-			await self.merge_move_done
+			await merge_info.awaiter.finished
+			for _block in matches:
+				level.remove_from_grid(_block)
+			
 			core.action(core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
 			var tween = merge_info.block.show_upgrade()
 			await tween.finished
-			#await self.merge_card_done
-			update_blocks()
-			is_merging = false
+			merge_completed.emit()
+
 
 func remove_upgrade_blocks(upgrade_level):
 	for block in level.all_blocks():
@@ -107,15 +94,22 @@ func remove_upgrade_blocks(upgrade_level):
 
 
 func update_blocks():
-	solve_gravity()
-	while refill():
+	var block_action = true
+	while block_action:
+		block_action = false
 		solve_gravity()
-	await level.move_blocks()
-	refill_counter.clear()
-	var matches = find_match()
-	if matches.size():
-		core.action(core.EVENT_TYPE.DRAFT_MERGE,[matches])
+		while refill():
+			solve_gravity()
+		await level.move_blocks()
+		refill_counter.clear()
+		var matches = find_match()
+		if matches.size():
+			block_action = true	
+			core.action(core.EVENT_TYPE.DRAFT_MERGE,[matches])
+			await merge_completed
 
+
+	core.action(core.EVENT_TYPE.DRAFT_STEADY,[])
 
 func find_match():
 	for block in level.all_blocks():
@@ -131,14 +125,16 @@ func merge_matched_cards(cluster):
 	var new_card = await card_controller.create_unit_from_id(card_id,new_level)
 	new_card.block_context = Cards.CONTEXT.DRAFT
 	var cluster_pos = level.get_grid_pos(cluster[1])
+	var awaiter = SignalAwaiter.All.new()
 	for block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
-		merging_cards.append(block)
-		#add the awaiter
+		#merging_cards.append(block)
+		awaiter.add(block.movement_done)
 
 	return {
 		"block" : new_card,
-		"pos" : cluster_pos
+		"pos" : cluster_pos,
+		"awaiter" : awaiter
 	}
 
 

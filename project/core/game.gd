@@ -50,12 +50,13 @@ func new_event(event_type,data,solve_type):
 	printt("New event: ", event_type,data,solve_type)
 	var draft_context = create_draft_context()
 	var event = Context.Event.new(solve_type,event_type,data)
-	contexts.append(draft_context)
+	#contexts.append(draft_context)
 	draft_context.add_event(event)
 	draft_context.solve_events()
-	contexts.erase(draft_context)
-	if contexts.is_empty() and clicker.is_steady() and ui_state == UI_STATE.LOCKED:
-		core.action(core.EVENT_TYPE.DRAFT_STEADY,[])
+	#contexts.erase(draft_context)
+	#printt("contexts:",contexts, "steady?",clicker.is_steady,"state",ui_state)
+	#if contexts.is_empty() and clicker.is_steady and ui_state == UI_STATE.LOCKED:
+	#	core.action(core.EVENT_TYPE.DRAFT_STEADY,[])
 	
 func create_draft_context():
 	var draft_context = DraftContext.new(self)
@@ -75,7 +76,6 @@ func solve_event(event,_context):
 		SOLVE_TYPE.CORE:
 			resolve_core_event(event.event_type,event.data,_context)
 			clicker.on_core_event(event.event_type,event.data)
-			level_controller.on_core_event(event.event_type,event.data)
 		SOLVE_TYPE.UI:
 			resolve_ui_event(event.event_type,event.data,_context)
 	return ret_context
@@ -235,7 +235,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 							core.OBJECT_TYPE.CARD:
 								inputs.tap_state = core.TAP_STATE.PRESSING
 								inputs.holding_item = interacted_object
-								inputs.drag_start_pos = interacted_object.position
+								#inputs.drag_start_pos = interacted_object.position
 							core.OBJECT_TYPE.CARD_HOLDER:
 								pass
 							core.OBJECT_TYPE.BLOCK_LOCKED:
@@ -292,12 +292,7 @@ func resolve_ui_event(_event_type,_data,current_context):
 										dragging_card.set_global_position(pos)
 										update_draft = true
 
-				inputs.tap_state = core.TAP_STATE.IDLE
-				inputs.tap_timer = 0
-				inputs.dragging_cargo = null
-				inputs.holding_item = null
-				inputs.last_touch_pos = null
-
+				inputs.reset_inputs()
 				if update_draft:
 					ui_state = UI_STATE.LOCKED
 					core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA,[])
