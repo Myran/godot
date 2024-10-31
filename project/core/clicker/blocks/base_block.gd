@@ -104,7 +104,8 @@ func move_to_on_top(_pos):
 	set_global_position(current_global_pos)
 	var scene_tween = create_tween()
 	scene_tween.tween_property(self, "global_position", _pos, top_move_speed)
-	scene_tween.tween_callback(func(): core.action(core.EVENT_TYPE.CARD_FINISHED_MOVING_TOP, self))
+	scene_tween.tween_callback(func(): movement_done.emit())
+	# scene_tween.tween_callback(func(): core.action(core.EVENT_TYPE.CARD_FINISHED_MOVING_TOP, self))
 
 
 func show_upgrade():
@@ -112,8 +113,6 @@ func show_upgrade():
 	scene_tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.2)
 	scene_tween.tween_property(self, "scale", Vector2(1, 1), 0.2)
 	return scene_tween
-
-
 
 
 func _on_area_2d_input_event(_viewport, _event, _shape_idx):
