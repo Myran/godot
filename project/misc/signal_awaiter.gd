@@ -1,4 +1,4 @@
-class_name SignalAwaiter extends RefCounted
+class_name SignalAwaiter extends Node
 
 signal finished
 
@@ -10,14 +10,19 @@ func add(_signal: Signal) -> SignalAwaiter:
 
 func _on_signal_received(_signal: Signal) -> void:
 	push_error("Method not implemented")
-	finished.emit()
+	_emit_deferred()
+
+
+func _emit_deferred() -> void:
+	call_deferred("emit_signal", "finished")
+	queue_free()
 
 
 class Any:
 	extends SignalAwaiter
 
 	func _on_signal_received(_signal: Signal) -> void:
-		finished.emit()
+		_emit_deferred()
 
 
 class Count:
@@ -29,7 +34,7 @@ class Count:
 
 	func _on_signal_received(_signal: Signal) -> void:
 		if get_incoming_connections().size() == _connections:
-			finished.emit()
+			_emit_deferred()
 
 
 class All:
@@ -48,7 +53,7 @@ class SequenceBreak:
 
 	func _on_signal_received(_signal: Signal) -> void:
 		if _signal != _signals[0]:
-			finished.emit()
+			_emit_deferred()
 
 
 class SequenceMatch:
@@ -58,7 +63,7 @@ class SequenceMatch:
 		if _signal == _signals[0]:
 			_signals.remove_at(0)
 			if _signals.is_empty():
-				finished.emit()
+				_emit_deferred()
 
 # Usage:
 # await SignalAwaiter.SequenceBreak.new([...]).finished

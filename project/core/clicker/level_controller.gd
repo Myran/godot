@@ -25,7 +25,6 @@ func _on_debug_event(event, _data = null):
 			setup_level(lvl_name)
 
 
-
 func setup_level(level_name = "default"):
 	var new_level = _level_factory.create_level(level_name)
 	if new_level == null:
@@ -115,12 +114,12 @@ func grid_to_world_pos(grid_pos):
 
 func move_blocks():
 	var awaiter = SignalAwaiter.All.new()
+	add_child(awaiter)
 	var b_moving = all_blocks()
 	for block_iterator in b_moving:
 		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))
 		awaiter.add(block_iterator.movement_done)
 	await awaiter.finished
-
 
 
 func remove_from_grid(block, destroy = true):

@@ -126,6 +126,7 @@ func merge_matched_cards(cluster):
 	new_card.block_context = Cards.CONTEXT.DRAFT
 	var cluster_pos = level.get_grid_pos(cluster[1])
 	var awaiter = SignalAwaiter.All.new()
+	add_child(awaiter)
 	for block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
 		#merging_cards.append(block)
