@@ -14,42 +14,32 @@ class_name Game extends Control
 
 var ui_state = core.UI_STATE.WAITING
 
-var input_handler
-var card_handler
-var draft_handler
-var lineup_handler
-var battle_handler
-var game_handler
-
+var handlers
 func _input(event: InputEvent) -> void:
-	input_handler.input(event)
+	handlers.input_handler.input(event)
 
 
 func _process(delta: float) -> void:
-	input_handler.process(delta)
+	handlers.input_handler.process(delta)
 
 
 func _ready():
 	ui.event.connect(new_event.bind(core.SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(core.SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
-	game_handler = GameHandler.new(self)
-	add_child(game_handler)
-	input_handler = InputHandler.new(clicker)
-	lineup_handler = LineupHandler.new(holder_allies)
-	battle_handler = BattleHandler.new(holder_allies, holder_enemy)
-	card_handler = CardHandler.new()
-	draft_handler = DraftHandler.new()
+	handlers = HandlerContainer.new(self)
+	add_child(handlers)
+
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
 	clicker.setup(level_controller)
-	game_handler.set_gamestate(core.GAME_STATE.START)
+	handlers.game_handler.set_gamestate(core.GAME_STATE.START)
 
 
 func _on_debug_event(event, _data):
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
-			draft_handler.current_draft_upgrade_level = 0
+			handlers.draft_handler.current_draft_upgrade_level = 0
 
 
 func new_event(event_type, data, solve_type):
@@ -85,15 +75,15 @@ func resolve_core_event(event_type, _data, current_context):
 		core.EVENT_TYPE.CARD_STAT_CHANGE:
 			var card = _data.card
 			if _data.has("health"):
-				card_handler.change_health(card, _data.health)
+				handlers.card_handler.change_health(card, _data.health)
 
 			if _data.has("attack"):
-				card_handler.change_attack(card, _data.attack)
+				handlers.card_handler.change_attack(card, _data.attack)
 			card.show_upgrade()
 
 		core.EVENT_TYPE.GAME_STATE_TRANSITION:
 			var new_state = _data[0] as core.GAME_STATE
-			game_handler.set_gamestate(new_state)
+			handlers.game_handler.set_gamestate(new_state)
 
 		core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD:
 			var card = _data[0]
@@ -105,13 +95,13 @@ func resolve_core_event(event_type, _data, current_context):
 			if _data.size() == 2:
 				var card = _data[0]
 				var pos = _data[1]
-				lineup_handler.add_card(card, pos)
+				handlers.lineup_handler.add_card(card, pos)
 			current_context.add_event(
 				{solve_type = core.SOLVE_TYPE.CORE, event_type = core.EVENT_TYPE.TRIPPLE_TEST, data = []}
 			)
 
 		core.EVENT_TYPE.TRIPPLE_TEST:
-			var tripples = lineup_handler.find_tripples()
+			var tripples = handlers.lineup_handler.find_tripples()
 			if not tripples.is_empty():
 				current_context.add_event(
 					{
@@ -126,7 +116,7 @@ func resolve_core_event(event_type, _data, current_context):
 			var card = _data[0]
 			var tripples = _data[1]
 
-			var new_card = await lineup_handler.merge(card, tripples)
+			var new_card = await handlers.lineup_handler.merge(card, tripples)
 			update_context_units(current_context)
 			current_context.add_event(
 				{
@@ -162,7 +152,7 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED:
 			var new_state = _data[0]
 			var col = _data[1]
-			draft_handler.hold_toggle(col, new_state)
+			handlers.draft_handler.hold_toggle(col, new_state)
 		ui.EVENT_TYPE.SHOW_CARD:
 			var card = _data[0]
 			card_pop.show_card(card)
@@ -172,12 +162,12 @@ func resolve_ui_event(_event_type, _data, current_context):
 			core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, state)
 		ui.EVENT_TYPE.START_BATTLE:
 			print("Start battle")
-			game_handler.current_battle = battle_handler.create_battle()
+			handlers.game_handler.current_battle = handlers.battle_handler.create_battle()
 			ui.action(ui.EVENT_TYPE.TRANSITION, [core.GAME_STATE.PREBATTLE])
 
 		ui.EVENT_TYPE.REROLL:
 			ui_state = core.UI_STATE.LOCKED
-			draft_handler.reroll()
+			handlers.draft_handler.reroll()
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
 			card_pop.hide()
@@ -185,12 +175,12 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.UPGRADE:
 			#check cost here
 			ui_state = core.UI_STATE.LOCKED
-			draft_handler.upgrade()
+			handlers.draft_handler.upgrade()
 
 		ui.EVENT_TYPE.TOUCH:
 			var interacted_object = _data[0]
 			var event = _data[1]
-			var update_draft = input_handler.touch_handler(event, interacted_object, current_context)
+			var update_draft = handlers.input_handler.touch_handler(event, interacted_object, current_context)
 			if update_draft:
 				ui_state = core.UI_STATE.LOCKED
 				core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA, [])

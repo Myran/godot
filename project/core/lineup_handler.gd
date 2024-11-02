@@ -1,4 +1,4 @@
-class_name LineupHandler extends RefCounted
+class_name LineupHandler extends Node
 
 var holder
 

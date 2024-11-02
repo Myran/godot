@@ -1,4 +1,4 @@
-class_name BattleHandler extends RefCounted
+class_name BattleHandler extends Node
 var holder_allies
 var holder_enemy
 func _init(_allies,_enemies) -> void:

@@ -1,4 +1,4 @@
-class_name DraftHandler extends RefCounted
+class_name DraftHandler extends Node
 var current_draft_upgrade_level = 0
 
 

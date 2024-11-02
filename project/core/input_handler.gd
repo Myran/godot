@@ -1,4 +1,4 @@
-class_name InputHandler extends Object
+class_name InputHandler extends Node
 
 const TAP_TIME = 0.25
 var clicker

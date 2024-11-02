@@ -1,4 +1,4 @@
-class_name CardHandler extends RefCounted
+class_name CardHandler extends Node
 
 
 func change_health(card, health_amount):
