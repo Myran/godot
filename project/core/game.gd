@@ -18,11 +18,14 @@ enum SOLVE_TYPE { CORE, UI }
 
 var ui_state = UI_STATE.WAITING
 var current_gamestate
-var current_draft_upgrade_level = 0
+
 var current_battle
 var inputs = InputHandler.new()
 var card_handler = CardHandler.new()
-var lineup_handler 
+var draft_handler = DraftHandler.new()
+var lineup_handler
+var battle_handler
+
 
 class CardHandler: 
 		func change_health(card,health_amount):
@@ -83,6 +86,37 @@ class LineupHandler:
 				trip_card.queue_free()
 			return new_card
 
+class DraftHandler:
+		var current_draft_upgrade_level = 0
+		func hold_toggle(col,new_state):
+			var state
+			if new_state:
+				state = core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED
+			else:
+				state = core.EVENT_TYPE.DRAFT_COLUMN_UNLOCKED
+			core.action(state, [col])
+		func reroll():
+			core.action(core.EVENT_TYPE.REROLL_DRAFT, [])
+		func upgrade():
+			current_draft_upgrade_level += 1
+			core.action(core.EVENT_TYPE.UPGRADE, [current_draft_upgrade_level])
+
+class BattleHandler:
+		var holder_allies
+		var holder_enemy
+		func _init(_allies,_enemies) -> void:
+			holder_allies = _allies
+			holder_enemy = _enemies
+			
+		func create_battle():
+			var allies = holder_allies.get_current_lineup()
+			var enemies = holder_enemy.get_current_lineup()
+
+			var battle_instance = Battle.new()
+			var prep_allies = Battle.prepare_lineup_from_holder(allies)
+			var prep_enemies = Battle.prepare_lineup_from_holder(enemies)
+			return battle_instance.battle_start(prep_allies, prep_enemies)
+
 func _input(event: InputEvent) -> void:
 	inputs.input(event)
 
@@ -96,6 +130,7 @@ func _ready():
 	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
 	lineup_handler = LineupHandler.new(holder_allies)
+	battle_handler = BattleHandler.new(holder_allies,holder_enemy)
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
 	clicker.setup(level_controller)
@@ -106,7 +141,7 @@ func _ready():
 func _on_debug_event(event, _data):
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
-			current_draft_upgrade_level = 0
+			draft_handler.current_draft_upgrade_level = 0
 
 
 func new_event(event_type, data, solve_type):
@@ -213,6 +248,8 @@ func resolve_core_event(event_type, _data, current_context):
 	
 	clicker.on_core_event(event_type, _data, current_context)
 
+
+
 func resolve_ui_event(_event_type, _data, current_context):
 	if ui_state == UI_STATE.LOCKED:
 		return
@@ -221,32 +258,21 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED:
 			var new_state = _data[0]
 			var col = _data[1]
-			var state
-			if new_state:
-				state = core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED
-			else:
-				state = core.EVENT_TYPE.DRAFT_COLUMN_UNLOCKED
-			core.action(state, [col])
+			draft_handler.hold_toggle(col,new_state)
+
 
 		ui.EVENT_TYPE.TRANSITION:
 			var state = _data
 			core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, state)
 		ui.EVENT_TYPE.START_BATTLE:
 			print("Start battle")
-			# create battle events and result
-			var allies = holder_allies.get_current_lineup()
-			var enemies = holder_enemy.get_current_lineup()
-
-			var battle_instance = Battle.new()
-			var prep_allies = Battle.prepare_lineup_from_holder(allies)
-			var prep_enemies = Battle.prepare_lineup_from_holder(enemies)
-			var battle_result = battle_instance.battle_start(prep_allies, prep_enemies)
-			current_battle = battle_result
+			current_battle = battle_handler.create_battle()
 			ui.action(ui.EVENT_TYPE.TRANSITION, [core.GAME_STATE.PREBATTLE])
 
 		ui.EVENT_TYPE.REROLL:
 			ui_state = UI_STATE.LOCKED
-			core.action(core.EVENT_TYPE.REROLL_DRAFT, [])
+			draft_handler.reroll()
+
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
 			card_pop.hide()
@@ -254,8 +280,8 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.UPGRADE:
 			#check cost here
 			ui_state = UI_STATE.LOCKED
-			current_draft_upgrade_level += 1
-			core.action(core.EVENT_TYPE.UPGRADE, [current_draft_upgrade_level])
+			draft_handler.upgrade()
+
 		ui.EVENT_TYPE.TOUCH:
 			var interacted_object = _data[0]
 			var event = _data[1]
