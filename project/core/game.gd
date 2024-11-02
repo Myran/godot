@@ -1,6 +1,5 @@
 class_name Game extends Control
 
-# signal merge_done
 
 enum UI_STATE { WAITING, HOLDING, LOCKED }
 enum SOLVE_TYPE { CORE, UI }
@@ -19,12 +18,70 @@ enum SOLVE_TYPE { CORE, UI }
 
 var ui_state = UI_STATE.WAITING
 var current_gamestate
-
 var current_draft_upgrade_level = 0
-# var merging_tripples = []
 var current_battle
 var inputs = InputHandler.new()
+var card_handler = CardHandler.new()
+var lineup_handler 
 
+class CardHandler: 
+		func change_health(card,health_amount):
+				var current_health = card.unit_info.current_health
+				var new_health = current_health + health_amount
+				card.unit_info.current_health = new_health
+				card.card_base.set_card_health(new_health)
+		func change_attack(card,attack_amount):
+				var current_attack = card.unit_info.current_attack
+				var new_attack = current_attack + attack_amount
+				card.unit_info.current_attack = new_attack
+				card.card_base.set_card_attack(new_attack)
+
+class LineupHandler:
+		var holder
+		func _init(_holder) -> void:
+			holder = _holder
+		func add_card(card,pos):
+				var holder_pos = holder.get_holder(pos)
+				holder_pos.set_card(card)
+		func find_tripples():
+			var lineup = holder.get_current_lineup()
+			for card in lineup.values():
+				var tripples = []
+				for lineup_card in lineup.values():
+					if (
+						lineup_card.card_info.id == card.card_info.id
+						and lineup_card.level == card.level
+					):
+						if not tripples.has(lineup_card):
+							tripples.append(lineup_card)
+				if tripples.size() >= 3:
+					return tripples
+			return []
+		func merge(card,tripples):
+			var new_card
+			var merge_pos
+			var awaiter = SignalAwaiter.All.new()
+			for trip_card in tripples:
+				var lineup_pos = holder.get_card_position(trip_card)
+				var holder = holder.get_holder(lineup_pos)
+				holder.remove_card()
+				#update_context_units(current_context)
+				if trip_card == card:
+					new_card = await card_controller.create_unit_from_id(
+						card.card_info.id, card.level + 1
+					)
+					new_card.block_context = Cards.CONTEXT.LINEUP
+					holder.set_card(new_card)
+					new_card.show_upgrade()
+					merge_pos = new_card.get_global_position()
+
+			for trip_card in tripples:
+				awaiter.add(trip_card.movement_done)
+				trip_card.move_to_on_top(merge_pos)
+			await awaiter.finished
+			for trip_card in tripples:
+				trip_card.queue_free()
+			return new_card
 
 func _input(event: InputEvent) -> void:
 	inputs.input(event)
@@ -35,13 +92,15 @@ func _process(delta: float) -> void:
 
 
 func _ready():
+	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
+	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
+	debug.debug_event.connect(_on_debug_event)
+	lineup_handler = LineupHandler.new(holder_allies)
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
 	clicker.setup(level_controller)
 	set_gamestate(core.GAME_STATE.START)
-	ui.event.connect(new_event.bind(SOLVE_TYPE.UI))
-	core.event.connect(new_event.bind(SOLVE_TYPE.CORE))
-	debug.debug_event.connect(_on_debug_event)
+
 
 
 func _on_debug_event(event, _data):
@@ -66,8 +125,7 @@ func create_draft_context():
 
 func update_context_units(_context):
 	_context.lineup = holder_allies.get_current_lineup()
-	if clicker:
-		_context.draft_area = clicker.get_all_cards()
+	_context.draft_area = clicker.get_all_cards()
 	return _context
 
 
@@ -76,7 +134,6 @@ func solve_event(event, _context):
 	match event.solve_type:
 		SOLVE_TYPE.CORE:
 			resolve_core_event(event.event_type, event.data, _context)
-			clicker.on_core_event(event.event_type, event.data)
 		SOLVE_TYPE.UI:
 			resolve_ui_event(event.event_type, event.data, _context)
 	return ret_context
@@ -88,29 +145,14 @@ func resolve_core_event(event_type, _data, current_context):
 		core.EVENT_TYPE.CARD_STAT_CHANGE:
 			var card = _data.card
 			if _data.has("health"):
-				var health_amount = _data.health
-				var current_health = card.unit_info.current_health
-				var new_health = current_health + health_amount
-				card.unit_info.current_health = new_health
-				card.card_base.set_card_health(new_health)
+				card_handler.change_health(card,_data.health)
+
 			if _data.has("attack"):
-				var attack_amount = _data.attack
-				var current_attack = card.unit_info.current_attack
-				var new_attack = current_attack + attack_amount
-				card.unit_info.current_attack = new_attack
-				card.card_base.set_card_attack(new_attack)
+				card_handler.change_attack(card,_data.attack)
 			card.show_upgrade()
 
-		# core.EVENT_TYPE.CARD_FINISHED_MOVING_TOP:
-		# 	var card = _data
-		# 	card.queue_free()
-		# 	merging_tripples.erase(card)
-		# 	if merging_tripples.size() == 0:
-		# 		update_context_units(current_context)
-		# 		emit_signal("merge_done")
-
 		core.EVENT_TYPE.GAME_STATE_TRANSITION:
-			var new_state = _data[0]
+			var new_state = _data[0] as core.GAME_STATE
 			set_gamestate(new_state)
 
 		core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD:
@@ -120,67 +162,32 @@ func resolve_core_event(event_type, _data, current_context):
 			holder.set_card(card)
 
 		core.EVENT_TYPE.LINEUP_ADD_CARD:
-			var card = _data[0]
-			var pos = null
 			if _data.size() == 2:
-				pos = _data[1]
-				var holder = holder_allies.get_holder(pos)
-				holder.set_card(card)
+				var card = _data[0]
+				var 	pos = _data[1]
+				lineup_handler.add_card(card,pos)
 			current_context.add_event(
 				{solve_type = SOLVE_TYPE.CORE, event_type = core.EVENT_TYPE.TRIPPLE_TEST, data = []}
 			)
 
 		core.EVENT_TYPE.TRIPPLE_TEST:
-			var lineup = holder_allies.get_current_lineup()
-			for card in lineup.values():
-				var tripples = []
-				for lineup_card in lineup.values():
-					if (
-						lineup_card.card_info.id == card.card_info.id
-						and lineup_card.level == card.level
-					):
-						if not tripples.has(lineup_card):
-							tripples.append(lineup_card)
-				if tripples.size() >= 3:
-					print("Tripple found: ", tripples)
+			var tripples = lineup_handler.find_tripples()
+			if not tripples.is_empty():
 					current_context.add_event(
 						{
 							solve_type = SOLVE_TYPE.CORE,
 							event_type = core.EVENT_TYPE.LINEUP_MERGE,
-							data = [card, tripples]
+							data = [tripples[0], tripples]
 						}
 					)
 					current_context.solve_events()
-					break
 
 		core.EVENT_TYPE.LINEUP_MERGE:
 			var card = _data[0]
 			var tripples = _data[1]
-			var new_card
-			var merge_pos
-			var awaiter = SignalAwaiter.All.new()
-			#add_child(awaiter)
-			for trip_card in tripples:
-				# merging_tripples.append(trip_card)
-				var lineup_pos = holder_allies.get_card_position(trip_card)
-				var holder = holder_allies.get_holder(lineup_pos)
-				holder.remove_card()
-				update_context_units(current_context)
-				if trip_card == card:
-					new_card = await card_controller.create_unit_from_id(
-						card.card_info.id, card.level + 1
-					)
-					new_card.block_context = Cards.CONTEXT.LINEUP
-					holder.set_card(new_card)
-					new_card.show_upgrade()
-					merge_pos = new_card.get_global_position()
-
-			for trip_card in tripples:
-				awaiter.add(trip_card.movement_done)
-				trip_card.move_to_on_top(merge_pos)
-			await awaiter.finished
-			for trip_card in tripples:
-				trip_card.queue_free()
+	
+			var new_card = await lineup_handler.merge(card,tripples)
+			update_context_units(current_context)
 			current_context.add_event(
 				{
 					solve_type = SOLVE_TYPE.CORE,
@@ -203,7 +210,8 @@ func resolve_core_event(event_type, _data, current_context):
 		core.EVENT_TYPE.DRAFT_STEADY:
 			print("Steady state! unlock")
 			ui_state = UI_STATE.WAITING
-
+	
+	clicker.on_core_event(event_type, _data, current_context)
 
 func resolve_ui_event(_event_type, _data, current_context):
 	if ui_state == UI_STATE.LOCKED:
@@ -251,7 +259,6 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.TOUCH:
 			var interacted_object = _data[0]
 			var event = _data[1]
-			#printt("interacted_object: ",interacted_object,"event:",event,"is_pressed:",event.pressed,"current cargo:",dragging_cargo)
 			var update_draft = false
 
 			if event.pressed == true:
@@ -261,7 +268,6 @@ func resolve_ui_event(_event_type, _data, current_context):
 							core.OBJECT_TYPE.CARD:
 								inputs.tap_state = core.TAP_STATE.PRESSING
 								inputs.holding_item = interacted_object
-								#inputs.drag_start_pos = interacted_object.position
 							core.OBJECT_TYPE.CARD_HOLDER:
 								pass
 							core.OBJECT_TYPE.BLOCK_LOCKED:
