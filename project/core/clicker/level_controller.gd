@@ -1,5 +1,5 @@
 extends Control
-#signal cards_done_moving
+
 const GRID_WIDTH = 5  # max five cards in row
 const GRID_HEIGTH = 5
 
@@ -78,7 +78,6 @@ func add_to_grid(grid_pos, block, refill = 0):
 	var refill_pos = refill_distance * refill
 	print("refill pos :", refill_pos)
 	print("final position: ", current_level.map_to_local(grid_pos) - refill_pos)
-	#block.position = (current_level.map_to_local(gridPos) -refillPos)
 	block.position = grid_to_world_pos(grid_pos) - refill_pos
 
 
@@ -114,7 +113,6 @@ func grid_to_world_pos(grid_pos):
 
 func move_blocks():
 	var awaiter = SignalAwaiter.All.new()
-	#add_child(awaiter)
 	var b_moving = all_blocks()
 	for block_iterator in b_moving:
 		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))

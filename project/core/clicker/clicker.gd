@@ -36,7 +36,7 @@ func remove_rerollables():
 			if rerollables.has(block.object_type):
 					level.remove_from_grid(block,true)
 
-func on_core_event(event_type,_data):
+func on_core_event(event_type,_data, _current_context):
 	match event_type:
 		core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED:
 			var col = _data[0]
