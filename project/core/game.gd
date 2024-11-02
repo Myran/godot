@@ -159,7 +159,7 @@ func resolve_core_event(event_type, _data, current_context):
 			var new_card
 			var merge_pos
 			var awaiter = SignalAwaiter.All.new()
-			add_child(awaiter)
+			#add_child(awaiter)
 			for trip_card in tripples:
 				# merging_tripples.append(trip_card)
 				var lineup_pos = holder_allies.get_card_position(trip_card)

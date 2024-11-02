@@ -114,7 +114,7 @@ func grid_to_world_pos(grid_pos):
 
 func move_blocks():
 	var awaiter = SignalAwaiter.All.new()
-	add_child(awaiter)
+	#add_child(awaiter)
 	var b_moving = all_blocks()
 	for block_iterator in b_moving:
 		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))
