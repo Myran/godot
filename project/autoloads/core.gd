@@ -1,6 +1,9 @@
 extends Node
 
 signal event
+const CARD_MERGE_AMOUNT = 3
+enum UI_STATE { WAITING, HOLDING, LOCKED }
+enum SOLVE_TYPE { CORE, UI }
 
 enum TAP_STATE {
 	IDLE,

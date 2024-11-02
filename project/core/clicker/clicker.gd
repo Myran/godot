@@ -2,10 +2,11 @@ extends Node
 
 signal merge_completed
 
-const GRAVITY_VECTOR = Vector2i(0,1)
-const CARD_MERGE_AMOUNT = 3
+const GRAVITY_VECTOR = Vector2i.DOWN
+
 const SPAWN_HEIGHT = 0
-var directions = [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]
+
+var directions = [Vector2i.LEFT,Vector2i.RIGHT,Vector2i.UP,Vector2i.DOWN]
 var level
 var refill_counter = []
 
@@ -47,7 +48,6 @@ func on_core_event(event_type,_data, _current_context):
 			var col = _data[0]
 			print("Draft coloumn unlocked: ",col)
 			columns_locked.erase(col)
-
 
 		core.EVENT_TYPE.REROLL_DRAFT:
 			remove_rerollables()
@@ -115,7 +115,7 @@ func find_match():
 	for block in level.all_blocks():
 		if block != null and block.object_type == core.OBJECT_TYPE.CARD:
 			var cluster = add_neighbour_cards(block,[block])
-			if cluster.size() >= CARD_MERGE_AMOUNT:
+			if cluster.size() >= core.CARD_MERGE_AMOUNT:
 				return cluster
 	return []
 

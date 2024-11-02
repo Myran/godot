@@ -410,17 +410,21 @@ mouse_filter = 2
 
 [node name="icon_level_2" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_0y3oy")]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="icon_level_3" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_0y3oy")]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="icon_level_4" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_0y3oy")]
 visible = false
 layout_mode = 2
+mouse_filter = 2
 
 [node name="icon_level_5" parent="card_sprite/card_image_base/panel_container_level/panel_container_level/h_box_container" instance=ExtResource("21_0y3oy")]
 visible = false
 layout_mode = 2
+mouse_filter = 2
 
 [node name="stat_container_3" type="HBoxContainer" parent="card_sprite/card_image_base"]
 layout_mode = 1
