@@ -1,15 +1,21 @@
-[gd_scene load_steps=34 format=3 uid="uid://ddv8p7xpjy08i"]
+[gd_scene load_steps=40 format=3 uid="uid://ddv8p7xpjy08i"]
 
 [ext_resource type="Script" path="res://core/game.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
+[ext_resource type="Script" path="res://core/input_handler.gd" id="2_e2gk4"]
+[ext_resource type="Script" path="res://core/game_handler.gd" id="2_q5x7q"]
 [ext_resource type="Script" path="res://core/safe_zone.gd" id="2_t1pgp"]
 [ext_resource type="Script" path="res://core/popup_card.gd" id="2_xsnym"]
+[ext_resource type="Script" path="res://core/card_handler.gd" id="3_f3e35"]
 [ext_resource type="Script" path="res://core/top_bar.gd" id="3_jg5gr"]
 [ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://core/card/card.tscn" id="3_qxw11"]
 [ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://core/hold_bar.tscn" id="4_0gw5k"]
+[ext_resource type="Script" path="res://core/draft_handler.gd" id="4_u85n2"]
 [ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="4_vn1jd"]
+[ext_resource type="Script" path="res://core/lineup_handler.gd" id="5_jukdk"]
 [ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="5_uee54"]
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
+[ext_resource type="Script" path="res://core/battle_handler.gd" id="6_8cr3l"]
 [ext_resource type="Script" path="res://core/clicker/clicker.gd" id="6_mq18b"]
 [ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_8b5nu"]
 [ext_resource type="Script" path="res://core/clicker/level_controller.gd" id="7_e68m3"]
@@ -70,7 +76,7 @@ _data = {
 "show": SubResource("Animation_bktm3")
 }
 
-[node name="Game" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "top_bar", "battle_layer", "unhandled_layer", "clicker", "level_controller")]
+[node name="Game" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "top_bar", "battle_layer", "unhandled_layer", "clicker", "level_controller", "game_handler", "input_handler", "card_handler", "draft_handler", "lineup_handler", "battle_handler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -90,6 +96,30 @@ battle_layer = NodePath("CanvasLayer_battle")
 unhandled_layer = NodePath("CanvasLayer_unhandled_events")
 clicker = NodePath("clicker")
 level_controller = NodePath("CanvasLayer_game/main_area/ally_container/holder_allies/holder_draft/v_box_container/draft_container/center_container/level_controller")
+game_handler = NodePath("game_handler")
+input_handler = NodePath("input_handler")
+card_handler = NodePath("card_handler")
+draft_handler = NodePath("draft_handler")
+lineup_handler = NodePath("lineup_handler")
+battle_handler = NodePath("battle_handler")
+
+[node name="input_handler" type="Node" parent="."]
+script = ExtResource("2_e2gk4")
+
+[node name="card_handler" type="Node" parent="."]
+script = ExtResource("3_f3e35")
+
+[node name="draft_handler" type="Node" parent="."]
+script = ExtResource("4_u85n2")
+
+[node name="lineup_handler" type="Node" parent="."]
+script = ExtResource("5_jukdk")
+
+[node name="battle_handler" type="Node" parent="."]
+script = ExtResource("6_8cr3l")
+
+[node name="game_handler" type="Node" parent="."]
+script = ExtResource("2_q5x7q")
 
 [node name="clicker" type="Node" parent="."]
 script = ExtResource("6_mq18b")

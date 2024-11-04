@@ -3,9 +3,9 @@ class_name LineupHandler extends Node
 var holder
 
 
-func _init(_holder) -> void:
-	holder = _holder
 
+func setup(_holder) -> void:
+	holder = _holder
 
 func add_card(card, pos):
 	var holder_pos = holder.get_holder(pos)

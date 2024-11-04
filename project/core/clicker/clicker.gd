@@ -19,8 +19,6 @@ func setup(_level_controller):
 	level = _level_controller
 	level.setup_level()
 
-
-	
 func has_card(card):
 	if level.get_grid_pos(card) == null:
 		return false
@@ -79,7 +77,7 @@ func on_core_event(event_type,_data, _current_context):
 			await merge_info.awaiter.finished
 			for _block in matches:
 				level.remove_from_grid(_block)
-			
+
 			core.action(core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
 			var tween = merge_info.block.show_upgrade()
 			await tween.finished
@@ -104,12 +102,12 @@ func update_blocks():
 		refill_counter.clear()
 		var matches = find_match()
 		if matches.size():
-			block_action = true	
+			block_action = true
 			core.action(core.EVENT_TYPE.DRAFT_MERGE,[matches])
 			await merge_completed
 
-
 	core.action(core.EVENT_TYPE.DRAFT_STEADY,[])
+
 
 func find_match():
 	for block in level.all_blocks():

@@ -1,7 +1,9 @@
 class_name BattleHandler extends Node
 var holder_allies
 var holder_enemy
-func _init(_allies,_enemies) -> void:
+
+
+func setup(_allies,_enemies) -> void:
 	holder_allies = _allies
 	holder_enemy = _enemies
 	

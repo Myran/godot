@@ -11,35 +11,43 @@ class_name Game extends Control
 @export var unhandled_layer: CanvasLayer
 @export var clicker: Node
 @export var level_controller: Control
+@export var game_handler : GameHandler
+@export var input_handler : InputHandler
+@export var card_handler : CardHandler
+@export var draft_handler : DraftHandler
+@export var lineup_handler : LineupHandler
+@export var battle_handler : BattleHandler
 
 var ui_state = core.UI_STATE.WAITING
-
+var current_battle
 var handlers
 func _input(event: InputEvent) -> void:
-	handlers.input_handler.input(event)
+	input_handler.input(event)
 
 
 func _process(delta: float) -> void:
-	handlers.input_handler.process(delta)
-
+	input_handler.process(delta)
 
 func _ready():
 	ui.event.connect(new_event.bind(core.SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(core.SOLVE_TYPE.CORE))
 	debug.debug_event.connect(_on_debug_event)
-	handlers = HandlerContainer.new(self)
-	add_child(handlers)
-
+	#handlers = HandlerContainer.new(self)
+	#add_child(handlers)
+	input_handler.setup(clicker)
+	lineup_handler.setup(holder_allies)
+	battle_handler.setup(holder_allies,holder_enemy)
+	
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
 	clicker.setup(level_controller)
-	handlers.game_handler.set_gamestate(core.GAME_STATE.START)
+	game_handler.set_gamestate(core.GAME_STATE.START)
 
 
 func _on_debug_event(event, _data):
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
-			handlers.draft_handler.current_draft_upgrade_level = 0
+			draft_handler.current_draft_upgrade_level = 0
 
 
 func new_event(event_type, data, solve_type):
@@ -49,9 +57,6 @@ func new_event(event_type, data, solve_type):
 	var event = Context.Event.new(solve_type, event_type, data)
 	draft_context.add_event(event)
 	draft_context.solve_events()
-
-
-
 
 func update_context_units(_context):
 	_context.lineup = holder_allies.get_current_lineup()
@@ -75,15 +80,15 @@ func resolve_core_event(event_type, _data, current_context):
 		core.EVENT_TYPE.CARD_STAT_CHANGE:
 			var card = _data.card
 			if _data.has("health"):
-				handlers.card_handler.change_health(card, _data.health)
+				card_handler.change_health(card, _data.health)
 
 			if _data.has("attack"):
-				handlers.card_handler.change_attack(card, _data.attack)
+				card_handler.change_attack(card, _data.attack)
 			card.show_upgrade()
 
 		core.EVENT_TYPE.GAME_STATE_TRANSITION:
 			var new_state = _data[0] as core.GAME_STATE
-			handlers.game_handler.set_gamestate(new_state)
+			game_handler.set_gamestate(new_state)
 
 		core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD:
 			var card = _data[0]
@@ -93,15 +98,17 @@ func resolve_core_event(event_type, _data, current_context):
 
 		core.EVENT_TYPE.LINEUP_ADD_CARD:
 			if _data.size() == 2:
+				#from debug menu
 				var card = _data[0]
 				var pos = _data[1]
-				handlers.lineup_handler.add_card(card, pos)
+				lineup_handler.add_card(card, pos)
 			current_context.add_event(
 				{solve_type = core.SOLVE_TYPE.CORE, event_type = core.EVENT_TYPE.TRIPPLE_TEST, data = []}
 			)
+			current_context.solve_events()
 
 		core.EVENT_TYPE.TRIPPLE_TEST:
-			var tripples = handlers.lineup_handler.find_tripples()
+			var tripples = lineup_handler.find_tripples()
 			if not tripples.is_empty():
 				current_context.add_event(
 					{
@@ -116,7 +123,7 @@ func resolve_core_event(event_type, _data, current_context):
 			var card = _data[0]
 			var tripples = _data[1]
 
-			var new_card = await handlers.lineup_handler.merge(card, tripples)
+			var new_card = await lineup_handler.merge(card, tripples)
 			update_context_units(current_context)
 			current_context.add_event(
 				{
@@ -152,7 +159,7 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED:
 			var new_state = _data[0]
 			var col = _data[1]
-			handlers.draft_handler.hold_toggle(col, new_state)
+			draft_handler.hold_toggle(col, new_state)
 		ui.EVENT_TYPE.SHOW_CARD:
 			var card = _data[0]
 			card_pop.show_card(card)
@@ -162,12 +169,12 @@ func resolve_ui_event(_event_type, _data, current_context):
 			core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, state)
 		ui.EVENT_TYPE.START_BATTLE:
 			print("Start battle")
-			handlers.game_handler.current_battle = handlers.battle_handler.create_battle()
+			current_battle = battle_handler.create_battle()
 			ui.action(ui.EVENT_TYPE.TRANSITION, [core.GAME_STATE.PREBATTLE])
 
 		ui.EVENT_TYPE.REROLL:
 			ui_state = core.UI_STATE.LOCKED
-			handlers.draft_handler.reroll()
+			draft_handler.reroll()
 
 		ui.EVENT_TYPE.TAP_POP_CARD:
 			card_pop.hide()
@@ -175,12 +182,63 @@ func resolve_ui_event(_event_type, _data, current_context):
 		ui.EVENT_TYPE.UPGRADE:
 			#check cost here
 			ui_state = core.UI_STATE.LOCKED
-			handlers.draft_handler.upgrade()
+			draft_handler.upgrade()
 
 		ui.EVENT_TYPE.TOUCH:
 			var interacted_object = _data[0]
 			var event = _data[1]
-			var update_draft = handlers.input_handler.touch_handler(event, interacted_object, current_context)
+			var update_draft = input_handler.touch_handler(event, interacted_object, current_context)
 			if update_draft:
 				ui_state = core.UI_STATE.LOCKED
 				core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA, [])
+
+
+
+
+func start_game():
+	print("Start Game")
+	ui_state = core.UI_STATE.WAITING
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, [core.GAME_STATE.PREPARE])
+
+
+func mode_draft():
+	print("Draft mode")
+	top_bar.visible = true
+	bottom_bar_draft.visible = true
+	bottom_bar_prepare.visible = false
+
+	holder_enemy.visible = false
+	holder_draft.visible = true
+
+
+func mode_prepare():
+	print("Preparation mode")
+	top_bar.visible = true
+	bottom_bar_draft.visible = false
+	bottom_bar_prepare.visible = true
+
+	holder_enemy.visible = true
+	holder_draft.visible = false
+
+
+func mode_pre_battle():
+	print("Pre Battle Mode")
+	ui_state = core.UI_STATE.LOCKED
+	top_bar.visible = false
+	bottom_bar_draft.visible = false
+	bottom_bar_prepare.visible = false
+	await get_tree().create_timer(0.5).timeout
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, [core.GAME_STATE.BATTLE])
+
+
+func mode_battle():
+	print("Battle Mode")
+	core.action(core.EVENT_TYPE.BATTLE, [current_battle])
+
+
+func mode_post_battle():
+	print("Post Battle Mode")
+	ui_state = core.UI_STATE.WAITING
+	holder_allies.show_lineup()
+	holder_enemy.show_lineup()
+	core.action(core.EVENT_TYPE.GAME_STATE_TRANSITION, [core.GAME_STATE.PREPARE])

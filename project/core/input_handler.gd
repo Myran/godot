@@ -7,12 +7,10 @@ var tap_timer = 0
 var holding_item = null
 var tap_state = core.TAP_STATE.IDLE
 var dragging_cargo = null
-#var drag_start_pos = null
 
-
-func _init(_clicker) -> void:
+func setup(_clicker) -> void:
 	clicker = _clicker
-
+	
 
 func reset_inputs():
 	last_touch_pos = null
@@ -20,7 +18,7 @@ func reset_inputs():
 	holding_item = null
 	tap_state = core.TAP_STATE.IDLE
 	dragging_cargo = null
-	#drag_start_pos = null
+
 
 
 func input(event):
