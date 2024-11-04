@@ -1,5 +1,5 @@
 class_name Game extends Control
-
+@export_group("UI Elements")
 @export var card_pop: Control
 @export var holder_draft: Node
 @export var holder_allies: Control
@@ -9,6 +9,8 @@ class_name Game extends Control
 @export var top_bar: CanvasLayer
 @export var battle_layer: CanvasLayer
 @export var unhandled_layer: CanvasLayer
+
+@export_group("Systems")
 @export var clicker: Node
 @export var level_controller: Control
 @export var game_handler : GameHandler
@@ -20,35 +22,33 @@ class_name Game extends Control
 
 var ui_state = core.UI_STATE.WAITING
 var current_battle
-var handlers
+
+
 func _input(event: InputEvent) -> void:
 	input_handler.input(event)
-
 
 func _process(delta: float) -> void:
 	input_handler.process(delta)
 
 func _ready():
+	setup_signals()
+	setup_systems()
+	intitialize_game()
+
+func setup_signals():
 	ui.event.connect(new_event.bind(core.SOLVE_TYPE.UI))
 	core.event.connect(new_event.bind(core.SOLVE_TYPE.CORE))
-	debug.debug_event.connect(_on_debug_event)
-	#handlers = HandlerContainer.new(self)
-	#add_child(handlers)
+
+func setup_systems():
 	input_handler.setup(clicker)
 	lineup_handler.setup(holder_allies)
 	battle_handler.setup(holder_allies,holder_enemy)
-	
+	clicker.setup(level_controller)
+
+func intitialize_game():
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
-	clicker.setup(level_controller)
 	game_handler.set_gamestate(core.GAME_STATE.START)
-
-
-func _on_debug_event(event, _data):
-	match event:
-		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
-			draft_handler.current_draft_upgrade_level = 0
-
 
 func new_event(event_type, data, solve_type):
 	printt("New event: ", event_type, data, solve_type)

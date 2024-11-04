@@ -1,6 +1,8 @@
 class_name DraftHandler extends Node
 var current_draft_upgrade_level = 0
 
+func _ready() -> void:
+	debug.debug_event.connect(_on_debug_event)
 
 func hold_toggle(col, new_state):
 	var state
@@ -18,3 +20,8 @@ func reroll():
 func upgrade():
 	current_draft_upgrade_level += 1
 	core.action(core.EVENT_TYPE.UPGRADE, [current_draft_upgrade_level])
+
+func _on_debug_event(event, _data):
+	match event:
+		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
+			current_draft_upgrade_level = 0
