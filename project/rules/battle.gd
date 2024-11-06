@@ -211,9 +211,20 @@ static func _solve_stat_change(data: Dictionary, context: BattleContext) -> void
 	if current_stat == null:
 		push_warning(str("Stats change error", data))
 		return
-
 	# Update unit with the new value directly
-	unit.set(data.stat, data.value)  # Changed from calculating with "change"
+	var new_value = current_stat + data.value
+	unit.set(data.stat, new_value)  # Changed from calculating with "change"
+	# Add follow-up event like in old system
+	var follow_up_event = create_event(
+		EventType.STAT_CHANGE,
+		{
+			"stat": "current_health",
+			"new_stat": new_value,  # Using the new value
+			"target": data.target,
+			"side": data.side
+			}
+	)
+	context.add_event(follow_up_event)
 
 
 static func _solve_death(data: Dictionary, context: BattleContext) -> void:

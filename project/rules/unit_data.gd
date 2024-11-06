@@ -29,6 +29,7 @@ func init_with_info(_card_info):
 		if _ab != null:
 			add_ability(_ab)
 	var ability
+	#debug init cards with a
 	if card_info.id == str(2):
 		ability = AbilityHealthOnDeath.new(2)
 		add_ability(ability)
