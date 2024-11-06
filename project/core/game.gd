@@ -193,8 +193,6 @@ func resolve_ui_event(_event_type, _data, current_context):
 				core.action(core.EVENT_TYPE.UPDATE_DRAFT_AREA, [])
 
 
-
-
 func start_game():
 	print("Start Game")
 	ui_state = core.UI_STATE.WAITING
