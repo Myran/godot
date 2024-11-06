@@ -2,7 +2,7 @@ class_name Battle extends Node
 
 # Enums for battle system
 enum BattleAction { ATTACK_REGULAR }
-enum Tempus { PRE, POST } 
+enum Tempus { PRE, POST }
 enum EventType {
 	COMBAT,
 	DEATH,
@@ -93,13 +93,11 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 static func _solve_find_next_unit(context: BattleContext) -> void:
 	var active_side = context.get_active_side()
 	var sel_unit_pos = find_next_unactive_on_side(active_side)
-	
 	# If no unit available and units were activated, clear and try again
 	if sel_unit_pos == -1:
 		print("All units activated, clearing list!")
 		active_side.clear_activated()
 		sel_unit_pos = find_next_unactive_on_side(active_side)
-		
 	var event = create_event(
 		EventType.SELECT_ACTIVE_UNIT,
 		{"sel_unit_pos": sel_unit_pos, "allied_side": context.allied_turn}
@@ -110,11 +108,10 @@ static func _solve_select_active_unit(data: Dictionary, context: BattleContext) 
 	# If no unit was found, we can't select anything
 	if data.sel_unit_pos == -1:
 		return
-		
 	var side = context.get_side(data.allied_side)
 	if !side.lineup.has(data.sel_unit_pos):
 		return
-		
+
 	var sel_unit = side.lineup[data.sel_unit_pos]
 	context.mark_unit_activated(sel_unit)
 	context.current_unit = sel_unit
@@ -125,9 +122,7 @@ static func find_next_unactive_on_side(side: Side) -> int:
 		if !side.has_unit(unit):
 			return pos
 	return -1  # Return -1 when no unactivated unit is found
-	
-	
-	
+
 # Individual event solvers
 #static func _solve_find_next_unit(context: BattleContext) -> void:
 	#var active_side = context.get_active_side()
