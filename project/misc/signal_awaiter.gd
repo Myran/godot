@@ -1,71 +1,57 @@
 class_name SignalAwaiter extends Node
 
-signal finished
+# Added signal typing to indicate it emits no arguments
+signal finished()
 
-
-func _init():
+func _init() -> void:  # Added return type
 	Engine.get_main_loop().root.add_child(self)
 
-
-func add(_signal: Signal) -> SignalAwaiter:
+# Added Signal type to indicate godot built-in Signal class
+func add(_signal: Signal) -> SignalAwaiter:  # Added return type
 	_signal.connect(_on_signal_received.bind(_signal), CONNECT_ONE_SHOT)
 	return self
 
-
-func finish() -> void:
+func finish() -> void:  # Added return type
 	finished.emit()
 	queue_free()
 
-
-func _on_signal_received(_signal: Signal) -> void:
+func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 	push_error("Method not implemented")
 	finish()
 
-
-class Any:
-	extends SignalAwaiter
-
-	func _on_signal_received(_signal: Signal) -> void:
+# Changed inner classes to properly extend base class and add typing
+class Any extends SignalAwaiter:
+	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		finish()
 
+class Count extends SignalAwaiter:
+	var _connections: int  # Added type hint
 
-class Count:
-	extends SignalAwaiter
-	var _connections: int
-
-	func _init(count: int):
+	func _init(count: int) -> void:  # Added param and return type
 		super()
 		_connections = count
 
-	func _on_signal_received(_signal: Signal) -> void:
+	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		if get_incoming_connections().size() == _connections:
 			finish()
 
-
-class All:
-	extends Count
-
-	func _init():
+class All extends Count:
+	func _init() -> void:  # Added return type
 		super(0)
 
+class SequenceBreak extends SignalAwaiter:
+	var _signals: Array[Signal]  # Added typed array
 
-class SequenceBreak:
-	extends SignalAwaiter
-	var _signals: Array[Signal]
-
-	func _init(signals: Array[Signal]):
+	func _init(signals: Array[Signal]) -> void:  # Added typed array param
 		super()
 		_signals = signals
 
-	func _on_signal_received(_signal: Signal) -> void:
+	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		if _signal != _signals[0]:
 			finish()
 
-
-class SequenceMatch:
-	extends SequenceBreak
-
-	func _on_signal_received(_signal: Signal) -> void:
+class SequenceMatch extends SequenceBreak:
+	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		if _signal == _signals[0]:
 			_signals.remove_at(0)
 			if _signals.is_empty():
