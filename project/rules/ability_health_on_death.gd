@@ -12,14 +12,15 @@ func condition(_tempus, _u_pos, _u_side, _context, _event):
 
 func actions(_tempus, _u_pos, _u_side, _context, _event):
 	# Create event using Event class
-	var new_event = Context.Event.new(
-		"stat_change",  # solve_type
-		Battle.EventType.STAT_CHANGE,  # event_type
-		{  # data
-			"stat": "current_health",
-			"target": _u_pos,
-			"side": _u_side,
-			"value": health_add
-		}
-	)
+	var new_event = BattleContext.StatChangeEvent.new("current_health",_u_pos,_u_side,health_add)
+	#var new_event = Context.Event.new(
+		#"stat_change",  # solve_type
+		#Battle.EventType.STAT_CHANGE,  # event_type
+		#{  # data
+			#"stat": "current_health",
+			#"target": _u_pos,
+			#"side": _u_side,
+			#"value": health_add
+		#}
+	#)
 	_context.add_event(new_event)

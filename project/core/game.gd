@@ -1,4 +1,5 @@
 class_name Game extends Control
+
 @export_group("UI Elements")
 @export var card_pop: Control
 @export var holder_draft: Node

@@ -121,21 +121,22 @@ func enact(battle_events):
 
 			Battle.EventType.DAMAGE:
 				print("Damage", event)
-				var u = allies[event.data.target] if event.data.side else enemies[event.data.target]
-				printt("Damage target:", u, "Damage", event.data.damage_amount)
+				var u = allies[event.target] if event.side else enemies[event.target]
+				printt("Damage target:", u, "Damage", event.damage_amount)
 
 			Battle.EventType.STAT_CHANGE:
 				print("Stat Change", event)
-				var unit_side = allies if event.data.side else enemies
-				if !unit_side.has(event.data.target):
+				var unit_side = allies if event.side else enemies
+				if !unit_side.has(event.target):
 					continue
-				if !event.data.has("new_stat"):
-					continue
+				#if !event.has("new_stat"):
+					#continue
+				if event.new_stat == 0 : continue
 
-				var u = unit_side[event.data.target]
-				match event.data.stat:
+				var u = unit_side[event.target]
+				match event.stat:
 					"current_health":
-						u.card_base.set_card_health(event.data.new_stat)  # Changed from "change"
+						u.card_base.set_card_health(event.new_stat)  # Changed from "change"
 
 			Battle.EventType.DEATH:
 				print("Death")

@@ -18,7 +18,7 @@ enum EventType {
 
 # Event creation helpers
 static func create_event(type: EventType, data: Dictionary) -> Context.Event:
-	return Context.Event.new("battle", type, data)
+	return Context.Event.new(core.SOLVE_TYPE.BATTLE, type, data)
 
 
 # Core battle flow
@@ -74,13 +74,13 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		EventType.ADD_LINEUP:
 			_solve_add_lineup(event.data, context)
 		EventType.SELECT_ACTIVE_UNIT:
-			_solve_select_active_unit(event.data, context)
+			_solve_select_active_unit(event, context)
 		EventType.COMBAT:
 			_solve_combat(event.data, context)
 		EventType.DAMAGE:
-			_solve_damage(event.data, context)
+			_solve_damage(event, context)
 		EventType.STAT_CHANGE:
-			_solve_stat_change(event.data, context)
+			_solve_stat_change(event, context)
 		EventType.DEATH:
 			_solve_death(event.data, context)
 		EventType.START_OF_TURN:
@@ -98,13 +98,14 @@ static func _solve_find_next_unit(context: BattleContext) -> void:
 		print("All units activated, clearing list!")
 		active_side.clear_activated()
 		sel_unit_pos = find_next_unactive_on_side(active_side)
-	var event = create_event(
-		EventType.SELECT_ACTIVE_UNIT,
-		{"sel_unit_pos": sel_unit_pos, "allied_side": context.allied_turn}
-		)
+	#var event = create_event(
+		#EventType.SELECT_ACTIVE_UNIT,
+		#{"sel_unit_pos": sel_unit_pos, "allied_side": context.allied_turn}
+		#)
+	var event = BattleContext.SelectActiveUnitEvent.new(sel_unit_pos,context.allied_turn)
 	context.add_event(event)
 
-static func _solve_select_active_unit(data: Dictionary, context: BattleContext) -> void:
+static func _solve_select_active_unit(data: BattleContext.SelectActiveUnitEvent, context: BattleContext) -> void:
 	# If no unit was found, we can't select anything
 	if data.sel_unit_pos == -1:
 		return
@@ -116,6 +117,7 @@ static func _solve_select_active_unit(data: Dictionary, context: BattleContext) 
 	context.mark_unit_activated(sel_unit)
 	context.current_unit = sel_unit
 
+
 static func find_next_unactive_on_side(side: Side) -> int:
 	for pos in side.lineup:
 		var unit = side.lineup[pos]
@@ -123,21 +125,6 @@ static func find_next_unactive_on_side(side: Side) -> int:
 			return pos
 	return -1  # Return -1 when no unactivated unit is found
 
-# Individual event solvers
-#static func _solve_find_next_unit(context: BattleContext) -> void:
-	#var active_side = context.get_active_side()
-	#var sel_unit_pos = find_next_unactive_on_side(active_side)
-#
-	#if sel_unit_pos == null:
-		#print("All units activated, clearing list!")
-		#active_side.clear_activated()
-		#sel_unit_pos = find_next_unactive_on_side(active_side)
-#
-	#var event = create_event(
-		#EventType.SELECT_ACTIVE_UNIT,
-		#{"sel_unit_pos": sel_unit_pos, "allied_side": context.allied_turn}
-	#)
-	#context.add_event(event)
 
 
 static func _solve_add_lineup(data: Dictionary, context: BattleContext) -> void:
@@ -146,11 +133,6 @@ static func _solve_add_lineup(data: Dictionary, context: BattleContext) -> void:
 	print("Lineup added", side.lineup)
 
 
-#static func _solve_select_active_unit(data: Dictionary, context: BattleContext) -> void:
-	#var side = context.get_side(data.allied_side)
-	#var sel_unit = side.lineup[data.sel_unit_pos]
-	#context.mark_unit_activated(sel_unit)
-	#context.current_unit = sel_unit
 
 
 static func _solve_combat(data: Dictionary, context: BattleContext) -> void:
@@ -158,44 +140,49 @@ static func _solve_combat(data: Dictionary, context: BattleContext) -> void:
 	var defending_side = context.get_side(!data.allied_attack)
 	var attacker = attacking_side.lineup[data.attacker]
 	var defender = defending_side.lineup[data.defender]
-
-	var attacker_damage = create_event(
-		EventType.DAMAGE,
-		{
-			"damage_amount": attacker.current_attack,
-			"target": data.defender,
-			"side": !data.allied_attack
-		}
-	)
-	var defender_damage = create_event(
-		EventType.DAMAGE,
-		{
-			"damage_amount": defender.current_attack,
-			"target": data.attacker,
-			"side": data.allied_attack
-		}
-	)
+	
+	var attacker_damage = BattleContext.DamageEvent.new(attacker.current_attack,data.defender,!data.allied_attack)
+	#var attacker_damage = create_event(
+		#EventType.DAMAGE,
+		#{
+			#"damage_amount": attacker.current_attack,
+			#"target": data.defender,
+			#"side": !data.allied_attack
+		#}
+	#)
+	var defender_damage = BattleContext.DamageEvent.new(defender.current_attack,data.attacker,data.allied_attack)
+	#var defender_damage = create_event(
+		#EventType.DAMAGE,
+		#{
+			#"damage_amount": defender.current_attack,
+			#"target": data.attacker,
+			#"side": data.allied_attack
+		#}
+	#)
 
 	context.add_event(attacker_damage)
 	context.add_event(defender_damage)
 
 
-static func _solve_damage(data: Dictionary, context: BattleContext) -> void:
-	var stat_change = create_event(
-		EventType.STAT_CHANGE,
-		{
-			"stat": "current_health",
-			"target": data.target,
-			"side": data.side,
-			"value": -data.damage_amount  # Changed from "change"
-			}
-			)
+static func _solve_damage(data: BattleContext.DamageEvent, context: BattleContext) -> void:
+	var stat_change = BattleContext.StatChangeEvent.new("current_health",data.target,data.side,-data.damage_amount)
+	#var stat_change = create_event(
+		#EventType.STAT_CHANGE,
+		#{
+			#"stat": "current_health",
+			#"target": data.target,
+			#"side": data.side,
+			#"value": -data.damage_amount  # Changed from "change"
+			#}
+			#)
 	context.add_event(stat_change)
 
-static func _solve_stat_change(data: Dictionary, context: BattleContext) -> void:
-	if !data.has("value"):  # Changed from "change"
-		return
-
+static func _solve_stat_change(data: BattleContext.StatChangeEvent, context: BattleContext) -> void:
+	#if !data.has("value"):  # Changed from "change"
+	#	return
+	
+	if data.value == 0 : return
+	
 	var side = context.get_side(data.side)
 	if !side.lineup.has(data.target):
 		print("target N/A , dead?", data)
@@ -208,17 +195,17 @@ static func _solve_stat_change(data: Dictionary, context: BattleContext) -> void
 		return
 	# Update unit with the new value directly
 	var new_value = current_stat + data.value
-	unit.set(data.stat, new_value)  # Changed from calculating with "change"
-	# Add follow-up event like in old system
-	var follow_up_event = create_event(
-		EventType.STAT_CHANGE,
-		{
-			"stat": "current_health",
-			"new_stat": new_value,  # Using the new value
-			"target": data.target,
-			"side": data.side
-			}
-	)
+	unit.set(data.stat, new_value) 
+	var follow_up_event = BattleContext.StatChangeEvent.new("current_health",data.target,data.side,0,new_value)
+	#var follow_up_event = create_event(
+		#EventType.STAT_CHANGE,
+		#{
+			#"stat": "current_health",
+			#"new_stat": new_value,  # Using the new value
+			#"target": data.target,
+			#"side": data.side
+			#}
+	#)
 	context.add_event(follow_up_event)
 
 
@@ -316,13 +303,6 @@ static func find_combat_target(lineup: Dictionary):
 		return lineup[pos]
 	return null
 
-
-#static func find_next_unactive_on_side(side: Side) -> int:
-	#for pos in side.lineup:
-		#var unit = side.lineup[pos]
-		#if !side.has_unit(unit):
-			#return pos
-	#return -1
 
 
 static func get_pos_for_unit(lineup: Dictionary, unit) -> int:
