@@ -61,7 +61,13 @@ static func process_turn(context: BattleContext) -> void:
 
 
 # Event solvers
-static func solve_event(event: Context.Event, context: BattleContext) -> void:
+static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) -> void:
+	match event:
+		var x when BattleContext.FindNextUnitEvent:
+			print("findnext unit syntax worked",x)
+		_:
+			print("get_class",event.get_class())
+			
 	match event.event_type:
 		EventType.FIND_NEXT_UNIT:
 			var active_side: Side = context.get_active_side()
