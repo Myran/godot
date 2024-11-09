@@ -35,7 +35,7 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 	return context.event_list
 
 
-func _initialize_battle(
+static func _initialize_battle(
 	context: BattleContext,
 	allied_lineup: Dictionary,
 	enemies_lineup: Dictionary

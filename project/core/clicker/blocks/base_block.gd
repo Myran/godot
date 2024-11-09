@@ -1,4 +1,4 @@
-extends TouchScreenButton
+class_name Card extends TouchScreenButton
 
 signal movement_done
 

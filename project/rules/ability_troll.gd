@@ -34,11 +34,14 @@ func draft_action(_tempus,_pos,_context,_event,_u):
 			continue
 		if lineup_card.card_info.tribe.match("evil"):
 			evil_count = evil_count + 1
-	_context.add_event({
-		solve_type = core.SOLVE_TYPE.CORE,
-		event_type = core.EVENT_TYPE.CARD_STAT_CHANGE,
-		data = {
-			"card" : _u,
-			"health" : health_add * evil_count,
-			"attack" : attack_add * evil_count
-			}})
+	_context.add_event(DraftContext.Event.new(core.SOLVE_TYPE.CORE,core.EVENT_TYPE.CARD_STAT_CHANGE,{"card" : _u, "health" : health_add * evil_count,"attack" : attack_add * evil_count}))
+	#ovanstående kanske inte funkar med "health" kanske ska vara "current_health" ? får se
+	
+	#_context.add_event({
+		#solve_type = core.SOLVE_TYPE.CORE,
+		#event_type = core.EVENT_TYPE.CARD_STAT_CHANGE,
+		#data = {
+			#"card" : _u,
+			#"health" : health_add * evil_count,
+			#"attack" : attack_add * evil_count
+			#}})
