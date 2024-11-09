@@ -33,19 +33,19 @@ func enact(battle_events):
 			Battle.EventType.COMBAT:
 				print("Combat")
 				var attacker = (
-					allies[event.data.attacker]
-					if event.data.allied_attack
-					else enemies[event.data.attacker]
+					allies[event.attacker]
+					if event.allied_attack
+					else enemies[event.attacker]
 				)
 				var defender = (
-					enemies[event.data.defender]
-					if event.data.allied_attack
-					else allies[event.data.defender]
+					enemies[event.defender]
+					if event.allied_attack
+					else allies[event.defender]
 				)
 				printt("attacker", attacker)
 				printt("defender", defender)
 				var combat_tween = create_tween()
-				#combat_tween.set_parallel(false)
+
 				var anim_speed = 0.2
 				var attack_dist = 0.65
 				var defence_dist = 0.25
@@ -129,8 +129,7 @@ func enact(battle_events):
 				var unit_side = allies if event.side else enemies
 				if !unit_side.has(event.target):
 					continue
-				#if !event.has("new_stat"):
-					#continue
+
 				if event.new_stat == 0 : continue
 
 				var u = unit_side[event.target]
@@ -140,10 +139,10 @@ func enact(battle_events):
 
 			Battle.EventType.DEATH:
 				print("Death")
-				var side = allies if event.data.side else enemies
-				var dying_u = side[event.data.pos]
-				side.erase(event.data.pos)
-				dying_u.shake(event.data.side)
+				var side = allies if event.side else enemies
+				var dying_u = side[event.pos]
+				side.erase(event.pos)
+				dying_u.shake(event.side)
 
 			Battle.EventType.START_OF_TURN:
 				await get_tree().create_timer(0.1).timeout
