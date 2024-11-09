@@ -19,62 +19,77 @@ var battle_state: int = BATTLE_STATE.BATTLE
 var allied_turn: bool = true
 var current_unit = null
 var solver
+
+
 # Base Event class
-class BaseEvent extends Context.Event:
+class BaseEvent:
+	extends Context.Event
 	#var event_type: EventType
-	
+
 	func _init(type: EventType) -> void:
 		event_type = type
 
+
 # Event classes for each type
-class CombatEvent extends BaseEvent:
+class CombatEvent:
+	extends BaseEvent
 	var attacker: int
 	var defender: int
 	var allied_attack: bool
-	
+
 	func _init(attacker_pos: int, defender_pos: int, is_allied_attack: bool) -> void:
 		super(EventType.COMBAT)
 		attacker = attacker_pos
 		defender = defender_pos
 		allied_attack = is_allied_attack
 
-class DeathEvent extends BaseEvent:
+
+class DeathEvent:
+	extends BaseEvent
 	var side: bool
 	var pos: int
-	
+
 	func _init(allied_side: bool, position: int) -> void:
 		super(EventType.DEATH)
 		side = allied_side
 		pos = position
 
-class AddLineupEvent extends BaseEvent:
+
+class AddLineupEvent:
+	extends BaseEvent
 	var allied_side: bool
 	var lineup: Dictionary
-	
+
 	func _init(is_allied: bool, lineup_data: Dictionary) -> void:
 		super(EventType.ADD_LINEUP)
 		allied_side = is_allied
 		lineup = lineup_data
 
-class DamageEvent extends BaseEvent:
+
+class DamageEvent:
+	extends BaseEvent
 	var damage_amount: int
 	var target: int
 	var side: bool
-	
+
 	func _init(amount: int, target_pos: int, target_side: bool) -> void:
 		super(EventType.DAMAGE)
 		damage_amount = amount
 		target = target_pos
 		side = target_side
 
-class StatChangeEvent extends BaseEvent:
+
+class StatChangeEvent:
+	extends BaseEvent
 	var stat: String
 	var target: int
 	var side: bool
 	var value: int
 	var new_stat: int
-	
-	func _init(stat_name: String, target_pos: int, target_side: bool, change_value: int, new_value: int = 0) -> void:
+
+	func _init(
+		stat_name: String, target_pos: int, target_side: bool, change_value: int, new_value: int = 0
+	) -> void:
 		super(EventType.STAT_CHANGE)
 		stat = stat_name
 		target = target_pos
@@ -82,27 +97,38 @@ class StatChangeEvent extends BaseEvent:
 		value = change_value
 		new_stat = new_value
 
-class SelectActiveUnitEvent extends BaseEvent:
+
+class SelectActiveUnitEvent:
+	extends BaseEvent
 	var sel_unit_pos: int
 	var allied_side: bool
-	
+
 	func _init(position: int, is_allied: bool) -> void:
 		super(EventType.SELECT_ACTIVE_UNIT)
 		sel_unit_pos = position
 		allied_side = is_allied
 
-class FindNextUnitEvent extends BaseEvent:
+
+class FindNextUnitEvent:
+	extends BaseEvent
+
 	func _init() -> void:
 		super(EventType.FIND_NEXT_UNIT)
 
-class StartOfTurnEvent extends BaseEvent:
+
+class StartOfTurnEvent:
+	extends BaseEvent
+
 	func _init() -> void:
 		super(EventType.START_OF_TURN)
 
-class EndOfTurnEvent extends BaseEvent:
+
+class EndOfTurnEvent:
+	extends BaseEvent
+
 	func _init() -> void:
 		super(EventType.END_OF_TURN)
-	
+
 
 func _init(_solver) -> void:
 	solver = _solver

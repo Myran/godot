@@ -1,7 +1,7 @@
 class_name Battle extends Node
 
-const UNIT_HEALTH = "current_health"
-const NO_UNIT_FOUND = -1
+
+
 enum BattleAction { ATTACK_REGULAR }
 enum Tempus { PRE, POST }
 enum EventType {
@@ -16,13 +16,15 @@ enum EventType {
 	END_OF_TURN
 }
 
+const UNIT_HEALTH: String = "current_health"
+const NO_UNIT_FOUND: int = -1
 
 func battle_start(allies_lineup: Dictionary, enemies_lineup: Dictionary) -> Array:
 	return battle_solver(allies_lineup, enemies_lineup)
 
 
 func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Array:
-	var context = BattleContext.new(self)
+	var context: BattleContext = BattleContext.new(self)
 	_initialize_battle(context, allied_lineup, enemies_lineup)
 
 	while context.is_battle_ongoing():
@@ -34,10 +36,12 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 
 
 func _initialize_battle(
-	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary
+	context: BattleContext,
+	allied_lineup: Dictionary,
+	enemies_lineup: Dictionary
 ) -> void:
-	var allies_event = BattleContext.AddLineupEvent.new(true, duplicate_resource(allied_lineup))
-	var enemies_event = BattleContext.AddLineupEvent.new(false, duplicate_resource(enemies_lineup))
+	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(true, duplicate_resource(allied_lineup))
+	var enemies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(false, duplicate_resource(enemies_lineup))
 	context.add_event(allies_event)
 	context.add_event(enemies_event)
 	context.solve_events()
@@ -60,46 +64,45 @@ static func process_turn(context: BattleContext) -> void:
 static func solve_event(event: Context.Event, context: BattleContext) -> void:
 	match event.event_type:
 		EventType.FIND_NEXT_UNIT:
-			var active_side = context.get_active_side()
-			var sel_unit_pos = find_next_unactive_on_side(active_side)
+			var active_side: Side = context.get_active_side()
+			var sel_unit_pos: int = find_next_unactive_on_side(active_side)
 			if sel_unit_pos == NO_UNIT_FOUND:
 				print("All units activated, clearing list!")
 				active_side.clear_activated()
 				sel_unit_pos = find_next_unactive_on_side(active_side)
 
-			var select_event = BattleContext.SelectActiveUnitEvent.new(
+			var select_event: BattleContext.SelectActiveUnitEvent = BattleContext.SelectActiveUnitEvent.new(
 				sel_unit_pos, context.allied_turn
 			)
 			context.add_event(select_event)
 
 		EventType.ADD_LINEUP:
-			var side = context.get_side(event.allied_side)
+			var side: Side = context.get_side(event.allied_side)
 			side.lineup = event.lineup
 			print("Lineup added", side.lineup)
 
 		EventType.SELECT_ACTIVE_UNIT:
-			var data = event as BattleContext.SelectActiveUnitEvent
-			# If no unit was found, we can't select anything
+			var data: BattleContext.SelectActiveUnitEvent = event as BattleContext.SelectActiveUnitEvent
 			if data.sel_unit_pos == NO_UNIT_FOUND:
 				return
-			var side = context.get_side(data.allied_side)
+			var side: Side = context.get_side(data.allied_side)
 			if !side.lineup.has(data.sel_unit_pos):
 				return
 
-			var sel_unit = side.lineup[data.sel_unit_pos]
+			var sel_unit: UnitData = side.lineup[data.sel_unit_pos]
 			context.mark_unit_activated(sel_unit)
 			context.current_unit = sel_unit
 
 		EventType.COMBAT:
-			var attacking_side = context.get_side(event.allied_attack)
-			var defending_side = context.get_side(!event.allied_attack)
-			var attacker = attacking_side.lineup[event.attacker]
-			var defender = defending_side.lineup[event.defender]
+			var attacking_side: Side = context.get_side(event.allied_attack)
+			var defending_side: Side = context.get_side(!event.allied_attack)
+			var attacker: UnitData = attacking_side.lineup[event.attacker]
+			var defender: UnitData = defending_side.lineup[event.defender]
 
-			var attacker_damage = BattleContext.DamageEvent.new(
+			var attacker_damage: BattleContext.DamageEvent = BattleContext.DamageEvent.new(
 				attacker.current_attack, event.defender, !event.allied_attack
 			)
-			var defender_damage = BattleContext.DamageEvent.new(
+			var defender_damage: BattleContext.DamageEvent = BattleContext.DamageEvent.new(
 				defender.current_attack, event.attacker, event.allied_attack
 			)
 
@@ -107,31 +110,31 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 			context.add_event(defender_damage)
 
 		EventType.DAMAGE:
-			var data = event as BattleContext.DamageEvent
-			var stat_change = BattleContext.StatChangeEvent.new(
+			var data: BattleContext.DamageEvent = event as BattleContext.DamageEvent
+			var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 				UNIT_HEALTH, data.target, data.side, -data.damage_amount
 			)
 			context.add_event(stat_change)
 
 		EventType.STAT_CHANGE:
-			var data = event as BattleContext.StatChangeEvent
+			var data: BattleContext.StatChangeEvent = event as BattleContext.StatChangeEvent
 			if data.value == 0:
 				return
 
-			var side = context.get_side(data.side)
+			var side: Side = context.get_side(data.side)
 			if !side.lineup.has(data.target):
 				print("target N/A , dead?", data)
 				return
 
-			var unit = side.lineup[data.target]
-			var current_stat = unit.get(data.stat)
+			var unit: UnitData = side.lineup[data.target]
+			var current_stat : int = unit.get(data.stat)
 			if current_stat == null:
 				push_warning(str("Stats change error", data))
 				return
 
-			var new_value = current_stat + data.value
+			var new_value: int = current_stat + data.value
 			unit.set(data.stat, new_value)
-			var follow_up_event = BattleContext.StatChangeEvent.new(
+			var follow_up_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 				UNIT_HEALTH, data.target, data.side, 0, new_value
 			)
 			context.add_event(follow_up_event)
@@ -148,17 +151,17 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 
 static func find_next_unactive_on_side(side: Side) -> int:
 	for pos in side.lineup:
-		var unit = side.lineup[pos]
+		var unit: UnitData = side.lineup[pos]
 		if !side.has_unit(unit):
 			return pos
 	return NO_UNIT_FOUND
 
 
 # Combat helpers
-static func create_combat_event(attacker_unit, context: BattleContext) -> Context.Event:
-	var target_lineup = context.get_inactive_side().lineup
-	var attacker_lineup = context.get_active_side().lineup
-	var opposing_unit = find_combat_target(target_lineup)
+static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
+	var target_lineup: Dictionary = context.get_inactive_side().lineup
+	var attacker_lineup: Dictionary = context.get_active_side().lineup
+	var opposing_unit: UnitData = find_combat_target(target_lineup)
 
 	return BattleContext.CombatEvent.new(
 		get_pos_for_unit(attacker_lineup, attacker_unit),
@@ -196,9 +199,9 @@ static func activate_current_unit(context: BattleContext) -> void:
 # Death handling
 static func solve_death_test(context: BattleContext) -> void:
 	for is_allied in [true, false]:
-		var side = context.get_side(is_allied)
+		var side: Side = context.get_side(is_allied)
 		for pos in side.lineup:
-			var unit = side.lineup[pos]
+			var unit: UnitData = side.lineup[pos]
 			if unit.current_health <= 0:
 				var event = BattleContext.DeathEvent.new(is_allied, pos)
 				context.add_event(event)
@@ -223,13 +226,13 @@ static func duplicate_resource(res: Variant) -> Variant:
 	return str_to_var(var_to_str(res))
 
 
-static func find_combat_target(lineup: Dictionary):
+static func find_combat_target(lineup: Dictionary) -> UnitData:
 	for pos in lineup:
 		return lineup[pos]
 	return null
 
 
-static func get_pos_for_unit(lineup: Dictionary, unit) -> int:
+static func get_pos_for_unit(lineup: Dictionary, unit: UnitData) -> int:
 	for pos in lineup:
 		if lineup[pos] == unit:
 			return pos
@@ -241,7 +244,7 @@ static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary:
 
 
 static func abstract_lineup(lineup: Dictionary) -> Dictionary:
-	var abs_lineup := {}
+	var abs_lineup: Dictionary = {}
 	for pos in lineup.keys():
 		abs_lineup[pos] = lineup[pos].unit_info
 	return abs_lineup
