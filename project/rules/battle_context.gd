@@ -1,17 +1,17 @@
 class_name BattleContext extends Context
 
 enum BATTLE_STATE { PRE_BATTLE, BATTLE, POST_BATTLE }
-enum EventType {
-	COMBAT,
-	DEATH,
-	ADD_LINEUP,
-	DAMAGE,
-	STAT_CHANGE,
-	SELECT_ACTIVE_UNIT,
-	FIND_NEXT_UNIT,
-	START_OF_TURN,
-	END_OF_TURN
-}
+#enum EventType {
+	#COMBAT,
+	#DEATH,
+	#ADD_LINEUP,
+	#DAMAGE,
+	#STAT_CHANGE,
+	#SELECT_ACTIVE_UNIT,
+	#FIND_NEXT_UNIT,
+	#START_OF_TURN,
+	#END_OF_TURN
+#}
 
 var allies: Side = Side.new()
 var enemies: Side = Side.new()
@@ -26,8 +26,9 @@ class BaseEvent:
 	extends Context.Event
 	#var event_type: EventType
 
-	func _init(type: EventType) -> void:
-		event_type = type
+	func _init() -> void:
+		pass
+	#	event_type = type
 
 
 # Event classes for each type
@@ -38,7 +39,7 @@ class CombatEvent:
 	var allied_attack: bool
 
 	func _init(attacker_pos: int, defender_pos: int, is_allied_attack: bool) -> void:
-		super(EventType.COMBAT)
+		#super(EventType.COMBAT)
 		attacker = attacker_pos
 		defender = defender_pos
 		allied_attack = is_allied_attack
@@ -50,7 +51,7 @@ class DeathEvent:
 	var pos: int
 
 	func _init(allied_side: bool, position: int) -> void:
-		super(EventType.DEATH)
+		#super(EventType.DEATH)
 		side = allied_side
 		pos = position
 
@@ -61,7 +62,7 @@ class AddLineupEvent:
 	var lineup: Dictionary
 
 	func _init(is_allied: bool, lineup_data: Dictionary) -> void:
-		super(EventType.ADD_LINEUP)
+		#super(EventType.ADD_LINEUP)
 		allied_side = is_allied
 		lineup = lineup_data
 
@@ -73,7 +74,7 @@ class DamageEvent:
 	var side: bool
 
 	func _init(amount: int, target_pos: int, target_side: bool) -> void:
-		super(EventType.DAMAGE)
+		#super(EventType.DAMAGE)
 		damage_amount = amount
 		target = target_pos
 		side = target_side
@@ -90,7 +91,7 @@ class StatChangeEvent:
 	func _init(
 		stat_name: String, target_pos: int, target_side: bool, change_value: int, new_value: int = 0
 	) -> void:
-		super(EventType.STAT_CHANGE)
+		#super(EventType.STAT_CHANGE)
 		stat = stat_name
 		target = target_pos
 		side = target_side
@@ -104,7 +105,7 @@ class SelectActiveUnitEvent:
 	var allied_side: bool
 
 	func _init(position: int, is_allied: bool) -> void:
-		super(EventType.SELECT_ACTIVE_UNIT)
+		#super(EventType.SELECT_ACTIVE_UNIT)
 		sel_unit_pos = position
 		allied_side = is_allied
 
@@ -113,22 +114,22 @@ class FindNextUnitEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		super(EventType.FIND_NEXT_UNIT)
-
+		#super(EventType.FIND_NEXT_UNIT)
+		pass
 
 class StartOfTurnEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		super(EventType.START_OF_TURN)
-
+		#super(EventType.START_OF_TURN)
+		pass
 
 class EndOfTurnEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		super(EventType.END_OF_TURN)
-
+		#super(EventType.END_OF_TURN)
+		pass
 
 func _init(_solver) -> void:
 	solver = _solver
@@ -154,21 +155,6 @@ func _process_event(event) -> void:
 	solve_events()  # Handle any events generated during post-response
 
 
-# Event creation helpers
-func create_combat_event(attacker_pos: int, defender_pos: int, is_allied_attack: bool) -> Event:
-	return Event.new(
-		"combat",
-		Battle.EventType.COMBAT,
-		{"attacker": attacker_pos, "defender": defender_pos, "allied_attack": is_allied_attack}
-	)
-
-
-func create_damage_event(amount: int, target_pos: int, is_allied_target: bool) -> Event:
-	return Event.new(
-		"damage",
-		Battle.EventType.DAMAGE,
-		{"damage_amount": amount, "target": target_pos, "side": is_allied_target}
-	)
 
 
 # Event broadcasting

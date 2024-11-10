@@ -3,18 +3,7 @@ class_name Battle extends Node
 
 
 enum BattleAction { ATTACK_REGULAR }
-enum Tempus { PRE, POST }
-enum EventType {
-	COMBAT,
-	DEATH,
-	ADD_LINEUP,
-	DAMAGE,
-	STAT_CHANGE,
-	SELECT_ACTIVE_UNIT,
-	FIND_NEXT_UNIT,
-	START_OF_TURN,
-	END_OF_TURN
-}
+
 
 const UNIT_HEALTH: String = "current_health"
 const NO_UNIT_FOUND: int = -1
@@ -38,8 +27,7 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 static func _initialize_battle(
 	context: BattleContext,
 	allied_lineup: Dictionary,
-	enemies_lineup: Dictionary
-) -> void:
+	enemies_lineup: Dictionary ) -> void:
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(true, duplicate_resource(allied_lineup))
 	var enemies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(false, duplicate_resource(enemies_lineup))
 	context.add_event(allies_event)
@@ -61,15 +49,9 @@ static func process_turn(context: BattleContext) -> void:
 
 
 # Event solvers
-static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) -> void:
-	match event:
-		var x when BattleContext.FindNextUnitEvent:
-			print("findnext unit syntax worked",x)
-		_:
-			print("get_class",event.get_class())
-			
-	match event.event_type:
-		EventType.FIND_NEXT_UNIT:
+static func solve_event(event : BattleContext.BaseEvent, context: BattleContext) -> void:
+	#match event:
+	if event is BattleContext.FindNextUnitEvent:
 			var active_side: Side = context.get_active_side()
 			var sel_unit_pos: int = find_next_unactive_on_side(active_side)
 			if sel_unit_pos == NO_UNIT_FOUND:
@@ -81,13 +63,13 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 				sel_unit_pos, context.allied_turn
 			)
 			context.add_event(select_event)
-
-		EventType.ADD_LINEUP:
+			
+	elif event is BattleContext.AddLineupEvent:
 			var side: Side = context.get_side(event.allied_side)
 			side.lineup = event.lineup
 			print("Lineup added", side.lineup)
 
-		EventType.SELECT_ACTIVE_UNIT:
+	elif event is BattleContext.SelectActiveUnitEvent:
 			var data: BattleContext.SelectActiveUnitEvent = event as BattleContext.SelectActiveUnitEvent
 			if data.sel_unit_pos == NO_UNIT_FOUND:
 				return
@@ -99,7 +81,7 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 			context.mark_unit_activated(sel_unit)
 			context.current_unit = sel_unit
 
-		EventType.COMBAT:
+	elif event is BattleContext.CombatEvent:
 			var attacking_side: Side = context.get_side(event.allied_attack)
 			var defending_side: Side = context.get_side(!event.allied_attack)
 			var attacker: UnitData = attacking_side.lineup[event.attacker]
@@ -115,14 +97,14 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 			context.add_event(attacker_damage)
 			context.add_event(defender_damage)
 
-		EventType.DAMAGE:
+	elif event is BattleContext.DamageEvent:
 			var data: BattleContext.DamageEvent = event as BattleContext.DamageEvent
 			var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 				UNIT_HEALTH, data.target, data.side, -data.damage_amount
 			)
 			context.add_event(stat_change)
 
-		EventType.STAT_CHANGE:
+	elif event is BattleContext.StatChangeEvent:
 			var data: BattleContext.StatChangeEvent = event as BattleContext.StatChangeEvent
 			if data.value == 0:
 				return
@@ -145,15 +127,12 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 			)
 			context.add_event(follow_up_event)
 
-		EventType.DEATH:
+	elif event is BattleContext.DeathEvent:
 			context.remove_unit(event.pos, event.side)
-
-		EventType.START_OF_TURN:
+	elif event is BattleContext.StartOfTurnEvent:
 			print("Start of turn")
-
-		EventType.END_OF_TURN:
+	elif event is BattleContext.EndOfTurnEvent:
 			print("End of turn")
-
 
 static func find_next_unactive_on_side(side: Side) -> int:
 	for pos in side.lineup:

@@ -23,14 +23,13 @@ func enact(battle_events):
 
 	for event in battle_events:
 		printt("current event:", event)
-		match event.event_type:
-			Battle.EventType.ADD_LINEUP:
+		if event is BattleContext.AddLineupEvent:
 				print("Add lineup")
-			Battle.EventType.FIND_NEXT_UNIT:
+		elif event is BattleContext.FindNextUnitEvent:
 				print("Find next unit")
-			Battle.EventType.SELECT_ACTIVE_UNIT:
+		elif event is BattleContext.SelectActiveUnitEvent:
 				print("Select active unit")
-			Battle.EventType.COMBAT:
+		elif event is BattleContext.CombatEvent:
 				print("Combat")
 				var attacker = (
 					allies[event.attacker]
@@ -119,12 +118,12 @@ func enact(battle_events):
 				)
 				back_tween.play()
 
-			Battle.EventType.DAMAGE:
+		elif event is BattleContext.DamageEvent:
 				print("Damage", event)
 				var u = allies[event.target] if event.side else enemies[event.target]
 				printt("Damage target:", u, "Damage", event.damage_amount)
 
-			Battle.EventType.STAT_CHANGE:
+		elif event is BattleContext.StatChangeEvent:
 				print("Stat Change", event)
 				var unit_side = allies if event.side else enemies
 				if !unit_side.has(event.target):
@@ -137,18 +136,18 @@ func enact(battle_events):
 					"current_health":
 						u.card_base.set_card_health(event.new_stat)  # Changed from "change"
 
-			Battle.EventType.DEATH:
+		elif event is BattleContext.DeathEvent:
 				print("Death")
 				var side = allies if event.side else enemies
 				var dying_u = side[event.pos]
 				side.erase(event.pos)
 				dying_u.shake(event.side)
 
-			Battle.EventType.START_OF_TURN:
+		elif event is BattleContext.StartOfTurnEvent:
 				await get_tree().create_timer(0.1).timeout
 				print("start of turn")
 
-			Battle.EventType.END_OF_TURN:
+		elif event is BattleContext.EndOfTurnEvent:
 				print("end of turn")
 				await back_tween.finished
 

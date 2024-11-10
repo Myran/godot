@@ -58,16 +58,16 @@ func select_action(_battle_context):
 	return {"action" : Battle.BattleAction.ATTACK_REGULAR}
 
 func draft_post_event_response(pos,_context,event,_u):
-	check_draft_abilities("post",pos,_context,event,_u)
+	check_draft_abilities(core.Tempus.POST,pos,_context,event,_u)
 
 func draft_pre_event_response(pos,_context,event,_u):
-	check_draft_abilities("pre",pos,_context,event,_u)
+	check_draft_abilities(core.Tempus.PRE,pos,_context,event,_u)
 
 func pre_event_response(_u_pos,_u_side,_battle_context,_event):
-	check_abilities(Battle.Tempus.PRE,_u_pos,_u_side,_battle_context,_event)
+	check_abilities(core.Tempus.PRE,_u_pos,_u_side,_battle_context,_event)
 
 func post_event_response(_u_pos,_u_side,_battle_context,_event):
-	check_abilities(Battle.Tempus.POST,_u_pos,_u_side,_battle_context,_event)
+	check_abilities(core.Tempus.POST,_u_pos,_u_side,_battle_context,_event)
 
 func check_abilities(tempus,_u_pos,_u_side,_battle_context,_event):
 	for _ability in abilities:

@@ -5,9 +5,10 @@ func _init(_health_add = 1):
 	health_add = _health_add
 
 func condition(_tempus, _u_pos, _u_side, _context, _event):
-	if _tempus == Battle.Tempus.POST:
+	if _tempus == core.Tempus.POST:
 		# Events are Context.Event objects
-		return _event.event_type == Battle.EventType.DEATH
+		#return _event.event_type == Battle.EventType.DEATH
+		return _event is BattleContext.DeathEvent
 	return false
 
 func actions(_tempus, _u_pos, _u_side, _context, _event):
