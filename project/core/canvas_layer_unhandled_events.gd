@@ -9,4 +9,5 @@ func input_handling(new_state):
 func _on_area_2d_input_event(_viewport, _event, _shape_idx):
 	if _event is InputEventScreenTouch:
 		await get_tree().process_frame
-		ui.action(ui.EVENT_TYPE.TOUCH,[self,_event])
+		#ui.action(ui.EVENT_TYPE.TOUCH,[self,_event])
+		ui.action(ui.TouchEvent.new(self,_event))

@@ -7,11 +7,14 @@ extends AspectRatioContainer
 func show_card():
 	$animation_player.play("scale_up")
 
+
 func _on_button_pressed():
-	ui.action(ui.EVENT_TYPE.TAP_POP_CARD,[self])
+#	ui.action(ui.EVENT_TYPE.TAP_POP_CARD,[self])
+	ui.action(ui.HideCardEvent.new())
+
 
 func setup_card(card):
-	print("CARD: setup card in card",card)
+	print("CARD: setup card in card", card)
 
 	var info = card.unit_info
 #	var img_string = str("cardtest/card_image_",debug.asset_variant,"_",info.card_info.id,".png")

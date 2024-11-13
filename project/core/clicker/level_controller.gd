@@ -85,7 +85,7 @@ func get_grid_pos(block):
 	for grid_pos in block_grid.keys():
 		if block_grid[grid_pos] == block:
 			return grid_pos
-	#return null
+	return null
 
 
 func switch_blocks(block_a, block_b):
@@ -122,8 +122,10 @@ func move_blocks():
 
 func remove_from_grid(block, destroy = true):
 	var remove_pos = get_grid_pos(block)
-	var empty_space = _block_factory.create_empty_space()
-	add_to_grid(remove_pos, empty_space)
+	#kan om redan borttaget som inmergade objectet
+	if remove_pos !=null:
+		var empty_space = _block_factory.create_empty_space()
+		add_to_grid(remove_pos, empty_space)
 	if destroy:
 		if block.get_parent():
 			block.get_parent().remove_child(block)

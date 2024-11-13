@@ -51,11 +51,13 @@ func debug_button_pressed(_name):
 			for n in 3:
 				var new_card = await card_controller.create_unit_from_id(n,1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
-				core.action(core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD,[new_card,n])
+				#core.action(core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD,[new_card,n])
+				core.action(core.EnemyLineupAddCardEvent.new(new_card,n))
 			for n in 3:
 				var new_card = await card_controller.create_unit_from_id(n,1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
-				core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
+				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
+				core.action(core.DebugLineupAddCardEvent.new(new_card,n))
 		"select_game":
 			print("select game")
 			popup_debug.hide()
