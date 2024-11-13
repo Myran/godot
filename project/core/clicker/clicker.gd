@@ -41,31 +41,23 @@ func remove_rerollables():
 
 func on_core_event(event, _current_context):
 	if event is core.DraftColumnLocked:
-		#core.EVENT_TYPE.DRAFT_COLOUMN_LOCKED:
-		#var col = _data[0]
 		print("Draft coloumn locked: ", event.col)
 		columns_locked.append(event.col)
 
 	if event is core.DraftColumnUnlocked:
-#		core.EVENT_TYPE.DRAFT_COLUMN_UNLOCKED:
-		#var col = _data[0]
 		print("Draft coloumn unlocked: ", event.col)
 		columns_locked.erase(event.col)
 
 	if event is core.RerollDraftEvent:
-#		core.EVENT_TYPE.REROLL_DRAFT:
 		remove_rerollables()
 		update_blocks()
 
 	if event is core.DraftAddBlockEvent:
-		#core.EVENT_TYPE.DRAFT_ADD_BLOCK:
-		#var match_info = _data[0]
 		var match_info = event.info
 		level.add_to_grid(match_info.pos, match_info.block)
 
 	if event is core.UpgradeEvent:
-#		core.EVENT_TYPE.UPGRADE:
-#			var upgrade_level = _data[0]
+
 		remove_upgrade_blocks(event.new_level)
 		update_blocks()
 
@@ -74,22 +66,16 @@ func on_core_event(event, _current_context):
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
-		#core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT:
-#			var block = _data[0]
-#			var destroy = false
-#			if _data.size() > 1:
-#				destroy = _data[1]
+
 		if level.get_grid_pos(event.block) != null:
 			level.remove_from_grid(event.block, event.destroy_block)
 
 	if event is core.DraftMergeEvent:
-#		core.EVENT_TYPE.DRAFT_MERGE:
-		#		var matches = _data[0]
+
 		var merge_info = await merge_matched_cards(event.matches)
 		await merge_info.awaiter.finished
 		for _block in event.matches:
 			level.remove_from_grid(_block)
-			#core.action(core.EVENT_TYPE.DRAFT_ADD_BLOCK,[merge_info])
 		core.action(core.DraftAddBlockEvent.new(merge_info))
 		var tween = merge_info.block.show_upgrade()
 		await tween.finished
@@ -115,11 +101,9 @@ func update_blocks():
 		var matches = find_match()
 		if matches.size():
 			block_action = true
-			#	core.action(core.EVENT_TYPE.DRAFT_MERGE, [matches])
 			core.action(core.DraftMergeEvent.new(matches))
 			await merge_completed
 
-	#core.action(core.EVENT_TYPE.DRAFT_STEADY, [])
 	core.action(core.DraftSteadyEvent.new())
 
 
@@ -139,10 +123,9 @@ func merge_matched_cards(cluster):
 	new_card.block_context = Cards.CONTEXT.DRAFT
 	var cluster_pos = level.get_grid_pos(cluster[1])
 	var awaiter = SignalAwaiter.All.new()
-	#add_child(awaiter)
 	for block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
-		#merging_cards.append(block)
+
 		awaiter.add(block.movement_done)
 
 	return {"block": new_card, "pos": cluster_pos, "awaiter": awaiter}

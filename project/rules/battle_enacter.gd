@@ -133,8 +133,8 @@ func enact(battle_events):
 
 				var u = unit_side[event.target]
 				match event.stat:
-					"current_health":
-						u.card_base.set_card_health(event.new_stat)  # Changed from "change"
+					Battle.UNIT_HEALTH:
+						u.base.set_card_health(event.new_stat)
 
 		elif event is BattleContext.DeathEvent:
 				print("Death")

@@ -115,11 +115,12 @@ shader_parameter/vignette_opacity = 1.0
 shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
 shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 
-[node name="Block" type="TouchScreenButton"]
+[node name="Block" type="TouchScreenButton" node_paths=PackedStringArray("base")]
 texture_normal = ExtResource("1_irw7l")
 shape = SubResource("1")
 script = ExtResource("2_batfy")
 card_image_folder = "res://assets/card_images/"
+base = NodePath("card_sprite/card_image_base")
 
 [node name="area_2d" type="Area2D" parent="."]
 position = Vector2(0, 1)

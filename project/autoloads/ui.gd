@@ -1,18 +1,6 @@
 extends Node
 
-enum EVENT_TYPE {
-	TEST,
-	TOUCH,
-	DRAG,
-	UPGRADE,
-	TAP_TAG,
-	TAP_POP_CARD,
-	REROLL,
-	START_BATTLE,
-	TRANSITION,
-	DRAFT_HOLD_TOGGLED,
-	SHOW_CARD
-}
+
 signal event
 
 
@@ -85,8 +73,6 @@ class UpgradeEvent:
 	extends UIEvent
 	pass
 
-
-#const SIGNAL_EVENT = "event"
 func action(_event: UIEvent):
 	event.emit(_event)
 

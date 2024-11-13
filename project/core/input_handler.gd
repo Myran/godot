@@ -74,16 +74,7 @@ func touch_handler(event, interacted_object, current_context):
 		match tap_state:
 			core.TAP_STATE.PRESSING:
 				if interacted_object.object_type == core.OBJECT_TYPE.CARD:
-					#card_pop.show_card(interacted_object)
-#					current_context.add_event(DraftContext.Event.new(core.SOLVE_TYPE.UI,ui.EVENT_TYPE.SHOW_CARD,[interacted_object]))
 					current_context.add_event(ui.ShowCardEvent.new(interacted_object))
-					# #current_context.add_event(
-					#{
-					#solve_type = core.SOLVE_TYPE.UI,
-					#event_type = ui.EVENT_TYPE.SHOW_CARD,
-					#data = [interacted_object]
-					#}
-					#)
 					current_context.solve_events()
 					update_draft = true
 				if interacted_object.object_type == core.OBJECT_TYPE.BLOCK_LOCKED:
@@ -118,31 +109,14 @@ func touch_handler(event, interacted_object, current_context):
 												dragging_card
 											)
 											if release_handled:
-#												current_context.add_event(DraftContext.Event.new(core.SOLVE_TYPE.CORE,core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,[dragging_card]))
 												current_context.add_event(
 													core.RemoveBlockFromDraft.new(dragging_card)
 												)
-												# #current_context.add_event(
-												#{
-												#solve_type = core.SOLVE_TYPE.CORE,
-												#event_type =
-												#core.EVENT_TYPE.REMOVE_BLOCK_FROM_DRAFT,
-												#data = [dragging_card]
-												#}
-												#)
 												current_context.solve_events()
-												#current_context.add_event(DraftContext.Event.new(core.SOLVE_TYPE.CORE,core.EVENT_TYPE.LINEUP_ADD_CARD,[dragging_card]))
 												current_context.add_event(
 													core.LineupAddCardEvent.new(dragging_card)
 												)
-												# #current_context.add_event(
-												#{
-												#solve_type = core.SOLVE_TYPE.CORE,
-												#event_type =
-												#core.EVENT_TYPE.LINEUP_ADD_CARD,
-												#data = [dragging_card]
-												#}
-												#)
+		
 												current_context.solve_events()
 												update_draft = true
 

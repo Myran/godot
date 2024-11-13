@@ -1,4 +1,3 @@
-
 class_name Cards extends Resource
 
 enum CONTEXT{

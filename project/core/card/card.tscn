@@ -173,6 +173,7 @@ script = ExtResource("1_kx5r1")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 2
+mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="button" type="Button" parent="."]
@@ -288,6 +289,7 @@ uppercase = true
 [node name="v_box_container" type="VBoxContainer" parent="margin_container/panel_name/h_box_container"]
 show_behind_parent = true
 layout_mode = 2
+mouse_filter = 2
 
 [node name="card_name_background" type="TextureRect" parent="margin_container/panel_name/h_box_container/v_box_container"]
 self_modulate = Color(1, 1, 1, 0.705882)

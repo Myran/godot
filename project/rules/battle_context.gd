@@ -1,17 +1,7 @@
 class_name BattleContext extends Context
 
 enum BATTLE_STATE { PRE_BATTLE, BATTLE, POST_BATTLE }
-#enum EventType {
-	#COMBAT,
-	#DEATH,
-	#ADD_LINEUP,
-	#DAMAGE,
-	#STAT_CHANGE,
-	#SELECT_ACTIVE_UNIT,
-	#FIND_NEXT_UNIT,
-	#START_OF_TURN,
-	#END_OF_TURN
-#}
+
 
 var allies: Side = Side.new()
 var enemies: Side = Side.new()
