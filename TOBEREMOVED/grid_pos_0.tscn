@@ -1,6 +1,0 @@
-[gd_scene format=2]
-
-[node name="grid_pos_0" type="ColorRect"]
-offset_right = 204.0
-offset_bottom = 232.0
-custom_minimum_size = Vector2( 204, 232 )

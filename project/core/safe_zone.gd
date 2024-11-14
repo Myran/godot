@@ -3,9 +3,11 @@ extends MarginContainer
 @onready var viewport = get_viewport()
 @onready var screen_size = viewport.get_visible_rect().size
 
+
 func _ready():
 	viewport.connect("size_changed", Callable(self, "resize_window"))
 	resize_window()
+
 
 func resize_window():
 	#print("Resizing safe area")
@@ -15,14 +17,14 @@ func resize_window():
 
 	update_safe_area()
 
+
 func update_safe_area():
-		# Turn off debugging godot 3->4
+	# Turn off debugging godot 3->4
 	# var rect = DisplayServer.get_display_safe_area()
 	var window_size = get_window().get_size()
 	var rect = get_window().get_visible_rect()
 	var offset = Vector2(
-		window_size.x - rect.size.x - rect.position.x,
-		window_size.y - rect.size.y - rect.position.y
+		window_size.x - rect.size.x - rect.position.x, window_size.y - rect.size.y - rect.position.y
 	)
 
 	var aspect_y = screen_size.y / window_size.y

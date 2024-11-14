@@ -6,7 +6,7 @@ const CARD_IMAGE_PREFIX = "card_image_"
 
 @export_dir var card_image_folder: String
 @export var move_speed: float = 0.05
-@export var base : Node
+@export var base: Node
 var object_type = core.OBJECT_TYPE.CARD
 var holder = null
 var block_context = Cards.CONTEXT.NOT_SET

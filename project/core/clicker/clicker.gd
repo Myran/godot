@@ -57,7 +57,6 @@ func on_core_event(event, _current_context):
 		level.add_to_grid(match_info.pos, match_info.block)
 
 	if event is core.UpgradeEvent:
-
 		remove_upgrade_blocks(event.new_level)
 		update_blocks()
 
@@ -66,12 +65,10 @@ func on_core_event(event, _current_context):
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
-
 		if level.get_grid_pos(event.block) != null:
 			level.remove_from_grid(event.block, event.destroy_block)
 
 	if event is core.DraftMergeEvent:
-
 		var merge_info = await merge_matched_cards(event.matches)
 		await merge_info.awaiter.finished
 		for _block in event.matches:

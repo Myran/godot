@@ -1,8 +1,10 @@
 class_name AbilitiesHandler extends Resource
 
+
 static func parse_abilities(abstring):
-	var new_abilities= []
-	if abstring == "": return []
+	var new_abilities = []
+	if abstring == "":
+		return []
 	# parse as csv
 	var commands = abstring.split(",")
 	for command in commands:
@@ -12,10 +14,11 @@ static func parse_abilities(abstring):
 		if command_parts[1]:
 			var args = command_parts[1]
 			argarray = args.split(";")
-		var new_ability = create_ability(ability_name,argarray)
+		var new_ability = create_ability(ability_name, argarray)
 		if new_ability:
 			new_abilities.append(new_ability)
 	return new_abilities
+
 
 static func create_ability(ability_name, argarray):
 	#argarray kommer in som string
@@ -24,7 +27,7 @@ static func create_ability(ability_name, argarray):
 		"guard":
 			ret_ability = AbilityHealthOnDeath.new(int(argarray[0]))
 		"troll":
-			ret_ability = AbilityTroll.new(int(argarray[0]),int(argarray[1]))
+			ret_ability = AbilityTroll.new(int(argarray[0]), int(argarray[1]))
 		"damage":
 			#ret_ability = ability_damage.new(argarray[0])
 			pass

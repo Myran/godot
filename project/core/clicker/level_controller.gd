@@ -123,7 +123,7 @@ func move_blocks():
 func remove_from_grid(block, destroy = true):
 	var remove_pos = get_grid_pos(block)
 	#kan om redan borttaget som inmergade objectet
-	if remove_pos !=null:
+	if remove_pos != null:
 		var empty_space = _block_factory.create_empty_space()
 		add_to_grid(remove_pos, empty_space)
 	if destroy:

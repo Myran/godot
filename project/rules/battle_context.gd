@@ -2,7 +2,6 @@ class_name BattleContext extends Context
 
 enum BATTLE_STATE { PRE_BATTLE, BATTLE, POST_BATTLE }
 
-
 var allies: Side = Side.new()
 var enemies: Side = Side.new()
 var battle_state: int = BATTLE_STATE.BATTLE
@@ -107,6 +106,7 @@ class FindNextUnitEvent:
 		#super(EventType.FIND_NEXT_UNIT)
 		pass
 
+
 class StartOfTurnEvent:
 	extends BaseEvent
 
@@ -114,12 +114,14 @@ class StartOfTurnEvent:
 		#super(EventType.START_OF_TURN)
 		pass
 
+
 class EndOfTurnEvent:
 	extends BaseEvent
 
 	func _init() -> void:
 		#super(EventType.END_OF_TURN)
 		pass
+
 
 func _init(_solver) -> void:
 	solver = _solver
@@ -143,8 +145,6 @@ func _process_event(event) -> void:
 	solver.solve_event(event, self)
 	broadcast_event("post_event_response", self, event)
 	solve_events()  # Handle any events generated during post-response
-
-
 
 
 # Event broadcasting

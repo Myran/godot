@@ -1,6 +1,5 @@
 extends Node
 
-
 signal event
 
 
@@ -72,6 +71,7 @@ class HideCardEvent:
 class UpgradeEvent:
 	extends UIEvent
 	pass
+
 
 func action(_event: UIEvent):
 	event.emit(_event)

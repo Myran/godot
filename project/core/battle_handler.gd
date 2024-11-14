@@ -3,10 +3,11 @@ var holder_allies
 var holder_enemy
 
 
-func setup(_allies,_enemies) -> void:
+func setup(_allies, _enemies) -> void:
 	holder_allies = _allies
 	holder_enemy = _enemies
-	
+
+
 func create_battle():
 	var allies = holder_allies.get_current_lineup()
 	var enemies = holder_enemy.get_current_lineup()

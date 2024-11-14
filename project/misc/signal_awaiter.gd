@@ -1,30 +1,39 @@
 class_name SignalAwaiter extends Node
 
 # Added signal typing to indicate it emits no arguments
-signal finished()
+signal finished
+
 
 func _init() -> void:  # Added return type
 	Engine.get_main_loop().root.add_child(self)
+
 
 # Added Signal type to indicate godot built-in Signal class
 func add(_signal: Signal) -> SignalAwaiter:  # Added return type
 	_signal.connect(_on_signal_received.bind(_signal), CONNECT_ONE_SHOT)
 	return self
 
+
 func finish() -> void:  # Added return type
 	finished.emit()
 	queue_free()
+
 
 func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 	push_error("Method not implemented")
 	finish()
 
+
 # Changed inner classes to properly extend base class and add typing
-class Any extends SignalAwaiter:
+class Any:
+	extends SignalAwaiter
+
 	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		finish()
 
-class Count extends SignalAwaiter:
+
+class Count:
+	extends SignalAwaiter
 	var _connections: int  # Added type hint
 
 	func _init(count: int) -> void:  # Added param and return type
@@ -35,11 +44,16 @@ class Count extends SignalAwaiter:
 		if get_incoming_connections().size() == _connections:
 			finish()
 
-class All extends Count:
+
+class All:
+	extends Count
+
 	func _init() -> void:  # Added return type
 		super(0)
 
-class SequenceBreak extends SignalAwaiter:
+
+class SequenceBreak:
+	extends SignalAwaiter
 	var _signals: Array[Signal]  # Added typed array
 
 	func _init(signals: Array[Signal]) -> void:  # Added typed array param
@@ -50,7 +64,10 @@ class SequenceBreak extends SignalAwaiter:
 		if _signal != _signals[0]:
 			finish()
 
-class SequenceMatch extends SequenceBreak:
+
+class SequenceMatch:
+	extends SequenceBreak
+
 	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
 		if _signal == _signals[0]:
 			_signals.remove_at(0)

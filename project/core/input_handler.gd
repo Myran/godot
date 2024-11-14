@@ -116,7 +116,7 @@ func touch_handler(event, interacted_object, current_context):
 												current_context.add_event(
 													core.LineupAddCardEvent.new(dragging_card)
 												)
-		
+
 												current_context.solve_events()
 												update_draft = true
 

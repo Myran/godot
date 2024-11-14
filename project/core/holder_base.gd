@@ -3,7 +3,8 @@ extends TextureRect
 var current_pos = null
 var is_moving = false
 
-func get_current_lineup(duplicate_card = false,new_layer = null):
+
+func get_current_lineup(duplicate_card = false, new_layer = null):
 	var retval = {}
 	for pos in $grid_container.get_children():
 		var card = pos.get_card()
@@ -12,7 +13,7 @@ func get_current_lineup(duplicate_card = false,new_layer = null):
 			new_card = card
 			if duplicate_card:
 				new_card = card.duplicate()
-				new_card.init_card(card.card_info,card.level)
+				new_card.init_card(card.card_info, card.level)
 			if new_layer != null:
 				new_layer.add_child(new_card)
 				new_card.global_position = card.global_position
@@ -25,13 +26,18 @@ func get_card_position(_card):
 		if pos.get_card() == _card:
 			return pos.get_index()
 
+
 func get_holder(pos):
 	return $grid_container.get_child(pos)
 
+
 func hide_lineup():
 	lineup_visibility(false)
+
+
 func show_lineup():
 	lineup_visibility(true)
+
 
 func lineup_visibility(vis):
 	for pos in $grid_container.get_children():

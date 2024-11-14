@@ -1,6 +1,7 @@
 class_name GameHandler extends Node
 var current_gamestate
 
+
 func set_gamestate(new_state):
 	print("Set gamestate:", core.GAME_STATE.keys()[new_state])
 	match new_state:

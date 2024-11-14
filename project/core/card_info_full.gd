@@ -12,20 +12,26 @@ extends VBoxContainer
 func set_card_level(_lvl = 1):
 	label_level.text = str(_lvl)
 
+
 func set_card_name(_name = "unnamed"):
 	label_card_name.text = _name
+
 
 func set_rules_text(_rules_text = "rules text missing"):
 	label_rules_text.text = _rules_text
 
+
 func set_attack(_a = 1):
 	label_attack.text = str(_a)
+
 
 func set_health(_h = 1):
 	label_health.text = str(_h)
 
+
 func set_upgrade_level(_up_level):
 	panel_container_level.set_level(_up_level)
+
 
 func add_tag(_tag_name = "tag_name"):
 	var tag = tag_scene.instantiate()

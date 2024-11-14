@@ -6,21 +6,24 @@ var _current_state: int
 var _result_sequence: Array[int]
 var _rng: RandomNumberGenerator
 
+
 func _init(new_seed: int = 0) -> void:
 	_rng = RandomNumberGenerator.new()
 	if new_seed == 0:
 		new_seed = randi()
 	reset(new_seed)
 
+
 func reset(new_seed: int = 0, hard: bool = false) -> void:
 	if hard:
 		new_seed = randi()
 	if new_seed != 0:
 		_initial_seed = new_seed
-	
+
 	_rng.seed = _initial_seed
 	_result_sequence.clear()
 	_current_state = _rng.state
+
 
 func next() -> int:
 	var random_integer = _rng.randi()
@@ -28,17 +31,17 @@ func next() -> int:
 	_result_sequence.append(random_integer)
 	return random_integer
 
+
 func get_at_index(index: int) -> int:
 	while index >= _result_sequence.size():
 		next()
 	return _result_sequence[index]
 
+
 func save_state() -> String:
-	var state = {
-		"initial_seed": _initial_seed,
-		"current_state": _current_state
-	}
+	var state = {"initial_seed": _initial_seed, "current_state": _current_state}
 	return JSON.stringify(state)
+
 
 func load_state(json_state: String) -> void:
 	var json = JSON.new()
@@ -54,4 +57,11 @@ func load_state(json_state: String) -> void:
 		else:
 			print("Unexpected data")
 	else:
-		print("JSON Parse Error: ", json.get_error_message(), " in ", json_state, " at line ", json.get_error_line())
+		print(
+			"JSON Parse Error: ",
+			json.get_error_message(),
+			" in ",
+			json_state,
+			" at line ",
+			json.get_error_line()
+		)

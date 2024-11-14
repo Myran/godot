@@ -92,24 +92,24 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.TransitionEvent:
 		game_handler.set_gamestate(event.new_state)
 
-	elif event is core.EnemyLineupAddCardEvent:  
+	elif event is core.EnemyLineupAddCardEvent:
 		var holder: Node = holder_enemy.get_holder(event.pos)
 		holder.set_card(event.card)
 
-	elif event is core.DebugLineupAddCardEvent:  
+	elif event is core.DebugLineupAddCardEvent:
 		lineup_handler.add_card(event.card, event.pos)
 		current_context.add_event(core.TrippleTestEvent.new())
 		current_context.solve_events()
 	elif event is core.LineupAddCardEvent:
 		current_context.add_event(core.TrippleTestEvent.new())
 
-	elif event is core.TrippleTestEvent: 
+	elif event is core.TrippleTestEvent:
 		var tripples: Array = lineup_handler.find_tripples()
 		if not tripples.is_empty():
 			current_context.add_event(core.LineupMergeEvent.new(tripples[0], tripples))
 		current_context.solve_events()
 
-	elif event is core.LineupMergeEvent: 
+	elif event is core.LineupMergeEvent:
 		var new_card: Card = await lineup_handler.merge(event.card, event.tripples)
 		update_context_units(current_context)
 		(
@@ -126,7 +126,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		)
 		current_context.solve_events()
 
-	elif event is core.BattleEvent:  
+	elif event is core.BattleEvent:
 		var enacter: BattleEnacter = BattleEnacter.new(battle_layer, holder_allies, holder_enemy)
 		add_child(enacter)
 		await enacter.enact(event.battle_events)
@@ -134,9 +134,9 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 
 		core.action(core.TransitionEvent.new(core.GAME_STATE.POSTBATTLE))
 
-	elif event is core.ResetUnitsEvent: 
+	elif event is core.ResetUnitsEvent:
 		pass
-	elif event is core.DraftSteadyEvent: 
+	elif event is core.DraftSteadyEvent:
 		print("Steady state! unlock")
 		ui_state = core.UI_STATE.WAITING
 

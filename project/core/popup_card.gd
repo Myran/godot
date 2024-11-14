@@ -3,12 +3,15 @@ extends Control
 @export var card_popup: PackedScene
 var current_card
 
+
 func _ready() -> void:
 	visible = false
+
 
 func show_card(_card):
 	setup_card(_card)
 	show()
+
 
 func setup_card(_card):
 	var new_card = card_popup.instantiate()
@@ -18,5 +21,6 @@ func setup_card(_card):
 		current_card.queue_free()
 	current_card = new_card
 
+
 func _on_popup_card_gui_input(event):
-	print("Event:",event)
+	print("Event:", event)

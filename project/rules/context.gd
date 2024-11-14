@@ -18,6 +18,6 @@ class Event:
 		data = _data
 
 
-func add_event(_event : ) -> Context:
+func add_event(_event) -> Context:
 	unresolved_events.append(_event)
 	return self

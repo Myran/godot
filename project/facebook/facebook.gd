@@ -14,51 +14,54 @@ var token = null
 var user = null
 const _APP_ID = 914537337160544
 
+
 func _ready():
-#	pause_mode = Node.PAUSE_MODE_PROCESS	
+#	pause_mode = Node.PAUSE_MODE_PROCESS
 	#if not ProjectSettings.has_setting('Facebook/FB_APP_ID'):
-		#push_error('Facebook/FB_APP_ID not found! Set it in engine.cfg!')
-		#return
+	#push_error('Facebook/FB_APP_ID not found! Set it in engine.cfg!')
+	#return
 	#var app_id = ProjectSettings.get_setting('Facebook/FB_APP_ID')
 	var app_id = _APP_ID
-	if(Engine.has_singleton("GodotFacebook")):  # Android
+	if Engine.has_singleton("GodotFacebook"):  # Android
 		_fb = Engine.get_singleton("GodotFacebook")
 		_fb.init(app_id)
 		_fb.setFacebookCallbackId(get_instance_id())
-		print('Facebook plugin Android inited')
+		print("Facebook plugin Android inited")
 		fb_inited.emit()
 
-
-
-	elif(Engine.has_singleton("Facebook")):  # iOS
+	elif Engine.has_singleton("Facebook"):  # iOS
 		_fb = Engine.get_singleton("Facebook")
 		_fb.init(app_id)
 		_fb.setFacebookCallbackId(self)
-		print('Facebook plugin iOS inited')
+		print("Facebook plugin iOS inited")
 		fb_inited.emit()
 	else:
-		print('Facebook plugin not found!')
+		print("Facebook plugin not found!")
+
 
 func login(permissions = null):
 	if _fb != null:
 		if permissions == null:
 			#permissions = ["public_profile", 'email', 'user_friends']
-			permissions = ["public_profile", 'email']
+			permissions = ["public_profile", "email"]
 		_fb.login(permissions)
 		return true
 	else:
 		return false
 
-func game_request(message, recipients='', objectId=''):
+
+func game_request(message, recipients = "", objectId = ""):
 	if _fb != null:
 		_fb.gameRequest(message, recipients, objectId)
 
+
 func game_requests(object, method):
 	if _fb != null:
-		if OS.get_name() == 'iOS':
-			_fb.callApi('/me/apprequests', {}, object, method)
+		if OS.get_name() == "iOS":
+			_fb.callApi("/me/apprequests", {}, object, method)
 		else:
-			_fb.callApi('/me/apprequests', {}, object.get_instance_id(), method)
+			_fb.callApi("/me/apprequests", {}, object.get_instance_id(), method)
+
 
 func logout():
 	if _fb != null:
@@ -66,32 +69,62 @@ func logout():
 		print("_fb logout sent")
 		fb_logged_out.emit()
 
+
 func is_logged_in():
 	if _fb != null:
 		return _fb.isLoggedIn()
 	else:
 		return false
 
+
 func user_profile(object, method):
 	if _fb != null:
-		if OS.get_name() == 'iOS':
-			_fb.callApi('/me', {'fields': 'id,name,first_name,last_name,picture'}, object, method)
+		if OS.get_name() == "iOS":
+			_fb.callApi("/me", {"fields": "id,name,first_name,last_name,picture"}, object, method)
 		else:
-			_fb.callApi('/me', {'fields': 'id,name,first_name,last_name,picture'}, object.get_instance_id(), method)
+			_fb.callApi(
+				"/me",
+				{"fields": "id,name,first_name,last_name,picture"},
+				object.get_instance_id(),
+				method
+			)
+
 
 func get_friends(object, method):
 	if _fb != null:
-		if OS.get_name() == 'iOS':
-			_fb.callApi('/me/friends', {'fields': 'name,first_name,last_name,picture', 'limit': 3000}, object, method)
+		if OS.get_name() == "iOS":
+			_fb.callApi(
+				"/me/friends",
+				{"fields": "name,first_name,last_name,picture", "limit": 3000},
+				object,
+				method
+			)
 		else:
-			_fb.callApi('/me/friends', {'fields': 'name,first_name,last_name,picture', 'limit': 3000}, object.get_instance_id(), method)
+			_fb.callApi(
+				"/me/friends",
+				{"fields": "name,first_name,last_name,picture", "limit": 3000},
+				object.get_instance_id(),
+				method
+			)
+
 
 func get_invitable_friends(object, method):
 	if _fb != null:
-		if OS.get_name() == 'iOS':
-			_fb.callApi('/me/invitable_friends', {'fields': 'first_name,last_name,picture', 'limit': 3000}, object, method)
+		if OS.get_name() == "iOS":
+			_fb.callApi(
+				"/me/invitable_friends",
+				{"fields": "first_name,last_name,picture", "limit": 3000},
+				object,
+				method
+			)
 		else:
-			_fb.callApi('/me/invitable_friends', {'fields': 'first_name,last_name,picture', 'limit': 3000}, object.get_instance_id(), method)
+			_fb.callApi(
+				"/me/invitable_friends",
+				{"fields": "first_name,last_name,picture", "limit": 3000},
+				object.get_instance_id(),
+				method
+			)
+
 
 # FB Analytics
 
@@ -150,9 +183,11 @@ FBSDKAppEventParameterNameAdType                 = ad_type
 FBSDKAppEventParameterNameOrderID                = fb_order_id
 """
 
+
 func set_push_token(_token):
 	if _fb != null:
 		_fb.set_push_token(_token)
+
 
 func log_event(event, value = 0, params = null):
 	if _fb != null:
@@ -165,12 +200,14 @@ func log_event(event, value = 0, params = null):
 		else:
 			_fb.log_event(event)
 
-func log_purchase(price, currency = 'USD', params = null):
+
+func log_purchase(price, currency = "USD", params = null):
 	if _fb != null:
 		if params != null:
 			_fb.log_purchase_params(price, currency, params)
 		else:
 			_fb.log_purchase(price, currency)
+
 
 func deep_link_uri():
 	if _fb != null:
@@ -178,11 +215,13 @@ func deep_link_uri():
 	else:
 		return null
 
+
 func deep_link_ref():
 	if _fb != null:
 		return _fb.deep_link_ref()
 	else:
 		return null
+
 
 func deep_link_promo():
 	if _fb != null:
@@ -190,38 +229,45 @@ func deep_link_promo():
 	else:
 		return null
 
+
 func set_advertiser_tracking(enabled: bool) -> void:
-	if _fb != null and OS.get_name() == 'iOS':
+	if _fb != null and OS.get_name() == "iOS":
 		_fb.setAdvertiserTracking(enabled)
 
 
 # FACEBOOK SDK CALLBACKS
 
+
 func login_success(tkn):
 	token = tkn
-	print('Facebook login success: %s'%tkn)
+	print("Facebook login success: %s" % tkn)
 	fb_login_success.emit(tkn)
+
 
 func login_cancelled():
 	token = null
 	user = null
-	print('Facebook login cancelled')
+	print("Facebook login cancelled")
 	fb_login_cancelled.emit()
+
 
 func login_failed(error):
 	token = null
 	user = null
-	print('Facebook login failed: %s'%error)
+	print("Facebook login failed: %s" % error)
 	fb_login_failed.emit(error)
+
 
 func request_success(result):
 	#print('Facebook request finished: %s'%var2str(result))
 	fb_request_success.emit(result)
 
+
 func request_cancelled():
-	push_warning('Facebook request cancelled')
+	push_warning("Facebook request cancelled")
 	fb_request_cancelled.emit()
 
+
 func request_failed(err):
-	push_error('Facebook request failed: %s'%var_to_str(err))
+	push_error("Facebook request failed: %s" % var_to_str(err))
 	fb_request_failed.emit(err)

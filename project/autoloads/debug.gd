@@ -2,36 +2,44 @@ extends Node
 
 signal debug_event
 
-enum DEBUG_EVENT_TYPE {EVENT_OPEN_DEBUG_MENU,EVENT_OPEN_GAME_SELECTOR,EVENT_RESET_MATCH_LEVEL,EVENT_FORCE_LOAD_MATCH_LEVEL}
+enum DEBUG_EVENT_TYPE {
+	EVENT_OPEN_DEBUG_MENU,
+	EVENT_OPEN_GAME_SELECTOR,
+	EVENT_RESET_MATCH_LEVEL,
+	EVENT_FORCE_LOAD_MATCH_LEVEL
+}
 
 #export (bool) var force_level = false setget set_force_level,get_force_level
 #export (String,FILE,"*.tscn") var forced_level = "res://zen/levels/"
 #export (PackedScene) var test_scene = null
 #export (bool) var force_test_scene = false
-@export var use_local_battle_db : bool
-@export var asset_variant : int
-@export var popup_debug : Control
-@export var v_box_container_buttons : VBoxContainer
+@export var use_local_battle_db: bool
+@export var asset_variant: int
+@export var popup_debug: Control
+@export var v_box_container_buttons: VBoxContainer
 
-func action(type : DEBUG_EVENT_TYPE,args):
-	debug_event.emit(type,args)
-	
-func _on_debug_event(event,_data = null):
+
+func action(type: DEBUG_EVENT_TYPE, args):
+	debug_event.emit(type, args)
+
+
+func _on_debug_event(event, _data = null):
 	match event:
 		DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU:
 			popup_debug.show()
 		#DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR:
-			#popup_debug_game.popup_centered()
+		#popup_debug_game.popup_centered()
 	pass
 
+
 #func set_force_level(_force):
-	#force_level = _force
+#force_level = _force
 #
 #func get_test_scene():
-	#return test_scene
+#return test_scene
 #
 #func get_force_level():
-	#return force_level if OS.is_debug_build() else false
+#return force_level if OS.is_debug_build() else false
 #
 func _ready():
 	print("debug ready")
@@ -41,7 +49,6 @@ func _ready():
 		btn.pressed.connect(debug_button_pressed.bind(btn.name))
 
 
-	
 func debug_button_pressed(_name):
 	match _name:
 		"button_close":
@@ -49,39 +56,39 @@ func debug_button_pressed(_name):
 		"button_pop_enemy":
 			print("pop enemy")
 			for n in 3:
-				var new_card = await card_controller.create_unit_from_id(n,1)
+				var new_card = await card_controller.create_unit_from_id(n, 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD,[new_card,n])
-				core.action(core.EnemyLineupAddCardEvent.new(new_card,n))
+				core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
 			for n in 3:
-				var new_card = await card_controller.create_unit_from_id(n,1)
+				var new_card = await card_controller.create_unit_from_id(n, 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
-				core.action(core.DebugLineupAddCardEvent.new(new_card,n))
+				core.action(core.DebugLineupAddCardEvent.new(new_card, n))
 		"select_game":
 			print("select game")
 			popup_debug.hide()
-			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR,null)
-			
+			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR, null)
+
 		"reset_current_match_level":
-			action(DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL,null)
+			action(DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, null)
 		"match_level_1":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL,["level_01"])
+			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_01"])
 		"match_level_2":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL,["level_02"])
-			
+			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_02"])
+
 		"match_level_3":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL,["level_03"])
-	
+			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_03"])
+
 		"match_level_4":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL,["level_04"])
-			
+			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_04"])
+
 		"match_level_5":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL,["level_05"])
+			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
 		_:
-				print("unnused button pressed: ",_name)
+			print("unnused button pressed: ", _name)
 #
 #func _process(_delta):
-	#if toggle_orientation:
-		#toggle_orientation = false
-		#OS.set_window_size(Vector2(OS.get_window_size().y,OS.get_window_size().x))
+#if toggle_orientation:
+#toggle_orientation = false
+#OS.set_window_size(Vector2(OS.get_window_size().y,OS.get_window_size().x))
