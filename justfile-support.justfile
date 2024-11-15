@@ -53,13 +53,16 @@ install-ios-deps:
     
 # Lint GDScript files
 lint:
-    @echo "Linting GDScript files... STILL TODO"
-    # gdlint {{PROJECT_PATH}}
-
+    @echo "Linting GDScript files..."
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec gdlint {} +;
 # Format GDScript files
 format:
-    @echo "Formatting GDScript files...STILL TODO"
-    # gdformat {{PROJECT_PATH}}
+    @echo "Formatting GDScript files..."
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec gdformat {} +
+
+format-test:
+    @echo "TEST Formatting GDScript files..."
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec gdformat --check {} +
 
 # Update version
 update-version:
