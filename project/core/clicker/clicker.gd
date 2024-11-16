@@ -2,15 +2,11 @@ extends Node
 
 signal merge_completed
 
-const GRAVITY_VECTOR = Vector2i.DOWN
-
 const SPAWN_HEIGHT = 0
+const DIRECTIONS = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 
-var directions = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 var level
 var refill_counter = []
-
-var rerollables = [core.OBJECT_TYPE.CARD, core.OBJECT_TYPE.BLOCK_ITEM]
 var columns_locked = []
 
 
@@ -35,7 +31,7 @@ func remove_rerollables():
 		var pos = level.get_grid_pos(block)
 		var col = pos.x
 		if not col in columns_locked:
-			if rerollables.has(block.object_type):
+			if LevelRules.REROLLABLES.has(block.object_type):
 				level.remove_from_grid(block, true)
 
 
@@ -134,7 +130,7 @@ func add_neighbour_cards(block, cluster = []):
 	if start_pos == null:
 		return cluster
 
-	for direction in directions:
+	for direction in DIRECTIONS:
 		var neighbour_pos = start_pos + direction
 
 		if level.has_pos(neighbour_pos):
@@ -150,14 +146,14 @@ func add_neighbour_cards(block, cluster = []):
 func refill():
 	var refill_action = false
 
-	for x in level.GRID_WIDTH:
+	for x in LevelRules.GRID_WIDTH:
 		var test_pos = Vector2i(x, SPAWN_HEIGHT)
 
 		if level.get_block(test_pos):
 			var test_block = level.get_block(test_pos)
-			while test_pos.y < level.GRID_HEIGTH:
+			while test_pos.y < LevelRules.GRID_HEIGTH:
 				if test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
-					test_pos = test_pos + GRAVITY_VECTOR
+					test_pos = test_pos + LevelRules.GRAVITY_VECTOR
 					if level.has_pos(test_pos):
 						test_block = level.get_block(test_pos)
 				else:
@@ -177,11 +173,11 @@ func solve_gravity():
 
 		for block in level.all_blocks():
 			if block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
-				var test_pos = level.get_grid_pos(block) - GRAVITY_VECTOR
+				var test_pos = level.get_grid_pos(block) - LevelRules.GRAVITY_VECTOR
 				if level.has_pos(test_pos):
 					var test_block = level.get_block(test_pos)
 					while test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
-						test_pos = test_pos - GRAVITY_VECTOR
+						test_pos = test_pos - LevelRules.GRAVITY_VECTOR
 						if level.has_pos(test_pos):
 							test_block = level.get_block(test_pos)
 						else:

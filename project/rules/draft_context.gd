@@ -12,10 +12,11 @@ func _init(_solver):
 static func broadcast_event(responder, _context, _event):
 	for pos in _context.lineup:
 		var u = _context.lineup[pos]
-		u.unit_info.call(responder, {"lineup": pos}, _context, _event, u)
+		if "unit_info" in u:
+			u.unit_info.call(responder, {"lineup": pos}, _context, _event, u)
 	var draft_pos = 0
 	for _u in _context.draft_area:
-		if _u.unit_info:
+		if "unit_info" in _u:
 			_u.unit_info.call(responder, {"draft": draft_pos}, _context, _event, _u)
 		draft_pos = draft_pos + 1
 

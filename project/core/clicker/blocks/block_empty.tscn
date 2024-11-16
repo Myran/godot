@@ -4,3 +4,4 @@
 
 [node name="Block" groups=["empty"] instance=ExtResource("1")]
 visible = false
+object_type = 6

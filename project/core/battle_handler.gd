@@ -3,6 +3,7 @@ var holder_allies
 var holder_enemy
 
 
+# res://assets/card_images/
 func setup(_allies, _enemies) -> void:
 	holder_allies = _allies
 	holder_enemy = _enemies

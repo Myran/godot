@@ -1,36 +1,14 @@
-class_name Card extends TouchScreenButton
+class_name Block extends TouchScreenButton
 
 signal movement_done
 
-const CARD_IMAGE_PREFIX = "card_image_"
-
-@export_dir var card_image_folder: String
-@export var move_speed: float = 0.05
-@export var base: Node
-var object_type = core.OBJECT_TYPE.CARD
+@export var object_type = core.OBJECT_TYPE.TEST
 var holder = null
 var block_context = Cards.CONTEXT.NOT_SET
-var level = 1
-var card_info = null
+
+var move_speed: float = 0.05
 var merge_speed = 0.15
 var top_move_speed = 0.15
-var unit_info
-
-
-func init_card(_card_info, _card_level = 1):
-	card_info = _card_info
-	level = _card_level
-
-	unit_info = UnitData.new()
-	unit_info.init_with_info(_card_info)
-	unit_info.upgrade_unit_to_level(_card_level)
-	var img_string = card_controller.get_card_image_name(_card_info.id)
-
-	base.set_card_img(img_string)
-	base.set_upgrade_level(unit_info.card_info.upgrade_level)
-	base.set_card_health(unit_info.current_health)
-	base.set_card_attack(unit_info.current_attack)
-	base.set_card_level(unit_info.level)
 
 
 func shake(left = true):

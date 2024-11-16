@@ -1,8 +1,5 @@
 extends Control
 
-const GRID_WIDTH = 5  # max five cards in row
-const GRID_HEIGTH = 5
-
 @export var _level_factory: Resource
 @export var _block_factory: block_factory
 
@@ -46,7 +43,6 @@ func create_blocks_from_level():
 		var block
 		match current_level.get_cell_source_id(tile_pos):
 			0:
-				#block = upgradeblock
 				block = _block_factory.create_locked_block()
 			1:
 				block = _block_factory.create_upgrade_block(1)
@@ -59,17 +55,27 @@ func create_blocks_from_level():
 			5:
 				block = _block_factory.create_passtrough_block()
 			_:
-				block = await _block_factory.create_block()
+				block = await create_block()
+		block.block_context = Cards.CONTEXT.DRAFT
 		add_to_grid(tile_pos, block)
 	current_level.clear()
 
 
 func create_upgrade_block(upgrade_level):
-	return _block_factory.create_upgrade_block(upgrade_level)
+	var upgrade_block = _block_factory.create_upgrade_block(upgrade_level)
+	upgrade_block.block_context = Cards.CONTEXT.DRAFT
+	return upgrade_block
 
 
 func create_block():
-	return await _block_factory.create_block()
+	var random_block
+	var rand = rng.seeded_rng.next() % LevelRules.FREQ_REFILL_ITEM
+	if rand == 0:
+		random_block = _block_factory.create_item_block()
+	else:
+		random_block = await card_controller.get_card_from_pool()
+	random_block.block_context = Cards.CONTEXT.DRAFT
+	return random_block
 
 
 func add_to_grid(grid_pos, block, refill = 0):

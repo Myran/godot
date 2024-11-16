@@ -1,21 +1,25 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=3 uid="uid://ryvto0utj6"]
 
 [ext_resource type="Texture2D" uid="uid://b4syphy68qihf" path="res://assets/testart/tile_test_11.png" id="1"]
 [ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="2"]
+[ext_resource type="Script" path="res://core/clicker/blocks/block_progress.gd" id="2_sjr68"]
 
-[sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 78.5, 79 )
+[sub_resource type="RectangleShape2D" id="1"]
+size = Vector2(157, 158)
 
-[node name="Block" instance=ExtResource( 2 )]
+[node name="Block" instance=ExtResource("2")]
+script = ExtResource("2_sjr68")
+level = 3
+object_type = 5
 
-[node name="area_2d" type="Area2D" parent="." index="1"]
+[node name="area_2d" type="Area2D" parent="." index="0"]
 
 [node name="collision_shape_2d" type="CollisionShape2D" parent="area_2d" index="0"]
-position = Vector2( -0.5, 0 )
-shape = SubResource( 1 )
+position = Vector2(-0.5, 0)
+shape = SubResource("1")
 
-[node name="icon_test_4" type="Sprite2D" parent="." index="2"]
-scale = Vector2( 0.64, 0.64 )
-texture = ExtResource( 1 )
+[node name="icon_test_4" type="Sprite2D" parent="." index="1"]
+scale = Vector2(0.64, 0.64)
+texture = ExtResource("1")
 
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]

@@ -4,11 +4,11 @@
 [ext_resource type="PackedScene" uid="uid://c6qd386np6ht3" path="res://core/clicker/blocks/block_empty.tscn" id="1_i7ye2"]
 [ext_resource type="PackedScene" uid="uid://bbkpu8u2sgdyr" path="res://core/clicker/blocks/block_items.tscn" id="7_q60pi"]
 [ext_resource type="PackedScene" uid="uid://2485kigtabyg" path="res://core/clicker/blocks/block_lock.tscn" id="8_svlm3"]
-[ext_resource type="PackedScene" path="res://core/clicker/blocks/block_void.tscn" id="9_h70if"]
-[ext_resource type="PackedScene" path="res://core/clicker/blocks/block_portal.tscn" id="10_hjfyp"]
+[ext_resource type="PackedScene" uid="uid://be527hhlk1dd2" path="res://core/clicker/blocks/block_void.tscn" id="9_h70if"]
+[ext_resource type="PackedScene" uid="uid://cra0gm7rin6vr" path="res://core/clicker/blocks/block_portal.tscn" id="10_hjfyp"]
 [ext_resource type="PackedScene" uid="uid://cqpumtgwt0h4g" path="res://core/clicker/blocks/block_progress_1.tscn" id="12_y1qa4"]
 [ext_resource type="PackedScene" uid="uid://dqnjhbo3g3bdb" path="res://core/clicker/blocks/block_progress_2.tscn" id="13_vqevx"]
-[ext_resource type="PackedScene" path="res://core/clicker/blocks/block_progress_3.tscn" id="14_4bnb6"]
+[ext_resource type="PackedScene" uid="uid://ryvto0utj6" path="res://core/clicker/blocks/block_progress_3.tscn" id="14_4bnb6"]
 
 [resource]
 script = ExtResource("1")
