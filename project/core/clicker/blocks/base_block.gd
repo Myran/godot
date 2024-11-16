@@ -2,7 +2,7 @@ class_name Block extends TouchScreenButton
 
 signal movement_done
 
-@export var object_type = core.OBJECT_TYPE.TEST
+@export var object_type = core.ObjectType.TEST
 var holder = null
 var block_context = Cards.CONTEXT.NOT_SET
 
@@ -56,7 +56,7 @@ func move_to_position(new_position):
 	var scene_tween = create_tween()
 	scene_tween.tween_property(self, "position", new_position, time)
 	scene_tween.tween_callback(func(): movement_done.emit())
-	if time != 0 and object_type == core.OBJECT_TYPE.CARD:
+	if time != 0 and object_type == core.ObjectType.CARD:
 		scene_tween.chain().tween_property(self, "scale", Vector2(1.05, 1.05), 0.08)
 		scene_tween.chain().tween_property(self, "scale", Vector2(1, 1), 0.08)
 

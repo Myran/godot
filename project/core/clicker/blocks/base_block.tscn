@@ -11,3 +11,4 @@ position = Vector2(-1, 0)
 texture_normal = ExtResource("1")
 shape = SubResource("1")
 script = ExtResource("2")
+object_type = null

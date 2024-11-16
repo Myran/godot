@@ -1,6 +1,7 @@
 extends Node
-var _seed = 1
+
 var seeded_rng = DeterministicRNG.new()
+var _seed = 1
 
 
 func start_with_base_seed():

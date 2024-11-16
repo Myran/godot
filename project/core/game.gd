@@ -21,7 +21,7 @@ class_name Game extends Control
 @export var lineup_handler: LineupHandler
 @export var battle_handler: BattleHandler
 
-var ui_state: core.UI_STATE = core.UI_STATE.WAITING
+var ui_state: core.UIState = core.UIState.WAITING
 var current_battle: Array
 
 
@@ -40,8 +40,8 @@ func _ready() -> void:
 
 
 func setup_signals() -> void:
-	ui.event.connect(new_event.bind(core.SOLVE_TYPE.UI))
-	core.event.connect(new_event.bind(core.SOLVE_TYPE.CORE))
+	ui.event.connect(new_event)
+	core.event.connect(new_event)
 
 
 func setup_systems() -> void:
@@ -54,11 +54,11 @@ func setup_systems() -> void:
 func intitialize_game() -> void:
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
-	game_handler.set_gamestate(core.GAME_STATE.START)
+	game_handler.set_gamestate(core.GameState.START)
 
 
-func new_event(event, solve_type: core.SOLVE_TYPE) -> void:
-	printt("New event: ", event, solve_type)
+func new_event(event) -> void:
+	printt("New event: ", event)
 	var draft_context: DraftContext = DraftContext.new(self)
 	draft_context = update_context_units(draft_context)
 	draft_context.add_event(event)
@@ -132,19 +132,19 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		await enacter.enact(event.battle_events)
 		enacter.queue_free()
 
-		core.action(core.TransitionEvent.new(core.GAME_STATE.POSTBATTLE))
+		core.action(core.TransitionEvent.new(core.GameState.POSTBATTLE))
 
 	elif event is core.ResetUnitsEvent:
 		pass
 	elif event is core.DraftSteadyEvent:
 		print("Steady state! unlock")
-		ui_state = core.UI_STATE.WAITING
+		ui_state = core.UIState.WAITING
 
 	clicker.on_core_event(event, current_context)
 
 
 func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void:
-	if ui_state == core.UI_STATE.LOCKED:
+	if ui_state == core.UIState.LOCKED:
 		return
 
 	if _event is ui.DraftHolderToggledEvent:
@@ -157,9 +157,9 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.StartBattleEvent:
 		print("Start battle")
 		current_battle = battle_handler.create_battle()
-		ui.action(ui.TransitionEvent.new(core.GAME_STATE.PREBATTLE))
+		ui.action(ui.TransitionEvent.new(core.GameState.PREBATTLE))
 	elif _event is ui.RerollEvent:
-		ui_state = core.UI_STATE.LOCKED
+		ui_state = core.UIState.LOCKED
 		draft_handler.reroll()
 
 	elif _event is ui.HideCardEvent:
@@ -167,7 +167,7 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 	elif _event is ui.UpgradeEvent:
 		#check cost here
-		ui_state = core.UI_STATE.LOCKED
+		ui_state = core.UIState.LOCKED
 		draft_handler.upgrade()
 
 	elif _event is ui.TouchEvent:
@@ -175,14 +175,14 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 			_event.event, _event.sender, current_context
 		)
 		if update_draft:
-			ui_state = core.UI_STATE.LOCKED
+			ui_state = core.UIState.LOCKED
 			core.action(core.UpdateDraftAreaEvent.new())
 
 
 func start_game() -> void:
 	print("Start Game")
-	ui_state = core.UI_STATE.WAITING
-	core.action(core.TransitionEvent.new(core.GAME_STATE.PREPARE))
+	ui_state = core.UIState.WAITING
+	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
 
 
 func mode_draft() -> void:
@@ -207,12 +207,12 @@ func mode_prepare() -> void:
 
 func mode_pre_battle() -> void:
 	print("Pre Battle Mode")
-	ui_state = core.UI_STATE.LOCKED
+	ui_state = core.UIState.LOCKED
 	top_bar.visible = false
 	bottom_bar_draft.visible = false
 	bottom_bar_prepare.visible = false
 	await get_tree().create_timer(0.5).timeout
-	core.action(core.TransitionEvent.new(core.GAME_STATE.BATTLE))
+	core.action(core.TransitionEvent.new(core.GameState.BATTLE))
 
 
 func mode_battle() -> void:
@@ -222,7 +222,7 @@ func mode_battle() -> void:
 
 func mode_post_battle() -> void:
 	print("Post Battle Mode")
-	ui_state = core.UI_STATE.WAITING
+	ui_state = core.UIState.WAITING
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
-	core.action(core.TransitionEvent.new(core.GAME_STATE.PREPARE))
+	core.action(core.TransitionEvent.new(core.GameState.PREPARE))

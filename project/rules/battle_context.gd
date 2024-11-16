@@ -1,10 +1,10 @@
 class_name BattleContext extends Context
 
-enum BATTLE_STATE { PRE_BATTLE, BATTLE, POST_BATTLE }
+enum BattleState { PRE_BATTLE, BATTLE, POST_BATTLE }
 
 var allies: Side = Side.new()
 var enemies: Side = Side.new()
-var battle_state: int = BATTLE_STATE.BATTLE
+var battle_state: int = BattleState.BATTLE
 var allied_turn: bool = true
 var current_unit = null
 var solver
@@ -196,11 +196,11 @@ func switch_turn() -> void:
 
 
 func end_battle() -> void:
-	battle_state = BATTLE_STATE.POST_BATTLE
+	battle_state = BattleState.POST_BATTLE
 
 
 func is_battle_ongoing() -> bool:
-	return battle_state == BATTLE_STATE.BATTLE
+	return battle_state == BattleState.BATTLE
 
 
 # Utility methods

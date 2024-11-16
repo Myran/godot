@@ -13,7 +13,7 @@ func _on_core_event(event):
 	if event is core.TransitionEvent:
 		var new_state = event.new_state
 		match new_state:
-			core.GAME_STATE.DRAFT:
+			core.GameState.DRAFT:
 				animation_player.play("show")
-			core.GAME_STATE.PREPARE:
+			core.GameState.PREPARE:
 				animation_player.play_backwards("show")

@@ -1,5 +1,4 @@
-extends Resource
-class_name DeterministicRNG
+class_name DeterministicRNG extends Resource
 
 var _initial_seed: int
 var _current_state: int

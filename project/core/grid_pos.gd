@@ -1,6 +1,6 @@
 extends ColorRect
 
-var object_type = core.OBJECT_TYPE.CARD_HOLDER
+var object_type = core.ObjectType.CARD_HOLDER
 var _content = null
 
 

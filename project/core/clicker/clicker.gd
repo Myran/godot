@@ -77,7 +77,7 @@ func on_core_event(event, _current_context):
 
 func remove_upgrade_blocks(upgrade_level):
 	for block in level.all_blocks():
-		if block.object_type == core.OBJECT_TYPE.BLOCK_UPGRADE:
+		if block.object_type == core.ObjectType.BLOCK_UPGRADE:
 			if block.level == upgrade_level:
 				level.remove_from_grid(block, true)
 
@@ -102,7 +102,7 @@ func update_blocks():
 
 func find_match():
 	for block in level.all_blocks():
-		if block != null and block.object_type == core.OBJECT_TYPE.CARD:
+		if block != null and block.object_type == core.ObjectType.CARD:
 			var cluster = add_neighbour_cards(block, [block])
 			if cluster.size() >= core.CARD_MERGE_AMOUNT:
 				return cluster
@@ -135,7 +135,7 @@ func add_neighbour_cards(block, cluster = []):
 
 		if level.has_pos(neighbour_pos):
 			var neighbour = level.get_block(neighbour_pos)
-			if neighbour.object_type == core.OBJECT_TYPE.CARD and not cluster.has(neighbour):
+			if neighbour.object_type == core.ObjectType.CARD and not cluster.has(neighbour):
 				if neighbour.level == block.level and neighbour.card_info.id == block.card_info.id:
 					cluster.append(neighbour)
 					add_neighbour_cards(neighbour, cluster)
@@ -152,13 +152,13 @@ func refill():
 		if level.get_block(test_pos):
 			var test_block = level.get_block(test_pos)
 			while test_pos.y < LevelRules.GRID_HEIGTH:
-				if test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
+				if test_block.object_type == core.ObjectType.BLOCK_PASSTROUGH:
 					test_pos = test_pos + LevelRules.GRAVITY_VECTOR
 					if level.has_pos(test_pos):
 						test_block = level.get_block(test_pos)
 				else:
 					break
-			if test_block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
+			if test_block.object_type == core.ObjectType.EMPTY_SPACE:
 				refill_counter.append(x)
 				level.add_to_grid(test_pos, level.create_block(), refill_counter.count(x))
 				refill_action = true
@@ -172,17 +172,17 @@ func solve_gravity():
 		gravity_action = false
 
 		for block in level.all_blocks():
-			if block.object_type == core.OBJECT_TYPE.EMPTY_SPACE:
+			if block.object_type == core.ObjectType.EMPTY_SPACE:
 				var test_pos = level.get_grid_pos(block) - LevelRules.GRAVITY_VECTOR
 				if level.has_pos(test_pos):
 					var test_block = level.get_block(test_pos)
-					while test_block.object_type == core.OBJECT_TYPE.BLOCK_PASSTROUGH:
+					while test_block.object_type == core.ObjectType.BLOCK_PASSTROUGH:
 						test_pos = test_pos - LevelRules.GRAVITY_VECTOR
 						if level.has_pos(test_pos):
 							test_block = level.get_block(test_pos)
 						else:
 							break
-					if ![core.OBJECT_TYPE.BLOCK_PASSTROUGH, core.OBJECT_TYPE.EMPTY_SPACE].has(
+					if ![core.ObjectType.BLOCK_PASSTROUGH, core.ObjectType.EMPTY_SPACE].has(
 						test_block.object_type
 					):
 						level.switch_blocks(block, test_block)

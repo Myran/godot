@@ -1,14 +1,11 @@
 extends Node
 
 signal event
-const CARD_MERGE_AMOUNT = 3
-enum UI_STATE { WAITING, HOLDING, LOCKED }
-enum SOLVE_TYPE { CORE, UI, BATTLE }
+enum UIState { WAITING, HOLDING, LOCKED }
 enum Tempus { PRE, POST }
-enum TAP_STATE { IDLE, PRESSING, UNPRESSING, HOLDING }
-enum GAME_STATE { START, DRAFT, PREPARE, PREBATTLE, BATTLE, POSTBATTLE }
-
-enum OBJECT_TYPE {
+enum TapState { IDLE, PRESSING, UNPRESSING, HOLDING }
+enum GameState { START, DRAFT, PREPARE, PREBATTLE, BATTLE, POSTBATTLE}
+enum ObjectType {
 	TEST,
 	CARD,
 	CARD_HOLDER,
@@ -20,6 +17,7 @@ enum OBJECT_TYPE {
 	BLOCK_PASSTROUGH,
 	BLOCK_ITEM
 }
+const CARD_MERGE_AMOUNT = 3
 
 
 class CoreEvent:
@@ -72,7 +70,6 @@ class DraftColumnUnlocked:
 
 class UpdateDraftAreaEvent:
 	extends CoreEvent
-	pass
 
 
 class CardStatChangeEvent:
@@ -89,9 +86,9 @@ class CardStatChangeEvent:
 
 class TransitionEvent:
 	extends CoreEvent
-	var new_state: core.GAME_STATE
+	var new_state: GameState
 
-	func _init(_new_state: core.GAME_STATE) -> void:
+	func _init(_new_state: GameState) -> void:
 		new_state = _new_state
 
 
@@ -125,7 +122,6 @@ class LineupAddCardEvent:
 
 class TrippleTestEvent:
 	extends CoreEvent
-	pass
 
 
 class LineupMergeEvent:
@@ -148,12 +144,10 @@ class BattleEvent:
 
 class ResetUnitsEvent:
 	extends CoreEvent
-	pass
 
 
 class DraftSteadyEvent:
 	extends CoreEvent
-	pass
 
 
 class RemoveBlockFromDraft:
@@ -166,7 +160,7 @@ class RemoveBlockFromDraft:
 		destroy_block = _destroy_block
 
 
-func action(_event: core.CoreEvent):
+func action(_event: CoreEvent):
 	event.emit(_event)
 
 

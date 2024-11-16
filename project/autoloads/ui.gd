@@ -47,7 +47,7 @@ class ShowCardEvent:
 
 class TransitionEvent:
 	extends UIEvent
-	var new_state: core.GAME_STATE
+	var new_state: core.GameState
 
 	func _init(_new_state) -> void:
 		new_state = _new_state
@@ -55,22 +55,18 @@ class TransitionEvent:
 
 class StartBattleEvent:
 	extends UIEvent
-	pass
 
 
 class RerollEvent:
 	extends UIEvent
-	pass
 
 
 class HideCardEvent:
 	extends UIEvent
-	pass
 
 
 class UpgradeEvent:
 	extends UIEvent
-	pass
 
 
 func action(_event: UIEvent):

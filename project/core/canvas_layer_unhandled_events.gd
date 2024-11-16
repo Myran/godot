@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-var object_type = core.OBJECT_TYPE.BACKGROUND
+var object_type = core.ObjectType.BACKGROUND
 
 
 func input_handling(new_state):
