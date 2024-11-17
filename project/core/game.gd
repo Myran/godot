@@ -184,7 +184,6 @@ func start_game() -> void:
 	ui_state = core.UIState.WAITING
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
 
-
 func mode_draft() -> void:
 	print("Draft mode")
 	top_bar.visible = true
