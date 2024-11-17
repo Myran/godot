@@ -35,7 +35,6 @@
 #include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/gui/editor_spin_slider.h"
-#include "editor/plugins/animation_player_editor_plugin.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/view_panner.h"
 #include "scene/resources/text_line.h"
@@ -175,7 +174,7 @@ void AnimationBezierTrackEdit::_draw_track(int p_track, const Color &p_color) {
 		}
 
 		if (lines.size() >= 2) {
-			draw_multiline(lines, p_color, Math::round(EDSCALE), true);
+			draw_multiline(lines, p_color, Math::round(EDSCALE));
 		}
 	}
 }
@@ -209,7 +208,7 @@ void AnimationBezierTrackEdit::_draw_line_clipped(const Vector2 &p_from, const V
 		from = from.lerp(to, c);
 	}
 
-	draw_line(from, to, p_color, Math::round(EDSCALE), true);
+	draw_line(from, to, p_color, Math::round(EDSCALE));
 }
 
 void AnimationBezierTrackEdit::_notification(int p_what) {
@@ -720,7 +719,7 @@ void AnimationBezierTrackEdit::set_root(Node *p_root) {
 
 void AnimationBezierTrackEdit::set_filtered(bool p_filtered) {
 	is_filtered = p_filtered;
-	if (animation.is_null()) {
+	if (animation == nullptr) {
 		return;
 	}
 	String base_path = animation->track_get_path(selected_track);
@@ -869,11 +868,6 @@ void AnimationBezierTrackEdit::_change_selected_keys_handle_mode(Animation::Hand
 		undo_redo->add_undo_method(animation.ptr(), "bezier_track_set_key_in_handle", track_key_pair.first, track_key_pair.second, animation->bezier_track_get_key_in_handle(track_key_pair.first, track_key_pair.second));
 		undo_redo->add_undo_method(animation.ptr(), "bezier_track_set_key_out_handle", track_key_pair.first, track_key_pair.second, animation->bezier_track_get_key_out_handle(track_key_pair.first, track_key_pair.second));
 		undo_redo->add_do_method(editor, "_bezier_track_set_key_handle_mode", animation.ptr(), track_key_pair.first, track_key_pair.second, p_mode, p_auto ? Animation::HANDLE_SET_MODE_AUTO : Animation::HANDLE_SET_MODE_RESET);
-	}
-	AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-	if (ape) {
-		undo_redo->add_do_method(ape, "_animation_update_key_frame");
-		undo_redo->add_undo_method(ape, "_animation_update_key_frame");
 	}
 	undo_redo->commit_action();
 }
@@ -1443,11 +1437,6 @@ void AnimationBezierTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 					i++;
 				}
 
-				AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-				if (ape) {
-					undo_redo->add_do_method(ape, "_animation_update_key_frame");
-					undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-				}
 				undo_redo->commit_action();
 
 			} else if (select_single_attempt != IntPair(-1, -1)) {
@@ -1501,6 +1490,11 @@ void AnimationBezierTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 		}
 
 		box_selection_to = mm->get_position();
+
+		if (get_local_mouse_position().y < 0) {
+			// Avoid cursor from going too above, so it does not lose focus with viewport.
+			warp_mouse(Vector2(get_local_mouse_position().x, 0));
+		}
 		queue_redraw();
 	}
 
@@ -1565,11 +1559,6 @@ void AnimationBezierTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 				real_t ratio = timeline->get_zoom_scale() * timeline_v_zoom;
 				undo_redo->add_do_method(animation.ptr(), "bezier_track_set_key_out_handle", moving_handle_track, moving_handle_key, moving_handle_right, ratio);
 				undo_redo->add_undo_method(animation.ptr(), "bezier_track_set_key_out_handle", moving_handle_track, moving_handle_key, animation->bezier_track_get_key_out_handle(moving_handle_track, moving_handle_key), ratio);
-			}
-			AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-			if (ape) {
-				undo_redo->add_do_method(ape, "_animation_update_key_frame");
-				undo_redo->add_undo_method(ape, "_animation_update_key_frame");
 			}
 			undo_redo->commit_action();
 			moving_handle = 0;
@@ -1650,7 +1639,7 @@ void AnimationBezierTrackEdit::_zoom_callback(float p_zoom_factor, Vector2 p_ori
 	Ref<InputEventWithModifiers> iewm = p_event;
 	if (iewm.is_valid() && iewm->is_alt_pressed()) {
 		// Alternate zoom (doesn't affect timeline).
-		timeline_v_zoom = CLAMP(timeline_v_zoom / p_zoom_factor, 0.000001, 100000);
+		timeline_v_zoom = CLAMP(timeline_v_zoom * p_zoom_factor, 0.000001, 100000);
 	} else {
 		float zoom_factor = p_zoom_factor > 1.0 ? AnimationTimelineEdit::SCROLL_ZOOM_FACTOR_IN : AnimationTimelineEdit::SCROLL_ZOOM_FACTOR_OUT;
 		timeline->_zoom_callback(zoom_factor, p_origin, p_event);
@@ -1671,7 +1660,7 @@ void AnimationBezierTrackEdit::_menu_selected(int p_index) {
 	switch (p_index) {
 		case MENU_KEY_INSERT: {
 			if (animation->get_track_count() > 0) {
-				if (editor->snap_keys->is_pressed() && editor->step->get_value() != 0) {
+				if (editor->snap->is_pressed() && editor->step->get_value() != 0) {
 					time = editor->snap_time(time);
 				}
 				while (animation->track_find_key(selected_track, time, Animation::FIND_MODE_APPROX) != -1) {
@@ -1684,11 +1673,6 @@ void AnimationBezierTrackEdit::_menu_selected(int p_index) {
 				undo_redo->add_do_method(animation.ptr(), "track_insert_key", selected_track, time, new_point);
 				undo_redo->add_undo_method(this, "_clear_selection_for_anim", animation);
 				undo_redo->add_undo_method(animation.ptr(), "track_remove_key_at_time", selected_track, time);
-				AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-				if (ape) {
-					undo_redo->add_do_method(ape, "_animation_update_key_frame");
-					undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-				}
 				undo_redo->commit_action();
 				queue_redraw();
 			}
@@ -1752,7 +1736,7 @@ void AnimationBezierTrackEdit::duplicate_selected_keys(real_t p_ofs, bool p_ofs_
 		real_t insert_pos = p_ofs_valid ? p_ofs : timeline->get_play_position();
 
 		if (p_ofs_valid) {
-			if (editor->snap_keys->is_pressed() && editor->step->get_value() != 0) {
+			if (editor->snap->is_pressed() && editor->step->get_value() != 0) {
 				insert_pos = editor->snap_time(insert_pos);
 			}
 		}
@@ -1789,11 +1773,6 @@ void AnimationBezierTrackEdit::duplicate_selected_keys(real_t p_ofs, bool p_ofs_
 		i++;
 	}
 
-	AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-	if (ape) {
-		undo_redo->add_do_method(ape, "_animation_update_key_frame");
-		undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-	}
 	undo_redo->add_do_method(this, "queue_redraw");
 	undo_redo->add_undo_method(this, "queue_redraw");
 	undo_redo->commit_action();
@@ -1843,15 +1822,6 @@ void AnimationBezierTrackEdit::copy_selected_keys(bool p_cut) {
 			undo_redo->add_undo_method(this, "_select_at_anim", animation, E->key().track, E->value().pos, i == 0);
 			i++;
 		}
-
-		AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-		if (ape) {
-			undo_redo->add_do_method(ape, "_animation_update_key_frame");
-			undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-		}
-		undo_redo->add_do_method(this, "queue_redraw");
-		undo_redo->add_undo_method(this, "queue_redraw");
-
 		undo_redo->commit_action();
 	}
 }
@@ -1889,7 +1859,7 @@ void AnimationBezierTrackEdit::paste_keys(real_t p_ofs, bool p_ofs_valid) {
 
 			float insert_pos = p_ofs_valid ? p_ofs : timeline->get_play_position();
 			if (p_ofs_valid) {
-				if (editor->snap_keys->is_pressed() && editor->step->get_value() != 0) {
+				if (editor->snap->is_pressed() && editor->step->get_value() != 0) {
 					insert_pos = editor->snap_time(insert_pos);
 				}
 			}
@@ -1930,15 +1900,9 @@ void AnimationBezierTrackEdit::paste_keys(real_t p_ofs, bool p_ofs_valid) {
 			i++;
 		}
 
-		AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-		if (ape) {
-			undo_redo->add_do_method(ape, "_animation_update_key_frame");
-			undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-		}
-		undo_redo->add_do_method(this, "queue_redraw");
-		undo_redo->add_undo_method(this, "queue_redraw");
-
 		undo_redo->commit_action();
+
+		queue_redraw();
 	}
 }
 
@@ -1953,11 +1917,6 @@ void AnimationBezierTrackEdit::delete_selection() {
 		}
 		undo_redo->add_do_method(this, "_clear_selection_for_anim", animation);
 		undo_redo->add_undo_method(this, "_clear_selection_for_anim", animation);
-		AnimationPlayerEditor *ape = AnimationPlayerEditor::get_singleton();
-		if (ape) {
-			undo_redo->add_do_method(ape, "_animation_update_key_frame");
-			undo_redo->add_undo_method(ape, "_animation_update_key_frame");
-		}
 		undo_redo->commit_action();
 
 		//selection.clear();

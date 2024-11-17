@@ -21,10 +21,7 @@ U_NAMESPACE_USE
 ULocale*
 ulocale_openForLocaleID(const char* localeID, int32_t length, UErrorCode* err) {
     if (U_FAILURE(*err)) { return nullptr; }
-    if (length < 0) {
-        return EXTERNAL(icu::Locale::createFromName(localeID).clone());
-    }
-    CharString str(localeID, length, *err);  // Make a NUL terminated copy.
+    CharString str(length < 0 ? StringPiece(localeID) : StringPiece(localeID, length), *err);
     if (U_FAILURE(*err)) { return nullptr; }
     return EXTERNAL(icu::Locale::createFromName(str.data()).clone());
 }

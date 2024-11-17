@@ -143,11 +143,8 @@ public:
 	StringName shader_overrides_group;
 	StringName shader_overrides_group_active;
 
-	StringName _custom_type_script;
-
 	StringName pressed;
 	StringName id_pressed;
-	StringName toggled;
 
 	StringName panel;
 
@@ -156,7 +153,6 @@ public:
 	StringName confirmed;
 
 	StringName text_changed;
-	StringName text_submitted;
 	StringName value_changed;
 };
 

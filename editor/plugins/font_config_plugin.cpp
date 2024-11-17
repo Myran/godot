@@ -121,8 +121,13 @@ bool EditorPropertyFontOTObject::_property_can_revert(const StringName &p_name) 
 
 	if (name.begins_with("keys")) {
 		int key = name.get_slicec('/', 1).to_int();
-		return defaults_dict.has(key) && dict.has(key);
+		if (defaults_dict.has(key) && dict.has(key)) {
+			int value = dict[key];
+			Vector3i range = defaults_dict[key];
+			return range.z != value;
+		}
 	}
+
 	return false;
 }
 
@@ -137,6 +142,7 @@ bool EditorPropertyFontOTObject::_property_get_revert(const StringName &p_name, 
 			return true;
 		}
 	}
+
 	return false;
 }
 
@@ -149,7 +155,7 @@ void EditorPropertyFontMetaOverride::_notification(int p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			if (button_add) {
-				button_add->set_button_icon(get_editor_theme_icon(SNAME("Add")));
+				button_add->set_icon(get_editor_theme_icon(SNAME("Add")));
 			}
 		} break;
 	}
@@ -295,7 +301,7 @@ void EditorPropertyFontMetaOverride::update_property() {
 			hbox->add_child(prop);
 			prop->set_h_size_flags(SIZE_EXPAND_FILL);
 			Button *remove = memnew(Button);
-			remove->set_button_icon(get_editor_theme_icon(SNAME("Remove")));
+			remove->set_icon(get_editor_theme_icon(SNAME("Remove")));
 			hbox->add_child(remove);
 			remove->connect(SceneStringName(pressed), callable_mp(this, &EditorPropertyFontMetaOverride::_remove).bind(remove, name));
 
@@ -470,7 +476,7 @@ void EditorPropertyOTVariation::update_property() {
 			Vector3i range = supported.get_value_at_index(i);
 
 			EditorPropertyInteger *prop = memnew(EditorPropertyInteger);
-			prop->setup(range.x, range.y, false, true, false, false);
+			prop->setup(range.x, range.y, false, 1, false, false);
 			prop->set_object_and_property(object.ptr(), "keys/" + itos(name_tag));
 
 			String name = TS->tag_to_name(name_tag);
@@ -552,7 +558,7 @@ void EditorPropertyOTFeatures::_notification(int p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			if (button_add) {
-				button_add->set_button_icon(get_editor_theme_icon(SNAME("Add")));
+				button_add->set_icon(get_editor_theme_icon(SNAME("Add")));
 			}
 		} break;
 	}
@@ -789,7 +795,7 @@ void EditorPropertyOTFeatures::update_property() {
 				hbox->add_child(prop);
 				prop->set_h_size_flags(SIZE_EXPAND_FILL);
 				Button *remove = memnew(Button);
-				remove->set_button_icon(get_editor_theme_icon(SNAME("Remove")));
+				remove->set_icon(get_editor_theme_icon(SNAME("Remove")));
 				hbox->add_child(remove);
 				remove->connect(SceneStringName(pressed), callable_mp(this, &EditorPropertyOTFeatures::_remove).bind(remove, name_tag));
 
@@ -798,7 +804,7 @@ void EditorPropertyOTFeatures::update_property() {
 		}
 
 		button_add = EditorInspector::create_inspector_action_button(TTR("Add Feature"));
-		button_add->set_button_icon(get_editor_theme_icon(SNAME("Add")));
+		button_add->set_icon(get_editor_theme_icon(SNAME("Add")));
 		button_add->connect(SceneStringName(pressed), callable_mp(this, &EditorPropertyOTFeatures::_add_menu));
 		property_vbox->add_child(button_add);
 
@@ -916,8 +922,7 @@ void FontPreview::_notification(int p_what) {
 						name = vformat("%s (%s)", prev_font->get_font_name(), prev_font->get_font_style_name());
 					}
 					if (prev_font->is_class("FontVariation")) {
-						// TRANSLATORS: This refers to variable font config, appended to the font name.
-						name += " - " + TTR("Variation");
+						name += " " + TTR(" - Variation");
 					}
 					font->draw_string(get_canvas_item(), Point2(0, font->get_height(font_size) + 2 * EDSCALE), name, HORIZONTAL_ALIGNMENT_CENTER, get_size().x, font_size, text_color);
 

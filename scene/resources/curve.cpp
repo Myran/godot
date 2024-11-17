@@ -479,9 +479,6 @@ void Curve::set_bake_resolution(int p_resolution) {
 }
 
 real_t Curve::sample_baked(real_t p_offset) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), 0, "Offset is non-finite");
-
 	if (_baked_cache_dirty) {
 		// Last-second bake if not done already
 		const_cast<Curve *>(this)->bake();
@@ -984,9 +981,6 @@ Transform2D Curve2D::_sample_posture(Interval p_interval) const {
 }
 
 Vector2 Curve2D::sample_baked(real_t p_offset, bool p_cubic) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), Vector2(), "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}
@@ -1006,9 +1000,6 @@ Vector2 Curve2D::sample_baked(real_t p_offset, bool p_cubic) const {
 }
 
 Transform2D Curve2D::sample_baked_with_rotation(real_t p_offset, bool p_cubic) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), Transform2D(), "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}
@@ -1890,9 +1881,6 @@ Basis Curve3D::get_point_baked_posture(int p_index, bool p_apply_tilt) const {
 #endif
 
 Vector3 Curve3D::sample_baked(real_t p_offset, bool p_cubic) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), Vector3(), "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}
@@ -1912,9 +1900,6 @@ Vector3 Curve3D::sample_baked(real_t p_offset, bool p_cubic) const {
 }
 
 Transform3D Curve3D::sample_baked_with_rotation(real_t p_offset, bool p_cubic, bool p_apply_tilt) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), Transform3D(), "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}
@@ -1944,9 +1929,6 @@ Transform3D Curve3D::sample_baked_with_rotation(real_t p_offset, bool p_cubic, b
 }
 
 real_t Curve3D::sample_baked_tilt(real_t p_offset) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), 0, "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}
@@ -1966,9 +1948,6 @@ real_t Curve3D::sample_baked_tilt(real_t p_offset) const {
 }
 
 Vector3 Curve3D::sample_baked_up_vector(real_t p_offset, bool p_apply_tilt) const {
-	// Make sure that p_offset is finite.
-	ERR_FAIL_COND_V_MSG(!Math::is_finite(p_offset), Vector3(0, 1, 0), "Offset is non-finite");
-
 	if (baked_cache_dirty) {
 		_bake();
 	}

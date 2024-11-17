@@ -36,7 +36,7 @@
     </ProjectReference>
   </ItemGroup>
   <!-- Compat Sources -->
-  <ItemGroup Condition=" '$(GodotNoDeprecated)' == '' ">
+  <ItemGroup>
     <Compile Include="Compat.cs" />
   </ItemGroup>
   <!--

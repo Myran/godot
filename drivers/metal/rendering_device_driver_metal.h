@@ -48,8 +48,6 @@
 class RenderingContextDriverMetal;
 
 class API_AVAILABLE(macos(11.0), ios(14.0)) RenderingDeviceDriverMetal : public RenderingDeviceDriver {
-	friend struct ShaderCacheEntry;
-
 	template <typename T>
 	using Result = std::variant<T, Error>;
 
@@ -78,19 +76,6 @@ class API_AVAILABLE(macos(11.0), ios(14.0)) RenderingDeviceDriverMetal : public 
 
 	Error _create_device();
 	Error _check_capabilities();
-
-#pragma mark - Shader Cache
-
-	ShaderLoadStrategy _shader_load_strategy = ShaderLoadStrategy::DEFAULT;
-
-	/**
-	 * The shader cache is a map of hashes of the Metal source to shader cache entries.
-	 *
-	 * To prevent unbounded growth of the cache, cache entries are automatically freed when
-	 * there are no more references to the MDLibrary associated with the cache entry.
-	 */
-	HashMap<SHA256Digest, ShaderCacheEntry *, HashableHasher<SHA256Digest>> _shader_cache;
-	void shader_cache_free_entry(const SHA256Digest &key);
 
 public:
 	Error initialize(uint32_t p_device_index, uint32_t p_frame_count) override final;
@@ -220,7 +205,6 @@ public:
 	virtual FramebufferID swap_chain_acquire_framebuffer(CommandQueueID p_cmd_queue, SwapChainID p_swap_chain, bool &r_resize_required) override final;
 	virtual RenderPassID swap_chain_get_render_pass(SwapChainID p_swap_chain) override final;
 	virtual DataFormat swap_chain_get_format(SwapChainID p_swap_chain) override final;
-	virtual void swap_chain_set_max_fps(SwapChainID p_swap_chain, int p_max_fps) override final;
 	virtual void swap_chain_free(SwapChainID p_swap_chain) override final;
 
 #pragma mark - Frame Buffer
@@ -240,13 +224,7 @@ private:
 	friend struct PushConstantData;
 
 private:
-	/// Contains additional metadata about the shader.
-	struct ShaderMeta {
-		/// Indicates whether the shader uses multiview.
-		bool has_multiview = false;
-	};
-
-	Error _reflect_spirv16(VectorView<ShaderStageSPIRVData> p_spirv, ShaderReflection &r_reflection, ShaderMeta &r_shader_meta);
+	Error _reflect_spirv16(VectorView<ShaderStageSPIRVData> p_spirv, ShaderReflection &r_reflection);
 
 public:
 	virtual String shader_get_binary_cache_key() override final;
@@ -292,7 +270,7 @@ public:
 #pragma mark Pipeline
 
 private:
-	Result<id<MTLFunction>> _create_function(MDLibrary *p_library, NSString *p_name, VectorView<PipelineSpecializationConstant> &p_specialization_constants);
+	Result<id<MTLFunction>> _create_function(id<MTLLibrary> p_library, NSString *p_name, VectorView<PipelineSpecializationConstant> &p_specialization_constants);
 
 public:
 	virtual void pipeline_free(PipelineID p_pipeline_id) override final;
@@ -417,7 +395,7 @@ public:
 	virtual uint64_t api_trait_get(ApiTrait p_trait) override final;
 	virtual bool has_feature(Features p_feature) override final;
 	virtual const MultiviewCapabilities &get_multiview_capabilities() override final;
-	virtual String get_api_name() const override final { return "Metal"; }
+	virtual String get_api_name() const override final { return "Metal"; };
 	virtual String get_api_version() const override final;
 	virtual String get_pipeline_cache_uuid() const override final;
 	virtual const Capabilities &get_capabilities() const override final;

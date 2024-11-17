@@ -500,8 +500,8 @@ Vector<ScriptLanguage::StackInfo> CSharpLanguage::debug_get_current_stack_info()
 	}
 	_recursion_flag_ = true;
 	SCOPE_EXIT {
-		_recursion_flag_ = false; // clang-format off
-	}; // clang-format on
+		_recursion_flag_ = false;
+	};
 
 	if (!gdmono || !gdmono->is_runtime_initialized()) {
 		return Vector<StackInfo>();
@@ -1497,23 +1497,11 @@ bool CSharpInstance::get(const StringName &p_name, Variant &r_ret) const {
 
 void CSharpInstance::get_property_list(List<PropertyInfo> *p_properties) const {
 	List<PropertyInfo> props;
-	ERR_FAIL_COND(!script.is_valid());
-#ifdef TOOLS_ENABLED
-	for (const PropertyInfo &prop : script->exported_members_cache) {
-		props.push_back(prop);
-	}
-#else
-	for (const KeyValue<StringName, PropertyInfo> &E : script->member_info) {
-		props.push_front(E.value);
-	}
-#endif
-
-	for (PropertyInfo &prop : props) {
-		validate_property(prop);
-		p_properties->push_back(prop);
-	}
+	script->get_script_property_list(&props);
 
 	// Call _get_property_list
+
+	ERR_FAIL_COND(!script.is_valid());
 
 	StringName method = SNAME("_get_property_list");
 
@@ -1536,25 +1524,9 @@ void CSharpInstance::get_property_list(List<PropertyInfo> *p_properties) const {
 		}
 	}
 
-	CSharpScript *top = script.ptr()->base_script.ptr();
-	while (top != nullptr) {
-		props.clear();
-#ifdef TOOLS_ENABLED
-		for (const PropertyInfo &prop : top->exported_members_cache) {
-			props.push_back(prop);
-		}
-#else
-		for (const KeyValue<StringName, PropertyInfo> &E : top->member_info) {
-			props.push_front(E.value);
-		}
-#endif
-
-		for (PropertyInfo &prop : props) {
-			validate_property(prop);
-			p_properties->push_back(prop);
-		}
-
-		top = top->base_script.ptr();
+	for (PropertyInfo &prop : props) {
+		validate_property(prop);
+		p_properties->push_back(prop);
 	}
 }
 
@@ -2744,7 +2716,7 @@ int CSharpScript::get_member_line(const StringName &p_member) const {
 	return -1;
 }
 
-Variant CSharpScript::get_rpc_config() const {
+const Variant CSharpScript::get_rpc_config() const {
 	return rpc_config;
 }
 
@@ -2824,9 +2796,9 @@ Ref<Resource> ResourceFormatLoaderCSharpScript::load(const String &p_path, const
 
 	if (GDMonoCache::godot_api_cache_updated) {
 		GDMonoCache::managed_callbacks.ScriptManagerBridge_GetOrCreateScriptBridgeForPath(&p_path, &scr);
-		ERR_FAIL_COND_V_MSG(scr.is_null(), Ref<Resource>(), "Could not create C# script '" + real_path + "'.");
+		ERR_FAIL_NULL_V_MSG(scr, Ref<Resource>(), "Could not create C# script '" + real_path + "'.");
 	} else {
-		scr.instantiate();
+		scr = Ref<CSharpScript>(memnew(CSharpScript));
 	}
 
 #if defined(DEBUG_ENABLED) || defined(TOOLS_ENABLED)

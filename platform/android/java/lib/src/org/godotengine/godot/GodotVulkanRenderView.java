@@ -68,7 +68,6 @@ class GodotVulkanRenderView extends VkSurfaceView implements GodotRenderView {
 			setPointerIcon(PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_DEFAULT));
 		}
 		setFocusableInTouchMode(true);
-		setClickable(false);
 	}
 
 	@Override
@@ -133,17 +132,17 @@ class GodotVulkanRenderView extends VkSurfaceView implements GodotRenderView {
 
 	@Override
 	public boolean onKeyUp(final int keyCode, KeyEvent event) {
-		return mInputHandler.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
+		return mInputHandler.onKeyUp(keyCode, event);
 	}
 
 	@Override
 	public boolean onKeyDown(final int keyCode, KeyEvent event) {
-		return mInputHandler.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
+		return mInputHandler.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onGenericMotionEvent(MotionEvent event) {
-		return mInputHandler.onGenericMotionEvent(event) || super.onGenericMotionEvent(event);
+		return mInputHandler.onGenericMotionEvent(event);
 	}
 
 	@Override

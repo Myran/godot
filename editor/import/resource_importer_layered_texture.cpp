@@ -276,10 +276,6 @@ void ResourceImporterLayeredTexture::_save_tex(Vector<Ref<Image>> p_images, cons
 	f->store_32(0);
 	f->store_32(0);
 
-	if ((p_compress_mode == COMPRESS_LOSSLESS || p_compress_mode == COMPRESS_LOSSY) && p_images[0]->get_format() >= Image::FORMAT_RF) {
-		p_compress_mode = COMPRESS_VRAM_UNCOMPRESSED; // These can't go as lossy.
-	}
-
 	for (int i = 0; i < p_images.size(); i++) {
 		ResourceImporterTexture::save_to_ctex_format(f, p_images[i], ResourceImporterTexture::CompressMode(p_compress_mode), used_channels, p_vram_compression, p_lossy);
 	}
@@ -289,7 +285,7 @@ void ResourceImporterLayeredTexture::_save_tex(Vector<Ref<Image>> p_images, cons
 	}
 }
 
-Error ResourceImporterLayeredTexture::import(ResourceUID::ID p_source_id, const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
+Error ResourceImporterLayeredTexture::import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	int compress_mode = p_options["compress/mode"];
 	float lossy = p_options["compress/lossy_quality"];
 	bool high_quality = p_options["compress/high_quality"];
@@ -337,6 +333,11 @@ Error ResourceImporterLayeredTexture::import(ResourceUID::ID p_source_id, const 
 	Error err = ImageLoader::load_image(p_source_file, image);
 	if (err != OK) {
 		return err;
+	}
+
+	if (compress_mode == COMPRESS_BASIS_UNIVERSAL && image->get_format() >= Image::FORMAT_RF) {
+		//basis universal does not support float formats, fall back
+		compress_mode = COMPRESS_VRAM_COMPRESSED;
 	}
 
 	if (compress_mode == COMPRESS_VRAM_COMPRESSED) {
@@ -430,20 +431,22 @@ String ResourceImporterLayeredTexture::get_import_settings_string() const {
 	return s;
 }
 
-bool ResourceImporterLayeredTexture::are_import_settings_valid(const String &p_path, const Dictionary &p_meta) const {
+bool ResourceImporterLayeredTexture::are_import_settings_valid(const String &p_path) const {
 	//will become invalid if formats are missing to import
-	if (!p_meta.has("vram_texture")) {
+	Dictionary meta = ResourceFormatImporter::get_singleton()->get_resource_metadata(p_path);
+
+	if (!meta.has("vram_texture")) {
 		return false;
 	}
 
-	bool vram = p_meta["vram_texture"];
+	bool vram = meta["vram_texture"];
 	if (!vram) {
 		return true; //do not care about non vram
 	}
 
 	Vector<String> formats_imported;
-	if (p_meta.has("imported_formats")) {
-		formats_imported = p_meta["imported_formats"];
+	if (meta.has("imported_formats")) {
+		formats_imported = meta["imported_formats"];
 	}
 
 	int index = 0;
@@ -507,7 +510,7 @@ void ResourceImporterLayeredTexture::_check_compress_ctex(const String &p_source
 	}
 
 	bool can_compress_hdr = r_texture_import->hdr_compression > 0;
-	ERR_FAIL_COND(r_texture_import->image.is_null());
+	ERR_FAIL_NULL(r_texture_import->image);
 	bool is_hdr = (r_texture_import->image->get_format() >= Image::FORMAT_RF && r_texture_import->image->get_format() <= Image::FORMAT_RGBE9995);
 	ERR_FAIL_NULL(r_texture_import->slices);
 	// Can compress hdr, but hdr with alpha is not compressible.

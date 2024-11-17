@@ -30,7 +30,7 @@
 
 #include "visible_on_screen_notifier_2d.h"
 
-#ifdef DEBUG_ENABLED
+#ifdef TOOLS_ENABLED
 Rect2 VisibleOnScreenNotifier2D::_edit_get_rect() const {
 	return rect;
 }
@@ -38,7 +38,7 @@ Rect2 VisibleOnScreenNotifier2D::_edit_get_rect() const {
 bool VisibleOnScreenNotifier2D::_edit_use_rect() const {
 	return true;
 }
-#endif // DEBUG_ENABLED
+#endif
 
 void VisibleOnScreenNotifier2D::_visibility_enter() {
 	if (!is_inside_tree() || Engine::get_singleton()->is_editor_hint()) {

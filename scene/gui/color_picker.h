@@ -130,6 +130,7 @@ private:
 	Popup *picker_window = nullptr;
 	// Legacy color picking.
 	TextureRect *picker_texture_rect = nullptr;
+	Panel *picker_preview = nullptr;
 	Label *picker_preview_label = nullptr;
 	Ref<StyleBoxFlat> picker_preview_style_box;
 	Color picker_color;

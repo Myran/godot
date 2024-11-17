@@ -29,6 +29,7 @@
 /**************************************************************************/
 
 #include "translation.h"
+#include "translation.compat.inc"
 
 #include "core/os/os.h"
 #include "core/os/thread.h"

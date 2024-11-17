@@ -39,6 +39,7 @@
 class CheckBox;
 class EditorData;
 class EditorSelection;
+class EditorQuickOpen;
 class MenuButton;
 class ReparentDialog;
 class ShaderCreateDialog;
@@ -115,7 +116,6 @@ class SceneTreeDock : public VBoxContainer {
 	Button *button_instance = nullptr;
 	Button *button_create_script = nullptr;
 	Button *button_detach_script = nullptr;
-	Button *button_extend_script = nullptr;
 	MenuButton *button_tree_menu = nullptr;
 
 	Button *node_shortcuts_toggle = nullptr;
@@ -159,6 +159,7 @@ class SceneTreeDock : public VBoxContainer {
 	ConfirmationDialog *placeholder_editable_instance_remove_dialog = nullptr;
 
 	ReparentDialog *reparent_dialog = nullptr;
+	EditorQuickOpen *quick_open = nullptr;
 	EditorFileDialog *new_scene_from_dialog = nullptr;
 
 	enum FilterMenuItems {
@@ -178,8 +179,7 @@ class SceneTreeDock : public VBoxContainer {
 	bool first_enter = true;
 
 	void _create();
-	Node *_do_create(Node *p_parent);
-	void _post_do_create(Node *p_child);
+	void _do_create(Node *p_parent);
 	Node *scene_root = nullptr;
 	Node *edited_scene = nullptr;
 	Node *pending_click_select = nullptr;
@@ -261,12 +261,11 @@ class SceneTreeDock : public VBoxContainer {
 	bool _has_tracks_to_delete(Node *p_node, List<Node *> &p_to_delete) const;
 
 	void _normalize_drop(Node *&to_node, int &to_pos, int p_type);
-	Array _get_selection_array();
 
 	void _nodes_dragged(const Array &p_nodes, NodePath p_to, int p_type);
 	void _files_dropped(const Vector<String> &p_files, NodePath p_to, int p_type);
 	void _script_dropped(const String &p_file, NodePath p_to);
-	void _quick_open(const String &p_file_path);
+	void _quick_open();
 
 	void _tree_rmb(const Vector2 &p_menu_pos);
 	void _update_tree_menu();

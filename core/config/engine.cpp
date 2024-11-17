@@ -36,7 +36,6 @@
 #include "core/license.gen.h"
 #include "core/variant/typed_array.h"
 #include "core/version.h"
-#include "servers/rendering/rendering_device.h"
 
 void Engine::set_physics_ticks_per_second(int p_ips) {
 	ERR_FAIL_COND_MSG(p_ips <= 0, "Engine iterations per second must be greater than 0.");
@@ -69,11 +68,6 @@ double Engine::get_physics_jitter_fix() const {
 
 void Engine::set_max_fps(int p_fps) {
 	_max_fps = p_fps > 0 ? p_fps : 0;
-
-	RenderingDevice *rd = RenderingDevice::get_singleton();
-	if (rd) {
-		rd->_set_max_fps(_max_fps);
-	}
 }
 
 int Engine::get_max_fps() const {
@@ -116,10 +110,6 @@ void Engine::set_time_scale(double p_scale) {
 }
 
 double Engine::get_time_scale() const {
-	return freeze_time_scale ? 0 : _time_scale;
-}
-
-double Engine::get_unfrozen_time_scale() const {
 	return _time_scale;
 }
 
@@ -273,24 +263,6 @@ bool Engine::is_generate_spirv_debug_info_enabled() const {
 	return generate_spirv_debug_info;
 }
 
-bool Engine::is_extra_gpu_memory_tracking_enabled() const {
-	return extra_gpu_memory_tracking;
-}
-
-#if defined(DEBUG_ENABLED) || defined(DEV_ENABLED)
-bool Engine::is_accurate_breadcrumbs_enabled() const {
-	return accurate_breadcrumbs;
-}
-#endif
-
-void Engine::set_print_to_stdout(bool p_enabled) {
-	CoreGlobals::print_line_enabled = p_enabled;
-}
-
-bool Engine::is_printing_to_stdout() const {
-	return CoreGlobals::print_line_enabled;
-}
-
 void Engine::set_print_error_messages(bool p_enabled) {
 	CoreGlobals::print_error_enabled = p_enabled;
 }
@@ -406,10 +378,6 @@ Engine *Engine::get_singleton() {
 bool Engine::notify_frame_server_synced() {
 	frame_server_synced = true;
 	return server_syncs > SERVER_SYNC_FRAME_COUNT_WARNING;
-}
-
-void Engine::set_freeze_time_scale(bool p_frozen) {
-	freeze_time_scale = p_frozen;
 }
 
 Engine::Engine() {

@@ -64,7 +64,7 @@ public:
 
 	/* MESH API */
 
-	bool owns_mesh(RID p_rid) { return mesh_owner.owns(p_rid); }
+	bool owns_mesh(RID p_rid) { return mesh_owner.owns(p_rid); };
 
 	virtual RID mesh_allocate() override;
 	virtual void mesh_initialize(RID p_rid) override;
@@ -163,7 +163,7 @@ public:
 	virtual AABB _multimesh_get_custom_aabb(RID p_multimesh) const override { return AABB(); }
 
 	virtual RID _multimesh_get_mesh(RID p_multimesh) const override { return RID(); }
-	virtual AABB _multimesh_get_aabb(RID p_multimesh) override { return AABB(); }
+	virtual AABB _multimesh_get_aabb(RID p_multimesh) const override { return AABB(); }
 
 	virtual Transform3D _multimesh_instance_get_transform(RID p_multimesh, int p_index) const override { return Transform3D(); }
 	virtual Transform2D _multimesh_instance_get_transform_2d(RID p_multimesh, int p_index) const override { return Transform2D(); }

@@ -30,7 +30,6 @@
 
 #include "inspector_dock.h"
 
-#include "editor/editor_main_screen.h"
 #include "editor/editor_node.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
@@ -98,7 +97,7 @@ void InspectorDock::_menu_option_confirm(int p_option, bool p_confirmed) {
 
 		case OBJECT_REQUEST_HELP: {
 			if (current) {
-				EditorNode::get_singleton()->get_editor_main_screen()->select(EditorMainScreen::EDITOR_SCRIPT);
+				EditorNode::get_singleton()->set_visible_editor(EditorNode::EDITOR_SCRIPT);
 				emit_signal(SNAME("request_help"), current->get_class());
 			}
 		} break;
@@ -191,7 +190,7 @@ void InspectorDock::_menu_option_confirm(int p_option, bool p_confirmed) {
 				}
 
 				int history_id = EditorUndoRedoManager::get_singleton()->get_history_id_for_object(current);
-				EditorUndoRedoManager::get_singleton()->clear_history(history_id);
+				EditorUndoRedoManager::get_singleton()->clear_history(true, history_id);
 
 				EditorNode::get_singleton()->edit_item(current, inspector);
 			}
@@ -427,36 +426,35 @@ void InspectorDock::_notification(int p_what) {
 		case NOTIFICATION_THEME_CHANGED:
 		case NOTIFICATION_TRANSLATION_CHANGED:
 		case NOTIFICATION_LAYOUT_DIRECTION_CHANGED: {
-			resource_new_button->set_button_icon(get_editor_theme_icon(SNAME("New")));
-			resource_load_button->set_button_icon(get_editor_theme_icon(SNAME("Load")));
-			resource_save_button->set_button_icon(get_editor_theme_icon(SNAME("Save")));
-			resource_extra_button->set_button_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
-			open_docs_button->set_button_icon(get_editor_theme_icon(SNAME("HelpSearch")));
+			resource_new_button->set_icon(get_editor_theme_icon(SNAME("New")));
+			resource_load_button->set_icon(get_editor_theme_icon(SNAME("Load")));
+			resource_save_button->set_icon(get_editor_theme_icon(SNAME("Save")));
+			resource_extra_button->set_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
+			open_docs_button->set_icon(get_editor_theme_icon(SNAME("HelpSearch")));
 
 			PopupMenu *resource_extra_popup = resource_extra_button->get_popup();
 			resource_extra_popup->set_item_icon(resource_extra_popup->get_item_index(RESOURCE_EDIT_CLIPBOARD), get_editor_theme_icon(SNAME("ActionPaste")));
 			resource_extra_popup->set_item_icon(resource_extra_popup->get_item_index(RESOURCE_COPY), get_editor_theme_icon(SNAME("ActionCopy")));
-			resource_extra_popup->set_item_icon(resource_extra_popup->get_item_index(RESOURCE_SHOW_IN_FILESYSTEM), get_editor_theme_icon(SNAME("ShowInFileSystem")));
 
 			if (is_layout_rtl()) {
-				backward_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
-				forward_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
+				backward_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
+				forward_button->set_icon(get_editor_theme_icon(SNAME("Back")));
 			} else {
-				backward_button->set_button_icon(get_editor_theme_icon(SNAME("Back")));
-				forward_button->set_button_icon(get_editor_theme_icon(SNAME("Forward")));
+				backward_button->set_icon(get_editor_theme_icon(SNAME("Back")));
+				forward_button->set_icon(get_editor_theme_icon(SNAME("Forward")));
 			}
 
 			const int icon_width = get_theme_constant(SNAME("class_icon_size"), EditorStringName(Editor));
 			history_menu->get_popup()->add_theme_constant_override("icon_max_width", icon_width);
 
-			history_menu->set_button_icon(get_editor_theme_icon(SNAME("History")));
-			object_menu->set_button_icon(get_editor_theme_icon(SNAME("Tools")));
+			history_menu->set_icon(get_editor_theme_icon(SNAME("History")));
+			object_menu->set_icon(get_editor_theme_icon(SNAME("Tools")));
 			search->set_right_icon(get_editor_theme_icon(SNAME("Search")));
 			if (info_is_warning) {
-				info->set_button_icon(get_editor_theme_icon(SNAME("NodeWarning")));
+				info->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
 				info->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
 			} else {
-				info->set_button_icon(get_editor_theme_icon(SNAME("NodeInfo")));
+				info->set_icon(get_editor_theme_icon(SNAME("NodeInfo")));
 				info->add_theme_color_override(SceneStringName(font_color), get_theme_color(SceneStringName(font_color), EditorStringName(Editor)));
 			}
 		} break;
@@ -483,10 +481,10 @@ void InspectorDock::set_info(const String &p_button_text, const String &p_messag
 	info_is_warning = p_is_warning;
 
 	if (info_is_warning) {
-		info->set_button_icon(get_editor_theme_icon(SNAME("NodeWarning")));
+		info->set_icon(get_editor_theme_icon(SNAME("NodeWarning")));
 		info->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
 	} else {
-		info->set_button_icon(get_editor_theme_icon(SNAME("NodeInfo")));
+		info->set_icon(get_editor_theme_icon(SNAME("NodeInfo")));
 		info->add_theme_color_override(SceneStringName(font_color), get_theme_color(SceneStringName(font_color), EditorStringName(Editor)));
 	}
 
@@ -801,7 +799,7 @@ InspectorDock::InspectorDock(EditorData &p_editor_data) {
 	inspector->set_use_folding(!bool(EDITOR_GET("interface/inspector/disable_folding")));
 	inspector->register_text_enter(search);
 
-	inspector->set_use_filter(true);
+	inspector->set_use_filter(true); // TODO: check me
 
 	inspector->connect("resource_selected", callable_mp(this, &InspectorDock::_resource_selected));
 

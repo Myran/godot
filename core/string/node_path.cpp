@@ -215,10 +215,7 @@ StringName NodePath::get_concatenated_names() const {
 		String concatenated;
 		const StringName *sn = data->path.ptr();
 		for (int i = 0; i < pc; i++) {
-			if (i > 0) {
-				concatenated += "/";
-			}
-			concatenated += sn[i].operator String();
+			concatenated += i == 0 ? sn[i].operator String() : "/" + sn[i];
 		}
 		data->concatenated_path = concatenated;
 	}
@@ -233,10 +230,7 @@ StringName NodePath::get_concatenated_subnames() const {
 		String concatenated;
 		const StringName *ssn = data->subpath.ptr();
 		for (int i = 0; i < spc; i++) {
-			if (i > 0) {
-				concatenated += ":";
-			}
-			concatenated += ssn[i].operator String();
+			concatenated += i == 0 ? ssn[i].operator String() : ":" + ssn[i];
 		}
 		data->concatenated_subpath = concatenated;
 	}
@@ -420,7 +414,7 @@ NodePath::NodePath(const String &p_path) {
 						continue; // Allow end-of-path :
 					}
 
-					ERR_FAIL_MSG(vformat("Invalid NodePath '%s'.", p_path));
+					ERR_FAIL_MSG("Invalid NodePath '" + p_path + "'.");
 				}
 				subpath.push_back(str);
 

@@ -534,10 +534,7 @@ namespace Godot.NativeInterop
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Callable ConvertToCallable(in godot_variant p_var)
-        {
-            using var callable = ConvertToNativeCallable(p_var);
-            return Marshaling.ConvertCallableToManaged(callable);
-        }
+            => Marshaling.ConvertCallableToManaged(ConvertToNativeCallable(p_var));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static godot_signal ConvertToNativeSignal(in godot_variant p_var)
@@ -545,10 +542,7 @@ namespace Godot.NativeInterop
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Signal ConvertToSignal(in godot_variant p_var)
-        {
-            using var signal = ConvertToNativeSignal(p_var);
-            return Marshaling.ConvertSignalToManaged(signal);
-        }
+            => Marshaling.ConvertSignalToManaged(ConvertToNativeSignal(p_var));
 
         public static godot_array ConvertToNativeArray(in godot_variant p_var)
             => p_var.Type == Variant.Type.Array ?

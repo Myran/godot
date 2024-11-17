@@ -162,7 +162,7 @@ void ProjectDialog::_validate_path() {
 		}
 	}
 
-	if (target_path.is_relative_path()) {
+	if (target_path.is_empty() || target_path.is_relative_path()) {
 		_set_message(TTR("The path specified is invalid."), MESSAGE_ERROR, target_path_input_type);
 		return;
 	}
@@ -352,7 +352,7 @@ void ProjectDialog::_install_path_changed() {
 
 void ProjectDialog::_browse_project_path() {
 	String path = project_path->get_text();
-	if (path.is_relative_path()) {
+	if (path.is_empty()) {
 		path = EDITOR_GET("filesystem/directories/default_project_path");
 	}
 	if (mode == MODE_IMPORT && install_path->is_visible_in_tree()) {
@@ -382,16 +382,12 @@ void ProjectDialog::_browse_project_path() {
 void ProjectDialog::_browse_install_path() {
 	ERR_FAIL_COND_MSG(mode != MODE_IMPORT, "Install path is only used for MODE_IMPORT.");
 
-	String path = install_path->get_text();
-	if (path.is_relative_path() || !DirAccess::dir_exists_absolute(path)) {
-		path = EDITOR_GET("filesystem/directories/default_project_path");
-	}
 	if (create_dir->is_pressed()) {
 		// Select parent directory of install path.
-		fdialog_install->set_current_dir(path.get_base_dir());
+		fdialog_install->set_current_dir(install_path->get_text().get_base_dir());
 	} else {
 		// Select install path.
-		fdialog_install->set_current_dir(path);
+		fdialog_install->set_current_dir(install_path->get_text());
 	}
 
 	fdialog_install->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_DIR);
@@ -552,21 +548,6 @@ void ProjectDialog::ok_pressed() {
 		fa_icon->store_string(get_default_project_icon());
 
 		EditorVCSInterface::create_vcs_metadata_files(EditorVCSInterface::VCSMetadata(vcs_metadata_selection->get_selected()), path);
-
-		// Ensures external editors and IDEs use UTF-8 encoding.
-		const String editor_config_path = path.path_join(".editorconfig");
-		Ref<FileAccess> f = FileAccess::open(editor_config_path, FileAccess::WRITE);
-		if (f.is_null()) {
-			// .editorconfig isn't so critical.
-			ERR_PRINT("Couldn't create .editorconfig in project path.");
-		} else {
-			f->store_line("root = true");
-			f->store_line("");
-			f->store_line("[*]");
-			f->store_line("charset = utf-8");
-			f->close();
-			FileAccess::set_hidden_attribute(editor_config_path, true);
-		}
 	}
 
 	// Two cases for importing a ZIP.
@@ -825,9 +806,9 @@ void ProjectDialog::show_dialog(bool p_reset_name) {
 void ProjectDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			create_dir->set_button_icon(get_editor_theme_icon(SNAME("FolderCreate")));
-			project_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
-			install_browse->set_button_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			create_dir->set_icon(get_editor_theme_icon(SNAME("FolderCreate")));
+			project_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
+			install_browse->set_icon(get_editor_theme_icon(SNAME("FolderBrowse")));
 		} break;
 		case NOTIFICATION_READY: {
 			fdialog_project = memnew(EditorFileDialog);
@@ -876,7 +857,7 @@ ProjectDialog::ProjectDialog() {
 	create_dir->set_text(TTR("Create Folder"));
 	create_dir->set_pressed(true);
 	pphb_label->add_child(create_dir);
-	create_dir->connect(SceneStringName(toggled), callable_mp(this, &ProjectDialog::_create_dir_toggled));
+	create_dir->connect("toggled", callable_mp(this, &ProjectDialog::_create_dir_toggled));
 
 	HBoxContainer *pphb = memnew(HBoxContainer);
 	project_path_container->add_child(pphb);
@@ -1001,7 +982,7 @@ ProjectDialog::ProjectDialog() {
 	rvb->add_child(renderer_info);
 
 	rd_not_supported = memnew(Label);
-	rd_not_supported->set_text(vformat(TTR("RenderingDevice-based methods not available on this GPU:\n%s\nPlease use the Compatibility renderer."), RenderingServer::get_singleton()->get_video_adapter_name()));
+	rd_not_supported->set_text(TTR("Rendering Device backend not available. Please use the Compatibility renderer."));
 	rd_not_supported->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 	rd_not_supported->set_custom_minimum_size(Size2(200, 0) * EDSCALE);
 	rd_not_supported->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
@@ -1039,14 +1020,8 @@ ProjectDialog::ProjectDialog() {
 	add_child(fdialog_install);
 
 	project_name->connect(SceneStringName(text_changed), callable_mp(this, &ProjectDialog::_project_name_changed).unbind(1));
-	project_name->connect(SceneStringName(text_submitted), callable_mp(this, &ProjectDialog::ok_pressed).unbind(1));
-
 	project_path->connect(SceneStringName(text_changed), callable_mp(this, &ProjectDialog::_project_path_changed).unbind(1));
-	project_path->connect(SceneStringName(text_submitted), callable_mp(this, &ProjectDialog::ok_pressed).unbind(1));
-
 	install_path->connect(SceneStringName(text_changed), callable_mp(this, &ProjectDialog::_install_path_changed).unbind(1));
-	install_path->connect(SceneStringName(text_submitted), callable_mp(this, &ProjectDialog::ok_pressed).unbind(1));
-
 	fdialog_install->connect("dir_selected", callable_mp(this, &ProjectDialog::_install_path_selected));
 	fdialog_install->connect("file_selected", callable_mp(this, &ProjectDialog::_install_path_selected));
 

@@ -561,9 +561,7 @@ void AnimationLibraryEditor::_button_pressed(TreeItem *p_item, int p_column, int
 					return;
 				}
 
-				if (!anim->get_path().is_resource_file()) {
-					anim = anim->duplicate(); // Users simply dont care about referencing, so making a copy works better here.
-				}
+				anim = anim->duplicate(); // Users simply dont care about referencing, so making a copy works better here.
 
 				String base_name;
 				if (anim->get_name() != "") {
@@ -598,7 +596,7 @@ void AnimationLibraryEditor::_button_pressed(TreeItem *p_item, int p_column, int
 				file_popup->add_separator();
 				file_popup->add_item(TTR("Open in Inspector"), FILE_MENU_EDIT_LIBRARY);
 				Rect2 pos = tree->get_item_rect(p_item, 1, 0);
-				Vector2 popup_pos = tree->get_screen_transform().xform(pos.position + Vector2(0, pos.size.height)) - tree->get_scroll();
+				Vector2 popup_pos = tree->get_screen_transform().xform(pos.position + Vector2(0, pos.size.height));
 				file_popup->popup(Rect2(popup_pos, Size2()));
 
 				file_dialog_animation = StringName();
@@ -638,7 +636,7 @@ void AnimationLibraryEditor::_button_pressed(TreeItem *p_item, int p_column, int
 				file_popup->add_separator();
 				file_popup->add_item(TTR("Open in Inspector"), FILE_MENU_EDIT_ANIMATION);
 				Rect2 pos = tree->get_item_rect(p_item, 1, 0);
-				Vector2 popup_pos = tree->get_screen_transform().xform(pos.position + Vector2(0, pos.size.height)) - tree->get_scroll();
+				Vector2 popup_pos = tree->get_screen_transform().xform(pos.position + Vector2(0, pos.size.height));
 				file_popup->popup(Rect2(popup_pos, Size2()));
 
 				file_dialog_animation = anim_name;
@@ -773,8 +771,8 @@ void AnimationLibraryEditor::show_dialog() {
 void AnimationLibraryEditor::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
-			new_library_button->set_button_icon(get_editor_theme_icon(SNAME("Add")));
-			load_library_button->set_button_icon(get_editor_theme_icon(SNAME("Load")));
+			new_library_button->set_icon(get_editor_theme_icon(SNAME("Add")));
+			load_library_button->set_icon(get_editor_theme_icon(SNAME("Load")));
 		}
 	}
 }

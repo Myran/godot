@@ -31,7 +31,6 @@
 package org.godotengine.godot;
 
 import org.godotengine.godot.input.GodotInputHandler;
-import org.godotengine.godot.utils.DeviceUtils;
 
 import android.view.SurfaceView;
 
@@ -64,11 +63,7 @@ public interface GodotRenderView {
 
 	void setPointerIcon(int pointerType);
 
-	/**
-	 * @return true if pointer capture is supported.
-	 */
 	default boolean canCapturePointer() {
-		// Pointer capture is not supported on Horizon OS
-		return !DeviceUtils.isHorizonOSDevice() && getInputHandler().canCapturePointer();
+		return getInputHandler().canCapturePointer();
 	}
 }

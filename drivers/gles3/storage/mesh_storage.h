@@ -214,7 +214,7 @@ struct Skeleton {
 	bool use_2d = false;
 	int size = 0;
 	int height = 0;
-	LocalVector<float> data;
+	Vector<float> data;
 
 	bool dirty = false;
 	Skeleton *dirty_list = nullptr;
@@ -280,8 +280,8 @@ public:
 
 	/* MESH API */
 
-	Mesh *get_mesh(RID p_rid) { return mesh_owner.get_or_null(p_rid); }
-	bool owns_mesh(RID p_rid) { return mesh_owner.owns(p_rid); }
+	Mesh *get_mesh(RID p_rid) { return mesh_owner.get_or_null(p_rid); };
+	bool owns_mesh(RID p_rid) { return mesh_owner.owns(p_rid); };
 
 	virtual RID mesh_allocate() override;
 	virtual void mesh_initialize(RID p_rid) override;
@@ -443,8 +443,8 @@ public:
 
 	/* MESH INSTANCE API */
 
-	MeshInstance *get_mesh_instance(RID p_rid) { return mesh_instance_owner.get_or_null(p_rid); }
-	bool owns_mesh_instance(RID p_rid) { return mesh_instance_owner.owns(p_rid); }
+	MeshInstance *get_mesh_instance(RID p_rid) { return mesh_instance_owner.get_or_null(p_rid); };
+	bool owns_mesh_instance(RID p_rid) { return mesh_instance_owner.owns(p_rid); };
 
 	virtual RID mesh_instance_create(RID p_base) override;
 	virtual void mesh_instance_free(RID p_rid) override;
@@ -492,8 +492,8 @@ public:
 
 	/* MULTIMESH API */
 
-	MultiMesh *get_multimesh(RID p_rid) { return multimesh_owner.get_or_null(p_rid); }
-	bool owns_multimesh(RID p_rid) { return multimesh_owner.owns(p_rid); }
+	MultiMesh *get_multimesh(RID p_rid) { return multimesh_owner.get_or_null(p_rid); };
+	bool owns_multimesh(RID p_rid) { return multimesh_owner.owns(p_rid); };
 
 	virtual RID _multimesh_allocate() override;
 	virtual void _multimesh_initialize(RID p_rid) override;
@@ -510,7 +510,7 @@ public:
 	virtual RID _multimesh_get_mesh(RID p_multimesh) const override;
 	virtual void _multimesh_set_custom_aabb(RID p_multimesh, const AABB &p_aabb) override;
 	virtual AABB _multimesh_get_custom_aabb(RID p_multimesh) const override;
-	virtual AABB _multimesh_get_aabb(RID p_multimesh) override;
+	virtual AABB _multimesh_get_aabb(RID p_multimesh) const override;
 
 	virtual Transform3D _multimesh_instance_get_transform(RID p_multimesh, int p_index) const override;
 	virtual Transform2D _multimesh_instance_get_transform_2d(RID p_multimesh, int p_index) const override;
@@ -571,8 +571,8 @@ public:
 
 	/* SKELETON API */
 
-	Skeleton *get_skeleton(RID p_rid) { return skeleton_owner.get_or_null(p_rid); }
-	bool owns_skeleton(RID p_rid) { return skeleton_owner.owns(p_rid); }
+	Skeleton *get_skeleton(RID p_rid) { return skeleton_owner.get_or_null(p_rid); };
+	bool owns_skeleton(RID p_rid) { return skeleton_owner.owns(p_rid); };
 
 	virtual RID skeleton_allocate() override;
 	virtual void skeleton_initialize(RID p_rid) override;

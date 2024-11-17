@@ -951,7 +951,7 @@ bool Variant::is_zero() const {
 			return *reinterpret_cast<const ::RID *>(_data._mem) == ::RID();
 		}
 		case OBJECT: {
-			return get_validated_object() == nullptr;
+			return _get_obj().obj == nullptr;
 		}
 		case CALLABLE: {
 			return reinterpret_cast<const Callable *>(_data._mem)->is_null();
@@ -1072,68 +1072,23 @@ bool Variant::is_null() const {
 	}
 }
 
-void Variant::ObjData::ref(const ObjData &p_from) {
-	// Mirrors Ref::ref in refcounted.h
-	if (p_from.id == id) {
-		return;
+bool Variant::initialize_ref(Object *p_object) {
+	RefCounted *ref_counted = const_cast<RefCounted *>(static_cast<const RefCounted *>(p_object));
+	if (!ref_counted->init_ref()) {
+		return false;
 	}
-
-	ObjData cleanup_ref = *this;
-
-	*this = p_from;
-	if (id.is_ref_counted()) {
-		RefCounted *reference = static_cast<RefCounted *>(obj);
-		// Assuming reference is not null because id.is_ref_counted() was true.
-		if (!reference->reference()) {
-			*this = ObjData();
-		}
-	}
-
-	cleanup_ref.unref();
+	return true;
 }
-
-void Variant::ObjData::ref_pointer(Object *p_object) {
-	// Mirrors Ref::ref_pointer in refcounted.h
-	if (p_object == obj) {
-		return;
-	}
-
-	ObjData cleanup_ref = *this;
-
-	if (p_object) {
-		*this = ObjData{ p_object->get_instance_id(), p_object };
-		if (p_object->is_ref_counted()) {
-			RefCounted *reference = static_cast<RefCounted *>(p_object);
-			if (!reference->init_ref()) {
-				*this = ObjData();
-			}
-		}
-	} else {
-		*this = ObjData();
-	}
-
-	cleanup_ref.unref();
-}
-
-void Variant::ObjData::unref() {
-	// Mirrors Ref::unref in refcounted.h
-	if (id.is_ref_counted()) {
-		RefCounted *reference = static_cast<RefCounted *>(obj);
-		// Assuming reference is not null because id.is_ref_counted() was true.
-		if (reference->unreference()) {
-			memdelete(reference);
-		}
-	}
-	*this = ObjData();
-}
-
 void Variant::reference(const Variant &p_variant) {
-	if (type == OBJECT && p_variant.type == OBJECT) {
-		_get_obj().ref(p_variant._get_obj());
-		return;
+	switch (type) {
+		case NIL:
+		case BOOL:
+		case INT:
+		case FLOAT:
+			break;
+		default:
+			clear();
 	}
-
-	clear();
 
 	type = p_variant.type;
 
@@ -1217,7 +1172,18 @@ void Variant::reference(const Variant &p_variant) {
 		} break;
 		case OBJECT: {
 			memnew_placement(_data._mem, ObjData);
-			_get_obj().ref(p_variant._get_obj());
+
+			if (p_variant._get_obj().obj && p_variant._get_obj().id.is_ref_counted()) {
+				RefCounted *ref_counted = static_cast<RefCounted *>(p_variant._get_obj().obj);
+				if (!ref_counted->reference()) {
+					_get_obj().obj = nullptr;
+					_get_obj().id = ObjectID();
+					break;
+				}
+			}
+
+			_get_obj().obj = const_cast<Object *>(p_variant._get_obj().obj);
+			_get_obj().id = p_variant._get_obj().id;
 		} break;
 		case CALLABLE: {
 			memnew_placement(_data._mem, Callable(*reinterpret_cast<const Callable *>(p_variant._data._mem)));
@@ -1416,7 +1382,15 @@ void Variant::_clear_internal() {
 			reinterpret_cast<NodePath *>(_data._mem)->~NodePath();
 		} break;
 		case OBJECT: {
-			_get_obj().unref();
+			if (_get_obj().id.is_ref_counted()) {
+				// We are safe that there is a reference here.
+				RefCounted *ref_counted = static_cast<RefCounted *>(_get_obj().obj);
+				if (ref_counted->unreference()) {
+					memdelete(ref_counted);
+				}
+			}
+			_get_obj().obj = nullptr;
+			_get_obj().id = ObjectID();
 		} break;
 		case RID: {
 			// Not much need probably.
@@ -1736,7 +1710,7 @@ String Variant::stringify(int recursion_count) const {
 		case INT:
 			return itos(_data._int);
 		case FLOAT:
-			return String::num_real(_data._float, true);
+			return rtos(_data._float);
 		case STRING:
 			return *reinterpret_cast<const String *>(_data._mem);
 		case VECTOR2:
@@ -2146,7 +2120,7 @@ Variant::operator ::RID() const {
 		}
 #endif
 		Callable::CallError ce;
-		const Variant ret = _get_obj().obj->callp(CoreStringName(get_rid), nullptr, 0, ce);
+		Variant ret = _get_obj().obj->callp(CoreStringName(get_rid), nullptr, 0, ce);
 		if (ce.error == Callable::CallError::CALL_OK && ret.get_type() == Variant::RID) {
 			return ret;
 		}
@@ -2622,8 +2596,24 @@ Variant::Variant(const ::RID &p_rid) :
 
 Variant::Variant(const Object *p_object) :
 		type(OBJECT) {
-	_get_obj() = ObjData();
-	_get_obj().ref_pointer(const_cast<Object *>(p_object));
+	memnew_placement(_data._mem, ObjData);
+
+	if (p_object) {
+		if (p_object->is_ref_counted()) {
+			RefCounted *ref_counted = const_cast<RefCounted *>(static_cast<const RefCounted *>(p_object));
+			if (!ref_counted->init_ref()) {
+				_get_obj().obj = nullptr;
+				_get_obj().id = ObjectID();
+				return;
+			}
+		}
+
+		_get_obj().obj = const_cast<Object *>(p_object);
+		_get_obj().id = p_object->get_instance_id();
+	} else {
+		_get_obj().obj = nullptr;
+		_get_obj().id = ObjectID();
+	}
 }
 
 Variant::Variant(const Callable &p_callable) :
@@ -2719,7 +2709,8 @@ Variant::Variant(const Vector<Plane> &p_array) :
 	}
 }
 
-Variant::Variant(const Vector<Face3> &p_face_array) {
+Variant::Variant(const Vector<Face3> &p_face_array) :
+		type(NIL) {
 	PackedVector3Array vertices;
 	int face_count = p_face_array.size();
 	vertices.resize(face_count * 3);
@@ -2738,7 +2729,8 @@ Variant::Variant(const Vector<Face3> &p_face_array) {
 	*this = vertices;
 }
 
-Variant::Variant(const Vector<Variant> &p_array) {
+Variant::Variant(const Vector<Variant> &p_array) :
+		type(NIL) {
 	Array arr;
 	arr.resize(p_array.size());
 	for (int i = 0; i < p_array.size(); i++) {
@@ -2747,7 +2739,8 @@ Variant::Variant(const Vector<Variant> &p_array) {
 	*this = arr;
 }
 
-Variant::Variant(const Vector<StringName> &p_array) {
+Variant::Variant(const Vector<StringName> &p_array) :
+		type(NIL) {
 	PackedStringArray v;
 	int len = p_array.size();
 	v.resize(len);
@@ -2842,7 +2835,26 @@ void Variant::operator=(const Variant &p_variant) {
 			*reinterpret_cast<::RID *>(_data._mem) = *reinterpret_cast<const ::RID *>(p_variant._data._mem);
 		} break;
 		case OBJECT: {
-			_get_obj().ref(p_variant._get_obj());
+			if (_get_obj().id.is_ref_counted()) {
+				//we are safe that there is a reference here
+				RefCounted *ref_counted = static_cast<RefCounted *>(_get_obj().obj);
+				if (ref_counted->unreference()) {
+					memdelete(ref_counted);
+				}
+			}
+
+			if (p_variant._get_obj().obj && p_variant._get_obj().id.is_ref_counted()) {
+				RefCounted *ref_counted = static_cast<RefCounted *>(p_variant._get_obj().obj);
+				if (!ref_counted->reference()) {
+					_get_obj().obj = nullptr;
+					_get_obj().id = ObjectID();
+					break;
+				}
+			}
+
+			_get_obj().obj = const_cast<Object *>(p_variant._get_obj().obj);
+			_get_obj().id = p_variant._get_obj().id;
+
 		} break;
 		case CALLABLE: {
 			*reinterpret_cast<Callable *>(_data._mem) = *reinterpret_cast<const Callable *>(p_variant._data._mem);
@@ -2905,7 +2917,8 @@ Variant::Variant(const IPAddress &p_address) :
 	memnew_placement(_data._mem, String(p_address));
 }
 
-Variant::Variant(const Variant &p_variant) {
+Variant::Variant(const Variant &p_variant) :
+		type(NIL) {
 	reference(p_variant);
 }
 
@@ -3664,20 +3677,18 @@ String Variant::get_call_error_text(Object *p_base, const StringName &p_method, 
 
 String Variant::get_callable_error_text(const Callable &p_callable, const Variant **p_argptrs, int p_argcount, const Callable::CallError &ce) {
 	Vector<Variant> binds;
-	p_callable.get_bound_arguments_ref(binds);
-
-	int args_unbound = p_callable.get_unbound_arguments_count();
-
-	if (p_argcount - args_unbound < 0) {
-		return "Callable unbinds " + itos(args_unbound) + " arguments, but called with " + itos(p_argcount);
+	int args_bound;
+	p_callable.get_bound_arguments_ref(binds, args_bound);
+	if (args_bound <= 0) {
+		return get_call_error_text(p_callable.get_object(), p_callable.get_method(), p_argptrs, MAX(0, p_argcount + args_bound), ce);
 	} else {
 		Vector<const Variant *> argptrs;
-		argptrs.resize(p_argcount - args_unbound + binds.size());
-		for (int i = 0; i < p_argcount - args_unbound; i++) {
+		argptrs.resize(p_argcount + binds.size());
+		for (int i = 0; i < p_argcount; i++) {
 			argptrs.write[i] = p_argptrs[i];
 		}
 		for (int i = 0; i < binds.size(); i++) {
-			argptrs.write[i + p_argcount - args_unbound] = &binds[i];
+			argptrs.write[i + p_argcount] = &binds[i];
 		}
 		return get_call_error_text(p_callable.get_object(), p_callable.get_method(), (const Variant **)argptrs.ptr(), argptrs.size(), ce);
 	}

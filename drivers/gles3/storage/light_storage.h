@@ -59,7 +59,6 @@ struct Light {
 	RS::LightBakeMode bake_mode = RS::LIGHT_BAKE_DYNAMIC;
 	uint32_t max_sdfgi_cascade = 2;
 	uint32_t cull_mask = 0xFFFFFFFF;
-	uint32_t shadow_caster_mask = 0xFFFFFFFF;
 	bool distance_fade = false;
 	real_t distance_fade_begin = 40.0;
 	real_t distance_fade_shadow = 50.0;
@@ -204,7 +203,7 @@ struct LightmapInstance {
 
 class LightStorage : public RendererLightStorage {
 public:
-	enum ShadowAtlastQuadrant : uint32_t {
+	enum ShadowAtlastQuadrant {
 		QUADRANT_SHIFT = 27,
 		OMNI_LIGHT_FLAG = 1 << 26,
 		SHADOW_INDEX_MASK = OMNI_LIGHT_FLAG - 1,
@@ -306,8 +305,8 @@ public:
 
 	/* Light API */
 
-	Light *get_light(RID p_rid) { return light_owner.get_or_null(p_rid); }
-	bool owns_light(RID p_rid) { return light_owner.owns(p_rid); }
+	Light *get_light(RID p_rid) { return light_owner.get_or_null(p_rid); };
+	bool owns_light(RID p_rid) { return light_owner.owns(p_rid); };
 
 	void _light_initialize(RID p_rid, RS::LightType p_type);
 
@@ -328,8 +327,6 @@ public:
 	virtual void light_set_cull_mask(RID p_light, uint32_t p_mask) override;
 	virtual void light_set_distance_fade(RID p_light, bool p_enabled, float p_begin, float p_shadow, float p_length) override;
 	virtual void light_set_reverse_cull_face_mode(RID p_light, bool p_enabled) override;
-	virtual void light_set_shadow_caster_mask(RID p_light, uint32_t p_caster_mask) override;
-	virtual uint32_t light_get_shadow_caster_mask(RID p_light) const override;
 	virtual void light_set_bake_mode(RID p_light, RS::LightBakeMode p_bake_mode) override;
 	virtual void light_set_max_sdfgi_cascade(RID p_light, uint32_t p_cascade) override {}
 
@@ -434,8 +431,8 @@ public:
 
 	/* LIGHT INSTANCE API */
 
-	LightInstance *get_light_instance(RID p_rid) { return light_instance_owner.get_or_null(p_rid); }
-	bool owns_light_instance(RID p_rid) { return light_instance_owner.owns(p_rid); }
+	LightInstance *get_light_instance(RID p_rid) { return light_instance_owner.get_or_null(p_rid); };
+	bool owns_light_instance(RID p_rid) { return light_instance_owner.owns(p_rid); };
 
 	virtual RID light_instance_create(RID p_light) override;
 	virtual void light_instance_free(RID p_light_instance) override;
@@ -633,8 +630,8 @@ public:
 
 	/* PROBE API */
 
-	ReflectionProbe *get_reflection_probe(RID p_rid) { return reflection_probe_owner.get_or_null(p_rid); }
-	bool owns_reflection_probe(RID p_rid) { return reflection_probe_owner.owns(p_rid); }
+	ReflectionProbe *get_reflection_probe(RID p_rid) { return reflection_probe_owner.get_or_null(p_rid); };
+	bool owns_reflection_probe(RID p_rid) { return reflection_probe_owner.owns(p_rid); };
 
 	virtual RID reflection_probe_allocate() override;
 	virtual void reflection_probe_initialize(RID p_rid) override;
@@ -715,8 +712,8 @@ public:
 
 	/* LIGHTMAP CAPTURE */
 
-	Lightmap *get_lightmap(RID p_rid) { return lightmap_owner.get_or_null(p_rid); }
-	bool owns_lightmap(RID p_rid) { return lightmap_owner.owns(p_rid); }
+	Lightmap *get_lightmap(RID p_rid) { return lightmap_owner.get_or_null(p_rid); };
+	bool owns_lightmap(RID p_rid) { return lightmap_owner.owns(p_rid); };
 
 	virtual RID lightmap_allocate() override;
 	virtual void lightmap_initialize(RID p_rid) override;
@@ -739,15 +736,15 @@ public:
 
 	/* LIGHTMAP INSTANCE */
 
-	LightmapInstance *get_lightmap_instance(RID p_rid) { return lightmap_instance_owner.get_or_null(p_rid); }
-	bool owns_lightmap_instance(RID p_rid) { return lightmap_instance_owner.owns(p_rid); }
+	LightmapInstance *get_lightmap_instance(RID p_rid) { return lightmap_instance_owner.get_or_null(p_rid); };
+	bool owns_lightmap_instance(RID p_rid) { return lightmap_instance_owner.owns(p_rid); };
 
 	virtual RID lightmap_instance_create(RID p_lightmap) override;
 	virtual void lightmap_instance_free(RID p_lightmap) override;
 	virtual void lightmap_instance_set_transform(RID p_lightmap, const Transform3D &p_transform) override;
 
 	/* SHADOW ATLAS API */
-	bool owns_shadow_atlas(RID p_rid) { return shadow_atlas_owner.owns(p_rid); }
+	bool owns_shadow_atlas(RID p_rid) { return shadow_atlas_owner.owns(p_rid); };
 
 	virtual RID shadow_atlas_create() override;
 	virtual void shadow_atlas_free(RID p_atlas) override;

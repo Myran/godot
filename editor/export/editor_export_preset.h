@@ -74,8 +74,6 @@ private:
 	bool advanced_options_enabled = false;
 	bool dedicated_server = false;
 
-	Vector<String> patches;
-
 	friend class EditorExport;
 	friend class EditorExportPlatform;
 
@@ -92,7 +90,6 @@ private:
 	String enc_ex_filters;
 	bool enc_pck = false;
 	bool enc_directory = false;
-	uint64_t seed = 0;
 
 	String script_key;
 	int script_mode = MODE_SCRIPT_BINARY_TOKENS_COMPRESSED;
@@ -147,13 +144,6 @@ public:
 	void set_exclude_filter(const String &p_exclude);
 	String get_exclude_filter() const;
 
-	void add_patch(const String &p_path, int p_at_pos = -1);
-	void set_patch(int p_index, const String &p_path);
-	String get_patch(int p_index);
-	void remove_patch(int p_index);
-	void set_patches(const Vector<String> &p_patches);
-	Vector<String> get_patches() const;
-
 	void set_custom_features(const String &p_custom_features);
 	String get_custom_features() const;
 
@@ -165,9 +155,6 @@ public:
 
 	void set_enc_ex_filter(const String &p_filter);
 	String get_enc_ex_filter() const;
-
-	void set_seed(uint64_t p_seed);
-	uint64_t get_seed() const;
 
 	void set_enc_pck(bool p_enabled);
 	bool get_enc_pck() const;
@@ -181,9 +168,6 @@ public:
 	void set_script_export_mode(int p_mode);
 	int get_script_export_mode() const;
 
-	Variant _get_or_env(const StringName &p_name, const String &p_env_var) const {
-		return get_or_env(p_name, p_env_var);
-	}
 	Variant get_or_env(const StringName &p_name, const String &p_env_var, bool *r_valid = nullptr) const;
 
 	// Return the preset's version number, or fall back to the
@@ -198,9 +182,5 @@ public:
 
 	EditorExportPreset();
 };
-
-VARIANT_ENUM_CAST(EditorExportPreset::ExportFilter);
-VARIANT_ENUM_CAST(EditorExportPreset::FileExportMode);
-VARIANT_ENUM_CAST(EditorExportPreset::ScriptExportMode);
 
 #endif // EDITOR_EXPORT_PRESET_H

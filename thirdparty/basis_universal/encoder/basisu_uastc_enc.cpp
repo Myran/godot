@@ -1,5 +1,5 @@
 // basisu_uastc_enc.cpp
-// Copyright (C) 2019-2024 Binomial LLC. All Rights Reserved.
+// Copyright (C) 2019-2021 Binomial LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "basisu_uastc_enc.h"
-#include "3rdparty/android_astc_decomp.h"
+
+#if BASISU_USE_ASTC_DECOMPRESS
+#include "basisu_astc_decomp.h"
+#endif
+
 #include "basisu_gpu_texture.h"
 #include "basisu_bc7enc.h"
 
@@ -380,7 +384,6 @@ namespace basisu
 		}
 
 		uint32_t total_endpoint_bits = 0;
-		(void)total_endpoint_bits;
 
 		for (uint32_t i = 0; i < total_tq_values; i++)
 		{
@@ -425,8 +428,6 @@ namespace basisu
 #endif
 
 		uint32_t total_weight_bits = 0;
-		(void)total_weight_bits;
-
 		const uint32_t plane_shift = (total_planes == 2) ? 1 : 0;
 		for (uint32_t i = 0; i < 16 * total_planes; i++)
 		{
@@ -3174,7 +3175,6 @@ namespace basisu
 		const bool favor_bc7_error = !favor_uastc_error && ((flags & cPackUASTCFavorBC7Error) != 0);
 		//const bool etc1_perceptual = true;
 		
-		// TODO: This uses 64KB of stack space!
 		uastc_encode_results results[MAX_ENCODE_RESULTS];
 						
 		level = clampi(level, cPackUASTCLevelFastest, cPackUASTCLevelVerySlow);
@@ -3567,6 +3567,7 @@ namespace basisu
 			success = basist::unpack_uastc(temp_block, (basist::color32 *)temp_block_unpacked, false);
 			VALIDATE(success);
 
+#if BASISU_USE_ASTC_DECOMPRESS
 			// Now round trip to packed ASTC and back, then decode to pixels.
 			uint32_t astc_data[4];
 			
@@ -3579,7 +3580,7 @@ namespace basisu
 			}
 
 			color_rgba decoded_astc_block[4][4];
-			success = basisu_astc::astc::decompress_ldr((uint8_t*)decoded_astc_block, (uint8_t*)&astc_data, false, 4, 4);
+			success = basisu_astc::astc::decompress((uint8_t*)decoded_astc_block, (uint8_t*)&astc_data, false, 4, 4);
 			VALIDATE(success);
 
 			for (uint32_t y = 0; y < 4; y++)
@@ -3594,6 +3595,7 @@ namespace basisu
 					VALIDATE(temp_block_unpacked[y][x].c[3] == decoded_uastc_block[y][x].a);
 				}
 			}
+#endif
 		}
 #endif
 
@@ -3787,9 +3789,8 @@ namespace basisu
 	{
 		uint64_t m_sel;
 		uint32_t m_ofs;
-		uint32_t m_pad; // avoid implicit padding for selector_bitsequence_hash
 		selector_bitsequence() { }
-		selector_bitsequence(uint32_t bit_ofs, uint64_t sel) : m_sel(sel), m_ofs(bit_ofs), m_pad(0) { }
+		selector_bitsequence(uint32_t bit_ofs, uint64_t sel) : m_sel(sel), m_ofs(bit_ofs) { }
 		bool operator== (const selector_bitsequence& other) const
 		{
 			return (m_ofs == other.m_ofs) && (m_sel == other.m_sel);
@@ -3810,7 +3811,7 @@ namespace basisu
 	{
 		std::size_t operator()(selector_bitsequence const& s) const noexcept
 		{
-			return hash_hsieh((const uint8_t*)&s, sizeof(s));
+			return static_cast<std::size_t>(hash_hsieh((uint8_t *)&s, sizeof(s)) ^ s.m_sel);
 		}
 	};
 

@@ -35,8 +35,8 @@
 #include "core/io/stream_peer_tls.h"
 #include "core/version.h"
 
-HTTPClient *HTTPClientTCP::_create_func(bool p_notify_postinitialize) {
-	return static_cast<HTTPClient *>(ClassDB::creator<HTTPClientTCP>(p_notify_postinitialize));
+HTTPClient *HTTPClientTCP::_create_func() {
+	return memnew(HTTPClientTCP);
 }
 
 Error HTTPClientTCP::connect_to_host(const String &p_host, int p_port, Ref<TLSOptions> p_options) {
@@ -662,16 +662,15 @@ PackedByteArray HTTPClientTCP::read_response_body_chunk() {
 				chunk_left -= rec;
 
 				if (chunk_left == 0) {
-					const int chunk_size = chunk.size();
-					if (chunk[chunk_size - 2] != '\r' || chunk[chunk_size - 1] != '\n') {
+					if (chunk[chunk.size() - 2] != '\r' || chunk[chunk.size() - 1] != '\n') {
 						ERR_PRINT("HTTP Invalid chunk terminator (not \\r\\n)");
 						status = STATUS_CONNECTION_ERROR;
 						break;
 					}
 
-					ret.resize(chunk_size - 2);
+					ret.resize(chunk.size() - 2);
 					uint8_t *w = ret.ptrw();
-					memcpy(w, chunk.ptr(), chunk_size - 2);
+					memcpy(w, chunk.ptr(), chunk.size() - 2);
 					chunk.clear();
 				}
 
@@ -793,6 +792,6 @@ HTTPClientTCP::HTTPClientTCP() {
 	request_buffer.instantiate();
 }
 
-HTTPClient *(*HTTPClient::_create)(bool p_notify_postinitialize) = HTTPClientTCP::_create_func;
+HTTPClient *(*HTTPClient::_create)() = HTTPClientTCP::_create_func;
 
 #endif // WEB_ENABLED

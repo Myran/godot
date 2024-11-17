@@ -271,7 +271,7 @@ bool NavigationRegion3D::is_baking() const {
 }
 
 PackedStringArray NavigationRegion3D::get_configuration_warnings() const {
-	PackedStringArray warnings = Node3D::get_configuration_warnings();
+	PackedStringArray warnings = Node::get_configuration_warnings();
 
 	if (is_visible_in_tree() && is_inside_tree()) {
 		if (!navigation_mesh.is_valid()) {
@@ -492,8 +492,8 @@ void NavigationRegion3D::_update_debug_mesh() {
 		debug_instance = RenderingServer::get_singleton()->instance_create();
 	}
 
-	if (debug_mesh.is_null()) {
-		debug_mesh.instantiate();
+	if (!debug_mesh.is_valid()) {
+		debug_mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
 	}
 
 	debug_mesh->clear_surfaces();
@@ -669,8 +669,8 @@ void NavigationRegion3D::_update_debug_edge_connections_mesh() {
 		debug_edge_connections_instance = RenderingServer::get_singleton()->instance_create();
 	}
 
-	if (debug_edge_connections_mesh.is_null()) {
-		debug_edge_connections_mesh.instantiate();
+	if (!debug_edge_connections_mesh.is_valid()) {
+		debug_edge_connections_mesh = Ref<ArrayMesh>(memnew(ArrayMesh));
 	}
 
 	debug_edge_connections_mesh->clear_surfaces();

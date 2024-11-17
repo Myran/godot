@@ -35,7 +35,6 @@
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
-#include "core/io/image.h"
 #include "core/os/os.h"
 #include "storage/texture_storage.h"
 
@@ -85,10 +84,6 @@
 
 #if defined(MINGW_ENABLED) || defined(_MSC_VER)
 #define strcpy strcpy_s
-#endif
-
-#ifdef WINDOWS_ENABLED
-bool RasterizerGLES3::screen_flipped_y = false;
 #endif
 
 bool RasterizerGLES3::gles_over_gl = true;
@@ -218,7 +213,6 @@ void RasterizerGLES3::finalize() {
 	memdelete(glow);
 	memdelete(cubemap_filter);
 	memdelete(copy_effects);
-	memdelete(feed_effects);
 	memdelete(light_storage);
 	memdelete(particles_storage);
 	memdelete(mesh_storage);
@@ -355,6 +349,9 @@ RasterizerGLES3::RasterizerGLES3() {
 		}
 	}
 
+	// Disable OpenGL linear to sRGB conversion, because Godot will always do this conversion itself.
+	glDisable(GL_FRAMEBUFFER_SRGB);
+
 	// OpenGL needs to be initialized before initializing the Rasterizers
 	config = memnew(GLES3::Config);
 	utilities = memnew(GLES3::Utilities);
@@ -367,16 +364,10 @@ RasterizerGLES3::RasterizerGLES3() {
 	cubemap_filter = memnew(GLES3::CubemapFilter);
 	glow = memnew(GLES3::Glow);
 	post_effects = memnew(GLES3::PostEffects);
-	feed_effects = memnew(GLES3::FeedEffects);
 	gi = memnew(GLES3::GI);
 	fog = memnew(GLES3::Fog);
 	canvas = memnew(RasterizerCanvasGLES3());
 	scene = memnew(RasterizerSceneGLES3());
-
-	// Disable OpenGL linear to sRGB conversion, because Godot will always do this conversion itself.
-	if (config->srgb_framebuffer_supported) {
-		glDisable(GL_FRAMEBUFFER_SRGB);
-	}
 }
 
 RasterizerGLES3::~RasterizerGLES3() {
@@ -395,12 +386,6 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 		// We're probably rendering directly to an XR device.
 		flip_y = false;
 	}
-
-#ifdef WINDOWS_ENABLED
-	if (screen_flipped_y) {
-		flip_y = !flip_y;
-	}
-#endif
 
 	GLuint read_fbo = 0;
 	glGenFramebuffers(1, &read_fbo);
@@ -498,14 +483,9 @@ void RasterizerGLES3::set_boot_image(const Ref<Image> &p_image, const Color &p_c
 		screenrect.position += ((Size2(win_size.width, win_size.height) - screenrect.size) / 2.0).floor();
 	}
 
-#ifdef WINDOWS_ENABLED
-	if (!screen_flipped_y)
-#endif
-	{
-		// Flip Y.
-		screenrect.position.y = win_size.y - screenrect.position.y;
-		screenrect.size.y = -screenrect.size.y;
-	}
+	// Flip Y.
+	screenrect.position.y = win_size.y - screenrect.position.y;
+	screenrect.size.y = -screenrect.size.y;
 
 	// Normalize texture coordinates to window size.
 	screenrect.position /= win_size;

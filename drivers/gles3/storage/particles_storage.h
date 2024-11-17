@@ -396,7 +396,7 @@ public:
 
 	_FORCE_INLINE_ bool particles_has_collision(RID p_particles) {
 		Particles *particles = particles_owner.get_or_null(p_particles);
-		ERR_FAIL_NULL_V(particles, false);
+		ERR_FAIL_NULL_V(particles, 0);
 
 		return particles->has_collision_cache;
 	}

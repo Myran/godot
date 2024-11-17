@@ -30,9 +30,7 @@
      l = lang, C = ctry, M = charmap, V = variant
 */
 
-#include <algorithm>
 #include <optional>
-#include <string_view>
 
 #include "unicode/bytestream.h"
 #include "unicode/errorcode.h"
@@ -553,17 +551,17 @@ namespace {
  * @param status return status (keyword too long)
  * @return the keyword name
  */
-CharString locale_canonKeywordName(std::string_view keywordName, UErrorCode& status)
+CharString locale_canonKeywordName(const char* keywordName, UErrorCode& status)
 {
   if (U_FAILURE(status)) { return {}; }
   CharString result;
 
-  for (char c : keywordName) {
-    if (!UPRV_ISALPHANUM(c)) {
+  for (; *keywordName != 0; keywordName++) {
+    if (!UPRV_ISALPHANUM(*keywordName)) {
       status = U_ILLEGAL_ARGUMENT_ERROR; /* malformed keyword name */
       return {};
     }
-    result.append(uprv_tolower(c), status);
+    result.append(uprv_tolower(*keywordName), status);
   }
   if (result.isEmpty()) {
     status = U_ILLEGAL_ARGUMENT_ERROR; /* empty keyword name */
@@ -582,8 +580,8 @@ typedef struct {
 
 int32_t U_CALLCONV
 compareKeywordStructs(const void * /*context*/, const void *left, const void *right) {
-    const char* leftString = static_cast<const KeywordStruct*>(left)->keyword;
-    const char* rightString = static_cast<const KeywordStruct*>(right)->keyword;
+    const char* leftString = ((const KeywordStruct *)left)->keyword;
+    const char* rightString = ((const KeywordStruct *)right)->keyword;
     return uprv_strcmp(leftString, rightString);
 }
 
@@ -688,10 +686,10 @@ ulocimp_getKeywords(const char* localeID,
                 while(*(pos - i - 1) == ' ') {
                     i++;
                 }
-                keywordList[numKeywords].valueLen = static_cast<int32_t>(pos - equalSign - i);
+                keywordList[numKeywords].valueLen = (int32_t)(pos - equalSign - i);
                 pos++;
             } else {
-                i = static_cast<int32_t>(uprv_strlen(equalSign));
+                i = (int32_t)uprv_strlen(equalSign);
                 while(i && equalSign[i-1] == ' ') {
                     i--;
                 }
@@ -735,11 +733,6 @@ uloc_getKeywordValue(const char* localeID,
                      char* buffer, int32_t bufferCapacity,
                      UErrorCode* status)
 {
-    if (U_FAILURE(*status)) { return 0; }
-    if (keywordName == nullptr || *keywordName == '\0') {
-        *status = U_ILLEGAL_ARGUMENT_ERROR;
-        return 0;
-    }
     return ByteSinkUtil::viaByteSinkToTerminatedChars(
         buffer, bufferCapacity,
         [&](ByteSink& sink, UErrorCode& status) {
@@ -750,7 +743,7 @@ uloc_getKeywordValue(const char* localeID,
 
 U_EXPORT CharString
 ulocimp_getKeywordValue(const char* localeID,
-                        std::string_view keywordName,
+                        const char* keywordName,
                         UErrorCode& status)
 {
     return ByteSinkUtil::viaByteSinkToCharString(
@@ -762,13 +755,13 @@ ulocimp_getKeywordValue(const char* localeID,
 
 U_EXPORT void
 ulocimp_getKeywordValue(const char* localeID,
-                        std::string_view keywordName,
+                        const char* keywordName,
                         icu::ByteSink& sink,
                         UErrorCode& status)
 {
     if (U_FAILURE(status)) { return; }
 
-    if (localeID == nullptr || keywordName.empty()) {
+    if (localeID == nullptr || keywordName == nullptr || keywordName[0] == 0) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
@@ -872,11 +865,6 @@ uloc_setKeywordValue(const char* keywordName,
 {
     if (U_FAILURE(*status)) { return 0; }
 
-    if (keywordName == nullptr || *keywordName == 0) {
-        *status = U_ILLEGAL_ARGUMENT_ERROR;
-        return 0;
-    }
-
     if (bufferCapacity <= 1) {
         *status = U_ILLEGAL_ARGUMENT_ERROR;
         return 0;
@@ -895,11 +883,7 @@ uloc_setKeywordValue(const char* keywordName,
     CheckedArrayByteSink sink(keywords == nullptr ? buffer + bufLen : keywords,
                               bufferCapacity - baseLen - 1);
     int32_t reslen = ulocimp_setKeywordValue(
-        keywords == nullptr ? std::string_view() : keywords,
-        keywordName,
-        keywordValue == nullptr ? std::string_view() : keywordValue,
-        sink,
-        *status);
+            keywords, keywordName, keywordValue, sink, *status);
 
     if (U_FAILURE(*status)) {
         return *status == U_BUFFER_OVERFLOW_ERROR ? reslen + baseLen : 0;
@@ -914,29 +898,24 @@ uloc_setKeywordValue(const char* keywordName,
 }
 
 U_EXPORT void
-ulocimp_setKeywordValue(std::string_view keywordName,
-                        std::string_view keywordValue,
+ulocimp_setKeywordValue(const char* keywordName,
+                        const char* keywordValue,
                         CharString& localeID,
                         UErrorCode& status)
 {
     if (U_FAILURE(status)) { return; }
-    std::string_view keywords;
-    if (const char* start = locale_getKeywordsStart(localeID.data()); start != nullptr) {
-        // This is safe because CharString::truncate() doesn't actually erase any
-        // data, but simply sets the position for where new data will be written.
-        int32_t size = start - localeID.data();
-        keywords = localeID.toStringPiece();
-        keywords.remove_prefix(size);
-        localeID.truncate(size);
-    }
+    // This is safe because CharString::truncate() doesn't actually erase any
+    // data, but simply sets the position for where new data will be written.
+    const char* keywords = locale_getKeywordsStart(localeID.data());
+    if (keywords != nullptr) localeID.truncate(keywords - localeID.data());
     CharStringByteSink sink(&localeID);
     ulocimp_setKeywordValue(keywords, keywordName, keywordValue, sink, status);
 }
 
 U_EXPORT int32_t
-ulocimp_setKeywordValue(std::string_view keywords,
-                        std::string_view keywordName,
-                        std::string_view keywordValue,
+ulocimp_setKeywordValue(const char* keywords,
+                        const char* keywordName,
+                        const char* keywordValue,
                         ByteSink& sink,
                         UErrorCode& status)
 {
@@ -945,6 +924,9 @@ ulocimp_setKeywordValue(std::string_view keywords,
     /* TODO: sorting. removal. */
     int32_t needLen = 0;
     int32_t rc;
+    const char* nextSeparator = nullptr;
+    const char* nextEqualsign = nullptr;
+    const char* keywordStart = nullptr;
     CharString updatedKeysAndValues;
     bool handledInputKeyAndValue = false;
     char keyValuePrefix = '@';
@@ -952,7 +934,7 @@ ulocimp_setKeywordValue(std::string_view keywords,
     if (status == U_STRING_NOT_TERMINATED_WARNING) {
         status = U_ZERO_ERROR;
     }
-    if (keywordName.empty()) {
+    if (keywordName == nullptr || keywordName[0] == 0) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return 0;
     }
@@ -962,19 +944,21 @@ ulocimp_setKeywordValue(std::string_view keywords,
     }
 
     CharString canonKeywordValue;
-    for (char c : keywordValue) {
-        if (!UPRV_ISALPHANUM(c) && !UPRV_OK_VALUE_PUNCTUATION(c)) {
-            status = U_ILLEGAL_ARGUMENT_ERROR; /* malformed key value */
-            return 0;
+    if(keywordValue) {
+        while (*keywordValue != 0) {
+            if (!UPRV_ISALPHANUM(*keywordValue) && !UPRV_OK_VALUE_PUNCTUATION(*keywordValue)) {
+                status = U_ILLEGAL_ARGUMENT_ERROR; /* malformed key value */
+                return 0;
+            }
+            /* Should we force lowercase in value to set? */
+            canonKeywordValue.append(*keywordValue++, status);
         }
-        /* Should we force lowercase in value to set? */
-        canonKeywordValue.append(c, status);
     }
     if (U_FAILURE(status)) {
         return 0;
     }
 
-    if (keywords.size() <= 1) {
+    if (keywords == nullptr || keywords[1] == '\0') {
         if (canonKeywordValue.isEmpty()) { /* no keywords = nothing to remove */
             U_ASSERT(status != U_STRING_NOT_TERMINATED_WARNING);
             return 0;
@@ -1000,20 +984,23 @@ ulocimp_setKeywordValue(std::string_view keywords,
         return needLen;
     } /* end shortcut - no @ */
 
+    keywordStart = keywords;
     /* search for keyword */
-    for (size_t keywordStart = 0; keywordStart != std::string_view::npos;) {
+    while(keywordStart) {
+        const char* keyValueTail;
+
         keywordStart++; /* skip @ or ; */
-        size_t nextEqualsign = keywords.find('=', keywordStart);
-        if (nextEqualsign == std::string_view::npos) {
+        nextEqualsign = uprv_strchr(keywordStart, '=');
+        if (!nextEqualsign) {
             status = U_ILLEGAL_ARGUMENT_ERROR; /* key must have =value */
             return 0;
         }
         /* strip leading & trailing spaces (TC decided to tolerate these) */
-        while (keywordStart < keywords.size() && keywords[keywordStart] == ' ') {
+        while(*keywordStart == ' ') {
             keywordStart++;
         }
-        size_t keyValueTail = nextEqualsign;
-        while (keyValueTail > keywordStart && keywords[keyValueTail - 1] == ' ') {
+        keyValueTail = nextEqualsign;
+        while (keyValueTail > keywordStart && *(keyValueTail-1) == ' ') {
             keyValueTail--;
         }
         /* now keyValueTail points to first char after the keyName */
@@ -1024,26 +1011,26 @@ ulocimp_setKeywordValue(std::string_view keywords,
         }
         CharString localeKeywordName;
         while (keywordStart < keyValueTail) {
-            if (!UPRV_ISALPHANUM(keywords[keywordStart])) {
+            if (!UPRV_ISALPHANUM(*keywordStart)) {
                 status = U_ILLEGAL_ARGUMENT_ERROR; /* malformed keyword name */
                 return 0;
             }
-            localeKeywordName.append(uprv_tolower(keywords[keywordStart++]), status);
+            localeKeywordName.append(uprv_tolower(*keywordStart++), status);
         }
         if (U_FAILURE(status)) {
             return 0;
         }
 
-        size_t nextSeparator = keywords.find(';', nextEqualsign);
+        nextSeparator = uprv_strchr(nextEqualsign, ';');
 
         /* start processing the value part */
         nextEqualsign++; /* skip '=' */
         /* First strip leading & trailing spaces (TC decided to tolerate these) */
-        while (nextEqualsign < keywords.size() && keywords[nextEqualsign] == ' ') {
+        while(*nextEqualsign == ' ') {
             nextEqualsign++;
         }
-        keyValueTail = nextSeparator == std::string_view::npos ? keywords.size() : nextSeparator;
-        while (keyValueTail > nextEqualsign && keywords[keyValueTail - 1] == ' ') {
+        keyValueTail = (nextSeparator)? nextSeparator: nextEqualsign + uprv_strlen(nextEqualsign);
+        while(keyValueTail > nextEqualsign && *(keyValueTail-1) == ' ') {
             keyValueTail--;
         }
         if (nextEqualsign == keyValueTail) {
@@ -1078,10 +1065,9 @@ ulocimp_setKeywordValue(std::string_view keywords,
             keyValuePrefix = ';'; /* for any subsequent key-value pair */
             updatedKeysAndValues.append(localeKeywordName, status);
             updatedKeysAndValues.append('=', status);
-            updatedKeysAndValues.append(keywords.data() + nextEqualsign,
-                                        static_cast<int32_t>(keyValueTail - nextEqualsign), status);
+            updatedKeysAndValues.append(nextEqualsign, static_cast<int32_t>(keyValueTail-nextEqualsign), status);
         }
-        if (nextSeparator == std::string_view::npos && !canonKeywordValue.isEmpty() && !handledInputKeyAndValue) {
+        if (!nextSeparator && !canonKeywordValue.isEmpty() && !handledInputKeyAndValue) {
             /* append new entry at the end, it sorts later than existing entries */
             updatedKeysAndValues.append(keyValuePrefix, status);
             /* skip keyValuePrefix update, no subsequent key-value pair */
@@ -1105,7 +1091,7 @@ ulocimp_setKeywordValue(std::string_view keywords,
         /* if input key/value specified removal of a keyword not present in locale, or
          * there was an error in CharString.append, leave original locale alone. */
         U_ASSERT(status != U_STRING_NOT_TERMINATED_WARNING);
-        return static_cast<int32_t>(keywords.size());
+        return (int32_t)uprv_strlen(keywords);
     }
 
     needLen = updatedKeysAndValues.length();
@@ -1169,7 +1155,7 @@ std::optional<int16_t> _findIndex(const char* const* list, const char* key)
     while (pass++ < 2) {
         while (*list) {
             if (uprv_strcmp(key, *list) == 0) {
-                return static_cast<int16_t>(list - anchor);
+                return (int16_t)(list - anchor);
             }
             list++;
         }
@@ -1255,7 +1241,7 @@ _getLanguage(const char* localeID,
         std::optional<int16_t> offset = _findIndex(LANGUAGES_3, buffer);
         if (offset.has_value()) {
             const char* const alias = LANGUAGES[*offset];
-            sink->Append(alias, static_cast<int32_t>(uprv_strlen(alias)));
+            sink->Append(alias, (int32_t)uprv_strlen(alias));
             return;
         }
     }
@@ -1336,7 +1322,7 @@ _getRegion(const char* localeID,
         std::optional<int16_t> offset = _findIndex(COUNTRIES_3, buffer);
         if (offset.has_value()) {
             const char* const alias = COUNTRIES[*offset];
-            sink->Append(alias, static_cast<int32_t>(uprv_strlen(alias)));
+            sink->Append(alias, (int32_t)uprv_strlen(alias));
             return;
         }
     }
@@ -1384,7 +1370,7 @@ _getVariant(const char* localeID,
                 needSeparator = false;
             }
             if (sink != nullptr) {
-                char c = uprv_toupper(localeID[index]);
+                char c = (char)uprv_toupper(localeID[index]);
                 if (c == '-') c = '_';
                 sink->Append(&c, 1);
             }
@@ -1413,7 +1399,7 @@ _getVariant(const char* localeID,
                 needSeparator = false;
             }
             if (sink != nullptr) {
-                char c = uprv_toupper(localeID[index]);
+                char c = (char)uprv_toupper(localeID[index]);
                 if (c == '-' || c == ',') c = '_';
                 sink->Append(&c, 1);
             }
@@ -1969,7 +1955,7 @@ ulocimp_getParent(const char* localeID,
 
     lastUnderscore=uprv_strrchr(localeID, '_');
     if(lastUnderscore!=nullptr) {
-        i = static_cast<int32_t>(lastUnderscore - localeID);
+        i=(int32_t)(lastUnderscore-localeID);
     } else {
         i=0;
     }
@@ -2232,7 +2218,7 @@ uloc_getLCID(const char* localeID)
         CharString collVal = ulocimp_getKeywordValue(localeID, "collation", status);
         if (U_SUCCESS(status) && !collVal.isEmpty()) {
             CharString tmpLocaleID = ulocimp_getBaseName(localeID, status);
-            ulocimp_setKeywordValue("collation", collVal.toStringPiece(), tmpLocaleID, status);
+            ulocimp_setKeywordValue("collation", collVal.data(), tmpLocaleID, status);
             if (U_SUCCESS(status)) {
                 return uprv_convertToLCID(langID.data(), tmpLocaleID.data(), &status);
             }
@@ -2299,17 +2285,8 @@ uloc_getISOCountries()
 U_CAPI const char* U_EXPORT2
 uloc_toUnicodeLocaleKey(const char* keyword)
 {
-    if (keyword == nullptr || *keyword == '\0') { return nullptr; }
-    std::optional<std::string_view> result = ulocimp_toBcpKeyWithFallback(keyword);
-    return result.has_value() ? result->data() : nullptr;  // Known to be NUL terminated.
-}
-
-U_EXPORT std::optional<std::string_view>
-ulocimp_toBcpKeyWithFallback(std::string_view keyword)
-{
-    std::optional<std::string_view> bcpKey = ulocimp_toBcpKey(keyword);
-    if (!bcpKey.has_value() &&
-        ultag_isUnicodeLocaleKey(keyword.data(), static_cast<int32_t>(keyword.size()))) {
+    const char* bcpKey = ulocimp_toBcpKey(keyword);
+    if (bcpKey == nullptr && ultag_isUnicodeLocaleKey(keyword, -1)) {
         // unknown keyword, but syntax is fine..
         return keyword;
     }
@@ -2319,18 +2296,8 @@ ulocimp_toBcpKeyWithFallback(std::string_view keyword)
 U_CAPI const char* U_EXPORT2
 uloc_toUnicodeLocaleType(const char* keyword, const char* value)
 {
-    if (keyword == nullptr || *keyword == '\0' ||
-        value == nullptr || *value == '\0') { return nullptr; }
-    std::optional<std::string_view> result = ulocimp_toBcpTypeWithFallback(keyword, value);
-    return result.has_value() ? result->data() : nullptr;  // Known to be NUL terminated.
-}
-
-U_EXPORT std::optional<std::string_view>
-ulocimp_toBcpTypeWithFallback(std::string_view keyword, std::string_view value)
-{
-    std::optional<std::string_view> bcpType = ulocimp_toBcpType(keyword, value);
-    if (!bcpType.has_value() &&
-        ultag_isUnicodeLocaleType(value.data(), static_cast<int32_t>(value.size()))) {
+    const char* bcpType = ulocimp_toBcpType(keyword, value, nullptr, nullptr);
+    if (bcpType == nullptr && ultag_isUnicodeLocaleType(value, -1)) {
         // unknown keyword, but syntax is fine..
         return value;
     }
@@ -2340,28 +2307,37 @@ ulocimp_toBcpTypeWithFallback(std::string_view keyword, std::string_view value)
 namespace {
 
 bool
-isWellFormedLegacyKey(std::string_view key)
+isWellFormedLegacyKey(const char* legacyKey)
 {
-    return std::all_of(key.begin(), key.end(), UPRV_ISALPHANUM);
+    const char* p = legacyKey;
+    while (*p) {
+        if (!UPRV_ISALPHANUM(*p)) {
+            return false;
+        }
+        p++;
+    }
+    return true;
 }
 
 bool
-isWellFormedLegacyType(std::string_view legacyType)
+isWellFormedLegacyType(const char* legacyType)
 {
+    const char* p = legacyType;
     int32_t alphaNumLen = 0;
-    for (char c : legacyType) {
-        if (c == '_' || c == '/' || c == '-') {
+    while (*p) {
+        if (*p == '_' || *p == '/' || *p == '-') {
             if (alphaNumLen == 0) {
                 return false;
             }
             alphaNumLen = 0;
-        } else if (UPRV_ISALPHANUM(c)) {
+        } else if (UPRV_ISALPHANUM(*p)) {
             alphaNumLen++;
         } else {
             return false;
         }
+        p++;
     }
-    return alphaNumLen != 0;
+    return (alphaNumLen != 0);
 }
 
 }  // namespace
@@ -2369,16 +2345,8 @@ isWellFormedLegacyType(std::string_view legacyType)
 U_CAPI const char* U_EXPORT2
 uloc_toLegacyKey(const char* keyword)
 {
-    if (keyword == nullptr || *keyword == '\0') { return nullptr; }
-    std::optional<std::string_view> result = ulocimp_toLegacyKeyWithFallback(keyword);
-    return result.has_value() ? result->data() : nullptr;  // Known to be NUL terminated.
-}
-
-U_EXPORT std::optional<std::string_view>
-ulocimp_toLegacyKeyWithFallback(std::string_view keyword)
-{
-    std::optional<std::string_view> legacyKey = ulocimp_toLegacyKey(keyword);
-    if (!legacyKey.has_value() && isWellFormedLegacyKey(keyword)) {
+    const char* legacyKey = ulocimp_toLegacyKey(keyword);
+    if (legacyKey == nullptr) {
         // Checks if the specified locale key is well-formed with the legacy locale syntax.
         //
         // Note:
@@ -2386,7 +2354,9 @@ ulocimp_toLegacyKeyWithFallback(std::string_view keyword)
         //  * http://www.unicode.org/reports/tr35/#Unicode_locale_identifier and
         //  * http://www.unicode.org/reports/tr35/#Old_Locale_Extension_Syntax
         //  Keys can only consist of [0-9a-zA-Z].
-        return keyword;
+        if (isWellFormedLegacyKey(keyword)) {
+            return keyword;
+        }
     }
     return legacyKey;
 }
@@ -2394,17 +2364,8 @@ ulocimp_toLegacyKeyWithFallback(std::string_view keyword)
 U_CAPI const char* U_EXPORT2
 uloc_toLegacyType(const char* keyword, const char* value)
 {
-    if (keyword == nullptr || *keyword == '\0' ||
-        value == nullptr || *value == '\0') { return nullptr; }
-    std::optional<std::string_view> result = ulocimp_toLegacyTypeWithFallback(keyword, value);
-    return result.has_value() ? result->data() : nullptr;  // Known to be NUL terminated.
-}
-
-U_EXPORT std::optional<std::string_view>
-ulocimp_toLegacyTypeWithFallback(std::string_view keyword, std::string_view value)
-{
-    std::optional<std::string_view> legacyType = ulocimp_toLegacyType(keyword, value);
-    if (!legacyType.has_value() && isWellFormedLegacyType(value)) {
+    const char* legacyType = ulocimp_toLegacyType(keyword, value, nullptr, nullptr);
+    if (legacyType == nullptr) {
         // Checks if the specified locale type is well-formed with the legacy locale syntax.
         //
         // Note:
@@ -2413,7 +2374,9 @@ ulocimp_toLegacyTypeWithFallback(std::string_view keyword, std::string_view valu
         //  * http://www.unicode.org/reports/tr35/#Old_Locale_Extension_Syntax
         //  Values (types) can only consist of [0-9a-zA-Z], plus for legacy values
         //  we allow [/_-+] in the middle (e.g. "Etc/GMT+1", "Asia/Tel_Aviv")
-        return value;
+        if (isWellFormedLegacyType(value)) {
+            return value;
+        }
     }
     return legacyType;
 }

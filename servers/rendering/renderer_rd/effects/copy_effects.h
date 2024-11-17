@@ -217,6 +217,7 @@ private:
 		float z_far;
 		float z_near;
 		float texel_size[2];
+		float screen_rect[4];
 	};
 
 	struct CopyToDP {

@@ -44,24 +44,24 @@
 #include <cmath>
 
 const char *Image::format_names[Image::FORMAT_MAX] = {
-	"Lum8",
-	"LumAlpha8",
+	"Lum8", //luminance
+	"LumAlpha8", //luminance-alpha
 	"Red8",
 	"RedGreen",
 	"RGB8",
 	"RGBA8",
 	"RGBA4444",
-	"RGBA5551", // Actually RGB565, kept as RGBA5551 for compatibility.
-	"RFloat",
+	"RGBA5551",
+	"RFloat", //float
 	"RGFloat",
 	"RGBFloat",
 	"RGBAFloat",
-	"RHalf",
+	"RHalf", //half float
 	"RGHalf",
 	"RGBHalf",
 	"RGBAHalf",
 	"RGBE9995",
-	"DXT1 RGB8",
+	"DXT1 RGB8", //s3tc
 	"DXT3 RGBA8",
 	"DXT5 RGBA8",
 	"RGTC Red8",
@@ -69,9 +69,9 @@ const char *Image::format_names[Image::FORMAT_MAX] = {
 	"BPTC_RGBA",
 	"BPTC_RGBF",
 	"BPTC_RGBFU",
-	"ETC",
-	"ETC2_R11",
-	"ETC2_R11S",
+	"ETC", //etc1
+	"ETC2_R11", //etc2
+	"ETC2_R11S", //signed", NOT srgb.
 	"ETC2_RG11",
 	"ETC2_RG11S",
 	"ETC2_RGB8",
@@ -85,59 +85,16 @@ const char *Image::format_names[Image::FORMAT_MAX] = {
 	"ASTC_8x8_HDR",
 };
 
-// External saver function pointers.
-
 SavePNGFunc Image::save_png_func = nullptr;
 SaveJPGFunc Image::save_jpg_func = nullptr;
 SaveEXRFunc Image::save_exr_func = nullptr;
-SaveWebPFunc Image::save_webp_func = nullptr;
 
 SavePNGBufferFunc Image::save_png_buffer_func = nullptr;
-SaveJPGBufferFunc Image::save_jpg_buffer_func = nullptr;
 SaveEXRBufferFunc Image::save_exr_buffer_func = nullptr;
+SaveJPGBufferFunc Image::save_jpg_buffer_func = nullptr;
+
+SaveWebPFunc Image::save_webp_func = nullptr;
 SaveWebPBufferFunc Image::save_webp_buffer_func = nullptr;
-
-// External loader function pointers.
-
-ImageMemLoadFunc Image::_png_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_png_mem_unpacker_func = nullptr;
-ImageMemLoadFunc Image::_jpg_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_webp_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_tga_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_bmp_mem_loader_func = nullptr;
-ScalableImageMemLoadFunc Image::_svg_scalable_mem_loader_func = nullptr;
-ImageMemLoadFunc Image::_ktx_mem_loader_func = nullptr;
-
-// External VRAM compression function pointers.
-
-void (*Image::_image_compress_bc_func)(Image *, Image::UsedChannels) = nullptr;
-void (*Image::_image_compress_bptc_func)(Image *, Image::UsedChannels) = nullptr;
-void (*Image::_image_compress_etc1_func)(Image *) = nullptr;
-void (*Image::_image_compress_etc2_func)(Image *, Image::UsedChannels) = nullptr;
-void (*Image::_image_compress_astc_func)(Image *, Image::ASTCFormat) = nullptr;
-
-Error (*Image::_image_compress_bptc_rd_func)(Image *, Image::UsedChannels) = nullptr;
-Error (*Image::_image_compress_bc_rd_func)(Image *, Image::UsedChannels) = nullptr;
-
-// External VRAM decompression function pointers.
-
-void (*Image::_image_decompress_bc)(Image *) = nullptr;
-void (*Image::_image_decompress_bptc)(Image *) = nullptr;
-void (*Image::_image_decompress_etc1)(Image *) = nullptr;
-void (*Image::_image_decompress_etc2)(Image *) = nullptr;
-void (*Image::_image_decompress_astc)(Image *) = nullptr;
-
-// External packer function pointers.
-
-Vector<uint8_t> (*Image::webp_lossy_packer)(const Ref<Image> &, float) = nullptr;
-Vector<uint8_t> (*Image::webp_lossless_packer)(const Ref<Image> &) = nullptr;
-Vector<uint8_t> (*Image::png_packer)(const Ref<Image> &) = nullptr;
-Vector<uint8_t> (*Image::basis_universal_packer)(const Ref<Image> &, Image::UsedChannels) = nullptr;
-
-Ref<Image> (*Image::webp_unpacker)(const Vector<uint8_t> &) = nullptr;
-Ref<Image> (*Image::png_unpacker)(const Vector<uint8_t> &) = nullptr;
-Ref<Image> (*Image::basis_universal_unpacker)(const Vector<uint8_t> &) = nullptr;
-Ref<Image> (*Image::basis_universal_unpacker_ptr)(const uint8_t *, int) = nullptr;
 
 void Image::_put_pixelb(int p_x, int p_y, uint32_t p_pixel_size, uint8_t *p_data, const uint8_t *p_pixel) {
 	uint32_t ofs = (p_y * width + p_x) * p_pixel_size;
@@ -152,9 +109,9 @@ void Image::_get_pixelb(int p_x, int p_y, uint32_t p_pixel_size, const uint8_t *
 int Image::get_format_pixel_size(Format p_format) {
 	switch (p_format) {
 		case FORMAT_L8:
-			return 1;
+			return 1; //luminance
 		case FORMAT_LA8:
-			return 2;
+			return 2; //luminance-alpha
 		case FORMAT_R8:
 			return 1;
 		case FORMAT_RG8:
@@ -168,7 +125,7 @@ int Image::get_format_pixel_size(Format p_format) {
 		case FORMAT_RGB565:
 			return 2;
 		case FORMAT_RF:
-			return 4;
+			return 4; //float
 		case FORMAT_RGF:
 			return 8;
 		case FORMAT_RGBF:
@@ -176,7 +133,7 @@ int Image::get_format_pixel_size(Format p_format) {
 		case FORMAT_RGBAF:
 			return 16;
 		case FORMAT_RH:
-			return 2;
+			return 2; //half float
 		case FORMAT_RGH:
 			return 4;
 		case FORMAT_RGBH:
@@ -186,27 +143,27 @@ int Image::get_format_pixel_size(Format p_format) {
 		case FORMAT_RGBE9995:
 			return 4;
 		case FORMAT_DXT1:
-			return 1;
+			return 1; //s3tc bc1
 		case FORMAT_DXT3:
-			return 1;
+			return 1; //bc2
 		case FORMAT_DXT5:
-			return 1;
+			return 1; //bc3
 		case FORMAT_RGTC_R:
-			return 1;
+			return 1; //bc4
 		case FORMAT_RGTC_RG:
-			return 1;
+			return 1; //bc5
 		case FORMAT_BPTC_RGBA:
-			return 1;
+			return 1; //btpc bc6h
 		case FORMAT_BPTC_RGBF:
-			return 1;
+			return 1; //float /
 		case FORMAT_BPTC_RGBFU:
-			return 1;
+			return 1; //unsigned float
 		case FORMAT_ETC:
-			return 1;
+			return 1; //etc1
 		case FORMAT_ETC2_R11:
-			return 1;
+			return 1; //etc2
 		case FORMAT_ETC2_R11S:
-			return 1;
+			return 1; //signed: return 1; NOT srgb.
 		case FORMAT_ETC2_RG11:
 			return 1;
 		case FORMAT_ETC2_RG11S:
@@ -237,11 +194,12 @@ int Image::get_format_pixel_size(Format p_format) {
 
 void Image::get_format_min_pixel_size(Format p_format, int &r_w, int &r_h) {
 	switch (p_format) {
-		case FORMAT_DXT1:
-		case FORMAT_DXT3:
-		case FORMAT_DXT5:
-		case FORMAT_RGTC_R:
-		case FORMAT_RGTC_RG: {
+		case FORMAT_DXT1: //s3tc bc1
+		case FORMAT_DXT3: //bc2
+		case FORMAT_DXT5: //bc3
+		case FORMAT_RGTC_R: //bc4
+		case FORMAT_RGTC_RG: { //bc5		case case FORMAT_DXT1:
+
 			r_w = 4;
 			r_h = 4;
 		} break;
@@ -255,8 +213,8 @@ void Image::get_format_min_pixel_size(Format p_format, int &r_w, int &r_h) {
 			r_w = 4;
 			r_h = 4;
 		} break;
-		case FORMAT_ETC2_R11:
-		case FORMAT_ETC2_R11S:
+		case FORMAT_ETC2_R11: //etc2
+		case FORMAT_ETC2_R11S: //signed: NOT srgb.
 		case FORMAT_ETC2_RG11:
 		case FORMAT_ETC2_RG11S:
 		case FORMAT_ETC2_RGB8:
@@ -266,16 +224,19 @@ void Image::get_format_min_pixel_size(Format p_format, int &r_w, int &r_h) {
 		case FORMAT_DXT5_RA_AS_RG: {
 			r_w = 4;
 			r_h = 4;
+
 		} break;
 		case FORMAT_ASTC_4x4:
 		case FORMAT_ASTC_4x4_HDR: {
 			r_w = 4;
 			r_h = 4;
+
 		} break;
 		case FORMAT_ASTC_8x8:
 		case FORMAT_ASTC_8x8_HDR: {
 			r_w = 8;
 			r_h = 8;
+
 		} break;
 		default: {
 			r_w = 1;
@@ -296,11 +257,12 @@ int Image::get_format_pixel_rshift(Format p_format) {
 
 int Image::get_format_block_size(Format p_format) {
 	switch (p_format) {
-		case FORMAT_DXT1:
-		case FORMAT_DXT3:
-		case FORMAT_DXT5:
-		case FORMAT_RGTC_R:
-		case FORMAT_RGTC_RG: {
+		case FORMAT_DXT1: //s3tc bc1
+		case FORMAT_DXT3: //bc2
+		case FORMAT_DXT5: //bc3
+		case FORMAT_RGTC_R: //bc4
+		case FORMAT_RGTC_RG: { //bc5		case case FORMAT_DXT1:
+
 			return 4;
 		}
 		case FORMAT_ETC: {
@@ -311,15 +273,17 @@ int Image::get_format_block_size(Format p_format) {
 		case FORMAT_BPTC_RGBFU: {
 			return 4;
 		}
-		case FORMAT_ETC2_R11:
-		case FORMAT_ETC2_R11S:
+		case FORMAT_ETC2_R11: //etc2
+		case FORMAT_ETC2_R11S: //signed: NOT srgb.
 		case FORMAT_ETC2_RG11:
 		case FORMAT_ETC2_RG11S:
 		case FORMAT_ETC2_RGB8:
 		case FORMAT_ETC2_RGBA8:
 		case FORMAT_ETC2_RGB8A1:
-		case FORMAT_ETC2_RA_AS_RG:
-		case FORMAT_DXT5_RA_AS_RG: {
+		case FORMAT_ETC2_RA_AS_RG: //used to make basis universal happy
+		case FORMAT_DXT5_RA_AS_RG: //used to make basis universal happy
+
+		{
 			return 4;
 		}
 		case FORMAT_ASTC_4x4:
@@ -495,7 +459,7 @@ int Image::get_mipmap_count() const {
 	}
 }
 
-// Using template generates perfectly optimized code due to constant expression reduction and unused variable removal present in all compilers.
+//using template generates perfectly optimized code due to constant expression reduction and unused variable removal present in all compilers
 template <uint32_t read_bytes, bool read_alpha, uint32_t write_bytes, bool write_alpha, bool read_gray, bool write_gray>
 static void _convert(int p_width, int p_height, const uint8_t *p_src, uint8_t *p_dst) {
 	constexpr uint32_t max_bytes = MAX(read_bytes, write_bytes);
@@ -571,7 +535,7 @@ static bool _are_formats_compatible(Image::Format p_format0, Image::Format p_for
 }
 
 void Image::convert(Format p_new_format) {
-	ERR_FAIL_INDEX_MSG(p_new_format, FORMAT_MAX, vformat("The Image format specified (%d) is out of range. See Image's Format enum.", p_new_format));
+	ERR_FAIL_INDEX_MSG(p_new_format, FORMAT_MAX, "The Image format specified (" + itos(p_new_format) + ") is out of range. See Image's Format enum.");
 	if (data.size() == 0) {
 		return;
 	}
@@ -587,7 +551,7 @@ void Image::convert(Format p_new_format) {
 		ERR_FAIL_MSG("Cannot convert to <-> from compressed formats. Use compress() and decompress() instead.");
 
 	} else if (!_are_formats_compatible(format, p_new_format)) {
-		// Use put/set pixel which is slower but works with non-byte formats.
+		//use put/set pixel which is slower but works with non byte formats
 		Image new_img(width, height, mipmaps, p_new_format);
 
 		for (int mip = 0; mip < mipmap_count; mip++) {
@@ -902,10 +866,12 @@ static void _scale_cubic(const uint8_t *__restrict p_src, uint8_t *__restrict p_
 
 template <int CC, typename T>
 static void _scale_bilinear(const uint8_t *__restrict p_src, uint8_t *__restrict p_dst, uint32_t p_src_width, uint32_t p_src_height, uint32_t p_dst_width, uint32_t p_dst_height) {
-	constexpr uint32_t FRAC_BITS = 8;
-	constexpr uint32_t FRAC_LEN = (1 << FRAC_BITS);
-	constexpr uint32_t FRAC_HALF = (FRAC_LEN >> 1);
-	constexpr uint32_t FRAC_MASK = FRAC_LEN - 1;
+	enum {
+		FRAC_BITS = 8,
+		FRAC_LEN = (1 << FRAC_BITS),
+		FRAC_HALF = (FRAC_LEN >> 1),
+		FRAC_MASK = FRAC_LEN - 1
+	};
 
 	for (uint32_t i = 0; i < p_dst_height; i++) {
 		// Add 0.5 in order to interpolate based on pixel center
@@ -1168,9 +1134,9 @@ void Image::resize(int p_width, int p_height, Interpolation p_interpolation) {
 
 	ERR_FAIL_COND_MSG(p_width <= 0, "Image width must be greater than 0.");
 	ERR_FAIL_COND_MSG(p_height <= 0, "Image height must be greater than 0.");
-	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH, vformat("Image width cannot be greater than %d pixels.", MAX_WIDTH));
-	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT, vformat("Image height cannot be greater than %d pixels.", MAX_HEIGHT));
-	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS, vformat("Too many pixels for image, maximum is %d pixels.", MAX_PIXELS));
+	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH, "Image width cannot be greater than " + itos(MAX_WIDTH) + ".");
+	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT, "Image height cannot be greater than " + itos(MAX_HEIGHT) + ".");
+	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS, "Too many pixels for image, maximum is " + itos(MAX_PIXELS));
 
 	if (p_width == width && p_height == height) {
 		return;
@@ -1471,8 +1437,8 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 	ERR_FAIL_COND_MSG(p_y < 0, "Start y position cannot be smaller than 0.");
 	ERR_FAIL_COND_MSG(p_width <= 0, "Width of image must be greater than 0.");
 	ERR_FAIL_COND_MSG(p_height <= 0, "Height of image must be greater than 0.");
-	ERR_FAIL_COND_MSG(p_x + p_width > MAX_WIDTH, vformat("End x position cannot be greater than %d.", MAX_WIDTH));
-	ERR_FAIL_COND_MSG(p_y + p_height > MAX_HEIGHT, vformat("End y position cannot be greater than %d.", MAX_HEIGHT));
+	ERR_FAIL_COND_MSG(p_x + p_width > MAX_WIDTH, "End x position cannot be greater than " + itos(MAX_WIDTH) + ".");
+	ERR_FAIL_COND_MSG(p_y + p_height > MAX_HEIGHT, "End y position cannot be greater than " + itos(MAX_HEIGHT) + ".");
 
 	/* to save memory, cropping should be done in-place, however, since this function
 	   will most likely either not be used much, or in critical areas, for now it won't, because
@@ -1520,8 +1486,8 @@ void Image::crop(int p_width, int p_height) {
 
 void Image::rotate_90(ClockDirection p_direction) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
-	ERR_FAIL_COND_MSG(width <= 0, vformat("The Image width specified (%d pixels) must be greater than 0 pixels.", width));
-	ERR_FAIL_COND_MSG(height <= 0, vformat("The Image height specified (%d pixels) must be greater than 0 pixels.", height));
+	ERR_FAIL_COND_MSG(width <= 0, "The Image width specified (" + itos(width) + " pixels) must be greater than 0 pixels.");
+	ERR_FAIL_COND_MSG(height <= 0, "The Image height specified (" + itos(height) + " pixels) must be greater than 0 pixels.");
 
 	bool used_mipmaps = has_mipmaps();
 	if (used_mipmaps) {
@@ -1638,8 +1604,8 @@ void Image::rotate_90(ClockDirection p_direction) {
 
 void Image::rotate_180() {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
-	ERR_FAIL_COND_MSG(width <= 0, vformat("The Image width specified (%d pixels) must be greater than 0 pixels.", width));
-	ERR_FAIL_COND_MSG(height <= 0, vformat("The Image height specified (%d pixels) must be greater than 0 pixels.", height));
+	ERR_FAIL_COND_MSG(width <= 0, "The Image width specified (" + itos(width) + " pixels) must be greater than 0 pixels.");
+	ERR_FAIL_COND_MSG(height <= 0, "The Image height specified (" + itos(height) + " pixels) must be greater than 0 pixels.");
 
 	bool used_mipmaps = has_mipmaps();
 	if (used_mipmaps) {
@@ -1730,7 +1696,7 @@ void Image::flip_x() {
 	}
 }
 
-// Get mipmap size and offset.
+/// Get mipmap size and offset.
 int64_t Image::_get_dst_image_size(int p_width, int p_height, Format p_format, int &r_mipmaps, int p_mipmaps, int *r_mm_width, int *r_mm_height) {
 	// Data offset in mipmaps (including the original texture).
 	int64_t size = 0;
@@ -2285,15 +2251,15 @@ void Image::set_data(int p_width, int p_height, bool p_use_mipmaps, Format p_for
 }
 
 void Image::initialize_data(int p_width, int p_height, bool p_use_mipmaps, Format p_format) {
-	ERR_FAIL_COND_MSG(p_width <= 0, vformat("The Image width specified (%d pixels) must be greater than 0 pixels.", p_width));
-	ERR_FAIL_COND_MSG(p_height <= 0, vformat("The Image height specified (%d pixels) must be greater than 0 pixels.", p_height));
+	ERR_FAIL_COND_MSG(p_width <= 0, "The Image width specified (" + itos(p_width) + " pixels) must be greater than 0 pixels.");
+	ERR_FAIL_COND_MSG(p_height <= 0, "The Image height specified (" + itos(p_height) + " pixels) must be greater than 0 pixels.");
 	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH,
-			vformat("The Image width specified (%d pixels) cannot be greater than %d pixels.", p_width, MAX_WIDTH));
+			"The Image width specified (" + itos(p_width) + " pixels) cannot be greater than " + itos(MAX_WIDTH) + "pixels.");
 	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT,
-			vformat("The Image height specified (%d pixels) cannot be greater than %d pixels.", p_height, MAX_HEIGHT));
+			"The Image height specified (" + itos(p_height) + " pixels) cannot be greater than " + itos(MAX_HEIGHT) + "pixels.");
 	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS,
-			vformat("Too many pixels for Image. Maximum is %dx%d = %d pixels.", MAX_WIDTH, MAX_HEIGHT, MAX_PIXELS));
-	ERR_FAIL_INDEX_MSG(p_format, FORMAT_MAX, vformat("The Image format specified (%d) is out of range. See Image's Format enum.", p_format));
+			"Too many pixels for Image. Maximum is " + itos(MAX_WIDTH) + "x" + itos(MAX_HEIGHT) + " = " + itos(MAX_PIXELS) + "pixels.");
+	ERR_FAIL_INDEX_MSG(p_format, FORMAT_MAX, "The Image format specified (" + itos(p_format) + ") is out of range. See Image's Format enum.");
 
 	int mm = 0;
 	int64_t size = _get_dst_image_size(p_width, p_height, p_format, mm, p_use_mipmaps ? -1 : 0);
@@ -2311,15 +2277,15 @@ void Image::initialize_data(int p_width, int p_height, bool p_use_mipmaps, Forma
 }
 
 void Image::initialize_data(int p_width, int p_height, bool p_use_mipmaps, Format p_format, const Vector<uint8_t> &p_data) {
-	ERR_FAIL_COND_MSG(p_width <= 0, vformat("The Image width specified (%d pixels) must be greater than 0 pixels.", p_width));
-	ERR_FAIL_COND_MSG(p_height <= 0, vformat("The Image height specified (%d pixels) must be greater than 0 pixels.", p_height));
+	ERR_FAIL_COND_MSG(p_width <= 0, "The Image width specified (" + itos(p_width) + " pixels) must be greater than 0 pixels.");
+	ERR_FAIL_COND_MSG(p_height <= 0, "The Image height specified (" + itos(p_height) + " pixels) must be greater than 0 pixels.");
 	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH,
-			vformat("The Image width specified (%d pixels) cannot be greater than %d pixels.", p_width, MAX_WIDTH));
+			"The Image width specified (" + itos(p_width) + " pixels) cannot be greater than " + itos(MAX_WIDTH) + " pixels.");
 	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT,
-			vformat("The Image height specified (%d pixels) cannot be greater than %d pixels.", p_height, MAX_HEIGHT));
+			"The Image height specified (" + itos(p_height) + " pixels) cannot be greater than " + itos(MAX_HEIGHT) + " pixels.");
 	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS,
-			vformat("Too many pixels for Image. Maximum is %dx%d = %d pixels.", MAX_WIDTH, MAX_HEIGHT, MAX_PIXELS));
-	ERR_FAIL_INDEX_MSG(p_format, FORMAT_MAX, vformat("The Image format specified (%d) is out of range. See Image's Format enum.", p_format));
+			"Too many pixels for Image. Maximum is " + itos(MAX_WIDTH) + "x" + itos(MAX_HEIGHT) + " = " + itos(MAX_PIXELS) + "pixels .");
+	ERR_FAIL_INDEX_MSG(p_format, FORMAT_MAX, "The Image format specified (" + itos(p_format) + ") is out of range. See Image's Format enum.");
 
 	int mm;
 	int64_t size = _get_dst_image_size(p_width, p_height, p_format, mm, p_use_mipmaps ? -1 : 0);
@@ -2611,25 +2577,23 @@ Image::AlphaMode Image::detect_alpha() const {
 }
 
 Error Image::load(const String &p_path) {
-	String path = ResourceUID::ensure_path(p_path);
 #ifdef DEBUG_ENABLED
-	if (path.begins_with("res://") && ResourceLoader::exists(path)) {
-		WARN_PRINT(vformat("Loaded resource as image file, this will not work on export: '%s'. Instead, import the image file as an Image resource and load it normally as a resource.", path));
+	if (p_path.begins_with("res://") && ResourceLoader::exists(p_path)) {
+		WARN_PRINT("Loaded resource as image file, this will not work on export: '" + p_path + "'. Instead, import the image file as an Image resource and load it normally as a resource.");
 	}
 #endif
-	return ImageLoader::load_image(ResourceUID::ensure_path(p_path), this);
+	return ImageLoader::load_image(p_path, this);
 }
 
 Ref<Image> Image::load_from_file(const String &p_path) {
-	String path = ResourceUID::ensure_path(p_path);
 #ifdef DEBUG_ENABLED
-	if (path.begins_with("res://") && ResourceLoader::exists(path)) {
-		WARN_PRINT(vformat("Loaded resource as image file, this will not work on export: '%s'. Instead, import the image file as an Image resource and load it normally as a resource.", path));
+	if (p_path.begins_with("res://") && ResourceLoader::exists(p_path)) {
+		WARN_PRINT("Loaded resource as image file, this will not work on export: '" + p_path + "'. Instead, import the image file as an Image resource and load it normally as a resource.");
 	}
 #endif
 	Ref<Image> image;
 	image.instantiate();
-	Error err = ImageLoader::load_image(path, image);
+	Error err = ImageLoader::load_image(p_path, image);
 	if (err != OK) {
 		ERR_FAIL_V_MSG(Ref<Image>(), vformat("Failed to load image. Error %d", err));
 	}
@@ -2687,7 +2651,7 @@ Error Image::save_webp(const String &p_path, const bool p_lossy, const float p_q
 	if (save_webp_func == nullptr) {
 		return ERR_UNAVAILABLE;
 	}
-	ERR_FAIL_COND_V_MSG(p_lossy && !(0.0f <= p_quality && p_quality <= 1.0f), ERR_INVALID_PARAMETER, vformat("The WebP lossy quality was set to %f, which is not valid. WebP lossy quality must be between 0.0 and 1.0 (inclusive).", p_quality));
+	ERR_FAIL_COND_V_MSG(p_lossy && !(0.0f <= p_quality && p_quality <= 1.0f), ERR_INVALID_PARAMETER, "The WebP lossy quality was set to " + rtos(p_quality) + ", which is not valid. WebP lossy quality must be between 0.0 and 1.0 (inclusive).");
 
 	return save_webp_func(p_path, Ref<Image>((Image *)this), p_lossy, p_quality);
 }
@@ -2696,7 +2660,7 @@ Vector<uint8_t> Image::save_webp_to_buffer(const bool p_lossy, const float p_qua
 	if (save_webp_buffer_func == nullptr) {
 		return Vector<uint8_t>();
 	}
-	ERR_FAIL_COND_V_MSG(p_lossy && !(0.0f <= p_quality && p_quality <= 1.0f), Vector<uint8_t>(), vformat("The WebP lossy quality was set to %f, which is not valid. WebP lossy quality must be between 0.0 and 1.0 (inclusive).", p_quality));
+	ERR_FAIL_COND_V_MSG(p_lossy && !(0.0f <= p_quality && p_quality <= 1.0f), Vector<uint8_t>(), "The WebP lossy quality was set to " + rtos(p_quality) + ", which is not valid. WebP lossy quality must be between 0.0 and 1.0 (inclusive).");
 
 	return save_webp_buffer_func(Ref<Image>((Image *)this), p_lossy, p_quality);
 }
@@ -2778,19 +2742,6 @@ Error Image::compress_from_channels(CompressMode p_mode, UsedChannels p_channels
 				// BC7 is unsupported currently.
 				if ((format >= FORMAT_RF && format <= FORMAT_RGBE9995) && _image_compress_bptc_rd_func) {
 					Error result = _image_compress_bptc_rd_func(this, p_channels);
-
-					// If the image was compressed successfully, we return here. If not, we fall back to the default compression scheme.
-					if (result == OK) {
-						return OK;
-					}
-				}
-
-			} break;
-
-			case COMPRESS_S3TC: {
-				// BC3 is unsupported currently.
-				if ((p_channels == USED_CHANNELS_R || p_channels == USED_CHANNELS_RGB || p_channels == USED_CHANNELS_L) && _image_compress_bc_rd_func) {
-					Error result = _image_compress_bc_rd_func(this, p_channels);
 
 					// If the image was compressed successfully, we return here. If not, we fall back to the default compression scheme.
 					if (result == OK) {
@@ -3172,6 +3123,36 @@ void Image::fill_rect(const Rect2i &p_rect, const Color &p_color) {
 	}
 }
 
+ImageMemLoadFunc Image::_png_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_png_mem_unpacker_func = nullptr;
+ImageMemLoadFunc Image::_jpg_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_webp_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_tga_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_bmp_mem_loader_func = nullptr;
+ScalableImageMemLoadFunc Image::_svg_scalable_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_ktx_mem_loader_func = nullptr;
+
+void (*Image::_image_compress_bc_func)(Image *, Image::UsedChannels) = nullptr;
+void (*Image::_image_compress_bptc_func)(Image *, Image::UsedChannels) = nullptr;
+void (*Image::_image_compress_etc1_func)(Image *) = nullptr;
+void (*Image::_image_compress_etc2_func)(Image *, Image::UsedChannels) = nullptr;
+void (*Image::_image_compress_astc_func)(Image *, Image::ASTCFormat) = nullptr;
+Error (*Image::_image_compress_bptc_rd_func)(Image *, Image::UsedChannels) = nullptr;
+void (*Image::_image_decompress_bc)(Image *) = nullptr;
+void (*Image::_image_decompress_bptc)(Image *) = nullptr;
+void (*Image::_image_decompress_etc1)(Image *) = nullptr;
+void (*Image::_image_decompress_etc2)(Image *) = nullptr;
+void (*Image::_image_decompress_astc)(Image *) = nullptr;
+
+Vector<uint8_t> (*Image::webp_lossy_packer)(const Ref<Image> &, float) = nullptr;
+Vector<uint8_t> (*Image::webp_lossless_packer)(const Ref<Image> &) = nullptr;
+Ref<Image> (*Image::webp_unpacker)(const Vector<uint8_t> &) = nullptr;
+Vector<uint8_t> (*Image::png_packer)(const Ref<Image> &) = nullptr;
+Ref<Image> (*Image::png_unpacker)(const Vector<uint8_t> &) = nullptr;
+Vector<uint8_t> (*Image::basis_universal_packer)(const Ref<Image> &, Image::UsedChannels) = nullptr;
+Ref<Image> (*Image::basis_universal_unpacker)(const Vector<uint8_t> &) = nullptr;
+Ref<Image> (*Image::basis_universal_unpacker_ptr)(const uint8_t *, int) = nullptr;
+
 void Image::_set_data(const Dictionary &p_data) {
 	ERR_FAIL_COND(!p_data.has("width"));
 	ERR_FAIL_COND(!p_data.has("height"));
@@ -3209,14 +3190,6 @@ Dictionary Image::_get_data() const {
 
 Color Image::get_pixelv(const Point2i &p_point) const {
 	return get_pixel(p_point.x, p_point.y);
-}
-
-void Image::_copy_internals_from(const Image &p_image) {
-	format = p_image.format;
-	width = p_image.width;
-	height = p_image.height;
-	mipmaps = p_image.mipmaps;
-	data = p_image.data;
 }
 
 Color Image::_get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const {
@@ -3658,34 +3631,34 @@ void Image::_bind_methods() {
 	BIND_CONSTANT(MAX_WIDTH);
 	BIND_CONSTANT(MAX_HEIGHT);
 
-	BIND_ENUM_CONSTANT(FORMAT_L8);
-	BIND_ENUM_CONSTANT(FORMAT_LA8);
+	BIND_ENUM_CONSTANT(FORMAT_L8); //luminance
+	BIND_ENUM_CONSTANT(FORMAT_LA8); //luminance-alpha
 	BIND_ENUM_CONSTANT(FORMAT_R8);
 	BIND_ENUM_CONSTANT(FORMAT_RG8);
 	BIND_ENUM_CONSTANT(FORMAT_RGB8);
 	BIND_ENUM_CONSTANT(FORMAT_RGBA8);
 	BIND_ENUM_CONSTANT(FORMAT_RGBA4444);
 	BIND_ENUM_CONSTANT(FORMAT_RGB565);
-	BIND_ENUM_CONSTANT(FORMAT_RF);
+	BIND_ENUM_CONSTANT(FORMAT_RF); //float
 	BIND_ENUM_CONSTANT(FORMAT_RGF);
 	BIND_ENUM_CONSTANT(FORMAT_RGBF);
 	BIND_ENUM_CONSTANT(FORMAT_RGBAF);
-	BIND_ENUM_CONSTANT(FORMAT_RH);
+	BIND_ENUM_CONSTANT(FORMAT_RH); //half float
 	BIND_ENUM_CONSTANT(FORMAT_RGH);
 	BIND_ENUM_CONSTANT(FORMAT_RGBH);
 	BIND_ENUM_CONSTANT(FORMAT_RGBAH);
 	BIND_ENUM_CONSTANT(FORMAT_RGBE9995);
-	BIND_ENUM_CONSTANT(FORMAT_DXT1);
-	BIND_ENUM_CONSTANT(FORMAT_DXT3);
-	BIND_ENUM_CONSTANT(FORMAT_DXT5);
+	BIND_ENUM_CONSTANT(FORMAT_DXT1); //s3tc bc1
+	BIND_ENUM_CONSTANT(FORMAT_DXT3); //bc2
+	BIND_ENUM_CONSTANT(FORMAT_DXT5); //bc3
 	BIND_ENUM_CONSTANT(FORMAT_RGTC_R);
 	BIND_ENUM_CONSTANT(FORMAT_RGTC_RG);
-	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBA);
-	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBF);
-	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBFU);
-	BIND_ENUM_CONSTANT(FORMAT_ETC);
-	BIND_ENUM_CONSTANT(FORMAT_ETC2_R11);
-	BIND_ENUM_CONSTANT(FORMAT_ETC2_R11S);
+	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBA); //btpc bc6h
+	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBF); //float /
+	BIND_ENUM_CONSTANT(FORMAT_BPTC_RGBFU); //unsigned float
+	BIND_ENUM_CONSTANT(FORMAT_ETC); //etc1
+	BIND_ENUM_CONSTANT(FORMAT_ETC2_R11); //etc2
+	BIND_ENUM_CONSTANT(FORMAT_ETC2_R11S); //signed ); NOT srgb.
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RG11);
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RG11S);
 	BIND_ENUM_CONSTANT(FORMAT_ETC2_RGB8);
@@ -3849,33 +3822,6 @@ void Image::bump_map_to_normal_map(float bump_scale) {
 	}
 	format = FORMAT_RGBA8;
 	data = result_image;
-}
-
-bool Image::detect_signed(bool p_include_mips) const {
-	ERR_FAIL_COND_V(is_compressed(), false);
-
-	if (format >= Image::FORMAT_RH && format <= Image::FORMAT_RGBAH) {
-		const uint16_t *img_data = reinterpret_cast<const uint16_t *>(data.ptr());
-		const uint64_t img_size = p_include_mips ? (data.size() / 2) : (width * height * get_format_pixel_size(format) / 2);
-
-		for (uint64_t i = 0; i < img_size; i++) {
-			if ((img_data[i] & 0x8000) != 0 && (img_data[i] & 0x7fff) != 0) {
-				return true;
-			}
-		}
-
-	} else if (format >= Image::FORMAT_RF && format <= Image::FORMAT_RGBAF) {
-		const uint32_t *img_data = reinterpret_cast<const uint32_t *>(data.ptr());
-		const uint64_t img_size = p_include_mips ? (data.size() / 4) : (width * height * get_format_pixel_size(format) / 4);
-
-		for (uint64_t i = 0; i < img_size; i++) {
-			if ((img_data[i] & 0x80000000) != 0 && (img_data[i] & 0x7fffffff) != 0) {
-				return true;
-			}
-		}
-	}
-
-	return false;
 }
 
 void Image::srgb_to_linear() {
@@ -4192,7 +4138,7 @@ void Image::renormalize_half(uint16_t *p_rgb) {
 }
 
 void Image::renormalize_rgbe9995(uint32_t *p_rgb) {
-	// Never used.
+	// Never used
 }
 
 Image::Image(const uint8_t *p_mem_png_jpg, int p_len) {
@@ -4225,15 +4171,6 @@ void Image::set_as_black() {
 	memset(data.ptrw(), 0, data.size());
 }
 
-void Image::copy_internals_from(const Ref<Image> &p_image) {
-	ERR_FAIL_COND_MSG(p_image.is_null(), "Cannot copy image internals: invalid Image object.");
-	format = p_image->format;
-	width = p_image->width;
-	height = p_image->height;
-	mipmaps = p_image->mipmaps;
-	data = p_image->data;
-}
-
 Dictionary Image::compute_image_metrics(const Ref<Image> p_compared_image, bool p_luma_metric) {
 	// https://github.com/richgel999/bc7enc_rdo/blob/master/LICENSE
 	//
@@ -4261,7 +4198,7 @@ Dictionary Image::compute_image_metrics(const Ref<Image> p_compared_image, bool 
 	result["root_mean_squared"] = INFINITY;
 	result["peak_snr"] = 0.0f;
 
-	ERR_FAIL_COND_V(p_compared_image.is_null(), result);
+	ERR_FAIL_NULL_V(p_compared_image, result);
 	Error err = OK;
 	Ref<Image> compared_image = duplicate(true);
 	if (compared_image->is_compressed()) {
@@ -4272,6 +4209,8 @@ Dictionary Image::compute_image_metrics(const Ref<Image> p_compared_image, bool 
 	if (source_image->is_compressed()) {
 		err = source_image->decompress();
 	}
+	ERR_FAIL_COND_V(err != OK, result);
+
 	ERR_FAIL_COND_V(err != OK, result);
 
 	ERR_FAIL_COND_V_MSG((compared_image->get_format() >= Image::FORMAT_RH) && (compared_image->get_format() <= Image::FORMAT_RGBE9995), result, "Metrics on HDR images are not supported.");

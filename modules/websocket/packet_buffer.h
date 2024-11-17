@@ -104,14 +104,6 @@ public:
 		return _queued;
 	}
 
-	int payload_space_left() const {
-		return _payload.space_left();
-	}
-
-	int packets_space_left() const {
-		return _packets.size() - _queued;
-	}
-
 	void clear() {
 		_payload.resize(0);
 		_packets.resize(0);
