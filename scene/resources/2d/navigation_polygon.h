@@ -33,6 +33,7 @@
 
 #include "scene/2d/node_2d.h"
 #include "scene/resources/navigation_mesh.h"
+#include "servers/navigation/navigation_globals.h"
 
 class NavigationPolygon : public Resource {
 	GDCLASS(NavigationPolygon, Resource);
@@ -50,7 +51,7 @@ class NavigationPolygon : public Resource {
 	// Navigation mesh
 	Ref<NavigationMesh> navigation_mesh;
 
-	real_t cell_size = 1.0f; // Must match ProjectSettings default 2D cell_size.
+	real_t cell_size = NavigationDefaults2D::navmesh_cell_size;
 	real_t border_size = 0.0f;
 
 	Rect2 baking_rect;
@@ -67,10 +68,11 @@ protected:
 	TypedArray<Vector<Vector2>> _get_outlines() const;
 
 public:
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 	Rect2 _edit_get_rect() const;
 	bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const;
-#endif
+#endif // DEBUG_ENABLED
+
 	enum SamplePartitionType {
 		SAMPLE_PARTITION_CONVEX_PARTITION = 0,
 		SAMPLE_PARTITION_TRIANGULATE,

@@ -2,11 +2,15 @@ import os
 import sys
 from typing import TYPE_CHECKING
 
-from methods import detect_darwin_sdk_path, get_compiler_version, is_vanilla_clang, print_error
-from platform_methods import detect_arch, detect_mvk
+from methods import detect_darwin_sdk_path, get_compiler_version, is_apple_clang, print_error, print_warning
+from platform_methods import detect_arch, detect_mvk, validate_arch
 
 if TYPE_CHECKING:
     from SCons.Script.SConscript import SConsEnvironment
+
+# To match other platforms
+STACK_SIZE = 8388608
+STACK_SIZE_SANITIZERS = 30 * 1024 * 1024
 
 
 def get_name():
@@ -64,12 +68,7 @@ def get_flags():
 def configure(env: "SConsEnvironment"):
     # Validate arch.
     supported_arches = ["x86_64", "arm64"]
-    if env["arch"] not in supported_arches:
-        print_error(
-            'Unsupported CPU architecture "%s" for macOS. Supported architectures are: %s.'
-            % (env["arch"], ", ".join(supported_arches))
-        )
-        sys.exit(255)
+    validate_arch(env["arch"], get_name(), supported_arches)
 
     ## Build type
 
@@ -102,10 +101,9 @@ def configure(env: "SConsEnvironment"):
     cc_version = get_compiler_version(env)
     cc_version_major = cc_version["apple_major"]
     cc_version_minor = cc_version["apple_minor"]
-    vanilla = is_vanilla_clang(env)
 
     # Workaround for Xcode 15 linker bug.
-    if not vanilla and cc_version_major == 1500 and cc_version_minor == 0:
+    if is_apple_clang(env) and cc_version_major == 1500 and cc_version_minor == 0:
         env.Prepend(LINKFLAGS=["-ld_classic"])
 
     env.Append(CCFLAGS=["-fobjc-arc"])
@@ -183,6 +181,10 @@ def configure(env: "SConsEnvironment"):
             env.Append(CCFLAGS=["-fsanitize=thread"])
             env.Append(LINKFLAGS=["-fsanitize=thread"])
 
+        env.Append(LINKFLAGS=["-Wl,-stack_size," + hex(STACK_SIZE_SANITIZERS)])
+    else:
+        env.Append(LINKFLAGS=["-Wl,-stack_size," + hex(STACK_SIZE)])
+
     if env["use_coverage"]:
         env.Append(CCFLAGS=["-ftest-coverage", "-fprofile-arcs"])
         env.Append(LINKFLAGS=["-ftest-coverage", "-fprofile-arcs"])
@@ -241,7 +243,7 @@ def configure(env: "SConsEnvironment"):
     env.Append(LINKFLAGS=["-rpath", "@executable_path/../Frameworks", "-rpath", "@executable_path"])
 
     if env["metal"] and env["arch"] != "arm64":
-        # Only supported on arm64, so skip it for x86_64 builds.
+        print_warning("Target architecture '{}' does not support the Metal rendering driver".format(env["arch"]))
         env["metal"] = False
 
     extra_frameworks = set()
