@@ -2,13 +2,15 @@ class_name Block extends TouchScreenButton
 
 signal movement_done
 
+const MOVE_SPEED: float = 0.05
+const MERGE_SPEED = 0.15
+const TOP_MOVE_SPEED = 0.15
+
 @export var object_type = core.ObjectType.TEST
 var holder = null
 var block_context = Cards.CONTEXT.NOT_SET
 
-var move_speed: float = 0.05
-var merge_speed = 0.15
-var top_move_speed = 0.15
+
 
 
 func shake(left = true):
@@ -52,7 +54,7 @@ func shake(left = true):
 
 
 func move_to_position(new_position):
-	var time = abs(((new_position - position).y / texture_normal.get_height()) * move_speed)
+	var time = abs(((new_position - position).y / texture_normal.get_height()) * MOVE_SPEED)
 	var scene_tween = create_tween()
 	scene_tween.tween_property(self, "position", new_position, time)
 	scene_tween.tween_callback(func(): movement_done.emit())
@@ -63,7 +65,7 @@ func move_to_position(new_position):
 
 func merge_into_position(merge_pos):
 	var scene_tween = create_tween()
-	scene_tween.tween_property(self, "position", merge_pos, merge_speed)
+	scene_tween.tween_property(self, "position", merge_pos, MERGE_SPEED)
 	scene_tween.tween_callback(func(): movement_done.emit())
 
 
@@ -72,7 +74,7 @@ func move_to_on_top(_pos):
 	set_as_top_level(true)
 	set_global_position(current_global_pos)
 	var scene_tween = create_tween()
-	scene_tween.tween_property(self, "global_position", _pos, top_move_speed)
+	scene_tween.tween_property(self, "global_position", _pos, TOP_MOVE_SPEED)
 	scene_tween.tween_callback(func(): movement_done.emit())
 
 
