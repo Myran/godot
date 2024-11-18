@@ -51,7 +51,6 @@ static func process_turn(context: BattleContext) -> void:
 
 # Event solvers
 static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) -> void:
-	#match event:
 	if event is BattleContext.FindNextUnitEvent:
 		var active_side: Side = context.get_active_side()
 		var sel_unit_pos: int = find_next_unactive_on_side(active_side)
@@ -97,9 +96,9 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 		context.add_event(defender_damage)
 
 	elif event is BattleContext.DamageEvent:
-		var data: BattleContext.DamageEvent = event as BattleContext.DamageEvent
+#		var data: BattleContext.DamageEvent = event as BattleContext.DamageEvent
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
-			UNIT_HEALTH, data.target, data.side, -data.damage_amount
+			UNIT_HEALTH, event.target, event.side, -event.damage_amount
 		)
 		context.add_event(stat_change)
 
