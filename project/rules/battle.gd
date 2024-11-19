@@ -96,29 +96,34 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 		context.add_event(defender_damage)
 
 	elif event is BattleContext.DamageEvent:
-#		var data: BattleContext.DamageEvent = event as BattleContext.DamageEvent
+		if event.effects.size():
+			for effect in event.effects:
+				match effect.name:
+					"shield":
+						print("shield found,damage prevented")
+						return
+
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 			UNIT_HEALTH, event.target, event.side, -event.damage_amount
 		)
 		context.add_event(stat_change)
 
 	elif event is BattleContext.StatChangeEvent:
-		var data: BattleContext.StatChangeEvent = event as BattleContext.StatChangeEvent
-		if data.value == 0:
+		if event.value == 0:
 			return
-		var side: Side = context.get_side(data.side)
-		if !side.lineup.has(data.target):
-			print("target N/A , dead?", data)
+		var side: Side = context.get_side(event.side)
+		if !side.lineup.has(event.target):
+			print("target N/A , dead?", event)
 			return
-		var unit: UnitData = side.lineup[data.target]
-		var current_stat: int = unit.get(data.stat)
+		var unit: UnitData = side.lineup[event.target]
+		var current_stat: int = unit.get(event.stat)
 		if current_stat == null:
-			push_warning(str("Stats change error", data))
+			push_warning(str("Stats change error", event))
 			return
-		var new_value: int = current_stat + data.value
-		unit.set(data.stat, new_value)
+		var new_value: int = current_stat + event.value
+		unit.set(event.stat, new_value)
 		var follow_up_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
-			UNIT_HEALTH, data.target, data.side, 0, new_value
+			UNIT_HEALTH, event.target, event.side, 0, new_value
 		)
 		context.add_event(follow_up_event)
 

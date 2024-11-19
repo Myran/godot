@@ -58,6 +58,7 @@ class AddLineupEvent:
 
 class DamageEvent:
 	extends BaseEvent
+	var effects: Array
 	var damage_amount: int
 	var target: int
 	var side: bool
