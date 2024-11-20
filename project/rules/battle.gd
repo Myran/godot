@@ -100,8 +100,11 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 			for effect in event.effects:
 				match effect.name:
 					"shield":
-						print("shield found,damage prevented")
-						return
+						var shield_ability = effect.ability as AbilityShield
+						if shield_ability.shield_used == false:
+							shield_ability.shield_used = true
+							print("shield found,damage prevented")
+						# #kolla här att den inte redan är använd
 
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 			UNIT_HEALTH, event.target, event.side, -event.damage_amount
