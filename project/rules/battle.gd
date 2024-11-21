@@ -140,7 +140,7 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 
 
 static func find_next_unactive_on_side(side: Side) -> int:
-	for pos in side.lineup:
+	for pos: int in side.lineup:
 		var unit: UnitData = side.lineup[pos]
 		if !side.has_unit(unit):
 			return pos
@@ -190,7 +190,7 @@ static func activate_current_unit(context: BattleContext) -> void:
 static func solve_death_test(context: BattleContext) -> void:
 	for is_allied in [true, false]:
 		var side: Side = context.get_side(is_allied)
-		for pos in side.lineup:
+		for pos: int in side.lineup:
 			var unit: UnitData = side.lineup[pos]
 			if unit.current_health <= 0:
 				var event = BattleContext.DeathEvent.new(is_allied, pos)
@@ -217,13 +217,13 @@ static func duplicate_resource(res: Variant) -> Variant:
 
 
 static func find_combat_target(lineup: Dictionary) -> UnitData:
-	for pos in lineup:
+	for pos: int in lineup:
 		return lineup[pos]
 	return null
 
 
 static func get_pos_for_unit(lineup: Dictionary, unit: UnitData) -> int:
-	for pos in lineup:
+	for pos: int in lineup:
 		if lineup[pos] == unit:
 			return pos
 	return NO_UNIT_FOUND
@@ -235,6 +235,6 @@ static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary:
 
 static func abstract_lineup(lineup: Dictionary) -> Dictionary:
 	var abs_lineup: Dictionary = {}
-	for pos in lineup.keys():
+	for pos: int in lineup.keys():
 		abs_lineup[pos] = lineup[pos].unit_info
 	return abs_lineup
