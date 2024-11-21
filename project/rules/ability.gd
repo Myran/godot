@@ -9,9 +9,21 @@ func action(_tempus, _u_pos, _u_side, _battle_context, _event):
 	pass
 
 
-func draft_condition(_tempus, _pos, _context, _event, _u):
+func draft_condition(
+	_tempus,
+	_pos,
+	_u,
+	_context,
+	_event,
+):
 	return false
 
 
-func draft_action(_tempus, _pos, _context, _event, _u):
+func draft_action(
+	_tempus,
+	_pos,
+	_u,
+	_context,
+	_event,
+):
 	pass

@@ -15,14 +15,12 @@ func action(_tempus, _u_pos, _u_side, _battle_context, _event):
 	pass
 
 
-func draft_condition(_tempus, _pos, _draft_context, event, _u):
-#	if event.solve_type == core.SOLVE_TYPE.CORE:
-#		if event.event_type == core.EVENT_TYPE.LINEUP_ADD_CARD:
+func draft_condition(_tempus, _pos, _u, _draft_context, event):
 	if event is core.LineupAddCardEvent:
 		print("add card event")
 		return true
 	return false
 
 
-func draft_action(_tempus, _pos, _draft_context, _event, _u):
+func draft_action(_tempus, _pos, _u, _draft_context, _event):
 	print("draft action happening")

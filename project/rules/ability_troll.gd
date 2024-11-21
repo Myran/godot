@@ -17,7 +17,7 @@ func actions(_tempus, _u_pos, _u_side, _battle_context, _event):
 	pass
 
 
-func draft_condition(_tempus, _pos, _draft_context, event, _u):
+func draft_condition(_tempus, _pos, _u, _draft_context, event):
 	if _tempus != core.Tempus.POST:
 		return false
 	if event is not core.LineupAddCardEvent:
@@ -29,7 +29,7 @@ func draft_condition(_tempus, _pos, _draft_context, event, _u):
 	return false
 
 
-func draft_action(_tempus, _pos, _context, _event, _u):
+func draft_action(_tempus, _pos, _u, _context, _event):
 	var evil_count = 0
 	for i_pos in _context.lineup:
 		var lineup_card = _context.lineup[i_pos]
