@@ -13,14 +13,11 @@ var solver
 # Base Event class
 class BaseEvent:
 	extends Context.Event
-	#var event_type: EventType
 
 	func _init() -> void:
 		pass
-	#	event_type = type
 
 
-# Event classes for each type
 class CombatEvent:
 	extends BaseEvent
 	var attacker: int
@@ -28,7 +25,6 @@ class CombatEvent:
 	var allied_attack: bool
 
 	func _init(attacker_pos: int, defender_pos: int, is_allied_attack: bool) -> void:
-		#super(EventType.COMBAT)
 		attacker = attacker_pos
 		defender = defender_pos
 		allied_attack = is_allied_attack
@@ -40,7 +36,6 @@ class DeathEvent:
 	var pos: int
 
 	func _init(allied_side: bool, position: int) -> void:
-		#super(EventType.DEATH)
 		side = allied_side
 		pos = position
 
@@ -51,7 +46,6 @@ class AddLineupEvent:
 	var lineup: Dictionary
 
 	func _init(is_allied: bool, lineup_data: Dictionary) -> void:
-		#super(EventType.ADD_LINEUP)
 		allied_side = is_allied
 		lineup = lineup_data
 
@@ -64,7 +58,6 @@ class DamageEvent:
 	var side: bool
 
 	func _init(amount: int, target_pos: int, target_side: bool) -> void:
-		#super(EventType.DAMAGE)
 		damage_amount = amount
 		target = target_pos
 		side = target_side
@@ -81,7 +74,6 @@ class StatChangeEvent:
 	func _init(
 		stat_name: String, target_pos: int, target_side: bool, change_value: int, new_value: int = 0
 	) -> void:
-		#super(EventType.STAT_CHANGE)
 		stat = stat_name
 		target = target_pos
 		side = target_side
@@ -95,7 +87,6 @@ class SelectActiveUnitEvent:
 	var allied_side: bool
 
 	func _init(position: int, is_allied: bool) -> void:
-		#super(EventType.SELECT_ACTIVE_UNIT)
 		sel_unit_pos = position
 		allied_side = is_allied
 
@@ -104,7 +95,6 @@ class FindNextUnitEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		#super(EventType.FIND_NEXT_UNIT)
 		pass
 
 
@@ -112,7 +102,6 @@ class StartOfTurnEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		#super(EventType.START_OF_TURN)
 		pass
 
 
@@ -120,7 +109,6 @@ class EndOfTurnEvent:
 	extends BaseEvent
 
 	func _init() -> void:
-		#super(EventType.END_OF_TURN)
 		pass
 
 
@@ -128,7 +116,6 @@ func _init(_solver) -> void:
 	solver = _solver
 
 
-# Event handling - extends base Context functionality
 func solve_events() -> void:
 	while unresolved_events.size():
 		var event_stack := unresolved_events.duplicate(true)
@@ -142,13 +129,12 @@ func solve_events() -> void:
 
 func _process_event(event) -> void:
 	broadcast_event("pre_event_response", self, event)
-	solve_events()  # Handle any events generated during pre-response
+	solve_events()
 	solver.solve_event(event, self)
 	broadcast_event("post_event_response", self, event)
-	solve_events()  # Handle any events generated during post-response
+	solve_events()
 
 
-# Event broadcasting
 static func broadcast_event(responder: String, _context: BattleContext, _event) -> void:
 	for _side in [_context.allies, _context.enemies]:
 		var is_allied: bool = _side == _context.allies
@@ -157,7 +143,6 @@ static func broadcast_event(responder: String, _context: BattleContext, _event) 
 			unit.call(responder, pos, is_allied, _context, _event)
 
 
-# Side management
 func get_side(is_allied: bool) -> Side:
 	return allies if is_allied else enemies
 
@@ -170,7 +155,6 @@ func get_inactive_side() -> Side:
 	return get_side(!allied_turn)
 
 
-# Unit management
 func add_unit_to_side(unit, position: int, is_allied: bool) -> void:
 	get_side(is_allied).add_unit(position, unit)
 
@@ -191,7 +175,6 @@ func clear_activated_units() -> void:
 	get_active_side().clear_activated()
 
 
-# Battle state management
 func switch_turn() -> void:
 	allied_turn = !allied_turn
 
@@ -204,7 +187,6 @@ func is_battle_ongoing() -> bool:
 	return battle_state == BattleState.BATTLE
 
 
-# Utility methods
 func get_unit_at_position(position: int, is_allied: bool):
 	return get_side(is_allied).lineup.get(position)
 
