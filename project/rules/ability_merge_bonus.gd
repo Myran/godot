@@ -13,7 +13,8 @@ func draft_condition(_tempus, _pos, _u, _draft_context, event):
 		return false
 	if event is not core.DraftMergeEvent:
 		return false
-
+	if not _u.block_context == Cards.CONTEXT.LINEUP:
+		return false
 	return true
 
 
