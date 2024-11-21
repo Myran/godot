@@ -44,6 +44,9 @@ func init_with_info(_card_info):
 	if card_info.id == str(12):
 		ability = AbilityTroll.new()
 		add_ability(ability)
+	if card_info.id == str(4):
+		ability = AbilityMergeBonus.new(1, 1)
+		add_ability(ability)
 
 
 #Implies on of each ability maximum?
@@ -90,7 +93,7 @@ func post_event_response(_u_pos, _u_side, _battle_context, _event):
 func check_abilities(tempus, _u_pos, _u_side, _battle_context, _event):
 	for _ability in abilities:
 		if _ability.condition(tempus, _u_pos, _u_side, _battle_context, _event):
-			_ability.actions(tempus, _u_pos, _u_side, _battle_context, _event)
+			_ability.action(tempus, _u_pos, _u_side, _battle_context, _event)
 
 
 func check_draft_abilities(tempus, pos, _context, event, _u):

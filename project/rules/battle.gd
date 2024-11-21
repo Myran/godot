@@ -104,6 +104,7 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 						if shield_ability.shield_used == false:
 							shield_ability.shield_used = true
 							print("shield found,damage prevented")
+							return
 						# #kolla här att den inte redan är använd
 
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(

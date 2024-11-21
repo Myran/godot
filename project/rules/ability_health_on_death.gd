@@ -8,23 +8,10 @@ func _init(_health_add = 1):
 
 func condition(_tempus, _u_pos, _u_side, _context, _event):
 	if _tempus == core.Tempus.POST:
-		# Events are Context.Event objects
-		#return _event.event_type == Battle.EventType.DEATH
 		return _event is BattleContext.DeathEvent
 	return false
 
 
-func actions(_tempus, _u_pos, _u_side, _context, _event):
-	# Create event using Event class
+func action(_tempus, _u_pos, _u_side, _context, _event):
 	var new_event = BattleContext.StatChangeEvent.new("current_health", _u_pos, _u_side, health_add)
-	#var new_event = Context.Event.new(
-	#"stat_change",  # solve_type
-	#Battle.EventType.STAT_CHANGE,  # event_type
-	#{  # data
-	#"stat": "current_health",
-	#"target": _u_pos,
-	#"side": _u_side,
-	#"value": health_add
-	#}
-	#)
 	_context.add_event(new_event)

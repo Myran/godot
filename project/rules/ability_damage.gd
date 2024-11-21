@@ -11,7 +11,7 @@ func condition(_tempus, _u_pos, _u_side, _battle_context, _event):
 	return false
 
 
-func actions(_tempus, _u_pos, _u_side, _battle_context, _event):
+func action(_tempus, _u_pos, _u_side, _battle_context, _event):
 	pass
 
 
