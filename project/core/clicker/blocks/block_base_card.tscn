@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://bq0pntsljc8cf"]
+[gd_scene load_steps=32 format=3 uid="uid://bq0pntsljc8cf"]
 
 [ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://assets/testart/brickSpecial01.png" id="1_irw7l"]
 [ext_resource type="Script" path="res://core/clicker/blocks/block_base_card.gd" id="2_bo0yh"]
@@ -24,6 +24,7 @@
 [ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="22_g1owo"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="23_ip14o"]
 [ext_resource type="Script" path="res://core/card/panel_container_level_top.gd" id="24_48xds"]
+[ext_resource type="Texture2D" uid="uid://bni80rx7ol2cc" path="res://assets/effects/bubble.png" id="25_ixlit"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(200, 220)
@@ -115,12 +116,13 @@ shader_parameter/vignette_opacity = 1.0
 shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
 shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 
-[node name="Block" type="TouchScreenButton" node_paths=PackedStringArray("base")]
+[node name="Block" type="TouchScreenButton" node_paths=PackedStringArray("base", "shield")]
 texture_normal = ExtResource("1_irw7l")
 shape = SubResource("1")
 script = ExtResource("2_bo0yh")
 card_image_folder = "res://assets/card_images/"
 base = NodePath("card_sprite/card_image_base")
+shield = NodePath("shield_sprite")
 object_type = 1
 
 [node name="area_2d" type="Area2D" parent="."]
@@ -598,5 +600,9 @@ visible = false
 layout_mode = 2
 mouse_filter = 2
 stretch_mode = 0
+
+[node name="shield_sprite" type="Sprite2D" parent="."]
+scale = Vector2(3.4, 3.4)
+texture = ExtResource("25_ixlit")
 
 [connection signal="input_event" from="area_2d" to="." method="_on_area_2d_input_event"]
