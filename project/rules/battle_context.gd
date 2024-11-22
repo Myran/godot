@@ -128,10 +128,10 @@ func solve_events() -> void:
 
 
 func _process_event(event) -> void:
-	broadcast_event("pre_event_response", self, event)
+	broadcast_event(UnitData.PRE_EVENT_RESPONSE, self, event)
 	solve_events()
 	solver.solve_event(event, self)
-	broadcast_event("post_event_response", self, event)
+	broadcast_event(UnitData.POST_EVENT_RESPONSE, self, event)
 	solve_events()
 
 
@@ -139,7 +139,7 @@ static func broadcast_event(responder: String, _context: BattleContext, _event) 
 	for _side in [_context.allies, _context.enemies]:
 		var is_allied: bool = _side == _context.allies
 		for pos in _side.lineup:
-			var unit = _side.lineup[pos]
+			var unit: UnitData = _side.lineup[pos]
 			unit.call(responder, pos, is_allied, _context, _event)
 
 

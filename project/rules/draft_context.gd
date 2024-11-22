@@ -28,8 +28,8 @@ func solve_events():
 		event_list.append_array(event_stack.duplicate(true))
 		while event_stack.size():
 			var next_event = event_stack.pop_front()
-			broadcast_event("draft_pre_event_response", self, next_event)
+			broadcast_event(UnitData.DRAFT_PRE_EVENT_RESPONSE, self, next_event)
 			solve_events()
 			solver.solve_event(next_event, self)
-			broadcast_event("draft_post_event_response", self, next_event)
+			broadcast_event(UnitData.DRAFT_POST_EVENT_RESPONSE, self, next_event)
 			solve_events()

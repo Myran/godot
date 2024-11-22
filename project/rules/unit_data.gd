@@ -1,4 +1,9 @@
 class_name UnitData extends Resource
+const POST_EVENT_RESPONSE = "post_event_response"
+const PRE_EVENT_RESPONSE = "pre_event_response"
+
+const DRAFT_POST_EVENT_RESPONSE = "draft_post_event_response"
+const DRAFT_PRE_EVENT_RESPONSE = "draft_pre_event_response"
 
 var max_health = 1
 var max_attack = 1

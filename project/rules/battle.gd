@@ -23,8 +23,7 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 
 
 static func _initialize_battle(
-	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary
-) -> void:
+	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary) -> void:
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, duplicate_resource(allied_lineup)
 	)
