@@ -4,6 +4,7 @@ signal event
 
 
 class UIEvent:
+	extends core.CoreEvent
 	pass
 
 

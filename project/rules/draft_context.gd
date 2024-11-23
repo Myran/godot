@@ -13,11 +13,11 @@ static func broadcast_event(responder, _context, _event):
 	for pos in _context.lineup:
 		var u = _context.lineup[pos]
 		if "unit_info" in u:
-			u.unit_info.call(responder, {"lineup": pos}, u, _context, _event)
+			u.unit_info.call(responder, pos, u, _context, _event)
 	var draft_pos = 0
 	for _u in _context.draft_area:
 		if "unit_info" in _u:
-			_u.unit_info.call(responder, {"draft": draft_pos}, _u, _context, _event)
+			_u.unit_info.call(responder, draft_pos, _u, _context, _event)
 		draft_pos = draft_pos + 1
 
 

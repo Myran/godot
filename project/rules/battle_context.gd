@@ -135,7 +135,7 @@ func _process_event(event) -> void:
 	solve_events()
 
 
-static func broadcast_event(responder: String, _context: BattleContext, _event) -> void:
+static func broadcast_event(responder: String, _context: BattleContext, _event: BaseEvent) -> void:
 	for _side in [_context.allies, _context.enemies]:
 		var is_allied: bool = _side == _context.allies
 		for pos in _side.lineup:

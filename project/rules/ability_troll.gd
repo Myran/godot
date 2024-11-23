@@ -1,7 +1,7 @@
 class_name AbilityTroll extends Ability
 
-var health_add
-var attack_add
+var health_add: int
+var attack_add: int
 
 
 func _init(_health_add = 1, _attack_add = 1):
@@ -9,27 +9,31 @@ func _init(_health_add = 1, _attack_add = 1):
 	attack_add = _attack_add
 
 
-func condition(_tempus, _u_pos, _u_side, _battle_context, _event):
-	return false
-
-
-func actions(_tempus, _u_pos, _u_side, _battle_context, _event):
-	pass
-
-
-func draft_condition(_tempus, _pos, _u, _draft_context, event):
+func draft_condition(
+	_tempus: core.Tempus,
+	_pos: int,
+	_u: Block,
+	_context: DraftContext,
+	_event: core.CoreEvent,
+):
 	if _tempus != core.Tempus.POST:
 		return false
-	if event is not core.LineupAddCardEvent:
+	if _event is not core.LineupAddCardEvent:
 		return false
 
-	var added_card = event.card
+	var added_card = _event.card
 	if added_card == _u:
 		return true
 	return false
 
 
-func draft_action(_tempus, _pos, _u, _context, _event):
+func draft_action(
+	_tempus: core.Tempus,
+	_pos: int,
+	_u: Block,
+	_context: DraftContext,
+	_event: core.CoreEvent,
+):
 	var evil_count = 0
 	for i_pos in _context.lineup:
 		var lineup_card = _context.lineup[i_pos]

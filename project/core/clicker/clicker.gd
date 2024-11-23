@@ -16,7 +16,7 @@ func setup(_level_controller):
 	level.setup_level()
 
 
-func has_card(card):
+func has_card(card: Card):
 	if level.get_grid_pos(card) == null:
 		return false
 	return true
@@ -35,7 +35,7 @@ func remove_rerollables():
 				level.remove_from_grid(block, true)
 
 
-func on_core_event(event, _current_context):
+func on_core_event(event: core.CoreEvent, _current_context: Context):
 	if event is core.DraftColumnLocked:
 		print("Draft coloumn locked: ", event.col)
 		columns_locked.append(event.col)
@@ -57,7 +57,6 @@ func on_core_event(event, _current_context):
 		update_blocks()
 
 	if event is core.UpdateDraftAreaEvent:
-		#	core.EVENT_TYPE.UPDATE_DRAFT_AREA:
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
