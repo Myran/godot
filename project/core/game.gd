@@ -57,7 +57,7 @@ func intitialize_game() -> void:
 	game_handler.set_gamestate(core.GameState.START)
 
 
-func new_event(event) -> void:
+func new_event(event: core.CoreEvent) -> void:
 	printt("New event: ", event)
 	var draft_context: DraftContext = DraftContext.new(self)
 	draft_context = update_context_units(draft_context)
@@ -71,7 +71,7 @@ func update_context_units(_context: DraftContext) -> DraftContext:
 	return _context
 
 
-func solve_event(event, _context: DraftContext) -> DraftContext:
+func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 	var ret_context: DraftContext = _context
 	if event is ui.UIEvent:
 		resolve_ui_event(event, _context)
