@@ -1,19 +1,19 @@
 class_name BattleHandler extends Node
-var holder_allies
-var holder_enemy
+var holder_allies: HolderContainer
+var holder_enemy: HolderContainer
 
 
 # res://assets/card_images/
-func setup(_allies, _enemies) -> void:
+func setup(_allies: HolderContainer, _enemies: HolderContainer) -> void:
 	holder_allies = _allies
 	holder_enemy = _enemies
 
 
-func create_battle():
-	var allies = holder_allies.get_current_lineup()
-	var enemies = holder_enemy.get_current_lineup()
+func create_battle() -> Array:
+	var allies: Dictionary = holder_allies.get_current_lineup()
+	var enemies: Dictionary = holder_enemy.get_current_lineup()
 
-	var battle_instance = Battle.new()
-	var prep_allies = Battle.prepare_lineup_from_holder(allies)
-	var prep_enemies = Battle.prepare_lineup_from_holder(enemies)
+	var battle_instance: Battle = Battle.new()
+	var prep_allies: Dictionary = Battle.prepare_lineup_from_holder(allies)
+	var prep_enemies: Dictionary = Battle.prepare_lineup_from_holder(enemies)
 	return battle_instance.battle_start(prep_allies, prep_enemies)

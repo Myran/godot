@@ -1,8 +1,8 @@
 class_name GameHandler extends Node
-var current_gamestate
+var current_gamestate: core.GameState
 
 
-func set_gamestate(new_state):
+func set_gamestate(new_state: core.GameState)-> void:
 	print("Set gamestate:", core.GameState.keys()[new_state])
 	match new_state:
 		core.GameState.START:

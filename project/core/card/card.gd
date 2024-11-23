@@ -1,24 +1,23 @@
-extends AspectRatioContainer
+class_name CardFullView extends AspectRatioContainer
 
-@onready var card_info = $"%card_info"
-@onready var card_image = $"%card_image"
+@export var card_info: Container
+@export var card_image : TextureRect
 
 
-func show_card():
+func show_card()->void:
 	$animation_player.play("scale_up")
 
 
-func _on_button_pressed():
-#	ui.action(ui.EVENT_TYPE.TAP_POP_CARD,[self])
+func _on_button_pressed()->void:
 	ui.action(ui.HideCardEvent.new())
 
 
-func setup_card(card):
+func setup_card(card: Card)->void:
 	print("CARD: setup card in card", card)
 
-	var info = card.unit_info
+	var info: UnitData = card.unit_info
 #	var img_string = str("cardtest/card_image_",debug.asset_variant,"_",info.card_info.id,".png")
-	var img_string = card_controller.get_card_image_name(info.card_info.id)
+	var img_string: String = card_controller.get_card_image_name(info.card_info.id)
 	card_image.texture = load(img_string)
 	card_info.set_attack(info.current_attack)
 	card_info.set_health(info.current_health)

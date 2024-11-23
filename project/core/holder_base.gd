@@ -1,4 +1,4 @@
-extends TextureRect
+class_name HolderContainer extends TextureRect
 
 var current_pos = null
 var is_moving = false
