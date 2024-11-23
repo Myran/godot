@@ -1,4 +1,4 @@
-extends Control
+class_name LevelController extends Control
 
 @export var _level_factory: Resource
 @export var _block_factory: block_factory
@@ -109,7 +109,7 @@ func has_pos(pos):
 	return block_grid.has(pos)
 
 
-func all_blocks():
+func all_blocks()-> Array:
 	return block_grid.values()
 
 

@@ -1,4 +1,4 @@
-extends Node
+class_name Clicker extends Node
 
 signal merge_completed
 

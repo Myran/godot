@@ -1,4 +1,4 @@
-extends ColorRect
+class_name Holder extends ColorRect
 
 var object_type = core.ObjectType.CARD_HOLDER
 var _content = null
