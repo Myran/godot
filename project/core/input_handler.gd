@@ -1,31 +1,37 @@
 class_name InputHandler extends Node
 
-const TAP_TIME = 0.15
-const DRAG_LERP = 0.25
+const TAP_TIME: float = 0.15
+const DRAG_LERP: float = 0.25
+
 var clicker: Clicker
 var last_touch_pos: Vector2 = Vector2.ZERO
-var tap_timer: float = 0
-var empty_item := Empty.new()
-var holding_item: Object = empty_item
+var tap_timer: float = 0.0
+var empty_item: Empty = Empty.new()
+var holding_item: Object = null  # Can't type more specifically due to polymorphic nature
 var tap_state: core.TapState = core.TapState.IDLE
-var dragging_cargo: Object = empty_item
+var dragging_cargo: Object = null  # Can't type more specifically due to polymorphic nature
+
 
 class Empty:
-	extends  Object
+	extends Object
+	pass
+
 
 func setup(_clicker: Clicker) -> void:
 	clicker = _clicker
+	holding_item = empty_item
+	dragging_cargo = empty_item
 
 
-func reset_inputs()-> void:
+func reset_inputs() -> void:
 	last_touch_pos = Vector2.ZERO
-	tap_timer = 0
+	tap_timer = 0.0
 	holding_item = empty_item
 	tap_state = core.TapState.IDLE
 	dragging_cargo = empty_item
 
 
-func input(event: InputEvent)-> void:
+func input(event: InputEvent) -> void:
 	if (
 		event is InputEventScreenDrag
 		and (tap_state == core.TapState.HOLDING or tap_state == core.TapState.PRESSING)
@@ -33,7 +39,7 @@ func input(event: InputEvent)-> void:
 		last_touch_pos = event.position
 
 
-func process(delta: float)-> void:
+func process(delta: float) -> void:
 	if tap_state == core.TapState.PRESSING:
 		tap_timer = tap_timer + delta
 		if holding_item is not Empty and last_touch_pos != Vector2.ZERO and tap_timer > TAP_TIME:
@@ -43,7 +49,7 @@ func process(delta: float)-> void:
 		if tap_timer > TAP_TIME:
 			if holding_item is not Empty:
 				tap_state = core.TapState.HOLDING
-				tap_timer = 0
+				tap_timer = 0.0
 				holding()
 	elif tap_state == core.TapState.HOLDING:
 		if last_touch_pos != Vector2.ZERO and dragging_cargo is not Empty:
@@ -52,7 +58,7 @@ func process(delta: float)-> void:
 			)
 
 
-func holding()-> void:
+func holding() -> void:
 	var pos: Vector2 = holding_item.get_global_position()
 	holding_item.set_as_top_level(true)
 	holding_item.set_global_position(pos)
@@ -61,8 +67,9 @@ func holding()-> void:
 	holding_item = empty_item
 
 
-func touch_handler(event: InputEvent, interacted_object: Object, current_context: Context)-> bool:
+func touch_handler(event: InputEvent, interacted_object: Object, current_context: Context) -> bool:
 	var update_draft: bool = false
+
 	if event.pressed == true:
 		match tap_state:
 			core.TapState.IDLE:
@@ -74,6 +81,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 						pass
 					core.ObjectType.BLOCK_LOCKED:
 						tap_state = core.TapState.PRESSING
+
 	elif event.pressed == false:
 		match tap_state:
 			core.TapState.PRESSING:
@@ -90,6 +98,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					dragging_cargo.set_process_input(true)
 					var release_handled: bool = false
 					var dragging_card: Card = dragging_cargo as Card
+
 					match interacted_object.object_type:
 						core.ObjectType.BACKGROUND:
 							pass
@@ -119,7 +128,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 												current_context.add_event(
 													core.LineupAddCardEvent.new(dragging_card)
 												)
-
 												current_context.solve_events()
 												update_draft = true
 

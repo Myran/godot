@@ -1,9 +1,9 @@
 class_name BattleHandler extends Node
+
 var holder_allies: HolderContainer
 var holder_enemy: HolderContainer
 
 
-# res://assets/card_images/
 func setup(_allies: HolderContainer, _enemies: HolderContainer) -> void:
 	holder_allies = _allies
 	holder_enemy = _enemies
