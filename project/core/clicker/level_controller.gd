@@ -23,7 +23,7 @@ func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Array) -> void:
 
 
 func setup_level(level_name: String = "default") -> void:
-	var new_level = _level_factory.create_level(level_name)
+	var new_level: TileMapLayer = _level_factory.create_level(level_name)
 	if new_level == null:
 		return
 	if current_level:

@@ -23,7 +23,8 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 
 
 static func _initialize_battle(
-	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary) -> void:
+	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary
+) -> void:
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, duplicate_resource(allied_lineup)
 	)
@@ -172,8 +173,8 @@ static func find_next_unit(context: BattleContext) -> void:
 
 
 static func activate_current_unit(context: BattleContext) -> void:
-	var selected_action = context.current_unit.select_action(context)
-	var event
+	var selected_action: Dictionary = context.current_unit.select_action(context)
+	var event: BattleContext.BaseEvent
 
 	match selected_action.action:
 		BattleAction.ATTACK_REGULAR:
@@ -187,12 +188,12 @@ static func activate_current_unit(context: BattleContext) -> void:
 
 # Death handling
 static func solve_death_test(context: BattleContext) -> void:
-	for is_allied in [true, false]:
+	for is_allied: bool in [true, false]:
 		var side: Side = context.get_side(is_allied)
 		for pos: int in side.lineup:
 			var unit: UnitData = side.lineup[pos]
 			if unit.current_health <= 0:
-				var event = BattleContext.DeathEvent.new(is_allied, pos)
+				var event: BattleContext.DeathEvent = BattleContext.DeathEvent.new(is_allied, pos)
 				context.add_event(event)
 
 

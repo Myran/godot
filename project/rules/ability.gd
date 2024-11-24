@@ -17,7 +17,7 @@ func action(
 	_u_side: bool,
 	_battle_context: BattleContext,
 	_event: BattleContext.BaseEvent
-):
+) -> void:
 	pass
 
 
@@ -27,7 +27,7 @@ func draft_condition(
 	_u: Block,
 	_context: DraftContext,
 	_event: core.CoreEvent,
-):
+) -> bool:
 	return false
 
 
@@ -37,5 +37,5 @@ func draft_action(
 	_u: Block,
 	_context: DraftContext,
 	_event: core.CoreEvent,
-):
+) -> void:
 	pass

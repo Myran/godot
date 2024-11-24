@@ -3,19 +3,23 @@ class_name Card extends Block
 const CARD_IMAGE_PREFIX = "card_image_"
 @export_dir var card_image_folder: String
 @export var base: Node
-@export var shield : Sprite2D
-var level = 1
+@export var shield: Sprite2D
+var level: int = 1
 var unit_info
 var card_info = null
+
 
 func _ready():
 	shield.hide()
 
+
 func show_shield():
 	shield.show()
 
+
 func hide_shield():
 	shield.hide()
+
 
 func init_card(_card_info, _card_level = 1):
 	card_info = _card_info
