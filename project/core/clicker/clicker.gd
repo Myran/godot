@@ -1,7 +1,7 @@
 class_name Clicker extends Node
 
 signal merge_completed
-
+const NO_POS = Vector2i(-1, -1)
 const SPAWN_HEIGHT = 0
 const DIRECTIONS = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 
@@ -10,23 +10,23 @@ var refill_counter := []
 var columns_locked := []
 
 
-func setup(_level_controller: LevelController)-> void:
+func setup(_level_controller: LevelController) -> void:
 	card_controller.setup()
 	level = _level_controller
 	level.setup_level()
 
 
-func has_card(card: Card)-> bool:
-	if level.get_grid_pos(card) == null:
+func has_card(card: Card) -> bool:
+	if level.get_grid_pos(card) == NO_POS:
 		return false
 	return true
 
 
-func get_all_cards()->Array:
+func get_all_cards() -> Array:
 	return level.all_blocks()
 
 
-func remove_rerollables()-> void:
+func remove_rerollables() -> void:
 	for block: Block in level.all_blocks():
 		var pos: Vector2i = level.get_grid_pos(block)
 		var col: int = pos.x
@@ -35,7 +35,7 @@ func remove_rerollables()-> void:
 				level.remove_from_grid(block, true)
 
 
-func on_core_event(event: core.CoreEvent, _current_context: Context)-> void:
+func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 	if event is core.DraftColumnLocked:
 		print("Draft coloumn locked: ", event.col)
 		columns_locked.append(event.col)
@@ -60,7 +60,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context)-> void:
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
-		if level.get_grid_pos(event.block) != null:
+		if level.get_grid_pos(event.block) != Clicker.NO_POS:
 			level.remove_from_grid(event.block, event.destroy_block)
 
 	if event is core.DraftMergeEvent:
@@ -74,14 +74,14 @@ func on_core_event(event: core.CoreEvent, _current_context: Context)-> void:
 		merge_completed.emit()
 
 
-func remove_upgrade_blocks(upgrade_level: int)-> void:
+func remove_upgrade_blocks(upgrade_level: int) -> void:
 	for block: Block in level.all_blocks():
 		if block.object_type == core.ObjectType.BLOCK_UPGRADE:
 			if block.level == upgrade_level:
 				level.remove_from_grid(block, true)
 
 
-func update_blocks()-> void:
+func update_blocks() -> void:
 	var block_action := true
 	while block_action:
 		block_action = false
@@ -99,7 +99,7 @@ func update_blocks()-> void:
 	core.action(core.DraftSteadyEvent.new())
 
 
-func find_match()->Array:
+func find_match() -> Array:
 	for block: Block in level.all_blocks():
 		if block != null and block.object_type == core.ObjectType.CARD:
 			var cluster: Array = add_neighbour_cards(block, [block])
@@ -108,7 +108,7 @@ func find_match()->Array:
 	return []
 
 
-func merge_matched_cards(cluster: Array)->Dictionary:
+func merge_matched_cards(cluster: Array) -> Dictionary:
 	var card_id: String = cluster[0].card_info.id
 	var new_level: int = int(cluster[0].level) + 1
 	var new_card: Block = await card_controller.create_unit_from_id(card_id, new_level)
@@ -123,7 +123,7 @@ func merge_matched_cards(cluster: Array)->Dictionary:
 	return {"block": new_card, "pos": cluster_pos, "awaiter": awaiter}
 
 
-func add_neighbour_cards(block: Block, cluster: Array = [])-> Array:
+func add_neighbour_cards(block: Block, cluster: Array = []) -> Array:
 	var start_pos: Vector2i = level.get_grid_pos(block)
 
 	if start_pos == null:
@@ -142,7 +142,7 @@ func add_neighbour_cards(block: Block, cluster: Array = [])-> Array:
 	return cluster
 
 
-func refill()-> bool:
+func refill() -> bool:
 	var refill_action := false
 
 	for x: int in LevelRules.GRID_WIDTH:
@@ -159,13 +159,13 @@ func refill()-> bool:
 					break
 			if test_block.object_type == core.ObjectType.EMPTY_SPACE:
 				refill_counter.append(x)
-				var new_block: Block = await level.create_block() 
+				var new_block: Block = await level.create_block()
 				level.add_to_grid(test_pos, new_block, refill_counter.count(x))
 				refill_action = true
 	return refill_action
 
 
-func solve_gravity()-> void:
+func solve_gravity() -> void:
 	var gravity_action := true
 
 	while gravity_action:
