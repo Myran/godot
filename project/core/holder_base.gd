@@ -1,14 +1,14 @@
 class_name HolderContainer extends TextureRect
 
-var current_pos = null
-var is_moving = false
+var current_pos: Vector2i = Vector2i.ZERO
+var is_moving: bool = false
 
 
-func get_current_lineup(duplicate_card = false, new_layer = null):
-	var retval = {}
-	for pos in $grid_container.get_children():
-		var card = pos.get_card()
-		var new_card
+func get_current_lineup(duplicate_card: bool = false, new_layer: Node = null) -> Dictionary:
+	var retval: Dictionary = {}
+	for pos: Holder in $grid_container.get_children():
+		var card: Card = pos.get_card()
+		var new_card: Card
 		if card:
 			new_card = card
 			if duplicate_card:
@@ -21,26 +21,27 @@ func get_current_lineup(duplicate_card = false, new_layer = null):
 	return retval
 
 
-func get_card_position(_card):
-	for pos in $grid_container.get_children():
-		if pos.get_card() == _card:
+func get_card_position(card: Card) -> int:
+	for pos: Holder in $grid_container.get_children():
+		if pos.get_card() == card:
 			return pos.get_index()
+	return -1
 
 
-func get_holder(pos):
+func get_holder(pos: int) -> Holder:
 	return $grid_container.get_child(pos)
 
 
-func hide_lineup():
+func hide_lineup() -> void:
 	lineup_visibility(false)
 
 
-func show_lineup():
+func show_lineup() -> void:
 	lineup_visibility(true)
 
 
-func lineup_visibility(vis):
-	for pos in $grid_container.get_children():
-		var card = pos.get_card()
+func lineup_visibility(vis: bool) -> void:
+	for pos: Holder in $grid_container.get_children():
+		var card: Card = pos.get_card()
 		if card:
 			card.visible = vis

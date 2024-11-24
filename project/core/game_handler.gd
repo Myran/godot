@@ -1,9 +1,11 @@
 class_name GameHandler extends Node
-var current_gamestate: core.GameState
+
+var current_gamestate: core.GameState = core.GameState.START
 
 
-func set_gamestate(new_state: core.GameState)-> void:
+func set_gamestate(new_state: core.GameState) -> void:
 	print("Set gamestate:", core.GameState.keys()[new_state])
+
 	match new_state:
 		core.GameState.START:
 			owner.call_deferred("start_game")
@@ -17,4 +19,5 @@ func set_gamestate(new_state: core.GameState)-> void:
 			owner.call_deferred("mode_battle")
 		core.GameState.POSTBATTLE:
 			owner.call_deferred("mode_post_battle")
+
 	current_gamestate = new_state
