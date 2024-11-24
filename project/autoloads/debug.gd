@@ -19,7 +19,7 @@ enum DEBUG_EVENT_TYPE {
 @export var v_box_container_buttons: VBoxContainer
 
 
-func action(type: DEBUG_EVENT_TYPE, args):
+func action(type: DEBUG_EVENT_TYPE, args:Array = []):
 	debug_event.emit(type, args)
 
 
@@ -68,10 +68,10 @@ func debug_button_pressed(_name):
 		"select_game":
 			print("select game")
 			popup_debug.hide()
-			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR, null)
+			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR)
 
 		"reset_current_match_level":
-			action(DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, null)
+			action(DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL)
 		"match_level_1":
 			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_01"])
 		"match_level_2":
