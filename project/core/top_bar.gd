@@ -6,7 +6,7 @@ extends NinePatchRect
 
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	pass  # Replace with function body.
 
 
@@ -15,5 +15,5 @@ func _ready():
 #	pass
 
 
-func _on_button_debug_pressed():
+func _on_button_debug_pressed() -> void:
 	debug.action(debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU)
