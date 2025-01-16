@@ -97,15 +97,15 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 
 	elif event is BattleContext.DamageEvent:
 		if event.effects.size():
-			for effect in event.effects:
+			for effect: Dictionary in event.effects:
 				match effect.name:
 					"shield":
-						var shield_ability = effect.ability as AbilityShield
+						var shield_ability: AbilityShield = effect.ability as AbilityShield
 						if shield_ability.shield_used == false:
 							shield_ability.shield_used = true
 							print("shield found,damage prevented")
+							# Addera en shield lost event som alla kan reagera p[ och enacter can ta bort skölden ifrån
 							return
-						# #kolla här att den inte redan är använd
 
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 			UNIT_HEALTH, event.target, event.side, -event.damage_amount
