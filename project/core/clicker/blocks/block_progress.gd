@@ -1,2 +1,2 @@
 extends Block
-@export var level = 0
+@export var level: int = 0

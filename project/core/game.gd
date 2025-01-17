@@ -12,7 +12,7 @@ class_name Game extends Control
 @export var unhandled_layer: CanvasLayer
 
 @export_group("Systems")
-@export var clicker: Node
+@export var clicker: Clicker
 @export var level_controller: Control
 @export var game_handler: GameHandler
 @export var input_handler: InputHandler
