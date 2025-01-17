@@ -118,6 +118,14 @@ func enact(battle_events):
 			print("Damage", event)
 			var u = allies[event.target] if event.side else enemies[event.target]
 			printt("Damage target:", u, "Damage", event.damage_amount)
+		elif event is BattleContext.ShieldEvent:
+			print("Shield")
+			var u = allies[event.target] if event.side else enemies[event.target]
+			if event.new_shield_state:
+				u.show_shield()
+			else:
+				u.hide_shield()
+			print("shield removed / added on", u)
 
 		elif event is BattleContext.StatChangeEvent:
 			print("Stat Change", event)

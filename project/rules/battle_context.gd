@@ -49,7 +49,16 @@ class AddLineupEvent:
 		allied_side = is_allied
 		lineup = lineup_data
 
-
+class ShieldEvent: 
+	extends BaseEvent
+	var target : int
+	var side : bool
+	var new_shield_state : bool
+	func _init(_target: int, _side : bool, _new_shield_state : bool) -> void :
+		target = _target
+		side = _side
+		new_shield_state = _new_shield_state
+		 
 class DamageEvent:
 	extends BaseEvent
 	var effects: Array
