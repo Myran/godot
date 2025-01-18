@@ -4,7 +4,7 @@ signal event
 enum UIState { WAITING, HOLDING, LOCKED }
 enum Tempus { PRE, POST }
 enum TapState { IDLE, PRESSING, UNPRESSING, HOLDING }
-enum GameState { START, DRAFT, PREPARE, PREBATTLE, BATTLE, POSTBATTLE}
+enum GameState { START, DRAFT, PREPARE, PREBATTLE, BATTLE, POSTBATTLE }
 enum ObjectType {
 	TEST,
 	CARD,
@@ -46,10 +46,14 @@ class DraftMergeEvent:
 
 class DraftAddBlockEvent:
 	extends CoreEvent
-	var info: Dictionary
+	var pos: Vector2i
+	var block: Block
+	var refill_count: int
 
-	func _init(_info: Dictionary) -> void:
-		info = _info
+	func _init(_block: Block, _pos: Vector2i, _refill_count: int = 0) -> void:
+		block = _block
+		pos = _pos
+		refill_count = _refill_count
 
 
 class DraftColumnLocked:

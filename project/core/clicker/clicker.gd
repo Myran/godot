@@ -49,8 +49,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		update_blocks()
 
 	if event is core.DraftAddBlockEvent:
-		var match_info: Dictionary = event.info
-		level.add_to_grid(match_info.pos, match_info.block)
+		level.add_to_grid(event.pos, event.block, event.refill_count)
 
 	if event is core.UpgradeEvent:
 		remove_upgrade_blocks(event.new_level)
@@ -68,7 +67,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		await merge_info.awaiter.finished
 		for _block: Block in event.matches:
 			level.remove_from_grid(_block)
-		core.action(core.DraftAddBlockEvent.new(merge_info))
+		core.action(core.DraftAddBlockEvent.new(merge_info.block, merge_info.pos))
 		var tween: Tween = merge_info.block.show_upgrade()
 		await tween.finished
 		merge_completed.emit()
@@ -160,7 +159,10 @@ func refill() -> bool:
 			if test_block.object_type == core.ObjectType.EMPTY_SPACE:
 				refill_counter.append(x)
 				var new_block: Block = await level.create_block()
-				level.add_to_grid(test_pos, new_block, refill_counter.count(x))
+				#level.add_to_grid(test_pos, new_block, refill_counter.count(x))
+				core.action(
+					core.DraftAddBlockEvent.new(new_block, test_pos, refill_counter.count(x))
+				)
 				refill_action = true
 	return refill_action
 

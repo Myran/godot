@@ -57,7 +57,8 @@ func create_blocks_from_level() -> void:
 			_:
 				block = await create_block()
 		block.block_context = Cards.CONTEXT.DRAFT
-		add_to_grid(tile_pos, block)
+		#add_to_grid(tile_pos, block)
+		core.action(core.DraftAddBlockEvent.new(block, tile_pos))
 	current_level.clear()
 
 
