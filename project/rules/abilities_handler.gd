@@ -1,28 +1,31 @@
 class_name AbilitiesHandler extends Resource
 
 
-static func parse_abilities(abstring):
-	var new_abilities = []
+static func parse_abilities(abstring: String) -> Array:
+	var new_abilities: Array = []
 	if abstring == "":
 		return []
+
 	# parse as csv
-	var commands = abstring.split(",")
-	for command in commands:
-		var command_parts = command.split(":")
-		var ability_name = command_parts[0]
-		var argarray = []
+	var commands: Array = abstring.split(",")
+	for command: String in commands:
+		var command_parts: Array = command.split(":")
+		var ability_name: String = command_parts[0]
+		var argarray: Array = []
+
 		if command_parts[1]:
-			var args = command_parts[1]
+			var args: String = command_parts[1]
 			argarray = args.split(";")
-		var new_ability = create_ability(ability_name, argarray)
+
+		var new_ability: Ability = create_ability(ability_name, argarray)
 		if new_ability:
 			new_abilities.append(new_ability)
 	return new_abilities
 
 
-static func create_ability(ability_name, argarray):
+static func create_ability(ability_name: String, argarray: Array) -> Ability:
 	#argarray kommer in som string
-	var ret_ability = null
+	var ret_ability: Ability = null
 	match ability_name:
 		"guard":
 			ret_ability = AbilityHealthOnDeath.new(int(argarray[0]))
