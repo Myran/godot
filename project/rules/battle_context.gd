@@ -6,7 +6,7 @@ var allies: Side = Side.new()
 var enemies: Side = Side.new()
 var battle_state: int = BattleState.BATTLE
 var allied_turn: bool = true
-var current_unit = null
+var current_unit: UnitData = null
 var solver
 
 
@@ -49,16 +49,19 @@ class AddLineupEvent:
 		allied_side = is_allied
 		lineup = lineup_data
 
-class ShieldEvent: 
+
+class ShieldEvent:
 	extends BaseEvent
-	var target : int
-	var side : bool
-	var new_shield_state : bool
-	func _init(_target: int, _side : bool, _new_shield_state : bool) -> void :
+	var target: int
+	var side: bool
+	var new_shield_state: bool
+
+	func _init(_target: int, _side: bool, _new_shield_state: bool) -> void:
 		target = _target
 		side = _side
 		new_shield_state = _new_shield_state
-		 
+
+
 class DamageEvent:
 	extends BaseEvent
 	var effects: Array
