@@ -4,13 +4,10 @@ const CARD_IMAGE_PREFIX = "card_image_"
 @export_dir var card_image_folder: String
 @export var base: Node
 @export var shield: Sprite2D
-var level: int = 1
-var unit_info
-var card_info = null
+@export var level: int = 1
+@export var unit_info = null
+@export var card_info = null
 
-
-func _ready():
-	shield.hide()
 
 
 func show_shield():

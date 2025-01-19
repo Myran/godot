@@ -56,6 +56,16 @@ class DraftAddBlockEvent:
 		refill_count = _refill_count
 
 
+class BlockEntersPlay:
+	extends CoreEvent
+	var block: Block
+	var pos: Vector2i
+
+	func _init(_block: Block, _pos: Vector2i = Vector2i(-1, -1)) -> void:
+		block = _block
+		pos = _pos
+
+
 class DraftColumnLocked:
 	extends CoreEvent
 	var col: int
@@ -118,7 +128,7 @@ class DebugLineupAddCardEvent:
 
 class LineupAddCardEvent:
 	extends CoreEvent
-	var card
+	var card: Card
 
 	func _init(_card: Card) -> void:
 		card = _card

@@ -50,6 +50,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 	if event is core.DraftAddBlockEvent:
 		level.add_to_grid(event.pos, event.block, event.refill_count)
+		core.action(core.BlockEntersPlay.new(event.block, event.pos))
 
 	if event is core.UpgradeEvent:
 		remove_upgrade_blocks(event.new_level)

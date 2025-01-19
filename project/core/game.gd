@@ -101,6 +101,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.add_event(core.TrippleTestEvent.new())
 		current_context.solve_events()
 	elif event is core.LineupAddCardEvent:
+		core.action(core.BlockEntersPlay.new(event.card))
+		# detta är inte snyggt med -1,-1. antagligen behövs den inte
 		current_context.add_event(core.TrippleTestEvent.new())
 
 	elif event is core.TrippleTestEvent:
@@ -183,6 +185,7 @@ func start_game() -> void:
 	print("Start Game")
 	ui_state = core.UIState.WAITING
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
+
 
 func mode_draft() -> void:
 	print("Draft mode")

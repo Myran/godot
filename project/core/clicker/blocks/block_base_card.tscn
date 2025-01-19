@@ -602,6 +602,7 @@ mouse_filter = 2
 stretch_mode = 0
 
 [node name="shield_sprite" type="Sprite2D" parent="."]
+visible = false
 scale = Vector2(3.4, 3.4)
 texture = ExtResource("25_ixlit")
 

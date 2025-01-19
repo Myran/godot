@@ -97,11 +97,9 @@ func post_event_response(_u_pos, _u_side, _battle_context, _event):
 
 func check_abilities(tempus, _u_pos, _u_side, _battle_context, _event):
 	for _ability in abilities:
-		if _ability.condition(tempus, _u_pos, _u_side, _battle_context, _event):
-			_ability.action(tempus, _u_pos, _u_side, _battle_context, _event)
+		_ability.action(tempus, _u_pos, _u_side, _battle_context, _event)
 
 
 func check_draft_abilities(tempus, pos, _context, event, _u):
 	for _ability in abilities:
-		if _ability.draft_condition(tempus, pos, _context, event, _u):
-			_ability.draft_action(tempus, pos, _context, event, _u)
+		_ability.draft_action(tempus, pos, _context, event, _u)
