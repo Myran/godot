@@ -1,31 +1,31 @@
 class_name Card extends Block
 
-const CARD_IMAGE_PREFIX = "card_image_"
+const CARD_IMAGE_PREFIX: String = "card_image_"
 @export_dir var card_image_folder: String
 @export var base: Node
 @export var shield: Sprite2D
 @export var level: int = 1
-@export var unit_info = null
-@export var card_info = null
+@export var unit_info: UnitData = null
+@export var card_info: Dictionary = {}
 
 
-
-func show_shield():
+func show_shield() -> void:
 	shield.show()
 
 
-func hide_shield():
+func hide_shield() -> void:
 	shield.hide()
 
 
-func init_card(_card_info, _card_level = 1):
+func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
 	card_info = _card_info
 	level = _card_level
 
 	unit_info = UnitData.new()
 	unit_info.init_with_info(_card_info)
 	unit_info.upgrade_unit_to_level(_card_level)
-	var img_string = card_controller.get_card_image_name(_card_info.id)
+
+	var img_string: String = card_controller.get_card_image_name(_card_info.id)
 
 	base.set_card_img(img_string)
 	base.set_upgrade_level(unit_info.card_info.upgrade_level)
