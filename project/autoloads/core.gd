@@ -21,7 +21,7 @@ const CARD_MERGE_AMOUNT = 3
 
 
 class CoreEvent:
-	pass
+	extends Context.Event
 
 
 class RerollDraftEvent:

@@ -26,4 +26,4 @@ func setup_card(card: Card)->void:
 	card_info.add_tag("testtag1")
 	card_info.add_tag("testtag1")
 	card_info.set_rules_text(info.card_info.description)
-	card_info.set_upgrade_level(info.card_info.upgrade_level)
+	card_info.set_upgrade_level(int(info.card_info.upgrade_level))

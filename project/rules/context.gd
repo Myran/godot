@@ -11,6 +11,6 @@ class Event:
 	pass
 
 
-func add_event(_event) -> Context:
+func add_event(_event: Event) -> Context:
 	unresolved_events.append(_event)
 	return self

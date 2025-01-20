@@ -28,7 +28,7 @@ func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
 	var img_string: String = card_controller.get_card_image_name(_card_info.id)
 
 	base.set_card_img(img_string)
-	base.set_upgrade_level(unit_info.card_info.upgrade_level)
+	base.set_upgrade_level(int(unit_info.card_info.upgrade_level))
 	base.set_card_health(unit_info.current_health)
 	base.set_card_attack(unit_info.current_attack)
 	base.set_card_level(unit_info.level)

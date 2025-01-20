@@ -1,7 +1,7 @@
 extends PanelContainer
 
 
-func set_level(_lvl):
+func set_level(_lvl: int) -> void:
 	$"%icon_level_1".visible = false
 	$"%icon_level_2".visible = false
 	$"%icon_level_3".visible = false

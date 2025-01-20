@@ -19,11 +19,11 @@ enum DEBUG_EVENT_TYPE {
 @export var v_box_container_buttons: VBoxContainer
 
 
-func action(type: DEBUG_EVENT_TYPE, args:Array = []):
+func action(type: DEBUG_EVENT_TYPE, args: Array = []) -> void:
 	debug_event.emit(type, args)
 
 
-func _on_debug_event(event, _data = null):
+func _on_debug_event(event: DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
 	match event:
 		DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU:
 			popup_debug.show()
@@ -41,7 +41,7 @@ func _on_debug_event(event, _data = null):
 #func get_force_level():
 #return force_level if OS.is_debug_build() else false
 #
-func _ready():
+func _ready() -> void:
 	print("debug ready")
 	popup_debug.hide()
 	debug_event.connect(_on_debug_event)
@@ -49,19 +49,19 @@ func _ready():
 		btn.pressed.connect(debug_button_pressed.bind(btn.name))
 
 
-func debug_button_pressed(_name):
+func debug_button_pressed(_name: String) -> void:
 	match _name:
 		"button_close":
 			popup_debug.hide()
 		"button_pop_enemy":
 			print("pop enemy")
 			for n in 3:
-				var new_card = await card_controller.create_unit_from_id(str(n), 1)
+				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD,[new_card,n])
 				core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
 			for n in 3:
-				var new_card = await card_controller.create_unit_from_id(str(n), 1)
+				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
 				core.action(core.DebugLineupAddCardEvent.new(new_card, n))

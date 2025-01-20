@@ -1,9 +1,9 @@
 class_name AbilityMergeBonus extends Ability
-var health_add
-var attack_add
+var health_add: int
+var attack_add: int
 
 
-func _init(_health_add = 1, _attack_add = 1):
+func _init(_health_add: int = 1, _attack_add: int = 1) -> void:
 	health_add = _health_add
 	attack_add = _attack_add
 

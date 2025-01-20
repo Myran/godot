@@ -156,5 +156,5 @@ func enact(battle_events: Array) -> void:
 
 	await get_tree().create_timer(1.25).timeout
 	for side: Dictionary in [allies, enemies]:
-		for k: Array in side.keys():
+		for k: int in side.keys():
 			side[k].queue_free()

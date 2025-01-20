@@ -25,7 +25,7 @@ func reset(new_seed: int = 0, hard: bool = false) -> void:
 
 
 func next() -> int:
-	var random_integer = _rng.randi()
+	var random_integer: int = _rng.randi()
 	_current_state = _rng.state
 	_result_sequence.append(random_integer)
 	return random_integer
@@ -38,18 +38,18 @@ func get_at_index(index: int) -> int:
 
 
 func save_state() -> String:
-	var state = {"initial_seed": _initial_seed, "current_state": _current_state}
+	var state: Dictionary = {"initial_seed": _initial_seed, "current_state": _current_state}
 	return JSON.stringify(state)
 
 
 func load_state(json_state: String) -> void:
-	var json = JSON.new()
-	var error = json.parse(json_state)
+	var json: JSON = JSON.new()
+	var error: Error = json.parse(json_state)
 	if error == OK:
-		var data = json.get_data()
+		var data: Variant = json.get_data()
 		if data is Dictionary:
 			_initial_seed = data.get("initial_seed", 0)
-			var loaded_state = data.get("current_state", 0)
+			var loaded_state: int = data.get("current_state", 0)
 			reset(_initial_seed)
 			while _current_state != loaded_state:
 				next()
