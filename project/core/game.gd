@@ -3,8 +3,8 @@ class_name Game extends Control
 @export_group("UI Elements")
 @export var card_pop: Control
 @export var holder_draft: Node
-@export var holder_allies: Control
-@export var holder_enemy: Control
+@export var holder_allies: HolderContainer
+@export var holder_enemy: HolderContainer
 @export var bottom_bar_draft: Control
 @export var bottom_bar_prepare: Control
 @export var top_bar: CanvasLayer
@@ -13,7 +13,7 @@ class_name Game extends Control
 
 @export_group("Systems")
 @export var clicker: Clicker
-@export var level_controller: Control
+@export var level_controller: LevelController
 @export var game_handler: GameHandler
 @export var input_handler: InputHandler
 @export var card_handler: CardHandler
@@ -74,7 +74,7 @@ func update_context_units(_context: DraftContext) -> DraftContext:
 func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 	var ret_context: DraftContext = _context
 	if event is ui.UIEvent:
-		resolve_ui_event(event, _context)
+		resolve_ui_event(event as ui.UIEvent, _context)
 	elif event is core.CoreEvent:
 		resolve_core_event(event, _context)
 	return ret_context
@@ -82,26 +82,35 @@ func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 
 func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) -> void:
 	if event is core.CardStatChangeEvent:
+		var _card: Card = event.card
 		if event.health != 0:
-			card_handler.change_health(event.card, event.health)
+			var _health: int = event.health
+			card_handler.change_health(_card, _health)
 
 		if event.attack != 0:
-			card_handler.change_attack(event.card, event.attack)
-		event.card.show_upgrade()
+			var _attack: int = event.attack
+			card_handler.change_attack(_card, _attack)
+		_card.show_upgrade()
 
 	elif event is core.TransitionEvent:
-		game_handler.set_gamestate(event.new_state)
+		var new_state: core.GameState = event.new_state
+		game_handler.set_gamestate(new_state)
 
 	elif event is core.EnemyLineupAddCardEvent:
-		var holder: Node = holder_enemy.get_holder(event.pos)
-		holder.set_card(event.card)
+		var pos: int = event.pos
+		var _card: Card = event.card
+		var holder: Holder = holder_enemy.get_holder(pos)
+		holder.set_card(_card)
 
 	elif event is core.DebugLineupAddCardEvent:
-		lineup_handler.add_card(event.card, event.pos)
+		var _card: Card = event.card
+		var pos: int = event.pos
+		lineup_handler.add_card(_card, pos)
 		current_context.add_event(core.TrippleTestEvent.new())
 		current_context.solve_events()
 	elif event is core.LineupAddCardEvent:
-		core.action(core.BlockEntersPlay.new(event.card))
+		var block: Block = event.card
+		core.action(core.BlockEntersPlay.new(block))
 		# detta är inte snyggt med -1,-1. antagligen behövs den inte
 		current_context.add_event(core.TrippleTestEvent.new())
 
