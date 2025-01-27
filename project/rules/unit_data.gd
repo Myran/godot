@@ -34,7 +34,7 @@ func init_with_info(_card_info: Dictionary) -> void:
 	card_info = _card_info
 	var abilities_string: String = card_info.abilities
 	var new_abilities: Array = AbilitiesHandler.parse_abilities(abilities_string)
-	for _ab in new_abilities:
+	for _ab: Ability in new_abilities:
 		if _ab != null:
 			add_ability(_ab)
 
