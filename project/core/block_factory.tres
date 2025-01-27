@@ -12,7 +12,7 @@
 
 [resource]
 script = ExtResource("1")
-upgrade_blocks = [ExtResource("12_y1qa4"), ExtResource("13_vqevx"), ExtResource("14_4bnb6")]
+upgrade_blocks = Array[PackedScene]([ExtResource("12_y1qa4"), ExtResource("13_vqevx"), ExtResource("14_4bnb6")])
 locked_block_scene = ExtResource("8_svlm3")
 nospace_block_scene = ExtResource("9_h70if")
 passtrough_block_scene = ExtResource("10_hjfyp")
