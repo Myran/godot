@@ -1,7 +1,7 @@
 class_name Game extends Control
 
 @export_group("UI Elements")
-@export var card_pop: Control
+@export var card_pop: CardPop
 @export var holder_draft: Node
 @export var holder_allies: HolderContainer
 @export var holder_enemy: HolderContainer
@@ -40,8 +40,9 @@ func _ready() -> void:
 
 
 func setup_signals() -> void:
-	ui.event.connect(new_event)
-	core.event.connect(new_event)
+	var __: int
+	__ = ui.event.connect(new_event)
+	__ = core.event.connect(new_event)
 
 
 func setup_systems() -> void:
@@ -82,15 +83,15 @@ func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 
 func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) -> void:
 	if event is core.CardStatChangeEvent:
-		var _card: Card = event.card
+		var card: Card = event.card
 		if event.health != 0:
-			var _health: int = event.health
-			card_handler.change_health(_card, _health)
+			var health: int = event.health
+			card_handler.change_health(card, health)
 
 		if event.attack != 0:
-			var _attack: int = event.attack
-			card_handler.change_attack(_card, _attack)
-		_card.show_upgrade()
+			var attack: int = event.attack
+			card_handler.change_attack(card, attack)
+		var __: Tween = card.show_upgrade()
 
 	elif event is core.TransitionEvent:
 		var new_state: core.GameState = event.new_state
@@ -98,14 +99,14 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 
 	elif event is core.EnemyLineupAddCardEvent:
 		var pos: int = event.pos
-		var _card: Card = event.card
+		var card: Card = event.card
 		var holder: Holder = holder_enemy.get_holder(pos)
-		holder.set_card(_card)
+		holder.set_card(card)
 
 	elif event is core.DebugLineupAddCardEvent:
-		var _card: Card = event.card
+		var card: Card = event.card
 		var pos: int = event.pos
-		lineup_handler.add_card(_card, pos)
+		lineup_handler.add_card(card, pos)
 		current_context.add_event(core.TrippleTestEvent.new())
 		current_context.solve_events()
 	elif event is core.LineupAddCardEvent:
@@ -117,15 +118,15 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.TrippleTestEvent:
 		var tripples: Array = lineup_handler.find_tripples()
 		if not tripples.is_empty():
-			var _card: Card = tripples[0]
-			current_context.add_event(core.LineupMergeEvent.new(_card, tripples))
+			var card: Card = tripples[0]
+			current_context.add_event(core.LineupMergeEvent.new(card, tripples))
 		current_context.solve_events()
 
 	elif event is core.LineupMergeEvent:
-		var _card: Card = event.card
+		var card: Card = event.card
 		var tripples: Array = event.tripples
-		var new_card: Card = await lineup_handler.merge(_card, tripples)
-		update_context_units(current_context)
+		var new_card: Card = await lineup_handler.merge(card, tripples)
+		current_context = update_context_units(current_context)
 		(
 			current_context
 			. add_event(
@@ -143,8 +144,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.BattleEvent:
 		var enacter: BattleEnacter = BattleEnacter.new(battle_layer, holder_allies, holder_enemy)
 		add_child(enacter)
-		var _events: Array = event.battle_events
-		await enacter.enact(_events)
+		var events: Array = event.battle_events
+		await enacter.enact(events)
 		enacter.queue_free()
 
 		core.action(core.TransitionEvent.new(core.GameState.POSTBATTLE))
@@ -163,12 +164,16 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		return
 
 	if _event is ui.DraftHolderToggledEvent:
-		draft_handler.hold_toggle(_event.col, _event.new_state)
+		var col: int = _event.col
+		var new_state: bool = _event.new_state
+		draft_handler.hold_toggle(col, new_state)
 	elif _event is ui.ShowCardEvent:
-		card_pop.show_card(_event.card_to_show)
+		var card: Card = _event.card_to_show
+		card_pop.show_card(card)
 
 	elif _event is ui.TransitionEvent:
-		core.action(core.TransitionEvent.new(_event.new_state))
+		var new_state: core.GameState = _event.new_state
+		core.action(core.TransitionEvent.new(new_state))
 	elif _event is ui.StartBattleEvent:
 		print("Start battle")
 		current_battle = battle_handler.create_battle()
@@ -186,9 +191,9 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		draft_handler.upgrade()
 
 	elif _event is ui.TouchEvent:
-		var update_draft: bool = input_handler.touch_handler(
-			_event.event, _event.sender, current_context
-		)
+		var event: InputEvent = _event.event
+		var sender: Object = _event.sender
+		var update_draft: bool = input_handler.touch_handler(event, sender, current_context)
 		if update_draft:
 			ui_state = core.UIState.LOCKED
 			core.action(core.UpdateDraftAreaEvent.new())

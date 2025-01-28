@@ -1,4 +1,4 @@
-extends Control
+class_name CardPop extends Control
 
 @export var card_popup: PackedScene
 var current_card: CardFullView
