@@ -49,8 +49,11 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		update_blocks()
 
 	if event is core.DraftAddBlockEvent:
-		level.add_to_grid(event.pos, event.block, event.refill_count)
-		core.action(core.BlockEntersPlay.new(event.block, event.pos))
+		var grid_pos: Vector2i = event.pos
+		var block: Block = event.block
+		var count: int = event.refill_count
+		level.add_to_grid(grid_pos, block, count)
+		core.action(core.BlockEntersPlay.new(block, grid_pos))
 
 	if event is core.UpgradeEvent:
 		remove_upgrade_blocks(event.new_level)

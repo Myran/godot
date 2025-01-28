@@ -40,9 +40,10 @@ func _ready() -> void:
 
 
 func setup_signals() -> void:
-	var __: int
-	__ = ui.event.connect(new_event)
-	__ = core.event.connect(new_event)
+	@warning_ignore("return_value_discarded")
+	ui.event.connect(new_event)
+	@warning_ignore("return_value_discarded")
+	core.event.connect(new_event)
 
 
 func setup_systems() -> void:
@@ -91,7 +92,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		if event.attack != 0:
 			var attack: int = event.attack
 			card_handler.change_attack(card, attack)
-		var __: Tween = card.show_upgrade()
+		@warning_ignore("return_value_discarded")
+		card.show_upgrade()
 
 	elif event is core.TransitionEvent:
 		var new_state: core.GameState = event.new_state

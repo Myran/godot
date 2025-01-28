@@ -50,7 +50,7 @@ class TransitionEvent:
 	extends UIEvent
 	var new_state: core.GameState
 
-	func _init(_new_state) -> void:
+	func _init(_new_state: core.GameState) -> void:
 		new_state = _new_state
 
 
@@ -70,9 +70,9 @@ class UpgradeEvent:
 	extends UIEvent
 
 
-func action(_event: UIEvent):
+func action(_event: UIEvent) -> void:
 	event.emit(_event)
 
 
-func _ready():
+func _ready() -> void:
 	print("ui autoload ready")
