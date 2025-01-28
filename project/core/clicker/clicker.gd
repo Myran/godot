@@ -60,16 +60,21 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
-		if level.get_grid_pos(event.block) != Clicker.NO_POS:
-			level.remove_from_grid(event.block, event.destroy_block)
+		var _block: Block = event.block
+		var is_destroy: bool = event.destroy_block
+		if level.get_grid_pos(_block) != Clicker.NO_POS:
+			level.remove_from_grid(_block, is_destroy)
 
 	if event is core.DraftMergeEvent:
-		var merge_info: Dictionary = await merge_matched_cards(event.matches)
+		var matches: Array = event.matches
+		var merge_info: Dictionary = await merge_matched_cards(matches)
 		await merge_info.awaiter.finished
+		var new_block: Block = merge_info.block
+		var pos: Vector2i = merge_info.pos
 		for _block: Block in event.matches:
 			level.remove_from_grid(_block)
-		core.action(core.DraftAddBlockEvent.new(merge_info.block, merge_info.pos))
-		var tween: Tween = merge_info.block.show_upgrade()
+		core.action(core.DraftAddBlockEvent.new(new_block, pos))
+		var tween: Tween = new_block.show_upgrade()
 		await tween.finished
 		merge_completed.emit()
 

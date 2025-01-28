@@ -117,11 +117,14 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.TrippleTestEvent:
 		var tripples: Array = lineup_handler.find_tripples()
 		if not tripples.is_empty():
-			current_context.add_event(core.LineupMergeEvent.new(tripples[0], tripples))
+			var _card: Card = tripples[0]
+			current_context.add_event(core.LineupMergeEvent.new(_card, tripples))
 		current_context.solve_events()
 
 	elif event is core.LineupMergeEvent:
-		var new_card: Card = await lineup_handler.merge(event.card, event.tripples)
+		var _card: Card = event.card
+		var tripples: Array = event.tripples
+		var new_card: Card = await lineup_handler.merge(_card, tripples)
 		update_context_units(current_context)
 		(
 			current_context
@@ -140,7 +143,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.BattleEvent:
 		var enacter: BattleEnacter = BattleEnacter.new(battle_layer, holder_allies, holder_enemy)
 		add_child(enacter)
-		await enacter.enact(event.battle_events)
+		var _events: Array = event.battle_events
+		await enacter.enact(_events)
 		enacter.queue_free()
 
 		core.action(core.TransitionEvent.new(core.GameState.POSTBATTLE))

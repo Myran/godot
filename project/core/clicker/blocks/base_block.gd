@@ -81,11 +81,11 @@ func move_to_on_top(_pos: Vector2) -> void:
 	scene_tween.tween_callback(func() -> void: movement_done.emit())
 
 
-func show_upgrade() -> void:
+func show_upgrade() -> Tween:
 	var scene_tween: Tween = create_tween()
 	scene_tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.2)
 	scene_tween.tween_property(self, "scale", Vector2(1, 1), 0.2)
-	#return scene_tween
+	return scene_tween
 
 
 func _on_area_2d_input_event(_viewport: Node, _event: InputEvent, _shape_idx: int) -> void:
