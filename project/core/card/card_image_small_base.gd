@@ -1,4 +1,4 @@
-extends ColorRect
+class_name SmallBase extends ColorRect
 
 
 func set_upgrade_level(_lvl: int = 1) -> void:

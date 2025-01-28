@@ -56,7 +56,8 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		core.action(core.BlockEntersPlay.new(block, grid_pos))
 
 	if event is core.UpgradeEvent:
-		remove_upgrade_blocks(event.new_level)
+		var new_level: int = event.new_level
+		remove_upgrade_blocks(new_level)
 		update_blocks()
 
 	if event is core.UpdateDraftAreaEvent:
@@ -118,15 +119,17 @@ func find_match() -> Array:
 
 func merge_matched_cards(cluster: Array) -> Dictionary:
 	var card_id: String = cluster[0].card_info.id
-	var new_level: int = int(cluster[0].level) + 1
+	var cluster_level: int = cluster[0].level
+	var new_level: int = cluster_level + 1
 	var new_card: Block = await card_controller.create_unit_from_id(card_id, new_level)
 	new_card.block_context = Cards.CONTEXT.DRAFT
-	var cluster_pos: Vector2i = level.get_grid_pos(cluster[1])
+	var cluster_block: Block = cluster[1]
+	var cluster_pos: Vector2i = level.get_grid_pos(cluster_block)
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
 	for block: Block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
 
-		awaiter.add(block.movement_done)
+		awaiter = awaiter.add(block.movement_done)
 
 	return {"block": new_card, "pos": cluster_pos, "awaiter": awaiter}
 
@@ -145,7 +148,7 @@ func add_neighbour_cards(block: Block, cluster: Array = []) -> Array:
 			if neighbour.object_type == core.ObjectType.CARD and not cluster.has(neighbour):
 				if neighbour.level == block.level and neighbour.card_info.id == block.card_info.id:
 					cluster.append(neighbour)
-					add_neighbour_cards(neighbour, cluster)
+					cluster = add_neighbour_cards(neighbour, cluster)
 
 	return cluster
 

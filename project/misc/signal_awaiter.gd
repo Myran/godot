@@ -5,11 +5,13 @@ signal finished
 
 
 func _init() -> void:  # Added return type
-	Engine.get_main_loop().root.add_child(self)
+	var win: Window = Engine.get_main_loop().root
+	win.add_child(self)
 
 
 # Added Signal type to indicate godot built-in Signal class
 func add(_signal: Signal) -> SignalAwaiter:  # Added return type
+	@warning_ignore("return_value_discarded")
 	_signal.connect(_on_signal_received.bind(_signal), CONNECT_ONE_SHOT)
 	return self
 

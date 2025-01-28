@@ -16,12 +16,14 @@ func shake(left: bool = true) -> void:
 	var block_tween: Tween = create_tween()
 	var fade_length: float = 1.1
 
+	@warning_ignore("return_value_discarded")
 	block_tween.tween_property(self, "modulate", Color(0, 0, 0, 0), fade_length).set_trans(
 		Tween.TRANS_QUINT
 	)
 
 	var vignette: ColorRect = %card_image_base.get_vignette_shader_node()
 	var vig_tween: Tween = create_tween()
+	@warning_ignore("return_value_discarded")
 	(
 		vig_tween
 		. tween_property(
@@ -29,13 +31,14 @@ func shake(left: bool = true) -> void:
 		)
 		. set_trans(Tween.TRANS_QUINT)
 	)
-
+	@warning_ignore("return_value_discarded")
 	vig_tween.chain().tween_callback(
 		func() -> void: vignette.material.set_shader_parameter("vignette_rgb", Color(0, 0, 0, 1))
 	)
 
 	if left:
 		self.rotation_degrees = wrapi(0, 0, 360)  # Set initial rotation if needed
+		@warning_ignore("return_value_discarded")
 		(
 			shake_tween
 			. tween_property(self, "rotation_degrees", wrapi(120, 0, 360), fade_length)
@@ -44,6 +47,7 @@ func shake(left: bool = true) -> void:
 		)
 	else:
 		self.rotation_degrees = 360  # Set initial rotation
+		@warning_ignore("return_value_discarded")
 		(
 			shake_tween
 			. tween_property(self, "rotation_degrees", 140, fade_length)
@@ -57,18 +61,23 @@ func shake(left: bool = true) -> void:
 func move_to_position(new_position: Vector2) -> void:
 	var time: float = abs(((new_position - position).y / texture_normal.get_height()) * MOVE_SPEED)
 	var scene_tween: Tween = create_tween()
-
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "position", new_position, time)
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_callback(func() -> void: movement_done.emit())
 
 	if time != 0 and object_type == core.ObjectType.CARD:
+		@warning_ignore("return_value_discarded")
 		scene_tween.chain().tween_property(self, "scale", Vector2(1.05, 1.05), 0.08)
+		@warning_ignore("return_value_discarded")
 		scene_tween.chain().tween_property(self, "scale", Vector2(1, 1), 0.08)
 
 
 func merge_into_position(merge_pos: Vector2) -> void:
 	var scene_tween: Tween = create_tween()
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "position", merge_pos, MERGE_SPEED)
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_callback(func() -> void: movement_done.emit())
 
 
@@ -77,13 +86,17 @@ func move_to_on_top(_pos: Vector2) -> void:
 	set_as_top_level(true)
 	set_global_position(current_global_pos)
 	var scene_tween: Tween = create_tween()
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "global_position", _pos, TOP_MOVE_SPEED)
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_callback(func() -> void: movement_done.emit())
 
 
 func show_upgrade() -> Tween:
 	var scene_tween: Tween = create_tween()
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.2)
+	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "scale", Vector2(1, 1), 0.2)
 	return scene_tween
 
