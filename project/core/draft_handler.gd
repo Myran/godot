@@ -4,6 +4,7 @@ var current_draft_upgrade_level: int = 0
 
 
 func _ready() -> void:
+	@warning_ignore("return_value_discarded")
 	debug.debug_event.connect(_on_debug_event)
 
 
