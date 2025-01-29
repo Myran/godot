@@ -1,18 +1,18 @@
 class_name CardFullView extends AspectRatioContainer
 
 @export var card_info: Container
-@export var card_image : TextureRect
+@export var card_image: TextureRect
 
 
-func show_card()->void:
+func show_card() -> void:
 	$animation_player.play("scale_up")
 
 
-func _on_button_pressed()->void:
+func _on_button_pressed() -> void:
 	ui.action(ui.HideCardEvent.new())
 
 
-func setup_card(card: Card)->void:
+func setup_card(card: Card) -> void:
 	print("CARD: setup card in card", card)
 
 	var info: UnitData = card.unit_info

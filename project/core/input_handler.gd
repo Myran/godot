@@ -15,6 +15,7 @@ var dragging_cargo: Object = null  # Can't type more specifically due to polymor
 class Empty:
 	extends Object
 
+
 func setup(_clicker: Clicker) -> void:
 	clicker = _clicker
 	holding_item = empty_item
