@@ -54,7 +54,7 @@ install-ios-deps:
 # Lint GDScript files
 lint:
     @echo "Linting GDScript files..."
-    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec gdlint {} +;
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" | grep -v -f .gdlintignore | xargs gdlint
 # Format GDScript files
 format:
     @echo "Formatting GDScript files..."
