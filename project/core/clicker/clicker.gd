@@ -64,10 +64,10 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
-		var _block: Block = event.block
+		var block: Block = event.block
 		var is_destroy: bool = event.destroy_block
-		if level.get_grid_pos(_block) != Clicker.NO_POS:
-			level.remove_from_grid(_block, is_destroy)
+		if level.get_grid_pos(block) != Clicker.NO_POS:
+			level.remove_from_grid(block, is_destroy)
 
 	if event is core.DraftMergeEvent:
 		var matches: Array = event.matches

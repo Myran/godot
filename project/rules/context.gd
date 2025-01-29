@@ -11,6 +11,10 @@ class Event:
 	pass
 
 
+func solve_events() -> void:
+	pass
+
+
 func add_event(_event: Event) -> void:
 	unresolved_events.append(_event)
 	#return self

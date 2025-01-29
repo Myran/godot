@@ -14,8 +14,6 @@ var dragging_cargo: Object = null  # Can't type more specifically due to polymor
 
 class Empty:
 	extends Object
-	pass
-
 
 func setup(_clicker: Clicker) -> void:
 	clicker = _clicker
@@ -43,9 +41,10 @@ func process(delta: float) -> void:
 	if tap_state == core.TapState.PRESSING:
 		tap_timer = tap_timer + delta
 		if holding_item is not Empty and last_touch_pos != Vector2.ZERO and tap_timer > TAP_TIME:
-			holding_item.set_global_position(
-				lerp(holding_item.get_global_position(), last_touch_pos, DRAG_LERP)
-			)
+			var item: TouchScreenButton = holding_item
+			var pos: Vector2 = last_touch_pos
+			var g_pos: Vector2 = item.get_global_position()
+			item.set_global_position(g_pos.lerp(pos, DRAG_LERP))
 		if tap_timer > TAP_TIME:
 			if holding_item is not Empty:
 				tap_state = core.TapState.HOLDING
@@ -53,17 +52,18 @@ func process(delta: float) -> void:
 				holding()
 	elif tap_state == core.TapState.HOLDING:
 		if last_touch_pos != Vector2.ZERO and dragging_cargo is not Empty:
-			dragging_cargo.set_global_position(
-				lerp(dragging_cargo.get_global_position(), last_touch_pos, DRAG_LERP)
-			)
+			var cargo: Card = dragging_cargo
+			var g_pos: Vector2 = cargo.get_global_position()
+			cargo.set_global_position(g_pos.lerp(last_touch_pos, DRAG_LERP))
 
 
 func holding() -> void:
-	var pos: Vector2 = holding_item.get_global_position()
-	holding_item.set_as_top_level(true)
-	holding_item.set_global_position(pos)
-	dragging_cargo = holding_item
-	dragging_cargo.set_process_input(false)
+	var item: Card = holding_item
+	var pos: Vector2 = item.get_global_position()
+	item.set_as_top_level(true)
+	item.set_global_position(pos)
+	dragging_cargo = item
+	item.set_process_input(false)
 	holding_item = empty_item
 
 
@@ -95,7 +95,8 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 
 			core.TapState.HOLDING:
 				if dragging_cargo.object_type == core.ObjectType.CARD:
-					dragging_cargo.set_process_input(true)
+					var cargo: Card = dragging_cargo
+					cargo.set_process_input(true)
 					var release_handled: bool = false
 					var dragging_card: Card = dragging_cargo as Card
 

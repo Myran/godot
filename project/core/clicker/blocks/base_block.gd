@@ -20,8 +20,8 @@ func shake(left: bool = true) -> void:
 	block_tween.tween_property(self, "modulate", Color(0, 0, 0, 0), fade_length).set_trans(
 		Tween.TRANS_QUINT
 	)
-
-	var vignette: ColorRect = %card_image_base.get_vignette_shader_node()
+	var card_image_base: SmallBase = %card_image_base
+	var vignette: ColorRect = card_image_base.get_vignette_shader_node()
 	var vig_tween: Tween = create_tween()
 	@warning_ignore("return_value_discarded")
 	(
@@ -33,7 +33,9 @@ func shake(left: bool = true) -> void:
 	)
 	@warning_ignore("return_value_discarded")
 	vig_tween.chain().tween_callback(
-		func() -> void: vignette.material.set_shader_parameter("vignette_rgb", Color(0, 0, 0, 1))
+		func() -> void:
+			var mat: ShaderMaterial = vignette.material
+			mat.set_shader_parameter("vignette_rgb", Color(0, 0, 0, 1))
 	)
 
 	if left:
