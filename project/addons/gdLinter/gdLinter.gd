@@ -78,7 +78,31 @@ func _exit_tree() -> void:
 	if Engine.get_version_info().hex >= 0x40201:
 		prints("Unload GDLint Plugin success")
 
+func read_gdlintignore() -> Array:
+	# Get the project root directory (where project.godot is)
+	var project_root = ProjectSettings.globalize_path("res://")
+	var full_path = project_root.path_join(".gdlintignore")
+	
+	var file = FileAccess.open(full_path, FileAccess.READ)
+	var ignored_files = []
+	
+	if file:
+		while !file.eof_reached():
+			var line = file.get_line().strip_edges()
+			# Skip empty lines and comments
+			if !line.is_empty() and !line.begins_with("#"):
+				ignored_files.append(line)
+		file.close()
+	else:
+		print("Error: Could not open .gdlintignore at: ", full_path)
+	
+	return ignored_files
 
+# Example usage
+func _ready():
+	var ignored = read_gdlintignore()
+	for pattern in ignored:
+		print("Ignore pattern: ", pattern)
 func on_resource_saved(resource: Resource) -> void:
 	if not resource is GDScript:
 		return
@@ -88,7 +112,12 @@ func on_resource_saved(resource: Resource) -> void:
 
 	# Show resource path in the GDLint Dock
 	_dock_ui.file.text = resource.resource_path
-
+	
+	var ignoredfiles : Array = read_gdlintignore()
+	print('file:', resource.resource_path.get_file())
+	if ignoredfiles.has(resource.resource_path.get_file()):
+		print('file ignored', resource.resource_name)
+		return
 	# Execute linting and get its output
 	var filepath: String = ProjectSettings.globalize_path(resource.resource_path)
 	var gdlint_output: Array = []
