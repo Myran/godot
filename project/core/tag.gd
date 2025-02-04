@@ -1,4 +1,4 @@
-extends PanelContainer
+class_name TagContainer extends PanelContainer
 @onready var label: Label = $label
 
 

@@ -2,13 +2,13 @@ extends VBoxContainer
 
 @export var tag_scene: PackedScene
 
-@onready var label_rules_text: Label = $"%label_rules_text"
-@onready var label_card_name: Label = $"%label_card_name"
-@onready var label_level: Label = $"%label_level"
-@onready var label_attack: Label = $"%label_attack"
-@onready var label_health: Label = $"%label_health"
-@onready var panel_container_level: AspectRatioContainer = $"%panel_container_level"
-@onready var h_box_container_tags: HBoxContainer = $"%h_box_container_tags"
+@export var label_rules_text: Label  # = $"%label_rules_text"
+@export var label_card_name: Label  # = $"%label_card_name"
+@export var label_level: Label  # = $"%label_level"
+@export var label_attack: Label  # = $"%label_attack"
+@export var label_health: Label  # = $"%label_health"
+@export var panel_container_level: LevelContainer  # = $"%panel_container_level"
+@export var h_box_container_tags: HBoxContainer  # = $"%h_box_container_tags"
 
 
 func set_card_level(_lvl: int = 1) -> void:
@@ -36,6 +36,6 @@ func set_upgrade_level(_up_level: int) -> void:
 
 
 func add_tag(_tag_name: String = "tag_name") -> void:
-	var tag: Node = tag_scene.instantiate()
+	var tag: TagContainer = tag_scene.instantiate()
 	h_box_container_tags.add_child(tag)
 	tag.set_tag(_tag_name)

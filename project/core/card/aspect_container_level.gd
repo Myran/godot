@@ -1,4 +1,4 @@
-extends AspectRatioContainer
+class_name LevelContainer extends AspectRatioContainer
 
 
 func set_level(_lvl: int) -> void:
