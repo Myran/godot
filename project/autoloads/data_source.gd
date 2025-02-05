@@ -1,47 +1,43 @@
 extends Node
+#test
+signal value_received(data: Dictionary)
 
-signal value_received
+const local_db_file: String = "res://resources/data.json"
+const local_db_battle_file: String = "res://resources/gameone-577cb-export.json"
+const sheets: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+const zen_data: String = "zen_data"
+const zen_players: String = "zen_players"
+const player_data: String = "player_data"
+const zen_rules: String = "zen_rules"
+const zen_location_data: String = "zen_location_data"
+const zen_progression: String = "zen_progression"
 
-const local_db_file = "res://resources/data.json"
-const local_db_battle_file = "res://resources/gameone-577cb-export.json"
-const sheets = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
-const zen_data = "zen_data"
-const zen_players = "zen_players"
-const player_data = "player_data"
-const zen_rules = "zen_rules"
-const zen_location_data = "zen_location_data"
-const zen_progression = "zen_progression"
+var test_group: int = 0
+var local_data: Dictionary = {}
+var db: Object
+var current_root: Array = []
+var debug_data: Dictionary = {}
+var card_cache: Array = []
 
-var test_group = 0
-var local_data = {}
-var db
-var current_root = null
-var debug_data = null
-var card_cache = null
+const _cards: String = "cards"
+const rules: String = "rules"
+const levels: String = "levels"
+const items: String = "items"
+const players: String = "players"
+const avatar_data: String = "avatar_data"
+const events: String = "event_data"
+const arena_card: String = "arena_card"
+const collection: String = "collection"
+var current_uuid: String = ""
 
-const _cards = "cards"
-const rules = "rules"
-const levels = "levels"
-const items = "items"
-const players = "players"
-const avatar_data = "avatar_data"
-const events = "event_data"
-const arena_card = "arena_card"
-const collection = "collection"
-var current_uuid
-
-
-func activate_card_cache():
+func activate_card_cache() -> void:
 	card_cache = await get_all_cards()
 
-
-func addtest(tab):
+func addtest(tab: String) -> String:
 	return str(tab, "_", test_group)
 
-
-func get_default_player_data():
-	var data = {}
-
+func get_default_player_data() -> Dictionary:
+	var data: Dictionary = {}
 	data.progress = 1
 	data.sfx = true
 	data.music = false
@@ -51,31 +47,25 @@ func get_default_player_data():
 	data.id = "1"
 	return data
 
-
-func _ready():
+func _ready() -> void:
 	if ClassDB.class_exists("FirebaseDatabase"):
 		print("Firebase RealTime Database exists singleton")
 		db = ClassDB.instantiate("FirebaseDatabase")
-		#db.connect("get_value",get_value)
 		db.connect("get_value", Callable(self, "get_value"))
 		db.connect("child_changed", Callable(self, "child_changed"))
 		db.connect("child_moved", Callable(self, "child_moved"))
 		db.connect("child_removed", Callable(self, "child_removed"))
 		db.connect("child_added", Callable(self, "child_added"))
-		#db.set_db_root([sheets])
 		set_root([sheets])
 	else:
-		var file = local_db_file
+		var file: String = local_db_file
 		if debug.use_local_battle_db:
 			file = local_db_battle_file
 		load_local_data(file)
 
-
-func load_local_data(db_file):
-	# var file = FileAccess.new();
-	var file = FileAccess.open(db_file, FileAccess.READ)
-	#TODO: Error handling?
-	var res = JSON.parse_string(file.get_as_text())
+func load_local_data(db_file: String) -> void:
+	var file: FileAccess = FileAccess.open(db_file, FileAccess.READ)
+	var res: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
 	if res is Dictionary:
 		local_data = res[sheets]
@@ -83,51 +73,24 @@ func load_local_data(db_file):
 	else:
 		push_error(str("Failed to load local data file error: ", res))
 
-
-func setup_player_data():
-	var retval = await data_source.login()
-
+func setup_player_data() -> int:
+	var retval: int = await data_source.login()
 	if OS.has_feature("editor"):
-		# Login "works" if in editor
 		retval = 0
-
 	if retval:
-		# error since not 0
 		return retval
-	var data = await data_source.get_zen_player_data()
-	if TYPE_BOOL == typeof(data):
-		print("Zen player data missing. creating new player data")
+	var data: Variant = await data_source.get_zen_player_data()
+	if typeof(data) == TYPE_BOOL:
 		data = data_source.set_zen_player_data()
 	return retval
 
-
-#func get_user_data(uuid = null):
-#	print("uuid:",uuid)
-#	if uuid == null:
-#		#assert(auth,"Auth not available")
-#		#print("Default to user: 3rmglsWkuIaymJUJUcMXSva983J2")
-#		#uuid = "3rmglsWkuIaymJUJUcMXSva983J2"
-#		uuid = auth.uid()
-#	print("get_user data from uid:",uuid)
-#	db.set_db_root([players,uuid])
-##	db.get_value([avatar_data])
-##	var ret_val = yield(self,"player_data")
-#	var ret_val = yield(get_db_value(avatar_data),"completed")
-#	print("get user data:",ret_val)
-#	return ret_val
-
-
-func get_user_data(uuid = null):
-	#print("get zen player data uuid:",uuid)
-	var ret_val = false
-	if uuid == null:
+func get_user_data(uuid: String = "") -> Dictionary:
+	var ret_val: Dictionary = {}
+	if uuid.is_empty():
 		if auth.is_available():
-			#print("auth available")
 			uuid = auth.uid()
 		else:
-			uuid = 0
-		#print("new uuid: ", uuid)
-	#print("get_user data from uid:",uuid)
+			uuid = "0"
 	if db:
 		set_root([players, uuid])
 		ret_val = await get_db_value(avatar_data)
@@ -137,380 +100,151 @@ func get_user_data(uuid = null):
 			ret_val = debug_data
 	return ret_val
 
-
-#
-func save_user_data(data):
-	var retval = await auth.login()
+func save_user_data(data: Dictionary) -> void:
+	var retval: int = await auth.login()
 	if retval == 0:
 		data_source.set_user_data(auth.uid(), data)
 
-
-func set_user_data(uuid, data):
+func set_user_data(uuid: String, data: Dictionary) -> void:
 	print("set user data:", data)
 	db.set_db_root([players, uuid, avatar_data])
 	db.set_value(["name"], data.name)
 	db.set_value(["avatar_id"], data.avatar_id)
 
-
-func set_root(new_root):
-	#if current_root == new_root:
-	#	return
-#	printt("current root:",current_root,"new root:",new_root)
-#	if current_root == new_root:
-#		print("compared true")
-#	else:
-#		print("compared false")
+func set_root(new_root: Array) -> void:
 	db.set_db_root(new_root)
 	current_root = new_root.duplicate(true)
 
-
-func get_db_sheet(sheet_name, is_dictionary = false):
-	var result
-	var _name = str(sheet_name, "_", test_group)
-
+func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
+	var result: Variant
+	var _name: String = str(sheet_name, "_", test_group)
 	if db:
-		#db.set_db_root([sheets])
 		set_root([sheets])
 		result = await get_db_value(_name)
-		#print("DB RESULT: ",result)
 	else:
-		#await get_tree().process_frame
 		result = local_data[_name]
-	#print("result received: ",result)
 	if is_dictionary:
 		result = result[0]
 	return result
 
-
-func get_db_value(value):
-	var retval
+func get_db_value(value: String) -> Variant:
+	var retval: Variant
 	db.get_value([value])
-	var recieved = {"key": null}
+	var recieved: Dictionary = {"key": null}
 	while recieved.key != value:
 		recieved = await self.value_received
 		retval = recieved.value
 	return retval
 
-
-"""
-func get_zen_progression():
-	return await get_db_sheet(zen_progression)
-
-func get_zen_location_data():
-	return await get_db_sheet(zen_location_data)
-
-func get_zen_rules_data():
-	return await get_db_sheet(zen_rules,true)
-
-func get_zen_level_data():
-	return await get_db_sheet(zen_data)
-
-func get_zen_level(level_uuid):
-	var result
-	if db:
-		#db.set_db_root(["zen","levels"])
-		set_root(["zen","levels"])
-		db.get_value([level_uuid,"zen_level"])
-		var ret_val
-		var recieved = {"key":null}
-		while recieved.key != "zen_level":
-			recieved = await self.value_received
-			ret_val = recieved.value
-		var test_json_conv = JSON.new()
-		test_json_conv.JSON.parse_string(ret_val).result
-		result =  test_json_conv.get_data()
-	else:
-		await get_tree().idle_frame
-		push_warning("No DB: Load zen levels from disk as scenes instead")
-	return result
-
-func set_zen_level(level_uuid, level_data):
-
-	var json_data = JSON.stringify(level_data)
-	#db.set_db_root(["zen","levels"])
-	set_root(["zen","levels"])
-	var pushString
-	if level_uuid == null:
-		pushString = db.push_child(["zen","levels"])
-	else:
-		pushString = level_uuid
-	var path = [str(pushString)]
-	var data = {"zen_level":json_data}
-
-	#print("data source zen level data: ",data)
-	db.update_children(path,data)
-	return pushString
-
-
-func get_zen_player_data(uuid = null):
-	#print("get zen player data uuid:",uuid)
-	var ret_val = false
-	if uuid == null:
-		if auth.is_available():
-			#print("auth available")
-			uuid = auth.uid()
-		else:
-			uuid = 0
-		#print("new uuid: ", uuid)
-	#print("get_user data from uid:",uuid)
-	if db:
-		set_root([zen_players,uuid])
-		ret_val = await get_db_value(player_data)
-	else:
-		await get_tree().idle_frame
-		if debug_data:
-			ret_val = debug_data
-	if TYPE_BOOL == typeof(ret_val):
-		print("Zen player data missing. creating new")
-		ret_val= data_source.set_zen_player_data()
-
-	var val_converted = {}
-	for key in ret_val.keys():
-		var val = ret_val[key]
-		val_converted[key] = str_to_var(val)
-
-	return val_converted
-
-func set_zen_player_data(data = null, uuid = null):
-	print("set_zen_player_data")
-	if uuid == null:
-		if auth.is_available():
-			#uuid = auth.uid()
-			pass
-		else:
-			uuid = 0
-	if data == null:
-		data = get_default_player_data()
-
-	var ret_data = {}
-	if db:
-		set_root([zen_players,uuid,player_data])
-		for key in data:
-			var _t = var_to_str(data[key])
-			db.set_value([key],_t)
-			ret_data[key] = _t
-	else:
-		for key in data:
-			ret_data[key] = var_to_str(data[key])
-		debug_data = ret_data
-	return ret_data
-
-
-func set_zen_player_value(key,_value):
-	var value = var_to_str(_value)
-	#db.set_db_root([zen_players,auth.uid()])
-	if db:
-		set_root([zen_players,auth.uid(),player_data])
-		db.set_value([key],value)
-	else:
-		if !debug_data:
-			debug_data = set_zen_player_data()
-		debug_data[key] = value
-
-func login():
-	return await auth.login()
-
-#func addtest(tab):
-#	return str(tab,"_",test_group)
-"""
-
-
-func get_value(key, value):
-	#printt("key:",key,"Value:",value)
+func get_value(key: String, value: Variant) -> void:
 	emit_signal("value_received", {"key": key, "value": value})
 
-
-func child_moved(_key, _value):
-	#printt("child moved",_key,"value",_value)
+func child_moved(_key: String, _value: Variant) -> void:
 	pass
 
-
-func child_added(_key, _value):
-	#printt("child added",_key,"value",_value)
+func child_added(_key: String, _value: Variant) -> void:
 	pass
 
-
-func child_removed(_key, _value):
-	#printt("child removed",_key,"value",_value)
+func child_removed(_key: String, _value: Variant) -> void:
 	pass
 
-
-func child_changed(_key, _value):
-	#printt("Child changed:","key:",_key,"value",_value)
+func child_changed(_key: String, _value: Variant) -> void:
 	pass
 
-
-func get_event_data():
-	var result = await get_db_sheet(events, false)
+func get_event_data() -> Array:
+	var result: Array = await get_db_sheet(events, false)
 	return result
 
-
-func get_item_info(item_id):
+func get_item_info(item_id: String) -> Dictionary:
 	print("get item info:", item_id)
-	var results = await get_db_sheet(items, false)
-	for item in results:
+	var results: Array = await get_db_sheet(items, false)
+	for item: Dictionary in results:
 		if item.id == item_id:
 			return item
-	assert(false, str("item with id not found! : ", item_id))
+	push_error(str("Item with id not found: ", item_id))
+	return {}
 
-
-func get_item_id_from_name(target_name):
-	var result = await get_db_sheet(items, false)
-	for item in result:
+func get_item_id_from_name(target_name: String) -> String:
+	var result: Array = await get_db_sheet(items, false)
+	for item: Dictionary in result:
 		if item.name == target_name:
 			return item.id
-	assert(false, str("item name not found! : ", target_name))
+	push_error(str("Item name not found: ", target_name))
+	return ""
 
-
-func get_level_data(level_nr):
-	var result = await get_db_sheet(levels, false)
-	for level in result:
-		if int(level.id) == int(level_nr):
+func get_level_data(level_nr: int) -> Dictionary:
+	var result: Array = await get_db_sheet(levels, false)
+	for level: Dictionary in result:
+		var id : String = level.id
+		if int(id) == level_nr:
 			return level
 	push_warning(str("No level data found for level:", level_nr))
 	return {}
 
-
-func get_card_id_from_name(target_name):
-	#print("get card from name ",target_name)
-	var result = await get_all_cards()
-
-	for card in result:
+func get_card_id_from_name(target_name: String) -> String:
+	var result: Array = await get_all_cards()
+	for card: Dictionary in result:
 		if card.name == target_name:
 			return card.id
-	assert(false, str("card name not found! : ", target_name))
+	push_error(str("Card name not found: ", target_name))
+	return ""
 
-
-func get_card_info(card_id, use_cache = false):
+func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	print("get card info:", card_id)
-	var results
+	var results: Array
 	if use_cache:
-		assert(card_cache, "Card cache is missing!")
 		results = card_cache
 	else:
 		results = await get_all_cards()
-
-	for card in results:
-		if int(card.id) == int(card_id):
+	for card: Dictionary in results:
+		var id : String = card.id
+		if int(id) == int(card_id):
 			return card
-	assert(false, str("card with id not found! : ", card_id))
+	push_error(str("Card with id not found: ", card_id))
+	return {}
 
-
-func get_all_cards(use_cache = false):
+func get_all_cards(use_cache: bool = false) -> Array:
 	if use_cache:
-		assert(card_cache, "Card cache is missing!")
 		return card_cache
 	return await get_db_sheet(_cards, false)
 
-
-func get_rules_data():
+func get_rules_data() -> Dictionary:
 	return await get_db_sheet(rules, true)
 
-
-func get_all_levels():
+func get_all_levels() -> Array:
 	return await get_db_sheet(levels, false)
 
-
-func get_all_items():
+func get_all_items() -> Array:
 	return await get_db_sheet(items, false)
 
-
-## Arena game mode
-func create_arena_card(card_data):
-	assert(auth, "Auth not available")
-	var uuid = auth.uid()
-	print("create arena card")
+func create_arena_card(card_data: Dictionary) -> String:
+	var uuid: String = auth.uid()
 	db.set_db_root([players, uuid, "collection"])
-	var card_uid = db.push_child(["collection"])
-	print("pushstring", card_uid)
+	var card_uid: String = db.push_child(["collection"])
 	db.update_children([card_uid], card_data)
 	return card_uid
 
-
-func remove_card_from_collection():
-	pass
-
-
-"""
-func get_arena_card_data(card_uid):
-	print("TTT Get arena card data:",card_uid)
-	assert(auth,"Auth not available")
-	var uuid
-	if !auth.is_logged_in():
-		login()
-		await auth.logged_in
-
-	uuid = auth.uid()
-	assert(uuid,"uuid not available")
-	printt("TTT card_uid:",card_uid,"uuid:",uuid)
-	db.set_db_root([players,uuid,"collection"])
-	db.get_value([card_uid])
-	var ret_val = await self.arena_card
-	print("arena card return:",ret_val)
-	return ret_val
-
-func get_arena_collection():
-	assert(auth,"Auth not available")
-	var uuid = auth.uid()
-	db.set_db_root([players,uuid])
-	db.get_value(["collection"])
-	var ret_val = await self.collection
-	print("collection retrieved:",ret_val)
-	return ret_val
-
-func set_arena_deck(deck,deck_number = 0):
-	print("set deck:",deck)
-	assert(auth,"Auth not available")
-	var uuid = auth.uid()
-	db.set_db_root([players,uuid,avatar_data])
-	var json_deck = JSON.stringify(deck)
-	var deck_string = str("deck_",deck_number)
-	#db.update_children([avatar_data],{deck_string:json_deck})
-	db.set_value([deck_string],json_deck)
-
-func get_arena_deck(deck_number = 0):
-	var deck_string = str("deck_",deck_number)
-	print("deck_string:",deck_string)
-	var user_data = await get_user_data()
-	print("user_data:",user_data)
-	var test_json_conv = JSON.new()
-	test_json_conv.JSON.parse_string(user_data[deck_string]).result
-	var deck = test_json_conv.get_data()
-	print("deck:",deck)
-	return deck
-"""
-
-
-func remove_event_lineups(event):
+func remove_event_lineups(event: String) -> void:
 	db.set_db_root(["events", event])
 	db.remove_value(["lineups"])
 
-
-func get_event_lineups_data(event):
+func get_event_lineups_data(event: String) -> Dictionary:
 	print("get event lineups data ", event)
 	if db:
 		db.set_db_root(["events", event])
-		var ret_val = await get_db_value("lineups")
-#		db.get_value(["lineups"])
-#		var ret_val = yield(self,"lineups")
-		return ret_val
-	else:
-		print("database not available!")
+		return await get_db_value("lineups")
+	push_error("Database not available!")
+	return {}
 
-
-func save_event_lineup_data(event, lineup, level = 1, p_data = null, lives = 3, lineup_uuid = null):
-	var json_data = JSON.stringify(lineup)
+func save_event_lineup_data(event: String, lineup: Dictionary, level: int = 1, 
+	p_data: Dictionary = {}, lives: int = 3, lineup_uuid: String = "") -> String:
+	var json_data: String = JSON.stringify(lineup)
 	db.set_db_root(["events", event])
-	var pushString
-	if lineup_uuid == null:
-		pushString = db.push_child(["lineups", event])
-	else:
-		pushString = lineup_uuid
-	var path = [str("lineups", "/", pushString)]
-	var data = {"lineup_level": level, "lineup_data": json_data, "lives": lives}
+	var pushString: String = lineup_uuid if lineup_uuid else db.push_child(["lineups", event])
+	var path: Array = [str("lineups", "/", pushString)]
+	var data: Dictionary = {"lineup_level": level, "lineup_data": json_data, "lives": lives}
 	if p_data:
 		data.name = p_data.name
 		data.avatar_id = p_data.avatar_id
-
 	db.update_children(path, data)
 	return pushString

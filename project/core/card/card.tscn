@@ -159,7 +159,7 @@ cache/0/40/0/underline_position = 0.0
 cache/0/40/0/underline_thickness = 0.0
 cache/0/40/0/scale = 1.0
 
-[node name="card" type="AspectRatioContainer" node_paths=PackedStringArray("card_info", "card_image")]
+[node name="card" type="AspectRatioContainer" node_paths=PackedStringArray("card_info", "card_image", "anim_player")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -172,6 +172,7 @@ stretch_mode = 1
 script = ExtResource("1_kx5r1")
 card_info = NodePath("v_box_container/stats/panel_container_2/panel_container/margin_container/card_info")
 card_image = NodePath("v_box_container_2/card_image")
+anim_player = NodePath("animation_player")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 2

@@ -1,4 +1,4 @@
-extends VBoxContainer
+class_name CardInfoContainer extends VBoxContainer
 
 @export var tag_scene: PackedScene
 

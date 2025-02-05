@@ -13,11 +13,11 @@ func clear_activated() -> void:
 	activated_units.clear()
 
 
-func has_unit(unit) -> bool:
+func has_unit(unit : UnitData) -> bool:
 	return unit in activated_units
 
 
-func add_unit(position: int, unit) -> void:
+func add_unit(position: int, unit : UnitData) -> void:
 	lineup[position] = unit
 
 
