@@ -1,31 +1,38 @@
-class_name AbilityShield extends Ability
+# abilities/damage_shield_ability.gd
+class_name DamageShieldAbility extends Ability
 
 var shield_used: bool = false
 
 
-func action(
-	_tempus: core.Tempus,
-	_u_pos: int,
-	_u_side: bool,
-	_context: BattleContext,
-	_event: BattleContext.BaseEvent
+func handle_battle_event(
+	phase: core.Tempus,
+	unit_position: int,
+	is_allied_unit: bool,
+	_battle_context: BattleContext,
+	battle_event: BattleContext.BaseEvent
 ) -> void:
-	if _tempus == core.Tempus.PRE and _event is BattleContext.DamageEvent:
-		var valid_target: bool = _event.side == _u_side and _event.target == _u_pos
-		if valid_target and not shield_used:
-			_event.effects.append({"name": "shield", "ability": self})
+	if shield_used:
+		return
+
+	if phase == core.Tempus.PRE and battle_event is BattleContext.DamageEvent:
+		var damage_event: BattleContext.DamageEvent = battle_event as BattleContext.DamageEvent
+		var is_target_unit: bool = (
+			damage_event.side == is_allied_unit and damage_event.target == unit_position
+		)
+		if is_target_unit:
+			damage_event.effects.append({"effect_type": "shield", "ability": self})
+			#shield_used = true
 
 
-func draft_action(
-	_tempus: core.Tempus,
-	_pos: int,
-	_u: Block,
-	_context: DraftContext,
-	_event: core.CoreEvent,
+func handle_draft_event(
+	phase: core.Tempus,
+	_unit_position: int,
+	unit: Block,
+	_draft_context: DraftContext,
+	draft_event: core.CoreEvent
 ) -> void:
-	if _tempus == core.Tempus.POST and _event is core.BlockEntersPlay:
-		printt("u and event.block", _u, _event.block)
-		if _u == _event.block:
-			if shield_used == false:
-				var card: Card = _u
-				card.show_shield()
+	if phase == core.Tempus.POST and draft_event is core.BlockEntersPlay:
+		var play_event: core.BlockEntersPlay = draft_event as core.BlockEntersPlay
+		if unit == play_event.block and not shield_used:
+			var card: Card = unit as Card
+			card.show_shield()

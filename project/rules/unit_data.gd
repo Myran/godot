@@ -33,7 +33,7 @@ func set_current_attack(new_attack: int) -> void:
 func init_with_info(_card_info: Dictionary) -> void:
 	card_info = _card_info
 	var abilities_string: String = card_info.abilities
-	var new_abilities: Array = AbilitiesHandler.parse_abilities(abilities_string)
+	var new_abilities: Array = AbilitiesHandler.parse_ability_string(abilities_string)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
 			add_ability(_ab)
@@ -41,16 +41,16 @@ func init_with_info(_card_info: Dictionary) -> void:
 	var ability: Resource
 	# debug init cards with an ability
 	if card_info.id == str(1):
-		ability = AbilityShield.new()
+		ability = DamageShieldAbility.new()
 		add_ability(ability)
 	if card_info.id == str(2):
-		ability = AbilityHealthOnDeath.new(2)
+		ability = DeathTriggerHealthAbility.new(2)
 		add_ability(ability)
 	if card_info.id == str(12):
-		ability = AbilityTroll.new()
+		ability = EvilSynergyAbility.new()
 		add_ability(ability)
 	if card_info.id == str(4):
-		ability = AbilityMergeBonus.new(1, 1)
+		ability = MergeBonusAbility.new(1, 1)
 		add_ability(ability)
 
 
@@ -112,11 +112,11 @@ func check_abilities(
 	_event: BattleContext.BaseEvent
 ) -> void:
 	for _ability: Ability in abilities:
-		_ability.action(tempus, u_pos, u_side, battle_context, _event)
+		_ability.handle_battle_event(tempus, u_pos, u_side, battle_context, _event)
 
 
 func check_draft_abilities(
 	tempus: int, pos: int, context: DraftContext, event: core.CoreEvent, u: Block
 ) -> void:
 	for _ability: Ability in abilities:
-		_ability.draft_action(tempus, pos, u, context, event)
+		_ability.handle_draft_event(tempus, pos, u, context, event)

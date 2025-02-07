@@ -108,9 +108,9 @@ static func solve_event(event: BattleContext.BaseEvent, context: BattleContext) 
 		var damage_amount: int = event.damage_amount
 		if event.effects.size():
 			for effect: Dictionary in event.effects:
-				match effect.name:
+				match effect.effect_type:
 					"shield":
-						var shield_ability: AbilityShield = effect.ability
+						var shield_ability: DamageShieldAbility = effect.ability
 						if shield_ability.shield_used == false:
 							context.add_event(BattleContext.ShieldEvent.new(target, side, false))
 

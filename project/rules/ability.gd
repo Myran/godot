@@ -1,21 +1,22 @@
 class_name Ability extends Resource
 
 
-func action(
-	_tempus: core.Tempus,
-	_u_pos: int,
-	_u_side: bool,
+# Base class marks all parameters as unused since they're meant for subclasses
+func handle_battle_event(
+	_phase: core.Tempus,
+	_unit_position: int,
+	_is_allied_unit: bool,
 	_battle_context: BattleContext,
-	_event: BattleContext.BaseEvent
+	_battle_event: BattleContext.BaseEvent
 ) -> void:
 	pass
 
 
-func draft_action(
-	_tempus: core.Tempus,
-	_pos: int,
-	_u: Block,
-	_context: DraftContext,
-	_event: core.CoreEvent,
+func handle_draft_event(
+	_phase: core.Tempus,
+	_unit_position: int,
+	_unit: Block,
+	_draft_context: DraftContext,
+	_draft_event: core.CoreEvent
 ) -> void:
 	pass

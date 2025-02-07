@@ -1,20 +1,17 @@
-class_name AbilityHealthOnDeath extends Ability
-var health_add: int = 1
+# abilities/death_trigger_health_ability.gd
+class_name DeathTriggerHealthAbility extends Ability
 
+var health_bonus: int
 
-func _init(_health_add: int = 1) -> void:
-	health_add = _health_add
+func _init(bonus_health: int = 1) -> void:
+	health_bonus = bonus_health
 
-
-func action(
-	_tempus: core.Tempus,
-	_u_pos: int,
-	_u_side: bool,
-	_battle_context: BattleContext,
-	_event: BattleContext.BaseEvent
-) -> void:
-	if _tempus == core.Tempus.POST:
-		if _event is BattleContext.DeathEvent:
-			_battle_context.add_event(
-				BattleContext.StatChangeEvent.new("current_health", _u_pos, _u_side, health_add)
-			)
+func handle_battle_event(phase: core.Tempus, unit_position: int, is_allied_unit: bool, battle_context: BattleContext, battle_event: BattleContext.BaseEvent) -> void:
+	if phase == core.Tempus.POST and battle_event is BattleContext.DeathEvent:
+		var stat_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
+			"current_health",
+			unit_position,
+			is_allied_unit,
+			health_bonus
+		)
+		battle_context.add_event(stat_event)
