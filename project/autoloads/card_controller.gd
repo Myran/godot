@@ -28,7 +28,7 @@ func get_random_id_from_pool(_level: int) -> String:
 	return unit_id
 
 
-func create_unit_from_id(id: String, unit_level: int = 1) -> Node:
+func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	var card_info: Dictionary = await data_source.get_card_info(id, true)
 	var card_scene: PackedScene = load(card_scene_name)
 	var card_instanced: Node = card_scene.instantiate()
@@ -42,7 +42,8 @@ func select_id_from_level(lvl: int) -> String:
 	var cards_with_level: Array = []
 
 	for card: Dictionary in all_cards:
-		if int(card.upgrade_level) == sel_lvl:
+		var level: String = card.upgrade_level
+		if int(level) == sel_lvl:
 			cards_with_level.append(card)
 
 	var picked_card_id: String = (
@@ -53,21 +54,25 @@ func select_id_from_level(lvl: int) -> String:
 
 func select_recruited_unit_level(recruit_lvl: int) -> int:
 	var roll: int = (randi() % 99) + 1
-
+	var c_lvl_2_star_1: String = _rules.chance_lvl_2_star_1
+	var c_lvl_2_star_2: String = _rules.chance_lvl_2_star_2
+	var c_lvl_3_star_1: String = _rules.chance_lvl_3_star_1
+	var c_lvl_3_star_2: String = _rules.chance_lvl_3_star_2
+	var c_lvl_3_star_3: String = _rules.chance_lvl_3_star_3
 	match recruit_lvl:
 		1:
 			return 1
 		2:
-			if roll <= int(_rules.chance_lvl_2_star_1):
+			if roll <= int(c_lvl_2_star_1):
 				return 1
-			if roll <= int(_rules.chance_lvl_2_star_2):
+			if roll <= int(c_lvl_2_star_2):
 				return 2
 		3:
-			if roll <= int(_rules.chance_lvl_3_star_1):
+			if roll <= int(c_lvl_3_star_1):
 				return 1
-			if roll <= int(_rules.chance_lvl_3_star_2):
+			if roll <= int(c_lvl_3_star_2):
 				return 2
-			if roll <= int(_rules.chance_lvl_3_star_3):
+			if roll <= int(c_lvl_3_star_3):
 				return 3
 
 	return 1  # Default fallback return

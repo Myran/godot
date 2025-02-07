@@ -21,4 +21,5 @@ func draft_action(
 		return
 	if not _u.block_context == Cards.CONTEXT.LINEUP:
 		return
-	_draft_context.add_event(core.CardStatChangeEvent.new(_u, health_add, attack_add))
+	var m_card : Card = _u
+	_draft_context.add_event(core.CardStatChangeEvent.new(m_card, health_add, attack_add))

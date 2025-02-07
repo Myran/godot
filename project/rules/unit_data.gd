@@ -68,8 +68,10 @@ func upgrade_unit_to_level(_new_level: int) -> void:
 
 
 func upgrade_stats_to_new_level(_level: int) -> void:
-	max_health = int(card_info.health) * _level
-	max_attack = int(card_info.attack) * _level
+	var health: String = card_info.health
+	var attack: String = card_info.attack
+	max_health = int(health) * _level
+	max_attack = int(attack) * _level
 	current_attack = max_attack
 	current_health = max_health
 

@@ -118,7 +118,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.add_event(core.TrippleTestEvent.new())
 
 	elif event is core.TrippleTestEvent:
-		var tripples: Array = lineup_handler.find_tripples()
+		var tripples: Array[Card] = lineup_handler.find_tripples()
 		if not tripples.is_empty():
 			var card: Card = tripples[0]
 			current_context.add_event(core.LineupMergeEvent.new(card, tripples))

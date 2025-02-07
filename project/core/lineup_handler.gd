@@ -12,10 +12,10 @@ func add_card(card: Card, pos: int) -> void:
 	holder_pos.set_card(card)
 
 
-func find_tripples() -> Array:
+func find_tripples() -> Array[Card]:
 	var lineup: Dictionary = holder_container.get_current_lineup()
 	for card: Card in lineup.values():
-		var tripples := []
+		var tripples: Array[Card] = []
 		for lineup_card: Card in lineup.values():
 			if lineup_card.card_info.id == card.card_info.id and lineup_card.level == card.level:
 				if not tripples.has(lineup_card):
@@ -35,7 +35,8 @@ func merge(card: Card, tripples: Array) -> Card:
 		current_holder.remove_card()
 
 		if trip_card == card:
-			new_card = await card_controller.create_unit_from_id(card.card_info.id, card.level + 1)
+			var id: String = card.card_info.id
+			new_card = await card_controller.create_unit_from_id(id, card.level + 1)
 			new_card.block_context = Cards.CONTEXT.LINEUP
 			current_holder.set_card(new_card)
 			new_card.show_upgrade()

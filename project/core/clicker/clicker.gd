@@ -99,7 +99,7 @@ func update_blocks() -> void:
 			solve_gravity()
 		await level.move_blocks()
 		refill_counter.clear()
-		var matches: Array = find_match()
+		var matches: Array[Card] = find_match()
 		if matches.size():
 			block_action = true
 			core.action(core.DraftMergeEvent.new(matches))
@@ -108,10 +108,10 @@ func update_blocks() -> void:
 	core.action(core.DraftSteadyEvent.new())
 
 
-func find_match() -> Array:
+func find_match() -> Array[Card]:
 	for block: Block in level.all_blocks():
 		if block != null and block.object_type == core.ObjectType.CARD:
-			var cluster: Array = add_neighbour_cards(block, [block])
+			var cluster: Array[Card] = add_neighbour_cards(block, [block])
 			if cluster.size() >= core.CARD_MERGE_AMOUNT:
 				return cluster
 	return []
@@ -134,7 +134,7 @@ func merge_matched_cards(cluster: Array) -> Dictionary:
 	return {"block": new_card, "pos": cluster_pos, "awaiter": awaiter}
 
 
-func add_neighbour_cards(block: Block, cluster: Array = []) -> Array:
+func add_neighbour_cards(block: Block, cluster: Array[Card] = []) -> Array[Card]:
 	var start_pos: Vector2i = level.get_grid_pos(block)
 
 	if start_pos == null:

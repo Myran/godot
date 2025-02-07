@@ -91,7 +91,8 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					current_context.solve_events()
 					update_draft = true
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:
-					core.action(core.RemoveBlockFromDraft.new(interacted_object, true))
+					var m_block : Block = interacted_object
+					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 					update_draft = true
 
 			core.TapState.HOLDING:

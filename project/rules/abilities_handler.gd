@@ -28,9 +28,12 @@ static func create_ability(ability_name: String, argarray: Array) -> Ability:
 	var ret_ability: Ability = null
 	match ability_name:
 		"guard":
-			ret_ability = AbilityHealthOnDeath.new(int(argarray[0]))
+			var arg0: String = argarray[0]
+			ret_ability = AbilityHealthOnDeath.new(int(arg0))
 		"troll":
-			ret_ability = AbilityTroll.new(int(argarray[0]), int(argarray[1]))
+			var arg0: int = argarray[0]
+			var arg1: int = argarray[1]
+			ret_ability = AbilityTroll.new(arg0, arg1)
 		"damage":
 			#ret_ability = ability_damage.new(argarray[0])
 			pass

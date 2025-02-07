@@ -135,11 +135,11 @@ func solve_events() -> void:
 		event_list.append_array(event_stack.duplicate(true))
 
 		while event_stack.size():
-			var next_event = event_stack.pop_front()
+			var next_event : BaseEvent = event_stack.pop_front()
 			_process_event(next_event)
 
 
-func _process_event(event) -> void:
+func _process_event(event : BaseEvent) -> void:
 	broadcast_event(UnitData.PRE_EVENT_RESPONSE, self, event)
 	solve_events()
 	solver.solve_event(event, self)

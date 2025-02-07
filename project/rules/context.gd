@@ -1,5 +1,6 @@
 class_name Context extends Resource
 
+
 # Event tracking arrays
 var events: Array = []
 var unresolved_events: Array = []
