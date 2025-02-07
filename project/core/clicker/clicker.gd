@@ -1,13 +1,14 @@
 class_name Clicker extends Node
 
 signal merge_completed
-const NO_POS = Vector2i(-1, -1)
-const SPAWN_HEIGHT = 0
-const DIRECTIONS = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+
+const NO_POS: Vector2i = Vector2i(-1, -1)
+const SPAWN_HEIGHT: int = 0
+const DIRECTIONS: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
 
 var level: LevelController
-var refill_counter := []
-var columns_locked := []
+var refill_counter: Array[int] = []
+var columns_locked: Array[int] = []
 
 
 func setup(_level_controller: LevelController) -> void:
@@ -22,7 +23,7 @@ func has_card(card: Card) -> bool:
 	return true
 
 
-func get_all_cards() -> Array:
+func get_all_cards() -> Array[Block]:
 	return level.all_blocks()
 
 
@@ -70,7 +71,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			level.remove_from_grid(block, is_destroy)
 
 	if event is core.DraftMergeEvent:
-		var matches: Array = event.matches
+		var matches: Array[Card] = event.matches
 		var merge_info: Dictionary = await merge_matched_cards(matches)
 		await merge_info.awaiter.finished
 		var new_block: Block = merge_info.block
@@ -91,7 +92,7 @@ func remove_upgrade_blocks(upgrade_level: int) -> void:
 
 
 func update_blocks() -> void:
-	var block_action := true
+	var block_action: bool = true
 	while block_action:
 		block_action = false
 		solve_gravity()
@@ -117,7 +118,7 @@ func find_match() -> Array[Card]:
 	return []
 
 
-func merge_matched_cards(cluster: Array) -> Dictionary:
+func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 	var card_id: String = cluster[0].card_info.id
 	var cluster_level: int = cluster[0].level
 	var new_level: int = cluster_level + 1
@@ -128,7 +129,6 @@ func merge_matched_cards(cluster: Array) -> Dictionary:
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
 	for block: Block in cluster:
 		block.merge_into_position(level.grid_to_world_pos(cluster_pos))
-
 		awaiter = awaiter.add(block.movement_done)
 
 	return {"block": new_card, "pos": cluster_pos, "awaiter": awaiter}
@@ -154,7 +154,7 @@ func add_neighbour_cards(block: Block, cluster: Array[Card] = []) -> Array[Card]
 
 
 func refill() -> bool:
-	var refill_action := false
+	var refill_action: bool = false
 
 	for x: int in LevelRules.GRID_WIDTH:
 		var test_pos: Vector2i = Vector2i(x, SPAWN_HEIGHT)
@@ -171,7 +171,6 @@ func refill() -> bool:
 			if test_block.object_type == core.ObjectType.EMPTY_SPACE:
 				refill_counter.append(x)
 				var new_block: Block = await level.create_block()
-				#level.add_to_grid(test_pos, new_block, refill_counter.count(x))
 				core.action(
 					core.DraftAddBlockEvent.new(new_block, test_pos, refill_counter.count(x))
 				)
@@ -180,7 +179,7 @@ func refill() -> bool:
 
 
 func solve_gravity() -> void:
-	var gravity_action := true
+	var gravity_action: bool = true
 
 	while gravity_action:
 		gravity_action = false

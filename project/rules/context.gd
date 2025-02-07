@@ -1,21 +1,18 @@
 class_name Context extends Resource
 
+# Event tracking arrays with explicit typing
+var events: Array[Event] = []
+var unresolved_events: Array[Event] = []
+var event_list: Array[Event] = []
 
-# Event tracking arrays
-var events: Array = []
-var unresolved_events: Array = []
-var event_list: Array = []
-
-
-# Event class for structured event data
+# Base Event class for structured event data
 class Event:
-	pass
+	extends RefCounted
 
-
+# Virtual method for event solving
 func solve_events() -> void:
 	pass
 
-
-func add_event(_event: Event) -> void:
-	unresolved_events.append(_event)
-	#return self
+# Add event with type checking
+func add_event(event: Event) -> void:
+	unresolved_events.append(event)

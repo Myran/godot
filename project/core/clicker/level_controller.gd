@@ -110,8 +110,10 @@ func has_pos(pos: Vector2i) -> bool:
 	return block_grid.has(pos)
 
 
-func all_blocks() -> Array:
-	return block_grid.values()
+func all_blocks() -> Array[Block]:
+	var block_array : Array[Block] = []
+	block_array.assign(block_grid.values())
+	return block_array
 
 
 func grid_to_world_pos(grid_pos: Vector2i) -> Vector2:
