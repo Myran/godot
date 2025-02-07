@@ -2,24 +2,29 @@ class_name DraftContext extends Context
 
 # Typed member variables
 var lineup: Dictionary = {}  # Dictionary[int, Card]
-var draft_area: Array[Block] = []  # Dictionary[int, Block]
+var draft_area: Array[Block] = []  
 var solver: Node  # Reference to solver node
+
 
 func _init(_solver: Node) -> void:
 	solver = _solver
 
+
 # Static method for broadcasting events with type safety
-static func broadcast_event(responder: StringName, _context: DraftContext, _event: core.CoreEvent) -> void:
-	for pos : int in _context.lineup:
+static func broadcast_event(
+	responder: StringName, _context: DraftContext, _event: core.CoreEvent
+) -> void:
+	for pos: int in _context.lineup:
 		var u: Card = _context.lineup[pos]
 		if "unit_info" in u:
 			u.unit_info.call(responder, pos, u, _context, _event)
 
 	var draft_pos: int = 0
-	for _u in _context.draft_area:
+	for _u: Block in _context.draft_area:
 		if "unit_info" in _u:
 			_u.unit_info.call(responder, draft_pos, _u, _context, _event)
 		draft_pos = draft_pos + 1
+
 
 # Override solve_events with proper typing
 func solve_events() -> void:

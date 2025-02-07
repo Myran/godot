@@ -45,7 +45,7 @@ func _ready() -> void:
 	print("debug ready")
 	popup_debug.hide()
 	debug_event.connect(_on_debug_event)
-	for btn in v_box_container_buttons.get_children():
+	for btn : Button in v_box_container_buttons.get_children():
 		btn.pressed.connect(debug_button_pressed.bind(btn.name))
 
 
@@ -55,12 +55,12 @@ func debug_button_pressed(_name: String) -> void:
 			popup_debug.hide()
 		"button_pop_enemy":
 			print("pop enemy")
-			for n in 3:
+			for n : int in 3:
 				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.ENEMY_LINEUP_ADD_CARD,[new_card,n])
 				core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
-			for n in 3:
+			for n : int in 3:
 				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
 				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])

@@ -4,7 +4,7 @@ class_name HoldingBar extends NinePatchRect
 
 
 func _ready() -> void:
-	for btn in h_box_container_buttons.get_children():
+	for btn : TextureButton in h_box_container_buttons.get_children():
 		btn.toggled.connect(on_hold_toggle.bind(btn))
 
 

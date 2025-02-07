@@ -5,7 +5,7 @@ class_name LevelController extends Control
 
 var current_level: TileMapLayer
 var current_level_name: String
-var block_grid := {}
+var block_grid : Dictionary = {}
 var refill_distance: Vector2
 
 
@@ -39,7 +39,7 @@ func setup_level(level_name: String = "default") -> void:
 
 
 func create_blocks_from_level() -> void:
-	for tile_pos in current_level.get_used_cells():
+	for tile_pos : Vector2i in current_level.get_used_cells():
 		var block: Block
 		match current_level.get_cell_source_id(tile_pos):
 			0:
