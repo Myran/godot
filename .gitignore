@@ -36,3 +36,4 @@ gradle/.build_version
 .idea/gametwo.iml
 .godot/shader_cache
 convertion/project
+.env
