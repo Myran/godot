@@ -19,6 +19,7 @@
 		0D6430612C6FDA0B008465EA /* firebase_auth.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6430542C6FDA0A008465EA /* firebase_auth.xcframework */; };
 		0D6430682C6FEB34008465EA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0D6430672C6FEB34008465EA /* GoogleService-Info.plist */; };
 		0D75CFD92C89961500E28041 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D75CFD82C89961500E28041 /* AdSupport.framework */; };
+		0DB9E7D62D5BAFD700CB12ED /* MetalFX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DB9E7D52D5BAFD700CB12ED /* MetalFX.framework */; };
 		1FF8DBB11FBA9DE1009DE660 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8DBB01FBA9DE1009DE660 /* dummy.cpp */; };
 		9039D3BE24C093AC0020482C /* MoltenVK in Frameworks */ = {isa = PBXBuildFile; fileRef = 9039D3BD24C093AC0020482C /* MoltenVK */; };
 		90DD2D9E24B36E8000717FE1 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DD2D9D24B36E8000717FE1 /* Launch Screen.storyboard */; };
@@ -56,6 +57,7 @@
 		0D6430542C6FDA0A008465EA /* firebase_auth.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = firebase_auth.xcframework; sourceTree = "<group>"; };
 		0D6430672C6FEB34008465EA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../firebase/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0D75CFD82C89961500E28041 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		0DB9E7D52D5BAFD700CB12ED /* MetalFX.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalFX.framework; path = System/Library/Frameworks/MetalFX.framework; sourceTree = SDKROOT; };
 		18C59E812FCFAFA9D93021C2 /* Pods_gametwo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_gametwo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F1575711F582BE20003B888 /* dylibs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dylibs; path = gametwo/dylibs; sourceTree = "<group>"; };
 		1FF4C1881F584E6300A41E41 /* gametwo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = gametwo.entitlements; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 				0D64305B2C6FDA0B008465EA /* firebase_firestore.xcframework in Frameworks */,
 				0D64305F2C6FDA0B008465EA /* firebase_installations.xcframework in Frameworks */,
 				0D6430612C6FDA0B008465EA /* firebase_auth.xcframework in Frameworks */,
+				0DB9E7D62D5BAFD700CB12ED /* MetalFX.framework in Frameworks */,
 				0D6430592C6FDA0B008465EA /* firebase_remote_config.xcframework in Frameworks */,
 				0D6430562C6FDA0B008465EA /* firebase_dynamic_links.xcframework in Frameworks */,
 				0D64305D2C6FDA0B008465EA /* firebase_database.xcframework in Frameworks */,
@@ -133,6 +136,7 @@
 		D0BCFE3618AEBDA2004A7AAE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0DB9E7D52D5BAFD700CB12ED /* MetalFX.framework */,
 				0D75CFD82C89961500E28041 /* AdSupport.framework */,
 				9039D3BD24C093AC0020482C /* MoltenVK */,
 				DEADBEEF1F582BE20003B888 /* godot */,
@@ -527,7 +531,7 @@
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -563,7 +567,7 @@
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
