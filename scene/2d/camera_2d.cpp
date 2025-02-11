@@ -31,7 +31,7 @@
 #include "camera_2d.h"
 
 #include "core/config/project_settings.h"
-#include "scene/main/window.h"
+#include "scene/main/viewport.h"
 
 bool Camera2D::_is_editing_in_editor() const {
 #ifdef TOOLS_ENABLED
@@ -277,7 +277,7 @@ void Camera2D::_notification(int p_what) {
 	switch (p_what) {
 #ifdef TOOLS_ENABLED
 		case NOTIFICATION_READY: {
-			if (Engine::get_singleton()->is_editor_hint() && is_part_of_edited_scene()) {
+			if (is_part_of_edited_scene()) {
 				ProjectSettings::get_singleton()->connect(SNAME("settings_changed"), callable_mp(this, &Camera2D::_project_settings_changed));
 			}
 		} break;
@@ -300,6 +300,7 @@ void Camera2D::_notification(int p_what) {
 			// Force the limits etc. to update.
 			_interpolation_data.xform_curr = get_camera_transform();
 			_interpolation_data.xform_prev = _interpolation_data.xform_curr;
+			_update_process_callback();
 		} break;
 
 		case NOTIFICATION_SUSPENDED:
@@ -315,7 +316,9 @@ void Camera2D::_notification(int p_what) {
 			}
 			if (is_physics_interpolated_and_enabled()) {
 				_ensure_update_interpolation_data();
-				_interpolation_data.xform_curr = get_camera_transform();
+				if (Engine::get_singleton()->is_in_physics_frame()) {
+					_interpolation_data.xform_curr = get_camera_transform();
+				}
 			}
 		} break;
 

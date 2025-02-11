@@ -155,6 +155,13 @@ def detect_build_env_arch():
     return ""
 
 
+def get_tools(env: "SConsEnvironment"):
+    if os.name != "nt" or env["use_mingw"]:
+        return ["mingw"]
+    else:
+        return ["default"]
+
+
 def get_opts():
     from SCons.Variables import BoolVariable, EnumVariable
 
@@ -326,10 +333,6 @@ def setup_mingw(env: "SConsEnvironment"):
         print_error("No valid compilers found, use MINGW_PREFIX environment variable to set MinGW path.")
         sys.exit(255)
 
-    env.Tool("mingw")
-    env.AppendUnique(CCFLAGS=env.get("ccflags", "").split())
-    env.AppendUnique(RCFLAGS=env.get("rcflags", "").split())
-
     print("Using MinGW, arch %s" % (env["arch"]))
 
 
@@ -358,6 +361,11 @@ def configure_msvc(env: "SConsEnvironment", vcvars_msvc_config):
 
         env.AppendUnique(CPPDEFINES=["R128_STDC_ONLY"])
         env.extra_suffix = ".llvm" + env.extra_suffix
+
+        # Ensure intellisense tools like `compile_commands.json` play nice with MSVC syntax.
+        env["CPPDEFPREFIX"] = "-D"
+        env["INCPREFIX"] = "-I"
+        env.AppendUnique(CPPDEFINES=[("alloca", "_alloca")])
 
     if env["silence_msvc"] and not env.GetOption("clean"):
         from tempfile import mkstemp
@@ -701,11 +709,7 @@ def configure_mingw(env: "SConsEnvironment"):
         print("Detected GCC to be a wrapper for Clang.")
         env["use_llvm"] = True
 
-    # TODO: Re-evaluate the need for this / streamline with common config.
-    if env["target"] == "template_release":
-        if env["arch"] != "arm64":
-            env.Append(CCFLAGS=["-msse2"])
-    elif env.dev_build:
+    if env.dev_build:
         # Allow big objects. It's supposed not to have drawbacks but seems to break
         # GCC LTO, so enabling for debug builds only (which are not built with LTO
         # and are the only ones with too big objects).
@@ -761,8 +765,8 @@ def configure_mingw(env: "SConsEnvironment"):
 
     ## LTO
 
-    if env["lto"] == "auto":  # Full LTO for production with MinGW.
-        env["lto"] = "full"
+    if env["lto"] == "auto":  # Enable LTO for production with MinGW.
+        env["lto"] = "thin" if env["use_llvm"] else "full"
 
     if env["lto"] != "none":
         if env["lto"] == "thin":
@@ -810,9 +814,6 @@ def configure_mingw(env: "SConsEnvironment"):
         env.Append(CFLAGS=san_flags)
         env.Append(CCFLAGS=san_flags)
         env.Append(LINKFLAGS=san_flags)
-
-    if env["use_llvm"] and os.name == "nt" and methods._colorize:
-        env.Append(CCFLAGS=["$(-fansi-escape-codes$)", "$(-fcolor-diagnostics$)"])
 
     if get_is_ar_thin_supported(env):
         env.Append(ARFLAGS=["--thin"])
