@@ -1,40 +1,40 @@
 [gd_scene load_steps=40 format=3 uid="uid://ddv8p7xpjy08i"]
 
-[ext_resource type="Script" path="res://core/game.gd" id="1_xyr2d"]
+[ext_resource type="Script" uid="uid://cpu7frcrrkqbh" path="res://core/game.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
-[ext_resource type="Script" path="res://core/input_handler.gd" id="2_e2gk4"]
-[ext_resource type="Script" path="res://core/game_handler.gd" id="2_q5x7q"]
-[ext_resource type="Script" path="res://core/safe_zone.gd" id="2_t1pgp"]
-[ext_resource type="Script" path="res://core/popup_card.gd" id="2_xsnym"]
-[ext_resource type="Script" path="res://core/card_handler.gd" id="3_f3e35"]
-[ext_resource type="Script" path="res://core/top_bar.gd" id="3_jg5gr"]
+[ext_resource type="Script" uid="uid://g0y4kf2vgi0i" path="res://core/input_handler.gd" id="2_e2gk4"]
+[ext_resource type="Script" uid="uid://t4kcwvh34csk" path="res://core/game_handler.gd" id="2_q5x7q"]
+[ext_resource type="Script" uid="uid://cc0sjrg44o5ic" path="res://core/safe_zone.gd" id="2_t1pgp"]
+[ext_resource type="Script" uid="uid://cwqiofadegcra" path="res://core/popup_card.gd" id="2_xsnym"]
+[ext_resource type="Script" uid="uid://b6l4n0mn5ahyk" path="res://core/card_handler.gd" id="3_f3e35"]
+[ext_resource type="Script" uid="uid://befi5tp1tbtl7" path="res://core/top_bar.gd" id="3_jg5gr"]
 [ext_resource type="PackedScene" uid="uid://0kaefxjko40k" path="res://core/card/card.tscn" id="3_qxw11"]
 [ext_resource type="PackedScene" uid="uid://b6avfnw2ou7lu" path="res://core/hold_bar.tscn" id="4_0gw5k"]
-[ext_resource type="Script" path="res://core/draft_handler.gd" id="4_u85n2"]
+[ext_resource type="Script" uid="uid://cl6jcm01ss5mk" path="res://core/draft_handler.gd" id="4_u85n2"]
 [ext_resource type="Texture2D" uid="uid://c3panog2rjlss" path="res://assets/ui/ui_bar_1.png" id="4_vn1jd"]
-[ext_resource type="Script" path="res://core/lineup_handler.gd" id="5_jukdk"]
+[ext_resource type="Script" uid="uid://bnsp58k7hfpfy" path="res://core/lineup_handler.gd" id="5_jukdk"]
 [ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="5_uee54"]
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
-[ext_resource type="Script" path="res://core/battle_handler.gd" id="6_8cr3l"]
-[ext_resource type="Script" path="res://core/clicker/clicker.gd" id="6_mq18b"]
+[ext_resource type="Script" uid="uid://b6y8ese5263q0" path="res://core/battle_handler.gd" id="6_8cr3l"]
+[ext_resource type="Script" uid="uid://c2fpavcf3efds" path="res://core/clicker/clicker.gd" id="6_mq18b"]
 [ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_8b5nu"]
-[ext_resource type="Script" path="res://core/clicker/level_controller.gd" id="7_e68m3"]
+[ext_resource type="Script" uid="uid://cp0af1aghupwk" path="res://core/clicker/level_controller.gd" id="7_e68m3"]
 [ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="8_h0xc7"]
 [ext_resource type="Resource" uid="uid://b4fke525yywsh" path="res://core/levels_default.tres" id="8_oqud3"]
 [ext_resource type="Resource" uid="uid://034uyxaore0y" path="res://core/block_factory.tres" id="9_goeof"]
 [ext_resource type="Texture2D" uid="uid://6f3pi1lhwia1" path="res://assets/test_board_pattern_3.png" id="18_prbo0"]
-[ext_resource type="Script" path="res://core/holder_base.gd" id="19_3dmvw"]
+[ext_resource type="Script" uid="uid://d154vanpw43yg" path="res://core/holder_base.gd" id="19_3dmvw"]
 [ext_resource type="PackedScene" uid="uid://dfnkpi4ikp2p7" path="res://core/grid_pos.tscn" id="20_hocuu"]
-[ext_resource type="Script" path="res://core/bottom_bar_draft.gd" id="28_tf1de"]
+[ext_resource type="Script" uid="uid://c4h7eix1x5fi5" path="res://core/bottom_bar_draft.gd" id="28_tf1de"]
 [ext_resource type="Texture2D" uid="uid://b8rfgb42ejraw" path="res://assets/ui/ui_button_round.png" id="29_pjcx5"]
 [ext_resource type="Texture2D" uid="uid://dp1o5y0achq26" path="res://assets/testart/icon_attacking_3.png" id="30_vxtce"]
 [ext_resource type="Texture2D" uid="uid://dlrk7bifsc01u" path="res://assets/testart/icon_twirl.png" id="31_i7330"]
 [ext_resource type="Texture2D" uid="uid://c83h23662qwhv" path="res://assets/testart/prepare_background_test_1.png" id="32_hrch1"]
-[ext_resource type="Script" path="res://core/bottom_bar_prepare.gd" id="32_lyjxj"]
+[ext_resource type="Script" uid="uid://csrq081ymraxf" path="res://core/bottom_bar_prepare.gd" id="32_lyjxj"]
 [ext_resource type="Texture2D" uid="uid://c1e08fanf64kf" path="res://assets/testart/icon_lock.png" id="33_55enf"]
 [ext_resource type="Texture2D" uid="uid://4kptx0p3ydv2" path="res://assets/testart/prepare_background_test_2.png" id="33_af07s"]
-[ext_resource type="Script" path="res://core/canvas_layer_unhandled_events.gd" id="33_xudeo"]
-[ext_resource type="Script" path="res://core/canvas_layer_background.gd" id="34_ohwbi"]
+[ext_resource type="Script" uid="uid://bldrf3aj5r74l" path="res://core/canvas_layer_unhandled_events.gd" id="33_xudeo"]
+[ext_resource type="Script" uid="uid://cjjt5i26tuca4" path="res://core/canvas_layer_background.gd" id="34_ohwbi"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(4888, 3161.5)
@@ -72,8 +72,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_oe4vg"]
 _data = {
-"RESET": SubResource("Animation_vtm3c"),
-"show": SubResource("Animation_bktm3")
+&"RESET": SubResource("Animation_vtm3c"),
+&"show": SubResource("Animation_bktm3")
 }
 
 [node name="Game" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "top_bar", "battle_layer", "unhandled_layer", "clicker", "level_controller", "game_handler", "input_handler", "card_handler", "draft_handler", "lineup_handler", "battle_handler")]
@@ -766,7 +766,7 @@ stretch_mode = 6
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="canvas_layer_background"]
 libraries = {
-"": SubResource("AnimationLibrary_oe4vg")
+&"": SubResource("AnimationLibrary_oe4vg")
 }
 
 [connection signal="pressed" from="CanvasLayer_top_bar/safe_zone/ui_bar_9/button_debug" to="CanvasLayer_top_bar/safe_zone/ui_bar_9" method="_on_button_debug_pressed"]

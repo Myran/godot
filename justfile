@@ -43,7 +43,7 @@ default:
 # Build Godot editor
 build-editor: validate-env
     @echo "Building Godot editor..."
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor use_lto=yes --jobs={{jobs}}
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor use_lto=yes --jobs={{jobs}} # vulkan_sdk_path=
     mv {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.editor.* editor/
 
 # Build export templates
@@ -177,7 +177,7 @@ build-all: validate-env
     just build-editor
     just build-templates
     just update-version
-    just format
+    #just format
     just insert-firebase-dependencies
     just build-android apk
     just build-android aab

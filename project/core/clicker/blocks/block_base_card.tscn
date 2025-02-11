@@ -1,9 +1,9 @@
-[gd_scene load_steps=32 format=3 uid="uid://bq0pntsljc8cf"]
+[gd_scene load_steps=31 format=3 uid="uid://bq0pntsljc8cf"]
 
 [ext_resource type="Texture2D" uid="uid://bk8pn2fdal02n" path="res://assets/testart/brickSpecial01.png" id="1_irw7l"]
-[ext_resource type="Script" path="res://core/clicker/blocks/block_base_card.gd" id="2_bo0yh"]
+[ext_resource type="Script" uid="uid://ctb1y0cggslc0" path="res://core/clicker/blocks/block_base_card.gd" id="2_bo0yh"]
 [ext_resource type="Texture2D" uid="uid://b813wdy8g6sw7" path="res://assets/frames/frame_icon.png" id="3_ot3ng"]
-[ext_resource type="Script" path="res://core/card/card_image_small_base.gd" id="4_2rh87"]
+[ext_resource type="Script" uid="uid://blvp85u3g08ug" path="res://core/card/card_image_small_base.gd" id="4_2rh87"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://assets/card_images/card_image_0_1.png" id="5_p2d6m"]
 [ext_resource type="Texture2D" uid="uid://bfmr148pn8d1e" path="res://assets/frames/Frame 21.png" id="6_tkqrh"]
 [ext_resource type="Texture2D" uid="uid://bhcv0333fjvdy" path="res://assets/frames/Frame 20.png" id="7_jmp52"]
@@ -23,7 +23,7 @@
 [ext_resource type="PackedScene" path="res://core/card/icon_level_small.tscn" id="21_0y3oy"]
 [ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="22_g1owo"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="23_ip14o"]
-[ext_resource type="Script" path="res://core/card/panel_container_level_top.gd" id="24_48xds"]
+[ext_resource type="Script" uid="uid://botmau3558bg3" path="res://core/card/panel_container_level_top.gd" id="24_48xds"]
 [ext_resource type="Texture2D" uid="uid://bni80rx7ol2cc" path="res://assets/effects/bubble.png" id="25_ixlit"]
 
 [sub_resource type="RectangleShape2D" id="1"]
@@ -105,16 +105,12 @@ float circular_vignette(vec2 uv) {
 */
 "
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ntg2t"]
-load_path = "res://.godot/imported/corners.png-95d080a72b143c84ac683f75aabe20d4.ctex"
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_spy1b"]
 resource_local_to_scene = true
 shader = SubResource("Shader_aydyb")
 shader_parameter/vignette_intensity = 1.0
 shader_parameter/vignette_opacity = 1.0
 shader_parameter/vignette_rgb = Color(0, 0, 0, 1)
-shader_parameter/mask = SubResource("CompressedTexture2D_ntg2t")
 
 [node name="Block" type="TouchScreenButton" node_paths=PackedStringArray("base", "shield")]
 texture_normal = ExtResource("1_irw7l")

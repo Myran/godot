@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="block_factory" load_steps=10 format=3 uid="uid://034uyxaore0y"]
 
-[ext_resource type="Script" path="res://core/block_factory.gd" id="1"]
+[ext_resource type="Script" uid="uid://bdsg2tjf7hqhp" path="res://core/block_factory.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://c6qd386np6ht3" path="res://core/clicker/blocks/block_empty.tscn" id="1_i7ye2"]
 [ext_resource type="PackedScene" uid="uid://bbkpu8u2sgdyr" path="res://core/clicker/blocks/block_items.tscn" id="7_q60pi"]
 [ext_resource type="PackedScene" uid="uid://2485kigtabyg" path="res://core/clicker/blocks/block_lock.tscn" id="8_svlm3"]

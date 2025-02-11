@@ -1,6 +1,6 @@
 shader_type canvas_item;
 
-uniform float vignette_intensity = 0.4;
+uniform float vignette_intensity = 0.40;
 uniform float vignette_opacity : hint_range(0.0, 1.0) = 0.5;
 uniform vec4 vignette_rgb : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform sampler2D mask;

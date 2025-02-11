@@ -1,27 +1,22 @@
-[gd_scene load_steps=26 format=3 uid="uid://0kaefxjko40k"]
+[gd_scene load_steps=25 format=3 uid="uid://0kaefxjko40k"]
 
-[ext_resource type="Script" path="res://core/card/card.gd" id="1_kx5r1"]
+[ext_resource type="Script" uid="uid://dfyy02bbr1w4g" path="res://core/card/card.gd" id="1_kx5r1"]
 [ext_resource type="Texture2D" uid="uid://b1ujpiiyymq2r" path="res://assets/card_images/card_image_0_1.png" id="2_p2tcb"]
 [ext_resource type="Material" uid="uid://cjohunbemkph7" path="res://assets/shaders/card_vignette.tres" id="3_siq1b"]
 [ext_resource type="StyleBox" path="res://core/card/panel_card.tres" id="4_elc7a"]
 [ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://assets/testart/ui_test_1.png" id="5_bde0u"]
-[ext_resource type="Script" path="res://core/card/card_level_icon.gd" id="6_bsedo"]
+[ext_resource type="Script" uid="uid://6jvxqmh8v0dv" path="res://core/card/card_level_icon.gd" id="6_bsedo"]
 [ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://assets/font_card_stat_num.tres" id="7_hh2oi"]
 [ext_resource type="Texture2D" uid="uid://cxw3d0a2n0olk" path="res://assets/testart/ui_test_9.png" id="8_30y4c"]
 [ext_resource type="FontFile" uid="uid://ddg2qxa5w06ai" path="res://assets/fonts/Quintessential/Quintessential-Regular.ttf" id="9_ql8ra"]
-[ext_resource type="Script" path="res://core/card/aspect_container_level.gd" id="10_v2cee"]
+[ext_resource type="Script" uid="uid://cxfcfpbyolru4" path="res://core/card/aspect_container_level.gd" id="10_v2cee"]
 [ext_resource type="PackedScene" path="res://assets/testart/icon_level.tscn" id="11_02h1h"]
 [ext_resource type="Texture2D" uid="uid://bwfyr6awi7jce" path="res://assets/testart/ui_test_11.png" id="12_hiu1l"]
 [ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="13_e2qcp"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="14_5eikb"]
 [ext_resource type="Texture2D" uid="uid://yfr83ovhs38a" path="res://assets/testart/draft_background_test_2.png" id="15_tokug"]
-[ext_resource type="Script" path="res://core/card_info_full.gd" id="16_rl3pn"]
+[ext_resource type="Script" uid="uid://bdh4kfd04b4rp" path="res://core/card_info_full.gd" id="16_rl3pn"]
 [ext_resource type="PackedScene" uid="uid://drbh6exh0meuq" path="res://core/card/card_tag.tscn" id="17_dg3l5"]
-
-[sub_resource type="Environment" id="6"]
-background_mode = 4
-glow_enabled = true
-glow_blend_mode = 0
 
 [sub_resource type="Animation" id="13"]
 length = 0.001
@@ -32,8 +27,8 @@ length = 0.2
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_aw7al"]
 _data = {
-"RESET": SubResource("13"),
-"scale_up": SubResource("14")
+&"RESET": SubResource("13"),
+&"scale_up": SubResource("14")
 }
 
 [sub_resource type="FontFile" id="15"]
@@ -186,12 +181,9 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
 
-[node name="world_environment" type="WorldEnvironment" parent="."]
-environment = SubResource("6")
-
 [node name="animation_player" type="AnimationPlayer" parent="."]
 libraries = {
-"": SubResource("AnimationLibrary_aw7al")
+&"": SubResource("AnimationLibrary_aw7al")
 }
 
 [node name="v_box_container_2" type="VBoxContainer" parent="."]

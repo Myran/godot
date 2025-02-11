@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://cjohunbemkph7"]
 
-[ext_resource type="Shader" path="res://assets/shaders/card_vignette.gdshader" id="1_7i5xu"]
+[ext_resource type="Shader" uid="uid://bu5caquttxgoh" path="res://assets/shaders/card_vignette.gdshader" id="1_7i5xu"]
 [ext_resource type="Texture2D" uid="uid://co1tc6hk6ct7c" path="res://assets/corners.png" id="2_dshcf"]
 
 [resource]
