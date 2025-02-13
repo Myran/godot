@@ -1,6 +1,7 @@
 class_name Ability extends Resource
 
 
+# update subclasses to have the same function signature . also update unit_data.gd to align signature AI!
 # Base class marks all parameters as unused since they're meant for subclasses
 func handle_battle_event(
 	_phase: core.Tempus,
