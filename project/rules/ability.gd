@@ -1,6 +1,7 @@
 class_name Ability extends Resource
 
 
+# update abilities and calling of these functions to have the same naming of arguments AI!
 # Base class marks all parameters as unused since they're meant for subclasses
 func handle_battle_event(
 	_phase: core.Tempus,
