@@ -64,13 +64,13 @@ func _ready() -> void:
 		firebase_auth = ClassDB.instantiate("FirebaseAuth")
 		print("Firebase Auth created")
 		firebase_auth.connect("logged_in", Callable(self, "logged_in"))
-	
+
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
 		print("facebook singleton exists")
 		facebook.connect("fb_login_success", Callable(self, "facebook_login_success"))
 		facebook.connect("fb_login_failed", Callable(self, "facebook_login_failed"))
 		facebook.connect("fb_login_cancelled", Callable(self, "facebook_login_cancelled"))
-	
+
 	if Engine.has_singleton("GodotAppleAuth"):
 		print("Apple singleton exist")
 		godot_apple_auth = Engine.get_singleton("GodotAppleAuth")
@@ -95,7 +95,7 @@ func sign_in_apple() -> int:
 	if !godot_apple_auth.is_available():
 		push_error("Auth: Apple auth is not available")
 		return -1
-	
+
 	godot_apple_auth.sign_in()
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
@@ -112,17 +112,17 @@ func sign_in_facebook() -> int:
 	if !is_facebook_available():
 		push_error("AUTH:facebook sign in attempted but facebook not available")
 		return -1
-	
+
 	var login_resp: bool = facebook.login()
 	if !login_resp:
 		push_warning("facebook.login() failed")
 		return -1
-	
+
 	var res: Dictionary = await self.fb_respons
 	if res.respons != "success":
 		push_warning(str("Facebook login failed / cancelled", res))
 		return -1
-	
+
 	firebase_auth.sign_in_facebook(res.arg)
 	var auth_res: int = await firebase_auth.logged_in
 	return auth_res
@@ -134,7 +134,7 @@ func log_out_facebook() -> bool:
 	if !is_facebook_available():
 		push_warning("AUTH: facebook not available")
 		return false
-	
+
 	facebook.logout()
 	return !facebook.is_logged_in()
 
@@ -151,12 +151,12 @@ func link_facebook() -> int:
 	if !login_resp:
 		push_warning("Facebook.login() failed")
 		return -1
-	
+
 	var res: Dictionary = await self.fb_respons
 	if res.respons != "success":
 		push_warning(str("Auth: Facebook login respons fail / cancelled res:", res))
 		return -1
-	
+
 	firebase_auth.link_to_facebook(res.arg)
 	var link_res: int = await firebase_auth.account_linked
 	return link_res
@@ -173,12 +173,12 @@ func link_apple() -> int:
 	print("button: link to Apple ")
 	if !godot_apple_auth:
 		return -1
-	
+
 	godot_apple_auth.sign_in()
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
 		return -1
-	
+
 	firebase_auth.link_to_apple(result.token, result.nonce)
 	var res: int = await firebase_auth.account_linked
 	return res
@@ -215,13 +215,13 @@ func login() -> int:
 	var retval: int = 0
 	print("Auth: attempt login")
 	await Engine.get_main_loop().process_frame
-	
+
 	if !is_available():
 		push_warning("Auth: Auth not available")
 		return 1
-	
+
 	if !firebase_auth.is_logged_in():
 		firebase_auth.sign_in_anonymously()
 		retval = await firebase_auth.logged_in
-	
+
 	return retval

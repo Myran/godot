@@ -1,0 +1,1213 @@
+
+# This file contains refactoring changes that updates names throughout the project which is contained solely in the 'project' folder. Update each file named in this file with the appropriate changes as written in this file and leave the rest of the file as is. Replace exact and use tabs as spaces.
+
+# context.gd
+class_name Context extends Resource
+
+# Typed event arrays for better code organization
+var events: Array[Event] = []
+var unresolved_events: Array[Event] = []
+var event_list: Array[Event] = []
+
+# Base Event class for structured event data
+class Event:
+	extends RefCounted
+
+# Virtual method for event processing
+func solve_events() -> void:
+	pass
+
+# Add event with type checking
+func add_event(event: Event) -> void:
+	unresolved_events.append(event)
+
+# battle.gd
+class_name Battle extends Node
+
+enum BattleAction {
+	ATTACK_REGULAR
+}
+
+# abilities_handler.gd
+class_name AbilitiesHandler extends Resource
+
+static func parse_ability_string(ability_string: String) -> Array[Ability]:
+	var parsed_abilities: Array[Ability] = []
+	if ability_string.is_empty():
+		return parsed_abilities
+
+	var ability_commands_packed: PackedStringArray = ability_string.split(",")
+	var ability_commands: Array[String] = []
+	ability_commands.assign(ability_commands_packed)
+	
+	for command in ability_commands:
+		var command_parts: PackedStringArray = command.split(":")
+		var ability_type: String = command_parts[0]
+		var ability_params: PackedStringArray = []
+
+		if command_parts.size() > 1:
+			ability_params = command_parts[1].split(";")
+
+		var new_ability: Ability = create_ability_from_type(ability_type, ability_params)
+		if new_ability:
+			parsed_abilities.append(new_ability)
+
+	return parsed_abilities
+
+static func create_ability_from_type(ability_type: String, params: PackedStringArray) -> Ability:
+	var new_ability: Ability = null
+	match ability_type:
+		"guard":
+			var health_bonus: int = int(params[0])
+			new_ability = DeathTriggerHealthAbility.new(health_bonus)
+		"troll":
+			var health_bonus: int = int(params[0])
+			var attack_bonus: int = int(params[1])
+			new_ability = EvilSynergyAbility.new(health_bonus, attack_bonus)
+		"shield":
+			new_ability = DamageShieldAbility.new()
+		"merge_bonus":
+			var health_bonus: int = int(params[0])
+			var attack_bonus: int = int(params[1])
+			new_ability = MergeBonusAbility.new(health_bonus, attack_bonus)
+	return new_ability
+
+# battle_context.gd
+class_name BattleContext extends Context
+
+enum BattleState {
+	PRE_BATTLE,
+	BATTLE,
+	POST_BATTLE
+}
+
+# Member variables with type hints
+var allied_side: Side = Side.new()
+var enemy_side: Side = Side.new()
+var battle_state: BattleState = BattleState.BATTLE
+var is_allied_turn: bool = true
+var active_unit: UnitData = null
+var battle_solver: Node
+
+# Base Event class for battle events
+class BaseEvent:
+	extends Context.Event
+
+	func _init() -> void:
+		pass
+
+class CombatEvent:
+	extends BaseEvent
+	var attacker_position: int
+	var defender_position: int
+	var is_allied_attack: bool
+
+	func _init(attacker_pos: int, defender_pos: int, allied_attack: bool) -> void:
+		self.attacker_position = attacker_pos
+		self.defender_position = defender_pos
+		self.is_allied_attack = allied_attack
+
+class DeathEvent:
+	extends BaseEvent
+	var is_allied_side: bool
+	var unit_position: int
+
+	func _init(allied_side: bool, position: int) -> void:
+		self.is_allied_side = allied_side
+		self.unit_position = position
+
+class AddLineupEvent:
+	extends BaseEvent
+	var is_allied_side: bool
+	var lineup_data: Dictionary
+
+	func _init(allied_side: bool, lineup: Dictionary) -> void:
+		self.is_allied_side = allied_side
+		self.lineup_data = lineup
+
+class ShieldEvent:
+	extends BaseEvent
+	var target_position: int
+	var is_allied_side: bool
+	var shield_active: bool
+
+	func _init(target: int, allied_side: bool, is_active: bool) -> void:
+		self.target_position = target
+		self.is_allied_side = allied_side
+		self.shield_active = is_active
+
+class DamageEvent:
+	extends BaseEvent
+	var damage_effects: Array[Dictionary] = []
+	var damage_amount: int
+	var target_position: int
+	var is_allied_side: bool
+
+	func _init(amount: int, target: int, allied_side: bool) -> void:
+		self.damage_amount = amount
+		self.target_position = target
+		self.is_allied_side = allied_side
+
+class StatChangeEvent:
+	extends BaseEvent
+	var stat_name: StringName
+	var target_position: int
+	var is_allied_side: bool
+	var change_value: int
+	var new_stat_value: int
+
+	func _init(
+		stat: StringName,
+		target: int,
+		allied_side: bool,
+		value_change: int,
+		new_value: int = 0
+	) -> void:
+		self.stat_name = stat
+		self.target_position = target
+		self.is_allied_side = allied_side
+		self.change_value = value_change
+		self.new_stat_value = new_value
+
+class SelectActiveUnitEvent:
+	extends BaseEvent
+	var selected_unit_position: int
+	var is_allied_side: bool
+
+	func _init(position: int, allied_side: bool) -> void:
+		self.selected_unit_position = position
+		self.is_allied_side = allied_side
+
+class FindNextUnitEvent:
+	extends BaseEvent
+	pass
+
+class StartOfTurnEvent:
+	extends BaseEvent
+	pass
+
+class EndOfTurnEvent:
+	extends BaseEvent
+	pass
+
+func _init(solver: Node) -> void:
+	battle_solver = solver
+
+# Override solve_events with battle-specific logic
+func solve_events() -> void:
+	while unresolved_events.size():
+		var event_stack: Array = unresolved_events.duplicate(true)
+		unresolved_events.clear()
+		event_list.append_array(event_stack.duplicate(true))
+
+		while event_stack.size():
+			var next_event: BaseEvent = event_stack.pop_front()
+			_process_event(next_event)
+
+func _process_event(event: BaseEvent) -> void:
+	broadcast_event(UnitData.PRE_EVENT_RESPONSE, self, event)
+	solve_events()
+	battle_solver.solve_event(event, self)
+	broadcast_event(UnitData.POST_EVENT_RESPONSE, self, event)
+	solve_events()
+
+static func broadcast_event(
+	responder: StringName,
+	battle_context: BattleContext,
+	battle_event: BaseEvent
+) -> void:
+	for side in [battle_context.allied_side, battle_context.enemy_side]:
+		var is_allied: bool = side == battle_context.allied_side
+		for position in side.lineup:
+			var unit: UnitData = side.lineup[position]
+			unit.call(responder, position, is_allied, battle_context, battle_event)
+
+# ability_damage.gd
+class_name AbilityDamage extends Ability
+
+var damage_type: String
+
+func _init(type: String) -> void:
+	damage_type = type
+
+func handle_battle_event(_phase: core.Tempus, _unit_pos: int, _is_allied: bool, 
+		_battle_context: BattleContext, _event: BattleContext.BaseEvent) -> void:
+	pass
+
+func handle_draft_event(_phase: core.Tempus, _unit_pos: int, _unit: Block,
+		_draft_context: DraftContext, _event: core.CoreEvent) -> void:
+	print("Draft action processing")
+
+# ability_health_on_death.gd
+class_name DeathTriggerHealthAbility extends Ability
+
+var health_bonus: int
+
+func _init(bonus_amount: int = 1) -> void:
+	health_bonus = bonus_amount
+
+func handle_battle_event(phase: core.Tempus, unit_position: int, 
+		is_allied_unit: bool, battle_context: BattleContext, 
+		battle_event: BattleContext.BaseEvent) -> void:
+	if phase == core.Tempus.POST and battle_event is BattleContext.DeathEvent:
+		var health_change_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
+			"current_health",
+			unit_position,
+			is_allied_unit,
+			health_bonus
+		)
+		battle_context.add_event(health_change_event)
+
+# ability_merge_bonus.gd
+class_name MergeBonusAbility extends Ability
+
+var health_bonus: int
+var attack_bonus: int
+
+func _init(bonus_health: int = 1, bonus_attack: int = 1) -> void:
+	health_bonus = bonus_health
+	attack_bonus = bonus_attack
+
+func handle_draft_event(phase: core.Tempus, _unit_position: int, 
+		unit: Block, draft_context: DraftContext, 
+		draft_event: core.CoreEvent) -> void:
+	if phase != core.Tempus.POST:
+		return
+		
+	if not draft_event is core.DraftMergeEvent:
+		return
+		
+	if not unit.block_context == Cards.CONTEXT.LINEUP:
+		return
+		
+	var card: Card = unit as Card
+	var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
+		card,
+		health_bonus,
+		attack_bonus
+	)
+	draft_context.add_event(stat_change_event)
+
+# ability_shield.gd
+class_name DamageShieldAbility extends Ability
+
+var is_shield_used: bool = false
+
+func handle_battle_event(
+	phase: core.Tempus,
+	unit_position: int,
+	is_allied_unit: bool,
+	_battle_context: BattleContext,
+	battle_event: BattleContext.BaseEvent
+) -> void:
+	if is_shield_used:
+		return
+
+	if phase == core.Tempus.PRE and battle_event is BattleContext.DamageEvent:
+		var damage_event: BattleContext.DamageEvent = battle_event as BattleContext.DamageEvent
+		var is_target_unit: bool = (
+			damage_event.is_allied_side == is_allied_unit and 
+			damage_event.target_position == unit_position
+		)
+		if is_target_unit:
+			damage_event.damage_effects.append({
+				"effect_type": "shield",
+				"ability": self
+			})
+
+func handle_draft_event(
+	phase: core.Tempus,
+	_unit_position: int,
+	unit: Block,
+	_draft_context: DraftContext,
+	draft_event: core.CoreEvent
+) -> void:
+	if phase == core.Tempus.POST and draft_event is core.BlockEntersPlay:
+		var play_event: core.BlockEntersPlay = draft_event as core.BlockEntersPlay
+		if unit == play_event.block and not is_shield_used:
+			var card: Card = unit as Card
+			card.show_shield()
+
+# ability_troll.gd
+class_name EvilSynergyAbility extends Ability
+
+var health_per_evil: int
+var attack_per_evil: int
+
+func _init(health_bonus: int = 1, attack_bonus: int = 1) -> void:
+	health_per_evil = health_bonus
+	attack_per_evil = attack_bonus
+
+func handle_draft_event(phase: core.Tempus, _unit_position: int, 
+		unit: Block, draft_context: DraftContext, 
+		draft_event: core.CoreEvent) -> void:
+	if phase != core.Tempus.POST:
+		return
+		
+	if not draft_event is core.LineupAddCardEvent:
+		return
+
+	var add_event: core.LineupAddCardEvent = draft_event as core.LineupAddCardEvent
+	var added_card: Card = add_event.card
+	if added_card != unit:
+		return
+
+	var evil_unit_count: int = count_evil_units_in_lineup(draft_context.lineup, unit)
+	if evil_unit_count > 0:
+		var total_health_bonus: int = health_per_evil * evil_unit_count
+		var total_attack_bonus: int = attack_per_evil * evil_unit_count
+		var modified_card: Card = unit
+		var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
+			modified_card,
+			total_health_bonus,
+			total_attack_bonus
+		)
+		draft_context.add_event(stat_change_event)
+
+func count_evil_units_in_lineup(lineup: Dictionary, current_unit: Block) -> int:
+	var evil_count: int = 0
+	for unit_position in lineup:
+		var card: Card = lineup[unit_position]
+		if card == current_unit:
+			continue
+		if card.card_info.tribe.match("evil"):
+			evil_count += 1
+	return evil_count
+
+# battle_handler.gd
+class_name BattleHandler extends Node
+
+var allied_holder: HolderContainer
+var enemy_holder: HolderContainer
+
+func setup(allies: HolderContainer, enemies: HolderContainer) -> void:
+	allied_holder = allies
+	enemy_holder = enemies
+
+func create_battle() -> Array:
+	var allied_lineup: Dictionary = allied_holder.get_current_lineup()
+	var enemy_lineup: Dictionary = enemy_holder.get_current_lineup()
+
+	var battle_instance: Battle = Battle.new()
+	var prepared_allies: Dictionary = Battle.prepare_lineup_from_holder(allied_lineup)
+	var prepared_enemies: Dictionary = Battle.prepare_lineup_from_holder(enemy_lineup)
+	return battle_instance.battle_start(prepared_allies, prepared_enemies)
+
+# battle_enacter.gd
+class_name BattleEnacter extends Node
+
+var battle_layer: Node
+var allied_holder: Node
+var enemy_holder: Node
+
+func _init(layer: Node, allies: Node, enemies: Node) -> void:
+	battle_layer = layer
+	allied_holder = allies
+	enemy_holder = enemies
+
+func enact(battle_events: Array) -> void:
+	printt("Starting battle animation")
+	printt("Current battle events:", battle_events)
+
+	var return_tween: Tween
+	var allied_units: Dictionary = allied_holder.get_current_lineup(true, battle_layer)
+	var enemy_units: Dictionary = enemy_holder.get_current_lineup(true, battle_layer)
+	allied_holder.hide_lineup()
+	enemy_holder.hide_lineup()
+
+	for event: BattleContext.BaseEvent in battle_events:
+		printt("Processing event:", event)
+		
+		match event:
+			BattleContext.AddLineupEvent:
+				print("Adding lineup")
+				
+			BattleContext.FindNextUnitEvent:
+				print("Finding next unit")
+				
+			BattleContext.SelectActiveUnitEvent:
+				print("Selecting active unit")
+				
+			BattleContext.CombatEvent:
+				print("Processing combat")
+				var attacker: Node2D = (
+					allied_units[event.attacker_position] if event.is_allied_attack 
+					else enemy_units[event.attacker_position]
+				)
+				var defender: Node2D = (
+					enemy_units[event.defender_position] if event.is_allied_attack 
+					else allied_units[event.defender_position]
+				)
+				printt("Attacker:", attacker)
+				printt("Defender:", defender)
+				
+				var combat_tween: Tween = create_tween()
+				var animation_config: Dictionary = {
+					"speed": 0.2,
+					"attack_distance": 0.65,
+					"defense_distance": 0.25,
+					"highlight_scale": Vector2(1.25, 1.25),
+					"highlight_speed": 0.2,
+					"return_speed_multiplier": 2
+				}
+
+				var attacker_start_scale: Vector2 = attacker.scale
+				var defender_start_pos: Vector2 = defender.global_position
+				var battle_pos: Vector2 = attacker.global_position.lerp(
+					defender_start_pos, 
+					animation_config.attack_distance
+				)
+				var defender_battle_pos: Vector2 = defender_start_pos.lerp(
+					battle_pos,
+					animation_config.defense_distance
+				)
+				var attacker_start_pos: Vector2 = attacker.global_position
+
+				# Highlight phase
+				combat_tween.tween_property(
+					defender,
+					"scale",
+					animation_config.highlight_scale,
+					animation_config.highlight_speed
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+				combat_tween.parallel().tween_property(
+					attacker,
+					"scale",
+					animation_config.highlight_scale,
+					animation_config.highlight_speed
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+				# Combat movement
+				combat_tween.tween_property(
+					defender,
+					"global_position",
+					defender_battle_pos,
+					animation_config.speed
+				).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN)
+
+				combat_tween.tween_property(
+					attacker,
+					"global_position",
+					battle_pos,
+					animation_config.speed
+				).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+
+				combat_tween.play()
+				await combat_tween.finished
+
+				# Return movement
+				return_tween = create_tween()
+				return_tween.chain().tween_property(
+					attacker,
+					"global_position",
+					attacker_start_pos,
+					animation_config.speed * animation_config.return_speed_multiplier
+				).set_trans(Tween.TRANS_QUINT)
+
+				return_tween.parallel().tween_property(
+					defender,
+					"global_position",
+					defender_start_pos,
+					animation_config.speed * animation_config.return_speed_multiplier
+				).set_trans(Tween.TRANS_QUINT)
+
+				return_tween.chain().tween_property(
+					attacker,
+					"scale",
+					attacker_start_scale,
+					animation_config.highlight_speed
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+				return_tween.parallel().tween_property(
+					defender,
+					"scale",
+					attacker_start_scale,
+					animation_config.highlight_speed
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+				return_tween.play()
+
+			BattleContext.DamageEvent:
+				print("Processing damage", event)
+				var target_unit: Node2D = (
+					allied_units[event.target_position] if event.is_allied_side 
+					else enemy_units[event.target_position]
+				)
+				printt("Damage target:", target_unit, "Amount:", event.damage_amount)
+
+			BattleContext.ShieldEvent:
+				print("Processing shield")
+				var shielded_unit: Node2D = (
+					allied_units[event.target_position] if event.is_allied_side 
+					else enemy_units[event.target_position]
+				)
+				if event.shield_active:
+					shielded_unit.show_shield()
+				else:
+					shielded_unit.hide_shield()
+				print("Shield modified on", shielded_unit)
+
+			BattleContext.StatChangeEvent:
+				print("Processing stat change", event)
+				var unit_side: Dictionary = (
+					allied_units if event.is_allied_side else enemy_units
+				)
+				if not unit_side.has(event.target_position):
+					continue
+				if event.new_stat_value == 0:
+					continue
+				var target_unit: Node2D = unit_side[event.target_position]
+				match event.stat_name:
+					Battle.UNIT_HEALTH:
+						target_unit.base.set_card_health(event.new_stat_value)
+
+			BattleContext.DeathEvent:
+				print("Processing death")
+				var affected_side: Dictionary = (
+					allied_units if event.is_allied_side else enemy_units
+				)
+				var dying_unit: Node2D = affected_side[event.unit_position]
+				affected_side.erase(event.unit_position)
+				dying_unit.shake(event.is_allied_side)
+
+			BattleContext.StartOfTurnEvent:
+				await get_tree().create_timer(0.1).timeout
+				print("Start of turn")
+
+			BattleContext.EndOfTurnEvent:
+				print("End of turn")
+				await return_tween.finished
+
+		# Cleanup phase
+	await get_tree().create_timer(1.25).timeout
+	for side in [allied_units, enemy_units]:
+		for unit_position in side.keys():
+			side[unit_position].queue_free()
+
+# draft_context.gd
+class_name DraftContext extends Context
+
+var lineup: Dictionary = {}  # Dictionary[int, Card]
+var draft_area: Array[Block] = []
+var draft_solver: Node
+
+func _init(solver: Node) -> void:
+	draft_solver = solver
+
+static func broadcast_event(
+	responder: StringName,
+	draft_context: DraftContext,
+	draft_event: core.CoreEvent
+) -> void:
+	for position in draft_context.lineup:
+		var unit: Card = draft_context.lineup[position]
+		if "unit_info" in unit:
+			unit.unit_info.call(responder, position, unit, draft_context, draft_event)
+
+	var draft_position: int = 0
+	for unit in draft_context.draft_area:
+		if "unit_info" in unit:
+			unit.unit_info.call(responder, draft_position, unit, draft_context, draft_event)
+		draft_position += 1
+
+func solve_events() -> void:
+	while unresolved_events.size():
+		var event_stack: Array = unresolved_events.duplicate(true)
+		unresolved_events.clear()
+		event_list.append_array(event_stack.duplicate(true))
+
+		while event_stack.size():
+			var next_event: core.CoreEvent = event_stack.pop_front()
+			broadcast_event(UnitData.DRAFT_PRE_EVENT_RESPONSE, self, next_event)
+			solve_events()
+			draft_solver.solve_event(next_event, self)
+			broadcast_event(UnitData.DRAFT_POST_EVENT_RESPONSE, self, next_event)
+			solve_events()
+
+# canvas_layer_background.gd
+class_name CanvasLayerBackground extends CanvasLayer
+
+@export var animation_player: AnimationPlayer
+
+func _ready() -> void:
+	core.connect("event", Callable(self, "_on_core_event"))
+
+func _on_core_event(event: core.CoreEvent) -> void:
+	if event is core.TransitionEvent:
+		var new_state: core.GameState = event.new_state
+		match new_state:
+			core.GameState.DRAFT:
+				animation_player.play("show")
+			core.GameState.PREPARE:
+				animation_player.play_backwards("show")
+
+# core.gd - New Event Classes
+class_name Core extends Node
+
+signal event(event_data: CoreEvent)
+
+enum UIState {
+	WAITING,
+	HOLDING,
+	LOCKED
+}
+
+enum Tempus {
+	PRE,
+	POST
+}
+
+enum TapState {
+	IDLE,
+	PRESSING,
+	UNPRESSING,
+	HOLDING
+}
+
+enum GameState {
+	START,
+	DRAFT,
+	PREPARE,
+	PREBATTLE,
+	BATTLE,
+	POSTBATTLE
+}
+
+enum ObjectType {
+	TEST,
+	CARD,
+	CARD_HOLDER,
+	BACKGROUND,
+	BLOCK_LOCKED,
+	BLOCK_UPGRADE,
+	EMPTY_SPACE,
+	BLOCK_NOSPACE,
+	BLOCK_PASSTROUGH,
+	BLOCK_ITEM
+}
+
+const CARD_MERGE_AMOUNT: int = 3
+
+class CoreEvent:
+	extends Context.Event
+
+class RerollDraftEvent:
+	extends CoreEvent
+
+class UpgradeEvent:
+	extends CoreEvent
+	var target_level: int
+
+	func _init(new_level: int) -> void:
+		target_level = new_level
+
+class DraftMergeEvent:
+	extends CoreEvent
+	var merged_cards: Array[Card]
+
+	func _init(matches: Array[Card]) -> void:
+		merged_cards = matches
+
+class DraftAddBlockEvent:
+	extends CoreEvent
+	var block_position: Vector2i
+	var target_block: Block
+	var refill_amount: int
+
+	func _init(block: Block, position: Vector2i, refill_count: int = 0) -> void:
+		target_block = block
+		block_position = position
+		refill_amount = refill_count
+
+class BlockEntersPlay:
+	extends CoreEvent
+	var played_block: Block
+	var entry_position: Vector2i
+
+	func _init(block: Block, position: Vector2i = Vector2i(-1, -1)) -> void:
+		played_block = block
+		entry_position = position
+
+class DraftColumnLocked:
+	extends CoreEvent
+	var column_index: int
+
+	func _init(column: int) -> void:
+		column_index = column
+
+class DraftColumnUnlocked:
+	extends CoreEvent
+	var column_index: int
+
+	func _init(column: int) -> void:
+		column_index = column
+
+class UpdateDraftAreaEvent:
+	extends CoreEvent
+
+class CardStatChangeEvent:
+	extends CoreEvent
+	var target_card: Card
+	var health_change: int
+	var attack_change: int
+
+	func _init(card: Card, health: int = 0, attack: int = 0) -> void:
+		target_card = card
+		health_change = health
+		attack_change = attack
+
+class TransitionEvent:
+	extends CoreEvent
+	var target_state: GameState
+
+	func _init(state: GameState) -> void:
+		target_state = state
+
+class EnemyLineupAddCardEvent:
+	extends CoreEvent
+	var added_card: Card
+	var card_position: int
+
+	func _init(card: Card, position: int) -> void:
+		added_card = card
+		card_position = position
+
+class DebugLineupAddCardEvent:
+	extends CoreEvent
+	var added_card: Card
+	var card_position: int
+
+	func _init(card: Card, position: int) -> void:
+		added_card = card
+		card_position = position
+
+class LineupAddCardEvent:
+	extends CoreEvent
+	var added_card: Card
+
+	func _init(card: Card) -> void:
+		added_card = card
+
+class TrippleTestEvent:
+	extends CoreEvent
+
+class LineupMergeEvent:
+	extends CoreEvent
+	var merged_card: Card
+	var merged_cards: Array[Card]
+
+	func _init(card: Card, triples: Array[Card]) -> void:
+		merged_card = card
+		merged_cards = triples
+
+class BattleEvent:
+	extends CoreEvent
+	var event_sequence: Array
+
+	func _init(battle_events: Array) -> void:
+		event_sequence = battle_events
+
+class ResetUnitsEvent:
+	extends CoreEvent
+
+class DraftSteadyEvent:
+	extends CoreEvent
+
+class RemoveBlockFromDraft:
+	extends CoreEvent
+	var removed_block: Block
+	var should_destroy: bool
+
+	func _init(block: Block, destroy_block: bool = false) -> void:
+		removed_block = block
+		should_destroy = destroy_block
+
+func action(event: CoreEvent) -> void:
+	event.emit(event)
+
+func _ready() -> void:
+	print("Core autoload ready")
+
+# bottom_bar_draft.gd
+extends NinePatchRect
+
+func _on_button_upgrade_pressed() -> void:
+	print("Upgrade button pressed")
+	ui.action(ui.UpgradeEvent.new())
+
+func _on_button_reroll_pressed() -> void:
+	print("Reroll button pressed")
+	ui.action(ui.RerollEvent.new())
+
+func _on_button_to_battle_pressed() -> void:
+	ui.action(ui.TransitionEvent.new(core.GameState.PREPARE))
+
+# bottom_bar_prepare.gd
+extends NinePatchRect
+
+func _on_button_draft_pressed() -> void:
+	ui.action(ui.TransitionEvent.new(core.GameState.DRAFT))
+
+func _on_button_battle_pressed() -> void:
+	ui.action(ui.StartBattleEvent.new())
+
+# card_controller.gd
+class_name CardController extends Node
+
+const CARD_IMAGE_PREFIX: String = "card_image_"
+
+@export_file("*.tscn") var card_scene_name: String
+@export_dir var card_image_folder: String
+
+var current_level: int = 1
+var game_rules: Dictionary
+
+func get_card_image_name(card_id: String) -> String:
+	return str(card_image_folder, CARD_IMAGE_PREFIX, debug.asset_variant, "_", card_id, ".png")
+
+func setup() -> void:
+	game_rules = await data_source.get_rules_data()
+	await data_source.activate_card_cache()
+
+func get_card_from_pool() -> Node:
+	var new_card_id: String = await get_random_id_from_pool(current_level)
+	var new_unit: Node = await create_unit_from_id(new_card_id)
+	return new_unit
+
+func get_random_id_from_pool(level: int) -> String:
+	var selected_level: int = select_recruited_unit_level(level)
+	var unit_id: String = await select_id_from_level(selected_level)
+	return unit_id
+
+func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
+	var card_info: Dictionary = await data_source.get_card_info(id, true)
+	var card_scene: PackedScene = load(card_scene_name)
+	var card_instance: Node = card_scene.instantiate()
+	card_instance.init_card(card_info, unit_level)
+	return card_instance
+
+func select_id_from_level(level: int) -> String:
+	var selected_level: int = select_recruited_unit_level(level)
+	var available_cards: Array = await data_source.get_all_cards(true)
+	var level_filtered_cards: Array = []
+
+	for card in available_cards:
+		var card_level: String = card.upgrade_level
+		if int(card_level) == selected_level:
+			level_filtered_cards.append(card)
+
+	var selected_card_id: String = (
+		level_filtered_cards[rng.seeded_rng.next() % level_filtered_cards.size()].id
+	)
+	return selected_card_id
+
+func select_recruited_unit_level(recruit_level: int) -> int:
+	var roll_result: int = (randi() % 99) + 1
+	var level_2_chance_1: String = game_rules.chance_lvl_2_star_1
+	var level_2_chance_2: String = game_rules.chance_lvl_2_star_2
+	var level_3_chance_1: String = game_rules.chance_lvl_3_star_1
+	var level_3_chance_2: String = game_rules.chance_lvl_3_star_2
+	var level_3_chance_3: String = game_rules.chance_lvl_3_star_3
+
+	match recruit_level:
+		1:
+			return 1
+		2:
+			if roll_result <= int(level_2_chance_1):
+				return 1
+			if roll_result <= int(level_2_chance_2):
+				return 2
+		3:
+			if roll_result <= int(level_3_chance_1):
+				return 1
+			if roll_result <= int(level_3_chance_2):
+				return 2
+			if roll_result <= int(level_3_chance_3):
+				return 3
+
+	return 1  # Default fallback return
+
+# data_source.gd
+class_name DataSource extends Node
+
+signal value_received(data: Dictionary)
+
+const LOCAL_DB_FILE: String = "res://resources/data.json"
+const LOCAL_DB_BATTLE_FILE: String = "res://resources/gameone-577cb-export.json"
+const SHEET_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+
+const DATA_KEYS = {
+	"zen_data": "zen_data",
+	"zen_players": "zen_players",
+	"player_data": "player_data",
+	"zen_rules": "zen_rules",
+	"zen_location": "zen_location_data",
+	"zen_progression": "zen_progression",
+	"cards": "cards",
+	"rules": "rules",
+	"levels": "levels",
+	"items": "items",
+	"players": "players",
+	"avatar": "avatar_data",
+	"events": "event_data",
+	"arena": "arena_card",
+	"collection": "collection"
+}
+
+var current_uuid: String = ""
+var test_group: int = 0
+var local_data: Dictionary = {}
+var database: Object
+var current_root: Array = []
+var debug_data: Dictionary = {}
+var card_cache: Array = []
+
+func activate_card_cache() -> void:
+	card_cache = await get_all_cards()
+
+func get_collection_key(table: String) -> String:
+	return str(table, "_", test_group)
+
+func get_default_player_data() -> Dictionary:
+	return {
+		"progress": 1,
+		"sfx": true,
+		"music": false,
+		"vibrate": true,
+		"notification": false,
+		"name": "test_avatar_name",
+		"id": "1"
+	}
+
+func _ready() -> void:
+	if ClassDB.class_exists("FirebaseDatabase"):
+		print("Firebase RealTime Database exists singleton")
+		database = ClassDB.instantiate("FirebaseDatabase")
+		database.connect("get_value", Callable(self, "_on_get_value"))
+		database.connect("child_changed", Callable(self, "_on_child_changed"))
+		database.connect("child_moved", Callable(self, "_on_child_moved"))
+		database.connect("child_removed", Callable(self, "_on_child_removed"))
+		database.connect("child_added", Callable(self, "_on_child_added"))
+		set_database_root([SHEET_ID])
+	else:
+		var database_file: String = LOCAL_DB_FILE
+		if debug.use_local_battle_db:
+			database_file = LOCAL_DB_BATTLE_FILE
+		load_local_data(database_file)
+
+func load_local_data(database_file: String) -> void:
+	var file: FileAccess = FileAccess.open(database_file, FileAccess.READ)
+	var parsed_data: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	
+	if parsed_data is Dictionary:
+		local_data = parsed_data[SHEET_ID]
+		printt("Local data file loaded successfully")
+	else:
+		push_error(str("Failed to load local data file error: ", parsed_data))
+
+# block_factory.gd
+class_name BlockFactory extends Resource
+
+@export var upgrade_blocks: Array[PackedScene]
+@export var locked_block_scene: PackedScene
+@export var nospace_block_scene: PackedScene
+@export var passtrough_block_scene: PackedScene
+@export var item_block_scene: PackedScene
+@export var empty_block_scene: PackedScene
+
+func create_locked_block() -> Node:
+	return locked_block_scene.instantiate()
+
+func create_item_block() -> Node:
+	return item_block_scene.instantiate()
+
+func create_nospace_block() -> Node:
+	return nospace_block_scene.instantiate()
+
+func create_passtrough_block() -> Node:
+	return passtrough_block_scene.instantiate()
+
+func create_upgrade_block(upgrade_level: int) -> Node:
+	return upgrade_blocks[upgrade_level - 1].instantiate()
+
+func create_empty_space() -> Node:
+	return empty_block_scene.instantiate()
+
+# ui.gd
+class_name UI extends Node
+
+signal event
+
+class UIEvent:
+	extends core.CoreEvent
+
+class TouchEvent:
+	extends UIEvent
+	var sender: Variant
+	var input_event: InputEvent
+
+	func _init(touch_sender: Variant, touch_event: InputEvent) -> void:
+		sender = touch_sender
+		input_event = touch_event
+
+class DragEvent:
+	extends UIEvent
+	var sender: Variant
+	var input_event: InputEvent
+
+	func _init(drag_sender: Variant, drag_event: InputEvent) -> void:
+		sender = drag_sender
+		input_event = drag_event
+
+class DraftHolderToggledEvent:
+	extends UIEvent
+	var is_enabled: bool
+	var column_index: int
+
+	func _init(enabled: bool, column: int) -> void:
+		is_enabled = enabled
+		column_index = column
+
+class ShowCardEvent:
+	extends UIEvent
+	var target_card: Variant
+
+	func _init(card: Variant) -> void:
+		target_card = card
+
+class TransitionEvent:
+	extends UIEvent
+	var target_state: core.GameState
+
+	func _init(new_state: core.GameState) -> void:
+		target_state = new_state
+
+class StartBattleEvent:
+	extends UIEvent
+
+class RerollEvent:
+	extends UIEvent
+
+class HideCardEvent:
+	extends UIEvent
+
+class UpgradeEvent:
+	extends UIEvent
+
+func action(ui_event: UIEvent) -> void:
+	event.emit(ui_event)
+
+func _ready() -> void:
+	print("UI autoload ready")
+
+
+const UNIT_HEALTH: String = "current_health"
+const NO_UNIT_FOUND: int = -1
+
+func battle_start(allied_lineup: Dictionary, enemy_lineup: Dictionary) -> Array:
+	return battle_solver(allied_lineup, enemy_lineup)
+
+func battle_solver(allied_lineup: Dictionary, enemy_lineup: Dictionary) -> Array:
+	var battle_context: BattleContext = BattleContext.new(self)
+	_initialize_battle(battle_context, allied_lineup, enemy_lineup)
+
+	while battle_context.is_battle_ongoing():
+		solve_win_conditions(battle_context)
+		if battle_context.is_battle_ongoing():
+			process_turn(battle_context)
+
+	return battle_context.event_list
+
+static func _initialize_battle(
+	battle_context: BattleContext, 
+	allied_lineup: Dictionary, 
+	enemy_lineup: Dictionary
+) -> void:
+	var duplicated_allies: Dictionary = duplicate_resource(allied_lineup)
+	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
+		true, duplicated_allies
+	)
+	var duplicated_enemies: Dictionary = duplicate_resource(enemy_lineup)
+	var enemies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
+		false, duplicated_enemies
+	)
+	battle_context.add_event(allies_event)
+	battle_context.add_event(enemies_event)
+	battle_context.solve_events()
+
+# ability.gd
+class_name Ability extends Resource
+
+func handle_battle_event(
+	phase: core.Tempus,
+	unit_position: int,
+	is_allied_unit: bool,
+	battle_context: BattleContext,
+	battle_event: BattleContext.BaseEvent
+) -> void:
+	pass
+
+func handle_draft_event(
+	phase: core.Tempus,
+	unit_position: int,
+	unit: Block,
+	draft_context: DraftContext,
+	draft_event: core.CoreEvent
+) -> void:
+	pass
+
+# unit_data.gd
+class_name UnitData extends Resource
+
+const POST_EVENT_RESPONSE: String = "post_event_response"
+const PRE_EVENT_RESPONSE: String = "pre_event_response"
+const DRAFT_POST_EVENT_RESPONSE: String = "draft_post_event_response"
+const DRAFT_PRE_EVENT_RESPONSE: String = "draft_pre_event_response"
+
+var max_health: int = 1
+var max_attack: int = 1
+var current_health: int = 1:
+	set = set_current_health
+var current_attack: int = 1:
+	set = set_current_attack
+var level: int = 0
+var card_info: Dictionary
+var temporary_effects: Array = []
+var permanent_effects: Array = []
+var abilities: Array = []
+
+func set_current_health(new_health: int) -> void:
+	if max_health < new_health:
+		max_health = new_health
+	current_health = new_health
+
+func set_current_attack(new_attack: int) -> void:
+	if max_attack < new_attack:
+		max_attack = new_attack
+	current_attack = new_attack
+
+func initialize_with_info(card_data: Dictionary) -> void:
+	card_info = card_data
+	var abilities_string: String = card_info.abilities
+	var parsed_abilities: Array = AbilitiesHandler.parse_ability_string(abilities_string)
+	for ability in parsed_abilities:
+		if ability != null:
+			add_ability(ability)
+
+	# Initialize debug abilities
+	var ability: Resource
+	match card_info.id:
+		"1":
+			ability = DamageShieldAbility.new()
+			add_ability(ability)
+		"2":
+			ability = DeathTriggerHealthAbility.new(2)
+			add_ability(ability)
+		"12":
+			ability = EvilSynergyAbility.new()
+			add_ability(ability)
+		"4":
+			ability = MergeBonusAbility.new(1, 1)
+			add_ability(ability)

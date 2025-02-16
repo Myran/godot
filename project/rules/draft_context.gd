@@ -2,7 +2,7 @@ class_name DraftContext extends Context
 
 # Typed member variables
 var lineup: Dictionary = {}  # Dictionary[int, Card]
-var draft_area: Array[Block] = []  
+var draft_area: Array[Block] = []
 var solver: Node  # Reference to solver node
 
 

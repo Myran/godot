@@ -152,9 +152,9 @@ class LineupMergeEvent:
 
 class BattleEvent:
 	extends CoreEvent
-	var battle_events: Array
+	var battle_events: Array[Context.Event]
 
-	func _init(m_battle_events: Array) -> void:
+	func _init(m_battle_events: Array[Context.Event]) -> void:
 		self.battle_events = m_battle_events
 
 

@@ -76,7 +76,7 @@ func user_profile(object: Object, method: String) -> void:
 func get_friends(object: Object, method: String) -> void:
 	if _fb != null:
 		var params: Dictionary = {
-			"fields": "name,first_name,last_name,picture", 
+			"fields": "name,first_name,last_name,picture",
 			"limit": 3000
 		}
 		if OS.get_name() == "iOS":
@@ -88,7 +88,7 @@ func get_friends(object: Object, method: String) -> void:
 func get_invitable_friends(object: Object, method: String) -> void:
 	if _fb != null:
 		var params: Dictionary = {
-			"fields": "first_name,last_name,picture", 
+			"fields": "first_name,last_name,picture",
 			"limit": 3000
 		}
 		if OS.get_name() == "iOS":

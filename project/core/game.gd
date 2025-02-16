@@ -22,7 +22,7 @@ class_name Game extends Control
 @export var battle_handler: BattleHandler
 
 var ui_state: core.UIState = core.UIState.WAITING
-var current_battle: Array
+var current_battle: Array[Context.Event]
 
 
 func _input(event: InputEvent) -> void:
@@ -146,7 +146,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.BattleEvent:
 		var enacter: BattleEnacter = BattleEnacter.new(battle_layer, holder_allies, holder_enemy)
 		add_child(enacter)
-		var events: Array = event.battle_events
+		var events: Array[Context.Event] = event.battle_events
 		await enacter.enact(events)
 		enacter.queue_free()
 

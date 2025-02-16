@@ -11,7 +11,7 @@ func _init(health_bonus: int = 1, attack_bonus: int = 1) -> void:
 func handle_draft_event(phase: core.Tempus, _unit_position: int, unit: Block, draft_context: DraftContext, draft_event: core.CoreEvent) -> void:
 	if phase != core.Tempus.POST:
 		return
-		
+
 	if not draft_event is core.LineupAddCardEvent:
 		return
 

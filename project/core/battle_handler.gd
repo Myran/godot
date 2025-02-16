@@ -9,7 +9,7 @@ func setup(_allies: HolderContainer, _enemies: HolderContainer) -> void:
 	holder_enemy = _enemies
 
 
-func create_battle() -> Array:
+func create_battle() -> Array[Context.Event]:
 	var allies: Dictionary = holder_allies.get_current_lineup()
 	var enemies: Dictionary = holder_enemy.get_current_lineup()
 

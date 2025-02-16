@@ -3,12 +3,12 @@ class_name BattleContext extends Context
 enum BattleState { PRE_BATTLE, BATTLE, POST_BATTLE }
 
 # Typed member variables
-var allies: Side = Side.new()
-var enemies: Side = Side.new()
+var allied_side: Side = Side.new()
+var enemy_side: Side = Side.new()
 var battle_state: BattleState = BattleState.BATTLE
-var allied_turn: bool = true
-var current_unit: UnitData = null
-var solver: Node
+var is_allied_turn: bool = true
+var active_unit: UnitData = null
+var battle_solver: Node
 
 
 # Base Event class for battle events
@@ -22,110 +22,103 @@ class BaseEvent:
 # Typed event classes
 class CombatEvent:
 	extends BaseEvent
-	var attacker: int
-	var defender: int
-	var allied_attack: bool
+	var attacker_position: int
+	var defender_position: int
+	var is_allied_attack: bool
 
-	func _init(attacker_pos: int, defender_pos: int, is_allied_attack: bool) -> void:
-		self.attacker = attacker_pos
-		self.defender = defender_pos
-		self.allied_attack = is_allied_attack
+	func _init(a_pos: int, d_pos: int, is_allied_a: bool) -> void:
+		self.attacker_position = a_pos
+		self.defender_position = d_pos
+		self.is_allied_attack = is_allied_a
 
 
 class DeathEvent:
 	extends BaseEvent
-	var side: bool
-	var pos: int
+	var is_allied_side: bool
+	var unit_position: int
 
 	func _init(allied_side: bool, position: int) -> void:
-		self.side = allied_side
-		self.pos = position
+		self.is_allied_side = allied_side
+		self.unit_position = position
 
 
 class AddLineupEvent:
 	extends BaseEvent
-	var allied_side: bool
-	var lineup: Dictionary  # Dictionary[int, UnitData]
+	var is_allied_side: bool
+	var lineup_data: Dictionary  # Dictionary[int, UnitData]
 
-	func _init(is_allied: bool, lineup_data: Dictionary) -> void:
-		self.allied_side = is_allied
-		self.lineup = lineup_data
+	func _init(is_a: bool, lineup_d: Dictionary) -> void:
+		self.is_allied_side = is_a
+		self.lineup_data = lineup_d
 
 
 class ShieldEvent:
 	extends BaseEvent
-	var target: int
-	var side: bool
-	var new_shield_state: bool
+	var target_position: int
+	var is_allied_side: bool
+	var shield_active: bool
 
 	func _init(_target: int, _side: bool, _new_shield_state: bool) -> void:
-		self.target = _target
-		self.side = _side
-		self.new_shield_state = _new_shield_state
+		self.target_position = _target
+		self.is_allied_side = _side
+		self.shield_active = _new_shield_state
 
 
 class DamageEvent:
 	extends BaseEvent
-	var effects: Array[Dictionary] = []
+	var damage_effects: Array[Dictionary] = []
 	var damage_amount: int
-	var target: int
-	var side: bool
+	var target_position: int
+	var is_allied_side: bool
 
 	func _init(amount: int, target_pos: int, target_side: bool) -> void:
 		self.damage_amount = amount
-		self.target = target_pos
-		self.side = target_side
+		self.target_position = target_pos
+		self.is_allied_side = target_side
 
 
 class StatChangeEvent:
 	extends BaseEvent
-	var stat: StringName
-	var target: int
-	var side: bool
-	var value: int
-	var new_stat: int
+	var stat_name: StringName
+	var target_position: int
+	var is_allied_side: bool
+	var change_value: int
+	var new_stat_value: int
 
 	func _init(
-		stat_name: StringName,
-		target_pos: int,
-		target_side: bool,
-		change_value: int,
-		new_value: int = 0
+		stat_n: StringName, target_pos: int, target_side: bool, change_v: int, new_value: int = 0
 	) -> void:
-		self.stat = stat_name
-		self.target = target_pos
-		self.side = target_side
-		self.value = change_value
-		self.new_stat = new_value
+		self.stat_name = stat_n
+		self.target_position = target_pos
+		self.is_allied_side = target_side
+		self.change_value = change_v
+		self.new_stat_value = new_value
 
 
 class SelectActiveUnitEvent:
 	extends BaseEvent
-	var sel_unit_pos: int
-	var allied_side: bool
+	var selected_unit_position: int
+	var is_allied_side: bool
 
 	func _init(position: int, is_allied: bool) -> void:
-		self.sel_unit_pos = position
-		self.allied_side = is_allied
+		self.selected_unit_position = position
+		self.is_allied_side = is_allied
 
 
 class FindNextUnitEvent:
 	extends BaseEvent
-	pass
 
 
 class StartOfTurnEvent:
 	extends BaseEvent
-	pass
 
 
 class EndOfTurnEvent:
 	extends BaseEvent
-	pass
 
 
 func _init(_solver: Node) -> void:
-	solver = _solver
+	battle_solver = _solver
 
 
 # Override solve_events with battle-specific logic
@@ -143,7 +136,7 @@ func solve_events() -> void:
 func _process_event(event: BaseEvent) -> void:
 	broadcast_event(UnitData.PRE_EVENT_RESPONSE, self, event)
 	solve_events()
-	solver.solve_event(event, self)
+	battle_solver.solve_event(event, self)
 	broadcast_event(UnitData.POST_EVENT_RESPONSE, self, event)
 	solve_events()
 
@@ -151,8 +144,8 @@ func _process_event(event: BaseEvent) -> void:
 static func broadcast_event(
 	responder: StringName, _context: BattleContext, _event: BaseEvent
 ) -> void:
-	for _side: Side in [_context.allies, _context.enemies]:
-		var is_allied: bool = _side == _context.allies
+	for _side: Side in [_context.allied_side, _context.enemy_side]:
+		var is_allied: bool = _side == _context.allied_side
 		for pos: int in _side.lineup:
 			var unit: UnitData = _side.lineup[pos]
 			unit.call(responder, pos, is_allied, _context, _event)
@@ -160,15 +153,15 @@ static func broadcast_event(
 
 # Battle state management methods
 func get_side(is_allied: bool) -> Side:
-	return allies if is_allied else enemies
+	return allied_side if is_allied else enemy_side
 
 
 func get_active_side() -> Side:
-	return get_side(allied_turn)
+	return get_side(is_allied_turn)
 
 
 func get_inactive_side() -> Side:
-	return get_side(!allied_turn)
+	return get_side(!is_allied_turn)
 
 
 func add_unit_to_side(unit: UnitData, position: int, is_allied: bool) -> void:
@@ -192,7 +185,7 @@ func clear_activated_units() -> void:
 
 
 func switch_turn() -> void:
-	allied_turn = !allied_turn
+	is_allied_turn = !is_allied_turn
 
 
 func end_battle() -> void:

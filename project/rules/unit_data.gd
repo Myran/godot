@@ -93,13 +93,13 @@ func draft_pre_event_response(
 
 
 func pre_event_response(
-	_u_pos: int, _u_side: int, _battle_context: BattleContext, _event: BattleContext.BaseEvent
+	_u_pos: int, _u_side: int, _battle_context: BattleContext, _event: Context.Event
 ) -> void:
 	check_abilities(core.Tempus.PRE, _u_pos, _u_side, _battle_context, _event)
 
 
 func post_event_response(
-	_u_pos: int, _u_side: int, _battle_context: BattleContext, _event: BattleContext.BaseEvent
+	_u_pos: int, _u_side: int, _battle_context: BattleContext, _event: Context.Event
 ) -> void:
 	check_abilities(core.Tempus.POST, _u_pos, _u_side, _battle_context, _event)
 
@@ -109,7 +109,7 @@ func check_abilities(
 	u_pos: int,
 	u_side: int,
 	battle_context: BattleContext,
-	_event: BattleContext.BaseEvent
+	_event: Context.Event
 ) -> void:
 	for _ability: Ability in abilities:
 		_ability.handle_battle_event(tempus, u_pos, u_side, battle_context, _event)

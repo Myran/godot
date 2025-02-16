@@ -1,150 +1,182 @@
 class_name BattleEnacter extends Node
 
 var battle_layer: Node
-var holder_allies: Node
-var holder_enemy: Node
+var allied_holder: HolderContainer
+var enemy_holder: HolderContainer
 
 
-func _init(_battle_layer: Node, _holder_allies: Node, _holder_enemy: Node) -> void:
-	battle_layer = _battle_layer
-	holder_allies = _holder_allies
-	holder_enemy = _holder_enemy
+func _init(layer: Node, allies: HolderContainer, enemies: HolderContainer) -> void:
+	battle_layer = layer
+	allied_holder = allies
+	enemy_holder = enemies
 
 
-func enact(battle_events: Array) -> void:
+func enact(battle_events: Array[Context.Event]) -> void:
 	printt("Start animating battle")
 	printt("current battle events", battle_events)
 
-	var back_tween: Tween
-	var allies: Dictionary = holder_allies.get_current_lineup(true, battle_layer)
-	var enemies: Dictionary = holder_enemy.get_current_lineup(true, battle_layer)
-	holder_allies.hide_lineup()
-	holder_enemy.hide_lineup()
+	var return_tween: Tween
+	var allied_units: Dictionary = allied_holder.get_current_lineup(true, battle_layer)
+	var enemy_units: Dictionary = enemy_holder.get_current_lineup(true, battle_layer)
+	allied_holder.hide_lineup()
+	enemy_holder.hide_lineup()
 
-	for event: BattleContext.BaseEvent in battle_events:
+	for event: Context.Event in battle_events:
 		printt("current event:", event)
+
 		if event is BattleContext.AddLineupEvent:
 			print("Add lineup")
+
 		elif event is BattleContext.FindNextUnitEvent:
 			print("Find next unit")
+
 		elif event is BattleContext.SelectActiveUnitEvent:
 			print("Select active unit")
+
 		elif event is BattleContext.CombatEvent:
 			print("Combat")
 			var attacker: Node2D = (
-				allies[event.attacker] if event.allied_attack else enemies[event.attacker]
+				allied_units[event.attacker_position]
+				if event.is_allied_attack
+				else enemy_units[event.attacker_position]
 			)
 			var defender: Node2D = (
-				enemies[event.defender] if event.allied_attack else allies[event.defender]
+				enemy_units[event.defender_position]
+				if event.is_allied_attack
+				else allied_units[event.defender_position]
 			)
 			printt("attacker", attacker)
 			printt("defender", defender)
+
 			var combat_tween: Tween = create_tween()
 
+			# Animation timing configuration
 			var anim_speed: float = 0.2
-			var attack_dist: float = 0.65
-			var defence_dist: float = 0.25
-			var highlight_size: Vector2 = Vector2(1.25, 1.25)
+			var attack_distance: float = 0.65
+			var defense_distance: float = 0.25
+			var highlight_scale: Vector2 = Vector2(1.25, 1.25)
 			var highlight_speed: float = 0.2
-			var back_multiplier: int = 2
+			var return_multiplier: float = 2.0
+
 			var attacker_start_scale: Vector2 = attacker.scale
-			var target_start_pos: Vector2 = defender.global_position
-			var battle_pos: Vector2 = attacker.global_position.lerp(target_start_pos, attack_dist)
-			var target_battle_pos: Vector2 = target_start_pos.lerp(battle_pos, defence_dist)
-			var start_pos: Vector2 = attacker.global_position
+			var defender_start_pos: Vector2 = defender.global_position
+			var battle_pos: Vector2 = attacker.global_position.lerp(
+				defender_start_pos, attack_distance
+			)
+			var defender_battle_pos: Vector2 = defender_start_pos.lerp(battle_pos, defense_distance)
+			var attacker_start_pos: Vector2 = attacker.global_position
+
+			# Highlight animation
 			(
 				combat_tween
-				. tween_property(defender, "scale", highlight_size, highlight_speed)
+				. tween_property(defender, "scale", highlight_scale, highlight_speed)
 				. set_trans(Tween.TRANS_SINE)
 				. set_ease(Tween.EASE_IN_OUT)
 			)
+
 			(
 				combat_tween
 				. parallel()
-				. tween_property(attacker, "scale", highlight_size, highlight_speed)
+				. tween_property(attacker, "scale", highlight_scale, highlight_speed)
 				. set_trans(Tween.TRANS_SINE)
 				. set_ease(Tween.EASE_IN_OUT)
 			)
 
+			# Movement animation
 			(
 				combat_tween
-				. tween_property(defender, "global_position", target_battle_pos, anim_speed)
+				. tween_property(defender, "global_position", defender_battle_pos, anim_speed)
 				. set_trans(Tween.TRANS_QUINT)
 				. set_ease(Tween.EASE_IN)
 			)
+
 			(
 				combat_tween
 				. tween_property(attacker, "global_position", battle_pos, anim_speed)
 				. set_trans(Tween.TRANS_QUINT)
 				. set_ease(Tween.EASE_OUT)
 			)
+
 			combat_tween.play()
 			await combat_tween.finished
 
-			back_tween = create_tween()
+			# Return animation
+			return_tween = create_tween()
+			var return_speed: float = anim_speed * return_multiplier
+
 			(
-				back_tween
+				return_tween
 				. chain()
-				. tween_property(
-					attacker, "global_position", start_pos, anim_speed * back_multiplier
-				)
+				. tween_property(attacker, "global_position", attacker_start_pos, return_speed)
 				. set_trans(Tween.TRANS_QUINT)
 			)
+
 			(
-				back_tween
+				return_tween
 				. parallel()
-				. tween_property(
-					defender, "global_position", target_start_pos, anim_speed * back_multiplier
-				)
+				. tween_property(defender, "global_position", defender_start_pos, return_speed)
 				. set_trans(Tween.TRANS_QUINT)
 			)
+
 			(
-				back_tween
+				return_tween
 				. chain()
 				. tween_property(attacker, "scale", attacker_start_scale, highlight_speed)
 				. set_trans(Tween.TRANS_SINE)
 				. set_ease(Tween.EASE_IN_OUT)
 			)
+
 			(
-				back_tween
+				return_tween
 				. parallel()
 				. tween_property(defender, "scale", attacker_start_scale, highlight_speed)
 				. set_trans(Tween.TRANS_SINE)
 				. set_ease(Tween.EASE_IN_OUT)
 			)
-			back_tween.play()
+
+			return_tween.play()
 
 		elif event is BattleContext.DamageEvent:
 			print("Damage", event)
-			var u: Node2D = allies[event.target] if event.side else enemies[event.target]
-			printt("Damage target:", u, "Damage", event.damage_amount)
+			var target: Node2D = (
+				allied_units[event.target_position]
+				if event.is_allied_side
+				else enemy_units[event.target_position]
+			)
+			printt("Damage target:", target, "Damage", event.damage_amount)
+
 		elif event is BattleContext.ShieldEvent:
 			print("Shield")
-			var u: Node2D = allies[event.target] if event.side else enemies[event.target]
-			if event.new_shield_state:
-				u.show_shield()
+			var target: Node2D = (
+				allied_units[event.target_position]
+				if event.is_allied_side
+				else enemy_units[event.target_position]
+			)
+			if event.shield_active:
+				target.show_shield()
 			else:
-				u.hide_shield()
-			print("shield removed / added on", u)
+				target.hide_shield()
+			print("shield removed / added on", target)
 
 		elif event is BattleContext.StatChangeEvent:
 			print("Stat Change", event)
-			var unit_side: Dictionary = allies if event.side else enemies
-			if !unit_side.has(event.target):
+			var unit_side: Dictionary = allied_units if event.is_allied_side else enemy_units
+			if !unit_side.has(event.target_position):
 				continue
-			if event.new_stat == 0:
+			if event.new_stat_value == 0:
 				continue
-			var u: Node2D = unit_side[event.target]
-			match event.stat:
+
+			var target: Node2D = unit_side[event.target_position]
+			match event.stat_name:
 				Battle.UNIT_HEALTH:
-					u.base.set_card_health(event.new_stat)
+					target.base.set_card_health(event.new_stat_value)
 
 		elif event is BattleContext.DeathEvent:
 			print("Death")
-			var side: Dictionary = allies if event.side else enemies
-			var dying_u: Node2D = side[event.pos]
-			side.erase(event.pos)
-			dying_u.shake(event.side)
+			var side: Dictionary = allied_units if event.is_allied_side else enemy_units
+			var target: Node2D = side[event.unit_position]
+			side.erase(event.unit_position)
+			target.shake(event.is_allied_side)
 
 		elif event is BattleContext.StartOfTurnEvent:
 			await get_tree().create_timer(0.1).timeout
@@ -152,9 +184,11 @@ func enact(battle_events: Array) -> void:
 
 		elif event is BattleContext.EndOfTurnEvent:
 			print("end of turn")
-			await back_tween.finished
+			await return_tween.finished
 
+	# Cleanup phase
 	await get_tree().create_timer(1.25).timeout
-	for side: Dictionary in [allies, enemies]:
-		for k: int in side.keys():
-			side[k].queue_free()
+	for side: Dictionary in [allied_units, enemy_units]:
+		for pos: int in side.keys():
+			var unit: Node2D = side[pos]
+			unit.queue_free()
