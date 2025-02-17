@@ -1,4 +1,4 @@
-# abilities/merge_bonus_ability.gd
+# rules/merge_bonus_ability.gd
 class_name MergeBonusAbility extends Ability
 
 var health_bonus: int

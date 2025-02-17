@@ -1,4 +1,4 @@
-# abilities/damage_shield_ability.gd
+# rules/damage_shield_ability.gd
 class_name DamageShieldAbility extends Ability
 
 var shield_used: bool = false

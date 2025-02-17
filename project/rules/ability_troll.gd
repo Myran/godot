@@ -1,4 +1,4 @@
-# abilities/evil_synergy_ability.gd
+# rules/evil_synergy_ability.gd
 class_name EvilSynergyAbility extends Ability
 
 var health_per_evil: int
