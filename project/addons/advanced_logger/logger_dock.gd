@@ -187,7 +187,7 @@ func add_tag(tag: String) -> void:
 func _validate_and_apply_buffer_size(size: float) -> void:
 	var value := int(size)
 	if value < Logger.LoggerConfig.MIN_BUFFER_SIZE or value > Logger.LoggerConfig.MAX_BUFFER_SIZE:
-		push_warning("Buffer size must be between %d and %d" % [LoggerConfig.MIN_BUFFER_SIZE, LoggerConfig.MAX_BUFFER_SIZE])
+		push_warning("Buffer size must be between %d and %d" % [Logger.LoggerConfig.MIN_BUFFER_SIZE, Logger.LoggerConfig.MAX_BUFFER_SIZE])
 		return
 
 	var result := logger.set_buffer_size(value)
@@ -201,7 +201,7 @@ func _validate_and_apply_retro_window(seconds: float) -> void:
 	var value := int(seconds)
 	if value < Logger.LoggerConfig.MIN_TIME_WINDOW or value > Logger.LoggerConfig.MAX_TIME_WINDOW:
 		push_warning("Retroactive window must be between %d and %d seconds" % [
-			LoggerConfig.MIN_TIME_WINDOW, LoggerConfig.MAX_TIME_WINDOW
+			Logger.LoggerConfig.MIN_TIME_WINDOW, Logger.LoggerConfig.MAX_TIME_WINDOW
 		])
 		return
 
