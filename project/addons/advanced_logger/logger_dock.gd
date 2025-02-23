@@ -55,8 +55,8 @@ func _setup_ui() -> void:
 	settings_container.add_child(buffer_container)
 
 	buffer_size_spin = SpinBox.new()
-	buffer_size_spin.min_value = LoggerConfig.MIN_BUFFER_SIZE as float
-	buffer_size_spin.max_value = LoggerConfig.MAX_BUFFER_SIZE as float
+	buffer_size_spin.min_value = Logger.LoggerConfig.MIN_BUFFER_SIZE as float
+	buffer_size_spin.max_value = Logger.LoggerConfig.MAX_BUFFER_SIZE as float
 	buffer_size_spin.value = 1000.0
 	buffer_size_spin.step = 100.0
 	buffer_size_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -75,8 +75,8 @@ func _setup_ui() -> void:
 	settings_container.add_child(retro_container)
 
 	retro_spin = SpinBox.new()
-	retro_spin.min_value = LoggerConfig.MIN_TIME_WINDOW as float
-	retro_spin.max_value = LoggerConfig.MAX_TIME_WINDOW as float
+	retro_spin.min_value = Logger.LoggerConfig.MIN_TIME_WINDOW as float
+	retro_spin.max_value = Logger.LoggerConfig.MAX_TIME_WINDOW as float
 	retro_spin.value = 300.0
 	retro_spin.step = 10.0
 	retro_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -124,11 +124,11 @@ func _setup_ui() -> void:
 	tag_container.add_child(tag_list)
 
 func _setup_log_level_options(option_button: OptionButton) -> void:
-	option_button.add_item("DEBUG", LogLevel.DEBUG)
-	option_button.add_item("INFO", LogLevel.INFO)
-	option_button.add_item("WARNING", LogLevel.WARNING)
-	option_button.add_item("ERROR", LogLevel.ERROR)
-	option_button.add_item("CRITICAL", LogLevel.CRITICAL)
+	option_button.add_item("DEBUG", Logger.LogLevel.DEBUG)
+	option_button.add_item("INFO", Logger.LogLevel.INFO)
+	option_button.add_item("WARNING", Logger.LogLevel.WARNING)
+	option_button.add_item("ERROR", Logger.LogLevel.ERROR)
+	option_button.add_item("CRITICAL", Logger.LogLevel.CRITICAL)
 
 func _connect_signals() -> void:
 	if not level_option or not tag_input or not tag_list:
@@ -163,7 +163,7 @@ func _connect_signals() -> void:
 
 # Public methods
 func set_log_level(level: int) -> void:
-	if level >= LogLevel.DEBUG and level <= LogLevel.CRITICAL:
+	if level >= Logger.LogLevel.DEBUG and level <= Logger.LogLevel.CRITICAL:
 		level_option.select(level)
 		var result := logger.set_level(level)
 		if result == OK:
@@ -186,7 +186,7 @@ func add_tag(tag: String) -> void:
 # Validation methods
 func _validate_and_apply_buffer_size(size: float) -> void:
 	var value := int(size)
-	if value < LoggerConfig.MIN_BUFFER_SIZE or value > LoggerConfig.MAX_BUFFER_SIZE:
+	if value < Logger.LoggerConfig.MIN_BUFFER_SIZE or value > Logger.LoggerConfig.MAX_BUFFER_SIZE:
 		push_warning("Buffer size must be between %d and %d" % [LoggerConfig.MIN_BUFFER_SIZE, LoggerConfig.MAX_BUFFER_SIZE])
 		return
 
@@ -199,7 +199,7 @@ func _validate_and_apply_buffer_size(size: float) -> void:
 
 func _validate_and_apply_retro_window(seconds: float) -> void:
 	var value := int(seconds)
-	if value < LoggerConfig.MIN_TIME_WINDOW or value > LoggerConfig.MAX_TIME_WINDOW:
+	if value < Logger.LoggerConfig.MIN_TIME_WINDOW or value > Logger.LoggerConfig.MAX_TIME_WINDOW:
 		push_warning("Retroactive window must be between %d and %d seconds" % [
 			LoggerConfig.MIN_TIME_WINDOW, LoggerConfig.MAX_TIME_WINDOW
 		])
