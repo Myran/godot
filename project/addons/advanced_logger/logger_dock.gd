@@ -170,7 +170,7 @@ func set_log_level(level: int) -> void:
 			log_level_changed.emit(level)
 
 func set_buffer_size(size: int) -> void:
-	if size >= LoggerConfig.MIN_BUFFER_SIZE and size <= LoggerConfig.MAX_BUFFER_SIZE:
+	if size >= Logger.LoggerConfig.MIN_BUFFER_SIZE and size <= Logger.LoggerConfig.MAX_BUFFER_SIZE:
 		buffer_size_spin.value = size as float
 		_validate_and_apply_buffer_size(size as float)
 
