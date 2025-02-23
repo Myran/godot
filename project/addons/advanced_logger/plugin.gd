@@ -50,21 +50,21 @@ func _load_settings() -> void:
 	if config.has_section_key("logger", "log_level"):
 		var level: Variant = config.get_value("logger", "log_level")
 		if typeof(level) == TYPE_INT:
-			if level >= LogLevel.DEBUG and level <= LogLevel.CRITICAL:
+			if level >= Logger.LogLevel.DEBUG and level <= Logger.LogLevel.CRITICAL:
 				logger_dock.set_log_level(level as int)
 
 	# Load and validate buffer size
 	if config.has_section_key("logger", "buffer_size"):
 		var size: Variant = config.get_value("logger", "buffer_size")
 		if typeof(size) == TYPE_INT:
-			if size >= LoggerConfig.MIN_BUFFER_SIZE and size <= LoggerConfig.MAX_BUFFER_SIZE:
+			if size >= Logger.LoggerConfig.MIN_BUFFER_SIZE and size <= Logger.LoggerConfig.MAX_BUFFER_SIZE:
 				logger_dock.set_buffer_size(size as int)
 
 	# Load and validate retroactive window
 	if config.has_section_key("logger", "retro_window"):
 		var window: Variant = config.get_value("logger", "retro_window")
 		if typeof(window) == TYPE_INT:
-			if window >= LoggerConfig.MIN_TIME_WINDOW and window <= LoggerConfig.MAX_TIME_WINDOW:
+			if window >= Logger.LoggerConfig.MIN_TIME_WINDOW and window <= Logger.LoggerConfig.MAX_TIME_WINDOW:
 				logger_dock.set_retro_window(window as int)
 
 	# Load and validate tags
