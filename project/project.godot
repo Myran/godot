@@ -26,6 +26,7 @@ core="*res://autoloads/core.gd"
 debug="*res://autoloads/debug.tscn"
 card_controller="*res://autoloads/card_controller.tscn"
 util="*res://misc/util.gd"
+logger="*res://autoloads/logger.gd"
 
 [debug]
 
