@@ -175,7 +175,7 @@ func set_buffer_size(size: int) -> void:
 		_validate_and_apply_buffer_size(size as float)
 
 func set_retro_window(seconds: int) -> void:
-	if seconds >= LoggerConfig.MIN_TIME_WINDOW and seconds <= LoggerConfig.MAX_TIME_WINDOW:
+	if seconds >= Logger.LoggerConfig.MIN_TIME_WINDOW and seconds <= Logger.LoggerConfig.MAX_TIME_WINDOW:
 		retro_spin.value = seconds as float
 		_validate_and_apply_retro_window(seconds as float)
 
