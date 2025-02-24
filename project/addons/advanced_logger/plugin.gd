@@ -1,18 +1,28 @@
 @tool
 extends EditorPlugin
 
+
+const SETTINGS_PATH: String = "res://addons/advanced_logger/settings.cfg"
 var logger_dock: LoggerDock
 var logger_instance: Logger
-const SETTINGS_PATH: String = "res://addons/advanced_logger/settings.cfg"
-
+const AUTOLOAD_NAME: String = "Log"
+const TEST_AUTOLOAD_NAME: String = "LogTest"
 func _enter_tree() -> void:
 	logger_instance = Logger.new()
 	logger_dock = preload("res://addons/advanced_logger/logger_dock.gd").new(logger_instance)
+	# Add logger as autoload
+	add_autoload_singleton(AUTOLOAD_NAME, "res://addons/advanced_logger/logger.gd")
+
+	# Add test script as autoload (will run automatically)
+	add_autoload_singleton(TEST_AUTOLOAD_NAME, "res://addons/advanced_logger/logger_test.gd")
+
 	add_control_to_bottom_panel(logger_dock, "Logger")
 	_load_settings()
 
 func _exit_tree() -> void:
 	_save_settings()
+	#remove_autoload_singleton(AUTOLOAD_NAME)
+	remove_autoload_singleton(TEST_AUTOLOAD_NAME)
 	remove_control_from_bottom_panel(logger_dock)
 	if logger_dock:
 		logger_dock.free()
