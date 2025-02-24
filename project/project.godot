@@ -26,6 +26,8 @@ core="*res://autoloads/core.gd"
 debug="*res://autoloads/debug.tscn"
 card_controller="*res://autoloads/card_controller.tscn"
 util="*res://misc/util.gd"
+Log="*res://addons/advanced_logger/logger.gd"
+LogTest="*res://addons/advanced_logger/logger_test.gd"
 
 [debug]
 
@@ -47,7 +49,7 @@ window/handheld/orientation=5
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdLinter/plugin.cfg", "res://addons/open-external-editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/advanced_logger/plugin.cfg", "res://addons/gdLinter/plugin.cfg", "res://addons/open-external-editor/plugin.cfg")
 
 [input_devices]
 

@@ -1,12 +1,12 @@
 @tool
 extends EditorPlugin
-
+const AUTOLOAD_NAME: String = "Log"
+const TEST_AUTOLOAD_NAME: String = "LogTest"
 
 const SETTINGS_PATH: String = "res://addons/advanced_logger/settings.cfg"
 var logger_dock: LoggerDock
 var logger_instance: Logger
-const AUTOLOAD_NAME: String = "Log"
-const TEST_AUTOLOAD_NAME: String = "LogTest"
+
 func _enter_tree() -> void:
 	logger_instance = Logger.new()
 	logger_dock = preload("res://addons/advanced_logger/logger_dock.gd").new(logger_instance)

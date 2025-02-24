@@ -1,10 +1,15 @@
+@tool
 class_name Logger extends Node
 ## Advanced logging system with colored output, circular buffer, and retroactive log replay
 
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
 enum LoggerError {
-	OK = 0, INVALID_BUFFER_SIZE = 1, INVALID_LOG_LEVEL = 2, INVALID_TIME_WINDOW = 3, INVALID_TAG = 4
+	OK = 0,
+	INVALID_BUFFER_SIZE = 1,
+	INVALID_LOG_LEVEL = 2,
+	INVALID_TIME_WINDOW = 3,
+	INVALID_TAG = 4
 }
 
 # Define colors as individual constants
@@ -34,7 +39,6 @@ const CONTEXT_VALUE_COLOR: Color = GRUVBOX_BLUE
 const REPLAY_COLOR: Color = GRUVBOX_YELLOW
 const SOURCE_COLOR: Color = GRUVBOX_GRAY
 
-
 class LogEntry:
 	var timestamp: int
 	var level: LogLevel
@@ -56,7 +60,6 @@ class LogEntry:
 		context = _context.duplicate()
 		tags = _tags.duplicate()
 		source_info = _source
-
 
 class CircularBuffer:
 	var buffer: Array[LogEntry]
@@ -86,7 +89,6 @@ class CircularBuffer:
 
 		mutex.unlock()
 		return entries
-
 
 class LoggerConfig:
 	const MIN_BUFFER_SIZE: int = 50
@@ -138,49 +140,53 @@ class LoggerConfig:
 		retroactive_time_window = seconds
 		return LoggerError.OK
 
-
 var _config: LoggerConfig
 var _buffer: CircularBuffer
 var _current_level: LogLevel = LogLevel.INFO
 var _active_tags: Array[String] = []
 var _enabled: bool = true
 
+func _init(config: LoggerConfig = null) -> void:
+	_config = config if config else LoggerConfig.new()
+	_buffer = CircularBuffer.new(_config.buffer_size)
+	set_level(_config.default_level)  # Use set_level to ensure proper initialization
 
+# Configuration methods
 func set_level(level: LogLevel) -> Error:
-	var err: LoggerError = _config.set_default_level(level)
-	if err != LoggerError.OK:
+	if level < LogLevel.DEBUG or level > LogLevel.CRITICAL:
 		push_warning("Logger: Invalid log level: %d" % level)
 		return FAILED
-	_current_level = level
-	return OK
 
+	var err: LoggerError = _config.set_default_level(level)
+	if err != LoggerError.OK:
+		push_warning("Logger: Failed to set log level: %d" % level)
+		return FAILED
+
+	_current_level = level
+	_config.default_level = level  # Ensure config is updated
+	print_rich("[color=green]Logger level set to: %s[/color]" % LogLevel.keys()[level])
+	return OK
 
 func set_buffer_size(size: int) -> Error:
 	var err: LoggerError = _config.set_buffer_size(size)
 	if err != LoggerError.OK:
 		push_warning(
-			(
-				"Logger: Invalid buffer size %d (must be between %d and %d)"
-				% [size, LoggerConfig.MIN_BUFFER_SIZE, LoggerConfig.MAX_BUFFER_SIZE]
-			)
+			"Logger: Invalid buffer size %d (must be between %d and %d)"
+			% [size, LoggerConfig.MIN_BUFFER_SIZE, LoggerConfig.MAX_BUFFER_SIZE]
 		)
 		return FAILED
 	_buffer = CircularBuffer.new(size)
 	return OK
 
-
 func set_retroactive_window(seconds: int) -> Error:
 	var err: LoggerError = _config.set_retroactive_time_window(seconds)
 	if err != LoggerError.OK:
 		push_warning(
-			(
-				"Logger: Invalid time window %d (must be between %d and %d seconds)"
-				% [seconds, LoggerConfig.MIN_TIME_WINDOW, LoggerConfig.MAX_TIME_WINDOW]
-			)
+			"Logger: Invalid time window %d (must be between %d and %d seconds)"
+			% [seconds, LoggerConfig.MIN_TIME_WINDOW, LoggerConfig.MAX_TIME_WINDOW]
 		)
 		return FAILED
 	return OK
-
 
 func add_tag(tag: String) -> Error:
 	if tag.is_empty():
@@ -188,54 +194,45 @@ func add_tag(tag: String) -> Error:
 		return FAILED
 	if not _active_tags.has(tag):
 		_active_tags.append(tag)
+		print_rich("[color=green]Added tag: %s[/color]" % tag)
 	return OK
 
-
 func remove_tag(tag: String) -> void:
-	_active_tags.erase(tag)
-
+	if _active_tags.has(tag):
+		_active_tags.erase(tag)
+		print_rich("[color=yellow]Removed tag: %s[/color]" % tag)
 
 func clear_tags() -> void:
 	_active_tags.clear()
-
+	print_rich("[color=yellow]Cleared all tags[/color]")
 
 func enable() -> void:
 	_enabled = true
-
+	print_rich("[color=green]Logger enabled[/color]")
 
 func disable() -> void:
 	_enabled = false
-
-
-func _init(config: LoggerConfig = null) -> void:
-	_config = config if config else LoggerConfig.new()
-	_buffer = CircularBuffer.new(_config.buffer_size)
-	_current_level = _config.default_level
-
+	print_rich("[color=red]Logger disabled[/color]")
 
 # Main logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	_log(LogLevel.DEBUG, message, context, tags)
 
-
 func info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	_log(LogLevel.INFO, message, context, tags)
 
-
 func warning(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	_log(LogLevel.WARNING, message, context, tags)
-
 
 func error(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	_log(LogLevel.ERROR, message, context, tags)
 	_handle_error_occurrence()
 
-
 func critical(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	_log(LogLevel.CRITICAL, message, context, tags)
 	_handle_error_occurrence()
 
-
+# Internal methods
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
 	if not _enabled:
 		return
@@ -243,59 +240,68 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 	var source_info: Dictionary = _get_source_info()
 	var entry: LogEntry = LogEntry.new(level, message, context, tags, source_info)
 
+	# Always store in buffer
 	_buffer.add(entry)
 
+	# Show if passes level and tag filters
 	if _should_show_log(level, tags):
 		_output_log_entry(entry)
 
-
 func _handle_error_occurrence() -> void:
-	print("\n=== Begin Retroactive Log Replay ===")
+	print_rich("\n[color=yellow]=== Begin Retroactive Log Replay ===[/color]")
 
 	var entries: Array[LogEntry] = _buffer.get_recent_entries()
-	var now: int = int(Time.get_unix_time_from_system())  # Changed to int
+	var now: int = int(Time.get_unix_time_from_system())
+	var saved_level := _current_level
+
+	# Temporarily set level to DEBUG to show all messages
+	_current_level = LogLevel.DEBUG
 
 	for entry: LogEntry in entries:
+		# Skip old entries
 		if now - entry.timestamp > _config.retroactive_time_window:
 			continue
 
-		if _config.retroactive_level_limit != -1:
-			var level_difference: int = entry.level - _current_level
-			if level_difference < _config.retroactive_level_limit:
-				continue
+		# Show all entries in retroactive mode
+		_output_log_entry(entry, true)
 
-		if not _should_show_log(entry.level, entry.tags):
-			_output_log_entry(entry, true)
+	# Restore original level
+	_current_level = saved_level
 
-	print("=== End Retroactive Log Replay ===\n")
-
+	print_rich("[color=yellow]=== End Retroactive Log Replay ===[/color]\n")
 
 func _should_show_log(level: LogLevel, tags: Array[String]) -> bool:
+	# Only show messages at or above the current level
 	if level < _current_level:
 		return false
 
+	# If no active tags, message passes
 	if _active_tags.is_empty():
 		return true
 
-	for tag: String in tags:
+	# If there are active tags but message has no tags, don't show
+	if tags.is_empty():
+		return false
+
+	# Show if any message tag matches active tags
+	for tag in tags:
 		if _active_tags.has(tag):
 			return true
 
 	return false
 
-
 func _get_source_info() -> Dictionary:
 	var stack: Array = get_stack()
 	if stack.size() >= 3:  # Skip logger internal frames
 		return {
-			"file": stack[2].source.get_file(), "line": stack[2].line, "function": stack[2].function
+			"file": stack[2].source.get_file(),
+			"line": stack[2].line,
+			"function": stack[2].function
 		}
 	return {}
 
-
 func _colorize(text: String, color: Color) -> String:
 	return "[color=#%s]%s[/color]" % [color.to_html(false), text]
-
 
 func _output_log_entry(entry: LogEntry, is_replay: bool = false) -> void:
 	var parts: Array[String] = []
@@ -325,24 +331,23 @@ func _output_log_entry(entry: LogEntry, is_replay: bool = false) -> void:
 			var value: Variant = entry.context[key]
 			var formatted_value: String = _format_context_value(value)
 			context_lines.append(
-				(
-					"    %s: %s"
-					% [
-						_colorize(key, CONTEXT_KEY_COLOR),
-						_colorize(formatted_value, CONTEXT_VALUE_COLOR)
-					]
-				)
+				"    %s: %s" % [
+					_colorize(key, CONTEXT_KEY_COLOR),
+					_colorize(formatted_value, CONTEXT_VALUE_COLOR)
+				]
 			)
 		parts.append("\n%s" % "\n".join(context_lines))
 
 	var source_text: String = (
-		"at: %s:%d (%s)"
-		% [entry.source_info.file, entry.source_info.line, entry.source_info.function]
+		"at: %s:%d (%s)" % [
+			entry.source_info.file,
+			entry.source_info.line,
+			entry.source_info.function
+		]
 	)
 	parts.append("\n    %s" % _colorize(source_text, SOURCE_COLOR))
 
-	print(" ".join(parts))
-
+	print_rich(" ".join(parts))
 
 func _format_context_value(value: Variant) -> String:
 	match typeof(value):
