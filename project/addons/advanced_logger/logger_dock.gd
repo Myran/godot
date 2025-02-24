@@ -194,13 +194,6 @@ func _connect_signals() -> void:
 		remove_button.pressed.connect(_on_remove_selected_tags)
 		clear_button.pressed.connect(_on_clear_tags_pressed)
 
-	# Connect signals to auto-save
-	logger_dock.log_level_changed.connect(_save_settings)
-	logger_dock.buffer_size_changed.connect(_save_settings)
-	logger_dock.retro_window_changed.connect(_save_settings)
-	logger_dock.tag_added.connect(_save_settings)
-	logger_dock.tag_removed.connect(_save_settings)
-
 
 # Public methods
 func set_log_level(level: int) -> void:
