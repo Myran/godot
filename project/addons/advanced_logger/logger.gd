@@ -23,6 +23,8 @@ const GRUVBOX_AQUA: Color = Color("8ec07c")
 const GRUVBOX_ORANGE: Color = Color("fe8019")
 const GRUVBOX_GRAY: Color = Color("928374")
 
+# Settings are managed by LoggerSettings class
+
 # Color mappings
 const LEVEL_COLORS: Dictionary[int, Color] = {
 	LogLevel.DEBUG: GRUVBOX_GRAY,
@@ -145,11 +147,21 @@ var _buffer: CircularBuffer
 var _current_level: LogLevel = LogLevel.INFO
 var _active_tags: Array[String] = []
 var _enabled: bool = true
+var _testing_mode: bool = false
+var _initialized: bool = false
 
 func _init(config: LoggerConfig = null) -> void:
 	_config = config if config else LoggerConfig.new()
 	_buffer = CircularBuffer.new(_config.buffer_size)
-	set_level(_config.default_level)  # Use set_level to ensure proper initialization
+
+	# Load settings using the shared LoggerSettings utility
+	if LoggerSettings.load_settings(self) != OK:
+		# If settings couldn't be loaded, use defaults
+		push_warning("Logger: Could not load settings, using defaults")
+		set_level(_config.default_level)
+
+	# Mark as initialized after setup
+	_initialized = true
 
 # Configuration methods
 func set_level(level: LogLevel) -> Error:
@@ -164,7 +176,9 @@ func set_level(level: LogLevel) -> Error:
 
 	_current_level = level
 	_config.default_level = level  # Ensure config is updated
-	print_rich("[color=green]Logger level set to: %s[/color]" % LogLevel.keys()[level])
+	# Only print during manual changes, not initialization
+	if Engine.is_editor_hint() and OS.has_feature("editor") and _initialized:
+		print_rich("[color=green]Logger level set to: %s[/color]" % LogLevel.keys()[level])
 	return OK
 
 func set_buffer_size(size: int) -> Error:
@@ -204,7 +218,10 @@ func remove_tag(tag: String) -> void:
 
 func clear_tags() -> void:
 	_active_tags.clear()
-	print_rich("[color=yellow]Cleared all tags[/color]")
+	# Only print during manual changes, not initialization
+	if Engine.is_editor_hint() and OS.has_feature("editor") and _initialized:
+		print_rich("[color=yellow]Cleared all tags[/color]")
+
 
 func enable() -> void:
 	_enabled = true
@@ -213,6 +230,14 @@ func enable() -> void:
 func disable() -> void:
 	_enabled = false
 	print_rich("[color=red]Logger disabled[/color]")
+
+func enable_testing_mode() -> void:
+	_testing_mode = true
+	print("Logger testing mode enabled")
+
+func disable_testing_mode() -> void:
+	_testing_mode = false
+	print("Logger testing mode disabled")
 
 # Main logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
@@ -293,17 +318,48 @@ func _should_show_log(level: LogLevel, tags: Array[String]) -> bool:
 func _get_source_info() -> Dictionary:
 	var stack: Array = get_stack()
 	if stack.size() >= 3:  # Skip logger internal frames
-		return {
-			"file": stack[2].source.get_file(),
-			"line": stack[2].line,
-			"function": stack[2].function
-		}
-	return {}
+		var source_info = {}
+
+		# Safely extract source info with error checking
+		if stack[2].has("source") and stack[2].source != null:
+			if stack[2].source.has_method("get_file"):
+				source_info["file"] = stack[2].source.get_file()
+			else:
+				source_info["file"] = "unknown"
+		else:
+			source_info["file"] = "unknown"
+
+		if stack[2].has("line"):
+			source_info["line"] = stack[2].line
+		else:
+			source_info["line"] = 0
+
+		if stack[2].has("function"):
+			source_info["function"] = stack[2].function
+		else:
+			source_info["function"] = "unknown"
+
+		return source_info
+
+	# Return a safe default if stack info isn't available
+	return {
+		"file": "unknown",
+		"line": 0,
+		"function": "unknown"
+	}
 
 func _colorize(text: String, color: Color) -> String:
 	return "[color=#%s]%s[/color]" % [color.to_html(false), text]
 
 func _output_log_entry(entry: LogEntry, is_replay: bool = false) -> void:
+	# For testing mode, use a simpler output format
+	if _testing_mode:
+		var level_str: String = LogLevel.keys()[entry.level]
+		print("LOG: " + level_str + " - " + entry.message)
+		if not entry.context.is_empty():
+			print("  Context: " + str(entry.context))
+		return
+
 	var parts: Array[String] = []
 
 	var timestamp: String = Time.get_datetime_string_from_unix_time(entry.timestamp)
@@ -338,16 +394,21 @@ func _output_log_entry(entry: LogEntry, is_replay: bool = false) -> void:
 			)
 		parts.append("\n%s" % "\n".join(context_lines))
 
-	var source_text: String = (
-		"at: %s:%d (%s)" % [
-			entry.source_info.file,
-			entry.source_info.line,
-			entry.source_info.function
-		]
-	)
-	parts.append("\n    %s" % _colorize(source_text, SOURCE_COLOR))
+	# Add source info if available with proper error checking
+	if entry.source_info.has("file") and entry.source_info.has("line") and entry.source_info.has("function"):
+		var source_text: String = (
+			"at: %s:%d (%s)" % [
+				entry.source_info.file,
+				entry.source_info.line,
+				entry.source_info.function
+			]
+		)
+		parts.append("\n    %s" % _colorize(source_text, SOURCE_COLOR))
 
-	print_rich(" ".join(parts))
+	# Print both a regular version and rich version for debugging
+	var full_message = " ".join(parts)
+	print("LOG: " + entry.message)  # Regular print for verification
+	print_rich(full_message)  # Rich formatted version
 
 func _format_context_value(value: Variant) -> String:
 	match typeof(value):
