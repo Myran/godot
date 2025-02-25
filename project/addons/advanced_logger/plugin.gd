@@ -11,6 +11,8 @@ var logger_instance: Logger
 var logger_dock: LoggerDock
 
 func _enter_tree() -> void:
+	print("Advanced Logger: Initializing...")
+
 	# Create a single logger instance first
 	logger_instance = Logger.new()
 

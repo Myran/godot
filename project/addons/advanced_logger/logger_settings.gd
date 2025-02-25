@@ -3,7 +3,7 @@ class_name LoggerSettings
 extends RefCounted
 ## Utility class for managing Logger settings
 
-const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
+
 
 # Using standard Error enum values to ensure compatibility
 enum SettingsError {
@@ -13,7 +13,7 @@ enum SettingsError {
 	FAILED_TO_LOAD = Error.ERR_CANT_OPEN,
 	VALIDATION_ERROR = Error.ERR_INVALID_DATA
 }
-
+const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 ## Settings structure with default values
 class Settings:
 	var log_level: int = Logger.LogLevel.INFO
@@ -135,6 +135,10 @@ static func load_settings(logger_instance: Logger) -> Error:
 		push_warning("Settings validation failed, using safe defaults")
 		# Still continue with the validated defaults
 
+	# Store original initialization state
+	var was_initialized = logger_instance._initialized
+	logger_instance._initialized = false  # Temporarily disable messages
+
 	# Apply settings to logger - using try/apply pattern for safety
 	var result = logger_instance.set_level(settings.log_level)
 	if result != Error.OK:
@@ -156,6 +160,9 @@ static func load_settings(logger_instance: Logger) -> Error:
 			if result != Error.OK:
 				push_warning("Failed to add tag: %s" % tag)
 
+	# Restore original initialization state
+	logger_instance._initialized = was_initialized
+
 	return Error.OK
 
 ## Get run_tests setting from config file
@@ -169,6 +176,10 @@ static func apply_logger_to_logger(source: Logger, target: Logger) -> Error:
 		return Error.FAILED
 
 	var result := Error.OK
+
+	# Store original initialization state
+	var was_initialized = target._initialized
+	target._initialized = false  # Temporarily disable messages
 
 	# Apply level
 	var level_result = target.set_level(source._current_level)
@@ -195,5 +206,8 @@ static func apply_logger_to_logger(source: Logger, target: Logger) -> Error:
 		if tag_result != Error.OK:
 			push_warning("Failed to apply tag to target logger: %s" % tag)
 			result = tag_result
+
+	# Restore original initialization state
+	target._initialized = was_initialized
 
 	return result
