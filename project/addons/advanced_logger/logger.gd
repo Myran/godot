@@ -317,36 +317,48 @@ func _should_show_log(level: LogLevel, tags: Array[String]) -> bool:
 
 func _get_source_info() -> Dictionary:
 	var stack: Array = get_stack()
-	if stack.size() >= 3:  # Skip logger internal frames
-		var source_info = {}
 
-		# Safely extract source info with error checking
-		if stack[2].has("source") and stack[2].source != null:
-			if stack[2].source.has_method("get_file"):
-				source_info["file"] = stack[2].source.get_file()
-			else:
-				source_info["file"] = "unknown"
-		else:
-			source_info["file"] = "unknown"
+	# We need to find the first stack frame that is NOT from the logger itself
+	var frame_index := 0
+	var logger_path := "res://addons/advanced_logger/logger.gd"
 
-		if stack[2].has("line"):
-			source_info["line"] = stack[2].line
-		else:
-			source_info["line"] = 0
+	# Skip all frames from within the logger
+	for i in range(stack.size()):
+		if stack[i].has("source"):
+			var source = stack[i].source
+			if typeof(source) == TYPE_STRING and source != logger_path:
+				frame_index = i
+				break
+			elif typeof(source) == TYPE_OBJECT and source != null:
+				if source.has_method("get_file") and source.get_file() != logger_path:
+					frame_index = i
+					break
 
-		if stack[2].has("function"):
-			source_info["function"] = stack[2].function
-		else:
-			source_info["function"] = "unknown"
-
-		return source_info
-
-	# Return a safe default if stack info isn't available
-	return {
+	# Now extract information from the target frame
+	var source_info = {
 		"file": "unknown",
 		"line": 0,
 		"function": "unknown"
 	}
+
+	if frame_index < stack.size():
+		var frame = stack[frame_index]
+
+		if frame.has("source"):
+			var source = frame.source
+			if typeof(source) == TYPE_STRING:
+				source_info["file"] = source
+			elif typeof(source) == TYPE_OBJECT and source != null:
+				if source.has_method("get_file"):
+					source_info["file"] = source.get_file()
+
+		if frame.has("line"):
+			source_info["line"] = frame.line
+
+		if frame.has("function"):
+			source_info["function"] = frame.function
+
+	return source_info
 
 func _colorize(text: String, color: Color) -> String:
 	return "[color=#%s]%s[/color]" % [color.to_html(false), text]
