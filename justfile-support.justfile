@@ -7,6 +7,10 @@ update-clangd:
 clean-xcode:
     rm -rf ~/Library/Developer/Xcode/DerivedData/
 
+# Generate a repofile with repomix
+generate-repofile:
+    repomix --include 'project/**/*.gd','project/docs/*.md','godot/modules/firebase/*.mm','godot/modules/firebase/*.cpp','godot/modules/firebase/*.h'
+
 validate-env:
     #!/usr/bin/env bash
     set -euo pipefail

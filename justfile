@@ -36,9 +36,27 @@ GODOT_SUBMODULE_PATH := "godot"
 # Utility functions
 timestamp := `date +%Y%m%d%H%M%S`
 jobs := `sysctl -n hw.logicalcpu`
-
+    
 default:
     @just --list
+
+# Gruvbox Material colors
+_gruvbox-colors:
+    # Base colors
+    @export BG_H="#1d2021"
+    @export BG="#282828"
+    @export BG_S="#32302f"
+    @export FG="#d4be98"
+    
+    # Regular colors
+    @export RED="#ea6962"
+    @export GREEN="#a9b665"
+    @export YELLOW="#d8a657"
+    @export BLUE="#7daea3"
+    @export PURPLE="#d3869b"
+    @export AQUA="#89b482"
+    @export ORANGE="#e78a4e"
+    @export GRAY="#928374"
 
 # Build Godot editor
 build-editor: validate-env
