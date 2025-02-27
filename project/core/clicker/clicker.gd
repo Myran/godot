@@ -12,7 +12,7 @@ var columns_locked: Array[int] = []
 
 
 func setup(_level_controller: LevelController) -> void:
-	card_controller.setup()
+	await card_controller.setup()
 	level = _level_controller
 	level.setup_level()
 
