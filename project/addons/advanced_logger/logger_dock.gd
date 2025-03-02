@@ -22,6 +22,10 @@ var remove_tag_button: Button
 var clear_tags_button: Button
 var run_tests_button: Button
 
+# UI elements for tab container
+var tab_container: TabContainer
+var format_tab: FormatTab
+
 # Initialization
 func _init(logger_instance: Logger) -> void:
 	if not logger_instance:
@@ -45,6 +49,31 @@ func _setup_ui() -> void:
 	var layout := VBoxContainer.new()
 	layout.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(layout)
+
+	# Create tab container for multiple tabs
+	tab_container = TabContainer.new()
+	tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(tab_container)
+
+	# Create main tab and move previously created content into it
+	var main_tab = VBoxContainer.new()
+	main_tab.name = "General"
+
+	# Move all existing children except the top controls to the main tab
+	var children_to_move = []
+	for i in range(layout.get_child_count()):
+		if i > 0:  # Skip the first child (top controls)
+			children_to_move.append(layout.get_child(i))
+
+	for child in children_to_move:
+		layout.remove_child(child)
+		main_tab.add_child(child)
+
+# Add main tab to tab container
+	tab_container.add_child(main_tab)
+
+# Create and set up Format Tab
+	format_tab = FormatTab.new(self, logger, ui_builder, tab_container)
 
 	# Test section
 	var test_section := VBoxContainer.new()
@@ -186,15 +215,18 @@ func _verify_ui_elements() -> bool:
 	return level_option != null && \
 		buffer_size_spin != null && \
 		retro_spin != null && \
-		tag_input != null && \
-		tag_list != null && \
 		run_tests_check != null && \
 		buffer_apply_button != null && \
 		retro_apply_button != null && \
-		add_tag_button != null && \
-		remove_tag_button != null && \
-		clear_tags_button != null && \
-		run_tests_button != null
+		run_tests_button != null && \
+		scan_tags_button != null && \
+		available_tags_tree != null && \
+		filter_tags_tree != null && \
+		ignore_tags_tree != null && \
+		group_selected_button != null && \
+		setups_tree != null && \
+		setup_root != null && \
+		tab_container != null
 
 func _setup_log_level_options(option_button: OptionButton) -> void:
 	if not option_button:
