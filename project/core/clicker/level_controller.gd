@@ -83,8 +83,8 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 	block_grid[grid_pos] = block
 	current_level.add_child(block)
 	var refill_pos: Vector2 = refill_distance * refill
-	print("refill pos :", refill_pos)
-	print("final position: ", current_level.map_to_local(grid_pos) - refill_pos)
+	# print("refill pos :", refill_pos)
+	# print("final position: ", current_level.map_to_local(grid_pos) - refill_pos)
 	block.position = grid_to_world_pos(grid_pos) - refill_pos
 
 
