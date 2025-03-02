@@ -4,6 +4,7 @@ extends Node
 ## Provides centralized access to cards, levels, items, and player data.
 
 signal value_received(data: Dictionary)
+signal startup_completed
 
 # Logger tags
 const TAG_DB: String = "database"
@@ -39,9 +40,22 @@ var current_root: Array = []
 var debug_data: Dictionary = {}
 var card_cache: Array = []
 
+func internet_online()->void:
+	Log.info('Internet online',{},[])
+func internet_offline()->void:
+	Log.warning('Internet offline',{},[])
 func _ready() -> void:
 	Log.info("DataSource initializing", {}, [TAG_DB])
 	_initialized = false
+
+	Log.info('Testing internet connection...',{},[])
+	internet_status.has_internet.connect(Callable(self,'internet_online'))
+	internet_status.no_internet.connect(Callable(self,'internet_offline'))
+	var internet_status_awaiter : SignalAwaiter.Any = SignalAwaiter.Any.new()
+	internet_status_awaiter.add(internet_status.has_internet)
+	internet_status_awaiter.add(internet_status.no_internet)
+	internet_status.get_status()
+	await internet_status_awaiter.finished
 
 	if ClassDB.class_exists("FirebaseDatabase"):
 		Log.info("Firebase RealTime Database available", {}, [TAG_FIREBASE])
@@ -74,6 +88,7 @@ func _ready() -> void:
 
 	Log.info("DataSource initialization complete", {"firebase_available": is_firebase_available()}, [TAG_DB])
 	_initialized = true
+	startup_completed.emit()
 
 
 func is_firebase_available() -> bool:

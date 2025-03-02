@@ -35,6 +35,8 @@ func _process(delta: float) -> void:
 
 func _ready() -> void:
 	setup_signals()
+	if !data_source._initialized:
+		await data_source.startup_completed
 	await setup_systems()
 	intitialize_game()
 

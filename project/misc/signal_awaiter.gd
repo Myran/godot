@@ -6,7 +6,7 @@ signal finished
 
 func _init() -> void:  # Added return type
 	var win: Window = Engine.get_main_loop().root
-	win.add_child(self)
+	win.call_deferred('add_child',self)
 
 
 # Added Signal type to indicate godot built-in Signal class
