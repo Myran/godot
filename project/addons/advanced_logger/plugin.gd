@@ -41,6 +41,11 @@ func _register_shared_logger_instance() -> void:
 	if autoload_logger:
 		# Replace its internal data with our logger instance's data
 		LoggerSettings.apply_logger_to_logger(logger_instance, autoload_logger)
+
+		# Ensure the formatter is properly initialized with format settings
+		if autoload_logger.has("_formatter") and autoload_logger.has("_format_settings"):
+			autoload_logger._formatter.apply_format_settings(autoload_logger._format_settings)
+
 		print_rich("[color=green]Advanced Logger initialized (DEBUG: %s, Buffer: %d entries)[/color]" %
 			[Logger.LogLevel.keys()[logger_instance._current_level],
 			logger_instance._buffer.buffer.size()])
@@ -60,6 +65,11 @@ func _exit_tree() -> void:
 	# Save settings before cleanup
 	if logger_instance:
 		var run_tests = logger_dock.should_run_tests() if logger_dock else true
+
+		# Make sure format settings are saved if format tab exists
+		if logger_dock and logger_dock.format_tab and logger_dock.format_tab.has_method("_save_format_settings"):
+			logger_dock.format_tab._save_format_settings()
+
 		var save_result = LoggerSettings.save_settings(logger_instance, run_tests)
 		if save_result != OK:
 			push_error("Failed to save logger settings")
@@ -94,5 +104,10 @@ func _on_settings_changed() -> void:
 		if autoload_logger:
 			# This is redundant if they share data, but ensures they stay in sync
 			LoggerSettings.apply_logger_to_logger(logger_instance, autoload_logger)
+
+			# Make sure format settings are applied to the formatter
+			if autoload_logger.has("_formatter") and autoload_logger.has("_format_settings"):
+				autoload_logger._formatter.apply_format_settings(autoload_logger._format_settings)
+
 			print_rich("[color=green]Logger: Settings saved and applied[/color]")
 			print("Logger: Settings saved and applied")

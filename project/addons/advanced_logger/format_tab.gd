@@ -7,7 +7,7 @@ var tab_container: TabContainer
 var parent_dock: Control
 var format_settings: LoggerSettings.FormatSettings
 var logger: Logger
-var ui_builder: UIBuilder
+var ui_builder: LoggerDock.UIBuilder
 var preview_label: RichTextLabel
 var debounce_timer: Timer
 var apply_button: Button
@@ -43,7 +43,7 @@ var context_multiline_check: CheckBox
 var context_limit_check: CheckBox
 var context_limit_spin: SpinBox
 
-func _init(p_parent_dock: Control, p_logger: Logger, p_ui_builder: UIBuilder, p_tab_container: TabContainer) -> void:
+func _init(p_parent_dock: Control, p_logger: Logger, p_ui_builder: LoggerDock.UIBuilder, p_tab_container: TabContainer) -> void:
 	parent_dock = p_parent_dock
 	logger = p_logger
 	ui_builder = p_ui_builder
@@ -79,6 +79,7 @@ func _setup_ui() -> void:
 	tab.add_child(scroll)
 
 	var main_container = VBoxContainer.new()
+	main_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(main_container)
 
 	# Basic Components Section
@@ -659,9 +660,9 @@ func _update_colors_from_pickers() -> void:
 func _schedule_preview_update() -> void:
 	debounce_timer.start()
 
-## Handle preview update
 func _on_preview_update() -> void:
 	_update_preview()
+	print_rich("[color=gray]Preview updated[/color]") # Optional debug message
 
 ## Update the preview with current settings
 func _update_preview() -> void:
@@ -687,10 +688,13 @@ func _update_preview() -> void:
 	# Set the formatted text
 	preview_label.text = formatted
 
-## Save format settings
 func _save_format_settings() -> void:
 	# Update colors from pickers
 	_update_colors_from_pickers()
+
+	# Update the logger's formatter with our settings
+	if logger and logger.has("_formatter"):
+		logger._formatter.apply_format_settings(format_settings)
 
 	# Save settings
 	var result = LoggerSettings.save_format_settings(format_settings)
