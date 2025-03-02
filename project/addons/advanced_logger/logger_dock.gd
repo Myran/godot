@@ -46,6 +46,8 @@ func _ready() -> void:
 
 # UI Setup with direct references
 func _setup_ui() -> void:
+	var ui_builder = UIBuilder.new()
+
 	var layout := VBoxContainer.new()
 	layout.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(layout)
@@ -58,6 +60,9 @@ func _setup_ui() -> void:
 	# Create main tab and move previously created content into it
 	var main_tab = VBoxContainer.new()
 	main_tab.name = "General"
+
+	# After creating the main_tab
+	tab_container.add_child(main_tab)
 
 	# Move all existing children except the top controls to the main tab
 	var children_to_move = []
@@ -83,6 +88,15 @@ func _setup_ui() -> void:
 	test_header.text = "Self-Test Settings"
 	test_header.add_theme_font_size_override("font_size", 16)
 	test_section.add_child(test_header)
+
+# Create sections for different settings
+	var general_section = ui_builder.create_section(main_tab, "General Settings")
+
+# Create and set up Format Tab
+	format_tab = FormatTab.new(self, logger, ui_builder, tab_container)
+
+
+# Move relevant controls to this section
 
 	var test_container := HBoxContainer.new()
 	test_section.add_child(test_container)
@@ -210,7 +224,6 @@ func _connect_signals() -> void:
 	clear_tags_button.pressed.connect(func(): _on_clear_tags_pressed())
 	run_tests_button.pressed.connect(func(): _on_run_tests_now_pressed())
 
-# Verify all UI elements are properly initialized
 func _verify_ui_elements() -> bool:
 	return level_option != null && \
 		buffer_size_spin != null && \
@@ -219,14 +232,8 @@ func _verify_ui_elements() -> bool:
 		buffer_apply_button != null && \
 		retro_apply_button != null && \
 		run_tests_button != null && \
-		scan_tags_button != null && \
-		available_tags_tree != null && \
-		filter_tags_tree != null && \
-		ignore_tags_tree != null && \
-		group_selected_button != null && \
-		setups_tree != null && \
-		setup_root != null && \
-		tab_container != null
+		tag_input != null && \
+		tag_list != null
 
 func _setup_log_level_options(option_button: OptionButton) -> void:
 	if not option_button:
