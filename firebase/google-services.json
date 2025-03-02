@@ -3,7 +3,7 @@
     "project_number": "308611281726",
     "firebase_url": "https://gametwo-89299-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "gametwo-89299",
-    "storage_bucket": "gametwo-89299.appspot.com"
+    "storage_bucket": "gametwo-89299.firebasestorage.app"
   },
   "client": [
     {
