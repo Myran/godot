@@ -67,7 +67,7 @@ build-editor: validate-env
 # Build export templates
 build-templates:
     just build-and-package-ios-templates
-    just build-android-templates
+    just build-android-templates minimal=no
     just install-android-template
 
 # build macos
@@ -128,16 +128,42 @@ package-ios-template:
     @echo "iOS templates built and packaged successfully."
 
 # Build Android templates
-build-android-templates:
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=android target=template_debug arch=arm32 --jobs={{jobs}} module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no disable_3d=yes optimize=size use_lto=yes
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=android target=template_debug arch=arm64 --jobs={{jobs}} module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no disable_3d=yes optimize=size use_lto=yes
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=android target=template_release arch=arm32 --jobs={{jobs}} module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no disable_3d=yes optimize=size use_lto=yes
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=android target=template_release arch=arm64 --jobs={{jobs}} module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no disable_3d=yes optimize=size use_lto=yes
-    cd {{GODOT_SUBMODULE_PATH}}/platform/android/java && ./gradlew generateGodotTemplates
+build-android-templates minimal="yes":
+    #!/usr/bin/env bash
+    set -e
+    
+    # Define the module flags based on the minimal argument
+    MODULE_FLAGS=""
+    if [ "{{minimal}}" = "yes" ]; then
+        MODULE_FLAGS="module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no disable_3d=yes"
+    fi
+    
+    # Build for all targets and architectures in a single working directory context
+    GODOT_PATH="{{GODOT_SUBMODULE_PATH}}"
+    
+    # Debug arm32
+    (cd "$GODOT_PATH" && scons platform=android target=template_debug arch=arm32 --jobs={{jobs}} $MODULE_FLAGS optimize=size use_lto=yes)
+    
+    # Debug arm64
+    (cd "$GODOT_PATH" && scons platform=android target=template_debug arch=arm64 --jobs={{jobs}} $MODULE_FLAGS optimize=size use_lto=yes)
+    
+    # Release arm32
+    (cd "$GODOT_PATH" && scons platform=android target=template_release arch=arm32 --jobs={{jobs}} $MODULE_FLAGS optimize=size use_lto=yes)
+    
+    # Release arm64
+    (cd "$GODOT_PATH" && scons platform=android target=template_release arch=arm64 --jobs={{jobs}} $MODULE_FLAGS optimize=size use_lto=yes)
+    
+    # Generate templates
+    (cd "$GODOT_PATH/platform/android/java" && ./gradlew generateGodotTemplates)
+    
+    # Make sure the templates directory exists
+    mkdir -p templates
+    
+    # Move templates
     echo "Moving templates...."
-    mv {{GODOT_SUBMODULE_PATH}}/bin/android_debug.apk templates/android_debug.apk
-    mv {{GODOT_SUBMODULE_PATH}}/bin/android_release.apk templates/android_release.apk
-    mv {{GODOT_SUBMODULE_PATH}}/bin/android_source.zip templates/android_source.zip
+    mv "$GODOT_PATH/bin/android_debug.apk" templates/android_debug.apk
+    mv "$GODOT_PATH/bin/android_release.apk" templates/android_release.apk
+    mv "$GODOT_PATH/bin/android_source.zip" templates/android_source.zip
 
 # Install Android template
 install-android-template:
