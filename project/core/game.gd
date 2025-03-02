@@ -35,7 +35,7 @@ func _process(delta: float) -> void:
 
 func _ready() -> void:
 	setup_signals()
-	setup_systems()
+	await setup_systems()
 	intitialize_game()
 
 
@@ -50,7 +50,7 @@ func setup_systems() -> void:
 	input_handler.setup(clicker)
 	lineup_handler.setup(holder_allies)
 	battle_handler.setup(holder_allies, holder_enemy)
-	clicker.setup(level_controller)
+	await clicker.setup(level_controller)
 
 
 func intitialize_game() -> void:
@@ -60,7 +60,7 @@ func intitialize_game() -> void:
 
 
 func new_event(event: core.CoreEvent) -> void:
-	printt("New event: ", event)
+	# printt("New event: ", event)
 	var draft_context: DraftContext = DraftContext.new(self)
 	draft_context = update_context_units(draft_context)
 	draft_context.add_event(event)

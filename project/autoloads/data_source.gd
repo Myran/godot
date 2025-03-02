@@ -1,18 +1,16 @@
 extends Node
-func ensure_db_available() -> bool:
-	"""Helper function to check database availability and log error if unavailable."""
-	if not db:
-		Log.error("Database not available", {}, [TAG_DB, TAG_ERROR])
-		return false
-	return true
-func safely_has_key(dict: Dictionary, key: String) -> bool:
-	"""Helper function to safely check if a dictionary has a key."""
-	return dict is Dictionary and dict.has(key)
+
 ## Data source manager for handling game data from Firebase or local JSON files.
 ## Provides centralized access to cards, levels, items, and player data.
 
 signal value_received(data: Dictionary)
 
+# Logger tags
+const TAG_DB: String = "database"
+const TAG_CACHE: String = "cache"
+const TAG_FIREBASE: String = "firebase"
+const TAG_LOCAL: String = "local_data"
+const TAG_ERROR: String = "error"
 const LOCAL_DB_FILE: String = "res://resources/data.json"
 const LOCAL_DB_BATTLE_FILE: String = "res://resources/gameone-577cb-export.json"
 const SHEETS: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
@@ -32,26 +30,14 @@ const EVENTS: String = "event_data"
 const ARENA_CARD: String = "arena_card"
 const COLLECTION: String = "collection"
 
-# Data storage
-# Database connection and state
 var db: Object  # FirebaseDatabase instance
 var _initialized: bool = false
-
-# Data storage
 var current_uuid: String = ""
 var test_group: int = 0
 var local_data: Dictionary = {}
 var current_root: Array = []
 var debug_data: Dictionary = {}
 var card_cache: Array = []
-
-# Logger tags
-const TAG_DB: String = "database"
-const TAG_CACHE: String = "cache"
-const TAG_FIREBASE: String = "firebase"
-const TAG_LOCAL: String = "local_data"
-const TAG_ERROR: String = "error"
-
 
 func _ready() -> void:
 	Log.info("DataSource initializing", {}, [TAG_DB])
@@ -300,8 +286,9 @@ func get_db_value(value: String) -> Variant:
 func get_value(key: String, value: Variant) -> void:
 	"""Signal handler for database value received from FirebaseDatabase::OnGetValue."""
 	# This matches the signature in database.h for the "get_value" signal
-	emit_signal("value_received", {"key": key, "value": value})
-	Log.debug("Database value received", {"key": key}, [TAG_DB, TAG_FIREBASE])
+	#emit_signal("value_received", {"key": key, "value": value})
+	value_received.emit.call_deferred(({"key": key, "value": value}))
+	Log.debug("Database value received", {"key": key, 'value': value}, [TAG_DB, TAG_FIREBASE])
 
 
 func child_moved(_key: String, _value: Variant) -> void:
@@ -539,3 +526,13 @@ func save_event_lineup_data(
 
 	Log.debug("Event lineup saved", {"event": event, "lineup_id": push_string}, [TAG_DB])
 	return push_string
+
+func ensure_db_available() -> bool:
+	"""Helper function to check database availability and log error if unavailable."""
+	if not db:
+		Log.error("Database not available", {}, [TAG_DB, TAG_ERROR])
+		return false
+	return true
+func safely_has_key(dict: Dictionary, key: String) -> bool:
+	"""Helper function to safely check if a dictionary has a key."""
+	return dict is Dictionary and dict.has(key)
