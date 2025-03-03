@@ -4,26 +4,6 @@ extends RefCounted
 ## Simple utility class for managing Logger settings
 
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
-const MIN_BUFFER_SIZE: int = 10
-const MAX_BUFFER_SIZE: int = 10000
-const MIN_RETROACTIVE_WINDOW: int = 10
-const MAX_RETROACTIVE_WINDOW: int = 3600
-
-## Check if tests should run based on settings
-static func should_run_tests() -> bool:
-	var config: ConfigFile = ConfigFile.new()
-
-	var load_result: Error = config.load(CONFIG_PATH)
-	if load_result != OK:
-		# Default to false if config can't be loaded
-		return false
-
-	if config.has_section_key("logger", "run_tests"):
-		var run_tests = config.get_value("logger", "run_tests")
-		if typeof(run_tests) == TYPE_BOOL:
-			return run_tests
-
-	return false  # Default to false
 
 ## Save Logger settings to config file
 static func save_settings(logger_instance: Logger) -> Error:
@@ -36,30 +16,12 @@ static func save_settings(logger_instance: Logger) -> Error:
 		push_error("Failed to create ConfigFile")
 		return Error.FAILED
 
-	# Validate settings before saving
-	var log_level: int = logger_instance._current_level
-	if log_level < 0 or log_level > Logger.LogLevel.size() - 1:
-		push_warning("Invalid log level: %d, using default" % log_level)
-		log_level = Logger.LogLevel.INFO
-
-	var buffer_size: int = logger_instance._buffer_size
-	if buffer_size < MIN_BUFFER_SIZE or buffer_size > MAX_BUFFER_SIZE:
-		push_warning("Invalid buffer size: %d, using default" % buffer_size)
-		buffer_size = 1000
-
-	var retroactive_window: int = logger_instance._retroactive_window
-	if retroactive_window < MIN_RETROACTIVE_WINDOW or retroactive_window > MAX_RETROACTIVE_WINDOW:
-		push_warning("Invalid retroactive window: %d, using default" % retroactive_window)
-		retroactive_window = 300
-
 	# Logger general settings
-	config.set_value("logger", "log_level", log_level)
-	config.set_value("logger", "buffer_size", buffer_size)
-	config.set_value("logger", "retroactive_window", retroactive_window)
+	config.set_value("logger", "log_level", logger_instance._current_level)
 
 	# Tag settings
-	var active_tags: Array[String] = logger_instance.get_active_tags()
-	var ignored_tags: Array[String] = logger_instance.get_ignored_tags()
+	var active_tags: Array[String] = logger_instance._active_tags
+	var ignored_tags: Array[String] = logger_instance._ignored_tags
 
 	config.set_value("logger", "active_tags", PackedStringArray(active_tags))
 	config.set_value("logger", "ignored_tags", PackedStringArray(ignored_tags))
@@ -101,23 +63,7 @@ static func load_settings(logger_instance: Logger) -> Error:
 	if config.has_section_key("logger", "log_level"):
 		var level: int = config.get_value("logger", "log_level") as int
 		if level >= 0 and level <= Logger.LogLevel.size() - 1:
-			var result: Error = logger_instance.set_level(level)
-			if result != OK:
-				push_warning("Failed to set log level: %d" % level)
-
-	if config.has_section_key("logger", "buffer_size"):
-		var size: int = config.get_value("logger", "buffer_size") as int
-		if size >= MIN_BUFFER_SIZE and size <= MAX_BUFFER_SIZE:
-			var result: Error = logger_instance.set_buffer_size(size)
-			if result != OK:
-				push_warning("Failed to set buffer size: %d" % size)
-
-	if config.has_section_key("logger", "retroactive_window"):
-		var window: int = config.get_value("logger", "retroactive_window") as int
-		if window >= MIN_RETROACTIVE_WINDOW and window <= MAX_RETROACTIVE_WINDOW:
-			var result: Error = logger_instance.set_retroactive_window(window)
-			if result != OK:
-				push_warning("Failed to set retroactive window: %d" % window)
+			logger_instance.set_level(level)
 
 	# Clear existing tags
 	logger_instance.clear_tags()
@@ -129,18 +75,14 @@ static func load_settings(logger_instance: Logger) -> Error:
 		if tags is PackedStringArray:
 			for tag in tags:
 				if tag is String and not tag.is_empty():
-					var result: Error = logger_instance.add_tag(tag)
-					if result != OK:
-						push_warning("Failed to add tag: %s" % tag)
+					logger_instance.add_tag(tag)
 
 	if config.has_section_key("logger", "ignored_tags"):
 		var tags = config.get_value("logger", "ignored_tags")
 		if tags is PackedStringArray:
 			for tag in tags:
 				if tag is String and not tag.is_empty():
-					var result: Error = logger_instance.add_ignored_tag(tag)
-					if result != OK:
-						push_warning("Failed to add ignored tag: %s" % tag)
+					logger_instance.add_ignored_tag(tag)
 
 	# Format settings
 	if config.has_section_key("format", "show_timestamp"):
