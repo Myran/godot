@@ -150,9 +150,37 @@ func _save_settings_to_config() -> Error:
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS, _show_tags)
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS, _use_colors)
 
+	# Make sure the directory exists
+	var dir := DirAccess.open("res://")
+	if dir:
+		# Create addons directory if it doesn't exist
+		if not dir.dir_exists("addons"):
+			var err := dir.make_dir("addons")
+			if err != OK:
+				push_error("Failed to create addons directory: %s" % error_string(err))
+				return err
+
+		# Move to addons directory
+		if dir.change_dir("addons") != OK:
+			push_error("Failed to access addons directory")
+			return Error.FAILED
+
+		# Create the advanced_logger directory if it doesn't exist
+		if not dir.dir_exists("advanced_logger"):
+			var err := dir.make_dir("advanced_logger")
+			if err != OK:
+				push_error("Failed to create advanced_logger directory: %s" % error_string(err))
+				return err
+	else:
+		push_error("Failed to access project directory")
+		return Error.FAILED
+
+	# Try to save with better error handling
 	var save_result: Error = config.save(CONFIG_PATH)
 	if save_result == OK:
-		print_rich("[color=#%s]Logger settings saved[/color]" % LoggerColors.SUCCESS_HTML)
+		print_rich("[color=#%s]Logger settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML)
+	else:
+		push_error("Failed to save logger settings: %s" % error_string(save_result))
 
 	return save_result
 
@@ -282,7 +310,35 @@ func _on_use_colors_toggled(button_pressed: bool) -> void:
 
 
 func _on_save_settings() -> void:
-	_save_settings_to_config()
+	print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
+	var result := _save_settings_to_config()
+	print_rich("[color=#%s]Save result: %s[/color]" % [
+		LoggerColors.INFO_HTML,
+		"OK" if result == OK else error_string(result)
+	])
+
+	# Verify the file exists after saving
+	var file := FileAccess.open(CONFIG_PATH, FileAccess.READ)
+	if file:
+		print_rich("[color=#%s]Config file exists and can be opened for reading[/color]" % LoggerColors.SUCCESS_HTML)
+		file.close()
+	else:
+		print_rich("[color=#%s]Config file could not be opened: %s[/color]" % [
+			LoggerColors.ERROR_HTML,
+			error_string(FileAccess.get_open_error())
+		])
+
+	# Test if we can write to a different location
+	var test_file := FileAccess.open("res://test_write.txt", FileAccess.WRITE)
+	if test_file:
+		test_file.store_string("Test write access")
+		test_file.close()
+		print_rich("[color=#%s]Successfully wrote to test file[/color]" % LoggerColors.SUCCESS_HTML)
+	else:
+		print_rich("[color=#%s]Failed to write to test file: %s[/color]" % [
+			LoggerColors.ERROR_HTML,
+			error_string(FileAccess.get_open_error())
+		])
 
 
 func _on_reset_settings() -> void:
