@@ -351,20 +351,6 @@ func _on_save_settings() -> void:
 			)
 		)
 
-	# Test if we can write to a different location
-	var test_file := FileAccess.open("res://test_write.txt", FileAccess.WRITE)
-	if test_file:
-		test_file.store_string("Test write access")
-		test_file.close()
-		print_rich("[color=#%s]Successfully wrote to test file[/color]" % LoggerColors.SUCCESS_HTML)
-	else:
-		print_rich(
-			(
-				"[color=#%s]Failed to write to test file: %s[/color]"
-				% [LoggerColors.ERROR_HTML, error_string(FileAccess.get_open_error())]
-			)
-		)
-
 
 func _on_reset_settings() -> void:
 	_apply_defaults()
