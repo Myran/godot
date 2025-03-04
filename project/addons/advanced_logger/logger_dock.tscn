@@ -1,0 +1,159 @@
+[gd_scene load_steps=2 format=3 uid="uid://bxt1u1x8ylpvl"]
+
+[ext_resource type="Script" uid="uid://dx1vcr1gewn0e" path="res://addons/advanced_logger/logger_dock.gd" id="1_jvxmq"]
+
+[node name="LoggerDock" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jvxmq")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Advanced Logger Settings"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LevelSection" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="VBoxContainer/LevelSection"]
+layout_mode = 2
+text = "Log Level:"
+
+[node name="LevelOption" type="OptionButton" parent="VBoxContainer/LevelSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 5
+popup/item_0/text = "DEBUG"
+popup/item_0/id = 0
+popup/item_1/text = "INFO"
+popup/item_1/id = 1
+popup/item_2/text = "WARNING"
+popup/item_2/id = 2
+popup/item_3/text = "ERROR"
+popup/item_3/id = 3
+popup/item_4/text = "CRITICAL"
+popup/item_4/id = 4
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TagsSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TagsLabel" type="Label" parent="VBoxContainer/TagsSection"]
+layout_mode = 2
+text = "Active Tags"
+horizontal_alignment = 1
+
+[node name="TagsInputHBox" type="HBoxContainer" parent="VBoxContainer/TagsSection"]
+layout_mode = 2
+
+[node name="TagsInput" type="LineEdit" parent="VBoxContainer/TagsSection/TagsInputHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter tag name"
+
+[node name="AddTagButton" type="Button" parent="VBoxContainer/TagsSection/TagsInputHBox"]
+layout_mode = 2
+text = "Add"
+
+[node name="TagsList" type="ItemList" parent="VBoxContainer/TagsSection"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="RemoveTagButton" type="Button" parent="VBoxContainer/TagsSection"]
+layout_mode = 2
+text = "Remove Selected Tag"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="IgnoredTagsSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="IgnoredTagsLabel" type="Label" parent="VBoxContainer/IgnoredTagsSection"]
+layout_mode = 2
+text = "Ignored Tags"
+horizontal_alignment = 1
+
+[node name="IgnoredTagsInputHBox" type="HBoxContainer" parent="VBoxContainer/IgnoredTagsSection"]
+layout_mode = 2
+
+[node name="IgnoredTagsInput" type="LineEdit" parent="VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter tag name"
+
+[node name="AddIgnoredTagButton" type="Button" parent="VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox"]
+layout_mode = 2
+text = "Add"
+
+[node name="IgnoredTagsList" type="ItemList" parent="VBoxContainer/IgnoredTagsSection"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="RemoveIgnoredTagButton" type="Button" parent="VBoxContainer/IgnoredTagsSection"]
+layout_mode = 2
+text = "Remove Selected Tag"
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FormatSection" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FormatLabel" type="Label" parent="VBoxContainer/FormatSection"]
+layout_mode = 2
+text = "Format Settings"
+horizontal_alignment = 1
+
+[node name="ShowTimestampCheck" type="CheckBox" parent="VBoxContainer/FormatSection"]
+layout_mode = 2
+text = "Show Timestamp"
+
+[node name="ShowTagsCheck" type="CheckBox" parent="VBoxContainer/FormatSection"]
+layout_mode = 2
+button_pressed = true
+text = "Show Tags"
+
+[node name="UseColorsCheck" type="CheckBox" parent="VBoxContainer/FormatSection"]
+layout_mode = 2
+button_pressed = true
+text = "Use Colors"
+
+[node name="HSeparator5" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonsSection" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/ButtonsSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save Settings"
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/ButtonsSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reset to Defaults"

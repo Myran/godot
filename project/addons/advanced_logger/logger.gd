@@ -4,6 +4,23 @@ class_name Logger extends Node
 
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
+# Config constants - must match those in LoggerDock
+const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
+const CONFIG_SECTION_LOGGER: String = "logger"
+const CONFIG_SECTION_FORMAT: String = "format"
+const CONFIG_KEY_LOG_LEVEL: String = "log_level"
+const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
+const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
+const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
+const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
+const CONFIG_KEY_USE_COLORS: String = "use_colors"
+
+# Default values
+const DEFAULT_LOG_LEVEL: LogLevel = LogLevel.INFO
+const DEFAULT_SHOW_TIMESTAMP: bool = true
+const DEFAULT_SHOW_TAGS: bool = true
+const DEFAULT_USE_COLORS: bool = true
+
 # Reference the centralized color palette
 const LEVEL_COLORS: Dictionary = {
 	LogLevel.DEBUG: LoggerColors.DEBUG_COLOR,
@@ -22,69 +39,87 @@ const LEVEL_HTML_COLORS: Dictionary = {
 }
 
 # Class variables
-var _current_level: LogLevel = LogLevel.INFO
+var _current_level: LogLevel = DEFAULT_LOG_LEVEL
 var _active_tags: Array[String] = []
 var _ignored_tags: Array[String] = []
-var _show_timestamp: bool = true
-var _show_tags: bool = true
-var _use_colors: bool = true
+var _show_timestamp: bool = DEFAULT_SHOW_TIMESTAMP
+var _show_tags: bool = DEFAULT_SHOW_TAGS
+var _use_colors: bool = DEFAULT_USE_COLORS
+
 
 func _init() -> void:
 	# Load settings on creation
 	LoggerSettings.load_settings(self)
 
+
 # Core logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if message.is_empty():
 		push_warning("Empty log message provided")
+		return
 	_log(LogLevel.DEBUG, message, context, tags)
+
 
 func info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if message.is_empty():
 		push_warning("Empty log message provided")
+		return
 	_log(LogLevel.INFO, message, context, tags)
+
 
 func warning(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if message.is_empty():
 		push_warning("Empty log message provided")
+		return
 	_log(LogLevel.WARNING, message, context, tags)
+
 
 func error(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if message.is_empty():
 		push_warning("Empty log message provided")
+		return
 	_log(LogLevel.ERROR, message, context, tags)
+
 
 func critical(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if message.is_empty():
 		push_warning("Empty log message provided")
+		return
 	_log(LogLevel.CRITICAL, message, context, tags)
+
 
 # Internal logging function
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
-	# Validate level
-	if level < LogLevel.DEBUG or level > LogLevel.CRITICAL:
-		push_error("Invalid log level: " + str(level))
-		level = LogLevel.INFO
+	# Skip if level filtering prevents this message
+	if level < _current_level:
+		return
 
-	# Validate tags
+	# Validate tags and check if we should show the message
+	var validated_tags := _validate_tags(tags)
+	if not _should_show_tags(validated_tags):
+		return
+
+	# Get source information and output the log
+	var source_info := _get_source_info()
+	_output_log(level, message, context, validated_tags, source_info)
+
+
+# Validate tags, returning only non-empty strings
+func _validate_tags(tags: Array[String]) -> Array[String]:
 	var validated_tags: Array[String] = []
 	for tag in tags:
-		if tag is String and not tag.is_empty():
+		if _is_valid_tag(tag):
 			validated_tags.append(tag)
+	return validated_tags
 
-	# Get source information
-	var source_info: Dictionary = _get_source_info()
 
-	# Only show if it passes level and tag filters
-	if level >= _current_level and _should_show_tags(validated_tags):
-		_output_log(level, message, context, validated_tags, source_info)
+## Checks if a tag is valid (non-empty string)
+func _is_valid_tag(tag: String) -> bool:
+	return tag is String and not tag.is_empty()
+
 
 # Check if a log should be shown based on tags
 func _should_show_tags(tags: Array[String]) -> bool:
-	if tags == null:
-		push_error("Null tags array provided")
-		return true
-
 	# If tags are ignored, don't show
 	for tag in tags:
 		if tag is String and _ignored_tags.has(tag):
@@ -105,41 +140,56 @@ func _should_show_tags(tags: Array[String]) -> bool:
 
 	return false
 
+
 # Get source information (file, line, function)
 func _get_source_info() -> Dictionary:
 	var source_info: Dictionary = {"file": "unknown", "line": 0, "function": "unknown"}
 
+	const FILE_KEY: String = "file"
+	const LINE_KEY: String = "line"
+	const FUNCTION_KEY: String = "function"
+	const SOURCE_KEY: String = "source"
+
 	var stack: Array = get_stack()
-	if stack == null or stack.is_empty():
+	if stack.is_empty():
 		return source_info
 
 	# Find the first stack frame that is NOT from the logger itself
-	for i in range(stack.size()):
-		if i >= stack.size():
-			break
-
-		if not stack[i].has("source"):
+	for frame in stack:
+		if not frame.has(SOURCE_KEY):
 			continue
 
-		var source = stack[i].source
-		if typeof(source) == TYPE_STRING and not String(source).ends_with("logger.gd"):
-			source_info["file"] = source
-			source_info["line"] = int(stack[i].line) if stack[i].has("line") else 0
-			source_info["function"] = String(stack[i].function) if stack[i].has("function") else "unknown"
+		var source: String = frame.get(SOURCE_KEY)
+		if not source.ends_with("logger.gd"):
+			source_info[FILE_KEY] = source
+			source_info[LINE_KEY] = int(frame.get(LINE_KEY, 0))
+			source_info[FUNCTION_KEY] = String(frame.get(FUNCTION_KEY, "unknown"))
 			break
 
 	return source_info
 
+
 # Format and output a log
-func _output_log(level: LogLevel, message: String, context: Dictionary, tags: Array[String], source_info: Dictionary) -> void:
+func _output_log(
+	level: LogLevel,
+	message: String,
+	context: Dictionary,
+	tags: Array[String],
+	source_info: Dictionary
+) -> void:
 	var parts: Array[String] = []
+
+	# Constants for dictionary keys
+	const FILE_KEY: String = "file"
+	const LINE_KEY: String = "line"
 
 	# Add timestamp if enabled
 	if _show_timestamp:
 		var dt: Dictionary = Time.get_datetime_dict_from_system()
-		var timestamp: String = "%04d-%02d-%02d %02d:%02d:%02d" % [
-			dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second
-		]
+		var timestamp: String = (
+			"%04d-%02d-%02d %02d:%02d:%02d"
+			% [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+		)
 
 		if _use_colors:
 			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, timestamp])
@@ -169,12 +219,11 @@ func _output_log(level: LogLevel, message: String, context: Dictionary, tags: Ar
 
 	# Add context if present
 	if not context.is_empty():
-		var context_text: String = str(context)
-		parts.append(context_text)
+		parts.append(str(context))
 
 	# Add source information
-	var file_name: String = String(source_info.get("file", "unknown")).get_file()
-	var line: int = int(source_info.get("line", 0))
+	var file_name: String = String(source_info.get(FILE_KEY, "unknown")).get_file()
+	var line: int = int(source_info.get(LINE_KEY, 0))
 	var source_text: String = "(%s:%d)" % [file_name, line]
 
 	if _use_colors:
@@ -185,6 +234,7 @@ func _output_log(level: LogLevel, message: String, context: Dictionary, tags: Ar
 	# Output the formatted log
 	print_rich(" ".join(parts))
 
+
 # Settings methods
 func set_level(level: LogLevel) -> Error:
 	if level < LogLevel.DEBUG or level > LogLevel.CRITICAL:
@@ -194,12 +244,16 @@ func set_level(level: LogLevel) -> Error:
 	_current_level = level
 	return Error.OK
 
+
 func get_level() -> LogLevel:
 	return _current_level
 
+
 # Tag management
+## Adds a tag to the active tags list
+## Returns OK if successful, FAILED otherwise
 func add_tag(tag: String) -> Error:
-	if tag.is_empty():
+	if not _is_valid_tag(tag):
 		push_warning("Cannot add empty tag")
 		return Error.FAILED
 
@@ -212,8 +266,11 @@ func add_tag(tag: String) -> Error:
 
 	return Error.OK
 
+
+## Removes a tag from the active tags list
+## Returns OK if successful, FAILED otherwise
 func remove_tag(tag: String) -> Error:
-	if tag.is_empty():
+	if not _is_valid_tag(tag):
 		push_warning("Cannot remove empty tag")
 		return Error.FAILED
 
@@ -221,13 +278,18 @@ func remove_tag(tag: String) -> Error:
 		_active_tags.erase(tag)
 		return Error.OK
 
-	return Error.FAILED # Tag wasn't in the list
+	return Error.FAILED  # Tag wasn't in the list
 
+
+## Clears all active tags
 func clear_tags() -> void:
 	_active_tags.clear()
 
+
+## Adds a tag to the ignored tags list
+## Returns OK if successful, FAILED otherwise
 func add_ignored_tag(tag: String) -> Error:
-	if tag.is_empty():
+	if not _is_valid_tag(tag):
 		push_warning("Cannot add empty ignored tag")
 		return Error.FAILED
 
@@ -240,8 +302,11 @@ func add_ignored_tag(tag: String) -> Error:
 
 	return Error.OK
 
+
+## Removes a tag from the ignored tags list
+## Returns OK if successful, FAILED otherwise
 func remove_ignored_tag(tag: String) -> Error:
-	if tag.is_empty():
+	if not _is_valid_tag(tag):
 		push_warning("Cannot remove empty ignored tag")
 		return Error.FAILED
 
@@ -249,17 +314,22 @@ func remove_ignored_tag(tag: String) -> Error:
 		_ignored_tags.erase(tag)
 		return Error.OK
 
-	return Error.FAILED # Tag wasn't in the list
+	return Error.FAILED  # Tag wasn't in the list
 
+
+## Clears all ignored tags
 func clear_ignored_tags() -> void:
 	_ignored_tags.clear()
+
 
 # Format settings
 func set_show_timestamp(show: bool) -> void:
 	_show_timestamp = show
 
+
 func set_show_tags(show: bool) -> void:
 	_show_tags = show
+
 
 func set_use_colors(use: bool) -> void:
 	_use_colors = use
