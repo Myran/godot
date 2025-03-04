@@ -5,6 +5,7 @@ class_name Logger extends Node
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
 # Config constants - must match those in LoggerDock
+
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
 const CONFIG_SECTION_FORMAT: String = "format"
@@ -20,6 +21,7 @@ const DEFAULT_LOG_LEVEL: LogLevel = LogLevel.INFO
 const DEFAULT_SHOW_TIMESTAMP: bool = true
 const DEFAULT_SHOW_TAGS: bool = true
 const DEFAULT_USE_COLORS: bool = true
+const DEFAULT_SHOW_SOURCE: bool = true
 
 # Reference the centralized color palette
 const LEVEL_COLORS: Dictionary = {
@@ -45,12 +47,13 @@ var _ignored_tags: Array[String] = []
 var _show_timestamp: bool = DEFAULT_SHOW_TIMESTAMP
 var _show_tags: bool = DEFAULT_SHOW_TAGS
 var _use_colors: bool = DEFAULT_USE_COLORS
+var _show_source: bool = DEFAULT_SHOW_SOURCE
 
 
 func _init() -> void:
 	# Load settings on creation
 	LoggerSettings.load_settings(self)
-
+	pass
 
 # Core logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
@@ -221,15 +224,19 @@ func _output_log(
 	if not context.is_empty():
 		parts.append(str(context))
 
-	# Add source information
-	var file_name: String = String(source_info.get(FILE_KEY, "unknown")).get_file()
-	var line: int = int(source_info.get(LINE_KEY, 0))
-	var source_text: String = "(%s:%d)" % [file_name, line]
 
-	if _use_colors:
-		parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, source_text])
-	else:
-		parts.append(source_text)
+
+	if _show_source:
+		var file_name: String = String(source_info.get(FILE_KEY, "unknown")).get_file()
+		var line: int = int(source_info.get(LINE_KEY, 0))
+		var source_text: String = "(%s:%d)" % [file_name, line]
+
+		if _use_colors:
+			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, source_text])
+		else:
+			parts.append(source_text)
+
+
 
 	# Output the formatted log
 	print_rich(" ".join(parts))
@@ -333,3 +340,7 @@ func set_show_tags(show: bool) -> void:
 
 func set_use_colors(use: bool) -> void:
 	_use_colors = use
+
+
+func set_show_source(show: bool) -> void:
+	_show_source = show

@@ -12,7 +12,8 @@ const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
 const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
 const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
 const CONFIG_KEY_USE_COLORS: String = "use_colors"
-
+const CONFIG_KEY_SHOW_SOURCE: String = "show_source"
+const DEFAULT_SHOW_SOURCE: bool = true
 # Default values
 const DEFAULT_LOG_LEVEL: int = 1  # INFO level
 const DEFAULT_SHOW_TIMESTAMP: bool = true
@@ -26,8 +27,9 @@ var _ignored_tags: Array[String] = []
 var _show_timestamp: bool = DEFAULT_SHOW_TIMESTAMP
 var _show_tags: bool = DEFAULT_SHOW_TAGS
 var _use_colors: bool = DEFAULT_USE_COLORS
-
+var _show_source: bool = DEFAULT_SHOW_SOURCE
 # UI Components
+@onready var _show_source_check: CheckBox = $VBoxContainer/FormatSection/ShowSourceCheck
 @onready var _level_option: OptionButton = $VBoxContainer/LevelSection/LevelOption
 @onready var _tags_input: LineEdit = $VBoxContainer/TagsSection/TagsInputHBox/TagsInput
 @onready var _tags_list: ItemList = $VBoxContainer/TagsSection/TagsList
@@ -45,8 +47,6 @@ var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/Remov
 @onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
 @onready var _save_button: Button = $VBoxContainer/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/ButtonsSection/ResetButton
-
-
 
 
 func _ready() -> void:
@@ -67,6 +67,7 @@ func _ready() -> void:
 	_use_colors_check.toggled.connect(_on_use_colors_toggled)
 	_save_button.pressed.connect(_on_save_settings)
 	_reset_button.pressed.connect(_on_reset_settings)
+	_show_source_check.toggled.connect(_on_show_source_toggled)
 
 	# Load settings from config
 	_load_settings_from_config()
@@ -89,6 +90,10 @@ func _load_settings_from_config() -> void:
 		push_warning("Config file missing required sections")
 		_apply_defaults()
 		return
+
+	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE):
+		_show_source = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE) as bool
+		_show_source_check.button_pressed = _show_source
 
 	# Load log level
 	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL):
@@ -149,6 +154,7 @@ func _save_settings_to_config() -> Error:
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP, _show_timestamp)
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS, _show_tags)
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS, _use_colors)
+	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE, _show_source)
 
 	# Make sure the directory exists
 	var dir := DirAccess.open("res://")
@@ -178,7 +184,9 @@ func _save_settings_to_config() -> Error:
 	# Try to save with better error handling
 	var save_result: Error = config.save(CONFIG_PATH)
 	if save_result == OK:
-		print_rich("[color=#%s]Logger settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML)
+		print_rich(
+			"[color=#%s]Logger settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML
+		)
 	else:
 		push_error("Failed to save logger settings: %s" % error_string(save_result))
 
@@ -205,7 +213,8 @@ func _apply_defaults() -> void:
 	_show_timestamp = DEFAULT_SHOW_TIMESTAMP
 	_show_tags = DEFAULT_SHOW_TAGS
 	_use_colors = DEFAULT_USE_COLORS
-
+	_show_source = DEFAULT_SHOW_SOURCE
+	_show_source_check.button_pressed = _show_source
 	# Update UI
 	_level_option.select(_current_level)
 	_show_timestamp_check.button_pressed = _show_timestamp
@@ -218,6 +227,11 @@ func _apply_defaults() -> void:
 
 
 # UI Event handlers
+func _on_show_source_toggled(button_pressed: bool) -> void:
+	_show_source = button_pressed
+	_save_settings_to_config()
+
+
 func _on_level_changed(index: int) -> void:
 	_current_level = index
 	_save_settings_to_config()
@@ -312,21 +326,30 @@ func _on_use_colors_toggled(button_pressed: bool) -> void:
 func _on_save_settings() -> void:
 	print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
 	var result := _save_settings_to_config()
-	print_rich("[color=#%s]Save result: %s[/color]" % [
-		LoggerColors.INFO_HTML,
-		"OK" if result == OK else error_string(result)
-	])
+	print_rich(
+		(
+			"[color=#%s]Save result: %s[/color]"
+			% [LoggerColors.INFO_HTML, "OK" if result == OK else error_string(result)]
+		)
+	)
 
 	# Verify the file exists after saving
 	var file := FileAccess.open(CONFIG_PATH, FileAccess.READ)
 	if file:
-		print_rich("[color=#%s]Config file exists and can be opened for reading[/color]" % LoggerColors.SUCCESS_HTML)
+		print_rich(
+			(
+				"[color=#%s]Config file exists and can be opened for reading[/color]"
+				% LoggerColors.SUCCESS_HTML
+			)
+		)
 		file.close()
 	else:
-		print_rich("[color=#%s]Config file could not be opened: %s[/color]" % [
-			LoggerColors.ERROR_HTML,
-			error_string(FileAccess.get_open_error())
-		])
+		print_rich(
+			(
+				"[color=#%s]Config file could not be opened: %s[/color]"
+				% [LoggerColors.ERROR_HTML, error_string(FileAccess.get_open_error())]
+			)
+		)
 
 	# Test if we can write to a different location
 	var test_file := FileAccess.open("res://test_write.txt", FileAccess.WRITE)
@@ -335,10 +358,12 @@ func _on_save_settings() -> void:
 		test_file.close()
 		print_rich("[color=#%s]Successfully wrote to test file[/color]" % LoggerColors.SUCCESS_HTML)
 	else:
-		print_rich("[color=#%s]Failed to write to test file: %s[/color]" % [
-			LoggerColors.ERROR_HTML,
-			error_string(FileAccess.get_open_error())
-		])
+		print_rich(
+			(
+				"[color=#%s]Failed to write to test file: %s[/color]"
+				% [LoggerColors.ERROR_HTML, error_string(FileAccess.get_open_error())]
+			)
+		)
 
 
 func _on_reset_settings() -> void:
