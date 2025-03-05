@@ -35,13 +35,10 @@ var _show_source: bool = DEFAULT_SHOW_SOURCE
 @onready var _tags_list: ItemList = $VBoxContainer/TagsSection/TagsList
 @onready var _add_tag_button: Button = $VBoxContainer/TagsSection/TagsInputHBox/AddTagButton
 @onready var _remove_tag_button: Button = $VBoxContainer/TagsSection/RemoveTagButton
-@onready
-var _ignored_tags_input: LineEdit = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/IgnoredTagsInput
+@onready var _ignored_tags_input: LineEdit = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/IgnoredTagsInput
 @onready var _ignored_tags_list: ItemList = $VBoxContainer/IgnoredTagsSection/IgnoredTagsList
-@onready
-var _add_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/AddIgnoredTagButton
-@onready
-var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/RemoveIgnoredTagButton
+@onready var _add_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/AddIgnoredTagButton
+@onready var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/RemoveIgnoredTagButton
 @onready var _show_timestamp_check: CheckBox = $VBoxContainer/FormatSection/ShowTimestampCheck
 @onready var _show_tags_check: CheckBox = $VBoxContainer/FormatSection/ShowTagsCheck
 @onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
@@ -51,8 +48,8 @@ var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/Remov
 
 func _ready() -> void:
 	# Populate the log level dropdown - use enum directly for type safety
-	for i in range(Logger.LogLevel.size()):
-		_level_option.add_item(Logger.LogLevel.keys()[i], i)
+	#for i in range(Logger.LogLevel.size()):
+		#_level_option.add_item(Logger.LogLevel.keys()[i], i)
 
 	# Connect UI signals
 	_level_option.item_selected.connect(_on_level_changed)

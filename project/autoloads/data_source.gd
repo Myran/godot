@@ -12,6 +12,7 @@ const TAG_CACHE: String = "cache"
 const TAG_FIREBASE: String = "firebase"
 const TAG_LOCAL: String = "local_data"
 const TAG_ERROR: String = "error"
+const TAG_NETWORK: String = "network"
 const LOCAL_DB_FILE: String = "res://resources/data.json"
 const LOCAL_DB_BATTLE_FILE: String = "res://resources/gameone-577cb-export.json"
 const SHEETS: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
@@ -40,18 +41,15 @@ var current_root: Array = []
 var debug_data: Dictionary = {}
 var card_cache: Array = []
 
-func internet_online()->void:
-	Log.info('Internet online',{},[])
-func internet_offline()->void:
-	Log.warning('Internet offline',{},[])
+
 func _ready() -> void:
 	Log.info("DataSource initializing", {}, [TAG_DB])
 	_initialized = false
 
-	Log.info('Testing internet connection...',{},[])
-	internet_status.has_internet.connect(Callable(self,'internet_online'))
-	internet_status.no_internet.connect(Callable(self,'internet_offline'))
-	var internet_status_awaiter : SignalAwaiter.Any = SignalAwaiter.Any.new()
+	Log.info("Testing internet connection...", {}, [])
+	internet_status.has_internet.connect(Callable(self, "internet_online"))
+	internet_status.no_internet.connect(Callable(self, "internet_offline"))
+	var internet_status_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	internet_status_awaiter.add(internet_status.has_internet)
 	internet_status_awaiter.add(internet_status.no_internet)
 	internet_status.get_status()
@@ -86,9 +84,21 @@ func _ready() -> void:
 
 		load_local_data(file)
 
-	Log.info("DataSource initialization complete", {"firebase_available": is_firebase_available()}, [TAG_DB])
+	Log.info(
+		"DataSource initialization complete",
+		{"firebase_available": is_firebase_available()},
+		[TAG_DB]
+	)
 	_initialized = true
 	startup_completed.emit()
+
+
+func internet_online() -> void:
+	Log.info("Internet online", {}, [TAG_NETWORK])
+
+
+func internet_offline() -> void:
+	Log.warning("Internet offline", {}, [TAG_NETWORK])
 
 
 func is_firebase_available() -> bool:
@@ -141,7 +151,11 @@ func load_local_data(db_file: String) -> void:
 
 	var file: FileAccess = FileAccess.open(db_file, FileAccess.READ)
 	if not file:
-		Log.error("Failed to open local data file", {"file": db_file, "error": FileAccess.get_open_error()}, [TAG_LOCAL, TAG_ERROR])
+		Log.error(
+			"Failed to open local data file",
+			{"file": db_file, "error": FileAccess.get_open_error()},
+			[TAG_LOCAL, TAG_ERROR]
+		)
 		return
 
 	var json_text: String = file.get_as_text()
@@ -154,7 +168,9 @@ func load_local_data(db_file: String) -> void:
 
 	if res is Dictionary:
 		local_data = res[SHEETS]
-		Log.info("Local data file loaded successfully", {"tables": local_data.keys().size()}, [TAG_LOCAL])
+		Log.info(
+			"Local data file loaded successfully", {"tables": local_data.keys().size()}, [TAG_LOCAL]
+		)
 	else:
 		Log.error("Local data is not a Dictionary", {"type": typeof(res)}, [TAG_LOCAL, TAG_ERROR])
 
@@ -168,7 +184,9 @@ func setup_player_data() -> int:
 		retval = 0
 
 	if retval:
-		Log.warning("Login failed during player data setup", {"error_code": retval}, [TAG_DB, TAG_ERROR])
+		Log.warning(
+			"Login failed during player data setup", {"error_code": retval}, [TAG_DB, TAG_ERROR]
+		)
 		return retval
 
 	Log.debug("Fetching player data", {}, [TAG_DB])
@@ -222,7 +240,9 @@ func save_user_data(data: Dictionary) -> void:
 		data_source.set_user_data(auth.uid(), data)
 		Log.info("User data saved successfully", {"uuid": auth.uid()}, [TAG_DB])
 	else:
-		Log.error("Failed to save user data - login failed", {"error_code": retval}, [TAG_DB, TAG_ERROR])
+		Log.error(
+			"Failed to save user data - login failed", {"error_code": retval}, [TAG_DB, TAG_ERROR]
+		)
 
 
 func set_user_data(uuid: String, data: Dictionary) -> void:
@@ -243,7 +263,9 @@ func set_user_data(uuid: String, data: Dictionary) -> void:
 func set_root(new_root: Array) -> void:
 	"""Set current database root path"""
 	if not db:
-		Log.warning("Cannot set root - database not available", {"path": new_root}, [TAG_DB, TAG_ERROR])
+		Log.warning(
+			"Cannot set root - database not available", {"path": new_root}, [TAG_DB, TAG_ERROR]
+		)
 		return
 
 	db.set_db_root(new_root)
@@ -255,7 +277,11 @@ func set_root(new_root: Array) -> void:
 func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 	"""Get data sheet from database or local data"""
 	var full_name: String = str(sheet_name, "_", test_group)
-	Log.debug("Getting database sheet", {"sheet": sheet_name, "full_name": full_name, "is_dict": is_dictionary}, [TAG_DB])
+	Log.debug(
+		"Getting database sheet",
+		{"sheet": sheet_name, "full_name": full_name, "is_dict": is_dictionary},
+		[TAG_DB]
+	)
 
 	var result: Variant
 	if db:
@@ -264,7 +290,11 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 		Log.debug("Retrieved sheet from database", {"sheet": sheet_name}, [TAG_DB, TAG_FIREBASE])
 	else:
 		if not local_data.has(full_name):
-			Log.error("Sheet not found in local data", {"sheet": full_name}, [TAG_DB, TAG_LOCAL, TAG_ERROR])
+			Log.error(
+				"Sheet not found in local data",
+				{"sheet": full_name},
+				[TAG_DB, TAG_LOCAL, TAG_ERROR]
+			)
 			if is_dictionary:
 				return {}
 			return []
@@ -284,7 +314,11 @@ func get_db_value(value: String) -> Variant:
 
 	var retval: Variant
 	if not db:
-		Log.error("Cannot get database value - database not available", {"key": value}, [TAG_DB, TAG_ERROR])
+		Log.error(
+			"Cannot get database value - database not available",
+			{"key": value},
+			[TAG_DB, TAG_ERROR]
+		)
 		return null
 
 	db.get_value([value])
@@ -302,8 +336,8 @@ func get_value(key: String, value: Variant) -> void:
 	"""Signal handler for database value received from FirebaseDatabase::OnGetValue."""
 	# This matches the signature in database.h for the "get_value" signal
 	#emit_signal("value_received", {"key": key, "value": value})
-	value_received.emit.call_deferred(({"key": key, "value": value}))
-	Log.debug("Database value received", {"key": key, 'value': value}, [TAG_DB, TAG_FIREBASE])
+	value_received.emit.call_deferred({"key": key, "value": value})
+	Log.debug("Database value received", {"key": key, "value": value}, [TAG_DB, TAG_FIREBASE])
 
 
 func child_moved(_key: String, _value: Variant) -> void:
@@ -416,7 +450,9 @@ func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	var results: Array
 	if use_cache:
 		if card_cache.is_empty():
-			Log.warning("Card cache requested but empty, loading cache first", {}, [TAG_CACHE, TAG_DB])
+			Log.warning(
+				"Card cache requested but empty, loading cache first", {}, [TAG_CACHE, TAG_DB]
+			)
 			await activate_card_cache()
 		results = card_cache
 	else:
@@ -542,12 +578,15 @@ func save_event_lineup_data(
 	Log.debug("Event lineup saved", {"event": event, "lineup_id": push_string}, [TAG_DB])
 	return push_string
 
+
 func ensure_db_available() -> bool:
 	"""Helper function to check database availability and log error if unavailable."""
 	if not db:
 		Log.error("Database not available", {}, [TAG_DB, TAG_ERROR])
 		return false
 	return true
+
+
 func safely_has_key(dict: Dictionary, key: String) -> bool:
 	"""Helper function to safely check if a dictionary has a key."""
 	return dict is Dictionary and dict.has(key)
