@@ -178,7 +178,7 @@ static func load_settings(logger_instance: Logger) -> Error:
 
 
 ## Checks if a tag is valid
-## 
+##
 ## Tags must be non-empty strings and follow allowed naming conventions.
 ## - Cannot be empty
 ## - Must contain only alphanumeric characters, underscores, or hyphens
@@ -187,10 +187,10 @@ static func load_settings(logger_instance: Logger) -> Error:
 static func _is_valid_tag(tag: String) -> bool:
 	if not (tag is String) or tag.is_empty():
 		return false
-		
+
 	# Basic check - not empty
 	var is_valid = not tag.is_empty()
-	
+
 	# Enhanced validation - alphanumeric, underscores, hyphens only
 	var regex = RegEx.new()
 	regex.compile("^[a-zA-Z0-9_-]+$")

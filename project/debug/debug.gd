@@ -374,8 +374,8 @@ var firebase_tests_failed: int = 0
 
 # Check for test command line parameter
 func check_for_test_mode() -> void:
-	var arguments = OS.get_cmdline_args()
-	for arg in arguments:
+	var arguments: PackedStringArray = OS.get_cmdline_args()
+	for arg: String in arguments:
 		if arg == "--test" or arg == "--test-firebase":
 			print("Test mode detected, running Firebase tests...")
 			call_deferred("run_firebase_tests")
@@ -416,8 +416,8 @@ func run_firebase_tests() -> void:
 	db.connect("db_error", Callable(self, "on_test_db_error"), CONNECT_DEFERRED)
 
 	# Setup test path - use a timestamp to avoid conflicts
-	var timestamp = Time.get_unix_time_from_system()
-	var test_path = ["firebase_tests", str(timestamp)]
+	var timestamp: int = Time.get_unix_time_from_system()
+	var test_path: Array[String] = ["firebase_tests", str(timestamp)]
 	db.set_db_root(test_path)
 
 	# Run tests sequentially with proper timing
@@ -439,7 +439,7 @@ func run_firebase_tests() -> void:
 	await get_tree().create_timer(1.0).timeout
 
 	# Clean up test data
-	var cleanup_path = ["firebase_tests"]
+	var cleanup_path: Array[String] = ["firebase_tests"]
 	db.set_db_root(cleanup_path)
 	db.remove_value([str(timestamp)])
 
@@ -456,7 +456,7 @@ func _test_set_value() -> void:
 
 func _test_push_child() -> void:
 	print("Testing push_child...")
-	var push_key = db.push_child(["test_push"])
+	var push_key: String = db.push_child(["test_push"])
 	if push_key.length() > 0:
 		db.set_value(["test_push", push_key], "push_test_value")
 		_log_test_result("push_child", true, "Pushed child with key: " + push_key)
@@ -481,7 +481,7 @@ func _test_query() -> void:
 	db.set_value(["query_test", "item3"], {"name": "Item 3", "score": 5})
 
 	# Query by score
-	var query_params = {
+	var query_params: Dictionary = {
 		"orderByChild": "score",
 		"limitToLast": 2  # Get top 2 scores
 	}
@@ -516,14 +516,14 @@ func _on_test_get_value(key: String, value: Variant) -> void:
 func on_test_query_result(key: String, value: Variant) -> void:
 	printt("Test query_result received:", "key:", key, "value:", value)
 	if firebase_tests_running:
-		var success = typeof(value) == TYPE_DICTIONARY and value.size() > 0
+		var success: bool = typeof(value) == TYPE_DICTIONARY and value.size() > 0
 		_log_test_result("query", success, "Query returned " + str(value.size()) + " results")
 
 func on_test_transaction_completed(key: String, value: Variant, success: bool) -> void:
 	printt("Test transaction_completed:", "success:", success, "key:", key, "value:", value)
 	if firebase_tests_running:
-		var expected_value = 15  # 10 + 5
-		var value_correct = typeof(value) == TYPE_INT and value == expected_value
+		var expected_value: int = 15  # 10 + 5
+		var value_correct: bool = typeof(value) == TYPE_INT and value == expected_value
 		_log_test_result("transaction", success and value_correct,
 			"Transaction " + ("succeeded" if success else "failed") +
 			", value: " + str(value) + " (expected: " + str(expected_value) + ")")
@@ -578,7 +578,7 @@ func _complete_tests() -> void:
 			"Success rate: " + str(round(100.0 * firebase_tests_passed / max(1, firebase_test_count))) + "%"
 
 	# Exit the application if running in test mode
-	var arguments = OS.get_cmdline_args()
+	var arguments: Array[String] = OS.get_cmdline_args()
 	if arguments.has("--test") or arguments.has("--test-firebase"):
 		await get_tree().create_timer(0.5).timeout
 		get_tree().quit(0 if firebase_tests_failed == 0 else 1)
@@ -587,24 +587,24 @@ func _complete_tests() -> void:
 
 func _on_Button_firebase_advanced_pressed() -> void:
 	print("Testing Firebase Advanced Features")
-	var dialog = ConfirmationDialog.new()
+	var dialog: ConfirmationDialog = ConfirmationDialog.new()
 	dialog.title = "Select Firebase Feature to Test"
 	dialog.dialog_text = "Select a feature to test:"
 
-	var option_button = OptionButton.new()
+	var option_button: OptionButton = OptionButton.new()
 	option_button.add_item("Query Ordered Data", 0)
 	option_button.add_item("Server Timestamp", 1)
 	option_button.add_item("Run Transaction", 2)
 	option_button.add_item("Monitor Connection State", 3)
 
-	dialog.add_child(option_button)
-	add_child(dialog)
+	dialog.add_child(option_button as Node)
+	add_child(dialog as Node)
 
 	dialog.popup_centered(Vector2(300, 200))
 
 	# Wait for dialog confirmation
-	dialog.confirmed.connect(func():
-		var result = option_button.selected
+	dialog.confirmed.connect(func() -> void:
+		var result: int = option_button.selected
 		match result:
 			0: # Query Ordered Data
 				_test_ui_query_ordered_data()
@@ -629,7 +629,7 @@ func _test_ui_query_ordered_data() -> void:
 	db.set_value(["test_query", "item3"], {"name": "Item 3", "score": 5})
 
 	# Now query by score
-	var query_params := {
+	var query_params: Dictionary = {
 			"orderByChild": "score",
 			"limitToLast": 2  # Get top 2 scores
 	}
@@ -673,8 +673,8 @@ func on_ui_query_result(key: String, value: Variant) -> void:
 	var result_text: String = "Query Results:\n"
 
 	if typeof(value) == TYPE_DICTIONARY:
-			for item_key in value.keys():
-					var item = value[item_key]
+			for item_key: String in value.keys():
+					var item: Dictionary = value[item_key]
 					if typeof(item) == TYPE_DICTIONARY and item.has("name") and item.has("score"):
 							result_text += str(item.name, " - Score: ", item.score, "\n")
 					else:

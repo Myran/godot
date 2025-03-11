@@ -1,7 +1,7 @@
 @tool
 class_name LoggerDock extends Control
 ## Editor dock for configuring the Advanced Logger settings
-## 
+##
 ## Provides configuration UI for the Advanced Logger system with tag filtering,
 ## drag and drop tag management, and other logger settings.
 
@@ -27,7 +27,7 @@ const DEFAULT_USE_COLORS: bool = true
 
 # Tag source constants to replace magic strings
 const SOURCE_AVAILABLE: String = "available"
-const SOURCE_ACTIVE: String = "active" 
+const SOURCE_ACTIVE: String = "active"
 const SOURCE_IGNORED: String = "ignored"
 
 # Settings cache
@@ -53,10 +53,13 @@ var _batch_operation: bool = false
 @onready var _startup_message: Label = $VBoxContainer/StartupMessage  # New startup message label
 
 # Available Tags components
-@onready var _available_tags_input: LineEdit = $VBoxContainer/AvailableTagsSection/TagsInputHBox/TagsInput
+@onready
+var _available_tags_input: LineEdit = $VBoxContainer/AvailableTagsSection/TagsInputHBox/TagsInput
 @onready var _available_tags_list: ItemList = $VBoxContainer/AvailableTagsSection/TagsList
-@onready var _add_available_tag_button: Button = $VBoxContainer/AvailableTagsSection/TagsInputHBox/AddTagButton
-@onready var _remove_available_tag_button: Button = $VBoxContainer/AvailableTagsSection/RemoveTagButton
+@onready
+var _add_available_tag_button: Button = $VBoxContainer/AvailableTagsSection/TagsInputHBox/AddTagButton
+@onready
+var _remove_available_tag_button: Button = $VBoxContainer/AvailableTagsSection/RemoveTagButton
 
 # Active Tags components
 @onready var _tags_input: LineEdit = $VBoxContainer/TagsSection/TagsInputHBox/TagsInput
@@ -65,10 +68,13 @@ var _batch_operation: bool = false
 @onready var _remove_tag_button: Button = $VBoxContainer/TagsSection/RemoveTagButton
 
 # Ignored Tags components
-@onready var _ignored_tags_input: LineEdit = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/IgnoredTagsInput
+@onready
+var _ignored_tags_input: LineEdit = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/IgnoredTagsInput
 @onready var _ignored_tags_list: ItemList = $VBoxContainer/IgnoredTagsSection/IgnoredTagsList
-@onready var _add_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/AddIgnoredTagButton
-@onready var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/RemoveIgnoredTagButton
+@onready
+var _add_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox/AddIgnoredTagButton
+@onready
+var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/RemoveIgnoredTagButton
 
 @onready var _show_timestamp_check: CheckBox = $VBoxContainer/FormatSection/ShowTimestampCheck
 @onready var _show_tags_check: CheckBox = $VBoxContainer/FormatSection/ShowTagsCheck
@@ -80,43 +86,43 @@ var _batch_operation: bool = false
 func _ready() -> void:
 	# Connect UI signals
 	_level_option.item_selected.connect(_on_level_changed)
-	
+
 	# Available Tags
 	_add_available_tag_button.pressed.connect(_on_add_available_tag)
 	_remove_available_tag_button.pressed.connect(_on_remove_available_tag)
 	_available_tags_input.text_submitted.connect(_on_add_available_tag)
-	
+
 	# Set up drag and drop for available tags
 	_available_tags_list.item_selected.connect(_on_available_tag_selected)
 	_available_tags_list.item_activated.connect(_on_available_tag_activated)
 	_available_tags_list.get_drag_data = _get_available_tag_drag_data
 	_available_tags_list.can_drop_data = _can_drop_on_available_tags
 	_available_tags_list.drop_data = _drop_on_available_tags
-	
+
 	# Active Tags
 	_add_tag_button.pressed.connect(_on_add_tag)
 	_remove_tag_button.pressed.connect(_on_remove_tag)
 	_tags_input.text_submitted.connect(_on_add_tag)
-	
+
 	# Set up drag and drop for active tags
 	_tags_list.item_selected.connect(_on_active_tag_selected)
 	_tags_list.item_activated.connect(_on_active_tag_activated)
 	_tags_list.get_drag_data = _get_active_tag_drag_data
 	_tags_list.can_drop_data = _can_drop_on_active_tags
 	_tags_list.drop_data = _drop_on_active_tags
-	
+
 	# Ignored Tags
 	_add_ignored_tag_button.pressed.connect(_on_add_ignored_tag)
 	_remove_ignored_tag_button.pressed.connect(_on_remove_ignored_tag)
 	_ignored_tags_input.text_submitted.connect(_on_add_ignored_tag)
-	
+
 	# Set up drag and drop for ignored tags
 	_ignored_tags_list.item_selected.connect(_on_ignored_tag_selected)
 	_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
 	_ignored_tags_list.get_drag_data = _get_ignored_tag_drag_data
 	_ignored_tags_list.can_drop_data = _can_drop_on_ignored_tags
 	_ignored_tags_list.drop_data = _drop_on_ignored_tags
-	
+
 	# Format settings
 	_show_timestamp_check.toggled.connect(_on_show_timestamp_toggled)
 	_show_tags_check.toggled.connect(_on_show_tags_toggled)
@@ -127,7 +133,7 @@ func _ready() -> void:
 
 	# Load settings from config
 	_load_settings_from_config()
-	
+
 	# Display startup message
 	_update_startup_message()
 
@@ -136,19 +142,19 @@ func _ready() -> void:
 func _update_startup_message() -> void:
 	# Create message about current active and ignored tags
 	var message: String = ""
-	
+
 	if _active_tags.size() > 0:
 		message += "Active filter tags: " + ", ".join(_active_tags)
 	else:
 		message += "No active filter tags (showing all logs except ignored)"
-	
+
 	if _ignored_tags.size() > 0:
 		message += "\nIgnored tags: " + ", ".join(_ignored_tags)
 	else:
 		message += "\nNo ignored tags"
-	
+
 	_startup_message.text = message
-	
+
 	# Also print to console for convenience
 	print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
@@ -203,7 +209,7 @@ func _load_settings_from_config() -> void:
 		for tag in tags:
 			if _validate_tag_name(tag):
 				_active_tags.append(tag)
-				
+
 				# Also add to available tags if not already there
 				if not _available_tags.has(tag):
 					_available_tags.append(tag)
@@ -217,7 +223,7 @@ func _load_settings_from_config() -> void:
 		for tag in tags:
 			if _validate_tag_name(tag):
 				_ignored_tags.append(tag)
-				
+
 				# Also add to available tags if not already there
 				if not _available_tags.has(tag):
 					_available_tags.append(tag)
@@ -245,9 +251,9 @@ func _save_settings_to_config() -> Error:
 	# Skip saving during batch operations
 	if _batch_operation:
 		return OK
-		
+
 	var config: ConfigFile = ConfigFile.new()
-	
+
 	# Try to load existing config first to preserve other settings
 	var load_result := config.load(CONFIG_PATH)
 	if load_result != OK and load_result != ERR_FILE_NOT_FOUND:
@@ -259,8 +265,12 @@ func _save_settings_to_config() -> Error:
 
 	# Tag settings
 	config.set_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS, PackedStringArray(_active_tags))
-	config.set_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS, PackedStringArray(_ignored_tags))
-	config.set_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_AVAILABLE_TAGS, PackedStringArray(_available_tags))
+	config.set_value(
+		CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS, PackedStringArray(_ignored_tags)
+	)
+	config.set_value(
+		CONFIG_SECTION_LOGGER, CONFIG_KEY_AVAILABLE_TAGS, PackedStringArray(_available_tags)
+	)
 
 	# Format settings
 	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP, _show_timestamp)
@@ -275,7 +285,7 @@ func _save_settings_to_config() -> Error:
 		var err := FileAccess.get_open_error()
 		push_error("Failed to access project directory: %s" % error_string(err))
 		return err
-		
+
 	# Create addons directory if it doesn't exist
 	if not dir.dir_exists("addons"):
 		var err := dir.make_dir("addons")
@@ -306,13 +316,13 @@ func _save_settings_to_config() -> Error:
 
 	# Update startup message
 	_update_startup_message()
-	
+
 	return save_result
 
 
 ## Refreshes all tag list UIs from the current state
 func _refresh_tags_lists() -> void:
-	# Clear and populate available tags list 
+	# Clear and populate available tags list
 	_available_tags_list.clear()
 	for tag in _available_tags:
 		if not _active_tags.has(tag) and not _ignored_tags.has(tag):
@@ -357,11 +367,11 @@ func _apply_defaults() -> void:
 func _validate_tag_name(tag: String) -> bool:
 	if tag.is_empty():
 		return false
-		
+
 	# First check using existing LoggerSettings static method
 	if not LoggerSettings._is_valid_tag(tag):
 		return false
-		
+
 	# Enhanced validation for better tag names
 	var regex = RegEx.new()
 	regex.compile("^[a-zA-Z0-9_-]+$")
@@ -383,18 +393,18 @@ func _move_tag(tag: String, from_list: Array[String], to_list: Array[String]) ->
 
 
 ## Handle tag movement between categories
-## 
+##
 ## Parameters:
 ## - tag: The tag being moved
-## - from_source: Source category ("available", "active", or "ignored") 
+## - from_source: Source category ("available", "active", or "ignored")
 ## - to_target: Target category for the tag
 func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> void:
 	if not _validate_tag_name(tag):
 		push_warning("Invalid tag format: '%s'" % tag)
 		return
-		
+
 	_begin_batch_operation()
-	
+
 	# Remove from source category
 	if from_source == SOURCE_AVAILABLE:
 		# Don't actually remove from available tags, as it's a master list
@@ -403,7 +413,7 @@ func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> vo
 		_active_tags.erase(tag)
 	elif from_source == SOURCE_IGNORED:
 		_ignored_tags.erase(tag)
-	
+
 	# Add to target category
 	if to_target == SOURCE_AVAILABLE:
 		# Just make sure it's in the available tags
@@ -421,17 +431,22 @@ func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> vo
 			_active_tags.erase(tag)
 		if not _ignored_tags.has(tag):
 			_ignored_tags.append(tag)
-	
+
 	_end_batch_operation()
-	
-	print_rich("[color=#%s]Moved tag '%s' from %s to %s[/color]" % 
-		[LoggerColors.SUCCESS_HTML, tag, from_source, to_target])
+
+	print_rich(
+		(
+			"[color=#%s]Moved tag '%s' from %s to %s[/color]"
+			% [LoggerColors.SUCCESS_HTML, tag, from_source, to_target]
+		)
+	)
 
 
 ## Begin a batch operation to prevent multiple saves
 func _begin_batch_operation() -> void:
 	_batch_operation = true
-	
+
+
 ## End a batch operation and save changes
 func _end_batch_operation() -> void:
 	_batch_operation = false
@@ -444,32 +459,32 @@ func _get_available_tag_drag_data(_position: Vector2) -> Variant:
 	var index := _available_tags_list.get_selected_items()
 	if index.size() == 0:
 		return null
-		
+
 	var tag_index = index[0]
 	var tag_text = _available_tags_list.get_item_text(tag_index)
-	
+
 	if not _validate_tag_name(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
-		
+
 	# Store source info for the drop
 	_drag_source = SOURCE_AVAILABLE
 	_drag_index = tag_index
-	
+
 	# Create drag preview
 	var preview = Label.new()
 	preview.text = tag_text
 	preview.modulate = Color(1, 1, 1, 0.7)
-	
+
 	var control = Control.new()
 	control.add_child(preview)
 	preview.position = -0.5 * preview.size
-	
+
 	set_drag_preview(control)
-	
+
 	# Visual feedback
 	_available_tags_list.add_theme_color_override("font_selected_color", Color.CORNFLOWER_BLUE)
-	
+
 	# Return the tag text
 	return tag_text
 
@@ -491,32 +506,32 @@ func _get_active_tag_drag_data(_position: Vector2) -> Variant:
 	var index := _tags_list.get_selected_items()
 	if index.size() == 0:
 		return null
-		
+
 	var tag_index = index[0]
 	var tag_text = _tags_list.get_item_text(tag_index)
-	
+
 	if not _validate_tag_name(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
-		
+
 	# Store source info for the drop
 	_drag_source = SOURCE_ACTIVE
 	_drag_index = tag_index
-	
+
 	# Create drag preview
 	var preview = Label.new()
 	preview.text = tag_text
 	preview.modulate = Color(1, 1, 1, 0.7)
-	
+
 	var control = Control.new()
 	control.add_child(preview)
 	preview.position = -0.5 * preview.size
-	
+
 	set_drag_preview(control)
-	
+
 	# Visual feedback
 	_tags_list.add_theme_color_override("font_selected_color", Color.CORNFLOWER_BLUE)
-	
+
 	# Return the tag text
 	return tag_text
 
@@ -538,32 +553,32 @@ func _get_ignored_tag_drag_data(_position: Vector2) -> Variant:
 	var index := _ignored_tags_list.get_selected_items()
 	if index.size() == 0:
 		return null
-		
+
 	var tag_index = index[0]
 	var tag_text = _ignored_tags_list.get_item_text(tag_index)
-	
+
 	if not _validate_tag_name(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
-		
+
 	# Store source info for the drop
 	_drag_source = SOURCE_IGNORED
 	_drag_index = tag_index
-	
+
 	# Create drag preview
 	var preview = Label.new()
 	preview.text = tag_text
 	preview.modulate = Color(1, 1, 1, 0.7)
-	
+
 	var control = Control.new()
 	control.add_child(preview)
 	preview.position = -0.5 * preview.size
-	
+
 	set_drag_preview(control)
-	
+
 	# Visual feedback
 	_ignored_tags_list.add_theme_color_override("font_selected_color", Color.CORNFLOWER_BLUE)
-	
+
 	# Return the tag text
 	return tag_text
 
@@ -582,15 +597,18 @@ func _drop_on_ignored_tags(_position: Vector2, data: Variant) -> void:
 
 # UI Event handlers
 
+
 # Available Tags handlers
 func _on_available_tag_selected(_index: int) -> void:
 	# Enable the remove button when a tag is selected
 	_remove_available_tag_button.disabled = false
 
+
 func _on_available_tag_activated(index: int) -> void:
 	# Move tag to active list when double-clicked
 	var tag = _available_tags_list.get_item_text(index)
 	_handle_tag_drag(tag, SOURCE_AVAILABLE, SOURCE_ACTIVE)
+
 
 func _on_add_available_tag(text: String = "") -> void:
 	var tag := _available_tags_input.text.strip_edges() if text.is_empty() else text.strip_edges()
@@ -604,11 +622,14 @@ func _on_add_available_tag(text: String = "") -> void:
 	# Add to available tags if not already present
 	if not _available_tags.has(tag):
 		_available_tags.append(tag)
-		print_rich("[color=#%s]Added tag '%s' to available tags[/color]" % [LoggerColors.SUCCESS_HTML, tag])
+		print_rich(
+			"[color=#%s]Added tag '%s' to available tags[/color]" % [LoggerColors.SUCCESS_HTML, tag]
+		)
 
 	_available_tags_input.clear()
 	_refresh_tags_lists()
 	_save_settings_to_config()
+
 
 func _on_remove_available_tag() -> void:
 	var selected := _available_tags_list.get_selected_items()
@@ -618,16 +639,21 @@ func _on_remove_available_tag() -> void:
 	var index := selected[0]
 	if index >= 0 and index < _available_tags_list.item_count:
 		var tag := _available_tags_list.get_item_text(index)
-		
+
 		# Check if the tag is in available list
 		var tag_index = _available_tags.find(tag)
 		if tag_index != -1:
 			_available_tags.remove_at(tag_index)
-			print_rich("[color=#%s]Removed tag '%s' from available tags[/color]" % 
-				[LoggerColors.SUCCESS_HTML, tag])
-			
+			print_rich(
+				(
+					"[color=#%s]Removed tag '%s' from available tags[/color]"
+					% [LoggerColors.SUCCESS_HTML, tag]
+				)
+			)
+
 		_refresh_tags_lists()
 		_save_settings_to_config()
+
 
 # Active Tags handlers
 func _on_active_tag_selected(_index: int) -> void:
@@ -680,12 +706,14 @@ func _on_add_tag(text: String = "") -> void:
 		# Remove from ignored tags if present
 		if _ignored_tags.has(tag):
 			_ignored_tags.erase(tag)
-		
+
 		# Add to available tags if not present
 		if not _available_tags.has(tag):
 			_available_tags.append(tag)
-			
-		print_rich("[color=#%s]Added tag '%s' to active filters[/color]" % [LoggerColors.SUCCESS_HTML, tag])
+
+		print_rich(
+			"[color=#%s]Added tag '%s' to active filters[/color]" % [LoggerColors.SUCCESS_HTML, tag]
+		)
 
 	_tags_input.clear()
 	_refresh_tags_lists()
@@ -702,8 +730,12 @@ func _on_remove_tag() -> void:
 		var tag := _tags_list.get_item_text(index)
 		if _active_tags.has(tag):
 			_active_tags.erase(tag)
-			print_rich("[color=#%s]Removed tag '%s' from active filters[/color]" % 
-				[LoggerColors.SUCCESS_HTML, tag])
+			print_rich(
+				(
+					"[color=#%s]Removed tag '%s' from active filters[/color]"
+					% [LoggerColors.SUCCESS_HTML, tag]
+				)
+			)
 			_refresh_tags_lists()
 			_save_settings_to_config()
 
@@ -723,12 +755,14 @@ func _on_add_ignored_tag(text: String = "") -> void:
 		# Remove from active tags if present
 		if _active_tags.has(tag):
 			_active_tags.erase(tag)
-			
+
 		# Add to available tags if not present
 		if not _available_tags.has(tag):
 			_available_tags.append(tag)
-			
-		print_rich("[color=#%s]Added tag '%s' to ignored tags[/color]" % [LoggerColors.SUCCESS_HTML, tag])
+
+		print_rich(
+			"[color=#%s]Added tag '%s' to ignored tags[/color]" % [LoggerColors.SUCCESS_HTML, tag]
+		)
 
 	_ignored_tags_input.clear()
 	_refresh_tags_lists()
@@ -745,8 +779,12 @@ func _on_remove_ignored_tag() -> void:
 		var tag := _ignored_tags_list.get_item_text(index)
 		if _ignored_tags.has(tag):
 			_ignored_tags.erase(tag)
-			print_rich("[color=#%s]Removed tag '%s' from ignored tags[/color]" % 
-				[LoggerColors.SUCCESS_HTML, tag])
+			print_rich(
+				(
+					"[color=#%s]Removed tag '%s' from ignored tags[/color]"
+					% [LoggerColors.SUCCESS_HTML, tag]
+				)
+			)
 			_refresh_tags_lists()
 			_save_settings_to_config()
 
