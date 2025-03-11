@@ -25,7 +25,7 @@ theme_override_font_sizes/font_size = 16
 text = "Advanced Logger Settings"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorTitle" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
@@ -59,7 +59,7 @@ popup/item_3/id = 3
 popup/item_4/text = "CRITICAL"
 popup/item_4/id = 4
 
-[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorLevel" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="AvailableTagsSection" type="VBoxContainer" parent="VBoxContainer"]
@@ -94,7 +94,7 @@ item_0/text = "Example tag (drag to filter or ignore)"
 layout_mode = 2
 text = "Remove Selected Tag"
 
-[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="TagsSection" type="VBoxContainer" parent="VBoxContainer"]
@@ -127,7 +127,7 @@ allow_reselect = true
 layout_mode = 2
 text = "Remove Selected Tag"
 
-[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="IgnoredTagsSection" type="VBoxContainer" parent="VBoxContainer"]
@@ -160,7 +160,7 @@ allow_reselect = true
 layout_mode = 2
 text = "Remove Selected Tag"
 
-[node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorIgnored" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="FormatSection" type="VBoxContainer" parent="VBoxContainer"]
@@ -190,7 +190,7 @@ layout_mode = 2
 button_pressed = true
 text = "Use Colors"
 
-[node name="HSeparator5" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorFormat" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="ButtonsSection" type="HBoxContainer" parent="VBoxContainer"]
