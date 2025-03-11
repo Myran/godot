@@ -10,6 +10,7 @@ const CONFIG_SECTION_FORMAT: String = "format"
 const CONFIG_KEY_LOG_LEVEL: String = "log_level"
 const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
 const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
+const CONFIG_KEY_AVAILABLE_TAGS: String = "available_tags"  # Added new config key
 const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
 const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
 const CONFIG_KEY_USE_COLORS: String = "use_colors"
@@ -176,6 +177,21 @@ static func load_settings(logger_instance: Logger) -> Error:
 	return OK
 
 
-## Checks if a tag is valid (non-empty string)
+## Checks if a tag is valid
+## 
+## Tags must be non-empty strings and follow allowed naming conventions.
+## - Cannot be empty
+## - Must contain only alphanumeric characters, underscores, or hyphens
+##
+## Returns: true if valid, false otherwise
 static func _is_valid_tag(tag: String) -> bool:
-	return tag is String and not tag.is_empty()
+	if not (tag is String) or tag.is_empty():
+		return false
+		
+	# Basic check - not empty
+	var is_valid = not tag.is_empty()
+	
+	# Enhanced validation - alphanumeric, underscores, hyphens only
+	var regex = RegEx.new()
+	regex.compile("^[a-zA-Z0-9_-]+$")
+	return is_valid and regex.search(tag) != null
