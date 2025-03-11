@@ -41,6 +41,12 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 text = "close"
 
+[node name="button_db_debug" type="Button" parent="canvas_layer_pop/popup_debug/color_rect/v_box_container_buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "DB Debug"
+
 [node name="button_pop_enemy" type="Button" parent="canvas_layer_pop/popup_debug/color_rect/v_box_container_buttons"]
 layout_mode = 2
 size_flags_horizontal = 3

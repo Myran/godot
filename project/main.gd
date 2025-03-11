@@ -6,6 +6,7 @@ func _ready() -> void:
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())
+	debug.debug_event.connect(_on_debug_event)
 	match OS.get_name():
 		"Windows":
 			print("Welcome to Windows!")
@@ -20,6 +21,12 @@ func _ready() -> void:
 		"Web":
 			print("Welcome to the Web!")
 
+
+func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
+	match event:
+		debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU:
+			print('db debug')
+			%PopupDebug.show()
 
 func _input(event: InputEvent) -> void:
 	if event.as_text() == "Escape" and event.is_pressed():

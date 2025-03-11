@@ -6,7 +6,8 @@ enum DEBUG_EVENT_TYPE {
 	EVENT_OPEN_DEBUG_MENU,
 	EVENT_OPEN_GAME_SELECTOR,
 	EVENT_RESET_MATCH_LEVEL,
-	EVENT_FORCE_LOAD_MATCH_LEVEL
+	EVENT_FORCE_LOAD_MATCH_LEVEL,
+	EVENT_OPEN_DB_DEBUG_MENU
 }
 
 #export (bool) var force_level = false setget set_force_level,get_force_level
@@ -53,6 +54,8 @@ func debug_button_pressed(_name: String) -> void:
 	match _name:
 		"button_close":
 			popup_debug.hide()
+		'button_db_debug':
+			action(DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU)
 		"button_pop_enemy":
 			print("pop enemy")
 			for n : int in 3:
