@@ -31,10 +31,12 @@ class FirebaseDatabase : public RefCounted {
 
     //Variant ConvertVariant(const firebase::Variant& val);
     firebase::database::DatabaseReference GetReferenceToPath(const Array& keys);
+    firebase::database::Query GetQueryFromReference(const firebase::database::DatabaseReference& ref, const Dictionary& query_params);
 
     public:
     
     FirebaseDatabase();
+    ~FirebaseDatabase();
     void SetDBRoot(const Array& keys);
     void SetValue(const Array& keys, const Variant& value);
     String PushChild(const Array& keys);
@@ -42,6 +44,21 @@ class FirebaseDatabase : public RefCounted {
     void RemoveValue(const Array& keys);
     void GetValue(const Array& keys);
     void OnGetValue(const firebase::Future<firebase::database::DataSnapshot>& result, void* user_data);
+    
+    // New query functionality
+    void QueryOrderedData(const Array& keys, const Dictionary& query_params);
+    void OnQueryResult(const firebase::Future<firebase::database::DataSnapshot>& result, void* user_data);
+    
+    // Server timestamp
+    void SetServerTimestamp(const Array& keys);
+    
+    // Transaction support - simplified to numeric increment
+    void RunTransaction(const Array& keys, int increment_by = 1);
+    void OnTransactionCompleted(const firebase::Future<firebase::database::DataSnapshot>& result, void* user_data);
+    
+    // Connection state monitoring
+    void MonitorConnectionState();
+    void OnConnectionStateChanged(const firebase::database::DataSnapshot& snapshot);
 };
 
 #endif // FirebaseDatabase_h
