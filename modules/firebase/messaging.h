@@ -26,6 +26,7 @@ class FirebaseMessaging : public RefCounted {
     public:
     
     FirebaseMessaging();
+    ~FirebaseMessaging();
     Variant token();
     void setToken(String token);
     void setMessage(const firebase::messaging::Message& message);
