@@ -587,35 +587,95 @@ func _complete_tests() -> void:
 
 func _on_Button_firebase_advanced_pressed() -> void:
 	print("Testing Firebase Advanced Features")
-	var dialog: ConfirmationDialog = ConfirmationDialog.new()
-	dialog.title = "Select Firebase Feature to Test"
-	dialog.dialog_text = "Select a feature to test:"
+	get_owner().get_parent().visible = false
+	# Create a new CanvasLayer to ensure the dialog appears on top
+	var canvas_layer: CanvasLayer = CanvasLayer.new()
+	canvas_layer.layer = 1000  # Set a high layer value to ensure it's on top
+	add_child(canvas_layer)
 
-	var option_button: OptionButton = OptionButton.new()
-	option_button.add_item("Query Ordered Data", 0)
-	option_button.add_item("Server Timestamp", 1)
-	option_button.add_item("Run Transaction", 2)
-	option_button.add_item("Monitor Connection State", 3)
+	# Create a more mobile-friendly dialog
+	var dialog: AcceptDialog = AcceptDialog.new()
+	dialog.title = "Select Firebase Feature"
 
-	dialog.add_child(option_button as Node)
-	add_child(dialog as Node)
+	# Make dialog larger and more touch-friendly
+	dialog.min_size = Vector2(600, 450)
 
-	dialog.popup_centered(Vector2(300, 200))
+	# Add margin to make text more readable
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
 
-	# Wait for dialog confirmation
-	dialog.confirmed.connect(func() -> void:
-		var result: int = option_button.selected
-		match result:
-			0: # Query Ordered Data
-				_test_ui_query_ordered_data()
-			1: # Server Timestamp
-				_test_ui_server_timestamp()
-			2: # Run Transaction
-				_test_ui_transaction()
-			3: # Monitor Connection State
-				_test_ui_connection_monitoring()
+	# Use VBox for layout
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 20)
+	margin.add_child(vbox)
 
-		dialog.queue_free()
+	# Add instruction label
+	var label = Label.new()
+	label.text = "Tap an option below:"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(label)
+
+	# Create option buttons container
+	var option_container = VBoxContainer.new()
+	option_container.add_theme_constant_override("separation", 15)
+	vbox.add_child(option_container)
+
+	# Create touch-friendly buttons
+	var options = [
+		"Query Ordered Data",
+		"Server Timestamp",
+		"Run Transaction",
+		"Monitor Connection State"
+	]
+
+	var selected_option = -1
+
+	for i in range(options.size()):
+		var button = Button.new()
+		button.text = options[i]
+		button.custom_minimum_size = Vector2(0, 80)
+		button.add_theme_font_size_override("font_size", 18)
+		button.focus_mode = Control.FOCUS_NONE
+
+		# Connect each button to close dialog and execute corresponding action
+		button.pressed.connect(func():
+			selected_option = i
+			dialog.hide()
+		)
+
+		option_container.add_child(button)
+
+	# Add the margin container to the dialog
+	dialog.add_child(margin)
+
+	# Add dialog to the CanvasLayer instead of directly to self
+	canvas_layer.add_child(dialog)
+
+	# Show the dialog
+	dialog.popup_centered()
+
+	# Connect to dialog signals to clean up properly
+	dialog.canceled.connect(func(): canvas_layer.queue_free())
+
+	# Connect hide signal to execute the selected action
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible and selected_option != -1:
+			match selected_option:
+				0: # Query Ordered Data
+					_test_ui_query_ordered_data()
+				1: # Server Timestamp
+					_test_ui_server_timestamp()
+				2: # Run Transaction
+					_test_ui_transaction()
+				3: # Monitor Connection State
+					_test_ui_connection_monitoring()
+
+			# Queue free the canvas layer to clean up
+			canvas_layer.queue_free()
 	)
 
 
