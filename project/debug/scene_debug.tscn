@@ -116,6 +116,7 @@ text = "RTDB: Delete Value"
 
 [node name="Button13" parent="MarginContainer/VBoxContainer/TabContainer/Auth" instance=ExtResource("1_ufstt")]
 layout_mode = 2
+text = "RTDB: Advanced Features"
 
 [node name="Facebook" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TabContainer"]
 visible = false
@@ -153,6 +154,7 @@ text = "Facebook: log out
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button5" to="Popup" method="_on_Button_get_value_pressed"]
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button6" to="Popup" method="_on_Button_set_value_pressed"]
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button7" to="Popup" method="_on_Button_delete_pressed"]
+[connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Auth/Button13" to="Popup" method="_on_Button_firebase_advanced_pressed"]
 [connection signal="button_down" from="MarginContainer/VBoxContainer/TabContainer/Facebook/Button8" to="Popup" method="_on_Button_send_all_tracking_events_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Facebook/Button9" to="Popup" method="_on_Button_sign_in_facebook_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/TabContainer/Facebook/Button10" to="Popup" method="_on_Button_link_Facebook_pressed"]

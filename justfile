@@ -5,6 +5,7 @@
 import "justfile-run.justfile"
 import "justfile-cicd.justfile"
 import "justfile-support.justfile"
+import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
 
@@ -202,7 +203,7 @@ build-android-aab: (build-android "aab")
 # Build and export for iOS
 build-ios: pre-build
     @echo "Building and exporting for iOS..."
-    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace -scheme {{GAME_NAME}} -configuration Debug -destination "generic/platform=iOS"
+    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace -scheme {{GAME_NAME}} -configuration Debug -destination "generic/platform=iOS" -allowProvisioningUpdates
 
 # Save iOS PCK file
 save-ios: pre-build
