@@ -85,6 +85,16 @@ edit:
     @echo "Running Godot editor..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor
 
+# Run Godot in headless mode without GUI
+headless:
+    @echo "Running Godot in headless mode..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless
+    
+# Run Godot in headless mode with additional arguments
+headless-run *ARGS:
+    @echo "Running Godot in headless mode with args: {{ARGS}}"
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless {{ARGS}}
+
 # Pre-build hook
 pre-build:
     @echo "Running pre-build tasks..."
