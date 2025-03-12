@@ -25,7 +25,6 @@ func _ready() -> void:
 func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU:
-			print('db debug')
 			%PopupDebug.show()
 
 func _input(event: InputEvent) -> void:

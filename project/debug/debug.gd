@@ -11,7 +11,12 @@ const FAKE_INTERSTITIAL_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/44114
 # const kRealInterstitialAdUnitIOS: String = "ca-app-pub-8265399856187334~2529757314"
 const FAKE_REWARDED_VIDEO_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/1712485313"
 # const kRealAdappIdIOS: String = "ca-app-pub-8265399856187334~2529757314"
-
+var auth: Object
+var firebase_tests_running: bool = false
+var firebase_test_results: Dictionary = {}
+var firebase_test_count: int = 0
+var firebase_tests_passed: int = 0
+var firebase_tests_failed: int = 0
 var admob: Object
 var db: Object
 var remote_config: Object
@@ -21,8 +26,12 @@ var godot_apple_auth: Object
 var home_game: Node
 var _auth: Object
 
+
+
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
 
+class SelectionReference:
+	var value: int = -1
 
 func setup(init_args: Dictionary) -> void:
 	print("setup with args", init_args)
@@ -365,12 +374,7 @@ func rewarded_loading_result(res: String) -> void:
 	print("Rewarded loading result", res)
 
 
-# Firebase Testing System
-var firebase_tests_running: bool = false
-var firebase_test_results: Dictionary = {}
-var firebase_test_count: int = 0
-var firebase_tests_passed: int = 0
-var firebase_tests_failed: int = 0
+
 
 # Check for test command line parameter
 func check_for_test_mode() -> void:
@@ -565,7 +569,11 @@ func _complete_tests() -> void:
 	print("Total tests: " + str(firebase_test_count))
 	print("Passed: " + str(firebase_tests_passed))
 	print("Failed: " + str(firebase_tests_failed))
-	print("Success rate: " + str(round(100.0 * firebase_tests_passed / max(1, firebase_test_count))) + "%")
+
+	# Fix narrowing conversion by explicitly converting to float then int
+	var success_rate: float = 100.0 * float(firebase_tests_passed) / float(max(1, firebase_test_count))
+	var rounded_rate: int = int(round(success_rate))  # Use explicit round() function
+	print("Success rate: " + str(rounded_rate) + "%")
 	print("===============================")
 
 	firebase_tests_running = false
@@ -575,190 +583,294 @@ func _complete_tests() -> void:
 			"Total: " + str(firebase_test_count) + "\n" + \
 			"Passed: " + str(firebase_tests_passed) + "\n" + \
 			"Failed: " + str(firebase_tests_failed) + "\n" + \
-			"Success rate: " + str(round(100.0 * firebase_tests_passed / max(1, firebase_test_count))) + "%"
+			"Success rate: " + str(rounded_rate) + "%"
 
 	# Exit the application if running in test mode
-	var arguments: Array[String] = OS.get_cmdline_args()
+	var arguments: PackedStringArray = OS.get_cmdline_args()
 	if arguments.has("--test") or arguments.has("--test-firebase"):
 		await get_tree().create_timer(0.5).timeout
 		get_tree().quit(0 if firebase_tests_failed == 0 else 1)
 
 # New Firebase Advanced Features handling
 
+## Opens a dialog to select which Firebase Advanced feature to test
 func _on_Button_firebase_advanced_pressed() -> void:
-	print("Testing Firebase Advanced Features")
-	get_owner().get_parent().visible = false
+	print("[Firebase Advanced] Opening feature selection dialog")
+
+	# Hide the parent window
+	if get_owner() and get_owner().get_parent():
+		get_owner().get_parent().visible = false
+
 	# Create a new CanvasLayer to ensure the dialog appears on top
 	var canvas_layer: CanvasLayer = CanvasLayer.new()
 	canvas_layer.layer = 1000  # Set a high layer value to ensure it's on top
-	add_child(canvas_layer)
+	add_child(canvas_layer as Node)
 
-	# Create a more mobile-friendly dialog
-	var dialog: AcceptDialog = AcceptDialog.new()
-	dialog.title = "Select Firebase Feature"
+	# Create a custom dialog without an OK button
+	var popup: Window = Window.new()
+	popup.title = "Select Firebase Feature"
 
-	# Make dialog larger and more touch-friendly
-	dialog.min_size = Vector2(600, 450)
+	# Configure window properties - consistent window size variable
+	var window_size: Vector2 = Vector2(600, 450)
+	var screen_size: Vector2 = Vector2(DisplayServer.window_get_size())
+	popup.position = (screen_size - window_size) / 2
+	popup.size = window_size
+	popup.borderless = false
+	popup.always_on_top = true
 
-	# Add margin to make text more readable
-	var margin = MarginContainer.new()
+	# Create main container with proper margins
+	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.add_theme_constant_override("margin_right", 20)
 	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.anchors_preset = Control.PRESET_FULL_RECT  # Fill the whole window
 
 	# Use VBox for layout
-	var vbox = VBoxContainer.new()
+	var vbox: VBoxContainer = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 20)
-	margin.add_child(vbox)
+	margin.add_child(vbox as Node)
 
 	# Add instruction label
-	var label = Label.new()
+	var label: Label = Label.new()
 	label.text = "Tap an option below:"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(label)
+	vbox.add_child(label as Node)
 
 	# Create option buttons container
-	var option_container = VBoxContainer.new()
+	var option_container: VBoxContainer = VBoxContainer.new()
 	option_container.add_theme_constant_override("separation", 15)
-	vbox.add_child(option_container)
+	option_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(option_container as Node)
 
-	# Create touch-friendly buttons
-	var options = [
+	# Add each feature button
+	var options: Array[String] = [
 		"Query Ordered Data",
 		"Server Timestamp",
 		"Run Transaction",
 		"Monitor Connection State"
 	]
 
-	var selected_option = -1
+	var feature_functions: Array[String] = [
+		"_test_ui_query_ordered_data",
+		"_test_ui_server_timestamp",
+		"_test_ui_transaction",
+		"_test_ui_connection_monitoring"
+	]
 
-	for i in range(options.size()):
-		var button = Button.new()
-		button.text = options[i]
+	# Add all option buttons
+	for i_option: int in range(options.size()):
+		var button: Button = Button.new()
+		button.text = options[i_option]
 		button.custom_minimum_size = Vector2(0, 80)
 		button.add_theme_font_size_override("font_size", 18)
 		button.focus_mode = Control.FOCUS_NONE
 
-		# Connect each button to close dialog and execute corresponding action
-		button.pressed.connect(func():
-			selected_option = i
-			dialog.hide()
+		# Store the function to call
+		var feature_function: String = feature_functions[i_option]
+
+		# Connect each button with direct action execution
+		button.pressed.connect(func() -> void:
+			popup.hide()
+			# Call the function by name
+			call(feature_function)
+			# Clean up
+			canvas_layer.queue_free()
 		)
 
-		option_container.add_child(button)
+		option_container.add_child(button as Node)
 
-	# Add the margin container to the dialog
-	dialog.add_child(margin)
+	# Add close button
+	var close_button: Button = Button.new()
+	close_button.text = "Cancel"
+	close_button.custom_minimum_size = Vector2(0, 60)
+	close_button.pressed.connect(func() -> void:
+		popup.hide()
+		canvas_layer.queue_free()
+	)
+	vbox.add_child(close_button as Node)
 
-	# Add dialog to the CanvasLayer instead of directly to self
-	canvas_layer.add_child(dialog)
+	# Add the margin container to the popup
+	popup.add_child(margin as Node)
 
-	# Show the dialog
-	dialog.popup_centered()
+	# Add popup to the CanvasLayer
+	canvas_layer.add_child(popup as Node)
 
-	# Connect to dialog signals to clean up properly
-	dialog.canceled.connect(func(): canvas_layer.queue_free())
-
-	# Connect hide signal to execute the selected action
-	dialog.visibility_changed.connect(func():
-		if not dialog.visible and selected_option != -1:
-			match selected_option:
-				0: # Query Ordered Data
-					_test_ui_query_ordered_data()
-				1: # Server Timestamp
-					_test_ui_server_timestamp()
-				2: # Run Transaction
-					_test_ui_transaction()
-				3: # Monitor Connection State
-					_test_ui_connection_monitoring()
-
-			# Queue free the canvas layer to clean up
-			canvas_layer.queue_free()
+	# Set up popup close handler
+	popup.close_requested.connect(func() -> void:
+		canvas_layer.queue_free()
 	)
 
+	# Show the popup
+	popup.show()
 
+
+## Executes a test of the Query Ordered Data feature
 func _test_ui_query_ordered_data() -> void:
-	print("Testing Query Ordered Data")
+	print("[Firebase Advanced] Starting Query Ordered Data test")
+	status_label.text = "Setting up query test data..."
 
 	# First set some test data
-	db.set_db_root(["test_query"])
-	db.set_value(["test_query", "item1"], {"name": "Item 1", "score": 10})
-	db.set_value(["test_query", "item2"], {"name": "Item 2", "score": 25})
-	db.set_value(["test_query", "item3"], {"name": "Item 3", "score": 5})
+	var test_path: Array[String] = ["test_query"]
+	print("[Firebase Advanced] Setting db root path: ", test_path)
+	db.set_db_root(test_path)
+
+	# Create test entries with different scores
+	print("[Firebase Advanced] Creating test data entries")
+
+	# Create item 1
+	db.set_value(["item1"], {"name": "Item 1", "score": 10})
+	print("[Firebase Advanced] Added item1: {name: Item 1, score: 10}")
+
+	# Create item 2
+	db.set_value(["item2"], {"name": "Item 2", "score": 25})
+	print("[Firebase Advanced] Added item2: {name: Item 2, score: 25}")
+
+	# Create item 3
+	db.set_value(["item3"], {"name": "Item 3", "score": 5})
+	print("[Firebase Advanced] Added item3: {name: Item 3, score: 5}")
 
 	# Now query by score
 	var query_params: Dictionary = {
-			"orderByChild": "score",
-			"limitToLast": 2  # Get top 2 scores
+		"orderByChild": "score",
+		"limitToLast": 2  # Get top 2 scores
 	}
 
-	db.query_ordered_data(["test_query"], query_params)
-	status_label.text = "Running query for top 2 scores..."
+	# Execute the query
+	print("[Firebase Advanced] Executing query with params: ", query_params)
+	db.query_ordered_data([], query_params)
+	status_label.text = "Running query for top 2 scores...\nWaiting for results..."
 
 
+## Executes a test of the Server Timestamp feature
 func _test_ui_server_timestamp() -> void:
-	print("Testing Server Timestamp")
-	db.set_server_timestamp(["test_timestamp"])
-	status_label.text = "Setting server timestamp..."
+	print("[Firebase Advanced] Starting Server Timestamp test")
+
+	# Set db root to a clean path for this test
+	var test_path: Array[String] = ["test_timestamp"]
+	print("[Firebase Advanced] Setting db root path: ", test_path)
+	db.set_db_root(test_path)
+
+	# Set the server timestamp
+	print("[Firebase Advanced] Setting server timestamp at root")
+	db.set_server_timestamp([])
+	status_label.text = "Setting server timestamp...\nWaiting for server response..."
 
 	# Wait a moment then get the value to display
+	print("[Firebase Advanced] Waiting 1 second before retrieving timestamp")
 	await get_tree().create_timer(1.0).timeout
-	db.get_value(["test_timestamp"])
+
+	# Retrieve the timestamp value
+	print("[Firebase Advanced] Retrieving server timestamp")
+	db.get_value([])
 
 
+## Executes a test of the Transaction feature
 func _test_ui_transaction() -> void:
-	print("Testing Transaction")
+	print("[Firebase Advanced] Starting Transaction test")
+
+	# Set db root to a clean path for this test
+	var test_path: Array[String] = ["test_transaction"]
+	print("[Firebase Advanced] Setting db root path: ", test_path)
+	db.set_db_root(test_path)
 
 	# Set initial counter value
-	db.set_value(["test_transaction", "counter"], 10)
+	print("[Firebase Advanced] Setting initial counter value to 10")
+	db.set_value(["counter"], 10)
+	status_label.text = "Initializing counter to 10..."
+
+	# Give it a moment to set the initial value
+	print("[Firebase Advanced] Waiting 0.5 seconds before transaction")
+	await get_tree().create_timer(0.5).timeout
 
 	# Now run a transaction that increments it by 5
-	db.run_transaction(["test_transaction", "counter"], 5)
-	status_label.text = "Running transaction to increment counter by 5..."
+	print("[Firebase Advanced] Running transaction to increment by 5")
+	db.run_transaction(["counter"], 5)
+	status_label.text = "Running transaction to increment counter by 5...\nWaiting for result..."
 
 
+## Executes a test of the Connection Monitoring feature
 func _test_ui_connection_monitoring() -> void:
-	print("Testing Connection Monitoring")
+	print("[Firebase Advanced] Starting Connection Monitoring test")
+	print("[Firebase Advanced] Calling monitor_connection_state()")
 	db.monitor_connection_state()
-	status_label.text = "Monitoring connection state..."
+	status_label.text = "Monitoring connection state...\nWaiting for connection status..."
 
 
 # Signal handlers for advanced features
 
+## Signal handler for query_result signal
+## Processes and displays query results
 func on_ui_query_result(key: String, value: Variant) -> void:
-	print("Query result received - key: ", key, " value: ", value)
+	print("[Firebase Advanced] Query result received")
+	print("[Firebase Advanced] Key: ", key)
+	print("[Firebase Advanced] Value type: ", typeof(value))
+	print("[Firebase Advanced] Value content: ", value)
 
+	# Start building the result text
 	var result_text: String = "Query Results:\n"
 
+	# Process dictionary results
 	if typeof(value) == TYPE_DICTIONARY:
-			for item_key: String in value.keys():
-					var item: Dictionary = value[item_key]
-					if typeof(item) == TYPE_DICTIONARY and item.has("name") and item.has("score"):
-							result_text += str(item.name, " - Score: ", item.score, "\n")
-					else:
-							result_text += str(item_key, ": ", item, "\n")
-	else:
-			result_text += str(value)
+		print("[Firebase Advanced] Processing dictionary result with ", value.size(), " items")
 
+		# Process each item in the dictionary
+		for item_key: String in value.keys():
+			var item: Variant = value[item_key]
+			print("[Firebase Advanced] Item key: ", item_key, ", type: ", typeof(item))
+
+			# Format score items nicely
+			if typeof(item) == TYPE_DICTIONARY and item.has("name") and item.has("score"):
+				result_text += str(item.name, " - Score: ", item.score, "\n")
+				print("[Firebase Advanced] Formatted item: ", item.name, " - Score: ", item.score)
+			else:
+				# Raw display for other items
+				result_text += str(item_key, ": ", item, "\n")
+				print("[Firebase Advanced] Raw item: ", item_key, ": ", item)
+	else:
+		# Handle non-dictionary results
+		print("[Firebase Advanced] Non-dictionary result")
+		result_text += str(value)
+
+	# Update the UI
+	print("[Firebase Advanced] Updating status label with results")
 	status_label.text = result_text
 
 
+## Signal handler for transaction_completed signal
+## Updates the UI with transaction results
 func on_ui_transaction_completed(key: String, value: Variant, success: bool) -> void:
-	print("Transaction completed - success: ", success, " key: ", key, " value: ", value)
+	print("[Firebase Advanced] Transaction completed")
+	print("[Firebase Advanced] Success: ", success)
+	print("[Firebase Advanced] Key: ", key)
+	print("[Firebase Advanced] Value: ", value)
 
+	# Update UI based on success or failure
 	if success:
-			status_label.text = str("Transaction successful!\nNew value: ", value)
+		print("[Firebase Advanced] Transaction successful with new value: ", value)
+		status_label.text = str("Transaction successful!\nCounter incremented to: ", value)
 	else:
-			status_label.text = "Transaction failed!"
+		print("[Firebase Advanced] Transaction failed")
+		status_label.text = "Transaction failed!\nCheck console for details."
 
 
+## Signal handler for connection_state_changed signal
+## Updates the UI with connection state information
 func on_ui_connection_state_changed(connected: bool) -> void:
-	print("Connection state changed - connected: ", connected)
-	status_label.text = str("Firebase connection state: ", "CONNECTED" if connected else "DISCONNECTED")
+	print("[Firebase Advanced] Connection state changed: ", connected)
+	var state_text: String = "CONNECTED" if connected else "DISCONNECTED"
+	print("[Firebase Advanced] Firebase is now ", state_text)
+	status_label.text = str("Firebase connection state: ", state_text)
 
 
+## Signal handler for db_error signal
+## Displays database errors and prints the stack trace
 func on_ui_db_error(code: String, message: String) -> void:
-	print("Database error - code: ", code, " message: ", message)
+	print("[Firebase Advanced] Database error occurred")
+	print("[Firebase Advanced] Error code: ", code)
+	print("[Firebase Advanced] Error message: ", message)
 	status_label.text = str("Firebase error!\nCode: ", code, "\nMessage: ", message)
+
+	# Print the stack trace for debugging
+	print_stack()
