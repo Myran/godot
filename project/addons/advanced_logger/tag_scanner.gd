@@ -4,19 +4,40 @@ extends RefCounted
 ## Utility for scanning project files to find Log tags
 
 ## Scans the project for Log method calls and extracts tags
+## 
+## Parameters:
+## - exclude_dirs: Array of directory paths to exclude from scanning (e.g. ["res://tests/"])
+##
 ## Returns an array of unique tags found
-static func scan_project_for_tags() -> Array[String]:
+static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[String]:
 	var found_tags: Array[String] = []
 	
 	# Start scanning from the project root
-	scan_directory("res://", found_tags)
+	scan_directory("res://", found_tags, exclude_dirs)
 	
 	# Return unique tags sorted alphabetically
 	found_tags.sort()
 	return found_tags
 
 ## Recursively scans a directory for .gd files
-static func scan_directory(path: String, found_tags: Array[String]) -> void:
+## 
+## Parameters:
+## - path: Directory path to scan
+## - found_tags: Array to store found tags
+## - exclude_dirs: Array of directory paths to exclude
+static func scan_directory(path: String, found_tags: Array[String], exclude_dirs: Array[String] = []) -> void:
+	# Skip this directory if it's in the exclude list
+	for exclude in exclude_dirs:
+		# Normalize the exclude path (remove trailing slash if present)
+		var normalized_exclude = exclude
+		if normalized_exclude.ends_with("/"):
+			normalized_exclude = normalized_exclude.substr(0, normalized_exclude.length() - 1)
+		
+		# Check if the current path matches or is under the exclude path
+		if path == normalized_exclude or path.begins_with(normalized_exclude + "/"):
+			# Skip this directory
+			return
+	
 	var dir := DirAccess.open(path)
 	if not dir:
 		push_warning("Failed to access directory: " + path)
@@ -35,8 +56,8 @@ static func scan_directory(path: String, found_tags: Array[String]) -> void:
 			continue
 			
 		if dir.current_is_dir():
-			# Recursively scan subdirectories
-			scan_directory(full_path, found_tags)
+			# Recursively scan subdirectories (passing along excluded dirs)
+			scan_directory(full_path, found_tags, exclude_dirs)
 		elif file_name.ends_with(".gd"):
 			# Process GDScript files
 			scan_file_for_tags(full_path, found_tags)

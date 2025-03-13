@@ -22,7 +22,7 @@ func _input(event: InputEvent) -> void:
 func _handle_mouse_down(position: Vector2) -> void:
 	# Check if the mouse is over any of the item lists
 	var global_pos = get_global_mouse_position()
-	
+
 	# Check if the click is inside Available Tags
 	if _available_tags_list.get_global_rect().has_point(global_pos):
 		# Try to select an item
@@ -31,7 +31,7 @@ func _handle_mouse_down(position: Vector2) -> void:
 		if index >= 0:
 			print_rich("[color=#%s]DEBUG: Selected tag in Available Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
 			_available_tags_list.select(index)
-	
+
 	# Check if the click is inside Active Tags
 	elif _tags_list.get_global_rect().has_point(global_pos):
 		# Try to select an item
@@ -40,7 +40,7 @@ func _handle_mouse_down(position: Vector2) -> void:
 		if index >= 0:
 			print_rich("[color=#%s]DEBUG: Selected tag in Active Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
 			_tags_list.select(index)
-	
+
 	# Check if the click is inside Ignored Tags
 	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
 		# Try to select an item
@@ -59,12 +59,12 @@ func _create_drag_preview(text: String) -> Control:
 	var label = Label.new()
 	label.text = text
 	label.modulate = Color(1, 1, 1, 0.8)
-	
+
 	var panel = Panel.new()
 	panel.add_child(label)
 	label.position = Vector2(10, 5)
 	panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
-	
+
 	return panel
 
 # Get drag data from any list with a single function
@@ -72,14 +72,14 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 	var indices = item_list.get_selected_items()
 	if indices.size() == 0:
 		return null
-		
+
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_text(tag_index)
-	
+
 	if not _validate_tag_name(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
-	
+
 	# Create drag data
 	var drag_data = {
 		"type": "tag",
@@ -87,7 +87,7 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 		"source": source_type,
 		"index": tag_index
 	}
-	
+
 	# Create preview
 	set_drag_preview(_create_drag_preview(tag_text))
 	return drag_data
@@ -95,7 +95,7 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 func _get_drag_data(at_position: Vector2) -> Variant:
 	# Get global mouse position
 	var global_pos = get_global_mouse_position()
-	
+
 	# Use a reusable function to handle all lists
 	if _available_tags_list.get_global_rect().has_point(global_pos):
 		return _get_drag_data_for_list(_available_tags_list, SOURCE_AVAILABLE)
@@ -103,7 +103,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		return _get_drag_data_for_list(_tags_list, SOURCE_ACTIVE)
 	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
 		return _get_drag_data_for_list(_ignored_tags_list, SOURCE_IGNORED)
-	
+
 	return null
 
 # Helper function to determine drop validity
@@ -111,7 +111,7 @@ func _can_drop_tag(tag: String, source: String, target: String) -> bool:
 	# Can't drop to the same list
 	if source == target:
 		return false
-		
+
 	# Check valid source->target combinations
 	match target:
 		SOURCE_AVAILABLE:
@@ -126,18 +126,18 @@ func _can_drop_tag(tag: String, source: String, target: String) -> bool:
 			if _ignored_tags.has(tag):
 				return false
 			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
-			
+
 	return false
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		return false
-	
+
 	var tag = data["tag"]
 	var source = data.get("source", "")
 	var mouse_pos = get_global_mouse_position()
-	
+
 	# Determine target list type and delegate to helper
 	var target_type = ""
 	if _available_tags_list.get_global_rect().has_point(mouse_pos):
@@ -148,7 +148,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 		target_type = SOURCE_IGNORED
 	else:
 		return false
-		
+
 	return _can_drop_tag(tag, source, target_type)
 
 # Common function for handling drops with feedback
@@ -157,7 +157,7 @@ func _handle_drop_on_list(item_list: ItemList, tag: String, source: String, targ
 	item_list.add_theme_color_override("font_selected_color", Color.GREEN)
 	await get_tree().create_timer(0.2).timeout
 	item_list.add_theme_color_override("font_selected_color", Color.WHITE)
-	
+
 	# Handle the tag movement
 	_handle_tag_drag(tag, source, target)
 
@@ -165,11 +165,11 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		return
-	
+
 	var tag = data["tag"]
 	var source = data.get("source", "")
 	var mouse_pos = get_global_mouse_position()
-	
+
 	# Use a reusable function for handling drops on all lists
 	if _available_tags_list.get_global_rect().has_point(mouse_pos):
 		_handle_drop_on_list(_available_tags_list, tag, source, SOURCE_AVAILABLE)
@@ -243,33 +243,35 @@ var _batch_operation: bool = false
 
 func _ready() -> void:
 	print_rich("[color=#%s]DEBUG: _ready called[/color]" % [LoggerColors.DEBUG_HTML])
-	
+
 	# Make sure drag is enabled on Control
 	set_process_input(true)
 	mouse_filter = MOUSE_FILTER_PASS
-	
+
 	# Connect UI signals
 	_level_option.item_selected.connect(_on_level_changed)
 
-	# Available Tags
-	_update_tags_button.pressed.connect(_on_scan_tags)
+	# Available Tags - connect with exclusion of test tags (normal usage)
+	_update_tags_button.pressed.connect(
+		func(): _on_scan_tags(false) # Normal usage excludes test tags
+	)
 
-	# Set up item selection and activation signals
+	# Set up item activation signals
 	_available_tags_list.item_activated.connect(_on_available_tag_activated)
-	
+
 	# Active Tags - Set up item activation signals
 	_tags_list.item_activated.connect(_on_active_tag_activated)
-	
+
 	# Ignored Tags - Set up item activation signals
 	_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
-	
+
 	# Configure all item lists with the same settings
 	for list in [_available_tags_list, _tags_list, _ignored_tags_list]:
 		list.mouse_filter = MOUSE_FILTER_PASS
 		list.focus_mode = FOCUS_ALL
 		list.allow_rmb_select = true
 		list.allow_reselect = true
-	
+
 	# Enable dragging on all lists
 	print_rich("[color=#%s]DEBUG: Drag and drop initialized[/color]" % [LoggerColors.DEBUG_HTML])
 
@@ -280,16 +282,21 @@ func _ready() -> void:
 	_save_button.pressed.connect(_on_save_settings)
 	_reset_button.pressed.connect(_on_reset_settings)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
-	
-	# Scan tags button
-	_update_all_tags_button.pressed.connect(_on_scan_tags)
+
+	# Scan all tags button - include test tags for a complete scan
+	_update_all_tags_button.pressed.connect(
+		func(): _on_scan_tags(true) # Allow including test tags when using 'Update All Tags'
+	)
 
 	# Load settings from config
 	_load_settings_from_config()
 
 	# Display startup message
 	_update_startup_message()
-	
+
+	# Ensure all lists are properly sized
+	call_deferred("_resize_all_lists")
+
 	# Perform initial tag scan
 	call_deferred("_initial_tag_scan")
 
@@ -484,15 +491,24 @@ func _refresh_tags_lists() -> void:
 		if not _active_tags.has(tag) and not _ignored_tags.has(tag):
 			_available_tags_list.add_item(tag)
 
+	# Adjust available tags list height based on content
+	_resize_list_to_fit_content(_available_tags_list)
+
 	# Clear and populate active tags list
 	_tags_list.clear()
 	for tag in _active_tags:
 		_tags_list.add_item(tag)
 
+	# Adjust active tags list height based on content
+	_resize_list_to_fit_content(_tags_list)
+
 	# Clear and populate ignored tags list
 	_ignored_tags_list.clear()
 	for tag in _ignored_tags:
 		_ignored_tags_list.add_item(tag)
+
+	# Adjust ignored tags list height based on content
+	_resize_list_to_fit_content(_ignored_tags_list)
 
 
 ## Applies default settings and resets UI
@@ -593,7 +609,7 @@ func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> vo
 	_end_batch_operation()
 
 	print_rich(
-		"[color=#%s]Moved tag '%s' from %s to %s[/color]" 
+		"[color=#%s]Moved tag '%s' from %s to %s[/color]"
 		% [LoggerColors.SUCCESS_HTML, tag, from_source, to_target]
 	)
 
@@ -680,18 +696,69 @@ func _on_reset_settings() -> void:
 	_apply_defaults()
 	print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
 
+## Calculates available space for tag lists, ensuring balanced distribution
+func _calculate_balanced_list_heights() -> void:
+	# Get total available height for the dock
+	var total_height: float = get_viewport_rect().size.y
+
+	# Estimate space taken by other UI elements (labels, buttons, etc.)
+	var other_elements_height: float = 300.0  # Estimated height of non-list elements
+
+	# Available space for the three tag lists
+	var available_list_space: float = max(300.0, total_height - other_elements_height)
+
+	# Count total items across all lists to determine proportional heights
+	var total_items := _available_tags_list.item_count + _tags_list.item_count + _ignored_tags_list.item_count
+
+	# Ensure minimal height for empty lists
+	if total_items == 0:
+		total_items = 3  # Treat as if each list had 1 item
+
+	# Calculate proportional heights for each list (with minimum of 100)
+	var min_list_height := 100.0
+
+	# Proportional height calculation based on item count in each list
+	var avail_proportion: float = float(_available_tags_list.item_count) / total_items
+	var active_proportion: float = float(_tags_list.item_count) / total_items
+	var ignored_proportion: float = float(_ignored_tags_list.item_count) / total_items
+
+	# Assign heights, ensuring a minimum
+	_available_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * avail_proportion)
+	_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * active_proportion)
+	_ignored_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * ignored_proportion)
+
+## Resizes all tag lists to ensure proper display
+func _resize_all_lists() -> void:
+	# Option 1: Fixed sizing based on content
+	_resize_list_to_fit_content(_available_tags_list)
+	_resize_list_to_fit_content(_tags_list)
+	_resize_list_to_fit_content(_ignored_tags_list)
+
+	# Option 2: Dynamic balanced sizing (uncomment to use)
+	# _calculate_balanced_list_heights()
+
 ## Performs an initial tag scan when the plugin is loaded
 func _initial_tag_scan() -> void:
 	# Only run if we have no available tags yet or they're empty
 	if _available_tags.size() <= 1: # Accounting for possible example tag
-		_on_scan_tags()
+		_on_scan_tags(false) # Exclude test tags for normal usage
 
 ## Scans the project for tags used in Log calls and adds them to available tags
-func _on_scan_tags() -> void:
+## 
+## Parameters:
+## - include_test_tags: If true, includes tags from test files, otherwise excludes them
+func _on_scan_tags(include_test_tags: bool = false) -> void:
 	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
 	
+	# Directories to exclude during normal development
+	var exclude_dirs: Array[String] = []
+	if not include_test_tags:
+		exclude_dirs = ["res://tests/"]
+		print_rich("[color=#%s]Excluding test directories: %s[/color]" % 
+			[LoggerColors.INFO_HTML, ", ".join(exclude_dirs)])
+	
 	# Get tags from the scanner
-	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags()
+	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags(exclude_dirs)
 	
 	# Begin batch operation to prevent multiple saves
 	_begin_batch_operation()
@@ -703,16 +770,114 @@ func _on_scan_tags() -> void:
 			_available_tags.append(tag)
 			added_count += 1
 	
+	# Also check for constant tags in data_source.gd that might not be directly used in Log calls
+	var additional_tags := _scan_for_tag_constants()
+	for tag in additional_tags:
+		if not _available_tags.has(tag) and not scanner_tags.has(tag):
+			_available_tags.append(tag)
+			added_count += 1
+	
+	# Sort tags alphabetically for easier finding
+	_available_tags.sort()
+	
 	# End batch operation and save changes
 	_end_batch_operation()
 	
+	# Ensure lists are properly sized after adding new tags
+	_resize_all_lists()
+	
 	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" % 
 			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
+	
+## Scans for TAG constant definitions in source files
+func _scan_for_tag_constants() -> Array[String]:
+	print_rich("[color=#%s]Looking for additional TAG constants...[/color]" % LoggerColors.INFO_HTML)
+	
+	var additional_tags: Array[String] = []
+	var files_to_check: Array[String] = [
+		"res://autoloads/data_source.gd"
+	]
+	
+	for file_path in files_to_check:
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if not file:
+			continue
+			
+		var content := file.get_as_text()
+		file.close()
+		
+		# Look for tag constants using regex
+		var regex := RegEx.new()
+		regex.compile("const\\s+TAG_[A-Za-z0-9_]+\\s*:\\s*String\\s*=\\s*\"([^\"]+)\"")
+		
+		var matches := regex.search_all(content)
+		for match_result in matches:
+			if match_result.strings.size() >= 2:
+				var tag := match_result.strings[1]
+				if not additional_tags.has(tag) and LoggerSettings._is_valid_tag(tag):
+					additional_tags.append(tag)
+					print_rich("[color=#%s]Found tag constant: %s[/color]" % [LoggerColors.INFO_HTML, tag])
+	
+	return additional_tags
 
 # Signal handlers that need to be defined
 func _on_level_changed(index: int) -> void:
 	_current_level = index
 	_save_settings_to_config()
+
+## Resizes an ItemList to fit its content while maintaining a minimum height
+## and ensuring all items are visible
+func _resize_list_to_fit_content(item_list: ItemList) -> void:
+	# Keep a minimum height for easy drag and drop interaction
+	var min_height := 100.0
+
+	# Calculate required height based on item count and item height
+	var item_count := item_list.item_count
+
+	if item_count == 0:
+		# Keep minimum height even when empty
+		item_list.custom_minimum_size.y = min_height
+		return
+
+	# Use a default item height if theme is not available yet
+	var item_height: float = 24.0  # Common default height for items
+
+	# Try different approaches to get the font height
+	var font
+	var font_size: float = 16.0  # Default size
+
+	# Approach 1: Try to get theme font from the ItemList directly
+	if item_list.has_theme_font_override("font"):
+		font = item_list.get_theme_font_override("font")
+		if item_list.has_theme_font_size_override("font_size"):
+			font_size = item_list.get_theme_font_size_override("font_size")
+	# Approach 2: Try to get from the theme using type name
+	elif has_theme_font("font", "ItemList"):
+		font = get_theme_font("font", "ItemList")
+		if has_theme_font_size("font_size", "ItemList"):
+			font_size = get_theme_font_size("font_size", "ItemList")
+	# Approach 3: Try to get default theme font
+	else:
+		font = ThemeDB.fallback_font
+		font_size = ThemeDB.fallback_font_size
+
+	# Calculate item height if we have a valid font
+	if font:
+		item_height = font.get_height(font_size) + 10  # Adding padding
+
+	# Add a bit more height per item for visual spacing
+	var visible_items := min(item_count, 15)  # Cap maximum visible items
+	var required_height: float = visible_items * item_height + 20  # Extra padding for better visibility
+
+	# For long lists, we add a bit more space for the scrollbar
+	if item_count > 15:
+		required_height += 10
+
+	# Use the larger of minimum height or required height
+	item_list.custom_minimum_size.y = max(min_height, required_height)
+
+	# Request layout update
+	item_list.queue_redraw()
 
 func _on_show_source_toggled(button_pressed: bool) -> void:
 	_show_source = button_pressed
