@@ -51,232 +51,129 @@ func _handle_mouse_up(position: Vector2) -> void:
 	# You can implement drop logic here if needed
 	pass
 
-func _get_drag_data(at_position: Vector2) -> Variant:
-	print_rich("[color=#%s]DEBUG: _get_drag_data called at %s[/color]" % [LoggerColors.DEBUG_HTML, at_position])
+# Create a common drag preview function for reusability
+func _create_drag_preview(text: String) -> Control:
+	var label = Label.new()
+	label.text = text
+	label.modulate = Color(1, 1, 1, 0.8)
 	
-	# Get global mouse position and convert to local positions for each list
-	var global_pos = get_global_mouse_position()
-	print_rich("[color=#%s]DEBUG: Global mouse position: %s[/color]" % [LoggerColors.DEBUG_HTML, global_pos])
+	var panel = Panel.new()
+	panel.add_child(label)
+	label.position = Vector2(10, 5)
+	panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
 	
-	# Check if we're dragging from Available Tags
-	var available_rect = _available_tags_list.get_global_rect()
-	if available_rect.has_point(global_pos):
-		print_rich("[color=#%s]DEBUG: Mouse is inside Available Tags rect[/color]" % [LoggerColors.DEBUG_HTML])
-		var indices = _available_tags_list.get_selected_items()
-		if indices.size() > 0:
-			var tag_index = indices[0]
-			var tag_text = _available_tags_list.get_item_text(tag_index)
-			print_rich("[color=#%s]DEBUG: Dragging '%s' from Available Tags[/color]" % [LoggerColors.DEBUG_HTML, tag_text])
-			
-			# Create drag data
-			var drag_data = {
-				"type": "tag",
-				"tag": tag_text,
-				"source": SOURCE_AVAILABLE,
-				"index": tag_index
-			}
-			
-			# Create preview
-			var label = Label.new()
-			label.text = tag_text
-			label.modulate = Color(1, 1, 1, 0.8)
-			
-			var panel = Panel.new()
-			panel.add_child(label)
-			label.position = Vector2(10, 5)
-			panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
-			
-			set_drag_preview(panel)
-			return drag_data
-	
-	# Check if we're dragging from Active Tags
-	var active_rect = _tags_list.get_global_rect()
-	if active_rect.has_point(global_pos):
-		print_rich("[color=#%s]DEBUG: Mouse is inside Active Tags rect[/color]" % [LoggerColors.DEBUG_HTML])
-		var indices = _tags_list.get_selected_items()
-		if indices.size() > 0:
-			var tag_index = indices[0]
-			var tag_text = _tags_list.get_item_text(tag_index)
-			print_rich("[color=#%s]DEBUG: Dragging '%s' from Active Tags[/color]" % [LoggerColors.DEBUG_HTML, tag_text])
-			
-			# Create drag data
-			var drag_data = {
-				"type": "tag",
-				"tag": tag_text,
-				"source": SOURCE_ACTIVE,
-				"index": tag_index
-			}
-			
-			# Create preview
-			var label = Label.new()
-			label.text = tag_text
-			label.modulate = Color(1, 1, 1, 0.8)
-			
-			var panel = Panel.new()
-			panel.add_child(label)
-			label.position = Vector2(10, 5)
-			panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
-			
-			set_drag_preview(panel)
-			return drag_data
-	
-	# Check if we're dragging from Ignored Tags
-	var ignored_rect = _ignored_tags_list.get_global_rect()
-	if ignored_rect.has_point(global_pos):
-		print_rich("[color=#%s]DEBUG: Mouse is inside Ignored Tags rect[/color]" % [LoggerColors.DEBUG_HTML])
-		var indices = _ignored_tags_list.get_selected_items()
-		if indices.size() > 0:
-			var tag_index = indices[0]
-			var tag_text = _ignored_tags_list.get_item_text(tag_index)
-			print_rich("[color=#%s]DEBUG: Dragging '%s' from Ignored Tags[/color]" % [LoggerColors.DEBUG_HTML, tag_text])
-			
-			# Create drag data
-			var drag_data = {
-				"type": "tag",
-				"tag": tag_text,
-				"source": SOURCE_IGNORED,
-				"index": tag_index
-			}
-			
-			# Create preview
-			var label = Label.new()
-			label.text = tag_text
-			label.modulate = Color(1, 1, 1, 0.8)
-			
-			var panel = Panel.new()
-			panel.add_child(label)
-			label.position = Vector2(10, 5)
-			panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
-			
-			set_drag_preview(panel)
-			return drag_data
-	
-	print_rich("[color=#%s]DEBUG: No valid drag source found[/color]" % [LoggerColors.DEBUG_HTML])
+	return panel
 
+# Get drag data from any list with a single function
+func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
+	var indices = item_list.get_selected_items()
+	if indices.size() == 0:
+		return null
+		
+	var tag_index = indices[0]
+	var tag_text = item_list.get_item_text(tag_index)
+	
+	if not _validate_tag_name(tag_text):
+		push_warning("Invalid tag: '%s'" % tag_text)
+		return null
+	
+	# Create drag data
+	var drag_data = {
+		"type": "tag",
+		"tag": tag_text,
+		"source": source_type,
+		"index": tag_index
+	}
+	
+	# Create preview
+	set_drag_preview(_create_drag_preview(tag_text))
+	return drag_data
+
+func _get_drag_data(at_position: Vector2) -> Variant:
+	# Get global mouse position
+	var global_pos = get_global_mouse_position()
+	
+	# Use a reusable function to handle all lists
+	if _available_tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_available_tags_list, SOURCE_AVAILABLE)
+	elif _tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_tags_list, SOURCE_ACTIVE)
+	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_ignored_tags_list, SOURCE_IGNORED)
+	
 	return null
 
+# Helper function to determine drop validity
+func _can_drop_tag(tag: String, source: String, target: String) -> bool:
+	# Can't drop to the same list
+	if source == target:
+		return false
+		
+	# Check valid source->target combinations
+	match target:
+		SOURCE_AVAILABLE:
+			return source == SOURCE_ACTIVE or source == SOURCE_IGNORED
+		SOURCE_ACTIVE:
+			# Don't accept if already in active list
+			if _active_tags.has(tag):
+				return false
+			return source == SOURCE_AVAILABLE or source == SOURCE_IGNORED
+		SOURCE_IGNORED:
+			# Don't accept if already in ignored list
+			if _ignored_tags.has(tag):
+				return false
+			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
+			
+	return false
+
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	print_rich("[color=#%s]DEBUG: _can_drop_data called at %s with data %s[/color]" % [LoggerColors.DEBUG_HTML, at_position, data])
-	
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
-		print_rich("[color=#%s]DEBUG: Drop rejected - not a valid tag dictionary[/color]" % [LoggerColors.DEBUG_HTML])
 		return false
 	
 	var tag = data["tag"]
 	var source = data.get("source", "")
-	
-	# Determine which list is the drop target
 	var mouse_pos = get_global_mouse_position()
-	print_rich("[color=#%s]DEBUG: Mouse position for drop: %s[/color]" % [LoggerColors.DEBUG_HTML, mouse_pos])
 	
-	# Check if dropping on Available Tags
-	var available_rect = _available_tags_list.get_global_rect()
-	if available_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Attempting to drop on Available Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		# Accept tags from active or ignored lists only
-		if not (source == SOURCE_ACTIVE or source == SOURCE_IGNORED):
-			print_rich("[color=#%s]DEBUG: Drop rejected - source is %s[/color]" % [LoggerColors.DEBUG_HTML, source])
-			return false
+	# Determine target list type and delegate to helper
+	var target_type = ""
+	if _available_tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_AVAILABLE
+	elif _tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_ACTIVE
+	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_IGNORED
+	else:
+		return false
 		
-		print_rich("[color=#%s]DEBUG: Drop accepted for tag '%s' to Available Tags[/color]" % [LoggerColors.DEBUG_HTML, tag])
-		return true
+	return _can_drop_tag(tag, source, target_type)
+
+# Common function for handling drops with feedback
+func _handle_drop_on_list(item_list: ItemList, tag: String, source: String, target: String) -> void:
+	# Visual feedback to indicate drop success
+	item_list.add_theme_color_override("font_selected_color", Color.GREEN)
+	await get_tree().create_timer(0.2).timeout
+	item_list.add_theme_color_override("font_selected_color", Color.WHITE)
 	
-	# Check if dropping on Active Tags
-	var active_rect = _tags_list.get_global_rect()
-	if active_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Attempting to drop on Active Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		# Accept tags from available or ignored lists
-		if not (source == SOURCE_AVAILABLE or source == SOURCE_IGNORED):
-			print_rich("[color=#%s]DEBUG: Drop rejected - source is %s[/color]" % [LoggerColors.DEBUG_HTML, source])
-			return false
-		
-		# Don't accept tags that are already in the active list
-		if _active_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Drop rejected - tag '%s' already in active list[/color]" % [LoggerColors.DEBUG_HTML, tag])
-			return false
-		
-		print_rich("[color=#%s]DEBUG: Drop accepted for tag '%s' to Active Tags[/color]" % [LoggerColors.DEBUG_HTML, tag])
-		return true
-	
-	# Check if dropping on Ignored Tags
-	var ignored_rect = _ignored_tags_list.get_global_rect()
-	if ignored_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Attempting to drop on Ignored Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		# Accept tags from available or active lists
-		if not (source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE):
-			print_rich("[color=#%s]DEBUG: Drop rejected - source is %s[/color]" % [LoggerColors.DEBUG_HTML, source])
-			return false
-		
-		# Don't accept tags that are already in the ignored list
-		if _ignored_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Drop rejected - tag '%s' already in ignored list[/color]" % [LoggerColors.DEBUG_HTML, tag])
-			return false
-		
-		print_rich("[color=#%s]DEBUG: Drop accepted for tag '%s' to Ignored Tags[/color]" % [LoggerColors.DEBUG_HTML, tag])
-		return true
-	
-	print_rich("[color=#%s]DEBUG: Drop rejected - not over a valid target[/color]" % [LoggerColors.DEBUG_HTML])
-	return false
+	# Handle the tag movement
+	_handle_tag_drag(tag, source, target)
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
-	print_rich("[color=#%s]DEBUG: _drop_data called at %s with data %s[/color]" % [LoggerColors.DEBUG_HTML, at_position, data])
-	
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
-		print_rich("[color=#%s]DEBUG: Drop failed - invalid data format[/color]" % [LoggerColors.DEBUG_HTML])
 		return
 	
 	var tag = data["tag"]
 	var source = data.get("source", "")
-	print_rich("[color=#%s]DEBUG: Processing drop of tag '%s' from %s[/color]" % [LoggerColors.DEBUG_HTML, tag, source])
-	
-	# Determine which list is the drop target
 	var mouse_pos = get_global_mouse_position()
 	
-	# Check if dropping on Available Tags
-	var available_rect = _available_tags_list.get_global_rect()
-	if available_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Dropping on Available Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		
-		# Visual feedback to indicate drop success
-		_available_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-		await get_tree().create_timer(0.2).timeout
-		_available_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-		
-		# Handle the tag movement
-		_handle_tag_drag(tag, source, SOURCE_AVAILABLE)
-		return
-	
-	# Check if dropping on Active Tags
-	var active_rect = _tags_list.get_global_rect()
-	if active_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Dropping on Active Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		
-		# Visual feedback to indicate drop success
-		_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-		await get_tree().create_timer(0.2).timeout
-		_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-		
-		# Handle the tag movement
-		_handle_tag_drag(tag, source, SOURCE_ACTIVE)
-		return
-	
-	# Check if dropping on Ignored Tags
-	var ignored_rect = _ignored_tags_list.get_global_rect()
-	if ignored_rect.has_point(mouse_pos):
-		print_rich("[color=#%s]DEBUG: Dropping on Ignored Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		
-		# Visual feedback to indicate drop success
-		_ignored_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-		await get_tree().create_timer(0.2).timeout
-		_ignored_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-		
-		# Handle the tag movement
-		_handle_tag_drag(tag, source, SOURCE_IGNORED)
-		return
-	
-	print_rich("[color=#%s]DEBUG: Drop failed - not over a valid target[/color]" % [LoggerColors.DEBUG_HTML])
+	# Use a reusable function for handling drops on all lists
+	if _available_tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_available_tags_list, tag, source, SOURCE_AVAILABLE)
+	elif _tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_tags_list, tag, source, SOURCE_ACTIVE)
+	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_ignored_tags_list, tag, source, SOURCE_IGNORED)
 
 # Config constants
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
@@ -369,16 +266,15 @@ func _ready() -> void:
 	_remove_available_tag_button.pressed.connect(_on_remove_available_tag)
 	_available_tags_input.text_submitted.connect(_on_add_available_tag)
 
+	# Available Tags
+	_add_available_tag_button.pressed.connect(_on_add_available_tag)
+	_remove_available_tag_button.pressed.connect(_on_remove_available_tag)
+	_available_tags_input.text_submitted.connect(_on_add_available_tag)
+
 	# Set up item selection and activation signals
 	_available_tags_list.item_selected.connect(_on_available_tag_selected)
 	_available_tags_list.item_activated.connect(_on_available_tag_activated)
 	
-	# Enable drag and drop for Available Tags
-	_available_tags_list.mouse_filter = MOUSE_FILTER_PASS
-	_available_tags_list.focus_mode = FOCUS_ALL
-	_available_tags_list.allow_rmb_select = true
-	_available_tags_list.allow_reselect = true
-
 	# Active Tags
 	_add_tag_button.pressed.connect(_on_add_tag)
 	_remove_tag_button.pressed.connect(_on_remove_tag)
@@ -388,12 +284,6 @@ func _ready() -> void:
 	_tags_list.item_selected.connect(_on_active_tag_selected)
 	_tags_list.item_activated.connect(_on_active_tag_activated)
 	
-	# Enable drag and drop for Active Tags
-	_tags_list.mouse_filter = MOUSE_FILTER_PASS
-	_tags_list.focus_mode = FOCUS_ALL
-	_tags_list.allow_rmb_select = true
-	_tags_list.allow_reselect = true
-
 	# Ignored Tags
 	_add_ignored_tag_button.pressed.connect(_on_add_ignored_tag)
 	_remove_ignored_tag_button.pressed.connect(_on_remove_ignored_tag)
@@ -403,11 +293,12 @@ func _ready() -> void:
 	_ignored_tags_list.item_selected.connect(_on_ignored_tag_selected)
 	_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
 	
-	# Enable drag and drop for Ignored Tags
-	_ignored_tags_list.mouse_filter = MOUSE_FILTER_PASS
-	_ignored_tags_list.focus_mode = FOCUS_ALL
-	_ignored_tags_list.allow_rmb_select = true
-	_ignored_tags_list.allow_reselect = true
+	# Configure all item lists with the same settings
+	for list in [_available_tags_list, _tags_list, _ignored_tags_list]:
+		list.mouse_filter = MOUSE_FILTER_PASS
+		list.focus_mode = FOCUS_ALL
+		list.allow_rmb_select = true
+		list.allow_reselect = true
 	
 	# Enable dragging on all lists
 	print_rich("[color=#%s]DEBUG: Drag and drop initialized[/color]" % [LoggerColors.DEBUG_HTML])
@@ -687,67 +578,48 @@ func _move_tag(tag: String, from_list: Array[String], to_list: Array[String]) ->
 ## - tag: The tag being moved
 ## - from_source: Source category ("available", "active", or "ignored")
 ## - to_target: Target category for the tag
+## Handle tag movement between categories with match statement for cleaner code
 func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> void:
-	print_rich("[color=#%s]DEBUG: _handle_tag_drag called with tag '%s' from %s to %s[/color]" %
-		[LoggerColors.DEBUG_HTML, tag, from_source, to_target])
-
-	if not _validate_tag_name(tag):
-		push_warning("Invalid tag format: '%s'" % tag)
+	if not _validate_tag_name(tag) or from_source == to_target:
 		return
-
-	# If trying to move a tag to its current list, do nothing
-	if from_source == to_target:
-		print_rich("[color=#%s]DEBUG: Skipping move - source and target are the same[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	print_rich("[color=#%s]DEBUG: Before move - Available tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _available_tags])
-	print_rich("[color=#%s]DEBUG: Before move - Active tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _active_tags])
-	print_rich("[color=#%s]DEBUG: Before move - Ignored tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _ignored_tags])
 
 	_begin_batch_operation()
 
-	# First, make sure the tag is in the available tags master list
+	# Always ensure tag is in the available tags master list
 	if not _available_tags.has(tag):
-		print_rich("[color=#%s]DEBUG: Adding tag to available tags master list[/color]" % [LoggerColors.DEBUG_HTML])
 		_available_tags.append(tag)
 
-	# Remove from source category lists
-	if from_source == SOURCE_ACTIVE and _active_tags.has(tag):
-		print_rich("[color=#%s]DEBUG: Removing tag from active tags[/color]" % [LoggerColors.DEBUG_HTML])
-		_active_tags.erase(tag)
-	elif from_source == SOURCE_IGNORED and _ignored_tags.has(tag):
-		print_rich("[color=#%s]DEBUG: Removing tag from ignored tags[/color]" % [LoggerColors.DEBUG_HTML])
-		_ignored_tags.erase(tag)
+	# Use match for cleaner code structure
+	# Handle tag removal from source
+	match from_source:
+		SOURCE_ACTIVE:
+			if _active_tags.has(tag):
+				_active_tags.erase(tag)
+		SOURCE_IGNORED:
+			if _ignored_tags.has(tag):
+				_ignored_tags.erase(tag)
 
-	# Add to target category list (if not already there)
-	if to_target == SOURCE_ACTIVE:
-		if _ignored_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Removing tag from ignored tags (moving to active)[/color]" % [LoggerColors.DEBUG_HTML])
-			_ignored_tags.erase(tag)
-		if not _active_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Adding tag to active tags[/color]" % [LoggerColors.DEBUG_HTML])
-			_active_tags.append(tag)
-	elif to_target == SOURCE_IGNORED:
-		if _active_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Removing tag from active tags (moving to ignored)[/color]" % [LoggerColors.DEBUG_HTML])
+	# Handle tag addition to target
+	match to_target:
+		SOURCE_AVAILABLE:
+			# Remove from both filtered lists
 			_active_tags.erase(tag)
-		if not _ignored_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Adding tag to ignored tags[/color]" % [LoggerColors.DEBUG_HTML])
-			_ignored_tags.append(tag)
-	# If target is available, just make sure it's removed from both active and ignored
-	elif to_target == SOURCE_AVAILABLE:
-		if _active_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Removing tag from active tags (moving to available)[/color]" % [LoggerColors.DEBUG_HTML])
-			_active_tags.erase(tag)
-		if _ignored_tags.has(tag):
-			print_rich("[color=#%s]DEBUG: Removing tag from ignored tags (moving to available)[/color]" % [LoggerColors.DEBUG_HTML])
 			_ignored_tags.erase(tag)
-
-	print_rich("[color=#%s]DEBUG: After move - Available tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _available_tags])
-	print_rich("[color=#%s]DEBUG: After move - Active tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _active_tags])
-	print_rich("[color=#%s]DEBUG: After move - Ignored tags: %s[/color]" % [LoggerColors.DEBUG_HTML, _ignored_tags])
+		SOURCE_ACTIVE:
+			_ignored_tags.erase(tag)
+			if not _active_tags.has(tag):
+				_active_tags.append(tag)
+		SOURCE_IGNORED:
+			_active_tags.erase(tag)
+			if not _ignored_tags.has(tag):
+				_ignored_tags.append(tag)
 
 	_end_batch_operation()
+
+	print_rich(
+		"[color=#%s]Moved tag '%s' from %s to %s[/color]" 
+		% [LoggerColors.SUCCESS_HTML, tag, from_source, to_target]
+	)
 
 	print_rich(
 		"[color=#%s]Moved tag '%s' from %s to %s[/color]"
@@ -757,263 +629,27 @@ func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> vo
 
 ## Begin a batch operation to prevent multiple saves
 func _begin_batch_operation() -> void:
-	print_rich("[color=#%s]DEBUG: Beginning batch operation[/color]" % [LoggerColors.DEBUG_HTML])
 	_batch_operation = true
 
 
 ## End a batch operation and save changes
 func _end_batch_operation() -> void:
-	print_rich("[color=#%s]DEBUG: Ending batch operation[/color]" % [LoggerColors.DEBUG_HTML])
 	_batch_operation = false
 	_refresh_tags_lists()
 	_save_settings_to_config()
 
 
-# Drag & Drop handlers for Available Tags
-func _get_available_tag_drag_data(position: Vector2) -> Variant:
-	print_rich("[color=#%s]DEBUG: Starting drag from Available Tags at position %s[/color]" % [LoggerColors.DEBUG_HTML, position])
+# The individual drag and drop handlers have been replaced by global methods:
+# - _get_drag_data
+# - _can_drop_data
+# - _drop_data
+# - _create_drag_preview
 
-	var indices := _available_tags_list.get_selected_items()
-	if indices.size() == 0:
-		print_rich("[color=#%s]DEBUG: No item selected in Available Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		return null
 
-	var tag_index = indices[0]
-	var tag_text = _available_tags_list.get_item_text(tag_index)
-	print_rich("[color=#%s]DEBUG: Selected tag: '%s' at index %d[/color]" % [LoggerColors.DEBUG_HTML, tag_text, tag_index])
+# Additional handlers removed (replaced by global methods)
 
-	if not _validate_tag_name(tag_text):
-		push_warning("Invalid tag: '%s'" % tag_text)
-		return null
 
-	# Store complete information in drag data
-	var drag_data = {
-		"type": "tag",
-		"tag": tag_text,
-		"source": SOURCE_AVAILABLE,
-		"index": tag_index
-	}
-
-	# Create drag preview
-	var preview = _create_tag_drag_preview(tag_text)
-	set_drag_preview(preview)
-
-	# Visual feedback
-	_available_tags_list.add_theme_color_override("font_selected_color", Color(0.2, 0.6, 1.0))
-
-	return drag_data
-
-
-func _can_drop_on_available_tags(position: Vector2, data: Variant) -> bool:
-	print_rich("[color=#%s]DEBUG: Checking if can drop on Available Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	# Only accept tag data
-	if not data is Dictionary or not data.has("type") or data["type"] != "tag":
-		print_rich("[color=#%s]DEBUG: Drop rejected - not a valid tag dictionary[/color]" % [LoggerColors.DEBUG_HTML])
-		return false
-
-	# Accept tags from active or ignored lists only
-	var source = data.get("source", "")
-	var result = source == SOURCE_ACTIVE or source == SOURCE_IGNORED
-	print_rich("[color=#%s]DEBUG: Drop %s - source is %s[/color]" % [LoggerColors.DEBUG_HTML, "accepted" if result else "rejected", source])
-	return result
-
-
-func _drop_on_available_tags(position: Vector2, data: Variant) -> void:
-	print_rich("[color=#%s]DEBUG: Dropping on Available Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	if not data is Dictionary or not data.has("tag"):
-		print_rich("[color=#%s]DEBUG: Drop failed - invalid data format[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	var tag = data["tag"]
-	var source = data.get("source", "")
-	print_rich("[color=#%s]DEBUG: Processing drop of tag '%s' from %s[/color]" % [LoggerColors.DEBUG_HTML, tag, source])
-
-	# Visual feedback to indicate drop success
-	_available_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-	await get_tree().create_timer(0.2).timeout
-	_available_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-
-	# Handle the tag movement
-	_handle_tag_drag(tag, source, SOURCE_AVAILABLE)
-
-
-# Helper method to create a consistent drag preview
-func _create_tag_drag_preview(tag_text: String) -> Control:
-	# Create a visually appealing preview
-	var preview_label = Label.new()
-	preview_label.text = tag_text
-	preview_label.modulate = Color(1, 1, 1, 0.8)
-
-	# Add a background panel
-	var panel = Panel.new()
-	panel.add_child(preview_label)
-
-	# Center the label in the panel
-	preview_label.set_anchors_preset(Control.PRESET_CENTER)
-	preview_label.size = Vector2(100, 30)  # Fixed size preview
-	preview_label.position = Vector2(-50, -15)  # Center it
-
-	return panel
-
-
-# Drag & Drop handlers for Active Tags
-func _get_active_tag_drag_data(position: Vector2) -> Variant:
-	print_rich("[color=#%s]DEBUG: Starting drag from Active Tags at position %s[/color]" % [LoggerColors.DEBUG_HTML, position])
-
-	var indices := _tags_list.get_selected_items()
-	if indices.size() == 0:
-		print_rich("[color=#%s]DEBUG: No item selected in Active Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		return null
-
-	var tag_index = indices[0]
-	var tag_text = _tags_list.get_item_text(tag_index)
-	print_rich("[color=#%s]DEBUG: Selected tag: '%s' at index %d[/color]" % [LoggerColors.DEBUG_HTML, tag_text, tag_index])
-
-	if not _validate_tag_name(tag_text):
-		push_warning("Invalid tag: '%s'" % tag_text)
-		return null
-
-	# Store complete information in drag data
-	var drag_data = {
-		"type": "tag",
-		"tag": tag_text,
-		"source": SOURCE_ACTIVE,
-		"index": tag_index
-	}
-
-	# Create drag preview
-	var preview = _create_tag_drag_preview(tag_text)
-	set_drag_preview(preview)
-
-	# Visual feedback
-	_tags_list.add_theme_color_override("font_selected_color", Color(0.2, 0.6, 1.0))
-
-	return drag_data
-
-
-func _can_drop_on_active_tags(position: Vector2, data: Variant) -> bool:
-	print_rich("[color=#%s]DEBUG: Checking if can drop on Active Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	# Only accept tag data
-	if not data is Dictionary or not data.has("type") or data["type"] != "tag":
-		print_rich("[color=#%s]DEBUG: Drop rejected - not a valid tag dictionary[/color]" % [LoggerColors.DEBUG_HTML])
-		return false
-
-	# Accept tags from available or ignored lists
-	var source = data.get("source", "")
-	if not (source == SOURCE_AVAILABLE or source == SOURCE_IGNORED):
-		print_rich("[color=#%s]DEBUG: Drop rejected - source is %s[/color]" % [LoggerColors.DEBUG_HTML, source])
-		return false
-
-	# Don't accept tags that are already in the active list
-	var tag = data.get("tag", "")
-	if _active_tags.has(tag):
-		print_rich("[color=#%s]DEBUG: Drop rejected - tag '%s' already in active list[/color]" % [LoggerColors.DEBUG_HTML, tag])
-		return false
-
-	print_rich("[color=#%s]DEBUG: Drop accepted for tag '%s'[/color]" % [LoggerColors.DEBUG_HTML, tag])
-	return true
-
-
-func _drop_on_active_tags(position: Vector2, data: Variant) -> void:
-	print_rich("[color=#%s]DEBUG: Dropping on Active Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	if not data is Dictionary or not data.has("tag"):
-		print_rich("[color=#%s]DEBUG: Drop failed - invalid data format[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	var tag = data["tag"]
-	var source = data.get("source", "")
-	print_rich("[color=#%s]DEBUG: Processing drop of tag '%s' from %s[/color]" % [LoggerColors.DEBUG_HTML, tag, source])
-
-	# Visual feedback to indicate drop success
-	_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-	await get_tree().create_timer(0.2).timeout
-	_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-
-	# Handle the tag movement
-	_handle_tag_drag(tag, source, SOURCE_ACTIVE)
-
-
-# Drag & Drop handlers for Ignored Tags
-func _get_ignored_tag_drag_data(position: Vector2) -> Variant:
-	print_rich("[color=#%s]DEBUG: Starting drag from Ignored Tags at position %s[/color]" % [LoggerColors.DEBUG_HTML, position])
-
-	var indices := _ignored_tags_list.get_selected_items()
-	if indices.size() == 0:
-		print_rich("[color=#%s]DEBUG: No item selected in Ignored Tags[/color]" % [LoggerColors.DEBUG_HTML])
-		return null
-
-	var tag_index = indices[0]
-	var tag_text = _ignored_tags_list.get_item_text(tag_index)
-	print_rich("[color=#%s]DEBUG: Selected tag: '%s' at index %d[/color]" % [LoggerColors.DEBUG_HTML, tag_text, tag_index])
-
-	if not _validate_tag_name(tag_text):
-		push_warning("Invalid tag: '%s'" % tag_text)
-		return null
-
-	# Store complete information in drag data
-	var drag_data = {
-		"type": "tag",
-		"tag": tag_text,
-		"source": SOURCE_IGNORED,
-		"index": tag_index
-	}
-
-	# Create drag preview
-	var preview = _create_tag_drag_preview(tag_text)
-	set_drag_preview(preview)
-
-	# Visual feedback
-	_ignored_tags_list.add_theme_color_override("font_selected_color", Color(0.2, 0.6, 1.0))
-
-	return drag_data
-
-
-func _can_drop_on_ignored_tags(position: Vector2, data: Variant) -> bool:
-	print_rich("[color=#%s]DEBUG: Checking if can drop on Ignored Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	# Only accept tag data
-	if not data is Dictionary or not data.has("type") or data["type"] != "tag":
-		print_rich("[color=#%s]DEBUG: Drop rejected - not a valid tag dictionary[/color]" % [LoggerColors.DEBUG_HTML])
-		return false
-
-	# Accept tags from available or active lists
-	var source = data.get("source", "")
-	if not (source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE):
-		print_rich("[color=#%s]DEBUG: Drop rejected - source is %s[/color]" % [LoggerColors.DEBUG_HTML, source])
-		return false
-
-	# Don't accept tags that are already in the ignored list
-	var tag = data.get("tag", "")
-	if _ignored_tags.has(tag):
-		print_rich("[color=#%s]DEBUG: Drop rejected - tag '%s' already in ignored list[/color]" % [LoggerColors.DEBUG_HTML, tag])
-		return false
-
-	print_rich("[color=#%s]DEBUG: Drop accepted for tag '%s'[/color]" % [LoggerColors.DEBUG_HTML, tag])
-	return true
-
-
-func _drop_on_ignored_tags(position: Vector2, data: Variant) -> void:
-	print_rich("[color=#%s]DEBUG: Dropping on Ignored Tags at %s with data: %s[/color]" % [LoggerColors.DEBUG_HTML, position, data])
-
-	if not data is Dictionary or not data.has("tag"):
-		print_rich("[color=#%s]DEBUG: Drop failed - invalid data format[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	var tag = data["tag"]
-	var source = data.get("source", "")
-	print_rich("[color=#%s]DEBUG: Processing drop of tag '%s' from %s[/color]" % [LoggerColors.DEBUG_HTML, tag, source])
-
-	# Visual feedback to indicate drop success
-	_ignored_tags_list.add_theme_color_override("font_selected_color", Color.GREEN)
-	await get_tree().create_timer(0.2).timeout
-	_ignored_tags_list.add_theme_color_override("font_selected_color", Color.WHITE)
-
-	# Handle the tag movement
-	_handle_tag_drag(tag, source, SOURCE_IGNORED)
+# Additional handlers removed (replaced by global methods)
 
 
 # UI Event handlers
