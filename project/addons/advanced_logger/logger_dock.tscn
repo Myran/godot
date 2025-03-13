@@ -70,17 +70,9 @@ layout_mode = 2
 text = "Available Tags"
 horizontal_alignment = 1
 
-[node name="TagsInputHBox" type="HBoxContainer" parent="VBoxContainer/AvailableTagsSection"]
+[node name="UpdateTagsButton" type="Button" parent="VBoxContainer/AvailableTagsSection"]
 layout_mode = 2
-
-[node name="TagsInput" type="LineEdit" parent="VBoxContainer/AvailableTagsSection/TagsInputHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "Enter tag name"
-
-[node name="AddTagButton" type="Button" parent="VBoxContainer/AvailableTagsSection/TagsInputHBox"]
-layout_mode = 2
-text = "Add"
+text = "Update Tags"
 
 [node name="TagsList" type="ItemList" parent="VBoxContainer/AvailableTagsSection"]
 custom_minimum_size = Vector2(0, 100)
@@ -89,10 +81,6 @@ size_flags_vertical = 3
 allow_reselect = true
 item_count = 1
 item_0/text = "Example tag (drag to filter or ignore)"
-
-[node name="RemoveTagButton" type="Button" parent="VBoxContainer/AvailableTagsSection"]
-layout_mode = 2
-text = "Remove Selected Tag"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
@@ -105,27 +93,11 @@ layout_mode = 2
 text = "Active Tags (Filter)"
 horizontal_alignment = 1
 
-[node name="TagsInputHBox" type="HBoxContainer" parent="VBoxContainer/TagsSection"]
-layout_mode = 2
-
-[node name="TagsInput" type="LineEdit" parent="VBoxContainer/TagsSection/TagsInputHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "Enter tag name"
-
-[node name="AddTagButton" type="Button" parent="VBoxContainer/TagsSection/TagsInputHBox"]
-layout_mode = 2
-text = "Add"
-
 [node name="TagsList" type="ItemList" parent="VBoxContainer/TagsSection"]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
 allow_reselect = true
-
-[node name="RemoveTagButton" type="Button" parent="VBoxContainer/TagsSection"]
-layout_mode = 2
-text = "Remove Selected Tag"
 
 [node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
@@ -138,27 +110,11 @@ layout_mode = 2
 text = "Ignored Tags"
 horizontal_alignment = 1
 
-[node name="IgnoredTagsInputHBox" type="HBoxContainer" parent="VBoxContainer/IgnoredTagsSection"]
-layout_mode = 2
-
-[node name="IgnoredTagsInput" type="LineEdit" parent="VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "Enter tag name"
-
-[node name="AddIgnoredTagButton" type="Button" parent="VBoxContainer/IgnoredTagsSection/IgnoredTagsInputHBox"]
-layout_mode = 2
-text = "Add"
-
 [node name="IgnoredTagsList" type="ItemList" parent="VBoxContainer/IgnoredTagsSection"]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 3
 allow_reselect = true
-
-[node name="RemoveIgnoredTagButton" type="Button" parent="VBoxContainer/IgnoredTagsSection"]
-layout_mode = 2
-text = "Remove Selected Tag"
 
 [node name="HSeparatorIgnored" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
@@ -206,7 +162,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset to Defaults"
 
-[node name="ScanTagsButton" type="Button" parent="VBoxContainer/ButtonsSection"]
+[node name="UpdateAllTagsButton" type="Button" parent="VBoxContainer/ButtonsSection"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Scan For Tags"
+text = "Update All Tags"

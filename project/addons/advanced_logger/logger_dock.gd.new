@@ -255,12 +255,15 @@ func _ready() -> void:
 	_update_tags_button.pressed.connect(_on_scan_tags)
 
 	# Set up item selection and activation signals
+	_available_tags_list.item_selected.connect(_on_available_tag_selected)
 	_available_tags_list.item_activated.connect(_on_available_tag_activated)
 	
-	# Active Tags - Set up item activation signals
+	# Active Tags
+	_tags_list.item_selected.connect(_on_active_tag_selected)
 	_tags_list.item_activated.connect(_on_active_tag_activated)
 	
-	# Ignored Tags - Set up item activation signals
+	# Ignored Tags
+	_ignored_tags_list.item_selected.connect(_on_ignored_tag_selected)
 	_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
 	
 	# Configure all item lists with the same settings
@@ -614,18 +617,35 @@ func _end_batch_operation() -> void:
 
 
 # Available Tags handlers
+func _on_available_tag_selected(_index: int) -> void:
+	# No longer need to enable any remove button
+	pass
+
+
 func _on_available_tag_activated(index: int) -> void:
 	# Move tag to active list when double-clicked
 	var tag = _available_tags_list.get_item_text(index)
 	_handle_tag_drag(tag, SOURCE_AVAILABLE, SOURCE_ACTIVE)
 
+
 # Active Tags handlers
+func _on_active_tag_selected(_index: int) -> void:
+	# No longer need to enable any remove button
+	pass
+
+
 func _on_active_tag_activated(index: int) -> void:
 	# Move to ignored when double-clicked
 	var tag = _tags_list.get_item_text(index)
 	_handle_tag_drag(tag, SOURCE_ACTIVE, SOURCE_IGNORED)
 
+
 # Ignored Tags handlers
+func _on_ignored_tag_selected(_index: int) -> void:
+	# No longer need to enable any remove button
+	pass
+
+
 func _on_ignored_tag_activated(index: int) -> void:
 	# Move to active when double-clicked
 	var tag = _ignored_tags_list.get_item_text(index)

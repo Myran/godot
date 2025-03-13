@@ -61,13 +61,16 @@ func test_dock_integration():
 		print("  ❌ Failed to load LoggerDock script")
 		return
 	
-	# Check for ScanTagsButton in the tscn file
+	# Check for update buttons in the tscn file
 	var tscn_file = FileAccess.open("res://addons/advanced_logger/logger_dock.tscn", FileAccess.READ)
 	var tscn_content = tscn_file.get_as_text()
 	tscn_file.close()
 	
-	var has_scan_button = tscn_content.find("[node name=\"ScanTagsButton\"") >= 0
-	expect_true(has_scan_button, "Logger dock scene contains ScanTagsButton")
+	var has_update_button = tscn_content.find("[node name=\"UpdateTagsButton\"") >= 0
+	expect_true(has_update_button, "Logger dock scene contains UpdateTagsButton")
+	
+	var has_update_all_button = tscn_content.find("[node name=\"UpdateAllTagsButton\"") >= 0
+	expect_true(has_update_all_button, "Logger dock scene contains UpdateAllTagsButton")
 	
 	# Check for scan tags method in the script
 	var dock_script = FileAccess.open("res://addons/advanced_logger/logger_dock.gd", FileAccess.READ)
@@ -80,11 +83,21 @@ func test_dock_integration():
 	var has_initial_scan = dock_content.find("func _initial_tag_scan") >= 0
 	expect_true(has_initial_scan, "Logger dock has _initial_tag_scan method")
 	
-	var has_button_var = dock_content.find("_scan_tags_button") >= 0
-	expect_true(has_button_var, "Logger dock has reference to scan tags button")
+	var has_update_button_var = dock_content.find("_update_tags_button") >= 0
+	expect_true(has_update_button_var, "Logger dock has reference to update tags button")
 	
-	var has_button_connection = dock_content.find("_scan_tags_button.pressed.connect") >= 0
-	expect_true(has_button_connection, "Logger dock connects to scan tags button")
+	var has_update_all_button_var = dock_content.find("_update_all_tags_button") >= 0
+	expect_true(has_update_all_button_var, "Logger dock has reference to update all tags button")
+	
+	var has_update_button_connection = dock_content.find("_update_tags_button.pressed.connect") >= 0
+	expect_true(has_update_button_connection, "Logger dock connects to update tags button")
+	
+	var has_update_all_button_connection = dock_content.find("_update_all_tags_button.pressed.connect") >= 0
+	expect_true(has_update_all_button_connection, "Logger dock connects to update all tags button")
+	
+	# Check for removal of old add button functionality
+	var has_add_available_tag_input = dock_content.find("_available_tags_input") >= 0
+	expect_false(has_add_available_tag_input, "Logger dock no longer has reference to removed input field")
 
 # Helper functions
 func expect_true(condition: bool, message: String):
