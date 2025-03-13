@@ -32,8 +32,32 @@ test-logger:
     just test-script tests/validate_logger.gd
     @echo "Logger tests completed"
 
+# Run logger tag resizing validation test
+test-tag-resizing:
+    @echo "Running tag resizing validation test..."
+    just test-script tests/validate_tag_resizing.gd
+    @echo "Tag resizing test completed"
+
+# Run tag scanning validation test
+test-tag-scanning:
+    @echo "Running tag scanning validation test..."
+    just test-script tests/validate_tag_scanning.gd
+    @echo "Tag scanning test completed"
+
+# Run tag rescan test
+test-tag-rescan:
+    @echo "Running tag rescan test..."
+    just test-script tests/validate_tag_rescan.gd
+    @echo "Tag rescan test completed"
+
+# Run tag filtering test
+test-tag-filtering:
+    @echo "Running tag filtering test..."
+    just test-script tests/validate_tag_filtering.gd
+    @echo "Tag filtering test completed"
+
 # Run all standalone tests that don't require a running project
-test-standalone: test-logger
+test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering
     @echo "All standalone tests completed"
 
 # ===== INTEGRATION TESTS =====
