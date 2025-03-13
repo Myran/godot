@@ -20,9 +20,13 @@ The Advanced Logger's tag handling system has been enhanced to:
 
 ### User Interface Improvements
 
-- **Button Behavior**:
-  - The "Update Tags" button in the Available Tags section excludes test directories by default
-  - The "Update All Tags" button in the bottom buttons section includes all tags for complete testing
+- **Simplified Button Interface**:
+  - The "Update Tags" button in the Available Tags section now uses project settings to determine tag inclusion
+  - Removed the "Update All Tags" button for a cleaner interface
+- **Project Settings Integration**:
+  - Added a project setting "advanced_logger/include_test_tags" to control test tag inclusion
+  - When set to true, the "Update Tags" button will include test tags (useful for testing/debugging)
+  - When set to false (default), test tags are excluded for normal development
 - **Dynamic Resizing**:
   - Tag lists now resize based on content to show more tags when available
   - Lists maintain a minimum size for easy drag and drop operations
@@ -52,8 +56,11 @@ All tests can be run using the justfile commands:
 
 ## Usage Notes
 
-- **For Normal Development**: Use the "Update Tags" button to scan for tags while excluding test-specific tags
-- **For Testing/Validation**: Use the "Update All Tags" button to include all tags, including those from test files
+- **For Normal Development**: The "Update Tags" button scans for tags while excluding test-specific tags
+- **For Testing/Validation**: Set the project setting "advanced_logger/include_test_tags" to true before scanning
+- **Configuration via Project Settings**:
+  - Go to Project → Project Settings → Advanced Logger
+  - Toggle "include_test_tags" setting to control test tag visibility
 - **Manual Tag Management**: You can still manually drag tags between the Available, Active, and Ignored lists
 
 ## Next Steps

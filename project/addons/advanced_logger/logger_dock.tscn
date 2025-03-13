@@ -161,8 +161,3 @@ text = "Save Settings"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset to Defaults"
-
-[node name="UpdateAllTagsButton" type="Button" parent="VBoxContainer/ButtonsSection"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Update All Tags"

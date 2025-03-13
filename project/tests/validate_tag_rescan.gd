@@ -32,20 +32,20 @@ func _init():
 	
 	print("\nInstantiated LoggerDock, running tag scan...")
 	
-	# First, run a scan excluding test tags (normal usage)
+	# Set the project setting to include test tags for this test
+	print("Setting project parameter to include test tags")
+	ProjectSettings.set_setting("advanced_logger/include_test_tags", true)
+	
+	# Run the scan which will now include test tags due to project setting
 	var scan_tags_method = dock_instance.get("_on_scan_tags")
 	if scan_tags_method and scan_tags_method.is_valid():
-		scan_tags_method.call(false)  # false = exclude test tags
-		print("✅ Completed scan excluding test tags")
+		scan_tags_method.call()  # Uses project setting which is now true
+		print("✅ Completed scan with test tags (via project setting)")
 	else:
 		print("❌ Failed to call _on_scan_tags method")
 	
-	# Now run a scan including test tags (for tests and complete scanning)
-	if scan_tags_method and scan_tags_method.is_valid():
-		scan_tags_method.call(true)  # true = include test tags
-		print("✅ Completed scan including test tags")
-	else:
-		print("❌ Failed to call _on_scan_tags method")
+	# Reset the project setting to default value
+	ProjectSettings.set_setting("advanced_logger/include_test_tags", false)
 	
 	# Load the updated settings
 	config = ConfigFile.new()

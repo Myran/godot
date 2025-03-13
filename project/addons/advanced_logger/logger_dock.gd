@@ -238,7 +238,6 @@ var _batch_operation: bool = false
 @onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
 @onready var _save_button: Button = $VBoxContainer/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/ButtonsSection/ResetButton
-@onready var _update_all_tags_button: Button = $VBoxContainer/ButtonsSection/UpdateAllTagsButton
 
 
 func _ready() -> void:
@@ -251,9 +250,9 @@ func _ready() -> void:
 	# Connect UI signals
 	_level_option.item_selected.connect(_on_level_changed)
 
-	# Available Tags - connect with exclusion of test tags (normal usage)
+	# Available Tags - button now respects the project setting
 	_update_tags_button.pressed.connect(
-		func(): _on_scan_tags(false) # Normal usage excludes test tags
+		func(): _on_scan_tags() # Will use project setting to determine test tag inclusion
 	)
 
 	# Set up item activation signals
@@ -283,10 +282,7 @@ func _ready() -> void:
 	_reset_button.pressed.connect(_on_reset_settings)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
 
-	# Scan all tags button - include test tags for a complete scan
-	_update_all_tags_button.pressed.connect(
-		func(): _on_scan_tags(true) # Allow including test tags when using 'Update All Tags'
-	)
+    # No longer using the update all tags button - test tags inclusion is controlled by project parameter
 
 	# Load settings from config
 	_load_settings_from_config()
@@ -741,21 +737,26 @@ func _resize_all_lists() -> void:
 func _initial_tag_scan() -> void:
 	# Only run if we have no available tags yet or they're empty
 	if _available_tags.size() <= 1: # Accounting for possible example tag
-		_on_scan_tags(false) # Exclude test tags for normal usage
+		_on_scan_tags() # Uses project setting to determine test tag inclusion
 
 ## Scans the project for tags used in Log calls and adds them to available tags
-## 
-## Parameters:
-## - include_test_tags: If true, includes tags from test files, otherwise excludes them
 func _on_scan_tags(include_test_tags: bool = false) -> void:
 	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
 	
+	# Check for project parameter to determine if test tags should be included
+	var project_include_test_tags: bool = ProjectSettings.get_setting("advanced_logger/include_test_tags", false)
+	
+	# Parameter overrides project setting if directly specified
+	var final_include_test_tags: bool = include_test_tags or project_include_test_tags
+	
 	# Directories to exclude during normal development
 	var exclude_dirs: Array[String] = []
-	if not include_test_tags:
+	if not final_include_test_tags:
 		exclude_dirs = ["res://tests/"]
 		print_rich("[color=#%s]Excluding test directories: %s[/color]" % 
 			[LoggerColors.INFO_HTML, ", ".join(exclude_dirs)])
+	else:
+		print_rich("[color=#%s]Including test directories (test mode)[/color]" % LoggerColors.INFO_HTML)
 	
 	# Get tags from the scanner
 	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags(exclude_dirs)
