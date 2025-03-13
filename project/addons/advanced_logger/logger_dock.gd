@@ -5,6 +5,9 @@ class_name LoggerDock extends Control
 ## Provides configuration UI for the Advanced Logger system with tag filtering,
 ## drag and drop tag management, and other logger settings.
 
+# Preload the tag scanner
+const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
+
 # Override drag and drop methods for Godot 4
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -249,6 +252,7 @@ var _remove_ignored_tag_button: Button = $VBoxContainer/IgnoredTagsSection/Remov
 @onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
 @onready var _save_button: Button = $VBoxContainer/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/ButtonsSection/ResetButton
+@onready var _scan_tags_button: Button = $VBoxContainer/ButtonsSection/ScanTagsButton
 
 
 func _ready() -> void:
@@ -310,12 +314,18 @@ func _ready() -> void:
 	_save_button.pressed.connect(_on_save_settings)
 	_reset_button.pressed.connect(_on_reset_settings)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
+	
+	# Scan tags button
+	_scan_tags_button.pressed.connect(_on_scan_tags)
 
 	# Load settings from config
 	_load_settings_from_config()
 
 	# Display startup message
 	_update_startup_message()
+	
+	# Perform initial tag scan
+	call_deferred("_initial_tag_scan")
 
 
 ## Updates the startup message with current tag status
@@ -893,3 +903,32 @@ func _on_save_settings() -> void:
 func _on_reset_settings() -> void:
 	_apply_defaults()
 	print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
+
+## Performs an initial tag scan when the plugin is loaded
+func _initial_tag_scan() -> void:
+	# Only run if we have no available tags yet or they're empty
+	if _available_tags.size() <= 1: # Accounting for possible example tag
+		_on_scan_tags()
+
+## Scans the project for tags used in Log calls and adds them to available tags
+func _on_scan_tags() -> void:
+	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
+	
+	# Get tags from the scanner
+	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags()
+	
+	# Begin batch operation to prevent multiple saves
+	_begin_batch_operation()
+	
+	# Add each tag to available tags if not already present
+	var added_count := 0
+	for tag in scanner_tags:
+		if not _available_tags.has(tag):
+			_available_tags.append(tag)
+			added_count += 1
+	
+	# End batch operation and save changes
+	_end_batch_operation()
+	
+	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" % 
+			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])

@@ -205,3 +205,8 @@ text = "Save Settings"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset to Defaults"
+
+[node name="ScanTagsButton" type="Button" parent="VBoxContainer/ButtonsSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Scan For Tags"
