@@ -224,14 +224,14 @@ var _batch_operation: bool = false
 @onready var _startup_message: Label = $VBoxContainer/StartupMessage  # New startup message label
 
 # Available Tags components
-@onready var _available_tags_list: ItemList = $VBoxContainer/AvailableTagsSection/TagsList
-@onready var _update_tags_button: Button = $VBoxContainer/AvailableTagsSection/UpdateTagsButton
+@onready var _available_tags_list: ItemList = $VBoxContainer/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList
+@onready var _update_tags_button: Button = $VBoxContainer/TagsContainer/AvailableTagsSection/UpdateTagsButton
 
 # Active Tags components
-@onready var _tags_list: ItemList = $VBoxContainer/TagsSection/TagsList
+@onready var _tags_list: ItemList = $VBoxContainer/TagsContainer/TagsSection/ScrollContainer/TagsList
 
 # Ignored Tags components
-@onready var _ignored_tags_list: ItemList = $VBoxContainer/IgnoredTagsSection/IgnoredTagsList
+@onready var _ignored_tags_list: ItemList = $VBoxContainer/TagsContainer/IgnoredTagsSection/ScrollContainer/IgnoredTagsList
 
 @onready var _show_timestamp_check: CheckBox = $VBoxContainer/FormatSection/ShowTimestampCheck
 @onready var _show_tags_check: CheckBox = $VBoxContainer/FormatSection/ShowTagsCheck
@@ -282,7 +282,7 @@ func _ready() -> void:
 	_reset_button.pressed.connect(_on_reset_settings)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
 
-    # No longer using the update all tags button - test tags inclusion is controlled by project parameter
+	# No longer using the update all tags button - test tags inclusion is controlled by project parameter
 
 	# Load settings from config
 	_load_settings_from_config()
@@ -742,75 +742,75 @@ func _initial_tag_scan() -> void:
 ## Scans the project for tags used in Log calls and adds them to available tags
 func _on_scan_tags(include_test_tags: bool = false) -> void:
 	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
-	
+
 	# Check for project parameter to determine if test tags should be included
 	var project_include_test_tags: bool = ProjectSettings.get_setting("advanced_logger/include_test_tags", false)
-	
+
 	# Parameter overrides project setting if directly specified
 	var final_include_test_tags: bool = include_test_tags or project_include_test_tags
-	
+
 	# Directories to exclude during normal development
 	var exclude_dirs: Array[String] = []
 	if not final_include_test_tags:
 		exclude_dirs = ["res://tests/"]
-		print_rich("[color=#%s]Excluding test directories: %s[/color]" % 
+		print_rich("[color=#%s]Excluding test directories: %s[/color]" %
 			[LoggerColors.INFO_HTML, ", ".join(exclude_dirs)])
 	else:
 		print_rich("[color=#%s]Including test directories (test mode)[/color]" % LoggerColors.INFO_HTML)
-	
+
 	# Get tags from the scanner
 	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags(exclude_dirs)
-	
+
 	# Begin batch operation to prevent multiple saves
 	_begin_batch_operation()
-	
+
 	# Add each tag to available tags if not already present
 	var added_count := 0
 	for tag in scanner_tags:
 		if not _available_tags.has(tag):
 			_available_tags.append(tag)
 			added_count += 1
-	
+
 	# Also check for constant tags in data_source.gd that might not be directly used in Log calls
 	var additional_tags := _scan_for_tag_constants()
 	for tag in additional_tags:
 		if not _available_tags.has(tag) and not scanner_tags.has(tag):
 			_available_tags.append(tag)
 			added_count += 1
-	
+
 	# Sort tags alphabetically for easier finding
 	_available_tags.sort()
-	
+
 	# End batch operation and save changes
 	_end_batch_operation()
-	
+
 	# Ensure lists are properly sized after adding new tags
 	_resize_all_lists()
-	
-	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" % 
+
+	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" %
 			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
-	
+
 ## Scans for TAG constant definitions in source files
 func _scan_for_tag_constants() -> Array[String]:
 	print_rich("[color=#%s]Looking for additional TAG constants...[/color]" % LoggerColors.INFO_HTML)
-	
+
 	var additional_tags: Array[String] = []
 	var files_to_check: Array[String] = [
 		"res://autoloads/data_source.gd"
 	]
-	
+
 	for file_path in files_to_check:
 		var file := FileAccess.open(file_path, FileAccess.READ)
 		if not file:
 			continue
-			
+
 		var content := file.get_as_text()
 		file.close()
-		
+
 		# Look for tag constants using regex
 		var regex := RegEx.new()
 		regex.compile("const\\s+TAG_[A-Za-z0-9_]+\\s*:\\s*String\\s*=\\s*\"([^\"]+)\"")
-		
+
 		var matches := regex.search_all(content)
 		for match_result in matches:
 			if match_result.strings.size() >= 2:
@@ -818,7 +818,7 @@ func _scan_for_tag_constants() -> Array[String]:
 				if not additional_tags.has(tag) and LoggerSettings._is_valid_tag(tag):
 					additional_tags.append(tag)
 					print_rich("[color=#%s]Found tag constant: %s[/color]" % [LoggerColors.INFO_HTML, tag])
-	
+
 	return additional_tags
 
 # Signal handlers that need to be defined

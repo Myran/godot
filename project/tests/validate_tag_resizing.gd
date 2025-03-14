@@ -50,10 +50,10 @@ func test_tag_list_resizing():
 	print("  Dock structure:")
 	print_node_hierarchy(dock_instance)
 	
-	# Get references to the lists
-	var available_list = dock_instance.get_node("VBoxContainer/AvailableTagsSection/TagsList")
-	var active_list = dock_instance.get_node("VBoxContainer/TagsSection/TagsList")
-	var ignored_list = dock_instance.get_node("VBoxContainer/IgnoredTagsSection/IgnoredTagsList")
+	# Get references to the lists using the new node paths
+	var available_list = dock_instance.get_node("VBoxContainer/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList")
+	var active_list = dock_instance.get_node("VBoxContainer/TagsContainer/TagsSection/ScrollContainer/TagsList")
+	var ignored_list = dock_instance.get_node("VBoxContainer/TagsContainer/IgnoredTagsSection/ScrollContainer/IgnoredTagsList")
 	
 	if not available_list or not active_list or not ignored_list:
 		print("❌ Could not find all tag lists")

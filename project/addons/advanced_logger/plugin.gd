@@ -13,7 +13,7 @@ var _dock: Control
 func _enter_tree() -> void:
 	# Register autoload singleton for runtime use
 	add_autoload_singleton(AUTOLOAD_NAME, LOGGER_SCRIPT_PATH)
-	
+
 	# Register project settings for test tag inclusion
 	_register_project_settings()
 
@@ -26,7 +26,7 @@ func _enter_tree() -> void:
 		print_rich("[color=#%s]Advanced Logger initialized[/color]" % LoggerColors.SUCCESS_HTML)
 	else:
 		push_error("Failed to load logger dock scene")
-		
+
 ## Register necessary project settings
 func _register_project_settings() -> void:
 	# Setting for including test tags
@@ -39,7 +39,7 @@ func _register_project_settings() -> void:
 			"hint": PROPERTY_HINT_NONE,
 			"hint_string": ""
 		})
-		
+
 	ProjectSettings.save()
 
 

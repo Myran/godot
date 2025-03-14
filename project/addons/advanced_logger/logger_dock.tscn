@@ -62,58 +62,87 @@ popup/item_4/id = 4
 [node name="HSeparatorLevel" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="AvailableTagsSection" type="VBoxContainer" parent="VBoxContainer"]
+[node name="TagsContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="TagsLabel" type="Label" parent="VBoxContainer/AvailableTagsSection"]
+[node name="AvailableTagsSection" type="VBoxContainer" parent="VBoxContainer/TagsContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+
+[node name="TagsLabel" type="Label" parent="VBoxContainer/TagsContainer/AvailableTagsSection"]
 layout_mode = 2
 text = "Available Tags"
 horizontal_alignment = 1
 
-[node name="UpdateTagsButton" type="Button" parent="VBoxContainer/AvailableTagsSection"]
+[node name="UpdateTagsButton" type="Button" parent="VBoxContainer/TagsContainer/AvailableTagsSection"]
 layout_mode = 2
 text = "Update Tags"
 
-[node name="TagsList" type="ItemList" parent="VBoxContainer/AvailableTagsSection"]
-custom_minimum_size = Vector2(0, 100)
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TagsContainer/AvailableTagsSection"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="TagsList" type="ItemList" parent="VBoxContainer/TagsContainer/AvailableTagsSection/ScrollContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+auto_height = true
 allow_reselect = true
 item_count = 1
 item_0/text = "Example tag (drag to filter or ignore)"
 
-[node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TagsContainer"]
 layout_mode = 2
 
-[node name="TagsSection" type="VBoxContainer" parent="VBoxContainer"]
+[node name="TagsSection" type="VBoxContainer" parent="VBoxContainer/TagsContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="TagsLabel" type="Label" parent="VBoxContainer/TagsSection"]
+[node name="TagsLabel" type="Label" parent="VBoxContainer/TagsContainer/TagsSection"]
 layout_mode = 2
 text = "Active Tags (Filter)"
 horizontal_alignment = 1
 
-[node name="TagsList" type="ItemList" parent="VBoxContainer/TagsSection"]
-custom_minimum_size = Vector2(0, 100)
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TagsContainer/TagsSection"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="TagsList" type="ItemList" parent="VBoxContainer/TagsContainer/TagsSection/ScrollContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+auto_height = true
 allow_reselect = true
 
-[node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer/TagsContainer"]
 layout_mode = 2
 
-[node name="IgnoredTagsSection" type="VBoxContainer" parent="VBoxContainer"]
+[node name="IgnoredTagsSection" type="VBoxContainer" parent="VBoxContainer/TagsContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="IgnoredTagsLabel" type="Label" parent="VBoxContainer/IgnoredTagsSection"]
+[node name="IgnoredTagsLabel" type="Label" parent="VBoxContainer/TagsContainer/IgnoredTagsSection"]
 layout_mode = 2
 text = "Ignored Tags"
 horizontal_alignment = 1
 
-[node name="IgnoredTagsList" type="ItemList" parent="VBoxContainer/IgnoredTagsSection"]
-custom_minimum_size = Vector2(0, 100)
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TagsContainer/IgnoredTagsSection"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="IgnoredTagsList" type="ItemList" parent="VBoxContainer/TagsContainer/IgnoredTagsSection/ScrollContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+auto_height = true
 allow_reselect = true
 
 [node name="HSeparatorIgnored" type="HSeparator" parent="VBoxContainer"]
