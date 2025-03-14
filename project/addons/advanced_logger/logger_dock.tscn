@@ -35,7 +35,7 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: cache
+text = "No active filter tags (showing all logs except ignored)
 No ignored tags"
 autowrap_mode = 3
 
@@ -115,7 +115,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="TagsList" type="ItemList" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer"]
-custom_minimum_size = Vector2(0, 185)
+custom_minimum_size = Vector2(0, 218)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -123,12 +123,13 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 5
-item_0/text = "database"
-item_1/text = "error"
-item_2/text = "firebase"
-item_3/text = "local_data"
-item_4/text = "network"
+item_count = 6
+item_0/text = "cache"
+item_1/text = "database"
+item_2/text = "error"
+item_3/text = "firebase"
+item_4/text = "local_data"
+item_5/text = "network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -156,8 +157,6 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 1
-item_0/text = "cache"
 
 [node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -208,6 +207,7 @@ horizontal_alignment = 1
 
 [node name="ShowTimestampCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
+button_pressed = true
 text = "Show Timestamp"
 
 [node name="ShowTagsCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]

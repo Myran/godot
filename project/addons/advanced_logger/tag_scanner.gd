@@ -12,12 +12,53 @@ extends RefCounted
 static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[String]:
 	var found_tags: Array[String] = []
 	
-	# Start scanning from the project root
+	# Extract all TAG_* constants from Logger class
+	var logger_tags := extract_tag_constants_from_logger()
+	found_tags.append_array(logger_tags)
+	
+	# Start scanning from the project root to find tag usage
 	scan_directory("res://", found_tags, exclude_dirs)
+	
+	# Ensure unique tags
+	found_tags = get_unique_tags(found_tags)
 	
 	# Return unique tags sorted alphabetically
 	found_tags.sort()
 	return found_tags
+
+## Extracts all TAG_* constants directly from the Logger class
+static func extract_tag_constants_from_logger() -> Array[String]:
+	var logger_tags: Array[String] = []
+	var logger_path := "res://addons/advanced_logger/logger.gd"
+	
+	var file := FileAccess.open(logger_path, FileAccess.READ)
+	if not file:
+		push_warning("Failed to open Logger class: " + logger_path)
+		return logger_tags
+		
+	var content := file.get_as_text()
+	file.close()
+	
+	# Find TAG_* constants and their values using regex
+	var regex := RegEx.new()
+	regex.compile("const\\s+TAG_[A-Za-z0-9_]+\\s*:\\s*String\\s*=\\s*\"([^\"]+)\"")
+	
+	var matches := regex.search_all(content)
+	for match_result in matches:
+		if match_result.strings.size() >= 2:
+			var tag := match_result.strings[1]
+			if LoggerSettings._is_valid_tag(tag):
+				logger_tags.append(tag)
+	
+	return logger_tags
+
+## Helper to ensure we have a unique tag list
+static func get_unique_tags(tags: Array[String]) -> Array[String]:
+	var unique_tags: Array[String] = []
+	for tag in tags:
+		if not unique_tags.has(tag):
+			unique_tags.append(tag)
+	return unique_tags
 
 ## Recursively scans a directory for .gd files
 ## 
@@ -76,7 +117,7 @@ static func scan_file_for_tags(file_path: String, found_tags: Array[String]) -> 
 	# Read the file content
 	var content := file.get_as_text()
 	
-	# Look for Log method calls with tags
+	# Pattern 1: Look for direct string tags in Log method calls
 	# Match different patterns of Log method calls:
 	# 1. Log.method("message", {}, ["tag1", "tag2"])
 	# 2. Log.method("message", tags = ["tag1", "tag2"])
@@ -95,6 +136,18 @@ static func scan_file_for_tags(file_path: String, found_tags: Array[String]) -> 
 			
 		if not tags_str.is_empty():
 			extract_tags_from_string(tags_str, found_tags)
+	
+	# Pattern 2: Look for Log.TAG_* constant usage
+	# This pattern identifies uses of the TAG constants
+	var tag_const_regex := RegEx.new()
+	tag_const_regex.compile("Log\\.TAG_[A-Za-z0-9_]+")
+	
+	# We don't need to add these to found_tags since we're already extracting
+	# constants directly from Logger class, but we can log their usage
+	var const_matches := tag_const_regex.search_all(content)
+	if const_matches.size() > 0:
+		print_rich("[color=#7daea3]Found %d TAG constant usages in %s[/color]" % 
+				  [const_matches.size(), file_path.get_file()])
 
 ## Extracts tag strings from a matched tags array string
 static func extract_tags_from_string(tags_str: String, found_tags: Array[String]) -> void:
