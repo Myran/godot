@@ -35,8 +35,8 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: Database
-Ignored tags: Cache"
+text = "No active filter tags (showing all logs except ignored)
+No ignored tags"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
@@ -115,7 +115,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="TagsList" type="ItemList" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer"]
-custom_minimum_size = Vector2(0, 152)
+custom_minimum_size = Vector2(0, 218)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -123,11 +123,13 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 4
-item_0/text = "Error"
-item_1/text = "Firebase"
-item_2/text = "Local_data"
-item_3/text = "Network"
+item_count = 6
+item_0/text = "Cache"
+item_1/text = "Database"
+item_2/text = "Error"
+item_3/text = "Firebase"
+item_4/text = "Local_data"
+item_5/text = "Network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -155,8 +157,6 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 1
-item_0/text = "Database"
 
 [node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -184,8 +184,6 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 1
-item_0/text = "Cache"
 
 [node name="Settings" type="Control" parent="VBoxContainer/TabContainer"]
 visible = false
@@ -254,3 +252,78 @@ text = "Save Settings"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset to Defaults"
+
+[node name="Setups" type="Control" parent="VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+mouse_filter = 1
+metadata/_tab_index = 2
+
+[node name="SetupsSection" type="VBoxContainer" parent="VBoxContainer/TabContainer/Setups"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="SetupsLabel" type="Label" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
+layout_mode = 2
+text = "Tag Setups"
+horizontal_alignment = 1
+
+[node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
+layout_mode = 2
+text = "Save Current Configuration as Setup"
+
+[node name="InfoLabel" type="Label" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
+layout_mode = 2
+text = "Double-click to load a setup"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SetupsList" type="ItemList" parent="VBoxContainer/TabContainer/Setups/SetupsSection/ScrollContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+allow_reselect = true
+allow_rmb_select = true
+auto_height = true
+item_count = 2
+item_0/text = "debug_network"
+item_1/text = "default"
+
+[node name="SetupNameDialog" type="ConfirmationDialog" parent="."]
+title = "Save Tag Setup"
+size = Vector2i(300, 150)
+min_size = Vector2i(300, 150)
+ok_button_text = "Save"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SetupNameDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="SetupNameDialog/VBoxContainer"]
+layout_mode = 2
+text = "Enter a name for this tag setup:"
+
+[node name="SetupNameInput" type="LineEdit" parent="SetupNameDialog/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Setup name"
+caret_blink = true
+caret_blink_interval = 0.5

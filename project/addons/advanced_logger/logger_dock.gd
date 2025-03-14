@@ -12,6 +12,7 @@ const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
 const CONFIG_SECTION_FORMAT: String = "format"
+const CONFIG_SECTION_SETUPS: String = "setups"  # New section for tag setups
 const CONFIG_KEY_LOG_LEVEL: String = "log_level"
 const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
 const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
@@ -43,6 +44,9 @@ var _show_tags: bool = DEFAULT_SHOW_TAGS
 var _use_colors: bool = DEFAULT_USE_COLORS
 var _show_source: bool = DEFAULT_SHOW_SOURCE
 
+# Tag setup library
+var _tag_setups: Dictionary = {}  # Dictionary of setup_name -> {active_tags, ignored_tags}
+
 # Flag to avoid multiple saves during batch operations
 var _batch_operation: bool = false
 
@@ -67,6 +71,12 @@ var _batch_operation: bool = false
 @onready var _use_colors_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/UseColorsCheck
 @onready var _save_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/ResetButton
+
+# Setup components
+@onready var _setups_list: ItemList = $VBoxContainer/TabContainer/Setups/SetupsSection/ScrollContainer/SetupsList
+@onready var _save_setup_button: Button = $VBoxContainer/TabContainer/Setups/SetupsSection/SaveSetupButton
+@onready var _setup_name_dialog: ConfirmationDialog = $SetupNameDialog
+@onready var _setup_name_input: LineEdit = $SetupNameDialog/VBoxContainer/SetupNameInput
 
 
 # Override drag and drop methods for Godot 4
@@ -277,6 +287,18 @@ func _ready() -> void:
 	# Ignored Tags - Set up item activation signals
 	_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
 
+	# Setup management signals
+	_save_setup_button.pressed.connect(_on_save_setup_button_pressed)
+	_setup_name_dialog.confirmed.connect(_on_setup_name_dialog_confirmed)
+	_setups_list.item_activated.connect(_on_setups_list_item_activated)
+	_setups_list.item_clicked.connect(_on_setups_list_item_clicked)
+
+	# Configure setup list without drag and drop functionality
+	_setups_list.mouse_filter = MOUSE_FILTER_PASS
+	_setups_list.focus_mode = FOCUS_ALL
+	_setups_list.allow_rmb_select = true
+	_setups_list.allow_reselect = true
+
 	# Configure all item lists with the same settings
 	for list in [_available_tags_list, _tags_list, _ignored_tags_list]:
 		list.mouse_filter = MOUSE_FILTER_PASS
@@ -412,6 +434,9 @@ func _load_settings_from_config() -> void:
 
 	# Refresh UI
 	_refresh_tags_lists()
+
+	# Load tag setups
+	_load_setups_from_config()
 
 ## Saves logger settings to the config file
 ## Returns OK if successful, otherwise returns an error code
@@ -684,6 +709,10 @@ func _on_use_colors_toggled(button_pressed: bool) -> void:
 func _on_save_settings() -> void:
 	print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
 	var result := _save_settings_to_config()
+
+	# Also save tag setups since we're doing a manual save
+	_save_setups_to_config()
+
 	print_rich(
 		(
 			"[color=#%s]Save result: %s[/color]"
@@ -711,6 +740,12 @@ func _on_save_settings() -> void:
 
 func _on_reset_settings() -> void:
 	_apply_defaults()
+
+	# Clear tag setups as well
+	_tag_setups.clear()
+	_refresh_setups_list()
+	_save_setups_to_config()
+
 	print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
 
 ## Resizes all tag lists to ensure proper display
@@ -870,3 +905,262 @@ func _resize_list_to_fit_content(item_list: ItemList) -> void:
 func _on_show_source_toggled(button_pressed: bool) -> void:
 	_show_source = button_pressed
 	_save_settings_to_config()
+
+## Loads tag setups from the config file
+func _load_setups_from_config() -> void:
+	var config: ConfigFile = ConfigFile.new()
+	var load_result: Error = config.load(CONFIG_PATH)
+
+	_tag_setups.clear()
+
+	if load_result != OK:
+		return
+
+	if not config.has_section(CONFIG_SECTION_SETUPS):
+		return
+
+	var setup_names = config.get_section_keys(CONFIG_SECTION_SETUPS)
+	for setup_name in setup_names:
+		var setup_json = config.get_value(CONFIG_SECTION_SETUPS, setup_name)
+		var setup = JSON.parse_string(setup_json)
+		if setup is Dictionary:
+			_tag_setups[setup_name] = setup
+
+	_refresh_setups_list()
+
+## Saves tag setups to the config file
+func _save_setups_to_config() -> Error:
+	var config: ConfigFile = ConfigFile.new()
+
+	# Try to load existing config first to preserve other settings
+	var load_result := config.load(CONFIG_PATH)
+	if load_result != OK and load_result != ERR_FILE_NOT_FOUND:
+		push_error("Failed to load existing config: %s" % error_string(load_result))
+
+	# Clear existing setups section
+	if config.has_section(CONFIG_SECTION_SETUPS):
+		var old_keys = config.get_section_keys(CONFIG_SECTION_SETUPS)
+		for key in old_keys:
+			config.erase_section_key(CONFIG_SECTION_SETUPS, key)
+
+	# Save each setup
+	for setup_name in _tag_setups:
+		var setup_json = JSON.stringify(_tag_setups[setup_name])
+		config.set_value(CONFIG_SECTION_SETUPS, setup_name, setup_json)
+
+	# Save config using existing robust directory handling
+	var dir_path := "res://addons/advanced_logger"
+	var dir := DirAccess.open("res://")
+	if not dir:
+		var err := FileAccess.get_open_error()
+		push_error("Failed to access project directory: %s" % error_string(err))
+		return err
+
+	# Create addons directory if it doesn't exist
+	if not dir.dir_exists("addons"):
+		var err := dir.make_dir("addons")
+		if err != OK:
+			push_error("Failed to create addons directory: %s" % error_string(err))
+			return err
+
+	# Move to addons directory
+	if dir.change_dir("addons") != OK:
+		push_error("Failed to access addons directory")
+		return Error.FAILED
+
+	# Create the advanced_logger directory if it doesn't exist
+	if not dir.dir_exists("advanced_logger"):
+		var err := dir.make_dir("advanced_logger")
+		if err != OK:
+			push_error("Failed to create advanced_logger directory: %s" % error_string(err))
+			return err
+
+	# Try to save with better error handling
+	var save_result: Error = config.save(CONFIG_PATH)
+	if save_result != OK:
+		push_error("Failed to save logger settings: %s" % error_string(save_result))
+
+	return save_result
+
+## Refreshes the setups list UI
+func _refresh_setups_list() -> void:
+	_setups_list.clear()
+
+	var setup_names = _tag_setups.keys()
+	setup_names.sort() # Keep alphabetically sorted
+
+	for setup_name in setup_names:
+		var setup = _tag_setups[setup_name]
+		var tooltip = ""
+
+		if setup.has("active_tags") and setup["active_tags"].size() > 0:
+			var capitalized_tags = setup["active_tags"].map(func(tag): return _capitalize_tag(tag))
+			tooltip += "Active: " + ", ".join(capitalized_tags)
+		else:
+			tooltip += "Active: None"
+
+		if setup.has("ignored_tags") and setup["ignored_tags"].size() > 0:
+			var capitalized_tags = setup["ignored_tags"].map(func(tag): return _capitalize_tag(tag))
+			tooltip += "\nIgnored: " + ", ".join(capitalized_tags)
+		else:
+			tooltip += "\nIgnored: None"
+
+		_setups_list.add_item(setup_name)
+		var idx = _setups_list.get_item_count() - 1
+		_setups_list.set_item_tooltip(idx, tooltip)
+
+	_resize_list_to_fit_content(_setups_list)
+
+## Saves the current tag configuration as a named setup
+func _save_current_setup(setup_name: String) -> void:
+	if setup_name.strip_edges().is_empty():
+		push_warning("Cannot save setup with empty name")
+		return
+
+	# Check if setup already exists and confirm overwrite
+	if _tag_setups.has(setup_name):
+		# For simplicity we're just overwriting; in a full implementation
+		# you might want to show a confirmation dialog
+		print_rich("[color=#%s]Overwriting existing tag setup: %s[/color]" %
+				  [LoggerColors.WARNING_HTML, setup_name])
+
+	# Create setup with active and ignored tags
+	var setup = {
+		"active_tags": _active_tags.duplicate(),
+		"ignored_tags": _ignored_tags.duplicate()
+	}
+
+	_tag_setups[setup_name] = setup
+	_save_setups_to_config()
+	_refresh_setups_list()
+
+	print_rich("[color=#%s]Saved tag setup: %s[/color]" % [LoggerColors.SUCCESS_HTML, setup_name])
+
+## Loads a saved tag setup
+func _load_setup(setup_name: String) -> void:
+	if not _tag_setups.has(setup_name):
+		push_warning("Setup not found: %s" % setup_name)
+		return
+
+	_begin_batch_operation()
+
+	var setup = _tag_setups[setup_name]
+
+	# Clear existing tags
+	_active_tags.clear()
+	_ignored_tags.clear()
+
+	# Load tags from setup
+	if setup.has("active_tags"):
+		for tag in setup["active_tags"]:
+			if _validate_tag_name(tag) and not _active_tags.has(tag):
+				_active_tags.append(tag)
+
+	if setup.has("ignored_tags"):
+		for tag in setup["ignored_tags"]:
+			if _validate_tag_name(tag) and not _ignored_tags.has(tag):
+				_ignored_tags.append(tag)
+
+	_end_batch_operation()
+
+	print_rich("[color=#%s]Loaded tag setup: %s[/color]" % [LoggerColors.SUCCESS_HTML, setup_name])
+
+## Deletes a saved tag setup
+func _delete_setup(setup_name: String) -> void:
+	if not _tag_setups.has(setup_name):
+		push_warning("Cannot delete non-existent setup: %s" % setup_name)
+		return
+
+	_tag_setups.erase(setup_name)
+	_save_setups_to_config()
+	_refresh_setups_list()
+
+	print_rich("[color=#%s]Deleted tag setup: %s[/color]" % [LoggerColors.SUCCESS_HTML, setup_name])
+
+## Shows the rename dialog for a setup
+func _show_rename_dialog(old_name: String) -> void:
+	# Store the old name for later reference
+	_setup_name_input.text = old_name
+	_setup_name_dialog.title = "Rename Setup"
+	_setup_name_dialog.dialog_text = "Enter new name for setup:"
+
+	# Use a custom connection for the rename operation
+	if _setup_name_dialog.is_connected("confirmed", _on_setup_name_dialog_confirmed):
+		_setup_name_dialog.confirmed.disconnect(_on_setup_name_dialog_confirmed)
+
+	# Create a one-time callback
+	var rename_handler = func():
+		var new_name = _setup_name_input.text.strip_edges()
+		if not new_name.is_empty() and new_name != old_name:
+			if _tag_setups.has(old_name):
+				var setup = _tag_setups[old_name]
+				_tag_setups.erase(old_name)
+				_tag_setups[new_name] = setup
+				_save_setups_to_config()
+				_refresh_setups_list()
+				print_rich("[color=#%s]Renamed tag setup: %s → %s[/color]" %
+						[LoggerColors.SUCCESS_HTML, old_name, new_name])
+
+		# Reset dialog for normal saves
+		_setup_name_dialog.title = "Save Tag Setup"
+		_setup_name_dialog.dialog_text = "Enter a name for this tag setup:"
+
+		# Reconnect the normal handler
+		if not _setup_name_dialog.is_connected("confirmed", _on_setup_name_dialog_confirmed):
+			_setup_name_dialog.confirmed.connect(_on_setup_name_dialog_confirmed)
+
+	# Connect the one-time handler
+	_setup_name_dialog.confirmed.connect(rename_handler, Object.CONNECT_ONE_SHOT)
+
+	# Show the dialog
+	_setup_name_dialog.popup_centered()
+
+	# Show the dialog
+	_setup_name_dialog.popup_centered()
+
+## Handle save setup button click
+func _on_save_setup_button_pressed() -> void:
+	_setup_name_input.text = ""
+	_setup_name_dialog.title = "Save Tag Setup"
+	_setup_name_dialog.dialog_text = "Enter a name for this tag setup:"
+	_setup_name_dialog.popup_centered()
+
+## Handle setup name dialog confirmation
+func _on_setup_name_dialog_confirmed() -> void:
+	var setup_name = _setup_name_input.text.strip_edges()
+	if not setup_name.is_empty():
+		_save_current_setup(setup_name)
+
+## Handle setup list item activation (double-click)
+func _on_setups_list_item_activated(index: int) -> void:
+	var setup_name = _setups_list.get_item_text(index)
+	_load_setup(setup_name)
+
+## Handle setup list item clicked (used for context menu)
+func _on_setups_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
+	# Only show context menu on right click
+	if mouse_button_index != MOUSE_BUTTON_RIGHT:
+		return
+
+	var setup_name = _setups_list.get_item_text(index)
+
+	var menu = PopupMenu.new()
+	menu.add_item("Load", 0)
+	menu.add_item("Rename", 1)
+	menu.add_item("Delete", 2)
+
+	var handle_menu_selection = func(idx: int):
+		match idx:
+			0: # Load
+				_load_setup(setup_name)
+			1: # Rename
+				_show_rename_dialog(setup_name)
+			2: # Delete
+				_delete_setup(setup_name)
+		menu.queue_free()
+
+	menu.id_pressed.connect(handle_menu_selection)
+
+	add_child(menu)
+	menu.position = get_global_mouse_position()
+	menu.popup()
