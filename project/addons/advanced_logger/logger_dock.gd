@@ -4,180 +4,6 @@ class_name LoggerDock extends Control
 ##
 ## Provides configuration UI for the Advanced Logger system with tag filtering,
 ## drag and drop tag management, and other logger settings.
-
-# Preload the tag scanner
-const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
-
-# Override drag and drop methods for Godot 4
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				print_rich("[color=#%s]DEBUG: Mouse down at %s[/color]" % [LoggerColors.DEBUG_HTML, event.position])
-				_handle_mouse_down(event.position)
-			else:
-				print_rich("[color=#%s]DEBUG: Mouse up at %s[/color]" % [LoggerColors.DEBUG_HTML, event.position])
-				_handle_mouse_up(event.position)
-
-func _handle_mouse_down(position: Vector2) -> void:
-	# Check if the mouse is over any of the item lists
-	var global_pos = get_global_mouse_position()
-
-	# Check if the click is inside Available Tags
-	if _available_tags_list.get_global_rect().has_point(global_pos):
-		# Try to select an item
-		var local_pos = _available_tags_list.get_local_mouse_position()
-		var index = _available_tags_list.get_item_at_position(local_pos)
-		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Available Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
-			_available_tags_list.select(index)
-
-	# Check if the click is inside Active Tags
-	elif _tags_list.get_global_rect().has_point(global_pos):
-		# Try to select an item
-		var local_pos = _tags_list.get_local_mouse_position()
-		var index = _tags_list.get_item_at_position(local_pos)
-		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Active Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
-			_tags_list.select(index)
-
-	# Check if the click is inside Ignored Tags
-	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
-		# Try to select an item
-		var local_pos = _ignored_tags_list.get_local_mouse_position()
-		var index = _ignored_tags_list.get_item_at_position(local_pos)
-		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Ignored Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
-			_ignored_tags_list.select(index)
-
-func _handle_mouse_up(position: Vector2) -> void:
-	# You can implement drop logic here if needed
-	pass
-
-# Create a common drag preview function for reusability
-func _create_drag_preview(text: String) -> Control:
-	var label = Label.new()
-	label.text = text
-	label.modulate = Color(1, 1, 1, 0.8)
-
-	var panel = Panel.new()
-	panel.add_child(label)
-	label.position = Vector2(10, 5)
-	panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
-
-	return panel
-
-# Get drag data from any list with a single function
-func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
-	var indices = item_list.get_selected_items()
-	if indices.size() == 0:
-		return null
-
-	var tag_index = indices[0]
-	var tag_text = item_list.get_item_text(tag_index)
-
-	if not _validate_tag_name(tag_text):
-		push_warning("Invalid tag: '%s'" % tag_text)
-		return null
-
-	# Create drag data
-	var drag_data = {
-		"type": "tag",
-		"tag": tag_text,
-		"source": source_type,
-		"index": tag_index
-	}
-
-	# Create preview
-	set_drag_preview(_create_drag_preview(tag_text))
-	return drag_data
-
-func _get_drag_data(at_position: Vector2) -> Variant:
-	# Get global mouse position
-	var global_pos = get_global_mouse_position()
-
-	# Use a reusable function to handle all lists
-	if _available_tags_list.get_global_rect().has_point(global_pos):
-		return _get_drag_data_for_list(_available_tags_list, SOURCE_AVAILABLE)
-	elif _tags_list.get_global_rect().has_point(global_pos):
-		return _get_drag_data_for_list(_tags_list, SOURCE_ACTIVE)
-	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
-		return _get_drag_data_for_list(_ignored_tags_list, SOURCE_IGNORED)
-
-	return null
-
-# Helper function to determine drop validity
-func _can_drop_tag(tag: String, source: String, target: String) -> bool:
-	# Can't drop to the same list
-	if source == target:
-		return false
-
-	# Check valid source->target combinations
-	match target:
-		SOURCE_AVAILABLE:
-			return source == SOURCE_ACTIVE or source == SOURCE_IGNORED
-		SOURCE_ACTIVE:
-			# Don't accept if already in active list
-			if _active_tags.has(tag):
-				return false
-			return source == SOURCE_AVAILABLE or source == SOURCE_IGNORED
-		SOURCE_IGNORED:
-			# Don't accept if already in ignored list
-			if _ignored_tags.has(tag):
-				return false
-			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
-
-	return false
-
-func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	# Validate the data
-	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
-		return false
-
-	var tag = data["tag"]
-	var source = data.get("source", "")
-	var mouse_pos = get_global_mouse_position()
-
-	# Determine target list type and delegate to helper
-	var target_type = ""
-	if _available_tags_list.get_global_rect().has_point(mouse_pos):
-		target_type = SOURCE_AVAILABLE
-	elif _tags_list.get_global_rect().has_point(mouse_pos):
-		target_type = SOURCE_ACTIVE
-	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
-		target_type = SOURCE_IGNORED
-	else:
-		return false
-
-	return _can_drop_tag(tag, source, target_type)
-
-# Common function for handling drops with feedback
-func _handle_drop_on_list(item_list: ItemList, tag: String, source: String, target: String) -> void:
-	# Visual feedback to indicate drop success
-	item_list.add_theme_color_override("font_selected_color", Color.GREEN)
-	await get_tree().create_timer(0.2).timeout
-	item_list.add_theme_color_override("font_selected_color", Color.WHITE)
-
-	# Handle the tag movement
-	_handle_tag_drag(tag, source, target)
-
-func _drop_data(at_position: Vector2, data: Variant) -> void:
-	# Validate the data
-	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
-		return
-
-	var tag = data["tag"]
-	var source = data.get("source", "")
-	var mouse_pos = get_global_mouse_position()
-
-	# Use a reusable function for handling drops on all lists
-	if _available_tags_list.get_global_rect().has_point(mouse_pos):
-		_handle_drop_on_list(_available_tags_list, tag, source, SOURCE_AVAILABLE)
-	elif _tags_list.get_global_rect().has_point(mouse_pos):
-		_handle_drop_on_list(_tags_list, tag, source, SOURCE_ACTIVE)
-	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
-		_handle_drop_on_list(_ignored_tags_list, tag, source, SOURCE_IGNORED)
-
 # Config constants
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
@@ -191,7 +17,7 @@ const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
 const CONFIG_KEY_USE_COLORS: String = "use_colors"
 const CONFIG_KEY_SHOW_SOURCE: String = "show_source"
 const DEFAULT_SHOW_SOURCE: bool = true
-
+const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
 # Default values
 const DEFAULT_LOG_LEVEL: int = 1  # INFO level
 const DEFAULT_SHOW_TIMESTAMP: bool = true
@@ -238,11 +64,173 @@ var _batch_operation: bool = false
 @onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
 @onready var _save_button: Button = $VBoxContainer/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/ButtonsSection/ResetButton
+# Preload the tag scanner
+
+
+# Override drag and drop methods for Godot 4
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_handle_mouse_down(event.position)
+
+func _handle_mouse_down(_position: Vector2) -> void:
+	# Check if the mouse is over any of the item lists
+	var global_pos = get_global_mouse_position()
+
+	# Check if the click is inside Available Tags
+	if _available_tags_list.get_global_rect().has_point(global_pos):
+		# Try to select an item
+		var local_pos = _available_tags_list.get_local_mouse_position()
+		var index = _available_tags_list.get_item_at_position(local_pos)
+		if index >= 0:
+			_available_tags_list.select(index)
+
+	# Check if the click is inside Active Tags
+	elif _tags_list.get_global_rect().has_point(global_pos):
+		# Try to select an item
+		var local_pos = _tags_list.get_local_mouse_position()
+		var index = _tags_list.get_item_at_position(local_pos)
+		if index >= 0:
+			_tags_list.select(index)
+
+	# Check if the click is inside Ignored Tags
+	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
+		# Try to select an item
+		var local_pos = _ignored_tags_list.get_local_mouse_position()
+		var index = _ignored_tags_list.get_item_at_position(local_pos)
+		if index >= 0:
+			_ignored_tags_list.select(index)
+
+# Mouse up is handled by the drag and drop system, no custom handling needed
+
+# Create a common drag preview function for reusability
+func _create_drag_preview(text: String) -> Control:
+	var label = Label.new()
+	label.text = text
+	label.modulate = Color(1, 1, 1, 0.8)
+
+	var panel = Panel.new()
+	panel.add_child(label)
+	label.position = Vector2(10, 5)
+	panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
+
+	return panel
+
+# Get drag data from any list with a single function
+func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
+	var indices = item_list.get_selected_items()
+	if indices.size() == 0:
+		return null
+
+	var tag_index = indices[0]
+	var tag_text = item_list.get_item_text(tag_index)
+
+	if not _validate_tag_name(tag_text):
+		push_warning("Invalid tag: '%s'" % tag_text)
+		return null
+
+	# Create drag data
+	var drag_data = {
+		"type": "tag",
+		"tag": tag_text,
+		"source": source_type,
+		"index": tag_index
+	}
+
+	# Create preview
+	set_drag_preview(_create_drag_preview(tag_text))
+	return drag_data
+
+func _get_drag_data(_at_position: Vector2) -> Variant:
+	# Get global mouse position
+	var global_pos = get_global_mouse_position()
+
+	# Use a reusable function to handle all lists
+	if _available_tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_available_tags_list, SOURCE_AVAILABLE)
+	elif _tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_tags_list, SOURCE_ACTIVE)
+	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
+		return _get_drag_data_for_list(_ignored_tags_list, SOURCE_IGNORED)
+
+	return null
+
+# Helper function to determine drop validity
+func _can_drop_tag(tag: String, source: String, target: String) -> bool:
+	# Can't drop to the same list
+	if source == target:
+		return false
+
+	# Check valid source->target combinations
+	match target:
+		SOURCE_AVAILABLE:
+			return source == SOURCE_ACTIVE or source == SOURCE_IGNORED
+		SOURCE_ACTIVE:
+			# Don't accept if already in active list
+			if _active_tags.has(tag):
+				return false
+			return source == SOURCE_AVAILABLE or source == SOURCE_IGNORED
+		SOURCE_IGNORED:
+			# Don't accept if already in ignored list
+			if _ignored_tags.has(tag):
+				return false
+			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
+
+	return false
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	# Validate the data
+	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
+		return false
+
+	var tag = data["tag"]
+	var source = data.get("source", "")
+	var mouse_pos = get_global_mouse_position()
+
+	# Determine target list type and delegate to helper
+	var target_type = ""
+	if _available_tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_AVAILABLE
+	elif _tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_ACTIVE
+	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
+		target_type = SOURCE_IGNORED
+	else:
+		return false
+
+	return _can_drop_tag(tag, source, target_type)
+
+# Common function for handling drops with feedback
+func _handle_drop_on_list(item_list: ItemList, tag: String, source: String, target: String) -> void:
+	# Visual feedback to indicate drop success
+	item_list.add_theme_color_override("font_selected_color", Color.GREEN)
+	await get_tree().create_timer(0.2).timeout
+	item_list.add_theme_color_override("font_selected_color", Color.WHITE)
+
+	# Handle the tag movement
+	_handle_tag_drag(tag, source, target)
+
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
+	# Validate the data
+	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
+		return
+
+	var tag = data["tag"]
+	var source = data.get("source", "")
+	var mouse_pos = get_global_mouse_position()
+
+	# Use a reusable function for handling drops on all lists
+	if _available_tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_available_tags_list, tag, source, SOURCE_AVAILABLE)
+	elif _tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_tags_list, tag, source, SOURCE_ACTIVE)
+	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
+		_handle_drop_on_list(_ignored_tags_list, tag, source, SOURCE_IGNORED)
+
+
 
 
 func _ready() -> void:
-	print_rich("[color=#%s]DEBUG: _ready called[/color]" % [LoggerColors.DEBUG_HTML])
-
 	# Make sure drag is enabled on Control
 	set_process_input(true)
 	mouse_filter = MOUSE_FILTER_PASS
@@ -270,9 +258,6 @@ func _ready() -> void:
 		list.focus_mode = FOCUS_ALL
 		list.allow_rmb_select = true
 		list.allow_reselect = true
-
-	# Enable dragging on all lists
-	print_rich("[color=#%s]DEBUG: Drag and drop initialized[/color]" % [LoggerColors.DEBUG_HTML])
 
 	# Format settings
 	_show_timestamp_check.toggled.connect(_on_show_timestamp_toggled)
@@ -533,17 +518,7 @@ func _apply_defaults() -> void:
 ## Validates a tag name is properly formatted
 ## Returns true if the tag is valid, false otherwise
 func _validate_tag_name(tag: String) -> bool:
-	if tag.is_empty():
-		return false
-
-	# First check using existing LoggerSettings static method
-	if not LoggerSettings._is_valid_tag(tag):
-		return false
-
-	# Enhanced validation for better tag names
-	var regex = RegEx.new()
-	regex.compile("^[a-zA-Z0-9_-]+$")
-	return regex.search(tag) != null
+	return LoggerSettings._is_valid_tag(tag)
 
 
 ## Helper function to move a tag between lists
@@ -692,46 +667,12 @@ func _on_reset_settings() -> void:
 	_apply_defaults()
 	print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
 
-## Calculates available space for tag lists, ensuring balanced distribution
-func _calculate_balanced_list_heights() -> void:
-	# Get total available height for the dock
-	var total_height: float = get_viewport_rect().size.y
-
-	# Estimate space taken by other UI elements (labels, buttons, etc.)
-	var other_elements_height: float = 300.0  # Estimated height of non-list elements
-
-	# Available space for the three tag lists
-	var available_list_space: float = max(300.0, total_height - other_elements_height)
-
-	# Count total items across all lists to determine proportional heights
-	var total_items := _available_tags_list.item_count + _tags_list.item_count + _ignored_tags_list.item_count
-
-	# Ensure minimal height for empty lists
-	if total_items == 0:
-		total_items = 3  # Treat as if each list had 1 item
-
-	# Calculate proportional heights for each list (with minimum of 100)
-	var min_list_height := 100.0
-
-	# Proportional height calculation based on item count in each list
-	var avail_proportion: float = float(_available_tags_list.item_count) / total_items
-	var active_proportion: float = float(_tags_list.item_count) / total_items
-	var ignored_proportion: float = float(_ignored_tags_list.item_count) / total_items
-
-	# Assign heights, ensuring a minimum
-	_available_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * avail_proportion)
-	_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * active_proportion)
-	_ignored_tags_list.custom_minimum_size.y = max(min_list_height, available_list_space * ignored_proportion)
-
 ## Resizes all tag lists to ensure proper display
 func _resize_all_lists() -> void:
-	# Option 1: Fixed sizing based on content
+	# Size each list based on its content
 	_resize_list_to_fit_content(_available_tags_list)
 	_resize_list_to_fit_content(_tags_list)
 	_resize_list_to_fit_content(_ignored_tags_list)
-
-	# Option 2: Dynamic balanced sizing (uncomment to use)
-	# _calculate_balanced_list_heights()
 
 ## Performs an initial tag scan when the plugin is loaded
 func _initial_tag_scan() -> void:
@@ -788,7 +729,7 @@ func _on_scan_tags(include_test_tags: bool = false) -> void:
 	_resize_all_lists()
 
 	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" %
-			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
+			[LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
 
 ## Scans for TAG constant definitions in source files
 func _scan_for_tag_constants() -> Array[String]:

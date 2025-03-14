@@ -24,11 +24,14 @@ const DEFAULT_SHOW_SOURCE: bool = true
 
 # In LoggerSettings.gd, add these methods:
 
-# Project settings path format
+# Project settings path format (used for test tag inclusion setting)
 const PROJECT_SETTINGS_PREFIX = "addons/advanced_logger/"
 
+# NOTE: The following ProjectSettings methods are prepared for future implementation
+# but are not currently used. The system uses ConfigFile instead.
 
-# Save to project settings instead of config file
+## Saves logger settings to project settings instead of config file
+## Currently unused - the system uses ConfigFile
 static func save_to_project_settings(logger_instance: Logger) -> Error:
 	if not logger_instance:
 		push_error("Cannot save settings: logger instance is null")
@@ -53,8 +56,8 @@ static func save_to_project_settings(logger_instance: Logger) -> Error:
 
 	return ProjectSettings.save()
 
-
-# Load from project settings instead of config file
+## Loads logger settings from project settings instead of config file
+## Currently unused - the system uses ConfigFile
 static func load_from_project_settings(logger_instance: Logger) -> Error:
 	if not logger_instance:
 		push_error("Cannot load settings: logger instance is null")

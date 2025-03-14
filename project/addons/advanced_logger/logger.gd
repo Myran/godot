@@ -53,7 +53,6 @@ var _show_source: bool = DEFAULT_SHOW_SOURCE
 func _init() -> void:
 	# Load settings on creation
 	LoggerSettings.load_settings(self)
-	pass
 
 # Core logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
@@ -116,9 +115,9 @@ func _validate_tags(tags: Array[String]) -> Array[String]:
 	return validated_tags
 
 
-## Checks if a tag is valid (non-empty string)
+## Checks if a tag is valid (delegates to LoggerSettings for consistent validation)
 func _is_valid_tag(tag: String) -> bool:
-	return tag is String and not tag.is_empty()
+	return LoggerSettings._is_valid_tag(tag)
 
 
 # Check if a log should be shown based on tags
