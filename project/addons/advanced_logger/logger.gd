@@ -5,6 +5,12 @@ class_name Logger extends Node
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
 # Config constants - must match those in LoggerDock
+const TAG_DB: String = "database"
+const TAG_CACHE: String = "cache"
+const TAG_FIREBASE: String = "firebase"
+const TAG_LOCAL: String = "local_data"
+const TAG_ERROR: String = "error"
+const TAG_NETWORK: String = "network"
 
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
@@ -53,6 +59,7 @@ var _show_source: bool = DEFAULT_SHOW_SOURCE
 func _init() -> void:
 	# Load settings on creation
 	LoggerSettings.load_settings(self)
+
 
 # Core logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
@@ -223,8 +230,6 @@ func _output_log(
 	if not context.is_empty():
 		parts.append(str(context))
 
-
-
 	if _show_source:
 		var file_name: String = String(source_info.get(FILE_KEY, "unknown")).get_file()
 		var line: int = int(source_info.get(LINE_KEY, 0))
@@ -234,8 +239,6 @@ func _output_log(
 			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, source_text])
 		else:
 			parts.append(source_text)
-
-
 
 	# Output the formatted log
 	print_rich(" ".join(parts))
