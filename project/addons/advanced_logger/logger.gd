@@ -192,6 +192,11 @@ func _output_log(
 	const FILE_KEY: String = "file"
 	const LINE_KEY: String = "line"
 
+	# Fixed width for log levels (padded to the width of "CRITICAL")
+	const LOG_LEVEL_WIDTH: int = 5  # "CRITICAL" is 8 chars + 1 for spacing
+	# Fixed width for tags section
+	const TAGS_WIDTH: int = 10
+
 	# Add timestamp if enabled
 	if _show_timestamp:
 		var dt: Dictionary = Time.get_datetime_dict_from_system()
@@ -205,20 +210,28 @@ func _output_log(
 		else:
 			parts.append(timestamp)
 
-	# Add log level
+	# Add log level with fixed width using padding helper
 	var level_str: String = LogLevel.keys()[level]
-	if _use_colors and LEVEL_HTML_COLORS.has(level):
-		parts.append("[color=#%s]%s[/color]" % [LEVEL_HTML_COLORS[level], level_str])
-	else:
-		parts.append(level_str)
+	var padded_level: String = _pad_right(level_str, LOG_LEVEL_WIDTH)
 
-	# Add tags if enabled and present
+	if _use_colors and LEVEL_HTML_COLORS.has(level):
+		parts.append("[color=#%s]%s[/color]" % [LEVEL_HTML_COLORS[level], padded_level])
+	else:
+		parts.append(padded_level)
+
+	# Add tags if enabled and present, with consistent spacing
 	if _show_tags and not tags.is_empty():
 		var tags_text: String = "[%s]" % ", ".join(tags)
+		# Fixed width for tags section
+		tags_text = _pad_right(tags_text, TAGS_WIDTH)
+
 		if _use_colors:
 			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TAG_HTML, tags_text])
 		else:
 			parts.append(tags_text)
+	elif _show_tags:
+		# Add empty space to maintain alignment even when no tags
+		parts.append(" ".repeat(TAGS_WIDTH))
 
 	# Add message (always included)
 	if _use_colors and LEVEL_HTML_COLORS.has(level):
@@ -242,6 +255,16 @@ func _output_log(
 
 	# Output the formatted log
 	print_rich(" ".join(parts))
+
+
+## Helper function to pad a string to a specific width
+## Returns the string padded with spaces to the specified width
+func _pad_right(text: String, width: int) -> String:
+	if text.length() >= width:
+		return text
+
+	# Use the more efficient String.pad_decimals method which adds spaces
+	return text + " ".repeat(width - text.length())
 
 
 # Settings methods
