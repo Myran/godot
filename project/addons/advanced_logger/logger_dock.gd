@@ -103,6 +103,12 @@ func _handle_mouse_down(_position: Vector2) -> void:
 		if index >= 0:
 			_ignored_tags_list.select(index)
 
+## Capitalizes the first letter of a tag for display purposes
+func _capitalize_tag(tag: String) -> String:
+	if tag.is_empty():
+		return tag
+	return tag.substr(0, 1).to_upper() + tag.substr(1)
+
 # Create a common drag preview function for reusability
 func _create_drag_preview(text: String) -> Control:
 	var label = Label.new()
@@ -125,19 +131,41 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_text(tag_index)
 
-	if not _validate_tag_name(tag_text):
-		push_warning("Invalid tag: '%s'" % tag_text)
+	# Get the original tag from the display text
+	var original_tag = ""
+	match source_type:
+		SOURCE_AVAILABLE:
+			for tag in _available_tags:
+				if _capitalize_tag(tag) == tag_text:
+					original_tag = tag
+					break
+		SOURCE_ACTIVE:
+			for tag in _active_tags:
+				if _capitalize_tag(tag) == tag_text:
+					original_tag = tag
+					break
+		SOURCE_IGNORED:
+			for tag in _ignored_tags:
+				if _capitalize_tag(tag) == tag_text:
+					original_tag = tag
+					break
+
+	if original_tag.is_empty():
+		original_tag = tag_text.to_lower()
+
+	if not _validate_tag_name(original_tag):
+		push_warning("Invalid tag: '%s'" % original_tag)
 		return null
 
-	# Create drag data
+	# Create drag data with original tag
 	var drag_data = {
 		"type": "tag",
-		"tag": tag_text,
+		"tag": original_tag,
 		"source": source_type,
 		"index": tag_index
 	}
 
-	# Create preview
+	# Create preview with capitalized tag
 	set_drag_preview(_create_drag_preview(tag_text))
 	return drag_data
 
@@ -282,12 +310,16 @@ func _update_startup_message() -> void:
 	var message: String = ""
 
 	if _active_tags.size() > 0:
-		message += "Active filter tags: " + ", ".join(_active_tags)
+		# Use capitalized tags in the message
+		var capitalized_tags = _active_tags.map(func(tag): return _capitalize_tag(tag))
+		message += "Active filter tags: " + ", ".join(capitalized_tags)
 	else:
 		message += "No active filter tags (showing all logs except ignored)"
 
 	if _ignored_tags.size() > 0:
-		message += "\nIgnored tags: " + ", ".join(_ignored_tags)
+		# Use capitalized tags in the message
+		var capitalized_tags = _ignored_tags.map(func(tag): return _capitalize_tag(tag))
+		message += "\nIgnored tags: " + ", ".join(capitalized_tags)
 	else:
 		message += "\nNo ignored tags"
 
@@ -461,7 +493,8 @@ func _refresh_tags_lists() -> void:
 	_available_tags_list.clear()
 	for tag in _available_tags:
 		if not _active_tags.has(tag) and not _ignored_tags.has(tag):
-			_available_tags_list.add_item(tag)
+			# Add capitalized tag to UI
+			_available_tags_list.add_item(_capitalize_tag(tag))
 
 	# Adjust available tags list height based on content
 	_resize_list_to_fit_content(_available_tags_list)
@@ -469,7 +502,8 @@ func _refresh_tags_lists() -> void:
 	# Clear and populate active tags list
 	_tags_list.clear()
 	for tag in _active_tags:
-		_tags_list.add_item(tag)
+		# Add capitalized tag to UI
+		_tags_list.add_item(_capitalize_tag(tag))
 
 	# Adjust active tags list height based on content
 	_resize_list_to_fit_content(_tags_list)
@@ -477,7 +511,8 @@ func _refresh_tags_lists() -> void:
 	# Clear and populate ignored tags list
 	_ignored_tags_list.clear()
 	for tag in _ignored_tags:
-		_ignored_tags_list.add_item(tag)
+		# Add capitalized tag to UI
+		_ignored_tags_list.add_item(_capitalize_tag(tag))
 
 	# Adjust ignored tags list height based on content
 	_resize_list_to_fit_content(_ignored_tags_list)
@@ -586,19 +621,52 @@ func _end_batch_operation() -> void:
 # Available Tags handlers
 func _on_available_tag_activated(index: int) -> void:
 	# Move tag to active list when double-clicked
-	var tag = _available_tags_list.get_item_text(index)
+	var display_tag = _available_tags_list.get_item_text(index)
+
+	# Find the original tag from the display text
+	var tag = ""
+	for original_tag in _available_tags:
+		if _capitalize_tag(original_tag) == display_tag:
+			tag = original_tag
+			break
+
+	if tag.is_empty():
+		tag = display_tag.to_lower()
+
 	_handle_tag_drag(tag, SOURCE_AVAILABLE, SOURCE_ACTIVE)
 
 # Active Tags handlers
 func _on_active_tag_activated(index: int) -> void:
 	# Move to ignored when double-clicked
-	var tag = _tags_list.get_item_text(index)
+	var display_tag = _tags_list.get_item_text(index)
+
+	# Find the original tag from the display text
+	var tag = ""
+	for original_tag in _active_tags:
+		if _capitalize_tag(original_tag) == display_tag:
+			tag = original_tag
+			break
+
+	if tag.is_empty():
+		tag = display_tag.to_lower()
+
 	_handle_tag_drag(tag, SOURCE_ACTIVE, SOURCE_IGNORED)
 
 # Ignored Tags handlers
 func _on_ignored_tag_activated(index: int) -> void:
 	# Move to active when double-clicked
-	var tag = _ignored_tags_list.get_item_text(index)
+	var display_tag = _ignored_tags_list.get_item_text(index)
+
+	# Find the original tag from the display text
+	var tag = ""
+	for original_tag in _ignored_tags:
+		if _capitalize_tag(original_tag) == display_tag:
+			tag = original_tag
+			break
+
+	if tag.is_empty():
+		tag = display_tag.to_lower()
+
 	_handle_tag_drag(tag, SOURCE_IGNORED, SOURCE_ACTIVE)
 
 func _on_show_timestamp_toggled(button_pressed: bool) -> void:

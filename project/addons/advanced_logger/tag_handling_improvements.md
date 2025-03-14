@@ -28,10 +28,10 @@ Tags in the Advanced Logger serve as metadata for log messages, enabling powerfu
 ```gdscript
 # Example of a typical log method
 func info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-    if message.is_empty():
-        push_warning("Empty log message provided")
-        return
-    _log(LogLevel.INFO, message, context, tags)
+	if message.is_empty():
+		push_warning("Empty log message provided")
+		return
+	_log(LogLevel.INFO, message, context, tags)
 ```
 
 ## Using the Logger
