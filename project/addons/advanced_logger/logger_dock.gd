@@ -4,6 +4,10 @@ class_name LoggerDock extends Control
 ##
 ## Provides configuration UI for the Advanced Logger system with tag filtering,
 ## drag and drop tag management, and other logger settings.
+
+# Preload the tag scanner
+const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
+
 # Config constants
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
@@ -17,7 +21,7 @@ const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
 const CONFIG_KEY_USE_COLORS: String = "use_colors"
 const CONFIG_KEY_SHOW_SOURCE: String = "show_source"
 const DEFAULT_SHOW_SOURCE: bool = true
-const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
+
 # Default values
 const DEFAULT_LOG_LEVEL: int = 1  # INFO level
 const DEFAULT_SHOW_TIMESTAMP: bool = true
@@ -39,32 +43,30 @@ var _show_tags: bool = DEFAULT_SHOW_TAGS
 var _use_colors: bool = DEFAULT_USE_COLORS
 var _show_source: bool = DEFAULT_SHOW_SOURCE
 
-# Drag and drop tracking (using Godot 4 virtual methods)
-
 # Flag to avoid multiple saves during batch operations
 var _batch_operation: bool = false
 
-# UI Components
-@onready var _show_source_check: CheckBox = $VBoxContainer/FormatSection/ShowSourceCheck
-@onready var _level_option: OptionButton = $VBoxContainer/LevelSection/LevelOption
-@onready var _startup_message: Label = $VBoxContainer/StartupMessage  # New startup message label
+# UI Components - Updated paths for the tabbed interface
+@onready var _level_option: OptionButton = $VBoxContainer/TabContainer/Tags/LevelSection/LevelOption
+@onready var _startup_message: Label = $VBoxContainer/StartupMessage
 
 # Available Tags components
-@onready var _available_tags_list: ItemList = $VBoxContainer/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList
-@onready var _update_tags_button: Button = $VBoxContainer/TagsContainer/AvailableTagsSection/UpdateTagsButton
+@onready var _available_tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList
+@onready var _update_tags_button: Button = $VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/UpdateTagsButton
 
 # Active Tags components
-@onready var _tags_list: ItemList = $VBoxContainer/TagsContainer/TagsSection/ScrollContainer/TagsList
+@onready var _tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/TagsSection/ScrollContainer/TagsList
 
 # Ignored Tags components
-@onready var _ignored_tags_list: ItemList = $VBoxContainer/TagsContainer/IgnoredTagsSection/ScrollContainer/IgnoredTagsList
+@onready var _ignored_tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/IgnoredTagsSection/ScrollContainer/IgnoredTagsList
 
-@onready var _show_timestamp_check: CheckBox = $VBoxContainer/FormatSection/ShowTimestampCheck
-@onready var _show_tags_check: CheckBox = $VBoxContainer/FormatSection/ShowTagsCheck
-@onready var _use_colors_check: CheckBox = $VBoxContainer/FormatSection/UseColorsCheck
-@onready var _save_button: Button = $VBoxContainer/ButtonsSection/SaveButton
-@onready var _reset_button: Button = $VBoxContainer/ButtonsSection/ResetButton
-# Preload the tag scanner
+# Settings components - Updated paths for tabbed interface
+@onready var _show_timestamp_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowTimestampCheck
+@onready var _show_tags_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowTagsCheck
+@onready var _show_source_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowSourceCheck
+@onready var _use_colors_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/UseColorsCheck
+@onready var _save_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/SaveButton
+@onready var _reset_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/ResetButton
 
 
 # Override drag and drop methods for Godot 4
@@ -100,8 +102,6 @@ func _handle_mouse_down(_position: Vector2) -> void:
 		var index = _ignored_tags_list.get_item_at_position(local_pos)
 		if index >= 0:
 			_ignored_tags_list.select(index)
-
-# Mouse up is handled by the drag and drop system, no custom handling needed
 
 # Create a common drag preview function for reusability
 func _create_drag_preview(text: String) -> Control:
@@ -227,9 +227,6 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
 		_handle_drop_on_list(_ignored_tags_list, tag, source, SOURCE_IGNORED)
 
-
-
-
 func _ready() -> void:
 	# Make sure drag is enabled on Control
 	set_process_input(true)
@@ -267,8 +264,6 @@ func _ready() -> void:
 	_reset_button.pressed.connect(_on_reset_settings)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
 
-	# No longer using the update all tags button - test tags inclusion is controlled by project parameter
-
 	# Load settings from config
 	_load_settings_from_config()
 
@@ -280,7 +275,6 @@ func _ready() -> void:
 
 	# Perform initial tag scan
 	call_deferred("_initial_tag_scan")
-
 
 ## Updates the startup message with current tag status
 func _update_startup_message() -> void:
@@ -302,7 +296,6 @@ func _update_startup_message() -> void:
 	# Also print to console for convenience
 	print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
-
 
 ## Loads logger settings from the config file
 ## Returns OK if successful, otherwise returns an error code
@@ -388,7 +381,6 @@ func _load_settings_from_config() -> void:
 	# Refresh UI
 	_refresh_tags_lists()
 
-
 ## Saves logger settings to the config file
 ## Returns OK if successful, otherwise returns an error code
 func _save_settings_to_config() -> Error:
@@ -463,7 +455,6 @@ func _save_settings_to_config() -> Error:
 
 	return save_result
 
-
 ## Refreshes all tag list UIs from the current state
 func _refresh_tags_lists() -> void:
 	# Clear and populate available tags list
@@ -491,7 +482,6 @@ func _refresh_tags_lists() -> void:
 	# Adjust ignored tags list height based on content
 	_resize_list_to_fit_content(_ignored_tags_list)
 
-
 ## Applies default settings and resets UI
 func _apply_defaults() -> void:
 	# Set defaults
@@ -514,12 +504,10 @@ func _apply_defaults() -> void:
 	# Save to config
 	_save_settings_to_config()
 
-
 ## Validates a tag name is properly formatted
 ## Returns true if the tag is valid, false otherwise
 func _validate_tag_name(tag: String) -> bool:
 	return LoggerSettings._is_valid_tag(tag)
-
 
 ## Helper function to move a tag between lists
 ## Parameters:
@@ -533,7 +521,6 @@ func _move_tag(tag: String, from_list: Array[String], to_list: Array[String]) ->
 		to_list.append(tag)
 	_refresh_tags_lists()
 	_save_settings_to_config()
-
 
 ## Handle tag movement between categories
 ##
@@ -584,11 +571,9 @@ func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> vo
 		% [LoggerColors.SUCCESS_HTML, tag, from_source, to_target]
 	)
 
-
 ## Begin a batch operation to prevent multiple saves
 func _begin_batch_operation() -> void:
 	_batch_operation = true
-
 
 ## End a batch operation and save changes
 func _end_batch_operation() -> void:
@@ -596,9 +581,7 @@ func _end_batch_operation() -> void:
 	_refresh_tags_lists()
 	_save_settings_to_config()
 
-
 # UI Event handlers
-
 
 # Available Tags handlers
 func _on_available_tag_activated(index: int) -> void:
@@ -618,21 +601,17 @@ func _on_ignored_tag_activated(index: int) -> void:
 	var tag = _ignored_tags_list.get_item_text(index)
 	_handle_tag_drag(tag, SOURCE_IGNORED, SOURCE_ACTIVE)
 
-
 func _on_show_timestamp_toggled(button_pressed: bool) -> void:
 	_show_timestamp = button_pressed
 	_save_settings_to_config()
-
 
 func _on_show_tags_toggled(button_pressed: bool) -> void:
 	_show_tags = button_pressed
 	_save_settings_to_config()
 
-
 func _on_use_colors_toggled(button_pressed: bool) -> void:
 	_use_colors = button_pressed
 	_save_settings_to_config()
-
 
 func _on_save_settings() -> void:
 	print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
@@ -661,7 +640,6 @@ func _on_save_settings() -> void:
 				% [LoggerColors.ERROR_HTML, error_string(FileAccess.get_open_error())]
 			)
 		)
-
 
 func _on_reset_settings() -> void:
 	_apply_defaults()
