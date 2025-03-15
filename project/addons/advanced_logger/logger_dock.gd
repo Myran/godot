@@ -724,27 +724,38 @@ func _initial_tag_scan() -> void:
 ## Scans the project for tags used in Log calls and adds them to available tags
 func _on_scan_tags() -> void:
 	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
-
-	# Get tags from the scanner
-	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags()
-
+	
+	# Determine directories to exclude based on project settings
+	var exclude_dirs: Array[String] = []
+	var include_test_tags = ProjectSettings.get_setting("advanced_logger/include_test_tags", false)
+	
+	# If not including test tags, exclude the tests directory
+	if not include_test_tags:
+		exclude_dirs.append("res://tests/")
+		print_rich("[color=#%s]Excluding test tags[/color]" % LoggerColors.INFO_HTML)
+	else:
+		print_rich("[color=#%s]Including test tags[/color]" % LoggerColors.INFO_HTML)
+	
+	# Get tags from the scanner with appropriate exclusions
+	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags(exclude_dirs)
+	
 	# Begin batch operation to prevent multiple saves
 	_begin_batch_operation()
-
+	
 	# Add each tag to available tags if not already present
 	var added_count := 0
 	for tag in scanner_tags:
 		if not _available_tags.has(tag):
 			_available_tags.append(tag)
 			added_count += 1
-
+	
 	# Sort tags alphabetically for easier finding
 	_available_tags.sort()
-
+	
 	# End batch operation and save changes
 	_end_batch_operation()
-
-	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" %
+	
+	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" % 
 			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
 
 # Signal handlers that need to be defined
