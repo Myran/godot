@@ -56,8 +56,14 @@ test-tag-filtering:
     just test-script tests/validate_tag_filtering.gd
     @echo "Tag filtering test completed"
 
+# Run tag setup manager test
+test-tag-setup-manager:
+    @echo "Running tag setup manager test..."
+    just test-script addons/advanced_logger/tests/test_tag_setup_manager.gd
+    @echo "Tag setup manager test completed"
+
 # Run all standalone tests that don't require a running project
-test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering
+test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering test-tag-setup-manager
     @echo "All standalone tests completed"
 
 # ===== INTEGRATION TESTS =====

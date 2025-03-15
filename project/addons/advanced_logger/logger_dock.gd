@@ -9,6 +9,7 @@ class_name LoggerDock extends Control
 const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
+const TagSetupManager = preload("res://addons/advanced_logger/tag_setup_manager.gd")
 
 # Override drag and drop methods for Godot 4
 func _input(event: InputEvent) -> void:
@@ -206,8 +207,8 @@ var _show_source: bool = true
 # Config manager instance
 var _config: ConfigManager = null
 
-# Tag setups: Dictionary of name -> {active_tags, ignored_tags}
-var _tag_setups: Dictionary = {}
+# Tag setup manager instance
+var _setup_manager: TagSetupManager = null
 
 # Flag to avoid multiple saves during batch operations
 var _batch_operation: bool = false
@@ -245,6 +246,9 @@ func _ready() -> void:
 
 	# Get the config instance
 	_config = ConfigManager.get_instance()
+
+	# Create tag setup manager
+	_setup_manager = TagSetupManager.new(_config)
 
 	# Register for configuration changes
 	_config.config_changed.connect(_on_config_changed)
@@ -300,6 +304,11 @@ func _ready() -> void:
 
 	# Load saved tag setups
 	_load_setups_from_config()
+
+	# Connect setup manager signals
+	_setup_manager.setup_changed.connect(_on_setup_changed)
+	_setup_manager.setup_deleted.connect(_on_setup_deleted)
+	_setup_manager.setup_renamed.connect(_on_setup_renamed)
 
 	# Display startup message
 	_update_startup_message()
@@ -684,69 +693,29 @@ func _on_show_source_toggled(button_pressed: bool) -> void:
 	_config.set_show_source(button_pressed)
 	_save_settings_to_config()
 
-## Loads tag setups from the ConfigManager
+## Loads tag setups and refreshes the UI
 func _load_setups_from_config() -> void:
-	# Get all tag setups from the config
-	_tag_setups = _config.get_all_tag_setups()
-
 	# If no setups exist, create defaults
-	if _tag_setups.is_empty():
-		_create_default_tag_setups()
+	if _setup_manager.get_all_setups().is_empty():
+		_setup_manager.create_default_setups()
 
 	# Refresh the setups list
 	_refresh_setups_list()
-
-## Creates default tag setups if none exist
-func _create_default_tag_setups() -> void:
-	_begin_batch_operation()
-
-	# Create default setups
-	_tag_setups = {
-		"default": {
-			"active_tags": [],
-			"ignored_tags": []
-		},
-		"debug_network": {
-			"active_tags": ["network"],
-			"ignored_tags": []
-		}
-	}
-
-	# Save the default setups to config
-	_save_setups_to_config()
-
-	_end_batch_operation()
-
-## Saves tag setups to the ConfigManager
-func _save_setups_to_config() -> Error:
-	# Save each setup in the setups section
-	for setup_name in _tag_setups:
-		_config.set_tag_setup(setup_name, _tag_setups[setup_name])
-
-	# Save the config
-	var result = _config.save()
-
-	if result == OK:
-		print_rich(
-			"[color=#%s]Tag setups saved successfully[/color]" % LoggerColors.SUCCESS_HTML
-		)
-	else:
-		push_error("Failed to save tag setups: %s" % error_string(result))
-
-	return result
 
 ## Refreshes the tag setups list UI
 func _refresh_setups_list() -> void:
 	_setups_list.clear()
 
+	# Get all setups from the manager
+	var setups = _setup_manager.get_all_setups()
 	# Sort setup names alphabetically for consistency
-	var sorted_names = _tag_setups.keys()
+	var sorted_names = setups.keys()
 	sorted_names.sort()
 
 	for setup_name in sorted_names:
 		# Assign icons based on setup content
 		var icon_index = 0 # Default icon
-		var setup = _tag_setups[setup_name]
+		var setup = setups[setup_name]
 
 		# Different icon if it has active tags
 		if setup.has("active_tags") and setup["active_tags"].size() > 0:
@@ -772,24 +741,14 @@ func _on_setup_name_dialog_confirmed() -> void:
 		push_warning("Setup name cannot be empty")
 		return
 
-	# Create the setup data
-	var setup = {
-		"active_tags": _active_tags.duplicate(),
-		"ignored_tags": _ignored_tags.duplicate()
-	}
+	# Save the setup using the manager
+	var result = _setup_manager.save_setup(setup_name, _active_tags, _ignored_tags)
 
-	# Add or update the setup
-	_tag_setups[setup_name] = setup
-
-	# Save to config
-	_config.set_tag_setup(setup_name, setup)
-	_config.save()
-
-	# Refresh the UI
-	_refresh_setups_list()
-
-	print_rich("[color=#%s]Saved tag setup: %s[/color]" %
-		   [LoggerColors.SUCCESS_HTML, setup_name])
+	if result == OK:
+		print_rich("[color=#%s]Saved tag setup: %s[/color]" %
+			[LoggerColors.SUCCESS_HTML, setup_name])
+	else:
+		push_error("Failed to save tag setup: %s" % error_string(result))
 
 func _on_setups_list_item_activated(index: int) -> void:
 	var setup_name = _setups_list.get_item_text(index)
@@ -826,20 +785,19 @@ func _on_setups_list_item_clicked(index: int, at_position: Vector2, mouse_button
 	menu.popup()
 
 func _load_setup(setup_name: String) -> void:
-	if not _tag_setups.has(setup_name):
+	if _setup_manager == null:
+		return
+
+	var setup = _setup_manager.get_setup(setup_name)
+	if setup.is_empty():
 		push_warning("Tag setup not found: %s" % setup_name)
 		return
 
-	var setup = _tag_setups[setup_name]
-
-	# Start batch operation to prevent multiple saves
 	_begin_batch_operation()
 
-	# Clear existing tags
 	_active_tags.clear()
 	_ignored_tags.clear()
 
-	# Load tags from setup
 	if setup.has("active_tags"):
 		for tag in setup["active_tags"]:
 			_active_tags.append(tag)
@@ -848,7 +806,6 @@ func _load_setup(setup_name: String) -> void:
 		for tag in setup["ignored_tags"]:
 			_ignored_tags.append(tag)
 
-	# End batch operation and save changes
 	_end_batch_operation()
 
 	print_rich("[color=#%s]Loaded tag setup: %s[/color]" %
@@ -868,19 +825,9 @@ func _show_rename_dialog(old_name: String) -> void:
 	var rename_handler = func():
 		var new_name = _setup_name_input.text.strip_edges()
 		if not new_name.is_empty() and new_name != old_name:
-			if _tag_setups.has(old_name):
-				var setup = _tag_setups[old_name]
-				_tag_setups.erase(old_name)
-				_tag_setups[new_name] = setup
-
-				# Remove old setup and add new one
-				_config.set_value(ConfigManager.SECTION_SETUPS, old_name, null) # Remove old
-				_config.set_tag_setup(new_name, setup) # Add new
-				_config.save()
-
-				_refresh_setups_list()
-				print_rich("[color=#%s]Renamed tag setup: %s → %s[/color]" %
-						[LoggerColors.SUCCESS_HTML, old_name, new_name])
+			var result = _setup_manager.rename_setup(old_name, new_name)
+			if result != OK:
+				push_error("Failed to rename setup: %s" % error_string(result))
 
 		# Reset dialog for normal saves
 		_setup_name_dialog.title = "Save Tag Setup"
@@ -897,14 +844,38 @@ func _show_rename_dialog(old_name: String) -> void:
 	_setup_name_dialog.popup_centered()
 
 func _delete_setup(setup_name: String) -> void:
-	if not _tag_setups.has(setup_name):
-		push_warning("Tag setup not found: %s" % setup_name)
+	if _setup_manager == null:
 		return
 
-	_tag_setups.erase(setup_name)
-	_config.set_value(ConfigManager.SECTION_SETUPS, setup_name, null)
-	_config.save()
+	var result = _setup_manager.delete_setup(setup_name)
+	if result != OK && result != ERR_DOES_NOT_EXIST:
+		push_error("Failed to delete setup: %s" % error_string(result))
+
+## Signal handler for setup_changed event from TagSetupManager
+func _on_setup_changed(setup_name: String, is_new: bool) -> void:
+	# Refresh the setups list
+	_refresh_setups_list()
+
+	# Log message based on whether it's a new setup or update
+	if is_new:
+		print_rich("[color=#%s]Created new tag setup: %s[/color]" %
+			[LoggerColors.SUCCESS_HTML, setup_name])
+	else:
+		print_rich("[color=#%s]Updated tag setup: %s[/color]" %
+			[LoggerColors.SUCCESS_HTML, setup_name])
+
+## Signal handler for setup_deleted event from TagSetupManager
+func _on_setup_deleted(setup_name: String) -> void:
+	# Refresh the setups list
 	_refresh_setups_list()
 
 	print_rich("[color=#%s]Deleted tag setup: %s[/color]" %
-		   [LoggerColors.SUCCESS_HTML, setup_name])
+		[LoggerColors.SUCCESS_HTML, setup_name])
+
+## Signal handler for setup_renamed event from TagSetupManager
+func _on_setup_renamed(old_name: String, new_name: String) -> void:
+	# Refresh the setups list
+	_refresh_setups_list()
+
+	print_rich("[color=#%s]Renamed tag setup: %s → %s[/color]" %
+		[LoggerColors.SUCCESS_HTML, old_name, new_name])

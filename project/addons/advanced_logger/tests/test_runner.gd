@@ -14,6 +14,9 @@ const TestLogFormatting = preload("res://addons/advanced_logger/tests/unit/test_
 # Integration Tests
 const TestTagOperations = preload("res://addons/advanced_logger/tests/integration/test_tag_operations.gd")
 
+# Refactoring Tests
+const TestTagSetupManager = preload("res://addons/advanced_logger/tests/test_tag_setup_manager.gd")
+
 # Test Results
 var _tests_run: int = 0
 var _tests_passed: int = 0
@@ -40,6 +43,9 @@ func run_tests():
 	
 	# Run Integration Tests
 	run_test(TestTagOperations)
+	
+	# Run Refactoring Tests
+	run_test(TestTagSetupManager)
 
 func run_test(test_class):
 	_tests_run += 1
@@ -55,9 +61,9 @@ func run_test(test_class):
 	
 	# We'll try to determine success from output
 	if test_instance.has_method("_ready"):
-		try:
-			test_instance._ready()
-		except:
+		var error = false
+		test_instance._ready()
+		if error:
 			exception_occurred = true
 			print("Exception occurred during test: %s" % str(get_stack()))
 	

@@ -35,8 +35,8 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "No active filter tags (showing all logs except ignored)
-No ignored tags"
+text = "Active filter tags: database
+Ignored tags: cache"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
@@ -64,7 +64,7 @@ text = "Log Level:"
 [node name="LevelOption" type="OptionButton" parent="VBoxContainer/TabContainer/Tags/LevelSection"]
 layout_mode = 2
 size_flags_horizontal = 3
-selected = 0
+selected = 1
 item_count = 5
 popup/item_0/text = "DEBUG"
 popup/item_0/id = 0
@@ -100,10 +100,11 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="SetupLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+visible = false
 layout_mode = 2
-text = "Tag Setups"
 theme_override_colors/font_color = Color(0.65, 0.78, 0.4, 1)
 theme_override_font_sizes/font_size = 14
+text = "Tag Setups"
 horizontal_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
@@ -112,12 +113,12 @@ layout_mode = 2
 [node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Save Current Setup"
+text = "Save Tag Selection"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 80)
 horizontal_scroll_mode = 0
 
 [node name="SetupsList" type="ItemList" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/ScrollContainer"]
@@ -129,11 +130,13 @@ mouse_filter = 1
 theme_override_constants/v_separation = 4
 allow_reselect = true
 allow_rmb_select = true
-auto_height = false
+item_count = 5
 fixed_icon_size = Vector2i(16, 16)
-item_count = 2
-item_0/text = "debug_network"
-item_1/text = "default"
+item_0/text = "cache+db"
+item_1/text = "debug_network"
+item_2/text = "default"
+item_3/text = "t"
+item_4/text = "test1"
 
 [node name="HSeparatorSetups" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -162,13 +165,11 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 6
-item_0/text = "Cache"
-item_1/text = "Database"
-item_2/text = "Error"
-item_3/text = "Firebase"
-item_4/text = "Local_data"
-item_5/text = "Network"
+item_count = 4
+item_0/text = "Error"
+item_1/text = "Firebase"
+item_2/text = "Local_data"
+item_3/text = "Network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -196,6 +197,8 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
+item_count = 1
+item_0/text = "Database"
 
 [node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -223,6 +226,8 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
+item_count = 1
+item_0/text = "Cache"
 
 [node name="Settings" type="Control" parent="VBoxContainer/TabContainer"]
 visible = false
