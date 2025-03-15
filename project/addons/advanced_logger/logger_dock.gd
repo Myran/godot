@@ -8,6 +8,7 @@ class_name LoggerDock extends Control
 # Preload required dependencies
 const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
 
 # Override drag and drop methods for Godot 4
 func _input(event: InputEvent) -> void:
@@ -186,26 +187,6 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	elif _ignored_tags_list.get_global_rect().has_point(mouse_pos):
 		_handle_drop_on_list(_ignored_tags_list, tag, source, SOURCE_IGNORED)
 
-# Config constants
-const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
-const CONFIG_SECTION_LOGGER: String = "logger"
-const CONFIG_SECTION_FORMAT: String = "format"
-const CONFIG_SECTION_SETUPS: String = "tag_setups"  # New section for tag setups
-const CONFIG_KEY_LOG_LEVEL: String = "log_level"
-const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
-const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
-const CONFIG_KEY_AVAILABLE_TAGS: String = "available_tags"  # New config key for available tags
-const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
-const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
-const CONFIG_KEY_USE_COLORS: String = "use_colors"
-const CONFIG_KEY_SHOW_SOURCE: String = "show_source"
-const DEFAULT_SHOW_SOURCE: bool = true
-
-# Default values
-const DEFAULT_LOG_LEVEL: int = 1  # INFO level
-const DEFAULT_SHOW_TIMESTAMP: bool = true
-const DEFAULT_SHOW_TAGS: bool = true
-const DEFAULT_USE_COLORS: bool = true
 
 # Tag source constants to replace magic strings
 const SOURCE_AVAILABLE: String = "available"
@@ -213,19 +194,20 @@ const SOURCE_ACTIVE: String = "active"
 const SOURCE_IGNORED: String = "ignored"
 
 # Settings cache
-var _current_level: int = DEFAULT_LOG_LEVEL
+var _current_level: int = 1  # INFO level
 var _active_tags: Array[String] = []
 var _ignored_tags: Array[String] = []
-var _available_tags: Array[String] = []  # New array for available tags
-var _show_timestamp: bool = DEFAULT_SHOW_TIMESTAMP
-var _show_tags: bool = DEFAULT_SHOW_TAGS
-var _use_colors: bool = DEFAULT_USE_COLORS
-var _show_source: bool = DEFAULT_SHOW_SOURCE
+var _available_tags: Array[String] = []
+var _show_timestamp: bool = true
+var _show_tags: bool = true
+var _use_colors: bool = true
+var _show_source: bool = true
+
+# Config manager instance
+var _config: ConfigManager = null
 
 # Tag setups: Dictionary of name -> {active_tags, ignored_tags}
 var _tag_setups: Dictionary = {}
-
-# Drag and drop tracking (using Godot 4 virtual methods)
 
 # Flag to avoid multiple saves during batch operations
 var _batch_operation: bool = false
@@ -260,6 +242,12 @@ var _batch_operation: bool = false
 
 func _ready() -> void:
 	print_rich("[color=#%s]DEBUG: _ready called[/color]" % [LoggerColors.DEBUG_HTML])
+
+	# Get the config instance
+	_config = ConfigManager.get_instance()
+
+	# Register for configuration changes
+	_config.config_changed.connect(_on_config_changed)
 
 	# Make sure drag is enabled on Control
 	set_process_input(true)
@@ -319,6 +307,42 @@ func _ready() -> void:
 	# Perform initial tag scan
 	call_deferred("_initial_tag_scan")
 
+## Handles configuration changes
+func _on_config_changed(section: String, key: String, value: Variant) -> void:
+	# Update internal state when config changes
+	if section == ConfigManager.SECTION_LOGGER:
+		if key == ConfigManager.KEY_LOG_LEVEL:
+			_current_level = value
+			_level_option.select(_current_level)
+		elif key == ConfigManager.KEY_ACTIVE_TAGS:
+			_active_tags = value
+			_refresh_tags_lists()
+		elif key == ConfigManager.KEY_IGNORED_TAGS:
+			_ignored_tags = value
+			_refresh_tags_lists()
+		elif key == ConfigManager.KEY_AVAILABLE_TAGS:
+			_available_tags = value
+			_refresh_tags_lists()
+	elif section == ConfigManager.SECTION_FORMAT:
+		if key == ConfigManager.KEY_SHOW_TIMESTAMP:
+			_show_timestamp = value
+			_show_timestamp_check.button_pressed = _show_timestamp
+		elif key == ConfigManager.KEY_SHOW_TAGS:
+			_show_tags = value
+			_show_tags_check.button_pressed = _show_tags
+		elif key == ConfigManager.KEY_USE_COLORS:
+			_use_colors = value
+			_use_colors_check.button_pressed = _use_colors
+		elif key == ConfigManager.KEY_SHOW_SOURCE:
+			_show_source = value
+			_show_source_check.button_pressed = _show_source
+	elif section == ConfigManager.SECTION_SETUPS:
+		# A tag setup was changed
+		_load_setups_from_config()
+
+	# Update startup message
+	_update_startup_message()
+
 
 ## Updates the startup message with current tag status
 func _update_startup_message() -> void:
@@ -342,164 +366,78 @@ func _update_startup_message() -> void:
 	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
 
 
-## Loads logger settings from the config file
-## Returns OK if successful, otherwise returns an error code
+## Loads logger settings from the ConfigManager
 func _load_settings_from_config() -> void:
-	var config: ConfigFile = ConfigFile.new()
-	var load_result: Error = config.load(CONFIG_PATH)
-
-	if load_result != OK:
-		# If file doesn't exist or other error, use defaults
-		_apply_defaults()
-		return
-
-	# Validate required sections exist
-	if (
-		not config.has_section(CONFIG_SECTION_LOGGER)
-		or not config.has_section(CONFIG_SECTION_FORMAT)
-	):
-		push_warning("Config file missing required sections")
-		_apply_defaults()
-		return
-
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE):
-		_show_source = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE) as bool
-		_show_source_check.button_pressed = _show_source
-
 	# Load log level
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL):
-		var level_value: int = config.get_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL)
-		_current_level = level_value
-		_level_option.select(_current_level)
+	_current_level = _config.get_log_level()
+	_level_option.select(_current_level)
 
 	# Load available tags
-	_available_tags.clear()
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_AVAILABLE_TAGS):
-		var tags: PackedStringArray = config.get_value(
-			CONFIG_SECTION_LOGGER, CONFIG_KEY_AVAILABLE_TAGS
-		)
-		for tag in tags:
-			if _validate_tag_name(tag):
-				_available_tags.append(tag)
+	_available_tags = _config.get_available_tags()
 
 	# Load active tags
-	_active_tags.clear()
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS):
-		var tags: PackedStringArray = config.get_value(
-			CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS
-		)
-		for tag in tags:
-			if _validate_tag_name(tag):
-				_active_tags.append(tag)
-
-				# Also add to available tags if not already there
-				if not _available_tags.has(tag):
-					_available_tags.append(tag)
+	_active_tags = _config.get_active_tags()
 
 	# Load ignored tags
-	_ignored_tags.clear()
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS):
-		var tags: PackedStringArray = config.get_value(
-			CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS
-		)
-		for tag in tags:
-			if _validate_tag_name(tag):
-				_ignored_tags.append(tag)
+	_ignored_tags = _config.get_ignored_tags()
 
-				# Also add to available tags if not already there
-				if not _available_tags.has(tag):
-					_available_tags.append(tag)
+	# Make sure active and ignored tags are in available tags
+	for tag in _active_tags:
+		if not _available_tags.has(tag):
+			_available_tags.append(tag)
+
+	for tag in _ignored_tags:
+		if not _available_tags.has(tag):
+			_available_tags.append(tag)
 
 	# Load format settings
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP):
-		_show_timestamp = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP) as bool
-		_show_timestamp_check.button_pressed = _show_timestamp
+	_show_timestamp = _config.get_show_timestamp()
+	_show_timestamp_check.button_pressed = _show_timestamp
 
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS):
-		_show_tags = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS) as bool
-		_show_tags_check.button_pressed = _show_tags
+	_show_tags = _config.get_show_tags()
+	_show_tags_check.button_pressed = _show_tags
 
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS):
-		_use_colors = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS) as bool
-		_use_colors_check.button_pressed = _use_colors
+	_use_colors = _config.get_use_colors()
+	_use_colors_check.button_pressed = _use_colors
+
+	_show_source = _config.get_show_source()
+	_show_source_check.button_pressed = _show_source
 
 	# Refresh UI
 	_refresh_tags_lists()
 
 
-## Saves logger settings to the config file
+## Saves logger settings to the ConfigManager
 ## Returns OK if successful, otherwise returns an error code
 func _save_settings_to_config() -> Error:
 	# Skip saving during batch operations
 	if _batch_operation:
 		return OK
 
-	var config: ConfigFile = ConfigFile.new()
+	# Set all values in the config
+	_config.set_log_level(_current_level)
+	_config.set_active_tags(_active_tags)
+	_config.set_ignored_tags(_ignored_tags)
+	_config.set_available_tags(_available_tags)
+	_config.set_show_timestamp(_show_timestamp)
+	_config.set_show_tags(_show_tags)
+	_config.set_use_colors(_use_colors)
+	_config.set_show_source(_show_source)
 
-	# Try to load existing config first to preserve other settings
-	var load_result := config.load(CONFIG_PATH)
-	if load_result != OK and load_result != ERR_FILE_NOT_FOUND:
-		push_error("Failed to load existing config: %s" % error_string(load_result))
-		# Continue anyway to try creating a new file
+	# Save the config
+	var result = _config.save()
 
-	# Logger general settings
-	config.set_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL, _current_level)
-
-	# Tag settings
-	config.set_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS, PackedStringArray(_active_tags))
-	config.set_value(
-		CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS, PackedStringArray(_ignored_tags)
-	)
-	config.set_value(
-		CONFIG_SECTION_LOGGER, CONFIG_KEY_AVAILABLE_TAGS, PackedStringArray(_available_tags)
-	)
-
-	# Format settings
-	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP, _show_timestamp)
-	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS, _show_tags)
-	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS, _use_colors)
-	config.set_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE, _show_source)
-
-	# More robust directory handling
-	var dir_path := "res://addons/advanced_logger"
-	var dir := DirAccess.open("res://")
-	if not dir:
-		var err := FileAccess.get_open_error()
-		push_error("Failed to access project directory: %s" % error_string(err))
-		return err
-
-	# Create addons directory if it doesn't exist
-	if not dir.dir_exists("addons"):
-		var err := dir.make_dir("addons")
-		if err != OK:
-			push_error("Failed to create addons directory: %s" % error_string(err))
-			return err
-
-	# Move to addons directory
-	if dir.change_dir("addons") != OK:
-		push_error("Failed to access addons directory")
-		return Error.FAILED
-
-	# Create the advanced_logger directory if it doesn't exist
-	if not dir.dir_exists("advanced_logger"):
-		var err := dir.make_dir("advanced_logger")
-		if err != OK:
-			push_error("Failed to create advanced_logger directory: %s" % error_string(err))
-			return err
-
-	# Try to save with better error handling
-	var save_result: Error = config.save(CONFIG_PATH)
-	if save_result == OK:
+	if result == OK:
 		print_rich(
 			"[color=#%s]Logger settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML
 		)
 	else:
-		push_error("Failed to save logger settings: %s" % error_string(save_result))
+		push_error("Failed to save settings: %s" % error_string(result))
 
 	# Update startup message
 	_update_startup_message()
 
-	return save_result
+	return result
 
 
 ## Refreshes all tag list UIs from the current state
@@ -526,21 +464,22 @@ func _refresh_tags_lists() -> void:
 
 ## Applies default settings and resets UI
 func _apply_defaults() -> void:
-	# Set defaults
-	_current_level = DEFAULT_LOG_LEVEL
+	# Set defaults using config default values
+	_current_level = ConfigManager.DEFAULT_LOG_LEVEL
 	_available_tags.clear()
 	_active_tags.clear()
 	_ignored_tags.clear()
-	_show_timestamp = DEFAULT_SHOW_TIMESTAMP
-	_show_tags = DEFAULT_SHOW_TAGS
-	_use_colors = DEFAULT_USE_COLORS
-	_show_source = DEFAULT_SHOW_SOURCE
-	_show_source_check.button_pressed = _show_source
+	_show_timestamp = ConfigManager.DEFAULT_SHOW_TIMESTAMP
+	_show_tags = ConfigManager.DEFAULT_SHOW_TAGS
+	_use_colors = ConfigManager.DEFAULT_USE_COLORS
+	_show_source = ConfigManager.DEFAULT_SHOW_SOURCE
+
 	# Update UI
 	_level_option.select(_current_level)
 	_show_timestamp_check.button_pressed = _show_timestamp
 	_show_tags_check.button_pressed = _show_tags
 	_use_colors_check.button_pressed = _use_colors
+	_show_source_check.button_pressed = _show_source
 	_refresh_tags_lists()
 
 	# Save to config
@@ -656,45 +595,34 @@ func _on_ignored_tag_activated(index: int) -> void:
 
 func _on_show_timestamp_toggled(button_pressed: bool) -> void:
 	_show_timestamp = button_pressed
+	_config.set_show_timestamp(button_pressed)
 	_save_settings_to_config()
 
 
 func _on_show_tags_toggled(button_pressed: bool) -> void:
 	_show_tags = button_pressed
+	_config.set_show_tags(button_pressed)
 	_save_settings_to_config()
 
 
 func _on_use_colors_toggled(button_pressed: bool) -> void:
 	_use_colors = button_pressed
+	_config.set_use_colors(button_pressed)
 	_save_settings_to_config()
 
 
 func _on_save_settings() -> void:
 	print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
 	var result := _save_settings_to_config()
-	print_rich(
-		(
-			"[color=#%s]Save result: %s[/color]"
-			% [LoggerColors.INFO_HTML, "OK" if result == OK else error_string(result)]
-		)
-	)
 
-	# Verify the file exists after saving
-	var file := FileAccess.open(CONFIG_PATH, FileAccess.READ)
-	if file:
+	if result == OK:
 		print_rich(
-			(
-				"[color=#%s]Config file exists and can be opened for reading[/color]"
-				% LoggerColors.SUCCESS_HTML
-			)
+			"[color=#%s]Settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML
 		)
-		file.close()
 	else:
 		print_rich(
-			(
-				"[color=#%s]Config file could not be opened: %s[/color]"
-				% [LoggerColors.ERROR_HTML, error_string(FileAccess.get_open_error())]
-			)
+			"[color=#%s]Failed to save settings: %s[/color]" %
+			[LoggerColors.ERROR_HTML, error_string(result)]
 		)
 
 
@@ -748,43 +676,31 @@ func _on_scan_tags() -> void:
 # Signal handlers that need to be defined
 func _on_level_changed(index: int) -> void:
 	_current_level = index
+	_config.set_log_level(index)
 	_save_settings_to_config()
 
 func _on_show_source_toggled(button_pressed: bool) -> void:
 	_show_source = button_pressed
+	_config.set_show_source(button_pressed)
 	_save_settings_to_config()
 
-## Loads tag setups from the config file
+## Loads tag setups from the ConfigManager
 func _load_setups_from_config() -> void:
-	var config: ConfigFile = ConfigFile.new()
-	var load_result: Error = config.load(CONFIG_PATH)
+	# Get all tag setups from the config
+	_tag_setups = _config.get_all_tag_setups()
 
-	if load_result != OK:
-		# If file doesn't exist or other error, initialize with defaults
+	# If no setups exist, create defaults
+	if _tag_setups.is_empty():
 		_create_default_tag_setups()
-		return
-
-	# Check if the setups section exists
-	if not config.has_section(CONFIG_SECTION_SETUPS):
-		_create_default_tag_setups()
-		return
-
-	# Clear existing setups
-	_tag_setups.clear()
-
-	# Load each setup
-	var setup_keys = config.get_section_keys(CONFIG_SECTION_SETUPS)
-	for setup_name in setup_keys:
-		var setup_data = config.get_value(CONFIG_SECTION_SETUPS, setup_name)
-		if setup_data is Dictionary:
-			if setup_data.has("active_tags") and setup_data.has("ignored_tags"):
-				_tag_setups[setup_name] = setup_data
 
 	# Refresh the setups list
 	_refresh_setups_list()
 
 ## Creates default tag setups if none exist
 func _create_default_tag_setups() -> void:
+	_begin_batch_operation()
+
+	# Create default setups
 	_tag_setups = {
 		"default": {
 			"active_tags": [],
@@ -799,33 +715,25 @@ func _create_default_tag_setups() -> void:
 	# Save the default setups to config
 	_save_setups_to_config()
 
-	# Refresh the UI
-	_refresh_setups_list()
+	_end_batch_operation()
 
-## Saves tag setups to the config file
+## Saves tag setups to the ConfigManager
 func _save_setups_to_config() -> Error:
-	var config: ConfigFile = ConfigFile.new()
-
-	# Try to load existing config first to preserve other settings
-	var load_result := config.load(CONFIG_PATH)
-	if load_result != OK and load_result != ERR_FILE_NOT_FOUND:
-		push_error("Failed to load existing config: %s" % error_string(load_result))
-		# Continue anyway to try creating a new file
-
 	# Save each setup in the setups section
 	for setup_name in _tag_setups:
-		config.set_value(CONFIG_SECTION_SETUPS, setup_name, _tag_setups[setup_name])
+		_config.set_tag_setup(setup_name, _tag_setups[setup_name])
 
-	# Try to save with better error handling
-	var save_result: Error = config.save(CONFIG_PATH)
-	if save_result == OK:
+	# Save the config
+	var result = _config.save()
+
+	if result == OK:
 		print_rich(
 			"[color=#%s]Tag setups saved successfully[/color]" % LoggerColors.SUCCESS_HTML
 		)
 	else:
-		push_error("Failed to save tag setups: %s" % error_string(save_result))
+		push_error("Failed to save tag setups: %s" % error_string(result))
 
-	return save_result
+	return result
 
 ## Refreshes the tag setups list UI
 func _refresh_setups_list() -> void:
@@ -874,7 +782,8 @@ func _on_setup_name_dialog_confirmed() -> void:
 	_tag_setups[setup_name] = setup
 
 	# Save to config
-	_save_setups_to_config()
+	_config.set_tag_setup(setup_name, setup)
+	_config.save()
 
 	# Refresh the UI
 	_refresh_setups_list()
@@ -963,7 +872,12 @@ func _show_rename_dialog(old_name: String) -> void:
 				var setup = _tag_setups[old_name]
 				_tag_setups.erase(old_name)
 				_tag_setups[new_name] = setup
-				_save_setups_to_config()
+
+				# Remove old setup and add new one
+				_config.set_value(ConfigManager.SECTION_SETUPS, old_name, null) # Remove old
+				_config.set_tag_setup(new_name, setup) # Add new
+				_config.save()
+
 				_refresh_setups_list()
 				print_rich("[color=#%s]Renamed tag setup: %s → %s[/color]" %
 						[LoggerColors.SUCCESS_HTML, old_name, new_name])
@@ -988,7 +902,8 @@ func _delete_setup(setup_name: String) -> void:
 		return
 
 	_tag_setups.erase(setup_name)
-	_save_setups_to_config()
+	_config.set_value(ConfigManager.SECTION_SETUPS, setup_name, null)
+	_config.save()
 	_refresh_setups_list()
 
 	print_rich("[color=#%s]Deleted tag setup: %s[/color]" %

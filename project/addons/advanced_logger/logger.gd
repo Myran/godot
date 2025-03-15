@@ -2,35 +2,19 @@
 class_name Logger extends Node
 ## Simple logging system with tags and levels
 
-# Make sure TagManager is preloaded
+# Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
 
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
-# Config constants - must match those in LoggerDock
+# Common tag constants
 const TAG_DB: String = "database"
 const TAG_CACHE: String = "cache"
 const TAG_FIREBASE: String = "firebase"
 const TAG_LOCAL: String = "local_data"
 const TAG_ERROR: String = "error"
 const TAG_NETWORK: String = "network"
-
-const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
-const CONFIG_SECTION_LOGGER: String = "logger"
-const CONFIG_SECTION_FORMAT: String = "format"
-const CONFIG_KEY_LOG_LEVEL: String = "log_level"
-const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
-const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
-const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
-const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
-const CONFIG_KEY_USE_COLORS: String = "use_colors"
-
-# Default values
-const DEFAULT_LOG_LEVEL: LogLevel = LogLevel.INFO
-const DEFAULT_SHOW_TIMESTAMP: bool = true
-const DEFAULT_SHOW_TAGS: bool = true
-const DEFAULT_USE_COLORS: bool = true
-const DEFAULT_SHOW_SOURCE: bool = true
 
 # Reference the centralized color palette
 const LEVEL_COLORS: Dictionary = {
@@ -50,18 +34,67 @@ const LEVEL_HTML_COLORS: Dictionary = {
 }
 
 # Class variables
-var _current_level: LogLevel = DEFAULT_LOG_LEVEL
+var _current_level: LogLevel = LogLevel.INFO
 var _active_tags: Array[String] = []
 var _ignored_tags: Array[String] = []
-var _show_timestamp: bool = DEFAULT_SHOW_TIMESTAMP
-var _show_tags: bool = DEFAULT_SHOW_TAGS
-var _use_colors: bool = DEFAULT_USE_COLORS
-var _show_source: bool = DEFAULT_SHOW_SOURCE
+var _show_timestamp: bool = true
+var _show_tags: bool = true
+var _use_colors: bool = true
+var _show_source: bool = true
+
+# Config instance
+var _config: ConfigManager = null
 
 
 func _init() -> void:
-	# Load settings on creation
-	LoggerSettings.load_settings(self)
+	# Get the config instance
+	_config = ConfigManager.get_instance()
+
+	# Register for configuration changes
+	if _config != null:
+		_config.config_changed.connect(_on_config_changed)
+
+	# Load settings
+	_load_settings()
+
+## Handles configuration changes
+func _on_config_changed(section: String, key: String, value: Variant) -> void:
+	# Update internal state when config changes
+	if section == ConfigManager.SECTION_LOGGER:
+		if key == ConfigManager.KEY_LOG_LEVEL:
+			_current_level = value
+		elif key == ConfigManager.KEY_ACTIVE_TAGS:
+			_active_tags = value
+		elif key == ConfigManager.KEY_IGNORED_TAGS:
+			_ignored_tags = value
+	elif section == ConfigManager.SECTION_FORMAT:
+		if key == ConfigManager.KEY_SHOW_TIMESTAMP:
+			_show_timestamp = value
+		elif key == ConfigManager.KEY_SHOW_TAGS:
+			_show_tags = value
+		elif key == ConfigManager.KEY_USE_COLORS:
+			_use_colors = value
+		elif key == ConfigManager.KEY_SHOW_SOURCE:
+			_show_source = value
+
+## Loads settings from the ConfigManager
+func _load_settings() -> void:
+	# In test mode or no config available, use defaults
+	if _config == null:
+		return
+
+	# General settings
+	_current_level = _config.get_log_level()
+
+	# Tags
+	_active_tags = _config.get_active_tags()
+	_ignored_tags = _config.get_ignored_tags()
+
+	# Format settings
+	_show_timestamp = _config.get_show_timestamp()
+	_show_tags = _config.get_show_tags()
+	_use_colors = _config.get_use_colors()
+	_show_source = _config.get_show_source()
 
 
 # Core logging methods
@@ -255,7 +288,12 @@ func set_level(level: LogLevel) -> Error:
 		return Error.FAILED
 
 	_current_level = level
-	return Error.OK
+
+	# Update config
+	if _config != null:
+		_config.set_log_level(level)
+
+	return OK
 
 
 func get_level() -> LogLevel:
@@ -277,7 +315,12 @@ func add_tag(tag: String) -> Error:
 	if _ignored_tags.has(tag):
 		_ignored_tags.erase(tag)
 
-	return Error.OK
+	# Update both tag lists in config if available
+	if _config != null:
+		_config.set_active_tags(_active_tags)
+		_config.set_ignored_tags(_ignored_tags)
+
+	return OK
 
 
 ## Removes a tag from the active tags list
@@ -289,7 +332,11 @@ func remove_tag(tag: String) -> Error:
 
 	if _active_tags.has(tag):
 		_active_tags.erase(tag)
-		return Error.OK
+
+		# Update tag list in config if available
+		if _config != null:
+			_config.set_active_tags(_active_tags)
+		return OK
 
 	return Error.FAILED  # Tag wasn't in the list
 
@@ -297,6 +344,10 @@ func remove_tag(tag: String) -> Error:
 ## Clears all active tags
 func clear_tags() -> void:
 	_active_tags.clear()
+
+	# Update tag list in config if available
+	if _config != null:
+		_config.set_active_tags(_active_tags)
 
 
 ## Adds a tag to the ignored tags list
@@ -313,7 +364,12 @@ func add_ignored_tag(tag: String) -> Error:
 	if _active_tags.has(tag):
 		_active_tags.erase(tag)
 
-	return Error.OK
+	# Update both tag lists in config if available
+	if _config != null:
+		_config.set_active_tags(_active_tags)
+		_config.set_ignored_tags(_ignored_tags)
+
+	return OK
 
 
 ## Removes a tag from the ignored tags list
@@ -325,7 +381,11 @@ func remove_ignored_tag(tag: String) -> Error:
 
 	if _ignored_tags.has(tag):
 		_ignored_tags.erase(tag)
-		return Error.OK
+
+		# Update tag list in config if available
+		if _config != null:
+			_config.set_ignored_tags(_ignored_tags)
+		return OK
 
 	return Error.FAILED  # Tag wasn't in the list
 
@@ -334,19 +394,31 @@ func remove_ignored_tag(tag: String) -> Error:
 func clear_ignored_tags() -> void:
 	_ignored_tags.clear()
 
+	# Update tag list in config if available
+	if _config != null:
+		_config.set_ignored_tags(_ignored_tags)
+
 
 # Format settings
 func set_show_timestamp(show: bool) -> void:
 	_show_timestamp = show
+	if _config != null:
+		_config.set_show_timestamp(show)
 
 
 func set_show_tags(show: bool) -> void:
 	_show_tags = show
+	if _config != null:
+		_config.set_show_tags(show)
 
 
 func set_use_colors(use: bool) -> void:
 	_use_colors = use
+	if _config != null:
+		_config.set_use_colors(use)
 
 
 func set_show_source(show: bool) -> void:
 	_show_source = show
+	if _config != null:
+		_config.set_show_source(show)

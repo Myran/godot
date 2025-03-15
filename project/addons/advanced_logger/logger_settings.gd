@@ -3,73 +3,24 @@ class_name LoggerSettings
 extends RefCounted
 ## Simple utility class for managing Logger settings
 
-# Make sure TagManager is preloaded
+# Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
 
-# Config constants - must match those in Logger and LoggerDock
-const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
-const CONFIG_SECTION_LOGGER: String = "logger"
-const CONFIG_SECTION_FORMAT: String = "format"
-const CONFIG_KEY_LOG_LEVEL: String = "log_level"
-const CONFIG_KEY_ACTIVE_TAGS: String = "active_tags"
-const CONFIG_KEY_IGNORED_TAGS: String = "ignored_tags"
-const CONFIG_KEY_AVAILABLE_TAGS: String = "available_tags"  # Added new config key
-const CONFIG_KEY_SHOW_TIMESTAMP: String = "show_timestamp"
-const CONFIG_KEY_SHOW_TAGS: String = "show_tags"
-const CONFIG_KEY_USE_COLORS: String = "use_colors"
-const CONFIG_KEY_SHOW_SOURCE: String = "show_source"
-# Default values - must match Logger and LoggerDock
-const DEFAULT_LOG_LEVEL: int = 1  # INFO level
-const DEFAULT_SHOW_TIMESTAMP: bool = true
-const DEFAULT_SHOW_TAGS: bool = true
-const DEFAULT_USE_COLORS: bool = true
-const DEFAULT_SHOW_SOURCE: bool = true
+# NOTE: This class is maintained for backward compatibility
+# New code should use ConfigManager directly
 
-# In LoggerSettings.gd, add these methods:
-
-# Project settings path format (used for test tag inclusion setting)
-const PROJECT_SETTINGS_PREFIX: String = "addons/advanced_logger/"
-
-# NOTE: The following ProjectSettings methods are prepared for future implementation
-# but are not currently used. The system uses ConfigFile instead.
-
-## Saves logger settings to project settings instead of config file
-## Currently unused - the system uses ConfigFile
-static func save_to_project_settings(logger_instance: Logger) -> Error:
-	if not logger_instance:
-		push_error("Cannot save settings: logger instance is null")
-		return Error.FAILED
-
-	# Save logger settings
-	ProjectSettings.set_setting(PROJECT_SETTINGS_PREFIX + "log_level", logger_instance.get_level())
-	ProjectSettings.set_setting(
-		PROJECT_SETTINGS_PREFIX + "active_tags", logger_instance._active_tags
-	)
-	ProjectSettings.set_setting(
-		PROJECT_SETTINGS_PREFIX + "ignored_tags", logger_instance._ignored_tags
-	)
-	ProjectSettings.set_setting(
-		PROJECT_SETTINGS_PREFIX + "show_timestamp", logger_instance._show_timestamp
-	)
-	ProjectSettings.set_setting(PROJECT_SETTINGS_PREFIX + "show_tags", logger_instance._show_tags)
-	ProjectSettings.set_setting(PROJECT_SETTINGS_PREFIX + "use_colors", logger_instance._use_colors)
-	ProjectSettings.set_setting(
-		PROJECT_SETTINGS_PREFIX + "show_source", logger_instance._show_source
-	)
-
-	return ProjectSettings.save()
-
-## Loads logger settings from project settings instead of config file
-## Currently unused - the system uses ConfigFile
-static func load_from_project_settings(logger_instance: Logger) -> Error:
+## Sets the logger settings from the ConfigManager to the logger instance
+## Returns OK if successful, FAILED otherwise
+static func load_settings(logger_instance: Logger) -> Error:
 	if not logger_instance:
 		push_error("Cannot load settings: logger instance is null")
 		return Error.FAILED
 
-	# Load logger settings with defaults
-	var level = ProjectSettings.get_setting(
-		PROJECT_SETTINGS_PREFIX + "log_level", DEFAULT_LOG_LEVEL
-	)
+	var config = ConfigManager.get_instance()
+
+	# Load log level
+	var level = config.get_log_level()
 	if level >= 0 and level < Logger.LogLevel.size():
 		logger_instance.set_level(level)
 
@@ -78,110 +29,47 @@ static func load_from_project_settings(logger_instance: Logger) -> Error:
 	logger_instance.clear_ignored_tags()
 
 	# Load tags
-	var active_tags = ProjectSettings.get_setting(PROJECT_SETTINGS_PREFIX + "active_tags", [])
+	var active_tags = config.get_active_tags()
 	for tag in active_tags:
 		if TagManager.is_valid_tag(tag):
 			logger_instance.add_tag(tag)
 
-	var ignored_tags = ProjectSettings.get_setting(PROJECT_SETTINGS_PREFIX + "ignored_tags", [])
+	var ignored_tags = config.get_ignored_tags()
 	for tag in ignored_tags:
 		if TagManager.is_valid_tag(tag):
 			logger_instance.add_ignored_tag(tag)
 
-	var show_source = ProjectSettings.get_setting(
-		PROJECT_SETTINGS_PREFIX + "show_source", DEFAULT_SHOW_SOURCE
-	)
-	logger_instance.set_show_source(show_source)
-
 	# Load format settings
-	var show_timestamp = ProjectSettings.get_setting(
-		PROJECT_SETTINGS_PREFIX + "show_timestamp", DEFAULT_SHOW_TIMESTAMP
-	)
-	logger_instance.set_show_timestamp(show_timestamp)
-
-	var show_tags = ProjectSettings.get_setting(
-		PROJECT_SETTINGS_PREFIX + "show_tags", DEFAULT_SHOW_TAGS
-	)
-	logger_instance.set_show_tags(show_tags)
-
-	var use_colors = ProjectSettings.get_setting(
-		PROJECT_SETTINGS_PREFIX + "use_colors", DEFAULT_USE_COLORS
-	)
-	logger_instance.set_use_colors(use_colors)
+	logger_instance.set_show_source(config.get_show_source())
+	logger_instance.set_show_timestamp(config.get_show_timestamp())
+	logger_instance.set_show_tags(config.get_show_tags())
+	logger_instance.set_use_colors(config.get_use_colors())
 
 	return OK
 
-
-## Sets the logger settings from the config file to the logger instance
+## Saves the logger settings to the config
 ## Returns OK if successful, FAILED otherwise
-static func load_settings(logger_instance: Logger) -> Error:
+static func save_settings(logger_instance: Logger) -> Error:
 	if not logger_instance:
-		push_error("Cannot load settings: logger instance is null")
+		push_error("Cannot save settings: logger instance is null")
 		return Error.FAILED
 
-	var config: ConfigFile = ConfigFile.new()
-	var load_result: Error = config.load(CONFIG_PATH)
+	var config = ConfigManager.get_instance()
 
-	# Use defaults if file doesn't exist or can't be loaded
-	if load_result != OK:
-		return OK
+	# Save log level
+	config.set_log_level(logger_instance.get_level())
 
-	# Validate required sections exist
-	if (
-		not config.has_section(CONFIG_SECTION_LOGGER)
-		or not config.has_section(CONFIG_SECTION_FORMAT)
-	):
-		push_warning("Config file missing required sections")
-		return OK
+	# Save tags
+	config.set_active_tags(logger_instance._active_tags)
+	config.set_ignored_tags(logger_instance._ignored_tags)
 
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE):
-		var show_source: bool = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_SOURCE)
-		logger_instance.set_show_source(show_source)
+	# Save format settings
+	config.set_show_source(logger_instance._show_source)
+	config.set_show_timestamp(logger_instance._show_timestamp)
+	config.set_show_tags(logger_instance._show_tags)
+	config.set_use_colors(logger_instance._use_colors)
 
-	# Logger general settings
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL):
-		var level: int = config.get_value(CONFIG_SECTION_LOGGER, CONFIG_KEY_LOG_LEVEL)
-		if level >= 0 and level < Logger.LogLevel.size():
-			logger_instance.set_level(level)
-
-	# Clear existing tags
-	logger_instance.clear_tags()
-	logger_instance.clear_ignored_tags()
-
-	# Tag settings
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS):
-		var tags: PackedStringArray = config.get_value(
-			CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS
-		)
-		for tag in tags:
-			if TagManager.is_valid_tag(tag):
-				logger_instance.add_tag(tag)
-
-	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS):
-		var tags: PackedStringArray = config.get_value(
-			CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS
-		)
-		for tag in tags:
-			if TagManager.is_valid_tag(tag):
-				logger_instance.add_ignored_tag(tag)
-
-	# Format settings
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP):
-		var show_timestamp: bool = config.get_value(
-			CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TIMESTAMP
-		)
-		logger_instance.set_show_timestamp(show_timestamp)
-
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS):
-		var show_tags: bool = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_SHOW_TAGS)
-		logger_instance.set_show_tags(show_tags)
-
-	if config.has_section_key(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS):
-		var use_colors: bool = config.get_value(CONFIG_SECTION_FORMAT, CONFIG_KEY_USE_COLORS)
-		logger_instance.set_use_colors(use_colors)
-
-	return OK
-
+	return config.save()
 
 ## Checks if a tag is valid
 ##
