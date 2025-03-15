@@ -95,6 +95,49 @@ grow_vertical = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 20
 
+[node name="SetupsSection" type="VBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SetupLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+layout_mode = 2
+text = "Tag Setups"
+theme_override_colors/font_color = Color(0.65, 0.78, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+layout_mode = 2
+
+[node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save Current Setup"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 80)
+horizontal_scroll_mode = 0
+
+[node name="SetupsList" type="ItemList" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/ScrollContainer"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+theme_override_constants/v_separation = 4
+allow_reselect = true
+allow_rmb_select = true
+auto_height = false
+fixed_icon_size = Vector2i(16, 16)
+item_count = 2
+item_0/text = "debug_network"
+item_1/text = "default"
+
+[node name="HSeparatorSetups" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
+layout_mode = 2
+
 [node name="AvailableTagsSection" type="VBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -115,7 +158,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="TagsList" type="ItemList" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer"]
-custom_minimum_size = Vector2(0, 218)
+custom_minimum_size = Vector2(0, 152)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -252,54 +295,6 @@ text = "Save Settings"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset to Defaults"
-
-[node name="Setups" type="Control" parent="VBoxContainer/TabContainer"]
-visible = false
-layout_mode = 2
-mouse_filter = 1
-metadata/_tab_index = 2
-
-[node name="SetupsSection" type="VBoxContainer" parent="VBoxContainer/TabContainer/Setups"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 10
-
-[node name="SetupsLabel" type="Label" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
-layout_mode = 2
-text = "Tag Setups"
-horizontal_alignment = 1
-
-[node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
-layout_mode = 2
-text = "Save Current Configuration as Setup"
-
-[node name="InfoLabel" type="Label" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
-layout_mode = 2
-text = "Double-click to load a setup"
-horizontal_alignment = 1
-
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Setups/SetupsSection"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="SetupsList" type="ItemList" parent="VBoxContainer/TabContainer/Setups/SetupsSection/ScrollContainer"]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 1
-allow_reselect = true
-allow_rmb_select = true
-auto_height = true
-item_count = 2
-item_0/text = "debug_network"
-item_1/text = "default"
 
 [node name="SetupNameDialog" type="ConfirmationDialog" parent="."]
 title = "Save Tag Setup"
