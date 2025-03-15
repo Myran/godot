@@ -237,7 +237,7 @@ var _batch_operation: bool = false
 
 # Available Tags components
 @onready var _available_tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList
-@onready var _update_tags_button: Button = $VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/UpdateTagsButton
+@onready var _update_tags_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/UpdateTagsButton
 
 # Active Tags components
 @onready var _tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/TagsSection/ScrollContainer/TagsList
