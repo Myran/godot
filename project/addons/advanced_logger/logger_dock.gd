@@ -29,7 +29,8 @@ func _handle_mouse_down(position: Vector2) -> void:
 		var local_pos = _available_tags_list.get_local_mouse_position()
 		var index = _available_tags_list.get_item_at_position(local_pos)
 		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Available Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
+			var tag = _available_tags_list.get_item_metadata(index)
+			print_rich("[color=#%s]DEBUG: Selected tag in Available Tags: %s (index %d)[/color]" % [LoggerColors.DEBUG_HTML, tag, index])
 			_available_tags_list.select(index)
 
 	# Check if the click is inside Active Tags
@@ -38,7 +39,8 @@ func _handle_mouse_down(position: Vector2) -> void:
 		var local_pos = _tags_list.get_local_mouse_position()
 		var index = _tags_list.get_item_at_position(local_pos)
 		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Active Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
+			var tag = _tags_list.get_item_metadata(index)
+			print_rich("[color=#%s]DEBUG: Selected tag in Active Tags: %s (index %d)[/color]" % [LoggerColors.DEBUG_HTML, tag, index])
 			_tags_list.select(index)
 
 	# Check if the click is inside Ignored Tags
@@ -47,7 +49,8 @@ func _handle_mouse_down(position: Vector2) -> void:
 		var local_pos = _ignored_tags_list.get_local_mouse_position()
 		var index = _ignored_tags_list.get_item_at_position(local_pos)
 		if index >= 0:
-			print_rich("[color=#%s]DEBUG: Selected tag in Ignored Tags at index %d[/color]" % [LoggerColors.DEBUG_HTML, index])
+			var tag = _ignored_tags_list.get_item_metadata(index)
+			print_rich("[color=#%s]DEBUG: Selected tag in Ignored Tags: %s (index %d)[/color]" % [LoggerColors.DEBUG_HTML, tag, index])
 			_ignored_tags_list.select(index)
 
 func _handle_mouse_up(position: Vector2) -> void:
@@ -67,6 +70,12 @@ func _create_drag_preview(text: String) -> Control:
 
 	return panel
 
+# Helper method to format tags for display
+func _format_tag_for_display(tag: String) -> String:
+	if tag.is_empty():
+		return tag
+	return tag.substr(0, 1).capitalize() + tag.substr(1)
+
 # Get drag data from any list with a single function
 func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
 	var indices = item_list.get_selected_items()
@@ -74,7 +83,7 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 		return null
 
 	var tag_index = indices[0]
-	var tag_text = item_list.get_item_text(tag_index)
+	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
 	if not _validate_tag_name(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
@@ -88,8 +97,8 @@ func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Varian
 		"index": tag_index
 	}
 
-	# Create preview
-	set_drag_preview(_create_drag_preview(tag_text))
+	# Create preview (with capitalized display)
+	set_drag_preview(_create_drag_preview(_format_tag_for_display(tag_text)))
 	return drag_data
 
 func _get_drag_data(at_position: Vector2) -> Variant:
@@ -500,17 +509,20 @@ func _refresh_tags_lists() -> void:
 	_available_tags_list.clear()
 	for tag in _available_tags:
 		if not _active_tags.has(tag) and not _ignored_tags.has(tag):
-			_available_tags_list.add_item(tag)
+			_available_tags_list.add_item(_format_tag_for_display(tag))
+			_available_tags_list.set_item_metadata(_available_tags_list.item_count - 1, tag)
 
 	# Clear and populate active tags list
 	_tags_list.clear()
 	for tag in _active_tags:
-		_tags_list.add_item(tag)
+		_tags_list.add_item(_format_tag_for_display(tag))
+		_tags_list.set_item_metadata(_tags_list.item_count - 1, tag)
 
 	# Clear and populate ignored tags list
 	_ignored_tags_list.clear()
 	for tag in _ignored_tags:
-		_ignored_tags_list.add_item(tag)
+		_ignored_tags_list.add_item(_format_tag_for_display(tag))
+		_ignored_tags_list.set_item_metadata(_ignored_tags_list.item_count - 1, tag)
 
 
 ## Applies default settings and resets UI
@@ -639,7 +651,7 @@ func _on_available_tag_selected(_index: int) -> void:
 
 func _on_available_tag_activated(index: int) -> void:
 	# Move tag to active list when double-clicked
-	var tag = _available_tags_list.get_item_text(index)
+	var tag = _available_tags_list.get_item_metadata(index)
 	_handle_tag_drag(tag, SOURCE_AVAILABLE, SOURCE_ACTIVE)
 
 
@@ -651,7 +663,7 @@ func _on_active_tag_selected(_index: int) -> void:
 
 func _on_active_tag_activated(index: int) -> void:
 	# Move to ignored when double-clicked
-	var tag = _tags_list.get_item_text(index)
+	var tag = _tags_list.get_item_metadata(index)
 	_handle_tag_drag(tag, SOURCE_ACTIVE, SOURCE_IGNORED)
 
 
@@ -663,7 +675,7 @@ func _on_ignored_tag_selected(_index: int) -> void:
 
 func _on_ignored_tag_activated(index: int) -> void:
 	# Move to active when double-clicked
-	var tag = _ignored_tags_list.get_item_text(index)
+	var tag = _ignored_tags_list.get_item_metadata(index)
 	_handle_tag_drag(tag, SOURCE_IGNORED, SOURCE_ACTIVE)
 
 
@@ -724,38 +736,38 @@ func _initial_tag_scan() -> void:
 ## Scans the project for tags used in Log calls and adds them to available tags
 func _on_scan_tags() -> void:
 	print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
-	
+
 	# Determine directories to exclude based on project settings
 	var exclude_dirs: Array[String] = []
 	var include_test_tags = ProjectSettings.get_setting("advanced_logger/include_test_tags", false)
-	
+
 	# If not including test tags, exclude the tests directory
 	if not include_test_tags:
 		exclude_dirs.append("res://tests/")
 		print_rich("[color=#%s]Excluding test tags[/color]" % LoggerColors.INFO_HTML)
 	else:
 		print_rich("[color=#%s]Including test tags[/color]" % LoggerColors.INFO_HTML)
-	
+
 	# Get tags from the scanner with appropriate exclusions
 	var scanner_tags: Array[String] = TagScanner.scan_project_for_tags(exclude_dirs)
-	
+
 	# Begin batch operation to prevent multiple saves
 	_begin_batch_operation()
-	
+
 	# Add each tag to available tags if not already present
 	var added_count := 0
 	for tag in scanner_tags:
 		if not _available_tags.has(tag):
 			_available_tags.append(tag)
 			added_count += 1
-	
+
 	# Sort tags alphabetically for easier finding
 	_available_tags.sort()
-	
+
 	# End batch operation and save changes
 	_end_batch_operation()
-	
-	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" % 
+
+	print_rich("[color=#%s]Tag scan complete. Found %d tags, added %d new tags.[/color]" %
 			   [LoggerColors.SUCCESS_HTML, scanner_tags.size(), added_count])
 
 # Signal handlers that need to be defined
