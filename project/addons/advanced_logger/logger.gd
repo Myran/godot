@@ -123,12 +123,12 @@ func _validate_tags(tags: Array[String]) -> Array[String]:
 
 
 ## Checks if a tag is valid (delegates to LoggerSettings for consistent validation)
-func _is_valid_tag(tag: String) -> bool:
+func _is_valid_tag(tag) -> bool:
 	return LoggerSettings._is_valid_tag(tag)
 
 
 # Check if a log should be shown based on tags
-func _should_show_tags(tags: Array[String]) -> bool:
+func _should_show_tags(tags: Array) -> bool:
 	# If tags are ignored, don't show
 	for tag in tags:
 		if tag is String and _ignored_tags.has(tag):

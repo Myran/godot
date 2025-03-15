@@ -1,0 +1,97 @@
+# Advanced Logger test commands
+# Run these with: just <command>
+
+# Location of the Godot editor executable
+godot := "../editor/godot.macos.editor.arm64"
+
+# Path prefix for tests
+test_path := "addons/advanced_logger/tests"
+
+# Default command: run all tests
+default:
+    @echo "Running all Advanced Logger tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/test_runner.gd
+    @echo "All tests completed."
+
+# Run a specific test file
+run-test test:
+    @echo "Running test: {{test}}"
+    {{godot}} --path . --headless --script res://{{test_path}}/{{test}}
+    @echo "Test completed."
+
+# Run individual unit tests
+test-tag-validation:
+    @echo "Running tag validation tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_validation.gd
+    @echo "Test completed."
+
+# Run in the editor (not headless)
+test-tag-validation-editor:
+    @echo "Running tag validation tests in editor..."
+    {{godot}} --path . res://{{test_path}}/simple_test.tscn
+    @echo "Test completed."
+
+test-tag-filtering:
+    @echo "Running tag filtering tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_filtering.gd
+    @echo "Test completed."
+
+# Run tag filtering tests in editor
+test-tag-filtering-editor:
+    @echo "Running tag filtering tests in editor..."
+    {{godot}} --path . res://{{test_path}}/filter_test.tscn
+    @echo "Test completed."
+
+test-config-handling:
+    @echo "Running config handling tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_config_handling.gd
+    @echo "Test completed."
+
+test-log-formatting:
+    @echo "Running log formatting tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_log_formatting.gd
+    @echo "Test completed."
+
+# Run integration tests
+test-tag-operations:
+    @echo "Running tag operations tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/integration/test_tag_operations.gd
+    @echo "Test completed."
+
+# Run all unit tests
+test-units:
+    @echo "Running all unit tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_validation.gd
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_filtering.gd
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_config_handling.gd
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_log_formatting.gd
+    @echo "All unit tests completed."
+
+# Run all integration tests
+test-integration:
+    @echo "Running all integration tests..."
+    {{godot}} --path . --headless --script res://{{test_path}}/integration/test_tag_operations.gd
+    @echo "All integration tests completed."
+
+# Run all tests in editor mode
+test-all-editor:
+    @echo "Running all tests in editor mode..."
+    {{godot}} --path . res://{{test_path}}/test_runner.tscn
+    @echo "All tests completed."
+
+# Collect test results and generate report
+test-report:
+    @echo "Generating test report..."
+    mkdir -p res://{{test_path}}/results
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_validation.gd > res://{{test_path}}/results/tag_validation_results.txt
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_tag_filtering.gd > res://{{test_path}}/results/tag_filtering_results.txt
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_config_handling.gd > res://{{test_path}}/results/config_handling_results.txt
+    {{godot}} --path . --headless --script res://{{test_path}}/unit/test_log_formatting.gd > res://{{test_path}}/results/log_formatting_results.txt
+    {{godot}} --path . --headless --script res://{{test_path}}/integration/test_tag_operations.gd > res://{{test_path}}/results/tag_operations_results.txt
+    @echo "Test report generated in res://{{test_path}}/results/"
+
+# Run a single test in interactive mode
+test-interactive test:
+    @echo "Running interactive test: {{test}}"
+    {{godot}} --path . res://{{test_path}}/{{test}}
+    @echo "Interactive test completed."

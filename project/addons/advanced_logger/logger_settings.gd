@@ -25,7 +25,7 @@ const DEFAULT_SHOW_SOURCE: bool = true
 # In LoggerSettings.gd, add these methods:
 
 # Project settings path format (used for test tag inclusion setting)
-const PROJECT_SETTINGS_PREFIX = "addons/advanced_logger/"
+const PROJECT_SETTINGS_PREFIX: String = "addons/advanced_logger/"
 
 # NOTE: The following ProjectSettings methods are prepared for future implementation
 # but are not currently used. The system uses ConfigFile instead.
@@ -187,14 +187,16 @@ static func load_settings(logger_instance: Logger) -> Error:
 ## - Must contain only alphanumeric characters, underscores, or hyphens
 ##
 ## Returns: true if valid, false otherwise
-static func _is_valid_tag(tag: String) -> bool:
-	if not (tag is String) or tag.is_empty():
+static func _is_valid_tag(tag) -> bool:
+	# First, check if it's a String
+	if not (tag is String):
 		return false
-
-	# Basic check - not empty
-	var is_valid = not tag.is_empty()
+	
+	# Check if it's empty
+	if tag.is_empty():
+		return false
 
 	# Enhanced validation - alphanumeric, underscores, hyphens only
 	var regex = RegEx.new()
 	regex.compile("^[a-zA-Z0-9_-]+$")
-	return is_valid and regex.search(tag) != null
+	return regex.search(tag) != null
