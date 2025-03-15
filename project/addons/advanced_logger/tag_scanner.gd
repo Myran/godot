@@ -3,6 +3,9 @@ class_name LogTagScanner
 extends RefCounted
 ## Utility for scanning project files to find Log tags
 
+# Preload TagManager
+const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+
 ## Scans the project for Log method calls and extracts tags
 ## 
 ## Parameters:
@@ -47,7 +50,7 @@ static func extract_tag_constants_from_logger() -> Array[String]:
 	for match_result in matches:
 		if match_result.strings.size() >= 2:
 			var tag := match_result.strings[1]
-			if LoggerSettings._is_valid_tag(tag):
+			if TagManager.is_valid_tag(tag):
 				logger_tags.append(tag)
 	
 	return logger_tags
@@ -160,6 +163,6 @@ static func extract_tags_from_string(tags_str: String, found_tags: Array[String]
 		# Get the tag value (either from double or single quotes)
 		var tag := tag_match.strings[1] if tag_match.strings.size() > 1 and tag_match.strings[1] else tag_match.strings[2]
 		
-		# Validate the tag using the existing validation method
-		if LoggerSettings._is_valid_tag(tag) and not found_tags.has(tag):
+		# Validate the tag using TagManager
+		if TagManager.is_valid_tag(tag) and not found_tags.has(tag):
 			found_tags.append(tag)

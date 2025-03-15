@@ -3,6 +3,9 @@ class_name LoggerSettings
 extends RefCounted
 ## Simple utility class for managing Logger settings
 
+# Make sure TagManager is preloaded
+const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+
 # Config constants - must match those in Logger and LoggerDock
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const CONFIG_SECTION_LOGGER: String = "logger"
@@ -77,12 +80,12 @@ static func load_from_project_settings(logger_instance: Logger) -> Error:
 	# Load tags
 	var active_tags = ProjectSettings.get_setting(PROJECT_SETTINGS_PREFIX + "active_tags", [])
 	for tag in active_tags:
-		if _is_valid_tag(tag):
+		if TagManager.is_valid_tag(tag):
 			logger_instance.add_tag(tag)
 
 	var ignored_tags = ProjectSettings.get_setting(PROJECT_SETTINGS_PREFIX + "ignored_tags", [])
 	for tag in ignored_tags:
-		if _is_valid_tag(tag):
+		if TagManager.is_valid_tag(tag):
 			logger_instance.add_ignored_tag(tag)
 
 	var show_source = ProjectSettings.get_setting(
@@ -151,7 +154,7 @@ static func load_settings(logger_instance: Logger) -> Error:
 			CONFIG_SECTION_LOGGER, CONFIG_KEY_ACTIVE_TAGS
 		)
 		for tag in tags:
-			if _is_valid_tag(tag):
+			if TagManager.is_valid_tag(tag):
 				logger_instance.add_tag(tag)
 
 	if config.has_section_key(CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS):
@@ -159,7 +162,7 @@ static func load_settings(logger_instance: Logger) -> Error:
 			CONFIG_SECTION_LOGGER, CONFIG_KEY_IGNORED_TAGS
 		)
 		for tag in tags:
-			if _is_valid_tag(tag):
+			if TagManager.is_valid_tag(tag):
 				logger_instance.add_ignored_tag(tag)
 
 	# Format settings
@@ -188,15 +191,4 @@ static func load_settings(logger_instance: Logger) -> Error:
 ##
 ## Returns: true if valid, false otherwise
 static func _is_valid_tag(tag) -> bool:
-	# First, check if it's a String
-	if not (tag is String):
-		return false
-	
-	# Check if it's empty
-	if tag.is_empty():
-		return false
-
-	# Enhanced validation - alphanumeric, underscores, hyphens only
-	var regex = RegEx.new()
-	regex.compile("^[a-zA-Z0-9_-]+$")
-	return regex.search(tag) != null
+	return TagManager.is_valid_tag(tag)

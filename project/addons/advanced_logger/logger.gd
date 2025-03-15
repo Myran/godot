@@ -2,6 +2,9 @@
 class_name Logger extends Node
 ## Simple logging system with tags and levels
 
+# Make sure TagManager is preloaded
+const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
 # Config constants - must match those in LoggerDock
@@ -115,39 +118,17 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 
 # Validate tags, returning only non-empty strings
 func _validate_tags(tags: Array[String]) -> Array[String]:
-	var validated_tags: Array[String] = []
-	for tag in tags:
-		if _is_valid_tag(tag):
-			validated_tags.append(tag)
-	return validated_tags
+	return TagManager.validate_tags(tags)
 
 
-## Checks if a tag is valid (delegates to LoggerSettings for consistent validation)
+## Checks if a tag is valid (delegates to TagManager for consistent validation)
 func _is_valid_tag(tag) -> bool:
-	return LoggerSettings._is_valid_tag(tag)
+	return TagManager.is_valid_tag(tag)
 
 
 # Check if a log should be shown based on tags
 func _should_show_tags(tags: Array) -> bool:
-	# If tags are ignored, don't show
-	for tag in tags:
-		if tag is String and _ignored_tags.has(tag):
-			return false
-
-	# If no active tags are set, show all logs
-	if _active_tags.is_empty():
-		return true
-
-	# If there are active tags but message has no tags, don't show
-	if tags.is_empty():
-		return false
-
-	# Show if any message tag matches active tags
-	for tag in tags:
-		if tag is String and _active_tags.has(tag):
-			return true
-
-	return false
+	return TagManager.should_show_tags(tags, _active_tags, _ignored_tags)
 
 
 # Get source information (file, line, function)

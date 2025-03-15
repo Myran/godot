@@ -5,8 +5,9 @@ class_name LoggerDock extends Control
 ## Provides configuration UI for the Advanced Logger system with tag filtering,
 ## drag and drop tag management, and other logger settings.
 
-# Preload the tag scanner
+# Preload required dependencies
 const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
+const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
 
 # Override drag and drop methods for Godot 4
 func _input(event: InputEvent) -> void:
@@ -72,9 +73,7 @@ func _create_drag_preview(text: String) -> Control:
 
 # Helper method to format tags for display
 func _format_tag_for_display(tag: String) -> String:
-	if tag.is_empty():
-		return tag
-	return tag.substr(0, 1).capitalize() + tag.substr(1)
+	return TagManager.format_tag_for_display(tag)
 
 # Get drag data from any list with a single function
 func _get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
@@ -551,17 +550,7 @@ func _apply_defaults() -> void:
 ## Validates a tag name is properly formatted
 ## Returns true if the tag is valid, false otherwise
 func _validate_tag_name(tag: String) -> bool:
-	if tag.is_empty():
-		return false
-
-	# First check using existing LoggerSettings static method
-	if not LoggerSettings._is_valid_tag(tag):
-		return false
-
-	# Enhanced validation for better tag names
-	var regex = RegEx.new()
-	regex.compile("^[a-zA-Z0-9_-]+$")
-	return regex.search(tag) != null
+	return TagManager.is_valid_tag(tag)
 
 
 ## Helper function to move a tag between lists
@@ -586,39 +575,25 @@ func _move_tag(tag: String, from_list: Array[String], to_list: Array[String]) ->
 ## - to_target: Target category for the tag
 ## Handle tag movement between categories with match statement for cleaner code
 func _handle_tag_drag(tag: String, from_source: String, to_target: String) -> void:
-	if not _validate_tag_name(tag) or from_source == to_target:
+	if not TagManager.is_valid_tag(tag) or from_source == to_target:
 		return
 
 	_begin_batch_operation()
 
-	# Always ensure tag is in the available tags master list
-	if not _available_tags.has(tag):
-		_available_tags.append(tag)
+	# Use the TagManager for handling tag movement
+	var result = TagManager.move_tag(
+		tag,
+		from_source,
+		to_target,
+		_available_tags,
+		_active_tags,
+		_ignored_tags
+	)
 
-	# Use match for cleaner code structure
-	# Handle tag removal from source
-	match from_source:
-		SOURCE_ACTIVE:
-			if _active_tags.has(tag):
-				_active_tags.erase(tag)
-		SOURCE_IGNORED:
-			if _ignored_tags.has(tag):
-				_ignored_tags.erase(tag)
-
-	# Handle tag addition to target
-	match to_target:
-		SOURCE_AVAILABLE:
-			# Remove from both filtered lists
-			_active_tags.erase(tag)
-			_ignored_tags.erase(tag)
-		SOURCE_ACTIVE:
-			_ignored_tags.erase(tag)
-			if not _active_tags.has(tag):
-				_active_tags.append(tag)
-		SOURCE_IGNORED:
-			_active_tags.erase(tag)
-			if not _ignored_tags.has(tag):
-				_ignored_tags.append(tag)
+	# Update arrays with the result
+	_available_tags = result.available_tags
+	_active_tags = result.active_tags
+	_ignored_tags = result.ignored_tags
 
 	_end_batch_operation()
 

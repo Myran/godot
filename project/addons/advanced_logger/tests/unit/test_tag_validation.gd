@@ -63,37 +63,37 @@ func test_invalid_tags():
 		"game/logic", # contains slash
 		"physics>engine", # contains comparison operator
 	]
-	
+
 	# Also test non-string values using a safe wrapper approach
 	var non_string_values = [
 		123, # integer
 		null # null
 	]
-	
+
 	# Test regular invalid strings first
 	var validation_results = []
 	for tag in invalid_tags:
 		var is_valid = logger_settings._is_valid_tag(tag)
 		validation_results.append(!is_valid) # Expecting to be invalid
 		print("- Tag: '%s' | Invalid: %s %s" % [
-			tag, 
-			!is_valid, 
+			tag,
+			!is_valid,
 			"✓" if !is_valid else "✗"
 		])
-	
+
 	# Now test non-string values safely
 	for value in non_string_values:
 		# Create a safe wrapper to handle type errors
 		var is_valid = false
-		
+
 		# In GDScript 4, try-except is more limited, so we'll test more directly
 		# This approach assumes _is_valid_tag properly returns false for non-string values
 		is_valid = logger_settings._is_valid_tag(value)
 		validation_results.append(!is_valid) # Non-string should be invalid
-		
+
 		print("- Non-string value: '%s' | Invalid: %s %s" % [
-			str(value), 
-			!is_valid, 
+			str(value),
+			!is_valid,
 			"✓" if !is_valid else "✗"
 		])
 
