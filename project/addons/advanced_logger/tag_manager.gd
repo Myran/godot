@@ -3,8 +3,9 @@ class_name TagManager
 extends RefCounted
 ## Centralized manager for tag operations in the Advanced Logger.
 ##
-## Provides validation, filtering, and categorization of logger tags,
-## eliminating duplication across the codebase.
+## Provides validation, filtering, categorization, and formatting of logger tags,
+## eliminating duplication across the codebase. All tag-related operations
+## should go through this class to ensure consistency.
 
 ## Validates a tag name is properly formatted
 ## 
@@ -141,3 +142,56 @@ static func format_tag_for_display(tag: String) -> String:
     if tag.is_empty():
         return tag
     return tag.substr(0, 1).capitalize() + tag.substr(1)
+
+## Filters a list of tags based on active and ignored tag rules
+##
+## Parameters:
+## - all_tags: List of all tags to filter
+## - active_tags: Tags that are actively being filtered for
+## - ignored_tags: Tags that should be excluded
+##
+## Returns a filtered list of tags
+static func filter_tags(all_tags: Array[String], active_tags: Array[String], ignored_tags: Array[String]) -> Array[String]:
+    var filtered_tags: Array[String] = []
+    
+    for tag in all_tags:
+        # Skip ignored tags
+        if ignored_tags.has(tag):
+            continue
+            
+        # If active tags are set, only include matching tags
+        if not active_tags.is_empty():
+            if active_tags.has(tag):
+                filtered_tags.append(tag)
+        else:
+            # If no active tags set, include all non-ignored tags
+            filtered_tags.append(tag)
+    
+    return filtered_tags
+
+## Merges tags from multiple sources into a single unique list
+##
+## Parameters:
+## - tag_arrays: Array of tag arrays to merge
+##
+## Returns a consolidated array with unique tags
+static func merge_tags(tag_arrays: Array) -> Array[String]:
+    var merged_tags: Array[String] = []
+    
+    for tag_array in tag_arrays:
+        for tag in tag_array:
+            if tag is String and is_valid_tag(tag) and not merged_tags.has(tag):
+                merged_tags.append(tag)
+    
+    return merged_tags
+
+## Sorts tags alphabetically
+##
+## Parameters:
+## - tags: Array of tags to sort
+##
+## Returns the sorted array
+static func sort_tags(tags: Array[String]) -> Array[String]:
+    var sorted_tags = tags.duplicate()
+    sorted_tags.sort()
+    return sorted_tags

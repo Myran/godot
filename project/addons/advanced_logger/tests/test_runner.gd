@@ -10,6 +10,7 @@ const TestTagValidation = preload("res://addons/advanced_logger/tests/unit/test_
 const TestTagFiltering = preload("res://addons/advanced_logger/tests/unit/test_tag_filtering.gd")
 const TestConfigHandling = preload("res://addons/advanced_logger/tests/unit/test_config_handling.gd")
 const TestLogFormatting = preload("res://addons/advanced_logger/tests/unit/test_log_formatting.gd")
+const TestTagManagerMoveTags = preload("res://addons/advanced_logger/tests/unit/test_tag_manager_move_tags.gd")
 
 # Integration Tests
 const TestTagOperations = preload("res://addons/advanced_logger/tests/integration/test_tag_operations.gd")
@@ -40,6 +41,7 @@ func run_tests():
 	run_test(TestTagFiltering)
 	run_test(TestConfigHandling)
 	run_test(TestLogFormatting)
+	run_test(TestTagManagerMoveTags)
 	
 	# Run Integration Tests
 	run_test(TestTagOperations)

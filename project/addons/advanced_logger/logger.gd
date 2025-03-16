@@ -241,16 +241,32 @@ func get_level() -> LogLevel:
 ## Adds a tag to the active tags list
 ## Returns OK if successful, FAILED otherwise
 func add_tag(tag: String) -> Error:
-	if not _is_valid_tag(tag):
-		push_warning("Cannot add empty tag")
+	if not TagManager.is_valid_tag(tag):
+		push_warning("Cannot add invalid tag: '%s'" % tag)
 		return Error.FAILED
 
-	if not _active_tags.has(tag):
-		_active_tags.append(tag)
+	# Track available tags to ensure the tag is included
+	var available_tags = [tag]
+	if not _active_tags.is_empty() or not _ignored_tags.is_empty():
+		# If we have existing tags, create a more complete available list
+		available_tags = []
+		available_tags.append_array(_active_tags)
+		available_tags.append_array(_ignored_tags)
+		available_tags.append(tag)
 
-	# Remove from ignored tags if present
-	if _ignored_tags.has(tag):
-		_ignored_tags.erase(tag)
+	# Use TagManager for moving tag to active list
+	var result = TagManager.move_tag(
+		tag,
+		"available", # Source doesn't matter since we're adding the tag anyway
+		"active",
+		available_tags,
+		_active_tags,
+		_ignored_tags
+	)
+
+	# Update tags
+	_active_tags = result.active_tags
+	_ignored_tags = result.ignored_tags
 
 	# Update both tag lists in config if available
 	if _config != null:
@@ -263,19 +279,37 @@ func add_tag(tag: String) -> Error:
 ## Removes a tag from the active tags list
 ## Returns OK if successful, FAILED otherwise
 func remove_tag(tag: String) -> Error:
-	if not _is_valid_tag(tag):
-		push_warning("Cannot remove empty tag")
+	if not TagManager.is_valid_tag(tag):
+		push_warning("Cannot remove invalid tag: '%s'" % tag)
 		return Error.FAILED
 
-	if _active_tags.has(tag):
-		_active_tags.erase(tag)
+	# Only proceed if tag is in active list
+	if not _active_tags.has(tag):
+		return Error.FAILED  # Tag wasn't in the list
 
-		# Update tag list in config if available
-		if _config != null:
-			_config.set_active_tags(_active_tags)
-		return OK
+	# Create available tags list from existing tags
+	var available_tags: Array[String] = []
+	available_tags.append_array(_active_tags)
+	available_tags.append_array(_ignored_tags)
 
-	return Error.FAILED  # Tag wasn't in the list
+	# Use TagManager to move tag from active to available
+	var result = TagManager.move_tag(
+		tag,
+		"active",
+		"available",
+		available_tags,
+		_active_tags,
+		_ignored_tags
+	)
+
+	# Update tags
+	_active_tags = result.active_tags
+
+	# Update tag list in config if available
+	if _config != null:
+		_config.set_active_tags(_active_tags)
+
+	return OK
 
 
 ## Clears all active tags
@@ -290,16 +324,32 @@ func clear_tags() -> void:
 ## Adds a tag to the ignored tags list
 ## Returns OK if successful, FAILED otherwise
 func add_ignored_tag(tag: String) -> Error:
-	if not _is_valid_tag(tag):
-		push_warning("Cannot add empty ignored tag")
+	if not TagManager.is_valid_tag(tag):
+		push_warning("Cannot add invalid ignored tag: '%s'" % tag)
 		return Error.FAILED
 
-	if not _ignored_tags.has(tag):
-		_ignored_tags.append(tag)
+	# Track available tags to ensure the tag is included
+	var available_tags = [tag]
+	if not _active_tags.is_empty() or not _ignored_tags.is_empty():
+		# If we have existing tags, create a more complete available list
+		available_tags = []
+		available_tags.append_array(_active_tags)
+		available_tags.append_array(_ignored_tags)
+		available_tags.append(tag)
 
-	# Remove from active tags if present
-	if _active_tags.has(tag):
-		_active_tags.erase(tag)
+	# Use TagManager for moving tag to ignored list
+	var result = TagManager.move_tag(
+		tag,
+		"available", # Source doesn't matter since we're adding the tag anyway
+		"ignored",
+		available_tags,
+		_active_tags,
+		_ignored_tags
+	)
+
+	# Update tags
+	_active_tags = result.active_tags
+	_ignored_tags = result.ignored_tags
 
 	# Update both tag lists in config if available
 	if _config != null:
@@ -312,19 +362,37 @@ func add_ignored_tag(tag: String) -> Error:
 ## Removes a tag from the ignored tags list
 ## Returns OK if successful, FAILED otherwise
 func remove_ignored_tag(tag: String) -> Error:
-	if not _is_valid_tag(tag):
-		push_warning("Cannot remove empty ignored tag")
+	if not TagManager.is_valid_tag(tag):
+		push_warning("Cannot remove invalid ignored tag: '%s'" % tag)
 		return Error.FAILED
 
-	if _ignored_tags.has(tag):
-		_ignored_tags.erase(tag)
+	# Only proceed if tag is in ignored list
+	if not _ignored_tags.has(tag):
+		return Error.FAILED  # Tag wasn't in the list
 
-		# Update tag list in config if available
-		if _config != null:
-			_config.set_ignored_tags(_ignored_tags)
-		return OK
+	# Create available tags list from existing tags
+	var available_tags: Array[String] = []
+	available_tags.append_array(_active_tags)
+	available_tags.append_array(_ignored_tags)
 
-	return Error.FAILED  # Tag wasn't in the list
+	# Use TagManager to move tag from ignored to available
+	var result = TagManager.move_tag(
+		tag,
+		"ignored",
+		"available",
+		available_tags,
+		_active_tags,
+		_ignored_tags
+	)
+
+	# Update tags
+	_ignored_tags = result.ignored_tags
+
+	# Update tag list in config if available
+	if _config != null:
+		_config.set_ignored_tags(_ignored_tags)
+
+	return OK
 
 
 ## Clears all ignored tags

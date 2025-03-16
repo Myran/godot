@@ -25,9 +25,8 @@ static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[Str
 	# Ensure unique tags
 	found_tags = get_unique_tags(found_tags)
 	
-	# Return unique tags sorted alphabetically
-	found_tags.sort()
-	return found_tags
+	# Return unique tags sorted alphabetically using TagManager
+	return TagManager.sort_tags(found_tags)
 
 ## Extracts all TAG_* constants directly from the Logger class
 static func extract_tag_constants_from_logger() -> Array[String]:
@@ -57,11 +56,8 @@ static func extract_tag_constants_from_logger() -> Array[String]:
 
 ## Helper to ensure we have a unique tag list
 static func get_unique_tags(tags: Array[String]) -> Array[String]:
-	var unique_tags: Array[String] = []
-	for tag in tags:
-		if not unique_tags.has(tag):
-			unique_tags.append(tag)
-	return unique_tags
+	# Delegate to TagManager to ensure consistency
+	return TagManager.merge_tags([tags])
 
 ## Recursively scans a directory for .gd files
 ## 
