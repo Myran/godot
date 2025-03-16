@@ -5,6 +5,7 @@ class_name Logger extends Node
 # Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
+const LogFormatter = preload("res://addons/advanced_logger/log_formatter.gd")
 
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 
@@ -200,85 +201,21 @@ func _output_log(
 	tags: Array[String],
 	source_info: Dictionary
 ) -> void:
-	var parts: Array[String] = []
-
-	# Constants for dictionary keys
-	const FILE_KEY: String = "file"
-	const LINE_KEY: String = "line"
-
-	# Fixed width for log levels (padded to the width of "CRITICAL")
-	const LOG_LEVEL_WIDTH: int = 5  # "CRITICAL" is 8 chars + 1 for spacing
-	# Fixed width for tags section
-	const TAGS_WIDTH: int = 10
-
-	# Add timestamp if enabled
-	if _show_timestamp:
-		var dt: Dictionary = Time.get_datetime_dict_from_system()
-		var timestamp: String = (
-			"%04d-%02d-%02d %02d:%02d:%02d"
-			% [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
-		)
-
-		if _use_colors:
-			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, timestamp])
-		else:
-			parts.append(timestamp)
-
-	# Add log level with fixed width using padding helper
-	var level_str: String = LogLevel.keys()[level]
-	var padded_level: String = _pad_right(level_str, LOG_LEVEL_WIDTH)
-
-	if _use_colors and LEVEL_HTML_COLORS.has(level):
-		parts.append("[color=#%s]%s[/color]" % [LEVEL_HTML_COLORS[level], padded_level])
-	else:
-		parts.append(padded_level)
-
-	# Add tags if enabled and present, with consistent spacing
-	if _show_tags and not tags.is_empty():
-		var tags_text: String = "[%s]" % ", ".join(tags)
-		# Fixed width for tags section
-		tags_text = _pad_right(tags_text, TAGS_WIDTH)
-
-		if _use_colors:
-			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TAG_HTML, tags_text])
-		else:
-			parts.append(tags_text)
-	elif _show_tags:
-		# Add empty space to maintain alignment even when no tags
-		parts.append(" ".repeat(TAGS_WIDTH))
-
-	# Add message (always included)
-	if _use_colors and LEVEL_HTML_COLORS.has(level):
-		parts.append("[color=#%s]%s[/color]" % [LEVEL_HTML_COLORS[level], message])
-	else:
-		parts.append(message)
-
-	# Add context if present
-	if not context.is_empty():
-		parts.append(str(context))
-
-	if _show_source:
-		var file_name: String = String(source_info.get(FILE_KEY, "unknown")).get_file()
-		var line: int = int(source_info.get(LINE_KEY, 0))
-		var source_text: String = "(%s:%d)" % [file_name, line]
-
-		if _use_colors:
-			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, source_text])
-		else:
-			parts.append(source_text)
+	# Use the LogFormatter to get the formatted log message
+	var formatted_log = LogFormatter.format_log(
+		level,
+		message,
+		context,
+		tags,
+		source_info,
+		_show_timestamp,
+		_show_tags,
+		_use_colors,
+		_show_source
+	)
 
 	# Output the formatted log
-	print_rich(" ".join(parts))
-
-
-## Helper function to pad a string to a specific width
-## Returns the string padded with spaces to the specified width
-func _pad_right(text: String, width: int) -> String:
-	if text.length() >= width:
-		return text
-
-	# Use the more efficient String.pad_decimals method which adds spaces
-	return text + " ".repeat(width - text.length())
+	print_rich(formatted_log)
 
 
 # Settings methods

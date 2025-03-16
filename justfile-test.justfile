@@ -62,8 +62,14 @@ test-tag-setup-manager:
     just test-script addons/advanced_logger/tests/test_tag_setup_manager.gd
     @echo "Tag setup manager test completed"
 
+# Run UI components test
+test-ui-components:
+    @echo "Running UI components test..."
+    just test-script addons/advanced_logger/tests/test_ui_components.gd
+    @echo "UI components test completed"
+
 # Run all standalone tests that don't require a running project
-test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering test-tag-setup-manager
+test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering test-tag-setup-manager test-ui-components
     @echo "All standalone tests completed"
 
 # ===== INTEGRATION TESTS =====
@@ -75,11 +81,12 @@ test-firebase:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --test-firebase || true
     @echo "Firebase tests completed (failure expected in non-firebase environments)"
 
-# Run all integration tests that require a running project
-test-integration: test-firebase
-    @echo "All integration tests completed"
-
 # ===== ALL TESTS =====
 # Run all tests (both standalone and integration)
 test-all: test-standalone test-integration
     @echo "All tests completed successfully"
+
+# ===== INTEGRATION TESTS =====
+# These tests run within a running project instance
+test-integration: test-firebase
+    @echo "All integration tests completed"

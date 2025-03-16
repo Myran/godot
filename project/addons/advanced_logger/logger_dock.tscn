@@ -35,8 +35,8 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: database
-Ignored tags: cache"
+text = "Active filter tags: cache
+Ignored tags: local_data"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
@@ -64,7 +64,7 @@ text = "Log Level:"
 [node name="LevelOption" type="OptionButton" parent="VBoxContainer/TabContainer/Tags/LevelSection"]
 layout_mode = 2
 size_flags_horizontal = 3
-selected = 1
+selected = 0
 item_count = 5
 popup/item_0/text = "DEBUG"
 popup/item_0/id = 0
@@ -166,9 +166,9 @@ allow_reselect = true
 allow_rmb_select = true
 auto_height = true
 item_count = 4
-item_0/text = "Error"
-item_1/text = "Firebase"
-item_2/text = "Local_data"
+item_0/text = "Database"
+item_1/text = "Error"
+item_2/text = "Firebase"
 item_3/text = "Network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
@@ -198,7 +198,7 @@ allow_reselect = true
 allow_rmb_select = true
 auto_height = true
 item_count = 1
-item_0/text = "Database"
+item_0/text = "Cache"
 
 [node name="HSeparatorActive" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -227,7 +227,7 @@ allow_reselect = true
 allow_rmb_select = true
 auto_height = true
 item_count = 1
-item_0/text = "Cache"
+item_0/text = "Local_data"
 
 [node name="Settings" type="Control" parent="VBoxContainer/TabContainer"]
 visible = false

@@ -1,14 +1,32 @@
 @tool
 class_name LoggerSettings
 extends RefCounted
-## Simple utility class for managing Logger settings
+## DEPRECATED: Compatibility wrapper for existing code
+##
+## This class is maintained only for backward compatibility with existing tests.
+## New code should use ConfigManager directly instead.
 
 # Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
 
-# NOTE: This class is maintained for backward compatibility
-# New code should use ConfigManager directly
+# Add backward compatibility constants to avoid breaking tests
+const CONFIG_PATH = ConfigManager.CONFIG_PATH
+const CONFIG_SECTION_LOGGER = ConfigManager.SECTION_LOGGER
+const CONFIG_SECTION_FORMAT = ConfigManager.SECTION_FORMAT
+const CONFIG_KEY_LOG_LEVEL = ConfigManager.KEY_LOG_LEVEL
+const CONFIG_KEY_ACTIVE_TAGS = ConfigManager.KEY_ACTIVE_TAGS
+const CONFIG_KEY_IGNORED_TAGS = ConfigManager.KEY_IGNORED_TAGS
+const CONFIG_KEY_AVAILABLE_TAGS = ConfigManager.KEY_AVAILABLE_TAGS
+const CONFIG_KEY_SHOW_TIMESTAMP = ConfigManager.KEY_SHOW_TIMESTAMP
+const CONFIG_KEY_SHOW_TAGS = ConfigManager.KEY_SHOW_TAGS
+const CONFIG_KEY_USE_COLORS = ConfigManager.KEY_USE_COLORS
+const CONFIG_KEY_SHOW_SOURCE = ConfigManager.KEY_SHOW_SOURCE
+const DEFAULT_LOG_LEVEL = ConfigManager.DEFAULT_LOG_LEVEL
+const DEFAULT_SHOW_TIMESTAMP = ConfigManager.DEFAULT_SHOW_TIMESTAMP
+const DEFAULT_SHOW_TAGS = ConfigManager.DEFAULT_SHOW_TAGS
+const DEFAULT_USE_COLORS = ConfigManager.DEFAULT_USE_COLORS
+const DEFAULT_SHOW_SOURCE = ConfigManager.DEFAULT_SHOW_SOURCE
 
 ## Sets the logger settings from the ConfigManager to the logger instance
 ## Returns OK if successful, FAILED otherwise
