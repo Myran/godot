@@ -11,12 +11,12 @@ const SOURCE_AVAILABLE: String = "available"
 const SOURCE_ACTIVE: String = "active"
 const SOURCE_IGNORED: String = "ignored"
 
-# Reference to the tag manager for validating tags
-var _tag_manager
+# Now using static TagManager class directly
 
-# Constructor to inject dependencies
-func _init(tag_manager) -> void:
-	_tag_manager = tag_manager
+# Constructor - now just for initialization
+func _init(_tag_manager_class) -> void:
+	# No need to store tag_manager as we'll use it statically
+	pass
 
 ## Creates a drag preview for a tag
 ## Parameters:
@@ -47,7 +47,7 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
-	if not _tag_manager.is_valid_tag(tag_text):
+	if not TagManager.is_valid_tag(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
 

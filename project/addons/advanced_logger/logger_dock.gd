@@ -23,7 +23,7 @@ var _show_source: bool = true
 
 # Manager instances
 var _config: ConfigManager = null
-var _tag_manager = TagManager.new() # For non-static methods
+# No need to instantiate TagManager as all methods are static
 
 # Controller instances
 var _tag_list_controller: TagListController
@@ -85,19 +85,19 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, "available")
 		if drag_data:
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
-				_tag_manager.format_tag_for_display(drag_data.tag)))
+				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 	elif _tags_list.get_global_rect().has_point(global_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_tags_list, "active")
 		if drag_data:
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
-				_tag_manager.format_tag_for_display(drag_data.tag)))
+				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_ignored_tags_list, "ignored")
 		if drag_data:
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
-				_tag_manager.format_tag_for_display(drag_data.tag)))
+				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 
 	return null
@@ -179,8 +179,8 @@ func _ready() -> void:
 
 	# Create controllers and helpers
 	var setup_manager = TagSetupManager.new(_config)
-	_drag_drop_helper = DragDropHelper.new(_tag_manager)
-	_tag_list_controller = TagListController.new(_tag_manager, _config)
+	_drag_drop_helper = DragDropHelper.new(TagManager)
+	_tag_list_controller = TagListController.new(TagManager, _config)
 	_setup_list_controller = SetupListController.new(setup_manager)
 
 	# Setup UI components in controllers

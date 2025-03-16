@@ -29,12 +29,11 @@ var _active_tags: Array[String] = []
 var _ignored_tags: Array[String] = []
 
 # Dependencies
-var _tag_manager
 var _config_manager
 
 # Initialize the controller with required dependencies
-func _init(tag_manager, config_manager) -> void:
-	_tag_manager = tag_manager
+func _init(_tag_manager_class, config_manager) -> void:
+	# TagManager is used statically
 	_config_manager = config_manager
 
 ## Setup the UI components
@@ -107,11 +106,11 @@ func refresh_tag_lists() -> void:
 
 ## Move a tag between categories
 func move_tag(tag: String, from_category: String, to_category: String) -> void:
-	if not _tag_manager.is_valid_tag(tag) or from_category == to_category:
+	if not TagManager.is_valid_tag(tag) or from_category == to_category:
 		return
 		
 	# Use TagManager to handle the move
-	var result = _tag_manager.move_tag(
+	var result = TagManager.move_tag(
 		tag,
 		from_category,
 		to_category,
@@ -133,7 +132,7 @@ func move_tag(tag: String, from_category: String, to_category: String) -> void:
 
 ## Format a tag for display
 func _format_tag_for_display(tag: String) -> String:
-	return _tag_manager.format_tag_for_display(tag)
+	return TagManager.format_tag_for_display(tag)
 
 ## Get current lists of tags
 func get_tag_lists() -> Dictionary:
@@ -154,7 +153,7 @@ func set_active_tags(tags: Array) -> void:
 	
 	# Carefully convert and add each tag
 	for tag in tags:
-		if tag is String and _tag_manager.is_valid_tag(tag):
+		if tag is String and TagManager.is_valid_tag(tag):
 			# Make sure we don't have duplicates
 			if not _active_tags.has(tag):
 				_active_tags.append(tag)
@@ -181,7 +180,7 @@ func set_ignored_tags(tags: Array) -> void:
 	
 	# Carefully convert and add each tag
 	for tag in tags:
-		if tag is String and _tag_manager.is_valid_tag(tag):
+		if tag is String and TagManager.is_valid_tag(tag):
 			# Make sure we don't have duplicates
 			if not _ignored_tags.has(tag):
 				_ignored_tags.append(tag)
