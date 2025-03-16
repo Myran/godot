@@ -3,7 +3,7 @@ extends EditorPlugin
 ## Plugin initialization script for the Advanced Logger
 
 const AUTOLOAD_NAME: String = "Log"
-const LOGGER_SCRIPT_PATH: String = "res://addons/advanced_logger/logger.gd"
+const LOGGER_SCRIPT_PATH: String = "res://addons/advanced_logger/core/logger.gd"
 const LOGGER_DOCK_PATH: String = "res://addons/advanced_logger/logger_dock.tscn"
 const DOCK_POSITION: int = EditorPlugin.DOCK_SLOT_RIGHT_UL
 

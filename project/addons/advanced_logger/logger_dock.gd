@@ -6,10 +6,10 @@ class_name LoggerDock extends Control
 ## drag and drop tag management, and other logger settings.
 
 # Preload required dependencies
-const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
-const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
-const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
-const TagSetupManager = preload("res://addons/advanced_logger/tag_setup_manager.gd")
+const TagScanner = preload("res://addons/advanced_logger/utils/tag_scanner.gd")
+const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
+const TagSetupManager = preload("res://addons/advanced_logger/utils/tag_setup_manager.gd")
 const DragDropHelper = preload("res://addons/advanced_logger/ui/drag_drop_helper.gd")
 const TagListController = preload("res://addons/advanced_logger/ui/tag_list_controller.gd")
 const SetupListController = preload("res://addons/advanced_logger/ui/setup_list_controller.gd")
@@ -261,28 +261,28 @@ func _update_startup_message() -> void:
 	# Get current tag lists directly from config to ensure we're seeing the saved state
 	var active_tags = _config.get_active_tags()
 	var ignored_tags = _config.get_ignored_tags()
-	
+
 	# Debug what we're getting from the config
-	print_rich("[color=#%s]DEBUG: From config - Active tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: From config - Active tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, active_tags])
-	print_rich("[color=#%s]DEBUG: From config - Ignored tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: From config - Ignored tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, ignored_tags])
-	
+
 	# Create message about current active and ignored tags
 	var message: String = ""
-	
+
 	if active_tags.size() > 0:
 		message += "Active filter tags: " + ", ".join(active_tags)
 	else:
 		message += "No active filter tags (showing all logs except ignored)"
-	
+
 	if ignored_tags.size() > 0:
 		message += "\nIgnored tags: " + ", ".join(ignored_tags)
 	else:
 		message += "\nNo ignored tags"
-	
+
 	_startup_message.text = message
-	
+
 	# Also print to console for convenience
 	print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
@@ -381,59 +381,59 @@ func _on_tag_moved(tag: String, from_category: String, to_category: String) -> v
 func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Array) -> void:
 	print_rich("[color=#%s]Loading tag setup: %s[/color]" %
 		[LoggerColors.INFO_HTML, setup_name])
-	
+
 	# Debug the incoming tags
-	print_rich("[color=#%s]DEBUG: Loading active tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: Loading active tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, active_tags])
-	print_rich("[color=#%s]DEBUG: Loading ignored tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: Loading ignored tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, ignored_tags])
-	
+
 	# EXTREMELY AGGRESSIVE APPROACH - Bypass all controllers
-	
+
 	# 1. Directly convert the arrays for safety
 	var active_tags_array: Array[String] = []
 	for tag in active_tags:
 		if tag is String:
 			active_tags_array.append(tag)
-			
+
 	var ignored_tags_array: Array[String] = []
 	for tag in ignored_tags:
 		if tag is String:
 			ignored_tags_array.append(tag)
-	
-	print_rich("[color=#%s]DEBUG: Converted active tags: %s[/color]" % 
+
+	print_rich("[color=#%s]DEBUG: Converted active tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, active_tags_array])
-	print_rich("[color=#%s]DEBUG: Converted ignored tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: Converted ignored tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, ignored_tags_array])
-	
+
 	# 2. Set directly in the config
 	_config.set_active_tags(active_tags_array)
 	_config.set_ignored_tags(ignored_tags_array)
-	
+
 	# 3. Force save
 	var save_result = _config.save()
-	print_rich("[color=#%s]DEBUG: Config save result: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: Config save result: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, "OK" if save_result == OK else error_string(save_result)])
-	
+
 	# 4. Update controller with the same values
 	_tag_list_controller.set_active_tags(active_tags_array)
 	_tag_list_controller.set_ignored_tags(ignored_tags_array)
-	
+
 	# 5. Force UI refresh
 	_tag_list_controller.refresh_tag_lists()
-	
+
 	# 6. Verify what got set in config
 	var saved_active = _config.get_active_tags()
 	var saved_ignored = _config.get_ignored_tags()
-	
-	print_rich("[color=#%s]DEBUG: Saved active tags: %s[/color]" % 
+
+	print_rich("[color=#%s]DEBUG: Saved active tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, saved_active])
-	print_rich("[color=#%s]DEBUG: Saved ignored tags: %s[/color]" % 
+	print_rich("[color=#%s]DEBUG: Saved ignored tags: %s[/color]" %
 		[LoggerColors.DEBUG_HTML, saved_ignored])
-	
+
 	print_rich("[color=#%s]Loaded tag setup: %s[/color]" %
 		[LoggerColors.SUCCESS_HTML, setup_name])
-	
+
 	# Update the UI display
 	_update_startup_message()
 

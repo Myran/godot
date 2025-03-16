@@ -7,8 +7,8 @@ extends RefCounted
 ## New code should use ConfigManager directly instead.
 
 # Make sure dependencies are preloaded
-const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
-const ConfigManager = preload("res://addons/advanced_logger/config_manager.gd")
+const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 
 # Add backward compatibility constants to avoid breaking tests
 const CONFIG_PATH = ConfigManager.CONFIG_PATH

@@ -7,7 +7,7 @@ extends RefCounted
 ## tag management system. Handles refreshing UI and responding to user actions.
 
 # Preload required dependencies
-const TagScanner = preload("res://addons/advanced_logger/tag_scanner.gd")
+const TagScanner = preload("res://addons/advanced_logger/utils/tag_scanner.gd")
 
 signal tag_moved(tag: String, from_category: String, to_category: String)
 signal tag_selected(tag: String, category: String)

@@ -4,7 +4,7 @@ extends RefCounted
 ## Utility for scanning project files to find Log tags
 
 # Preload TagManager
-const TagManager = preload("res://addons/advanced_logger/tag_manager.gd")
+const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 
 ## Scans the project for Log method calls and extracts tags
 ## 
@@ -31,7 +31,7 @@ static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[Str
 ## Extracts all TAG_* constants directly from the Logger class
 static func extract_tag_constants_from_logger() -> Array[String]:
 	var logger_tags: Array[String] = []
-	var logger_path := "res://addons/advanced_logger/logger.gd"
+	var logger_path := "res://addons/advanced_logger/core/logger.gd"
 	
 	var file := FileAccess.open(logger_path, FileAccess.READ)
 	if not file:

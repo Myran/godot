@@ -7,7 +7,7 @@ extends RefCounted
 ## and enable future customization options.
 
 # Reference to the color palette
-const LogLevel = preload("res://addons/advanced_logger/logger.gd").LogLevel
+const LogLevel = preload("res://addons/advanced_logger/core/logger.gd").LogLevel
 
 ## Formats a log message with appropriate styling
 ##
