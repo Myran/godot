@@ -64,7 +64,7 @@ text = "Log Level:"
 [node name="LevelOption" type="OptionButton" parent="VBoxContainer/TabContainer/Tags/LevelSection"]
 layout_mode = 2
 size_flags_horizontal = 3
-selected = 0
+selected = 1
 item_count = 5
 popup/item_0/text = "DEBUG"
 popup/item_0/id = 0
@@ -130,7 +130,7 @@ mouse_filter = 1
 theme_override_constants/v_separation = 4
 allow_reselect = true
 allow_rmb_select = true
-item_count = 6
+item_count = 7
 fixed_icon_size = Vector2i(16, 16)
 item_0/text = "cache+db"
 item_1/text = "debug_network"
@@ -138,6 +138,7 @@ item_2/text = "default"
 item_3/text = "dsfsf"
 item_4/text = "t"
 item_5/text = "test1"
+item_6/text = "test2"
 
 [node name="HSeparatorSetups" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2

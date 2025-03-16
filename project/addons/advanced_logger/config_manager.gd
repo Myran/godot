@@ -147,6 +147,8 @@ func get_ignored_tags() -> Array[String]:
 	return []
 
 func set_ignored_tags(tags: Array[String]) -> void:
+	print_rich("[color=#%s]DEBUG: ConfigManager.set_ignored_tags: %s[/color]" % 
+		[LoggerColors.DEBUG_HTML, tags])
 	set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, tags)
 
 func get_available_tags() -> Array[String]:
