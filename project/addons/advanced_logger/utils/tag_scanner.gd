@@ -146,7 +146,7 @@ static func scan_file_for_tags(file_path: String, found_tags: Array[String]) -> 
 	var const_matches := tag_const_regex.search_all(content)
 	if const_matches.size() > 0:
 		print_rich("[color=#7daea3]Found %d TAG constant usages in %s[/color]" %
-				  [const_matches.size(), file_path.get_file()])
+				[const_matches.size(), file_path.get_file()])
 
 ## Extracts tag strings from a matched tags array string
 static func extract_tags_from_string(tags_str: String, found_tags: Array[String]) -> void:

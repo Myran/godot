@@ -164,7 +164,10 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 	_output_log(level, message, context, validated_tags, source_info)
 
 
-# Validate tags, returning only valid tags
+## Validates an array of tags, returning only valid ones
+## Parameters:
+## - tags: Array of tags to validate
+## Returns: Array containing only valid tags
 func _validate_tags(tags: Array[String]) -> Array[String]:
 	return TagManager.validate_tags(tags)
 
@@ -174,7 +177,10 @@ func _is_valid_tag(tag) -> bool:
 	return TagManager.is_valid_tag(tag)
 
 
-# Check if a log should be shown based on tags
+## Check if a log should be shown based on tags
+## Parameters:
+## - tags: Tags associated with the log message
+## Returns: True if the log should be shown, false otherwise
 func _should_show_tags(tags: Array) -> bool:
 	return TagManager.should_show_tags(tags, _active_tags, _ignored_tags)
 

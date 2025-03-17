@@ -35,8 +35,8 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: local_data
-Ignored tags: cache"
+text = "No active filter tags (showing all logs except ignored)
+No ignored tags"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
