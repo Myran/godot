@@ -17,6 +17,9 @@ var _setups_list: ItemList
 # Dependencies
 var _setup_manager
 
+# Signal connection tracking
+var _signals_connected: bool = false
+
 # Initialize the controller with dependencies
 func _init(setup_manager) -> void:
 	_setup_manager = setup_manager
@@ -36,6 +39,15 @@ func setup(setups_list: ItemList) -> void:
 		_setups_list.focus_mode = Control.FOCUS_ALL
 		_setups_list.allow_rmb_select = true
 		_setups_list.allow_reselect = true
+		
+		# Only connect signals if not already connected
+		if not _signals_connected:
+			_connect_signals()
+			_signals_connected = true
+
+## Connect UI signals - only called once
+func _connect_signals() -> void:
+	if _setups_list:
 		_setups_list.item_activated.connect(_on_setups_list_item_activated)
 		_setups_list.item_clicked.connect(_on_setups_list_item_clicked)
 

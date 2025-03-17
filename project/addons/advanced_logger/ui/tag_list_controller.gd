@@ -31,6 +31,9 @@ var _ignored_tags: Array[String] = []
 # Dependencies
 var _config_manager
 
+# Signal connection tracking
+var _signals_connected: bool = false
+
 # Initialize the controller with required dependencies
 func _init(_tag_manager_class, config_manager) -> void:
 	# TagManager is used statically
@@ -42,6 +45,21 @@ func setup(available_list: ItemList, active_list: ItemList, ignored_list: ItemLi
 	_active_tags_list = active_list
 	_ignored_tags_list = ignored_list
 	
+	# Only connect signals if this is the first time
+	if not _signals_connected:
+		_connect_signals()
+		_signals_connected = true
+	
+	# Configure ItemList UI settings
+	for list in [_available_tags_list, _active_tags_list, _ignored_tags_list]:
+		if list:
+			list.mouse_filter = Control.MOUSE_FILTER_PASS
+			list.focus_mode = Control.FOCUS_ALL
+			list.allow_rmb_select = true
+			list.allow_reselect = true
+
+## Connect UI signals - only called once
+func _connect_signals() -> void:
 	# Connect signals
 	if _available_tags_list:
 		_available_tags_list.item_selected.connect(_on_available_tag_selected)
@@ -54,14 +72,6 @@ func setup(available_list: ItemList, active_list: ItemList, ignored_list: ItemLi
 	if _ignored_tags_list:
 		_ignored_tags_list.item_selected.connect(_on_ignored_tag_selected)
 		_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
-	
-	# Configure ItemList UI settings
-	for list in [_available_tags_list, _active_tags_list, _ignored_tags_list]:
-		if list:
-			list.mouse_filter = Control.MOUSE_FILTER_PASS
-			list.focus_mode = Control.FOCUS_ALL
-			list.allow_rmb_select = true
-			list.allow_reselect = true
 
 ## Load tags from configuration
 func load_tags_from_config() -> void:

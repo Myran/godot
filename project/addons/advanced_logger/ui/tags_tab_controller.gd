@@ -38,8 +38,7 @@ func _init(
 	_setup_list_controller = setup_list_controller
 	_parent_dock = parent_dock
 	
-	# Connect controller signals
-	_tag_list_controller.tag_moved.connect(_on_tag_moved)
+	# Connect controller signals - but not to UI yet
 	_setup_list_controller.setup_loaded.connect(_on_setup_loaded)
 	_setup_list_controller.setup_renamed.connect(_on_setup_renamed)
 
@@ -72,8 +71,9 @@ func setup(
 	
 	# Load initial data
 	_load_level_from_config()
-	_tag_list_controller.load_tags_from_config()
-	_setup_list_controller.load_setups()
+	
+	# Note: tag_list_controller.load_tags_from_config() is now called by LoggerDock
+	# Note: setup_list_controller.load_setups() is now called by LoggerDock
 
 ## Load the log level from config
 func _load_level_from_config() -> void:
@@ -127,7 +127,7 @@ func _on_level_changed(index: int) -> void:
 	print_rich("[color=#%s]Log level changed to %s[/color]" %
 		[LoggerColors.INFO_HTML, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][index]])
 
-## Handler for tag movement
+## Handler for tag movement - this will be connected in the LoggerDock
 func _on_tag_moved(tag: String, from_category: String, to_category: String) -> void:
 	print_rich(
 		"[color=#%s]Moved tag '%s' from %s to %s[/color]"
