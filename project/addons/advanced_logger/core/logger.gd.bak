@@ -34,6 +34,11 @@ const LEVEL_HTML_COLORS: Dictionary = {
 	LogLevel.CRITICAL: LoggerColors.CRITICAL_HTML
 }
 
+# Tag operation constants
+const TAG_CATEGORY_AVAILABLE: String = "available"
+const TAG_CATEGORY_ACTIVE: String = "active"
+const TAG_CATEGORY_IGNORED: String = "ignored"
+
 # Class variables
 var _current_level: LogLevel = LogLevel.INFO
 var _active_tags: Array[String] = []
@@ -100,49 +105,58 @@ func _load_settings() -> void:
 
 # Core logging methods
 func debug(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if message.is_empty():
-		push_warning("Empty log message provided")
+	if !_validate_message(message):
 		return
 	_log(LogLevel.DEBUG, message, context, tags)
 
 
 func info(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if message.is_empty():
-		push_warning("Empty log message provided")
+	if !_validate_message(message):
 		return
 	_log(LogLevel.INFO, message, context, tags)
 
 
 func warning(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if message.is_empty():
-		push_warning("Empty log message provided")
+	if !_validate_message(message):
 		return
 	_log(LogLevel.WARNING, message, context, tags)
 
 
 func error(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if message.is_empty():
-		push_warning("Empty log message provided")
+	if !_validate_message(message):
 		return
 	_log(LogLevel.ERROR, message, context, tags)
 
 
 func critical(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
-	if message.is_empty():
-		push_warning("Empty log message provided")
+	if !_validate_message(message):
 		return
 	_log(LogLevel.CRITICAL, message, context, tags)
+
+
+## Validates the message parameter
+## Returns true if valid, otherwise false
+func _validate_message(message: String) -> bool:
+	if message.is_empty():
+		push_warning("Empty log message provided")
+		return false
+	return true
+
+
+## Checks if a log level should be shown based on the current threshold
+func _should_show_level(level: LogLevel) -> bool:
+	return level >= _current_level
 
 
 # Internal logging function
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
 	# Skip if level filtering prevents this message
-	if level < _current_level:
+	if !_should_show_level(level):
 		return
 
 	# Validate tags and check if we should show the message
 	var validated_tags := _validate_tags(tags)
-	if not _should_show_tags(validated_tags):
+	if !_should_show_tags(validated_tags):
 		return
 
 	# Get source information and output the log
@@ -150,7 +164,7 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 	_output_log(level, message, context, validated_tags, source_info)
 
 
-# Validate tags, returning only non-empty strings
+# Validate tags, returning only valid tags
 func _validate_tags(tags: Array[String]) -> Array[String]:
 	return TagManager.validate_tags(tags)
 
@@ -167,30 +181,58 @@ func _should_show_tags(tags: Array) -> bool:
 
 # Get source information (file, line, function)
 func _get_source_info() -> Dictionary:
-	var source_info: Dictionary = {"file": "unknown", "line": 0, "function": "unknown"}
-
-	const FILE_KEY: String = "file"
-	const LINE_KEY: String = "line"
-	const FUNCTION_KEY: String = "function"
-	const SOURCE_KEY: String = "source"
-
-	var stack: Array = get_stack()
+	var source_info := _create_default_source_info()
+	var stack := get_stack()
+	
 	if stack.is_empty():
 		return source_info
+		
+	var frame := _find_non_logger_frame(stack)
+	if frame != null && !frame.is_empty():
+		_update_source_info_from_frame(source_info, frame)
+		
+	return source_info
 
-	# Find the first stack frame that is NOT from the logger itself
+
+## Creates a default source info dictionary
+func _create_default_source_info() -> Dictionary:
+	return {
+		"file": "unknown",
+		"line": 0,
+		"function": "unknown"
+	}
+
+
+## Finds the first stack frame that isn't from the logger itself
+func _find_non_logger_frame(stack: Array) -> Dictionary:
+	const SOURCE_KEY: String = "source"
+	
 	for frame in stack:
 		if not frame.has(SOURCE_KEY):
 			continue
 
 		var source: String = frame.get(SOURCE_KEY)
 		if not source.ends_with("logger.gd"):
-			source_info[FILE_KEY] = source
-			source_info[LINE_KEY] = int(frame.get(LINE_KEY, 0))
-			source_info[FUNCTION_KEY] = String(frame.get(FUNCTION_KEY, "unknown"))
-			break
+			return frame
+			
+	return {}
 
-	return source_info
+
+## Updates source info with data from a stack frame
+func _update_source_info_from_frame(source_info: Dictionary, frame: Dictionary) -> void:
+	const FILE_KEY: String = "file"
+	const LINE_KEY: String = "line"
+	const FUNCTION_KEY: String = "function"
+	const SOURCE_KEY: String = "source"
+	
+	if frame.has(SOURCE_KEY):
+		source_info[FILE_KEY] = frame.get(SOURCE_KEY)
+	
+	if frame.has(LINE_KEY):
+		source_info[LINE_KEY] = int(frame.get(LINE_KEY, 0))
+		
+	if frame.has(FUNCTION_KEY):
+		source_info[FUNCTION_KEY] = String(frame.get(FUNCTION_KEY, "unknown"))
 
 
 # Format and output a log
@@ -220,7 +262,7 @@ func _output_log(
 
 # Settings methods
 func set_level(level: LogLevel) -> Error:
-	if level < LogLevel.DEBUG or level > LogLevel.CRITICAL:
+	if !_is_valid_level(level):
 		push_warning("Invalid log level: %d" % level)
 		return Error.FAILED
 
@@ -233,6 +275,11 @@ func set_level(level: LogLevel) -> Error:
 	return OK
 
 
+## Validates that a log level is within the enum range
+func _is_valid_level(level: int) -> bool:
+	return level >= LogLevel.DEBUG and level <= LogLevel.CRITICAL
+
+
 func get_level() -> LogLevel:
 	return _current_level
 
@@ -241,75 +288,26 @@ func get_level() -> LogLevel:
 ## Adds a tag to the active tags list
 ## Returns OK if successful, FAILED otherwise
 func add_tag(tag: String) -> Error:
-	if not TagManager.is_valid_tag(tag):
-		push_warning("Cannot add invalid tag: '%s'" % tag)
-		return Error.FAILED
-
-	# Track available tags to ensure the tag is included
-	var available_tags = [tag]
-	if not _active_tags.is_empty() or not _ignored_tags.is_empty():
-		# If we have existing tags, create a more complete available list
-		available_tags = []
-		available_tags.append_array(_active_tags)
-		available_tags.append_array(_ignored_tags)
-		available_tags.append(tag)
-
-	# Use TagManager for moving tag to active list
-	var result = TagManager.move_tag(
-		tag,
-		"available", # Source doesn't matter since we're adding the tag anyway
-		"active",
-		available_tags,
-		_active_tags,
-		_ignored_tags
-	)
-
-	# Update tags
-	_active_tags = result.active_tags
-	_ignored_tags = result.ignored_tags
-
-	# Update both tag lists in config if available
-	if _config != null:
-		_config.set_active_tags(_active_tags)
-		_config.set_ignored_tags(_ignored_tags)
-
-	return OK
+	# Use the new helper method for tag operations
+	return _add_tag_to_category(tag, TAG_CATEGORY_ACTIVE)
 
 
 ## Removes a tag from the active tags list
 ## Returns OK if successful, FAILED otherwise
 func remove_tag(tag: String) -> Error:
-	if not TagManager.is_valid_tag(tag):
+	if !_is_valid_tag(tag):
 		push_warning("Cannot remove invalid tag: '%s'" % tag)
 		return Error.FAILED
 
 	# Only proceed if tag is in active list
-	if not _active_tags.has(tag):
+	if !_active_tags.has(tag):
 		return Error.FAILED  # Tag wasn't in the list
 
-	# Create available tags list from existing tags
-	var available_tags: Array[String] = []
-	available_tags.append_array(_active_tags)
-	available_tags.append_array(_ignored_tags)
-
-	# Use TagManager to move tag from active to available
-	var result = TagManager.move_tag(
-		tag,
-		"active",
-		"available",
-		available_tags,
-		_active_tags,
-		_ignored_tags
-	)
-
-	# Update tags
-	_active_tags = result.active_tags
-
-	# Update tag list in config if available
-	if _config != null:
-		_config.set_active_tags(_active_tags)
-
-	return OK
+	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_ACTIVE, TAG_CATEGORY_AVAILABLE)
+	if update_result == OK:
+		_update_active_tags_in_config()
+		
+	return update_result
 
 
 ## Clears all active tags
@@ -317,82 +315,32 @@ func clear_tags() -> void:
 	_active_tags.clear()
 
 	# Update tag list in config if available
-	if _config != null:
-		_config.set_active_tags(_active_tags)
+	_update_active_tags_in_config()
 
 
 ## Adds a tag to the ignored tags list
 ## Returns OK if successful, FAILED otherwise
 func add_ignored_tag(tag: String) -> Error:
-	if not TagManager.is_valid_tag(tag):
-		push_warning("Cannot add invalid ignored tag: '%s'" % tag)
-		return Error.FAILED
-
-	# Track available tags to ensure the tag is included
-	var available_tags = [tag]
-	if not _active_tags.is_empty() or not _ignored_tags.is_empty():
-		# If we have existing tags, create a more complete available list
-		available_tags = []
-		available_tags.append_array(_active_tags)
-		available_tags.append_array(_ignored_tags)
-		available_tags.append(tag)
-
-	# Use TagManager for moving tag to ignored list
-	var result = TagManager.move_tag(
-		tag,
-		"available", # Source doesn't matter since we're adding the tag anyway
-		"ignored",
-		available_tags,
-		_active_tags,
-		_ignored_tags
-	)
-
-	# Update tags
-	_active_tags = result.active_tags
-	_ignored_tags = result.ignored_tags
-
-	# Update both tag lists in config if available
-	if _config != null:
-		_config.set_active_tags(_active_tags)
-		_config.set_ignored_tags(_ignored_tags)
-
-	return OK
+	# Use the new helper method for tag operations
+	return _add_tag_to_category(tag, TAG_CATEGORY_IGNORED)
 
 
 ## Removes a tag from the ignored tags list
 ## Returns OK if successful, FAILED otherwise
 func remove_ignored_tag(tag: String) -> Error:
-	if not TagManager.is_valid_tag(tag):
+	if !_is_valid_tag(tag):
 		push_warning("Cannot remove invalid ignored tag: '%s'" % tag)
 		return Error.FAILED
 
 	# Only proceed if tag is in ignored list
-	if not _ignored_tags.has(tag):
+	if !_ignored_tags.has(tag):
 		return Error.FAILED  # Tag wasn't in the list
 
-	# Create available tags list from existing tags
-	var available_tags: Array[String] = []
-	available_tags.append_array(_active_tags)
-	available_tags.append_array(_ignored_tags)
-
-	# Use TagManager to move tag from ignored to available
-	var result = TagManager.move_tag(
-		tag,
-		"ignored",
-		"available",
-		available_tags,
-		_active_tags,
-		_ignored_tags
-	)
-
-	# Update tags
-	_ignored_tags = result.ignored_tags
-
-	# Update tag list in config if available
-	if _config != null:
-		_config.set_ignored_tags(_ignored_tags)
-
-	return OK
+	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_IGNORED, TAG_CATEGORY_AVAILABLE)
+	if update_result == OK:
+		_update_ignored_tags_in_config()
+		
+	return update_result
 
 
 ## Clears all ignored tags
@@ -400,6 +348,74 @@ func clear_ignored_tags() -> void:
 	_ignored_tags.clear()
 
 	# Update tag list in config if available
+	_update_ignored_tags_in_config()
+
+
+## Helper method to add a tag to a specific category (active or ignored)
+func _add_tag_to_category(tag: String, category: String) -> Error:
+	if !_is_valid_tag(tag):
+		push_warning("Cannot add invalid tag: '%s'" % tag)
+		return Error.FAILED
+
+	# Use the shared tag moving logic
+	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_AVAILABLE, category)
+	if update_result == OK:
+		# Update config based on the category
+		if category == TAG_CATEGORY_ACTIVE:
+			_update_active_tags_in_config()
+			_update_ignored_tags_in_config()
+		elif category == TAG_CATEGORY_IGNORED:
+			_update_ignored_tags_in_config()
+			_update_active_tags_in_config()
+	
+	return update_result
+
+
+## Moves a tag between categories using TagManager
+func _move_tag_between_categories(tag: String, from_category: String, to_category: String) -> Error:
+	# Create available tags list that includes all currently known tags
+	var available_tags := _create_available_tags_list(tag)
+	
+	# Use TagManager for moving tag between categories
+	var result = TagManager.move_tag(
+		tag,
+		from_category,
+		to_category,
+		available_tags,
+		_active_tags,
+		_ignored_tags
+	)
+
+	# Update tags from the result
+	_active_tags = result.active_tags
+	_ignored_tags = result.ignored_tags
+	
+	return OK
+
+
+## Creates a list of available tags including all currently known tags
+func _create_available_tags_list(tag: String = "") -> Array[String]:
+	var available_tags: Array[String] = []
+	
+	# Add current active and ignored tags
+	available_tags.append_array(_active_tags)
+	available_tags.append_array(_ignored_tags)
+	
+	# Add the new tag if provided and not already in the list
+	if !tag.is_empty() && !available_tags.has(tag):
+		available_tags.append(tag)
+		
+	return available_tags
+
+
+## Updates active tags in configuration
+func _update_active_tags_in_config() -> void:
+	if _config != null:
+		_config.set_active_tags(_active_tags)
+
+
+## Updates ignored tags in configuration
+func _update_ignored_tags_in_config() -> void:
 	if _config != null:
 		_config.set_ignored_tags(_ignored_tags)
 
@@ -407,23 +423,25 @@ func clear_ignored_tags() -> void:
 # Format settings
 func set_show_timestamp(show: bool) -> void:
 	_show_timestamp = show
-	if _config != null:
-		_config.set_show_timestamp(show)
+	_update_format_setting(ConfigManager.KEY_SHOW_TIMESTAMP, show)
 
 
 func set_show_tags(show: bool) -> void:
 	_show_tags = show
-	if _config != null:
-		_config.set_show_tags(show)
+	_update_format_setting(ConfigManager.KEY_SHOW_TAGS, show)
 
 
 func set_use_colors(use: bool) -> void:
 	_use_colors = use
-	if _config != null:
-		_config.set_use_colors(use)
+	_update_format_setting(ConfigManager.KEY_USE_COLORS, use)
 
 
 func set_show_source(show: bool) -> void:
 	_show_source = show
+	_update_format_setting(ConfigManager.KEY_SHOW_SOURCE, show)
+
+
+## Helper for updating format settings in configuration
+func _update_format_setting(key: String, value: bool) -> void:
 	if _config != null:
-		_config.set_show_source(show)
+		_config.set_value(ConfigManager.SECTION_FORMAT, key, value)

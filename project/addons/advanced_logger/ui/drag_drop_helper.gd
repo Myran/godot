@@ -43,7 +43,7 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 	var indices = item_list.get_selected_items()
 	if indices.size() == 0:
 		return null
-		
+
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
@@ -73,7 +73,7 @@ func can_drop_tag(tag: String, source: String, target: String, active_tags: Arra
 	# Can't drop to the same list
 	if source == target:
 		return false
-		
+
 	# Check valid source->target combinations
 	match target:
 		SOURCE_AVAILABLE:
@@ -88,5 +88,5 @@ func can_drop_tag(tag: String, source: String, target: String, active_tags: Arra
 			if ignored_tags.has(tag):
 				return false
 			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
-			
+
 	return false
