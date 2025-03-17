@@ -35,8 +35,8 @@ layout_mode = 2
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: local_data, network
-Ignored tags: cache, firebase"
+text = "Active filter tags: local_data
+Ignored tags: cache"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
@@ -164,13 +164,16 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 6
-item_0/text = "Cache"
-item_1/text = "Database"
-item_2/text = "Error"
-item_3/text = "Firebase"
-item_4/text = "Local_data"
-item_5/text = "Network"
+item_count = 9
+item_0/text = "Active"
+item_1/text = "Available"
+item_2/text = "Cache"
+item_3/text = "Database"
+item_4/text = "Error"
+item_5/text = "Firebase"
+item_6/text = "Ignored"
+item_7/text = "Local_data"
+item_8/text = "Network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
