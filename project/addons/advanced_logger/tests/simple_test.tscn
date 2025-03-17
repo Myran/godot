@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bb1okl635o1bw"]
-
-[ext_resource type="Script" uid="uid://ejfhicihuwn5" path="res://addons/advanced_logger/tests/unit/test_tag_validation.gd" id="1_46tpv"]
-
-[node name="SimpleTest" type="Node"]
-script = ExtResource("1_46tpv")

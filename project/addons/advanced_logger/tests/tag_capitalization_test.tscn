@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://addons/advanced_logger/tests/test_tag_capitalization.gd" id="1_vr87u"]
-
-[node name="TagCapitalizationTest" type="Node"]
-script = ExtResource("1_vr87u")
