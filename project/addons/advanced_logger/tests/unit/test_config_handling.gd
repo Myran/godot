@@ -3,11 +3,11 @@ extends Node
 class_name TestConfigHandling
 
 # This test validates the configuration handling
-# which is a key area for refactoring
+# Note: Updated to use ConfigManager directly instead of LoggerSettings
 
 const TEST_CONFIG_PATH = "res://addons/advanced_logger/tests/test_settings.cfg"
-var Logger = preload("res://addons/advanced_logger/logger.gd")
-var LoggerSettings = preload("res://addons/advanced_logger/logger_settings.gd")
+var Logger = preload("res://addons/advanced_logger/core/logger.gd")
+var ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 
 func _ready():
 	print("\n=== Running Configuration Handling Tests ===")
@@ -31,76 +31,68 @@ func cleanup_test_environment():
 	if dir && dir.file_exists("test_settings.cfg"):
 		dir.remove("test_settings.cfg")
 
-# Test that configuration constants are consistent across files
+# Test that configuration constants are properly defined
 func test_config_constants_consistency():
-	print("\nTesting configuration constants consistency:")
+	print("\nTesting configuration constants:")
 	
 	var tests = [
 		{
 			"description": "CONFIG_PATH",
-			"logger": Logger.CONFIG_PATH, 
-			"settings": LoggerSettings.CONFIG_PATH,
-			"expected": true
+			"config_manager": ConfigManager.CONFIG_PATH,
+			"expected": "res://addons/advanced_logger/settings.cfg"
 		},
 		{
-			"description": "CONFIG_SECTION_LOGGER",
-			"logger": Logger.CONFIG_SECTION_LOGGER, 
-			"settings": LoggerSettings.CONFIG_SECTION_LOGGER,
-			"expected": true
+			"description": "SECTION_LOGGER",
+			"config_manager": ConfigManager.SECTION_LOGGER,
+			"expected": "logger"
 		},
 		{
-			"description": "CONFIG_SECTION_FORMAT",
-			"logger": Logger.CONFIG_SECTION_FORMAT, 
-			"settings": LoggerSettings.CONFIG_SECTION_FORMAT,
-			"expected": true
+			"description": "SECTION_FORMAT", 
+			"config_manager": ConfigManager.SECTION_FORMAT,
+			"expected": "format"
 		},
 		{
-			"description": "CONFIG_KEY_LOG_LEVEL",
-			"logger": Logger.CONFIG_KEY_LOG_LEVEL, 
-			"settings": LoggerSettings.CONFIG_KEY_LOG_LEVEL,
-			"expected": true
+			"description": "KEY_LOG_LEVEL",
+			"config_manager": ConfigManager.KEY_LOG_LEVEL,
+			"expected": "log_level"
 		},
 		{
-			"description": "CONFIG_KEY_ACTIVE_TAGS",
-			"logger": Logger.CONFIG_KEY_ACTIVE_TAGS, 
-			"settings": LoggerSettings.CONFIG_KEY_ACTIVE_TAGS,
-			"expected": true
+			"description": "KEY_ACTIVE_TAGS",
+			"config_manager": ConfigManager.KEY_ACTIVE_TAGS,
+			"expected": "active_tags"
 		},
 		{
-			"description": "CONFIG_KEY_IGNORED_TAGS",
-			"logger": Logger.CONFIG_KEY_IGNORED_TAGS, 
-			"settings": LoggerSettings.CONFIG_KEY_IGNORED_TAGS,
-			"expected": true
+			"description": "KEY_IGNORED_TAGS",
+			"config_manager": ConfigManager.KEY_IGNORED_TAGS,
+			"expected": "ignored_tags"
 		},
 		{
-			"description": "CONFIG_KEY_SHOW_TIMESTAMP",
-			"logger": Logger.CONFIG_KEY_SHOW_TIMESTAMP, 
-			"settings": LoggerSettings.CONFIG_KEY_SHOW_TIMESTAMP,
-			"expected": true
+			"description": "KEY_SHOW_TIMESTAMP",
+			"config_manager": ConfigManager.KEY_SHOW_TIMESTAMP,
+			"expected": "show_timestamp"
 		},
 		{
-			"description": "CONFIG_KEY_SHOW_TAGS",
-			"logger": Logger.CONFIG_KEY_SHOW_TAGS, 
-			"settings": LoggerSettings.CONFIG_KEY_SHOW_TAGS,
-			"expected": true
+			"description": "KEY_SHOW_TAGS",
+			"config_manager": ConfigManager.KEY_SHOW_TAGS,
+			"expected": "show_tags"
 		},
 		{
-			"description": "CONFIG_KEY_USE_COLORS",
-			"logger": Logger.CONFIG_KEY_USE_COLORS, 
-			"settings": LoggerSettings.CONFIG_KEY_USE_COLORS,
-			"expected": true
+			"description": "KEY_USE_COLORS",
+			"config_manager": ConfigManager.KEY_USE_COLORS,
+			"expected": "use_colors"
 		}
 	]
 	
 	var results = []
 	for test in tests:
-		var equal = test.logger == test.settings
-		var passed = equal == test.expected
+		var actual = test.config_manager
+		var expected = test.expected
+		var passed = actual == expected
 		results.append(passed)
-		print("- %s | Equal: %s | Expected: %s %s" % [
+		print("- %s | Value: %s | Expected: %s %s" % [
 			test.description,
-			equal,
-			test.expected,
+			actual,
+			expected,
 			"✓" if passed else "✗"
 		])
 	
@@ -109,21 +101,21 @@ func test_config_constants_consistency():
 		if result == false:
 			all_passed = false
 			break
-	print("Config constants consistency test: %s" % ("PASSED" if all_passed else "FAILED"))
+	print("Config constants test: %s" % ("PASSED" if all_passed else "FAILED"))
 
 # Create a test config file
 func _create_test_config():
 	var config = ConfigFile.new()
 	
 	# Logger section
-	config.set_value(Logger.CONFIG_SECTION_LOGGER, Logger.CONFIG_KEY_LOG_LEVEL, Logger.LogLevel.WARNING)
-	config.set_value(Logger.CONFIG_SECTION_LOGGER, Logger.CONFIG_KEY_ACTIVE_TAGS, PackedStringArray(["network", "database"]))
-	config.set_value(Logger.CONFIG_SECTION_LOGGER, Logger.CONFIG_KEY_IGNORED_TAGS, PackedStringArray(["debug"]))
+	config.set_value(ConfigManager.SECTION_LOGGER, ConfigManager.KEY_LOG_LEVEL, Logger.LogLevel.WARNING)
+	config.set_value(ConfigManager.SECTION_LOGGER, ConfigManager.KEY_ACTIVE_TAGS, PackedStringArray(["network", "database"]))
+	config.set_value(ConfigManager.SECTION_LOGGER, ConfigManager.KEY_IGNORED_TAGS, PackedStringArray(["debug"]))
 	
 	# Format section
-	config.set_value(Logger.CONFIG_SECTION_FORMAT, Logger.CONFIG_KEY_SHOW_TIMESTAMP, false)
-	config.set_value(Logger.CONFIG_SECTION_FORMAT, Logger.CONFIG_KEY_SHOW_TAGS, true)
-	config.set_value(Logger.CONFIG_SECTION_FORMAT, Logger.CONFIG_KEY_USE_COLORS, true)
+	config.set_value(ConfigManager.SECTION_FORMAT, ConfigManager.KEY_SHOW_TIMESTAMP, false)
+	config.set_value(ConfigManager.SECTION_FORMAT, ConfigManager.KEY_SHOW_TAGS, true)
+	config.set_value(ConfigManager.SECTION_FORMAT, ConfigManager.KEY_USE_COLORS, true)
 	
 	config.save(TEST_CONFIG_PATH)
 	return config
@@ -156,14 +148,21 @@ func test_config_loading():
 	var logger = Logger.new()
 	
 	# Save original config path
-	var original_path = Logger.CONFIG_PATH
+	var original_path = ConfigManager.CONFIG_PATH
 	
-	# Hack to load our test config (with reflection)
-	var script = logger.get_script()
+	# Create a ConfigManager instance for loading
+	var config_manager = ConfigManager.get_instance()
+	
+	# Override config path for testing
+	var script = config_manager.get_script()
 	script.get_script_constant_map()["CONFIG_PATH"] = TEST_CONFIG_PATH
 	
-	# Manually load the settings
-	var load_result = LoggerSettings.load_settings(logger)
+	# Reload config from test path
+	var load_result = config_manager._load_config()
+	
+	# Load settings into logger
+	logger._config = config_manager
+	logger._load_settings()
 	
 	# Check the logger state matches what we saved
 	var tests = [
@@ -233,21 +232,28 @@ func test_default_values():
 	var logger = Logger.new()
 	
 	# Save original config path
-	var original_path = Logger.CONFIG_PATH
+	var original_path = ConfigManager.CONFIG_PATH
 	
-	# Hack to use our test config path (with reflection)
-	var script = logger.get_script()
+	# Create a ConfigManager instance for loading
+	var config_manager = ConfigManager.get_instance()
+	
+	# Override config path for testing
+	var script = config_manager.get_script()
 	script.get_script_constant_map()["CONFIG_PATH"] = TEST_CONFIG_PATH
 	
-	# Manually load settings (should use defaults)
-	LoggerSettings.load_settings(logger)
+	# Reload config from test path (which doesn't exist, so defaults should be used)
+	var load_result = config_manager._load_config()
+	
+	# Load settings into logger
+	logger._config = config_manager
+	logger._load_settings()
 	
 	# Check the logger state matches the defaults
 	var tests = [
 		{
 			"description": "Log level",
 			"value": logger._current_level,
-			"expected": Logger.DEFAULT_LOG_LEVEL
+			"expected": ConfigManager.DEFAULT_LOG_LEVEL
 		},
 		{
 			"description": "Active tags",
@@ -262,17 +268,17 @@ func test_default_values():
 		{
 			"description": "Show timestamp",
 			"value": logger._show_timestamp,
-			"expected": Logger.DEFAULT_SHOW_TIMESTAMP
+			"expected": ConfigManager.DEFAULT_SHOW_TIMESTAMP
 		},
 		{
 			"description": "Show tags",
 			"value": logger._show_tags,
-			"expected": Logger.DEFAULT_SHOW_TAGS
+			"expected": ConfigManager.DEFAULT_SHOW_TAGS
 		},
 		{
 			"description": "Use colors",
 			"value": logger._use_colors,
-			"expected": Logger.DEFAULT_USE_COLORS
+			"expected": ConfigManager.DEFAULT_USE_COLORS
 		}
 	]
 	

@@ -1,10 +1,13 @@
 @tool
 class_name LoggerSettings
 extends RefCounted
-## DEPRECATED: Compatibility wrapper for existing code
+## [DEPRECATED] Compatibility wrapper for existing code - Use ConfigManager instead
 ##
-## This class is maintained only for backward compatibility with existing tests.
-## New code should use ConfigManager directly instead.
+## WARNING: This class is deprecated and will be removed in a future version.
+## It is maintained only for backward compatibility with existing tests.
+## All new code should use ConfigManager directly instead.
+##
+## @deprecated
 
 # Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
@@ -28,9 +31,12 @@ const DEFAULT_SHOW_TAGS = ConfigManager.DEFAULT_SHOW_TAGS
 const DEFAULT_USE_COLORS = ConfigManager.DEFAULT_USE_COLORS
 const DEFAULT_SHOW_SOURCE = ConfigManager.DEFAULT_SHOW_SOURCE
 
-## Sets the logger settings from the ConfigManager to the logger instance
+## [DEPRECATED] Sets the logger settings from the ConfigManager to the logger instance
 ## Returns OK if successful, FAILED otherwise
+##
+## @deprecated Use ConfigManager directly instead
 static func load_settings(logger_instance: Logger) -> Error:
+	push_warning("[Deprecated] LoggerSettings.load_settings is deprecated. Use ConfigManager directly instead.")
 	if not logger_instance:
 		push_error("Cannot load settings: logger instance is null")
 		return Error.FAILED
@@ -65,9 +71,12 @@ static func load_settings(logger_instance: Logger) -> Error:
 
 	return OK
 
-## Saves the logger settings to the config
+## [DEPRECATED] Saves the logger settings to the config
 ## Returns OK if successful, FAILED otherwise
+##
+## @deprecated Use ConfigManager directly instead
 static func save_settings(logger_instance: Logger) -> Error:
+	push_warning("[Deprecated] LoggerSettings.save_settings is deprecated. Use ConfigManager directly instead.")
 	if not logger_instance:
 		push_error("Cannot save settings: logger instance is null")
 		return Error.FAILED
@@ -89,11 +98,13 @@ static func save_settings(logger_instance: Logger) -> Error:
 
 	return config.save()
 
-## Checks if a tag is valid
+## [DEPRECATED] Checks if a tag is valid
 ##
 ## Tags must be non-empty strings and follow allowed naming conventions.
 ## - Cannot be empty
 ## - Must contain only alphanumeric characters, underscores, or hyphens
+##
+## @deprecated Use TagManager.is_valid_tag instead
 ##
 ## Returns: true if valid, false otherwise
 static func _is_valid_tag(tag) -> bool:
