@@ -47,6 +47,8 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
+	print_rich("[color=#7daea3]DEBUG: Getting drag data for index %d, tag: '%s'[/color]" % [tag_index, tag_text])
+
 	if not TagManager.is_valid_tag(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
 		return null
@@ -58,6 +60,8 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 		"source": source_type,
 		"index": tag_index
 	}
+
+	print_rich("[color=#7daea3]DEBUG: Created drag data: %s[/color]" % [drag_data])
 
 	return drag_data
 

@@ -3,6 +3,7 @@ extends Node
 
 func _ready() -> void:
 	print("Main ready")
+	Log.set_debug_filter_logging(false)
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())

@@ -15,6 +15,25 @@ const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[String]:
 	var found_tags: Array[String] = []
 
+	# Add level tags first - use exact constants from Logger
+	var Logger = load("res://addons/advanced_logger/core/logger.gd")
+
+	# Check if Logger loaded successfully
+	if Logger:
+		found_tags.append(Logger.TAG_LEVEL_DEBUG)
+		found_tags.append(Logger.TAG_LEVEL_INFO)
+		found_tags.append(Logger.TAG_LEVEL_WARNING)
+		found_tags.append(Logger.TAG_LEVEL_ERROR)
+		found_tags.append(Logger.TAG_LEVEL_CRITICAL)
+	else:
+		# Fallback if Logger can't be loaded
+		print_rich("[color=#ea6962]WARNING: Could not load Logger class, using hardcoded level tags[/color]")
+		found_tags.append("level:debug")
+		found_tags.append("level:info")
+		found_tags.append("level:warning")
+		found_tags.append("level:error")
+		found_tags.append("level:critical")
+
 	# Extract all TAG_* constants from Logger class
 	var logger_tags := extract_tag_constants_from_logger()
 	found_tags.append_array(logger_tags)

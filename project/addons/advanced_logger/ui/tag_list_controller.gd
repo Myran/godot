@@ -99,6 +99,10 @@ func refresh_tag_lists() -> void:
 			if not _active_tags.has(tag) and not _ignored_tags.has(tag):
 				_available_tags_list.add_item(_format_tag_for_display(tag))
 				_available_tags_list.set_item_metadata(_available_tags_list.item_count - 1, tag)
+				
+				# Set custom color for level tags
+				if _is_level_tag(tag):
+					_available_tags_list.set_item_custom_fg_color(_available_tags_list.item_count - 1, LoggerColors.INFO_COLOR)
 
 	# Clear and populate active tags list
 	if _active_tags_list:
@@ -106,6 +110,10 @@ func refresh_tag_lists() -> void:
 		for tag in _active_tags:
 			_active_tags_list.add_item(_format_tag_for_display(tag))
 			_active_tags_list.set_item_metadata(_active_tags_list.item_count - 1, tag)
+			
+			# Set custom color for level tags
+			if _is_level_tag(tag):
+				_active_tags_list.set_item_custom_fg_color(_active_tags_list.item_count - 1, LoggerColors.SUCCESS_COLOR)
 
 	# Clear and populate ignored tags list
 	if _ignored_tags_list:
@@ -113,12 +121,38 @@ func refresh_tag_lists() -> void:
 		for tag in _ignored_tags:
 			_ignored_tags_list.add_item(_format_tag_for_display(tag))
 			_ignored_tags_list.set_item_metadata(_ignored_tags_list.item_count - 1, tag)
+			
+			# Set custom color for level tags
+			if _is_level_tag(tag):
+				_ignored_tags_list.set_item_custom_fg_color(_ignored_tags_list.item_count - 1, LoggerColors.ERROR_COLOR)
 
 ## Move a tag between categories
 func move_tag(tag: String, from_category: String, to_category: String) -> void:
-	if not TagManager.is_valid_tag(tag) or from_category == to_category:
+	# Debug output
+	print_rich("[color=#%s]Moving tag: '%s' from %s to %s[/color]" % 
+		[LoggerColors.INFO_HTML, tag, from_category, to_category])
+	
+	# Normalize the tag to ensure consistent case
+	var normalized_tag = TagManager.normalize_tag(tag)
+	if normalized_tag != tag:
+		print_rich("[color=#%s]Normalized tag: %s -> %s[/color]" % 
+			[LoggerColors.WARNING_HTML, tag, normalized_tag])
+		tag = normalized_tag
+	
+	if not TagManager.is_valid_tag(tag):
+		print_rich("[color=#%s]Tag is not valid: %s[/color]" % [LoggerColors.ERROR_HTML, tag])
 		return
 		
+	if from_category == to_category:
+		print_rich("[color=#%s]Source and target categories are the same[/color]" % [LoggerColors.WARNING_HTML])
+		return
+	
+	# Debug the tag lists before moving
+	print_rich("[color=#%s]Before move - Active tags: %s[/color]" % 
+		[LoggerColors.DEBUG_HTML, _active_tags])
+	print_rich("[color=#%s]Before move - Ignored tags: %s[/color]" % 
+		[LoggerColors.DEBUG_HTML, _ignored_tags])
+	
 	# Use TagManager to handle the move
 	var result = TagManager.move_tag(
 		tag,
@@ -128,6 +162,15 @@ func move_tag(tag: String, from_category: String, to_category: String) -> void:
 		_active_tags,
 		_ignored_tags
 	)
+	
+	# Debug the tag lists after moving
+	print_rich("[color=#%s]After move - Active tags: %s[/color]" % 
+		[LoggerColors.DEBUG_HTML, _active_tags])
+	print_rich("[color=#%s]After move - Ignored tags: %s[/color]" % 
+		[LoggerColors.DEBUG_HTML, _ignored_tags])
+	
+	# Save after every move to ensure persistence
+	save_tags_to_config()
 	
 	# Update arrays with the result
 	_available_tags = result.available_tags
@@ -140,9 +183,21 @@ func move_tag(tag: String, from_category: String, to_category: String) -> void:
 	# Emit signal for external listeners
 	tag_moved.emit(tag, from_category, to_category)
 
-## Format a tag for display
+## Format a tag for display, with special handling for level tags
 func _format_tag_for_display(tag: String) -> String:
-	return TagManager.format_tag_for_display(tag)
+	var formatted = TagManager.format_tag_for_display(tag)
+	
+	# Add special indicator based on tag type
+	if _is_level_tag(tag):
+		formatted = "⚙ " + formatted  # Use gear icon to indicate level tag
+	else:
+		formatted = "🏷 " + formatted  # Use tag icon for regular tags
+	
+	return formatted
+
+## Check if a tag is a level tag
+func _is_level_tag(tag: String) -> bool:
+	return tag.begins_with("level:")
 
 ## Get current lists of tags
 func get_tag_lists() -> Dictionary:
@@ -236,30 +291,36 @@ func save_tags_to_config() -> void:
 ## Signal handlers
 func _on_available_tag_selected(index: int) -> void:
 	var tag = _available_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_selected.emit(tag, SOURCE_AVAILABLE)
 
 func _on_available_tag_activated(index: int) -> void:
 	var tag = _available_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_activated.emit(tag, SOURCE_AVAILABLE)
 	# Default behavior: Move to active list
 	move_tag(tag, SOURCE_AVAILABLE, SOURCE_ACTIVE)
 
 func _on_active_tag_selected(index: int) -> void:
 	var tag = _active_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_selected.emit(tag, SOURCE_ACTIVE)
 
 func _on_active_tag_activated(index: int) -> void:
 	var tag = _active_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_activated.emit(tag, SOURCE_ACTIVE)
 	# Default behavior: Move to ignored list
 	move_tag(tag, SOURCE_ACTIVE, SOURCE_IGNORED)
 
 func _on_ignored_tag_selected(index: int) -> void:
 	var tag = _ignored_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_selected.emit(tag, SOURCE_IGNORED)
 
 func _on_ignored_tag_activated(index: int) -> void:
 	var tag = _ignored_tags_list.get_item_metadata(index)
+	tag = TagManager.normalize_tag(tag)
 	tag_activated.emit(tag, SOURCE_IGNORED)
 	# Default behavior: Move to active list
 	move_tag(tag, SOURCE_IGNORED, SOURCE_ACTIVE)

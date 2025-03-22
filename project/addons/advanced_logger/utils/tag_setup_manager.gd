@@ -19,7 +19,34 @@ func _init(config_manager: ConfigManager) -> void:
 ## Get a specific tag setup
 ## Returns an empty dictionary if setup doesn't exist
 func get_setup(name: String) -> Dictionary:
-    return _config.get_tag_setup(name)
+    if name == null:
+        print_rich("[color=#%s]ERROR: Attempted to get setup with null name[/color]" % [LoggerColors.ERROR_HTML])
+        return {}
+        
+    if name.is_empty():
+        print_rich("[color=#%s]ERROR: Attempted to get setup with empty name[/color]" % [LoggerColors.ERROR_HTML])
+        return {}
+    
+    # Get all setups and print the available keys for debugging
+    var all_setups = _config.get_all_tag_setups()
+    var available_names = all_setups.keys()
+    print_rich("[color=#%s]DEBUG: Available setup names: %s[/color]" % [LoggerColors.DEBUG_HTML, available_names])
+    
+    # Check if the exact name exists
+    if all_setups.has(name):
+        print_rich("[color=#%s]DEBUG: Found exact match for setup name: '%s'[/color]" % [LoggerColors.DEBUG_HTML, name])
+        return _config.get_tag_setup(name)
+    
+    # If not found, try case-insensitive matching
+    for setup_name in available_names:
+        if setup_name.to_lower() == name.to_lower():
+            print_rich("[color=#%s]DEBUG: Found case-insensitive match: '%s' for '%s'[/color]" % 
+                [LoggerColors.WARNING_HTML, setup_name, name])
+            return _config.get_tag_setup(setup_name)
+    
+    # Not found
+    print_rich("[color=#%s]WARNING: No matching setup found for name: '%s'[/color]" % [LoggerColors.WARNING_HTML, name])
+    return {}
 
 ## Get all available tag setups
 ## Returns a dictionary of name -> setup data
@@ -90,3 +117,4 @@ func create_default_setups() -> void:
     if setups.is_empty():
         save_setup("default", [], [])
         save_setup("debug_network", ["network"], [])
+        save_setup("errors_only", ["level:error", "level:critical"], ["level:debug", "level:info", "level:warning"])

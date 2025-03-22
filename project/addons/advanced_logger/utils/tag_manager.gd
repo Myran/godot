@@ -12,6 +12,7 @@ extends RefCounted
 ## Tags must be non-empty strings and follow allowed naming conventions:
 ## - Cannot be empty
 ## - Must contain only alphanumeric characters, underscores, or hyphens
+## - Special exception for level tags with "level:" prefix
 ##
 ## Returns true if the tag is valid, false otherwise
 static func is_valid_tag(tag) -> bool:
@@ -23,7 +24,19 @@ static func is_valid_tag(tag) -> bool:
 	if tag.is_empty():
 		return false
 
-	# Enhanced validation - alphanumeric, underscores, hyphens only
+	# Special case for level tags (allowed to have colon)
+	if tag.begins_with("level:") or tag.begins_with("Level:"):
+		# Extract the level part after the colon
+		var parts = tag.split(":")
+		if parts.size() != 2 or parts[1].is_empty():
+			return false
+
+		# Check if the level part is valid
+		var regex = RegEx.new()
+		regex.compile("^[a-zA-Z0-9_-]+$")
+		return regex.search(parts[1]) != null
+
+	# Regular validation - alphanumeric, underscores, hyphens only
 	var regex = RegEx.new()
 	regex.compile("^[a-zA-Z0-9_-]+$")
 	return regex.search(tag) != null
@@ -132,7 +145,8 @@ static func move_tag(
 
 ## Formats a tag for display in the UI
 ##
-## Capitalizes the first letter of the tag for better readability
+## Capitalizes the first letter of the tag for better readability,
+## with special handling for level tags to preserve their format
 ##
 ## Parameters:
 ## - tag: The tag to format
@@ -141,6 +155,17 @@ static func move_tag(
 static func format_tag_for_display(tag: String) -> String:
 	if tag.is_empty():
 		return tag
+
+	# Normalize the tag first to ensure consistency
+	tag = normalize_tag(tag)
+
+	# Special handling for level tags to preserve lowercase after colon
+	if is_level_tag(tag):
+		var parts = tag.split(":")
+		if parts.size() == 2:
+			return parts[0].capitalize() + ":" + parts[1]
+
+	# Regular capitalization for other tags
 	return tag.substr(0, 1).capitalize() + tag.substr(1)
 
 ## Filters a list of tags based on active and ignored tag rules
@@ -185,13 +210,51 @@ static func merge_tags(tag_arrays: Array) -> Array[String]:
 
 	return merged_tags
 
-## Sorts tags alphabetically
+## Checks if a tag is a level tag (prefixed with level: or Level:)
+## Returns true if it is a level tag
+static func is_level_tag(tag: String) -> bool:
+	return tag is String and (tag.begins_with("level:") or tag.begins_with("Level:"))
+
+## Normalizes a tag to ensure consistent case
+## Specifically, ensures level tags are in the correct case
+## Returns the normalized tag
+static func normalize_tag(tag: String) -> String:
+	if not tag is String:
+		return tag
+
+	# Case insensitive check for level tags
+	if tag.to_lower().begins_with("level:"):
+		# Always use lowercase "level:" prefix
+		var parts = tag.split(":")
+		if parts.size() == 2:
+			return "level:" + parts[1].to_lower()
+
+	return tag
+
+## Sorts tags with level tags appearing at the top
 ##
 ## Parameters:
 ## - tags: Array of tags to sort
 ##
 ## Returns the sorted array
 static func sort_tags(tags: Array[String]) -> Array[String]:
-	var sorted_tags = tags.duplicate()
-	sorted_tags.sort()
+	var level_tags: Array[String] = []
+	var regular_tags: Array[String] = []
+
+	# Separate level tags from regular tags
+	for tag in tags:
+		if is_level_tag(tag):
+			level_tags.append(tag)
+		else:
+			regular_tags.append(tag)
+
+	# Sort each group
+	level_tags.sort()
+	regular_tags.sort()
+
+	# Combine with level tags first
+	var sorted_tags: Array[String] = []
+	sorted_tags.append_array(level_tags)
+	sorted_tags.append_array(regular_tags)
+
 	return sorted_tags

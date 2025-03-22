@@ -17,6 +17,23 @@ const TAG_LOCAL: String = "local_data"
 const TAG_ERROR: String = "error"
 const TAG_NETWORK: String = "network"
 
+# Level tag constants
+const TAG_LEVEL_PREFIX: String = "level:"
+const TAG_LEVEL_DEBUG: String = "level:debug"
+const TAG_LEVEL_INFO: String = "level:info"
+const TAG_LEVEL_WARNING: String = "level:warning"
+const TAG_LEVEL_ERROR: String = "level:error"
+const TAG_LEVEL_CRITICAL: String = "level:critical"
+
+# Mapping between log levels and corresponding tags
+const LEVEL_TAGS: Dictionary = {
+	LogLevel.DEBUG: TAG_LEVEL_DEBUG,
+	LogLevel.INFO: TAG_LEVEL_INFO,
+	LogLevel.WARNING: TAG_LEVEL_WARNING,
+	LogLevel.ERROR: TAG_LEVEL_ERROR,
+	LogLevel.CRITICAL: TAG_LEVEL_CRITICAL
+}
+
 # Tag operation constants
 const TAG_CATEGORY_AVAILABLE: String = "available"
 const TAG_CATEGORY_ACTIVE: String = "active"
@@ -47,6 +64,8 @@ var _show_timestamp: bool = true
 var _show_tags: bool = true
 var _use_colors: bool = true
 var _show_source: bool = true
+# Debug mode is explicitly disabled by default - very important!
+var _debug_filter_logging: bool = false
 
 # Config instance
 var _config: ConfigManager = null
@@ -143,21 +162,80 @@ func _validate_message(message: String) -> bool:
 	return true
 
 
-## Checks if a log level should be shown based on the current threshold
+## Checks if a log level should be shown based on the current threshold or level tags
 func _should_show_level(level: LogLevel) -> bool:
-	return level >= _current_level
+	var level_tag: String = LEVEL_TAGS[level]
+
+	# Debug - log what we're checking
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Checking level %s (tag: %s), ignored_tags: %s, active_tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], level_tag, _ignored_tags, _active_tags])
+
+	# Check if this level tag is ignored
+	if _ignored_tags.has(level_tag):
+		if _debug_filter_logging:
+			print_rich("[color=#%s]DEBUG: Level tag %s is ignored, skipping[/color]" %
+				[LoggerColors.DEBUG_HTML, level_tag])
+		return false
+
+	# Check if any level tags are in active tags
+	var has_active_level_tag: bool = false
+	var active_level_tags = []
+	for tag in _active_tags:
+		if tag.begins_with(TAG_LEVEL_PREFIX):
+			has_active_level_tag = true
+			active_level_tags.append(tag)
+
+	# If we have active level tags, they override the level setting
+	if has_active_level_tag:
+		if _debug_filter_logging:
+			print_rich("[color=#%s]DEBUG: Found active level tags: %s[/color]" %
+				[LoggerColors.DEBUG_HTML, active_level_tags])
+
+		var should_show = _active_tags.has(level_tag)
+
+		if _debug_filter_logging:
+			print_rich("[color=#%s]DEBUG: Level tag override - should show %s? %s[/color]" %
+				[LoggerColors.DEBUG_HTML, level_tag, should_show])
+		return should_show
+
+	# Otherwise use traditional level threshold
+	var should_show = level >= _current_level
+
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Traditional level threshold - should show %s? %s[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], should_show])
+	return should_show
 
 
 # Internal logging function
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
+	# Debug message with more info
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Log call - level: %s, message: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], message.left(30) + "..."])
+
+		# Print current filter status to help debug
+		print_rich("[color=#%s]DEBUG STATUS: _debug_filter_logging=%s, active_tags=%s, ignored_tags=%s[/color]" %
+			[LoggerColors.WARNING_HTML, _debug_filter_logging, _active_tags, _ignored_tags])
+
 	# Skip if level filtering prevents this message
 	if !_should_show_level(level):
+		if _debug_filter_logging:
+			print_rich("[color=#%s]DEBUG: Skipping log due to level filtering[/color]" % [LoggerColors.DEBUG_HTML])
 		return
 
 	# Validate tags and check if we should show the message
 	var validated_tags := _validate_tags(tags)
 	if !_should_show_tags(validated_tags):
+		if _debug_filter_logging:
+			print_rich("[color=#%s]DEBUG: Skipping log due to tag filtering[/color]" % [LoggerColors.DEBUG_HTML])
 		return
+
+	# Log is going to be shown
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Showing log - level: %s, tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], validated_tags])
 
 	# Get source information and output the log
 	var source_info := _get_source_info()
@@ -182,7 +260,13 @@ func _is_valid_tag(tag) -> bool:
 ## - tags: Tags associated with the log message
 ## Returns: True if the log should be shown, false otherwise
 func _should_show_tags(tags: Array) -> bool:
-	return TagManager.should_show_tags(tags, _active_tags, _ignored_tags)
+	var result = TagManager.should_show_tags(tags, _active_tags, _ignored_tags)
+
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Checking if tags %s should be shown: %s (active: %s, ignored: %s)[/color]" %
+			[LoggerColors.DEBUG_HTML, tags, result, _active_tags, _ignored_tags])
+
+	return result
 
 
 # Get source information (file, line, function)
@@ -416,12 +500,20 @@ func _create_available_tags_list(tag: String = "") -> Array[String]:
 
 ## Updates active tags in configuration
 func _update_active_tags_in_config() -> void:
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Updating active tags in config: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, _active_tags])
+
 	if _config != null:
 		_config.set_active_tags(_active_tags)
 
 
 ## Updates ignored tags in configuration
 func _update_ignored_tags_in_config() -> void:
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Updating ignored tags in config: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, _ignored_tags])
+
 	if _config != null:
 		_config.set_ignored_tags(_ignored_tags)
 
@@ -445,6 +537,32 @@ func set_use_colors(use: bool) -> void:
 func set_show_source(show: bool) -> void:
 	_show_source = show
 	_update_format_setting(ConfigManager.KEY_SHOW_SOURCE, show)
+
+## Enable or disable debug logs for filtering logic
+## This is useful for troubleshooting tag and level filtering
+## Parameters:
+## - enable: Whether to enable debug logs
+func set_debug_filter_logging(enable: bool) -> void:
+	_debug_filter_logging = enable
+
+	# Always print this message regardless of the flag
+	print("============================================")
+	if enable:
+		print_rich("[color=#%s]Advanced Logger debug filter logging ENABLED[/color]" %
+			LoggerColors.SUCCESS_HTML)
+
+		# Print current state to verify settings
+		print_rich("[color=#%s]Current state: log level=%s, active_tags=%s, ignored_tags=%s[/color]" %
+			[LoggerColors.INFO_HTML, LogLevel.keys()[_current_level], _active_tags, _ignored_tags])
+	else:
+		print_rich("[color=#%s]Advanced Logger debug filter logging DISABLED[/color]" %
+			LoggerColors.INFO_HTML)
+	print("============================================")
+
+	# Force a debug print to demonstrate it's working
+	if enable:
+		print_rich("[color=#%s]TESTING: Debug filter logging is active. This message should appear.[/color]" %
+			LoggerColors.WARNING_HTML)
 
 
 ## Helper for updating format settings in configuration

@@ -59,7 +59,8 @@ offset_bottom = 31.0
 
 [node name="LevelLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/LevelSection"]
 layout_mode = 2
-text = "Log Level:"
+theme_override_font_sizes/font_size = 24
+text = "⚙️ Log Level:"
 
 [node name="LevelOption" type="OptionButton" parent="VBoxContainer/TabContainer/Tags/LevelSection"]
 layout_mode = 2
@@ -100,20 +101,11 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="SetupLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
-visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.78, 0.4, 1)
-theme_override_font_sizes/font_size = 14
-text = "Tag Setups"
+theme_override_font_sizes/font_size = 24
+text = "📋 Tag Selections"
 horizontal_alignment = 1
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
-layout_mode = 2
-
-[node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Save Tag Selection"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
 custom_minimum_size = Vector2(0, 80)
@@ -130,12 +122,21 @@ mouse_filter = 1
 theme_override_constants/v_separation = 4
 allow_reselect = true
 allow_rmb_select = true
-item_count = 4
+item_count = 5
 fixed_icon_size = Vector2i(16, 16)
-item_0/text = "default"
-item_1/text = "ignore cache"
-item_2/text = "test1"
-item_3/text = "test2"
+item_0/text = "📄 default"
+item_1/text = "📋 ignore cache"
+item_2/text = "📥 test"
+item_3/text = "📋 test1"
+item_4/text = "📋 test2"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection"]
+layout_mode = 2
+
+[node name="SaveSetupButton" type="Button" parent="VBoxContainer/TabContainer/Tags/TagsContainer/SetupsSection/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save Tag Selection"
 
 [node name="HSeparatorSetups" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -147,7 +148,8 @@ size_flags_stretch_ratio = 1.5
 
 [node name="TagsLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection"]
 layout_mode = 2
-text = "Available Tags"
+theme_override_font_sizes/font_size = 24
+text = "🏷️ Available Tags"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection"]
@@ -164,16 +166,21 @@ mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
 auto_height = true
-item_count = 9
-item_0/text = "Active"
-item_1/text = "Available"
-item_2/text = "Cache"
-item_3/text = "Database"
-item_4/text = "Error"
-item_5/text = "Firebase"
-item_6/text = "Ignored"
-item_7/text = "Local_data"
-item_8/text = "Network"
+item_count = 14
+item_0/text = "🏷 Active"
+item_1/text = "🏷 Available"
+item_2/text = "🏷 Cache"
+item_3/text = "🏷 Database"
+item_4/text = "🏷 Error"
+item_5/text = "🏷 Firebase"
+item_6/text = "🏷 Ignored"
+item_7/text = "⚙ Level:critical"
+item_8/text = "⚙ Level:debug"
+item_9/text = "⚙ Level:error"
+item_10/text = "⚙ Level:info"
+item_11/text = "⚙ Level:warning"
+item_12/text = "🏷 Local_data"
+item_13/text = "🏷 Network"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -184,7 +191,8 @@ size_flags_vertical = 3
 
 [node name="TagsLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/TagsSection"]
 layout_mode = 2
-text = "Active Tags (Filter)"
+theme_override_font_sizes/font_size = 24
+text = "🔍 Active Tags (Filter)"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/TagsSection"]
@@ -211,7 +219,8 @@ size_flags_vertical = 3
 
 [node name="IgnoredTagsLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/IgnoredTagsSection"]
 layout_mode = 2
-text = "Ignored Tags"
+theme_override_font_sizes/font_size = 24
+text = "🚫 Ignored Tags"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer/IgnoredTagsSection"]
@@ -246,7 +255,8 @@ grow_vertical = 2
 
 [node name="FormatLabel" type="Label" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
-text = "Format Settings"
+theme_override_font_sizes/font_size = 16
+text = "⚙️ Format Settings"
 horizontal_alignment = 1
 
 [node name="ShowTimestampCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]

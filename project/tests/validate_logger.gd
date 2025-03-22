@@ -33,7 +33,7 @@ func _init():
 func verify_files() -> bool:
 	print("\n----- Verifying Required Files -----")
 	var logger_settings_path = "res://addons/advanced_logger/logger_settings.gd"
-	var logger_path = "res://addons/advanced_logger/logger.gd"
+	var logger_path = "res://addons/advanced_logger/core/logger.gd"
 	
 	var file = FileAccess.open(logger_settings_path, FileAccess.READ)
 	var settings_exists = file != null
@@ -54,24 +54,29 @@ func verify_files() -> bool:
 func test_tag_validation():
 	print("\n----- Testing Tag Validation -----")
 	
-	# Import the LoggerSettings to test tag validation
-	var LoggerSettings = load("res://addons/advanced_logger/logger_settings.gd")
-	if LoggerSettings == null:
-		print("  ❌ Failed to load LoggerSettings script")
+	# Import the TagManager to test tag validation
+	var TagManagerClass = load("res://addons/advanced_logger/utils/tag_manager.gd")
+	if TagManagerClass == null:
+		print("  ❌ Failed to load TagManager script")
 		return
-	LoggerSettings = LoggerSettings.new()
 	
 	# Valid tags
-	expect_true(LoggerSettings._is_valid_tag("test"), "Simple tag validation")
-	expect_true(LoggerSettings._is_valid_tag("test_tag"), "Tag with underscore")
-	expect_true(LoggerSettings._is_valid_tag("test-tag"), "Tag with hyphen")
-	expect_true(LoggerSettings._is_valid_tag("test123"), "Tag with numbers")
+	expect_true(TagManagerClass.is_valid_tag("test"), "Simple tag validation")
+	expect_true(TagManagerClass.is_valid_tag("test_tag"), "Tag with underscore")
+	expect_true(TagManagerClass.is_valid_tag("test-tag"), "Tag with hyphen")
+	expect_true(TagManagerClass.is_valid_tag("test123"), "Tag with numbers")
+	
+	# Level tags
+	expect_true(TagManagerClass.is_valid_tag("level:debug"), "Level tag validation (with colon)")
+	expect_true(TagManagerClass.is_level_tag("level:debug"), "Level tag recognition")
+	expect_false(TagManagerClass.is_level_tag("debug"), "Regular tag not recognized as level tag")
+	expect_false(TagManagerClass.is_valid_tag("level:"), "Empty level tag")
 	
 	# Invalid tags
-	expect_false(LoggerSettings._is_valid_tag(""), "Empty tag")
-	expect_false(LoggerSettings._is_valid_tag("test tag"), "Tag with space")
-	expect_false(LoggerSettings._is_valid_tag("test.tag"), "Tag with period")
-	expect_false(LoggerSettings._is_valid_tag("test!tag"), "Tag with special char")
+	expect_false(TagManagerClass.is_valid_tag(""), "Empty tag")
+	expect_false(TagManagerClass.is_valid_tag("test tag"), "Tag with space")
+	expect_false(TagManagerClass.is_valid_tag("test.tag"), "Tag with period")
+	expect_false(TagManagerClass.is_valid_tag("test!tag"), "Tag with special char")
 
 # Test 2: Config save and load operations
 func test_config_save_load():
@@ -113,7 +118,7 @@ func test_tag_filtering():
 	print("\n----- Testing Tag Filtering Logic -----")
 	
 	# Create simulated logger instance to test filtering logic
-	var Logger = load("res://addons/advanced_logger/logger.gd")
+	var Logger = load("res://addons/advanced_logger/core/logger.gd")
 	if Logger == null:
 		print("  ❌ Failed to load Logger script")
 		return

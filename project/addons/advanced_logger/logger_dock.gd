@@ -135,6 +135,10 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	if _available_tags_list.get_global_rect().has_point(global_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, "available")
 		if drag_data:
+			# Debug info
+			print_rich("[color=#%s]DEBUG: Dragging tag from available: %s[/color]" %
+				[LoggerColors.DEBUG_HTML, drag_data.tag])
+
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
@@ -253,6 +257,37 @@ func _update_startup_message() -> void:
 	# Also print to console for convenience
 	print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
+
+	# Update tooltips for level tags
+	_update_level_tag_tooltips()
+
+## Update tooltips for level tag items in lists
+func _update_level_tag_tooltips() -> void:
+	_update_tooltip_for_tag_list(_available_tags_list)
+	_update_tooltip_for_tag_list(_tags_list)
+	_update_tooltip_for_tag_list(_ignored_tags_list)
+
+## Helper to update tooltips for a specific list
+func _update_tooltip_for_tag_list(list: ItemList) -> void:
+	if not list:
+		return
+
+	for i in range(list.get_item_count()):
+		var tag = list.get_item_metadata(i)
+		if tag is String and tag.begins_with("level:"):
+			var tooltip = "Level Tag: Overrides the log level dropdown when active.\n"
+			match tag:
+				"level:debug":
+					tooltip += "Shows DEBUG level messages."
+				"level:info":
+					tooltip += "Shows INFO level messages."
+				"level:warning":
+					tooltip += "Shows WARNING level messages."
+				"level:error":
+					tooltip += "Shows ERROR level messages."
+				"level:critical":
+					tooltip += "Shows CRITICAL level messages."
+			list.set_item_tooltip(i, tooltip)
 
 ## Performs an initial tag scan when the plugin is loaded
 func _initial_tag_scan() -> void:
