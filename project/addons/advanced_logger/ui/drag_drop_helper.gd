@@ -6,7 +6,10 @@ extends RefCounted
 ## Centralizes drag and drop functionality for tag lists to avoid
 ## code duplication and improve maintainability.
 
-# Tag source constants
+# Preload required dependencies
+const TagCategories = preload("res://addons/advanced_logger/utils/tag_categories.gd")
+
+# Tag source constants for backward compatibility
 const SOURCE_AVAILABLE: String = "available"
 const SOURCE_ACTIVE: String = "active"
 const SOURCE_IGNORED: String = "ignored"
@@ -47,7 +50,8 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
-	print_rich("[color=#7daea3]DEBUG: Getting drag data for index %d, tag: '%s'[/color]" % [tag_index, tag_text])
+	if OS.is_debug_build():
+		print_rich("[color=#7daea3]DEBUG: Getting drag data for index %d, tag: '%s'[/color]" % [tag_index, tag_text])
 
 	if not TagManager.is_valid_tag(tag_text):
 		push_warning("Invalid tag: '%s'" % tag_text)
@@ -61,36 +65,46 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 		"index": tag_index
 	}
 
-	print_rich("[color=#7daea3]DEBUG: Created drag data: %s[/color]" % [drag_data])
+	if OS.is_debug_build():
+		print_rich("[color=#7daea3]DEBUG: Created drag data: %s[/color]" % [drag_data])
 
 	return drag_data
 
 ## Checks if a tag can be dropped from one list to another
 ## Parameters:
 ## - tag: The tag being moved
-## - source: The source list type
-## - target: The target list type
+## - source: The source list type (string or enum)
+## - target: The target list type (string or enum)
 ## - active_tags: Current active tags
 ## - ignored_tags: Current ignored tags
 ## Returns: True if the drop is valid, false otherwise
-func can_drop_tag(tag: String, source: String, target: String, active_tags: Array[String], ignored_tags: Array[String]) -> bool:
+func can_drop_tag(tag: String, source: Variant, target: Variant, active_tags: Array[String], ignored_tags: Array[String]) -> bool:
+	# Convert string categories to enum if needed
+	var source_cat := source
+	var target_cat := target
+
+	if source_cat is String:
+		source_cat = TagCategories.from_string(source_cat)
+	if target_cat is String:
+		target_cat = TagCategories.from_string(target_cat)
+
 	# Can't drop to the same list
-	if source == target:
+	if source_cat == target_cat:
 		return false
 
 	# Check valid source->target combinations
-	match target:
-		SOURCE_AVAILABLE:
-			return source == SOURCE_ACTIVE or source == SOURCE_IGNORED
-		SOURCE_ACTIVE:
+	match target_cat:
+		TagCategories.Category.AVAILABLE:
+			return source_cat == TagCategories.Category.ACTIVE or source_cat == TagCategories.Category.IGNORED
+		TagCategories.Category.ACTIVE:
 			# Don't accept if already in active list
 			if active_tags.has(tag):
 				return false
-			return source == SOURCE_AVAILABLE or source == SOURCE_IGNORED
-		SOURCE_IGNORED:
+			return source_cat == TagCategories.Category.AVAILABLE or source_cat == TagCategories.Category.IGNORED
+		TagCategories.Category.IGNORED:
 			# Don't accept if already in ignored list
 			if ignored_tags.has(tag):
 				return false
-			return source == SOURCE_AVAILABLE or source == SOURCE_ACTIVE
+			return source_cat == TagCategories.Category.AVAILABLE or source_cat == TagCategories.Category.ACTIVE
 
 	return false

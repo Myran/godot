@@ -236,39 +236,65 @@ func get_active_tags() -> Array[String]:
 	if tags is Array:
 		var result: Array[String] = []
 		for tag in tags:
-			if tag is String:
+			if tag is String and not _is_reserved_category_name(tag):
 				result.append(tag)
 		return result
 	return []
 
 func set_active_tags(tags: Array[String]) -> void:
-	set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, tags)
+	# Filter out any category names before saving
+	var filtered_tags: Array[String] = []
+	for tag in tags:
+		if not _is_reserved_category_name(tag):
+			filtered_tags.append(tag)
+	
+	set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, filtered_tags)
 
 func get_ignored_tags() -> Array[String]:
 	var tags = get_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
 	if tags is Array:
 		var result: Array[String] = []
 		for tag in tags:
-			if tag is String:
+			if tag is String and not _is_reserved_category_name(tag):
 				result.append(tag)
 		return result
 	return []
 
+# Helper function to check if a tag name is a reserved category name
+func _is_reserved_category_name(tag: String) -> bool:
+	if not tag is String:
+		return false
+		
+	var lower_tag = tag.to_lower()
+	return lower_tag == "available" or lower_tag == "active" or lower_tag == "ignored"
+
 func set_ignored_tags(tags: Array[String]) -> void:
-	set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, tags)
+	# Filter out any category names before saving
+	var filtered_tags: Array[String] = []
+	for tag in tags:
+		if not _is_reserved_category_name(tag):
+			filtered_tags.append(tag)
+			
+	set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, filtered_tags)
 
 func get_available_tags() -> Array[String]:
 	var tags = get_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
 	if tags is Array:
 		var result: Array[String] = []
 		for tag in tags:
-			if tag is String:
+			if tag is String and not _is_reserved_category_name(tag):
 				result.append(tag)
 		return result
 	return []
 
 func set_available_tags(tags: Array[String]) -> void:
-	set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, tags)
+	# Filter out any category names before saving
+	var filtered_tags: Array[String] = []
+	for tag in tags:
+		if not _is_reserved_category_name(tag):
+			filtered_tags.append(tag)
+			
+	set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, filtered_tags)
 
 func get_show_timestamp() -> bool:
 	return get_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)

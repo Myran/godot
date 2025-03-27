@@ -7,6 +7,9 @@ extends RefCounted
 ## eliminating duplication across the codebase. All tag-related operations
 ## should go through this class to ensure consistency.
 
+# Preload required dependencies
+const TagCategories = preload("res://addons/advanced_logger/utils/tag_categories.gd")
+
 ## Validates a tag name is properly formatted
 ##
 ## Tags must be non-empty strings and follow allowed naming conventions:
@@ -87,8 +90,8 @@ static func should_show_tags(tags: Array, active_tags: Array[String], ignored_ta
 ##
 ## Parameters:
 ## - tag: The tag to move
-## - from_category: Source category ("available", "active", or "ignored")
-## - to_category: Target category for the tag
+## - from_category: Source category (TagCategories.Category enum or string)
+## - to_category: Target category (TagCategories.Category enum or string)
 ## - available_tags: Array of all available tags
 ## - active_tags: Array of active filter tags
 ## - ignored_tags: Array of ignored filter tags
@@ -96,13 +99,22 @@ static func should_show_tags(tags: Array, active_tags: Array[String], ignored_ta
 ## Returns a dictionary with updated arrays: {available_tags, active_tags, ignored_tags}
 static func move_tag(
 	tag: String,
-	from_category: String,
-	to_category: String,
+	from_category: Variant,
+	to_category: Variant,
 	available_tags: Array[String],
 	active_tags: Array[String],
 	ignored_tags: Array[String]
 ) -> Dictionary:
-	if not is_valid_tag(tag) or from_category == to_category:
+	# Convert string categories to enum if needed
+	var from_cat := from_category
+	var to_cat := to_category
+
+	if from_cat is String:
+		from_cat = TagCategories.from_string(from_cat)
+	if to_cat is String:
+		to_cat = TagCategories.from_string(to_cat)
+
+	if not is_valid_tag(tag) or from_cat == to_cat:
 		return {
 			"available_tags": available_tags,
 			"active_tags": active_tags,
@@ -114,25 +126,25 @@ static func move_tag(
 		available_tags.append(tag)
 
 	# Handle tag removal from source
-	match from_category:
-		"active", "SOURCE_ACTIVE":
+	match from_cat:
+		TagCategories.Category.ACTIVE:
 			if active_tags.has(tag):
 				active_tags.erase(tag)
-		"ignored", "SOURCE_IGNORED":
+		TagCategories.Category.IGNORED:
 			if ignored_tags.has(tag):
 				ignored_tags.erase(tag)
 
 	# Handle tag addition to target
-	match to_category:
-		"available", "SOURCE_AVAILABLE":
+	match to_cat:
+		TagCategories.Category.AVAILABLE:
 			# Remove from both filtered lists
 			active_tags.erase(tag)
 			ignored_tags.erase(tag)
-		"active", "SOURCE_ACTIVE":
+		TagCategories.Category.ACTIVE:
 			ignored_tags.erase(tag)
 			if not active_tags.has(tag):
 				active_tags.append(tag)
-		"ignored", "SOURCE_IGNORED":
+		TagCategories.Category.IGNORED:
 			active_tags.erase(tag)
 			if not ignored_tags.has(tag):
 				ignored_tags.append(tag)

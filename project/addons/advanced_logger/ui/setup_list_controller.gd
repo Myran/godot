@@ -85,7 +85,8 @@ func refresh_setups_list() -> void:
 		return
 		
 	# Debug output before refresh
-	print_rich("[color=#%s]DEBUG: Refreshing setup list[/color]" % [LoggerColors.DEBUG_HTML])
+	if OS.is_debug_build():
+		print_rich("[color=#%s]DEBUG: Refreshing setup list[/color]" % [LoggerColors.DEBUG_HTML])
 	
 	# Clear the list
 	_setups_list.clear()
@@ -95,8 +96,9 @@ func refresh_setups_list() -> void:
 	var sorted_names = setups.keys()
 	sorted_names.sort()
 	
-	print_rich("[color=#%s]DEBUG: Found %d setups to display[/color]" % 
-		[LoggerColors.DEBUG_HTML, sorted_names.size()])
+	if OS.is_debug_build():
+		print_rich("[color=#%s]DEBUG: Found %d setups to display[/color]" % 
+			[LoggerColors.DEBUG_HTML, sorted_names.size()])
 
 	# Track setup index for debugging
 	var setup_index = 0
@@ -143,8 +145,9 @@ func refresh_setups_list() -> void:
 				[LoggerColors.ERROR_HTML, setup_name, str(verify_metadata)])
 				
 		# Debug output
-		print_rich("[color=#%s]DEBUG: Added setup #%d: '%s' at index %d with metadata '%s'[/color]" % 
-			[LoggerColors.DEBUG_HTML, setup_index, display_name, item_index, setup_name])
+		if OS.is_debug_build():
+			print_rich("[color=#%s]DEBUG: Added setup #%d: '%s' at index %d with metadata '%s'[/color]" % 
+				[LoggerColors.DEBUG_HTML, setup_index, display_name, item_index, setup_name])
 			
 		setup_index += 1
 	
@@ -153,8 +156,9 @@ func refresh_setups_list() -> void:
 		_disconnect_signals()
 	_connect_signals()
 	
-	print_rich("[color=#%s]DEBUG: Setup list refresh complete with %d items[/color]" % 
-		[LoggerColors.DEBUG_HTML, _setups_list.item_count])
+	if OS.is_debug_build():
+		print_rich("[color=#%s]DEBUG: Setup list refresh complete with %d items[/color]" % 
+			[LoggerColors.DEBUG_HTML, _setups_list.item_count])
 
 ## Save current tag selection as a setup
 func save_setup(setup_name: String, active_tags: Array[String], ignored_tags: Array[String]) -> Error:

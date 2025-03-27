@@ -73,10 +73,27 @@ static func extract_tag_constants_from_logger() -> Array[String]:
 
 	return logger_tags
 
-## Helper to ensure we have a unique tag list
+## Helper to ensure we have a unique tag list with filtered invalid tags
 static func get_unique_tags(tags: Array[String]) -> Array[String]:
+	# Filter out category names that might cause confusion
+	var filtered_tags: Array[String] = []
+	var category_names = ["available", "active", "ignored"]
+	
+	for tag in tags:
+		# Skip category names
+		if category_names.has(tag.to_lower()):
+			print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found during tag scanning[/color]" % tag)
+			continue
+			
+		# Skip other potentially problematic tags
+		if tag.length() < 3:  # Too short to be meaningful
+			print_rich("[color=#d8a657]WARNING: Skipping too short tag '%s'[/color]" % tag)
+			continue
+			
+		filtered_tags.append(tag)
+	
 	# Delegate to TagManager to ensure consistency
-	return TagManager.merge_tags([tags])
+	return TagManager.merge_tags([filtered_tags])
 
 ## Recursively scans a directory for .gd files
 ##
@@ -178,6 +195,11 @@ static func extract_tags_from_string(tags_str: String, found_tags: Array[String]
 		# Get the tag value (either from double or single quotes)
 		var tag := tag_match.strings[1] if tag_match.strings.size() > 1 and tag_match.strings[1] else tag_match.strings[2]
 
-		# Validate the tag using TagManager
+		# Validate the tag using TagManager and filter out reserved words
 		if TagManager.is_valid_tag(tag) and not found_tags.has(tag):
+			# Skip category names
+			if tag.to_lower() == "active" or tag.to_lower() == "available" or tag.to_lower() == "ignored":
+				print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found in file[/color]" % tag)
+				continue
+				
 			found_tags.append(tag)
