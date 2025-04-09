@@ -1,13 +1,13 @@
 @tool
 class_name Logger extends Node
 ## Simple logging system with tags and levels
-
+enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 # Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 const LogFormatter = preload("res://addons/advanced_logger/core/log_formatter.gd")
 
-enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
+
 
 # Common tag constants
 const TAG_DB: String = "database"

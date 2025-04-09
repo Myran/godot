@@ -78,20 +78,20 @@ static func get_unique_tags(tags: Array[String]) -> Array[String]:
 	# Filter out category names that might cause confusion
 	var filtered_tags: Array[String] = []
 	var category_names = ["available", "active", "ignored"]
-	
+
 	for tag in tags:
 		# Skip category names
 		if category_names.has(tag.to_lower()):
 			print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found during tag scanning[/color]" % tag)
 			continue
-			
+
 		# Skip other potentially problematic tags
 		if tag.length() < 3:  # Too short to be meaningful
 			print_rich("[color=#d8a657]WARNING: Skipping too short tag '%s'[/color]" % tag)
 			continue
-			
+
 		filtered_tags.append(tag)
-	
+
 	# Delegate to TagManager to ensure consistency
 	return TagManager.merge_tags([filtered_tags])
 
@@ -201,5 +201,4 @@ static func extract_tags_from_string(tags_str: String, found_tags: Array[String]
 			if tag.to_lower() == "active" or tag.to_lower() == "available" or tag.to_lower() == "ignored":
 				print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found in file[/color]" % tag)
 				continue
-				
 			found_tags.append(tag)
