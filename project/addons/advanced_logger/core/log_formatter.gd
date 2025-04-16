@@ -127,16 +127,17 @@ static func _get_level_html_color(level: int) -> String:
 		push_error("Failed to load Logger script in LogFormatter._get_level_html_color")
 		return "" # Return empty string on failure
 
+	# Match directly against integer enum values
 	match level:
-		LoggerScript.LogLevel.DEBUG:
+		0: # Logger.LogLevel.DEBUG
 			return LoggerColors.DEBUG_HTML
-		LoggerScript.LogLevel.INFO:
+		1: # Logger.LogLevel.INFO
 			return LoggerColors.INFO_HTML
-		LoggerScript.LogLevel.WARNING:
+		2: # Logger.LogLevel.WARNING
 			return LoggerColors.WARNING_HTML
-		LoggerScript.LogLevel.ERROR:
+		3: # Logger.LogLevel.ERROR
 			return LoggerColors.ERROR_HTML
-		LoggerScript.LogLevel.CRITICAL:
+		4: # Logger.LogLevel.CRITICAL
 			return LoggerColors.CRITICAL_HTML
 	return ""
 
