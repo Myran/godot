@@ -528,13 +528,16 @@ func add_tag(tag: String) -> Error:
 		# print("Tag '%s' is already active." % tag)
 		return Error.ERR_ALREADY_EXISTS
 
+	# Check if the tag was previously ignored before erasing
+	var was_ignored = _ignored_tags.has(tag)
+	if was_ignored:
+		_ignored_tags.erase(tag)
+
 	_active_tags.append(tag)
-	# Ensure consistency: remove from ignored if it was there
-	var removed_from_ignored = _ignored_tags.erase(tag)
 
 	# Update config immediately to reflect the change
 	_update_active_tags_in_config()
-	if removed_from_ignored:
+	if was_ignored: # Update ignored config only if it was actually removed
 		_update_ignored_tags_in_config()
 
 	return OK
@@ -571,13 +574,16 @@ func add_ignored_tag(tag: String) -> Error:
 	if _ignored_tags.has(tag):
 		return Error.ERR_ALREADY_EXISTS
 
+	# Check if the tag was previously active before erasing
+	var was_active = _active_tags.has(tag)
+	if was_active:
+		_active_tags.erase(tag)
+
 	_ignored_tags.append(tag)
-	# Ensure consistency: remove from active if it was there
-	var removed_from_active = _active_tags.erase(tag)
 
 	# Update config immediately
 	_update_ignored_tags_in_config()
-	if removed_from_active:
+	if was_active: # Update active config only if it was actually removed
 		_update_active_tags_in_config()
 
 	return OK
