@@ -276,6 +276,38 @@ layout_mode = 2
 button_pressed = true
 text = "Use Colors"
 
+[node name="HSeparatorBuffer" type="HSeparator" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BufferLabel" type="Label" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "🔄 Log Buffer Settings"
+horizontal_alignment = 1
+
+[node name="BufferSizeContainer" type="HBoxContainer" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+
+[node name="BufferSizeLabel" type="Label" parent="VBoxContainer/TabContainer/Settings/FormatSection/BufferSizeContainer"]
+layout_mode = 2
+text = "Buffer Size:"
+
+[node name="BufferSizeSpinBox" type="SpinBox" parent="VBoxContainer/TabContainer/Settings/FormatSection/BufferSizeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 1000.0
+value = 20.0
+rounded = true
+alignment = 1
+
+[node name="EnableBufferDumpCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+button_pressed = true
+text = "Enable Buffer Dump on Error"
+tooltip_text = "When enabled, the buffer will be dumped to the console when ERROR or CRITICAL logs occur"
+
 [node name="HSeparatorFormat" type="HSeparator" parent="VBoxContainer/TabContainer/Settings"]
 visible = false
 layout_mode = 1

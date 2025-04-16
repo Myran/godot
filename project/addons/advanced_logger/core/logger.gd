@@ -67,13 +67,19 @@ var _show_source: bool = true
 # Debug mode is explicitly disabled by default - very important!
 var _debug_filter_logging: bool = false
 
-# --- ADD BUFFER VARIABLES ---
+# --- BUFFER VARIABLES ---
 ## Stores the last N log entries as dictionaries.
 var _log_buffer: Array[Dictionary] = []
 ## Maximum number of log entries to keep in the buffer.
 var _buffer_size: int = ConfigManager.DEFAULT_BUFFER_SIZE
+## Whether to dump the buffer on ERROR/CRITICAL logs.
+var _enable_buffer_dump: bool = ConfigManager.DEFAULT_ENABLE_BUFFER_DUMP
 ## Flag to prevent dumping the buffer repeatedly for consecutive errors.
 var _buffer_dumped_recently: bool = false
+## Flag to indicate this logger has a custom buffer size.
+var _has_custom_buffer_size: bool = false
+## Flag to indicate this logger has a custom buffer dump setting.
+var _has_custom_buffer_dump: bool = false
 
 # Config instance
 var _config: ConfigManager = null
@@ -100,9 +106,13 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 			_active_tags = value
 		elif key == ConfigManager.KEY_IGNORED_TAGS:
 			_ignored_tags = value
-		elif key == ConfigManager.KEY_BUFFER_SIZE: # <-- Add this elif block
+		elif key == ConfigManager.KEY_BUFFER_SIZE and not _has_custom_buffer_size:
+			# Only update buffer size if this logger doesn't have a custom size
 			_buffer_size = int(value)
 			_trim_buffer() # Adjust buffer immediately if size changed
+		elif key == ConfigManager.KEY_ENABLE_BUFFER_DUMP and not _has_custom_buffer_dump:
+			# Only update buffer dump setting if this logger doesn't have a custom setting
+			_enable_buffer_dump = bool(value)
 	elif section == ConfigManager.SECTION_FORMAT:
 		if key == ConfigManager.KEY_SHOW_TIMESTAMP:
 			_show_timestamp = value
@@ -121,7 +131,8 @@ func _load_settings() -> void:
 
 	# General settings
 	_current_level = _config.get_log_level()
-	_buffer_size = _config.get_buffer_size() # <-- Add this line
+	_buffer_size = _config.get_buffer_size()
+	_enable_buffer_dump = _config.get_enable_buffer_dump()
 
 	# Tags
 	_active_tags = _config.get_active_tags()
@@ -229,14 +240,13 @@ func _should_show_level(level: LogLevel) -> bool:
 		# Check if this specific level tag is in active tags
 		var exact_match = _active_tags.has(level_tag)
 		
-		# If no exact match, check if the level is at least as high as any active level tag
+		# When a level tag is active, we only want to show logs of that exact level
+		# or logs with a different active level tag
 		var level_match = false
 		if !exact_match:
-			for active_tag in active_level_tags:
-				var active_tag_level = _get_level_from_tag(active_tag)
-				if active_tag_level != -1 and level >= active_tag_level:
-					level_match = true
-					break
+			# Don't do any automatic level matching when level tags are active
+			# Only exact matches are allowed 
+			level_match = false
 		
 		var should_show = exact_match or level_match
 
@@ -265,8 +275,13 @@ func _add_to_buffer(log_data: Dictionary) -> void:
 
 ## Trims the buffer to the current _buffer_size. Used when config changes.
 func _trim_buffer() -> void:
+	var original_size = _log_buffer.size()
 	while _log_buffer.size() > _buffer_size:
 		_log_buffer.pop_front()
+	
+	if original_size > _buffer_size:
+		print_rich("[color=#%s]DEBUG: Buffer trimmed from %d to %d entries (max: %d)[/color]" % 
+			[LoggerColors.DEBUG_HTML, original_size, _log_buffer.size(), _buffer_size])
 
 ## Prints the entire contents of the log buffer to the console with clear demarcation.
 func _dump_buffer() -> void:
@@ -311,8 +326,8 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 	# 3. Add to buffer
 	_add_to_buffer(log_entry_data)
 
-	# 4. Check if buffer dump is needed (Error/Critical and not recently dumped)
-	if level >= LogLevel.ERROR and not _buffer_dumped_recently:
+	# 4. Check if buffer dump is needed (Error/Critical, dumping enabled, and not recently dumped)
+	if level >= LogLevel.ERROR and _enable_buffer_dump and not _buffer_dumped_recently:
 		_dump_buffer()
 		_buffer_dumped_recently = true # Prevent immediate re-dumping
 
@@ -645,6 +660,39 @@ func set_show_source(show: bool) -> void:
 ## This is useful for troubleshooting tag and level filtering
 ## Parameters:
 ## - enable: Whether to enable debug logs
+# Buffer configuration methods
+func set_buffer_size(size: int) -> Error:
+	if size < 1:
+		push_warning("Invalid buffer size: %d. Buffer size must be at least 1." % size)
+		return Error.FAILED
+	
+	_buffer_size = size
+	_trim_buffer() # Adjust buffer immediately
+	
+	# Flag to track if this logger has a custom buffer size
+	_has_custom_buffer_size = true
+	
+	# Update config only if we want to propagate this change globally
+	# Otherwise, this logger instance keeps its own buffer size
+	if _config != null:
+		_config.set_buffer_size(size)
+	
+	return OK
+
+func get_buffer_size() -> int:
+	return _buffer_size
+
+func set_enable_buffer_dump(enable: bool) -> void:
+	_enable_buffer_dump = enable
+	_has_custom_buffer_dump = true
+	
+	# Update config
+	if _config != null:
+		_config.set_enable_buffer_dump(enable)
+
+func get_enable_buffer_dump() -> bool:
+	return _enable_buffer_dump
+
 func set_debug_filter_logging(enable: bool) -> void:
 	_debug_filter_logging = enable
 

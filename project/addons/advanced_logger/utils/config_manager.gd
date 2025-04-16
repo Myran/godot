@@ -52,7 +52,8 @@ const KEY_SHOW_TIMESTAMP: String = "show_timestamp"  ## Key for timestamp displa
 const KEY_SHOW_TAGS: String = "show_tags"  ## Key for tags display setting
 const KEY_USE_COLORS: String = "use_colors"  ## Key for color usage setting
 const KEY_SHOW_SOURCE: String = "show_source"  ## Key for source info display setting
-const KEY_BUFFER_SIZE: String = "buffer_size"  # Key for buffer size setting
+const KEY_BUFFER_SIZE: String = "buffer_size"  ## Key for buffer size setting
+const KEY_ENABLE_BUFFER_DUMP: String = "enable_buffer_dump"  ## Key for buffer dump toggle
 
 # Default values used when config file is missing or incomplete
 const DEFAULT_LOG_LEVEL: int = 1  ## Default log level (INFO)
@@ -60,7 +61,8 @@ const DEFAULT_SHOW_TIMESTAMP: bool = true  ## Default timestamp display (on)
 const DEFAULT_SHOW_TAGS: bool = true  ## Default tags display (on)
 const DEFAULT_USE_COLORS: bool = true  ## Default color usage (on)
 const DEFAULT_SHOW_SOURCE: bool = true  ## Default source info display (on)
-const DEFAULT_BUFFER_SIZE: int = 20    # Default buffer size
+const DEFAULT_BUFFER_SIZE: int = 20    ## Default buffer size
+const DEFAULT_ENABLE_BUFFER_DUMP: bool = true  ## Default buffer dump setting (enabled)
 
 # Config file instance
 var _config: ConfigFile = ConfigFile.new()
@@ -328,6 +330,12 @@ func get_buffer_size() -> int:
 func set_buffer_size(size: int) -> void:
 	# Ensure buffer size is reasonable
 	set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, max(1, size))
+	
+func get_enable_buffer_dump() -> bool:
+	return get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+
+func set_enable_buffer_dump(enable: bool) -> void:
+	set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, enable)
 
 ## Gets a tag setup by name
 ## Parameters:
@@ -372,7 +380,8 @@ func reset_to_defaults() -> Error:
 	set_active_tags([])
 	set_ignored_tags([])
 	set_available_tags([])
-	set_buffer_size(DEFAULT_BUFFER_SIZE) # <-- Add this line
+	set_buffer_size(DEFAULT_BUFFER_SIZE)
+	set_enable_buffer_dump(DEFAULT_ENABLE_BUFFER_DUMP)
 	
 	# Set defaults for format settings
 	set_show_timestamp(DEFAULT_SHOW_TIMESTAMP)

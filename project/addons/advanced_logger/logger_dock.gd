@@ -46,6 +46,8 @@ var _setup_dialog_controller: SetupDialogController
 @onready var _show_tags_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowTagsCheck
 @onready var _use_colors_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/UseColorsCheck
 @onready var _show_source_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowSourceCheck
+@onready var _buffer_size_spin: SpinBox = $VBoxContainer/TabContainer/Settings/FormatSection/BufferSizeContainer/BufferSizeSpinBox
+@onready var _enable_buffer_dump_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/EnableBufferDumpCheck
 @onready var _save_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/ResetButton
 
@@ -123,6 +125,8 @@ func _initialize_controllers() -> void:
 		_show_tags_check,
 		_use_colors_check,
 		_show_source_check,
+		_buffer_size_spin,
+		_enable_buffer_dump_check,
 		_save_button,
 		_reset_button,
 		_update_tags_button

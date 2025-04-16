@@ -15,6 +15,8 @@ var _show_timestamp_check: CheckBox
 var _show_tags_check: CheckBox
 var _use_colors_check: CheckBox
 var _show_source_check: CheckBox
+var _buffer_size_spin: SpinBox
+var _enable_buffer_dump_check: CheckBox
 var _save_button: Button
 var _reset_button: Button
 var _update_tags_button: Button
@@ -24,6 +26,8 @@ var _show_timestamp: bool = true
 var _show_tags: bool = true
 var _use_colors: bool = true
 var _show_source: bool = true
+var _buffer_size: int = ConfigManager.DEFAULT_BUFFER_SIZE
+var _enable_buffer_dump: bool = ConfigManager.DEFAULT_ENABLE_BUFFER_DUMP
 
 # Dependencies (injected in constructor)
 var _config: ConfigManager
@@ -46,6 +50,8 @@ func setup(
 	show_tags_check: CheckBox,
 	use_colors_check: CheckBox,
 	show_source_check: CheckBox,
+	buffer_size_spin: SpinBox,
+	enable_buffer_dump_check: CheckBox,
 	save_button: Button,
 	reset_button: Button,
 	update_tags_button: Button
@@ -55,6 +61,8 @@ func setup(
 	_show_tags_check = show_tags_check
 	_use_colors_check = use_colors_check
 	_show_source_check = show_source_check
+	_buffer_size_spin = buffer_size_spin
+	_enable_buffer_dump_check = enable_buffer_dump_check
 	_save_button = save_button
 	_reset_button = reset_button
 	_update_tags_button = update_tags_button
@@ -64,6 +72,8 @@ func setup(
 	_show_tags_check.toggled.connect(_on_show_tags_toggled)
 	_use_colors_check.toggled.connect(_on_use_colors_toggled)
 	_show_source_check.toggled.connect(_on_show_source_toggled)
+	_buffer_size_spin.value_changed.connect(_on_buffer_size_changed)
+	_enable_buffer_dump_check.toggled.connect(_on_enable_buffer_dump_toggled)
 	_save_button.pressed.connect(_on_save_settings)
 	_reset_button.pressed.connect(_on_reset_settings)
 	_update_tags_button.pressed.connect(_on_scan_tags)
@@ -85,6 +95,13 @@ func _load_settings_from_config() -> void:
 
 	_show_source = _config.get_show_source()
 	_show_source_check.button_pressed = _show_source
+	
+	# Load buffer settings
+	_buffer_size = _config.get_buffer_size()
+	_buffer_size_spin.value = _buffer_size
+	
+	_enable_buffer_dump = _config.get_enable_buffer_dump()
+	_enable_buffer_dump_check.button_pressed = _enable_buffer_dump
 
 ## Scan for tags in the project
 func _on_scan_tags() -> void:
@@ -120,6 +137,10 @@ func _save_settings_to_config() -> Error:
 	_config.set_show_tags(_show_tags)
 	_config.set_use_colors(_use_colors)
 	_config.set_show_source(_show_source)
+	
+	# Save buffer settings
+	_config.set_buffer_size(_buffer_size)
+	_config.set_enable_buffer_dump(_enable_buffer_dump)
 
 	# Save the config
 	var result = _config.save()
@@ -140,12 +161,16 @@ func _apply_defaults() -> void:
 	_show_tags = ConfigManager.DEFAULT_SHOW_TAGS
 	_use_colors = ConfigManager.DEFAULT_USE_COLORS
 	_show_source = ConfigManager.DEFAULT_SHOW_SOURCE
+	_buffer_size = ConfigManager.DEFAULT_BUFFER_SIZE
+	_enable_buffer_dump = ConfigManager.DEFAULT_ENABLE_BUFFER_DUMP
 
 	# Update UI
 	_show_timestamp_check.button_pressed = _show_timestamp
 	_show_tags_check.button_pressed = _show_tags
 	_use_colors_check.button_pressed = _use_colors
 	_show_source_check.button_pressed = _show_source
+	_buffer_size_spin.value = _buffer_size
+	_enable_buffer_dump_check.button_pressed = _enable_buffer_dump
 
 	# Clear tag lists through the tag list controller
 	var tag_lists = _tag_list_controller.get_tag_lists()
@@ -178,6 +203,21 @@ func _on_use_colors_toggled(button_pressed: bool) -> void:
 func _on_show_source_toggled(button_pressed: bool) -> void:
 	_show_source = button_pressed
 	_config.set_show_source(button_pressed)
+	_config.save()
+	
+func _on_buffer_size_changed(value: float) -> void:
+	_buffer_size = int(value)
+	print_rich("[color=#%s]DEBUG: Buffer size changed to %d[/color]" % [LoggerColors.DEBUG_HTML, _buffer_size])
+	_config.set_buffer_size(_buffer_size)
+	var save_result = _config.save()
+	if save_result == OK:
+		print_rich("[color=#%s]DEBUG: Buffer size saved successfully[/color]" % [LoggerColors.DEBUG_HTML])
+	else:
+		print_rich("[color=#%s]DEBUG: Failed to save buffer size: %s[/color]" % [LoggerColors.ERROR_HTML, error_string(save_result)])
+	
+func _on_enable_buffer_dump_toggled(button_pressed: bool) -> void:
+	_enable_buffer_dump = button_pressed
+	_config.set_enable_buffer_dump(button_pressed)
 	_config.save()
 
 func _on_save_settings() -> void:
