@@ -67,6 +67,14 @@ var _show_source: bool = true
 # Debug mode is explicitly disabled by default - very important!
 var _debug_filter_logging: bool = false
 
+# --- ADD BUFFER VARIABLES ---
+## Stores the last N log entries as dictionaries.
+var _log_buffer: Array[Dictionary] = []
+## Maximum number of log entries to keep in the buffer.
+var _buffer_size: int = ConfigManager.DEFAULT_BUFFER_SIZE
+## Flag to prevent dumping the buffer repeatedly for consecutive errors.
+var _buffer_dumped_recently: bool = false
+
 # Config instance
 var _config: ConfigManager = null
 
@@ -92,6 +100,9 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 			_active_tags = value
 		elif key == ConfigManager.KEY_IGNORED_TAGS:
 			_ignored_tags = value
+		elif key == ConfigManager.KEY_BUFFER_SIZE: # <-- Add this elif block
+			_buffer_size = int(value)
+			_trim_buffer() # Adjust buffer immediately if size changed
 	elif section == ConfigManager.SECTION_FORMAT:
 		if key == ConfigManager.KEY_SHOW_TIMESTAMP:
 			_show_timestamp = value
@@ -110,6 +121,7 @@ func _load_settings() -> void:
 
 	# General settings
 	_current_level = _config.get_log_level()
+	_buffer_size = _config.get_buffer_size() # <-- Add this line
 
 	# Tags
 	_active_tags = _config.get_active_tags()
@@ -208,38 +220,93 @@ func _should_show_level(level: LogLevel) -> bool:
 	return should_show
 
 
-# Internal logging function
+# --- ADD BUFFER HELPER METHODS ---
+
+## Adds a log entry dictionary to the buffer, maintaining max size.
+func _add_to_buffer(log_data: Dictionary) -> void:
+	_log_buffer.append(log_data)
+	# Trim the buffer if it exceeds the max size
+	if _log_buffer.size() > _buffer_size:
+		_log_buffer.pop_front()
+
+## Trims the buffer to the current _buffer_size. Used when config changes.
+func _trim_buffer() -> void:
+	while _log_buffer.size() > _buffer_size:
+		_log_buffer.pop_front()
+
+## Prints the entire contents of the log buffer to the console with clear demarcation.
+func _dump_buffer() -> void:
+	# Use distinct colors for clarity
+	var header_footer_color = LoggerColors.WARNING_HTML # Yellow
+	var separator = "".rpad(60, "=") # Create a string of 60 equal signs
+
+	print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
+	print_rich("[color=#%s]=== Dumping Log Buffer (%d entries) ===[/color]" % [header_footer_color, _log_buffer.size()])
+	print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
+
+	# Iterate through a copy to avoid issues if buffer changes during iteration
+	var buffer_copy = _log_buffer.duplicate()
+	for entry_data in buffer_copy:
+		# Create a deep copy to modify the message safely
+		var data_to_print = entry_data.duplicate(true)
+		# Prepend indicator to the message
+		data_to_print.message = "[BUFFER] " + data_to_print.message
+		# Print using the standard formatting function
+		_print_formatted_log(data_to_print)
+
+	print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
+	print_rich("[color=#%s]=== End Log Buffer Dump ===[/color]" % [header_footer_color])
+	print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
+
+# --- REPLACE THIS ENTIRE METHOD ---
+## Internal logging function - handles buffering, filtering, and output
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
-	# Debug message with more info
-	if _debug_filter_logging:
-		print_rich("[color=#%s]DEBUG: Log call - level: %s, message: %s[/color]" %
-			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], message.left(30) + "..."])
+	# 1. Validate message
+	if !_validate_message(message):
+		return
 
-		# Print current filter status to help debug
-		print_rich("[color=#%s]DEBUG STATUS: _debug_filter_logging=%s, active_tags=%s, ignored_tags=%s[/color]" %
-			[LoggerColors.WARNING_HTML, _debug_filter_logging, _active_tags, _ignored_tags])
+	# 2. Capture log entry data *before* filtering
+	var log_entry_data := {
+		"level": level,
+		"message": message,
+		"context": context.duplicate(true), # Deep duplicate context
+		"tags": tags.duplicate(),         # Shallow duplicate tags array
+		"source_info": _get_source_info() # Get source info now
+	}
 
+	# 3. Add to buffer
+	_add_to_buffer(log_entry_data)
+
+	# 4. Check if buffer dump is needed (Error/Critical and not recently dumped)
+	if level >= LogLevel.ERROR and not _buffer_dumped_recently:
+		_dump_buffer()
+		_buffer_dumped_recently = true # Prevent immediate re-dumping
+
+	# 5. Reset dump flag if this log is not high severity
+	elif level < LogLevel.ERROR:
+		_buffer_dumped_recently = false
+
+	# 6. Perform filtering for *this specific log entry*
 	# Skip if level filtering prevents this message
-	if !_should_show_level(level):
+	if not _should_show_level(level):
 		if _debug_filter_logging:
 			print_rich("[color=#%s]DEBUG: Skipping log due to level filtering[/color]" % [LoggerColors.DEBUG_HTML])
 		return
 
-	# Validate tags and check if we should show the message
-	var validated_tags := _validate_tags(tags)
-	if !_should_show_tags(validated_tags):
+	# Validate tags and check if we should show the message based on tags
+	var validated_tags := _validate_tags(tags) # Use original tags array
+	if not _should_show_tags(validated_tags):
 		if _debug_filter_logging:
 			print_rich("[color=#%s]DEBUG: Skipping log due to tag filtering[/color]" % [LoggerColors.DEBUG_HTML])
 		return
 
-	# Log is going to be shown
+	# 7. Output the *current* log if it passed filters
 	if _debug_filter_logging:
 		print_rich("[color=#%s]DEBUG: Showing log - level: %s, tags: %s[/color]" %
 			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], validated_tags])
 
-	# Get source information and output the log
-	var source_info := _get_source_info()
-	_output_log(level, message, context, validated_tags, source_info)
+	# Call the refactored printing function
+	_print_formatted_log(log_entry_data)
 
 
 ## Validates an array of tags, returning only valid ones
@@ -325,14 +392,16 @@ func _update_source_info_from_frame(source_info: Dictionary, frame: Dictionary) 
 		source_info[FUNCTION_KEY] = String(frame.get(FUNCTION_KEY, "unknown"))
 
 
-# Format and output a log
-func _output_log(
-	level: LogLevel,
-	message: String,
-	context: Dictionary,
-	tags: Array[String],
-	source_info: Dictionary
-) -> void:
+# --- RENAME _output_log TO _print_formatted_log AND REPLACE ITS CONTENT ---
+## Formats and prints a single log entry dictionary
+func _print_formatted_log(log_data: Dictionary) -> void:
+	# Extract data from the dictionary
+	var level: int = log_data.level
+	var message: String = log_data.message
+	var context: Dictionary = log_data.context
+	var tags: Array[String] = log_data.tags
+	var source_info: Dictionary = log_data.source_info
+
 	# Use the LogFormatter to get the formatted log message
 	var formatted_log = LogFormatter.format_log(
 		level,

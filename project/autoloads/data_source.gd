@@ -499,7 +499,7 @@ func get_all_cards(use_cache: bool = false) -> Array:
 		return card_cache
 
 	var cards: Array = await get_db_sheet(_CARDS, false)
-	Log.debug("Retrieved all cards", {"count": cards.size()}, [Log.TAG_DB])
+	Log.critical("Retrieved all cards", {"count": cards.size()}, [Log.TAG_DB])
 	return cards
 
 
