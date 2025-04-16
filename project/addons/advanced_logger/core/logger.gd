@@ -34,11 +34,6 @@ const LEVEL_TAGS: Dictionary = {
 	LogLevel.CRITICAL: TAG_LEVEL_CRITICAL
 }
 
-# Tag operation constants
-const TAG_CATEGORY_AVAILABLE: String = "available"
-const TAG_CATEGORY_ACTIVE: String = "active"
-const TAG_CATEGORY_IGNORED: String = "ignored"
-
 # Reference the centralized color palette
 const LEVEL_COLORS: Dictionary = {
 	LogLevel.DEBUG: LoggerColors.DEBUG_COLOR,
@@ -183,88 +178,180 @@ func _validate_message(message: String) -> bool:
 		push_warning("Empty log message provided")
 		return false
 	return true
-	
-## Helper method to extract the LogLevel from a level tag (e.g., "level:debug" -> LogLevel.DEBUG)
-## Returns -1 if the tag is not a valid level tag
-func _get_level_from_tag(tag: String) -> int:
-	if not tag.begins_with(TAG_LEVEL_PREFIX):
-		return -1
-		
-	var level_name = tag.substr(TAG_LEVEL_PREFIX.length()).to_upper()
-	
-	match level_name:
-		"DEBUG":
-			return LogLevel.DEBUG
-		"INFO":
-			return LogLevel.INFO
-		"WARNING":
-			return LogLevel.WARNING
-		"ERROR":
-			return LogLevel.ERROR
-		"CRITICAL":
-			return LogLevel.CRITICAL
-	
-	return -1
 
+# --- Refactored Logging Pipeline ---
+
+## Internal logging function - handles validation, buffering, filtering, and output
+func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
+	# 1. Validate message - Early exit if invalid
+	if not _validate_message(message):
+		return
+
+	# 2. Prepare Log Entry Data
+	# Use TagManager directly for validation
+	var validated_tags := TagManager.validate_tags(tags)
+	var log_entry_data := _create_log_entry_data(level, message, context, validated_tags)
+
+	# 3. Buffering Logic
+	_handle_buffering(log_entry_data)
+
+	# 4. Filtering Logic
+	if not _should_output_log(level, validated_tags):
+		return
+
+	# 5. Output the formatted log
+	_print_formatted_log(log_entry_data)
+
+## Creates the dictionary containing all data for a single log entry
+func _create_log_entry_data(level: LogLevel, message: String, context: Dictionary, validated_tags: Array[String]) -> Dictionary:
+	return {
+		"level": level,
+		"message": message,
+		"context": context.duplicate(true), # Deep duplicate
+		"tags": validated_tags.duplicate(), # Shallow duplicate is fine for array of strings
+		"source_info": _get_source_info()   # Get source info
+	}
+
+## Handles adding the log entry to the buffer and triggering dumps if necessary
+func _handle_buffering(log_entry_data: Dictionary) -> void:
+	# Add to buffer
+	_add_to_buffer(log_entry_data)
+
+	# Check if buffer dump is needed
+	var level = log_entry_data.level
+	if level >= LogLevel.ERROR and _enable_buffer_dump and not _buffer_dumped_recently:
+		_dump_buffer()
+		_buffer_dumped_recently = true # Prevent immediate re-dumping
+	elif level < LogLevel.ERROR:
+		_buffer_dumped_recently = false # Reset dump flag if not high severity
+
+## Determines if a log entry should be printed based on level and tag filters
+func _should_output_log(level: LogLevel, validated_tags: Array[String]) -> bool:
+	# Check level filtering first
+	if not _should_show_level(level):
+		return false
+
+	# Then check tag filtering
+	if not _should_show_tags(validated_tags):
+		return false
+
+	# If both pass, output the log
+	return true
+
+# --- Filtering Logic ---
 
 ## Checks if a log level should be shown based on the current threshold or level tags
 func _should_show_level(level: LogLevel) -> bool:
-	var level_tag: String = LEVEL_TAGS[level]
+	var level_tag: String = LEVEL_TAGS.get(level, "") # Use .get() for safety
+	if level_tag.is_empty():
+		push_warning("Invalid log level provided to _should_show_level: %d" % level)
+		return false # Should not happen with enum, but good practice
 
-	# Debug - log what we're checking
-	if _debug_filter_logging:
-		print_rich("[color=#%s]DEBUG: Checking level %s (tag: %s), ignored_tags: %s, active_tags: %s[/color]" %
-			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], level_tag, _ignored_tags, _active_tags])
+	_debug_print_filter_check_start(level, level_tag)
 
-	# Check if this level tag is ignored
+	# --- Rule 1: Check Ignored Level Tag ---
 	if _ignored_tags.has(level_tag):
-		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Level tag %s is ignored, skipping[/color]" %
-				[LoggerColors.DEBUG_HTML, level_tag])
+		_debug_print_filter_result(level_tag, "Ignored Level Tag", false)
 		return false
 
-	# Check if any level tags are in active tags
-	var has_active_level_tag: bool = false
-	var active_level_tags = []
+	# --- Rule 2: Check if any Active Level Tags Exist ---
+	var active_level_tags = _get_active_level_tags()
+	var has_active_level_filter = not active_level_tags.is_empty()
+
+	if has_active_level_filter:
+		# --- Rule 2a: Active Level Tags Override Threshold ---
+		# If *any* level tag is active, we ONLY filter based on the active level tags.
+		# The _current_level threshold is ignored in this case.
+		# A message must match *exactly* one of the active level tags.
+		# IMPORTANT: This preserves the original strict behavior where higher levels are NOT automatically shown if a lower level tag is active.
+		var show_based_on_active_level = _active_tags.has(level_tag) # Exact match required
+		_debug_print_filter_result(level_tag, "Active Level Tag Filter", show_based_on_active_level)
+		return show_based_on_active_level
+	else:
+		# --- Rule 3: Use Standard Level Threshold ---
+		# If no level tags are active, use the standard _current_level threshold.
+		var show_based_on_threshold = level >= _current_level
+		_debug_print_filter_result(LogLevel.keys()[level], "Standard Level Threshold", show_based_on_threshold)
+		return show_based_on_threshold
+
+## Check if a log should be shown based on topic tags (non-level tags)
+## Parameters:
+## - log_tags: Tags associated with the log message (already validated)
+## Returns: True if the log should be shown based on topic tags, false otherwise
+func _should_show_tags(log_tags: Array[String]) -> bool:
+	_debug_print_tag_check_start(log_tags)
+
+	# --- Rule 1: Check Ignored Topic Tags ---
+	# If the log has any tag that is in the ignored list, hide it.
+	for tag in log_tags:
+		# This check uses the instance's _ignored_tags list directly
+		if _ignored_tags.has(tag):
+			_debug_print_tag_result(log_tags, "Ignored Topic Tag", false)
+			return false
+
+	# --- Rule 2: Check Active Topic Tags ---
+	var active_topic_tags = _get_active_topic_tags()
+
+	# If there are no active *topic* tags, all non-ignored messages pass this check.
+	# (Level filtering is handled separately in _should_show_level)
+	if active_topic_tags.is_empty():
+		_debug_print_tag_result(log_tags, "No Active Topic Tags", true)
+		return true
+
+	# If there are active topic tags, the message must have at least one of them.
+	for tag in log_tags:
+		if active_topic_tags.has(tag):
+			_debug_print_tag_result(log_tags, "Active Topic Tag Match", true)
+			return true
+
+	# If we reached here, active topic tags exist, but the message had none of them.
+	_debug_print_tag_result(log_tags, "No Active Topic Tag Match", false)
+	return false
+
+## Helper function to get currently active level tags
+func _get_active_level_tags() -> Array[String]:
+	var level_tags: Array[String] = []
 	for tag in _active_tags:
 		if tag.begins_with(TAG_LEVEL_PREFIX):
-			has_active_level_tag = true
-			active_level_tags.append(tag)
+			level_tags.append(tag)
+	return level_tags
 
-	# If we have active level tags, they override the level setting
-	if has_active_level_tag:
-		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Found active level tags: %s[/color]" %
-				[LoggerColors.DEBUG_HTML, active_level_tags])
+## Helper function to get currently active topic tags (non-level)
+func _get_active_topic_tags() -> Array[String]:
+	var topic_tags: Array[String] = []
+	for tag in _active_tags:
+		# Check instance's _active_tags list
+		if not tag.begins_with(TAG_LEVEL_PREFIX):
+			topic_tags.append(tag)
+	return topic_tags
 
-		# Check if this specific level tag is in active tags
-		var exact_match = _active_tags.has(level_tag)
-		
-		# When a level tag is active, we only want to show logs of that exact level
-		# or logs with a different active level tag
-		var level_match = false
-		if !exact_match:
-			# Don't do any automatic level matching when level tags are active
-			# Only exact matches are allowed 
-			level_match = false
-		
-		var should_show = exact_match or level_match
+# --- Debug Printing Helpers for Filtering ---
 
-		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Level tag override - should show %s? %s (exact_match: %s, level_match: %s)[/color]" %
-				[LoggerColors.DEBUG_HTML, level_tag, should_show, exact_match, level_match])
-		return should_show
-
-	# Otherwise use traditional level threshold
-	var should_show = level >= _current_level
-
+func _debug_print_filter_check_start(level: LogLevel, level_tag: String) -> void:
 	if _debug_filter_logging:
-		print_rich("[color=#%s]DEBUG: Traditional level threshold - should show %s? %s[/color]" %
-			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], should_show])
-	return should_show
+		print_rich("[color=#%s]DEBUG: Filtering check for level %s (tag: %s)[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], level_tag])
+		print_rich("[color=#%s]  Current State: _current_level=%s, _active_tags=%s, _ignored_tags=%s[/color]" %
+			[LoggerColors.DEBUG_HTML, LogLevel.keys()[_current_level], _active_tags, _ignored_tags])
 
+func _debug_print_filter_result(identifier: String, reason: String, result: bool) -> void:
+	if _debug_filter_logging:
+		print_rich("[color=#%s]  Filter Decision (%s): %s -> %s[/color]" %
+			[LoggerColors.DEBUG_HTML, reason, identifier, "SHOW" if result else "SKIP"])
 
-# --- ADD BUFFER HELPER METHODS ---
+func _debug_print_tag_check_start(log_tags: Array[String]) -> void:
+	if _debug_filter_logging:
+		print_rich("[color=#%s]DEBUG: Tag filtering check for log_tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, log_tags])
+		print_rich("[color=#%s]  Current State: _active_tags=%s, _ignored_tags=%s[/color]" %
+			[LoggerColors.DEBUG_HTML, _active_tags, _ignored_tags])
+
+func _debug_print_tag_result(log_tags: Array[String], reason: String, result: bool) -> void:
+	if _debug_filter_logging:
+		print_rich("[color=#%s]  Tag Filter Decision (%s): %s -> %s[/color]" %
+			[LoggerColors.DEBUG_HTML, reason, log_tags, "SHOW" if result else "SKIP"])
+
+# --- Buffer Management ---
 
 ## Adds a log entry dictionary to the buffer, maintaining max size.
 func _add_to_buffer(log_data: Dictionary) -> void:
@@ -278,114 +365,47 @@ func _trim_buffer() -> void:
 	var original_size = _log_buffer.size()
 	while _log_buffer.size() > _buffer_size:
 		_log_buffer.pop_front()
-	
+
 	if original_size > _buffer_size:
-		print_rich("[color=#%s]DEBUG: Buffer trimmed from %d to %d entries (max: %d)[/color]" % 
+		print_rich("[color=#%s]DEBUG: Buffer trimmed from %d to %d entries (max: %d)[/color]" %
 			[LoggerColors.DEBUG_HTML, original_size, _log_buffer.size(), _buffer_size])
 
 ## Prints the entire contents of the log buffer to the console with clear demarcation.
 func _dump_buffer() -> void:
-	# Use distinct colors for clarity
-	var header_footer_color = LoggerColors.WARNING_HTML # Yellow
-	var separator = "".rpad(60, "=") # Create a string of 60 equal signs
+	var header_footer_color = LoggerColors.WARNING_HTML # Yellow for visibility
+	var separator = "═".repeat(80) # Use double lines for more emphasis
 
+	# Print header with timestamp for context
+	var dt = Time.get_datetime_dict_from_system()
+	var dump_timestamp = "%02d:%02d:%02d" % [dt.hour, dt.minute, dt.second]
 	print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
-	print_rich("[color=#%s]=== Dumping Log Buffer (%d entries) ===[/color]" % [header_footer_color, _log_buffer.size()])
-	print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
+	print_rich("[color=#%s]=== BUFFER DUMP (%s) - Last %d entries ===[/color]" %
+		[header_footer_color, dump_timestamp, _log_buffer.size()])
+	print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
 
 	# Iterate through a copy to avoid issues if buffer changes during iteration
-	var buffer_copy = _log_buffer.duplicate()
-	for entry_data in buffer_copy:
-		# Create a deep copy to modify the message safely
-		var data_to_print = entry_data.duplicate(true)
-		# Prepend indicator to the message
-		data_to_print.message = "[BUFFER] " + data_to_print.message
-		# Print using the standard formatting function
-		_print_formatted_log(data_to_print)
+	var buffer_copy = _log_buffer.duplicate(true) # Use deep copy for safety
+	if buffer_copy.is_empty():
+		print_rich("[color=#%s]  (Buffer is empty)[/color]" % LoggerColors.TIMESTAMP_HTML)
+	else:
+		for entry_data in buffer_copy:
+			# Create a deep copy to modify the message safely
+			var data_to_print = entry_data.duplicate(true)
 
-	print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
-	print_rich("[color=#%s]=== End Log Buffer Dump ===[/color]" % [header_footer_color])
+			# Prepend indicator to the message for clarity in the output
+			data_to_print.message = "[BUFFER] " + data_to_print.message
+
+			# Print using the standard formatting function
+			# Ensures buffered messages look the same as live ones, just marked
+			_print_formatted_log(data_to_print)
+
+	print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
+	print_rich("[color=#%s]=== END BUFFER DUMP ===[/color]" % header_footer_color)
 	print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
 
-# --- REPLACE THIS ENTIRE METHOD ---
-## Internal logging function - handles buffering, filtering, and output
-func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
-	# 1. Validate message
-	if !_validate_message(message):
-		return
+# --- Source Info Helpers ---
 
-	# 2. Capture log entry data *before* filtering
-	var log_entry_data := {
-		"level": level,
-		"message": message,
-		"context": context.duplicate(true), # Deep duplicate context
-		"tags": tags.duplicate(),         # Shallow duplicate tags array
-		"source_info": _get_source_info() # Get source info now
-	}
-
-	# 3. Add to buffer
-	_add_to_buffer(log_entry_data)
-
-	# 4. Check if buffer dump is needed (Error/Critical, dumping enabled, and not recently dumped)
-	if level >= LogLevel.ERROR and _enable_buffer_dump and not _buffer_dumped_recently:
-		_dump_buffer()
-		_buffer_dumped_recently = true # Prevent immediate re-dumping
-
-	# 5. Reset dump flag if this log is not high severity
-	elif level < LogLevel.ERROR:
-		_buffer_dumped_recently = false
-
-	# 6. Perform filtering for *this specific log entry*
-	# Skip if level filtering prevents this message
-	if not _should_show_level(level):
-		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Skipping log due to level filtering[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	# Validate tags and check if we should show the message based on tags
-	var validated_tags := _validate_tags(tags) # Use original tags array
-	if not _should_show_tags(validated_tags):
-		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Skipping log due to tag filtering[/color]" % [LoggerColors.DEBUG_HTML])
-		return
-
-	# 7. Output the *current* log if it passed filters
-	if _debug_filter_logging:
-		print_rich("[color=#%s]DEBUG: Showing log - level: %s, tags: %s[/color]" %
-			[LoggerColors.DEBUG_HTML, LogLevel.keys()[level], validated_tags])
-
-	# Call the refactored printing function
-	_print_formatted_log(log_entry_data)
-
-
-## Validates an array of tags, returning only valid ones
-## Parameters:
-## - tags: Array of tags to validate
-## Returns: Array containing only valid tags
-func _validate_tags(tags: Array[String]) -> Array[String]:
-	return TagManager.validate_tags(tags)
-
-
-## Checks if a tag is valid (delegates to TagManager for consistent validation)
-func _is_valid_tag(tag) -> bool:
-	return TagManager.is_valid_tag(tag)
-
-
-## Check if a log should be shown based on tags
-## Parameters:
-## - tags: Tags associated with the log message
-## Returns: True if the log should be shown, false otherwise
-func _should_show_tags(tags: Array) -> bool:
-	var result = TagManager.should_show_tags(tags, _active_tags, _ignored_tags)
-
-	if _debug_filter_logging:
-		print_rich("[color=#%s]DEBUG: Checking if tags %s should be shown: %s (active: %s, ignored: %s)[/color]" %
-			[LoggerColors.DEBUG_HTML, tags, result, _active_tags, _ignored_tags])
-
-	return result
-
-
-# Get source information (file, line, function)
+## Get source information (file, line, function)
 func _get_source_info() -> Dictionary:
 	var source_info := _create_default_source_info()
 	var stack := get_stack()
@@ -493,128 +513,95 @@ func get_level() -> LogLevel:
 
 
 # Tag management
-## Adds a tag to the active tags list
-## Returns OK if successful, FAILED otherwise
+# Tag management
+## Adds a tag to the active tags list.
+## Ensures the tag is valid and not already active.
+## Removes the tag from the ignored list if present.
+## Returns OK on success, ERR_INVALID_PARAMETER for invalid tags,
+## ERR_ALREADY_EXISTS if the tag is already active.
 func add_tag(tag: String) -> Error:
-	# Use the new helper method for tag operations
-	return _add_tag_to_category(tag, TAG_CATEGORY_ACTIVE)
-
-
-## Removes a tag from the active tags list
-## Returns OK if successful, FAILED otherwise
-func remove_tag(tag: String) -> Error:
-	if !_is_valid_tag(tag):
-		push_warning("Cannot remove invalid tag: '%s'" % tag)
-		return Error.FAILED
-
-	# Only proceed if tag is in active list
-	if !_active_tags.has(tag):
-		return Error.FAILED  # Tag wasn't in the list
-
-	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_ACTIVE, TAG_CATEGORY_AVAILABLE)
-	if update_result == OK:
-		_update_active_tags_in_config()
-
-	return update_result
-
-
-## Clears all active tags
-func clear_tags() -> void:
-	_active_tags.clear()
-
-	# Update tag list in config if available
-	_update_active_tags_in_config()
-
-
-## Adds a tag to the ignored tags list
-## Returns OK if successful, FAILED otherwise
-func add_ignored_tag(tag: String) -> Error:
-	# Use the new helper method for tag operations
-	return _add_tag_to_category(tag, TAG_CATEGORY_IGNORED)
-
-
-## Removes a tag from the ignored tags list
-## Returns OK if successful, FAILED otherwise
-func remove_ignored_tag(tag: String) -> Error:
-	if !_is_valid_tag(tag):
-		push_warning("Cannot remove invalid ignored tag: '%s'" % tag)
-		return Error.FAILED
-
-	# Only proceed if tag is in ignored list
-	if !_ignored_tags.has(tag):
-		return Error.FAILED  # Tag wasn't in the list
-
-	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_IGNORED, TAG_CATEGORY_AVAILABLE)
-	if update_result == OK:
-		_update_ignored_tags_in_config()
-
-	return update_result
-
-
-## Clears all ignored tags
-func clear_ignored_tags() -> void:
-	_ignored_tags.clear()
-
-	# Update tag list in config if available
-	_update_ignored_tags_in_config()
-
-
-## Helper method to add a tag to a specific category (active or ignored)
-func _add_tag_to_category(tag: String, category: String) -> Error:
-	if !_is_valid_tag(tag):
+	if not TagManager.is_valid_tag(tag):
 		push_warning("Cannot add invalid tag: '%s'" % tag)
-		return Error.FAILED
+		return Error.ERR_INVALID_PARAMETER
+	if _active_tags.has(tag):
+		# Optionally print a message here if needed, but returning the error is key
+		# print("Tag '%s' is already active." % tag)
+		return Error.ERR_ALREADY_EXISTS
 
-	# Use the shared tag moving logic
-	var update_result = _move_tag_between_categories(tag, TAG_CATEGORY_AVAILABLE, category)
-	if update_result == OK:
-		# Update config based on the category
-		if category == TAG_CATEGORY_ACTIVE:
-			_update_active_tags_in_config()
-			_update_ignored_tags_in_config()
-		elif category == TAG_CATEGORY_IGNORED:
-			_update_ignored_tags_in_config()
-			_update_active_tags_in_config()
+	_active_tags.append(tag)
+	# Ensure consistency: remove from ignored if it was there
+	var removed_from_ignored = _ignored_tags.erase(tag)
 
-	return update_result
-
-
-## Moves a tag between categories using TagManager
-func _move_tag_between_categories(tag: String, from_category: String, to_category: String) -> Error:
-	# Create available tags list that includes all currently known tags
-	var available_tags := _create_available_tags_list(tag)
-
-	# Use TagManager for moving tag between categories
-	var result = TagManager.move_tag(
-		tag,
-		from_category,
-		to_category,
-		available_tags,
-		_active_tags,
-		_ignored_tags
-	)
-
-	# Update tags from the result
-	_active_tags = result.active_tags
-	_ignored_tags = result.ignored_tags
+	# Update config immediately to reflect the change
+	_update_active_tags_in_config()
+	if removed_from_ignored:
+		_update_ignored_tags_in_config()
 
 	return OK
 
+## Removes a tag from the active tags list.
+## Returns OK on success, ERR_DOES_NOT_EXIST if the tag wasn't active.
+func remove_tag(tag: String) -> Error:
+	# No need to check validity if just checking existence for removal
+	if not _active_tags.has(tag):
+		return Error.ERR_DOES_NOT_EXIST # Tag wasn't active
 
-## Creates a list of available tags including all currently known tags
-func _create_available_tags_list(tag: String = "") -> Array[String]:
-	var available_tags: Array[String] = []
+	_active_tags.erase(tag)
 
-	# Add current active and ignored tags
-	available_tags.append_array(_active_tags)
-	available_tags.append_array(_ignored_tags)
+	# Update config immediately
+	_update_active_tags_in_config()
 
-	# Add the new tag if provided and not already in the list
-	if !tag.is_empty() && !available_tags.has(tag):
-		available_tags.append(tag)
+	return OK
 
-	return available_tags
+## Clears all active tags.
+func clear_tags() -> void:
+	_active_tags.clear()
+	# Update config immediately
+	_update_active_tags_in_config()
 
+## Adds a tag to the ignored tags list.
+## Ensures the tag is valid and not already ignored.
+## Removes the tag from the active list if present.
+## Returns OK on success, ERR_INVALID_PARAMETER for invalid tags,
+## ERR_ALREADY_EXISTS if the tag is already ignored.
+func add_ignored_tag(tag: String) -> Error:
+	if not TagManager.is_valid_tag(tag):
+		push_warning("Cannot add invalid ignored tag: '%s'" % tag)
+		return Error.ERR_INVALID_PARAMETER
+	if _ignored_tags.has(tag):
+		return Error.ERR_ALREADY_EXISTS
+
+	_ignored_tags.append(tag)
+	# Ensure consistency: remove from active if it was there
+	var removed_from_active = _active_tags.erase(tag)
+
+	# Update config immediately
+	_update_ignored_tags_in_config()
+	if removed_from_active:
+		_update_active_tags_in_config()
+
+	return OK
+
+## Removes a tag from the ignored tags list.
+## Returns OK on success, ERR_DOES_NOT_EXIST if the tag wasn't ignored.
+func remove_ignored_tag(tag: String) -> Error:
+	if not _ignored_tags.has(tag):
+		return Error.ERR_DOES_NOT_EXIST # Tag wasn't ignored
+
+	_ignored_tags.erase(tag)
+
+	# Update config immediately
+	_update_ignored_tags_in_config()
+
+	return OK
+
+## Clears all ignored tags.
+func clear_ignored_tags() -> void:
+	_ignored_tags.clear()
+	# Update config immediately
+	_update_ignored_tags_in_config()
+
+# --- Config Update Helpers ---
 
 ## Updates active tags in configuration
 func _update_active_tags_in_config() -> void:

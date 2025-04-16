@@ -60,26 +60,34 @@ static func format_log(
 
 	# Add log level with fixed width using padding helper
 	var level_str: String = LogLevel.keys()[level]
-	var padded_level: String = _pad_right(level_str, LOG_LEVEL_WIDTH)
+	# Ensure level string doesn't exceed width (though unlikely with standard levels)
+	if level_str.length() > LOG_LEVEL_WIDTH:
+		level_str = level_str.substr(0, LOG_LEVEL_WIDTH - 3) + "..." # Truncate if too long
+
+	var padded_level: String = _pad_right(level_str, LOG_LEVEL_WIDTH) # Pad after potential truncate
 
 	if use_colors and _get_level_html_color(level) != "":
 		parts.append("[color=#%s]%s[/color]" % [_get_level_html_color(level), padded_level])
 	else:
 		parts.append(padded_level)
 
-	# Add tags if enabled and present, with consistent spacing
-	if show_tags and not tags.is_empty():
-		var tags_text: String = "[%s]" % ", ".join(tags)
-		# Fixed width for tags section
-		tags_text = _pad_right(tags_text, TAGS_WIDTH)
+	# Add tags if enabled and present, with fixed width
+	var tags_part = ""
+	if show_tags:
+		if not tags.is_empty():
+			var tags_text: String = "[%s]" % ", ".join(tags)
+			# Truncate if tags string exceeds width
+			if tags_text.length() > TAGS_WIDTH:
+				tags_text = tags_text.substr(0, TAGS_WIDTH - 3) + "..." # Indicate truncation
+			tags_part = _pad_right(tags_text, TAGS_WIDTH)
+		else:
+			# Add empty space to maintain alignment even when no tags
+			tags_part = " ".repeat(TAGS_WIDTH)
 
 		if use_colors:
-			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TAG_HTML, tags_text])
+			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TAG_HTML, tags_part])
 		else:
-			parts.append(tags_text)
-	elif show_tags:
-		# Add empty space to maintain alignment even when no tags
-		parts.append(" ".repeat(TAGS_WIDTH))
+			parts.append(tags_part)
 
 	# Add message (always included)
 	if use_colors and _get_level_html_color(level) != "":
@@ -119,10 +127,9 @@ static func _get_level_html_color(level: int) -> String:
 			return LoggerColors.CRITICAL_HTML
 	return ""
 
-## Helper function to pad a string to a specific width
+## Helper function to pad a string to a specific width (right padding)
 static func _pad_right(text: String, width: int) -> String:
-	if text.length() >= width:
-		return text
-
-	# Add spaces to pad the text
-	return text + " ".repeat(width - text.length())
+	var len = text.length()
+	if len >= width:
+		return text # Return original if already wider or equal
+	return text + " ".repeat(width - len)
