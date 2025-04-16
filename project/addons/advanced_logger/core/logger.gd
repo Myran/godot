@@ -172,6 +172,28 @@ func _validate_message(message: String) -> bool:
 		push_warning("Empty log message provided")
 		return false
 	return true
+	
+## Helper method to extract the LogLevel from a level tag (e.g., "level:debug" -> LogLevel.DEBUG)
+## Returns -1 if the tag is not a valid level tag
+func _get_level_from_tag(tag: String) -> int:
+	if not tag.begins_with(TAG_LEVEL_PREFIX):
+		return -1
+		
+	var level_name = tag.substr(TAG_LEVEL_PREFIX.length()).to_upper()
+	
+	match level_name:
+		"DEBUG":
+			return LogLevel.DEBUG
+		"INFO":
+			return LogLevel.INFO
+		"WARNING":
+			return LogLevel.WARNING
+		"ERROR":
+			return LogLevel.ERROR
+		"CRITICAL":
+			return LogLevel.CRITICAL
+	
+	return -1
 
 
 ## Checks if a log level should be shown based on the current threshold or level tags
@@ -204,11 +226,23 @@ func _should_show_level(level: LogLevel) -> bool:
 			print_rich("[color=#%s]DEBUG: Found active level tags: %s[/color]" %
 				[LoggerColors.DEBUG_HTML, active_level_tags])
 
-		var should_show = _active_tags.has(level_tag)
+		# Check if this specific level tag is in active tags
+		var exact_match = _active_tags.has(level_tag)
+		
+		# If no exact match, check if the level is at least as high as any active level tag
+		var level_match = false
+		if !exact_match:
+			for active_tag in active_level_tags:
+				var active_tag_level = _get_level_from_tag(active_tag)
+				if active_tag_level != -1 and level >= active_tag_level:
+					level_match = true
+					break
+		
+		var should_show = exact_match or level_match
 
 		if _debug_filter_logging:
-			print_rich("[color=#%s]DEBUG: Level tag override - should show %s? %s[/color]" %
-				[LoggerColors.DEBUG_HTML, level_tag, should_show])
+			print_rich("[color=#%s]DEBUG: Level tag override - should show %s? %s (exact_match: %s, level_match: %s)[/color]" %
+				[LoggerColors.DEBUG_HTML, level_tag, should_show, exact_match, level_match])
 		return should_show
 
 	# Otherwise use traditional level threshold
