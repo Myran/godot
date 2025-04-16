@@ -114,16 +114,18 @@ static func format_log(
 
 ## Helper function to get HTML color code for a log level
 static func _get_level_html_color(level: int) -> String:
+	# Preload Logger class to access its enum
+	var Logger = preload("res://addons/advanced_logger/core/logger.gd")
 	match level:
-		LogLevel.DEBUG:
+		Logger.LogLevel.DEBUG:
 			return LoggerColors.DEBUG_HTML
-		LogLevel.INFO:
+		Logger.LogLevel.INFO:
 			return LoggerColors.INFO_HTML
-		LogLevel.WARNING:
+		Logger.LogLevel.WARNING:
 			return LoggerColors.WARNING_HTML
-		LogLevel.ERROR:
+		Logger.LogLevel.ERROR:
 			return LoggerColors.ERROR_HTML
-		LogLevel.CRITICAL:
+		Logger.LogLevel.CRITICAL:
 			return LoggerColors.CRITICAL_HTML
 	return ""
 
