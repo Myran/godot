@@ -6,8 +6,10 @@ extends RefCounted
 ## Centralizes all log message formatting logic to improve maintainability
 ## and enable future customization options.
 
+# Preload the Logger script to access its LogLevel enum
+const Logger = preload("res://addons/advanced_logger/core/logger.gd")
 # Reference to the color palette
-const LogLevel = preload("res://addons/advanced_logger/core/logger.gd").LogLevel
+# const LogLevel = preload("res://addons/advanced_logger/core/logger.gd").LogLevel # No longer needed directly
 
 ## Formats a log message with appropriate styling
 ##
@@ -114,8 +116,7 @@ static func format_log(
 
 ## Helper function to get HTML color code for a log level
 static func _get_level_html_color(level: int) -> String:
-	# Preload Logger class to access its enum
-	var Logger = preload("res://addons/advanced_logger/core/logger.gd")
+	# Access the LogLevel enum via the preloaded Logger script resource
 	match level:
 		Logger.LogLevel.DEBUG:
 			return LoggerColors.DEBUG_HTML
