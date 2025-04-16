@@ -54,6 +54,7 @@ const KEY_USE_COLORS: String = "use_colors"  ## Key for color usage setting
 const KEY_SHOW_SOURCE: String = "show_source"  ## Key for source info display setting
 const KEY_BUFFER_SIZE: String = "buffer_size"  ## Key for buffer size setting
 const KEY_ENABLE_BUFFER_DUMP: String = "enable_buffer_dump"  ## Key for buffer dump toggle
+const KEY_SHOW_EDITOR_DEBUG: String = "show_editor_debug"  ## Key for showing editor debug prints toggle
 
 # Default values used when config file is missing or incomplete
 const DEFAULT_LOG_LEVEL: int = 1  ## Default log level (INFO)
@@ -63,6 +64,7 @@ const DEFAULT_USE_COLORS: bool = true  ## Default color usage (on)
 const DEFAULT_SHOW_SOURCE: bool = true  ## Default source info display (on)
 const DEFAULT_BUFFER_SIZE: int = 20    ## Default buffer size
 const DEFAULT_ENABLE_BUFFER_DUMP: bool = true  ## Default buffer dump setting (enabled)
+const DEFAULT_SHOW_EDITOR_DEBUG: bool = false  ## Default editor debug prints (disabled)
 
 # Config file instance
 var _config: ConfigFile = ConfigFile.new()
@@ -337,6 +339,12 @@ func get_enable_buffer_dump() -> bool:
 func set_enable_buffer_dump(enable: bool) -> void:
 	set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, enable)
 
+func get_show_editor_debug() -> bool:
+	return get_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
+
+func set_show_editor_debug(show: bool) -> void:
+	set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, show)
+
 ## Gets a tag setup by name
 ## Parameters:
 ## - setup_name: Name of the tag setup
@@ -388,6 +396,7 @@ func reset_to_defaults() -> Error:
 	set_show_tags(DEFAULT_SHOW_TAGS)
 	set_use_colors(DEFAULT_USE_COLORS)
 	set_show_source(DEFAULT_SHOW_SOURCE)
+	set_show_editor_debug(DEFAULT_SHOW_EDITOR_DEBUG)
 	
 	# Save the changes
 	return save()

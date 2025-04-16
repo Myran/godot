@@ -22,7 +22,15 @@ func _enter_tree() -> void:
 	if dock_scene:
 		_dock = dock_scene.instantiate()
 		add_control_to_dock(DOCK_POSITION, _dock)
-		print_rich('dock: ',_dock)
+		
+		# Since the ConfigManager is not accessible here, we need to load it directly
+		const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
+		var config = ConfigManager.get_instance()
+		
+		if config.get_show_editor_debug():
+			print_rich('dock: ',_dock)
+			
+		# Keep the initialization message visible always
 		print_rich("[color=#%s]Advanced Logger initialized[/color]" % LoggerColors.SUCCESS_HTML)
 	else:
 		push_error("Failed to load logger dock scene")

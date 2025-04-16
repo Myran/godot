@@ -85,13 +85,13 @@ func load_tags_from_config() -> void:
 	for category in category_names:
 		if _active_tags.has(category):
 			_active_tags.erase(category)
-			if OS.is_debug_build():
+			if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 				print_rich("[color=#%s]WARNING: Removed category name '%s' from active tags[/color]" % 
 					[LoggerColors.WARNING_HTML, category])
 		
 		if _ignored_tags.has(category):
 			_ignored_tags.erase(category)
-			if OS.is_debug_build():
+			if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 				print_rich("[color=#%s]WARNING: Removed category name '%s' from ignored tags[/color]" % 
 					[LoggerColors.WARNING_HTML, category])
 	
@@ -157,7 +157,7 @@ func move_tag(tag: String, from_category: Variant, to_category: Variant) -> void
 		to_cat = TagCategories.from_string(to_cat)
 	
 	# Debug output
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]Moving tag: '%s' from %s to %s[/color]" % 
 			[LoggerColors.INFO_HTML, tag, 
 			TagCategories.category_to_string(from_cat) if from_cat is int else from_cat, 
@@ -166,20 +166,23 @@ func move_tag(tag: String, from_category: Variant, to_category: Variant) -> void
 	# Normalize the tag to ensure consistent case
 	var normalized_tag = TagManager.normalize_tag(tag)
 	if normalized_tag != tag:
-		print_rich("[color=#%s]Normalized tag: %s -> %s[/color]" % 
-			[LoggerColors.WARNING_HTML, tag, normalized_tag])
+		if _config_manager.get_show_editor_debug():
+			print_rich("[color=#%s]Normalized tag: %s -> %s[/color]" % 
+				[LoggerColors.WARNING_HTML, tag, normalized_tag])
 		tag = normalized_tag
 	
 	if not TagManager.is_valid_tag(tag):
-		print_rich("[color=#%s]Tag is not valid: %s[/color]" % [LoggerColors.ERROR_HTML, tag])
+		if _config_manager.get_show_editor_debug():
+			print_rich("[color=#%s]Tag is not valid: %s[/color]" % [LoggerColors.ERROR_HTML, tag])
 		return
 		
 	if from_cat == to_cat:
-		print_rich("[color=#%s]Source and target categories are the same[/color]" % [LoggerColors.WARNING_HTML])
+		if _config_manager.get_show_editor_debug():
+			print_rich("[color=#%s]Source and target categories are the same[/color]" % [LoggerColors.WARNING_HTML])
 		return
 	
 	# Debug the tag lists before moving
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]Before move - Active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, _active_tags])
 		print_rich("[color=#%s]Before move - Ignored tags: %s[/color]" % 
@@ -196,7 +199,7 @@ func move_tag(tag: String, from_category: Variant, to_category: Variant) -> void
 	)
 	
 	# Debug the tag lists after moving
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]After move - Active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, _active_tags])
 		print_rich("[color=#%s]After move - Ignored tags: %s[/color]" % 
@@ -243,7 +246,7 @@ func get_tag_lists() -> Dictionary:
 ## Set active tags (replaces existing active tags)
 func set_active_tags(tags: Array) -> void:
 	# Print what we received
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Setting active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, tags])
 	
@@ -262,7 +265,7 @@ func set_active_tags(tags: Array) -> void:
 				_available_tags.append(tag)
 	
 	# Debug what we've set
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: New active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, _active_tags])
 	
@@ -272,7 +275,7 @@ func set_active_tags(tags: Array) -> void:
 ## Set ignored tags (replaces existing ignored tags)
 func set_ignored_tags(tags: Array) -> void:
 	# Print what we received
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Setting ignored tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, tags])
 	
@@ -291,7 +294,7 @@ func set_ignored_tags(tags: Array) -> void:
 				_available_tags.append(tag)
 	
 	# Debug what we've set
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: New ignored tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, _ignored_tags])
 	
@@ -301,7 +304,7 @@ func set_ignored_tags(tags: Array) -> void:
 ## Update tags in configuration
 func save_tags_to_config() -> void:
 	# Debug what we're saving to config
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Saving to config - Active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, _active_tags])
 		print_rich("[color=#%s]DEBUG: Saving to config - Ignored tags: %s[/color]" % 
@@ -314,7 +317,7 @@ func save_tags_to_config() -> void:
 	
 	# Force save
 	var result = _config_manager.save()
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Config save result: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, "OK" if result == OK else error_string(result)])
 	
@@ -322,7 +325,7 @@ func save_tags_to_config() -> void:
 	var saved_active = _config_manager.get_active_tags()
 	var saved_ignored = _config_manager.get_ignored_tags()
 	
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Verified in config - Active tags: %s[/color]" % 
 			[LoggerColors.DEBUG_HTML, saved_active])
 		print_rich("[color=#%s]DEBUG: Verified in config - Ignored tags: %s[/color]" % 

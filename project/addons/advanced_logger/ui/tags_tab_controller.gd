@@ -124,8 +124,9 @@ func _on_level_changed(index: int) -> void:
 	# Save the configuration immediately so the change takes effect
 	_config.save()
 
-	print_rich("[color=#%s]Log level changed to %s[/color]" %
-		[LoggerColors.INFO_HTML, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][index]])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]Log level changed to %s[/color]" %
+			[LoggerColors.INFO_HTML, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][index]])
 
 ## Handler for tag movement - this will be connected in the LoggerDock
 func _on_tag_moved(tag: String, from_category: String, to_category: String) -> void:
@@ -138,14 +139,16 @@ func _on_tag_moved(tag: String, from_category: String, to_category: String) -> v
 
 ## Handler for setup loaded
 func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Array) -> void:
-	print_rich("[color=#%s]Loading tag setup: %s[/color]" %
-		[LoggerColors.INFO_HTML, setup_name])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]Loading tag setup: %s[/color]" %
+			[LoggerColors.INFO_HTML, setup_name])
 
 	# Debug the incoming tags
-	print_rich("[color=#%s]DEBUG: Loading active tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, active_tags])
-	print_rich("[color=#%s]DEBUG: Loading ignored tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, ignored_tags])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]DEBUG: Loading active tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, active_tags])
+		print_rich("[color=#%s]DEBUG: Loading ignored tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, ignored_tags])
 
 	# 1. Directly convert the arrays for safety
 	var active_tags_array: Array[String] = []
@@ -158,10 +161,11 @@ func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Arra
 		if tag is String:
 			ignored_tags_array.append(tag)
 
-	print_rich("[color=#%s]DEBUG: Converted active tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, active_tags_array])
-	print_rich("[color=#%s]DEBUG: Converted ignored tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, ignored_tags_array])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]DEBUG: Converted active tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, active_tags_array])
+		print_rich("[color=#%s]DEBUG: Converted ignored tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, ignored_tags_array])
 
 	# 2. Set directly in the config
 	_config.set_active_tags(active_tags_array)
@@ -169,8 +173,9 @@ func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Arra
 
 	# 3. Force save
 	var save_result = _config.save()
-	print_rich("[color=#%s]DEBUG: Config save result: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, "OK" if save_result == OK else error_string(save_result)])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]DEBUG: Config save result: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, "OK" if save_result == OK else error_string(save_result)])
 
 	# 4. Update controller with the same values
 	_tag_list_controller.set_active_tags(active_tags_array)
@@ -183,13 +188,15 @@ func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Arra
 	var saved_active = _config.get_active_tags()
 	var saved_ignored = _config.get_ignored_tags()
 
-	print_rich("[color=#%s]DEBUG: Saved active tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, saved_active])
-	print_rich("[color=#%s]DEBUG: Saved ignored tags: %s[/color]" %
-		[LoggerColors.DEBUG_HTML, saved_ignored])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]DEBUG: Saved active tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, saved_active])
+		print_rich("[color=#%s]DEBUG: Saved ignored tags: %s[/color]" %
+			[LoggerColors.DEBUG_HTML, saved_ignored])
 
-	print_rich("[color=#%s]Loaded tag setup: %s[/color]" %
-		[LoggerColors.SUCCESS_HTML, setup_name])
+	if _config.get_show_editor_debug():
+		print_rich("[color=#%s]Loaded tag setup: %s[/color]" %
+			[LoggerColors.SUCCESS_HTML, setup_name])
 
 	# Signal that the startup message should be updated
 	_parent_dock.call("_update_startup_message")

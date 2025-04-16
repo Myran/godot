@@ -308,6 +308,21 @@ button_pressed = true
 text = "Enable Buffer Dump on Error"
 tooltip_text = "When enabled, the buffer will be dumped to the console when ERROR or CRITICAL logs occur"
 
+[node name="HSeparatorDebug" type="HSeparator" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="DebugLabel" type="Label" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "🔍 Editor Debug"
+horizontal_alignment = 1
+
+[node name="ShowEditorDebugCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
+layout_mode = 2
+text = "Show Editor Debug Messages"
+tooltip_text = "When enabled, debug print statements from the logger's editor interface will be displayed in the Godot editor output"
+
 [node name="HSeparatorFormat" type="HSeparator" parent="VBoxContainer/TabContainer/Settings"]
 visible = false
 layout_mode = 1

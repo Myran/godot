@@ -8,6 +8,7 @@ extends RefCounted
 
 # Preload required dependencies
 const TagCategories = preload("res://addons/advanced_logger/utils/tag_categories.gd")
+const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 
 # Tag source constants for backward compatibility
 const SOURCE_AVAILABLE: String = "available"
@@ -50,7 +51,7 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 	var tag_index = indices[0]
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
-	if OS.is_debug_build():
+	if OS.is_debug_build() and ConfigManager.get_instance().get_show_editor_debug():
 		print_rich("[color=#7daea3]DEBUG: Getting drag data for index %d, tag: '%s'[/color]" % [tag_index, tag_text])
 
 	if not TagManager.is_valid_tag(tag_text):
@@ -65,7 +66,7 @@ func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant
 		"index": tag_index
 	}
 
-	if OS.is_debug_build():
+	if OS.is_debug_build() and ConfigManager.get_instance().get_show_editor_debug():
 		print_rich("[color=#7daea3]DEBUG: Created drag data: %s[/color]" % [drag_data])
 
 	return drag_data

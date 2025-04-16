@@ -3,8 +3,9 @@ class_name LogTagScanner
 extends RefCounted
 ## Utility for scanning project files to find Log tags
 
-# Preload TagManager
+# Preload dependencies
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
+const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 
 ## Scans the project for Log method calls and extracts tags
 ##
@@ -27,7 +28,9 @@ static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[Str
 		found_tags.append(Logger.TAG_LEVEL_CRITICAL)
 	else:
 		# Fallback if Logger can't be loaded
-		print_rich("[color=#ea6962]WARNING: Could not load Logger class, using hardcoded level tags[/color]")
+		var config = ConfigManager.get_instance()
+		if config.get_show_editor_debug():
+			print_rich("[color=#ea6962]WARNING: Could not load Logger class, using hardcoded level tags[/color]")
 		found_tags.append("level:debug")
 		found_tags.append("level:info")
 		found_tags.append("level:warning")
@@ -82,12 +85,16 @@ static func get_unique_tags(tags: Array[String]) -> Array[String]:
 	for tag in tags:
 		# Skip category names
 		if category_names.has(tag.to_lower()):
-			print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found during tag scanning[/color]" % tag)
+			var config = ConfigManager.get_instance()
+			if config.get_show_editor_debug():
+				print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found during tag scanning[/color]" % tag)
 			continue
 
 		# Skip other potentially problematic tags
 		if tag.length() < 3:  # Too short to be meaningful
-			print_rich("[color=#d8a657]WARNING: Skipping too short tag '%s'[/color]" % tag)
+			var config = ConfigManager.get_instance()
+			if config.get_show_editor_debug():
+				print_rich("[color=#d8a657]WARNING: Skipping too short tag '%s'[/color]" % tag)
 			continue
 
 		filtered_tags.append(tag)
@@ -181,8 +188,10 @@ static func scan_file_for_tags(file_path: String, found_tags: Array[String]) -> 
 	# constants directly from Logger class, but we can log their usage
 	var const_matches := tag_const_regex.search_all(content)
 	if const_matches.size() > 0:
-		print_rich("[color=#7daea3]Found %d TAG constant usages in %s[/color]" %
-				[const_matches.size(), file_path.get_file()])
+		var config = ConfigManager.get_instance()
+		if config.get_show_editor_debug():
+			print_rich("[color=#7daea3]Found %d TAG constant usages in %s[/color]" %
+					[const_matches.size(), file_path.get_file()])
 
 ## Extracts tag strings from a matched tags array string
 static func extract_tags_from_string(tags_str: String, found_tags: Array[String]) -> void:
@@ -199,6 +208,8 @@ static func extract_tags_from_string(tags_str: String, found_tags: Array[String]
 		if TagManager.is_valid_tag(tag) and not found_tags.has(tag):
 			# Skip category names
 			if tag.to_lower() == "active" or tag.to_lower() == "available" or tag.to_lower() == "ignored":
-				print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found in file[/color]" % tag)
+				var config = ConfigManager.get_instance()
+				if config.get_show_editor_debug():
+					print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found in file[/color]" % tag)
 				continue
 			found_tags.append(tag)

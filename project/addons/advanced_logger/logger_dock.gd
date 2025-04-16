@@ -29,6 +29,9 @@ var _tags_tab_controller: TagsTabController
 var _settings_tab_controller: SettingsTabController
 var _setup_dialog_controller: SetupDialogController
 
+# Debug flag
+var _show_editor_debug: bool = false
+
 # UI Components
 @onready var _startup_message: Label = $VBoxContainer/StartupMessage
 
@@ -48,18 +51,22 @@ var _setup_dialog_controller: SetupDialogController
 @onready var _show_source_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowSourceCheck
 @onready var _buffer_size_spin: SpinBox = $VBoxContainer/TabContainer/Settings/FormatSection/BufferSizeContainer/BufferSizeSpinBox
 @onready var _enable_buffer_dump_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/EnableBufferDumpCheck
+@onready var _show_editor_debug_check: CheckBox = $VBoxContainer/TabContainer/Settings/FormatSection/ShowEditorDebugCheck
 @onready var _save_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/SaveButton
 @onready var _reset_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/ResetButton
 
 func _ready() -> void:
-	if OS.is_debug_build():
-		print_rich("[color=#%s]DEBUG: LoggerDock _ready called[/color]" % [LoggerColors.DEBUG_HTML])
-
 	# Get config instance
 	_config = ConfigManager.get_instance()
 
 	# Register for configuration changes
 	_config.config_changed.connect(_on_config_changed)
+	
+	# Load the debug flag
+	_show_editor_debug = _config.get_show_editor_debug()
+	
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: LoggerDock _ready called[/color]" % [LoggerColors.DEBUG_HTML])
 
 	# Create and initialize controllers
 	_initialize_controllers()
@@ -127,6 +134,7 @@ func _initialize_controllers() -> void:
 		_show_source_check,
 		_buffer_size_spin,
 		_enable_buffer_dump_check,
+		_show_editor_debug_check,
 		_save_button,
 		_reset_button,
 		_update_tags_button
@@ -145,7 +153,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, TagCategories.category_to_string(TagCategories.Category.AVAILABLE))
 		if drag_data:
 			# Debug info
-			if OS.is_debug_build():
+			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Dragging tag from available: %s[/color]" %
 					[LoggerColors.DEBUG_HTML, drag_data.tag])
 
@@ -172,7 +180,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 func _connect_drag_drop_signals() -> void:
 	# In Godot 4.4, ItemList doesn't have separate drop signals
 	# The parent Control's _can_drop_data and _drop_data are used instead
-	if OS.is_debug_build():
+	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: Using Control's built-in drag-drop handling[/color]" % [LoggerColors.DEBUG_HTML])
 
 ## Helper method to determine the target category from a position
@@ -206,6 +214,10 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 	# Refresh setups if they've changed
 	if section == ConfigManager.SECTION_SETUPS:
 		_setup_list_controller.refresh_setups_list()
+		
+	# Update debug flag if it changed
+	if section == ConfigManager.SECTION_FORMAT and key == ConfigManager.KEY_SHOW_EDITOR_DEBUG:
+		_show_editor_debug = value
 
 ## Updates the startup message with current tag status
 func _update_startup_message() -> void:
@@ -229,8 +241,9 @@ func _update_startup_message() -> void:
 	_startup_message.text = message
 
 	# Also print to console for convenience
-	print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
-	print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
+	if _show_editor_debug:
+		print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
+		print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
 
 	# Update tooltips for level tags
 	_update_level_tag_tooltips()
