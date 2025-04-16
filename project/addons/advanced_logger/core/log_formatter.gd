@@ -40,10 +40,10 @@ static func format_log(
 	const FILE_KEY: String = "file"
 	const LINE_KEY: String = "line"
 
-	# Fixed width for log levels (padded to the width of "CRITICAL")
-	const LOG_LEVEL_WIDTH: int = 5  # "CRITICAL" is 8 chars + 1 for spacing
+	# Fixed width for log levels (padded to the width of "CRITICAL" + spacing)
+	const LOG_LEVEL_WIDTH: int = 10 # Increased from 5
 	# Fixed width for tags section
-	const TAGS_WIDTH: int = 10
+	const TAGS_WIDTH: int = 30 # Increased from 10
 
 	# Add timestamp if enabled
 	if show_timestamp:
