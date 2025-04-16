@@ -391,6 +391,8 @@ func _dump_buffer() -> void:
 		for entry_data in buffer_copy:
 			# Create a deep copy to modify the message safely
 			var data_to_print = entry_data.duplicate(true)
+			# Mark this entry as being printed from the buffer dump
+			data_to_print["is_buffer_dump"] = true
 
 			# Prepend indicator to the message for clarity in the output
 			data_to_print.message = "[BUFFER] " + data_to_print.message
@@ -470,6 +472,12 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 	var context: Dictionary = log_data.context
 	var tags: Array[String] = log_data.tags
 	var source_info: Dictionary = log_data.source_info
+	var is_buffer_dump_entry: bool = log_data.get("is_buffer_dump", false)
+
+	# Determine timestamp color override for buffer dump entries
+	var timestamp_color_override: String = ""
+	if is_buffer_dump_entry:
+		timestamp_color_override = LoggerColors.WARNING_HTML # Use the header/footer color
 
 	# Use the LogFormatter to get the formatted log message
 	var formatted_log = LogFormatter.format_log(
@@ -481,7 +489,8 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 		_show_timestamp,
 		_show_tags,
 		_use_colors,
-		_show_source
+		_show_source,
+		timestamp_color_override # Pass the override color
 	)
 
 	# Output the formatted log

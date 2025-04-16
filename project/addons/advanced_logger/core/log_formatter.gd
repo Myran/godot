@@ -32,7 +32,8 @@ static func format_log(
 	show_timestamp: bool,
 	show_tags: bool,
 	use_colors: bool,
-	show_source: bool
+	show_source: bool,
+	timestamp_color_override: String = "" # Add new optional parameter
 ) -> String:
 	var parts: Array[String] = []
 
@@ -54,7 +55,11 @@ static func format_log(
 		)
 
 		if use_colors:
-			parts.append("[color=#%s]%s[/color]" % [LoggerColors.TIMESTAMP_HTML, timestamp])
+			# Use override color if provided, otherwise default timestamp color
+			var color_to_use = LoggerColors.TIMESTAMP_HTML
+			if not timestamp_color_override.is_empty():
+				color_to_use = timestamp_color_override
+			parts.append("[color=#%s]%s[/color]" % [color_to_use, timestamp])
 		else:
 			parts.append(timestamp)
 
