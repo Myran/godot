@@ -6,10 +6,8 @@ extends RefCounted
 ## Centralizes all log message formatting logic to improve maintainability
 ## and enable future customization options.
 
-# Preload the Logger script to access its LogLevel enum
-const Logger = preload("res://addons/advanced_logger/core/logger.gd")
 # Reference to the color palette
-# const LogLevel = preload("res://addons/advanced_logger/core/logger.gd").LogLevel # No longer needed directly
+# No need to preload Logger here anymore, it's loaded inside the static functions
 
 ## Formats a log message with appropriate styling
 ##
@@ -60,8 +58,15 @@ static func format_log(
 		else:
 			parts.append(timestamp)
 
+	# Load Logger script to access enum keys within the static function
+	var LoggerScript = load("res://addons/advanced_logger/core/logger.gd")
+	if not LoggerScript:
+		push_error("Failed to load Logger script in LogFormatter.format_log")
+		# Handle error appropriately, maybe return a basic message
+		return "ERROR: Could not format log message (Logger script load failed)."
+
 	# Add log level with fixed width using padding helper
-	var level_str: String = LogLevel.keys()[level]
+	var level_str: String = LoggerScript.LogLevel.keys()[level]
 	# Ensure level string doesn't exceed width (though unlikely with standard levels)
 	if level_str.length() > LOG_LEVEL_WIDTH:
 		level_str = level_str.substr(0, LOG_LEVEL_WIDTH - 3) + "..." # Truncate if too long
@@ -116,17 +121,22 @@ static func format_log(
 
 ## Helper function to get HTML color code for a log level
 static func _get_level_html_color(level: int) -> String:
-	# Access the LogLevel enum via the preloaded Logger script resource
+	# Load the Logger script resource to access its enum within the static function
+	var LoggerScript = load("res://addons/advanced_logger/core/logger.gd")
+	if not LoggerScript:
+		push_error("Failed to load Logger script in LogFormatter._get_level_html_color")
+		return "" # Return empty string on failure
+
 	match level:
-		Logger.LogLevel.DEBUG:
+		LoggerScript.LogLevel.DEBUG:
 			return LoggerColors.DEBUG_HTML
-		Logger.LogLevel.INFO:
+		LoggerScript.LogLevel.INFO:
 			return LoggerColors.INFO_HTML
-		Logger.LogLevel.WARNING:
+		LoggerScript.LogLevel.WARNING:
 			return LoggerColors.WARNING_HTML
-		Logger.LogLevel.ERROR:
+		LoggerScript.LogLevel.ERROR:
 			return LoggerColors.ERROR_HTML
-		Logger.LogLevel.CRITICAL:
+		LoggerScript.LogLevel.CRITICAL:
 			return LoggerColors.CRITICAL_HTML
 	return ""
 
