@@ -1,8 +1,6 @@
-# rules/damage_shield_ability.gd
 class_name DamageShieldAbility extends Ability
 
 var shield_used: bool = false
-
 
 func handle_battle_event(
 	phase: core.Tempus,
@@ -17,12 +15,14 @@ func handle_battle_event(
 	if phase == core.Tempus.PRE and battle_event is BattleContext.DamageEvent:
 		var damage_event: BattleContext.DamageEvent = battle_event as BattleContext.DamageEvent
 		var is_target_unit: bool = (
-			damage_event.is_allied_side == is_allied_unit and damage_event.target_position == unit_position
+			damage_event.is_allied_side == is_allied_unit and 
+			damage_event.target_position == unit_position
 		)
 		if is_target_unit:
-			damage_event.damage_effects.append({"effect_type": "shield", "ability": self})
-			#shield_used = true
-
+			damage_event.damage_effects.append({
+				"effect_type": "shield",
+				"ability": self
+			})
 
 func handle_draft_event(
 	phase: core.Tempus,

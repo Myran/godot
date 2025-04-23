@@ -1,6 +1,6 @@
 class_name Context extends Resource
 
-# Event tracking arrays with explicit typing
+# Typed event arrays for better code organization
 var events: Array[Event] = []
 var unresolved_events: Array[Event] = []
 var event_list: Array[Event] = []
@@ -9,7 +9,7 @@ var event_list: Array[Event] = []
 class Event:
 	extends RefCounted
 
-# Virtual method for event solving
+# Virtual method for event processing
 func solve_events() -> void:
 	pass
 

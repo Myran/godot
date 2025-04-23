@@ -1,32 +1,28 @@
 class_name DraftContext extends Context
 
-# Typed member variables
 var lineup: Dictionary = {}  # Dictionary[int, Card]
 var draft_area: Array[Block] = []
-var solver: Node  # Reference to solver node
+var draft_solver: Node
 
+func _init(solver: Node) -> void:
+	draft_solver = solver
 
-func _init(_solver: Node) -> void:
-	solver = _solver
-
-
-# Static method for broadcasting events with type safety
 static func broadcast_event(
-	responder: StringName, _context: DraftContext, _event: core.CoreEvent
+	responder: StringName,
+	draft_context: DraftContext,
+	draft_event: core.CoreEvent
 ) -> void:
-	for pos: int in _context.lineup:
-		var u: Card = _context.lineup[pos]
-		if "unit_info" in u:
-			u.unit_info.call(responder, pos, u, _context, _event)
+	for position in draft_context.lineup:
+		var unit: Card = draft_context.lineup[position]
+		if "unit_info" in unit:
+			unit.unit_info.call(responder, position, unit, draft_context, draft_event)
 
-	var draft_pos: int = 0
-	for _u: Block in _context.draft_area:
-		if "unit_info" in _u:
-			_u.unit_info.call(responder, draft_pos, _u, _context, _event)
-		draft_pos = draft_pos + 1
+	var draft_position: int = 0
+	for unit in draft_context.draft_area:
+		if "unit_info" in unit:
+			unit.unit_info.call(responder, draft_position, unit, draft_context, draft_event)
+		draft_position += 1
 
-
-# Override solve_events with proper typing
 func solve_events() -> void:
 	while unresolved_events.size():
 		var event_stack: Array = unresolved_events.duplicate(true)
@@ -37,6 +33,6 @@ func solve_events() -> void:
 			var next_event: core.CoreEvent = event_stack.pop_front()
 			broadcast_event(UnitData.DRAFT_PRE_EVENT_RESPONSE, self, next_event)
 			solve_events()
-			solver.solve_event(next_event, self)
+			draft_solver.solve_event(next_event, self)
 			broadcast_event(UnitData.DRAFT_POST_EVENT_RESPONSE, self, next_event)
 			solve_events()

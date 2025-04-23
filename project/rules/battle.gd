@@ -116,7 +116,6 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 							context.add_event(BattleContext.ShieldEvent.new(target, side, false))
 							shield_ability.shield_used = true
 							print("shield found,damage prevented")
-							# Addera en shield lost event som alla kan reagera p[ och enacter can ta bort skölden ifrån
 							return
 
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(

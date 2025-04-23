@@ -1,7 +1,5 @@
 class_name Ability extends Resource
 
-
-
 # Base class marks all parameters as unused since they're meant for subclasses
 func handle_battle_event(
 	_phase: core.Tempus,
@@ -11,7 +9,6 @@ func handle_battle_event(
 	_battle_event: Context.Event
 ) -> void:
 	pass
-
 
 func handle_draft_event(
 	_phase: core.Tempus,
