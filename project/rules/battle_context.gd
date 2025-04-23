@@ -44,9 +44,9 @@ class DeathEvent:
 class AddLineupEvent:
 	extends BaseEvent
 	var is_allied_side: bool
-	var lineup_data: Dictionary
+	var lineup_data: Dictionary[int, UnitData]
 
-	func _init(allied_side: bool, lineup: Dictionary) -> void:
+	func _init(allied_side: bool, lineup: Dictionary[int, UnitData]) -> void:
 		self.is_allied_side = allied_side
 		self.lineup_data = lineup
 

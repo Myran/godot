@@ -6,11 +6,11 @@ const UNIT_HEALTH: String = "current_health"
 const NO_UNIT_FOUND: int = -1
 
 
-func battle_start(allies_lineup: Dictionary, enemies_lineup: Dictionary) -> Array[Context.Event]:
+func battle_start(allies_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]) -> Array[Context.Event]:
 	return battle_solver(allies_lineup, enemies_lineup)
 
 
-func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Array[Context.Event]:
+func battle_solver(allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]) -> Array[Context.Event]:
 	var context: BattleContext = BattleContext.new(self)
 	_initialize_battle(context, allied_lineup, enemies_lineup)
 
@@ -23,13 +23,13 @@ func battle_solver(allied_lineup: Dictionary, enemies_lineup: Dictionary) -> Arr
 
 
 static func _initialize_battle(
-	context: BattleContext, allied_lineup: Dictionary, enemies_lineup: Dictionary
+	context: BattleContext, allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
 ) -> void:
-	var dup_allies: Dictionary = duplicate_resource(allied_lineup)
+	var dup_allies: Dictionary[int, UnitData] = duplicate_resource(allied_lineup)
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, dup_allies
 	)
-	var dup_enemies: Dictionary = duplicate_resource(enemies_lineup)
+	var dup_enemies: Dictionary[int, UnitData] = duplicate_resource(enemies_lineup)
 	var enemies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		false, dup_enemies
 	)
@@ -165,8 +165,8 @@ static func find_next_unactive_on_side(side: Side) -> int:
 
 # Combat helpers
 static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
-	var target_lineup: Dictionary = context.get_inactive_side().lineup
-	var attacker_lineup: Dictionary = context.get_active_side().lineup
+	var target_lineup: Dictionary[int, UnitData] = context.get_inactive_side().lineup
+	var attacker_lineup: Dictionary[int, UnitData] = context.get_active_side().lineup
 	var opposing_unit: UnitData = find_combat_target(target_lineup)
 
 	return BattleContext.CombatEvent.new(
@@ -232,25 +232,25 @@ static func duplicate_resource(res: Variant) -> Variant:
 	return str_to_var(var_to_str(res))
 
 
-static func find_combat_target(lineup: Dictionary) -> UnitData:
+static func find_combat_target(lineup: Dictionary[int, UnitData]) -> UnitData:
 	for pos: int in lineup:
 		return lineup[pos]
 	return null
 
 
-static func get_pos_for_unit(lineup: Dictionary, unit: UnitData) -> int:
+static func get_pos_for_unit(lineup: Dictionary[int, UnitData], unit: UnitData) -> int:
 	for pos: int in lineup:
 		if lineup[pos] == unit:
 			return pos
 	return NO_UNIT_FOUND
 
 
-static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary:
+static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary[int, UnitData]:
 	return abstract_lineup(lineup)
 
 
-static func abstract_lineup(lineup: Dictionary) -> Dictionary:
-	var abs_lineup: Dictionary = {}
+static func abstract_lineup(lineup: Dictionary) -> Dictionary[int, UnitData]:
+	var abs_lineup: Dictionary[int, UnitData] = {}
 	for pos: int in lineup.keys():
 		abs_lineup[pos] = lineup[pos].unit_info
 	return abs_lineup

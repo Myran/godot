@@ -13,9 +13,9 @@ var current_attack: int = 1:
 	set = set_current_attack
 var level: int = 0
 var card_info: Dictionary
-var effects_temp: Array = []
-var effects_perm: Array = []
-var abilities: Array = []
+var effects_temp: Array[Variant] = []
+var effects_perm: Array[Variant] = []
+var abilities: Array[Ability] = []
 
 
 func set_current_health(new_health: int) -> void:
@@ -33,7 +33,7 @@ func set_current_attack(new_attack: int) -> void:
 func init_with_info(_card_info: Dictionary) -> void:
 	card_info = _card_info
 	var abilities_string: String = card_info.abilities
-	var new_abilities: Array = AbilitiesHandler.parse_ability_string(abilities_string)
+	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_string)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
 			add_ability(_ab)
@@ -54,11 +54,11 @@ func init_with_info(_card_info: Dictionary) -> void:
 		add_ability(ability)
 
 
-func add_ability(_ability: Resource) -> void:
+func add_ability(_ability: Ability) -> void:
 	abilities.append(_ability)
 
 
-func remove_ability(_ability: Resource) -> void:
+func remove_ability(_ability: Ability) -> void:
 	abilities.erase(_ability)
 
 

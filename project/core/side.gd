@@ -1,8 +1,8 @@
 class_name Side extends RefCounted
 
-var lineup: Dictionary = {}
-var dead_units: Dictionary = {}
-var activated_units: Array = []
+var lineup: Dictionary[int, UnitData] = {}
+var dead_units: Dictionary[int, UnitData] = {}
+var activated_units: Array[UnitData] = []
 
 
 func is_empty() -> bool:

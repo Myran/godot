@@ -9,20 +9,20 @@ class UIEvent:
 
 class TouchEvent:
 	extends UIEvent
-	var sender: Variant
+	var sender: Object
 	var event: InputEvent
 
-	func _init(_sender: Variant, _event: InputEvent) -> void:
+	func _init(_sender: Object, _event: InputEvent) -> void:
 		sender = _sender
 		event = _event
 
 
 class DragEvent:
 	extends UIEvent
-	var sender: Variant
+	var sender: Object
 	var event: InputEvent
 
-	func _init(_sender: Variant, _event: InputEvent) -> void:
+	func _init(_sender: Object, _event: InputEvent) -> void:
 		sender = _sender
 		event = _event
 
@@ -39,9 +39,9 @@ class DraftHolderToggledEvent:
 
 class ShowCardEvent:
 	extends UIEvent
-	var card_to_show: Variant  # inte optimal borde vara nåt annat, card.gd är inte Card
+	var card_to_show: Card
 
-	func _init(_card: Variant) -> void:
+	func _init(_card: Card) -> void:
 		card_to_show = _card
 
 

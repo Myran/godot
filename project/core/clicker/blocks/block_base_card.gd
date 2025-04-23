@@ -6,7 +6,7 @@ const CARD_IMAGE_PREFIX: String = "card_image_"
 @export var shield: Sprite2D
 @export var level: int = 1
 @export var unit_info: UnitData = null
-@export var card_info: Dictionary = {}
+@export var card_info: Dictionary = {} # CardInfo data structure
 
 
 func show_shield() -> void:
