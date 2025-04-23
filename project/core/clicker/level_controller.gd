@@ -1,11 +1,11 @@
 class_name LevelController extends Control
 
-@export var _level_factory: Resource
+@export var _level_factory: LevelFactory
 @export var _block_factory: block_factory
 
 var current_level: TileMapLayer
 var current_level_name: String
-var block_grid : Dictionary = {}
+var block_grid : Dictionary[Vector2i, Block] = {}
 var refill_distance: Vector2
 
 

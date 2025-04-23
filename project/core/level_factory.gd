@@ -1,5 +1,5 @@
 class_name LevelFactory extends Resource
-@export var tilemap_levels: Dictionary
+@export var tilemap_levels: Dictionary[String, PackedScene]
 
 
 func create_level(level_name: String = "default") -> TileMapLayer:
