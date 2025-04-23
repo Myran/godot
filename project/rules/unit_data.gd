@@ -38,7 +38,7 @@ func init_with_info(_card_info: Dictionary) -> void:
 		if _ab != null:
 			add_ability(_ab)
 
-	var ability: Resource
+	var ability: Ability
 	# debug init cards with an ability
 	if card_info.id == str(1):
 		ability = DamageShieldAbility.new()

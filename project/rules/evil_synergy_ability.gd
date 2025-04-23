@@ -46,9 +46,9 @@ func handle_draft_event(
 		)
 		draft_context.add_event(stat_change_event)
 
-func count_evil_units_in_lineup(lineup: Dictionary, current_unit: Block) -> int:
+func count_evil_units_in_lineup(lineup: Dictionary[int, Card], current_unit: Block) -> int:
 	var evil_count: int = 0
-	for unit_position in lineup:
+	for unit_position: int in lineup:
 		var card: Card = lineup[unit_position]
 		if card == current_unit:
 			continue

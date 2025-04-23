@@ -87,7 +87,8 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 		match tap_state:
 			core.TapState.PRESSING:
 				if interacted_object.object_type == core.ObjectType.CARD:
-					current_context.add_event(ui.ShowCardEvent.new(interacted_object))
+					var interacted_card : Card = interacted_object
+					current_context.add_event(ui.ShowCardEvent.new(interacted_card))
 					current_context.solve_events()
 					update_draft = true
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:

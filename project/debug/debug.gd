@@ -420,7 +420,7 @@ func run_firebase_tests() -> void:
 	db.connect("db_error", Callable(self, "on_test_db_error"), CONNECT_DEFERRED)
 
 	# Setup test path - use a timestamp to avoid conflicts
-	var timestamp: int = Time.get_unix_time_from_system()
+	var timestamp: int = int(Time.get_unix_time_from_system())
 	var test_path: Array[String] = ["firebase_tests", str(timestamp)]
 	db.set_db_root(test_path)
 
@@ -571,8 +571,8 @@ func _complete_tests() -> void:
 	print("Failed: " + str(firebase_tests_failed))
 
 	# Fix narrowing conversion by explicitly converting to float then int
-	var success_rate: float = 100.0 * float(firebase_tests_passed) / float(max(1, firebase_test_count))
-	var rounded_rate: int = int(round(success_rate))  # Use explicit round() function
+	var success_rate: float = 100.0 * float(firebase_tests_passed) / float(maxf(1, firebase_test_count))
+	var rounded_rate: int = int(roundf(success_rate))  # Use explicit round() function
 	print("Success rate: " + str(rounded_rate) + "%")
 	print("===============================")
 

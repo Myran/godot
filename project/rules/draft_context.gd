@@ -12,13 +12,13 @@ static func broadcast_event(
 	draft_context: DraftContext,
 	draft_event: core.CoreEvent
 ) -> void:
-	for position in draft_context.lineup:
+	for position: int in draft_context.lineup:
 		var unit: Card = draft_context.lineup[position]
 		if "unit_info" in unit:
 			unit.unit_info.call(responder, position, unit, draft_context, draft_event)
 
 	var draft_position: int = 0
-	for unit in draft_context.draft_area:
+	for unit: Block in draft_context.draft_area:
 		if "unit_info" in unit:
 			unit.unit_info.call(responder, draft_position, unit, draft_context, draft_event)
 		draft_position += 1

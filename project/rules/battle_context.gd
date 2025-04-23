@@ -141,9 +141,9 @@ static func broadcast_event(
 	battle_context: BattleContext,
 	battle_event: BaseEvent
 ) -> void:
-	for side in [battle_context.allied_side, battle_context.enemy_side]:
+	for side: Side in [battle_context.allied_side, battle_context.enemy_side]:
 		var is_allied: bool = side == battle_context.allied_side
-		for position in side.lineup:
+		for position: int in side.lineup:
 			var unit: UnitData = side.lineup[position]
 			unit.call(responder, position, is_allied, battle_context, battle_event)
 
