@@ -3,7 +3,13 @@ extends Node
 ## Data source manager for handling game data from Firebase or local JSON files.
 ## Provides centralized access to cards, levels, items, and player data.
 
+## Emitted when a value is received from the database
+## The data dictionary contains:
+## - key: String - The key of the data received
+## - value: Variant - The value received, could be Dictionary, Array, or primitive types
 signal value_received(data: Dictionary)
+
+## Emitted when data source initialization is complete
 signal startup_completed
 
 # Logger tags
@@ -26,13 +32,21 @@ const EVENTS: String = "event_data"
 const ARENA_CARD: String = "arena_card"
 const COLLECTION: String = "collection"
 
+## Firebase database reference from the native Firebase module
 var db: Object  # FirebaseDatabase instance
+## Whether data source is initialized
 var _initialized: bool = false
+## Current user UUID
 var current_uuid: String = ""
+## Test group identifier for database tables
 var test_group: int = 0
+## Local data cache from JSON files (sheet name -> data mapping)
 var local_data: Dictionary = {}
-var current_root: Array = []
+## Current database root path
+var current_root: Array[String] = []
+## Debug data for testing (user data)
 var debug_data: Dictionary = {}
+## Card data cache
 var card_cache: Array = []
 
 
@@ -89,29 +103,35 @@ func _ready() -> void:
 	startup_completed.emit()
 
 
+## Called when internet connection is detected
 func internet_online() -> void:
 	Log.info("Internet online", {}, [Log.TAG_NETWORK])
 
 
+## Called when internet connection is lost
 func internet_offline() -> void:
 	Log.warning("Internet offline", {}, [Log.TAG_NETWORK])
 
 
+## Check if Firebase is available and connected
 func is_firebase_available() -> bool:
 	"""Check if Firebase is available and connected."""
 	return db != null
 
 
+## Check if data source is fully initialized
 func is_initialized() -> bool:
 	"""Check if data source is fully initialized"""
 	return _initialized
 
 
+## Add test group suffix to table name
 func addtest(tab: String) -> String:
 	"""Add test group suffix to table name"""
 	return str(tab, "_", test_group)
 
 
+## Initialize card cache with all cards
 func activate_card_cache() -> void:
 	"""Initialize card cache with all cards"""
 	Log.info("Activating card cache", {}, [Log.TAG_CACHE])
@@ -121,6 +141,7 @@ func activate_card_cache() -> void:
 	Log.info("Card cache activated", {"count": card_cache.size()}, [Log.TAG_CACHE])
 
 
+## Return default player data structure
 func get_default_player_data() -> Dictionary:
 	"""Return default player data structure"""
 	var data: Dictionary = {
@@ -137,6 +158,7 @@ func get_default_player_data() -> Dictionary:
 	return data
 
 
+## Load data from local JSON file
 func load_local_data(db_file: String) -> void:
 	"""Load data from local JSON file"""
 	Log.info("Loading local data file", {"file": db_file}, [Log.TAG_LOCAL])
@@ -179,6 +201,7 @@ func load_local_data(db_file: String) -> void:
 		)
 
 
+## Set up player data from server or create new data
 func setup_player_data() -> int:
 	"""Set up player data from server or create new data"""
 	Log.info("Setting up player data", {}, [Log.TAG_DB])
@@ -205,12 +228,14 @@ func setup_player_data() -> int:
 	return retval
 
 
+## Login to auth service and return result code
 func login() -> int:
 	"""Login to auth service and return result code."""
 	Log.debug("Logging in to auth service", {}, [Log.TAG_DB])
 	return await auth.login()
 
 
+## Get user data for specified UUID or current user
 func get_user_data(uuid: String = "") -> Dictionary:
 	"""Get user data for specified UUID or current user"""
 	Log.info("Getting user data", {"specified_uuid": uuid.is_empty()}, [Log.TAG_DB])
@@ -239,6 +264,7 @@ func get_user_data(uuid: String = "") -> Dictionary:
 	return ret_val
 
 
+## Save user data to server for current user
 func save_user_data(data: Dictionary) -> void:
 	"""Save user data to server for current user"""
 	Log.info("Saving user data", {}, [Log.TAG_DB])
@@ -255,6 +281,7 @@ func save_user_data(data: Dictionary) -> void:
 		)
 
 
+## Set user data for specified UUID
 func set_user_data(uuid: String, data: Dictionary) -> void:
 	"""Set user data for specified UUID"""
 	Log.info("Setting user data", {"uuid": uuid}, [Log.TAG_DB])
@@ -270,7 +297,8 @@ func set_user_data(uuid: String, data: Dictionary) -> void:
 	Log.debug("User data set successfully", {"uuid": uuid, "name": data.name}, [Log.TAG_DB])
 
 
-func set_root(new_root: Array) -> void:
+## Set current database root path
+func set_root(new_root: Array[String]) -> void:
 	"""Set current database root path"""
 	if not db:
 		Log.warning(
@@ -286,6 +314,8 @@ func set_root(new_root: Array) -> void:
 	Log.debug("Set database root", {"path": new_root}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 
+## Get data sheet from database or local data
+## Returns either an Array[Dictionary] or a Dictionary depending on is_dictionary
 func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 	"""Get data sheet from database or local data"""
 	var full_name: String = str(sheet_name, "_", test_group)
@@ -324,6 +354,8 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 	return result
 
 
+## Get value from database with signal response handling
+## Returns the value from the database (could be Dictionary, Array, or primitive types)
 func get_db_value(value: String) -> Variant:
 	"""Get value from database with signal response handling"""
 	Log.debug("Getting database value", {"key": value}, [Log.TAG_DB, Log.TAG_FIREBASE])
@@ -348,6 +380,7 @@ func get_db_value(value: String) -> Variant:
 	return retval
 
 
+## Signal handler for database value received from FirebaseDatabase::OnGetValue
 func get_value(key: String, value: Variant) -> void:
 	"""Signal handler for database value received from FirebaseDatabase::OnGetValue."""
 	# This matches the signature in database.h for the "get_value" signal
@@ -358,30 +391,36 @@ func get_value(key: String, value: Variant) -> void:
 	)
 
 
+## Signal handler for database child moved
 func child_moved(_key: String, _value: Variant) -> void:
 	"""Signal handler for database child moved"""
 	Log.debug("Database child moved", {"key": _key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 	pass
 
 
+## Signal handler for database child added
 func child_added(_key: String, _value: Variant) -> void:
 	"""Signal handler for database child added"""
 	Log.debug("Database child added", {"key": _key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 	pass
 
 
+## Signal handler for database child removed
 func child_removed(_key: String, _value: Variant) -> void:
 	"""Signal handler for database child removed"""
 	Log.debug("Database child removed", {"key": _key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 	pass
 
 
+## Signal handler for database child changed
 func child_changed(_key: String, _value: Variant) -> void:
 	"""Signal handler for database child changed"""
 	Log.debug("Database child changed", {"key": _key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 	pass
 
 
+## Get player data from zen data
+## Returns Dictionary if found or boolean false if not found
 func get_zen_player_data() -> Variant:
 	"""Get player data from zen data"""
 	Log.debug("Getting zen player data", {}, [Log.TAG_DB])
@@ -390,6 +429,7 @@ func get_zen_player_data() -> Variant:
 	return false
 
 
+## Set default zen player data
 func set_zen_player_data() -> Dictionary:
 	"""Set default zen player data"""
 	Log.debug("Setting zen player data", {}, [Log.TAG_DB])
@@ -397,6 +437,7 @@ func set_zen_player_data() -> Dictionary:
 	return get_default_player_data()
 
 
+## Get event data from database
 func get_event_data() -> Array:
 	"""Get event data from database"""
 	Log.info("Getting event data", {}, [Log.TAG_DB])
@@ -404,6 +445,7 @@ func get_event_data() -> Array:
 	return result
 
 
+## Get specific item info by ID
 func get_item_info(item_id: String) -> Dictionary:
 	"""Get specific item info by ID"""
 	Log.info("Getting item info", {"item_id": item_id}, [Log.TAG_DB])
@@ -418,6 +460,7 @@ func get_item_info(item_id: String) -> Dictionary:
 	return {}
 
 
+## Find item ID by name
 func get_item_id_from_name(target_name: String) -> String:
 	"""Find item ID by name"""
 	Log.info("Getting item ID from name", {"name": target_name}, [Log.TAG_DB])
@@ -432,6 +475,7 @@ func get_item_id_from_name(target_name: String) -> String:
 	return ""
 
 
+## Get level data by level number
 func get_level_data(level_nr: int) -> Dictionary:
 	"""Get level data by level number"""
 	Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
@@ -447,6 +491,7 @@ func get_level_data(level_nr: int) -> Dictionary:
 	return {}
 
 
+## Find card ID by name
 func get_card_id_from_name(target_name: String) -> String:
 	"""Find card ID by name"""
 	Log.info("Getting card ID from name", {"name": target_name}, [Log.TAG_DB])
@@ -461,11 +506,12 @@ func get_card_id_from_name(target_name: String) -> String:
 	return ""
 
 
+## Get specific card info by ID
 func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	"""Get specific card info by ID"""
 	Log.info("Getting card info", {"card_id": card_id, "use_cache": use_cache}, [Log.TAG_DB])
 
-	var results: Array
+	var results: Array = []
 	if use_cache:
 		if card_cache.is_empty():
 			Log.warning(
@@ -488,6 +534,7 @@ func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	return {}
 
 
+## Get all card data
 func get_all_cards(use_cache: bool = false) -> Array:
 	"""Get all card data"""
 	Log.info("Getting all cards", {"use_cache": use_cache}, [Log.TAG_DB])
@@ -503,24 +550,28 @@ func get_all_cards(use_cache: bool = false) -> Array:
 	return cards
 
 
+## Get game rules data
 func get_rules_data() -> Dictionary:
 	"""Get game rules data"""
 	Log.info("Getting rules data", {}, [Log.TAG_DB])
 	return await get_db_sheet(RULES, true)
 
 
+## Get all level data
 func get_all_levels() -> Array:
 	"""Get all level data"""
 	Log.info("Getting all levels", {}, [Log.TAG_DB])
 	return await get_db_sheet(LEVELS, false)
 
 
+## Get all item data
 func get_all_items() -> Array:
 	"""Get all item data"""
 	Log.info("Getting all items", {}, [Log.TAG_DB])
 	return await get_db_sheet(ITEMS, false)
 
 
+## Create a new arena card in player collection
 func create_arena_card(card_data: Dictionary) -> String:
 	"""Create a new arena card in player collection"""
 	Log.info("Creating arena card", {}, [Log.TAG_DB])
@@ -544,6 +595,7 @@ func create_arena_card(card_data: Dictionary) -> String:
 	return card_uid
 
 
+## Remove lineups from an event
 func remove_event_lineups(event: String) -> void:
 	"""Remove lineups from an event"""
 	Log.info("Removing event lineups", {"event": event}, [Log.TAG_DB])
@@ -560,6 +612,7 @@ func remove_event_lineups(event: String) -> void:
 	Log.debug("Event lineups removed", {"event": event}, [Log.TAG_DB])
 
 
+## Get lineup data for an event
 func get_event_lineups_data(event: String) -> Dictionary:
 	"""Get lineup data for an event"""
 	Log.info("Getting event lineups data", {"event": event}, [Log.TAG_DB])
@@ -576,6 +629,7 @@ func get_event_lineups_data(event: String) -> Dictionary:
 	return {}
 
 
+## Save lineup data for an event
 func save_event_lineup_data(
 	event: String,
 	lineup: Dictionary,
@@ -598,7 +652,7 @@ func save_event_lineup_data(
 	var json_data: String = JSON.stringify(lineup)
 	db.set_db_root(["EVENTS", event])
 	var push_string: String = lineup_uuid if lineup_uuid else db.push_child(["lineups", event])
-	var path: Array = [str("lineups", "/", push_string)]
+	var path: Array[String] = [str("lineups", "/", push_string)]
 
 	var data: Dictionary = {"lineup_level": level, "lineup_data": json_data, "lives": lives}
 	if p_data:
@@ -611,6 +665,7 @@ func save_event_lineup_data(
 	return push_string
 
 
+## Helper function to check database availability and log error if unavailable
 func ensure_db_available() -> bool:
 	"""Helper function to check database availability and log error if unavailable."""
 	if not db:
@@ -619,6 +674,7 @@ func ensure_db_available() -> bool:
 	return true
 
 
+## Helper function to safely check if a dictionary has a key
 func safely_has_key(dict: Dictionary, key: String) -> bool:
 	"""Helper function to safely check if a dictionary has a key."""
 	return dict is Dictionary and dict.has(key)
