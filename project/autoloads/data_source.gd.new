@@ -1,0 +1,177 @@
+extends Node
+
+## DataSource manager for game data using collection-based architecture
+## Provides centralized access to cards, levels, items, player data, and events
+## Maintains backward compatibility with the original DataSource implementation
+
+# Signals
+signal startup_completed
+signal value_received(data: Dictionary)  # Kept for backward compatibility
+
+# Collections
+var cards: CardCollection
+var levels: LevelCollection
+var items: ItemCollection
+var players: PlayerCollection
+var events: EventCollection
+var rules: RulesCollection
+
+# Internal state
+var _backend: DataBackend
+var using_local_data: bool = false
+var _initialized: bool = false
+var _cache_initialized: Array = [] # For backward compatibility
+var test_group: int = 0  # Keep this for backwards compatibility
+
+func _ready() -> void:
+	Log.info("DataSource initializing", {}, [Log.TAG_DB])
+	_initialized = false
+	
+	# Initialize async
+	_initialize.call_deferred()
+	
+func _initialize() -> void:
+	# Create the backend
+	_backend = await BackendFactory.create_backend()
+	
+	# Track whether we're using local data
+	using_local_data = _backend is LocalJSONBackend
+	
+	# Initialize collections
+	_initialize_collections()
+	
+	# Connect to backend signals
+	_backend.startup_completed.connect(func():
+		Log.info("DataSource initialization complete", {"firebase_available": is_firebase_available()}, [Log.TAG_DB])
+		_initialized = true
+		startup_completed.emit()
+	)
+	
+	# Forward value_received signals for backward compatibility
+	_backend.value_received.connect(func(data: Dictionary):
+		value_received.emit(data)
+	)
+	
+func _initialize_collections() -> void:
+	# Create all collections
+	cards = CardCollection.new(_backend, test_group)
+	levels = LevelCollection.new(_backend, test_group)
+	items = ItemCollection.new(_backend, test_group)
+	players = PlayerCollection.new(_backend)
+	events = EventCollection.new(_backend, test_group)
+	rules = RulesCollection.new(_backend, test_group)
+	
+	Log.debug("DataSource collections initialized", {}, [Log.TAG_DB])
+	
+# Public API - convenience and compatibility methods
+func is_firebase_available() -> bool:
+	var available = _backend is FirebaseBackend and _backend.is_available()
+	Log.debug("Firebase availability check", {
+		"available": available,
+		"backend_type": _backend.get_class()
+	}, [Log.TAG_DB])
+	return available
+	
+func is_initialized() -> bool:
+	return _initialized
+	
+# Legacy compatibility methods - these will gradually be deprecated
+func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
+	return await cards.get_by_id(card_id, use_cache)
+	
+func get_all_cards(use_cache: bool = false) -> Array:
+	return await cards.get_all(use_cache)
+	
+func get_card_id_from_name(target_name: String) -> String:
+	return await cards.get_id_by_name(target_name)
+	
+func get_level_data(level_nr: int) -> Dictionary:
+	return await levels.get_by_number(level_nr)
+	
+func get_all_levels() -> Array:
+	return await levels.get_all()
+	
+func get_item_info(item_id: String) -> Dictionary:
+	return await items.get_by_id(item_id)
+	
+func get_item_id_from_name(target_name: String) -> String:
+	return await items.get_id_by_name(target_name)
+	
+func get_all_items() -> Array:
+	return await items.get_all()
+	
+func get_user_data(uuid: String = "") -> Dictionary:
+	return await players.get_user_data(uuid)
+	
+func save_user_data(data: Dictionary) -> bool:
+	return await players.save_user_data(data)
+
+func get_default_player_data() -> Dictionary:
+	return players.get_default_data()
+	
+func get_rules_data() -> Dictionary:
+	return await rules.get_rules()
+	
+func get_event_data() -> Array:
+	return await events.get_all()
+	
+func get_event_lineups_data(event: String) -> Dictionary:
+	return await events.get_lineup_data(event)
+	
+func save_event_lineup_data(
+	event: String,
+	lineup: Dictionary,
+	level: int = 1,
+	p_data: Dictionary = {},
+	lives: int = 3,
+	lineup_uuid: String = ""
+) -> String:
+	return await events.save_lineup_data(event, lineup, level, p_data, lives, lineup_uuid)
+	
+func remove_event_lineups(event: String) -> bool:
+	return await events.remove_event_lineups(event)
+	
+func activate_card_cache() -> void:
+	Log.info("Activating card cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
+	_cache_initialized = await cards.get_all(true)
+	Log.info("Card cache activated", {"count": _cache_initialized.size()}, [Log.TAG_CACHE, Log.TAG_DB])
+
+func clear_card_cache() -> void:
+	Log.info("Clearing card cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
+	cards.clear_cache()
+	_cache_initialized = []
+
+func clear_level_cache() -> void:
+	Log.info("Clearing level cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
+	levels.clear_cache()
+
+func clear_item_cache() -> void:
+	Log.info("Clearing item cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
+	items.clear_cache()
+
+# Legacy method kept for backward compatibility
+func set_root(new_root: Array) -> void:
+	Log.debug("Legacy set_root called", {"path": new_root}, [Log.TAG_DB])
+	if _backend is FirebaseBackend:
+		var fb_backend = _backend as FirebaseBackend
+		fb_backend.db.set_db_root(new_root)
+	
+# Legacy methods kept for backward compatibility - these methods simply forward to the backend
+func get_db_value(value: String) -> Variant:
+	Log.debug("Legacy get_db_value called", {"key": value}, [Log.TAG_DB])
+	var current_path = []
+	
+	if _backend is FirebaseBackend:
+		var fb_backend = _backend as FirebaseBackend
+		# Get the current path from the Firebase backend
+		fb_backend.db.get_value([value])
+		var received = {"key": null}
+		while received.key != value:
+			received = await self.value_received
+			return received.value
+	
+	return null
+
+# Direct backend access - only for advanced use cases
+func get_backend() -> DataBackend:
+	return _backend
