@@ -59,8 +59,6 @@ func get_all(use_cache: bool = true) -> Array:
 			"stack_trace": _get_stack_trace(3) # Show more stack frames for errors
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 
-		push_error("Required card data is missing for collection: " + _collection_name + " with key: " + _collection_key)
-
 		# For editor testing, create minimal test cards
 		var test_cards = []
 		for i in range(5):
@@ -133,9 +131,6 @@ func get_all(use_cache: bool = true) -> Array:
 				"collection_id": get_instance_id(),
 				"stack_trace": _get_stack_trace(3)
 			}, [Log.TAG_DB, Log.TAG_ERROR])
-
-			push_error("Card data missing required fields: " + str(missing_keys) +
-				". Available keys: " + str(sample_card_keys))
 		else:
 			Log.debug("Card data validation successful", {
 				"collection_name": _collection_name,

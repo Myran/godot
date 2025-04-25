@@ -54,25 +54,25 @@ func check_provider_connection(provider_name: String) -> bool:
 			if provider.name == provider_name:
 				return true
 	else:
-		print("Auth: checking provider connection however not logged in: ", provider_name)
+		Log.warning("Checking provider connection but not logged in", {"provider": provider_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "validation"])
 	return false
 
 
 func _ready() -> void:
 	if ClassDB.class_exists("FirebaseAuth") and true:
-		print("Auth exists data source")
+		Log.info("Firebase Auth module available", {}, [Log.TAG_FIREBASE, "initialization", "auth"])
 		firebase_auth = ClassDB.instantiate("FirebaseAuth")
-		print("Firebase Auth created")
+		Log.debug("Firebase Auth instance created", {}, [Log.TAG_FIREBASE, "initialization", "auth"])
 		firebase_auth.connect("logged_in", Callable(self, "logged_in"))
 
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
-		print("facebook singleton exists")
+		Log.info("Facebook SDK available", {}, [Log.TAG_FIREBASE, "initialization", "auth", "facebook"])
 		facebook.connect("fb_login_success", Callable(self, "facebook_login_success"))
 		facebook.connect("fb_login_failed", Callable(self, "facebook_login_failed"))
 		facebook.connect("fb_login_cancelled", Callable(self, "facebook_login_cancelled"))
 
 	if Engine.has_singleton("GodotAppleAuth"):
-		print("Apple singleton exist")
+		Log.info("Apple Auth module available", {}, [Log.TAG_FIREBASE, "initialization", "auth", "apple"])
 		godot_apple_auth = Engine.get_singleton("GodotAppleAuth")
 		godot_apple_auth.connect("credential", Callable(self, "_on_credential"))
 		godot_apple_auth.connect("authorization", Callable(self, "_on_authorization"))
@@ -91,15 +91,15 @@ func facebook_login_cancelled() -> void:
 
 
 func sign_in_apple() -> int:
-	print("Auth: Apple sign in to firebase")
+	Log.info("Starting Apple sign-in flow", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if !godot_apple_auth.is_available():
-		push_error("Auth: Apple auth is not available")
+		Log.error("Apple auth is not available", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "apple", "validation"])
 		return -1
 
 	godot_apple_auth.sign_in()
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
-		push_warning(str("Auth: Apple auth sign in failed / cancelled"))
+		Log.warning("Apple auth sign in failed or cancelled", {"error": result.has("error")}, [Log.TAG_FIREBASE, "auth", "apple"])
 		return -1
 
 	firebase_auth.sign_in_apple(result.token, result.nonce)
@@ -108,19 +108,19 @@ func sign_in_apple() -> int:
 
 
 func sign_in_facebook() -> int:
-	print("AUTH: sign in facebook")
+	Log.info("Starting Facebook sign-in flow", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	if !is_facebook_available():
-		push_error("AUTH:facebook sign in attempted but facebook not available")
+		Log.error("Facebook sign in attempted but Facebook SDK not available", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "facebook", "validation"])
 		return -1
 
 	var login_resp: bool = facebook.login()
 	if !login_resp:
-		push_warning("facebook.login() failed")
+		Log.warning("Facebook login API call failed", {}, [Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK])
 		return -1
 
 	var res: Dictionary = await self.fb_respons
 	if res.respons != "success":
-		push_warning(str("Facebook login failed / cancelled", res))
+		Log.warning("Facebook login failed or cancelled", {"response": res}, [Log.TAG_FIREBASE, "auth", "facebook"])
 		return -1
 
 	firebase_auth.sign_in_facebook(res.arg)
@@ -129,10 +129,10 @@ func sign_in_facebook() -> int:
 
 
 func log_out_facebook() -> bool:
-	print("AUTH: Facebook log out")
+	Log.info("Facebook logout requested", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	await Engine.get_main_loop().process_frame
 	if !is_facebook_available():
-		push_warning("AUTH: facebook not available")
+		Log.warning("Facebook logout requested but Facebook SDK not available", {}, [Log.TAG_FIREBASE, "auth", "facebook", "validation"])
 		return false
 
 	facebook.logout()
@@ -140,21 +140,21 @@ func log_out_facebook() -> bool:
 
 
 func unlink_facebook() -> void:
-	print("Auth: unlink facebook")
+	Log.info("Unlinking Facebook provider", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	firebase_auth.unlink_provider("facebook.com")
 	var _res: String = await firebase_auth.account_unlinked
 
 
 func link_facebook() -> int:
-	print("Auth: link to facebook started")
+	Log.info("Starting Facebook account linking", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	var login_resp: bool = facebook.login()
 	if !login_resp:
-		push_warning("Facebook.login() failed")
+		Log.warning("Facebook login API call failed during account linking", {}, [Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK])
 		return -1
 
 	var res: Dictionary = await self.fb_respons
 	if res.respons != "success":
-		push_warning(str("Auth: Facebook login respons fail / cancelled res:", res))
+		Log.warning("Facebook login failed or cancelled during account linking", {"response": res}, [Log.TAG_FIREBASE, "auth", "facebook"])
 		return -1
 
 	firebase_auth.link_to_facebook(res.arg)
@@ -163,14 +163,14 @@ func link_facebook() -> int:
 
 
 func log_out_apple() -> void:
-	print("Apple log out start")
+	Log.info("Apple logout requested", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if is_apple_available():
 		godot_apple_auth.sign_out()
 	await Engine.get_main_loop().process_frame
 
 
 func link_apple() -> int:
-	print("button: link to Apple ")
+	Log.info("Starting Apple account linking", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if !godot_apple_auth:
 		return -1
 
@@ -185,7 +185,7 @@ func link_apple() -> int:
 
 
 func unlink_apple() -> void:
-	print("Button: unlink apple")
+	Log.info("Unlinking Apple provider", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	firebase_auth.unlink_provider("apple.com")
 	var _res: String = await firebase_auth.account_unlinked
 
@@ -193,7 +193,7 @@ func unlink_apple() -> void:
 func _on_credential(result: Dictionary) -> void:
 	apple_aut_res = result
 	if result.has("error"):
-		print(result.error)
+		Log.error("Apple Auth error", {"error": result.error}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "apple"])
 
 
 func _on_authorization(result: Dictionary) -> void:
@@ -208,16 +208,16 @@ func apple_credential() -> void:
 
 
 func logged_in(res: int) -> void:
-	print("Auth: Logged in: ", res)
+	Log.info("Firebase login completed", {"result_code": res}, [Log.TAG_FIREBASE, "auth"])
 
 
 func login() -> int:
 	var retval: int = 0
-	print("Auth: attempt login")
+	Log.info("Attempting Firebase login", {}, [Log.TAG_FIREBASE, "auth"])
 	await Engine.get_main_loop().process_frame
 
 	if !is_available():
-		push_warning("Auth: Auth not available")
+		Log.warning("Firebase Auth module not available", {}, [Log.TAG_FIREBASE, "auth", "validation"])
 		return 1
 
 	if !firebase_auth.is_logged_in():

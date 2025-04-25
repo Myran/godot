@@ -10,19 +10,23 @@ var refill_distance: Vector2
 
 
 func _ready() -> void:
+	Log.debug("Level controller initializing", {}, ["initialization", "level"])
 	debug.debug_event.connect(_on_debug_event)
 
 
 func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Array) -> void:
 	match event:
 		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL:
+			Log.debug("Debug event: Resetting current level", {"level": current_level_name}, ["level", "debug"])
 			setup_level(current_level_name)
 		debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			var lvl_name: String = _data[0]
+			Log.debug("Debug event: Force loading level", {"level": lvl_name}, ["level", "debug"])
 			setup_level(lvl_name)
 
 
 func setup_level(level_name: String = "default") -> void:
+	Log.info("Setting up level", {"level_name": level_name}, ["level", "initialization"])
 	var new_level: TileMapLayer = _level_factory.create_level(level_name)
 	if new_level == null:
 		return
@@ -34,11 +38,12 @@ func setup_level(level_name: String = "default") -> void:
 	current_level = new_level
 	current_level_name = level_name
 	refill_distance = Vector2(0, current_level.tile_set.tile_size.y)
-	print("RefillDistance set to: ", refill_distance)
+	Log.debug("RefillDistance set for level", {"distance": refill_distance, "level": level_name}, ["clicker", "game_state"])
 	create_blocks_from_level()
 
 
 func create_blocks_from_level() -> void:
+	Log.debug("Creating blocks from level layout", {}, ["level", "initialization"])
 	for tile_pos : Vector2i in current_level.get_used_cells():
 		var block: Block
 		match current_level.get_cell_source_id(tile_pos):
@@ -63,28 +68,37 @@ func create_blocks_from_level() -> void:
 
 
 func create_upgrade_block(upgrade_level: int) -> Block:
+	Log.debug("Creating upgrade block", {"level": upgrade_level}, ["level", "card"])
 	var upgrade_block: Block = _block_factory.create_upgrade_block(upgrade_level)
 	upgrade_block.block_context = Cards.CONTEXT.DRAFT
 	return upgrade_block
 
 
 func create_block() -> Block:
+	Log.debug("Creating random block", {}, ["level", "card"])
 	var random_block: Block
 	var rand: int = rng.seeded_rng.next() % LevelRules.FREQ_REFILL_ITEM
 	if rand == 0:
+		Log.debug("Created item block", {}, ["level", "item"])
 		random_block = _block_factory.create_item_block()
 	else:
+		Log.debug("Getting card from pool", {}, ["level", "card"])
 		random_block = await card_controller.get_card_from_pool()
 	random_block.block_context = Cards.CONTEXT.DRAFT
 	return random_block
 
 
 func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
+	Log.debug("Adding block to grid", {"grid_pos": grid_pos, "block_type": block.object_type, "refill": refill}, ["level", "grid"])
 	block_grid[grid_pos] = block
 	current_level.add_child(block)
 	var refill_pos: Vector2 = refill_distance * refill
-	# print("refill pos :", refill_pos)
-	# print("final position: ", current_level.map_to_local(grid_pos) - refill_pos)
+	# Uncomment for detailed debugging:
+	# Log.debug("Block positioning calculation", {
+	#   "refill_pos": refill_pos,
+	#   "final_position": current_level.map_to_local(grid_pos) - refill_pos,
+	#   "grid_pos": grid_pos
+	# }, ["clicker"])
 	block.position = grid_to_world_pos(grid_pos) - refill_pos
 
 
@@ -121,15 +135,18 @@ func grid_to_world_pos(grid_pos: Vector2i) -> Vector2:
 
 
 func move_blocks() -> void:
+	Log.debug("Moving blocks to positions", {"block_count": block_grid.size()}, ["level", "grid", "ui_animation"])
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
 	var b_moving: Array = all_blocks()
 	for block_iterator: Block in b_moving:
 		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))
 		awaiter.add(block_iterator.movement_done)
 	await awaiter.finished
+	Log.debug("Block movement complete", {}, ["level", "grid", "ui_animation"])
 
 
 func remove_from_grid(block: Block, destroy: bool = true) -> void:
+	Log.debug("Removing block from grid", {"block_type": block.object_type, "destroy": destroy}, ["level", "grid"])
 	var remove_pos: Vector2i = get_grid_pos(block)
 	#kan om redan borttaget som inmergade objectet
 	if remove_pos != Clicker.NO_POS:

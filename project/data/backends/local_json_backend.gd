@@ -15,7 +15,7 @@ func _init(file_path: String = ""):
 
 func initialize() -> bool:
 	# Check if we should use the battle DB file
-	var debug_node = Engine.get_singleton("Debug")
+	var debug_node = Engine.get_singleton("debug")
 	if debug_node and debug_node.use_local_battle_db:
 		current_file = battle_db_file
 		Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
@@ -95,8 +95,6 @@ func get_data(path: Array, key: String) -> Variant:
 				"backend_id": get_instance_id(),
 				"call_stack": _get_simple_stack_trace()
 			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-
-			push_error("Required data missing in sheets: " + key + ". Available keys: " + str(sheets_keys.slice(0, min(10, sheets_keys.size()))))
 			return null
 
 	# Navigate through the path (backward compatibility)
@@ -149,9 +147,6 @@ func get_data(path: Array, key: String) -> Variant:
 				"backend_id": get_instance_id(),
 				"call_stack": _get_simple_stack_trace()
 			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-
-			push_error("Required path missing: " + path_part + " at index " + str(i) +
-				". Available keys: " + str(available_keys.slice(0, min(10, available_keys.size()))))
 			return null
 
 	Log.debug("Path navigation complete", {
@@ -212,9 +207,6 @@ func get_data(path: Array, key: String) -> Variant:
 		"backend_id": get_instance_id(),
 		"call_stack": _get_simple_stack_trace()
 	}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-
-	push_error("Required key missing: " + key + " at path " + str(path) +
-		". Available keys: " + str(available_keys.slice(0, min(10, available_keys.size()))))
 	return null
 
 # Helper to get a simplified stack trace for debugging

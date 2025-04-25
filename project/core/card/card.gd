@@ -14,7 +14,7 @@ func _on_button_pressed() -> void:
 
 
 func setup_card(card: Card) -> void:
-	print("CARD: setup card in card", card)
+	Log.info("Setting up card in card view", {"card": card}, [Log.TAG_DB, "card", "ui"])
 
 	var info: UnitData = card.unit_info
 #	var img_string = str("cardtest/card_image_",debug.asset_variant,"_",info.card_info.id,".png")

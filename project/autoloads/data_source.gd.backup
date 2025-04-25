@@ -2,12 +2,7 @@ extends Node
 
 ## DataSource manager for game data
 ## Provides centralized access to cards, levels, items, player data, etc.
-## Hybrid implementation using collection-based architecture with backend factory
-
-# Import required classes
-const BackendFactory = preload("res://data/backends/backend_factory.gd")
-const DataBackend = preload("res://data/backends/data_backend.gd")
-const LocalJSONBackend = preload("res://data/backends/local_json_backend.gd")
+## Hybrid implementation using collection-based architecture with fallback to test data
 
 # Signals
 signal startup_completed
@@ -29,16 +24,7 @@ const _CARDS: String = "cards_0"
 
 # Add helper function to check if we have game data
 func has_game_data() -> bool:
-	# Check if the backend has been initialized
-	if _backend == null:
-		return local_data.has(_CARDS) or local_data.has("cards_0") or local_data.has("cards")
-
-	# Try to access data under the sheet ID
-	var sheet_data = await _backend.get_data([], SHEET_ID)
-	if sheet_data is Dictionary:
-		return sheet_data.has(_CARDS) or sheet_data.has("cards_0") or sheet_data.has("cards")
-
-	return false
+	return local_data.has(_CARDS) or local_data.has("cards_0") or local_data.has("cards")
 
 # Collections with specific type annotations
 var cards: CardCollectionImpl
@@ -49,7 +35,8 @@ var events: EventCollectionImpl
 var rules: RulesCollectionImpl
 
 # Internal state
-var _backend: DataBackend
+# @warning_ignore:unused_private_class_variable - Kept for compatibility with external code
+var _backend: Node = null
 var using_local_data: bool = false
 var _initialized: bool = false
 var card_cache: Array = []
@@ -61,55 +48,110 @@ var current_file: String = "res://resources/data.json"
 
 func _ready() -> void:
 	Log.info("DataSource initializing", {
-		"version": "backend_factory_implementation",
+		"version": "hybrid_implementation",
 		"os": OS.get_name(),
 		"in_editor": OS.has_feature("editor"),
 		"debug_build": OS.is_debug_build()
-	}, [Log.TAG_DB, "initialization", "system"])
+	}, [Log.TAG_DB])
 
 	_initialized = false
 
-	# Initialize async
-	await _initialize()
+	# Always use the battle DB file since that's what contains our game data
+	current_file = battle_db_file
+	Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
 
-## Initialize the data source using BackendFactory
-func _initialize() -> void:
-	# Create backend with battle file as primary option
-	Log.debug("Using battle database file", {"file": battle_db_file}, [Log.TAG_LOCAL, "initialization"])
-	_backend = LocalJSONBackend.new(battle_db_file)
-	var success = await _backend.initialize()
+	# Load actual data from JSON
+	load_local_data(current_file)
 
-	# Check for game data
-	var has_data = await has_game_data()
-
-	# If initialization failed or we don't have game data, try default file
-	if not success or not has_data:
-		Log.warning("No game data found in battle DB file, trying standard data file", {}, [Log.TAG_LOCAL, "initialization"])
-		_backend = LocalJSONBackend.new(default_db_file)
-		await _backend.initialize()
-
-	# Populate local_data for backward compatibility
-	var sheet_data = await _backend.get_data([], SHEET_ID)
-	if sheet_data is Dictionary:
-		local_data = sheet_data.duplicate()
-		Log.debug("Populated local_data from backend", {"keys": local_data.keys()}, [Log.TAG_DB, "initialization"])
-
-	# Track if we're using local data
-	using_local_data = true
+	# If we don't have game data, try the standard data.json as fallback
+	if not has_game_data():
+		Log.warning("No game data found in battle DB file, trying standard data file", {}, [Log.TAG_LOCAL])
+		load_local_data(default_db_file)
 
 	# Create collections
 	_initialize_collections()
 
-	# Connect to backend signals
-	_backend.startup_completed.connect(func():
-		Log.info("DataSource initialization complete", {
-			"using_local_data": using_local_data,
-			"firebase_available": is_firebase_available(),
-			"collections": [_CARDS, LEVELS, ITEMS, RULES, EVENTS]
-		}, [Log.TAG_DB, "initialization", "system"])
+	# Initialize async
+	_finalize_init()
 
-		_finalize_init()
-	)
+func load_local_data(db_file: String) -> void:
+	"""Load data from local JSON file"""
+	Log.info("Loading local data file", {"file": db_file}, [Log.TAG_LOCAL])
+
+	if not FileAccess.file_exists(db_file):
+		Log.error(
+			"Local data file does not exist", {"file": db_file}, [Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
+		return
+
+	var file: FileAccess = FileAccess.open(db_file, FileAccess.READ)
+	if not file:
+		Log.error(
+			"Failed to open local data file",
+			{"file": db_file, "error": FileAccess.get_open_error()},
+			[Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
+		return
+
+	var json_text: String = file.get_as_text()
+	file.close()
+
+	var res: Variant = JSON.parse_string(json_text)
+	if res == null:
+		Log.error(
+			"Failed to parse local data JSON", {"file": db_file}, [Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
+		return
+
+	if res is Dictionary:
+		# Log the top-level structure to help diagnose
+		Log.debug("JSON root structure", {"keys": res.keys()}, [Log.TAG_LOCAL])
+
+		# Handle different JSON structures
+		if res.has(SHEETS):
+			# Standard format with sheets key (unlikely in our case)
+			local_data = res[SHEETS]
+			Log.debug("Found standard SHEETS key in JSON", {}, [Log.TAG_LOCAL])
+		elif res.has(SHEET_ID) and res[SHEET_ID] is Dictionary:
+			# This is our actual structure with Google Sheet ID as the key
+			var sheet_data: Dictionary = res[SHEET_ID]
+			Log.debug("Found Sheet ID in JSON with keys", {"keys": sheet_data.keys()}, [Log.TAG_LOCAL])
+
+			# Extract all the collections we need directly
+			local_data = sheet_data.duplicate()
+
+			# Look for game cards - debug the structure
+			if sheet_data.has(_CARDS):
+				var card_data: Variant = sheet_data[_CARDS]
+				Log.debug("Found card data", {
+					"card_type": typeof(card_data),
+					"is_array": card_data is Array,
+					"count": card_data.size() if card_data is Array else 0
+				}, [Log.TAG_LOCAL])
+		else:
+			Log.warning("JSON data does not match expected format", {"keys": res.keys()}, [Log.TAG_LOCAL])
+			# Try to find any collection keys at root level
+			var found_collections: bool = false
+			for key: String in [_CARDS, LEVELS, ITEMS, RULES, EVENTS]:
+				if res.has(key):
+					local_data[key] = res[key]
+					found_collections = true
+					Log.debug("Found collection at root level", {"key": key}, [Log.TAG_LOCAL])
+
+			if not found_collections:
+				Log.error("No valid data collections found in JSON", {}, [Log.TAG_LOCAL, Log.TAG_ERROR])
+
+		Log.info(
+			"Local data file loaded successfully",
+			{"tables": local_data.keys().size(), "keys": local_data.keys()},
+			[Log.TAG_LOCAL]
+		)
+	else:
+		Log.error(
+			"Local data is not a Dictionary",
+			{"type": typeof(res)},
+			[Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
 
 class CardCollectionImpl extends Node:
 	var _parent: Node
@@ -123,19 +165,12 @@ class CardCollectionImpl extends Node:
 
 	func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
-			Log.debug("Using card cache", {"cache_size": _cache.size()}, [Log.TAG_DB, Log.TAG_CACHE, "card", "performance"])
+			Log.debug("Using card cache", {"cache_size": _cache.size()}, [Log.TAG_DB, Log.TAG_CACHE])
 			return _cache
 
-		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
-		var sheet_data: Variant = await _parent._backend.get_data(path, key)
+		# Use the parent's get_db_sheet method to access actual data
+		var cards_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
 		var cards: Array[Dictionary] = []
-
-		# Get cards data from the sheet data
-		var cards_data = null
-		if sheet_data is Dictionary and sheet_data.has(_collection_key):
-			cards_data = sheet_data[_collection_key]
 
 		# Convert to typed array
 		if cards_data is Array:
@@ -145,7 +180,7 @@ class CardCollectionImpl extends Node:
 
 		# If we didn't find any data, check if we have test data
 		if (cards.is_empty() or cards.size() == 0) and _parent.has_method("_get_test_cards"):
-			Log.warning("No card data found, using test cards", {}, [Log.TAG_DB, "card"])
+			Log.warning("No card data found, using test cards", {}, [Log.TAG_DB])
 			var test_cards: Array = _parent._get_test_cards()
 			for card_item: Dictionary in test_cards:
 				if card_item is Dictionary:
@@ -154,24 +189,24 @@ class CardCollectionImpl extends Node:
 		_cache = cards
 		_is_cache_initialized = true
 
-		Log.info("Retrieved all cards", {"count": cards.size()}, [Log.TAG_DB, "card"])
+		Log.info("Retrieved all cards", {"count": cards.size()}, [Log.TAG_DB])
 		return cards
 
 	func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
-		Log.info("Getting card info", {"card_id": card_id, "use_cache": use_cache}, [Log.TAG_DB, "card"])
+		Log.info("Getting card info", {"card_id": card_id, "use_cache": use_cache}, [Log.TAG_DB])
 
 		# Handle empty card_id case
 		if card_id.is_empty():
-			Log.error("Empty card_id provided", {}, [Log.TAG_DB, Log.TAG_ERROR, "card", "validation"])
+			Log.error("Empty card_id provided", {}, [Log.TAG_DB, Log.TAG_ERROR])
 			return {}
 
 		var results: Array[Dictionary] = await get_all(use_cache)
 
 		if results.is_empty():
-			Log.error("No cards found in collection", {}, [Log.TAG_DB, Log.TAG_ERROR, "card"])
+			Log.error("No cards found in collection", {}, [Log.TAG_DB, Log.TAG_ERROR])
 			return {}
 
-		Log.debug("Searching through cards", {"count": results.size()}, [Log.TAG_DB, "card"])
+		Log.debug("Searching through cards", {"count": results.size()}, [Log.TAG_DB])
 
 		# First try integer comparison exactly like the original implementation
 		for card: Dictionary in results:
@@ -182,7 +217,7 @@ class CardCollectionImpl extends Node:
 			# Safely convert to int using is_valid_int check
 			if str(id).is_valid_int() and str(card_id).is_valid_int():
 				if str(id).to_int() == str(card_id).to_int():
-					Log.debug("Card found by int comparison", {"card_id": card_id, "card_id_value": card_id, "id_value": id}, [Log.TAG_DB, "card"])
+					Log.debug("Card found by int comparison", {"card_id": card_id, "card_id_value": card_id, "id_value": id}, [Log.TAG_DB])
 					return card
 
 		# If that fails, try string comparison as backup
@@ -192,10 +227,10 @@ class CardCollectionImpl extends Node:
 
 			var id: Variant = card.id
 			if str(id) == str(card_id):
-				Log.debug("Card found by string comparison", {"card_id": card_id}, [Log.TAG_DB, "card"])
+				Log.debug("Card found by string comparison", {"card_id": card_id}, [Log.TAG_DB])
 				return card
 
-		Log.error("Card with id not found", {"card_id": card_id}, [Log.TAG_DB, Log.TAG_ERROR, "card"])
+		Log.error("Card with id not found", {"card_id": card_id}, [Log.TAG_DB, Log.TAG_ERROR])
 		return {}
 
 	func get_id_by_name(card_name: String) -> String:
@@ -239,16 +274,9 @@ class LevelCollectionImpl extends Node:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
 			return _cache
 
-		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
-		var sheet_data: Variant = await _parent._backend.get_data(path, key)
+		# Use the parent's get_db_sheet method to access actual data
+		var levels_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
 		var levels: Array[Dictionary] = []
-
-		# Get levels data from the sheet data
-		var levels_data = null
-		if sheet_data is Dictionary and sheet_data.has(_collection_key):
-			levels_data = sheet_data[_collection_key]
 
 		# Convert to typed array
 		if levels_data is Array:
@@ -258,7 +286,7 @@ class LevelCollectionImpl extends Node:
 
 		# If we didn't find any data, check if we have test data
 		if levels.is_empty() and _parent.has_method("_get_test_levels"):
-			Log.warning("No level data found, using test levels", {}, [Log.TAG_DB, "level"])
+			Log.warning("No level data found, using test levels", {}, [Log.TAG_DB])
 			var test_levels: Array = _parent._get_test_levels()
 			for level_item: Dictionary in test_levels:
 				if level_item is Dictionary:
@@ -269,7 +297,7 @@ class LevelCollectionImpl extends Node:
 		return levels
 
 	func get_by_number(level_nr: int) -> Dictionary:
-		Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB, "level"])
+		Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
 
 		var levels: Array = await get_all()
 		for level: Dictionary in levels:
@@ -280,10 +308,10 @@ class LevelCollectionImpl extends Node:
 			# Safely convert to int using is_valid_int check
 			if str(id).is_valid_int():
 				if str(id).to_int() == level_nr:
-					Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB, "level"])
+					Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 					return level
 
-		Log.warning("No level data found for level", {"level": level_nr}, [Log.TAG_DB, "level"])
+		Log.warning("No level data found for level", {"level": level_nr}, [Log.TAG_DB])
 		return {}
 
 	func clear_cache() -> void:
@@ -304,16 +332,9 @@ class ItemCollectionImpl extends Node:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
 			return _cache
 
-		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
-		var sheet_data: Variant = await _parent._backend.get_data(path, key)
+		# Use the parent's get_db_sheet method to access actual data
+		var items_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
 		var items: Array[Dictionary] = []
-
-		# Get items data from the sheet data
-		var items_data = null
-		if sheet_data is Dictionary and sheet_data.has(_collection_key):
-			items_data = sheet_data[_collection_key]
 
 		# Convert to typed array
 		if items_data is Array:
@@ -323,7 +344,7 @@ class ItemCollectionImpl extends Node:
 
 		# If we didn't find any data, check if we have test data
 		if items.is_empty() and _parent.has_method("_get_test_items"):
-			Log.warning("No item data found, using test items", {}, [Log.TAG_DB, "item"])
+			Log.warning("No item data found, using test items", {}, [Log.TAG_DB])
 			var test_items: Array = _parent._get_test_items()
 			for item_item: Dictionary in test_items:
 				if item_item is Dictionary:
@@ -334,7 +355,7 @@ class ItemCollectionImpl extends Node:
 		return items
 
 	func get_by_id(item_id: String) -> Dictionary:
-		Log.info("Getting item info", {"item_id": item_id}, [Log.TAG_DB, "item"])
+		Log.info("Getting item info", {"item_id": item_id}, [Log.TAG_DB])
 
 		var items: Array[Dictionary] = await get_all()
 		for item: Dictionary in items:
@@ -342,10 +363,10 @@ class ItemCollectionImpl extends Node:
 				continue
 
 			if str(item.id) == str(item_id):
-				Log.debug("Item found", {"item_id": item_id}, [Log.TAG_DB, "item"])
+				Log.debug("Item found", {"item_id": item_id}, [Log.TAG_DB])
 				return item
 
-		Log.error("Item with id not found", {"item_id": item_id}, [Log.TAG_DB, Log.TAG_ERROR, "item"])
+		Log.error("Item with id not found", {"item_id": item_id}, [Log.TAG_DB, Log.TAG_ERROR])
 		return {}
 
 	func get_id_by_name(item_name: String) -> String:
@@ -376,27 +397,11 @@ class RulesCollectionImpl extends Node:
 		_collection_key = collection_key
 
 	func get_rules() -> Dictionary:
-		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
-		var sheet_data: Variant = await _parent._backend.get_data(path, key)
-		var rules: Dictionary = {}
-
-		# Get rules data from the sheet data
-		var rules_data = null
-		if sheet_data is Dictionary and sheet_data.has(_collection_key):
-			rules_data = sheet_data[_collection_key]
-
-		# Handle array response (keep first item as dictionary)
-		if rules_data is Array and rules_data.size() > 0:
-			if rules_data[0] is Dictionary:
-				rules = rules_data[0]
-		elif rules_data is Dictionary:
-			rules = rules_data
+		var rules: Dictionary = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), true)
 
 		# If we didn't find any data, check if we have test data
 		if rules.is_empty() and _parent.has_method("_get_test_rules"):
-			Log.warning("No rules data found, using test rules", {}, [Log.TAG_DB, "rules"])
+			Log.warning("No rules data found, using test rules", {}, [Log.TAG_DB])
 			rules = _parent._get_test_rules()
 
 		return rules
@@ -410,16 +415,8 @@ class EventCollectionImpl extends Node:
 		_collection_key = collection_key
 
 	func get_all() -> Array[Dictionary]:
-		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
-		var sheet_data: Variant = await _parent._backend.get_data(path, key)
+		var events_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
 		var events: Array[Dictionary] = []
-
-		# Get events data from the sheet data
-		var events_data = null
-		if sheet_data is Dictionary and sheet_data.has(_collection_key):
-			events_data = sheet_data[_collection_key]
 
 		# Convert to typed array
 		if events_data is Array:
@@ -429,7 +426,7 @@ class EventCollectionImpl extends Node:
 
 		# If we didn't find any data, check if we have test data
 		if events.is_empty() and _parent.has_method("_get_test_events"):
-			Log.warning("No event data found, using test events", {}, [Log.TAG_DB, "event"])
+			Log.warning("No event data found, using test events", {}, [Log.TAG_DB])
 			var test_events: Array = _parent._get_test_events()
 			for event_item: Dictionary in test_events:
 				if event_item is Dictionary:
@@ -438,7 +435,7 @@ class EventCollectionImpl extends Node:
 		return events
 
 	func get_lineup_data(event: String) -> Dictionary:
-		Log.info("Getting event lineups data", {"event": event}, [Log.TAG_DB, "event"])
+		Log.info("Getting event lineups data", {"event": event}, [Log.TAG_DB])
 
 		# Since we're using test data, we don't have event lineups
 		return {}
@@ -502,7 +499,7 @@ func _initialize_collections() -> void:
 
 	Log.info("Collections initialized with local data", {
 		"data_keys": local_data.keys()
-	}, [Log.TAG_DB, "initialization"])
+	}, [Log.TAG_DB])
 
 func _finalize_init() -> void:
 	# Mark as initialized and emit signal
@@ -513,50 +510,61 @@ func _finalize_init() -> void:
 		"using_local_data": using_local_data
 	}, [Log.TAG_DB])
 
-# Implement the get_db_sheet method that maintains compatibility with collections
+# Implement the original get_db_sheet method that all collections will use
 func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
-	"""Get data sheet from database using the backend"""
+	"""Get data sheet from database or local data"""
 	var full_name: String = str(sheet_name, "_", test_group)
 	Log.debug(
-		"Getting database sheet via backend",
+		"Getting database sheet",
 		{"sheet": sheet_name, "full_name": full_name, "is_dict": is_dictionary},
-		[Log.TAG_DB, "data"]
+		[Log.TAG_DB]
 	)
 
-	# Try different path patterns
-	var paths_to_try = [
-		[],  # Root level
-		["sheets"]  # Standard sheets path
-	]
+	# Try the full name first (with test_group suffix)
+	if local_data.has(full_name):
+		var result: Variant = local_data[full_name]
+		Log.debug(
+			"Retrieved sheet from local data (with test_group)",
+			{"sheet": full_name},
+			[Log.TAG_DB, Log.TAG_LOCAL]
+		)
 
-	# Keys to try in order
-	var keys_to_try = [
-		full_name,  # First try with test_group suffix
-		str(sheet_name, "_0"),  # Then standard _0 suffix
-		sheet_name  # Finally try without suffix
-	]
+		if is_dictionary and result is Array and result.size() > 0:
+			result = result[0]
+		return result
 
-	# Try all combinations
-	for path in paths_to_try:
-		for key in keys_to_try:
-			var result = await _backend.get_data(path, key)
-			if result != null:
-				Log.debug(
-					"Retrieved sheet from backend",
-					{"path": path, "key": key},
-					[Log.TAG_DB, "data"]
-				)
+	# If not found, try with "_0" suffix (standard format)
+	var standard_name: String = str(sheet_name, "_0")
+	if local_data.has(standard_name):
+		var result: Variant = local_data[standard_name]
+		Log.debug(
+			"Retrieved sheet from local data (standard format)",
+			{"sheet": standard_name},
+			[Log.TAG_DB, Log.TAG_LOCAL]
+		)
 
-				# Handle dictionary conversion if needed
-				if is_dictionary and result is Array and result.size() > 0:
-					result = result[0]
-				return result
+		if is_dictionary and result is Array and result.size() > 0:
+			result = result[0]
+		return result
+
+	# If still not found, try without any suffix
+	if local_data.has(sheet_name):
+		var result: Variant = local_data[sheet_name]
+		Log.debug(
+			"Retrieved sheet from local data (no suffix)",
+			{"sheet": sheet_name},
+			[Log.TAG_DB, Log.TAG_LOCAL]
+		)
+
+		if is_dictionary and result is Array and result.size() > 0:
+			result = result[0]
+		return result
 
 	# Nothing found, log error and return empty result
 	Log.error(
-		"Sheet not found via backend",
-		{"sheet": sheet_name, "tried_keys": keys_to_try},
-		[Log.TAG_DB, Log.TAG_ERROR, "data"]
+		"Sheet not found in local data",
+		{"sheet": full_name, "tried_also": [standard_name, sheet_name], "available_keys": local_data.keys()},
+		[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
 	)
 
 	if is_dictionary:
@@ -565,7 +573,7 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 
 # Public API - convenience methods
 func is_firebase_available() -> bool:
-	return _backend is FirebaseBackend and _backend.is_available()
+	return false # This implementation only uses local data
 
 func is_initialized() -> bool:
 	return _initialized
@@ -632,30 +640,30 @@ func remove_event_lineups(_event: String) -> bool:    # Unused parameter prefixe
 	return await events.remove_event_lineups(_event)
 
 func activate_card_cache() -> void:
-	Log.info("Activating card cache", {}, [Log.TAG_CACHE, Log.TAG_DB, "card", "performance"])
+	Log.info("Activating card cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
 	card_cache = await cards.get_all(true)
-	Log.info("Card cache activated", {"count": card_cache.size()}, [Log.TAG_CACHE, Log.TAG_DB, "card", "performance"])
+	Log.info("Card cache activated", {"count": card_cache.size()}, [Log.TAG_CACHE, Log.TAG_DB])
 
 func clear_card_cache() -> void:
-	Log.info("Clearing card cache", {}, [Log.TAG_CACHE, Log.TAG_DB, "card", "performance"])
+	Log.info("Clearing card cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
 	cards.clear_cache()
 	card_cache = []
 
 func clear_level_cache() -> void:
-	Log.info("Clearing level cache", {}, [Log.TAG_CACHE, Log.TAG_DB, "level", "performance"])
+	Log.info("Clearing level cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
 	levels.clear_cache()
 
 func clear_item_cache() -> void:
-	Log.info("Clearing item cache", {}, [Log.TAG_CACHE, Log.TAG_DB, "item", "performance"])
+	Log.info("Clearing item cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
 	items.clear_cache()
 
 # Legacy method kept for backward compatibility
 func set_root(_new_root: Array) -> void:    # Unused parameter prefixed with underscore
-	Log.debug("Legacy set_root called (simplified)", {"path": _new_root}, [Log.TAG_DB, "data"])
+	Log.debug("Legacy set_root called (simplified)", {"path": _new_root}, [Log.TAG_DB])
 
 # Legacy method - simplified implementation
 func get_db_value(_value: String) -> Variant:    # Unused parameter prefixed with underscore
-	Log.debug("Legacy get_db_value called (simplified)", {"key": _value}, [Log.TAG_DB, "data"])
+	Log.debug("Legacy get_db_value called (simplified)", {"key": _value}, [Log.TAG_DB])
 	return null
 
 # For compatibility with other code

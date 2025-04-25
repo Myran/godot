@@ -2,7 +2,7 @@ extends Node
 
 
 func _ready() -> void:
-	print("Main ready")
+	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
@@ -10,17 +10,17 @@ func _ready() -> void:
 	debug.debug_event.connect(_on_debug_event)
 	match OS.get_name():
 		"Windows":
-			print("Welcome to Windows!")
+			Log.info("Running on Windows platform", {}, ["system", "initialization"])
 		"macOS":
-			print("Welcome to macOS!")
+			Log.info("Running on macOS platform", {}, ["system", "initialization"])
 		"Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD":
-			print("Welcome to Linux/BSD!")
+			Log.info("Running on Linux/BSD platform", {}, ["system", "initialization"])
 		"Android":
-			print("Welcome to Android!")
+			Log.info("Running on Android platform", {}, ["system", "initialization"])
 		"iOS":
-			print("Welcome to iOS!")
+			Log.info("Running on iOS platform", {}, ["system", "initialization"])
 		"Web":
-			print("Welcome to the Web!")
+			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 
 func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Variant = null) -> void:

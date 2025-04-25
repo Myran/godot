@@ -22,7 +22,7 @@ func finish() -> void:  # Added return type
 
 
 func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
-	push_error("Method not implemented")
+	Log.error("Method not implemented in SignalAwaiter base class", {"method": "_on_signal_received"}, [Log.TAG_ERROR])
 	finish()
 
 

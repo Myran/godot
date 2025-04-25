@@ -3,7 +3,7 @@ class_name TagContainer extends PanelContainer
 
 
 func _on_button_pressed() -> void:
-	print("tag pressed: ", label.text)
+	Log.debug("Tag button pressed", {"tag_text": label.text}, ["ui"])
 
 
 #	ui.action(ui.EVENT_TYPE.TAP_TAG,[self])

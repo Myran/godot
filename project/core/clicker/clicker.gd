@@ -38,11 +38,11 @@ func remove_rerollables() -> void:
 
 func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 	if event is core.DraftColumnLocked:
-		print("Draft coloumn locked: ", event.col)
+		Log.debug("Draft column locked", {"column": event.col}, ["draft", "clicker"])
 		columns_locked.append(event.col)
 
 	if event is core.DraftColumnUnlocked:
-		print("Draft coloumn unlocked: ", event.col)
+		Log.debug("Draft column unlocked", {"column": event.col}, ["draft", "clicker"])
 		columns_locked.erase(event.col)
 
 	if event is core.RerollDraftEvent:

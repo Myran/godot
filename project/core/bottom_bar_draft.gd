@@ -2,12 +2,12 @@ extends NinePatchRect
 
 
 func _on_button_upgrade_pressed() -> void:
-	print("upgrade button pressed")
+	Log.debug("Upgrade button pressed", {}, ["ui", "draft"])
 	ui.action(ui.UpgradeEvent.new())
 
 
 func _on_button_reroll_pressed() -> void:
-	print("Reroll button pressed")
+	Log.debug("Reroll button pressed", {}, ["ui", "draft"])
 	ui.action(ui.RerollEvent.new())
 
 

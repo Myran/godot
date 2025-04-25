@@ -67,8 +67,6 @@ func get_rules() -> Dictionary:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_WARNING])
 		
-		push_error("Required rules data is missing - using emergency defaults for editor testing ONLY in " + _collection_name)
-		
 		return default_rules
 	
 	# Check data structure in detail
@@ -121,9 +119,6 @@ func get_rules() -> Dictionary:
 			"collection_id": get_instance_id(),
 			"stack_trace": _get_stack_trace(3)
 		}, [Log.TAG_DB, Log.TAG_ERROR])
-		
-		push_error("Required rules data keys missing: " + str(missing_keys) + 
-			". Available keys: " + str(result.keys()) + " in " + _collection_name)
 		
 		# Add emergency values for the missing keys for editor testing
 		Log.warning("Adding emergency default values for missing rules", {

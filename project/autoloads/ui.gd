@@ -74,4 +74,4 @@ func action(_event: UIEvent) -> void:
 
 
 func _ready() -> void:
-	print("ui autoload ready")
+	Log.info("UI autoload initialized", {}, ["ui", "system"])

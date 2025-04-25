@@ -165,10 +165,10 @@ func request_success(result: Dictionary) -> void:
 
 
 func request_cancelled() -> void:
-	push_warning("Facebook request cancelled")
+	Log.warning("Facebook request cancelled", {}, [Log.TAG_NETWORK])
 	fb_request_cancelled.emit()
 
 
 func request_failed(err: String) -> void:
-	push_error("Facebook request failed: %s" % err)
+	Log.error("Facebook request failed", {"error": err}, [Log.TAG_NETWORK, Log.TAG_ERROR])
 	fb_request_failed.emit(err)

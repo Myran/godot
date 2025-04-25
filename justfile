@@ -83,7 +83,7 @@ build-macos-templates: validate-env
 # Run Godot editor
 edit:
     @echo "Running Godot editor..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor --verbose --debug
 
 # Run Godot in headless mode without GUI
 headless:
@@ -94,6 +94,18 @@ headless:
 headless-run *ARGS:
     @echo "Running Godot in headless mode with args: {{ARGS}}"
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless {{ARGS}}
+
+# Validate GDScript code by checking for errors
+validate:
+    @echo "Validating GDScript code..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --verbose --debug
+    @echo "Validation complete. Any errors will be shown above."
+
+# Export validation errors to a log file
+validate-log:
+    @echo "Validating GDScript code and saving errors to log file..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --debug --verbose > validation_errors.log 2>&1
+    @echo "Validation complete. Errors saved to validation_errors.log"
 
 # Pre-build hook
 pre-build:

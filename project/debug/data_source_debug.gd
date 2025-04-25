@@ -6,8 +6,8 @@ extends Node
 func _ready() -> void:
 	# Check if DataSource is loaded
 	if not has_node("/root/data_source"):
-		print("DataSource node not found! Make sure to run the full game with autoloads.")
-		print("Attempting to load DataSource manually...")
+		Log.warning("DataSource node not found", {"action": "Manual load attempt"}, [Log.TAG_DB, "debug"])
+		Log.info("Attempting to load DataSource manually", {}, [Log.TAG_DB, "debug"])
 		
 		# Try to load DataSource manually
 		var data_source_script = load("res://autoloads/data_source.gd")
@@ -15,48 +15,51 @@ func _ready() -> void:
 			var data_source = data_source_script.new()
 			get_tree().root.add_child(data_source)
 			data_source.name = "data_source"
-			print("DataSource loaded manually. Waiting for initialization...")
+			Log.info("DataSource loaded manually", {"waiting": "initialization"}, [Log.TAG_DB, "debug"])
 			await data_source.startup_completed
-			print("DataSource initialized. Running diagnostics...")
+			Log.info("DataSource initialized", {"action": "Running diagnostics"}, [Log.TAG_DB, "debug"])
 			diagnose_data_source()
 		else:
-			print("Failed to load DataSource script!")
+			Log.error("Failed to load DataSource script", {}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 			return
 	else:
 		# Wait for DataSource to initialize if it's already loaded
-		print("DataSource node found. Waiting for initialization...")
+		Log.info("DataSource node found", {"action": "Waiting for initialization"}, [Log.TAG_DB, "debug"])
 		
 		# Add a timeout mechanism
 		var timeout = Time.get_ticks_msec() + 2000  # 2 second timeout
 		var data_source = get_node("/root/data_source")
 		
 		if data_source.is_initialized():
-			print("DataSource already initialized. Running diagnostics...")
+			Log.info("DataSource already initialized", {"action": "Running diagnostics"}, [Log.TAG_DB, "debug"])
 			diagnose_data_source()
 		else:
-			print("Waiting for DataSource to initialize (with timeout)...")
+			Log.info("Waiting for DataSource to initialize", {"timeout_ms": 2000}, [Log.TAG_DB, "debug"])
 			# Try to wait for startup_completed signal with timeout
 			while not data_source.is_initialized() and Time.get_ticks_msec() < timeout:
 				await get_tree().create_timer(0.1).timeout
 			
 			if data_source.is_initialized():
-				print("DataSource initialized. Running diagnostics...")
+				Log.info("DataSource initialized", {"action": "Running diagnostics"}, [Log.TAG_DB, "debug"])
 				diagnose_data_source()
 			else:
-				print("Timeout waiting for DataSource initialization. Running diagnostics anyway...")
+				Log.warning("Timeout waiting for DataSource initialization", {"action": "Running diagnostics anyway"}, [Log.TAG_DB, "debug"])
 				diagnose_data_source()
 
 func diagnose_data_source() -> void:
-	print("\n=== STARTING DATASOURCE DIAGNOSTICS ===")
+	Log.info("=== STARTING DATASOURCE DIAGNOSTICS ===", {}, [Log.TAG_DB, "debug"])
 	
 	# Check data loading
 	var data_source = get_node("/root/data_source")
-	print("DataSource initialized: ", data_source.is_initialized())
-	print("Using local data: ", data_source.using_local_data)
+	Log.info("DataSource status", {
+		"initialized": data_source.is_initialized(),
+		"using_local_data": data_source.using_local_data
+	}, [Log.TAG_DB, "debug"])
 	
 	# Check JSON data structure
-	print("\n=== JSON DATA STRUCTURE ===")
-	print("Local data keys: ", data_source.local_data.keys())
+	Log.info("=== JSON DATA STRUCTURE ===", {
+		"local_data_keys": data_source.local_data.keys()
+	}, [Log.TAG_DB, "debug"])
 	
 	# Check collections
 	diagnose_cards()
@@ -64,103 +67,123 @@ func diagnose_data_source() -> void:
 	diagnose_items()
 	diagnose_rules()
 	
-	print("\n=== DATASOURCE DIAGNOSTICS COMPLETE ===")
+	Log.info("=== DATASOURCE DIAGNOSTICS COMPLETE ===", {}, [Log.TAG_DB, "debug"])
 
 func diagnose_cards() -> void:
-	print("\n=== CARD DIAGNOSTICS ===")
+	Log.info("=== CARD DIAGNOSTICS ===", {}, [Log.TAG_DB, "debug"])
 	var data_source = get_node("/root/data_source")
 	
 	# Try direct JSON data check first
-	print("Checking direct JSON structure for cards...")
+	Log.debug("Checking direct JSON structure for cards", {}, [Log.TAG_DB, "debug"])
 	var card_key = "cards_0"
 	if data_source.local_data.has(card_key):
-		print("Found cards key '", card_key, "' in local_data with ", data_source.local_data[card_key].size(), " entries")
+		Log.info("Found cards key in local_data", {
+			"key": card_key,
+			"entries": data_source.local_data[card_key].size()
+		}, [Log.TAG_DB, "debug"])
 	else:
-		print("No '", card_key, "' key found in local_data")
-		print("Available keys: ", data_source.local_data.keys())
+		Log.warning("Card key not found in local_data", {
+			"key_searched": card_key,
+			"available_keys": data_source.local_data.keys()
+		}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 	
 	# Get all cards through API
-	print("Retrieving cards through API...")
+	Log.debug("Retrieving cards through API", {}, [Log.TAG_DB, "debug"])
 	var cards = []
 	
 	# Use error handling to prevent crashes
 	if data_source.has_method("get_all_cards"):
 		cards = await data_source.get_all_cards(false)
-		print("Found ", cards.size(), " cards")
+		Log.info("Cards retrieved", {"count": cards.size()}, [Log.TAG_DB, "debug"])
 		
 		if cards.size() > 0:
 			# Sample first card
 			var first_card = cards[0]
-			print("\nFirst card details:")
-			print("Name: ", first_card.get("name", "N/A"))
-			print("ID: ", first_card.get("id", "N/A"))
-			print("All keys: ", first_card.keys())
+			Log.info("First card details", {
+				"name": first_card.get("name", "N/A"),
+				"id": first_card.get("id", "N/A"),
+				"available_keys": first_card.keys()
+			}, [Log.TAG_DB, "debug"])
 	else:
-		print("Method get_all_cards not found!")
+		Log.error("Method get_all_cards not found", {}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 
 func diagnose_levels() -> void:
-	print("\n=== LEVEL DIAGNOSTICS ===")
+	Log.info("=== LEVEL DIAGNOSTICS ===", {}, [Log.TAG_DB, "debug"])
 	var data_source = get_node("/root/data_source")
 	
 	# Try direct JSON data check first
-	print("Checking direct JSON structure for levels...")
+	Log.debug("Checking direct JSON structure for levels", {}, [Log.TAG_DB, "debug"])
 	var level_key = "levels_0"
 	if data_source.local_data.has(level_key):
-		print("Found levels key '", level_key, "' in local_data with ", data_source.local_data[level_key].size(), " entries")
+		Log.info("Found levels key in local_data", {
+			"key": level_key,
+			"entries": data_source.local_data[level_key].size()
+		}, [Log.TAG_DB, "debug"])
 	else:
-		print("No '", level_key, "' key found in local_data")
-		print("Available keys: ", data_source.local_data.keys())
+		Log.warning("Level key not found in local_data", {
+			"key_searched": level_key,
+			"available_keys": data_source.local_data.keys()
+		}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 	
 	# Get all levels through API 
-	print("Retrieving levels through API...")
+	Log.debug("Retrieving levels through API", {}, [Log.TAG_DB, "debug"])
 	if data_source.has_method("get_all_levels"):
 		var levels = await data_source.get_all_levels()
-		print("Found ", levels.size(), " levels")
+		Log.info("Levels retrieved", {"count": levels.size()}, [Log.TAG_DB, "debug"])
 	else:
-		print("Method get_all_levels not found!")
+		Log.error("Method get_all_levels not found", {}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 
 func diagnose_items() -> void:
-	print("\n=== ITEM DIAGNOSTICS ===")
+	Log.info("=== ITEM DIAGNOSTICS ===", {}, [Log.TAG_DB, "debug"])
 	var data_source = get_node("/root/data_source")
 	
 	# Try direct JSON data check first
-	print("Checking direct JSON structure for items...")
+	Log.debug("Checking direct JSON structure for items", {}, [Log.TAG_DB, "debug"])
 	var item_key = "items_0"
 	if data_source.local_data.has(item_key):
-		print("Found items key '", item_key, "' in local_data with ", data_source.local_data[item_key].size(), " entries")
+		Log.info("Found items key in local_data", {
+			"key": item_key, 
+			"entries": data_source.local_data[item_key].size()
+		}, [Log.TAG_DB, "debug"])
 	else:
-		print("No '", item_key, "' key found in local_data")
-		print("Available keys: ", data_source.local_data.keys())
+		Log.warning("Item key not found in local_data", {
+			"key_searched": item_key,
+			"available_keys": data_source.local_data.keys()
+		}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 	
 	# Get all items through API
-	print("Retrieving items through API...")
+	Log.debug("Retrieving items through API", {}, [Log.TAG_DB, "debug"])
 	if data_source.has_method("get_all_items"):
 		var items = await data_source.get_all_items()
-		print("Found ", items.size(), " items")
+		Log.info("Items retrieved", {"count": items.size()}, [Log.TAG_DB, "debug"])
 	else:
-		print("Method get_all_items not found!")
+		Log.error("Method get_all_items not found", {}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 
 func diagnose_rules() -> void:
-	print("\n=== RULES DIAGNOSTICS ===")
+	Log.info("=== RULES DIAGNOSTICS ===", {}, [Log.TAG_DB, "debug"])
 	var data_source = get_node("/root/data_source")
 	
 	# Try direct JSON data check first
-	print("Checking direct JSON structure for rules...")
+	Log.debug("Checking direct JSON structure for rules", {}, [Log.TAG_DB, "debug"])
 	var rules_key = "rules_0"
 	if data_source.local_data.has(rules_key):
-		print("Found rules key '", rules_key, "' in local_data")
+		Log.info("Found rules key in local_data", {"key": rules_key}, [Log.TAG_DB, "debug"])
 		if data_source.local_data[rules_key] is Dictionary:
-			print("Rules keys: ", data_source.local_data[rules_key].keys())
+			Log.debug("Rules keys", {"keys": data_source.local_data[rules_key].keys()}, [Log.TAG_DB, "debug"])
 		else:
-			print("Rules data is not a Dictionary: ", typeof(data_source.local_data[rules_key]))
+			Log.warning("Rules data is not a Dictionary", {
+				"type": typeof(data_source.local_data[rules_key])
+			}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 	else:
-		print("No '", rules_key, "' key found in local_data")
-		print("Available keys: ", data_source.local_data.keys())
+		Log.warning("Rules key not found in local_data", {
+			"key_searched": rules_key,
+			"available_keys": data_source.local_data.keys()
+		}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])
 	
 	# Get rules through API
-	print("Retrieving rules through API...")
+	Log.debug("Retrieving rules through API", {}, [Log.TAG_DB, "debug"])
 	if data_source.has_method("get_rules_data"):
 		var rules = await data_source.get_rules_data()
-		print("Rules data found: ", not rules.is_empty())
+		Log.info("Rules data", {"found": not rules.is_empty()}, [Log.TAG_DB, "debug"])
 	else:
-		print("Method get_rules_data not found!")
+		Log.error("Method get_rules_data not found", {}, [Log.TAG_DB, Log.TAG_ERROR, "debug"])

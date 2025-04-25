@@ -8,13 +8,13 @@ signal startup_completed
 ## @return bool True if initialization was successful
 func initialize() -> bool:
 	Log.info("DataBackend.initialize called on base class", {}, [Log.TAG_DB])
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "initialize"}, [Log.TAG_DB, Log.TAG_ERROR])
 	return false
 
 ## Check if the backend is available and ready for use
 ## @return bool True if the backend is available
 func is_available() -> bool:
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "is_available"}, [Log.TAG_DB, Log.TAG_ERROR])
 	return false
 
 ## Get data from the specified path and key
@@ -23,7 +23,7 @@ func is_available() -> bool:
 ## @return Variant The retrieved data
 func get_data(path: Array, key: String) -> Variant:
 	Log.debug("DataBackend.get_data called with", {"path": path, "key": key}, [Log.TAG_DB])
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "get_data", "path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 	return null
 
 ## Set data at the specified path and key
@@ -33,7 +33,7 @@ func get_data(path: Array, key: String) -> Variant:
 ## @return bool True if data was set successfully
 func set_data(path: Array, key: String, data: Variant) -> bool:
 	Log.debug("DataBackend.set_data called with", {"path": path, "key": key}, [Log.TAG_DB])
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "set_data", "path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 	return false
 
 ## Push data to a collection, generating a unique ID
@@ -42,7 +42,7 @@ func set_data(path: Array, key: String, data: Variant) -> bool:
 ## @return String The generated unique ID
 func push_data(path: Array, data: Variant) -> String:
 	Log.debug("DataBackend.push_data called with", {"path": path}, [Log.TAG_DB])
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "push_data", "path": path}, [Log.TAG_DB, Log.TAG_ERROR])
 	return ""
 
 ## Remove data at the specified path and key
@@ -51,5 +51,5 @@ func push_data(path: Array, data: Variant) -> String:
 ## @return bool True if data was removed successfully
 func remove_data(path: Array, key: String) -> bool:
 	Log.debug("DataBackend.remove_data called with", {"path": path, "key": key}, [Log.TAG_DB])
-	push_error("Method not implemented")
+	Log.error("Method not implemented in base class", {"method": "remove_data", "path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 	return false

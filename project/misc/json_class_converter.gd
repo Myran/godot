@@ -7,7 +7,7 @@ static var save_temp_resources_tres: bool = false
 ## Checks if the provided class is valid (not null)
 static func _check_cast_class(castClass: GDScript) -> bool:
 	if typeof(castClass) == Variant.Type.TYPE_NIL:
-		printerr("The provided class is null.")
+		Log.error("The provided class is null", {}, [Log.TAG_ERROR])
 		return false
 	return true
 
@@ -31,7 +31,7 @@ static func json_file_to_dict(file_path: String, security_key: String = "") -> D
 		else:
 			file = FileAccess.open_encrypted_with_pass(file_path, FileAccess.READ, security_key)
 		if not file:
-			printerr("Error opening file: ", file_path)
+			Log.error("Error opening file", {"file_path": file_path}, [Log.TAG_ERROR])
 			return {}
 		var parsed_results: Variant = JSON.parse_string(file.get_as_text())
 		file.close()
@@ -46,7 +46,7 @@ static func json_file_to_class(
 	castClass: GDScript, file_path: String, security_key: String = ""
 ) -> Object:
 	if not _check_cast_class(castClass):
-		printerr("The provided class is null.")
+		Log.error("The provided class is null", {}, [Log.TAG_ERROR])
 		return null
 	var parsed_results = json_file_to_dict(file_path, security_key)
 	if parsed_results == null:
@@ -57,7 +57,7 @@ static func json_file_to_class(
 ## Converts a JSON string into a Godot class instance.
 static func json_string_to_class(castClass: GDScript, json_string: String) -> Object:
 	if not _check_cast_class(castClass):
-		printerr("The provided class is null.")
+		Log.error("The provided class is null", {}, [Log.TAG_ERROR]) 
 		return null
 	var json: JSON = JSON.new()
 	var parse_result: Error = json.parse(json_string)
@@ -240,7 +240,7 @@ static func store_json_file(file_path: String, data: Dictionary, security_key: S
 	else:
 		file = FileAccess.open_encrypted_with_pass(file_path, FileAccess.WRITE, security_key)
 	if not file:
-		printerr("Error writing to a file")
+		Log.error("Error writing to a file", {"file_path": file_path}, [Log.TAG_ERROR])
 		return false
 	var json_string: String = JSON.stringify(data, "\t")
 	file.store_string(json_string)

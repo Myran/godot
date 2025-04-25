@@ -4,7 +4,10 @@ var current_gamestate: core.GameState = core.GameState.START
 
 
 func set_gamestate(new_state: core.GameState) -> void:
-	print("Set gamestate:", core.GameState.keys()[new_state])
+	Log.info("Game state changing", {
+		"from": core.GameState.keys()[current_gamestate],
+		"to": core.GameState.keys()[new_state]
+	}, ["game_state", "state_transition"])
 
 	match new_state:
 		core.GameState.START:

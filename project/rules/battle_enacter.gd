@@ -12,8 +12,8 @@ func _init(layer: Node, allies: HolderContainer, enemies: HolderContainer) -> vo
 
 
 func enact(battle_events: Array[Context.Event]) -> void:
-	printt("Start animating battle")
-	printt("current battle events", battle_events)
+	Log.info("Starting battle animation sequence", {"event_count": battle_events.size()}, ["battle", "animation", "initialization"])
+	Log.debug("Battle events to animate", {"events": battle_events}, ["battle", "animation"])
 
 	var return_tween: Tween
 	var allied_units: Dictionary = allied_holder.get_current_lineup(true, battle_layer)
@@ -22,19 +22,23 @@ func enact(battle_events: Array[Context.Event]) -> void:
 	enemy_holder.hide_lineup()
 
 	for event: Context.Event in battle_events:
-		printt("current event:", event)
+		Log.debug("Processing battle event", {"event_type": event.get_class()}, ["battle", "animation", "state_transition"])
 
 		if event is BattleContext.AddLineupEvent:
-			print("Add lineup")
+			Log.debug("Adding lineup to battle", {"allied": event.is_allied_side}, ["battle", "animation", "initialization"])
 
 		elif event is BattleContext.FindNextUnitEvent:
-			print("Find next unit")
+			Log.debug("Finding next active unit", {}, ["battle", "animation", "combat"])
 
 		elif event is BattleContext.SelectActiveUnitEvent:
-			print("Select active unit")
+			Log.debug("Selected active unit", {"position": event.selected_unit_position, "allied": event.is_allied_side}, ["battle", "animation", "combat", "state_transition"])
 
 		elif event is BattleContext.CombatEvent:
-			print("Combat")
+			Log.debug("Combat event", {
+				"attacker_position": event.attacker_position, 
+				"defender_position": event.defender_position,
+				"allied_attack": event.is_allied_attack
+			}, ["battle", "combat", "animation", "state_transition"])
 			var attacker: Node2D = (
 				allied_units[event.attacker_position]
 				if event.is_allied_attack
@@ -45,8 +49,10 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				if event.is_allied_attack
 				else allied_units[event.defender_position]
 			)
-			printt("attacker", attacker)
-			printt("defender", defender)
+			Log.debug("Combat participants", {
+				"attacker": attacker.name if attacker else "unknown",
+				"defender": defender.name if defender else "unknown"
+			}, ["battle", "combat", "animation", "card"])
 
 			var combat_tween: Tween = create_tween()
 
@@ -137,16 +143,27 @@ func enact(battle_events: Array[Context.Event]) -> void:
 			return_tween.play()
 
 		elif event is BattleContext.DamageEvent:
-			print("Damage", event)
+			Log.debug("Damage event", {
+				"target_position": event.target_position,
+				"damage_amount": event.damage_amount,
+				"allied_side": event.is_allied_side
+			}, ["battle", "combat", "animation", "damage"])
 			var target: Node2D = (
 				allied_units[event.target_position]
 				if event.is_allied_side
 				else enemy_units[event.target_position]
 			)
-			printt("Damage target:", target, "Damage", event.damage_amount)
+			Log.debug("Applying damage to target", {
+				"target": target.name if target else "unknown",
+				"damage": event.damage_amount
+			}, ["battle", "combat", "animation", "damage", "card"])
 
 		elif event is BattleContext.ShieldEvent:
-			print("Shield")
+			Log.debug("Shield event", {
+				"target_position": event.target_position,
+				"shield_active": event.shield_active,
+				"allied_side": event.is_allied_side
+			}, ["battle", "combat", "animation", "ability"])
 			var target: Node2D = (
 				allied_units[event.target_position]
 				if event.is_allied_side
@@ -156,10 +173,18 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				target.show_shield()
 			else:
 				target.hide_shield()
-			print("shield removed / added on", target)
+			Log.debug("Shield status changed", {
+				"target": target.name if target else "unknown",
+				"shield_active": event.shield_active
+			}, ["battle", "animation", "ability", "combat", "card"])
 
 		elif event is BattleContext.StatChangeEvent:
-			print("Stat Change", event)
+			Log.debug("Stat change event", {
+				"stat": event.stat_name,
+				"target_position": event.target_position,
+				"new_value": event.new_stat_value,
+				"allied_side": event.is_allied_side
+			}, ["battle", "animation", "stat", "combat"])
 			var unit_side: Dictionary = allied_units if event.is_allied_side else enemy_units
 			if !unit_side.has(event.target_position):
 				continue
@@ -172,7 +197,10 @@ func enact(battle_events: Array[Context.Event]) -> void:
 					target.base.set_card_health(event.new_stat_value)
 
 		elif event is BattleContext.DeathEvent:
-			print("Death")
+			Log.debug("Death event", {
+				"unit_position": event.unit_position,
+				"allied_side": event.is_allied_side
+			}, ["battle", "animation", "death", "combat"])
 			var side: Dictionary = allied_units if event.is_allied_side else enemy_units
 			var target: Node2D = side[event.unit_position]
 			side.erase(event.unit_position)
@@ -180,10 +208,10 @@ func enact(battle_events: Array[Context.Event]) -> void:
 
 		elif event is BattleContext.StartOfTurnEvent:
 			await get_tree().create_timer(0.1).timeout
-			print("start of turn")
+			Log.debug("Start of turn event", {}, ["battle", "animation", "state_transition", "combat"])
 
 		elif event is BattleContext.EndOfTurnEvent:
-			print("end of turn")
+			Log.debug("End of turn event", {}, ["battle", "animation", "state_transition", "combat"])
 			await return_tween.finished
 
 	# Cleanup phase

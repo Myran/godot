@@ -9,7 +9,7 @@ func _ready() -> void:
 
 
 func on_hold_toggle(state: bool, btn: TextureButton) -> void:
-	print("button toggle: ", btn, state)
+	Log.debug("Hold button toggled", {"button": btn.name, "state": state, "column": btn.get_index()}, ["ui", "draft"])
 	var col: int = btn.get_index()
 #	ui.action(ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED,[btn.button_pressed,col])
 	ui.action(ui.DraftHolderToggledEvent.new(btn.button_pressed, col))

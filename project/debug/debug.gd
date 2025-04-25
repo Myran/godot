@@ -34,10 +34,12 @@ class SelectionReference:
 	var value: int = -1
 
 func setup(init_args: Dictionary) -> void:
-	print("setup with args", init_args)
+	Log.debug("Debug setup with arguments", init_args, ["debug"])
 
 
 func _ready() -> void:
+	Engine.print_error_messages = true
+	Engine.print_to_stdout = true
 	var debug_text: String
 	if OS.is_debug_build():
 		debug_text = "Build is debug"
@@ -47,9 +49,9 @@ func _ready() -> void:
 	%DebugRichTextLabel3.text = str("Commit: ", Engine.get_version_info()["hash"])
 
 	if ClassDB.class_exists("FirebaseDatabase"):
-		print("RealTime Database Singelton exists")
+		Log.info("Firebase RealTime Database available", {}, [Log.TAG_FIREBASE])
 		db = ClassDB.instantiate("FirebaseDatabase")
-		print("RealTime Database instance: ", db)
+		Log.debug("RealTime Database instance created", {"db_instance": db}, [Log.TAG_FIREBASE])
 		db.connect("get_value", Callable(self, "get_value"), CONNECT_DEFERRED)
 		db.connect("child_changed", Callable(self, "child_changed"), CONNECT_DEFERRED)
 		db.connect("child_moved", Callable(self, "child_moved"), CONNECT_DEFERRED)
@@ -68,39 +70,39 @@ func _ready() -> void:
 	check_for_test_mode()
 
 	if ClassDB.class_exists("FirebaseRemoteConfig"):
-		print("Remote Config exists")
+		Log.info("Firebase Remote Config available", {}, [Log.TAG_FIREBASE])
 		remote_config = ClassDB.instantiate("FirebaseRemoteConfig")
 		remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
 
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
-		print("facebook singleton exists")
+		Log.info("Facebook SDK available", {}, [Log.TAG_FIREBASE])
 	else:
-		print("Facebook singleton does not exist")
+		Log.warning("Facebook SDK not available", {}, [Log.TAG_FIREBASE])
 
 
 func messaging_token() -> void:
-	print("Messaging: token set")
+	Log.info("Firebase Messaging token set", {}, [Log.TAG_FIREBASE])
 
 
 func messaging_message() -> void:
-	print("Messaging: message: ")
+	Log.info("Firebase Messaging message received", {}, [Log.TAG_FIREBASE])
 
 
 func _on_Button_remote_config_string_pressed() -> void:
-	print("Button remote config string press")
+	Log.debug("Remote config string button pressed", {}, [Log.TAG_FIREBASE, "ui"])
 	remote_config.set_instant_fetching()
 	var rc_string: String = "local value"
 	rc_string = remote_config.get_string("test_string")
-	printt("Remote string:", rc_string)
+	Log.debug("Remote config string value", {"value": rc_string}, [Log.TAG_FIREBASE])
 	status_label.text = str("Remote config string: ", rc_string)
 
 
 func remote_config_loaded() -> void:
-	printt("Remote config loaded")
+	Log.info("Remote config loaded successfully", {}, [Log.TAG_FIREBASE])
 
 
 func _on_Button_update_pressed() -> void:
-	printt("Button update pressed")
+	Log.debug("Update button pressed", {}, [Log.TAG_FIREBASE, "ui"])
 	db.update_children(["update"], {"key1": "value", "key2": "value"})
 
 
@@ -112,41 +114,41 @@ func _on_Button_delete_pressed() -> void:
 func _on_Button_push_child_pressed() -> void:
 	var key: String = "pushed"
 	var pushString: String = db.push_child(["push", key])
-	printt("Pushed string key:", key, "return string", pushString)
+	Log.debug("Child push operation", {"key": key, "push_string": pushString}, [Log.TAG_FIREBASE])
 	db.set_value(["push", pushString], count)
 	count = count + 1
 
 
 func _on_Button_set_value_pressed() -> void:
-	printt("Set value pressed")
+	Log.debug("Set value button pressed", {}, [Log.TAG_FIREBASE, "ui"])
 	db.set_value(["tom"], str("Value", count))
 	count = count + 1
 
 
 func _on_Button_get_value_pressed() -> void:
-	printt("Get_value pressed")
+	Log.debug("Get value button pressed", {}, [Log.TAG_FIREBASE, "ui"])
 	db.get_value(["tom"])
 
 
 func child_moved(key: String, value: Variant) -> void:
-	printt("child moved", key, "value", value)
+	Log.debug("Firebase child moved", {"key": key, "value": value}, [Log.TAG_FIREBASE])
 
 
 func child_added(key: String, value: Variant) -> void:
-	printt("child added", key, "value", value)
+	Log.debug("Firebase child added", {"key": key, "value": value}, [Log.TAG_FIREBASE])
 
 
 func child_removed(key: String, value: Variant) -> void:
-	printt("child removed", key, "value", value)
+	Log.debug("Firebase child removed", {"key": key, "value": value}, [Log.TAG_FIREBASE])
 
 
 func child_changed(key: String, value: Variant) -> void:
-	printt("Child changed:", "key:", key, "value", value)
+	Log.debug("Firebase child changed", {"key": key, "value": value}, [Log.TAG_FIREBASE])
 	status_label.call_deferred("set_text", str("Value changed: ", key, "\n", "value: ", value))
 
 
 func get_value(key: String, value: Variant) -> void:
-	printt("key:", key, "Value:", value)
+	Log.debug("Firebase get_value response", {"key": key, "value": value}, [Log.TAG_FIREBASE])
 	status_label.text = str("Get_value for key: ", key, "\n", "Value: ", value)
 
 
@@ -277,7 +279,7 @@ func check_provider_connection(provider_name: String) -> bool:
 			if provider.name == provider_name:
 				return true
 	else:
-		print("not logged in")
+		Log.warning("Provider check failed - user not logged in", {"provider": provider_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
 	return false
 
 
@@ -513,18 +515,18 @@ func _test_connection_monitoring() -> void:
 # Signal handlers for test validation
 
 func _on_test_get_value(key: String, value: Variant) -> void:
-	printt("Test get_value received:", "key:", key, "Value:", value)
+	Log.debug("Test get_value received", {"key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
 	if firebase_tests_running:
 		_log_test_result("get_value", true, "Retrieved value: " + str(value))
 
 func on_test_query_result(key: String, value: Variant) -> void:
-	printt("Test query_result received:", "key:", key, "value:", value)
+	Log.debug("Test query_result received", {"key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
 	if firebase_tests_running:
 		var success: bool = typeof(value) == TYPE_DICTIONARY and value.size() > 0
 		_log_test_result("query", success, "Query returned " + str(value.size()) + " results")
 
 func on_test_transaction_completed(key: String, value: Variant, success: bool) -> void:
-	printt("Test transaction_completed:", "success:", success, "key:", key, "value:", value)
+	Log.debug("Test transaction_completed", {"success": success, "key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
 	if firebase_tests_running:
 		var expected_value: int = 15  # 10 + 5
 		var value_correct: bool = typeof(value) == TYPE_INT and value == expected_value
@@ -533,12 +535,12 @@ func on_test_transaction_completed(key: String, value: Variant, success: bool) -
 			", value: " + str(value) + " (expected: " + str(expected_value) + ")")
 
 func on_test_connection_state_changed(connected: bool) -> void:
-	printt("Test connection state changed:", connected)
+	Log.debug("Test connection state changed", {"connected": connected}, [Log.TAG_FIREBASE, "test"])
 	if firebase_tests_running:
 		_log_test_result("connection_monitoring", true, "Connection state: " + ("connected" if connected else "disconnected"))
 
 func on_test_db_error(code: String, message: String) -> void:
-	printt("Test database error:", "code:", code, "message:", message)
+	Log.error("Test database error", {"code": code, "message": message}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "test"])
 	if firebase_tests_running:
 		_log_test_result("db_error", false, "Error " + code + ": " + message)
 

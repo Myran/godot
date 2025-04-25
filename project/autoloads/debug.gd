@@ -43,7 +43,7 @@ func _on_debug_event(event: DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
 #return force_level if OS.is_debug_build() else false
 #
 func _ready() -> void:
-	print("debug ready")
+	Log.info("Debug module initialized", {}, [Log.TAG_DB])
 	popup_debug.hide()
 	debug_event.connect(_on_debug_event)
 	for btn : Button in v_box_container_buttons.get_children():
@@ -57,7 +57,7 @@ func debug_button_pressed(_name: String) -> void:
 		'button_db_debug':
 			action(DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU)
 		"button_pop_enemy":
-			print("pop enemy")
+			Log.debug("Populating enemy lineup with test cards", {}, [Log.TAG_DB, "debug"])
 			for n : int in 3:
 				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
@@ -69,7 +69,7 @@ func debug_button_pressed(_name: String) -> void:
 				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
 				core.action(core.DebugLineupAddCardEvent.new(new_card, n))
 		"select_game":
-			print("select game")
+			Log.debug("Game selection requested", {}, ["debug", "ui"])
 			popup_debug.hide()
 			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR)
 
@@ -89,7 +89,7 @@ func debug_button_pressed(_name: String) -> void:
 		"match_level_5":
 			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
 		_:
-			print("unnused button pressed: ", _name)
+			Log.warning("Unused debug button pressed", {"button_name": _name}, ["debug", "ui"])
 #
 #func _process(_delta):
 #if toggle_orientation:

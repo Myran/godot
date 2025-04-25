@@ -181,4 +181,4 @@ func action(_event: CoreEvent) -> void:
 
 
 func _ready() -> void:
-	print("core autoload ready")
+	Log.info("Core autoload initialized", {}, ["system"])
