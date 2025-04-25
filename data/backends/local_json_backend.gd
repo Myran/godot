@@ -72,7 +72,7 @@ func get_data(path: Array, key: String) -> Variant:
 		if key_in_sheets:
 			var result = sheets_data[key]
 			var result_type = typeof(result)
-			var result_size = result is Array ? result.size() : (result is Dictionary ? result.keys().size() : 0)
+			var result_size = result.size() if result is Array else result.keys().size() if result is Dictionary else 0
 			
 			Log.info("Found key in sheets data", {
 				"key": key, 
@@ -167,8 +167,8 @@ func get_data(path: Array, key: String) -> Variant:
 		Log.info("Empty key requested, returning entire data at path", {
 			"path": path,
 			"data_type": typeof(current_data),
-			"data_size": current_data is Array ? current_data.size() : 
-						(current_data is Dictionary ? current_data.keys().size() : 0),
+			"data_size": current_data.size() if current_data is Array else 
+						current_data.keys().size() if current_data is Dictionary else 0,
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
 		
@@ -186,7 +186,7 @@ func get_data(path: Array, key: String) -> Variant:
 	if has_key:
 		var result = current_data[key]
 		var result_type = typeof(result)
-		var result_size = result is Array ? result.size() : (result is Dictionary ? result.keys().size() : 0)
+		var result_size = result.size() if result is Array else result.keys().size() if result is Dictionary else 0
 		
 		Log.info("Found key in current data", {
 			"key": key,
@@ -310,7 +310,7 @@ func _load_local_data() -> bool:
 				structure_info[key] = {
 					"type": "Array", 
 					"size": value.size(),
-					"sample": value.size() > 0 ? _get_value_type_info(value[0]) : "empty"
+					"sample": _get_value_type_info(value[0]) if value.size() > 0 else "empty"
 				}
 			else:
 				structure_info[key] = {

@@ -88,7 +88,7 @@ func get_all(use_cache: bool = true) -> Array:
 		Log.debug("Processing card data result", {
 			"result_type": typeof(result),
 			"is_array": result is Array,
-			"result_size": result is Array ? result.size() : 0,
+			"result_size": result.size() if result is Array else 0,
 			"collection_name": _collection_name,
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB])

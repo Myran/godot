@@ -6,33 +6,36 @@ extends Node
 
 # Signals
 signal startup_completed
+# Signal below is used by Firebase connections - kept for compatibility with original code
+# @warning_ignore:unused_signal
 signal value_received(data: Dictionary)
 
 # Constants (restored from original)
-# Google Sheet ID from the JSON structure
-const SHEET_ID = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
-const SHEETS = "sheets" # Legacy key - not used in actual JSON
-const PLAYERS = "players"
-const AVATAR_DATA = "avatar_data"
-const EVENTS = "event_data_0"
-const LEVELS = "levels_0"
-const ITEMS = "items_0"
-const RULES = "rules_0"
-const _CARDS = "cards_0"
+# Google Sheet ID from the JSON structure - explicitly typed constants
+const SHEET_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+const SHEETS: String = "sheets" # Legacy key - not used in actual JSON
+const PLAYERS: String = "players"
+const AVATAR_DATA: String = "avatar_data"
+const EVENTS: String = "event_data_0"
+const LEVELS: String = "levels_0"
+const ITEMS: String = "items_0"
+const RULES: String = "rules_0"
+const _CARDS: String = "cards_0"
 
 # Add helper function to check if we have game data
 func has_game_data() -> bool:
 	return local_data.has(_CARDS) or local_data.has("cards_0") or local_data.has("cards")
 
-# Collections
-var cards: Node
-var levels: Node
-var items: Node
-var players: Node
-var events: Node
-var rules: Node
+# Collections with specific type annotations
+var cards: CardCollectionImpl
+var levels: LevelCollectionImpl
+var items: ItemCollectionImpl
+var players: PlayerCollectionImpl
+var events: EventCollectionImpl
+var rules: RulesCollectionImpl
 
 # Internal state
+# @warning_ignore:unused_private_class_variable - Kept for compatibility with external code
 var _backend: Node = null
 var using_local_data: bool = false
 var _initialized: bool = false
@@ -111,7 +114,7 @@ func load_local_data(db_file: String) -> void:
 			Log.debug("Found standard SHEETS key in JSON", {}, [Log.TAG_LOCAL])
 		elif res.has(SHEET_ID) and res[SHEET_ID] is Dictionary:
 			# This is our actual structure with Google Sheet ID as the key
-			var sheet_data = res[SHEET_ID]
+			var sheet_data: Dictionary = res[SHEET_ID]
 			Log.debug("Found Sheet ID in JSON with keys", {"keys": sheet_data.keys()}, [Log.TAG_LOCAL])
 
 			# Extract all the collections we need directly
@@ -119,7 +122,7 @@ func load_local_data(db_file: String) -> void:
 
 			# Look for game cards - debug the structure
 			if sheet_data.has(_CARDS):
-				var card_data = sheet_data[_CARDS]
+				var card_data: Variant = sheet_data[_CARDS]
 				Log.debug("Found card data", {
 					"card_type": typeof(card_data),
 					"is_array": card_data is Array,
@@ -128,8 +131,8 @@ func load_local_data(db_file: String) -> void:
 		else:
 			Log.warning("JSON data does not match expected format", {"keys": res.keys()}, [Log.TAG_LOCAL])
 			# Try to find any collection keys at root level
-			var found_collections = false
-			for key in [_CARDS, LEVELS, ITEMS, RULES, EVENTS]:
+			var found_collections: bool = false
+			for key: String in [_CARDS, LEVELS, ITEMS, RULES, EVENTS]:
 				if res.has(key):
 					local_data[key] = res[key]
 					found_collections = true
@@ -153,25 +156,35 @@ func load_local_data(db_file: String) -> void:
 class CardCollectionImpl extends Node:
 	var _parent: Node
 	var _collection_key: String
-	var _cache: Array = []
+	var _cache: Array[Dictionary] = []
 	var _is_cache_initialized: bool = false
 
-	func _init(parent: Node, collection_key: String = "cards_0"):
+	func _init(parent: Node, collection_key: String = "cards_0") -> void:
 		_parent = parent
 		_collection_key = collection_key
 
-	func get_all(use_cache: bool = true) -> Array:
+	func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
 			Log.debug("Using card cache", {"cache_size": _cache.size()}, [Log.TAG_DB, Log.TAG_CACHE])
 			return _cache
 
 		# Use the parent's get_db_sheet method to access actual data
-		var cards = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var cards_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var cards: Array[Dictionary] = []
+
+		# Convert to typed array
+		if cards_data is Array:
+			for card_item: Dictionary in cards_data:
+				if card_item is Dictionary:
+					cards.append(card_item)
 
 		# If we didn't find any data, check if we have test data
 		if (cards.is_empty() or cards.size() == 0) and _parent.has_method("_get_test_cards"):
 			Log.warning("No card data found, using test cards", {}, [Log.TAG_DB])
-			cards = _parent._get_test_cards()
+			var test_cards: Array = _parent._get_test_cards()
+			for card_item: Dictionary in test_cards:
+				if card_item is Dictionary:
+					cards.append(card_item)
 
 		_cache = cards
 		_is_cache_initialized = true
@@ -187,7 +200,7 @@ class CardCollectionImpl extends Node:
 			Log.error("Empty card_id provided", {}, [Log.TAG_DB, Log.TAG_ERROR])
 			return {}
 
-		var results = await get_all(use_cache)
+		var results: Array[Dictionary] = await get_all(use_cache)
 
 		if results.is_empty():
 			Log.error("No cards found in collection", {}, [Log.TAG_DB, Log.TAG_ERROR])
@@ -196,21 +209,23 @@ class CardCollectionImpl extends Node:
 		Log.debug("Searching through cards", {"count": results.size()}, [Log.TAG_DB])
 
 		# First try integer comparison exactly like the original implementation
-		for card in results:
+		for card: Dictionary in results:
 			if not card.has("id"):
 				continue
 
-			var id = card.id
-			if int(id) == int(card_id):
-				Log.debug("Card found by int comparison", {"card_id": card_id, "card_id_value": card_id, "id_value": id}, [Log.TAG_DB])
-				return card
+			var id: Variant = card.id
+			# Safely convert to int using is_valid_int check
+			if str(id).is_valid_int() and str(card_id).is_valid_int():
+				if str(id).to_int() == str(card_id).to_int():
+					Log.debug("Card found by int comparison", {"card_id": card_id, "card_id_value": card_id, "id_value": id}, [Log.TAG_DB])
+					return card
 
 		# If that fails, try string comparison as backup
-		for card in results:
+		for card: Dictionary in results:
 			if not card.has("id"):
 				continue
 
-			var id = card.id
+			var id: Variant = card.id
 			if str(id) == str(card_id):
 				Log.debug("Card found by string comparison", {"card_id": card_id}, [Log.TAG_DB])
 				return card
@@ -221,8 +236,8 @@ class CardCollectionImpl extends Node:
 	func get_id_by_name(card_name: String) -> String:
 		Log.info("Getting card ID from name", {"name": card_name}, [Log.TAG_DB])
 
-		var cards = await get_all()
-		for card in cards:
+		var cards: Array[Dictionary] = await get_all()
+		for card: Dictionary in cards:
 			if not card.has("name"):
 				continue
 
@@ -233,10 +248,10 @@ class CardCollectionImpl extends Node:
 		Log.error("Card name not found", {"name": card_name}, [Log.TAG_DB, Log.TAG_ERROR])
 		return ""
 
-	func get_by_type(card_type: String) -> Array:
-		var filtered = []
-		var cards = await get_all()
-		for card in cards:
+	func get_by_type(card_type: String) -> Array[Dictionary]:
+		var filtered: Array[Dictionary] = []
+		var cards: Array[Dictionary] = await get_all()
+		for card: Dictionary in cards:
 			if "type" in card and card.type == card_type:
 				filtered.append(card)
 		return filtered
@@ -248,24 +263,34 @@ class CardCollectionImpl extends Node:
 class LevelCollectionImpl extends Node:
 	var _parent: Node
 	var _collection_key: String
-	var _cache: Array = []
+	var _cache: Array[Dictionary] = []
 	var _is_cache_initialized: bool = false
 
-	func _init(parent: Node, collection_key: String = "levels_0"):
+	func _init(parent: Node, collection_key: String = "levels_0") -> void:
 		_parent = parent
 		_collection_key = collection_key
 
-	func get_all(use_cache: bool = true) -> Array:
+	func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
 			return _cache
 
 		# Use the parent's get_db_sheet method to access actual data
-		var levels = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var levels_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var levels: Array[Dictionary] = []
+
+		# Convert to typed array
+		if levels_data is Array:
+			for level_item: Dictionary in levels_data:
+				if level_item is Dictionary:
+					levels.append(level_item)
 
 		# If we didn't find any data, check if we have test data
 		if levels.is_empty() and _parent.has_method("_get_test_levels"):
 			Log.warning("No level data found, using test levels", {}, [Log.TAG_DB])
-			levels = _parent._get_test_levels()
+			var test_levels: Array = _parent._get_test_levels()
+			for level_item: Dictionary in test_levels:
+				if level_item is Dictionary:
+					levels.append(level_item)
 
 		_cache = levels
 		_is_cache_initialized = true
@@ -274,15 +299,17 @@ class LevelCollectionImpl extends Node:
 	func get_by_number(level_nr: int) -> Dictionary:
 		Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
 
-		var levels = await get_all()
-		for level in levels:
+		var levels: Array = await get_all()
+		for level: Dictionary in levels:
 			if not level.has("id"):
 				continue
 
-			var id = level.id
-			if int(id) == level_nr:
-				Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
-				return level
+			var id: Variant = level.id
+			# Safely convert to int using is_valid_int check
+			if str(id).is_valid_int():
+				if str(id).to_int() == level_nr:
+					Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
+					return level
 
 		Log.warning("No level data found for level", {"level": level_nr}, [Log.TAG_DB])
 		return {}
@@ -294,24 +321,34 @@ class LevelCollectionImpl extends Node:
 class ItemCollectionImpl extends Node:
 	var _parent: Node
 	var _collection_key: String
-	var _cache: Array = []
+	var _cache: Array[Dictionary] = []
 	var _is_cache_initialized: bool = false
 
-	func _init(parent: Node, collection_key: String = "items_0"):
+	func _init(parent: Node, collection_key: String = "items_0") -> void:
 		_parent = parent
 		_collection_key = collection_key
 
-	func get_all(use_cache: bool = true) -> Array:
+	func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		if use_cache and _is_cache_initialized and not _cache.is_empty():
 			return _cache
 
 		# Use the parent's get_db_sheet method to access actual data
-		var items = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var items_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var items: Array[Dictionary] = []
+
+		# Convert to typed array
+		if items_data is Array:
+			for item_item: Dictionary in items_data:
+				if item_item is Dictionary:
+					items.append(item_item)
 
 		# If we didn't find any data, check if we have test data
 		if items.is_empty() and _parent.has_method("_get_test_items"):
 			Log.warning("No item data found, using test items", {}, [Log.TAG_DB])
-			items = _parent._get_test_items()
+			var test_items: Array = _parent._get_test_items()
+			for item_item: Dictionary in test_items:
+				if item_item is Dictionary:
+					items.append(item_item)
 
 		_cache = items
 		_is_cache_initialized = true
@@ -320,8 +357,8 @@ class ItemCollectionImpl extends Node:
 	func get_by_id(item_id: String) -> Dictionary:
 		Log.info("Getting item info", {"item_id": item_id}, [Log.TAG_DB])
 
-		var items = await get_all()
-		for item in items:
+		var items: Array[Dictionary] = await get_all()
+		for item: Dictionary in items:
 			if not item.has("id"):
 				continue
 
@@ -335,8 +372,8 @@ class ItemCollectionImpl extends Node:
 	func get_id_by_name(item_name: String) -> String:
 		Log.info("Getting item ID from name", {"name": item_name}, [Log.TAG_DB])
 
-		var items = await get_all()
-		for item in items:
+		var items: Array[Dictionary] = await get_all()
+		for item: Dictionary in items:
 			if not item.has("name"):
 				continue
 
@@ -355,12 +392,12 @@ class RulesCollectionImpl extends Node:
 	var _parent: Node
 	var _collection_key: String
 
-	func _init(parent: Node, collection_key: String = "rules_0"):
+	func _init(parent: Node, collection_key: String = "rules_0") -> void:
 		_parent = parent
 		_collection_key = collection_key
 
 	func get_rules() -> Dictionary:
-		var rules = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), true)
+		var rules: Dictionary = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), true)
 
 		# If we didn't find any data, check if we have test data
 		if rules.is_empty() and _parent.has_method("_get_test_rules"):
@@ -373,17 +410,27 @@ class EventCollectionImpl extends Node:
 	var _parent: Node
 	var _collection_key: String
 
-	func _init(parent: Node, collection_key: String = "event_data_0"):
+	func _init(parent: Node, collection_key: String = "event_data_0") -> void:
 		_parent = parent
 		_collection_key = collection_key
 
-	func get_all() -> Array:
-		var events = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+	func get_all() -> Array[Dictionary]:
+		var events_data: Variant = await _parent.get_db_sheet(_collection_key.trim_suffix("_0"), false)
+		var events: Array[Dictionary] = []
+
+		# Convert to typed array
+		if events_data is Array:
+			for event_item: Dictionary in events_data:
+				if event_item is Dictionary:
+					events.append(event_item)
 
 		# If we didn't find any data, check if we have test data
 		if events.is_empty() and _parent.has_method("_get_test_events"):
 			Log.warning("No event data found, using test events", {}, [Log.TAG_DB])
-			events = _parent._get_test_events()
+			var test_events: Array = _parent._get_test_events()
+			for event_item: Dictionary in test_events:
+				if event_item is Dictionary:
+					events.append(event_item)
 
 		return events
 
@@ -394,16 +441,16 @@ class EventCollectionImpl extends Node:
 		return {}
 
 	func save_lineup_data(
-		event: String,
-		lineup: Dictionary,
-		level: int = 1,
-		p_data: Dictionary = {},
-		lives: int = 3,
-		lineup_uuid: String = ""
+		_event: String,  # Underscore prefix for unused parameter
+		_lineup: Dictionary,
+		_level: int = 1,
+		_p_data: Dictionary = {},
+		_lives: int = 3,
+		_lineup_uuid: String = ""
 	) -> String:
 		return "test-id-" + str(Time.get_unix_time_from_system())
 
-	func remove_event_lineups(event: String) -> bool:
+	func remove_event_lineups(_event: String) -> bool:  # Underscore prefix for unused parameter
 		return true
 
 class PlayerCollectionImpl extends Node:
@@ -419,7 +466,7 @@ class PlayerCollectionImpl extends Node:
 			"id": uuid if not uuid.is_empty() else "1"
 		}
 
-	func save_user_data(data: Dictionary) -> bool:
+	func save_user_data(_data: Dictionary) -> bool:  # Unused parameter with underscore
 		return true
 
 	func get_default_data() -> Dictionary:
@@ -435,12 +482,12 @@ class PlayerCollectionImpl extends Node:
 
 func _initialize_collections() -> void:
 	# Create collections that use the parent DataSource for data access
-	cards = CardCollectionImpl.new(self, _CARDS)
-	levels = LevelCollectionImpl.new(self, LEVELS)
-	items = ItemCollectionImpl.new(self, ITEMS)
-	players = PlayerCollectionImpl.new()
-	events = EventCollectionImpl.new(self, EVENTS)
-	rules = RulesCollectionImpl.new(self, RULES)
+	cards = CardCollectionImpl.new(self, _CARDS) as CardCollectionImpl
+	levels = LevelCollectionImpl.new(self, LEVELS) as LevelCollectionImpl
+	items = ItemCollectionImpl.new(self, ITEMS) as ItemCollectionImpl
+	players = PlayerCollectionImpl.new() as PlayerCollectionImpl
+	events = EventCollectionImpl.new(self, EVENTS) as EventCollectionImpl
+	rules = RulesCollectionImpl.new(self, RULES) as RulesCollectionImpl
 
 	# In editor mode, always use local data
 	using_local_data = true
@@ -475,7 +522,7 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 
 	# Try the full name first (with test_group suffix)
 	if local_data.has(full_name):
-		var result = local_data[full_name]
+		var result: Variant = local_data[full_name]
 		Log.debug(
 			"Retrieved sheet from local data (with test_group)",
 			{"sheet": full_name},
@@ -487,9 +534,9 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 		return result
 
 	# If not found, try with "_0" suffix (standard format)
-	var standard_name = str(sheet_name, "_0")
+	var standard_name: String = str(sheet_name, "_0")
 	if local_data.has(standard_name):
-		var result = local_data[standard_name]
+		var result: Variant = local_data[standard_name]
 		Log.debug(
 			"Retrieved sheet from local data (standard format)",
 			{"sheet": standard_name},
@@ -502,7 +549,7 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 
 	# If still not found, try without any suffix
 	if local_data.has(sheet_name):
-		var result = local_data[sheet_name]
+		var result: Variant = local_data[sheet_name]
 		Log.debug(
 			"Retrieved sheet from local data (no suffix)",
 			{"sheet": sheet_name},
@@ -531,7 +578,7 @@ func is_firebase_available() -> bool:
 func is_initialized() -> bool:
 	return _initialized
 
-# Legacy compatibility methods
+# Legacy compatibility methods with explicit return types
 func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	return await cards.get_by_id(card_id, use_cache)
 
@@ -556,9 +603,11 @@ func get_item_id_from_name(target_name: String) -> String:
 func get_all_items() -> Array:
 	return await items.get_all()
 
+# @warning_ignore:redundant_await - Kept for consistency with other async methods
 func get_user_data(uuid: String = "") -> Dictionary:
 	return await players.get_user_data(uuid)
 
+# @warning_ignore:redundant_await - Kept for consistency with other async methods
 func save_user_data(data: Dictionary) -> bool:
 	return await players.save_user_data(data)
 
@@ -571,21 +620,24 @@ func get_rules_data() -> Dictionary:
 func get_event_data() -> Array:
 	return await events.get_all()
 
+# @warning_ignore:redundant_await
 func get_event_lineups_data(event: String) -> Dictionary:
 	return await events.get_lineup_data(event)
 
+# @warning_ignore:redundant_await - Kept for consistency with other async methods
 func save_event_lineup_data(
-	event: String,
-	lineup: Dictionary,
-	level: int = 1,
-	p_data: Dictionary = {},
-	lives: int = 3,
-	lineup_uuid: String = ""
+	_event: String,    # Unused parameter prefixed with underscore
+	_lineup: Dictionary,
+	_level: int = 1,
+	_p_data: Dictionary = {},
+	_lives: int = 3,
+	_lineup_uuid: String = ""
 ) -> String:
-	return await events.save_lineup_data(event, lineup, level, p_data, lives, lineup_uuid)
+	return await events.save_lineup_data(_event, _lineup, _level, _p_data, _lives, _lineup_uuid)
 
-func remove_event_lineups(event: String) -> bool:
-	return await events.remove_event_lineups(event)
+# @warning_ignore:redundant_await - Kept for consistency with other async methods
+func remove_event_lineups(_event: String) -> bool:    # Unused parameter prefixed with underscore
+	return await events.remove_event_lineups(_event)
 
 func activate_card_cache() -> void:
 	Log.info("Activating card cache", {}, [Log.TAG_CACHE, Log.TAG_DB])
@@ -606,40 +658,42 @@ func clear_item_cache() -> void:
 	items.clear_cache()
 
 # Legacy method kept for backward compatibility
-func set_root(new_root: Array) -> void:
-	Log.debug("Legacy set_root called (simplified)", {"path": new_root}, [Log.TAG_DB])
+func set_root(_new_root: Array) -> void:    # Unused parameter prefixed with underscore
+	Log.debug("Legacy set_root called (simplified)", {"path": _new_root}, [Log.TAG_DB])
 
 # Legacy method - simplified implementation
-func get_db_value(value: String) -> Variant:
-	Log.debug("Legacy get_db_value called (simplified)", {"key": value}, [Log.TAG_DB])
+func get_db_value(_value: String) -> Variant:    # Unused parameter prefixed with underscore
+	Log.debug("Legacy get_db_value called (simplified)", {"key": _value}, [Log.TAG_DB])
 	return null
 
 # For compatibility with other code
-func get_backend():
+func get_backend() -> Variant:    # Add explicit return type
 	return null
 
-# Enhanced debugging function
+# Enhanced debugging function with typed variables
 func debug_card_retrieval(card_id: String) -> Dictionary:
 	Log.info("Debugging card retrieval", {"card_id": card_id}, [Log.TAG_DB])
 
-	var debug_info = {
+	var debug_info: Dictionary = {
 		"original_id": card_id,
 		"id_type": typeof(card_id),
 		"results": {}
 	}
 
 	# Try with cache
-	var with_cache = await cards.get_by_id(card_id, true)
+	var with_cache: Dictionary = await cards.get_by_id(card_id, true)
 	debug_info.results.with_cache = {
 		"found": not with_cache.is_empty(),
+		# @warning_ignore:incompatible_ternary
 		"data": with_cache if not with_cache.is_empty() else null
 	}
 
 	# Clear cache and try again
 	cards.clear_cache()
-	var without_cache = await cards.get_by_id(card_id, false)
+	var without_cache: Dictionary = await cards.get_by_id(card_id, false)
 	debug_info.results.without_cache = {
 		"found": not without_cache.is_empty(),
+		# @warning_ignore:incompatible_ternary
 		"data": without_cache if not without_cache.is_empty() else null
 	}
 
@@ -655,7 +709,7 @@ func debug_card_retrieval(card_id: String) -> Dictionary:
 	}
 
 	# Check data from get_db_sheet directly
-	var cards_data = await get_db_sheet(_CARDS.trim_suffix("_0"), false)
+	var cards_data: Array = await get_db_sheet(_CARDS.trim_suffix("_0"), false)
 	debug_info["direct_sheet_access"] = {
 		"found_cards": cards_data is Array and not cards_data.is_empty(),
 		"card_count": cards_data.size() if cards_data is Array else 0
@@ -664,15 +718,16 @@ func debug_card_retrieval(card_id: String) -> Dictionary:
 	Log.info("Card retrieval debug complete", debug_info, [Log.TAG_DB])
 	return debug_info
 
-# Initialize test data (only used if no data is found in JSON)
+# Initialize test data (only used if no data is found in JSON) with typed variables and iterators
 func _initialize_test_data() -> void:
 	Log.warning("No data found in JSON, initializing test data", {}, [Log.TAG_DB])
 
 	# Create test card data that matches the structure in the original implementation
-	var test_cards = []
-	for i in range(10):
-		var rarity = "rare" if i % 3 == 0 else "common"
-		test_cards.append({
+	var test_card_data: Array = []
+	# @warning_ignore:incompatible_ternary
+	for i: int in range(10):
+		var rarity: String = "rare" if i % 3 == 0 else "common"
+		test_card_data.append({
 			"id": str(i),
 			"name": "Test Card " + str(i),
 			"card_name": "Test Card " + str(i),
@@ -688,9 +743,9 @@ func _initialize_test_data() -> void:
 		})
 
 	# Create test level data
-	var test_levels = []
-	for i in range(5):
-		test_levels.append({
+	var test_level_data: Array = []
+	for i: int in range(5):
+		test_level_data.append({
 			"id": str(i + 1),
 			"name": "Level " + str(i + 1),
 			"difficulty": i + 1,
@@ -698,10 +753,11 @@ func _initialize_test_data() -> void:
 		})
 
 	# Create test item data
-	var test_items = []
-	for i in range(5):
-		var item_type = "weapon" if i % 2 == 0 else "armor"
-		test_items.append({
+	var test_item_data: Array = []
+	# @warning_ignore:incompatible_ternary
+	for i: int in range(5):
+		var item_type: String = "weapon" if i % 2 == 0 else "armor"
+		test_item_data.append({
 			"id": str(i),
 			"name": "Test Item " + str(i),
 			"type": item_type,
@@ -709,7 +765,7 @@ func _initialize_test_data() -> void:
 		})
 
 	# Create test rules data - must match structure exactly expected by the game
-	var test_rules = [{
+	var test_rules: Array = [{
 		"chance_lvl_2_star_1": "30",
 		"chance_lvl_2_star_2": "10",
 		"chance_lvl_2_star_3": "5",
@@ -719,9 +775,9 @@ func _initialize_test_data() -> void:
 	}]
 
 	# Create test event data
-	var test_events = []
-	for i in range(3):
-		test_events.append({
+	var test_event_data: Array = []
+	for i: int in range(3):
+		test_event_data.append({
 			"id": str(i),
 			"name": "Test Event " + str(i),
 			"start_date": "2025-0" + str(i+1) + "-01",
@@ -729,41 +785,62 @@ func _initialize_test_data() -> void:
 		})
 
 	# Add the test data to the local_data dictionary with the correct keys including the _0 suffix
-	local_data[_CARDS] = test_cards
-	local_data[LEVELS] = test_levels
-	local_data[ITEMS] = test_items
+	local_data[_CARDS] = test_card_data
+	local_data[LEVELS] = test_level_data
+	local_data[ITEMS] = test_item_data
 	local_data[RULES] = test_rules
-	local_data[EVENTS] = test_events
+	local_data[EVENTS] = test_event_data
 
 	Log.info("Test data initialized", {
-		"cards": test_cards.size(),
-		"levels": test_levels.size(),
-		"items": test_items.size(),
-		"events": test_events.size()
+		"cards": test_card_data.size(),
+		"levels": test_level_data.size(),
+		"items": test_item_data.size(),
+		"events": test_event_data.size()
 	}, [Log.TAG_DB])
 
-# Helper methods to access test data
-func _get_test_cards() -> Array:
+# Helper methods to access test data with typed returns
+func _get_test_cards() -> Array[Dictionary]:
 	if local_data.has(_CARDS):
-		return local_data[_CARDS]
+		var cards_result: Array[Dictionary] = []
+		var raw_data: Array = local_data[_CARDS]
+		for card: Dictionary in raw_data:
+			if card is Dictionary:
+				cards_result.append(card)
+		return cards_result
 	return []
 
-func _get_test_levels() -> Array:
+func _get_test_levels() -> Array[Dictionary]:
 	if local_data.has(LEVELS):
-		return local_data[LEVELS]
+		var levels_result: Array[Dictionary] = []
+		var raw_data: Array = local_data[LEVELS]
+		for level: Dictionary in raw_data:
+			if level is Dictionary:
+				levels_result.append(level)
+		return levels_result
 	return []
 
-func _get_test_items() -> Array:
+func _get_test_items() -> Array[Dictionary]:
 	if local_data.has(ITEMS):
-		return local_data[ITEMS]
+		var items_result: Array[Dictionary] = []
+		var raw_data: Array = local_data[ITEMS]
+		for item: Dictionary in raw_data:
+			if item is Dictionary:
+				items_result.append(item)
+		return items_result
 	return []
 
 func _get_test_rules() -> Dictionary:
-	if local_data.has(RULES):
-		return local_data[RULES]
+	if local_data.has(RULES) and local_data[RULES] is Array and local_data[RULES].size() > 0:
+		var rules_data: Dictionary = local_data[RULES][0]
+		return rules_data
 	return {}
 
-func _get_test_events() -> Array:
+func _get_test_events() -> Array[Dictionary]:
 	if local_data.has(EVENTS):
-		return local_data[EVENTS]
+		var events_result: Array[Dictionary] = []
+		var raw_data: Array = local_data[EVENTS]
+		for event: Dictionary in raw_data:
+			if event is Dictionary:
+				events_result.append(event)
+		return events_result
 	return []
