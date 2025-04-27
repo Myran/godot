@@ -2,8 +2,8 @@ class_name LocalJSONBackend
 extends DataBackend
 
 # Import class references directly
-const JSONPathNavigator = preload("res://data/backends/json_path_navigator.gd")
-const NavigationResult = preload("res://data/backends/navigation_result.gd")
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
 var local_data: Dictionary = {}
 var default_db_file: String = "res://resources/data.json"
