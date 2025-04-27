@@ -1,6 +1,10 @@
 class_name CardCollection
 extends BaseCollection
 
+# Import required utilities
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 var _cache: Array = []
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
@@ -37,9 +41,44 @@ func get_all(use_cache: bool = true) -> Array:
 	}, [Log.TAG_DB])
 
 	var request_start_time = Time.get_ticks_msec()
-	var result = await _backend.get_data(_get_path(), _collection_key)
+	
+	# Use the backend to get raw data
+	var raw_result = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration = Time.get_ticks_msec() - request_start_time
-
+	
+	# Process the result using JSONPathNavigator for additional safety
+	var result = null
+	
+	if raw_result != null and raw_result is Array:
+		# Data is already an array, we can use it directly
+		result = raw_result
+		
+		Log.debug("Retrieved card data array directly", {
+			"duration_ms": request_duration,
+			"count": result.size(),
+			"collection_name": _collection_name,
+			"collection_id": get_instance_id()
+		}, [Log.TAG_DB])
+	elif raw_result != null:
+		# Try to navigate using JSONPathNavigator
+		var nav_result = JSONPathNavigator.navigate(raw_result, [])
+		
+		if nav_result.found and nav_result.is_array():
+			result = nav_result.as_array()
+			
+			Log.debug("Retrieved card data via JSONPathNavigator", {
+				"duration_ms": request_duration,
+				"count": result.size(),
+				"collection_name": _collection_name,
+				"collection_id": get_instance_id()
+			}, [Log.TAG_DB])
+		else:
+			Log.error("Expected card data to be an array, got different type", {
+				"result_type": nav_result.result_type,
+				"collection_name": _collection_name,
+				"collection_id": get_instance_id()
+			}, [Log.TAG_DB, Log.TAG_ERROR])
+	
 	Log.debug("Backend get_data call completed", {
 		"duration_ms": request_duration,
 		"collection_name": _collection_name,
@@ -47,8 +86,8 @@ func get_all(use_cache: bool = true) -> Array:
 		"result_null": result == null,
 		"collection_id": get_instance_id()
 	}, [Log.TAG_DB])
-
-	# Handle case where result is null
+	
+	# Handle case where result is null or not an array
 	if result == null:
 		Log.error("No card data returned", {
 			"collection_name": _collection_name,
