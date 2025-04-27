@@ -31,12 +31,12 @@ enum ResultType {
 var result_type: ResultType = ResultType.NOT_FOUND
 
 ## Create a new NavigationResult
-## @param found Whether the navigation was successful
-## @param value The value found at the path
-## @param path The path that was navigated
-## @param result_type The type of result
-## @param error_message Error message if navigation failed
-## @param context Additional context information for debugging
+## @param p_found Whether the navigation was successful
+## @param p_value The value found at the path
+## @param p_path The path that was navigated
+## @param p_result_type The type of result
+## @param p_error_message Error message if navigation failed
+## @param p_context Additional context information for debugging
 func _init(
 	p_found: bool,
 	p_value: Variant,
@@ -53,45 +53,45 @@ func _init(
 	context = p_context
 
 ## Create a "not found" result
-## @param error_message Error message describing why the path was not found
-## @param path The path that was navigated
-## @param context Additional context information for debugging
+## @param p_error_message Error message describing why the path was not found
+## @param p_path The path that was navigated
+## @param p_context Additional context information for debugging
 ## @return A NavigationResult representing a failed navigation
 static func new_not_found(
-	error_message: String,
-	path: Array,
-	context: Dictionary = {}
+	p_error_message: String,
+	p_path: Array,
+	p_context: Dictionary = {}
 ) -> NavigationResult:
 	return NavigationResult.new(
 		false,
 		null,
-		path,
+		p_path,
 		ResultType.NOT_FOUND,
-		error_message,
-		context
+		p_error_message,
+		p_context
 	)
 
 ## Create a dictionary result
 ## @param dict The dictionary that was found
-## @param path The path that was navigated
+## @param p_path The path that was navigated
 ## @return A NavigationResult containing a dictionary
-static func new_dictionary(dict: Dictionary, path: Array) -> NavigationResult:
+static func new_dictionary(dict: Dictionary, p_path: Array) -> NavigationResult:
 	return NavigationResult.new(
 		true,
 		dict,
-		path,
+		p_path,
 		ResultType.DICTIONARY
 	)
 
 ## Create an array result
 ## @param array The array that was found
-## @param path The path that was navigated
+## @param p_path The path that was navigated
 ## @return A NavigationResult containing an array
-static func new_array(array: Array, path: Array) -> NavigationResult:
+static func new_array(array: Array, p_path: Array) -> NavigationResult:
 	return NavigationResult.new(
 		true,
 		array,
-		path,
+		p_path,
 		ResultType.ARRAY
 	)
 
@@ -195,7 +195,7 @@ func as_bool(default_bool: bool = false) -> bool:
 ## @return A string representation of the result
 func get_formatted_string() -> String:
 	if found:
-		var type_name := ""
+		var type_name: String = ""
 		match result_type:
 			ResultType.DICTIONARY: type_name = "Dictionary"
 			ResultType.ARRAY: type_name = "Array"
