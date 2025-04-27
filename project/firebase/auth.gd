@@ -50,7 +50,7 @@ func check_provider_connection(provider_name: String) -> bool:
 	if !firebase_auth:
 		return false
 	if firebase_auth.is_logged_in():
-		for provider : Dictionary in firebase_auth.providers():
+		for provider: Dictionary in firebase_auth.providers():
 			if provider.name == provider_name:
 				return true
 	else:

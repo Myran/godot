@@ -1,12 +1,22 @@
 class_name RulesCollection
 extends BaseCollection
 
+## Collection class for game rules data.
+## Provides access to configurable game rules with validation.
+
+# Key for retrieving rules data
 var _collection_key: String = ""
+
+# Cache for rules data
+var _cache: Dictionary = {}
+
+# Whether the cache has been initialized
+var _is_cache_initialized: bool = false
 
 ## Initialize the rules collection with the backend
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
-func _init(backend: DataBackend, test_group: int = 0):
+func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, ["sheets"], "Rules")
 	_collection_key = "rules_" + str(test_group)
 	Log.info("RulesCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
@@ -22,9 +32,9 @@ func get_rules() -> Dictionary:
 		"stack_trace": _get_stack_trace(2)
 	}, [Log.TAG_DB])
 	
-	var request_start_time = Time.get_ticks_msec()
-	var result = await _backend.get_data(_get_path(), _collection_key)
-	var request_duration = Time.get_ticks_msec() - request_start_time
+	var request_start_time: int = Time.get_ticks_msec()
+	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
+	var request_duration: int = Time.get_ticks_msec() - request_start_time
 	
 	Log.debug("Rules data request completed", {
 		"duration_ms": request_duration,
@@ -35,7 +45,7 @@ func get_rules() -> Dictionary:
 	}, [Log.TAG_DB])
 	
 	# Define the expected structure for rules data
-	var expected_structure = {
+	var expected_structure: Dictionary = {
 		"chance_lvl_2_star_1": {"type": TYPE_INT, "default": 30, "description": "Chance for level 2, 1-star unit"},
 		"chance_lvl_2_star_2": {"type": TYPE_INT, "default": 10, "description": "Chance for level 2, 2-star unit"},
 		"chance_lvl_2_star_3": {"type": TYPE_INT, "default": 5, "description": "Chance for level 2, 3-star unit"},
@@ -56,7 +66,7 @@ func get_rules() -> Dictionary:
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 		
 		# Emergency defaults for editor testing - still error out for visibility
-		var default_rules = {}
+		var default_rules: Dictionary = {}
 		for key in expected_structure:
 			default_rules[key] = expected_structure[key].default
 		
@@ -80,16 +90,16 @@ func get_rules() -> Dictionary:
 	}, [Log.TAG_DB])
 	
 	# Check for required keys
-	var missing_keys = []
-	var type_mismatches = []
-	var values_info = {}
+	var missing_keys: Array = []
+	var type_mismatches: Array = []
+	var values_info: Dictionary = {}
 	
 	for key in expected_structure.keys():
 		if not result.has(key):
 			missing_keys.append(key)
 		else:
-			var expected_type = expected_structure[key].type
-			var actual_type = typeof(result[key])
+			var expected_type: int = expected_structure[key].type
+			var actual_type: int = typeof(result[key])
 			
 			if expected_type != actual_type:
 				type_mismatches.append({
@@ -145,18 +155,22 @@ func get_rules() -> Dictionary:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_WARNING])
 	
+	# Store in cache
+	_cache = result
+	_is_cache_initialized = true
+	
 	return result
 	
 ## Helper to get a simplified stack trace for debugging
 func _get_stack_trace(depth: int = 2) -> Array:
-	var stack = get_stack()
-	var simplified_stack = []
+	var stack: Array = get_stack()
+	var simplified_stack: Array = []
 	
 	for i in range(min(depth, stack.size())):
 		if i >= stack.size():
 			break
 			
-		var frame = stack[i]
+		var frame: Dictionary = stack[i]
 		simplified_stack.append({
 			"function": frame.function,
 			"file": frame.source.get_file(),
@@ -164,3 +178,29 @@ func _get_stack_trace(depth: int = 2) -> Array:
 		})
 	
 	return simplified_stack
+	
+## Get a specific rule value
+## @param rule_key The key of the rule to retrieve
+## @param default_value Default value to return if rule is not found
+## @return The value of the rule or the default value if not found
+func get_rule(rule_key: String, default_value: Variant = null) -> Variant:
+	Log.info("Getting rule value", {"rule_key": rule_key}, [Log.TAG_DB])
+	
+	var rules: Dictionary = await get_rules()
+	if rules.has(rule_key):
+		Log.debug("Rule found", {"rule_key": rule_key, "value": rules[rule_key]}, [Log.TAG_DB])
+		return rules[rule_key]
+		
+	Log.warning("Rule not found, using default", {
+		"rule_key": rule_key, 
+		"default_value": default_value
+	}, [Log.TAG_DB, Log.TAG_WARNING])
+	
+	return default_value
+	
+## Clear the rules cache
+## @return void
+func clear_cache() -> void:
+	Log.info("Clearing rules cache", {}, [Log.TAG_DB, Log.TAG_CACHE])
+	_is_cache_initialized = false
+	_cache.clear()

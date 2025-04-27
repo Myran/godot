@@ -14,20 +14,22 @@ static func create_backend() -> DataBackend:
 		return create_local_backend()
 
 	# Try to create firebase backend - it will check availability internally
-	var firebase_backend = create_firebase_backend()
-	if await firebase_backend.initialize():
-		return firebase_backend
+	var firebase_backend_instance: DataBackend = create_firebase_backend()
+	var firebase_init_result: bool = await firebase_backend_instance.initialize()
+	if firebase_init_result:
+		return firebase_backend_instance
 
 	# Fall back to local if Firebase fails
 	Log.info("Firebase initialization failed, falling back to local data", {}, [Log.TAG_DB])
-	var local_backend = create_local_backend()
-	await local_backend.initialize()
-	return local_backend
+	var local_backend_instance: DataBackend = create_local_backend()
+	# We need the await here since initialize() is async
+	var local_init_result: bool = await local_backend_instance.initialize()
+	return local_backend_instance
 
 ## Create a new Firebase backend
 static func create_firebase_backend() -> DataBackend:
-	return FirebaseBackend.new()
+	return FirebaseBackend.new() as DataBackend
 
 ## Create a new local JSON backend
 static func create_local_backend(file_path: String = "") -> DataBackend:
-	return LocalJSONBackend.new(file_path)
+	return LocalJSONBackend.new(file_path) as DataBackend

@@ -1,14 +1,14 @@
 class_name ItemCollection
 extends BaseCollection
 
-var _cache: Array = []
+var _cache: Array[Dictionary] = []
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
 
 ## Initialize the item collection with the backend
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
-func _init(backend: DataBackend, test_group: int = 0):
+func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, ["sheets"], "Items")
 	_collection_key = "items_" + str(test_group)
 	Log.info("ItemCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
@@ -16,12 +16,12 @@ func _init(backend: DataBackend, test_group: int = 0):
 ## Get all items
 ## @param use_cache Whether to use the cache if available
 ## @return Array of item dictionaries
-func get_all(use_cache: bool = true) -> Array:
+func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		return _cache
 		
 	Log.info("Getting all items", {}, [Log.TAG_DB])
-	var result = await _backend.get_data(_get_path(), _collection_key)
+	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	
 	# Handle case where result is null
 	if result == null:
@@ -39,8 +39,8 @@ func get_all(use_cache: bool = true) -> Array:
 func get_by_id(item_id: String) -> Dictionary:
 	Log.info("Getting item info", {"item_id": item_id}, [Log.TAG_DB])
 	
-	var items = await get_all()
-	for item in items:
+	var items: Array[Dictionary] = await get_all()
+	for item: Dictionary in items:
 		if item.id == item_id:
 			Log.debug("Item found", {"item_id": item_id}, [Log.TAG_DB])
 			return item
@@ -54,8 +54,8 @@ func get_by_id(item_id: String) -> Dictionary:
 func get_id_by_name(item_name: String) -> String:
 	Log.info("Getting item ID from name", {"name": item_name}, [Log.TAG_DB])
 	
-	var items = await get_all()
-	for item in items:
+	var items: Array[Dictionary] = await get_all()
+	for item: Dictionary in items:
 		if item.name == item_name:
 			Log.debug("Item name found", {"name": item_name, "id": item.id}, [Log.TAG_DB])
 			return item.id

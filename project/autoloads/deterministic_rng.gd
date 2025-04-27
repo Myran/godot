@@ -54,7 +54,7 @@ func load_state(json_state: String) -> void:
 			while _current_state != loaded_state:
 				next()
 		else:
-			Log.error("Unexpected data format when loading RNG state", {"data_type": typeof(data)}, ["rng", Log.TAG_ERROR])
+			Log.error("Unexpected data format when loading RNG state", {"data_type": typeof(data)}, [Log.TAG_RNG, Log.TAG_ERROR])
 	else:
 		Log.error(
 			"JSON Parse Error when loading RNG state", 
@@ -63,5 +63,5 @@ func load_state(json_state: String) -> void:
 				"json": json_state,
 				"line": json.get_error_line()
 			}, 
-			["rng", Log.TAG_ERROR]
+			[Log.TAG_RNG, Log.TAG_ERROR]
 		)

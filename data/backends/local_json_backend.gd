@@ -1,17 +1,40 @@
 class_name LocalJSONBackend
 extends DataBackend
 
+## Local JSON backend for data retrieval from local JSON files.
+## Handles file loading, parsing, and data access with JSONPathNavigator.
+
+# Loaded JSON data
 var local_data: Dictionary = {}
-var default_db_file: String = "res://resources/data.json"
-var battle_db_file: String = "res://resources/gameone-577cb-export.json"
+
+# File paths (initialized from ProjectSettings)
+var default_db_file: String
+var battle_db_file: String
 var current_file: String
 
-func _init(file_path: String = ""):
-	Log.info("LocalJSONBackend initializing", {}, [Log.TAG_DB, Log.TAG_LOCAL])
+# Sheet ID for the main data structure
+const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+
+func _init(file_path: String = "") -> void:
+	Log.info("LocalJSONBackend initializing", {
+		"backend_id": get_instance_id()
+	}, [Log.TAG_DB, Log.TAG_LOCAL])
+	
+	# Load file paths from project settings with fallbacks
+	default_db_file = _get_project_setting("gametwo/data/default_db_file", "res://resources/data.json")
+	battle_db_file = _get_project_setting("gametwo/data/battle_db_file", "res://resources/gameone-577cb-export.json")
+	
 	if file_path.is_empty():
 		current_file = default_db_file
 	else:
 		current_file = file_path
+		
+	Log.debug("LocalJSONBackend file paths", {
+		"default_db_file": default_db_file,
+		"battle_db_file": battle_db_file,
+		"current_file": current_file,
+		"backend_id": get_instance_id()
+	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
 func initialize() -> bool:
 	# Check if we should use the battle DB file
@@ -42,185 +65,131 @@ func get_data(path: Array, key: String) -> Variant:
 	
 	# Special handling for our specific JSON structure
 	# The structure is: {"1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": {...}}
-	# Where SHEETS is the key "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+	# Where SHEETS is the key in the JSON structure
 	
-	# First, check if the first level has the sheets ID
-	const SHEETS_ID = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
-	var has_sheets = local_data.has(SHEETS_ID)
+	# Get sheets ID from project settings or use default
+	var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
 	
-	Log.debug("Checking for sheets ID", {
-		"sheets_id": SHEETS_ID, 
-		"has_sheets": has_sheets,
-		"backend_id": get_instance_id()
-	}, [Log.TAG_DB, Log.TAG_LOCAL])
-	
-	if has_sheets:
-		var sheets_data = local_data[SHEETS_ID]
-		var sheets_keys = sheets_data.keys()
+	# Handle special case for sheets directly
+	var sheets_data: Dictionary = {}
+	if local_data.has(sheets_id):
+		sheets_data = local_data[sheets_id]
 		
-		# Check if the key exists directly in sheets_data
-		var key_in_sheets = sheets_data.has(key)
-		
-		Log.debug("Sheets data info", {
-			"key": key, 
-			"key_in_sheets": key_in_sheets, 
-			"sheets_key_count": sheets_keys.size(),
-			"sample_keys": sheets_keys.slice(0, min(5, sheets_keys.size())),
+		Log.debug("Found sheets ID in data", {
+			"sheets_id": sheets_id,
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
 		
-		if key_in_sheets:
-			var result = sheets_data[key]
-			var result_type = typeof(result)
-			var result_size = result.size() if result is Array else result.keys().size() if result is Dictionary else 0
+		# Special case: direct key lookup in sheets data
+		if sheets_data.has(key):
+			var result: Variant = sheets_data[key]
+			var result_info: Dictionary = _get_value_info(result)
 			
-			Log.info("Found key in sheets data", {
-				"key": key, 
-				"result_type": result_type, 
-				"result_size": result_size,
+			Log.info("Found key directly in sheets data", {
+				"key": key,
+				"result_info": result_info,
 				"backend_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_LOCAL])
 			
 			call_deferred("emit_signal", "value_received", {"key": key, "value": result})
 			return result
-		
-		# If we're looking for sheets path and we have the sheets data
-		if path.size() > 0 and path[0] == "sheets":
-			# Error out with clear message about the expected key
-			Log.error("Required key missing in sheets data", {
-				"key": key, 
-				"path": path, 
-				"available_keys": sheets_keys.slice(0, min(10, sheets_keys.size())), # Show up to 10 keys
-				"total_keys": sheets_keys.size(),
-				"backend_id": get_instance_id(),
-				"call_stack": _get_simple_stack_trace()
-			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-			
-			push_error("Required data missing in sheets: " + key + ". Available keys: " + str(sheets_keys.slice(0, min(10, sheets_keys.size()))))
-			return null
 	
-	# Navigate through the path (backward compatibility)
-	Log.debug("Beginning path navigation", {
-		"path": path, 
-		"key": key,
-		"backend_id": get_instance_id()
-	}, [Log.TAG_DB, Log.TAG_LOCAL])
+	# Use JSONPathNavigator for reliable path navigation
+	var navigation_path: Array = []
+	var target_data: Variant = local_data
 	
-	var current_data = local_data
-	var navigation_history = []
-	
-	for i in range(path.size()):
-		var path_part = path[i]
-		navigation_history.append(path_part)
-		
-		var path_exists = current_data.has(path_part)
-		var sheets_special_case = path_part == "sheets" and current_data.has(SHEETS_ID)
-		
-		Log.debug("Navigating path part", {
-			"path_part": path_part, 
-			"path_index": i,
-			"path_exists": path_exists,
-			"sheets_special_case": sheets_special_case,
-			"navigation_history": navigation_history,
-			"backend_id": get_instance_id()
-		}, [Log.TAG_DB, Log.TAG_LOCAL])
-		
-		if path_exists:
-			current_data = current_data[path_part]
-		elif sheets_special_case:
-			# Special case: if path_part is "sheets", use the sheets ID
-			Log.debug("Using special case for sheets path", {
-				"sheets_id": SHEETS_ID,
-				"backend_id": get_instance_id()
-			}, [Log.TAG_DB, Log.TAG_LOCAL])
-			current_data = current_data[SHEETS_ID]
+	# Handle special case for sheets path
+	if path.size() > 0 and path[0] == "sheets":
+		# If the path starts with "sheets", use the sheets data as the base
+		var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
+		if local_data.has(sheets_id):
+			target_data = local_data[sheets_id]
+			# Skip the "sheets" part in the navigation path
+			navigation_path = path.slice(1, path.size())
 		else:
-			# Error out with clear info about available keys
-			var available_keys = []
-			if current_data is Dictionary:
-				available_keys = current_data.keys()
-				
-			Log.error("Path part not found in data", {
-				"path": path, 
-				"navigation_history": navigation_history,
-				"current_path_part": path_part, 
-				"available_keys": available_keys.slice(0, min(10, available_keys.size())),
-				"total_keys": available_keys.size(),
-				"backend_id": get_instance_id(),
+			Log.error("Sheets data not found", {
+				"sheets_id": sheets_id,
+				"backend_id": get_instance_id(), 
 				"call_stack": _get_simple_stack_trace()
 			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-			
-			push_error("Required path missing: " + path_part + " at index " + str(i) + 
-				". Available keys: " + str(available_keys.slice(0, min(10, available_keys.size()))))
 			return null
+	else:
+		# Use the path as is for regular navigation
+		navigation_path = path.duplicate()
 	
-	Log.debug("Path navigation complete", {
-		"path": path, 
-		"reached_data_type": typeof(current_data),
-		"is_dictionary": current_data is Dictionary,
-		"is_array": current_data is Array,
+	Log.debug("Navigating path with JSONPathNavigator", {
+		"original_path": path,
+		"navigation_path": navigation_path,
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 	
-	# Once we've navigated to the right place, check for the key
+	var result: NavigationResult
+	
 	if key.is_empty():
-		Log.info("Empty key requested, returning entire data at path", {
+		# If key is empty, navigate to the path and return the data at that location
+		result = JSONPathNavigator.navigate(target_data, navigation_path)
+	else:
+		# If a key is specified, navigate to the path and then look for the key
+		var full_path: Array = navigation_path.duplicate()
+		full_path.append(key)
+		result = JSONPathNavigator.navigate(target_data, full_path)
+	
+	if result.found:
+		var value_info: Dictionary = _get_value_info(result.value)
+		
+		Log.info("Successfully navigated to data", {
 			"path": path,
-			"data_type": typeof(current_data),
-			"data_size": current_data.size() if current_data is Array else 
-						current_data.keys().size() if current_data is Dictionary else 0,
-			"backend_id": get_instance_id()
-		}, [Log.TAG_DB, Log.TAG_LOCAL])
-		
-		call_deferred("emit_signal", "value_received", {"key": key, "value": current_data})
-		return current_data
-	
-	var has_key = current_data.has(key)
-	
-	Log.debug("Checking for key in current data", {
-		"key": key,
-		"has_key": has_key,
-		"backend_id": get_instance_id()
-	}, [Log.TAG_DB, Log.TAG_LOCAL])
-	
-	if has_key:
-		var result = current_data[key]
-		var result_type = typeof(result)
-		var result_size = result.size() if result is Array else result.keys().size() if result is Dictionary else 0
-		
-		Log.info("Found key in current data", {
 			"key": key,
-			"path": path,
-			"result_type": result_type,
-			"result_size": result_size,
+			"value_info": value_info,
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
 		
-		call_deferred("emit_signal", "value_received", {"key": key, "value": result})
-		return result
-	
-	# If key wasn't found, provide detailed error
-	var available_keys = []
-	if current_data is Dictionary:
-		available_keys = current_data.keys()
+		call_deferred("emit_signal", "value_received", {"key": key, "value": result.value})
+		return result.value
+	else:
+		Log.error("Failed to navigate to data", {
+			"path": path,
+			"key": key,
+			"error": result.error_message,
+			"context": result.context,
+			"backend_id": get_instance_id(),
+			"call_stack": _get_simple_stack_trace()
+		}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 		
-	Log.error("Key not found after navigating path", {
-		"path": path, 
-		"key": key, 
-		"available_keys": available_keys.slice(0, min(10, available_keys.size())),
-		"total_keys": available_keys.size(),
-		"backend_id": get_instance_id(),
-		"call_stack": _get_simple_stack_trace()
-	}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
+		push_error("Data not found: path=" + str(path) + ", key=" + key + 
+			". Error: " + result.error_message + ". Context: " + str(result.context))
+		return null
+
+# Helper to get information about a value for logging
+func _get_value_info(value: Variant) -> Dictionary:
+	var info: Dictionary = {}
+	info["type"] = typeof(value)
 	
-	push_error("Required key missing: " + key + " at path " + str(path) + 
-		". Available keys: " + str(available_keys.slice(0, min(10, available_keys.size()))))
-	return null
+	if value is Array:
+		info["size"] = value.size()
+		info["is_array"] = true
+	elif value is Dictionary:
+		info["size"] = value.keys().size()
+		info["is_dictionary"] = true
+		info["sample_keys"] = value.keys().slice(0, min(5, value.keys().size()))
+	else:
+		info["is_value"] = true
+		
+		return info
+		
+## Helper to get a project setting with fallback
+## @param setting_name The name of the project setting
+## @param default_value The default value if setting doesn't exist
+## @return The setting value or default value
+func _get_project_setting(setting_name: String, default_value: Variant) -> Variant:
+	if ProjectSettings.has_setting(setting_name):
+		return ProjectSettings.get_setting(setting_name)
+	return default_value
 	
 # Helper to get a simplified stack trace for debugging
 func _get_simple_stack_trace() -> Array:
-	var stack = get_stack()
-	var simplified_stack = []
+	var stack: Array = get_stack()
+	var simplified_stack: Array = []
 	
 	for frame in stack:
 		if frame.function != "_get_simple_stack_trace" and frame.function != "get_data":

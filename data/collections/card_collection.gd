@@ -2,14 +2,14 @@ class_name CardCollection
 extends BaseCollection
 
 # Import class references directly
-const JSONPathNavigator = preload("res://data/backends/json_path_navigator.gd")
-const NavigationResult = preload("res://data/backends/navigation_result.gd")
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
 ## Collection class for card data.
 ## Provides access to card information with caching and validation.
 
 # Cache of retrieved cards
-var _cache: Array = []
+var _cache: Array[Dictionary] = []
 
 # Whether the cache has been initialized
 var _is_cache_initialized: bool = false
@@ -28,12 +28,12 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 ## Get all cards
 ## @param use_cache Whether to use the cache if available
 ## @return Array of card dictionaries
-func get_all(use_cache: bool = true) -> Array:
+func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	var cache_key: String = "all_cards"
 	
 	# Try to get from cache first
 	if use_cache and _has_in_cache(cache_key):
-		var cached_cards: Array = _get_from_cache(cache_key, [])
+		var cached_cards: Array[Dictionary] = _get_from_cache(cache_key, [])
 		Log.debug("Using card cache", {
 			"cache_size": cached_cards.size(),
 			"collection_name": _collection_name,
@@ -53,8 +53,10 @@ func get_all(use_cache: bool = true) -> Array:
 	}, [Log.TAG_DB])
 	
 	var request_start_time: int = Time.get_ticks_msec()
-	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
+	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
+	
+	var result: Variant = raw_result
 	
 	Log.debug("Backend get_data call completed", {
 		"duration_ms": request_duration,
@@ -78,8 +80,8 @@ func get_all(use_cache: bool = true) -> Array:
 		push_error("Required card data is missing for collection: " + _collection_name + " with key: " + _collection_key)
 		
 		# For editor testing, create minimal test cards
-		var test_cards: Array = []
-		for i in range(5):
+		var test_cards: Array[Dictionary] = []
+		for i: int in range(5):
 			test_cards.append({
 				"id": str(i),
 				"name": "Test Card " + str(i),
@@ -117,7 +119,7 @@ func get_all(use_cache: bool = true) -> Array:
 				"collection_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_WARNING])
 			
-			var nav_result: NavigationResult = JSONPathNavigator.navigate(result, [])
+			var nav_result: NavigationResultClass = JSONPathNavigator.navigate(result, [])
 			if nav_result.is_array():
 				result = nav_result.as_array()
 			elif nav_result.is_dictionary():
@@ -163,9 +165,9 @@ func get_all(use_cache: bool = true) -> Array:
 	# Validate important fields in the cards
 	if _cache.size() > 0:
 		var sample_card: Dictionary = _cache[0]
-		var sample_card_keys: Array = sample_card.keys()
-		var required_keys: Array = ["id", "name", "abilities", "health"]
-		var missing_keys: Array = []
+		var sample_card_keys: Array[String] = sample_card.keys()
+		var required_keys: Array[String] = ["id", "name", "abilities", "health"]
+		var missing_keys: Array[String] = []
 		
 		Log.debug("Validating card data structure", {
 			"sample_card_keys": sample_card_keys,
@@ -174,7 +176,7 @@ func get_all(use_cache: bool = true) -> Array:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB])
 		
-		for key in required_keys:
+		for key: String in required_keys:
 			if not sample_card.has(key):
 				missing_keys.append(key)
 				
@@ -271,13 +273,13 @@ func get_id_by_name(card_name: String) -> String:
 ## Get cards by type
 ## @param card_type The type of cards to retrieve
 ## @return Array of card dictionaries matching the type
-func get_by_type(card_type: String) -> Array:
+func get_by_type(card_type: String) -> Array[Dictionary]:
 	Log.info("Getting cards by type", {"type": card_type}, [Log.TAG_DB])
 	
-	var cards: Array = await get_all()
-	var filtered_cards: Array = []
+	var cards: Array[Dictionary] = await get_all()
+	var filtered_cards: Array[Dictionary] = []
 	
-	for card in cards:
+	for card: Dictionary in cards:
 		if not card is Dictionary:
 			continue
 			
@@ -291,13 +293,13 @@ func get_by_type(card_type: String) -> Array:
 ## Get cards by rarity
 ## @param rarity The rarity of cards to retrieve
 ## @return Array of card dictionaries matching the rarity
-func get_by_rarity(rarity: String) -> Array:
+func get_by_rarity(rarity: String) -> Array[Dictionary]:
 	Log.info("Getting cards by rarity", {"rarity": rarity}, [Log.TAG_DB])
 	
-	var cards: Array = await get_all()
-	var filtered_cards: Array = []
+	var cards: Array[Dictionary] = await get_all()
+	var filtered_cards: Array[Dictionary] = []
 	
-	for card in cards:
+	for card: Dictionary in cards:
 		if not card is Dictionary:
 			continue
 			
@@ -326,14 +328,14 @@ func clear_cache() -> void:
 ## Get full data for an array of card IDs
 ## @param card_ids Array of card IDs to get data for
 ## @return Array of card dictionaries
-func get_cards_by_ids(card_ids: Array) -> Array:
+func get_cards_by_ids(card_ids: Array[String]) -> Array[Dictionary]:
 	Log.info("Getting cards by IDs", {"id_count": card_ids.size()}, [Log.TAG_DB])
 	
-	var cards: Array = await get_all()
-	var result_cards: Array = []
-	var found_ids: Array = []
+	var cards: Array[Dictionary] = await get_all()
+	var result_cards: Array[Dictionary] = []
+	var found_ids: Array[String] = []
 	
-	for card in cards:
+	for card: Dictionary in cards:
 		if not card is Dictionary:
 			continue
 			
@@ -346,8 +348,8 @@ func get_cards_by_ids(card_ids: Array) -> Array:
 			result_cards.append(card_dict)
 			found_ids.append(id)
 	
-	var missing_ids: Array = []
-	for id in card_ids:
+	var missing_ids: Array[String] = []
+	for id: String in card_ids:
 		if not found_ids.has(id):
 			missing_ids.append(id)
 	

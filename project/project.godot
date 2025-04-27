@@ -17,6 +17,7 @@ config/icon="res://assets/frame.png"
 
 [autoload]
 
+debug="*res://autoloads/debug.tscn"
 internet_status="*res://autoloads/internet_status.gd"
 auth="*res://firebase/auth.gd"
 facebook="*res://facebook/facebook.gd"
@@ -24,7 +25,6 @@ data_source="*res://autoloads/data_source.gd"
 rng="*res://autoloads/seeded_rng_singleton.gd"
 ui="*res://autoloads/ui.gd"
 core="*res://autoloads/core.gd"
-debug="*res://autoloads/debug.tscn"
 card_controller="*res://autoloads/card_controller.tscn"
 util="*res://misc/util.gd"
 Log="*res://addons/advanced_logger/core/logger.gd"

@@ -1,14 +1,14 @@
 class_name LevelCollection
 extends BaseCollection
 
-var _cache: Array = []
+var _cache: Array[Dictionary] = []
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
 
 ## Initialize the level collection with the backend
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
-func _init(backend: DataBackend, test_group: int = 0):
+func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, ["sheets"], "Levels")
 	_collection_key = "levels_" + str(test_group)
 	Log.info("LevelCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
@@ -16,12 +16,12 @@ func _init(backend: DataBackend, test_group: int = 0):
 ## Get all levels
 ## @param use_cache Whether to use the cache if available
 ## @return Array of level dictionaries
-func get_all(use_cache: bool = true) -> Array:
+func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		return _cache
 		
 	Log.info("Getting all levels", {}, [Log.TAG_DB])
-	var result = await _backend.get_data(_get_path(), _collection_key)
+	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	
 	# Handle case where result is null
 	if result == null:
@@ -39,9 +39,9 @@ func get_all(use_cache: bool = true) -> Array:
 func get_by_number(level_nr: int) -> Dictionary:
 	Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
 	
-	var levels = await get_all()
-	for level in levels:
-		var id = level.id
+	var levels: Array[Dictionary] = await get_all()
+	for level: Dictionary in levels:
+		var id: Variant = level.id
 		if int(id) == level_nr:
 			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 			return level

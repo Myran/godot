@@ -2,7 +2,7 @@ class_name LocalJSONBackend
 extends DataBackend
 
 # Import class references directly
-const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
 var local_data: Dictionary = {}
@@ -45,10 +45,10 @@ func get_data(path: Array, key: String) -> Variant:
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
 	# Use JSONPathNavigator for robust JSON structure handling
-	
+
 	# Special handling for our specific JSON structure
 	# The structure is: {"1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": {...}}
-	
+
 	# Define the sheets ID as a constant
 	const SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
 	var has_sheets: bool = local_data.has(SHEETS_ID)
@@ -61,29 +61,29 @@ func get_data(path: Array, key: String) -> Variant:
 
 	# Determine the proper navigation path based on the input path and key
 	var navigation_path: Array = []
-	
+
 	# Special case: If the path starts with "sheets", we need to use the SHEETS_ID
 	if path.size() > 0 and path[0] == "sheets":
 		# Start with the sheets ID
 		navigation_path.append(SHEETS_ID)
-		
+
 		# Add the rest of the path (skipping the first "sheets" element)
 		for i in range(1, path.size()):
 			navigation_path.append(path[i])
 	else:
 		# For other paths, use them directly
 		navigation_path = path.duplicate()
-	
+
 	Log.debug("Prepared navigation path", {
 		"original_path": path,
 		"navigation_path": navigation_path,
 		"key": key,
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
-	
+
 	# Use JSONPathNavigator to navigate to the path
 	var result: NavigationResult
-	
+
 	if navigation_path.is_empty():
 		# Special case for empty path
 		if key.is_empty():
@@ -101,7 +101,7 @@ func get_data(path: Array, key: String) -> Variant:
 	else:
 		# First navigate to the specified path
 		var path_result = JSONPathNavigator.navigate(local_data, navigation_path)
-		
+
 		if not path_result.found:
 			Log.error("Path navigation failed", {
 				"path": navigation_path,
@@ -110,7 +110,7 @@ func get_data(path: Array, key: String) -> Variant:
 				"backend_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 			return null
-			
+
 		# If key is empty, return the data at the path
 		if key.is_empty():
 			result = path_result
@@ -120,7 +120,7 @@ func get_data(path: Array, key: String) -> Variant:
 				var dict_data = path_result.as_dictionary()
 				if dict_data.has(key):
 					var value = dict_data[key]
-					
+
 					# Create appropriate result type based on the value
 					if value is Dictionary:
 						result = NavigationResult.new_dictionary(value, navigation_path + [key])
@@ -154,12 +154,12 @@ func get_data(path: Array, key: String) -> Variant:
 			"result_type": result.result_type,
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
-		
+
 		var value = result.value
-		
+
 		# For backward compatibility, emit the value_received signal
 		call_deferred("emit_signal", "value_received", {"key": key, "value": value})
-		
+
 		return value
 	else:
 		# Log detailed error information for debugging
@@ -171,7 +171,7 @@ func get_data(path: Array, key: String) -> Variant:
 			"backend_id": get_instance_id(),
 			"call_stack": _get_simple_stack_trace()
 		}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-		
+
 		return null
 
 	# End of get_data implementation

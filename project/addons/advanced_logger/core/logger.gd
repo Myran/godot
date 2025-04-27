@@ -17,6 +17,41 @@ const TAG_LOCAL: String = "local_data"
 const TAG_ERROR: String = "error"
 const TAG_NETWORK: String = "network"
 
+# Domain-specific tag constants
+const TAG_UI: String = "ui"
+const TAG_UI_INPUT: String = "ui_input"
+const TAG_UI_ANIMATION: String = "ui_animation"
+const TAG_CARD: String = "card"
+const TAG_LEVEL: String = "level"
+const TAG_ITEM: String = "item"
+const TAG_BATTLE: String = "battle"
+const TAG_COMBAT: String = "combat"
+const TAG_GAME: String = "game"
+const TAG_GAME_STATE: String = "game_state"
+const TAG_RNG: String = "rng"
+const TAG_RULE: String = "rule"
+const TAG_RULES: String = "rules"
+const TAG_EVENT: String = "event"
+const TAG_PLAYER: String = "player"
+const TAG_INPUT: String = "input"
+const TAG_SYSTEM: String = "system"
+const TAG_DEBUG: String = "debug"
+const TAG_DATA: String = "data"
+const TAG_DRAFT: String = "draft"
+const TAG_INITIALIZATION: String = "initialization"
+const TAG_PERFORMANCE: String = "performance"
+const TAG_VALIDATION: String = "validation"
+const TAG_ANIMATION: String = "animation"
+const TAG_STATE_TRANSITION: String = "state_transition"
+const TAG_WIN_CONDITION: String = "win_condition"
+const TAG_STAT: String = "stat"
+const TAG_TEST: String = "test"
+const TAG_GRID: String = "grid"
+const TAG_CLICKER: String = "clicker"
+const TAG_AUTH: String = "auth"
+const TAG_FACEBOOK: String = "facebook"
+const TAG_APPLE: String = "apple"
+
 # Level tag constants
 const TAG_LEVEL_PREFIX: String = "level:"
 const TAG_LEVEL_DEBUG: String = "level:debug"
@@ -667,18 +702,18 @@ func set_buffer_size(size: int) -> Error:
 	if size < 1:
 		push_warning("Invalid buffer size: %d. Buffer size must be at least 1." % size)
 		return Error.FAILED
-	
+
 	_buffer_size = size
 	_trim_buffer() # Adjust buffer immediately
-	
+
 	# Flag to track if this logger has a custom buffer size
 	_has_custom_buffer_size = true
-	
+
 	# Update config only if we want to propagate this change globally
 	# Otherwise, this logger instance keeps its own buffer size
 	if _config != null:
 		_config.set_buffer_size(size)
-	
+
 	return OK
 
 func get_buffer_size() -> int:
@@ -687,7 +722,7 @@ func get_buffer_size() -> int:
 func set_enable_buffer_dump(enable: bool) -> void:
 	_enable_buffer_dump = enable
 	_has_custom_buffer_dump = true
-	
+
 	# Update config
 	if _config != null:
 		_config.set_enable_buffer_dump(enable)

@@ -145,18 +145,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		Log.info("Merging cards", {"base_card": card.card_info.id, "tripple_count": tripples.size()}, ["card", "rules"])
 		var new_card: Card = await lineup_handler.merge(card, tripples)
 		current_context = update_context_units(current_context)
-		(
-			current_context
-			. add_event(
-				(
-					core
-					. LineupAddCardEvent
-					. new(
-						new_card,
-					)
-				)
-			)
-		)
+		# Simplified to avoid potential ternary issues
+		current_context.add_event(core.LineupAddCardEvent.new(new_card))
 		current_context.solve_events()
 
 	elif event is core.BattleEvent:

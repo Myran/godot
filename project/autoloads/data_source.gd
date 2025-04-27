@@ -5,14 +5,14 @@ extends Node
 ## Hybrid implementation using collection-based architecture with backend factory
 
 # Import required classes
-const BackendFactory = preload("res://data/backends/backend_factory.gd")
-const DataBackend = preload("res://data/backends/data_backend.gd")
-const LocalJSONBackend = preload("res://data/backends/local_json_backend.gd")
+const BackendFactoryClass = preload("res://data/backends/backend_factory.gd")
+const DataBackendClass = preload("res://data/backends/data_backend.gd")
+const LocalJSONBackendClass = preload("res://data/backends/local_json_backend.gd")
 
 # Signals
 signal startup_completed
 # Signal below is used by Firebase connections - kept for compatibility with original code
-# @warning_ignore:unused_signal
+@warning_ignore("unused_signal")
 signal value_received(data: Dictionary)
 
 # Constants (restored from original)
@@ -34,9 +34,9 @@ func has_game_data() -> bool:
 		return local_data.has(_CARDS) or local_data.has("cards_0") or local_data.has("cards")
 
 	# Try to access data under the sheet ID
-	var sheet_data = await _backend.get_data([], SHEET_ID)
-	if sheet_data is Dictionary:
-		return sheet_data.has(_CARDS) or sheet_data.has("cards_0") or sheet_data.has("cards")
+	var sheet_data_result: Variant = await _backend.get_data([], SHEET_ID)
+	if sheet_data_result is Dictionary:
+		return sheet_data_result.has(_CARDS) or sheet_data_result.has("cards_0") or sheet_data_result.has("cards")
 
 	return false
 
@@ -49,7 +49,7 @@ var events: EventCollectionImpl
 var rules: RulesCollectionImpl
 
 # Internal state
-var _backend: DataBackend
+var _backend: DataBackendClass
 var using_local_data: bool = false
 var _initialized: bool = false
 var card_cache: Array = []
@@ -58,6 +58,7 @@ var test_group: int = 0
 var default_db_file: String = "res://resources/data.json"
 var battle_db_file: String = "res://resources/gameone-577cb-export.json"
 var current_file: String = "res://resources/data.json"
+var sheet_data: Dictionary = {}
 
 func _ready() -> void:
 	Log.info("DataSource initializing", {
@@ -76,22 +77,22 @@ func _ready() -> void:
 func _initialize() -> void:
 	# Create backend with battle file as primary option
 	Log.debug("Using battle database file", {"file": battle_db_file}, [Log.TAG_LOCAL, "initialization"])
-	_backend = LocalJSONBackend.new(battle_db_file)
-	var success = await _backend.initialize()
+	_backend = LocalJSONBackendClass.new(battle_db_file)
+	var success: bool = await _backend.initialize()
 
 	# Check for game data
-	var has_data = await has_game_data()
+	var has_data: bool = await has_game_data()
 
 	# If initialization failed or we don't have game data, try default file
 	if not success or not has_data:
 		Log.warning("No game data found in battle DB file, trying standard data file", {}, [Log.TAG_LOCAL, "initialization"])
-		_backend = LocalJSONBackend.new(default_db_file)
+		_backend = LocalJSONBackendClass.new(default_db_file)
 		await _backend.initialize()
 
 	# Populate local_data for backward compatibility
-	var sheet_data = await _backend.get_data([], SHEET_ID)
-	if sheet_data is Dictionary:
-		local_data = sheet_data.duplicate()
+	var backend_data: Variant = await _backend.get_data([], SHEET_ID)
+	if backend_data is Dictionary:
+		local_data = backend_data.duplicate()
 		Log.debug("Populated local_data from backend", {"keys": local_data.keys()}, [Log.TAG_DB, "initialization"])
 
 	# Track if we're using local data
@@ -101,12 +102,12 @@ func _initialize() -> void:
 	_initialize_collections()
 
 	# Connect to backend signals
-	_backend.startup_completed.connect(func():
+	_backend.startup_completed.connect(func() -> void:
 		Log.info("DataSource initialization complete", {
 			"using_local_data": using_local_data,
 			"firebase_available": is_firebase_available(),
 			"collections": [_CARDS, LEVELS, ITEMS, RULES, EVENTS]
-		}, [Log.TAG_DB, "initialization", "system"])
+		}, [Log.TAG_DB, Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
 
 		_finalize_init()
 	)
@@ -127,13 +128,13 @@ class CardCollectionImpl extends Node:
 			return _cache
 
 		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
+		var path: Array = []
+		var key: String = SHEET_ID
 		var sheet_data: Variant = await _parent._backend.get_data(path, key)
 		var cards: Array[Dictionary] = []
 
 		# Get cards data from the sheet data
-		var cards_data = null
+		var cards_data: Variant = null
 		if sheet_data is Dictionary and sheet_data.has(_collection_key):
 			cards_data = sheet_data[_collection_key]
 
@@ -240,13 +241,13 @@ class LevelCollectionImpl extends Node:
 			return _cache
 
 		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
+		var path: Array = []
+		var key: String = SHEET_ID
 		var sheet_data: Variant = await _parent._backend.get_data(path, key)
 		var levels: Array[Dictionary] = []
 
 		# Get levels data from the sheet data
-		var levels_data = null
+		var levels_data: Variant = null
 		if sheet_data is Dictionary and sheet_data.has(_collection_key):
 			levels_data = sheet_data[_collection_key]
 
@@ -305,13 +306,13 @@ class ItemCollectionImpl extends Node:
 			return _cache
 
 		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
+		var path: Array = []
+		var key: String = SHEET_ID
 		var sheet_data: Variant = await _parent._backend.get_data(path, key)
 		var items: Array[Dictionary] = []
 
 		# Get items data from the sheet data
-		var items_data = null
+		var items_data: Variant = null
 		if sheet_data is Dictionary and sheet_data.has(_collection_key):
 			items_data = sheet_data[_collection_key]
 
@@ -377,13 +378,13 @@ class RulesCollectionImpl extends Node:
 
 	func get_rules() -> Dictionary:
 		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
+		var path: Array = []
+		var key: String = SHEET_ID
 		var sheet_data: Variant = await _parent._backend.get_data(path, key)
 		var rules: Dictionary = {}
 
 		# Get rules data from the sheet data
-		var rules_data = null
+		var rules_data: Variant = null
 		if sheet_data is Dictionary and sheet_data.has(_collection_key):
 			rules_data = sheet_data[_collection_key]
 
@@ -411,13 +412,13 @@ class EventCollectionImpl extends Node:
 
 	func get_all() -> Array[Dictionary]:
 		# Use the backend to get data - access the Sheet ID directly
-		var path = []
-		var key = SHEET_ID
+		var path: Array = []
+		var key: String = SHEET_ID
 		var sheet_data: Variant = await _parent._backend.get_data(path, key)
 		var events: Array[Dictionary] = []
 
 		# Get events data from the sheet data
-		var events_data = null
+		var events_data: Variant = null
 		if sheet_data is Dictionary and sheet_data.has(_collection_key):
 			events_data = sheet_data[_collection_key]
 
@@ -524,22 +525,22 @@ func get_db_sheet(sheet_name: String, is_dictionary: bool = false) -> Variant:
 	)
 
 	# Try different path patterns
-	var paths_to_try = [
+	var paths_to_try: Array[Array] = [
 		[],  # Root level
 		["sheets"]  # Standard sheets path
 	]
 
 	# Keys to try in order
-	var keys_to_try = [
+	var keys_to_try: Array[String] = [
 		full_name,  # First try with test_group suffix
 		str(sheet_name, "_0"),  # Then standard _0 suffix
 		sheet_name  # Finally try without suffix
 	]
 
 	# Try all combinations
-	for path in paths_to_try:
-		for key in keys_to_try:
-			var result = await _backend.get_data(path, key)
+	for path: Array in paths_to_try:
+		for key: String in keys_to_try:
+			var result: Variant = await _backend.get_data(path, key)
 			if result != null:
 				Log.debug(
 					"Retrieved sheet from backend",
@@ -676,8 +677,7 @@ func debug_card_retrieval(card_id: String) -> Dictionary:
 	var with_cache: Dictionary = await cards.get_by_id(card_id, true)
 	debug_info.results.with_cache = {
 		"found": not with_cache.is_empty(),
-		# @warning_ignore:incompatible_ternary
-		"data": with_cache if not with_cache.is_empty() else null
+		"data": with_cache if not with_cache.is_empty() else {}
 	}
 
 	# Clear cache and try again
@@ -685,8 +685,7 @@ func debug_card_retrieval(card_id: String) -> Dictionary:
 	var without_cache: Dictionary = await cards.get_by_id(card_id, false)
 	debug_info.results.without_cache = {
 		"found": not without_cache.is_empty(),
-		# @warning_ignore:incompatible_ternary
-		"data": without_cache if not without_cache.is_empty() else null
+		"data": without_cache if not without_cache.is_empty() else {}
 	}
 
 	# Check local data structure in detail

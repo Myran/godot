@@ -57,7 +57,7 @@ func debug_button_pressed(_name: String) -> void:
 		'button_db_debug':
 			action(DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU)
 		"button_pop_enemy":
-			Log.debug("Populating enemy lineup with test cards", {}, [Log.TAG_DB, "debug"])
+			Log.debug("Populating enemy lineup with test cards", {}, [Log.TAG_DB, Log.TAG_DEBUG])
 			for n : int in 3:
 				var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 				new_card.block_context = Cards.CONTEXT.LINEUP
@@ -69,7 +69,7 @@ func debug_button_pressed(_name: String) -> void:
 				#core.action(core.EVENT_TYPE.LINEUP_ADD_CARD,[new_card,n])
 				core.action(core.DebugLineupAddCardEvent.new(new_card, n))
 		"select_game":
-			Log.debug("Game selection requested", {}, ["debug", "ui"])
+			Log.debug("Game selection requested", {}, [Log.TAG_DEBUG, Log.TAG_UI])
 			popup_debug.hide()
 			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR)
 
@@ -89,7 +89,7 @@ func debug_button_pressed(_name: String) -> void:
 		"match_level_5":
 			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
 		_:
-			Log.warning("Unused debug button pressed", {"button_name": _name}, ["debug", "ui"])
+			Log.warning("Unused debug button pressed", {"button_name": _name}, [Log.TAG_DEBUG, Log.TAG_UI])
 #
 #func _process(_delta):
 #if toggle_orientation:

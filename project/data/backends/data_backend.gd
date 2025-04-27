@@ -1,7 +1,10 @@
 class_name DataBackend
 extends RefCounted
 
+# These signals are used by derived classes
+# Used by the DataSource class to track when data is retrieved
 signal value_received(data: Dictionary)
+# Used to notify when initialization is complete
 signal startup_completed
 
 ## Initialize the backend
@@ -31,7 +34,7 @@ func get_data(path: Array, key: String) -> Variant:
 ## @param key String The key to set
 ## @param data Variant The data to set
 ## @return bool True if data was set successfully
-func set_data(path: Array, key: String, data: Variant) -> bool:
+func set_data(path: Array, key: String, _data: Variant) -> bool:
 	Log.debug("DataBackend.set_data called with", {"path": path, "key": key}, [Log.TAG_DB])
 	Log.error("Method not implemented in base class", {"method": "set_data", "path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 	return false
@@ -40,7 +43,7 @@ func set_data(path: Array, key: String, data: Variant) -> bool:
 ## @param path Array The path to push data to
 ## @param data Variant The data to push
 ## @return String The generated unique ID
-func push_data(path: Array, data: Variant) -> String:
+func push_data(path: Array, _data: Variant) -> String:
 	Log.debug("DataBackend.push_data called with", {"path": path}, [Log.TAG_DB])
 	Log.error("Method not implemented in base class", {"method": "push_data", "path": path}, [Log.TAG_DB, Log.TAG_ERROR])
 	return ""

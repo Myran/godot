@@ -4,7 +4,7 @@ extends DataBackend
 var db: Object = null  # FirebaseDatabase instance
 var internet_available: bool = false
 
-func _init():
+func _init() -> void:
 	Log.info("FirebaseBackend initializing", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 func initialize() -> bool:
@@ -14,24 +14,26 @@ func initialize() -> bool:
 		return false
 
 	# Check internet connectivity
-	var internet_check_complete = false
-	var internet_status = Engine.get_singleton("InternetStatus")
+	var internet_status: Object = Engine.get_singleton("InternetStatus")
+
+	# Create a reference to capture instead of a primitive
+	var check_status: Dictionary = {"complete": false}
 
 	if internet_status:
-		internet_status.has_internet.connect(func():
+		internet_status.has_internet.connect(func() -> void:
 			internet_available = true
-			internet_check_complete = true
+			check_status.complete = true
 			Log.info("Internet connection available", {}, [Log.TAG_NETWORK])
 		)
-		internet_status.no_internet.connect(func():
+		internet_status.no_internet.connect(func() -> void:
 			internet_available = false
-			internet_check_complete = true
+			check_status.complete = true
 			Log.warning("No internet connection", {}, [Log.TAG_NETWORK])
 		)
 		internet_status.get_status()
 
 		# Wait for internet check to complete
-		while not internet_check_complete:
+		while not check_status.complete:
 			await Engine.get_main_loop().process_frame
 
 	# If no internet, we can't use Firebase
@@ -71,9 +73,9 @@ func get_data(path: Array, key: String) -> Variant:
 	db.set_db_root(path)
 
 	# Get value
-	var result = null
+	var result: Variant = null
 	db.get_value([key])
-	var received = {"key": null}
+	var received: Dictionary = {"key": null}
 
 	# Wait for value to be received via signal
 	while received.key != key:
@@ -91,7 +93,7 @@ func set_data(path: Array, key: String, data: Variant) -> bool:
 	Log.debug("Setting Firebase data", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 	# Prepare path
-	var full_path = path.duplicate()
+	var full_path: Array = path.duplicate()
 	if not key.is_empty():
 		full_path.append(key)
 
@@ -110,7 +112,7 @@ func push_data(path: Array, data: Variant) -> String:
 
 	# Push child
 	db.set_db_root(path)
-	var push_id = db.push_child([""])
+	var push_id: String = db.push_child([""])
 
 	# Update child data
 	db.update_children([push_id], data)
@@ -134,14 +136,14 @@ func remove_data(path: Array, key: String) -> bool:
 func _on_get_value(key: String, value: Variant) -> void:
 	call_deferred("emit_signal", "value_received", {"key": key, "value": value})
 
-func _on_child_changed(key: String, value: Variant) -> void:
+func _on_child_changed(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child changed", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
-func _on_child_moved(key: String, value: Variant) -> void:
+func _on_child_moved(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child moved", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
-func _on_child_removed(key: String, value: Variant) -> void:
+func _on_child_removed(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child removed", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
-func _on_child_added(key: String, value: Variant) -> void:
+func _on_child_added(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child added", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])

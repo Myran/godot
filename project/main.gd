@@ -4,6 +4,13 @@ extends Node
 func _ready() -> void:
 	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
+
+
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	# Check if a specific flag exists
+	if "--close" in args:
+		Log.info('quitting',{},['system','initialization'])
+		get_tree().quit(0)
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())

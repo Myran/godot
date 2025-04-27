@@ -2,8 +2,7 @@ extends Node
 
 ## Data source manager for handling game data from Firebase or local JSON files.
 ## Provides centralized access to cards, levels, items, players, events, and rules data via collections.
-## Collection-based implementation with clear separation between Firebase and local data sources.
-## Includes legacy compatibility methods for backward compatibility.
+## Uses collection-based architecture with proper separation of concerns.
 
 ## Emitted when data source initialization is complete
 signal startup_completed
@@ -81,11 +80,10 @@ func _initialize_collections() -> void:
 		"test_group": test_group,
 		"instance_id": get_instance_id()
 	}, [Log.TAG_DB])
-
+	
 	# Create all collections with proper error handling
-	# GDScript doesn't support try/except blocks, so we'll use a more defensive approach
 	var initialization_success: bool = true
-
+	
 	# Initialize all collections individually to isolate potential errors
 	initialization_success = initialization_success and _initialize_collection("cards")
 	initialization_success = initialization_success and _initialize_collection("levels")
@@ -93,7 +91,7 @@ func _initialize_collections() -> void:
 	initialization_success = initialization_success and _initialize_collection("players")
 	initialization_success = initialization_success and _initialize_collection("events")
 	initialization_success = initialization_success and _initialize_collection("rules")
-
+	
 	if initialization_success:
 		Log.debug("DataSource collections initialized successfully", {
 			"instance_id": get_instance_id()
@@ -111,9 +109,9 @@ func _initialize_collection(collection_name: String) -> bool:
 		"collection_name": collection_name,
 		"instance_id": get_instance_id()
 	}, [Log.TAG_DB])
-
+	
 	var success: bool = true
-
+	
 	match collection_name:
 		"cards":
 			success = _safely_create_collection(func(): cards = CardCollection.new(_backend, test_group), "cards")
@@ -133,7 +131,7 @@ func _initialize_collection(collection_name: String) -> bool:
 				"instance_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_ERROR])
 			success = false
-
+			
 	return success
 
 ## Helper function to safely create a collection with error handling
@@ -141,27 +139,22 @@ func _initialize_collection(collection_name: String) -> bool:
 ## @param collection_name The name of the collection being created (for logging)
 ## @return bool True if creation was successful
 func _safely_create_collection(creation_function: Callable, collection_name: String) -> bool:
-	# In GDScript, we can't directly catch exceptions, but we can use a custom approach
-	var stack_before: Array = get_stack()
-	var error_occurred: bool = false
-
-	# Call the creation function
-	creation_function.call()
-
-	# Check if there were any errors logged
-	var stack_after: Array = get_stack()
-	if stack_after.size() > stack_before.size():
-		error_occurred = true
-
-	if error_occurred:
+	# In GDScript, we can use push_error to handle errors
+	var success: bool = true
+	
+	# Call the creation function and catch any potential errors
+	@warning_ignore("shadowed_variable")
+	var err: Variant = creation_function.call()
+	if err is Error and err != OK:
+		success = false
 		Log.error("Failed to initialize collection", {
 			"collection_name": collection_name,
+			"error": err,
 			"instance_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 		push_error("Failed to initialize collection: " + collection_name)
-		return false
-
-	return true
+		
+	return success
 
 ## Set the test group identifier
 ## @param group The test group to use
@@ -311,14 +304,14 @@ func get_level_data(level_nr: int) -> Dictionary:
 
 ## Legacy method: Get all levels
 ## @return Array of level dictionaries
-func get_all_levels() -> Array[Dictionary]:
+func get_all_levels() -> Array:
 	if not levels:
 		Log.error("Cannot get all levels - levels collection not initialized", {
 			"instance_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 		return []
 
-	var levels_data: Array[Dictionary] = await levels.get_all()
+	var levels_data: Array = await levels.get_all()
 	return levels_data
 
 ## Legacy method: Get item info by ID

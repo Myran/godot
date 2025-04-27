@@ -23,4 +23,4 @@ func setup_card(_card: Card) -> void:
 
 
 func _on_popup_card_gui_input(event: InputEvent) -> void:
-	Log.debug("Popup card input event", {"event_type": event.get_class()}, ["ui"])
+	Log.debug("Popup card input event", {"event_type": event.get_class()}, [Log.TAG_UI])

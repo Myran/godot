@@ -2,17 +2,17 @@ class_name CardCollection
 extends BaseCollection
 
 # Import class references directly
-const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
-var _cache: Array = []
+var _cache: Array[Dictionary] = []
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
 
 ## Initialize the card collection with the backend
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
-func _init(backend: DataBackend, test_group: int = 0):
+func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, ["sheets"], "Cards")
 	_collection_key = "cards_" + str(test_group)
 	Log.info("CardCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
@@ -20,7 +20,7 @@ func _init(backend: DataBackend, test_group: int = 0):
 ## Get all cards
 ## @param use_cache Whether to use the cache if available
 ## @return Array of card dictionaries
-func get_all(use_cache: bool = true) -> Array:
+func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		Log.debug("Using card cache", {
 			"cache_size": _cache.size(),
@@ -40,19 +40,19 @@ func get_all(use_cache: bool = true) -> Array:
 		"stack_trace": _get_stack_trace(2) # Show 2 frames of the stack
 	}, [Log.TAG_DB])
 
-	var request_start_time = Time.get_ticks_msec()
-	
+	var request_start_time: int = Time.get_ticks_msec()
+
 	# Use the backend to get raw data
-	var raw_result = await _backend.get_data(_get_path(), _collection_key)
-	var request_duration = Time.get_ticks_msec() - request_start_time
-	
+	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
+	var request_duration: int = Time.get_ticks_msec() - request_start_time
+
 	# Process the result using JSONPathNavigator for additional safety
-	var result = null
-	
+	var result: Variant = null
+
 	if raw_result != null and raw_result is Array:
 		# Data is already an array, we can use it directly
 		result = raw_result
-		
+
 		Log.debug("Retrieved card data array directly", {
 			"duration_ms": request_duration,
 			"count": result.size(),
@@ -61,11 +61,11 @@ func get_all(use_cache: bool = true) -> Array:
 		}, [Log.TAG_DB])
 	elif raw_result != null:
 		# Try to navigate using JSONPathNavigator
-		var nav_result = JSONPathNavigator.navigate(raw_result, [])
-		
+		var nav_result: NavigationResultClass = JSONPathNavigator.navigate(raw_result, [])
+
 		if nav_result.found and nav_result.is_array():
 			result = nav_result.as_array()
-			
+
 			Log.debug("Retrieved card data via JSONPathNavigator", {
 				"duration_ms": request_duration,
 				"count": result.size(),
@@ -78,7 +78,7 @@ func get_all(use_cache: bool = true) -> Array:
 				"collection_name": _collection_name,
 				"collection_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_ERROR])
-	
+
 	Log.debug("Backend get_data call completed", {
 		"duration_ms": request_duration,
 		"collection_name": _collection_name,
@@ -86,7 +86,7 @@ func get_all(use_cache: bool = true) -> Array:
 		"result_null": result == null,
 		"collection_id": get_instance_id()
 	}, [Log.TAG_DB])
-	
+
 	# Handle case where result is null or not an array
 	if result == null:
 		Log.error("No card data returned", {
@@ -99,8 +99,8 @@ func get_all(use_cache: bool = true) -> Array:
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 
 		# For editor testing, create minimal test cards
-		var test_cards = []
-		for i in range(5):
+		var test_cards: Array[Dictionary] = []
+		for i: int in range(5):
 			test_cards.append({
 				"id": str(i),
 				"name": "Test Card " + str(i),
@@ -146,10 +146,10 @@ func get_all(use_cache: bool = true) -> Array:
 
 	# Validate important fields in the cards
 	if _cache.size() > 0:
-		var sample_card = _cache[0]
-		var sample_card_keys = sample_card.keys()
-		var required_keys = ["id", "name", "abilities", "health"]
-		var missing_keys = []
+		var sample_card: Dictionary = _cache[0]
+		var sample_card_keys: Array[String] = sample_card.keys()
+		var required_keys: Array[String] = ["id", "name", "abilities", "health"]
+		var missing_keys: Array[String] = []
 
 		Log.debug("Validating card data structure", {
 			"sample_card_keys": sample_card_keys,
@@ -158,7 +158,7 @@ func get_all(use_cache: bool = true) -> Array:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB])
 
-		for key in required_keys:
+		for key: String in required_keys:
 			if not sample_card.has(key):
 				missing_keys.append(key)
 
@@ -185,15 +185,15 @@ func get_all(use_cache: bool = true) -> Array:
 	return _cache
 
 ## Helper to get a simplified stack trace for debugging
-func _get_stack_trace(depth: int = 2) -> Array:
-	var stack = get_stack()
-	var simplified_stack = []
+func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
+	var stack: Array = get_stack()
+	var simplified_stack: Array[Dictionary] = []
 
-	for i in range(min(depth, stack.size())):
+	for i: int in range(min(depth, stack.size())):
 		if i >= stack.size():
 			break
 
-		var frame = stack[i]
+		var frame: Dictionary = stack[i]
 		simplified_stack.append({
 			"function": frame.function,
 			"file": frame.source.get_file(),
@@ -209,9 +209,9 @@ func _get_stack_trace(depth: int = 2) -> Array:
 func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 	Log.info("Getting card info", {"card_id": card_id, "use_cache": use_cache}, [Log.TAG_DB])
 
-	var cards = await get_all(use_cache)
-	for card in cards:
-		var id = card.id
+	var cards: Array[Dictionary] = await get_all(use_cache)
+	for card: Dictionary in cards:
+		var id: Variant = card.id
 		if str(id) == str(card_id):
 			Log.debug("Card found", {"card_id": card_id}, [Log.TAG_DB])
 			return card
@@ -225,8 +225,8 @@ func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 func get_id_by_name(card_name: String) -> String:
 	Log.info("Getting card ID from name", {"name": card_name}, [Log.TAG_DB])
 
-	var cards = await get_all()
-	for card in cards:
+	var cards: Array[Dictionary] = await get_all()
+	for card: Dictionary in cards:
 		if card.name == card_name:
 			Log.debug("Card name found", {"name": card_name, "id": card.id}, [Log.TAG_DB])
 			return card.id
@@ -237,13 +237,13 @@ func get_id_by_name(card_name: String) -> String:
 ## Get cards by type
 ## @param card_type The type of cards to retrieve
 ## @return Array of card dictionaries matching the type
-func get_by_type(card_type: String) -> Array:
+func get_by_type(card_type: String) -> Array[Dictionary]:
 	Log.info("Getting cards by type", {"type": card_type}, [Log.TAG_DB])
 
-	var cards = await get_all()
-	var filtered_cards = []
+	var cards: Array[Dictionary] = await get_all()
+	var filtered_cards: Array[Dictionary] = []
 
-	for card in cards:
+	for card: Dictionary in cards:
 		if "type" in card and card.type == card_type:
 			filtered_cards.append(card)
 

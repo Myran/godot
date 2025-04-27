@@ -11,7 +11,7 @@ var found: bool = false
 var value: Variant = null
 
 ## The path that was navigated
-var path: Array = []
+var path: Array[Variant] = []
 
 ## Error message if navigation failed
 var error_message: String = ""
@@ -127,7 +127,7 @@ func is_value() -> bool:
 ## @return The result as a dictionary or the default dictionary
 func as_dictionary(default_dict: Dictionary = {}) -> Dictionary:
 	if is_dictionary():
-		return value
+		return value as Dictionary
 	return default_dict
 
 ## Get the result as an array
@@ -135,7 +135,7 @@ func as_dictionary(default_dict: Dictionary = {}) -> Dictionary:
 ## @return The result as an array or the default array
 func as_array(default_array: Array = []) -> Array:
 	if is_array():
-		return value
+		return value as Array
 	return default_array
 
 ## Get the result as a string
@@ -144,7 +144,7 @@ func as_array(default_array: Array = []) -> Array:
 func as_string(default_str: String = "") -> String:
 	if found:
 		if value is String:
-			return value
+			return value as String
 		else:
 			# Try to convert to string if possible
 			return str(value)
@@ -156,11 +156,11 @@ func as_string(default_str: String = "") -> String:
 func as_int(default_int: int = 0) -> int:
 	if found:
 		if value is int:
-			return value
+			return value as int
 		elif value is float:
-			return int(value)
-		elif value is String and value.is_valid_int():
-			return value.to_int()
+			return int(value as float)
+		elif value is String and (value as String).is_valid_int():
+			return (value as String).to_int()
 	return default_int
 
 ## Get the result as a float
@@ -168,10 +168,12 @@ func as_int(default_int: int = 0) -> int:
 ## @return The result as a float or the default float
 func as_float(default_float: float = 0.0) -> float:
 	if found:
-		if value is float or value is int:
-			return float(value)
-		elif value is String and value.is_valid_float():
-			return value.to_float()
+		if value is float:
+			return value as float
+		elif value is int:
+			return float(value as int)
+		elif value is String and (value as String).is_valid_float():
+			return (value as String).to_float()
 	return default_float
 
 ## Get the result as a boolean
@@ -180,11 +182,11 @@ func as_float(default_float: float = 0.0) -> float:
 func as_bool(default_bool: bool = false) -> bool:
 	if found:
 		if value is bool:
-			return value
+			return value as bool
 		elif value is int:
-			return value != 0
+			return (value as int) != 0
 		elif value is String:
-			var lower_str: String = value.to_lower()
+			var lower_str: String = (value as String).to_lower()
 			if lower_str == "true" or lower_str == "yes" or lower_str == "1":
 				return true
 			elif lower_str == "false" or lower_str == "no" or lower_str == "0":
