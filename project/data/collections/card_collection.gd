@@ -1,9 +1,9 @@
 class_name CardCollection
 extends BaseCollection
 
-# Import required utilities
-const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
-const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+# Import class references directly
+const JSONPathNavigator = preload("res://project/data/backends/json_path_navigator.gd")
+const NavigationResult = preload("res://project/data/backends/navigation_result.gd")
 
 var _cache: Array = []
 var _is_cache_initialized: bool = false
