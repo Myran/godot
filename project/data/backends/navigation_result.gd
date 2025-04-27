@@ -193,7 +193,7 @@ func as_bool(default_bool: bool = false) -> bool:
 
 ## Get a human-readable representation of the result
 ## @return A string representation of the result
-func to_string() -> String:
+func get_formatted_string() -> String:
 	if found:
 		var type_name := ""
 		match result_type:
