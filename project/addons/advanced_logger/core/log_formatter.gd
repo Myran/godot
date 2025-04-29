@@ -44,7 +44,7 @@ static func format_log(
 	# Fixed width for log levels (padded to the width of "CRITICAL" + spacing)
 	const LOG_LEVEL_WIDTH: int = 10 # Increased from 5
 	# Fixed width for tags section
-	const TAGS_WIDTH: int = 30 # Increased from 10
+	const TAGS_WIDTH: int = 45 # Increased from 30 to provide more space for tags
 
 	# Add timestamp if enabled
 	if show_timestamp:

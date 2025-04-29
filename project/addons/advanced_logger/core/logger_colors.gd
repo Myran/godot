@@ -4,7 +4,7 @@ extends RefCounted
 ## Centralized color definitions for the logger system using Gruvbox Material palette
 
 # Gruvbox Material palette
-const DEBUG_COLOR: Color = Color("#7c6f64")     # Gray
+const DEBUG_COLOR: Color = Color("#bdae93")     # Lighter Gray for better visibility
 const INFO_COLOR: Color = Color("#7daea3")      # Blue
 const WARNING_COLOR: Color = Color("#d8a657")   # Yellow
 const ERROR_COLOR: Color = Color("#ea6962")     # Red
@@ -14,7 +14,7 @@ const TAG_COLOR: Color = Color("#a9b665")       # Green
 const SUCCESS_COLOR: Color = Color("#a9b665")   # Green (same as tag)
 
 # HTML versions for print_rich (without the # prefix)
-const DEBUG_HTML: String = "7c6f64"
+const DEBUG_HTML: String = "bdae93"
 const INFO_HTML: String = "7daea3"
 const WARNING_HTML: String = "d8a657"
 const ERROR_HTML: String = "ea6962"
