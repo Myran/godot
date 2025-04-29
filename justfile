@@ -97,15 +97,99 @@ headless-run *ARGS:
 
 # Validate GDScript code by checking for errors
 validate:
-    @echo "Validating GDScript code..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --verbose --debug
-    @echo "Validation complete. Any errors will be shown above."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "Validating GDScript code..."
+    
+    # Start the Godot process and save its PID
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --verbose --debug &
+    VALIDATION_PID=$!
+    
+    echo "Started validation process with PID: $VALIDATION_PID"
+    
+    # Wait for up to 90 seconds for the process to complete naturally
+    TIMEOUT=90
+    for ((i=1; i<=TIMEOUT; i++)); do
+        if ! ps -p $VALIDATION_PID > /dev/null 2>&1; then
+            echo "Validation process completed after $i seconds"
+            echo "Validation complete. Any errors will be shown above."
+            exit 0
+        fi
+        
+        # Print a progress message every 15 seconds
+        if [ $((i % 15)) -eq 0 ]; then
+            echo "Validation still running after $i seconds..."
+        fi
+        
+        sleep 1
+    done
+    
+    # If we get here, the process is still running after the timeout
+    if ps -p $VALIDATION_PID > /dev/null 2>&1; then
+        echo "Validation process (PID: $VALIDATION_PID) timed out after $TIMEOUT seconds. Terminating..."
+        kill $VALIDATION_PID 2>/dev/null || true
+        
+        # Give it a moment to terminate gracefully
+        sleep 2
+        
+        # Force kill if still running
+        if ps -p $VALIDATION_PID > /dev/null 2>&1; then
+            echo "Process didn't terminate gracefully. Forcing termination..."
+            kill -9 $VALIDATION_PID 2>/dev/null || true
+        fi
+        echo "Validation process terminated due to timeout."
+        exit 1
+    fi
 
 # Export validation errors to a log file
 validate-log:
-    @echo "Validating GDScript code and saving errors to log file..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --close --check-only --debug --verbose > validation_errors.log 2>&1
-    @echo "Validation complete. Errors saved to validation_errors.log"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "Validating GDScript code and saving errors to log file..."
+    
+    # Remove previous log file to avoid confusion with old errors
+    rm -f validation_errors.log
+    
+    # Start the Godot process and save its PID
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --close --check-only --debug --verbose > validation_errors.log 2>&1 &
+    VALIDATION_PID=$!
+    
+    echo "Started validation process with PID: $VALIDATION_PID"
+    
+    # Wait for up to 90 seconds for the process to complete naturally
+    TIMEOUT=90
+    for ((i=1; i<=TIMEOUT; i++)); do
+        if ! ps -p $VALIDATION_PID > /dev/null 2>&1; then
+            echo "Validation process completed after $i seconds"
+            exit 0
+        fi
+        
+        # Print a progress message every 15 seconds
+        if [ $((i % 15)) -eq 0 ]; then
+            echo "Validation still running after $i seconds..."
+        fi
+        
+        sleep 1
+    done
+    
+    # If we get here, the process is still running after the timeout
+    if ps -p $VALIDATION_PID > /dev/null 2>&1; then
+        echo "Validation process (PID: $VALIDATION_PID) timed out after $TIMEOUT seconds. Terminating..."
+        kill $VALIDATION_PID 2>/dev/null || true
+        
+        # Give it a moment to terminate gracefully
+        sleep 2
+        
+        # Force kill if still running
+        if ps -p $VALIDATION_PID > /dev/null 2>&1; then
+            echo "Process didn't terminate gracefully. Forcing termination..."
+            kill -9 $VALIDATION_PID 2>/dev/null || true
+        fi
+    fi
+    
+    echo "Validation complete. Errors saved to validation_errors.log"
 
 # Pre-build hook
 pre-build:

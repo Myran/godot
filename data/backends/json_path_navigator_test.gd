@@ -164,3 +164,10 @@ func test_not_found_cases(test_data: Dictionary) -> void:
 	
 	var missing_path_with_default: String = JSONPathNavigator.get_string(test_data, ["settings", "missing", "path"], "default_value")
 	print("Missing path with default: ", missing_path_with_default)
+	
+	# Test filtering with lambda
+	var players_array: Array = JSONPathNavigator.get_array(test_data, ["players"])
+	var high_level_players: Array = players_array.filter(func(player: Dictionary) -> bool: 
+		return player.stats.level > 5
+	)
+	print("Players with level > 5: ", high_level_players.size())

@@ -14,6 +14,33 @@ run target *args='':
 _run_desktop:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
+# Run in debug mode
+run-debug:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "Running project in debug mode..."
+    
+    # Start the Godot process and save its PID
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --debug --verbose &
+    DEBUG_PID=$!
+    
+    echo "Started debug process with PID: $DEBUG_PID"
+    
+    # Let the user know how to terminate the process
+    echo "Press Ctrl+C to terminate the debug process"
+    
+    # Wait for the user to terminate with Ctrl+C
+    wait $DEBUG_PID
+    EXIT_CODE=$?
+    
+    # The wait command above will be interrupted by Ctrl+C
+    if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 130 ]; then # 130 is the exit code for Ctrl+C
+        echo "Debug process terminated with exit code: $EXIT_CODE"
+    else
+        echo "Debug process terminated"
+    fi
+
 # Run on iOS devices
 _run_ios device debug="": pre-build
     #!/usr/bin/env bash

@@ -1,28 +1,48 @@
 class_name LocalJSONBackend
 extends DataBackend
 
-# Import class references directly
-const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
-const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+## Local JSON backend for data retrieval from local JSON files.
+## Handles file loading, parsing, and data access with JSONPathNavigator.
 
+# Suppress warning for the signal since it's required for the DataBackend interface
+@warning_ignore("unused_signal")
+
+# Loaded JSON data
 var local_data: Dictionary = {}
-var default_db_file: String = "res://resources/data.json"
-var battle_db_file: String = "res://resources/gameone-577cb-export.json"
-var current_file: String = ""
+
+# File paths (initialized from ProjectSettings)
+#var default_db_file: String
+var battle_db_file: String
+var current_file: String
+
+# Sheet ID for the main data structure
+const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
 
 func _init(file_path: String = "") -> void:
-	Log.info("LocalJSONBackend initializing", {}, [Log.TAG_DB, Log.TAG_LOCAL])
+	Log.info("LocalJSONBackend initializing", {
+		"backend_id": get_instance_id()
+	}, [Log.TAG_DB, Log.TAG_LOCAL])
+
+	# Load file paths from project settings with fallbacks
+	#default_db_file = _get_project_setting("gametwo/data/default_db_file", "res://resources/data.json")
+	battle_db_file = _get_project_setting("gametwo/data/battle_db_file", "res://resources/gameone-577cb-export.json")
+
 	if file_path.is_empty():
-		current_file = default_db_file
+		current_file = battle_db_file
 	else:
 		current_file = file_path
 
+	Log.debug("LocalJSONBackend file paths", {
+		"battle_db_file": battle_db_file,
+		"current_file": current_file,
+		"backend_id": get_instance_id()
+	}, [Log.TAG_DB, Log.TAG_LOCAL])
+
 func initialize() -> bool:
 	# Check if we should use the battle DB file
-	var debug_node: Node = debug
-	if debug_node and debug_node.use_local_battle_db:
-		current_file = battle_db_file
-		Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
+
+	current_file = battle_db_file
+	Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
 
 	var success: bool = _load_local_data()
 	if success:
@@ -32,161 +52,157 @@ func initialize() -> bool:
 func is_available() -> bool:
 	return not local_data.is_empty()
 
-func get_data(path: Array, key: String) -> Variant:
+func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 	if not is_available():
 		Log.error("Local data not available", {"backend_id": get_instance_id()}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 		return null
 
 	Log.debug("Getting local data", {
-		"path": path,
-		"key": key,
+		"path": p_path,
+		"key": p_key,
 		"call_stack": _get_simple_stack_trace(),
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-	# Use JSONPathNavigator for robust JSON structure handling
-
 	# Special handling for our specific JSON structure
 	# The structure is: {"1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": {...}}
+	# Where SHEETS is the key in the JSON structure
 
-	# Define the sheets ID as a constant
-	const SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
-	var has_sheets: bool = local_data.has(SHEETS_ID)
+	# Get sheets ID from project settings or use default
+	var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
 
-	Log.debug("Checking for sheets ID", {
-		"sheets_id": SHEETS_ID,
-		"has_sheets": has_sheets,
-		"backend_id": get_instance_id()
-	}, [Log.TAG_DB, Log.TAG_LOCAL])
+	# Handle special case for sheets directly
+	var sheets_data: Dictionary = {}
+	if local_data.has(sheets_id) and local_data[sheets_id] is Dictionary:
+		sheets_data = local_data[sheets_id] as Dictionary
 
-	# Determine the proper navigation path based on the input path and key
-	var navigation_path: Array = []
-
-	# Special case: If the path starts with "sheets", we need to use the SHEETS_ID
-	if path.size() > 0 and path[0] == "sheets":
-		# Start with the sheets ID
-		navigation_path.append(SHEETS_ID)
-
-		# Add the rest of the path (skipping the first "sheets" element)
-		for i in range(1, path.size()):
-			navigation_path.append(path[i])
-	else:
-		# For other paths, use them directly
-		navigation_path = path.duplicate()
-
-	Log.debug("Prepared navigation path", {
-		"original_path": path,
-		"navigation_path": navigation_path,
-		"key": key,
-		"backend_id": get_instance_id()
-	}, [Log.TAG_DB, Log.TAG_LOCAL])
-
-	# Use JSONPathNavigator to navigate to the path
-	var result: NavigationResult
-
-	if navigation_path.is_empty():
-		# Special case for empty path
-		if key.is_empty():
-			# Return the entire data
-			result = NavigationResult.new_dictionary(local_data, [])
-		elif key == SHEETS_ID:
-			# Direct lookup for the SHEETS_ID at root level
-			if local_data.has(SHEETS_ID):
-				result = NavigationResult.new_dictionary(local_data[SHEETS_ID], [SHEETS_ID])
-			else:
-				result = NavigationResult.new_not_found("SHEETS_ID not found at root level", [SHEETS_ID])
-		else:
-			# Direct lookup for any other key at root level
-			result = JSONPathNavigator.navigate(local_data, [key])
-	else:
-		# First navigate to the specified path
-		var path_result = JSONPathNavigator.navigate(local_data, navigation_path)
-
-		if not path_result.found:
-			Log.error("Path navigation failed", {
-				"path": navigation_path,
-				"error": path_result.error_message,
-				"context": path_result.context,
-				"backend_id": get_instance_id()
-			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
-			return null
-
-		# If key is empty, return the data at the path
-		if key.is_empty():
-			result = path_result
-		else:
-			# Otherwise, check if we can lookup the key in the path result
-			if path_result.is_dictionary():
-				var dict_data = path_result.as_dictionary()
-				if dict_data.has(key):
-					var value = dict_data[key]
-
-					# Create appropriate result type based on the value
-					if value is Dictionary:
-						result = NavigationResult.new_dictionary(value, navigation_path + [key])
-					elif value is Array:
-						result = NavigationResult.new_array(value, navigation_path + [key])
-					else:
-						result = NavigationResult.new_value(value, navigation_path + [key])
-				else:
-					# Key not found in dictionary
-					result = NavigationResult.new_not_found(
-						"Key not found in dictionary at path",
-						navigation_path + [key],
-						{
-							"available_keys": dict_data.keys().slice(0, min(10, dict_data.keys().size())),
-							"total_keys": dict_data.keys().size()
-						}
-					)
-			else:
-				# Not a dictionary, can't lookup the key
-				result = NavigationResult.new_not_found(
-					"Cannot lookup key in non-dictionary result at path",
-					navigation_path,
-					{"result_type": path_result.result_type}
-				)
-
-	# Process the navigation result
-	if result.found:
-		Log.info("Data found using JSONPathNavigator", {
-			"path": path,
-			"key": key,
-			"result_type": result.result_type,
+		Log.debug("Found sheets ID in data", {
+			"sheets_id": sheets_id,
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-		var value = result.value
+		# Special case: direct key lookup in sheets data
+		if sheets_data.has(p_key):
+			var result: Variant = sheets_data[p_key]
+			var result_info: Dictionary = _get_value_info(result)
 
-		# For backward compatibility, emit the value_received signal
-		call_deferred("emit_signal", "value_received", {"key": key, "value": value})
+			Log.info("Found key directly in sheets data", {
+				"key": p_key,
+				"result_info": result_info,
+				"backend_id": get_instance_id()
+			}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-		return value
+			call_deferred("emit_signal", "value_received", {"key": p_key, "value": result})
+			return result
+
+	# Use JSONPathNavigator for reliable path navigation
+	var navigation_path: Array[Variant] = []
+	var target_data: Variant = local_data
+
+	# Handle special case for sheets path
+	if p_path.size() > 0 and p_path[0] is String and p_path[0] == "sheets":
+		# If the path starts with "sheets", use the sheets data as the base
+		var sheets_id_string: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
+		if local_data.has(sheets_id_string):
+			target_data = local_data[sheets_id_string]
+			# Skip the "sheets" part in the navigation path
+			for i_idx: int in range(1, p_path.size()):
+				navigation_path.append(p_path[i_idx])
+		else:
+			Log.error("Sheets data not found", {
+				"sheets_id": sheets_id_string,
+				"backend_id": get_instance_id(),
+				"call_stack": _get_simple_stack_trace()
+			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
+			return null
 	else:
-		# Log detailed error information for debugging
-		Log.error("Data not found using JSONPathNavigator", {
-			"path": path,
-			"key": key,
+		# Use the path as is for regular navigation
+		for path_item: Variant in p_path:
+			navigation_path.append(path_item)
+
+	Log.debug("Navigating path with JSONPathNavigator", {
+		"original_path": p_path,
+		"navigation_path": navigation_path,
+		"backend_id": get_instance_id()
+	}, [Log.TAG_DB, Log.TAG_LOCAL])
+
+	var result: NavigationResult
+
+	if p_key.is_empty():
+		# If key is empty, navigate to the path and return the data at that location
+		result = JSONPathNavigator.navigate(target_data, navigation_path)
+	else:
+		# If a key is specified, navigate to the path and then look for the key
+		var full_path: Array[Variant] = []
+		for nav_item: Variant in navigation_path:
+			full_path.append(nav_item)
+		full_path.append(p_key)
+		result = JSONPathNavigator.navigate(target_data, full_path)
+
+	if result.found:
+		var value_info: Dictionary = _get_value_info(result.value)
+
+		Log.info("Successfully navigated to data", {
+			"path": p_path,
+			"key": p_key,
+			"value_info": value_info,
+			"backend_id": get_instance_id()
+		}, [Log.TAG_DB, Log.TAG_LOCAL])
+
+		call_deferred("emit_signal", "value_received", {"key": p_key, "value": result.value})
+		return result.value
+	else:
+		Log.error("Failed to navigate to data", {
+			"path": p_path,
+			"key": p_key,
 			"error": result.error_message,
 			"context": result.context,
 			"backend_id": get_instance_id(),
 			"call_stack": _get_simple_stack_trace()
 		}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 
+		push_error("Data not found: path=" + str(p_path) + ", key=" + p_key +
+			". Error: " + result.error_message + ". Context: " + str(result.context))
 		return null
 
-	# End of get_data implementation
+# Helper to get information about a value for logging
+func _get_value_info(value: Variant) -> Dictionary:
+	var info: Dictionary = {}
+	info["type"] = typeof(value)
+
+	if value is Array:
+		info["size"] = value.size()
+		info["is_array"] = true
+	elif value is Dictionary:
+		info["size"] = value.keys().size()
+		info["is_dictionary"] = true
+		info["sample_keys"] = value.keys().slice(0, min(5, value.keys().size()))
+	else:
+		info["is_value"] = true
+
+	return info
+
+## Helper to get a project setting with fallback
+## @param setting_name The name of the project setting
+## @param default_value The default value if setting doesn't exist
+## @return The setting value or default value
+func _get_project_setting(setting_name: String, default_value: Variant) -> Variant:
+	if ProjectSettings.has_setting(setting_name):
+		var setting_value: Variant = ProjectSettings.get_setting(setting_name)
+		return setting_value
+	return default_value
 
 # Helper to get a simplified stack trace for debugging
-func _get_simple_stack_trace() -> Array:
+func _get_simple_stack_trace() -> Array[Dictionary]:
 	var stack: Array = get_stack()
-	var simplified_stack: Array = []
+	var simplified_stack: Array[Dictionary] = []
 
-	for frame: Dictionary in stack:
-		if frame.function != "_get_simple_stack_trace" and frame.function != "get_data":
+	for frame_info: Dictionary in stack:
+		if frame_info.function != "_get_simple_stack_trace" and frame_info.function != "get_data":
 			simplified_stack.append({
-				"function": frame.function,
-				"file": frame.source.get_file(),
-				"line": frame.line
+				"function": frame_info.function,
+				"file": frame_info.source.get_file(),
+				"line": frame_info.line
 			})
 
 			# Only show a few frames for brevity
@@ -195,19 +211,22 @@ func _get_simple_stack_trace() -> Array:
 
 	return simplified_stack
 
-func set_data(path: Array, key: String, _data: Variant) -> bool:
-	Log.warning("LocalJSONBackend.set_data is read-only implementation", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_LOCAL])
+@warning_ignore("redundant_await")
+func set_data(p_path: Array[Variant], p_key: String, _p_data: Variant) -> bool:
+	Log.warning("LocalJSONBackend.set_data is read-only implementation", {"path": p_path, "key": p_key}, [Log.TAG_DB, Log.TAG_LOCAL])
 	# For test environments, we might want to simulate write operations
 	# But in production, local JSON is read-only
 	return false
 
-func push_data(path: Array, _data: Variant) -> String:
-	Log.warning("LocalJSONBackend.push_data is read-only implementation", {"path": path}, [Log.TAG_DB, Log.TAG_LOCAL])
+@warning_ignore("redundant_await")
+func push_data(p_path: Array[Variant], _p_data: Variant) -> String:
+	Log.warning("LocalJSONBackend.push_data is read-only implementation", {"path": p_path}, [Log.TAG_DB, Log.TAG_LOCAL])
 	# Read-only implementation
 	return "local-read-only-" + str(Time.get_unix_time_from_system())
 
-func remove_data(path: Array, key: String) -> bool:
-	Log.warning("LocalJSONBackend.remove_data is read-only implementation", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_LOCAL])
+@warning_ignore("redundant_await")
+func remove_data(p_path: Array[Variant], p_key: String) -> bool:
+	Log.warning("LocalJSONBackend.remove_data is read-only implementation", {"path": p_path, "key": p_key}, [Log.TAG_DB, Log.TAG_LOCAL])
 	# Read-only implementation
 	return false
 
@@ -243,10 +262,14 @@ func _load_local_data() -> bool:
 		return false
 
 	# Store the entire JSON result
-	local_data = json_result
+	if json_result is Dictionary:
+		local_data = json_result as Dictionary
+	else:
+		Log.error("JSON result is not a Dictionary", {"file": current_file, "result_type": typeof(json_result), "backend_id": get_instance_id()}, [Log.TAG_LOCAL, Log.TAG_ERROR])
+		return false
 
 	# Log extensive data structure info to help with debugging
-	var top_level_keys: Array = local_data.keys()
+	var top_level_keys: Array[Variant] = local_data.keys()
 	Log.info("Local data file loaded successfully", {
 		"file": current_file,
 		"top_level_keys": top_level_keys,
@@ -257,30 +280,28 @@ func _load_local_data() -> bool:
 	# Log more detailed structure information for debugging
 	if top_level_keys.size() > 0:
 		var structure_info: Dictionary = {}
-		for structure_key: String in top_level_keys:
-			var value: Variant = local_data[structure_key]
-			if value is Dictionary:
-				# Calculate slice end without complex type conversions
-				var key_slice_end = 5
-				if value.keys().size() < 5:
-					key_slice_end = value.keys().size()
-
-				structure_info[structure_key] = {
-					"type": "Dictionary",
-					"size": value.keys().size(),
-					"keys": value.keys().slice(0, key_slice_end) # Show first 5 keys
-				}
-			elif value is Array:
-				structure_info[structure_key] = {
-					"type": "Array",
-					"size": value.size(),
-					# Avoid ternary by using explicit conditional
-					"sample": get_array_sample_info(value)
-				}
-			else:
-				structure_info[structure_key] = {
-					"type": typeof(value)
-				}
+		for key_name: Variant in top_level_keys:
+			if key_name is String:
+				var value_item: Variant = local_data[key_name]
+				if value_item is Dictionary:
+					var dict_keys: Array = (value_item as Dictionary).keys()
+					var max_keys: int = min(5, dict_keys.size())
+					structure_info[key_name] = {
+						"type": "Dictionary",
+						"size": dict_keys.size(),
+						"keys": dict_keys.slice(0, max_keys) # Show first 5 keys
+					}
+				elif value_item is Array:
+					var array_value: Array = value_item
+					structure_info[key_name] = {
+						"type": "Array",
+						"size": array_value.size(),
+						"sample": _get_value_type_info(array_value[0]) if array_value.size() > 0 else "empty"
+					}
+				else:
+					structure_info[key_name] = {
+						"type": typeof(value_item)
+					}
 
 		Log.debug("Data structure details", {"structure": structure_info, "backend_id": get_instance_id()}, [Log.TAG_LOCAL, Log.TAG_DB])
 
@@ -303,18 +324,11 @@ func _get_file_error_string(error_code: int) -> String:
 		ERR_FILE_EOF: return "End of file"
 		_: return "Unknown error " + str(error_code)
 
-# Helper to get sample info from an array without using ternary operators
-func get_array_sample_info(array_value: Array) -> Dictionary:
-	if array_value.size() > 0:
-		return _get_value_type_info(array_value[0])
-	else:
-		return {"type": "empty"}
-
 # Helper to get type info for a value
-func _get_value_type_info(value: Variant) -> Dictionary:
-	if value is Dictionary:
-		return {"type": "Dictionary", "keys": value.keys()}
-	elif value is Array:
-		return {"type": "Array", "size": value.size()}
+func _get_value_type_info(p_value: Variant) -> Dictionary:
+	if p_value is Dictionary:
+		return {"type": "Dictionary", "keys": p_value.keys()}
+	elif p_value is Array:
+		return {"type": "Array", "size": p_value.size()}
 	else:
-		return {"type": typeof(value)}
+		return {"type": typeof(p_value)}

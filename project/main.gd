@@ -8,9 +8,10 @@ func _ready() -> void:
 
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	# Check if a specific flag exists
-	if "--close" in args:
-		Log.info('quitting',{},['system','initialization'])
-		get_tree().quit(0)
+
+
+	# Log which data source implementation is being used
+	Log.info("Using updated DataSource implementation", {}, ["system", "initialization"])
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())

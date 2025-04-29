@@ -1,6 +1,10 @@
 class_name EventCollection
 extends BaseCollection
 
+# Import class references directly
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 ## Collection class for event data.
 ## Provides access to event information and lineup management.
 
@@ -120,12 +124,12 @@ func get_all(use_cache: bool = true) -> Array:
 				"collection_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_WARNING])
 			
-			var nav_result: NavigationResult = JSONPathNavigator.navigate(result, [])
+			var nav_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, [])
 			if nav_result.is_array():
 				result = nav_result.as_array()
 			elif nav_result.is_dictionary():
 				# Try to extract events from dictionary structure
-				var events_result: NavigationResult = JSONPathNavigator.navigate(nav_result.value, ["events"])
+				var events_result: NavigationResultClass = JSONPathNavigatorClass.navigate(nav_result.value, ["events"])
 				if events_result.is_array():
 					result = events_result.as_array()
 				else:
@@ -292,7 +296,7 @@ func get_lineup_data(event_id: String, use_cache: bool = true) -> Dictionary:
 		return {}
 	
 	if result is Dictionary:
-		// Store in cache
+		# Store in cache
 		_lineup_cache[event_id] = result
 		
 		Log.debug("Retrieved event lineup data", {
@@ -387,7 +391,7 @@ func save_lineup_data(
 		"collection_id": get_instance_id()
 	}, [Log.TAG_DB])
 	
-	// Clear cache for this event
+	# Clear cache for this event
 	if _lineup_cache.has(event_id):
 		_lineup_cache.erase(event_id)
 	
@@ -426,7 +430,7 @@ func remove_event_lineups(event_id: String) -> bool:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB])
 		
-		// Clear cache for this event
+		# Clear cache for this event
 		if _lineup_cache.has(event_id):
 			_lineup_cache.erase(event_id)
 	else:

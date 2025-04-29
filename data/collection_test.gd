@@ -53,12 +53,16 @@ func _on_backend_ready() -> void:
 	
 	print("------------------------")
 	print("Collection Tests Complete")
+	
+	# Always exit with proper code after tests finish
+	await get_tree().process_frame  # Allow final logs to process
+	get_tree().quit(0)
 
 func test_card_collection() -> void:
 	print("\nTesting Card Collection:")
 	
 	# Test get_all
-	var cards: Array = await card_collection.get_all()
+	var cards: Array[Dictionary] = await card_collection.get_all()
 	print("Retrieved cards: ", cards.size())
 	
 	if cards.size() > 0:
@@ -74,23 +78,23 @@ func test_card_collection() -> void:
 		# Test get_by_type
 		var card_type: String = sample_card.get("type", "")
 		if not card_type.is_empty():
-			var typed_cards: Array = await card_collection.get_by_type(card_type)
+			var typed_cards: Array[Dictionary] = await card_collection.get_by_type(card_type)
 			print("Retrieved cards by type (", card_type, "): ", typed_cards.size())
 			
 		# Test cache
-		var cached_cards: Array = await card_collection.get_all(true)
+		var cached_cards: Array[Dictionary] = await card_collection.get_all(true)
 		print("Retrieved cached cards: ", cached_cards.size())
 		
 		# Test clear cache
 		card_collection.clear_cache()
-		var fresh_cards: Array = await card_collection.get_all(true)
+		var fresh_cards: Array[Dictionary] = await card_collection.get_all(true)
 		print("Retrieved fresh cards after cache clear: ", fresh_cards.size())
 
 func test_level_collection() -> void:
 	print("\nTesting Level Collection:")
 	
 	# Test get_all
-	var levels: Array = await level_collection.get_all()
+	var levels: Array[Dictionary] = await level_collection.get_all()
 	print("Retrieved levels: ", levels.size())
 	
 	if levels.size() > 0:
@@ -105,16 +109,16 @@ func test_level_collection() -> void:
 		
 		# Test get_levels_up_to
 		var max_level: int = 3
-		var early_levels: Array = await level_collection.get_levels_up_to(max_level)
+		var early_levels: Array[Dictionary] = await level_collection.get_levels_up_to(max_level)
 		print("Retrieved levels up to ", max_level, ": ", early_levels.size())
 		
 		# Test cache
-		var cached_levels: Array = await level_collection.get_all(true)
+		var cached_levels: Array[Dictionary] = await level_collection.get_all(true)
 		print("Retrieved cached levels: ", cached_levels.size())
 		
 		# Test clear cache
 		level_collection.clear_cache()
-		var fresh_levels: Array = await level_collection.get_all(true)
+		var fresh_levels: Array[Dictionary] = await level_collection.get_all(true)
 		print("Retrieved fresh levels after cache clear: ", fresh_levels.size())
 
 func test_rules_collection() -> void:
@@ -143,7 +147,7 @@ func test_item_collection() -> void:
 	print("\nTesting Item Collection:")
 	
 	# Test get_all
-	var items: Array = await item_collection.get_all()
+	var items: Array[Dictionary] = await item_collection.get_all()
 	print("Retrieved items: ", items.size())
 	
 	if items.size() > 0:
@@ -159,28 +163,28 @@ func test_item_collection() -> void:
 		# Test get_by_type
 		var item_type: String = sample_item.get("type", "")
 		if not item_type.is_empty():
-			var typed_items: Array = await item_collection.get_by_type(item_type)
+			var typed_items: Array[Dictionary] = await item_collection.get_by_type(item_type)
 			print("Retrieved items by type (", item_type, "): ", typed_items.size())
 		
 		# Test get_by_rarity
 		var item_rarity: String = sample_item.get("rarity", "")
 		if not item_rarity.is_empty():
-			var rarity_items: Array = await item_collection.get_by_rarity(item_rarity)
+			var rarity_items: Array[Dictionary] = await item_collection.get_by_rarity(item_rarity)
 			print("Retrieved items by rarity (", item_rarity, "): ", rarity_items.size())
 		
 		# Test get_by_price_range
 		var min_price: int = 10
 		var max_price: int = 100
-		var price_items: Array = await item_collection.get_by_price_range(min_price, max_price)
+		var price_items: Array[Dictionary] = await item_collection.get_by_price_range(min_price, max_price)
 		print("Retrieved items by price range (", min_price, "-", max_price, "): ", price_items.size())
 		
 		# Test cache
-		var cached_items: Array = await item_collection.get_all(true)
+		var cached_items: Array[Dictionary] = await item_collection.get_all(true)
 		print("Retrieved cached items: ", cached_items.size())
 		
 		# Test clear cache
 		item_collection.clear_cache()
-		var fresh_items: Array = await item_collection.get_all(true)
+		var fresh_items: Array[Dictionary] = await item_collection.get_all(true)
 		print("Retrieved fresh items after cache clear: ", fresh_items.size())
 
 func test_player_collection() -> void:
@@ -209,7 +213,7 @@ func test_event_collection() -> void:
 	print("\nTesting Event Collection:")
 	
 	# Test get_all
-	var events: Array = await event_collection.get_all()
+	var events: Array[Dictionary] = await event_collection.get_all()
 	print("Retrieved events: ", events.size())
 	
 	if events.size() > 0:
@@ -225,11 +229,11 @@ func test_event_collection() -> void:
 		# Test get_by_type
 		var event_type: String = sample_event.get("type", "")
 		if not event_type.is_empty():
-			var typed_events: Array = await event_collection.get_by_type(event_type)
+			var typed_events: Array[Dictionary] = await event_collection.get_by_type(event_type)
 			print("Retrieved events by type (", event_type, "): ", typed_events.size())
 		
 		# Test get_active_events
-		var active_events: Array = await event_collection.get_active_events()
+		var active_events: Array[Dictionary] = await event_collection.get_active_events()
 		print("Retrieved active events: ", active_events.size())
 		
 		# Test get_lineup_data (using first event, which might not have lineups)
@@ -237,10 +241,10 @@ func test_event_collection() -> void:
 		print("Retrieved lineup data entries: ", lineup_data.size())
 		
 		# Test cache
-		var cached_events: Array = await event_collection.get_all(true)
+		var cached_events: Array[Dictionary] = await event_collection.get_all(true)
 		print("Retrieved cached events: ", cached_events.size())
 		
 		# Test clear cache
 		event_collection.clear_cache()
-		var fresh_events: Array = await event_collection.get_all(true)
+		var fresh_events: Array[Dictionary] = await event_collection.get_all(true)
 		print("Retrieved fresh events after cache clear: ", fresh_events.size())

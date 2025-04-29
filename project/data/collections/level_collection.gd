@@ -1,9 +1,9 @@
 class_name LevelCollection
 extends BaseCollection
 
-var _cache: Array[Dictionary] = []
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
+var _level_cache: Array[Dictionary] = []
 
 ## Initialize the level collection with the backend
 ## @param backend The data backend to use
@@ -18,39 +18,44 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 ## @return Array of level dictionaries
 func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
-		return _cache
-		
+		return _level_cache
+
 	Log.info("Getting all levels", {}, [Log.TAG_DB])
 	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
-	
+
 	# Handle case where result is null
 	if result == null:
 		Log.warning("No level data returned, using empty array", {}, [Log.TAG_DB, Log.TAG_ERROR])
-		_cache = []
+		_level_cache = []
+	elif result is Array:
+		# Direct assign for fail-fast approach - will crash if types don't match
+		_cache.assign(result)
 	else:
-		_cache = result
-		
+		Log.error("Expected Array but got different type", {"type": typeof(result)}, [Log.TAG_DB, Log.TAG_ERROR])
+		_level_cache = []
+
 	_is_cache_initialized = true
-	return _cache
-	
+	return _level_cache
+
 ## Get a specific level by number
 ## @param level_nr The level number to retrieve
 ## @return Level dictionary or empty dictionary if not found
 func get_by_number(level_nr: int) -> Dictionary:
 	Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
-	
+
 	var levels: Array[Dictionary] = await get_all()
 	for level: Dictionary in levels:
 		var id: Variant = level.id
 		if int(id) == level_nr:
 			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 			return level
-			
+
 	Log.warning("No level data found for level", {"level": level_nr}, [Log.TAG_DB])
 	return {}
-	
+
 ## Clear the level cache
 ## @return void
 func clear_cache() -> void:
 	_is_cache_initialized = false
-	_cache = []
+	_level_cache = []
+	super.clear_cache()

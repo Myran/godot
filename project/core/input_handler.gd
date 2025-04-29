@@ -101,7 +101,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					var cargo: Card = dragging_cargo
 					cargo.set_process_input(true)
 					var release_handled: bool = false
-					var dragging_card: Card = dragging_cargo as Card
+					var dragging_card: Card = dragging_cargo
 
 					match interacted_object.object_type:
 						core.ObjectType.BACKGROUND:

@@ -5,9 +5,11 @@ extends BaseCollection
 const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
-var _cache: Array[Dictionary] = []
+
+# Cache and initialization variables
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
+var _card_cache: Array[Dictionary] = []
 
 ## Initialize the card collection with the backend
 ## @param backend The data backend to use
@@ -23,19 +25,18 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		Log.debug("Using card cache", {
-			"cache_size": _cache.size(),
+			"cache_size": _card_cache.size(),
 			"collection_name": _collection_name,
 			"collection_key": _collection_key,
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_CACHE])
-		return _cache
+		return _card_cache
 
 	Log.info("Getting all cards", {
 		"use_cache": use_cache,
 		"cache_initialized": _is_cache_initialized,
 		"collection_name": _collection_name,
 		"collection_key": _collection_key,
-		"base_path": _base_path,
 		"collection_id": get_instance_id(),
 		"stack_trace": _get_stack_trace(2) # Show 2 frames of the stack
 	}, [Log.TAG_DB])
@@ -47,11 +48,11 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 
 	# Process the result using JSONPathNavigator for additional safety
-	var result: Variant = null
+	var result: Array[Dictionary]
 
 	if raw_result != null and raw_result is Array:
-		# Data is already an array, we can use it directly
-		result = raw_result
+		# Data is already an array - direct cast will crash if type is wrong (fail fast)
+		result.assign(raw_result)
 
 		Log.debug("Retrieved card data array directly", {
 			"duration_ms": request_duration,
@@ -61,7 +62,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		}, [Log.TAG_DB])
 	elif raw_result != null:
 		# Try to navigate using JSONPathNavigator
-		var nav_result: NavigationResultClass = JSONPathNavigator.navigate(raw_result, [])
+		var nav_result: NavigationResult = JSONPathNavigator.navigate(raw_result, [])
 
 		if nav_result.found and nav_result.is_array():
 			result = nav_result.as_array()
@@ -92,7 +93,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		Log.error("No card data returned", {
 			"collection_name": _collection_name,
 			"collection_key": _collection_key,
-			"base_path": _base_path,
 			"backend_class": _backend.get_class(),
 			"collection_id": get_instance_id(),
 			"stack_trace": _get_stack_trace(3) # Show more stack frames for errors
@@ -120,7 +120,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			"emergency_data": true
 		}, [Log.TAG_DB])
 
-		_cache = test_cards
+		_card_cache = test_cards
 	else:
 		Log.debug("Processing card data result", {
 			"result_type": typeof(result),
@@ -130,24 +130,25 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB])
 
-		_cache = result
+		_card_cache = result
 
 	_is_cache_initialized = true
 
 	# Log detailed results
 	Log.info("Retrieved all cards", {
-		"count": _cache.size(),
+		"count":_card_cache.size(),
 		"collection_name": _collection_name,
 		"collection_key": _collection_key,
-		"empty_result": _cache.size() == 0,
+		"empty_result":_card_cache.size() == 0,
 		"duration_ms": request_duration,
 		"collection_id": get_instance_id()
 	}, [Log.TAG_DB])
 
 	# Validate important fields in the cards
-	if _cache.size() > 0:
-		var sample_card: Dictionary = _cache[0]
-		var sample_card_keys: Array[String] = sample_card.keys()
+	if _card_cache.size() > 0:
+		var sample_card: Dictionary =_card_cache[0]
+		var sample_card_keys: Array[String]
+		sample_card_keys.assign(sample_card.keys())
 		var required_keys: Array[String] = ["id", "name", "abilities", "health"]
 		var missing_keys: Array[String] = []
 
@@ -182,7 +183,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_WARNING])
 
-	return _cache
+	return _card_cache
 
 ## Helper to get a simplified stack trace for debugging
 func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
@@ -255,4 +256,6 @@ func get_by_type(card_type: String) -> Array[Dictionary]:
 func clear_cache() -> void:
 	Log.info("Clearing card cache", {}, [Log.TAG_DB, Log.TAG_CACHE])
 	_is_cache_initialized = false
-	_cache = []
+	_card_cache = []
+	# Clear cache in parent class
+	super.clear_cache()

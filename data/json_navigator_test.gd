@@ -8,10 +8,10 @@ const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
 func _ready() -> void:
-	Log.info("Starting JSONPathNavigator tests", {}, ["test"])
-	
+	print("Starting JSONPathNavigator tests")
+
 	# Create a test JSON structure
-	var test_data = {
+	var test_data: Dictionary = {
 		"sheets": {
 			"cards_0": [
 				{
@@ -49,7 +49,7 @@ func _ready() -> void:
 			}
 		}
 	}
-	
+
 	# Test navigating to different parts of the structure
 	_test_navigation(test_data, ["sheets", "cards_0"], "Testing cards_0 path")
 	_test_navigation(test_data, ["sheets", "cards_0", 0], "Testing card index 0")
@@ -57,56 +57,58 @@ func _ready() -> void:
 	_test_navigation(test_data, ["sheets", "cards_0", 0, "abilities"], "Testing card abilities")
 	_test_navigation(test_data, ["sheets", "cards_0", 0, "abilities", 0], "Testing ability index 0")
 	_test_navigation(test_data, ["config", "settings", "sound"], "Testing config setting")
-	
+
 	# Test negative cases
 	_test_navigation(test_data, ["sheets", "cards_1"], "Testing non-existent path")
 	_test_navigation(test_data, ["sheets", "cards_0", 5], "Testing out of bounds index")
 	_test_navigation(test_data, ["sheets", "cards_0", 0, "non_existent"], "Testing non-existent field")
 	
-	Log.info("JSONPathNavigator tests completed", {}, ["test"])
+	# Test type conversions
+	_test_type_conversions(test_data)
+
+	print("JSONPathNavigator tests completed")
+	
+	# For headless mode
+	if OS.has_feature("headless"):
+		get_tree().quit()
 
 func _test_navigation(json_data: Dictionary, path: Array, description: String) -> void:
-	Log.info("Test: " + description, {"path": path}, ["test"])
-	
-	var result = JSONPathNavigator.navigate(json_data, path)
-	
+	print("Test: " + description + ", path: " + str(path))
+
+	var result = JSONPathNavigatorClass.navigate(json_data, path)
+
 	if result.found:
-		Log.info("  ✓ Path found", {
-			"result_type": result.result_type,
-			"value_type": typeof(result.value),
-			"value": result.value
-		}, ["test"])
+		print("  ✓ Path found, result_type: " + str(result.result_type) + 
+			 ", value_type: " + str(typeof(result.value)) + 
+			 ", value: " + str(result.value))
 	else:
-		Log.warning("  ✗ Path not found", {
-			"error": result.error_message,
-			"context": result.context
-		}, ["test"])
+		print("  ✗ Path not found, error: " + result.error_message)
 
 # Test special type conversions
 func _test_type_conversions(json_data: Dictionary) -> void:
-	Log.info("Testing type conversions", {}, ["test"])
-	
+	print("Testing type conversions")
+
 	# String conversions
 	var string_path = ["config", "version"]
-	var string_value = JSONPathNavigator.get_string(json_data, string_path)
-	Log.info("  String value", {"path": string_path, "value": string_value}, ["test"])
-	
+	var string_value = JSONPathNavigatorClass.get_string(json_data, string_path)
+	print("  String value - path: " + str(string_path) + ", value: " + string_value)
+
 	# Int conversions
 	var int_path = ["sheets", "levels_0", 0, "id"]
-	var int_value = JSONPathNavigator.get_int(json_data, int_path)
-	Log.info("  Int value", {"path": int_path, "value": int_value}, ["test"])
-	
+	var int_value = JSONPathNavigatorClass.get_int(json_data, int_path)
+	print("  Int value - path: " + str(int_path) + ", value: " + str(int_value))
+
 	# Bool conversions
 	var bool_path = ["config", "debug"]
-	var bool_value = JSONPathNavigator.get_bool(json_data, bool_path)
-	Log.info("  Bool value", {"path": bool_path, "value": bool_value}, ["test"])
-	
+	var bool_value = JSONPathNavigatorClass.get_bool(json_data, bool_path)
+	print("  Bool value - path: " + str(bool_path) + ", value: " + str(bool_value))
+
 	# Dictionary conversions
 	var dict_path = ["config", "settings"]
-	var dict_value = JSONPathNavigator.get_dictionary(json_data, dict_path)
-	Log.info("  Dictionary value", {"path": dict_path, "value": dict_value}, ["test"])
-	
+	var dict_value = JSONPathNavigatorClass.get_dictionary(json_data, dict_path)
+	print("  Dictionary value - path: " + str(dict_path) + ", value: " + str(dict_value))
+
 	# Array conversions
 	var array_path = ["sheets", "cards_0", 0, "abilities"]
-	var array_value = JSONPathNavigator.get_array(json_data, array_path)
-	Log.info("  Array value", {"path": array_path, "value": array_value}, ["test"])
+	var array_value = JSONPathNavigatorClass.get_array(json_data, array_path)
+	print("  Array value - path: " + str(array_path) + ", value: " + str(array_value))

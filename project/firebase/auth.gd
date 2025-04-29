@@ -3,7 +3,9 @@ extends Node
 signal fb_respons(res: Dictionary)
 signal apple_auth_respons(res: Dictionary)
 
-var firebase_auth: Object
+# We can't use FirebaseAuth type directly as it's not defined in the current scope
+# Using Object with clear naming convention to maintain type safety
+var firebase_auth: Object  # FirebaseAuth instance
 var godot_apple_auth: Object
 var apple_aut_res: Dictionary = {}
 
@@ -35,11 +37,13 @@ func is_connected_to_apple() -> bool:
 
 
 func is_apple_logged_in() -> bool:
+	@warning_ignore("redundant_await")
 	await Engine.get_main_loop().process_frame
 	if !auth.is_apple_available():
 		return false
 	godot_apple_auth.credential()
 	if apple_aut_res.is_empty():
+		@warning_ignore("redundant_await")
 		apple_aut_res = await godot_apple_auth.credential
 	var respons: Dictionary = apple_aut_res
 	apple_aut_res = {}
@@ -51,7 +55,7 @@ func check_provider_connection(provider_name: String) -> bool:
 		return false
 	if firebase_auth.is_logged_in():
 		for provider: Dictionary in firebase_auth.providers():
-			if provider.name == provider_name:
+			if provider.has("name") and provider.name == provider_name:
 				return true
 	else:
 		Log.warning("Checking provider connection but not logged in", {"provider": provider_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "validation"])
@@ -97,12 +101,14 @@ func sign_in_apple() -> int:
 		return -1
 
 	godot_apple_auth.sign_in()
+	@warning_ignore("redundant_await")
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
 		Log.warning("Apple auth sign in failed or cancelled", {"error": result.has("error")}, [Log.TAG_FIREBASE, "auth", "apple"])
 		return -1
 
 	firebase_auth.sign_in_apple(result.token, result.nonce)
+	@warning_ignore("redundant_await")
 	var auth_res: int = await firebase_auth.logged_in
 	return auth_res
 
@@ -118,18 +124,21 @@ func sign_in_facebook() -> int:
 		Log.warning("Facebook login API call failed", {}, [Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK])
 		return -1
 
+	@warning_ignore("redundant_await")
 	var res: Dictionary = await self.fb_respons
-	if res.respons != "success":
+	if res.has("respons") and res.respons != "success":
 		Log.warning("Facebook login failed or cancelled", {"response": res}, [Log.TAG_FIREBASE, "auth", "facebook"])
 		return -1
 
 	firebase_auth.sign_in_facebook(res.arg)
+	@warning_ignore("redundant_await")
 	var auth_res: int = await firebase_auth.logged_in
 	return auth_res
 
 
 func log_out_facebook() -> bool:
 	Log.info("Facebook logout requested", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
+	@warning_ignore("redundant_await")
 	await Engine.get_main_loop().process_frame
 	if !is_facebook_available():
 		Log.warning("Facebook logout requested but Facebook SDK not available", {}, [Log.TAG_FIREBASE, "auth", "facebook", "validation"])
@@ -142,6 +151,7 @@ func log_out_facebook() -> bool:
 func unlink_facebook() -> void:
 	Log.info("Unlinking Facebook provider", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	firebase_auth.unlink_provider("facebook.com")
+	@warning_ignore("redundant_await")
 	var _res: String = await firebase_auth.account_unlinked
 
 
@@ -152,12 +162,14 @@ func link_facebook() -> int:
 		Log.warning("Facebook login API call failed during account linking", {}, [Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK])
 		return -1
 
+	@warning_ignore("redundant_await")
 	var res: Dictionary = await self.fb_respons
-	if res.respons != "success":
+	if res.has("respons") and res.respons != "success":
 		Log.warning("Facebook login failed or cancelled during account linking", {"response": res}, [Log.TAG_FIREBASE, "auth", "facebook"])
 		return -1
 
 	firebase_auth.link_to_facebook(res.arg)
+	@warning_ignore("redundant_await")
 	var link_res: int = await firebase_auth.account_linked
 	return link_res
 
@@ -166,6 +178,7 @@ func log_out_apple() -> void:
 	Log.info("Apple logout requested", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if is_apple_available():
 		godot_apple_auth.sign_out()
+	@warning_ignore("redundant_await")
 	await Engine.get_main_loop().process_frame
 
 
@@ -175,11 +188,13 @@ func link_apple() -> int:
 		return -1
 
 	godot_apple_auth.sign_in()
+	@warning_ignore("redundant_await")
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
 		return -1
 
 	firebase_auth.link_to_apple(result.token, result.nonce)
+	@warning_ignore("redundant_await")
 	var res: int = await firebase_auth.account_linked
 	return res
 
@@ -187,6 +202,7 @@ func link_apple() -> int:
 func unlink_apple() -> void:
 	Log.info("Unlinking Apple provider", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	firebase_auth.unlink_provider("apple.com")
+	@warning_ignore("redundant_await")
 	var _res: String = await firebase_auth.account_unlinked
 
 
@@ -214,6 +230,7 @@ func logged_in(res: int) -> void:
 func login() -> int:
 	var retval: int = 0
 	Log.info("Attempting Firebase login", {}, [Log.TAG_FIREBASE, "auth"])
+	@warning_ignore("redundant_await")
 	await Engine.get_main_loop().process_frame
 
 	if !is_available():
@@ -222,6 +239,7 @@ func login() -> int:
 
 	if !firebase_auth.is_logged_in():
 		firebase_auth.sign_in_anonymously()
+		@warning_ignore("redundant_await")
 		retval = await firebase_auth.logged_in
 
 	return retval

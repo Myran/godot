@@ -1,8 +1,14 @@
 class_name FirebaseBackend
 extends DataBackend
 
+
+
 var db: Object = null  # FirebaseDatabase instance
 var internet_available: bool = false
+var auth: Object = null
+var uuid: String = ""
+var path: Array[Variant] = []
+var result: Variant = null
 
 func _init() -> void:
 	Log.info("FirebaseBackend initializing", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
@@ -19,7 +25,7 @@ func initialize() -> bool:
 	# Create a reference to capture instead of a primitive
 	var check_status: Dictionary = {"complete": false}
 
-	if internet_status:
+	if internet_status != null:
 		internet_status.has_internet.connect(func() -> void:
 			internet_available = true
 			check_status.complete = true
@@ -34,6 +40,7 @@ func initialize() -> bool:
 
 		# Wait for internet check to complete
 		while not check_status.complete:
+			@warning_ignore("redundant_await")
 			await Engine.get_main_loop().process_frame
 
 	# If no internet, we can't use Firebase
@@ -44,7 +51,7 @@ func initialize() -> bool:
 	# Initialize Firebase
 	db = ClassDB.instantiate("FirebaseDatabase")
 
-	if not db:
+	if db == null:
 		Log.error("Failed to instantiate FirebaseDatabase", {}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
 		return false
 
@@ -62,56 +69,67 @@ func initialize() -> bool:
 func is_available() -> bool:
 	return db != null and internet_available
 
-func get_data(path: Array, key: String) -> Variant:
+func get_data(p_path: Array[Variant], key: String) -> Variant:
 	if not is_available():
-		Log.error("Cannot get database value - Firebase not available", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error("Cannot get database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 		return null
 
-	Log.debug("Getting Firebase data", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug("Getting Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 	# Set DB root
-	db.set_db_root(path)
+	db.set_db_root(p_path)
 
 	# Get value
-	var result: Variant = null
+	result = null
 	db.get_value([key])
 	var received: Dictionary = {"key": null}
 
 	# Wait for value to be received via signal
 	while received.key != key:
+		@warning_ignore("redundant_await")
 		received = await self.value_received
 		result = received.value
 
-	Log.debug("Firebase data received", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug("Firebase data received", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 	return result
 
-func set_data(path: Array, key: String, data: Variant) -> bool:
+func set_data(p_path: Array[Variant], key: String, data: Variant) -> bool:
 	if not is_available():
-		Log.error("Cannot set database value - Firebase not available", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error("Cannot set database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 		return false
 
-	Log.debug("Setting Firebase data", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug("Setting Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 	# Prepare path
-	var full_path: Array = path.duplicate()
+	var full_path: Array[Variant] = []
+	for item: Variant in p_path:
+		full_path.append(item)
+
 	if not key.is_empty():
 		full_path.append(key)
 
 	# Set value
-	db.set_db_root(full_path.slice(0, -1))
-	db.set_value([full_path[-1]], data)
+	if full_path.size() > 1:
+		var root_path: Array[Variant] = []
+		for i: int in range(full_path.size() - 1):
+			root_path.append(full_path[i])
+		db.set_db_root(root_path)
+		db.set_value([full_path[-1]], data)
+	else:
+		db.set_db_root([])
+		db.set_value([full_path[0]], data)
 
 	return true
 
-func push_data(path: Array, data: Variant) -> String:
+func push_data(p_path: Array[Variant], data: Variant) -> String:
 	if not is_available():
-		Log.error("Cannot push database value - Firebase not available", {"path": path}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error("Cannot push database value - Firebase not available", {"path": p_path}, [Log.TAG_DB, Log.TAG_ERROR])
 		return ""
 
-	Log.debug("Pushing Firebase data", {"path": path}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug("Pushing Firebase data", {"path": p_path}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 	# Push child
-	db.set_db_root(path)
+	db.set_db_root(p_path)
 	var push_id: String = db.push_child([""])
 
 	# Update child data
@@ -119,15 +137,15 @@ func push_data(path: Array, data: Variant) -> String:
 
 	return push_id
 
-func remove_data(path: Array, key: String) -> bool:
+func remove_data(p_path: Array[Variant], key: String) -> bool:
 	if not is_available():
-		Log.error("Cannot remove database value - Firebase not available", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error("Cannot remove database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
 		return false
 
-	Log.debug("Removing Firebase data", {"path": path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug("Removing Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
 	# Remove value
-	db.set_db_root(path)
+	db.set_db_root(p_path)
 	db.remove_value([key])
 
 	return true

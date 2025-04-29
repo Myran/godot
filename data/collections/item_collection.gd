@@ -1,6 +1,10 @@
 class_name ItemCollection
 extends BaseCollection
 
+# Import class references directly
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 ## Collection class for item data.
 ## Provides access to item information with caching and validation.
 
@@ -107,12 +111,12 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 				"collection_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_WARNING])
 			
-			var nav_result: NavigationResultClass = JSONPathNavigator.navigate(result, [])
+			var nav_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, [])
 			if nav_result.is_array():
 				result = nav_result.as_array()
 			elif nav_result.is_dictionary():
 				# Try to extract items from dictionary structure
-				var items_result: NavigationResult = JSONPathNavigator.navigate(nav_result.value, ["items"])
+				var items_result: NavigationResultClass = JSONPathNavigatorClass.navigate(nav_result.value, ["items"])
 				if items_result.is_array():
 					result = items_result.as_array()
 				else:

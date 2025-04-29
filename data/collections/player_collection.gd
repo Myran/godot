@@ -1,6 +1,10 @@
 class_name PlayerCollection
 extends BaseCollection
 
+# Import class references directly
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 ## Collection class for player data.
 ## Provides access to player information and save functionality.
 
@@ -97,7 +101,7 @@ func get_user_data(uuid: String = "", use_cache: bool = true) -> Dictionary:
 			"collection_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_WARNING])
 		
-		var nav_result: NavigationResult = JSONPathNavigator.navigate(result, [])
+		var nav_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, [])
 		if nav_result.is_dictionary():
 			result = nav_result.as_dictionary()
 		else:
@@ -105,7 +109,7 @@ func get_user_data(uuid: String = "", use_cache: bool = true) -> Dictionary:
 			var player_paths: Array = [["data"], ["player"], ["user"], ["avatar"]]
 			
 			for search_path in player_paths:
-				var player_result: NavigationResult = JSONPathNavigator.navigate(result, search_path)
+				var player_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, search_path)
 				if player_result.is_dictionary():
 					Log.debug("Found player data at path", {
 						"path": search_path,

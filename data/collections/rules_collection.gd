@@ -1,6 +1,10 @@
 class_name RulesCollection
 extends BaseCollection
 
+# Import class references directly
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 ## Collection class for game rules data.
 ## Provides access to configurable game rules with validation.
 
@@ -54,8 +58,29 @@ func get_rules() -> Dictionary:
 		"chance_lvl_3_star_3": {"type": TYPE_INT, "default": 10, "description": "Chance for level 3, 3-star unit"}
 	}
 	
-	# Error out if result is null or empty
-	if result == null or result.is_empty():
+	# Process result with JSONPathNavigator if not null
+	if result != null:
+		# Check if result needs to be processed with JSONPathNavigator
+		if not (result is Dictionary):
+			Log.warning("Rules data is not a dictionary, attempting to navigate result", {
+				"collection_name": _collection_name,
+				"result_type": typeof(result),
+				"collection_id": get_instance_id()
+			}, [Log.TAG_DB, Log.TAG_WARNING])
+			
+			var nav_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, [])
+			if nav_result.is_dictionary():
+				result = nav_result.as_dictionary()
+			else:
+				# Try to extract rules key if in a nested structure
+				var rules_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, ["rules"])
+				if rules_result.is_dictionary():
+					result = rules_result.as_dictionary()
+				else if rules_result.is_array() and rules_result.as_array().size() > 0 and rules_result.as_array()[0] is Dictionary:
+					result = rules_result.as_array()[0]
+		
+	# Error out if result is null, empty or couldn't be processed to a dictionary
+	if result == null or not (result is Dictionary) or (result is Dictionary and result.is_empty()):
 		Log.error("Rules data is missing or empty", {
 			"collection_name": _collection_name,
 			"collection_key": _collection_key,
@@ -166,7 +191,7 @@ func _get_stack_trace(depth: int = 2) -> Array:
 	var stack: Array = get_stack()
 	var simplified_stack: Array = []
 	
-	for i in range(min(depth, stack.size())):
+	for i: int in range(min(depth, stack.size())):
 		if i >= stack.size():
 			break
 			

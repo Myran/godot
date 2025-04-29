@@ -1,6 +1,10 @@
 class_name LevelCollection
 extends BaseCollection
 
+# Import class references directly
+const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd") 
+const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+
 ## Collection class for level data.
 ## Provides access to level information with caching and validation.
 
@@ -112,12 +116,12 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 				"collection_id": get_instance_id()
 			}, [Log.TAG_DB, Log.TAG_WARNING])
 			
-			var nav_result: NavigationResultClass = JSONPathNavigator.navigate(result, [])
+			var nav_result: NavigationResultClass = JSONPathNavigatorClass.navigate(result, [])
 			if nav_result.is_array():
 				result = nav_result.as_array()
 			elif nav_result.is_dictionary():
 				# Try to extract levels from dictionary structure
-				var levels_result: NavigationResult = JSONPathNavigator.navigate(nav_result.value, ["levels"])
+				var levels_result: NavigationResultClass = JSONPathNavigatorClass.navigate(nav_result.value, ["levels"])
 				if levels_result.is_array():
 					result = levels_result.as_array()
 				else:

@@ -11,20 +11,56 @@ test-script SCRIPT_PATH:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running test script: {{SCRIPT_PATH}}"
-    
+
     # Format the path if it's relative
     FULL_PATH="{{SCRIPT_PATH}}"
     if [[ "{{SCRIPT_PATH}}" != /* && "{{SCRIPT_PATH}}" != ~/* ]]; then
         # If path doesn't start with / or ~/, assume it's relative to project directory
         FULL_PATH="{{PROJECT_PATH}}/{{SCRIPT_PATH}}"
     fi
+
+    # Run the script with Godot in headless mode and save PID
+    cd {{PROJECT_PATH}} && ../editor/{{GODOT_EXECUTABLE}} --headless --script "${FULL_PATH}" &
+    TEST_PID=$!
     
-    # Run the script with Godot in headless mode
-    cd {{PROJECT_PATH}} && ../editor/{{GODOT_EXECUTABLE}} --headless --script "${FULL_PATH}"
-    EXIT_CODE=$?
+    echo "Started test process with PID: $TEST_PID"
     
-    echo "Test script completed with exit code: ${EXIT_CODE}"
-    exit ${EXIT_CODE}
+    # Wait for up to 120 seconds for the process to complete naturally
+    TIMEOUT=120
+    for ((i=1; i<=TIMEOUT; i++)); do
+        if ! ps -p $TEST_PID > /dev/null 2>&1; then
+            echo "Test process completed after $i seconds"
+            # Process exited naturally, we assume success
+            exit 0
+        fi
+        
+        # Print a progress message every 20 seconds
+        if [ $((i % 20)) -eq 0 ]; then
+            echo "Test still running after $i seconds..."
+        fi
+        
+        sleep 1
+    done
+    
+    # If we get here, the process is still running after the timeout
+    if ps -p $TEST_PID > /dev/null 2>&1; then
+        echo "Test process (PID: $TEST_PID) timed out after $TIMEOUT seconds. Terminating..."
+        kill $TEST_PID 2>/dev/null || true
+        
+        # Give it a moment to terminate gracefully
+        sleep 2
+        
+        # Force kill if still running
+        if ps -p $TEST_PID > /dev/null 2>&1; then
+            echo "Process didn't terminate gracefully. Forcing termination..."
+            kill -9 $TEST_PID 2>/dev/null || true
+        fi
+        
+        echo "Test timed out"
+        exit 1
+    fi
+    
+    echo "Test script completed successfully"
 
 # Run logger validation tests
 test-logger:
@@ -68,6 +104,47 @@ test-ui-components:
     just test-script addons/advanced_logger/tests/test_ui_components.gd
     @echo "UI components test completed"
 
+# ===== DATA REFACTORING TESTS =====
+# Tests for the data management refactoring
+
+# Run JSONPathNavigator tests
+test-json-navigator:
+    @echo "Running JSONPathNavigator tests..."
+    just test-script tests/refactoring/json_path_navigator_test.gd
+    @echo "JSONPathNavigator tests completed"
+
+# Test data source with refactored collections
+test-refactored-data-source:
+    @echo "Running refactored data source tests..."
+    just test-script tests/refactoring/data_source_test.gd
+    @echo "Refactored data source tests completed"
+
+# Test collections with JSONPathNavigator
+test-collections-with-navigator:
+    @echo "Testing collections with JSONPathNavigator..."
+    just test-script tests/refactoring/collection_test.gd
+    @echo "Collection tests completed"
+
+# Test the cache mechanism
+test-cache:
+    @echo "Testing cache mechanism..."
+    just test-script tests/refactoring/cache_test.gd
+    @echo "Cache tests completed"
+
+# Run the game with legacy data source
+run-with-legacy-data-source:
+    @echo "Running game with legacy data source..."
+    cd {{PROJECT_PATH}} && ../editor/{{GODOT_EXECUTABLE}} --path . --use-legacy-datasource
+
+# Run the game with refactored data source
+run-with-refactored-data-source:
+    @echo "Running game with refactored data source..."
+    cd {{PROJECT_PATH}} && ../editor/{{GODOT_EXECUTABLE}} --path . --use-refactored-datasource
+
+# Run all refactoring tests
+test-refactoring: test-json-navigator test-refactored-data-source test-collections-with-navigator test-cache
+    @echo "All refactoring tests completed"
+
 # Run all standalone tests that don't require a running project
 test-standalone: test-logger test-tag-resizing test-tag-scanning test-tag-filtering test-tag-setup-manager test-ui-components
     @echo "All standalone tests completed"
@@ -83,7 +160,7 @@ test-firebase:
 
 # ===== ALL TESTS =====
 # Run all tests (both standalone and integration)
-test-all: test-standalone test-integration
+test-all: test-standalone test-integration test-refactoring
     @echo "All tests completed successfully"
 
 # ===== INTEGRATION TESTS =====

@@ -1,0 +1,15 @@
+res://godot/tests/data/translations.en.translation
+res://godot/tests/data/testdata.Header 2.translation
+res://extras/MoltenVK/External/glslang/External/spirv-tools/test/operand-class-test-coverage.Example instruction.translation
+res://extras/MoltenVK/MoltenVKShaderConverter/glslang/External/spirv-tools/test/operand-class-test-coverage.Example instruction.translation
+res://godot/tests/data/translations.de.translation
+res://godot/tests/data/testdata.Header 3.translation
+res://extras/MoltenVK/External/glslang/External/spirv-tools/test/operand-class-test-coverage.Notes.translation
+res://extras/MoltenVK/MoltenVKShaderConverter/glslang/External/spirv-tools/test/operand-class-test-coverage.Notes.translation
+res://godot/tests/data/translations.ja.translation
+res://godot/tests/data/testdata.Header 4.translation
+res://extras/MoltenVK/MoltenVKShaderConverter/glslang/External/spirv-tools/test/operand-class-test-coverage.example unit test.translation
+res://extras/MoltenVK/External/glslang/External/spirv-tools/test/operand-class-test-coverage.example unit test.translation
+res://godot/tests/data/translations.fa.translation
+res://extras/MoltenVK/MoltenVKShaderConverter/glslang/External/spirv-tools/test/operand-class-test-coverage.negative.translation
+res://extras/MoltenVK/External/glslang/External/spirv-tools/test/operand-class-test-coverage.negative.translation

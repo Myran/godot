@@ -1,7 +1,7 @@
 extends Node
 
-## Data source manager for handling game data from Firebase or local JSON files.
-## Provides centralized access to cards, levels, items, players, events, and rules data via collections.
+## Data source manager for game data from Firebase or local JSON files.
+## Provides centralized access to cards, levels, items, players, events, and rules data.
 ## Uses collection-based architecture with proper separation of concerns.
 
 ## Emitted when data source initialization is complete
@@ -114,17 +114,17 @@ func _initialize_collection(collection_name: String) -> bool:
 	
 	match collection_name:
 		"cards":
-			success = _safely_create_collection(func(): cards = CardCollection.new(_backend, test_group), "cards")
+			success = _safely_create_collection(func() -> void: cards = CardCollection.new(_backend, test_group), "cards")
 		"levels":
-			success = _safely_create_collection(func(): levels = LevelCollection.new(_backend, test_group), "levels")
+			success = _safely_create_collection(func() -> void: levels = LevelCollection.new(_backend, test_group), "levels")
 		"items":
-			success = _safely_create_collection(func(): items = ItemCollection.new(_backend, test_group), "items")
+			success = _safely_create_collection(func() -> void: items = ItemCollection.new(_backend, test_group), "items")
 		"players":
-			success = _safely_create_collection(func(): players = PlayerCollection.new(_backend), "players")
+			success = _safely_create_collection(func() -> void: players = PlayerCollection.new(_backend), "players")
 		"events":
-			success = _safely_create_collection(func(): events = EventCollection.new(_backend, test_group), "events")
+			success = _safely_create_collection(func() -> void: events = EventCollection.new(_backend, test_group), "events")
 		"rules":
-			success = _safely_create_collection(func(): rules = RulesCollection.new(_backend, test_group), "rules")
+			success = _safely_create_collection(func() -> void: rules = RulesCollection.new(_backend, test_group), "rules")
 		_:
 			Log.error("Unknown collection name", {
 				"collection_name": collection_name,
