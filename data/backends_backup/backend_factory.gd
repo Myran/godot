@@ -15,12 +15,14 @@ static func create_backend() -> DataBackend:
 	
 	# Try to create firebase backend - it will check availability internally
 	var firebase_backend = create_firebase_backend()
+	@warning_ignore("redundant_await")
 	if await firebase_backend.initialize():
 		return firebase_backend
 		
 	# Fall back to local if Firebase fails
 	Log.info("Firebase initialization failed, falling back to local data", {}, [Log.TAG_DB])
 	var local_backend = create_local_backend()
+	@warning_ignore("redundant_await")
 	await local_backend.initialize()
 	return local_backend
 	

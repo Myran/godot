@@ -9,7 +9,10 @@ var _level_cache: Array[Dictionary] = []
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
-	super(backend, ["sheets"], "Levels")
+	# Initialize with base path and collection name
+	var base_path: Array[Variant] = []
+	base_path.append("sheets")
+	super(backend, base_path, "Levels")
 	_collection_key = "levels_" + str(test_group)
 	Log.info("LevelCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
@@ -21,6 +24,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		return _level_cache
 
 	Log.info("Getting all levels", {}, [Log.TAG_DB])
+	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 
 	# Handle case where result is null
@@ -28,8 +32,16 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		Log.warning("No level data returned, using empty array", {}, [Log.TAG_DB, Log.TAG_ERROR])
 		_level_cache = []
 	elif result is Array:
-		# Direct assign for fail-fast approach - will crash if types don't match
-		_cache.assign(result)
+		# Check type before assigning to avoid unsafe assignment
+		if result is Array:
+			var array_result: Array = result
+			_level_cache = []
+			for item: Variant in array_result:
+				if item is Dictionary:
+					_level_cache.append(item)
+		else:
+			Log.error("Invalid data type for level data", {"actual_type": typeof(result)}, [Log.TAG_DB, Log.TAG_ERROR])
+			_level_cache = []
 	else:
 		Log.error("Expected Array but got different type", {"type": typeof(result)}, [Log.TAG_DB, Log.TAG_ERROR])
 		_level_cache = []
@@ -43,10 +55,15 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 func get_by_number(level_nr: int) -> Dictionary:
 	Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
+	@warning_ignore("redundant_await")
 	var levels: Array[Dictionary] = await get_all()
 	for level: Dictionary in levels:
 		var id: Variant = level.id
-		if int(id) == level_nr:
+		if id is int and id == level_nr:
+			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
+			return level
+		elif id is String and id.is_valid_int() and id.to_int() == level_nr:
 			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 			return level
 

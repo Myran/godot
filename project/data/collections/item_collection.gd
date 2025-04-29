@@ -57,6 +57,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	)
 
 	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
 	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 
@@ -64,8 +65,16 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	var result: Array[Dictionary]
 
 	if raw_result != null and raw_result is Array:
-		# Data is already an array - direct cast will crash if type is wrong (fail fast)
-		result.assign(raw_result)
+		# Check each item to ensure they are dictionaries before assignment
+		var safe_result: Array[Dictionary] = []
+		for item: Variant in raw_result:
+			if item is Dictionary:
+				safe_result.append(item)
+			else:
+				Log.warning("Skipped non-dictionary item in array", {
+					"item_type": typeof(item)
+				}, [Log.TAG_DB, Log.TAG_WARNING])
+		result = safe_result
 
 		Log.debug(
 			"Retrieved item data array directly",
@@ -286,6 +295,7 @@ func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 func get_by_id(item_id: String, use_cache: bool = true) -> Dictionary:
 	Log.info("Getting item info", {"item_id": item_id, "use_cache": use_cache}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
 	var items: Array[Dictionary] = await get_all(use_cache)
 	for item: Dictionary in items:
 		if not item is Dictionary:
@@ -311,6 +321,7 @@ func get_by_id(item_id: String, use_cache: bool = true) -> Dictionary:
 func get_id_by_name(item_name: String, use_cache: bool = true) -> String:
 	Log.info("Getting item ID from name", {"name": item_name, "use_cache": use_cache}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
 	var items: Array[Dictionary] = await get_all(use_cache)
 	for item: Dictionary in items:
 		if not item is Dictionary:
@@ -335,6 +346,7 @@ func get_id_by_name(item_name: String, use_cache: bool = true) -> String:
 func get_by_type(item_type: String, use_cache: bool = true) -> Array[Dictionary]:
 	Log.info("Getting items by type", {"type": item_type, "use_cache": use_cache}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
 	var items: Array[Dictionary] = await get_all(use_cache)
 	var filtered_items: Array[Dictionary] = []
 
@@ -362,6 +374,7 @@ func get_by_type(item_type: String, use_cache: bool = true) -> Array[Dictionary]
 func get_by_rarity(rarity: String, use_cache: bool = true) -> Array[Dictionary]:
 	Log.info("Getting items by rarity", {"rarity": rarity, "use_cache": use_cache}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
 	var items: Array[Dictionary] = await get_all(use_cache)
 	var filtered_items: Array[Dictionary] = []
 
@@ -396,6 +409,7 @@ func get_by_price_range(
 		[Log.TAG_DB]
 	)
 
+	@warning_ignore("redundant_await")
 	var items: Array[Dictionary] = await get_all(use_cache)
 	var filtered_items: Array[Dictionary] = []
 
@@ -407,13 +421,18 @@ func get_by_price_range(
 		if not item_dict.has("price"):
 			continue
 
-		var price: int
-		if item_dict.price is int:
-			price = item_dict.price
-		elif item_dict.price is float:
-			price = int(item_dict.price)
-		elif item_dict.price is String and item_dict.price.is_valid_int():
-			price = item_dict.price.to_int()
+		var price: int = 0
+		var price_variant: Variant = item_dict.price
+
+		if price_variant is int:
+			price = price_variant
+		elif price_variant is float:
+			var float_value: float = price_variant
+			price = int(float_value)
+		elif price_variant is String:
+			var price_string: String = price_variant
+			if price_string.is_valid_int():
+				price = price_string.to_int()
 		else:
 			continue
 

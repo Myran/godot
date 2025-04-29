@@ -51,8 +51,9 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	var result: Array[Dictionary]
 
 	if raw_result != null and raw_result is Array:
-		# Data is already an array - direct cast will crash if type is wrong (fail fast)
-		result.assign(raw_result)
+		# First ensure the raw result is a proper Array before assigning
+		var array_result: Array = raw_result
+		result.assign(array_result)
 
 		Log.debug("Retrieved card data array directly", {
 			"duration_ms": request_duration,

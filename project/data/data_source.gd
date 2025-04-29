@@ -1,6 +1,7 @@
 class_name DataSource
 extends Node
-
+## Emitted when data source initialization is complete
+signal startup_completed
 # Import required classes
 const BackendFactoryClass = preload("res://data/backends/backend_factory.gd")
 const DataBackendClass = preload("res://data/backends/data_backend.gd")
@@ -13,8 +14,7 @@ const NavigationResultClass = preload("res://data/backends/navigation_result.gd"
 ## Provides centralized access to cards, levels, items, players, events, and rules data.
 ## Uses collection-based architecture with proper separation of concerns.
 
-## Emitted when data source initialization is complete
-signal startup_completed
+
 
 # Collections
 var cards: CardCollection = null
@@ -49,6 +49,7 @@ func _initialize() -> void:
 	}, [Log.TAG_DB])
 
 	# Create the backend - let it crash if type is wrong
+	@warning_ignore("redundant_await")
 	_backend = await BackendFactoryClass.create_backend()
 
 	# Track whether we're using local data
@@ -211,6 +212,7 @@ func activate_card_cache() -> void:
 	# No null check - will crash if cards is null (fail fast)
 
 	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
 	var card_data: Array[Dictionary] = await cards.get_all(true)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 
@@ -234,7 +236,7 @@ func setup_player_data() -> int:
 		}, [Log.TAG_DB, Log.TAG_ERROR])
 		return -1
 
-	var auth = Engine.get_singleton("Auth")
+	var auth: Object = Engine.get_singleton("Auth")
 	var retval: int = 0
 
 	if auth != null and auth.is_available():
@@ -243,6 +245,7 @@ func setup_player_data() -> int:
 		}, [Log.TAG_DB])
 
 		# Direct assignment - will crash if type is wrong (fail fast)
+		@warning_ignore("redundant_await")
 		retval = await auth.login()
 
 		if OS.has_feature("editor"):
@@ -273,6 +276,7 @@ func setup_player_data() -> int:
 		"instance_id": get_instance_id()
 	}, [Log.TAG_DB])
 
+	@warning_ignore("redundant_await")
 	var save_success: bool = await players.save_user_data(data)
 
 	if not save_success:
@@ -297,6 +301,7 @@ func setup_player_data() -> int:
 ## @return Card dictionary or empty dictionary if not found
 func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 	# No null check - will crash if cards is null (fail fast)
+	@warning_ignore("redundant_await")
 	return await cards.get_by_id(card_id, use_cache)
 
 ## Legacy method: Get all cards
@@ -304,6 +309,7 @@ func get_card_info(card_id: String, use_cache: bool = false) -> Dictionary:
 ## @return Array of card dictionaries
 func get_all_cards(use_cache: bool = false) -> Array[Dictionary]:
 	# No null check - will crash if cards is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Array[Dictionary] = await cards.get_all(use_cache)
 	return result
 
@@ -312,6 +318,7 @@ func get_all_cards(use_cache: bool = false) -> Array[Dictionary]:
 ## @return Card ID or empty string if not found
 func get_card_id_from_name(target_name: String) -> String:
 	# No null check - will crash if cards is null (fail fast)
+	@warning_ignore("redundant_await")
 	return await cards.get_id_by_name(target_name)
 
 ## Legacy method: Get level data by number
@@ -319,6 +326,7 @@ func get_card_id_from_name(target_name: String) -> String:
 ## @return Level dictionary or empty dictionary if not found
 func get_level_data(level_nr: int) -> Dictionary:
 	# No null check - will crash if levels is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Dictionary = await levels.get_by_number(level_nr)
 	return result
 
@@ -326,6 +334,7 @@ func get_level_data(level_nr: int) -> Dictionary:
 ## @return Array of level dictionaries
 func get_all_levels() -> Array[Dictionary]:
 	# No null check - will crash if levels is null (fail fast)
+	@warning_ignore("redundant_await")
 	var levels_data: Array[Dictionary] = await levels.get_all()
 	return levels_data
 
@@ -334,6 +343,7 @@ func get_all_levels() -> Array[Dictionary]:
 ## @return Item dictionary or empty dictionary if not found
 func get_item_info(item_id: String) -> Dictionary:
 	# No null check - will crash if items is null (fail fast)
+	@warning_ignore("redundant_await")
 	return await items.get_by_id(item_id)
 
 ## Legacy method: Get item ID from name
@@ -341,12 +351,14 @@ func get_item_info(item_id: String) -> Dictionary:
 ## @return Item ID or empty string if not found
 func get_item_id_from_name(target_name: String) -> String:
 	# No null check - will crash if items is null (fail fast)
+	@warning_ignore("redundant_await")
 	return await items.get_id_by_name(target_name)
 
 ## Legacy method: Get all items
 ## @return Array of item dictionaries
 func get_all_items() -> Array[Dictionary]:
 	# No null check - will crash if items is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Array[Dictionary] = await items.get_all()
 	return result
 
@@ -355,6 +367,7 @@ func get_all_items() -> Array[Dictionary]:
 ## @return User data dictionary or empty dictionary if not found
 func get_user_data(uuid: String = "") -> Dictionary:
 	# No null check - will crash if players is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Dictionary = await players.get_user_data(uuid)
 	return result
 
@@ -368,12 +381,14 @@ func get_default_player_data() -> Dictionary:
 ## @return Rules dictionary
 func get_rules_data() -> Dictionary:
 	# No null check - will crash if rules is null (fail fast)
+	@warning_ignore("redundant_await")
 	return await rules.get_rules()
 
 ## Legacy method: Get event data
 ## @return Array of event dictionaries
 func get_event_data() -> Array[Dictionary]:
 	# No null check - will crash if events is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Array[Dictionary] = await events.get_all()
 	return result
 
@@ -382,6 +397,7 @@ func get_event_data() -> Array[Dictionary]:
 ## @return Dictionary of lineup data or empty dictionary if not found
 func get_event_lineups_data(event: String) -> Dictionary:
 	# No null check - will crash if events is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: Dictionary = await events.get_lineup_data(event)
 	return result
 
@@ -402,6 +418,7 @@ func save_event_lineup_data(
 	lineup_uuid: String = ""
 ) -> String:
 	# No null check - will crash if events is null (fail fast)
+	@warning_ignore("redundant_await")
 	var result: String = await events.save_lineup_data(event, lineup, level, p_data, lives, lineup_uuid)
 	return result
 
@@ -409,6 +426,7 @@ func save_event_lineup_data(
 ## @param event The event ID to remove lineups from
 func remove_event_lineups(event: String) -> void:
 	# No null check - will crash if events is null (fail fast)
+	@warning_ignore("redundant_await")
 	await events.remove_event_lineups(event)
 
 ## Legacy method: Save user data
@@ -416,6 +434,7 @@ func remove_event_lineups(event: String) -> void:
 ## @return bool True if save was successful
 func save_user_data(data: Dictionary) -> bool:
 	# No null check - will crash if players is null (fail fast)
+	@warning_ignore("redundant_await")
 	var success: bool = await players.save_user_data(data)
 	return success
 

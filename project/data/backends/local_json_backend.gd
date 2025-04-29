@@ -73,8 +73,9 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 
 	# Handle special case for sheets directly
 	var sheets_data: Dictionary = {}
-	if local_data.has(sheets_id) and local_data[sheets_id] is Dictionary:
-		sheets_data = local_data[sheets_id] as Dictionary
+	if local_data.has(sheets_id):
+		if local_data[sheets_id] is Dictionary:
+			sheets_data = local_data[sheets_id]
 
 		Log.debug("Found sheets ID in data", {
 			"sheets_id": sheets_id,
@@ -104,7 +105,10 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		# If the path starts with "sheets", use the sheets data as the base
 		var sheets_id_string: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
 		if local_data.has(sheets_id_string):
-			target_data = local_data[sheets_id_string]
+			if local_data[sheets_id_string] is Dictionary:
+				target_data = local_data[sheets_id_string]
+			else:
+				target_data = {}
 			# Skip the "sheets" part in the navigation path
 			for i_idx: int in range(1, p_path.size()):
 				navigation_path.append(p_path[i_idx])
@@ -126,21 +130,21 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-	var result: NavigationResult
+	var nav_result: NavigationResult
 
 	if p_key.is_empty():
 		# If key is empty, navigate to the path and return the data at that location
-		result = JSONPathNavigator.navigate(target_data, navigation_path)
+		nav_result = JSONPathNavigator.navigate(target_data, navigation_path)
 	else:
 		# If a key is specified, navigate to the path and then look for the key
 		var full_path: Array[Variant] = []
 		for nav_item: Variant in navigation_path:
 			full_path.append(nav_item)
 		full_path.append(p_key)
-		result = JSONPathNavigator.navigate(target_data, full_path)
+		nav_result = JSONPathNavigator.navigate(target_data, full_path)
 
-	if result.found:
-		var value_info: Dictionary = _get_value_info(result.value)
+	if nav_result.found:
+		var value_info: Dictionary = _get_value_info(nav_result.value)
 
 		Log.info("Successfully navigated to data", {
 			"path": p_path,
@@ -149,20 +153,20 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 			"backend_id": get_instance_id()
 		}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-		call_deferred("emit_signal", "value_received", {"key": p_key, "value": result.value})
-		return result.value
+		call_deferred("emit_signal", "value_received", {"key": p_key, "value": nav_result.value})
+		return nav_result.value
 	else:
 		Log.error("Failed to navigate to data", {
 			"path": p_path,
 			"key": p_key,
-			"error": result.error_message,
-			"context": result.context,
+			"error": nav_result.error_message,
+			"context": nav_result.context,
 			"backend_id": get_instance_id(),
 			"call_stack": _get_simple_stack_trace()
 		}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 
 		push_error("Data not found: path=" + str(p_path) + ", key=" + p_key +
-			". Error: " + result.error_message + ". Context: " + str(result.context))
+			". Error: " + nav_result.error_message + ". Context: " + str(nav_result.context))
 		return null
 
 # Helper to get information about a value for logging
@@ -263,7 +267,7 @@ func _load_local_data() -> bool:
 
 	# Store the entire JSON result
 	if json_result is Dictionary:
-		local_data = json_result as Dictionary
+		local_data = json_result
 	else:
 		Log.error("JSON result is not a Dictionary", {"file": current_file, "result_type": typeof(json_result), "backend_id": get_instance_id()}, [Log.TAG_LOCAL, Log.TAG_ERROR])
 		return false
@@ -284,7 +288,7 @@ func _load_local_data() -> bool:
 			if key_name is String:
 				var value_item: Variant = local_data[key_name]
 				if value_item is Dictionary:
-					var dict_keys: Array = (value_item as Dictionary).keys()
+					var dict_keys: Array = value_item.keys()
 					var max_keys: int = min(5, dict_keys.size())
 					structure_info[key_name] = {
 						"type": "Dictionary",
@@ -295,9 +299,13 @@ func _load_local_data() -> bool:
 					var array_value: Array = value_item
 					structure_info[key_name] = {
 						"type": "Array",
-						"size": array_value.size(),
-						"sample": _get_value_type_info(array_value[0]) if array_value.size() > 0 else "empty"
+						"size": array_value.size()
 					}
+					# Avoid using ternary operator to prevent INCOMPATIBLE_TERNARY error
+					if array_value.size() > 0:
+						structure_info[key_name]["sample"] = _get_value_type_info(array_value[0])
+					else:
+						structure_info[key_name]["sample"] = "empty"
 				else:
 					structure_info[key_name] = {
 						"type": typeof(value_item)

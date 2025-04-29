@@ -12,14 +12,14 @@ extends RefCounted
 static func navigate(json_data: Variant, path: Array, _default_value: Variant = null) -> NavigationResult:
 	if json_data == null:
 		return NavigationResult.new_not_found("JSON data is null", path)
-		
+
 	var current_data: Variant = json_data
 	var current_path: Array[Variant] = []
-	
+
 	for i: int in range(path.size()):
 		var path_part: Variant = path[i]
 		current_path.append(path_part)
-		
+
 		# Handle different container types
 		if current_data is Dictionary:
 			var dict_data: Dictionary = current_data
@@ -40,7 +40,7 @@ static func navigate(json_data: Variant, path: Array, _default_value: Variant = 
 				var path_string: String = path_part
 				if path_string.is_valid_int():
 					index = path_string.to_int()
-			
+
 			var array_data: Array = current_data
 			if index >= 0 and index < array_data.size():
 				current_data = array_data[index]
@@ -57,7 +57,7 @@ static func navigate(json_data: Variant, path: Array, _default_value: Variant = 
 				current_path,
 				{"node_type": typeof(current_data)}
 			)
-	
+
 	# Successfully navigated the entire path
 	return _create_result_for_type(current_data, path)
 

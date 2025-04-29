@@ -53,6 +53,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	}, [Log.TAG_DB])
 	
 	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
 	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 	
@@ -140,7 +141,16 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 							break
 		
 		if result is Array:
-			_cache = result
+			# Safely convert Array to Array[Dictionary]
+			_cache = []
+			for item: Variant in result:
+				if item is Dictionary:
+					_cache.append(item)
+				else:
+					Log.warning("Skipped non-dictionary item in cards array", {
+						"item_type": typeof(item),
+						"collection_name": _collection_name
+					}, [Log.TAG_DB, Log.TAG_WARNING])
 		else:
 			Log.error("Failed to process card data", {
 				"collection_name": _collection_name,
@@ -226,8 +236,9 @@ func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 			return cached_card
 	
 	# Not in cache or cache disabled, search in all cards
+	@warning_ignore("redundant_await")
 	var cards: Array = await get_all(use_cache)
-	for card in cards:
+	for card: Variant in cards:
 		if not card is Dictionary:
 			continue
 			
@@ -254,8 +265,9 @@ func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 func get_id_by_name(card_name: String) -> String:
 	Log.info("Getting card ID from name", {"name": card_name}, [Log.TAG_DB])
 	
+	@warning_ignore("redundant_await")
 	var cards: Array = await get_all()
-	for card in cards:
+	for card: Variant in cards:
 		if not card is Dictionary:
 			continue
 			
@@ -276,6 +288,7 @@ func get_id_by_name(card_name: String) -> String:
 func get_by_type(card_type: String) -> Array[Dictionary]:
 	Log.info("Getting cards by type", {"type": card_type}, [Log.TAG_DB])
 	
+	@warning_ignore("redundant_await")
 	var cards: Array[Dictionary] = await get_all()
 	var filtered_cards: Array[Dictionary] = []
 	
@@ -296,6 +309,7 @@ func get_by_type(card_type: String) -> Array[Dictionary]:
 func get_by_rarity(rarity: String) -> Array[Dictionary]:
 	Log.info("Getting cards by rarity", {"rarity": rarity}, [Log.TAG_DB])
 	
+	@warning_ignore("redundant_await")
 	var cards: Array[Dictionary] = await get_all()
 	var filtered_cards: Array[Dictionary] = []
 	
@@ -331,6 +345,7 @@ func clear_cache() -> void:
 func get_cards_by_ids(card_ids: Array[String]) -> Array[Dictionary]:
 	Log.info("Getting cards by IDs", {"id_count": card_ids.size()}, [Log.TAG_DB])
 	
+	@warning_ignore("redundant_await")
 	var cards: Array[Dictionary] = await get_all()
 	var result_cards: Array[Dictionary] = []
 	var found_ids: Array[String] = []

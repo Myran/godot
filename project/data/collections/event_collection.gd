@@ -15,6 +15,7 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 ## @return Array of event dictionaries
 func get_all() -> Array[Dictionary]:
 	Log.info("Getting event data", {}, [Log.TAG_DB])
+	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 
 	# Handle case where result is null
@@ -25,9 +26,13 @@ func get_all() -> Array[Dictionary]:
 	# Directly cast with fail-fast approach
 	if result is Array:
 		var typed_result: Array[Dictionary] = []
-		for item in result:
-			# Will crash immediately if item is not a Dictionary (fail fast)
-			typed_result.append(item)
+		for item: Variant in result:
+			if item is Dictionary:
+				typed_result.append(item)
+			else:
+				Log.warning("Skipped non-dictionary item in array", {
+					"item_type": typeof(item)
+				}, [Log.TAG_DB, Log.TAG_WARNING])
 		return typed_result
 	else:
 		Log.error("Expected Array but got different type", {"type": typeof(result)}, [Log.TAG_DB, Log.TAG_ERROR])
@@ -44,9 +49,10 @@ func get_lineup_data(event: String) -> Dictionary:
 		return {}
 
 	var path: Array[Variant] = ["events", event]
+	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(path, "lineups")
 	if result is Dictionary:
-		return result as Dictionary
+		return result
 	return {}
 
 ## Save lineup data for an event
@@ -86,10 +92,12 @@ func save_lineup_data(
 
 	var push_id: String
 	if lineup_uuid.is_empty():
+		@warning_ignore("redundant_await")
 		push_id = await _backend.push_data(path, data)
 	else:
 		push_id = lineup_uuid
 		var update_path: Array[Variant] = ["events", event, "lineups"]
+		@warning_ignore("redundant_await")
 		await _backend.set_data(update_path, push_id, data)
 
 	Log.debug("Event lineup saved", {"event": event, "lineup_id": push_id}, [Log.TAG_DB])
@@ -106,4 +114,5 @@ func remove_event_lineups(event: String) -> bool:
 		return false
 
 	var path: Array[Variant] = ["events", event]
+	@warning_ignore("redundant_await")
 	return await _backend.remove_data(path, "lineups")

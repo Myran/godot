@@ -1,6 +1,13 @@
 class_name NavigationResult
 extends RefCounted
 
+## Result type constants
+enum ResultType {
+	NOT_FOUND,
+	DICTIONARY,
+	ARRAY,
+	VALUE
+}
 ## A class to encapsulate the result of a JSON structure navigation.
 ## Provides type-safe access to the navigation result.
 
@@ -19,13 +26,7 @@ var error_message: String = ""
 ## Additional context information for debugging
 var context: Dictionary = {}
 
-## Result type constants
-enum ResultType {
-	NOT_FOUND,
-	DICTIONARY,
-	ARRAY,
-	VALUE
-}
+
 
 ## The type of result
 var result_type: ResultType = ResultType.NOT_FOUND
@@ -214,7 +215,6 @@ func get_formatted_string() -> String:
 			ResultType.DICTIONARY: type_name = "Dictionary"
 			ResultType.ARRAY: type_name = "Array"
 			ResultType.VALUE: type_name = "Value"
-		
 		return "NavigationResult[Found %s at %s: %s]" % [type_name, path, value]
 	else:
 		return "NavigationResult[Not Found at %s: %s (%s)]" % [path, error_message, context]

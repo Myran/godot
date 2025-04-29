@@ -25,7 +25,7 @@ func get_user_data(uuid: String = "") -> Dictionary:
 	var path: Array[Variant] = _get_path().duplicate()
 	path.append(uuid)
 	var result: Dictionary = {}
-	var data = await _backend.get_data(path, "avatar_data")
+	var data: Variant = await _backend.get_data(path, "avatar_data")
 	if data is Dictionary:
 		result = data
 
@@ -47,6 +47,7 @@ func save_user_data(data: Dictionary) -> bool:
 	var path: Array[Variant] = _get_path().duplicate()
 	path.append(uuid)
 
+	@warning_ignore("redundant_await")
 	return await _backend.set_data(path, "avatar_data", data)
 
 ## Get default player data structure

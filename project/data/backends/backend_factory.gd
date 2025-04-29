@@ -32,6 +32,7 @@ static func create_backend() -> DataBackend:
 			Log.error("Failed to create Firebase backend", {}, [Log.TAG_DB, Log.TAG_ERROR])
 			selected_backend = BackendSelection.LOCAL
 		else:
+			@warning_ignore("redundant_await")
 			var firebase_init_result: bool = await firebase_backend_instance.initialize()
 			if firebase_init_result:
 				Log.info("Firebase backend initialized successfully", {}, [Log.TAG_DB])
@@ -50,6 +51,7 @@ static func create_backend() -> DataBackend:
 			return null
 
 		# We need the await here since initialize() is async
+		@warning_ignore("redundant_await")
 		var local_init_result: bool = await local_backend_instance.initialize()
 
 		if not local_init_result:

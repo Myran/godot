@@ -1,0 +1,378 @@
+WorkerThreadPool: 8 threads, 2 max low-priority.
+Godot Engine v4.4.rc.custom_build.78f73d476 (2025-03-01 20:19:08 UTC) - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+Using "default" pen tablet driver...
+
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+CameraServer: Registered camera FaceTime HD Camera with ID 1 and position 0 at index 0
+CORE API HASH: 1539128922
+EDITOR API HASH: 2189602513
+Loading resource: res://autoloads/debug.tscn
+Loading resource: res://autoloads/debug.gd
+Loading resource: res://autoloads/internet_status.gd
+Loading resource: res://firebase/auth.gd
+Loading resource: res://data/data_source.gd
+ERROR: 'Values of the ternary operator are not mutually compatible.'
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+ERROR: '"for" iterator variable "item" has no static type.'
+ERROR: 'The argument 1 of the constructor "int()" requires the subtype "int", "bool", or "float" but the supertype "Variant" was provided.'
+ERROR: '"for" iterator variable "part" has no static type.'
+ERROR: '"for" iterator variable "part" has an implicitly inferred static type.'
+ERROR: 'The argument 1 of the function "assign()" requires the subtype "Array" but the supertype "Variant" was provided.'
+ERROR: 'The argument 1 of the constructor "int()" requires the subtype "int", "bool", or "float" but the supertype "Variant" was provided.'
+ERROR: 'Casting "Variant" to "String" is unsafe.'
+ERROR: 'Casting "Variant" to "String" is unsafe.'
+ERROR: 'Variable "data" has no static type.'
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+Loading resource: res://autoloads/seeded_rng_singleton.gd
+Loading resource: res://autoloads/card_controller.tscn
+Loading resource: res://autoloads/card_controller.gd
+Loading resource: res://misc/util.gd
+Loaded system CA certificates
+Loading resource: res://main.tscn
+Loading resource: res://main.gd
+Loading resource: res://debug/scene_debug.tscn
+Loading resource: res://debug/theme_debugmenu.tres
+Loading resource: res://debug/debug.gd
+Loading resource: res://debug/button_debug_menu.tscn
+Loading resource: res://core/game.tscn
+Loading resource: res://core/game.gd
+Loading resource: res://assets/ui/ui_bar_2.png
+Loading resource: res://.godot/imported/ui_bar_2.png-acabc4060c016a9601a803bca406cebc.ctex
+Loading resource: res://core/safe_zone.gd
+Loading resource: res://core/top_bar.gd
+Loading resource: res://core/card/card.tscn
+Loading resource: res://assets/card_images/card_image_0_1.png
+Loading resource: res://.godot/imported/card_image_0_1.png-0931e78cf76b24975f5323aa09930697.ctex
+Loading resource: res://assets/shaders/card_vignette.tres
+Loading resource: res://assets/shaders/card_vignette.gdshader
+Loading resource: res://assets/corners.png
+Loading resource: res://.godot/imported/corners.png-194868510a3039e0b1b645d74979cd08.ctex
+Loading resource: res://core/card/panel_card.tres
+Loading resource: res://assets/testart/ui_test_1.png
+Loading resource: res://.godot/imported/ui_test_1.png-79606df6039ad020bbe1efb062f23146.ctex
+Loading resource: res://core/card/card_level_icon.gd
+Loading resource: res://assets/font_card_stat_num.tres
+Loading resource: res://assets/fonts/Quintessential/Quintessential-Regular.ttf
+Loading resource: res://.godot/imported/Quintessential-Regular.ttf-c735462b4dfb8cfa620a702de64d3b4c.fontdata
+Loading resource: res://assets/testart/ui_test_9.png
+Loading resource: res://.godot/imported/ui_test_9.png-88cb2df9677593d9ef5e0ed169232c61.ctex
+Loading resource: res://assets/testart/icon_level.tscn
+Loading resource: res://assets/testart/icon_level_4.png
+Loading resource: res://.godot/imported/icon_level_4.png-6e6f7fb7e512ddc7aebe67446c98ed69.ctex
+Loading resource: res://assets/testart/ui_test_11.png
+Loading resource: res://.godot/imported/ui_test_11.png-d732a5e0d8ab911078e386c8ae4b7afe.ctex
+Loading resource: res://assets/testart/ui_test_13.png
+Loading resource: res://.godot/imported/ui_test_13.png-afc56256ba8033e71ab5e316ca0a1613.ctex
+Loading resource: res://assets/testart/ui_test_8.png
+Loading resource: res://.godot/imported/ui_test_8.png-8453bc9727b9ba8dd7d54480478081b6.ctex
+Loading resource: res://assets/testart/draft_background_test_2.png
+Loading resource: res://.godot/imported/draft_background_test_2.png-6db9147740646fae6b6ae68aaee1b408.ctex
+Loading resource: res://core/card/card_tag.tscn
+Loading resource: res://assets/font_card_text.tres
+Loading resource: res://core/hold_bar.tscn
+Loading resource: res://core/hold_button.tscn
+Loading resource: res://assets/ui/icons/button_triangle_green.png
+Loading resource: res://.godot/imported/button_triangle_green.png-31b4f63127568812a3bca19a4174acfe.ctex
+Loading resource: res://assets/ui/icons/button_triangle_red.png
+Loading resource: res://.godot/imported/button_triangle_red.png-4dc27dca513591a18ed7e873a38030d2.ctex
+Loading resource: res://core/hold_bar.gd
+Loading resource: res://assets/ui/ui_bar_1.png
+Loading resource: res://.godot/imported/ui_bar_1.png-3edfaf857c2ccdce51a5b585420505f5.ctex
+Loading resource: res://assets/font_card_title.tres
+Loading resource: res://assets/testart/icon_upgrade.png
+Loading resource: res://.godot/imported/icon_upgrade.png-4b73836cea13360cb055558b28c947ff.ctex
+Loading resource: res://assets/testart/icon_coins.png
+Loading resource: res://.godot/imported/icon_coins.png-5d931ab2a614d27a35317cad7928a25c.ctex
+Loading resource: res://core/levels_default.tres
+Loading resource: res://core/match_levels/draft_level_0.tscn
+Loading resource: res://core/clicker/tileset_test2.res
+Loading resource: res://assets/testart/brickSpecial03.png
+Loading resource: res://.godot/imported/brickSpecial03.png-d437e0c700fceae642af751cfab95915.ctex
+Loading resource: res://assets/testart/brickSpecial01.png
+Loading resource: res://.godot/imported/brickSpecial01.png-4b901d8ba838042be7fdf819ca01a07a.ctex
+Loading resource: res://assets/testart/brickSpecial09.png
+Loading resource: res://.godot/imported/brickSpecial09.png-2604b97b9fd2e23564c1a49732e5e4d5.ctex
+Loading resource: res://assets/testart/brickSpecial08.png
+Loading resource: res://.godot/imported/brickSpecial08.png-1c72e42a9f35b863e6389eb624441d78.ctex
+Loading resource: res://assets/testart/brickSpecial10.png
+Loading resource: res://.godot/imported/brickSpecial10.png-b945a89551765483c02cdbd5a064ee23.ctex
+Loading resource: res://assets/testart/brickSpecial02.png
+Loading resource: res://.godot/imported/brickSpecial02.png-59903b3a944892870ba29e320b6158b8.ctex
+Loading resource: res://assets/testart/block_blocker.png
+Loading resource: res://.godot/imported/block_blocker.png-264c6c0f285804a09c53ae3c4254c676.ctex
+Loading resource: res://core/match_levels/tile_level_01.tscn
+Loading resource: res://core/match_levels/tile_level_02.tscn
+Loading resource: res://core/match_levels/tile_level_03.tscn
+Loading resource: res://core/match_levels/tile_level_04.tscn
+Loading resource: res://core/match_levels/tile_level_05.tscn
+Loading resource: res://core/block_factory.tres
+Loading resource: res://core/clicker/blocks/block_empty.tscn
+Loading resource: res://core/clicker/blocks/base_block.tscn
+Loading resource: res://core/clicker/blocks/block_items.tscn
+Loading resource: res://assets/testart/tile_test_6.png
+Loading resource: res://.godot/imported/tile_test_6.png-4fbdd4b74384fdb65ad09e7e5267b1c8.ctex
+Loading resource: res://core/clicker/blocks/block_lock.tscn
+Loading resource: res://assets/testart/tile_test_7.png
+Loading resource: res://.godot/imported/tile_test_7.png-a3147a7876c586a22dacc179134c7141.ctex
+Loading resource: res://core/clicker/blocks/block_void.tscn
+Loading resource: res://assets/testart/tile_test_5.png
+Loading resource: res://.godot/imported/tile_test_5.png-f4b2a717a1c17b0b6abbc4a69383cffa.ctex
+Loading resource: res://core/clicker/blocks/block_portal.tscn
+Loading resource: res://assets/testart/icon_test_4.png
+Loading resource: res://.godot/imported/icon_test_4.png-b98fa2850a1e4ac12d830e47bbe70aa1.ctex
+Loading resource: res://core/clicker/blocks/block_progress_1.tscn
+Loading resource: res://assets/testart/tile_test_9.png
+Loading resource: res://.godot/imported/tile_test_9.png-8bd15112006f1a577d0d5866d7edc05a.ctex
+Loading resource: res://core/clicker/blocks/block_progress.gd
+Loading resource: res://core/clicker/blocks/block_progress_2.tscn
+Loading resource: res://assets/testart/tile_test_10.png
+Loading resource: res://.godot/imported/tile_test_10.png-88866db6e693d9c09dc7a5a75bae47d9.ctex
+Loading resource: res://core/clicker/blocks/block_progress_3.tscn
+Loading resource: res://assets/testart/tile_test_11.png
+Loading resource: res://.godot/imported/tile_test_11.png-e58ba1ca81894aaa1048074ca68dd3f8.ctex
+Loading resource: res://assets/test_board_pattern_3.png
+Loading resource: res://.godot/imported/test_board_pattern_3.png-e3acc2a427398331a24724bb3bf10529.ctex
+Loading resource: res://core/grid_pos.tscn
+Loading resource: res://core/bottom_bar_draft.gd
+Loading resource: res://assets/ui/ui_button_round.png
+Loading resource: res://.godot/imported/ui_button_round.png-e0c9f3c7885de51e89443caa9086fcf4.ctex
+Loading resource: res://assets/testart/icon_attacking_3.png
+Loading resource: res://.godot/imported/icon_attacking_3.png-789b3b9b1eccaf1faa14f5ccb4f5594a.ctex
+Loading resource: res://assets/testart/icon_twirl.png
+Loading resource: res://.godot/imported/icon_twirl.png-30fd86e6713ba748cae064cb268e1c60.ctex
+Loading resource: res://assets/testart/prepare_background_test_1.png
+Loading resource: res://.godot/imported/prepare_background_test_1.png-a5972de55bcf29fabcdd862a681be279.ctex
+Loading resource: res://core/bottom_bar_prepare.gd
+Loading resource: res://assets/testart/icon_lock.png
+Loading resource: res://.godot/imported/icon_lock.png-7a3506257588e20512eb6c349e5e5abb.ctex
+Loading resource: res://assets/testart/prepare_background_test_2.png
+Loading resource: res://.godot/imported/prepare_background_test_2.png-5a91bb5177e3849c66ac15477b0e82f7.ctex
+Loading resource: res://core/canvas_layer_unhandled_events.gd
+Loading resource: res://core/canvas_layer_background.gd
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDebug module initialized[39m [38;2;146;131;116m(debug.gd:46)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[network]                     [39m [38;2;125;174;163mInternet status checker initialized[39m [38;2;146;131;116m(internet_status.gd:11)[39m[0m
+Facebook plugin not found!
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDataSource initializing[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:37)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[ui, system]                  [39m [38;2;125;174;163mUI autoload initialized[39m [38;2;146;131;116m(ui.gd:77)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system]                      [39m [38;2;125;174;163mCore autoload initialized[39m [38;2;146;131;116m(core.gd:184)[39m[0m
+[38;2;216;166;87mWARNING   [39m [38;2;169;182;101m[firebase]                    [39m [38;2;216;166;87mFacebook SDK not available[39m [38;2;146;131;116m(debug.gd:80)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, level]       [39m [38;2;124;111;100mLevel controller initializing[39m [38;2;146;131;116m(level_controller.gd:13)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;124;111;100mGame initializing[39m [38;2;146;131;116m(game.gd:37)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mMain scene initialized[39m [38;2;146;131;116m(main.gd:5)[39m[0m
+============================================
+[38;2;125;174;163mAdvanced Logger debug filter logging DISABLED[39m[0m
+============================================
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mUsing updated DataSource implementation[39m [38;2;146;131;116m(main.gd:14)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mRunning on macOS platform[39m [38;2;146;131;116m(main.gd:23)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mStarting DataSource initialization[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:47)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRunning in editor, using local data source[39m [38;2;146;131;116m(backend_factory.gd:18)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCreating local JSON backend[39m { "custom_file_path": false } [38;2;146;131;116m(backend_factory.gd:93)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mLocalJSONBackend initializing[39m { "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:22)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mLocalJSONBackend file paths[39m { "battle_db_file": "res://resources/gameone-577cb-export.json", "current_file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:35)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mUsing battle database file[39m { "file": "res://resources/gameone-577cb-export.json" } [38;2;146;131;116m(local_json_backend.gd:45)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;125;174;163mLoading local data file[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:238)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mFile opened successfully, reading content[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:255)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mFile read complete[39m { "file": "res://resources/gameone-577cb-export.json", "size_bytes": 417498, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:261)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;125;174;163mLocal data file loaded successfully[39m { "file": "res://resources/gameone-577cb-export.json", "top_level_keys": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "events", "players", "zen", "zen_players"], "key_count": 5, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:277)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;124;111;100mData structure details[39m { "structure": { "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": { "type": "Dictionary", "size": 12, "keys": ["cards_0", "event_data_0", "items_0", "levels_0", "rules_0"] }, "events": { "type": "Dictionary", "size": 2, "keys": ["event_1", "event_2"] }, "players": { "type": "Dictionary", "size": 14, "keys": ["0IFVa4UfguWtMqKt9vaG0Ejhcm43", "3ejbxJpfzggt53MMoSmaLZk0KZt1", "BSsTupQkUjSZrm6RrbfSrCWDRnk1", "FLhqBCvW6MYlB0YbBRITU3m77ST2", "MM8J6PopV5ffHXFMI3H4pfSSES12"] }, "zen": { "type": "Dictionary", "size": 1, "keys": ["levels"] }, "zen_players": { "type": "Dictionary", "size": 20, "keys": ["0XW0aF3mgWQUr6k9ugrUlgvIss92", "2lVS33FUs3OcHdbxL61iP4wG1sj2", "6RVtUgcHwBZdA1PQ4jn26OIhkfN2", "7E7oaVZIOkWjPXzLt8UZgfcd6Iq2", "90PmPtA0Czcla470z2XP6PzNgXj1"] } }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:310)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mLocal backend initialized successfully[39m [38;2;146;131;116m(backend_factory.gd:59)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBackend created[39m { "backend_type": "RefCounted", "using_local_data": true, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:58)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collections[39m { "test_group": 0, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "cards", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Cards", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mCardCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(card_collection.gd:20)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "levels", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Levels", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mLevelCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(level_collection.gd:17)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "items", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Items", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mItemCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(item_collection.gd:26)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "players", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Players", "base_path": ["players"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mPlayerCollection initialized[39m [38;2;146;131;116m(player_collection.gd:8)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "events", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Events", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mEventCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(event_collection.gd:12)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "rules", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Rules", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRulesCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(rules_collection.gd:12)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mDataSource collections initialized successfully[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:110)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mWaiting for backend startup[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:72)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDataSource initialization complete[39m { "firebase_available": false, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;124;111;100mSetting up game systems[39m [38;2;146;131;116m(game.gd:53)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting rules data[39m { "collection_name": "Rules", "collection_key": "rules_0", "collection_id": -9223371873478244141, "stack_trace": [{ "function": "_get_stack_trace", "file": "rules_collection.gd", "line": 64 }, { "function": "get_rules", "file": "rules_collection.gd", "line": 17 }] } [38;2;146;131;116m(rules_collection.gd:17)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mGetting local data[39m { "path": ["sheets"], "key": "rules_0", "call_stack": [{ "function": "get_rules", "file": "rules_collection.gd", "line": 23 }, { "function": "get_rules_data", "file": "data_source.gd", "line": 385 }, { "function": "setup", "file": "card_controller.gd", "line": 15 }], "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:60)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mFound sheets ID in data[39m { "sheets_id": "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:80)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mFound key directly in sheets data[39m { "key": "rules_0", "result_info": { "type": 28, "size": 1, "is_array": true }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:90)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mRules data request completed[39m { "duration_ms": 1, "result_null": false, "result_empty": false, "collection_name": "Rules", "collection_id": -9223371873478244141 } [38;2;146;131;116m(rules_collection.gd:26)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mValidating rules data structure[39m { "result_keys": ["battle_reward_loss", "battle_reward_win", "chance_lvl_2_star_1", "chance_lvl_2_star_2", "chance_lvl_3_star_1", "chance_lvl_3_star_2", "chance_lvl_3_star_3", "id", "notch_devices", "start_energy", "upgrade_cost_lvl_2", "upgrade_cost_lvl_3", "upgrade_slots_lvl_1", "upgrade_slots_lvl_2", "upgrade_slots_lvl_3", "value_recruit_unit", "value_roll", "value_sell_item", "value_sell_unit", "value_upgrade"], "collection_name": "Rules", "collection_id": -9223371873478244141 } [38;2;146;131;116m(rules_collection.gd:54)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:208)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting all cards[39m { "use_cache": true, "cache_initialized": false, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906, "stack_trace": [{ "function": "_get_stack_trace", "file": "card_collection.gd", "line": 190 }, { "function": "get_all", "file": "card_collection.gd", "line": 35 }] } [38;2;146;131;116m(card_collection.gd:35)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mGetting local data[39m { "path": ["sheets"], "key": "cards_0", "call_stack": [{ "function": "get_all", "file": "card_collection.gd", "line": 47 }, { "function": "activate_card_cache", "file": "data_source.gd", "line": 216 }, { "function": "setup", "file": "card_controller.gd", "line": 16 }], "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:60)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mFound sheets ID in data[39m { "sheets_id": "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:80)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mFound key directly in sheets data[39m { "key": "cards_0", "result_info": { "type": 28, "size": 19, "is_array": true }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:90)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mRetrieved card data array directly[39m { "duration_ms": 0, "count": 19, "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:57)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBackend get_data call completed[39m { "duration_ms": 0, "collection_name": "Cards", "collection_key": "cards_0", "result_null": false, "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:83)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mProcessing card data result[39m { "result_type": 28, "is_array": true, "result_size": 19, "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:125)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRetrieved all cards[39m { "count": 19, "collection_name": "Cards", "collection_key": "cards_0", "empty_result": false, "duration_ms": 0, "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:138)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mValidating card data structure[39m { "sample_card_keys": ["abilities", "attack", "card_name", "description", "health", "id", "name", "tags", "tribe", "upgrade_level"], "required_keys": ["id", "name", "abilities", "health"], "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:155)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard data validation successful[39m { "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:175)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 0, "data_source": "local", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:219)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[level, initialization]       [39m [38;2;125;174;163mSetting up level[39m { "level_name": "default" } [38;2;146;131;116m(level_controller.gd:29)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[clicker, game_state]         [39m [38;2;124;111;100mRefillDistance set for level[39m { "distance": (0.0, 225.0), "level": "default" } [38;2;146;131;116m(level_controller.gd:41)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, initialization]       [39m [38;2;124;111;100mCreating blocks from level layout[39m [38;2;146;131;116m(level_controller.gd:46)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "0", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "0" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://assets/frames/frame_icon.png
+Loading resource: res://.godot/imported/frame_icon.png-a3e81cd472d2d589bc926b7918ce573e.ctex
+Loading resource: res://assets/frames/Frame 21.png
+Loading resource: res://.godot/imported/Frame 21.png-d042dcdc9ca45d0fd763769dca2c2f28.ctex
+Loading resource: res://assets/frames/Frame 20.png
+Loading resource: res://.godot/imported/Frame 20.png-46a24c6397f74f523a66ff9ba027493c.ctex
+Loading resource: res://assets/frames/Frame 22.png
+Loading resource: res://.godot/imported/Frame 22.png-c5cb67867565725d3d1f202558d0c403.ctex
+Loading resource: res://assets/testart/frame_test_1.png
+Loading resource: res://.godot/imported/frame_test_1.png-f1782482718888d9c4d0c512d1b4925d.ctex
+Loading resource: res://assets/testart/frame_test_2.png
+Loading resource: res://.godot/imported/frame_test_2.png-9e6b52ad2d9babb3217db3481825d93b.ctex
+Loading resource: res://assets/testart/frame_test_3.png
+Loading resource: res://.godot/imported/frame_test_3.png-3ed29fa9eef43e873464893ae1c9dd34.ctex
+Loading resource: res://assets/testart/frame_test_4.png
+Loading resource: res://.godot/imported/frame_test_4.png-8e2647c00873822e355264269f238313.ctex
+Loading resource: res://assets/testart/frame_test_5.png
+Loading resource: res://.godot/imported/frame_test_5.png-dd8160ec03e96449bcf0d5fba23b58c3.ctex
+Loading resource: res://assets/testart/frame_test_6.png
+Loading resource: res://.godot/imported/frame_test_6.png-688314be80c60293b2f440e1a09300d1.ctex
+Loading resource: res://assets/testart/frame_test_7.png
+Loading resource: res://.godot/imported/frame_test_7.png-73f340cffebf16ac8f06244c0ced0d41.ctex
+Loading resource: res://assets/testart/frame_test_8.png
+Loading resource: res://.godot/imported/frame_test_8.png-32ceb494fbdba5753a8b09bac290c5bd.ctex
+Loading resource: res://assets/testart/frame_test_9.png
+Loading resource: res://.godot/imported/frame_test_9.png-2c2d32008f570925fe8c169aa99dbe67.ctex
+Loading resource: res://core/card/icon_level_small.tscn
+Loading resource: res://core/card/panel_container_level_top.gd
+Loading resource: res://assets/effects/bubble.png
+Loading resource: res://.godot/imported/bubble.png-683bf9094485ef6f389913837db4c502.ctex
+Loading resource: res://assets/card_images/card_image_1_0.png
+Loading resource: res://.godot/imported/card_image_1_0.png-6c27c4cf163b8ea49db34b763610450a.ctex
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "10", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "10" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+Loading resource: res://assets/card_images/card_image_1_10.png
+Loading resource: res://.godot/imported/card_image_1_10.png-219b59d5f832786b5a1a2badf1732eb1.ctex
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "4", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "4" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+Loading resource: res://assets/card_images/card_image_1_4.png
+Loading resource: res://.godot/imported/card_image_1_4.png-196d254936bb9f0ea95d4f742c12bd3b.ctex
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "1", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "1" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+Loading resource: res://assets/card_images/card_image_1_1.png
+Loading resource: res://.godot/imported/card_image_1_1.png-c9d7af7af0b4dc5d082bd68bebd2b8a7.ctex
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "0", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "0" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;125;174;163mInitializing game[39m [38;2;146;131;116m(game.gd:61)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:208)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 0, "data_source": "local", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:219)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "START" } [38;2;146;131;116m(game_handler.gd:7)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mActive collections[39m { "collections": { "cards": true, "levels": true, "items": true, "players": true, "events": true, "rules": true }, "active_count": 6, "backend_type": "RefCounted", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:489)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state]                  [39m [38;2;125;174;163mGame starting[39m [38;2;146;131;116m(game.gd:220)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state transition[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(game.gd:108)[39m[0m
+[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(game_handler.gd:7)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, ui]              [39m [38;2;124;111;100mSwitching to preparation mode[39m [38;2;146;131;116m(game.gd:236)[39m[0m
+[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[network]                     [39m [38;2;124;111;100mSocket status[39m { "status": 0 } [38;2;146;131;116m(internet_status.gd:27)[39m[0m

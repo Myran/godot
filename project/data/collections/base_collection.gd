@@ -22,7 +22,7 @@ func _init(backend: DataBackend, base_path: Array = [], collection_name: String 
 
 	# Convert base_path to Array[Variant] if needed
 	if base_path is Array:
-		for item in base_path:
+		for item: Variant in base_path:
 			_base_path.append(item)
 
 	_collection_name = collection_name
@@ -144,7 +144,8 @@ func get_data_as_int(path: Array[Variant], key: String, use_cache: bool = true, 
 			"path": path,
 			"value": data
 		}, [Log.TAG_DB])
-		return int(data)
+		var float_value: float = data
+		return int(float_value)
 
 	if data is String:
 		var string_value: String = data
@@ -180,7 +181,7 @@ func save_data(path: Array[Variant], data: Variant) -> bool:
 ## @return The cache key
 func _get_cache_key(path: Array[Variant]) -> String:
 	var key: String = ""
-	for part in path:
+	for part: Variant in path:
 		key += str(part) + "/"
 	return key.strip_edges(false, true)
 
@@ -237,7 +238,7 @@ func path_string_to_array(string_path: String, separator: String = "/") -> Array
 	var parts: PackedStringArray = string_path.split(separator)
 	var result: Array[Variant] = []
 
-	for part in parts:
+	for part: String in parts:
 		if part.is_empty():
 			continue
 

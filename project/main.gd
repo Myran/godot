@@ -6,7 +6,7 @@ func _ready() -> void:
 	Log.set_debug_filter_logging(false)
 
 
-	var args: PackedStringArray = OS.get_cmdline_user_args()
+	var _args: PackedStringArray = OS.get_cmdline_user_args()
 	# Check if a specific flag exists
 
 

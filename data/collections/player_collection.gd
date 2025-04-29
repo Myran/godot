@@ -54,6 +54,7 @@ func get_user_data(uuid: String = "", use_cache: bool = true) -> Dictionary:
 	path.append(resolved_uuid)
 	
 	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(path, "avatar_data")
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 	
@@ -161,8 +162,8 @@ func save_user_data(data: Dictionary) -> bool:
 		"collection_id": get_instance_id()
 	}, [Log.TAG_DB])
 	
-	var auth: Object = Engine.get_singleton("Auth")
-	if not auth or not auth.is_available():
+	var auth_obj: Object = Engine.get_singleton("Auth")
+	if not auth_obj or not auth_obj.is_available():
 		Log.error("Cannot save user data - auth not available", {
 			"collection_name": _collection_name,
 			"collection_id": get_instance_id(),
@@ -180,6 +181,7 @@ func save_user_data(data: Dictionary) -> bool:
 	_validate_player_data(data, uuid)
 	
 	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
 	var success: bool = await _backend.set_data(path, "avatar_data", data)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 	
@@ -264,7 +266,7 @@ func _get_stack_trace(depth: int = 2) -> Array:
 	var stack: Array = get_stack()
 	var simplified_stack: Array = []
 	
-	for i in range(min(depth, stack.size())):
+	for i: int in range(min(depth, stack.size())):
 		if i >= stack.size():
 			break
 			
@@ -284,9 +286,9 @@ func _resolve_uuid(uuid: String) -> String:
 	if not uuid.is_empty():
 		return uuid
 		
-	var auth: Object = Engine.get_singleton("Auth")
-	if auth and auth.is_available():
-		var resolved_uuid: String = auth.uid()
+	var auth_obj: Object = Engine.get_singleton("Auth")
+	if auth_obj and auth_obj.is_available():
+		var resolved_uuid: String = auth_obj.uid()
 		Log.debug("Using auth UUID", {"uuid": resolved_uuid}, [Log.TAG_DB])
 		return resolved_uuid
 	else:
@@ -301,7 +303,7 @@ func _validate_player_data(data: Dictionary, uuid: String) -> void:
 	var required_fields: Array = ["name", "id"]
 	var missing_fields: Array = []
 	
-	for field in required_fields:
+	for field: String in required_fields:
 		if not data.has(field):
 			missing_fields.append(field)
 	
