@@ -3,12 +3,12 @@ extends Node
 ## Emitted when data source initialization is complete
 signal startup_completed
 # Import required classes
-const BackendFactoryClass = preload("res://data/backends/backend_factory.gd")
-const DataBackendClass = preload("res://data/backends/data_backend.gd")
-const LocalJSONBackendClass = preload("res://data/backends/local_json_backend.gd")
-const FirebaseBackendClass = preload("res://data/backends/firebase_backend.gd")
-const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
-const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
+#const BackendFactoryClass = preload("res://data/backends/backend_factory.gd")
+#const DataBackendClass = preload("res://data/backends/data_backend.gd")
+#const LocalJSONBackendClass = preload("res://data/backends/local_json_backend.gd")
+#const FirebaseBackendClass = preload("res://data/backends/firebase_backend.gd")
+#const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
+#const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
 ## Data source manager for game data from Firebase or local JSON files.
 ## Provides centralized access to cards, levels, items, players, events, and rules data.
@@ -28,8 +28,8 @@ var rules: RulesCollection = null
 var test_group: int = 0
 
 # Internal state
-var _backend: DataBackend = null
 var using_local_data: bool = false
+var _backend: DataBackend = null
 var _initialized: bool = false
 
 ## Called when the node enters the scene tree
@@ -50,10 +50,10 @@ func _initialize() -> void:
 
 	# Create the backend - let it crash if type is wrong
 	@warning_ignore("redundant_await")
-	_backend = await BackendFactoryClass.create_backend()
+	_backend = await BackendFactory.create_backend()
 
 	# Track whether we're using local data
-	using_local_data = _backend is LocalJSONBackendClass
+	using_local_data = _backend is LocalJSONBackend
 
 	Log.debug("Backend created", {
 		"backend_type": _backend.get_class() if _backend != null else "null",
@@ -191,7 +191,7 @@ func set_test_group(group: int) -> void:
 ## @return True if Firebase is available, false otherwise
 func is_firebase_available() -> bool:
 	# No null check - will crash if _backend is null (fail fast)
-	var available: bool = _backend is FirebaseBackendClass and _backend.is_available()
+	var available: bool = _backend is FirebaseBackend and _backend.is_available()
 	Log.debug("Firebase availability check", {
 		"available": available,
 		"backend_type": _backend.get_class()
