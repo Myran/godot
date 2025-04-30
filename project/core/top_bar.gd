@@ -16,4 +16,4 @@ func _ready() -> void:
 
 
 func _on_button_debug_pressed() -> void:
-	debug.action(debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU)
+	debug.action(debug.DebugEventType.EVENT_OPEN_DEBUG_MENU)

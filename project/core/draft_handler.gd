@@ -24,7 +24,7 @@ func upgrade() -> void:
 	core.action(core.UpgradeEvent.new(current_draft_upgrade_level))
 
 
-func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Array) -> void:
+func _on_debug_event(event: debug.DebugEventType, _data: Array) -> void:
 	match event:
-		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL, debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
+		debug.DebugEventType.EVENT_RESET_MATCH_LEVEL, debug.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			current_draft_upgrade_level = 0

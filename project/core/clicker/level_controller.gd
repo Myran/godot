@@ -14,12 +14,12 @@ func _ready() -> void:
 	debug.debug_event.connect(_on_debug_event)
 
 
-func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Array) -> void:
+func _on_debug_event(event: debug.DebugEventType, _data: Array) -> void:
 	match event:
-		debug.DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL:
+		debug.DebugEventType.EVENT_RESET_MATCH_LEVEL:
 			Log.debug("Debug event: Resetting current level", {"level": current_level_name}, [Log.TAG_LEVEL, Log.TAG_DEBUG])
 			setup_level(current_level_name)
-		debug.DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL:
+		debug.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			var lvl_name: String = _data[0]
 			Log.debug("Debug event: Force loading level", {"level": lvl_name}, [Log.TAG_LEVEL, Log.TAG_DEBUG])
 			setup_level(lvl_name)

@@ -31,9 +31,9 @@ func _ready() -> void:
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 
-func _on_debug_event(event: debug.DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
+func _on_debug_event(event: debug.DebugEventType, _data: Variant = null) -> void:
 	match event:
-		debug.DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU:
+		debug.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU:
 			%PopupDebug.show()
 
 func _input(event: InputEvent) -> void:

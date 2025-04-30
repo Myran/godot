@@ -2,7 +2,7 @@ extends Node
 
 signal debug_event
 
-enum DEBUG_EVENT_TYPE {
+enum DebugEventType {
 	EVENT_OPEN_DEBUG_MENU,
 	EVENT_OPEN_GAME_SELECTOR,
 	EVENT_RESET_MATCH_LEVEL,
@@ -20,17 +20,17 @@ enum DEBUG_EVENT_TYPE {
 @export var v_box_container_buttons: VBoxContainer
 
 
-func action(type: DEBUG_EVENT_TYPE, args: Array = []) -> void:
+func action(type: DebugEventType, args: Array = []) -> void:
 	debug_event.emit(type, args)
 
 
-func _on_debug_event(event: DEBUG_EVENT_TYPE, _data: Variant = null) -> void:
+func _on_debug_event(event: DebugEventType, _data: Variant = null) -> void:
 	match event:
-		DEBUG_EVENT_TYPE.EVENT_OPEN_DEBUG_MENU:
+		DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			popup_debug.show()
-		#DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR:
+		#DebugEventType.EVENT_OPEN_GAME_SELECTOR:
 		#popup_debug_game.popup_centered()
-	pass
+
 
 
 #func set_force_level(_force):
@@ -55,7 +55,7 @@ func debug_button_pressed(_name: String) -> void:
 		"button_close":
 			popup_debug.hide()
 		'button_db_debug':
-			action(DEBUG_EVENT_TYPE.EVENT_OPEN_DB_DEBUG_MENU)
+			action(DebugEventType.EVENT_OPEN_DB_DEBUG_MENU)
 		"button_pop_enemy":
 			Log.debug("Populating enemy lineup with test cards", {}, [Log.TAG_DB, Log.TAG_DEBUG])
 			for n : int in 3:
@@ -71,23 +71,23 @@ func debug_button_pressed(_name: String) -> void:
 		"select_game":
 			Log.debug("Game selection requested", {}, [Log.TAG_DEBUG, Log.TAG_UI])
 			popup_debug.hide()
-			action(DEBUG_EVENT_TYPE.EVENT_OPEN_GAME_SELECTOR)
+			action(DebugEventType.EVENT_OPEN_GAME_SELECTOR)
 
 		"reset_current_match_level":
-			action(DEBUG_EVENT_TYPE.EVENT_RESET_MATCH_LEVEL)
+			action(DebugEventType.EVENT_RESET_MATCH_LEVEL)
 		"match_level_1":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_01"])
+			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_01"])
 		"match_level_2":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_02"])
+			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_02"])
 
 		"match_level_3":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_03"])
+			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_03"])
 
 		"match_level_4":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_04"])
+			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_04"])
 
 		"match_level_5":
-			action(DEBUG_EVENT_TYPE.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
+			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
 		_:
 			Log.warning("Unused debug button pressed", {"button_name": _name}, [Log.TAG_DEBUG, Log.TAG_UI])
 #
