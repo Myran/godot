@@ -148,7 +148,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	# Validate important fields in the cards
 	if _card_cache.size() > 0:
 		var sample_card: Dictionary =_card_cache[0]
-		var sample_card_keys: Array[String]
+		var sample_card_keys: Array[String] # This is used in logging below
 		sample_card_keys.assign(sample_card.keys())
 		var required_keys: Array[String] = ["id", "name", "abilities", "health"]
 		var missing_keys: Array[String] = []
