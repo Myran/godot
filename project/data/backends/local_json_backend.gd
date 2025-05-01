@@ -3,7 +3,7 @@ extends DataBackend
 
 ## Local JSON backend for data retrieval from local JSON files.
 ## Handles file loading, parsing, and data access with JSONPathNavigator.
-
+const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
 # Suppress warning for the signal since it's required for the DataBackend interface
 @warning_ignore("unused_signal")
 
@@ -16,7 +16,7 @@ var battle_db_file: String
 var current_file: String
 
 # Sheet ID for the main data structure
-const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+
 
 func _init(file_path: String = "") -> void:
 	Log.info("LocalJSONBackend initializing", {
@@ -64,65 +64,35 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-	# Special handling for our specific JSON structure
-	# The structure is: {"1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": {...}}
-	# Where SHEETS is the key in the JSON structure
+	# Create navigation path with sheets handling
+	var target_data: Variant = local_data
+	var navigation_path: Array[Variant] = []
 
 	# Get sheets ID from project settings or use default
 	var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
 
-	# Handle special case for sheets directly
-	var sheets_data: Dictionary = {}
-	if local_data.has(sheets_id):
-		if local_data[sheets_id] is Dictionary:
-			sheets_data = local_data[sheets_id]
-
-		Log.debug("Found sheets ID in data", {
-			"sheets_id": sheets_id,
-			"backend_id": get_instance_id()
-		}, [Log.TAG_DB, Log.TAG_LOCAL])
-
-		# Special case: direct key lookup in sheets data
-		if sheets_data.has(p_key):
-			var result: Variant = sheets_data[p_key]
-			var result_info: Dictionary = _get_value_info(result)
-
-			Log.info("Found key directly in sheets data", {
-				"key": p_key,
-				"result_info": result_info,
-				"backend_id": get_instance_id()
-			}, [Log.TAG_DB, Log.TAG_LOCAL])
-
-			call_deferred("emit_signal", "value_received", {"key": p_key, "value": result})
-			return result
-
-	# Use JSONPathNavigator for reliable path navigation
-	var navigation_path: Array[Variant] = []
-	var target_data: Variant = local_data
-
-	# Handle special case for sheets path
+	# Handle sheets path prefix consistently - no special cases, always use JSONPathNavigator
 	if p_path.size() > 0 and p_path[0] is String and p_path[0] == "sheets":
-		# If the path starts with "sheets", use the sheets data as the base
-		var sheets_id_string: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
-		if local_data.has(sheets_id_string):
-			if local_data[sheets_id_string] is Dictionary:
-				target_data = local_data[sheets_id_string]
-			else:
-				target_data = {}
-			# Skip the "sheets" part in the navigation path
-			for i_idx: int in range(1, p_path.size()):
-				navigation_path.append(p_path[i_idx])
-		else:
+		# First navigate to the sheets data
+		var sheets_nav_result: NavigationResult = JSONPathNavigator.navigate(local_data, [sheets_id])
+
+		if not sheets_nav_result.found:
 			Log.error("Sheets data not found", {
-				"sheets_id": sheets_id_string,
+				"sheets_id": sheets_id,
 				"backend_id": get_instance_id(),
 				"call_stack": _get_simple_stack_trace()
 			}, [Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR])
 			return null
+
+		# Use the sheets data as the starting point
+		target_data = sheets_nav_result.value
+
+		# Skip the "sheets" part in the navigation path
+		for i_idx: int in range(1, p_path.size()):
+			navigation_path.append(p_path[i_idx])
 	else:
 		# Use the path as is for regular navigation
-		for path_item: Variant in p_path:
-			navigation_path.append(path_item)
+		navigation_path = p_path.duplicate()
 
 	Log.debug("Navigating path with JSONPathNavigator", {
 		"original_path": p_path,
@@ -130,18 +100,13 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		"backend_id": get_instance_id()
 	}, [Log.TAG_DB, Log.TAG_LOCAL])
 
-	var nav_result: NavigationResult
+	# Add key to path if provided
+	var final_path: Array[Variant] = navigation_path.duplicate()
+	if not p_key.is_empty():
+		final_path.append(p_key)
 
-	if p_key.is_empty():
-		# If key is empty, navigate to the path and return the data at that location
-		nav_result = JSONPathNavigator.navigate(target_data, navigation_path)
-	else:
-		# If a key is specified, navigate to the path and then look for the key
-		var full_path: Array[Variant] = []
-		for nav_item: Variant in navigation_path:
-			full_path.append(nav_item)
-		full_path.append(p_key)
-		nav_result = JSONPathNavigator.navigate(target_data, full_path)
+	# Let JSONPathNavigator handle all navigation - always use the same pattern
+	var nav_result: NavigationResult = JSONPathNavigator.navigate(target_data, final_path)
 
 	if nav_result.found:
 		var value_info: Dictionary = _get_value_info(nav_result.value)
