@@ -272,6 +272,15 @@ build-android-templates minimal="yes":
     mv "$GODOT_PATH/bin/android_release.apk" templates/android_release.apk
     mv "$GODOT_PATH/bin/android_source.zip" templates/android_source.zip
 
+
+clean-android-templates:
+    #!/usr/bin/env bash
+    set -e
+    # Build for all targets and architectures in a single working directory context
+    GODOT_PATH="{{GODOT_SUBMODULE_PATH}}"
+    # clean templates
+    (cd "$GODOT_PATH/platform/android/java" && ./gradlew clean)
+
 # Install Android template
 install-android-template:
     #!/usr/bin/env bash
