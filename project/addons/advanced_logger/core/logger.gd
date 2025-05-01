@@ -1,5 +1,5 @@
 @tool
-class_name Logger extends Node
+extends Node
 ## Simple logging system with tags and levels
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 # Make sure dependencies are preloaded
