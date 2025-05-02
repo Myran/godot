@@ -12,7 +12,7 @@ func get_card_image_name(card_id: String) -> String:
 
 
 func setup() -> void:
-	_rules = await data_source.get_rules_data()
+	_rules = await data_source.rules.get_rules()
 	await data_source.activate_card_cache()
 
 
@@ -29,7 +29,7 @@ func get_random_id_from_pool(_level: int) -> String:
 
 
 func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
-	var card_info: Dictionary = await data_source.get_card_info(id, true)
+	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
 	var card_scene: PackedScene = load(card_scene_name)
 	var card_instanced: Node = card_scene.instantiate()
 	card_instanced.init_card(card_info, unit_level)
@@ -38,7 +38,7 @@ func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 
 func select_id_from_level(lvl: int) -> String:
 	var sel_lvl: int = select_recruited_unit_level(lvl)
-	var all_cards: Array = await data_source.get_all_cards(true)
+	var all_cards: Array = await data_source.cards.get_all(true)
 	var cards_with_level: Array = []
 
 	for card: Dictionary in all_cards:
