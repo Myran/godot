@@ -5,14 +5,21 @@ extends EditorPlugin
 const AUTOLOAD_NAME: String = "Log"
 const LOGGER_SCRIPT_PATH: String = "res://addons/advanced_logger/core/logger.gd"
 const LOGGER_DOCK_PATH: String = "res://addons/advanced_logger/logger_dock.tscn"
+const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
+const EXPORT_PLUGIN_PATH: String = "res://addons/advanced_logger/advanced_logger_export_plugin.gd"
 const DOCK_POSITION: int = EditorPlugin.DOCK_SLOT_RIGHT_UL
 
 var _dock: Control
+var _export_plugin: EditorExportPlugin
 
 
 func _enter_tree() -> void:
 	# Register autoload singleton for runtime use
 	add_autoload_singleton(AUTOLOAD_NAME, LOGGER_SCRIPT_PATH)
+
+	# Register export plugin
+	_export_plugin = load(EXPORT_PLUGIN_PATH).new()
+	add_export_plugin(_export_plugin)
 
 	# Register project settings for test tag inclusion
 	_register_project_settings()
@@ -48,6 +55,17 @@ func _register_project_settings() -> void:
 			"hint_string": ""
 		})
 
+	# Ensure the config file is always exported
+	if not ProjectSettings.has_setting("advanced_logger/export_config_file"):
+		ProjectSettings.set_setting("advanced_logger/export_config_file", true)
+		ProjectSettings.set_initial_value("advanced_logger/export_config_file", true)
+		ProjectSettings.add_property_info({
+			"name": "advanced_logger/export_config_file",
+			"type": TYPE_BOOL,
+			"hint": PROPERTY_HINT_NONE,
+			"hint_string": "Always export the logger config file"
+		})
+
 	ProjectSettings.save()
 
 
@@ -56,6 +74,10 @@ func _exit_tree() -> void:
 	if _dock:
 		remove_control_from_docks(_dock)
 		_dock.queue_free()
+
+	# Remove export plugin
+	if _export_plugin:
+		remove_export_plugin(_export_plugin)
 
 	# Remove autoload
 	if Engine.has_singleton(AUTOLOAD_NAME):

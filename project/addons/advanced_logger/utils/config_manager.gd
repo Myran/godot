@@ -92,7 +92,25 @@ func _init() -> void:
 ## Loads the configuration file and handles version upgrades
 ## Returns: Error code from the load operation
 func _load_config() -> Error:
-	var result = _config.load(CONFIG_PATH)
+	# On Android, try loading with different methods
+	var result = Error.FAILED
+
+	# First try the standard load
+	result = _config.load(CONFIG_PATH)
+
+	# If that fails on Android, try using FileAccess
+	if result != OK and OS.get_name() == "Android":
+		if FileAccess.file_exists(CONFIG_PATH):
+			var file = FileAccess.open(CONFIG_PATH, FileAccess.READ)
+			if file:
+				var content = file.get_as_text()
+				result = _config.parse(content)
+				file.close()
+		else:
+			# On Android, create default config if file doesn't exist
+			_create_default_config()
+			result = OK
+
 	_config_loaded = result == OK or result == ERR_FILE_NOT_FOUND
 
 	# Handle configuration version upgrades
@@ -100,6 +118,26 @@ func _load_config() -> Error:
 		_upgrade_config_if_needed()
 
 	return result
+
+## Creates a default configuration in memory for Android
+func _create_default_config() -> void:
+	# Set default logger settings
+	_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+	_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
+	_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
+	_config.set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
+	_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
+	_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+
+	# Set default format settings
+	_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
+	_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
+	_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
+	_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
+	_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
+
+	# Set version marker
+	_config.set_value("meta", "version", 1)
 
 ## Upgrades configuration format if needed
 ## This ensures backward compatibility with older config formats
@@ -180,6 +218,12 @@ func set_value(section: String, key: String, value: Variant) -> void:
 ## Saves the configuration to disk
 ## Returns: Error code from the save operation
 func save() -> Error:
+	# On Android, we can't save to res://, use user:// instead
+	if OS.get_name() == "Android":
+		var user_config_path = "user://advanced_logger_settings.cfg"
+		return _config.save(user_config_path)
+
+	# On desktop platforms, use standard save
 	# Create directories if needed
 	var dir_path = CONFIG_PATH.get_base_dir()
 	var dir = DirAccess.open("res://")

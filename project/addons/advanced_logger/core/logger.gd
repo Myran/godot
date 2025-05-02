@@ -126,6 +126,14 @@ func _init() -> void:
 	# Load settings
 	_load_settings()
 
+	# On Android, ensure essential settings are properly initialized
+	if OS.get_name() == "Android":
+		# On Android, rich text formatting might not work properly
+		if not Engine.is_editor_hint():
+			# Force disable colors on Android runtime
+			_use_colors = false
+			print("[Advanced Logger] Running on Android - colors disabled")
+
 ## Handles configuration changes
 func _on_config_changed(section: String, key: String, value: Variant) -> void:
 	# Update internal state when config changes
@@ -529,7 +537,17 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 	)
 
 	# Output the formatted log
-	print_rich(formatted_log)
+	# On Android, use plain print instead of print_rich if colors are disabled
+	if OS.get_name() == "Android" and not _use_colors:
+		# Strip BBCode if present
+		var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
+		# Replace color tags with simple text
+		var regex = RegEx.new()
+		regex.compile("\\[color=#[0-9a-fA-F]+\\]")
+		plain_text = regex.sub(plain_text, "", true)
+		print(plain_text)
+	else:
+		print_rich(formatted_log)
 
 
 # Settings methods

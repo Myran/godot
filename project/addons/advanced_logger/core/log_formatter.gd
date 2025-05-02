@@ -35,6 +35,10 @@ static func format_log(
 	show_source: bool,
 	timestamp_color_override: String = "" # Add new optional parameter
 ) -> String:
+	# On Android, colors might not display properly
+	if OS.get_name() == "Android" and use_colors:
+		# Force simpler formatting for Android logcat
+		use_colors = false
 	var parts: Array[String] = []
 
 	# Constants for dictionary keys
