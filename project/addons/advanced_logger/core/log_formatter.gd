@@ -127,22 +127,22 @@ static func format_log(
 ## Helper function to get HTML color code for a log level
 static func _get_level_html_color(level: int) -> String:
 	# Load the Logger script resource to access its enum within the static function
-	var LoggerScript = load("res://addons/advanced_logger/core/logger.gd")
-	if not LoggerScript:
-		push_error("Failed to load Logger script in LogFormatter._get_level_html_color")
-		return "" # Return empty string on failure
+	#var LoggerScript = load("res://addons/advanced_logger/core/logger.gd")
+	#if not LoggerScript:
+		#push_error("Failed to load Logger script in LogFormatter._get_level_html_color")
+		#return "" # Return empty string on failure
 
 	# Match directly against integer enum values
 	match level:
-		0: # Logger.LogLevel.DEBUG
+		ALogger.LogLevel.DEBUG:
 			return LoggerColors.DEBUG_HTML
-		1: # Logger.LogLevel.INFO
+		ALogger.LogLevel.INFO:
 			return LoggerColors.INFO_HTML
-		2: # Logger.LogLevel.WARNING
+		ALogger.LogLevel.WARNING:
 			return LoggerColors.WARNING_HTML
-		3: # Logger.LogLevel.ERROR
+		ALogger.LogLevel.ERROR:
 			return LoggerColors.ERROR_HTML
-		4: # Logger.LogLevel.CRITICAL
+		ALogger.LogLevel.CRITICAL:
 			return LoggerColors.CRITICAL_HTML
 	return ""
 

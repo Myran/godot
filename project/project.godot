@@ -12,7 +12,7 @@ config_version=5
 
 config/name="gametwo"
 run/main_scene="res://main.tscn"
-config/features=PackedStringArray("4.4", "Mobile")
+config/features=PackedStringArray("4.5", "Mobile")
 config/icon="res://assets/frame.png"
 
 [autoload]

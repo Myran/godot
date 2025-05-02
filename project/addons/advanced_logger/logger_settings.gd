@@ -45,7 +45,7 @@ static func load_settings(logger_instance: Logger) -> Error:
 
 	# Load log level
 	var level = config.get_log_level()
-	if level >= 0 and level < Logger.LogLevel.size():
+	if level >= 0 and level < ALogger.LogLevel.size():
 		logger_instance.set_level(level)
 
 	# Clear existing tags

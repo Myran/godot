@@ -5,7 +5,7 @@
 import "justfile-run.justfile"
 import "justfile-cicd.justfile"
 import "justfile-support.justfile"
-import "justfile-test.justfile"
+#import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
 

@@ -15,15 +15,15 @@ extends RefCounted
 ## ```gdscript
 ## # Get the ConfigManager instance
 ## var config = ConfigManager.get_instance()
-## 
+##
 ## # Get configuration values
 ## var level = config.get_log_level()
 ## var active_tags = config.get_active_tags()
-## 
+##
 ## # Set configuration values
 ## config.set_log_level(Logger.LogLevel.INFO)
 ## config.set_show_timestamp(true)
-## 
+##
 ## # Save changes
 ## config.save()
 ## ```
@@ -66,14 +66,17 @@ const DEFAULT_BUFFER_SIZE: int = 20    ## Default buffer size
 const DEFAULT_ENABLE_BUFFER_DUMP: bool = true  ## Default buffer dump setting (enabled)
 const DEFAULT_SHOW_EDITOR_DEBUG: bool = false  ## Default editor debug prints (disabled)
 
+## Singleton pattern implementation
+## This ensures that only one instance of ConfigManager exists throughout the application.
+## Always use get_instance() to access the ConfigManager instead of creating a new instance.
+
+static var _instance: ConfigManager = null
 # Config file instance
 var _config: ConfigFile = ConfigFile.new()
 var _config_loaded: bool = false
 
-## Singleton pattern implementation
-## This ensures that only one instance of ConfigManager exists throughout the application.
-## Always use get_instance() to access the ConfigManager instead of creating a new instance.
-static var _instance: ConfigManager = null
+
+
 
 ## Get the singleton instance of ConfigManager
 ## This is the main access point for the ConfigManager.
@@ -91,11 +94,11 @@ func _init() -> void:
 func _load_config() -> Error:
 	var result = _config.load(CONFIG_PATH)
 	_config_loaded = result == OK or result == ERR_FILE_NOT_FOUND
-	
+
 	# Handle configuration version upgrades
 	if result == OK:
 		_upgrade_config_if_needed()
-	
+
 	return result
 
 ## Upgrades configuration format if needed
@@ -104,17 +107,17 @@ func _upgrade_config_if_needed() -> void:
 	# Check if config has a version marker
 	if not _config.has_section_key("meta", "version"):
 		# This is a pre-versioned config, upgrade to version 1
-		
+
 		# Migrate any old 'setups' section to 'tag_setups' if needed
 		if _config.has_section("setups") and not _config.has_section(SECTION_SETUPS):
 			var keys = _config.get_section_keys("setups")
 			for key in keys:
 				var value = _config.get_value("setups", key)
 				_config.set_value(SECTION_SETUPS, key, value)
-			
+
 		# Add version marker
 		_config.set_value("meta", "version", 1)
-		
+
 		# Save updated config
 		save()
 		print_rich("[color=#%s]Config upgraded to version 1[/color]" % LoggerColors.INFO_HTML)
@@ -129,7 +132,7 @@ func _upgrade_config_if_needed() -> void:
 func get_value(section: String, key: String, default_value: Variant = null) -> Variant:
 	if not _config_loaded:
 		_load_config()
-	
+
 	return _config.get_value(section, key, default_value)
 
 ## Sets a value in the configuration and notifies listeners
@@ -137,27 +140,27 @@ func get_value(section: String, key: String, default_value: Variant = null) -> V
 ## - section: Configuration section name
 ## - key: Configuration key
 ## - value: Value to store
-## 
+##
 ## Validates input values where appropriate and performs type checking
 func set_value(section: String, key: String, value: Variant) -> void:
 	if not _config_loaded:
 		_load_config()
-	
+
 	# Validate certain known values before storing
 	if section == SECTION_LOGGER and key == KEY_LOG_LEVEL:
 		# Validate log level is within bounds
 		if not (value is int and value >= 0 and value <= 4):
 			push_warning("Invalid log level value: %s. Using default." % str(value))
 			value = DEFAULT_LOG_LEVEL
-	
+
 	# Ensure array types are converted properly for certain keys
 	if section == SECTION_LOGGER and (key == KEY_ACTIVE_TAGS or key == KEY_IGNORED_TAGS or key == KEY_AVAILABLE_TAGS):
 		if not value is Array:
 			push_warning("Non-array value for %s.%s. Converting to empty array." % [section, key])
 			value = []
-	
+
 	# Format settings should be booleans
-	if section == SECTION_FORMAT and (key == KEY_SHOW_TIMESTAMP or key == KEY_SHOW_TAGS or 
+	if section == SECTION_FORMAT and (key == KEY_SHOW_TIMESTAMP or key == KEY_SHOW_TAGS or
 			key == KEY_USE_COLORS or key == KEY_SHOW_SOURCE):
 		if not value is bool:
 			push_warning("Non-boolean value for %s.%s. Converting to default." % [section, key])
@@ -170,7 +173,7 @@ func set_value(section: String, key: String, value: Variant) -> void:
 				value = DEFAULT_USE_COLORS
 			elif key == KEY_SHOW_SOURCE:
 				value = DEFAULT_SHOW_SOURCE
-	
+
 	_config.set_value(section, key, value)
 	config_changed.emit(section, key, value)
 
@@ -182,18 +185,18 @@ func save() -> Error:
 	var dir = DirAccess.open("res://")
 	if not dir:
 		return FileAccess.get_open_error()
-	
+
 	# Create directory path if it doesn't exist
 	if not dir.dir_exists(dir_path):
 		var current_path = "res://"
 		for path_part in dir_path.trim_prefix("res://").split("/"):
 			if path_part.is_empty():
 				continue
-			
+
 			current_path = current_path.path_join(path_part)
 			if not dir.dir_exists(current_path):
 				dir.make_dir(current_path)
-	
+
 	return _config.save(CONFIG_PATH)
 
 ## Checks if the configuration has a specific key
@@ -205,28 +208,28 @@ func save() -> Error:
 func has_value(section: String, key: String) -> bool:
 	if not _config_loaded:
 		_load_config()
-	
+
 	return _config.has_section_key(section, key)
 
 ## Clears a section of the configuration
 ## Parameters:
 ## - section: Configuration section name to clear
-## 
+##
 ## Returns: True if the section was found and cleared
 func clear_section(section: String) -> bool:
 	if not _config_loaded:
 		_load_config()
-	
+
 	if not _config.has_section(section):
 		return false
-		
+
 	# Get all keys in the section
 	var keys = _config.get_section_keys(section)
-	
+
 	# Remove each key
 	for key in keys:
 		_config.set_value(section, key, null)
-	
+
 	return true
 
 ## Helper methods for common operations
@@ -253,7 +256,7 @@ func set_active_tags(tags: Array[String]) -> void:
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
 			filtered_tags.append(tag)
-	
+
 	set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, filtered_tags)
 
 func get_ignored_tags() -> Array[String]:
@@ -270,7 +273,7 @@ func get_ignored_tags() -> Array[String]:
 func _is_reserved_category_name(tag: String) -> bool:
 	if not tag is String:
 		return false
-		
+
 	var lower_tag = tag.to_lower()
 	return lower_tag == "available" or lower_tag == "active" or lower_tag == "ignored"
 
@@ -280,7 +283,7 @@ func set_ignored_tags(tags: Array[String]) -> void:
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
 			filtered_tags.append(tag)
-			
+
 	set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, filtered_tags)
 
 func get_available_tags() -> Array[String]:
@@ -299,7 +302,7 @@ func set_available_tags(tags: Array[String]) -> void:
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
 			filtered_tags.append(tag)
-			
+
 	set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, filtered_tags)
 
 func get_show_timestamp() -> bool:
@@ -332,7 +335,7 @@ func get_buffer_size() -> int:
 func set_buffer_size(size: int) -> void:
 	# Ensure buffer size is reasonable
 	set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, max(1, size))
-	
+
 func get_enable_buffer_dump() -> bool:
 	return get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
 
@@ -365,24 +368,24 @@ func set_tag_setup(setup_name: String, setup_data: Dictionary) -> void:
 func get_all_tag_setups() -> Dictionary:
 	if not _config_loaded:
 		_load_config()
-	
+
 	var result = {}
 	if _config.has_section(SECTION_SETUPS):
 		var setup_keys = _config.get_section_keys(SECTION_SETUPS)
 		for setup_name in setup_keys:
 			result[setup_name] = get_tag_setup(setup_name)
-	
+
 	return result
 
 ## Reset all settings to default values
 ## This does not affect tag setups
-## 
+##
 ## Returns: Error code from the save operation
 func reset_to_defaults() -> Error:
 	# Clear existing sections first
 	clear_section(SECTION_LOGGER)
 	clear_section(SECTION_FORMAT)
-	
+
 	# Set defaults for logger settings
 	set_log_level(DEFAULT_LOG_LEVEL)
 	set_active_tags([])
@@ -390,13 +393,13 @@ func reset_to_defaults() -> Error:
 	set_available_tags([])
 	set_buffer_size(DEFAULT_BUFFER_SIZE)
 	set_enable_buffer_dump(DEFAULT_ENABLE_BUFFER_DUMP)
-	
+
 	# Set defaults for format settings
 	set_show_timestamp(DEFAULT_SHOW_TIMESTAMP)
 	set_show_tags(DEFAULT_SHOW_TAGS)
 	set_use_colors(DEFAULT_USE_COLORS)
 	set_show_source(DEFAULT_SHOW_SOURCE)
 	set_show_editor_debug(DEFAULT_SHOW_EDITOR_DEBUG)
-	
+
 	# Save the changes
 	return save()

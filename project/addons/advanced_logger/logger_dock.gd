@@ -61,10 +61,10 @@ func _ready() -> void:
 
 	# Register for configuration changes
 	_config.config_changed.connect(_on_config_changed)
-	
+
 	# Load the debug flag
 	_show_editor_debug = _config.get_show_editor_debug()
-	
+
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: LoggerDock _ready called[/color]" % [LoggerColors.DEBUG_HTML])
 
@@ -144,7 +144,7 @@ func _initialize_controllers() -> void:
 	_settings_tab_controller.tags_scanned.connect(_on_tags_scanned)
 
 ## Override drag and drop methods for Godot 4
-func _get_drag_data(at_position: Vector2) -> Variant:
+func _get_drag_data(_at_position: Vector2) -> Variant:
 	# Get global mouse position
 	var global_pos = get_global_mouse_position()
 
@@ -214,7 +214,7 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 	# Refresh setups if they've changed
 	if section == ConfigManager.SECTION_SETUPS:
 		_setup_list_controller.refresh_setups_list()
-		
+
 	# Update debug flag if it changed
 	if section == ConfigManager.SECTION_FORMAT and key == ConfigManager.KEY_SHOW_EDITOR_DEBUG:
 		_show_editor_debug = value
@@ -297,7 +297,7 @@ func _on_tag_setup_requested() -> void:
 	_setup_dialog_controller.show_save_dialog()
 
 ## Handler for tag movement
-func _on_tag_moved(tag: String, from_category: int, to_category: int) -> void:
+func _on_tag_moved(_tag: String, _from_category: int, _to_category: int) -> void:
 	_update_startup_message()
 
 ## Handler for setup loaded
@@ -307,7 +307,7 @@ func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Arra
 	_update_startup_message()
 
 ## Handler for setup saved
-func _on_setup_saved(setup_name: String) -> void:
+func _on_setup_saved(_setup_name: String) -> void:
 	_update_startup_message()
 
 ## Handler for setup renamed
@@ -323,7 +323,7 @@ func _on_scan_tags() -> void:
 	_settings_tab_controller._on_scan_tags()
 
 ## Handler for tags scanned
-func _on_tags_scanned(added_count: int) -> void:
+func _on_tags_scanned(_added_count: int) -> void:
 	_update_startup_message()
 
 ## Handler for settings saved
@@ -335,7 +335,7 @@ func _on_settings_reset() -> void:
 	_update_startup_message()
 
 ## Can drop data implementation - determines if the drop is valid
-func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		return false
@@ -363,7 +363,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	)
 
 ## Drop data implementation - handles the drop
-func _drop_data(at_position: Vector2, data: Variant) -> void:
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		return

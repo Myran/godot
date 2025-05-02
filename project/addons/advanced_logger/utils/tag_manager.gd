@@ -74,18 +74,18 @@ static func should_show_tags(tags: Array, active_tags: Array[String], ignored_ta
 	# If no active tags are set, show all logs
 	if active_tags.is_empty():
 		return true
-		
+
 	# Special case: Check if the active tags only contain level tags
 	var has_only_level_tags = true
 	var level_tags_count = 0
-	
+
 	for tag in active_tags:
 		if tag is String and is_level_tag(tag):
 			level_tags_count += 1
 		else:
 			has_only_level_tags = false
 			break
-	
+
 	# If only level tags are active, we only filter by log level, not by tags
 	# This allows messages with any topic tags to pass when only filtered by level
 	if has_only_level_tags and level_tags_count > 0:

@@ -28,7 +28,7 @@ var _current_level: int = 1  # INFO level
 
 # Constructor with dependency injection
 func _init(
-	config: ConfigManager, 
+	config: ConfigManager,
 	tag_list_controller: TagListController,
 	setup_list_controller: SetupListController,
 	parent_dock: Control
@@ -37,7 +37,7 @@ func _init(
 	_tag_list_controller = tag_list_controller
 	_setup_list_controller = setup_list_controller
 	_parent_dock = parent_dock
-	
+
 	# Connect controller signals - but not to UI yet
 	_setup_list_controller.setup_loaded.connect(_on_setup_loaded)
 	_setup_list_controller.setup_renamed.connect(_on_setup_renamed)
@@ -58,20 +58,20 @@ func setup(
 	_ignored_tags_list = ignored_tags_list
 	_setups_list = setups_list
 	_save_setup_button = save_setup_button
-	
+
 	# Connect UI signals
 	_level_option.item_selected.connect(_on_level_changed)
 	_save_setup_button.pressed.connect(_on_save_setup_button_pressed)
-	
+
 	# Setup the tag list controller with UI references
 	_tag_list_controller.setup(_available_tags_list, _tags_list, _ignored_tags_list)
-	
+
 	# Setup the setup list controller with UI references
 	_setup_list_controller.setup(_setups_list)
-	
+
 	# Load initial data
 	_load_level_from_config()
-	
+
 	# Note: tag_list_controller.load_tags_from_config() is now called by LoggerDock
 	# Note: setup_list_controller.load_setups() is now called by LoggerDock
 
@@ -111,7 +111,7 @@ func _scan_tags() -> int:
 
 	print_rich("[color=#%s]Tag scan complete. Added %d new tags.[/color]" %
 		[LoggerColors.SUCCESS_HTML, added_count])
-		
+
 	return added_count
 
 # Signal handlers

@@ -9,7 +9,7 @@ enum Category { AVAILABLE, ACTIVE, IGNORED }
 static func category_to_string(category: int) -> String:
 	match category:
 		Category.AVAILABLE: return "available"
-		Category.ACTIVE: return "active" 
+		Category.ACTIVE: return "active"
 		Category.IGNORED: return "ignored"
 		_: return ""
 

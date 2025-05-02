@@ -7,18 +7,18 @@ extends EditorPlugin
 
 func _enter_tree() -> void:
 	print("Updating Advanced Logger autoload path...")
-	
+
 	# Check if the autoload exists with the old path
 	if ProjectSettings.has_setting("autoload/Log"):
 		# Get the current value
 		var current_value = ProjectSettings.get_setting("autoload/Log")
-		
+
 		# Check if it's using the old path
 		if current_value == "res://addons/advanced_logger/logger.gd":
 			# Update to the new path
 			ProjectSettings.set_setting("autoload/Log", "res://addons/advanced_logger/core/logger.gd")
 			print("Autoload path updated to: res://addons/advanced_logger/core/logger.gd")
-			
+
 			# Save the project settings
 			ProjectSettings.save()
 		else:

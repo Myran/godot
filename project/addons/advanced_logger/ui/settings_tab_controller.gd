@@ -39,15 +39,15 @@ var _config: ConfigManager
 var _tag_list_controller: TagListController
 var _parent_dock: Control
 
+
 # Constructor with dependency injection
 func _init(
-	config: ConfigManager, 
-	tag_list_controller: TagListController, 
-	parent_dock: Control
+	config: ConfigManager, tag_list_controller: TagListController, parent_dock: Control
 ) -> void:
 	_config = config
 	_tag_list_controller = tag_list_controller
 	_parent_dock = parent_dock
+
 
 ## Setup UI components - called by the main dock
 func setup(
@@ -73,7 +73,7 @@ func setup(
 	_save_button = save_button
 	_reset_button = reset_button
 	_update_tags_button = update_tags_button
-	
+
 	# Connect UI signals
 	_show_timestamp_check.toggled.connect(_on_show_timestamp_toggled)
 	_show_tags_check.toggled.connect(_on_show_tags_toggled)
@@ -85,9 +85,10 @@ func setup(
 	_save_button.pressed.connect(_on_save_settings)
 	_reset_button.pressed.connect(_on_reset_settings)
 	_update_tags_button.pressed.connect(_on_scan_tags)
-	
+
 	# Load current settings from config
 	_load_settings_from_config()
+
 
 ## Load settings from the ConfigManager
 func _load_settings_from_config() -> void:
@@ -103,20 +104,21 @@ func _load_settings_from_config() -> void:
 
 	_show_source = _config.get_show_source()
 	_show_source_check.button_pressed = _show_source
-	
+
 	# Load buffer settings
 	_buffer_size = _config.get_buffer_size()
 	_buffer_size_spin.value = _buffer_size
-	
+
 	_enable_buffer_dump = _config.get_enable_buffer_dump()
 	_enable_buffer_dump_check.button_pressed = _enable_buffer_dump
-	
+
 	# Load editor debug settings
 	_show_editor_debug = _config.get_show_editor_debug()
 	_show_editor_debug_check.button_pressed = _show_editor_debug
-	
+
 	# Local variable for convenience
 	_show_debug = _show_editor_debug
+
 
 ## Scan for tags in the project
 func _on_scan_tags() -> void:
@@ -139,14 +141,19 @@ func _on_scan_tags() -> void:
 	var added_count = _tag_list_controller.scan_tags(exclude_dirs)
 
 	if _show_debug:
-		print_rich("[color=#%s]Tag scan complete. Added %d new tags.[/color]" %
-			[LoggerColors.SUCCESS_HTML, added_count])
-	
+		print_rich(
+			(
+				"[color=#%s]Tag scan complete. Added %d new tags.[/color]"
+				% [LoggerColors.SUCCESS_HTML, added_count]
+			)
+		)
+
 	# Signal the results
 	tags_scanned.emit(added_count)
-	
+
 	# Update the startup message
 	_parent_dock.call("_update_startup_message")
+
 
 ## Save settings to config
 func _save_settings_to_config() -> Error:
@@ -155,11 +162,11 @@ func _save_settings_to_config() -> Error:
 	_config.set_show_tags(_show_tags)
 	_config.set_use_colors(_use_colors)
 	_config.set_show_source(_show_source)
-	
+
 	# Save buffer settings
 	_config.set_buffer_size(_buffer_size)
 	_config.set_enable_buffer_dump(_enable_buffer_dump)
-	
+
 	# Save editor debug settings
 	_config.set_show_editor_debug(_show_editor_debug)
 
@@ -174,6 +181,7 @@ func _save_settings_to_config() -> Error:
 		push_error("Failed to save settings: %s" % error_string(result))
 
 	return result
+
 
 ## Apply default settings
 func _apply_defaults() -> void:
@@ -206,47 +214,70 @@ func _apply_defaults() -> void:
 	_save_settings_to_config()
 	_tag_list_controller.save_tags_to_config()
 
+
 # Signal handlers for UI events
+
 
 func _on_show_timestamp_toggled(button_pressed: bool) -> void:
 	_show_timestamp = button_pressed
 	_config.set_show_timestamp(button_pressed)
 	_config.save()
 
+
 func _on_show_tags_toggled(button_pressed: bool) -> void:
 	_show_tags = button_pressed
 	_config.set_show_tags(button_pressed)
 	_config.save()
+
 
 func _on_use_colors_toggled(button_pressed: bool) -> void:
 	_use_colors = button_pressed
 	_config.set_use_colors(button_pressed)
 	_config.save()
 
+
 func _on_show_source_toggled(button_pressed: bool) -> void:
 	_show_source = button_pressed
 	_config.set_show_source(button_pressed)
 	_config.save()
-	
+
+
 func _on_buffer_size_changed(value: float) -> void:
 	_buffer_size = int(value)
-	
+
 	if _show_editor_debug:
-		print_rich("[color=#%s]DEBUG: Buffer size changed to %d[/color]" % [LoggerColors.DEBUG_HTML, _buffer_size])
-	
+		print_rich(
+			(
+				"[color=#%s]DEBUG: Buffer size changed to %d[/color]"
+				% [LoggerColors.DEBUG_HTML, _buffer_size]
+			)
+		)
+
 	_config.set_buffer_size(_buffer_size)
 	var save_result = _config.save()
-	
+
 	if _show_editor_debug:
 		if save_result == OK:
-			print_rich("[color=#%s]DEBUG: Buffer size saved successfully[/color]" % [LoggerColors.DEBUG_HTML])
+			print_rich(
+				(
+					"[color=#%s]DEBUG: Buffer size saved successfully[/color]"
+					% [LoggerColors.DEBUG_HTML]
+				)
+			)
 		else:
-			print_rich("[color=#%s]DEBUG: Failed to save buffer size: %s[/color]" % [LoggerColors.ERROR_HTML, error_string(save_result)])
-	
+			print_rich(
+				(
+					"[color=#%s]DEBUG: Failed to save buffer size: %s[/color]"
+					% [LoggerColors.ERROR_HTML, error_string(save_result)]
+				)
+			)
+
+
 func _on_enable_buffer_dump_toggled(button_pressed: bool) -> void:
 	_enable_buffer_dump = button_pressed
 	_config.set_enable_buffer_dump(button_pressed)
 	_config.save()
+
 
 func _on_show_editor_debug_toggled(button_pressed: bool) -> void:
 	_show_editor_debug = button_pressed
@@ -254,30 +285,32 @@ func _on_show_editor_debug_toggled(button_pressed: bool) -> void:
 	_config.set_show_editor_debug(button_pressed)
 	_config.save()
 
+
 func _on_save_settings() -> void:
 	if _show_debug:
 		print_rich("[color=#%s]Attempting to save settings...[/color]" % LoggerColors.INFO_HTML)
-	
+
 	var result := _save_settings_to_config()
 
 	if result == OK:
 		if _show_debug:
-			print_rich(
-				"[color=#%s]Settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML
-			)
+			print_rich("[color=#%s]Settings saved successfully[/color]" % LoggerColors.SUCCESS_HTML)
 		settings_saved.emit()
 	else:
 		if _show_debug:
 			print_rich(
-				"[color=#%s]Failed to save settings: %s[/color]" %
-				[LoggerColors.ERROR_HTML, error_string(result)]
+				(
+					"[color=#%s]Failed to save settings: %s[/color]"
+					% [LoggerColors.ERROR_HTML, error_string(result)]
+				)
 			)
+
 
 func _on_reset_settings() -> void:
 	_apply_defaults()
 	if _show_debug:
 		print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
 	settings_reset.emit()
-	
+
 	# Update the startup message
 	_parent_dock.call("_update_startup_message")

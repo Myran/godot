@@ -20,12 +20,12 @@ static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[Str
 	var Logger = load("res://addons/advanced_logger/core/logger.gd")
 
 	# Check if Logger loaded successfully
-	if Logger:
-		found_tags.append(Logger.TAG_LEVEL_DEBUG)
-		found_tags.append(Logger.TAG_LEVEL_INFO)
-		found_tags.append(Logger.TAG_LEVEL_WARNING)
-		found_tags.append(Logger.TAG_LEVEL_ERROR)
-		found_tags.append(Logger.TAG_LEVEL_CRITICAL)
+	if ALogger:
+		found_tags.append(ALogger.TAG_LEVEL_DEBUG)
+		found_tags.append(ALogger.TAG_LEVEL_INFO)
+		found_tags.append(ALogger.TAG_LEVEL_WARNING)
+		found_tags.append(ALogger.TAG_LEVEL_ERROR)
+		found_tags.append(ALogger.TAG_LEVEL_CRITICAL)
 	else:
 		# Fallback if Logger can't be loaded
 		var config = ConfigManager.get_instance()
