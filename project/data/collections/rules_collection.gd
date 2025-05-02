@@ -7,7 +7,7 @@ var _collection_key: String = ""
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0)->void:
-	super(backend, ["sheets"], "Rules")
+	super(backend, [data_source.DEFAULT_SHEETS_ID], "rules")
 	_collection_key = "rules_" + str(test_group)
 	Log.info("RulesCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 

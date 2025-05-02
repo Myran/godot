@@ -15,7 +15,7 @@ var _card_cache: Array[Dictionary] = []
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
-	super(backend, ["sheets"], "Cards")
+	super(backend, [data_source.DEFAULT_SHEETS_ID], "cards")
 	_collection_key = "cards_" + str(test_group)
 	Log.info("CardCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
@@ -182,7 +182,7 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			"collection_name": _collection_name,
 			"collection_key": _collection_key,
 			"collection_id": get_instance_id()
-		}, [Log.TAG_DB, Log.TAG_WARNING])
+		}, [Log.TAG_DB])
 
 	return _card_cache
 

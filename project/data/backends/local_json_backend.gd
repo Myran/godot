@@ -3,7 +3,7 @@ extends DataBackend
 
 ## Local JSON backend for data retrieval from local JSON files.
 ## Handles file loading, parsing, and data access with JSONPathNavigator.
-const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
+
 # Suppress warning for the signal since it's required for the DataBackend interface
 @warning_ignore("unused_signal")
 
@@ -69,7 +69,7 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 	var navigation_path: Array[Variant] = []
 
 	# Get sheets ID from project settings or use default
-	var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", DEFAULT_SHEETS_ID)
+	var sheets_id: String = _get_project_setting("gametwo/data/sheets_id", data_source.DEFAULT_SHEETS_ID)
 
 	# Handle sheets path prefix consistently - no special cases, always use JSONPathNavigator
 	if p_path.size() > 0 and p_path[0] is String and p_path[0] == "sheets":

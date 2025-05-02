@@ -11,7 +11,7 @@ var _level_cache: Array[Dictionary] = []
 func _init(backend: DataBackend, test_group: int = 0) -> void:
 	# Initialize with base path and collection name
 	var base_path: Array[Variant] = []
-	base_path.append("sheets")
+	base_path.append(data_source.DEFAULT_SHEETS_ID)
 	super(backend, base_path, "Levels")
 	_collection_key = "levels_" + str(test_group)
 	Log.info("LevelCollection initialized", {"test_group": test_group}, [Log.TAG_DB])

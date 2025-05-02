@@ -4,7 +4,7 @@ extends BaseCollection
 ## Initialize the player collection with the backend
 ## @param backend The data backend to use
 func _init(backend: DataBackend) -> void:
-	super(backend, ["players"], "Players")
+	super(backend, ["players"], "players")
 	Log.info("PlayerCollection initialized", {}, [Log.TAG_DB])
 
 ## Get user data for a UUID

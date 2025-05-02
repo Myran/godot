@@ -1,6 +1,7 @@
 class_name FirebaseBackend
 extends DataBackend
 
+
 # Define the request class first
 class FirebaseRequest:
 	var key: String
@@ -14,17 +15,20 @@ class FirebaseRequest:
 		value = null
 		start_time = Time.get_unix_time_from_system()
 
+
 # Firebase connection objects
 var db: Object = null  # FirebaseDatabase instance
 var internet_available: bool = false
 var auth: Object = null
 
 # Request tracking with explicit typing
-var _pending_requests: Dictionary = {} # Dictionary<int, FirebaseRequest>
+var _pending_requests: Dictionary = {}  # Dictionary<int, FirebaseRequest>
 var _next_request_id: int = 0
+
 
 func _init() -> void:
 	Log.info("FirebaseBackend initializing", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
+
 
 func initialize() -> bool:
 	# Check for Firebase availability first
@@ -33,21 +37,23 @@ func initialize() -> bool:
 		return false
 
 	# Check internet connectivity
-	var internet_status: Object = Engine.get_singleton("InternetStatus")
+	#var internet_status: Object = Engine.get_singleton("InternetStatus")
 
 	# Create a reference to capture instead of a primitive
 	var check_status: Dictionary = {"complete": false}
 
 	if internet_status != null:
-		internet_status.has_internet.connect(func() -> void:
-			internet_available = true
-			check_status.complete = true
-			Log.info("Internet connection available", {}, [Log.TAG_NETWORK])
+		internet_status.has_internet.connect(
+			func() -> void:
+				internet_available = true
+				check_status.complete = true
+				Log.info("Internet connection available", {}, [Log.TAG_NETWORK])
 		)
-		internet_status.no_internet.connect(func() -> void:
-			internet_available = false
-			check_status.complete = true
-			Log.warning("No internet connection", {}, [Log.TAG_NETWORK])
+		internet_status.no_internet.connect(
+			func() -> void:
+				internet_available = false
+				check_status.complete = true
+				Log.warning("No internet connection", {}, [Log.TAG_NETWORK])
 		)
 		internet_status.get_status()
 
@@ -58,7 +64,9 @@ func initialize() -> bool:
 
 	# If no internet, we can't use Firebase
 	if not internet_available:
-		Log.warning("No internet connection, Firebase unavailable", {}, [Log.TAG_DB, Log.TAG_NETWORK])
+		Log.warning(
+			"No internet connection, Firebase unavailable", {}, [Log.TAG_DB, Log.TAG_NETWORK]
+		)
 		return false
 
 	# Initialize Firebase
@@ -82,12 +90,18 @@ func initialize() -> bool:
 	call_deferred("emit_signal", "startup_completed")
 	return true
 
+
 func is_available() -> bool:
 	return db != null and internet_available
 
+
 func get_data(p_path: Array[Variant], key: String) -> Variant:
 	if not is_available():
-		Log.error("Cannot get database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot get database value - Firebase not available",
+			{"path": p_path, "key": key},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return null
 
 	Log.debug("Getting Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
@@ -102,6 +116,10 @@ func get_data(p_path: Array[Variant], key: String) -> Variant:
 	# Store request information using the strongly typed FirebaseRequest class
 	var request: FirebaseRequest = FirebaseRequest.new(key)
 	_pending_requests[request_id] = request
+	Log.debug(
+		"Sending Firebase request",
+		{"db_root": "/".join(p_path), "key": key, "full_path": "/".join(p_path) + "/" + key}  # Join array elements with "/"
+	)
 
 	# Send the request to Firebase
 	db.get_value([key])
@@ -113,11 +131,11 @@ func get_data(p_path: Array[Variant], key: String) -> Variant:
 		# Check for timeout
 		var current_request: FirebaseRequest = _pending_requests[request_id]
 		if Time.get_unix_time_from_system() - current_request.start_time > timeout:
-			Log.error("Timeout waiting for Firebase data", {
-				"path": p_path,
-				"key": key,
-				"timeout_seconds": timeout
-			}, [Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR])
+			Log.error(
+				"Timeout waiting for Firebase data",
+				{"path": p_path, "key": key, "timeout_seconds": timeout},
+				[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
 			_pending_requests.erase(request_id)
 			return null
 
@@ -131,11 +149,18 @@ func get_data(p_path: Array[Variant], key: String) -> Variant:
 		var completed_request: FirebaseRequest = _pending_requests[request_id]
 		result = completed_request.value
 		_pending_requests.erase(request_id)
-		Log.debug("Firebase data received", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+		Log.debug(
+			"Firebase data received", {"path": p_path, "key": key, 'Result': result}, [Log.TAG_DB, Log.TAG_FIREBASE]
+		)
 	else:
-		Log.error("Failed to get Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR])
+		Log.error(
+			"Failed to get Firebase data",
+			{"path": p_path, "key": key},
+			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
 
 	return result
+
 
 # Centralized handler for value_received signal with strongly typed parameter
 func _on_value_received(data: Dictionary) -> void:
@@ -156,9 +181,14 @@ func _on_value_received(data: Dictionary) -> void:
 	# We don't remove the requests here, as the get_data function
 	# needs to process the result before removal
 
+
 func set_data(p_path: Array[Variant], key: String, data: Variant) -> bool:
 	if not is_available():
-		Log.error("Cannot set database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot set database value - Firebase not available",
+			{"path": p_path, "key": key},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return false
 
 	Log.debug("Setting Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
@@ -184,9 +214,14 @@ func set_data(p_path: Array[Variant], key: String, data: Variant) -> bool:
 
 	return true
 
+
 func push_data(p_path: Array[Variant], data: Variant) -> String:
 	if not is_available():
-		Log.error("Cannot push database value - Firebase not available", {"path": p_path}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot push database value - Firebase not available",
+			{"path": p_path},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return ""
 
 	Log.debug("Pushing Firebase data", {"path": p_path}, [Log.TAG_DB, Log.TAG_FIREBASE])
@@ -200,12 +235,19 @@ func push_data(p_path: Array[Variant], data: Variant) -> String:
 
 	return push_id
 
+
 func remove_data(p_path: Array[Variant], key: String) -> bool:
 	if not is_available():
-		Log.error("Cannot remove database value - Firebase not available", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot remove database value - Firebase not available",
+			{"path": p_path, "key": key},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return false
 
-	Log.debug("Removing Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	Log.debug(
+		"Removing Firebase data", {"path": p_path, "key": key}, [Log.TAG_DB, Log.TAG_FIREBASE]
+	)
 
 	# Remove value
 	db.set_db_root(p_path)
@@ -213,18 +255,23 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 
 	return true
 
+
 # Signal handlers
 func _on_get_value(key: String, value: Variant) -> void:
 	call_deferred("emit_signal", "value_received", {"key": key, "value": value})
 
+
 func _on_child_changed(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child changed", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+
 
 func _on_child_moved(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child moved", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
+
 func _on_child_removed(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child removed", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])
+
 
 func _on_child_added(key: String, _value: Variant) -> void:
 	Log.debug("Firebase child added", {"key": key}, [Log.TAG_DB, Log.TAG_FIREBASE])

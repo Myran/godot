@@ -7,7 +7,7 @@ var _collection_key: String = ""
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
-	super(backend, ["sheets"], "Events")
+	super(backend, [data_source.DEFAULT_SHEETS_ID], "events")
 	_collection_key = "event_data_" + str(test_group)
 	Log.info("EventCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
