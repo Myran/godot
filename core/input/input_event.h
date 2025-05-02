@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef INPUT_EVENT_H
-#define INPUT_EVENT_H
+#pragma once
 
 #include "core/input/input_enums.h"
 #include "core/io/resource.h"
@@ -62,8 +61,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	static const int DEVICE_ID_EMULATION;
-	static const int DEVICE_ID_INTERNAL;
+	static constexpr int DEVICE_ID_EMULATION = -1;
+	static constexpr int DEVICE_ID_INTERNAL = -2;
 
 	void set_device(int p_device);
 	int get_device() const;
@@ -209,7 +208,7 @@ public:
 class InputEventMouse : public InputEventWithModifiers {
 	GDCLASS(InputEventMouse, InputEventWithModifiers);
 
-	BitField<MouseButtonMask> button_mask;
+	BitField<MouseButtonMask> button_mask = MouseButtonMask::NONE;
 
 	Vector2 pos;
 	Vector2 global_pos;
@@ -595,5 +594,3 @@ public:
 
 	InputEventShortcut();
 };
-
-#endif // INPUT_EVENT_H

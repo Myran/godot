@@ -41,6 +41,7 @@ import androidx.core.view.isVisible
 import org.godotengine.editor.embed.GameMenuFragment
 import org.godotengine.godot.utils.GameMenuUtils
 import org.godotengine.godot.utils.ProcessPhoenix
+import org.godotengine.godot.utils.isHorizonOSDevice
 import org.godotengine.godot.utils.isNativeXRDevice
 
 /**
@@ -206,6 +207,14 @@ open class GodotGame : BaseGodotGame() {
 		editorMessageDispatcher.dispatchGameMenuAction(EDITOR_MAIN_INFO, actionBundle)
 	}
 
+	override fun muteAudio(enabled: Boolean) {
+		val actionBundle = Bundle().apply {
+			putString(KEY_GAME_MENU_ACTION, GAME_MENU_ACTION_SET_DEBUG_MUTE_AUDIO)
+			putBoolean(KEY_GAME_MENU_ACTION_PARAM1, enabled)
+		}
+		editorMessageDispatcher.dispatchGameMenuAction(EDITOR_MAIN_INFO, actionBundle)
+	}
+
 	override fun embedGameOnPlay(embedded: Boolean) {
 		val actionBundle = Bundle().apply {
 			putString(KEY_GAME_MENU_ACTION, GAME_MENU_ACTION_EMBED_GAME_ON_PLAY)
@@ -220,7 +229,7 @@ open class GodotGame : BaseGodotGame() {
 
 	override fun isMinimizedButtonEnabled() = isTaskRoot && !isNativeXRDevice(applicationContext)
 
-	override fun isCloseButtonEnabled() = !isNativeXRDevice(applicationContext)
+	override fun isCloseButtonEnabled() = !isHorizonOSDevice(applicationContext)
 
 	override fun isPiPButtonEnabled() = hasPiPSystemFeature()
 

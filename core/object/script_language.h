@@ -28,11 +28,11 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef SCRIPT_LANGUAGE_H
-#define SCRIPT_LANGUAGE_H
+#pragma once
 
 #include "core/doc_data.h"
 #include "core/io/resource.h"
+#include "core/object/script_backtrace.h"
 #include "core/object/script_instance.h"
 #include "core/templates/pair.h"
 #include "core/templates/safe_refcount.h"
@@ -101,6 +101,8 @@ public:
 	static void get_global_class_list(List<StringName> *r_global_classes);
 	static void get_inheriters_list(const StringName &p_base_type, List<StringName> *r_classes);
 	static void save_global_classes();
+
+	static Vector<Ref<ScriptBacktrace>> capture_script_backtraces(bool p_include_variables = false);
 
 	static void init_languages();
 	static void finish_languages();
@@ -194,17 +196,6 @@ public:
 	Script() {}
 };
 
-class ScriptCodeCompletionCache {
-	static ScriptCodeCompletionCache *singleton;
-
-public:
-	static ScriptCodeCompletionCache *get_singleton() { return singleton; }
-
-	ScriptCodeCompletionCache();
-
-	virtual ~ScriptCodeCompletionCache() {}
-};
-
 class ScriptLanguage : public Object {
 	GDCLASS(ScriptLanguage, Object)
 
@@ -247,6 +238,7 @@ public:
 		SCRIPT_NAME_CASING_PASCAL_CASE,
 		SCRIPT_NAME_CASING_SNAKE_CASE,
 		SCRIPT_NAME_CASING_KEBAB_CASE,
+		SCRIPT_NAME_CASING_CAMEL_CASE,
 	};
 
 	struct ScriptTemplate {
@@ -505,5 +497,3 @@ public:
 	PlaceHolderScriptInstance(ScriptLanguage *p_language, Ref<Script> p_script, Object *p_owner);
 	~PlaceHolderScriptInstance();
 };
-
-#endif // SCRIPT_LANGUAGE_H
