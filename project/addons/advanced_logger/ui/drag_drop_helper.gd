@@ -30,11 +30,22 @@ func create_drag_preview(text: String) -> Control:
 	var label = Label.new()
 	label.text = text
 	label.modulate = Color(1, 1, 1, 0.8)
+	label.add_theme_font_size_override("font_size", 14)
 
 	var panel = Panel.new()
 	panel.add_child(label)
 	label.position = Vector2(10, 5)
 	panel.custom_minimum_size = Vector2(label.get_minimum_size().x + 20, 30)
+
+	# Add a stylebox for visual feedback
+	var stylebox = StyleBoxFlat.new()
+	stylebox.bg_color = Color(0.1, 0.1, 0.1, 0.8)
+	stylebox.border_color = Color(0.5, 0.5, 0.5, 0.8)
+	stylebox.border_width_bottom = 2
+	stylebox.border_width_top = 2
+	stylebox.border_width_left = 2
+	stylebox.border_width_right = 2
+	panel.add_theme_stylebox_override("panel", stylebox)
 
 	return panel
 
@@ -45,10 +56,26 @@ func create_drag_preview(text: String) -> Control:
 ## Returns: The drag data or null if no item is selected
 func get_drag_data_for_list(item_list: ItemList, source_type: String) -> Variant:
 	var indices = item_list.get_selected_items()
+
+	# If no item is selected, check if we're hovering over an item (for drag initiation)
 	if indices.size() == 0:
-		return null
+		# Get the current mouse position in the ItemList
+		var mouse_pos = item_list.get_local_mouse_position()
+		var item_at_position = item_list.get_item_at_position(mouse_pos)
+
+		if item_at_position == -1:
+			return null
+
+		# Select the item at position for visual feedback
+		item_list.select(item_at_position)
+		indices = [item_at_position]
 
 	var tag_index = indices[0]
+
+	# Ensure index is valid
+	if tag_index < 0 or tag_index >= item_list.get_item_count():
+		return null
+
 	var tag_text = item_list.get_item_metadata(tag_index) # Get original tag from metadata
 
 	if OS.is_debug_build() and ConfigManager.get_instance().get_show_editor_debug():

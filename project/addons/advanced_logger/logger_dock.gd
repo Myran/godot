@@ -89,6 +89,9 @@ func _initialize_controllers() -> void:
 	# We'll connect this one signal here, but let the tab controllers handle the rest
 	_tag_list_controller.tag_moved.connect(_on_tag_moved)
 
+	# Configure ItemLists for drag and drop
+	call_deferred("_configure_item_lists_for_drag_drop")
+
 	# Connect drag and drop signals for tag lists
 	call_deferred("_connect_drag_drop_signals")
 
@@ -144,36 +147,60 @@ func _initialize_controllers() -> void:
 	_settings_tab_controller.tags_scanned.connect(_on_tags_scanned)
 
 ## Override drag and drop methods for Godot 4
-func _get_drag_data(_at_position: Vector2) -> Variant:
-	# Get global mouse position
-	var global_pos = get_global_mouse_position()
+func _get_drag_data(at_position: Vector2) -> Variant:
+	# Check which list the position is over by converting to each list's local coordinates
+	var available_pos = _available_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
+	var active_pos = _tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
+	var ignored_pos = _ignored_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
 
-	# Figure out which list we're dragging from and delegate to the drag drop helper
-	if _available_tags_list.get_global_rect().has_point(global_pos):
+	# Check if position is inside available tags list
+	if _available_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _available_tags_list.size).has_point(available_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, TagCategories.category_to_string(TagCategories.Category.AVAILABLE))
 		if drag_data:
-			# Debug info
 			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Dragging tag from available: %s[/color]" %
 					[LoggerColors.DEBUG_HTML, drag_data.tag])
-
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
-	elif _tags_list.get_global_rect().has_point(global_pos):
+
+	# Check if position is inside active tags list
+	if _tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _tags_list.size).has_point(active_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_tags_list, TagCategories.category_to_string(TagCategories.Category.ACTIVE))
 		if drag_data:
+			if OS.is_debug_build() and _show_editor_debug:
+				print_rich("[color=#%s]DEBUG: Dragging tag from active: %s[/color]" %
+					[LoggerColors.DEBUG_HTML, drag_data.tag])
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
-	elif _ignored_tags_list.get_global_rect().has_point(global_pos):
+
+	# Check if position is inside ignored tags list
+	if _ignored_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _ignored_tags_list.size).has_point(ignored_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_ignored_tags_list, TagCategories.category_to_string(TagCategories.Category.IGNORED))
 		if drag_data:
+			if OS.is_debug_build() and _show_editor_debug:
+				print_rich("[color=#%s]DEBUG: Dragging tag from ignored: %s[/color]" %
+					[LoggerColors.DEBUG_HTML, drag_data.tag])
 			set_drag_preview(_drag_drop_helper.create_drag_preview(
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 
 	return null
+
+## Configure ItemLists for proper drag and drop behavior
+func _configure_item_lists_for_drag_drop() -> void:
+	# Configure all tag lists to support drag and drop
+	for list in [_available_tags_list, _tags_list, _ignored_tags_list]:
+		if list:
+			# Ensure lists can process mouse events
+			list.mouse_filter = Control.MOUSE_FILTER_PASS
+			list.focus_mode = Control.FOCUS_ALL
+			list.select_mode = ItemList.SELECT_SINGLE
+
+			# Debug output
+			if OS.is_debug_build() and _show_editor_debug:
+				print_rich("[color=#%s]DEBUG: Configured drag-drop for %s[/color]" % [LoggerColors.DEBUG_HTML, list.name])
 
 ## Connect drag and drop signals for each tag list - not needed as we're using Control's _can_drop_data and _drop_data
 ## This is kept as a placeholder for reference but functionality has been moved to the Control's methods
@@ -184,14 +211,31 @@ func _connect_drag_drop_signals() -> void:
 		print_rich("[color=#%s]DEBUG: Using Control's built-in drag-drop handling[/color]" % [LoggerColors.DEBUG_HTML])
 
 ## Helper method to determine the target category from a position
-func _get_target_category_at_position(pos: Vector2) -> int:
-	if _available_tags_list.get_global_rect().has_point(pos):
+# --- START OF MODIFIED FUNCTION ---
+func _get_target_category_at_position(at_position: Vector2) -> int:
+	# at_position is local to LoggerDock. Convert it to global coordinates.
+	var global_pos: Vector2 = get_global_transform() * at_position
+
+	# Check if the global position is within the global rectangle of each list
+	if _available_tags_list.is_visible_in_tree() and _available_tags_list.get_global_rect().has_point(global_pos):
+		if OS.is_debug_build() and _show_editor_debug:
+			print_rich("[color=#%s]DEBUG: Target identified as AVAILABLE[/color]" % [LoggerColors.DEBUG_HTML])
 		return TagCategories.Category.AVAILABLE
-	elif _tags_list.get_global_rect().has_point(pos):
+
+	if _tags_list.is_visible_in_tree() and _tags_list.get_global_rect().has_point(global_pos):
+		if OS.is_debug_build() and _show_editor_debug:
+			print_rich("[color=#%s]DEBUG: Target identified as ACTIVE[/color]" % [LoggerColors.DEBUG_HTML])
 		return TagCategories.Category.ACTIVE
-	elif _ignored_tags_list.get_global_rect().has_point(pos):
+
+	if _ignored_tags_list.is_visible_in_tree() and _ignored_tags_list.get_global_rect().has_point(global_pos):
+		if OS.is_debug_build() and _show_editor_debug:
+			print_rich("[color=#%s]DEBUG: Target identified as IGNORED[/color]" % [LoggerColors.DEBUG_HTML])
 		return TagCategories.Category.IGNORED
-	return -1
+
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: No valid target list found at position[/color]" % [LoggerColors.WARNING_HTML])
+	return -1 # No valid target list found
+# --- END OF MODIFIED FUNCTION ---
 
 ## Get the ItemList corresponding to a category
 func _get_list_for_category(category: int) -> ItemList:
@@ -335,17 +379,27 @@ func _on_settings_reset() -> void:
 	_update_startup_message()
 
 ## Can drop data implementation - determines if the drop is valid
-func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
+		if OS.is_debug_build() and _show_editor_debug:
+			print_rich("[color=#%s]DEBUG: Invalid drag data for drop validation[/color]" % [LoggerColors.DEBUG_HTML])
 		return false
 
 	var tag = data["tag"]
 	var source = data.get("source", "")
-	var mouse_pos = get_global_mouse_position()
 
 	# Get target category using helper method
-	var target_category = _get_target_category_at_position(mouse_pos)
+	var target_category = _get_target_category_at_position(at_position)
+
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: Can drop check - Tag: %s, Source: %s, Target: %s[/color]" % [
+			LoggerColors.DEBUG_HTML,
+			tag,
+			source,
+			TagCategories.category_to_string(target_category) if target_category >= 0 else "INVALID"
+		])
+
 	if target_category < 0:
 		return false
 
@@ -354,7 +408,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 
 	# Use drag_drop_helper to check if drop is valid
 	var source_category = TagCategories.from_string(source)
-	return _drag_drop_helper.can_drop_tag(
+	var can_drop = _drag_drop_helper.can_drop_tag(
 		tag,
 		source_category,
 		target_category,
@@ -362,18 +416,33 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 		tag_lists.ignored_tags
 	)
 
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: Can drop result: %s[/color]" % [LoggerColors.DEBUG_HTML, can_drop])
+
+	return can_drop
+
 ## Drop data implementation - handles the drop
-func _drop_data(_at_position: Vector2, data: Variant) -> void:
+func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
+		if OS.is_debug_build() and _show_editor_debug:
+			print_rich("[color=#%s]DEBUG: Invalid drag data for drop[/color]" % [LoggerColors.ERROR_HTML])
 		return
 
 	var tag = data["tag"]
 	var source = data.get("source", "")
-	var mouse_pos = get_global_mouse_position()
 
 	# Get target category using helper method
-	var target_category = _get_target_category_at_position(mouse_pos)
+	var target_category = _get_target_category_at_position(at_position)
+
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: Drop data - Tag: %s, Source: %s, Target: %s[/color]" % [
+			LoggerColors.DEBUG_HTML,
+			tag,
+			source,
+			TagCategories.category_to_string(target_category) if target_category >= 0 else "INVALID"
+		])
+
 	if target_category < 0:
 		return
 
@@ -388,4 +457,13 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 
 	# Use the tag list controller to handle the move
 	var source_category = TagCategories.from_string(source)
+
+	if OS.is_debug_build() and _show_editor_debug:
+		print_rich("[color=#%s]DEBUG: Moving tag '%s' from %s to %s[/color]" % [
+			LoggerColors.INFO_HTML,
+			tag,
+			TagCategories.category_to_string(source_category),
+			TagCategories.category_to_string(target_category)
+		])
+
 	_tag_list_controller.move_tag(tag, source_category, target_category)

@@ -19,6 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer"]
@@ -33,13 +34,16 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="StartupMessage" type="Label" parent="VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.482353, 0.682353, 0.639216, 1)
-text = "Active filter tags: local_data, network
-Ignored tags: cache, level:info"
+text = "No active filter tags (showing all logs except ignored)
+No ignored tags"
 autowrap_mode = 3
 
 [node name="HSeparatorStartup" type="HSeparator" parent="VBoxContainer"]
+visible = false
 layout_mode = 2
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
@@ -53,7 +57,7 @@ mouse_filter = 1
 metadata/_tab_index = 0
 
 [node name="LevelSection" type="HBoxContainer" parent="VBoxContainer/TabContainer/Tags"]
-layout_mode = 2
+layout_mode = 0
 offset_right = 1079.0
 offset_bottom = 31.0
 
@@ -80,7 +84,7 @@ popup/item_4/id = 4
 
 [node name="HSeparatorLevel" type="HSeparator" parent="VBoxContainer/TabContainer/Tags"]
 visible = false
-layout_mode = 2
+layout_mode = 0
 offset_top = 35.0
 offset_right = 1075.0
 offset_bottom = 39.0
@@ -141,7 +145,6 @@ layout_mode = 2
 [node name="AvailableTagsSection" type="VBoxContainer" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 1.5
 
 [node name="TagsLabel" type="Label" parent="VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection"]
 layout_mode = 2
@@ -162,22 +165,50 @@ size_flags_vertical = 3
 mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
-auto_height = true
-item_count = 14
-item_0/text = "🏷 Active"
-item_1/text = "🏷 Available"
-item_2/text = "🏷 Cache"
-item_3/text = "🏷 Database"
-item_4/text = "🏷 Error"
-item_5/text = "🏷 Firebase"
-item_6/text = "🏷 Ignored"
-item_7/text = "⚙ Level:critical"
-item_8/text = "⚙ Level:debug"
-item_9/text = "⚙ Level:error"
-item_10/text = "⚙ Level:info"
-item_11/text = "⚙ Level:warning"
-item_12/text = "🏷 Local_data"
-item_13/text = "🏷 Network"
+item_count = 43
+item_0/text = "🏷 Animation"
+item_1/text = "🏷 Apple"
+item_2/text = "🏷 Auth"
+item_3/text = "🏷 Battle"
+item_4/text = "🏷 Cache"
+item_5/text = "🏷 Card"
+item_6/text = "🏷 Clicker"
+item_7/text = "🏷 Combat"
+item_8/text = "🏷 Data"
+item_9/text = "🏷 Database"
+item_10/text = "🏷 Debug"
+item_11/text = "🏷 Draft"
+item_12/text = "🏷 Error"
+item_13/text = "🏷 Event"
+item_14/text = "🏷 Facebook"
+item_15/text = "🏷 Firebase"
+item_16/text = "🏷 Game"
+item_17/text = "🏷 Game_state"
+item_18/text = "🏷 Grid"
+item_19/text = "🏷 Initialization"
+item_20/text = "🏷 Input"
+item_21/text = "🏷 Item"
+item_22/text = "🏷 Level"
+item_23/text = "⚙ Level:critical"
+item_24/text = "⚙ Level:debug"
+item_25/text = "⚙ Level:error"
+item_26/text = "⚙ Level:info"
+item_27/text = "⚙ Level:warning"
+item_28/text = "🏷 Local_data"
+item_29/text = "🏷 Network"
+item_30/text = "🏷 Performance"
+item_31/text = "🏷 Player"
+item_32/text = "🏷 Rng"
+item_33/text = "🏷 Rule"
+item_34/text = "🏷 Rules"
+item_35/text = "🏷 Stat"
+item_36/text = "🏷 State_transition"
+item_37/text = "🏷 System"
+item_38/text = "🏷 Test"
+item_39/text = "🏷 Ui_animation"
+item_40/text = "🏷 Ui_input"
+item_41/text = "🏷 Validation"
+item_42/text = "🏷 Win_condition"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -304,9 +335,9 @@ alignment = 1
 
 [node name="EnableBufferDumpCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
+tooltip_text = "When enabled, the buffer will be dumped to the console when ERROR or CRITICAL logs occur"
 button_pressed = true
 text = "Enable Buffer Dump on Error"
-tooltip_text = "When enabled, the buffer will be dumped to the console when ERROR or CRITICAL logs occur"
 
 [node name="HSeparatorDebug" type="HSeparator" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
@@ -320,8 +351,8 @@ horizontal_alignment = 1
 
 [node name="ShowEditorDebugCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
-text = "Show Editor Debug Messages"
 tooltip_text = "When enabled, debug print statements from the logger's editor interface will be displayed in the Godot editor output"
+text = "Show Editor Debug Messages"
 
 [node name="HSeparatorFormat" type="HSeparator" parent="VBoxContainer/TabContainer/Settings"]
 visible = false
