@@ -35,6 +35,8 @@ func _on_debug_event(event: debug.DebugEventType, _data: Variant = null) -> void
 	match event:
 		debug.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU:
 			%PopupDebug.show()
+		debug.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU:
+			%PopupDebug.hide()
 
 func _input(event: InputEvent) -> void:
 	if event.as_text() == "Escape" and event.is_pressed():

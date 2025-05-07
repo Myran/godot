@@ -7,7 +7,8 @@ enum DebugEventType {
 	EVENT_OPEN_GAME_SELECTOR,
 	EVENT_RESET_MATCH_LEVEL,
 	EVENT_FORCE_LOAD_MATCH_LEVEL,
-	EVENT_OPEN_DB_DEBUG_MENU
+	EVENT_OPEN_DB_DEBUG_MENU,
+	EVENT_CLOSE_DB_DEBUG_MENU
 }
 
 #export (bool) var force_level = false setget set_force_level,get_force_level

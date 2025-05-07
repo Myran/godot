@@ -1,117 +1,211 @@
+# project/data/backends/backend_factory.gd
 class_name BackendFactory
 extends RefCounted
 
-## Backend selection options
-enum BackendSelection {
-	NONE,
-	LOCAL,
-	FIREBASE
-}
+# Forward declare or ensure these classes are loaded/available for type hinting
+# If they are in the same directory or autoloads, direct usage is fine.
+# Otherwise, you might need:
+# const FirebaseBackend = preload("firebase_backend.gd")
+# const LocalJSONBackend = preload("local_json_backend.gd")
+# const DataBackend = preload("data_backend.gd") # If not implicitly known
 
-## Create the appropriate data backend based on runtime conditions
-## @return A properly initialized DataBackend instance
-static func create_backend() -> DataBackend:
-	# Always use local data when in editor
-	var selected_backend: BackendSelection = BackendSelection.NONE
+enum BackendSelection { NONE, LOCAL, FIREBASE }
+
+
+static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
+	var internet_status_node: Node = Engine.get_singleton("internet_status")  # More specific type if InternetStatus is a class_name
+	if internet_status_node == null:
+		Log.warning(
+			"InternetStatus singleton not found in BackendFactory. Assuming connected for check.",
+			{},
+			[Log.TAG_NETWORK]
+		)
+		return true
+
+	Log.debug("BackendFactory: Requesting internet status check...", {}, [Log.TAG_NETWORK])
+	internet_status_node.get_status()
+
+	var internet_available_result: bool = false
+	var check_completed: bool = false
+
+	# Use a dictionary to hold connection status to avoid issues with lambda captures if not careful
+	var connection_status := {"available": false, "completed": false}
+
+	var has_internet_callable: Callable = func():
+		connection_status.available = true
+		connection_status.completed = true
+	var no_internet_callable: Callable = func():
+		connection_status.available = false
+		connection_status.completed = true
+	var timeout_callable: Callable = func():
+		if not connection_status.completed:
+			Log.error(
+				"BackendFactory: Internet status check timed out after %s seconds" % timeout_sec,
+				{},
+				[Log.TAG_NETWORK, Log.TAG_ERROR]
+			)
+			connection_status.available = false
+			connection_status.completed = true
+
+	var has_internet_conn_err: Error = internet_status_node.has_internet.connect(
+		has_internet_callable, CONNECT_ONE_SHOT
+	)
+	var no_internet_conn_err: Error = internet_status_node.no_internet.connect(
+		no_internet_callable, CONNECT_ONE_SHOT
+	)
+
+	if has_internet_conn_err != OK or no_internet_conn_err != OK:
+		Log.error(
+			"Failed to connect to InternetStatus signals", {}, [Log.TAG_NETWORK, Log.TAG_ERROR]
+		)
+		# Decide a default behavior, e.g., assume no internet
+		return false
+
+	var timeout_timer: Timer = Timer.new()
+	timeout_timer.name = "BackendFactoryInternetTimeout"
+	Engine.get_main_loop().root.add_child(timeout_timer)
+	timeout_timer.wait_time = timeout_sec
+	timeout_timer.one_shot = true
+	var timeout_conn_err: Error = timeout_timer.timeout.connect(timeout_callable, CONNECT_ONE_SHOT)
+	if timeout_conn_err != OK:
+		Log.error("Failed to connect timeout timer signal", {}, [Log.TAG_NETWORK, Log.TAG_ERROR])
+		timeout_timer.queue_free()
+		return false  # Or another default
+	timeout_timer.start()
+
+	while not connection_status.completed:
+		await Engine.get_main_loop().process_frame
+
+	# Disconnect signals (important for one-shot behavior if re-used)
+	if internet_status_node.has_internet.is_connected(has_internet_callable):
+		internet_status_node.has_internet.disconnect(has_internet_callable)
+	if internet_status_node.no_internet.is_connected(no_internet_callable):
+		internet_status_node.no_internet.disconnect(no_internet_callable)
+	# Timer will be freed by queue_free if it hasn't fired, or it's already done.
+	timeout_timer.queue_free()
+
+	internet_available_result = connection_status.available
+
+	if internet_available_result:
+		Log.info(
+			"BackendFactory: Internet connection determined to be available.", {}, [Log.TAG_NETWORK]
+		)
+	else:
+		Log.warning(
+			"BackendFactory: Internet connection determined to be unavailable or check timed out.",
+			{},
+			[Log.TAG_NETWORK]
+		)
+
+	return internet_available_result
+
+
+static func create_backend() -> DataBackend:  # Return type is DataBackend or null
+	var selected_backend_type: BackendSelection = BackendSelection.NONE
+	var internet_is_available: bool = false
 
 	if OS.has_feature("editor"):
-		Log.info("Running in editor, using local data source", {}, [Log.TAG_DB])
-		selected_backend = BackendSelection.LOCAL
-
-	# For non-editor builds, check for debug mode with forced local data
-	if ProjectSettings.has_setting("game/debug/force_local_data") and ProjectSettings.get_setting("game/debug/force_local_data", false):
+		Log.info("Running in editor, selecting local data source", {}, [Log.TAG_DB])
+		selected_backend_type = BackendSelection.LOCAL
+	elif ProjectSettings.get_setting("game/debug/force_local_data", false):
 		Log.info("Debug flag forcing local data source", {}, [Log.TAG_DB])
-		selected_backend = BackendSelection.LOCAL
+		selected_backend_type = BackendSelection.LOCAL
+	else:
+		Log.debug(
+			"BackendFactory: Attempting to use Firebase, checking internet...", {}, [Log.TAG_DB]
+		)
+		internet_is_available = await _check_internet_availability()
 
-	if selected_backend == BackendSelection.NONE:
-		# Try to create firebase backend - it will check availability internally
-		var firebase_backend_instance: DataBackend = create_firebase_backend()
-
-		# Validate that we got a proper FirebaseBackend instance
-		if firebase_backend_instance == null:
-			Log.error("Failed to create Firebase backend", {}, [Log.TAG_DB, Log.TAG_ERROR])
-			selected_backend = BackendSelection.LOCAL
+		if internet_is_available:
+			Log.info(
+				"BackendFactory: Internet available, selecting Firebase backend.",
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE]
+			)
+			selected_backend_type = BackendSelection.FIREBASE
 		else:
-			@warning_ignore("redundant_await")
-			var firebase_init_result: bool = await firebase_backend_instance.initialize()
-			if firebase_init_result:
-				Log.info("Firebase backend initialized successfully", {}, [Log.TAG_DB])
-				return firebase_backend_instance
-			else:
-				selected_backend = BackendSelection.LOCAL
-				# Fall back to local if Firebase fails
-				Log.info("Firebase initialization failed, falling back to local data", {}, [Log.TAG_DB])
+			Log.warning(
+				"BackendFactory: Internet unavailable, falling back to local data source.",
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE]
+			)
+			selected_backend_type = BackendSelection.LOCAL
 
-	if selected_backend == BackendSelection.LOCAL:
-		var local_backend_instance: DataBackend = create_local_backend()
+	var backend_instance: DataBackend = null
+	if selected_backend_type == BackendSelection.FIREBASE:
+		backend_instance = create_firebase_backend()
+		if backend_instance == null:
+			Log.error(
+				"Failed to create Firebase backend despite internet, falling back to local.",
+				{},
+				[Log.TAG_DB, Log.TAG_ERROR]
+			)
+			selected_backend_type = BackendSelection.LOCAL
 
-		# Validate that we got a proper LocalJSONBackend instance
-		if local_backend_instance == null:
-			Log.error("Failed to create local backend", {}, [Log.TAG_DB, Log.TAG_ERROR])
+	if selected_backend_type == BackendSelection.LOCAL:
+		backend_instance = create_local_backend()
+
+	if backend_instance != null:
+		Log.debug(
+			"BackendFactory: Initializing chosen backend: %s" % backend_instance.get_class(),
+			{},
+			[Log.TAG_DB]
+		)
+		var init_success: bool = await backend_instance.initialize()  # initialize is async
+		if init_success:
+			Log.info(
+				(
+					"BackendFactory: Successfully initialized backend: %s"
+					% backend_instance.get_class()
+				),
+				{},
+				[Log.TAG_DB]
+			)
+			return backend_instance
+		else:
+			(
+				Log
+				. error(
+					(
+						"BackendFactory: Failed to initialize chosen backend: %s. No backend will be used."
+						% backend_instance.get_class()
+					),
+					{},
+					[Log.TAG_DB, Log.TAG_ERROR]
+				)
+			)
 			return null
-
-		# We need the await here since initialize() is async
-		@warning_ignore("redundant_await")
-		var local_init_result: bool = await local_backend_instance.initialize()
-
-		if not local_init_result:
-			Log.error("Local backend initialization failed", {}, [Log.TAG_DB, Log.TAG_ERROR])
-			return null
-
-		Log.info("Local backend initialized successfully", {}, [Log.TAG_DB])
-		return local_backend_instance
-
-	Log.warning("No backend selection made", {}, [Log.TAG_DB, Log.TAG_WARNING])
-	return null
-## Create a new Firebase backend
-## @return A FirebaseBackend instance or null if creation fails
-static func create_firebase_backend() -> DataBackend:
-	Log.debug("Creating Firebase backend", {}, [Log.TAG_DB])
-
-	# Try to create the backend instance
-	var backend: FirebaseBackend
-
-	# Use a try-catch block to handle potential errors during creation
-	var has_error: bool = false
-
-	# Here we can't use try/catch in GDScript, so we'll check for problems after creation
-	backend = FirebaseBackend.new()
-
-	if backend == null or not (backend is FirebaseBackend):
-		Log.error("Failed to create FirebaseBackend instance", {
-			"error": "Creation failed"
-		}, [Log.TAG_DB, Log.TAG_ERROR])
-		has_error = true
-
-	if has_error:
+	else:
+		Log.error(
+			"BackendFactory: Could not create any backend instance.",
+			{},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return null
 
-	return backend
 
-## Create a new local JSON backend
-## @param file_path Optional custom file path for the JSON data
-## @return A LocalJSONBackend instance or null if creation fails
-static func create_local_backend(file_path: String = "") -> DataBackend:
-	Log.debug("Creating local JSON backend", {
-		"custom_file_path": file_path != ""
-	}, [Log.TAG_DB])
-
-	# Try to create the backend instance
-	var backend: LocalJSONBackend
-
-	# Use a try-catch block to handle potential errors during creation
-	var has_error: bool = false
-
-	# Here we can't use try/catch in GDScript, so we'll check for problems after creation
-	backend = LocalJSONBackend.new(file_path)
-
-	if backend == null or not (backend is LocalJSONBackend):
-		Log.error("Failed to create LocalJSONBackend instance", {
-			"error": "Creation failed"
-		}, [Log.TAG_DB, Log.TAG_ERROR])
-		has_error = true
-
-	if has_error:
+static func create_firebase_backend() -> FirebaseBackend:  # Return type is FirebaseBackend or null
+	Log.debug(
+		"BackendFactory: Creating Firebase backend instance.", {}, [Log.TAG_DB, Log.TAG_FIREBASE]
+	)
+	if not ClassDB.class_exists("FirebaseDatabase"):  # Ensure FirebaseDatabase C++ class exists
+		Log.error(
+			"FirebaseDatabase C++ module class not found. Cannot create Firebase backend.",
+			{},
+			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
 		return null
+	# Assuming FirebaseBackend.new() returns a FirebaseBackend typed object
+	var fb_backend: FirebaseBackend = FirebaseBackend.new()
+	return fb_backend
 
-	return backend
+
+static func create_local_backend(file_path: String = "") -> LocalJSONBackend:  # Return type is LocalJSONBackend or null
+	Log.debug(
+		"BackendFactory: Creating local JSON backend instance.",
+		{"custom_file_path": file_path != ""},
+		[Log.TAG_DB, Log.TAG_LOCAL]
+	)
+	# Assuming LocalJSONBackend.new() returns a LocalJSONBackend typed object
+	var local_backend: LocalJSONBackend = LocalJSONBackend.new(file_path)
+	return local_backend

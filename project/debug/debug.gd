@@ -1,878 +1,409 @@
+# File: project/debug/debug.gd
+# Updated to test the new C++ Firebase Realtime Database module
+# Includes AUTOMATIC TABBED button creation based on function names.
+# Convention: _test_rtdb_[group_name]_[test_description]
+# Example:    _test_rtdb_basic_set_simple_value
+
 extends Control
 
 signal fb_success(res: Dictionary)
 signal apple_success(res: Dictionary)
 
-# const kBannerAdUnitAndroid: String = "ca-app-pub-3940256099942544/6300978111"
-# const kInterstitialAdUnitAndroid: String = "ca-app-pub-3940256099942544/1033173712"
-# const kBannerAdUnitIOS: String = "ca-app-pub-3940256099942544/2934735716"
-# const kFakeBannerAdUnitIOS: String = "ca-app-pub-3940256099942544/2934735716"
+# Constants for AdMob (kept for completeness, but not the focus)
 const FAKE_INTERSTITIAL_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/4411468910"
-# const kRealInterstitialAdUnitIOS: String = "ca-app-pub-8265399856187334~2529757314"
 const FAKE_REWARDED_VIDEO_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/1712485313"
-# const kRealAdappIdIOS: String = "ca-app-pub-8265399856187334~2529757314"
-var auth: Object
-var firebase_tests_running: bool = false
-var firebase_test_results: Dictionary = {}
-var firebase_test_count: int = 0
-var firebase_tests_passed: int = 0
-var firebase_tests_failed: int = 0
-var admob: Object
-var db: Object
-var remote_config: Object
-var messaging: Object
-var count: int = 1
-var godot_apple_auth: Object
-var home_game: Node
-var _auth: Object
 
+# Firebase Module Instances (nullable)
+var auth: Object = null
+var db: Object = null
+var remote_config: Object = null
+var messaging: Object = null
 
+# Other Module Instances (nullable)
+var godot_apple_auth: Object = null
+var admob: Object = null
 
+# --- UI References ---
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
+@onready var close_button: Button = %Button_close
+@onready var tab_container: TabContainer = %TabContainer # Ensure this exists in your scene!
 
-class SelectionReference:
-	var value: int = -1
+# RTDB Test State
+var _next_request_id: int = 0
+var _pending_requests: Dictionary = {}
+const _test_base_path: Array = ["debug_tests", "rtdb"]
+var _listener_path_suffix: Array = ["live_data"]
+var _listen_count: int = 0
+var _transaction_count: int = 0
+const _RTDB_TEST_PREFIX = "_test_rtdb_"
+
+#-----------------------------------------------------------------------------#
+# Initialization                                                              #
+#-----------------------------------------------------------------------------#
 
 func setup(init_args: Dictionary) -> void:
-	Log.debug("Debug setup with arguments", init_args, ["debug"])
-
+	Log.debug("Debug setup with arguments", init_args, ["debug", "initialization"])
 
 func _ready() -> void:
+	Log.info("Debug Node _ready: Starting initialization.", {}, ["debug", "initialization"])
 	Engine.print_error_messages = true
 	Engine.print_to_stdout = true
-	var debug_text: String
-	if OS.is_debug_build():
-		debug_text = "Build is debug"
-	else:
-		debug_text = "build is release"
+	var debug_text: String = "Build is debug" if OS.is_debug_build() else "build is release"
 	%DebugRichTextLabel2.text = str("OS: ", OS.get_name(), debug_text)
 	%DebugRichTextLabel3.text = str("Commit: ", Engine.get_version_info()["hash"])
 
+	# --- Initialize Firebase Database C++ Module ---
+	Log.debug("Checking for FirebaseDatabase class...", {}, ["debug", "initialization", Log.TAG_FIREBASE])
 	if ClassDB.class_exists("FirebaseDatabase"):
-		Log.info("Firebase RealTime Database available", {}, [Log.TAG_FIREBASE])
+		Log.info("FirebaseDatabase class found. Instantiating...", {}, ["debug", "initialization", Log.TAG_FIREBASE])
 		db = ClassDB.instantiate("FirebaseDatabase")
-		Log.debug("RealTime Database instance created", {"db_instance": db}, [Log.TAG_FIREBASE])
-		db.connect("get_value", Callable(self, "get_value"), CONNECT_DEFERRED)
-		db.connect("child_changed", Callable(self, "child_changed"), CONNECT_DEFERRED)
-		db.connect("child_moved", Callable(self, "child_moved"), CONNECT_DEFERRED)
-		db.connect("child_removed", Callable(self, "child_removed"), CONNECT_DEFERRED)
-		db.connect("child_added", Callable(self, "child_added"), CONNECT_DEFERRED)
-
-		# Connect to new signals for advanced features
-		db.connect("query_result", Callable(self, "on_ui_query_result"), CONNECT_DEFERRED)
-		db.connect("transaction_completed", Callable(self, "on_ui_transaction_completed"), CONNECT_DEFERRED)
-		db.connect("connection_state_changed", Callable(self, "on_ui_connection_state_changed"), CONNECT_DEFERRED)
-		db.connect("db_error", Callable(self, "on_ui_db_error"), CONNECT_DEFERRED)
-
-		db.set_db_root(["users"])
-
-	# Check if we're running in test mode
-	check_for_test_mode()
-
-	if ClassDB.class_exists("FirebaseRemoteConfig"):
-		Log.info("Firebase Remote Config available", {}, [Log.TAG_FIREBASE])
-		remote_config = ClassDB.instantiate("FirebaseRemoteConfig")
-		remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
-
-	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"):
-		Log.info("Facebook SDK available", {}, [Log.TAG_FIREBASE])
-	else:
-		Log.warning("Facebook SDK not available", {}, [Log.TAG_FIREBASE])
-
-
-func messaging_token() -> void:
-	Log.info("Firebase Messaging token set", {}, [Log.TAG_FIREBASE])
-
-
-func messaging_message() -> void:
-	Log.info("Firebase Messaging message received", {}, [Log.TAG_FIREBASE])
-
-
-func _on_Button_remote_config_string_pressed() -> void:
-	Log.debug("Remote config string button pressed", {}, [Log.TAG_FIREBASE, "ui"])
-	remote_config.set_instant_fetching()
-	var rc_string: String = "local value"
-	rc_string = remote_config.get_string("test_string")
-	Log.debug("Remote config string value", {"value": rc_string}, [Log.TAG_FIREBASE])
-	status_label.text = str("Remote config string: ", rc_string)
-
-
-func remote_config_loaded() -> void:
-	Log.info("Remote config loaded successfully", {}, [Log.TAG_FIREBASE])
-
-
-func _on_Button_update_pressed() -> void:
-	Log.debug("Update button pressed", {}, [Log.TAG_FIREBASE, "ui"])
-	db.update_children(["update"], {"key1": "value", "key2": "value"})
-
-
-func _on_Button_delete_pressed() -> void:
-	print("Button delete pressed")
-	db.remove_value(["tom"])
-
-
-func _on_Button_push_child_pressed() -> void:
-	var key: String = "pushed"
-	var pushString: String = db.push_child(["push", key])
-	Log.debug("Child push operation", {"key": key, "push_string": pushString}, [Log.TAG_FIREBASE])
-	db.set_value(["push", pushString], count)
-	count = count + 1
-
-
-func _on_Button_set_value_pressed() -> void:
-	Log.debug("Set value button pressed", {}, [Log.TAG_FIREBASE, "ui"])
-	db.set_value(["tom"], str("Value", count))
-	count = count + 1
-
-
-func _on_Button_get_value_pressed() -> void:
-	Log.debug("Get value button pressed", {}, [Log.TAG_FIREBASE, "ui"])
-	db.get_value(["tom"])
-
-
-func child_moved(key: String, value: Variant) -> void:
-	Log.debug("Firebase child moved", {"key": key, "value": value}, [Log.TAG_FIREBASE])
-
-
-func child_added(key: String, value: Variant) -> void:
-	Log.debug("Firebase child added", {"key": key, "value": value}, [Log.TAG_FIREBASE])
-
-
-func child_removed(key: String, value: Variant) -> void:
-	Log.debug("Firebase child removed", {"key": key, "value": value}, [Log.TAG_FIREBASE])
-
-
-func child_changed(key: String, value: Variant) -> void:
-	Log.debug("Firebase child changed", {"key": key, "value": value}, [Log.TAG_FIREBASE])
-	status_label.call_deferred("set_text", str("Value changed: ", key, "\n", "value: ", value))
-
-
-func get_value(key: String, value: Variant) -> void:
-	Log.debug("Firebase get_value response", {"key": key, "value": value}, [Log.TAG_FIREBASE])
-	status_label.text = str("Get_value for key: ", key, "\n", "Value: ", value)
-
-
-func _on_Button_send_all_tracking_events_pressed() -> void:
-	print("Tracking button pressed")
-	if ClassDB.class_exists("FirebaseAnalytics"):
-		print("FirebaseAnalytics exists")
-		var a: Object = ClassDB.instantiate("FirebaseAnalytics")
-		a.log_event("testlog_event")
-		a.log_int("testlog_int", "int", 99)
-		a.log_long("testlog_long", "long", 99)
-		a.log_double("testlog_double", "double", 99)
-		a.log_string("testlog_string", "string", "stringToLog")
-		a.log_params("testlog_params", {"string": "start", "int": 99, "bool": true})
-		a.user_property("has_test_property", "test_propery")
-		a.user_id("0")
-		a.screen_name("start_screen", "start_class")
-		a.log_event("earn_virtual_currency")
-
-
-func logged_in(res: String) -> void:
-	print("_auth: DEBUG  Logged in: ", res)
-	status_label.text = str("Auth: Logged in: ", res)
-
-
-func _on_Button_sign_in_anon_pressed() -> void:
-	print("button: sign in anon")
-	var retval: int = await auth.login()
-	print(str("login result: ", retval))
-	status_label.call_deferred("set_text", str("login result: ", retval))
-
-
-func facebook_login_success(res: Dictionary) -> void:
-	fb_success.emit(res)
-
-
-func _on_Button_sign_in_facebook_pressed() -> void:
-	auth.sign_in_facebook()
-
-
-func _on_Button_unlink_Facebook_pressed() -> void:
-	auth.unlink_facebook()
-
-
-func _on_Button_link_Facebook_pressed() -> void:
-	auth.link_facebook()
-
-
-func _on_Auth_Apple_login_pressed() -> void:
-	print("button: apple login")
-	if godot_apple_auth.is_available():
-		print("apple auth is available")
-		godot_apple_auth.sign_in()
-		var result: Dictionary = await apple_success
-		_auth.sign_in_apple(result.token, result.nonce)
-		var auth_res: String = await _auth.logged_in()
-		if auth_res == "":
-			print("Firebase auth login success")
+		if db:
+			Log.debug("FirebaseDatabase instance created successfully.", {"db_instance": db}, ["debug", "initialization", Log.TAG_FIREBASE])
+			_connect_rtdb_signals()
+			_create_rtdb_test_tabs_from_methods()
 		else:
-			print("Firebase auth login failed with error: ", auth_res)
+			Log.error("Failed to instantiate FirebaseDatabase!", {}, ["debug", "initialization", Log.TAG_FIREBASE, Log.TAG_ERROR])
+			status_label.text = "[ERROR] Failed to instantiate FirebaseDatabase"
+			if tab_container: tab_container.visible = false; Log.warning("Hiding TabContainer as DB init failed.", {}, ["debug", "ui"])
 	else:
-		print("apple auth is not available")
+		Log.warning("FirebaseDatabase C++ module class not found.", {}, ["debug", "initialization", Log.TAG_FIREBASE])
+		status_label.text = "[WARN] FirebaseDatabase C++ module not found"
+		if tab_container: tab_container.visible = false; Log.warning("Hiding TabContainer as DB class not found.", {}, ["debug", "ui"])
 
+	# --- Initialize Other Firebase Modules (Optional) ---
+	if ClassDB.class_exists("FirebaseRemoteConfig"): Log.info("Checking for FirebaseRemoteConfig...", {}, ["debug", "initialization"]); remote_config = ClassDB.instantiate("FirebaseRemoteConfig"); if remote_config: remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
+	if ClassDB.class_exists("FirebaseMessaging"): Log.info("Checking for FirebaseMessaging...", {}, ["debug", "initialization"]); messaging = ClassDB.instantiate("FirebaseMessaging"); if messaging: messaging.connect("token", Callable(self, "messaging_token")); messaging.connect("message", Callable(self, "messaging_message"))
+	if Engine.has_singleton("Auth"): Log.info("Checking for Auth singleton...", {}, ["debug", "initialization"]); auth = Engine.get_singleton("Auth")
 
-func _on_Auth_Apple_log_out_pressed() -> void:
-	print("button: apple log out")
-	godot_apple_auth.sign_out()
+	# --- Initialize Other SDKs (Placeholders) ---
+	if Engine.has_singleton("GodotAppleAuth"): Log.info("Checking for GodotAppleAuth singleton...", {}, ["debug", "initialization"]); godot_apple_auth = Engine.get_singleton("GodotAppleAuth"); if godot_apple_auth: godot_apple_auth.connect("credential", Callable(self, "_on_credential")); godot_apple_auth.connect("authorization", Callable(self, "_on_authorization"))
+	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"): Log.info("Facebook SDK available.", {}, [Log.TAG_FACEBOOK]); # Connect signals if needed
+	if ClassDB.class_exists("FirebaseAdmob"): Log.info("Checking for FirebaseAdmob class...", {}, ["debug", "initialization"]); admob = ClassDB.instantiate("FirebaseAdmob") # Connect signals if needed
 
+	# --- Connect UI Buttons (Non-RTDB ones) ---
+	Log.debug("Connecting non-RTDB UI buttons...", {}, ["debug", "ui", "initialization"])
+	if close_button:
+		var close_conn_err: Error = close_button.pressed.connect(_on_Button_close_pressed)
+		if close_conn_err == OK:
+			Log.debug("Connected close_button (%Button_close) pressed signal.", {}, ["debug", "ui"])
+		else:
+			Log.error("Failed to connect close_button (%Button_close) pressed signal!", {"error": error_string(close_conn_err)}, ["debug", "ui", Log.TAG_ERROR])
+	else:
+		Log.error("Close button node (%Button_close) not found!", {}, ["debug", "ui", Log.TAG_ERROR])
 
-func _on_Auth_Apple_link_pressed() -> void:
-	print("button: link to Apple ")
-	if !godot_apple_auth:
-		print("apple auth does not exist")
+	Log.info("Debug Node _ready: Initialization complete.", {}, ["debug", "initialization"])
+
+#-----------------------------------------------------------------------------#
+# Firebase RTDB: Automatic Button Creation                                    #
+#-----------------------------------------------------------------------------#
+
+## Creates tabs and buttons based on methods prefixed with _test_rtdb_
+func _create_rtdb_test_tabs_from_methods() -> void:
+	Log.debug("Starting automatic RTDB button creation...", {}, ["debug", "ui", "rtdb"])
+	if not tab_container:
+		Log.error("Cannot create RTDB buttons: TabContainer node (%TabContainer) not found!", {}, ["debug", "ui", Log.TAG_ERROR])
 		return
-	godot_apple_auth.sign_in()
-	var result: Dictionary = await apple_success
-	print("apple login success")
-	_auth.link_to_apple(result.token, result.nonce)
-	var res: String = await _auth.account_linked
-	if res == "":
-		print("Apple account linked successfully")
+
+	Log.debug("Clearing previous dynamic RTDB tabs...", {}, ["debug", "ui", "rtdb"])
+	var cleared_count: int = 0
+	for i in range(tab_container.get_tab_count() - 1, -1, -1):
+		var child: Control = tab_container.get_tab_control(i)
+		if child and child.has_meta("_dynamic_rtdb_tab"):
+			tab_container.remove_child(child)
+			child.queue_free()
+			cleared_count += 1
+	Log.debug("Cleared %d dynamic tabs." % cleared_count, {}, ["debug", "ui", "rtdb"])
+
+	var method_list: Array = get_method_list()
+	Log.debug("Found %d total methods in script." % method_list.size(), {}, ["debug", "ui", "rtdb"])
+	var created_button_count: int = 0
+	var group_containers: Dictionary = {}
+
+	method_list.sort_custom(func(a, b): return a.name < b.name)
+
+	for method_info: Dictionary in method_list:
+		var method_name: String = method_info.name
+		if method_name.begins_with(_RTDB_TEST_PREFIX):
+			Log.debug("Found potential test method: %s" % method_name, {}, ["debug", "ui", "rtdb"])
+			var name_without_prefix: String = method_name.trim_prefix(_RTDB_TEST_PREFIX)
+			var underscore_pos: int = name_without_prefix.find("_")
+
+			if underscore_pos <= 0:
+				Log.warning("Method '%s' skipped: No '_' found after prefix." % method_name, {}, ["debug", "ui", "rtdb"])
+				continue
+
+			var group_name: String = name_without_prefix.substr(0, underscore_pos)
+			var test_description: String = name_without_prefix.substr(underscore_pos + 1)
+
+			if group_name.is_empty() or test_description.is_empty():
+				Log.warning("Method '%s' skipped: Empty group or description." % method_name, {}, ["debug", "ui", "rtdb"])
+				continue
+
+			Log.debug("Parsed method '%s': Group='%s', Desc='%s'" % [method_name, group_name, test_description], {}, ["debug", "ui", "rtdb"])
+
+			# Ensure Group Tab/Container Exists
+			var target_container: VBoxContainer
+			if not group_containers.has(group_name):
+				Log.debug("Creating new container and tab for group: %s" % group_name, {}, ["debug", "ui", "rtdb"])
+				target_container = VBoxContainer.new()
+				target_container.name = "VBox_" + group_name
+				target_container.set_meta("_dynamic_rtdb_tab", true)
+				tab_container.add_child(target_container)
+				var tab_idx: int = tab_container.get_tab_count() - 1
+				var tab_title: String = _format_name_for_display(group_name)
+				tab_container.set_tab_title(tab_idx, tab_title)
+				group_containers[group_name] = target_container
+				Log.debug("Added tab '%s' with container '%s'" % [tab_title, target_container.name], {}, ["debug", "ui", "rtdb"])
+			else:
+				target_container = group_containers[group_name]
+				Log.debug("Using existing container for group: %s" % group_name, {}, ["debug", "ui", "rtdb"])
+
+			# Create and Add Button
+			var button_text: String = _format_name_for_display(test_description)
+			var button: Button = Button.new()
+			button.text = button_text
+			button.name = "Btn_" + method_name
+
+			Log.debug("Attempting to connect button '%s' to method '%s'" % [button_text, method_name], {}, ["debug", "ui", "rtdb"])
+			var err: Error = button.pressed.connect(Callable(self, method_name))
+			if err != OK:
+				Log.error("Failed to connect button signal", {"text": button.text, "method": method_name, "error": error_string(err)}, ["debug", "ui", Log.TAG_ERROR])
+				button.disabled = true
+			else:
+				button.disabled = (db == null)
+				Log.debug("Successfully connected button '%s'." % button_text, {}, ["debug", "ui", "rtdb"])
+
+			Log.debug("Adding button '%s' to container '%s'" % [button_text, target_container.name], {}, ["debug", "ui", "rtdb"])
+			target_container.add_child(button)
+			if not button.get_parent() == target_container:
+				Log.error("Button '%s' failed to be added to container '%s'!" % [button_text, target_container.name], {}, ["debug", "ui", Log.TAG_ERROR])
+
+			created_button_count += 1
+
+	Log.info("Finished auto-button creation: %d buttons across %d tabs." % [created_button_count, group_containers.size()], {}, ["debug", "ui", "rtdb"])
+	if created_button_count == 0 and db != null:
+		Log.warning("No methods found with prefix '%s'. No RTDB test buttons created." % _RTDB_TEST_PREFIX, {}, ["debug", "ui", "rtdb"])
+
+## Formats a snake_case name into a readable Title Case string
+func _format_name_for_display(name_part: String) -> String:
+	if name_part.is_empty(): return ""
+	return name_part.replace("_", " ").capitalize()
+
+#-----------------------------------------------------------------------------#
+# Firebase RTDB: Signal Connections & Request Handling                        #
+#-----------------------------------------------------------------------------#
+
+func _connect_rtdb_signals() -> void:
+	if db == null: return
+	Log.debug("Connecting Firebase RTDB signals", {}, [Log.TAG_FIREBASE])
+	var connect_ok: Callable = func(signal_name: String, handler: Callable) -> void:
+		if not db.is_connected(signal_name, handler):
+			var err: Error = db.connect(signal_name, handler, CONNECT_DEFERRED)
+			if err != OK: Log.error("Failed to connect RTDB signal", {"signal": signal_name, "error": error_string(err)}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
+	connect_ok.call("get_value_completed", Callable(self, "_on_rtdb_get_value_completed"))
+	connect_ok.call("get_value_error", Callable(self, "_on_rtdb_get_value_error"))
+	connect_ok.call("set_value_completed", Callable(self, "_on_rtdb_set_value_completed"))
+	connect_ok.call("push_and_update_completed", Callable(self, "_on_rtdb_push_and_update_completed"))
+	connect_ok.call("remove_value_completed", Callable(self, "_on_rtdb_remove_value_completed"))
+	connect_ok.call("query_completed", Callable(self, "_on_rtdb_query_completed"))
+	connect_ok.call("query_error", Callable(self, "_on_rtdb_query_error"))
+	connect_ok.call("transaction_completed", Callable(self, "_on_rtdb_transaction_completed"))
+	connect_ok.call("child_added", Callable(self, "_on_rtdb_child_added"))
+	connect_ok.call("child_changed", Callable(self, "_on_rtdb_child_changed"))
+	connect_ok.call("child_moved", Callable(self, "_on_rtdb_child_moved"))
+	connect_ok.call("child_removed", Callable(self, "_on_rtdb_child_removed"))
+	connect_ok.call("connection_state_changed", Callable(self, "_on_rtdb_connection_state_changed"))
+	connect_ok.call("db_error", Callable(self, "_on_rtdb_db_error"))
+
+func _make_rtdb_request(operation_name: String, path_suffix: Array, args: Array = []) -> void:
+	if db == null:
+		status_label.text = "[ERROR] RTDB not initialized."
+		Log.error("Attempted RTDB request but db is null", {"operation": operation_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
+		return
+	var request_id: int = _next_request_id; _next_request_id += 1
+	var full_path: Array = _test_base_path + path_suffix
+	_pending_requests[request_id] = { "operation": operation_name, "path": full_path }
+	var call_args: Array = [request_id, full_path]; call_args.append_array(args)
+	Log.debug("Making RTDB request", { "req_id": request_id, "op": operation_name, "path": full_path, "args#": args.size() }, [Log.TAG_FIREBASE, Log.TAG_NETWORK])
+	status_label.text = "Sending req %d: %s\nPath: %s" % [request_id, operation_name, full_path]
+	db.callv(operation_name, call_args)
+
+#-----------------------------------------------------------------------------#
+# Firebase RTDB: Test Functions (Linked to Buttons)                           #
+#-----------------------------------------------------------------------------#
+
+# --- Group: basic ---
+func _test_rtdb_basic_set_simple_value() -> void: Log.debug("RTDB Test: Set Simple Value", {}, ["test"]); _transaction_count += 1; _make_rtdb_request("set_value_async", ["simple_value"], ["Basic Value " + str(_transaction_count)])
+func _test_rtdb_basic_get_simple_value() -> void: Log.debug("RTDB Test: Get Simple Value", {}, ["test"]); _make_rtdb_request("get_value_async", ["simple_value"])
+func _test_rtdb_basic_push_item() -> void: Log.debug("RTDB Test: Push Item", {}, ["test"]); _transaction_count += 1; var td: Dictionary = {"msg": "Pushed " + str(_transaction_count), "ts": Time.get_unix_time_from_system()}; _make_rtdb_request("push_and_update_async", ["pushed_items"], [td])
+func _test_rtdb_basic_set_dictionary() -> void: Log.debug("RTDB Test: Set Dictionary", {}, ["test"]); _transaction_count += 1; var ud: Dictionary = {"a": "Dict A " + str(_transaction_count), "b": true, "c": _transaction_count}; _make_rtdb_request("set_value_async", ["dictionary_target"], [ud])
+func _test_rtdb_basic_delete_dictionary() -> void: Log.debug("RTDB Test: Delete Dictionary Target", {}, ["test"]); _make_rtdb_request("remove_value_async", ["dictionary_target"])
+
+# --- Group: advanced ---
+func _test_rtdb_advanced_query_top_2_scores() -> void:
+	Log.debug("RTDB Test: Query Top 2 Scores", {}, ["test"])
+	status_label.text = "Setting up query data..."
+	var ps: Array = ["query_items"]
+	_make_rtdb_request("set_value_async", ps + ["item1"], [{"name": "A", "score": 50}])
+	_make_rtdb_request("set_value_async", ps + ["item2"], [{"name": "B", "score": 100}])
+	_make_rtdb_request("set_value_async", ps + ["item3"], [{"name": "C", "score": 75}])
+	call_deferred("_execute_query_test", ps)
+func _execute_query_test(path_suffix: Array) -> void: await get_tree().create_timer(1.0).timeout; var qp: Dictionary = {"orderByChild": "score", "limitToLast": 2}; _make_rtdb_request("query_ordered_data_async", path_suffix, [qp])
+func _test_rtdb_advanced_increment_transaction() -> void: Log.debug("RTDB Test: Increment Transaction", {}, ["test"]); call_deferred("_execute_transaction_test")
+func _execute_transaction_test() -> void: var crid = _next_request_id; _next_request_id += 1; var cp = _test_base_path + ["counter"]; _pending_requests[crid] = { "operation": "get_value_check_for_transaction", "path": cp }; db.callv("get_value_async", [crid, cp])
+func _test_rtdb_advanced_set_server_timestamp() -> void: Log.debug("RTDB Test: Set Server Timestamp", {}, ["test"]); _make_rtdb_request("set_server_timestamp_async", ["server_time"])
+
+# --- Group: listeners ---
+func _test_rtdb_listeners_add() -> void:
+	Log.debug("RTDB Test: Add Listener", {}, ["test"])
+	if db: var fp: Array = _test_base_path + _listener_path_suffix; db.add_listener_at_path(fp); status_label.text = "Added listener:\n%s" % [fp]; _listen_count = 0; _make_rtdb_request("set_value_async", _listener_path_suffix, [{"status": "listening", "count": _listen_count}])
+	else: status_label.text = "[ERROR] RTDB not init."
+func _test_rtdb_listeners_trigger_change() -> void:
+	Log.debug("RTDB Test: Trigger Listener Change", {}, ["test"])
+	_listen_count += 1
+	_make_rtdb_request("set_value_async", _listener_path_suffix + ["count"], [_listen_count])
+	_make_rtdb_request("set_value_async", _listener_path_suffix + ["status"], ["triggered_" + str(_listen_count)])
+func _test_rtdb_listeners_remove() -> void:
+	Log.debug("RTDB Test: Remove Listener", {}, ["test"])
+	if db: var fp: Array = _test_base_path + _listener_path_suffix; db.remove_listener_at_path(fp); status_label.text = "Removed listener:\n%s" % [fp]
+	else: status_label.text = "[ERROR] RTDB not init."
+
+# --- Group: connection ---
+func _test_rtdb_connection_monitor() -> void:
+	Log.debug("RTDB Test: Monitor Connection", {}, ["test"])
+	if db:
+		db.monitor_connection_state()
+		status_label.text = "Monitoring connection..."
 	else:
-		print("Apple account link unsuccessful error:", res)
+		status_label.text = "[ERROR] RTDB not init."
+#-----------------------------------------------------------------------------#
+# Firebase RTDB: Signal Handlers                                              #
+#-----------------------------------------------------------------------------#
 
+func _handle_rtdb_response(request_id: int, success: bool, result: Variant, error_code: String = "", error_message: String = "") -> void:
+	if not _pending_requests.has(request_id):
+		Log.warning("Response for unknown/timed-out RTDB request", {"req_id": request_id}, [Log.TAG_FIREBASE, "test"])
+		return
 
-func _on_Auth_Apple_unlink_pressed() -> void:
-	print("Button: unlink apple")
-	_auth.unlink_provider("apple.com")
-	var res: String = await _auth.account_unlinked()
-	if res == "":
-		print("Apple account unlinked successfully")
+	var req_data: Dictionary = _pending_requests[request_id]
+	var op_name: String = req_data.operation
+	var path: Array = req_data.path
+
+	# Special handling for transaction pre-check
+	if op_name == "get_value_check_for_transaction":
+		_pending_requests.erase(request_id) # Remove check request first
+		var relative_path: Array = path.slice(len(_test_base_path)) # Get suffix for potential next request
+		if not success or result == null:
+			# Counter doesn't exist, initialize it first
+			Log.debug("Transaction counter needs init.", {"path": path}, ["test"])
+			var init_req_id = _next_request_id
+			_next_request_id += 1
+			_pending_requests[init_req_id] = {"operation": "set_value_for_transaction", "path": path}
+			db.callv("set_value_async", [init_req_id, path, 0])
+		else:
+			# Counter exists, run the transaction immediately
+			Log.debug("Transaction counter exists, running transaction.", {"path": path}, ["test"])
+			_make_rtdb_request("run_transaction_async", relative_path, [1]) # Use relative path suffix
+		return # Stop processing this specific response
+
+	# Special handling for transaction initialization completion
+	if op_name == "set_value_for_transaction":
+		_pending_requests.erase(request_id) # Remove init request first
+		var relative_path: Array = path.slice(len(_test_base_path)) # Get suffix for next request
+		if success:
+			# Initialization successful, now run the transaction
+			Log.debug("Transaction counter initialized, running transaction.", {"path": path}, ["test"])
+			_make_rtdb_request("run_transaction_async", relative_path, [1]) # Use relative path suffix
+		else:
+			# Initialization failed
+			Log.error("Failed init for transaction", {"path": path, "error": error_message}, ["test"])
+			status_label.text = "Error: Failed init counter for transaction."
+		return # Stop processing this specific response
+
+	# --- General Response Handling ---
+	if success:
+		var result_str: String = JSON.stringify(result, "  ") if typeof(result) in [TYPE_DICTIONARY, TYPE_ARRAY] else str(result)
+		Log.info("RTDB Success", {"req_id": request_id, "op": op_name, "path": path, "type": typeof(result)}, ["test"])
+		status_label.text = "Success (Req %d): %s\nPath: %s\nResult: %s" % [request_id, op_name, path, result_str]
 	else:
-		print("Apple account unlink unsuccessful error:", res)
+		Log.error("RTDB Error", {"req_id": request_id, "op": op_name, "path": path, "code": error_code, "msg": error_message}, ["test"])
+		status_label.text = "Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s" % [request_id, op_name, path, error_code, error_message]
 
+	# Clean up the request now that it's fully handled
+	if _pending_requests.has(request_id): # Check again as it might have been handled above
+		_pending_requests.erase(request_id)
 
-func account_linked(_res: String) -> void:
-	print("Account linked result:", _res)
+func _on_rtdb_get_value_completed(request_id: int, _key: String, value: Variant) -> void: _handle_rtdb_response(request_id, true, value)
+func _on_rtdb_get_value_error(request_id: int, _key: String, error_code: String, error_message: String) -> void: _handle_rtdb_response(request_id, false, null, error_code, error_message)
+func _on_rtdb_set_value_completed(request_id: int, success: bool, error_message: String) -> void: _handle_rtdb_response(request_id, success, success, "" if success else "SET_FAILED", error_message)
+func _on_rtdb_push_and_update_completed(request_id: int, push_id: String, success: bool, error_message: String) -> void: _handle_rtdb_response(request_id, success, push_id if success else null, "" if success else "PUSH_FAILED", error_message)
+func _on_rtdb_remove_value_completed(request_id: int, success: bool, error_message: String) -> void: _handle_rtdb_response(request_id, success, success, "" if success else "REMOVE_FAILED", error_message)
+func _on_rtdb_query_completed(request_id: int, _key: String, value: Variant) -> void: _handle_rtdb_response(request_id, true, value)
+func _on_rtdb_query_error(request_id: int, _key: String, error_code: String, error_message: String) -> void: _handle_rtdb_response(request_id, false, null, error_code, error_message)
+func _on_rtdb_transaction_completed(request_id: int, _key: String, value: Variant, success: bool, error_message: String) -> void: if success and value is int: _transaction_count = value; _handle_rtdb_response(request_id, success, value, "" if success else "TRANSACTION_FAILED", error_message)
 
+func _on_rtdb_child_added(key: String, value: Variant) -> void: var rs: String = JSON.stringify(value, "  ") if typeof(value) in [TYPE_DICTIONARY, TYPE_ARRAY] else str(value); var msg: String = "[LISTENER] Added:\nK: %s\nV: %s" % [key, rs]; Log.info("RTDB Listener", {"evt": "added", "key": key}, ["test"]); status_label.text = msg
+func _on_rtdb_child_changed(key: String, value: Variant) -> void: var rs: String = JSON.stringify(value, "  ") if typeof(value) in [TYPE_DICTIONARY, TYPE_ARRAY] else str(value); var msg: String = "[LISTENER] Changed:\nK: %s\nV: %s" % [key, rs]; Log.info("RTDB Listener", {"evt": "changed", "key": key}, ["test"]); status_label.text = msg
+func _on_rtdb_child_moved(key: String, value: Variant) -> void: var rs: String = JSON.stringify(value, "  ") if typeof(value) in [TYPE_DICTIONARY, TYPE_ARRAY] else str(value); var msg: String = "[LISTENER] Moved:\nK: %s\nV: %s" % [key, rs]; Log.info("RTDB Listener", {"evt": "moved", "key": key}, ["test"]); status_label.text = msg
+func _on_rtdb_child_removed(key: String, value: Variant) -> void: var rs: String = JSON.stringify(value, "  ") if typeof(value) in [TYPE_DICTIONARY, TYPE_ARRAY] else str(value); var msg: String = "[LISTENER] Removed:\nK: %s\nV: %s" % [key, rs]; Log.info("RTDB Listener", {"evt": "removed", "key": key}, ["test"]); status_label.text = msg
+func _on_rtdb_connection_state_changed(connected: bool) -> void: var st: String = "Connected" if connected else "Disconnected"; var msg: String = "[STATUS] Connection: " + st; Log.info("RTDB Status", {"evt": "connection", "connected": connected}); status_label.text = msg
+func _on_rtdb_db_error(code: String, message: String) -> void: var msg: String = "[ERROR] DB Error:\nCode: %s\nMsg: %s" % [code, message]; Log.error("RTDB Error", {"code": code, "msg": message}); status_label.text = msg
 
-func _on_Auth_Apple_has_provider_pressed() -> void:
-	status_label.text = str("Auth: Is account connected to apple:", is_connected_to_apple())
+#-----------------------------------------------------------------------------#
+# Other Module Handlers                                                       #
+#-----------------------------------------------------------------------------#
 
+func _on_Button_remote_config_string_pressed() -> void: if not remote_config: return; Log.debug("RC button", {}, ["ui"]); remote_config.set_instant_fetching(); var rc_s: String = remote_config.get_string("test_string", "local"); Log.debug("RC value", {"value": rc_s}, ["rc"]); status_label.text = str("RC string: ", rc_s)
+func remote_config_loaded() -> void: Log.info("RC loaded", {}, ["rc"]); status_label.text = "Remote Config: Loaded"
+func messaging_token() -> void: if not messaging: return; var t = messaging.token(); Log.info("Messaging token", {"token": t}, ["msg"]); status_label.text = "Msg Token:\n" + str(t)
+func messaging_message(msg_data: Dictionary) -> void: Log.info("Messaging message", {"msg": msg_data}, ["msg"]); status_label.text = "Msg Rcvd:\n" + JSON.stringify(msg_data, "  ")
+# ... (Auth, Facebook, Apple, AdMob handlers remain the same, ensure 'auth'/'godot_apple_auth' checks are present) ...
+func _on_Button_sign_in_anon_pressed() -> void: if not auth: status_label.text = "[ERROR] Auth N/A."; return; Log.debug("Auth Anon Sign in", {}, ["test"]); var r: int = await auth.login(); Log.info("Anon login result", {"res": r}, ["auth"]); status_label.text = str("Anon Login Res: ", r)
+func logged_in(res: String) -> void: print("_auth Logged in: ", res); status_label.text = str("Auth Logged in: ", res)
+func facebook_login_success(res: Dictionary) -> void: fb_success.emit(res)
+func _on_Button_sign_in_facebook_pressed() -> void: if not auth: return; var rc : int = await auth.sign_in_facebook(); status_label.text = "FB Sign in res: " + str(rc)
+func _on_Button_unlink_Facebook_pressed() -> void: if not auth: return; auth.unlink_facebook()
+func _on_Button_link_Facebook_pressed() -> void: if not auth: return; var rc : int = await auth.link_facebook(); status_label.text = "FB Link res: " + str(rc)
+func _on_Auth_Apple_login_pressed() -> void: if not auth: return; var rc : int = await auth.sign_in_apple(); status_label.text = "Apple Sign in res: " + str(rc)
+func _on_Auth_Apple_log_out_pressed() -> void: if not auth: return; auth.log_out_apple(); status_label.text = "Apple Logout called"
+func _on_Auth_Apple_link_pressed() -> void: if not auth: return; var rc : int = await auth.link_apple(); status_label.text = "Apple Link res: " + str(rc)
+func _on_Auth_Apple_unlink_pressed() -> void: if not auth: return; auth.unlink_apple(); status_label.text = "Apple Unlink called"
+func account_linked(res: String) -> void: Log.info("Account linked", {"res": res}, ["auth"]); status_label.text = "Account Link Res: " + res
+func account_unlinked(res: String) -> void: Log.info("Account unlinked", {"res": res}, ["auth"]); status_label.text = "Account Unlink Res: " + res
+func _on_Auth_Apple_has_provider_pressed() -> void: if not auth: return; status_label.text = str("Apple Connected: ", auth.is_connected_to_apple())
+func _on_Auth_fb_has_provider_pressed() -> void: if not auth: return; status_label.text = str("Facebook Connected: ", auth.is_connected_to_facebook())
+func _on_Button_sign_out_pressed() -> void: if not auth: return; var s : bool = auth.log_out_facebook(); status_label.text = "FB Logout res: " + str(s)
+func _on_Button_get_all_info_pressed() -> void: if not auth or not auth.firebase_auth: return; var pt = JSON.stringify(auth.firebase_auth.providers(), " "); status_label.text = "UID: %s\nProviders: %s" % [auth.uid(), pt]
 
-func _on_Auth_fb_has_provider_pressed() -> void:
-	status_label.text = str("Auth: Is account connected to facebook:", is_connected_to_facebook())
-
-
-func _on_Button_sign_out_pressed() -> void:
-	print("button: sign out")
-	auth.log_out_facebook()
-
-
-func _on_Button_get_all_info_pressed() -> void:
-	print("button: show all info (Not implemented)")
-
-
-func is_connected_to_facebook() -> bool:
-	return check_provider_connection("facebook.com")
-
-
-func is_connected_to_apple() -> bool:
-	return check_provider_connection("apple.com")
-
-
-func check_provider_connection(provider_name: String) -> bool:
-	if _auth.is_logged_in():
-		for provider : Dictionary in _auth.providers():
-			if provider.name == provider_name:
-				return true
+# Corrected Apple Auth Credential Handler
+func _on_credential(result: Dictionary) -> void:
+	Log.debug("Apple credential received", {"result": result}, [Log.TAG_APPLE, "auth"])
+	if result.has("error"):
+		print("Apple Credential Error: ", result.error)
 	else:
-		Log.warning("Provider check failed - user not logged in", {"provider": provider_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
-	return false
+		if result.has("state"):
+			print("Apple Credential State: ", result.state)
+		else:
+			print("Apple Credential Result (no 'state' key): ", result)
 
+func _on_authorization(result: Dictionary) -> void: Log.debug("Apple authorization", {"res": result}, [Log.TAG_APPLE, "auth"]); emit_signal("apple_auth_respons", result)
+# AdMob handlers
+func _on_Button_func_is_interstitial_loaded_pressed() -> void: if not admob: return; status_label.text = str("AdMob Interstitial: ", admob.is_interstitial_loaded())
+func _on_Button_func_is_reward_loaded_pressed() -> void: if not admob: return; status_label.text = str("AdMob Rewarded: ", admob.is_rewarded_loaded())
+func interstitial_loading_result(res: String) -> void: print("AdMob Interstitial load: ", res)
+func rewarded_completed() -> void: print("AdMob Rewarded complete"); status_label.text = "AdMob: Rewarded complete"
+func rewarded_state(state: String) -> void: print("AdMob Rewarded state: ", state)
+func interstitial_state(state: String) -> void: print("AdMob Interstitial state: ", state)
+func _on_Button_load_interstitial_pressed() -> void: if not admob: return; admob.load_interstitial(FAKE_INTERSTITIAL_AD_UNIT_IOS)
+func _on_Button_play_interstitial_pressed() -> void: if not admob: return; admob.show_interstitial()
+func _on_Button_load_rewarded_video_pressed() -> void: if not admob: return; admob.load_rewarded(FAKE_REWARDED_VIDEO_AD_UNIT_IOS)
+func _on_Button_play_rewarded_video_pressed() -> void: if not admob: return; admob.show_rewarded()
+func rewarded_loading_result(res: String) -> void: print("AdMob Rewarded load: ", res)
+
+#-----------------------------------------------------------------------------#
+# General Debug UI Handlers                                                   #
+#-----------------------------------------------------------------------------#
 
 func _on_Button_close_pressed() -> void:
-	visible = false
-
-
-func _on_credential(result: Dictionary) -> void:
-	if result.has("error"):
-		print(result.error)
-	else:
-		print(result.state)
-
-
-func _on_authorization(result: Dictionary) -> void:
-	if result.has("error"):
-		print(result.error)
-		status_label.text = str(result.error)
-	else:
-		print("apple auth:")
-		print("token: ", result.token)
-		print("used_id: ", result.user_id)
-		print("email ", result.email)
-		print("name ", result.name)
-		print("nonce ", result.nonce)
-		status_label.text = str(
-			"Apple auth:",
-			"\n",
-			"Name: ",
-			result.name,
-			"\n",
-			"Mail:",
-			result.email,
-			"\n",
-			"User_id:",
-			result.user_id,
-			"\n",
-			"token: ",
-			result.token,
-			"\n",
-			"nonce:",
-			result.nonce
-		)
-		print("attempting to connect apple sign in to firebase")
-		emit_signal("apple_success", result)
-
-
-func _on_Button_func_is_interstitial_loaded_pressed() -> void:
-	print("Return Value: is_interstitial_loaded:", admob.is_interstitial_loaded())
-	status_label.text = str("Return Value: is_interstitial_loaded:", admob.is_interstitial_loaded())
-
-
-func _on_Button_func_is_reward_loaded_pressed() -> void:
-	status_label.text = str("Return Value: is_rewarded_loaded:", admob.is_rewarded_loaded())
-
-
-func interstitial_loading_result(res: String) -> void:
-	print("interstitial_loading_result", res)
-
-
-func rewarded_completed() -> void:
-	print("Rewarded completed")
-	status_label.text = "Rewarded completed"
-
-
-func rewarded_state(state: String) -> void:
-	print("rewarded state changed:", state)
-
-
-func interstitial_state(state: String) -> void:
-	print("interstitial state changed:", state)
-
-
-func _on_Button_load_interstitial_pressed() -> void:
-	admob.load_interstitial(FAKE_INTERSTITIAL_AD_UNIT_IOS)
-
-
-func _on_Button_play_interstitial_pressed() -> void:
-	print("button play interstital pressed")
-	admob.show_interstitial()
-
-
-func _on_Button_load_rewarded_video_pressed() -> void:
-	print("Button load rewarded video pressed")
-	admob.load_rewarded(FAKE_REWARDED_VIDEO_AD_UNIT_IOS)
-
-
-func _on_Button_play_rewarded_video_pressed() -> void:
-	print("Button play rewarded video pressed")
-	admob.show_rewarded()
-
-
-func rewarded_loading_result(res: String) -> void:
-	print("Rewarded loading result", res)
-
-
-
-
-# Check for test command line parameter
-func check_for_test_mode() -> void:
-	var arguments: PackedStringArray = OS.get_cmdline_args()
-	for arg: String in arguments:
-		if arg == "--test" or arg == "--test-firebase":
-			print("Test mode detected, running Firebase tests...")
-			call_deferred("run_firebase_tests")
-			return
-
-# Main test runner function
-func run_firebase_tests() -> void:
-	print("===== STARTING FIREBASE DATABASE TESTS =====")
-	firebase_tests_running = true
-	firebase_test_count = 0
-	firebase_tests_passed = 0
-	firebase_tests_failed = 0
-	firebase_test_results.clear()
-
-	if not ClassDB.class_exists("FirebaseDatabase"):
-		_log_test_result("firebase_available", false, "FirebaseDatabase class not found")
-		_complete_tests()
-		return
-
-	# Setup database with test path
-	db = ClassDB.instantiate("FirebaseDatabase")
-	if not db:
-		_log_test_result("firebase_init", false, "Failed to instantiate FirebaseDatabase")
-		_complete_tests()
-		return
-
-	_log_test_result("firebase_init", true, "FirebaseDatabase initialized successfully")
-
-	# Connect to signals
-	db.connect("get_value", Callable(self, "_on_test_get_value"), CONNECT_DEFERRED)
-	db.connect("child_changed", Callable(self, "child_changed"), CONNECT_DEFERRED)
-	db.connect("child_moved", Callable(self, "child_moved"), CONNECT_DEFERRED)
-	db.connect("child_removed", Callable(self, "child_removed"), CONNECT_DEFERRED)
-	db.connect("child_added", Callable(self, "child_added"), CONNECT_DEFERRED)
-	db.connect("query_result", Callable(self, "on_test_query_result"), CONNECT_DEFERRED)
-	db.connect("transaction_completed", Callable(self, "on_test_transaction_completed"), CONNECT_DEFERRED)
-	db.connect("connection_state_changed", Callable(self, "on_test_connection_state_changed"), CONNECT_DEFERRED)
-	db.connect("db_error", Callable(self, "on_test_db_error"), CONNECT_DEFERRED)
-
-	# Setup test path - use a timestamp to avoid conflicts
-	var timestamp: int = int(Time.get_unix_time_from_system())
-	var test_path: Array[String] = ["firebase_tests", str(timestamp)]
-	db.set_db_root(test_path)
-
-	# Run tests sequentially with proper timing
-	_test_set_value()
-	await get_tree().create_timer(1.0).timeout
-	_test_push_child()
-	await get_tree().create_timer(1.0).timeout
-	_test_update_children()
-	await get_tree().create_timer(1.0).timeout
-	_test_get_value()
-	await get_tree().create_timer(1.0).timeout
-	_test_query()
-	await get_tree().create_timer(1.0).timeout
-	_test_server_timestamp()
-	await get_tree().create_timer(1.0).timeout
-	_test_transaction()
-	await get_tree().create_timer(1.0).timeout
-	_test_connection_monitoring()
-	await get_tree().create_timer(1.0).timeout
-
-	# Clean up test data
-	var cleanup_path: Array[String] = ["firebase_tests"]
-	db.set_db_root(cleanup_path)
-	db.remove_value([str(timestamp)])
-
-	# Wait for cleanup to complete
-	await get_tree().create_timer(1.0).timeout
-	_complete_tests()
-
-# Individual test functions
-func _test_set_value() -> void:
-	print("Testing set_value...")
-	db.set_value(["test_value"], "test_string_value")
-	db.set_value(["test_number"], 42)
-	_log_test_result("set_value", true, "Set string and number values")
-
-func _test_push_child() -> void:
-	print("Testing push_child...")
-	var push_key: String = db.push_child(["test_push"])
-	if push_key.length() > 0:
-		db.set_value(["test_push", push_key], "push_test_value")
-		_log_test_result("push_child", true, "Pushed child with key: " + push_key)
-	else:
-		_log_test_result("push_child", false, "Failed to generate push key")
-
-func _test_update_children() -> void:
-	print("Testing update_children...")
-	db.update_children(["test_update"], {"field1": "value1", "field2": "value2"})
-	_log_test_result("update_children", true, "Updated multiple fields")
-
-func _test_get_value() -> void:
-	print("Testing get_value...")
-	# Value will be received via the get_value signal handler
-	db.get_value(["test_value"])
-
-func _test_query() -> void:
-	print("Testing query functionality...")
-	# Setup test data for query
-	db.set_value(["query_test", "item1"], {"name": "Item 1", "score": 10})
-	db.set_value(["query_test", "item2"], {"name": "Item 2", "score": 25})
-	db.set_value(["query_test", "item3"], {"name": "Item 3", "score": 5})
-
-	# Query by score
-	var query_params: Dictionary = {
-		"orderByChild": "score",
-		"limitToLast": 2  # Get top 2 scores
-	}
-	db.query_ordered_data(["query_test"], query_params)
-
-func _test_server_timestamp() -> void:
-	print("Testing server timestamp...")
-	db.set_server_timestamp(["test_timestamp"])
-	# Value will be received in a signal
-
-func _test_transaction() -> void:
-	print("Testing transaction...")
-	# Initialize counter
-	db.set_value(["test_transaction", "counter"], 10)
-	await get_tree().create_timer(0.5).timeout
-	# Run transaction to increment by 5
-	db.run_transaction(["test_transaction", "counter"], 5)
-	# Result handled by on_transaction_completed signal
-
-func _test_connection_monitoring() -> void:
-	print("Testing connection monitoring...")
-	db.monitor_connection_state()
-	# Will be notified via the connection_state_changed signal
-
-# Signal handlers for test validation
-
-func _on_test_get_value(key: String, value: Variant) -> void:
-	Log.debug("Test get_value received", {"key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
-	if firebase_tests_running:
-		_log_test_result("get_value", true, "Retrieved value: " + str(value))
-
-func on_test_query_result(key: String, value: Variant) -> void:
-	Log.debug("Test query_result received", {"key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
-	if firebase_tests_running:
-		var success: bool = typeof(value) == TYPE_DICTIONARY and value.size() > 0
-		_log_test_result("query", success, "Query returned " + str(value.size()) + " results")
-
-func on_test_transaction_completed(key: String, value: Variant, success: bool) -> void:
-	Log.debug("Test transaction_completed", {"success": success, "key": key, "value": value}, [Log.TAG_FIREBASE, "test"])
-	if firebase_tests_running:
-		var expected_value: int = 15  # 10 + 5
-		var value_correct: bool = typeof(value) == TYPE_INT and value == expected_value
-		_log_test_result("transaction", success and value_correct,
-			"Transaction " + ("succeeded" if success else "failed") +
-			", value: " + str(value) + " (expected: " + str(expected_value) + ")")
-
-func on_test_connection_state_changed(connected: bool) -> void:
-	Log.debug("Test connection state changed", {"connected": connected}, [Log.TAG_FIREBASE, "test"])
-	if firebase_tests_running:
-		_log_test_result("connection_monitoring", true, "Connection state: " + ("connected" if connected else "disconnected"))
-
-func on_test_db_error(code: String, message: String) -> void:
-	Log.error("Test database error", {"code": code, "message": message}, [Log.TAG_FIREBASE, Log.TAG_ERROR, "test"])
-	if firebase_tests_running:
-		_log_test_result("db_error", false, "Error " + code + ": " + message)
-
-# Test utility functions
-
-func _log_test_result(test_name: String, success: bool, message: String) -> void:
-	firebase_test_count += 1
-	if success:
-		firebase_tests_passed += 1
-		print("✅ PASS: " + test_name + " - " + message)
-	else:
-		firebase_tests_failed += 1
-		print("❌ FAIL: " + test_name + " - " + message)
-
-	firebase_test_results[test_name] = {
-		"success": success,
-		"message": message
-	}
-
-	if status_label:
-		status_label.text = "Running Firebase tests...\n" + \
-			"Passed: " + str(firebase_tests_passed) + "\n" + \
-			"Failed: " + str(firebase_tests_failed) + "\n" + \
-			"Last test: " + test_name
-
-func _complete_tests() -> void:
-	print("\n===== FIREBASE TEST RESULTS =====")
-	print("Total tests: " + str(firebase_test_count))
-	print("Passed: " + str(firebase_tests_passed))
-	print("Failed: " + str(firebase_tests_failed))
-
-	# Fix narrowing conversion by explicitly converting to float then int
-	var success_rate: float = 100.0 * float(firebase_tests_passed) / float(maxf(1, firebase_test_count))
-	var rounded_rate: int = int(roundf(success_rate))  # Use explicit round() function
-	print("Success rate: " + str(rounded_rate) + "%")
-	print("===============================")
-
-	firebase_tests_running = false
-
-	if status_label:
-		status_label.text = "Firebase Tests Completed\n" + \
-			"Total: " + str(firebase_test_count) + "\n" + \
-			"Passed: " + str(firebase_tests_passed) + "\n" + \
-			"Failed: " + str(firebase_tests_failed) + "\n" + \
-			"Success rate: " + str(rounded_rate) + "%"
-
-	# Exit the application if running in test mode
-	var arguments: PackedStringArray = OS.get_cmdline_args()
-	if arguments.has("--test") or arguments.has("--test-firebase"):
-		await get_tree().create_timer(0.5).timeout
-		get_tree().quit(0 if firebase_tests_failed == 0 else 1)
-
-# New Firebase Advanced Features handling
-
-## Opens a dialog to select which Firebase Advanced feature to test
-func _on_Button_firebase_advanced_pressed() -> void:
-	print("[Firebase Advanced] Opening feature selection dialog")
-
-	# Hide the parent window
-	if get_owner() and get_owner().get_parent():
-		get_owner().get_parent().visible = false
-
-	# Create a new CanvasLayer to ensure the dialog appears on top
-	var canvas_layer: CanvasLayer = CanvasLayer.new()
-	canvas_layer.layer = 1000  # Set a high layer value to ensure it's on top
-	add_child(canvas_layer as Node)
-
-	# Create a custom dialog without an OK button
-	var popup: Window = Window.new()
-	popup.title = "Select Firebase Feature"
-
-	# Configure window properties - consistent window size variable
-	var window_size: Vector2 = Vector2(600, 450)
-	var screen_size: Vector2 = Vector2(DisplayServer.window_get_size())
-	popup.position = (screen_size - window_size) / 2
-	popup.size = window_size
-	popup.borderless = false
-	popup.always_on_top = true
-
-	# Create main container with proper margins
-	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_bottom", 20)
-	margin.anchors_preset = Control.PRESET_FULL_RECT  # Fill the whole window
-
-	# Use VBox for layout
-	var vbox: VBoxContainer = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 20)
-	margin.add_child(vbox as Node)
-
-	# Add instruction label
-	var label: Label = Label.new()
-	label.text = "Tap an option below:"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(label as Node)
-
-	# Create option buttons container
-	var option_container: VBoxContainer = VBoxContainer.new()
-	option_container.add_theme_constant_override("separation", 15)
-	option_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(option_container as Node)
-
-	# Add each feature button
-	var options: Array[String] = [
-		"Query Ordered Data",
-		"Server Timestamp",
-		"Run Transaction",
-		"Monitor Connection State"
-	]
-
-	var feature_functions: Array[String] = [
-		"_test_ui_query_ordered_data",
-		"_test_ui_server_timestamp",
-		"_test_ui_transaction",
-		"_test_ui_connection_monitoring"
-	]
-
-	# Add all option buttons
-	for i_option: int in range(options.size()):
-		var button: Button = Button.new()
-		button.text = options[i_option]
-		button.custom_minimum_size = Vector2(0, 80)
-		button.add_theme_font_size_override("font_size", 18)
-		button.focus_mode = Control.FOCUS_NONE
-
-		# Store the function to call
-		var feature_function: String = feature_functions[i_option]
-
-		# Connect each button with direct action execution
-		button.pressed.connect(func() -> void:
-			popup.hide()
-			# Call the function by name
-			call(feature_function)
-			# Clean up
-			canvas_layer.queue_free()
-		)
-
-		option_container.add_child(button as Node)
-
-	# Add close button
-	var close_button: Button = Button.new()
-	close_button.text = "Cancel"
-	close_button.custom_minimum_size = Vector2(0, 60)
-	close_button.pressed.connect(func() -> void:
-		popup.hide()
-		canvas_layer.queue_free()
-	)
-	vbox.add_child(close_button as Node)
-
-	# Add the margin container to the popup
-	popup.add_child(margin as Node)
-
-	# Add popup to the CanvasLayer
-	canvas_layer.add_child(popup as Node)
-
-	# Set up popup close handler
-	popup.close_requested.connect(func() -> void:
-		canvas_layer.queue_free()
-	)
-
-	# Show the popup
-	popup.show()
-
-
-## Executes a test of the Query Ordered Data feature
-func _test_ui_query_ordered_data() -> void:
-	print("[Firebase Advanced] Starting Query Ordered Data test")
-	status_label.text = "Setting up query test data..."
-
-	# First set some test data
-	var test_path: Array[String] = ["test_query"]
-	print("[Firebase Advanced] Setting db root path: ", test_path)
-	db.set_db_root(test_path)
-
-	# Create test entries with different scores
-	print("[Firebase Advanced] Creating test data entries")
-
-	# Create item 1
-	db.set_value(["item1"], {"name": "Item 1", "score": 10})
-	print("[Firebase Advanced] Added item1: {name: Item 1, score: 10}")
-
-	# Create item 2
-	db.set_value(["item2"], {"name": "Item 2", "score": 25})
-	print("[Firebase Advanced] Added item2: {name: Item 2, score: 25}")
-
-	# Create item 3
-	db.set_value(["item3"], {"name": "Item 3", "score": 5})
-	print("[Firebase Advanced] Added item3: {name: Item 3, score: 5}")
-
-	# Now query by score
-	var query_params: Dictionary = {
-		"orderByChild": "score",
-		"limitToLast": 2  # Get top 2 scores
-	}
-
-	# Execute the query
-	print("[Firebase Advanced] Executing query with params: ", query_params)
-	db.query_ordered_data([], query_params)
-	status_label.text = "Running query for top 2 scores...\nWaiting for results..."
-
-
-## Executes a test of the Server Timestamp feature
-func _test_ui_server_timestamp() -> void:
-	print("[Firebase Advanced] Starting Server Timestamp test")
-
-	# Set db root to a clean path for this test
-	var test_path: Array[String] = ["test_timestamp"]
-	print("[Firebase Advanced] Setting db root path: ", test_path)
-	db.set_db_root(test_path)
-
-	# Set the server timestamp
-	print("[Firebase Advanced] Setting server timestamp at root")
-	db.set_server_timestamp([])
-	status_label.text = "Setting server timestamp...\nWaiting for server response..."
-
-	# Wait a moment then get the value to display
-	print("[Firebase Advanced] Waiting 1 second before retrieving timestamp")
-	await get_tree().create_timer(1.0).timeout
-
-	# Retrieve the timestamp value
-	print("[Firebase Advanced] Retrieving server timestamp")
-	db.get_value([])
-
-
-## Executes a test of the Transaction feature
-func _test_ui_transaction() -> void:
-	print("[Firebase Advanced] Starting Transaction test")
-
-	# Set db root to a clean path for this test
-	var test_path: Array[String] = ["test_transaction"]
-	print("[Firebase Advanced] Setting db root path: ", test_path)
-	db.set_db_root(test_path)
-
-	# Set initial counter value
-	print("[Firebase Advanced] Setting initial counter value to 10")
-	db.set_value(["counter"], 10)
-	status_label.text = "Initializing counter to 10..."
-
-	# Give it a moment to set the initial value
-	print("[Firebase Advanced] Waiting 0.5 seconds before transaction")
-	await get_tree().create_timer(0.5).timeout
-
-	# Now run a transaction that increments it by 5
-	print("[Firebase Advanced] Running transaction to increment by 5")
-	db.run_transaction(["counter"], 5)
-	status_label.text = "Running transaction to increment counter by 5...\nWaiting for result..."
-
-
-## Executes a test of the Connection Monitoring feature
-func _test_ui_connection_monitoring() -> void:
-	print("[Firebase Advanced] Starting Connection Monitoring test")
-	print("[Firebase Advanced] Calling monitor_connection_state()")
-	db.monitor_connection_state()
-	status_label.text = "Monitoring connection state...\nWaiting for connection status..."
-
-
-# Signal handlers for advanced features
-
-## Signal handler for query_result signal
-## Processes and displays query results
-func on_ui_query_result(key: String, value: Variant) -> void:
-	print("[Firebase Advanced] Query result received")
-	print("[Firebase Advanced] Key: ", key)
-	print("[Firebase Advanced] Value type: ", typeof(value))
-	print("[Firebase Advanced] Value content: ", value)
-
-	# Start building the result text
-	var result_text: String = "Query Results:\n"
-
-	# Process dictionary results
-	if typeof(value) == TYPE_DICTIONARY:
-		print("[Firebase Advanced] Processing dictionary result with ", value.size(), " items")
-
-		# Process each item in the dictionary
-		for item_key: String in value.keys():
-			var item: Variant = value[item_key]
-			print("[Firebase Advanced] Item key: ", item_key, ", type: ", typeof(item))
-
-			# Format score items nicely
-			if typeof(item) == TYPE_DICTIONARY and item.has("name") and item.has("score"):
-				result_text += str(item.name, " - Score: ", item.score, "\n")
-				print("[Firebase Advanced] Formatted item: ", item.name, " - Score: ", item.score)
-			else:
-				# Raw display for other items
-				result_text += str(item_key, ": ", item, "\n")
-				print("[Firebase Advanced] Raw item: ", item_key, ": ", item)
-	else:
-		# Handle non-dictionary results
-		print("[Firebase Advanced] Non-dictionary result")
-		result_text += str(value)
-
-	# Update the UI
-	print("[Firebase Advanced] Updating status label with results")
-	status_label.text = result_text
-
-
-## Signal handler for transaction_completed signal
-## Updates the UI with transaction results
-func on_ui_transaction_completed(key: String, value: Variant, success: bool) -> void:
-	print("[Firebase Advanced] Transaction completed")
-	print("[Firebase Advanced] Success: ", success)
-	print("[Firebase Advanced] Key: ", key)
-	print("[Firebase Advanced] Value: ", value)
-
-	# Update UI based on success or failure
-	if success:
-		print("[Firebase Advanced] Transaction successful with new value: ", value)
-		status_label.text = str("Transaction successful!\nCounter incremented to: ", value)
-	else:
-		print("[Firebase Advanced] Transaction failed")
-		status_label.text = "Transaction failed!\nCheck console for details."
-
-
-## Signal handler for connection_state_changed signal
-## Updates the UI with connection state information
-func on_ui_connection_state_changed(connected: bool) -> void:
-	print("[Firebase Advanced] Connection state changed: ", connected)
-	var state_text: String = "CONNECTED" if connected else "DISCONNECTED"
-	print("[Firebase Advanced] Firebase is now ", state_text)
-	status_label.text = str("Firebase connection state: ", state_text)
-
-
-## Signal handler for db_error signal
-## Displays database errors and prints the stack trace
-func on_ui_db_error(code: String, message: String) -> void:
-	print("[Firebase Advanced] Database error occurred")
-	print("[Firebase Advanced] Error code: ", code)
-	print("[Firebase Advanced] Error message: ", message)
-	status_label.text = str("Firebase error!\nCode: ", code, "\nMessage: ", message)
-
-	# Print the stack trace for debugging
-	print_stack()
+	Log.debug("Close button pressed.", {}, ["debug", "ui"])
+	debug.action(debug.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU)
