@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from misc.utility.scons_hints import *
 
-from platform_ios_builders import generate_bundle
 
 from platform_methods import combine_libs_apple_embedded
+from platform_ios_builders import generate_bundle
 
 Import("env")
 
@@ -22,6 +22,7 @@ ios_lib = env_ios.add_library("ios", ios_lib)
 # (iOS) Enable module support
 env_ios.Append(CCFLAGS=["-fmodules", "-fcxx-modules"])
 
+env_ios.Append(CPPPATH=[Dir('#/../export/ios/Pods/FirebaseCore/FirebaseCore/Sources/Public/FirebaseCore/')])
 combine_command = env_ios.CommandNoCache(
     "#bin/libgodot" + env_ios["LIBSUFFIX"], [ios_lib] + env_ios["LIBS"], env.Run(combine_libs_apple_embedded)
 )

@@ -1,74 +1,112 @@
 #include "convertor.h"
+#include "core/string/print_string.h" // For print_line/itos
 
 Variant Convertor::fromFirebaseVariant(const firebase::Variant& arg)
 {
-    if(arg.is_null()) {
-        return Variant((void*)NULL);
-    } else if(arg.is_vector()) {
-        const std::vector<firebase::Variant>& vector = arg.vector();
-        Vector<Variant> vecRes;
-        for(int i=0; i<vector.size(); i++) {
-            vecRes.push_back(fromFirebaseVariant(vector[i]));
-        }
-        return Variant(vecRes);
-    } else if(arg.is_map()) {
-        const std::map<firebase::Variant, firebase::Variant>& map = arg.map();
-        Dictionary dictRes;
-        for(std::map<firebase::Variant, firebase::Variant>::const_iterator i=map.begin(); i!=map.end(); i++) {
-            firebase::Variant first = i->first;
-            firebase::Variant second = i->second;
-            String key;
-            key.parse_utf8(first.string_value());
-            dictRes[key] = fromFirebaseVariant(second);
-        }
-        return Variant(dictRes);
-    } else if(arg.is_int64()) {
-        return Variant(arg.int64_value());
-    } else if(arg.is_double()) {
-        return Variant(arg.double_value());
-    } else if(arg.is_bool()) {
-        return Variant(arg.bool_value());
-    } else if(arg.is_string()) {
-        String str;
-        if(!str.parse_utf8(arg.string_value()))
-            return Variant(str);
-        else
-            return Variant(arg.string_value());
-    } else {
-        return Variant((void*)NULL);
-    }
+	if(arg.is_null()) {
+		return Variant(); // Return NIL Variant
+	} else if(arg.is_vector()) {
+		const std::vector<firebase::Variant>& vector = arg.vector();
+		Array arrRes; // Use Godot Array
+		arrRes.resize(vector.size()); // Optional: pre-allocate
+		for(int i = 0; i < vector.size(); i++) {
+			arrRes[i] = fromFirebaseVariant(vector[i]);
+		}
+		return Variant(arrRes);
+	} else if(arg.is_map()) {
+		const std::map<firebase::Variant, firebase::Variant>& map = arg.map();
+		Dictionary dictRes;
+		for(std::map<firebase::Variant, firebase::Variant>::const_iterator i = map.begin(); i != map.end(); i++) {
+			firebase::Variant first = i->first;
+			firebase::Variant second = i->second;
+			if (!first.is_string()) {
+				print_line("[Convertor] Warning: Non-string key found in Firebase map, skipping.");
+				continue;
+			}
+			// CORRECTED: Use String::utf8()
+			String key = String::utf8(first.string_value());
+			dictRes[key] = fromFirebaseVariant(second);
+		}
+		return Variant(dictRes);
+	} else if(arg.is_int64()) {
+		return Variant(arg.int64_value());
+	} else if(arg.is_double()) {
+		return Variant(arg.double_value());
+	} else if(arg.is_bool()) {
+		return Variant(arg.bool_value());
+	} else if(arg.is_string()) {
+		// CORRECTED: Use String::utf8()
+		String str = String::utf8(arg.string_value());
+		return Variant(str);
+	} else {
+		print_line(String("[Convertor] Warning: Unhandled Firebase Variant type: ") + arg.TypeName(arg.type()));
+		return Variant(); // Return NIL for unknown types
+	}
 }
 
 firebase::Variant Convertor::toFirebaseVariant(const String& arg)
 {
-    std::string tmp(arg.utf8().get_data());
-    return firebase::Variant(tmp);
+	std::string tmp = arg.utf8().get_data(); // Use get_data() for const char*
+	return firebase::Variant(tmp);
 }
 
 firebase::Variant Convertor::toFirebaseVariant(const Dictionary& arg)
 {
-    std::map<firebase::Variant, firebase::Variant> map;
-    for(int i=0; i<arg.size(); i++) {
-        Variant key = arg.get_key_at_index(i);
-        Variant val = arg.get_value_at_index(i);
-        if (key.get_type() != Variant::STRING) {
-            print_line(String("Unknown key type: ") + itos(key.get_type()));
-            continue;
-        }
-        firebase::Variant fkey = toFirebaseVariant((String)key);
-        if(val.get_type() == Variant::INT) {
-            map[fkey] = firebase::Variant((int)val);
-       // } else if(val.get_type() == Variant::REAL) {
-         //   map[fkey] = firebase::Variant((double)val);
-        } else if (val.get_type() == Variant::STRING) {
-            map[fkey] = toFirebaseVariant((String)val);
-        } else if(val.get_type() == Variant::BOOL) {
-            map[fkey] = firebase::Variant((bool)val);
-        } else {
-            map[fkey] = firebase::Variant(false);
-            print_line(String("Unknown variant type: ") + itos(val.get_type()));
-        }
-    }
+	std::map<std::string, firebase::Variant> map; // Use std::string keys for Firebase map
+	Array keys = arg.keys();
+	for (int i = 0; i < keys.size(); ++i) {
+		Variant key = keys[i];
+		Variant val = arg[key];
 
-    return firebase::Variant(map);
+		if (key.get_type() != Variant::STRING) {
+			print_line(String("[Convertor] Warning: Dictionary key is not a String, skipping. Type: ") + Variant::get_type_name(key.get_type()));
+			continue;
+		}
+
+		std::string key_utf8 = ((String)key).utf8().get_data();
+		// CORRECTED: Use the general Variant converter
+		firebase::Variant fval = toFirebaseVariant(val);
+
+		if (!fval.is_null()) { // Only add if conversion was successful
+			map[key_utf8] = fval;
+		} else {
+			 print_line(String("[Convertor] Warning: Could not convert dictionary value for key '") + String(key) + "'. Type: " + Variant::get_type_name(val.get_type()));
+		}
+	}
+	return firebase::Variant(map);
+}
+
+// CORRECTED: Implementation for the general Variant converter
+firebase::Variant Convertor::toFirebaseVariant(const Variant& arg)
+{
+	switch (arg.get_type()) {
+		case Variant::NIL:
+			return firebase::Variant::Null();
+		case Variant::BOOL:
+			return firebase::Variant(arg.operator bool());
+		case Variant::INT:
+			return firebase::Variant(static_cast<int64_t>(arg.operator int64_t()));
+		case Variant::FLOAT:
+			return firebase::Variant(static_cast<double>(arg.operator double()));
+		case Variant::STRING:
+			// Explicitly call the String overload
+			return toFirebaseVariant(arg.operator String());
+		case Variant::DICTIONARY:
+			// Explicitly call the Dictionary overload
+			return toFirebaseVariant(arg.operator Dictionary());
+		case Variant::ARRAY: {
+			Array arr = arg;
+			std::vector<firebase::Variant> vec;
+			vec.reserve(arr.size());
+			for(int i=0; i<arr.size(); ++i) {
+				// Recursively call this general function for array elements
+				vec.push_back(toFirebaseVariant(arr[i]));
+			}
+			return firebase::Variant(vec);
+		}
+		// Add other conversions if necessary (Vector2, Color, etc.)
+		default:
+			print_error(String("[Convertor] Error: Unsupported Variant type for Firebase conversion: ") + Variant::get_type_name(arg.get_type()));
+			return firebase::Variant::Null(); // Return Null for unsupported types
+	}
 }
