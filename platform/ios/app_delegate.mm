@@ -40,7 +40,8 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import <AudioToolbox/AudioServices.h>
-
+#include "firebase/app.h"
+#import <FirebaseCore.h>
 #define kRenderingFrequency 60
 
 extern int gargc;
@@ -127,7 +128,7 @@ static ViewController *mainViewController = nil;
 	}
 
 	[[AVAudioSession sharedInstance] setCategory:category withOptions:options error:nil];
-
+	[FIRApp configure];
 	return YES;
 }
 

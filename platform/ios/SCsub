@@ -30,8 +30,7 @@ ios_lib = env_ios.add_library("ios", ios_lib)
 
 # (iOS) Enable module support
 env_ios.Append(CCFLAGS=["-fmodules", "-fcxx-modules"])
-
-
+env_ios.Append(CPPPATH=[Dir('#/../export/ios/Pods/FirebaseCore/FirebaseCore/Sources/Public/FirebaseCore/')])
 combine_command = env_ios.CommandNoCache(
     "#bin/libgodot" + env_ios["LIBSUFFIX"], [ios_lib] + env_ios["LIBS"], env.Run(platform_ios_builders.combine_libs)
 )
