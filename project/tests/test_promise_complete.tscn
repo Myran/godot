@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bt1xpgkfrq8n7"]
+
+[ext_resource type="Script" path="res://tests/test_promise_complete.gd" id="1_0yxka"]
+
+[node name="TestPromise" type="Node"]
+script = ExtResource("1_0yxka")
