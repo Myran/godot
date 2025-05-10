@@ -70,15 +70,44 @@ func _register_project_settings() -> void:
 
 
 func _exit_tree() -> void:
+	# Clean up ConfigManager first before removing anything else
+	_cleanup_config_manager()
+
 	# Remove dock
 	if _dock:
 		remove_control_from_docks(_dock)
 		_dock.queue_free()
+		_dock = null
 
 	# Remove export plugin
 	if _export_plugin:
 		remove_export_plugin(_export_plugin)
+		_export_plugin = null
 
 	# Remove autoload
 	if Engine.has_singleton(AUTOLOAD_NAME):
 		remove_autoload_singleton(AUTOLOAD_NAME)
+
+## Notification handler for plugin cleanup
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		# Make sure we clean up when the plugin is about to be destroyed
+		_cleanup_config_manager()
+
+## Helper function to clean up ConfigManager
+func _cleanup_config_manager() -> void:
+	# We need to be very careful about cleaning up the singleton
+	const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
+
+	# Get and cleanup instance first
+	var instance = ConfigManager.get_instance()
+	if instance:
+		# Clean up the instance internals
+		instance.cleanup_instance()
+
+	# Then clean up the static singleton
+	ConfigManager.cleanup()
+
+	# Force garbage collection if needed
+	if OS.is_debug_build():
+		print("Advanced Logger: Cleaned up ConfigManager singleton")

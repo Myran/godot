@@ -17,6 +17,7 @@ config/icon="res://assets/frame.png"
 
 [autoload]
 
+singleton_cleanup="*res://autoloads/singleton_cleanup.gd"
 debug="*res://autoloads/debug.tscn"
 internet_status="*res://autoloads/internet_status.gd"
 auth="*res://firebase/auth.gd"

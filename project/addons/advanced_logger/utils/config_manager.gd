@@ -86,6 +86,28 @@ static func get_instance() -> ConfigManager:
 		_instance = ConfigManager.new()
 	return _instance
 
+## Cleanup function to properly free the singleton instance
+static func cleanup() -> void:
+	if _instance != null:
+		# Clean up instance properly
+		_instance.cleanup_instance()
+
+		# Force free the instance if possible
+		if is_instance_valid(_instance):
+			if _instance._config:
+				# Clear the ConfigFile instance
+				_instance._config = null
+
+			# Clear cached instance first
+			var temp_instance = _instance
+			_instance = null
+
+			# Free the instance if it inherits from Object
+			if temp_instance is Object and not temp_instance is RefCounted:
+				temp_instance.free()
+		else:
+			_instance = null
+
 func _init() -> void:
 	_load_config()
 
@@ -447,3 +469,21 @@ func reset_to_defaults() -> Error:
 
 	# Save the changes
 	return save()
+
+## Instance cleanup function to be called when the plugin is disabled
+func cleanup_instance() -> void:
+	# Disconnect any signals first
+	if is_instance_valid(self):
+		# Clear all signal connections
+		var connections = get_signal_connection_list("config_changed")
+		for connection in connections:
+			disconnect("config_changed", connection["callable"])
+
+	# Clear any references we hold
+	if _config != null:
+		# Clear the ConfigFile completely
+		_config.clear()
+		_config = null
+
+	# Clear any other references
+	_config_loaded = false

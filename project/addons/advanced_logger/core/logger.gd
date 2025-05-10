@@ -775,3 +775,13 @@ func set_debug_filter_logging(enable: bool) -> void:
 func _update_format_setting(key: String, value: bool) -> void:
 	if _config != null:
 		_config.set_value(ConfigManager.SECTION_FORMAT, key, value)
+
+## Cleanup notification - properly disconnect from ConfigManager
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		# Disconnect from config signals
+		if _config != null:
+			if is_instance_valid(_config) and _config.has_signal("config_changed"):
+				if _config.config_changed.is_connected(_on_config_changed):
+					_config.config_changed.disconnect(_on_config_changed)
+			_config = null
