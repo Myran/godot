@@ -13,7 +13,7 @@ enum BackendSelection { NONE, LOCAL, FIREBASE }
 
 
 static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
-	var internet_status_node: Node = Engine.get_singleton("internet_status")  # More specific type if InternetStatus is a class_name
+	var internet_status_node: Node = internet_status  # More specific type if InternetStatus is a class_name
 	if internet_status_node == null:
 		Log.warning(
 			"InternetStatus singleton not found in BackendFactory. Assuming connected for check.",
@@ -26,18 +26,18 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 	internet_status_node.get_status()
 
 	var internet_available_result: bool = false
-	var check_completed: bool = false
+	var _check_completed: bool = false
 
 	# Use a dictionary to hold connection status to avoid issues with lambda captures if not careful
-	var connection_status := {"available": false, "completed": false}
+	var connection_status: Dictionary = {"available": false, "completed": false}
 
-	var has_internet_callable: Callable = func():
+	var has_internet_callable: Callable = func() -> void:
 		connection_status.available = true
 		connection_status.completed = true
-	var no_internet_callable: Callable = func():
+	var no_internet_callable: Callable = func() -> void:
 		connection_status.available = false
 		connection_status.completed = true
-	var timeout_callable: Callable = func():
+	var timeout_callable: Callable = func() -> void:
 		if not connection_status.completed:
 			Log.error(
 				"BackendFactory: Internet status check timed out after %s seconds" % timeout_sec,
@@ -66,7 +66,9 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 	Engine.get_main_loop().root.add_child(timeout_timer)
 	timeout_timer.wait_time = timeout_sec
 	timeout_timer.one_shot = true
-	var timeout_conn_err: Error = timeout_timer.timeout.connect(timeout_callable, CONNECT_ONE_SHOT)
+	var timeout_conn_err: int = timeout_timer.timeout.connect(
+		timeout_callable, ConnectFlags.CONNECT_DEFERRED
+	)
 	if timeout_conn_err != OK:
 		Log.error("Failed to connect timeout timer signal", {}, [Log.TAG_NETWORK, Log.TAG_ERROR])
 		timeout_timer.queue_free()
@@ -100,7 +102,7 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 	return internet_available_result
 
 
-static func create_backend() -> DataBackend:  # Return type is DataBackend or null
+static func create_backend() -> DataBackend:
 	var selected_backend_type: BackendSelection = BackendSelection.NONE
 	var internet_is_available: bool = false
 
@@ -131,15 +133,31 @@ static func create_backend() -> DataBackend:  # Return type is DataBackend or nu
 			)
 			selected_backend_type = BackendSelection.LOCAL
 
-	var backend_instance: DataBackend = null
+	var backend_instance: DataBackend = null  # Explicitly DataBackend
+
 	if selected_backend_type == BackendSelection.FIREBASE:
-		backend_instance = create_firebase_backend()
+		backend_instance = create_firebase_backend()  # This MUST return a FirebaseBackend (GDScript) instance
 		if backend_instance == null:
 			Log.error(
-				"Failed to create Firebase backend despite internet, falling back to local.",
+				"Failed to create Firebase backend instance, falling back to local.",
 				{},
 				[Log.TAG_DB, Log.TAG_ERROR]
 			)
+			selected_backend_type = BackendSelection.LOCAL
+		# Add a specific check for the type here
+		elif not backend_instance is FirebaseBackend:
+			(
+				Log
+				. error(
+					(
+						"BackendFactory: create_firebase_backend() did NOT return a FirebaseBackend instance! Type: %s. Falling back."
+						% backend_instance.get_class()
+					),
+					{},
+					[Log.TAG_DB, Log.TAG_ERROR]
+				)
+			)
+			backend_instance = null  # Invalidate it
 			selected_backend_type = BackendSelection.LOCAL
 
 	if selected_backend_type == BackendSelection.LOCAL:
@@ -147,21 +165,24 @@ static func create_backend() -> DataBackend:  # Return type is DataBackend or nu
 
 	if backend_instance != null:
 		Log.debug(
-			"BackendFactory: Initializing chosen backend: %s" % backend_instance.get_class(),
+			(
+				"BackendFactory: Initializing chosen backend: %s (Instance ID: %s)"
+				% [backend_instance.get_class(), backend_instance.get_instance_id()]
+			),
 			{},
 			[Log.TAG_DB]
 		)
-		var init_success: bool = await backend_instance.initialize()  # initialize is async
+		var init_success: bool = await backend_instance.initialize()
 		if init_success:
 			Log.info(
 				(
-					"BackendFactory: Successfully initialized backend: %s"
-					% backend_instance.get_class()
+					"BackendFactory: Successfully initialized backend: %s (Instance ID: %s)"
+					% [backend_instance.get_class(), backend_instance.get_instance_id()]
 				),
 				{},
 				[Log.TAG_DB]
 			)
-			return backend_instance
+			return backend_instance  # This is what DataSource._backend will hold
 		else:
 			(
 				Log
@@ -184,28 +205,127 @@ static func create_backend() -> DataBackend:  # Return type is DataBackend or nu
 		return null
 
 
-static func create_firebase_backend() -> FirebaseBackend:  # Return type is FirebaseBackend or null
+static func create_firebase_backend() -> FirebaseBackend:  # Return type explicitly FirebaseBackend
 	Log.debug(
-		"BackendFactory: Creating Firebase backend instance.", {}, [Log.TAG_DB, Log.TAG_FIREBASE]
+		"BackendFactory: Attempting to create FirebaseBackend (GDScript) instance.",
+		{},
+		[Log.TAG_DB, Log.TAG_FIREBASE]
 	)
-	if not ClassDB.class_exists("FirebaseDatabase"):  # Ensure FirebaseDatabase C++ class exists
+
+	if not ClassDB.class_exists("FirebaseDatabase"):
 		Log.error(
-			"FirebaseDatabase C++ module class not found. Cannot create Firebase backend.",
+			"BF: FirebaseDatabase C++ module class not found.",
 			{},
 			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return null
-	# Assuming FirebaseBackend.new() returns a FirebaseBackend typed object
-	var fb_backend: FirebaseBackend = FirebaseBackend.new()
-	return fb_backend
+
+	var fb_backend_script_resource: Script = load("res://data/backends/firebase_backend.gd")
+	if not fb_backend_script_resource:
+		Log.error(
+			"BF: Failed to load FirebaseBackend.gd script resource!",
+			{},
+			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return null
+	Log.debug(
+		"BF: FirebaseBackend.gd script resource loaded: %s" % fb_backend_script_resource,
+		{},
+		[Log.TAG_DB, Log.TAG_FIREBASE]
+	)
+
+	var fb_backend_instance_variant: Variant = fb_backend_script_resource.new()
+
+	if fb_backend_instance_variant == null:
+		Log.error(
+			"BF: Instantiating FirebaseBackend.gd script returned null!",
+			{},
+			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return null
+
+	# --- DETAILED TYPE CHECKING ---
+	var actual_class_name_str: String = "ErrorGettingClass"
+	if fb_backend_instance_variant is Object:  # get_class() is on Object
+		actual_class_name_str = (fb_backend_instance_variant as Object).get_class()
+
+	if fb_backend_instance_variant is FirebaseBackend:  # Check against the GDScript class_name
+		(
+			Log
+			. info(
+				(
+					"BF: fb_backend_instance_variant IS FirebaseBackend (GDScript type). Class via get_class(): %s, Instance ID: %s"
+					% [
+						actual_class_name_str,
+						(fb_backend_instance_variant as Object).get_instance_id()
+					]
+				),
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE]
+			)
+		)
+		var fb_backend_typed_instance := fb_backend_instance_variant as FirebaseBackend
+		return fb_backend_typed_instance
+	else:
+		(
+			Log
+			. error(
+				(
+					"BF: Instantiated object is NOT of type FirebaseBackend (GDScript). Actual class via get_class(): %s. Type via typeof(): %s. Instance ID: %s"
+					% [
+						actual_class_name_str,
+						typeof(fb_backend_instance_variant),
+						(
+							(fb_backend_instance_variant as Object).get_instance_id()
+							if fb_backend_instance_variant is Object
+							else "N/A"
+						)
+					]
+				),
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+		)
+		if fb_backend_instance_variant is Object and not fb_backend_instance_variant is RefCounted:  # Check if it's a Node that needs freeing
+			(fb_backend_instance_variant as Object).free()
+		elif fb_backend_instance_variant is RefCounted:  # If it's just a RefCounted that's not our script, let GC handle it or check if unreference is needed
+			pass  # Or specific unreferencing if necessary for that type
+		return null
 
 
-static func create_local_backend(file_path: String = "") -> LocalJSONBackend:  # Return type is LocalJSONBackend or null
+static func create_local_backend(file_path: String = "") -> LocalJSONBackend:
 	Log.debug(
 		"BackendFactory: Creating local JSON backend instance.",
 		{"custom_file_path": file_path != ""},
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
-	# Assuming LocalJSONBackend.new() returns a LocalJSONBackend typed object
-	var local_backend: LocalJSONBackend = LocalJSONBackend.new(file_path)
-	return local_backend
+	var local_backend_script: Script = load("res://data/backends/local_json_backend.gd")
+	if not local_backend_script:
+		Log.error(
+			"Failed to load LocalJSONBackend.gd script resource!",
+			{},
+			[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
+		return null
+	var local_backend_instance: LocalJSONBackend = local_backend_script.new(file_path)  # Assuming constructor takes file_path
+	if not local_backend_instance is LocalJSONBackend:
+		Log.error(
+			(
+				"Instantiated object is NOT of type LocalJSONBackend. Actual type: %s"
+				% local_backend_instance.get_class()
+			),
+			{},
+			[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
+		)
+		if local_backend_instance is Object and not local_backend_instance is RefCounted:
+			local_backend_instance.free()
+		return null
+	Log.info(
+		(
+			"LocalJSONBackend instance created successfully. Class: %s"
+			% local_backend_instance.get_class()
+		),
+		{},
+		[Log.TAG_LOCAL]
+	)
+	return local_backend_instance
