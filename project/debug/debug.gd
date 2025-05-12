@@ -233,7 +233,8 @@ func _make_rtdb_request(operation_name: String, path_suffix: Array[String], args
 		Log.error("Attempted RTDB request but db is null", {"operation": operation_name}, [Log.TAG_FIREBASE, Log.TAG_ERROR])
 		return
 	var request_id: int = _next_request_id; _next_request_id += 1
-	var full_path: Array[String] = _test_base_path + path_suffix
+	var full_path: Array[String] = _test_base_path.duplicate()
+	full_path.append_array(path_suffix)
 	_pending_requests[request_id] = { "operation": operation_name, "path": full_path }
 	var call_args: Array = [request_id, full_path]; call_args.append_array(args)
 	Log.debug("Making RTDB request", { "req_id": request_id, "op": operation_name, "path": full_path, "args#": args.size() }, [Log.TAG_FIREBASE, Log.TAG_NETWORK])
@@ -263,22 +264,51 @@ func _test_rtdb_basic_delete_dictionary() -> void: Log.debug("RTDB Test: Delete 
 func _test_rtdb_advanced_query_top_2_scores() -> void:
 	Log.debug("RTDB Test: Query Top 2 Scores", {}, ["test"])
 	status_label.text = "Setting up query data..."
-	var ps: Array = ["query_items"]
-	_make_rtdb_request("set_value_async", ps + ["item1"], [{"name": "A", "score": 50}])
-	_make_rtdb_request("set_value_async", ps + ["item2"], [{"name": "B", "score": 100}])
-	_make_rtdb_request("set_value_async", ps + ["item3"], [{"name": "C", "score": 75}])
-	call_deferred("_execute_query_test", ps)
+	var ps_base: Array[String] = ["query_items"]  # Explicitly Array[String]
+
+	var p1: Array[String] = ps_base.duplicate()
+	p1.append("item1")
+	_make_rtdb_request("set_value_async", p1, [{"name": "A", "score": 50}])
+
+	var p2: Array[String] = ps_base.duplicate()
+	p2.append("item2")
+	_make_rtdb_request("set_value_async", p2, [{"name": "B", "score": 100}])
+
+	var p3: Array[String] = ps_base.duplicate()
+	p3.append("item3")
+	_make_rtdb_request("set_value_async", p3, [{"name": "C", "score": 75}])
+
+	call_deferred("_execute_query_test", ps_base)  # ps_base is already Array[String]
 func _execute_query_test(path_suffix: Array[String]) -> void:
 	# Keep await to align with all backends even though it's redundant
 	@warning_ignore("redundant_await")
 	await get_tree().create_timer(1.0).timeout
 	var qp: Dictionary = {"orderByChild": "score", "limitToLast": 2}
 	_make_rtdb_request("query_ordered_data_async", path_suffix, [qp])
-func _test_rtdb_advanced_increment_transaction() -> void: Log.debug("RTDB Test: Increment Transaction", {}, ["test"]); call_deferred("_execute_transaction_test")
+func _test_rtdb_advanced_increment_transaction() -> void:
+	Log.debug("RTDB Test: Increment Transaction", {}, ["test"])
+
+	# First delete any existing counter to ensure we start with a Double type
+	var delete_path: Array[String] = _test_base_path.duplicate()
+	delete_path.append("counter")
+	_make_rtdb_request("remove_value_async", ["counter"])
+
+	# Small delay to ensure deletion completes before transaction
+	status_label.text = "Deleting existing counter..."
+	call_deferred("_execute_transaction_test_after_delay")
+
+func _execute_transaction_test_after_delay() -> void:
+	# Wait a short time for delete to propagate
+	await get_tree().create_timer(1.0).timeout
+	call_deferred("_execute_transaction_test")
+
 func _execute_transaction_test() -> void:
 	var crid: int = _next_request_id
 	_next_request_id += 1
-	var cp: Array[String] = _test_base_path + ["counter"]
+
+	var cp: Array[String] = _test_base_path.duplicate()  # Start with Array[String]
+	cp.append("counter")  # Append string, result is Array[String]
+
 	_pending_requests[crid] = { "operation": "get_value_check_for_transaction", "path": cp }
 	db.callv("get_value_async", [crid, cp])
 func _test_rtdb_advanced_set_server_timestamp() -> void: Log.debug("RTDB Test: Set Server Timestamp", {}, ["test"]); _make_rtdb_request("set_server_timestamp_async", ["server_time"])
@@ -339,25 +369,53 @@ func _handle_rtdb_response(request_id: int, success: bool, result: Variant, erro
 			var init_req_id: int = _next_request_id
 			_next_request_id += 1
 			_pending_requests[init_req_id] = {"operation": "set_value_for_transaction", "path": path}
-			db.callv("set_value_async", [init_req_id, path, 0])
+			db.callv("set_value_async", [init_req_id, path, 0.0]) # Use 0.0 (Double) instead of 0 (Int)
+			status_label.text = "Initializing counter to 0.0 (Double)..."
 		else:
-			# Counter exists, run the transaction immediately
-			Log.debug("Transaction counter exists, running transaction.", {"path": path}, ["test"])
-			_make_rtdb_request("run_transaction_async", relative_path, [1]) # Use relative path suffix
+			# Counter exists, but could be Int or Double - need to recreate
+			# First delete, then create new double
+			Log.debug("Counter exists but may be wrong type; recreating.", {"path": path}, ["test"])
+			status_label.text = "Cleaning up existing counter..."
+
+			# First, remove the existing counter
+			var del_req_id: int = _next_request_id
+			_next_request_id += 1
+			_pending_requests[del_req_id] = {"operation": "remove_for_transaction", "path": path}
+			db.callv("remove_value_async", [del_req_id, path])
 		return # Stop processing this specific response
 
-	# Special handling for transaction initialization completion
+	# Special handling for transaction operations
 	if op_name == "set_value_for_transaction":
 		_pending_requests.erase(request_id) # Remove init request first
 		var relative_path: Array[String] = path.slice(len(_test_base_path)) # Get suffix for next request
 		if success:
 			# Initialization successful, now run the transaction
 			Log.debug("Transaction counter initialized, running transaction.", {"path": path}, ["test"])
-			_make_rtdb_request("run_transaction_async", relative_path, [1]) # Use relative path suffix
+			_make_rtdb_request("run_transaction_async", relative_path, [1.0]) # Use 1.0 (Double) instead of 1 (Int)
 		else:
 			# Initialization failed
 			Log.error("Failed init for transaction", {"path": path, "error": error_message}, ["test"])
 			status_label.text = "Error: Failed init counter for transaction."
+		return # Stop processing this specific response
+
+	# Handle removal before re-initialization for transaction
+	if op_name == "remove_for_transaction":
+		_pending_requests.erase(request_id) # Remove removal request first
+		if success:
+			# Removal successful, now initialize as Double
+			var relative_path: Array[String] = path.slice(len(_test_base_path)) # Get suffix for next request
+			Log.debug("Old counter removed, initializing as Double.", {"path": path}, ["test"])
+			status_label.text = "Re-initializing counter as Double..."
+
+			# Create as Double
+			var init_req_id: int = _next_request_id
+			_next_request_id += 1
+			_pending_requests[init_req_id] = {"operation": "set_value_for_transaction", "path": path}
+			db.callv("set_value_async", [init_req_id, path, 0.0]) # Use 0.0 (Double) instead of 0 (Int)
+		else:
+			# Removal failed
+			Log.error("Failed to remove old counter for transaction", {"path": path, "error": error_message}, ["test"])
+			status_label.text = "Error: Failed to remove old counter."
 		return # Stop processing this specific response
 
 	# --- General Response Handling ---
