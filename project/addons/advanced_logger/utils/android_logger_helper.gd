@@ -29,16 +29,12 @@ static func configure_for_android(logger: ALogger) -> void:
 
 ## Strips color and formatting codes from log messages for Android
 static func strip_formatting(message: String) -> String:
-	# Remove BBCode formatting
-	var result = message.replace("[/color]", "")
+	return MobileFormatter.strip_formatting(message)
 
-	# Remove color tags with regex
-	var regex = RegEx.new()
-	regex.compile("\\[color=#[0-9a-fA-F]+\\]")
-	result = regex.sub(result, "", true)
+## Process a log message specifically for Android output
+static func process_log_message(level: int, message: String, context: Dictionary, tags: Array[String] = []) -> String:
+	# Format the message using the shared formatter
+	var formatted = MobileFormatter.format_log_message(level, message, context, tags)
 
-	# Remove other BBCode tags if present
-	regex.compile("\\[/?[a-zA-Z]+\\]")
-	result = regex.sub(result, "", true)
-
-	return result
+	# Make sure the formatted message doesn't contain any escape sequences
+	return strip_formatting(formatted)

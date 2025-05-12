@@ -35,9 +35,10 @@ static func format_log(
 	show_source: bool,
 	timestamp_color_override: String = "" # Add new optional parameter
 ) -> String:
-	# On Android, colors might not display properly
-	if OS.get_name() == "Android" and use_colors:
-		# Force simpler formatting for Android logcat
+	# On mobile platforms, colors might not display properly
+	var platform = OS.get_name()
+	if (platform == "Android" or platform == "iOS") and use_colors:
+		# Force simpler formatting for mobile platforms
 		use_colors = false
 	var parts: Array[String] = []
 

@@ -29,6 +29,7 @@ core="*res://autoloads/core.gd"
 card_controller="*res://autoloads/card_controller.tscn"
 util="*res://misc/util.gd"
 Log="*res://addons/advanced_logger/core/logger.gd"
+LoggerIOSLoader="*res://addons/advanced_logger/ios_loader.gd"
 
 [debug]
 

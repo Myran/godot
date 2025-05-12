@@ -6,6 +6,10 @@ enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 const LogFormatter = preload("res://addons/advanced_logger/core/log_formatter.gd")
+# Platform-specific helpers (loaded conditionally)
+# We don't preload these to avoid issues if they don't exist
+var AndroidLoggerHelper = null
+var IosLoggerHelper = null
 
 
 
@@ -126,13 +130,8 @@ func _init() -> void:
 	# Load settings
 	_load_settings()
 
-	# On Android, ensure essential settings are properly initialized
-	if OS.get_name() == "Android":
-		# On Android, rich text formatting might not work properly
-		if not Engine.is_editor_hint():
-			# Force disable colors on Android runtime
-			_use_colors = false
-			print("[Advanced Logger] Running on Android - colors disabled")
+	# Apply platform-specific configuration
+	_configure_for_platform()
 
 ## Handles configuration changes
 func _on_config_changed(section: String, key: String, value: Variant) -> void:
@@ -418,18 +417,34 @@ func _dump_buffer() -> void:
 	var header_footer_color = LoggerColors.WARNING_HTML # Yellow for visibility
 	var separator = "═".repeat(80) # Use double lines for more emphasis
 
+	# Get platform info
+	var platform = OS.get_name()
+	var use_plain_formatting = platform == "iOS" or platform == "Android"
+
 	# Print header with timestamp for context
 	var dt = Time.get_datetime_dict_from_system()
 	var dump_timestamp = "%02d:%02d:%02d" % [dt.hour, dt.minute, dt.second]
-	print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
-	print_rich("[color=#%s]=== BUFFER DUMP (%s) - Last %d entries ===[/color]" %
-		[header_footer_color, dump_timestamp, _log_buffer.size()])
-	print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
+
+	# Use platform-specific formatting for buffer headers
+	if use_plain_formatting:
+		# Plain formatting for mobile platforms
+		print("\n" + separator)
+		print("=== BUFFER DUMP (" + dump_timestamp + ") - Last " + str(_log_buffer.size()) + " entries ===")
+		print(separator)
+	else:
+		# Rich formatting for desktop platforms
+		print_rich("\n[color=#%s]%s[/color]" % [header_footer_color, separator])
+		print_rich("[color=#%s]=== BUFFER DUMP (%s) - Last %d entries ===[/color]" %
+			[header_footer_color, dump_timestamp, _log_buffer.size()])
+		print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
 
 	# Iterate through a copy to avoid issues if buffer changes during iteration
 	var buffer_copy = _log_buffer.duplicate(true) # Use deep copy for safety
 	if buffer_copy.is_empty():
-		print_rich("[color=#%s]  (Buffer is empty)[/color]" % LoggerColors.TIMESTAMP_HTML)
+		if use_plain_formatting:
+			print("  (Buffer is empty)")
+		else:
+			print_rich("[color=#%s]  (Buffer is empty)[/color]" % LoggerColors.TIMESTAMP_HTML)
 	else:
 		for entry_data in buffer_copy:
 			# Create a deep copy to modify the message safely
@@ -437,16 +452,19 @@ func _dump_buffer() -> void:
 			# Mark this entry as being printed from the buffer dump
 			data_to_print["is_buffer_dump"] = true
 
-			# Prepend indicator to the message for clarity in the output
-			data_to_print.message = "[BUFFER] " + data_to_print.message
-
 			# Print using the standard formatting function
 			# Ensures buffered messages look the same as live ones, just marked
 			_print_formatted_log(data_to_print)
 
-	print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
-	print_rich("[color=#%s]=== END BUFFER DUMP ===[/color]" % header_footer_color)
-	print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
+	# Print footer
+	if use_plain_formatting:
+		print(separator)
+		print("=== END BUFFER DUMP ===")
+		print(separator + "\n")
+	else:
+		print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
+		print_rich("[color=#%s]=== END BUFFER DUMP ===[/color]" % header_footer_color)
+		print_rich("[color=#%s]%s[/color]\n" % [header_footer_color, separator])
 
 # --- Source Info Helpers ---
 
@@ -507,6 +525,33 @@ func _update_source_info_from_frame(source_info: Dictionary, frame: Dictionary) 
 
 
 # --- RENAME _output_log TO _print_formatted_log AND REPLACE ITS CONTENT ---
+## Configure logger based on platform
+func _configure_for_platform() -> void:
+	# Platform-specific initialization
+	var platform = OS.get_name()
+
+	# Android-specific configuration
+	if platform == "Android":
+		# Try to load Android helper if available
+		AndroidLoggerHelper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
+		if AndroidLoggerHelper:
+			# Apply Android-specific configuration
+			AndroidLoggerHelper.configure_for_android(self)
+
+	# iOS-specific configuration
+	elif platform == "iOS":
+		# Try to load iOS helper if available
+		IosLoggerHelper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
+		if IosLoggerHelper:
+			# Apply iOS-specific configuration
+			IosLoggerHelper.configure_for_ios(self)
+		else:
+			# Fallback if helper not found - basic iOS configuration
+			if not Engine.is_editor_hint():
+				# Force disable colors on iOS runtime for better console output
+				_use_colors = false
+				print("[Advanced Logger] Running on iOS - colors disabled")
+
 ## Formats and prints a single log entry dictionary
 func _print_formatted_log(log_data: Dictionary) -> void:
 	# Extract data from the dictionary
@@ -536,16 +581,63 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 		timestamp_color_override # Pass the override color
 	)
 
-	# Output the formatted log
-	# On Android, use plain print instead of print_rich if colors are disabled
-	if OS.get_name() == "Android" and not _use_colors:
-		# Strip BBCode if present
-		var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
-		# Replace color tags with simple text
-		var regex = RegEx.new()
-		regex.compile("\\[color=#[0-9a-fA-F]+\\]")
-		plain_text = regex.sub(plain_text, "", true)
-		print(plain_text)
+	# Platform-specific output formatting
+	var platform = OS.get_name()
+
+	# Android-specific output
+	if platform == "Android":
+		if AndroidLoggerHelper:
+			# Use Android-specific formatting and processing
+			if is_buffer_dump_entry:
+				# For buffer entries, handle specially to maintain [BUFFER] prefix
+				print(AndroidLoggerHelper.process_log_message(
+					level,
+					"[BUFFER] " + message,
+					context,
+					tags
+				))
+			else:
+				# For regular logs, use standard processing
+				print(AndroidLoggerHelper.process_log_message(
+					level,
+					message,
+					context,
+					tags
+				))
+		else:
+			# Strip BBCode if present (fallback if helper not available)
+			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
+			# Replace color tags with simple text
+			var regex = RegEx.new()
+			regex.compile("\\[color=#[0-9a-fA-F]+\\]")
+			plain_text = regex.sub(plain_text, "", true)
+			print(plain_text)
+
+	# iOS-specific output
+	elif platform == "iOS":
+		if IosLoggerHelper:
+			# Process the message first to format it appropriately for iOS
+			var ios_formatted = IosLoggerHelper.process_log_message(
+				level,
+				message,
+				context,
+				tags
+			)
+			# Make absolutely sure all formatting is stripped before printing
+			print(ios_formatted)
+		else:
+			# Strip BBCode if present (fallback if helper not available)
+			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
+			# Replace color tags and ANSI escape sequences
+			var regex = RegEx.new()
+			regex.compile("\\[color=#[0-9a-fA-F]+\\]")
+			plain_text = regex.sub(plain_text, "", true)
+			# Also strip ANSI sequences
+			regex.compile("\\[(\\d+;)*\\d+m")
+			plain_text = regex.sub(plain_text, "", true)
+			print(plain_text)
+
+	# Default rich text output for other platforms
 	else:
 		print_rich(formatted_log)
 

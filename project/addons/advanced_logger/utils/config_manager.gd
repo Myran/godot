@@ -114,22 +114,23 @@ func _init() -> void:
 ## Loads the configuration file and handles version upgrades
 ## Returns: Error code from the load operation
 func _load_config() -> Error:
-	# On Android, try loading with different methods
+	# Get the appropriate config path for the platform
+	var config_path = _get_platform_config_path()
 	var result = Error.FAILED
 
 	# First try the standard load
-	result = _config.load(CONFIG_PATH)
+	result = _config.load(config_path)
 
-	# If that fails on Android, try using FileAccess
-	if result != OK and OS.get_name() == "Android":
-		if FileAccess.file_exists(CONFIG_PATH):
-			var file = FileAccess.open(CONFIG_PATH, FileAccess.READ)
+	# If that fails on mobile platforms, try using FileAccess
+	if result != OK and _is_mobile_platform():
+		if FileAccess.file_exists(config_path):
+			var file = FileAccess.open(config_path, FileAccess.READ)
 			if file:
 				var content = file.get_as_text()
 				result = _config.parse(content)
 				file.close()
 		else:
-			# On Android, create default config if file doesn't exist
+			# On mobile platforms, create default config if file doesn't exist
 			_create_default_config()
 			result = OK
 
@@ -237,11 +238,38 @@ func set_value(section: String, key: String, value: Variant) -> void:
 	_config.set_value(section, key, value)
 	config_changed.emit(section, key, value)
 
+## Get appropriate config path based on platform
+func _get_platform_config_path() -> String:
+	# Check if platform-specific helpers are available
+	var platform = OS.get_name()
+
+	# Try to use Android helper if on Android
+	if platform == "Android":
+		var android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
+		if android_helper:
+			return android_helper.get_config_path()
+		return "user://advanced_logger_settings.cfg"
+
+	# Try to use iOS helper if on iOS
+	elif platform == "iOS":
+		var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
+		if ios_helper:
+			return ios_helper.get_config_path()
+		return "user://advanced_logger_settings.cfg"
+
+	# Default path for desktop platforms
+	return CONFIG_PATH
+
+## Check if running on a mobile platform
+func _is_mobile_platform() -> bool:
+	var platform = OS.get_name()
+	return platform == "Android" or platform == "iOS"
+
 ## Saves the configuration to disk
 ## Returns: Error code from the save operation
 func save() -> Error:
-	# On Android, we can't save to res://, use user:// instead
-	if OS.get_name() == "Android":
+	# On mobile platforms, we can't save to res://, use user:// instead
+	if _is_mobile_platform():
 		var user_config_path = "user://advanced_logger_settings.cfg"
 		return _config.save(user_config_path)
 

@@ -49,6 +49,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 534.0
 offset_bottom = 433.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="Button4" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
@@ -81,6 +83,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 534.0
 offset_bottom = 433.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="Button4" parent="Node/RTDB2" instance=ExtResource("1_ufstt")]

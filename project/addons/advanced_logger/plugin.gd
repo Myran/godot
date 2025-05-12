@@ -7,6 +7,8 @@ const LOGGER_SCRIPT_PATH: String = "res://addons/advanced_logger/core/logger.gd"
 const LOGGER_DOCK_PATH: String = "res://addons/advanced_logger/logger_dock.tscn"
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 const EXPORT_PLUGIN_PATH: String = "res://addons/advanced_logger/advanced_logger_export_plugin.gd"
+const IOS_LOADER_PATH: String = "res://addons/advanced_logger/ios_loader.gd"
+const IOS_LOADER_NAME: String = "LoggerIOSLoader"
 const DOCK_POSITION: int = EditorPlugin.DOCK_SLOT_RIGHT_UL
 
 var _dock: Control
@@ -16,6 +18,11 @@ var _export_plugin: EditorExportPlugin
 func _enter_tree() -> void:
 	# Register autoload singleton for runtime use
 	add_autoload_singleton(AUTOLOAD_NAME, LOGGER_SCRIPT_PATH)
+
+	# Add iOS Loader autoload if available
+	if FileAccess.file_exists(IOS_LOADER_PATH):
+		add_autoload_singleton(IOS_LOADER_NAME, IOS_LOADER_PATH)
+		print_rich("[color=#%s]Advanced Logger: iOS Loader registered[/color]" % LoggerColors.INFO_HTML)
 
 	# Register export plugin
 	_export_plugin = load(EXPORT_PLUGIN_PATH).new()
@@ -84,9 +91,12 @@ func _exit_tree() -> void:
 		remove_export_plugin(_export_plugin)
 		_export_plugin = null
 
-	# Remove autoload
+	# Remove autoloads
 	if Engine.has_singleton(AUTOLOAD_NAME):
 		remove_autoload_singleton(AUTOLOAD_NAME)
+
+	if Engine.has_singleton(IOS_LOADER_NAME):
+		remove_autoload_singleton(IOS_LOADER_NAME)
 
 ## Notification handler for plugin cleanup
 func _notification(what: int) -> void:

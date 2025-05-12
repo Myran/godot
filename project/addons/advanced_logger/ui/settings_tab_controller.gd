@@ -148,6 +148,9 @@ func _on_scan_tags() -> void:
 			)
 		)
 
+	# Test iOS logging while scanning
+	_test_platform_logging()
+
 	# Signal the results
 	tags_scanned.emit(added_count)
 
@@ -214,6 +217,53 @@ func _apply_defaults() -> void:
 	_save_settings_to_config()
 	_tag_list_controller.save_tags_to_config()
 
+
+## Test iOS and Android logger implementation
+func _test_platform_logging() -> void:
+	print_rich("\n[color=#%s]=== TESTING PLATFORM LOGGING ===[/color]" % LoggerColors.INFO_HTML)
+
+	# Check if platform test module is available
+	var platform_test = load("res://addons/advanced_logger/utils/platform_test.gd")
+	if platform_test:
+		platform_test.run_all_tests()
+		print_rich("[color=#%s]Platform tests completed[/color]" % LoggerColors.SUCCESS_HTML)
+	else:
+		print_rich("[color=#%s]Platform test module not found[/color]" % LoggerColors.ERROR_HTML)
+
+	# Run iOS-specific formatting tests
+	var ios_test = load("res://addons/advanced_logger/utils/ios_test.gd")
+	if ios_test:
+		ios_test.run_tests()
+		print_rich("[color=#%s]iOS formatting tests completed[/color]" % LoggerColors.SUCCESS_HTML)
+	else:
+		print_rich("[color=#%s]iOS test module not found[/color]" % LoggerColors.ERROR_HTML)
+
+	# Test iOS specific logging
+	var current_platform = OS.get_name()
+
+	print_rich("[color=#%s]Current platform: %s[/color]" % [LoggerColors.INFO_HTML, current_platform])
+	print_rich("[color=#%s]Testing platform-specific logging...[/color]" % LoggerColors.INFO_HTML)
+
+	# Load platform helpers if available
+	var ios_helper = null
+	var android_helper = null
+
+	if FileAccess.file_exists("res://addons/advanced_logger/utils/ios_logger_helper.gd"):
+		ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
+		print_rich("[color=#%s]iOS helper loaded[/color]" % LoggerColors.SUCCESS_HTML)
+
+	if FileAccess.file_exists("res://addons/advanced_logger/utils/android_logger_helper.gd"):
+		android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
+		print_rich("[color=#%s]Android helper loaded[/color]" % LoggerColors.SUCCESS_HTML)
+
+	# Test logger instance with simple text (no formatting)
+	print("\n--- Testing logger with simple text ---")
+	Log.debug("Platform Logger Test - Debug Message", {"platform": current_platform}, ["test", "platform"])
+	Log.info("Platform Logger Test - Info Message", {"platform": current_platform}, ["test", "platform"])
+	Log.warning("Platform Logger Test - Warning Message", {"platform": current_platform}, ["test", "platform"])
+	Log.error("Platform Logger Test - Error Message", {"platform": current_platform}, ["test", "platform"])
+
+	print_rich("[color=#%s]=== PLATFORM LOGGING TEST COMPLETE ===[/color]\n" % LoggerColors.INFO_HTML)
 
 # Signal handlers for UI events
 
