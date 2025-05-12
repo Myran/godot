@@ -56,30 +56,25 @@ func _ready() -> void:
 
 ## Verify logger file export (used on mobile platforms)
 func _verify_logger_export() -> void:
-	# Try to load the verification utility
-	var verifier = load("res://addons/advanced_logger/utils/export_verifier.gd")
-	if verifier:
-		verifier.runtime_verification()
-		Log.info("Logger export verification completed", {}, [Log.TAG_DEBUG])
-	else:
-		# If the verifier isn't available, do a basic check
-		Log.warning("Logger export verifier not found, performing basic check", {}, [Log.TAG_DEBUG])
 
-		# Check for iOS helper on iOS
-		if OS.get_name() == "iOS":
-			var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
-			if ios_helper:
-				Log.info("iOS logger helper found", {}, [Log.TAG_DEBUG])
-			else:
-				Log.error("iOS logger helper missing!", {}, [Log.TAG_DEBUG])
+	# If the verifier isn't available, do a basic check
+	Log.warning("Logger export verifier not found, performing basic check", {}, [Log.TAG_DEBUG])
 
-		# Check for Android helper on Android
-		if OS.get_name() == "Android":
-			var android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
-			if android_helper:
-				Log.info("Android logger helper found", {}, [Log.TAG_DEBUG])
-			else:
-				Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
+	# Check for iOS helper on iOS
+	if OS.get_name() == "iOS":
+		var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
+		if ios_helper:
+			Log.info("iOS logger helper found", {}, [Log.TAG_DEBUG])
+		else:
+			Log.error("iOS logger helper missing!", {}, [Log.TAG_DEBUG])
+
+	# Check for Android helper on Android
+	if OS.get_name() == "Android":
+		var android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
+		if android_helper:
+			Log.info("Android logger helper found", {}, [Log.TAG_DEBUG])
+		else:
+			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
 
 
 func debug_button_pressed(_name: String) -> void:

@@ -25,8 +25,8 @@ func _enter_tree() -> void:
 		print_rich("[color=#%s]Advanced Logger: iOS Loader registered[/color]" % LoggerColors.INFO_HTML)
 
 	# Register export plugin
-	_export_plugin = load(EXPORT_PLUGIN_PATH).new()
-	add_export_plugin(_export_plugin)
+	#_export_plugin = load(EXPORT_PLUGIN_PATH).new()
+	#add_export_plugin(_export_plugin)
 
 	# Register project settings for test tag inclusion
 	_register_project_settings()
