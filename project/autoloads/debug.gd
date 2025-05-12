@@ -62,16 +62,14 @@ func _verify_logger_export() -> void:
 
 	# Check for iOS helper on iOS
 	if OS.get_name() == "iOS":
-		var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
-		if ios_helper:
+		if IosLoggerHelper:
 			Log.info("iOS logger helper found", {}, [Log.TAG_DEBUG])
 		else:
 			Log.error("iOS logger helper missing!", {}, [Log.TAG_DEBUG])
 
 	# Check for Android helper on Android
 	if OS.get_name() == "Android":
-		var android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
-		if android_helper:
+		if AndroidLoggerHelper:
 			Log.info("Android logger helper found", {}, [Log.TAG_DEBUG])
 		else:
 			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])

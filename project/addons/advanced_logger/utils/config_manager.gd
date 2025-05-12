@@ -245,16 +245,16 @@ func _get_platform_config_path() -> String:
 
 	# Try to use Android helper if on Android
 	if platform == "Android":
-		var android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
+		var android_helper: Script = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
 		if android_helper:
-			return android_helper.get_config_path()
+			return AndroidLoggerHelper.get_config_path()
 		return "user://advanced_logger_settings.cfg"
 
 	# Try to use iOS helper if on iOS
 	elif platform == "iOS":
-		var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
+		var ios_helper: Script = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 		if ios_helper:
-			return ios_helper.get_config_path()
+			return IosLoggerHelper.get_config_path()
 		return "user://advanced_logger_settings.cfg"
 
 	# Default path for desktop platforms
