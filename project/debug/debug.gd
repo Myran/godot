@@ -80,13 +80,13 @@ func _ready() -> void:
 
 	# --- Initialize Other Firebase Modules (Optional) ---
 	if ClassDB.class_exists("FirebaseRemoteConfig"): Log.info("Checking for FirebaseRemoteConfig...", {}, ["debug", "initialization"]); remote_config = ClassDB.instantiate("FirebaseRemoteConfig"); if remote_config: remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
-	if ClassDB.class_exists("FirebaseMessaging"): Log.info("Checking for FirebaseMessaging...", {}, ["debug", "initialization"]); messaging = ClassDB.instantiate("FirebaseMessaging"); if messaging: messaging.connect("token", Callable(self, "messaging_token")); messaging.connect("message", Callable(self, "messaging_message"))
+	# if ClassDB.class_exists("FirebaseMessaging"): Log.info("Checking for FirebaseMessaging...", {}, ["debug", "initialization"]); messaging = ClassDB.instantiate("FirebaseMessaging"); if messaging: messaging.connect("token", Callable(self, "messaging_token")); messaging.connect("message", Callable(self, "messaging_message"))
 	if Engine.has_singleton("Auth"): Log.info("Checking for Auth singleton...", {}, ["debug", "initialization"]); auth = Engine.get_singleton("Auth")
 
 	# --- Initialize Other SDKs (Placeholders) ---
 	if Engine.has_singleton("GodotAppleAuth"): Log.info("Checking for GodotAppleAuth singleton...", {}, ["debug", "initialization"]); godot_apple_auth = Engine.get_singleton("GodotAppleAuth"); if godot_apple_auth: godot_apple_auth.connect("credential", Callable(self, "_on_credential")); godot_apple_auth.connect("authorization", Callable(self, "_on_authorization"))
 	if Engine.has_singleton("Facebook") or Engine.has_singleton("GodotFacebook"): Log.info("Facebook SDK available.", {}, [Log.TAG_FACEBOOK]); # Connect signals if needed
-	if ClassDB.class_exists("FirebaseAdmob"): Log.info("Checking for FirebaseAdmob class...", {}, ["debug", "initialization"]); admob = ClassDB.instantiate("FirebaseAdmob") # Connect signals if needed
+	# if ClassDB.class_exists("FirebaseAdmob"): Log.info("Checking for FirebaseAdmob class...", {}, ["debug", "initialization"]); admob = ClassDB.instantiate("FirebaseAdmob") # Connect signals if needed
 
 	# --- Connect UI Buttons (Non-RTDB ones) ---
 	Log.debug("Connecting non-RTDB UI buttons...", {}, ["debug", "ui", "initialization"])
