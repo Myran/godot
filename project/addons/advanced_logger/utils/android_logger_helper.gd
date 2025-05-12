@@ -20,7 +20,7 @@ static func get_config_path() -> String:
 static func configure_for_android(logger: ALogger) -> void:
 	if not is_android():
 		return
-	
+
 	# Android-specific settings
 	if not Engine.is_editor_hint():
 		# Disable rich text colors for better logcat compatibility
@@ -31,14 +31,14 @@ static func configure_for_android(logger: ALogger) -> void:
 static func strip_formatting(message: String) -> String:
 	# Remove BBCode formatting
 	var result = message.replace("[/color]", "")
-	
+
 	# Remove color tags with regex
 	var regex = RegEx.new()
 	regex.compile("\\[color=#[0-9a-fA-F]+\\]")
 	result = regex.sub(result, "", true)
-	
+
 	# Remove other BBCode tags if present
 	regex.compile("\\[/?[a-zA-Z]+\\]")
 	result = regex.sub(result, "", true)
-	
+
 	return result

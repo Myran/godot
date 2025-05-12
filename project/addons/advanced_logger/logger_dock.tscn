@@ -165,7 +165,7 @@ size_flags_vertical = 3
 mouse_filter = 1
 allow_reselect = true
 allow_rmb_select = true
-item_count = 43
+item_count = 45
 item_0/text = "🏷 Animation"
 item_1/text = "🏷 Apple"
 item_2/text = "🏷 Auth"
@@ -195,20 +195,22 @@ item_25/text = "⚙ Level:error"
 item_26/text = "⚙ Level:info"
 item_27/text = "⚙ Level:warning"
 item_28/text = "🏷 Local_data"
-item_29/text = "🏷 Network"
-item_30/text = "🏷 Performance"
-item_31/text = "🏷 Player"
-item_32/text = "🏷 Rng"
-item_33/text = "🏷 Rule"
-item_34/text = "🏷 Rules"
-item_35/text = "🏷 Stat"
-item_36/text = "🏷 State_transition"
-item_37/text = "🏷 System"
-item_38/text = "🏷 Test"
-item_39/text = "🏷 Ui_animation"
-item_40/text = "🏷 Ui_input"
-item_41/text = "🏷 Validation"
-item_42/text = "🏷 Win_condition"
+item_29/text = "🏷 Msg"
+item_30/text = "🏷 Network"
+item_31/text = "🏷 Performance"
+item_32/text = "🏷 Player"
+item_33/text = "🏷 Rng"
+item_34/text = "🏷 Rtdb"
+item_35/text = "🏷 Rule"
+item_36/text = "🏷 Rules"
+item_37/text = "🏷 Stat"
+item_38/text = "🏷 State_transition"
+item_39/text = "🏷 System"
+item_40/text = "🏷 Test"
+item_41/text = "🏷 Ui_animation"
+item_42/text = "🏷 Ui_input"
+item_43/text = "🏷 Validation"
+item_44/text = "🏷 Win_condition"
 
 [node name="HSeparatorAvailable" type="HSeparator" parent="VBoxContainer/TabContainer/Tags/TagsContainer"]
 layout_mode = 2
@@ -289,7 +291,6 @@ horizontal_alignment = 1
 
 [node name="ShowTimestampCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
 layout_mode = 2
-button_pressed = true
 text = "Show Timestamp"
 
 [node name="ShowTagsCheck" type="CheckBox" parent="VBoxContainer/TabContainer/Settings/FormatSection"]
