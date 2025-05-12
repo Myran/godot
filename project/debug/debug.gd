@@ -324,11 +324,19 @@ func _test_rtdb_listeners_add() -> void:
 		_make_rtdb_request("set_value_async", _listener_path_suffix, [{"status": "listening", "count": _listen_count}])
 	else:
 		status_label.text = "[ERROR] RTDB not init."
+
 func _test_rtdb_listeners_trigger_change() -> void:
 	Log.debug("RTDB Test: Trigger Listener Change", {}, ["test"])
 	_listen_count += 1
-	_make_rtdb_request("set_value_async", _listener_path_suffix + ["count"], [_listen_count])
-	_make_rtdb_request("set_value_async", _listener_path_suffix + ["status"], ["triggered_" + str(_listen_count)])
+
+	var path_for_count: Array[String]
+	path_for_count.assign(_listener_path_suffix + ["count"])
+	_make_rtdb_request("set_value_async", path_for_count, [_listen_count])
+
+	var path_for_status: Array[String]
+	path_for_status.assign( _listener_path_suffix + ["status"])
+	_make_rtdb_request("set_value_async", path_for_status, ["triggered_" + str(_listen_count)])
+
 func _test_rtdb_listeners_remove() -> void:
 	Log.debug("RTDB Test: Remove Listener", {}, ["test"])
 	if db:
