@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://du5rvnc3ulg1w"]
+[gd_scene load_steps=3 format=3 uid="uid://du5rvnc3ulg1w"]
 
 [ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://debug/theme_debugmenu.tres" id="1_3au6l"]
 [ext_resource type="Script" uid="uid://clqyb0iapb35n" path="res://debug/debug.gd" id="1_cx13k"]
-[ext_resource type="PackedScene" uid="uid://yftmen1pc7rw" path="res://debug/button_debug_menu.tscn" id="1_ufstt"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -13,114 +12,6 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-
-[node name="Node" type="Control" parent="."]
-visible = false
-anchors_preset = 0
-
-[node name="Auth" type="VBoxContainer" parent="Node"]
-visible = false
-layout_mode = 0
-offset_top = 433.0
-offset_bottom = 433.0
-theme_override_constants/separation = 10
-
-[node name="Button" parent="Node/Auth" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Firebase: Sign in Anonym
-"
-
-[node name="Button2" parent="Node/Auth" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Login information
-"
-
-[node name="Button3" parent="Node/Auth" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Remote Config: String
-
-"
-
-[node name="RTDB" type="VBoxContainer" parent="Node"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 534.0
-offset_bottom = 433.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 10
-
-[node name="Button4" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "RTDB: Push Value
-"
-
-[node name="Button5" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "RTDB: Get Value
-"
-
-[node name="Button6" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "RTDB: Set Value"
-
-[node name="Button7" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "RTDB: Delete Value"
-
-[node name="Button13" parent="Node/RTDB" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "RTDB: Advanced Features"
-
-[node name="RTDB2" type="VBoxContainer" parent="Node"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 534.0
-offset_bottom = 433.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 10
-
-[node name="Button4" parent="Node/RTDB2" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Get value async
-"
-
-[node name="Facebook" type="VBoxContainer" parent="Node"]
-visible = false
-layout_mode = 0
-offset_top = 433.0
-offset_bottom = 433.0
-theme_override_constants/separation = 10
-
-[node name="Button8" parent="Node/Facebook" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Analytics: All Tracking events
-"
-
-[node name="Button9" parent="Node/Facebook" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Facebook: Sign in"
-
-[node name="Button10" parent="Node/Facebook" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Facebook: link account"
-
-[node name="Button11" parent="Node/Facebook" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Facebook: unlink
-"
-
-[node name="Button12" parent="Node/Facebook" instance=ExtResource("1_ufstt")]
-layout_mode = 2
-text = "Facebook: log out
-"
 
 [node name="Debug" type="Control" parent="."]
 anchors_preset = 0
@@ -134,21 +25,27 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_3au6l")
-theme_override_constants/margin_bottom = 100
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 alignment = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+[node name="Button_close" type="Button" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "     X     "
+
+[node name="Panel" type="Panel" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 0.31
 
-[node name="Panel" type="Panel" parent="MarginContainer/VBoxContainer/MarginContainer"]
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -156,61 +53,28 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DebugRichTextLabel2" type="RichTextLabel" parent="MarginContainer/VBoxContainer/MarginContainer/Panel/VBoxContainer"]
+[node name="DebugRichTextLabel2" type="RichTextLabel" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 fit_content = true
 context_menu_enabled = true
 
-[node name="DebugRichTextLabel3" type="RichTextLabel" parent="MarginContainer/VBoxContainer/MarginContainer/Panel/VBoxContainer"]
+[node name="DebugRichTextLabel3" type="RichTextLabel" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 fit_content = true
 context_menu_enabled = true
 
-[node name="DebugRichTextLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/MarginContainer/Panel/VBoxContainer"]
+[node name="DebugRichTextLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 fit_content = true
 context_menu_enabled = true
 
-[node name="Button_close" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/Panel/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 8
-size_flags_vertical = 0
-text = "XXX"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/separation = 10
-
-[node name="RTDBTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "RTDB Tests"
-
-[node name="AuthTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Auth Tests"
-
-[node name="ConfigTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Config Tests"
-
-[node name="GeneralActionsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/separation = 5
-
-[node name="TabContainer" type="TabContainer" parent="MarginContainer/VBoxContainer"]
+[node name="DebugItemList" type="ItemList" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3

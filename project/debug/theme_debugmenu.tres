@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=2 format=3 uid="uid://bwcg8tn7on4fu"]
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://bwcg8tn7on4fu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sgtky"]
 content_margin_left = 0.0
@@ -17,7 +17,16 @@ corner_radius_bottom_right = 15
 corner_radius_bottom_left = 15
 corner_detail = 15
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_677hs"]
+content_margin_left = 25.0
+content_margin_top = 15.0
+content_margin_right = 25.0
+content_margin_bottom = 1.0
+bg_color = Color(0.15, 0.15, 0.2, 0.7)
+border_color = Color(0.3, 0.35, 0.45, 0.8)
+
 [resource]
-default_font_size = 40
+default_font_size = 52
 Button/styles/normal = SubResource("StyleBoxFlat_sgtky")
+Panel/styles/panel = SubResource("StyleBoxFlat_677hs")
 TabContainer/font_sizes/font_size = 68
