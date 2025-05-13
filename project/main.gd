@@ -5,10 +5,8 @@ func _ready() -> void:
 	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
 
-
 	var _args: PackedStringArray = OS.get_cmdline_user_args()
 	# Check if a specific flag exists
-
 
 	# Log which data source implementation is being used
 	Log.info("Using updated DataSource implementation", {}, ["system", "initialization"])
@@ -37,6 +35,7 @@ func _on_debug_event(event: debug.DebugEventType, _data: Variant = null) -> void
 			%PopupDebug.show()
 		debug.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU:
 			%PopupDebug.hide()
+
 
 func _input(event: InputEvent) -> void:
 	if event.as_text() == "Escape" and event.is_pressed():

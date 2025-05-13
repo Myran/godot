@@ -6,11 +6,15 @@ const UNIT_HEALTH: String = "current_health"
 const NO_UNIT_FOUND: int = -1
 
 
-func battle_start(allies_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]) -> Array[Context.Event]:
+func battle_start(
+	allies_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
+) -> Array[Context.Event]:
 	return battle_solver(allies_lineup, enemies_lineup)
 
 
-func battle_solver(allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]) -> Array[Context.Event]:
+func battle_solver(
+	allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
+) -> Array[Context.Event]:
 	var context: BattleContext = BattleContext.new(self)
 	_initialize_battle(context, allied_lineup, enemies_lineup)
 
@@ -23,12 +27,15 @@ func battle_solver(allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dic
 
 
 static func _initialize_battle(
-	context: BattleContext, allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
+	context: BattleContext,
+	allied_lineup: Dictionary[int, UnitData],
+	enemies_lineup: Dictionary[int, UnitData]
 ) -> void:
-	Log.debug("Initializing battle", {
-		"allied_count": allied_lineup.size(),
-		"enemy_count": enemies_lineup.size()
-	}, [Log.TAG_BATTLE, Log.TAG_INITIALIZATION])
+	Log.debug(
+		"Initializing battle",
+		{"allied_count": allied_lineup.size(), "enemy_count": enemies_lineup.size()},
+		[Log.TAG_BATTLE, Log.TAG_INITIALIZATION]
+	)
 	var dup_allies: Dictionary[int, UnitData] = duplicate_resource(allied_lineup)
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, dup_allies
@@ -44,7 +51,11 @@ static func _initialize_battle(
 
 # Turn processing
 static func process_turn(context: BattleContext) -> void:
-	Log.debug("Processing battle turn", {"side": context.is_allied_turn}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+	Log.debug(
+		"Processing battle turn",
+		{"side": context.is_allied_turn},
+		[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+	)
 	start_of_turn(context)
 	find_next_unit(context)
 	context.solve_events()
@@ -62,7 +73,11 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		var active_side: Side = context.get_active_side()
 		var sel_unit_pos: int = find_next_unactive_on_side(active_side)
 		if sel_unit_pos == NO_UNIT_FOUND:
-			Log.debug("All units activated, clearing activated units list", {}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+			Log.debug(
+				"All units activated, clearing activated units list",
+				{},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+			)
 			active_side.clear_activated()
 			sel_unit_pos = find_next_unactive_on_side(active_side)
 		var select_event: BattleContext.SelectActiveUnitEvent = (
@@ -74,7 +89,11 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		var allied_side: bool = event.is_allied_side
 		var side: Side = context.get_side(allied_side)
 		side.lineup = event.lineup_data
-		Log.debug("Lineup added to battle", {"side": allied_side, "lineup_size": side.lineup.size()}, [Log.TAG_BATTLE, Log.TAG_INITIALIZATION])
+		Log.debug(
+			"Lineup added to battle",
+			{"side": allied_side, "lineup_size": side.lineup.size()},
+			[Log.TAG_BATTLE, Log.TAG_INITIALIZATION]
+		)
 
 	elif event is BattleContext.SelectActiveUnitEvent:
 		var data: BattleContext.SelectActiveUnitEvent = event as BattleContext.SelectActiveUnitEvent
@@ -85,7 +104,11 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 			return
 		var sel_unit: UnitData = side.lineup[data.selected_unit_position]
 		context.mark_unit_activated(sel_unit)
-		Log.debug("Unit activated", {"unit": sel_unit.card_info.id, "position": data.selected_unit_position}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+		Log.debug(
+			"Unit activated",
+			{"unit": sel_unit.card_info.id, "position": data.selected_unit_position},
+			[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+		)
 		context.active_unit = sel_unit
 
 	elif event is BattleContext.CombatEvent:
@@ -104,10 +127,14 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		var defender_damage: BattleContext.DamageEvent = BattleContext.DamageEvent.new(
 			defender_current_attack, event_attacker, allied_attack
 		)
-		Log.debug("Combat damage calculated", {
-			"attacker_damage": attacker_current_attack,
-			"defender_damage": defender_current_attack
-		}, [Log.TAG_BATTLE, Log.TAG_COMBAT])
+		Log.debug(
+			"Combat damage calculated",
+			{
+				"attacker_damage": attacker_current_attack,
+				"defender_damage": defender_current_attack
+			},
+			[Log.TAG_BATTLE, Log.TAG_COMBAT]
+		)
 		context.add_event(attacker_damage)
 		context.add_event(defender_damage)
 
@@ -123,10 +150,11 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 						if shield_ability.shield_used == false:
 							context.add_event(BattleContext.ShieldEvent.new(target, side, false))
 							shield_ability.shield_used = true
-							Log.debug("Shield ability activated, damage prevented", {
-								"target": target,
-								"side": side
-							}, [Log.TAG_BATTLE, Log.TAG_COMBAT])
+							Log.debug(
+								"Shield ability activated, damage prevented",
+								{"target": target, "side": side},
+								[Log.TAG_BATTLE, Log.TAG_COMBAT]
+							)
 							return
 
 		var stat_change: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
@@ -141,15 +169,20 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		var side: Side = context.get_side(event_side)
 		var stat: StringName = event.stat_name
 		if !side.lineup.has(event.target_position):
-			Log.warning("Target unit not found during stat change", {
-				"target_position": event.target_position,
-				"side": event_side
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ERROR])
+			Log.warning(
+				"Target unit not found during stat change",
+				{"target_position": event.target_position, "side": event_side},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ERROR]
+			)
 			return
 		var unit: UnitData = side.lineup[event.target_position]
 		var current_stat: int = unit.get(stat)
 		if current_stat == null:
-			Log.warning("Stats change error during battle", {"event": event}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STAT, Log.TAG_ERROR])
+			Log.warning(
+				"Stats change error during battle",
+				{"event": event},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STAT, Log.TAG_ERROR]
+			)
 			return
 		var new_value: int = current_stat + event.change_value
 		unit.set(stat, new_value)
@@ -164,13 +197,25 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		var side: bool = event.is_allied_side
 		context.remove_unit(pos, side)
 	elif event is BattleContext.StartOfTurnEvent:
-		Log.debug("Start of battle turn", {"side": context.is_allied_turn}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+		Log.debug(
+			"Start of battle turn",
+			{"side": context.is_allied_turn},
+			[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+		)
 	elif event is BattleContext.EndOfTurnEvent:
-		Log.debug("End of battle turn", {"side": context.is_allied_turn}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+		Log.debug(
+			"End of battle turn",
+			{"side": context.is_allied_turn},
+			[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+		)
 
 
 static func find_next_unactive_on_side(side: Side) -> int:
-	Log.debug("Finding next unactivated unit", {"side_units": side.lineup.size()}, [Log.TAG_BATTLE, Log.TAG_COMBAT])
+	Log.debug(
+		"Finding next unactivated unit",
+		{"side_units": side.lineup.size()},
+		[Log.TAG_BATTLE, Log.TAG_COMBAT]
+	)
 	for pos: int in side.lineup:
 		var unit: UnitData = side.lineup[pos]
 		if !side.has_unit(unit):
@@ -180,7 +225,11 @@ static func find_next_unactive_on_side(side: Side) -> int:
 
 # Combat helpers
 static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
-	Log.debug("Creating combat event", {"attacker": attacker_unit.card_info.id}, [Log.TAG_BATTLE, Log.TAG_COMBAT])
+	Log.debug(
+		"Creating combat event",
+		{"attacker": attacker_unit.card_info.id},
+		[Log.TAG_BATTLE, Log.TAG_COMBAT]
+	)
 	var target_lineup: Dictionary[int, UnitData] = context.get_inactive_side().lineup
 	var attacker_lineup: Dictionary[int, UnitData] = context.get_active_side().lineup
 	var opposing_unit: UnitData = find_combat_target(target_lineup)
@@ -212,7 +261,11 @@ static func activate_current_unit(context: BattleContext) -> void:
 		BattleAction.ATTACK_REGULAR:
 			event = create_combat_event(context.active_unit, context)
 		_:
-			Log.warning("No action selected for unit in battle", {}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_VALIDATION, Log.TAG_ERROR])
+			Log.warning(
+				"No action selected for unit in battle",
+				{},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_VALIDATION, Log.TAG_ERROR]
+			)
 
 	if event:
 		context.add_event(event)
@@ -232,19 +285,35 @@ static func solve_death_test(context: BattleContext) -> void:
 
 static func solve_win_conditions(context: BattleContext) -> void:
 	if context.is_side_empty(true) and context.is_side_empty(false):
-		Log.info("Battle ended in a draw", {}, [Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION])
+		Log.info(
+			"Battle ended in a draw",
+			{},
+			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION]
+		)
 		context.end_battle()
 	elif context.is_side_empty(true):
-		Log.info("Battle ended - Allied side lost", {}, [Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION])
+		Log.info(
+			"Battle ended - Allied side lost",
+			{},
+			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION]
+		)
 		context.end_battle()
 	elif context.is_side_empty(false):
-		Log.info("Battle ended - Enemy side lost", {}, [Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION])
+		Log.info(
+			"Battle ended - Enemy side lost",
+			{},
+			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION]
+		)
 		context.end_battle()
 	else:
-		Log.debug("Win conditions not met, continuing battle", {
-			"allied_units": context.get_side(true).lineup.size(),
-			"enemy_units": context.get_side(false).lineup.size()
-		}, [Log.TAG_BATTLE, Log.TAG_WIN_CONDITION])
+		Log.debug(
+			"Win conditions not met, continuing battle",
+			{
+				"allied_units": context.get_side(true).lineup.size(),
+				"enemy_units": context.get_side(false).lineup.size()
+			},
+			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION]
+		)
 
 
 # Utility functions

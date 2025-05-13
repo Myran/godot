@@ -6,7 +6,7 @@ signal finished
 
 func _init() -> void:  # Added return type
 	var win: Window = Engine.get_main_loop().root
-	win.call_deferred('add_child',self)
+	win.call_deferred("add_child", self)
 
 
 # Added Signal type to indicate godot built-in Signal class
@@ -22,7 +22,11 @@ func finish() -> void:  # Added return type
 
 
 func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
-	Log.error("Method not implemented in SignalAwaiter base class", {"method": "_on_signal_received"}, [Log.TAG_ERROR])
+	Log.error(
+		"Method not implemented in SignalAwaiter base class",
+		{"method": "_on_signal_received"},
+		[Log.TAG_ERROR]
+	)
 	finish()
 
 

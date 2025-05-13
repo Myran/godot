@@ -88,33 +88,53 @@ func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 
 
 func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) -> void:
-	Log.debug("Resolving core event", {"event_type": event.get_class()}, [Log.TAG_GAME_STATE, Log.TAG_EVENT])
+	Log.debug(
+		"Resolving core event",
+		{"event_type": event.get_class()},
+		[Log.TAG_GAME_STATE, Log.TAG_EVENT]
+	)
 	if event is core.CardStatChangeEvent:
 		var card: Card = event.card
 		if event.health != 0:
 			var health: int = event.health
-			Log.debug("Changing card health", {"card": card.card_info.id, "health_change": health}, [Log.TAG_CARD])
+			Log.debug(
+				"Changing card health",
+				{"card": card.card_info.id, "health_change": health},
+				[Log.TAG_CARD]
+			)
 			card_handler.change_health(card, health)
 
 		if event.attack != 0:
 			var attack: int = event.attack
-			Log.debug("Changing card attack", {"card": card.card_info.id, "attack_change": attack}, [Log.TAG_CARD])
+			Log.debug(
+				"Changing card attack",
+				{"card": card.card_info.id, "attack_change": attack},
+				[Log.TAG_CARD]
+			)
 			card_handler.change_attack(card, attack)
 		@warning_ignore("return_value_discarded")
 		card.show_upgrade()
 
 	elif event is core.TransitionEvent:
 		var new_state: core.GameState = event.new_state
-		Log.info("Game state transition", {
-			"from": core.GameState.keys()[game_handler.current_gamestate],
-			"to": core.GameState.keys()[new_state]
-		}, [Log.TAG_GAME_STATE, Log.TAG_STATE_TRANSITION])
+		Log.info(
+			"Game state transition",
+			{
+				"from": core.GameState.keys()[game_handler.current_gamestate],
+				"to": core.GameState.keys()[new_state]
+			},
+			[Log.TAG_GAME_STATE, Log.TAG_STATE_TRANSITION]
+		)
 		game_handler.set_gamestate(new_state)
 
 	elif event is core.EnemyLineupAddCardEvent:
 		var pos: int = event.pos
 		var card: Card = event.card
-		Log.debug("Adding card to enemy lineup", {"card": card.card_info.id, "position": pos}, [Log.TAG_CARD, Log.TAG_BATTLE])
+		Log.debug(
+			"Adding card to enemy lineup",
+			{"card": card.card_info.id, "position": pos},
+			[Log.TAG_CARD, Log.TAG_BATTLE]
+		)
 		var holder: Holder = holder_enemy.get_holder(pos)
 		holder.set_card(card)
 
@@ -134,7 +154,11 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		Log.debug("Testing for card tripples", {}, [Log.TAG_CARD, Log.TAG_RULES])
 		var tripples: Array[Card] = lineup_handler.find_tripples()
 		if not tripples.is_empty():
-			Log.info("Found card tripple match", {"tripple_count": tripples.size()}, [Log.TAG_CARD, Log.TAG_RULES])
+			Log.info(
+				"Found card tripple match",
+				{"tripple_count": tripples.size()},
+				[Log.TAG_CARD, Log.TAG_RULES]
+			)
 			var card: Card = tripples[0]
 			current_context.add_event(core.LineupMergeEvent.new(card, tripples))
 		current_context.solve_events()
@@ -142,7 +166,11 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupMergeEvent:
 		var card: Card = event.card
 		var tripples: Array = event.tripples
-		Log.info("Merging cards", {"base_card": card.card_info.id, "tripple_count": tripples.size()}, [Log.TAG_CARD, Log.TAG_RULES])
+		Log.info(
+			"Merging cards",
+			{"base_card": card.card_info.id, "tripple_count": tripples.size()},
+			[Log.TAG_CARD, Log.TAG_RULES]
+		)
 		var new_card: Card = await lineup_handler.merge(card, tripples)
 		current_context = update_context_units(current_context)
 		# Simplified to avoid potential ternary issues
@@ -150,14 +178,22 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.solve_events()
 
 	elif event is core.BattleEvent:
-		Log.info("Starting battle event sequence", {"event_count": event.battle_events.size()}, [Log.TAG_BATTLE, Log.TAG_EVENT])
+		Log.info(
+			"Starting battle event sequence",
+			{"event_count": event.battle_events.size()},
+			[Log.TAG_BATTLE, Log.TAG_EVENT]
+		)
 		var enacter: BattleEnacter = BattleEnacter.new(battle_layer, holder_allies, holder_enemy)
 		add_child(enacter)
 		var events: Array[Context.Event] = event.battle_events
 		await enacter.enact(events)
 		enacter.queue_free()
 
-		Log.debug("Battle complete, transitioning to post-battle", {}, [Log.TAG_BATTLE, Log.TAG_STATE_TRANSITION])
+		Log.debug(
+			"Battle complete, transitioning to post-battle",
+			{},
+			[Log.TAG_BATTLE, Log.TAG_STATE_TRANSITION]
+		)
 		core.action(core.TransitionEvent.new(core.GameState.POSTBATTLE))
 
 	elif event is core.ResetUnitsEvent:
@@ -172,13 +208,21 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void:
 	Log.debug("Resolving UI event", {"event_type": _event.get_class()}, [Log.TAG_UI, Log.TAG_EVENT])
 	if ui_state == core.UIState.LOCKED:
-		Log.debug("UI locked, ignoring event", {"event_type": _event.get_class()}, [Log.TAG_UI, Log.TAG_GAME_STATE])
+		Log.debug(
+			"UI locked, ignoring event",
+			{"event_type": _event.get_class()},
+			[Log.TAG_UI, Log.TAG_GAME_STATE]
+		)
 		return
 
 	if _event is ui.DraftHolderToggledEvent:
 		var col: int = _event.col
 		var new_state: bool = _event.new_state
-		Log.debug("Draft holder toggled", {"column": col, "new_state": new_state}, [Log.TAG_UI, Log.TAG_DRAFT])
+		Log.debug(
+			"Draft holder toggled",
+			{"column": col, "new_state": new_state},
+			[Log.TAG_UI, Log.TAG_DRAFT]
+		)
 		draft_handler.hold_toggle(col, new_state)
 	elif _event is ui.ShowCardEvent:
 		var card: Card = _event.card_to_show
@@ -209,7 +253,9 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.TouchEvent:
 		var event: InputEvent = _event.event
 		var sender: Object = _event.sender
-		Log.debug("Touch event received", {"sender": sender.get_class()}, [Log.TAG_UI, Log.TAG_UI_INPUT])
+		Log.debug(
+			"Touch event received", {"sender": sender.get_class()}, [Log.TAG_UI, Log.TAG_UI_INPUT]
+		)
 		var update_draft: bool = input_handler.touch_handler(event, sender, current_context)
 		if update_draft:
 			ui_state = core.UIState.LOCKED

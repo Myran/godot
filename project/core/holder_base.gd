@@ -4,7 +4,9 @@ var current_pos: Vector2i = Vector2i.ZERO
 var is_moving: bool = false
 
 
-func get_current_lineup(duplicate_card: bool = false, new_layer: Node = null) -> Dictionary[int, Card]:
+func get_current_lineup(
+	duplicate_card: bool = false, new_layer: Node = null
+) -> Dictionary[int, Card]:
 	var retval: Dictionary[int, Card] = {}
 	for pos: Holder in $grid_container.get_children():
 		var card: Card = pos.get_card()

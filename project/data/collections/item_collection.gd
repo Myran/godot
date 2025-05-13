@@ -71,9 +71,11 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			if item is Dictionary:
 				safe_result.append(item)
 			else:
-				Log.warning("Skipped non-dictionary item in array", {
-					"item_type": typeof(item)
-				}, [Log.TAG_DB, Log.TAG_WARNING])
+				Log.warning(
+					"Skipped non-dictionary item in array",
+					{"item_type": typeof(item)},
+					[Log.TAG_DB, Log.TAG_WARNING]
+				)
 		result = safe_result
 
 		Log.debug(

@@ -3,9 +3,11 @@ class_name EvilSynergyAbility extends Ability
 var health_per_evil: int
 var attack_per_evil: int
 
+
 func _init(health_bonus: int = 1, attack_bonus: int = 1) -> void:
 	health_per_evil = health_bonus
 	attack_per_evil = attack_bonus
+
 
 func handle_battle_event(
 	_phase: core.Tempus,
@@ -16,16 +18,17 @@ func handle_battle_event(
 ) -> void:
 	pass
 
+
 func handle_draft_event(
-	phase: core.Tempus, 
-	_unit_position: int, 
-	unit: Block, 
-	draft_context: DraftContext, 
+	phase: core.Tempus,
+	_unit_position: int,
+	unit: Block,
+	draft_context: DraftContext,
 	draft_event: core.CoreEvent
 ) -> void:
 	if phase != core.Tempus.POST:
 		return
-		
+
 	if not draft_event is core.LineupAddCardEvent:
 		return
 
@@ -40,11 +43,10 @@ func handle_draft_event(
 		var total_attack_bonus: int = attack_per_evil * evil_unit_count
 		var modified_card: Card = unit
 		var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
-			modified_card,
-			total_health_bonus,
-			total_attack_bonus
+			modified_card, total_health_bonus, total_attack_bonus
 		)
 		draft_context.add_event(stat_change_event)
+
 
 func count_evil_units_in_lineup(lineup: Dictionary[int, Card], current_unit: Block) -> int:
 	var evil_count: int = 0

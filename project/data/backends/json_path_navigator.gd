@@ -4,12 +4,15 @@ extends RefCounted
 ## A utility class for safely navigating nested JSON structures.
 ## Provides consistent error handling and type safety.
 
+
 ## Navigate a JSON structure using a path array.
 ## @param json_data The JSON structure to navigate (can be Dictionary or Array)
 ## @param path Array of path components to navigate through
 ## @param _default_value Optional default value to return if path is not found (unused)
 ## @return NavigationResult object containing the result
-static func navigate(json_data: Variant, path: Array, _default_value: Variant = null) -> NavigationResult:
+static func navigate(
+	json_data: Variant, path: Array, _default_value: Variant = null
+) -> NavigationResult:
 	if json_data == null:
 		return NavigationResult.new_not_found("JSON data is null", path)
 
@@ -61,6 +64,7 @@ static func navigate(json_data: Variant, path: Array, _default_value: Variant = 
 	# Successfully navigated the entire path
 	return _create_result_for_type(current_data, path)
 
+
 ## Create a NavigationResult based on the type of data found
 ## @param data The data to wrap in a NavigationResult
 ## @param path The path that was navigated
@@ -77,6 +81,7 @@ static func _create_result_for_type(data: Variant, path: Array) -> NavigationRes
 	else:
 		return NavigationResult.new_value(data, path)
 
+
 ## Get a formatted list of available keys from a dictionary
 ## @param data Dictionary to extract keys from
 ## @return Dictionary with key information for error reporting
@@ -84,20 +89,23 @@ static func _get_available_keys(data: Dictionary) -> Dictionary:
 	var available_keys: Array = data.keys()
 	var max_keys: int = min(10, available_keys.size())
 	return {
-		"available_keys": available_keys.slice(0, max_keys),
-		"total_keys": available_keys.size()
+		"available_keys": available_keys.slice(0, max_keys), "total_keys": available_keys.size()
 	}
+
 
 ## Get a value by navigating a path, returning a default if not found
 ## @param json_data The JSON structure to navigate
 ## @param path Array of path components to navigate through
 ## @param default_value Value to return if path is not found
 ## @return The found value or the default value
-static func get_value(json_data: Variant, path: Array[Variant], default_value: Variant = null) -> Variant:
+static func get_value(
+	json_data: Variant, path: Array[Variant], default_value: Variant = null
+) -> Variant:
 	var result: NavigationResult = navigate(json_data, path)
 	if result.found:
 		return result.value
 	return default_value
+
 
 ## Check if a path exists in the JSON structure
 ## @param json_data The JSON structure to navigate
@@ -106,16 +114,20 @@ static func get_value(json_data: Variant, path: Array[Variant], default_value: V
 static func path_exists(json_data: Variant, path: Array[Variant]) -> bool:
 	return navigate(json_data, path).found
 
+
 ## Get a dictionary at the specified path
 ## @param json_data The JSON structure to navigate
 ## @param path Array of path components to navigate through
 ## @param default_dict Dictionary to return if path is not found or not a dictionary
 ## @return Dictionary at the specified path or default dictionary
-static func get_dictionary(json_data: Variant, path: Array[Variant], default_dict: Dictionary = {}) -> Dictionary:
+static func get_dictionary(
+	json_data: Variant, path: Array[Variant], default_dict: Dictionary = {}
+) -> Dictionary:
 	var result: NavigationResult = navigate(json_data, path)
 	if result.found and result.is_dictionary():
 		return result.as_dictionary()
 	return default_dict
+
 
 ## Get an array at the specified path
 ## @param json_data The JSON structure to navigate
@@ -128,12 +140,15 @@ static func get_array(json_data: Variant, path: Array[Variant], default_array: A
 		return result.as_array()
 	return default_array
 
+
 ## Get a string at the specified path
 ## @param json_data The JSON structure to navigate
 ## @param path Array of path components to navigate through
 ## @param default_str String to return if path is not found or not a string
 ## @return String at the specified path or default string
-static func get_string(json_data: Variant, path: Array[Variant], default_str: String = "") -> String:
+static func get_string(
+	json_data: Variant, path: Array[Variant], default_str: String = ""
+) -> String:
 	var result: NavigationResult = navigate(json_data, path)
 	if result.found:
 		if result.value is String:
@@ -142,6 +157,7 @@ static func get_string(json_data: Variant, path: Array[Variant], default_str: St
 			# Try to convert to string if possible
 			return str(result.value)
 	return default_str
+
 
 ## Get an integer at the specified path
 ## @param json_data The JSON structure to navigate
@@ -163,12 +179,15 @@ static func get_int(json_data: Variant, path: Array[Variant], default_int: int =
 				return string_value.to_int()
 	return default_int
 
+
 ## Get a float at the specified path
 ## @param json_data The JSON structure to navigate
 ## @param path Array of path components to navigate through
 ## @param default_float Float to return if path is not found or not a float
 ## @return Float at the specified path or default float
-static func get_float(json_data: Variant, path: Array[Variant], default_float: float = 0.0) -> float:
+static func get_float(
+	json_data: Variant, path: Array[Variant], default_float: float = 0.0
+) -> float:
 	var result: NavigationResult = navigate(json_data, path)
 	if result.found:
 		if result.value is float:
@@ -182,6 +201,7 @@ static func get_float(json_data: Variant, path: Array[Variant], default_float: f
 			if string_value.is_valid_float():
 				return string_value.to_float()
 	return default_float
+
 
 ## Get a boolean at the specified path
 ## @param json_data The JSON structure to navigate

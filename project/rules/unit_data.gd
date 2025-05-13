@@ -105,11 +105,7 @@ func post_event_response(
 
 
 func check_abilities(
-	tempus: int,
-	u_pos: int,
-	u_side: int,
-	battle_context: BattleContext,
-	_event: Context.Event
+	tempus: int, u_pos: int, u_side: int, battle_context: BattleContext, _event: Context.Event
 ) -> void:
 	for _ability: Ability in abilities:
 		_ability.handle_battle_event(tempus, u_pos, u_side, battle_context, _event)

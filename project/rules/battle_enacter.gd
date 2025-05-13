@@ -12,8 +12,14 @@ func _init(layer: Node, allies: HolderContainer, enemies: HolderContainer) -> vo
 
 
 func enact(battle_events: Array[Context.Event]) -> void:
-	Log.info("Starting battle animation sequence", {"event_count": battle_events.size()}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_INITIALIZATION])
-	Log.debug("Battle events to animate", {"events": battle_events}, [Log.TAG_BATTLE, Log.TAG_ANIMATION])
+	Log.info(
+		"Starting battle animation sequence",
+		{"event_count": battle_events.size()},
+		[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_INITIALIZATION]
+	)
+	Log.debug(
+		"Battle events to animate", {"events": battle_events}, [Log.TAG_BATTLE, Log.TAG_ANIMATION]
+	)
 
 	var return_tween: Tween
 	var allied_units: Dictionary = allied_holder.get_current_lineup(true, battle_layer)
@@ -22,23 +28,41 @@ func enact(battle_events: Array[Context.Event]) -> void:
 	enemy_holder.hide_lineup()
 
 	for event: Context.Event in battle_events:
-		Log.debug("Processing battle event", {"event_type": event.get_class()}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION])
+		Log.debug(
+			"Processing battle event",
+			{"event_type": event.get_class()},
+			[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION]
+		)
 
 		if event is BattleContext.AddLineupEvent:
-			Log.debug("Adding lineup to battle", {"allied": event.is_allied_side}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_INITIALIZATION])
+			Log.debug(
+				"Adding lineup to battle",
+				{"allied": event.is_allied_side},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_INITIALIZATION]
+			)
 
 		elif event is BattleContext.FindNextUnitEvent:
-			Log.debug("Finding next active unit", {}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT])
+			Log.debug(
+				"Finding next active unit", {}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT]
+			)
 
 		elif event is BattleContext.SelectActiveUnitEvent:
-			Log.debug("Selected active unit", {"position": event.selected_unit_position, "allied": event.is_allied_side}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION])
+			Log.debug(
+				"Selected active unit",
+				{"position": event.selected_unit_position, "allied": event.is_allied_side},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
+			)
 
 		elif event is BattleContext.CombatEvent:
-			Log.debug("Combat event", {
-				"attacker_position": event.attacker_position, 
-				"defender_position": event.defender_position,
-				"allied_attack": event.is_allied_attack
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION])
+			Log.debug(
+				"Combat event",
+				{
+					"attacker_position": event.attacker_position,
+					"defender_position": event.defender_position,
+					"allied_attack": event.is_allied_attack
+				},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION]
+			)
 			var attacker: Node2D = (
 				allied_units[event.attacker_position]
 				if event.is_allied_attack
@@ -52,16 +76,17 @@ func enact(battle_events: Array[Context.Event]) -> void:
 			# Prepare names with explicit variables instead of ternary operators
 			var attacker_name: String = "unknown"
 			var defender_name: String = "unknown"
-			
+
 			if attacker != null:
 				attacker_name = attacker.get_name()
 			if defender != null:
 				defender_name = defender.get_name()
-				
-			Log.debug("Combat participants", {
-				"attacker": attacker_name,
-				"defender": defender_name
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_CARD])
+
+			Log.debug(
+				"Combat participants",
+				{"attacker": attacker_name, "defender": defender_name},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_CARD]
+			)
 
 			var combat_tween: Tween = create_tween()
 
@@ -152,11 +177,15 @@ func enact(battle_events: Array[Context.Event]) -> void:
 			return_tween.play()
 
 		elif event is BattleContext.DamageEvent:
-			Log.debug("Damage event", {
-				"target_position": event.target_position,
-				"damage_amount": event.damage_amount,
-				"allied_side": event.is_allied_side
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION])
+			Log.debug(
+				"Damage event",
+				{
+					"target_position": event.target_position,
+					"damage_amount": event.damage_amount,
+					"allied_side": event.is_allied_side
+				},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION]
+			)
 			var target: Node2D = (
 				allied_units[event.target_position]
 				if event.is_allied_side
@@ -166,18 +195,23 @@ func enact(battle_events: Array[Context.Event]) -> void:
 			var target_name: String = "unknown"
 			if target != null:
 				target_name = target.get_name()
-				
-			Log.debug("Applying damage to target", {
-				"target": target_name,
-				"damage": event.damage_amount
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_CARD])
+
+			Log.debug(
+				"Applying damage to target",
+				{"target": target_name, "damage": event.damage_amount},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_CARD]
+			)
 
 		elif event is BattleContext.ShieldEvent:
-			Log.debug("Shield event", {
-				"target_position": event.target_position,
-				"shield_active": event.shield_active,
-				"allied_side": event.is_allied_side
-			}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION])
+			Log.debug(
+				"Shield event",
+				{
+					"target_position": event.target_position,
+					"shield_active": event.shield_active,
+					"allied_side": event.is_allied_side
+				},
+				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION]
+			)
 			var target: Node2D = (
 				allied_units[event.target_position]
 				if event.is_allied_side
@@ -191,19 +225,24 @@ func enact(battle_events: Array[Context.Event]) -> void:
 			var target_name: String = "unknown"
 			if target != null:
 				target_name = target.get_name()
-				
-			Log.debug("Shield status changed", {
-				"target": target_name,
-				"shield_active": event.shield_active
-			}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT, Log.TAG_CARD])
+
+			Log.debug(
+				"Shield status changed",
+				{"target": target_name, "shield_active": event.shield_active},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT, Log.TAG_CARD]
+			)
 
 		elif event is BattleContext.StatChangeEvent:
-			Log.debug("Stat change event", {
-				"stat": event.stat_name,
-				"target_position": event.target_position,
-				"new_value": event.new_stat_value,
-				"allied_side": event.is_allied_side
-			}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STAT, Log.TAG_COMBAT])
+			Log.debug(
+				"Stat change event",
+				{
+					"stat": event.stat_name,
+					"target_position": event.target_position,
+					"new_value": event.new_stat_value,
+					"allied_side": event.is_allied_side
+				},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STAT, Log.TAG_COMBAT]
+			)
 			var unit_side: Dictionary = allied_units if event.is_allied_side else enemy_units
 			if !unit_side.has(event.target_position):
 				continue
@@ -216,10 +255,11 @@ func enact(battle_events: Array[Context.Event]) -> void:
 					target.base.set_card_health(event.new_stat_value)
 
 		elif event is BattleContext.DeathEvent:
-			Log.debug("Death event", {
-				"unit_position": event.unit_position,
-				"allied_side": event.is_allied_side
-			}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT])
+			Log.debug(
+				"Death event",
+				{"unit_position": event.unit_position, "allied_side": event.is_allied_side},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT]
+			)
 			var side: Dictionary = allied_units if event.is_allied_side else enemy_units
 			var target: Node2D = side[event.unit_position]
 			side.erase(event.unit_position)
@@ -227,10 +267,18 @@ func enact(battle_events: Array[Context.Event]) -> void:
 
 		elif event is BattleContext.StartOfTurnEvent:
 			await get_tree().create_timer(0.1).timeout
-			Log.debug("Start of turn event", {}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION, Log.TAG_COMBAT])
+			Log.debug(
+				"Start of turn event",
+				{},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION, Log.TAG_COMBAT]
+			)
 
 		elif event is BattleContext.EndOfTurnEvent:
-			Log.debug("End of turn event", {}, [Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION, Log.TAG_COMBAT])
+			Log.debug(
+				"End of turn event",
+				{},
+				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION, Log.TAG_COMBAT]
+			)
 			await return_tween.finished
 
 	# Cleanup phase

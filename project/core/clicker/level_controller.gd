@@ -5,7 +5,7 @@ class_name LevelController extends Control
 
 var current_level: TileMapLayer
 var current_level_name: String
-var block_grid : Dictionary[Vector2i, Block] = {}
+var block_grid: Dictionary[Vector2i, Block] = {}
 var refill_distance: Vector2
 
 
@@ -17,16 +17,26 @@ func _ready() -> void:
 func _on_debug_event(event: debug.DebugEventType, _data: Array) -> void:
 	match event:
 		debug.DebugEventType.EVENT_RESET_MATCH_LEVEL:
-			Log.debug("Debug event: Resetting current level", {"level": current_level_name}, [Log.TAG_LEVEL, Log.TAG_DEBUG])
+			Log.debug(
+				"Debug event: Resetting current level",
+				{"level": current_level_name},
+				[Log.TAG_LEVEL, Log.TAG_DEBUG]
+			)
 			setup_level(current_level_name)
 		debug.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			var lvl_name: String = _data[0]
-			Log.debug("Debug event: Force loading level", {"level": lvl_name}, [Log.TAG_LEVEL, Log.TAG_DEBUG])
+			Log.debug(
+				"Debug event: Force loading level",
+				{"level": lvl_name},
+				[Log.TAG_LEVEL, Log.TAG_DEBUG]
+			)
 			setup_level(lvl_name)
 
 
 func setup_level(level_name: String = "default") -> void:
-	Log.info("Setting up level", {"level_name": level_name}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION])
+	Log.info(
+		"Setting up level", {"level_name": level_name}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
+	)
 	var new_level: TileMapLayer = _level_factory.create_level(level_name)
 	if new_level == null:
 		return
@@ -38,13 +48,17 @@ func setup_level(level_name: String = "default") -> void:
 	current_level = new_level
 	current_level_name = level_name
 	refill_distance = Vector2(0, current_level.tile_set.tile_size.y)
-	Log.debug("RefillDistance set for level", {"distance": refill_distance, "level": level_name}, [Log.TAG_CLICKER, Log.TAG_GAME_STATE])
+	Log.debug(
+		"RefillDistance set for level",
+		{"distance": refill_distance, "level": level_name},
+		[Log.TAG_CLICKER, Log.TAG_GAME_STATE]
+	)
 	create_blocks_from_level()
 
 
 func create_blocks_from_level() -> void:
 	Log.debug("Creating blocks from level layout", {}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION])
-	for tile_pos : Vector2i in current_level.get_used_cells():
+	for tile_pos: Vector2i in current_level.get_used_cells():
 		var block: Block
 		match current_level.get_cell_source_id(tile_pos):
 			0:
@@ -89,7 +103,11 @@ func create_block() -> Block:
 
 
 func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
-	Log.debug("Adding block to grid", {"grid_pos": grid_pos, "block_type": block.object_type, "refill": refill}, [Log.TAG_LEVEL, Log.TAG_GRID])
+	Log.debug(
+		"Adding block to grid",
+		{"grid_pos": grid_pos, "block_type": block.object_type, "refill": refill},
+		[Log.TAG_LEVEL, Log.TAG_GRID]
+	)
 	block_grid[grid_pos] = block
 	current_level.add_child(block)
 	var refill_pos: Vector2 = refill_distance * refill
@@ -125,7 +143,7 @@ func has_pos(pos: Vector2i) -> bool:
 
 
 func all_blocks() -> Array[Block]:
-	var block_array : Array[Block] = []
+	var block_array: Array[Block] = []
 	block_array.assign(block_grid.values())
 	return block_array
 
@@ -135,7 +153,11 @@ func grid_to_world_pos(grid_pos: Vector2i) -> Vector2:
 
 
 func move_blocks() -> void:
-	Log.debug("Moving blocks to positions", {"block_count": block_grid.size()}, [Log.TAG_LEVEL, Log.TAG_GRID, Log.TAG_UI_ANIMATION])
+	Log.debug(
+		"Moving blocks to positions",
+		{"block_count": block_grid.size()},
+		[Log.TAG_LEVEL, Log.TAG_GRID, Log.TAG_UI_ANIMATION]
+	)
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
 	var b_moving: Array = all_blocks()
 	for block_iterator: Block in b_moving:
@@ -146,7 +168,11 @@ func move_blocks() -> void:
 
 
 func remove_from_grid(block: Block, destroy: bool = true) -> void:
-	Log.debug("Removing block from grid", {"block_type": block.object_type, "destroy": destroy}, [Log.TAG_LEVEL, Log.TAG_GRID])
+	Log.debug(
+		"Removing block from grid",
+		{"block_type": block.object_type, "destroy": destroy},
+		[Log.TAG_LEVEL, Log.TAG_GRID]
+	)
 	var remove_pos: Vector2i = get_grid_pos(block)
 	#kan om redan borttaget som inmergade objectet
 	if remove_pos != Clicker.NO_POS:

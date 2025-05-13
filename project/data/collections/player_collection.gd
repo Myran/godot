@@ -1,11 +1,13 @@
 class_name PlayerCollection
 extends BaseCollection
 
+
 ## Initialize the player collection with the backend
 ## @param backend The data backend to use
 func _init(backend: DataBackend) -> void:
 	super(backend, ["players"], "players")
 	Log.info("PlayerCollection initialized", {}, [Log.TAG_DB])
+
 
 ## Get user data for a UUID
 ## @param uuid UUID of the player (if empty, uses current user from Auth)
@@ -32,6 +34,7 @@ func get_user_data(uuid: String = "") -> Dictionary:
 	Log.debug("Retrieved user data", {"uuid": uuid}, [Log.TAG_DB])
 	return result
 
+
 ## Save user data for the current user
 ## @param data Dictionary containing player data to save
 ## @return bool True if save was successful
@@ -49,6 +52,7 @@ func save_user_data(data: Dictionary) -> bool:
 
 	@warning_ignore("redundant_await")
 	return await _backend.set_data(path, "avatar_data", data)
+
 
 ## Get default player data structure
 ## @return Dictionary with default player data

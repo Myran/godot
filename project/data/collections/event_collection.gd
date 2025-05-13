@@ -3,6 +3,7 @@ extends BaseCollection
 
 var _collection_key: String = ""
 
+
 ## Initialize the event collection with the backend
 ## @param backend The data backend to use
 ## @param test_group The test group suffix to use
@@ -10,6 +11,7 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, [data_source.DEFAULT_SHEETS_ID], "events")
 	_collection_key = "event_data_" + str(test_group)
 	Log.info("EventCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
+
 
 ## Get all events
 ## @return Array of event dictionaries
@@ -30,13 +32,20 @@ func get_all() -> Array[Dictionary]:
 			if item is Dictionary:
 				typed_result.append(item)
 			else:
-				Log.warning("Skipped non-dictionary item in array", {
-					"item_type": typeof(item)
-				}, [Log.TAG_DB, Log.TAG_WARNING])
+				Log.warning(
+					"Skipped non-dictionary item in array",
+					{"item_type": typeof(item)},
+					[Log.TAG_DB, Log.TAG_WARNING]
+				)
 		return typed_result
 	else:
-		Log.error("Expected Array but got different type", {"type": typeof(result)}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Expected Array but got different type",
+			{"type": typeof(result)},
+			[Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return []
+
 
 ## Get lineup data for an event
 ## @param event Event ID to get lineups for
@@ -45,7 +54,9 @@ func get_lineup_data(event: String) -> Dictionary:
 	Log.info("Getting event lineups data", {"event": event}, [Log.TAG_DB])
 
 	if not _backend.is_available():
-		Log.error("Database not available for getting event lineups", {}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Database not available for getting event lineups", {}, [Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return {}
 
 	var path: Array[Variant] = ["events", event]
@@ -54,6 +65,7 @@ func get_lineup_data(event: String) -> Dictionary:
 	if result is Dictionary:
 		return result
 	return {}
+
 
 ## Save lineup data for an event
 ## @param event Event ID to save lineup for
@@ -71,20 +83,20 @@ func save_lineup_data(
 	lives: int = 3,
 	lineup_uuid: String = ""
 ) -> String:
-	Log.info("Saving event lineup data", {"event": event, "level": level, "lives": lives}, [Log.TAG_DB])
+	Log.info(
+		"Saving event lineup data", {"event": event, "level": level, "lives": lives}, [Log.TAG_DB]
+	)
 
 	if not _backend.is_available():
-		Log.error("Cannot save event lineup - database not available", {}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot save event lineup - database not available", {}, [Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return ""
 
 	var json_data: String = JSON.stringify(lineup)
 	var path: Array[Variant] = ["events", event, "lineups"]
 
-	var data: Dictionary = {
-		"lineup_level": level,
-		"lineup_data": json_data,
-		"lives": lives
-	}
+	var data: Dictionary = {"lineup_level": level, "lineup_data": json_data, "lives": lives}
 
 	if not p_data.is_empty():
 		data.name = p_data.name
@@ -103,6 +115,7 @@ func save_lineup_data(
 	Log.debug("Event lineup saved", {"event": event, "lineup_id": push_id}, [Log.TAG_DB])
 	return push_id
 
+
 ## Remove lineups from an event
 ## @param event Event ID to remove lineups from
 ## @return bool True if removal was successful
@@ -110,7 +123,9 @@ func remove_event_lineups(event: String) -> bool:
 	Log.info("Removing event lineups", {"event": event}, [Log.TAG_DB])
 
 	if not _backend.is_available():
-		Log.error("Cannot remove event lineups - database not available", {}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error(
+			"Cannot remove event lineups - database not available", {}, [Log.TAG_DB, Log.TAG_ERROR]
+		)
 		return false
 
 	var path: Array[Variant] = ["events", event]
