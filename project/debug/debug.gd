@@ -1001,6 +1001,7 @@ func _run_sequential_tests(method_list: Array, test_prefix: String, module_name:
 		var method_name: String = method_info.name if method_info.name is String else ""
 		if not method_name.begins_with(test_prefix):
 			continue
+		tests_run += 1
 		var skip_test: bool = false
 		if (
 			module_name == "rtdb"
@@ -1010,7 +1011,6 @@ func _run_sequential_tests(method_list: Array, test_prefix: String, module_name:
 			skip_test = true
 		if skip_test:
 			continue
-			tests_run += 1
 		var display_method_name: String = _format_name_for_display(
 			method_name.trim_prefix(test_prefix)
 		)
@@ -1039,13 +1039,13 @@ func _run_sequential_tests(method_list: Array, test_prefix: String, module_name:
 				)
 		else:
 			tests_failed += 1
-		if get_parent().visible and is_instance_valid(status_label):
-			status_label.text = "FAIL: %s\nDetails: %s" % [display_method_name, str(payload)]
-			Log.error(
-				"Test FAILED: %s" % method_name,
-				{"err": payload},
-				["debug", "test", module_name, Log.TAG_ERROR]
-			)
+			if get_parent().visible and is_instance_valid(status_label):
+				status_label.text = "FAIL: %s\nDetails: %s" % [display_method_name, str(payload)]
+				Log.error(
+					"Test FAILED: %s" % method_name,
+					{"err": payload},
+					["debug", "test", module_name, Log.TAG_ERROR]
+				)
 		await get_tree().create_timer(0.05).timeout
 	var summary: String = (
 		"%s Tests: %d Run, %d Passed, %d Failed"
