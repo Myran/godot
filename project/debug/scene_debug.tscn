@@ -122,7 +122,7 @@ layout_mode = 2
 text = "Facebook: log out
 "
 
-[node name="Popup" type="Control" parent="."]
+[node name="Debug" type="Control" parent="."]
 anchors_preset = 0
 script = ExtResource("1_cx13k")
 
@@ -184,22 +184,34 @@ size_flags_horizontal = 8
 size_flags_vertical = 0
 text = "XXX"
 
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="RTDBTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "RTDB Tests"
+
+[node name="AuthTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Auth Tests"
+
+[node name="ConfigTestsButton" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Config Tests"
+
+[node name="GeneralActionsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 5
+
 [node name="TabContainer" type="TabContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_3au6l")
-
-[connection signal="button_down" from="Node/Auth/Button" to="Popup" method="_on_Button_sign_in_anon_pressed"]
-[connection signal="button_down" from="Node/Auth/Button2" to="Popup" method="_on_Button_get_all_info_pressed"]
-[connection signal="button_down" from="Node/Auth/Button3" to="Popup" method="_on_Button_remote_config_string_pressed"]
-[connection signal="button_down" from="Node/RTDB/Button4" to="Popup" method="_on_Button_push_child_pressed"]
-[connection signal="button_down" from="Node/RTDB/Button5" to="Popup" method="_on_Button_get_value_pressed"]
-[connection signal="button_down" from="Node/RTDB/Button6" to="Popup" method="_on_Button_set_value_pressed"]
-[connection signal="button_down" from="Node/RTDB/Button7" to="Popup" method="_on_Button_delete_pressed"]
-[connection signal="button_down" from="Node/RTDB/Button13" to="Popup" method="_on_Button_firebase_advanced_pressed"]
-[connection signal="button_down" from="Node/Facebook/Button8" to="Popup" method="_on_Button_send_all_tracking_events_pressed"]
-[connection signal="pressed" from="Node/Facebook/Button9" to="Popup" method="_on_Button_sign_in_facebook_pressed"]
-[connection signal="pressed" from="Node/Facebook/Button10" to="Popup" method="_on_Button_link_Facebook_pressed"]
-[connection signal="pressed" from="Node/Facebook/Button11" to="Popup" method="_on_Button_unlink_Facebook_pressed"]
-[connection signal="pressed" from="Node/Facebook/Button12" to="Popup" method="_on_Button_sign_out_pressed"]
