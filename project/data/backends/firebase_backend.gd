@@ -259,12 +259,13 @@ func _get_next_request_id() -> int:
 
 
 ## Executes a C++ RTDB operation and returns its result after awaiting a unique signal.
+## This version includes the modified timeout_callable logic.
 func _execute_rtdb_operation_and_await(
-	cpp_method_name: String,  # Name of the C++ method to call on `db`
-	full_path: Array[Variant],  # Database path for the operation
-	args: Array = [],  # Additional arguments for the C++ method (after request_id and path)
+	cpp_method_name: String,
+	full_path: Array[Variant],
+	args: Array = [],
 	timeout_sec: float = DEFAULT_TIMEOUT
-) -> Variant:  # Returns a Dictionary: {"status": "ok", "payload": ...} or {"status": "error", "code": ..., "message": ...}
+) -> Variant:
 	if _is_being_freed:
 		Log.error(
 			"FB_Backend: Attempt to execute op while freeing. Aborting.",
@@ -294,10 +295,9 @@ func _execute_rtdb_operation_and_await(
 		return {"status": "error", "code": "INVALID_PATH_TYPE", "message": "Path must be an Array."}
 
 	var request_id: int = _get_next_request_id()
-	var signal_helper := RequestSignalHelper.new()  # Helper object to emit the unique signal
-	var timer_instance_id: Variant = null  # To store ObjectID of the Timer
+	var signal_helper := RequestSignalHelper.new()
+	var timer_instance_id: Variant = null
 
-	# Store info needed to correlate C++ callback and manage timeout
 	_pending_direct_awaits[request_id] = {
 		"signal_helper": signal_helper, "result_data": null, "timer_instance_id": null  # Will be populated by C++ callback or timeout
 	}
@@ -309,7 +309,7 @@ func _execute_rtdb_operation_and_await(
 			{"req_id": request_id, "backend_id": _backend_instance_id_str},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		_pending_direct_awaits.erase(request_id)  # Clean up the premature entry
+		_pending_direct_awaits.erase(request_id)
 		return {
 			"status": "error",
 			"code": "TIMER_SETUP_FAIL",
@@ -317,25 +317,23 @@ func _execute_rtdb_operation_and_await(
 		}
 
 	var timeout_timer := Timer.new()
-	timeout_timer.name = "FB_DirectTimer_%s_%d" % [_backend_instance_id_str, request_id]  # Make timer name unique
-	root_node.add_child(timeout_timer)  # Add timer to the scene tree root
-	timer_instance_id = timeout_timer.get_instance_id()  # Get its ObjectID
-	_pending_direct_awaits[request_id]["timer_instance_id"] = timer_instance_id  # Store the ObjectID
+	timeout_timer.name = "FB_DirectTimer_%s_%d" % [_backend_instance_id_str, request_id]
+	root_node.add_child(timeout_timer)
+	timer_instance_id = timeout_timer.get_instance_id()
+	_pending_direct_awaits[request_id]["timer_instance_id"] = timer_instance_id
 
 	timeout_timer.wait_time = timeout_sec
 	timeout_timer.one_shot = true
 
 	var timeout_callable := func() -> void:
-		# This block executes when the timer fires
-		if _is_being_freed:  # Check if backend is already being shut down
+		if _is_being_freed:
 			var timer_node_on_free: Timer = instance_from_id(timer_instance_id as int) as Timer
 			if is_instance_valid(timer_node_on_free):
 				timer_node_on_free.queue_free()
 			return
 
-		# Retrieve timer by ID to ensure it's the correct one and still valid
 		var timer_node_check: Timer = instance_from_id(timer_instance_id as int) as Timer
-		if not is_instance_valid(timer_node_check):  # Timer might have been freed by an early C++ response
+		if not is_instance_valid(timer_node_check):
 			(
 				Log
 				. debug(
@@ -349,34 +347,79 @@ func _execute_rtdb_operation_and_await(
 			)
 			return
 
-		# Check if the request is still pending (i.e., C++ callback hasn't arrived yet)
-		if _pending_direct_awaits.has(request_id):
-			var await_entry_on_timeout: Dictionary = _pending_direct_awaits[request_id]
-			if await_entry_on_timeout.get("result_data") == null:  # Check if not already settled
-				var reason_str: String = (
-					"Operation '%s' (req_id: %d) timed out after %s seconds"
-					% [cpp_method_name, request_id, timeout_sec]
+		# Critical check: Is the request still genuinely pending in our tracking?
+		if not _pending_direct_awaits.has(request_id):
+			(
+				Log
+				. warning(
+					(
+						"FB_Backend: Timeout for req_id %d, but entry no longer in _pending_direct_awaits (likely completed by C++)."
+						% request_id
+					),
+					{"backend_id": _backend_instance_id_str},
+					[Log.TAG_FIREBASE]
 				)
-				Log.warning(
-					"FB_Backend: TIMEOUT for request.",
+			)
+			if (
+				is_instance_valid(timer_node_check)
+				and not timer_node_check.is_queued_for_deletion()
+			):
+				timer_node_check.queue_free()  # Clean up this timer as it's no longer needed
+			return
+
+		var await_entry_on_timeout: Dictionary = _pending_direct_awaits[request_id]
+
+		# Double-check if `result_data` was set by a racing C++ callback *just before* timeout erased the entry.
+		# If `result_data` is already populated, it means the C++ callback won the race to settle.
+		if await_entry_on_timeout.get("result_data") != null:
+			(
+				Log
+				. warning(
+					(
+						"FB_Backend: Timeout for req_id %d, but C++ callback likely just settled it (result_data found). Ignoring timeout action."
+						% request_id
+					),
 					{
-						"req_id": request_id,
-						"method": cpp_method_name,
-						"backend_id": _backend_instance_id_str
+						"backend_id": _backend_instance_id_str,
+						"existing_result": await_entry_on_timeout.get("result_data")
 					},
-					[Log.TAG_FIREBASE, Log.TAG_ERROR]
+					[Log.TAG_FIREBASE]
 				)
+			)
+			# The C++ callback is responsible for cleaning the entry from _pending_direct_awaits.
+			# If it's still here, _complete_direct_await had an issue or this is a very tight race.
+			# For safety, let's ensure this timer gets cleaned.
+			if (
+				is_instance_valid(timer_node_check)
+				and not timer_node_check.is_queued_for_deletion()
+			):
+				timer_node_check.queue_free()
+			return
 
-				var timeout_result: Dictionary = {
-					"status": "error", "code": "TIMEOUT", "message": reason_str
-				}
-				await_entry_on_timeout["result_data"] = timeout_result  # Store the timeout error
+		# If we reach here, the timeout is the first to definitively settle the request.
+		var reason_str: String = (
+			"Operation '%s' (req_id: %d) timed out after %s seconds"
+			% [cpp_method_name, request_id, timeout_sec]
+		)
+		Log.warning(
+			"FB_Backend: TIMEOUT for request.",
+			{
+				"req_id": request_id,
+				"method": cpp_method_name,
+				"backend_id": _backend_instance_id_str
+			},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		var timeout_result: Dictionary = {
+			"status": "error", "code": "TIMEOUT", "message": reason_str
+		}
 
-				var sig_helper_on_timeout: RequestSignalHelper = (
-					await_entry_on_timeout.signal_helper
-				)
-				if is_instance_valid(sig_helper_on_timeout):
-					sig_helper_on_timeout.completed.emit(timeout_result)  # Emit signal with error data to unblock await
+		# Store the signal helper, then erase the main entry from _pending_direct_awaits
+		var sig_helper_on_timeout: RequestSignalHelper = await_entry_on_timeout.signal_helper
+		_pending_direct_awaits.erase(request_id)  # ERASE HERE
+
+		if is_instance_valid(sig_helper_on_timeout):
+			sig_helper_on_timeout.completed.emit(timeout_result)
 
 		# Ensure timer is freed if it fired (and wasn't already cleaned up)
 		if is_instance_valid(timer_node_check) and not timer_node_check.is_queued_for_deletion():
@@ -393,16 +436,15 @@ func _execute_rtdb_operation_and_await(
 			},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		_pending_direct_awaits.erase(request_id)  # Clean up before returning
+		_pending_direct_awaits.erase(request_id)
 		if is_instance_valid(timeout_timer):
-			timeout_timer.free()  # Free the unusable timer
+			timeout_timer.free()
 		return {
 			"status": "error",
 			"code": "TIMER_SETUP_FAIL",
 			"message": "Failed to connect timer signal."
 		}
 
-	# Prepare arguments for the C++ call
 	var call_args: Array = [request_id, full_path]
 	call_args.append_array(args)
 
@@ -417,17 +459,14 @@ func _execute_rtdb_operation_and_await(
 		},
 		[Log.TAG_FIREBASE, Log.TAG_NETWORK]
 	)
-	db.callv(cpp_method_name, call_args)  # Make the call to the C++ module
-	timeout_timer.start()  # Start the timeout timer
+	db.callv(cpp_method_name, call_args)
+	timeout_timer.start()
 
 	Log.debug(
 		"FB_Backend: Awaiting completion signal from helper for req_id %d." % request_id,
 		{"backend_id": _backend_instance_id_str},
 		[Log.TAG_FIREBASE]
 	)
-
-	# Await the 'completed' signal from the signal_helper object.
-	# The argument emitted by signal_helper.completed will be the return value of this await.
 	var final_result_data: Variant = await signal_helper.completed
 
 	Log.debug(
@@ -439,24 +478,28 @@ func _execute_rtdb_operation_and_await(
 		[Log.TAG_FIREBASE]
 	)
 
-	# Entry in _pending_direct_awaits should have been cleaned up by _complete_direct_await or timeout_callable.
-	# Add a final check/cleanup for robustness, though ideally it's already gone.
+	# At this point, the entry in _pending_direct_awaits should have been cleaned up by
+	# either _complete_direct_await (if C++ callback won) or the timeout_callable (if timeout won).
+	# A final check is mostly for sanity/debugging during development.
 	if _pending_direct_awaits.has(request_id):
 		(
 			Log
 			. warning(
 				(
-					"FB_Backend: Entry for req_id %d still in _pending_direct_awaits after await. Forcing cleanup."
+					"FB_Backend: Entry for req_id %d STILL in _pending_direct_awaits after await AND settlement. This indicates a logic flaw in cleanup. Force cleaning."
 					% request_id
 				),
-				{"backend_id": _backend_instance_id_str},
-				[Log.TAG_FIREBASE]
+				{
+					"backend_id": _backend_instance_id_str,
+					"entry_data": _pending_direct_awaits[request_id]
+				},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]  # Elevate to error if this happens
 			)
 		)
 		var timer_id_final_cleanup: Variant = _pending_direct_awaits[request_id].get(
 			"timer_instance_id"
 		)
-		if timer_id_final_cleanup != null:
+		if timer_id_final_cleanup != null and typeof(timer_id_final_cleanup) == TYPE_INT:
 			var timer_node_final_cleanup: Timer = (
 				instance_from_id(timer_id_final_cleanup as int) as Timer
 			)
@@ -464,11 +507,11 @@ func _execute_rtdb_operation_and_await(
 				timer_node_final_cleanup.queue_free()
 		_pending_direct_awaits.erase(request_id)
 
-	# The signal_helper object is RefCounted and will be garbage collected when no longer referenced.
 	return final_result_data
 
 
 ## Called by C++ signal handlers (or timeout via its callable) to finalize an operation.
+## This version ensures the pending request entry is removed *before* signaling completion.
 func _complete_direct_await(
 	request_id: int,
 	result_payload: Variant,
@@ -482,96 +525,93 @@ func _complete_direct_await(
 			{"req_id": request_id, "backend_id": _backend_instance_id_str},
 			[Log.TAG_FIREBASE]
 		)
-		# Attempt to clean up timer if entry still exists
-		if _pending_direct_awaits.has(request_id):
-			var timer_id_on_free: Variant = _pending_direct_awaits[request_id].get(
-				"timer_instance_id"
-			)
-			if timer_id_on_free != null:
-				var timer_node_on_free: Timer = instance_from_id(timer_id_on_free as int) as Timer
-				if is_instance_valid(timer_node_on_free):
-					timer_node_on_free.queue_free()
-			# Do not erase here, let the awaiter clean up if it's still awaiting.
-			# Or, if we are sure the awaiter will no longer access it, it can be erased.
-			# For safety, we'll let the awaiter's resumption handle final cleanup of the entry.
+		# During predelete, _pending_direct_awaits is cleared more aggressively.
+		# Avoid modifying it here if already in that shutdown path.
 		return
 
-	if _pending_direct_awaits.has(request_id):
-		var await_entry: Dictionary = _pending_direct_awaits[request_id]
-		var signal_helper_to_emit: RequestSignalHelper = await_entry.signal_helper
-		var timer_id_to_stop: Variant = await_entry.timer_instance_id
-
-		# Stop and free the timer associated with this request, as the operation has now completed.
-		if timer_id_to_stop != null and typeof(timer_id_to_stop) == TYPE_INT:
-			var timer_node: Node = instance_from_id(timer_id_to_stop as int)
-			if is_instance_valid(timer_node) and timer_node is Timer:
-				(timer_node as Timer).stop()
-				timer_node.queue_free()
-
-		# Check if already settled (e.g., by a timeout that raced with this C++ callback)
-		if await_entry.get("result_data") == null:
-			var result_for_signal: Dictionary
-			if is_error:
-				result_for_signal = {
-					"status": "error",
-					"code": error_code,
-					"message": error_message,
-					"payload": result_payload
-				}
-				Log.error(
-					"FB_Backend: Completing await with error for req_id %d." % request_id,
-					{"error_info": result_for_signal, "backend_id": _backend_instance_id_str},
-					[Log.TAG_FIREBASE, Log.TAG_ERROR]
-				)
-			else:
-				result_for_signal = {"status": "ok", "payload": result_payload}
-				Log.debug(
-					"FB_Backend: Completing await with success for req_id %d." % request_id,
-					{
-						"payload_type": typeof(result_payload),
-						"backend_id": _backend_instance_id_str
-					},
-					[Log.TAG_FIREBASE]
-				)
-
-			await_entry["result_data"] = result_for_signal  # Store result before emitting
-
-			if is_instance_valid(signal_helper_to_emit):
-				signal_helper_to_emit.completed.emit(result_for_signal)  # Emit signal WITH the result data
-			else:  # Should not happen if entry exists
+	if not _pending_direct_awaits.has(request_id):
+		(
+			Log
+			. warning(
 				(
-					Log
-					. error(
-						(
-							"FB_Backend: signal_helper_to_emit is invalid for req_id %d during completion."
-							% request_id
-						),
-						{"backend_id": _backend_instance_id_str},
-						[Log.TAG_FIREBASE, Log.TAG_ERROR]
-					)
-				)
-		else:
-			(
-				Log
-				. warning(
-					(
-						"FB_Backend: Attempt to complete already settled (e.g., by timeout) req_id: %d. Ignoring C++ callback."
-						% request_id
-					),
-					{"backend_id": _backend_instance_id_str},
-					[Log.TAG_FIREBASE]
-				)
+					"FB_Backend: Received C++ completion for unknown or already handled/timed_out req_id: %d."
+					% request_id
+				),
+				{"backend_id": _backend_instance_id_str},
+				[Log.TAG_FIREBASE]
 			)
-			# The timer (if it caused the settlement) would have already been freed.
-			# The _pending_direct_awaits entry will be cleaned up when the original _execute... function resumes.
+		)
+		return
+
+	var await_entry: Dictionary = _pending_direct_awaits[request_id]
+	var signal_helper_to_emit: RequestSignalHelper = await_entry.signal_helper
+	var timer_id_to_stop: Variant = await_entry.timer_instance_id
+
+	if timer_id_to_stop != null and typeof(timer_id_to_stop) == TYPE_INT:
+		var timer_node: Node = instance_from_id(timer_id_to_stop as int)
+		if is_instance_valid(timer_node) and timer_node is Timer:
+			(timer_node as Timer).stop()
+			timer_node.queue_free()
+
+	if await_entry.get("result_data") != null:
+		(
+			Log
+			. warning(
+				(
+					"FB_Backend: Attempt to complete (via C++ CB) an already settled (e.g., by timeout) req_id: %d. Ignoring current C++ CB."
+					% request_id
+				),
+				{
+					"backend_id": _backend_instance_id_str,
+					"existing_result": await_entry.get("result_data")
+				},
+				[Log.TAG_FIREBASE]
+			)
+		)
+		# If already settled, the entry should have been removed by the settler.
+		# If still here, we erase for robustness.
+		_pending_direct_awaits.erase(request_id)
+		return
+
+	var result_for_signal: Dictionary
+	if is_error:
+		result_for_signal = {
+			"status": "error",
+			"code": error_code,
+			"message": error_message,
+			"payload": result_payload
+		}
+		Log.error(
+			"FB_Backend: Completing await with error for req_id %d." % request_id,
+			{"error_info": result_for_signal, "backend_id": _backend_instance_id_str},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
 	else:
-		Log.warning(
-			(
-				"FB_Backend: Received C++ completion for unknown or already cleaned up req_id: %d."
-				% request_id
-			),
-			{"backend_id": _backend_instance_id_str},
+		result_for_signal = {"status": "ok", "payload": result_payload}
+		Log.debug(
+			"FB_Backend: Completing await with success for req_id %d." % request_id,
+			{"payload_type": typeof(result_payload), "backend_id": _backend_instance_id_str},
 			[Log.TAG_FIREBASE]
+		)
+
+	# Store the signal helper, then erase the main entry from _pending_direct_awaits
+	# This is the "settler cleans" pattern.
+	var temp_signal_helper = signal_helper_to_emit  # Keep a reference before erasing
+	_pending_direct_awaits.erase(request_id)  # ERASE HERE, BEFORE EMITTING
+
+	if is_instance_valid(temp_signal_helper):
+		temp_signal_helper.completed.emit(result_for_signal)
+	else:
+		(
+			Log
+			. error(
+				(
+					"FB_Backend: signal_helper_to_emit is invalid for req_id %d during completion (after erase)."
+					% request_id
+				),
+				{"backend_id": _backend_instance_id_str},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
 		)
 
 
