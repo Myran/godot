@@ -26,7 +26,7 @@ bg_color = Color(0.15, 0.15, 0.2, 0.7)
 border_color = Color(0.3, 0.35, 0.45, 0.8)
 
 [resource]
-default_font_size = 52
+default_font_size = 60
 Button/styles/normal = SubResource("StyleBoxFlat_sgtky")
 Panel/styles/panel = SubResource("StyleBoxFlat_677hs")
 TabContainer/font_sizes/font_size = 68

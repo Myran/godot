@@ -1,9 +1,10 @@
+# project/debug/scene_debug.gd
 extends Control
 
 signal fb_success(res: Dictionary)
 @warning_ignore("unused_signal")
 signal _apple_success(res: Dictionary)
-# 'timed_out' signal is no longer relevant with GDScript timers removed.
+signal apple_auth_respons(res: Dictionary)
 
 # Constants
 const FAKE_INTERSTITIAL_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/4411468910"
@@ -200,11 +201,10 @@ func _initialize_firebase_modules() -> void:
 			var cce = godot_apple_auth.connect("credential", Callable(self, "_on_credential"))
 			if cce != OK:
 				Log.error("Fail GAppleAuth cred conn", {}, ["debug"])
-				var ace = godot_apple_auth.connect(
-					"authorization", Callable(self, "_on_authorization")
-				)
-				if ace != OK:
-					Log.error("Fail GAppleAuth auth conn", {}, ["debug"])
+			# Corrected to only one connection for 'authorization'
+			var ace = godot_apple_auth.connect("authorization", Callable(self, "_on_authorization"))
+			if ace != OK:
+				Log.error("Fail GAppleAuth auth conn", {}, ["debug"])
 
 
 #-----------------------------------------------------------------------------#
@@ -224,7 +224,7 @@ func _populate_main_categories_view() -> void:
 			var module_instance = get(module_var_name)
 			module_instance_valid = is_instance_valid(module_instance)
 		else:
-			module_instance_valid = true
+			module_instance_valid = true  # Category might not depend on a specific module instance
 		if module_instance_valid:
 			item_list_navigator.add_item(category_def.name)
 			item_list_navigator.set_item_metadata(
@@ -281,7 +281,7 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 			var name_after_prefix: String = method_name.trim_prefix(category_prefix)
 			var underscore_pos: int = name_after_prefix.find("_")
 			if underscore_pos > 0:
-				var group_name_raw: String = name_after_prefix.substr(0, underscore_pos)  # group_name_raw is defined here
+				var group_name_raw: String = name_after_prefix.substr(0, underscore_pos)
 				if not group_name_raw.is_empty() and not group_name_raw.contains("."):
 					if not groups.has(group_name_raw):
 						groups[group_name_raw] = {
@@ -290,7 +290,7 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 					groups[group_name_raw].count += 1
 	var sorted_group_keys = groups.keys()
 	sorted_group_keys.sort()
-	for group_name_raw_key in sorted_group_keys:  # Use a different var name to avoid confusion if needed, though scope is fine
+	for group_name_raw_key in sorted_group_keys:
 		var group_data = groups[group_name_raw_key]
 		item_list_navigator.add_item(group_data.display_name)
 		item_list_navigator.set_item_metadata(
@@ -308,9 +308,9 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 	var min_expected_items_before_groups = 1
 	if has_run_all_item:
 		min_expected_items_before_groups += 1
-	if groups.is_empty() and item_list_navigator.item_count == min_expected_items_before_groups:
+	if groups.is_empty() and item_list_navigator.item_count == min_expected_items_before_groups:  # Check if only "Back" and "Run All" exist
 		item_list_navigator.add_item("No further test groups in " + category_info.name + ".")
-		item_list_navigator.set_item_disabled(item_idx_counter, true)
+		item_list_navigator.set_item_disabled(item_idx_counter, true)  # RP: item_idx_counter should be correct here
 	item_list_navigator.ensure_current_is_visible()
 
 
@@ -341,14 +341,14 @@ func _populate_tests_view(group_info: Dictionary) -> void:
 	var method_list: Array = get_method_list()
 	method_list.sort_custom(
 		func(a: Dictionary, b: Dictionary) -> bool: return (a.name as String) < (b.name as String)
-	)
+	)  # Sort for consistent order
 	var items_added: bool = false
 	for method_info_variant in method_list:
 		var method_info: Dictionary = method_info_variant as Dictionary
 		var method_name: String = method_info.name as String
 		if method_name.begins_with(full_prefix_for_tests):
 			var test_name_raw: String = method_name.trim_prefix(full_prefix_for_tests)
-			if not test_name_raw.is_empty() and not test_name_raw.contains("."):
+			if not test_name_raw.is_empty() and not test_name_raw.contains("."):  # Ensure it's a valid final part of method name
 				var display_test_name: String = _format_name_for_display(test_name_raw)
 				item_list_navigator.add_item(display_test_name)
 				item_list_navigator.set_item_metadata(
@@ -363,7 +363,7 @@ func _populate_tests_view(group_info: Dictionary) -> void:
 				items_added = true
 	if not items_added:
 		item_list_navigator.add_item("No tests found in this group.")
-		item_list_navigator.set_item_disabled(item_idx_counter, true)
+		item_list_navigator.set_item_disabled(item_idx_counter, true)  # RP: item_idx_counter should be correct
 	item_list_navigator.ensure_current_is_visible()
 
 
@@ -379,8 +379,10 @@ func _on_navigator_item_activated(index: int) -> void:
 	if metadata.is_empty():
 		Log.warning("No metadata for item.", {"i": index}, ["debug_ui"])
 		return
+
 	var item_type: String = metadata.get("type", "")
 	Log.debug("Item activated", {"t": item_type, "m": metadata}, ["debug_ui"])
+
 	match item_type:
 		ITEM_TYPE_CATEGORY:
 			_populate_groups_view(metadata)
@@ -388,14 +390,50 @@ func _on_navigator_item_activated(index: int) -> void:
 			_populate_tests_view(metadata)
 		ITEM_TYPE_TEST:
 			var method_name: String = metadata.get("method_name")
+			var display_name: String = metadata.get("display_name", method_name)
 			if has_method(method_name):
-				Log.info("Exec test: %s" % method_name, {}, ["debug", "test"])
-				if is_instance_valid(status_label):
-					status_label.text = "Running: %s..." % metadata.get("display_name", method_name)
-				call_deferred(method_name)  # call_deferred is important
+				Log.info("Exec test (manual): %s" % method_name, {}, ["debug", "test"])
+				if get_parent().visible and is_instance_valid(status_label):
+					status_label.text = "Running: %s..." % display_name
+
+				var result_tuple: Array = await call(method_name)
+				var success: bool = false
+				var payload: Variant = null
+
+				if result_tuple.size() == 2 and result_tuple[0] is bool:
+					success = result_tuple[0]
+					payload = result_tuple[1]
+				else:
+					Log.error(
+						(
+							"Test '%s' (manual) returned unexpected format: %s"
+							% [method_name, str(result_tuple)]
+						),
+						{},
+						["debug", Log.TAG_ERROR]
+					)
+					payload = {
+						"error": "Bad return format from manual test", "details": str(result_tuple)
+					}
+					success = false  # Ensure failure on bad format
+
+				if success:
+					if get_parent().visible and is_instance_valid(status_label):
+						status_label.text = "PASS: %s" % display_name
+					Log.info(
+						"Manual Test PASSED: %s" % method_name, {"p": payload}, ["debug", "test"]
+					)
+				else:
+					if get_parent().visible and is_instance_valid(status_label):
+						status_label.text = "FAIL: %s\nDetails: %s" % [display_name, str(payload)]
+					Log.error(
+						"Manual Test FAILED: %s" % method_name,
+						{"err": payload},
+						["debug", "test", Log.TAG_ERROR]
+					)
 			else:
 				Log.error("Method not found: %s" % method_name, {}, ["debug", "ui", Log.TAG_ERROR])
-				if is_instance_valid(status_label):
+				if get_parent().visible and is_instance_valid(status_label):
 					status_label.text = "[ERR] Test method '%s' not found!" % method_name
 		ITEM_TYPE_BACK_TO_MAIN:
 			_populate_main_categories_view()
@@ -410,9 +448,14 @@ func _on_navigator_item_activated(index: int) -> void:
 			var cp: String = metadata.get("category_prefix")
 			var cn: String = metadata.get("category_name")
 			Log.info("Exec 'Run All' for: %s" % cn, {}, ["debug", "test"])
-			if is_instance_valid(status_label):
+			if get_parent().visible and is_instance_valid(status_label):
 				status_label.text = "Starting all %s tests..." % cn
+			if not _is_running_all_tests:
 				_run_all_tests_by_prefix(cp)
+			else:
+				Log.warning("Another 'Run All' test sequence is already active.", {}, ["debug"])
+				if get_parent().visible and is_instance_valid(status_label):
+					status_label.text = "A 'Run All' test sequence is already active. Please wait."
 		_:
 			Log.warning("Unknown item type in nav.", {"t": item_type}, ["debug_ui"])
 
@@ -455,8 +498,8 @@ func _connect_rtdb_signals_dynamically() -> void:
 			)
 			continue
 		var h_call: Callable = Callable(self, handler_name)
-		if not db.is_connected(sig_name, h_call):
-			var err: Error = db.connect(sig_name, h_call, CONNECT_DEFERRED)
+		if not db.is_connected(sig_name, h_call):  # Check before connecting
+			var err: Error = db.connect(sig_name, h_call, CONNECT_DEFERRED)  # Use deferred for safety
 			if err != OK:
 				Log.error(
 					"Fail connect RTDB sig",
@@ -494,8 +537,10 @@ func _handle_rtdb_completion_from_cpp_signal(
 			["debug", "firebase", "rtdb_flow"]
 		)
 		return
+
 	var pending_req_data: PendingRequestData = _pending_requests[request_id]
-	_pending_requests.erase(request_id)
+	_pending_requests.erase(request_id)  # Erase immediately
+
 	if get_parent().visible and is_instance_valid(status_label):
 		var display_path: String = "/".join(pending_req_data.path)
 		if success:
@@ -513,7 +558,7 @@ func _handle_rtdb_completion_from_cpp_signal(
 				data_or_error
 				if data_or_error is Dictionary
 				else {"error_code": "UNKNOWN", "message": str(data_or_error)}
-			)
+			)  # Ensure message is string
 			status_label.text = (
 				"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
 				% [
@@ -538,7 +583,7 @@ func _make_rtdb_request(
 	operation_name: String, path_suffix: Array[String], args: Array = []
 ) -> Array:
 	if not is_instance_valid(db):
-		if is_instance_valid(status_label):
+		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not initialized."
 		Log.error(
 			"Attempted RTDB request but db is null",
@@ -546,9 +591,11 @@ func _make_rtdb_request(
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized."}]
+
 	var request_id: int = _next_request_id
 	_next_request_id += 1
-	if _pending_requests.has(request_id):
+
+	if _pending_requests.has(request_id):  # Should ideally not happen if _next_request_id is unique
 		Log.critical(
 			(
 				"CRITICAL: Key %d for op '%s' was ALREADY in _pending_requests! State corruption."
@@ -562,23 +609,31 @@ func _make_rtdb_request(
 			(old_prd as PendingRequestData)._mark_as_stuck_or_cancelled(
 				{"error_code": "OVERWRITTEN", "message": "Request ID overwritten"}
 			)
-		_pending_requests.erase(request_id)
+		# _pending_requests.erase(request_id) # Already erased by _handle_rtdb_completion if it was a true duplicate signal
+		# For safety, ensure this new request gets a clean slate if the ID truly collided due to a logic error elsewhere.
+
 	var full_path: Array[String] = _test_base_path.duplicate()
 	full_path.append_array(path_suffix)
+
 	var pending_req_data := PendingRequestData.new(request_id, operation_name, full_path, self)
 	_pending_requests[request_id] = pending_req_data
+
 	var call_args: Array = [request_id, full_path]
 	call_args.append_array(args)
+
 	Log.debug(
 		"Making RTDB request (awaitable)",
 		{"req_id": request_id, "op": operation_name, "path": full_path, "args_count": args.size()},
 		[Log.TAG_FIREBASE, Log.TAG_NETWORK]
 	)
+
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = (
 			"Sending req %d: %s\nPath: %s" % [request_id, operation_name, "/".join(full_path)]
 		)
-	db.callv(operation_name, call_args)
+
+	db.callv(operation_name, call_args)  # Call the C++ method
+
 	Log.debug(
 		(
 			"Awaiting 'completed' signal for PendingRequestData req_id: %d, op: %s"
@@ -600,6 +655,9 @@ func _make_rtdb_request(
 		{},
 		["debug", "firebase", "rtdb_flow"]
 	)
+
+	# Defensive check: if the request is still in _pending_requests, it means
+	# _handle_rtdb_completion_from_cpp_signal did not run for some reason (e.g., signal disconnect).
 	if _pending_requests.has(request_id):
 		Log.warning(
 			(
@@ -609,7 +667,8 @@ func _make_rtdb_request(
 			{},
 			["debug", "firebase", Log.TAG_ERROR]
 		)
-		_pending_requests.erase(request_id)
+		_pending_requests.erase(request_id)  # Clean up to prevent memory leaks or future issues
+
 	return result_tuple
 
 
@@ -669,14 +728,15 @@ func _on_rtdb_query_error(
 func _on_rtdb_transaction_completed(
 	request_id: int, _rtdb_key: String, value: Variant, success: bool, error_message: String
 ) -> void:
-	if success and value is int:
+	# Assuming _transaction_count is updated based on the 'value' if successful
+	if success and value is int:  # Or float, depending on what run_transaction_async returns
 		_transaction_count = value
-		_handle_rtdb_completion_from_cpp_signal(
-			request_id,
-			success,
-			value if success else {"error_code": "TRANSACTION_FAILED", "message": error_message},
-			"transaction"
-		)
+	_handle_rtdb_completion_from_cpp_signal(
+		request_id,
+		success,
+		value if success else {"error_code": "TRANSACTION_FAILED", "message": error_message},
+		"transaction"
+	)
 
 
 func _on_rtdb_child_added(key: String, value: Variant) -> void:
@@ -732,7 +792,7 @@ func _on_rtdb_connection_state_changed(connected: bool) -> void:
 	var m = "[S] Connection: " + connection_status_text
 	Log.info("RTDB Status", {"e": "connection", "c": connected})
 	if get_parent().visible and is_instance_valid(status_label):
-		status_label.text = m  # Renamed local var
+		status_label.text = m
 
 
 func _on_rtdb_db_error(code: String, message: String) -> void:
@@ -742,7 +802,6 @@ func _on_rtdb_db_error(code: String, message: String) -> void:
 		status_label.text = m
 
 
-# --- RTDB Test Functions ---
 # --- RTDB Test Functions ---
 func _test_rtdb_basic_set_simple_value() -> Array:
 	Log.debug("RTDB Test: Set Simple Value", {}, ["test"])
@@ -812,17 +871,17 @@ func _test_rtdb_advanced_increment_transaction() -> Array:
 	if not delete_result[0]:
 		var err_p: Dictionary = delete_result[1] if delete_result[1] is Dictionary else {}
 		var err_msg_l = str(err_p.get("message", "")).to_lower()
-		if not (err_msg_l.contains("not found") or err_msg_l.contains("no data exists")):
-			Log.warning("Problem deleting counter", {"r": err_p}, ["test"])
+		if not (err_msg_l.contains("not found") or err_msg_l.contains("no data exists")):  # Allow "not found" for initial delete
+			Log.warning("Problem deleting counter (may not exist)", {"r": err_p}, ["test"])
 	if get_parent().visible and is_instance_valid(status_label):
-		status_label.text = "Setting initial counter to 0.0..."
-	var set_result: Array = await _make_rtdb_request("set_value_async", counter_path_suffix, [0.0])
+		status_label.text = "Setting initial counter to 0..."  # Changed to 0 from 0.0 for int transaction
+	var set_result: Array = await _make_rtdb_request("set_value_async", counter_path_suffix, [0])  # Set as int
 	if not set_result[0]:
 		Log.error("Failed to set initial counter", {"r": set_result[1]}, ["test", Log.TAG_ERROR])
 		return [false, {"error": "Failed to set initial counter", "d": set_result[1]}]
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Running transaction..."
-	return await _make_rtdb_request("run_transaction_async", counter_path_suffix, [1.0])  # RP: Ensure float if C++ expects float for counter; if int, 1 is fine. Assuming 1.0 for safety given 0.0 above.
+	return await _make_rtdb_request("run_transaction_async", counter_path_suffix, [1])  # Increment by int
 
 
 func _test_rtdb_advanced_set_server_timestamp() -> Array:
@@ -830,8 +889,8 @@ func _test_rtdb_advanced_set_server_timestamp() -> Array:
 	return await _make_rtdb_request("set_server_timestamp_async", ["server_time"])
 
 
-var _listener_path_suffix: Array[String] = ["live_data"]  # Used by add/remove/trigger
-var _listen_count: int = 0  # Used by trigger
+var _listener_path_suffix: Array[String] = ["live_data"]
+var _listen_count: int = 0
 
 
 func _test_rtdb_listeners_add() -> Array:
@@ -843,26 +902,33 @@ func _test_rtdb_listeners_add() -> Array:
 
 	var fp_listener: Array[String] = _test_base_path.duplicate()
 	fp_listener.append_array(_listener_path_suffix)
-	db.add_listener_at_path(fp_listener)
+	db.add_listener_at_path(fp_listener)  # This call is synchronous from GDScript's perspective
 
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Added listener:\n%s" % [str(fp_listener)]
 
 	var path_for_status_set: Array[String] = fp_listener.duplicate()
 	path_for_status_set.append("status")
-	# Use _make_rtdb_request for the auxiliary set_value operation
 	var set_status_result: Array = await _make_rtdb_request(
 		"set_value_async", path_for_status_set, ["listening_init"]
 	)
-	if not set_status_result[0]:
+
+	var success: bool = set_status_result[0]
+	var payload: Dictionary = {
+		"message":
+		(
+			"Listener add requested for path: %s. Initial status set: %s"
+			% [str(fp_listener), "OK" if success else "FAIL"]
+		),
+		"status_set_payload": set_status_result[1]
+	}
+	if not success:
 		Log.warning(
 			"Failed to set initial listener status in RTDB",
 			{"error_info": set_status_result[1]},
 			["test", "rtdb"]
 		)
-		# Decide if this failure should make the overall _test_rtdb_listeners_add fail
-		# For now, we'll still return true for the listener add request itself.
-	return [true, {"message": "Listener add requested for path: %s" % str(fp_listener)}]
+	return [success, payload]
 
 
 func _test_rtdb_listeners_trigger_change() -> Array:
@@ -882,41 +948,31 @@ func _test_rtdb_listeners_trigger_change() -> Array:
 	var path_status: Array[String] = listener_base.duplicate()
 	path_status.append("status")
 
-	# Use _make_rtdb_request for the auxiliary set_value operations
 	var set_count_result: Array = await _make_rtdb_request(
 		"set_value_async", path_count, [_listen_count]
 	)
-	if not set_count_result[0]:
-		Log.warning(
-			"Failed to set listener count in RTDB",
-			{"error_info": set_count_result[1]},
-			["test", "rtdb"]
-		)
-		# Potentially return an error or handle as appropriate
-
 	var set_status_result: Array = await _make_rtdb_request(
 		"set_value_async", path_status, ["triggered_" + str(_listen_count)]
 	)
-	if not set_status_result[0]:
-		Log.warning(
-			"Failed to set listener status in RTDB",
-			{"error_info": set_status_result[1]},
-			["test", "rtdb"]
-		)
-		# Potentially return an error or handle as appropriate
 
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Triggered listener change (count: %d)" % _listen_count
-	# The success of this test function now depends on the success of the _make_rtdb_request calls.
-	# We'll consider it successful if both DB writes were ack'd, even if the listener itself has issues (that's a separate test).
-	var overall_success = set_count_result[0] and set_status_result[0]
-	var result_payload = {
+
+	var overall_success: bool = set_count_result[0] and set_status_result[0]
+	var result_payload: Dictionary = {
 		"message": "Listener change trigger sent (count: %d)" % _listen_count,
 		"count_set_success": set_count_result[0],
 		"status_set_success": set_status_result[0],
-		"count_set_payload": set_count_result[1],
-		"status_set_payload": set_status_result[1]
+		"count_set_payload": set_count_result[1] if set_count_result.size() > 1 else "N/A",  # RP: Safety for payload
+		"status_set_payload": set_status_result[1] if set_status_result.size() > 1 else "N/A"  # RP: Safety for payload
 	}
+	if not overall_success:
+		Log.warning(
+			"One or more DB writes failed during listener trigger.",
+			{"details": result_payload},
+			["test", "rtdb"]
+		)
+
 	return [overall_success, result_payload]
 
 
@@ -929,7 +985,7 @@ func _test_rtdb_listeners_remove() -> Array:
 
 	var fp_listener: Array[String] = _test_base_path.duplicate()
 	fp_listener.append_array(_listener_path_suffix)
-	db.remove_listener_at_path(fp_listener)
+	db.remove_listener_at_path(fp_listener)  # Synchronous from GDScript perspective
 
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Removed listener:\n%s" % [str(fp_listener)]
@@ -942,7 +998,7 @@ func _test_rtdb_connection_monitor() -> Array:
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not init."
 		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
-	db.monitor_connection_state()
+	db.monitor_connection_state()  # Synchronous from GDScript perspective
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Monitoring connection..."
 	return [true, {"message": "Connection monitoring started"}]
@@ -975,6 +1031,7 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 		{},
 		["debug", "test"]
 	)
+
 	var pending_ids = _pending_requests.keys()
 	if not pending_ids.is_empty():
 		Log.warning(
@@ -982,7 +1039,7 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 			{},
 			["debug", Log.TAG_ERROR]
 		)
-		for req_id in pending_ids:
+		for req_id in pending_ids:  # Iterate over a copy if modification occurs
 			var prd = _pending_requests.get(req_id)
 			if is_instance_valid(prd):
 				Log.debug(
@@ -991,7 +1048,8 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 				prd._mark_as_stuck_or_cancelled(
 					{"error_code": "RUN_ALL_CLEANUP", "message": "Cleaned by new Run All"}
 				)
-				_pending_requests.clear()
+		_pending_requests.clear()  # Clear after processing all
+
 	var module_instance: Object = null
 	match module_name:
 		"rtdb":
@@ -1000,13 +1058,17 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 			module_instance = auth
 		"config":
 			module_instance = remote_config
+		_:  # Default case if module_name doesn't match
+			Log.error("Unknown module for Run All: %s" % module_name, {}, ["debug", Log.TAG_ERROR])
+
 	if not is_instance_valid(module_instance):
 		if is_instance_valid(status_label):
 			status_label.text = "Cannot run: %s module not init." % module_name.to_upper()
-			Log.error("Module null for %s tests." % module_name, {}, ["debug", Log.TAG_ERROR])
-			_is_running_all_tests = false
-			_current_run_all_category_prefix = ""
-			return
+		Log.error("Module null for %s tests." % module_name, {}, ["debug", Log.TAG_ERROR])
+		_is_running_all_tests = false
+		_current_run_all_category_prefix = ""
+		return
+
 	var original_mouse_filter = Control.MOUSE_FILTER_STOP
 	var original_modulate_alpha = 1.0
 	if is_instance_valid(item_list_navigator):
@@ -1014,17 +1076,21 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 		original_modulate_alpha = item_list_navigator.modulate.a
 		item_list_navigator.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		item_list_navigator.modulate.a = 0.5
+
 	Log.info(
 		"Starting sequential %s tests..." % module_name.to_upper(),
 		{},
 		["debug", "test", module_name]
 	)
 	var method_list: Array = get_method_list()
-	method_list.sort_custom(func(a, b): return (a.name as String) < (b.name as String))
+	method_list.sort_custom(func(a, b): return (a.name as String) < (b.name as String))  # Ensure consistent order
+
 	await _run_sequential_tests(method_list, test_prefix, module_name)
+
 	if is_instance_valid(item_list_navigator):
 		item_list_navigator.mouse_filter = original_mouse_filter
 		item_list_navigator.modulate.a = original_modulate_alpha
+
 	Log.info("Finished 'Run All' for %s tests." % module_name.to_upper(), {}, ["debug", "test"])
 	_is_running_all_tests = false
 	_current_run_all_category_prefix = ""
@@ -1032,70 +1098,83 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 
 func _run_sequential_tests(method_list: Array, test_prefix: String, module_name: String) -> void:
 	var tests_run: int = 0
-	var tests_passed: int = 0
-	var tests_failed: int = 0
+	var tests_passed_count: int = 0
+	var tests_failed_count: int = 0
+	var passed_test_names: Array[String] = []  # Array to store names of passed tests
+
 	for method_info_variant in method_list:
 		var method_info: Dictionary = (
 			method_info_variant if method_info_variant is Dictionary else {}
 		)
 		if not method_info.has("name"):
-			continue
+			continue  # Skip if no name, should not happen
+
 		var method_name: String = method_info.name if method_info.name is String else ""
 		if not method_name.begins_with(test_prefix):
-			continue
+			continue  # Skip methods not matching the current test prefix
+
 		tests_run += 1
-		var skip_test: bool = false
-		if (
-			module_name == "rtdb"
-			and (method_name.contains("_listeners_") or method_name.contains("_connection_"))
-		):
-			Log.info("Skipping manual test: %s" % method_name, {}, ["debug", "test", module_name])
-			skip_test = true
-		if skip_test:
-			continue
 		var display_method_name: String = _format_name_for_display(
 			method_name.trim_prefix(test_prefix)
 		)
+
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "Running: %s..." % display_method_name
 		Log.info("Executing test: %s" % method_name, {}, ["debug", "test", module_name])
-		var result_tuple: Array = await call(method_name)
+
+		var result_tuple: Array = await call(method_name)  # Await the async test method
 		var success: bool = false
 		var payload: Variant = null
+
 		if result_tuple.size() == 2 and result_tuple[0] is bool:
 			success = result_tuple[0]
 			payload = result_tuple[1]
 		else:
 			Log.error(
-				"Test '%s' bad return: %s" % [method_name, str(result_tuple)],
+				"Test '%s' returned unexpected format: %s" % [method_name, str(result_tuple)],
 				{},
 				["debug", Log.TAG_ERROR]
 			)
-			payload = {"error": "Bad return format", "d": str(result_tuple)}
+			payload = {"error": "Bad return format from test", "details": str(result_tuple)}
+			success = false  # Ensure failure on bad format
+
 		if success:
-			tests_passed += 1
+			tests_passed_count += 1
+			passed_test_names.append(display_method_name)  # Add to list of passed tests
 			if get_parent().visible and is_instance_valid(status_label):
 				status_label.text = "PASS: %s" % display_method_name
-				Log.info(
-					"Test PASSED: %s" % method_name, {"p": payload}, ["debug", "test", module_name]
-				)
+			Log.info(
+				"Test PASSED: %s" % method_name, {"p": payload}, ["debug", "test", module_name]
+			)
 		else:
-			tests_failed += 1
+			tests_failed_count += 1
 			if get_parent().visible and is_instance_valid(status_label):
 				status_label.text = "FAIL: %s\nDetails: %s" % [display_method_name, str(payload)]
-				Log.error(
-					"Test FAILED: %s" % method_name,
-					{"err": payload},
-					["debug", "test", module_name, Log.TAG_ERROR]
-				)
-		await get_tree().create_timer(0.05).timeout
+			Log.error(
+				"Test FAILED: %s" % method_name,
+				{"err": payload},
+				["debug", "test", module_name, Log.TAG_ERROR]
+			)
+
+		await get_tree().create_timer(0.05).timeout  # Small delay between tests if needed
+
+	var summary_passed_list_str: String = ""
+	if not passed_test_names.is_empty():
+		summary_passed_list_str = "\nPassed tests:\n - " + "\n - ".join(passed_test_names)
+
 	var summary: String = (
-		"%s Tests: %d Run, %d Passed, %d Failed"
-		% [module_name.to_upper(), tests_run, tests_passed, tests_failed]
+		"%s Tests: %d Run, %d Passed, %d Failed.%s"
+		% [
+			module_name.to_upper(),
+			tests_run,
+			tests_passed_count,
+			tests_failed_count,
+			summary_passed_list_str
+		]
 	)
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = summary
-		Log.info(summary, {}, ["debug", "test", module_name])
+	Log.info(summary, {}, ["debug", "test", module_name])
 
 
 #-----------------------------------------------------------------------------#
@@ -1110,8 +1189,9 @@ func _test_auth_basic_sign_in_anonymous() -> Array:
 	if not is_instance_valid(auth):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] Auth not initialized."
-			return [false, {"error_code": "AUTH_NULL", "message": "Auth module not initialized."}]
-	var login_result: int = auth.login()
+		return [false, {"error_code": "AUTH_NULL", "message": "Auth module not initialized."}]
+
+	var login_result: int = await auth.login()  # Assuming auth.login() is async or returns a signal to await
 	var success: bool = login_result == OK
 	var payload: Variant = (
 		{"login_result_code": login_result}
@@ -1125,11 +1205,10 @@ func _test_auth_basic_sign_in_anonymous() -> Array:
 		status_label.text = (
 			"Anon Login %s: Code %d" % ["Success" if success else "Failed", login_result]
 		)
-		Log.info(
-			"Anonymous login result", {"result": login_result, "success": success}, ["test", "auth"]
-		)
-		return [success, payload]
-	return []
+	Log.info(
+		"Anonymous login result", {"result": login_result, "success": success}, ["test", "auth"]
+	)
+	return [success, payload]
 
 
 func _test_config_basic_fetch() -> Array:
@@ -1137,134 +1216,234 @@ func _test_config_basic_fetch() -> Array:
 	if not is_instance_valid(remote_config):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] Remote Config not initialized."
-			return [
-				false,
-				{"error_code": "CONFIG_NULL", "message": "Remote Config module not initialized."}
-			]
+		return [
+			false, {"error_code": "CONFIG_NULL", "message": "Remote Config module not initialized."}
+		]
+	# Ensure instant fetching for test reliability if needed
 	remote_config.set_instant_fetching()
+	# The `loaded` signal might be better to await for reliable fetching in tests,
+	# but for a basic test, direct get might suffice if defaults are set and fetch is quick.
+	if not remote_config.loaded():  # Await if not loaded for more reliability
+		await remote_config.loaded  # Wait for FetchAndActivate to complete
 	var rc_value: String = remote_config.get_string("test_string", "local_default_for_test")
-	var success: bool = rc_value != "local_default_for_test"
+	var success: bool = rc_value != "local_default_for_test"  # Success if not default
 	var payload: Variant = {"fetched_value": rc_value, "was_default": not success}
+
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = (
 			"RC Value: %s (Fetched: %s)" % [rc_value, "Yes" if success else "No/Default"]
 		)
-		Log.info(
-			"Remote Config fetch test",
-			{"value": rc_value, "success_assumption": success},
-			["test", "config"]
-		)
-		return [success, payload]
-	return []
+	Log.info(
+		"Remote Config fetch test",
+		{"value": rc_value, "success_assumption": success},
+		["test", "config"]
+	)
+	return [success, payload]
 
 
-func _on_Button_remote_config_string_pressed() -> void:
-	pass
-
-
-func remote_config_loaded() -> void:
-	pass
-
-
-func messaging_token() -> void:
-	pass
-
-
-func messaging_message(_msg_data: Dictionary) -> void:
-	pass
-
-
+# Placeholder for AdMob, assuming it might be re-integrated or tested later
 func _on_Button_func_is_interstitial_loaded_pressed() -> void:
-	pass
+	Log.debug("Button: Is Interstitial Loaded pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): status_label.text = "Interstitial Loaded: " + str(admob.is_interstitial_loaded())
 
 
 func _on_Button_func_is_reward_loaded_pressed() -> void:
-	pass
+	Log.debug("Button: Is Reward Loaded pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): status_label.text = "Reward Loaded: " + str(admob.is_rewarded_video_loaded())
 
 
 func _on_Button_load_interstitial_pressed() -> void:
-	pass
+	Log.debug("Button: Load Interstitial pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): admob.load_interstitial()
 
 
 func _on_Button_play_interstitial_pressed() -> void:
-	pass
+	Log.debug("Button: Play Interstitial pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): admob.show_interstitial()
 
 
 func _on_Button_load_rewarded_video_pressed() -> void:
-	pass
+	Log.debug("Button: Load Rewarded Video pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): admob.load_rewarded_video()
 
 
 func _on_Button_play_rewarded_video_pressed() -> void:
-	pass
+	Log.debug("Button: Play Rewarded Video pressed", {}, ["debug_ui", "admob_test"])
+	# if is_instance_valid(admob): admob.show_rewarded_video()
 
 
+# Auth Callbacks (from FirebaseAuth C++ module)
+func logged_in(res_code: int) -> void:  # res is an int (error code)
+	var success: bool = res_code == 0  # Assuming 0 means success
+	var message: String = (
+		"Firebase Login %s. Code: %d" % ["Succeeded" if success else "Failed", res_code]
+	)
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = message
+	Log.info(
+		"Firebase Auth: Logged In callback",
+		{"code": res_code, "success": success},
+		["firebase", "auth"]
+	)
+	fb_success.emit({"type": "login", "success": success, "code": res_code})
+
+
+func account_linked(res_code: int) -> void:  # res is an int (error code)
+	var success: bool = res_code == 0
+	var message: String = (
+		"Firebase Account Link %s. Code: %d" % ["Succeeded" if success else "Failed", res_code]
+	)
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = message
+	Log.info(
+		"Firebase Auth: Account Linked callback",
+		{"code": res_code, "success": success},
+		["firebase", "auth"]
+	)
+	fb_success.emit({"type": "link", "success": success, "code": res_code})
+
+
+func account_unlinked(error_message: String) -> void:  # res is error_message (String)
+	var success: bool = error_message.is_empty()  # No error message means success
+	var message: String = "Firebase Account Unlink %s." % ["Succeeded" if success else "Failed"]
+	if not success:
+		message += " Error: %s" % error_message
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = message
+	Log.info(
+		"Firebase Auth: Account Unlinked callback",
+		{"error": error_message, "success": success},
+		["firebase", "auth"]
+	)
+	fb_success.emit({"type": "unlink", "success": success, "error_message": error_message})
+
+
+# Facebook Callbacks (from project/facebook/facebook.gd)
+func facebook_login_success(token: String) -> void:
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = "Facebook Login Success: Token received."
+	Log.info("Facebook SDK: Login Success", {"token_len": token.length()}, ["facebook", "auth"])
+	fb_success.emit({"type": "fb_login", "success": true, "token": token})
+
+
+# Apple Auth Callbacks (from project/firebase/auth.gd which wraps GodotAppleAuth)
+func _on_credential(result: Dictionary) -> void:  # From GodotAppleAuth
+	var success = not result.has("error")
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = (
+			"Apple Credential Status: %s"
+			% ("OK" if success else result.get("error", "Unknown Error"))
+		)
+	Log.info(
+		"Apple Auth: Credential Callback", {"result": result, "success": success}, ["apple", "auth"]
+	)
+	apple_auth_respons.emit(result)  # Forward to test methods if they await this
+
+
+func _on_authorization(result: Dictionary) -> void:  # From GodotAppleAuth
+	var success = not result.has("error")
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = (
+			"Apple Authorization: %s"
+			% ("Success" if success else result.get("error", "Unknown Error"))
+		)
+	Log.info(
+		"Apple Auth: Authorization Callback",
+		{"result": result, "success": success},
+		["apple", "auth"]
+	)
+	apple_auth_respons.emit(result)
+
+
+# Remote Config Callbacks
+func remote_config_loaded() -> void:
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = "Remote Config: Data loaded and activated."
+	Log.info("Remote Config: Loaded callback received.", {}, ["firebase", "config"])
+
+
+# Firebase Messaging Callbacks (if used in tests)
+func messaging_token() -> void:  # Placeholder, actual token string needed from signal
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = "FCM Token Received (see logs)."
+	Log.info("FCM: Token received.", {}, ["firebase", "messaging"])
+
+
+func messaging_message(msg_data: Dictionary) -> void:
+	if get_parent().visible and is_instance_valid(status_label):
+		status_label.text = "FCM Message Received: From " + msg_data.get("from", "N/A")
+	Log.info("FCM: Message received.", {"data": msg_data}, ["firebase", "messaging"])
+
+
+# --- UI Button Handlers (Simplified, actual test logic is in _test_* methods) ---
 func _on_Button_sign_in_anon_pressed() -> void:
-	pass
-
-
-func logged_in(_res: String) -> void:
-	pass
-
-
-func facebook_login_success(_result: Dictionary) -> void:
-	pass
+	call_deferred("_test_auth_basic_sign_in_anonymous")
 
 
 func _on_Button_sign_in_facebook_pressed() -> void:
-	pass
+	Log.debug("UI: Sign In Facebook pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_facebook_sign_in() # Example if you had such a test
 
 
 func _on_Button_unlink_Facebook_pressed() -> void:
-	pass
+	Log.debug("UI: Unlink Facebook pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_facebook_unlink()
 
 
 func _on_Button_link_Facebook_pressed() -> void:
-	pass
+	Log.debug("UI: Link Facebook pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_facebook_link()
 
 
 func _on_Auth_Apple_login_pressed() -> void:
-	pass
+	Log.debug("UI: Apple Login pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_apple_sign_in()
 
 
 func _on_Auth_Apple_log_out_pressed() -> void:
-	pass
+	Log.debug("UI: Apple Logout pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_apple_log_out()
 
 
 func _on_Auth_Apple_link_pressed() -> void:
-	pass
+	Log.debug("UI: Apple Link pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_apple_link()
 
 
 func _on_Auth_Apple_unlink_pressed() -> void:
-	pass
-
-
-func account_linked(_res: String) -> void:
-	pass
-
-
-func account_unlinked(_res: String) -> void:
-	pass
+	Log.debug("UI: Apple Unlink pressed.", {}, ["debug_ui", "auth"])
+	# _test_auth_apple_unlink()
 
 
 func _on_Auth_Apple_has_provider_pressed() -> void:
-	pass
+	Log.debug("UI: Apple Has Provider pressed.", {}, ["debug_ui", "auth"])
+	# if is_instance_valid(auth): status_label.text = "Apple Linked: " + str(auth.check_provider_connection("apple.com"))
 
 
 func _on_Auth_fb_has_provider_pressed() -> void:
-	pass
+	Log.debug("UI: FB Has Provider pressed.", {}, ["debug_ui", "auth"])
+	# if is_instance_valid(auth): status_label.text = "FB Linked: " + str(auth.check_provider_connection("facebook.com"))
 
 
 func _on_Button_sign_out_pressed() -> void:
-	pass
+	Log.debug("UI: Sign Out pressed.", {}, ["debug_ui", "auth"])
+	# if is_instance_valid(auth): auth.firebase_auth.sign_out(); status_label.text = "Sign out called."
 
 
 func _on_Button_get_all_info_pressed() -> void:
-	pass
+	Log.debug("UI: Get All Info pressed.", {}, ["debug_ui", "auth"])
+	# if is_instance_valid(auth) and auth.firebase_auth.is_logged_in():
+	# 	var info_text = "UID: %s\nName: %s\nEmail: %s\nPhoto: %s\nProviders: %s" % [
+	# 		auth.firebase_auth.uid(),
+	# 		auth.firebase_auth.user_name(),
+	# 		auth.firebase_auth.email(),
+	# 		auth.firebase_auth.photo_url(),
+	# 		JSON.stringify(auth.firebase_auth.providers())
+	# 	]
+	# 	status_label.text = info_text
+	# else:
+	# 	status_label.text = "Not logged in to Firebase."
 
 
-func _on_credential(_result: Dictionary) -> void:
-	pass
-
-
-func _on_authorization(_result: Dictionary) -> void:
-	pass
+func _on_Button_remote_config_string_pressed() -> void:
+	call_deferred("_test_config_basic_fetch")
