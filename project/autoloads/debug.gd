@@ -26,6 +26,7 @@ func _on_debug_event(event: DebugEventType, _data: Variant = null) -> void:
 		DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			popup_debug.show()
 
+
 func _ready() -> void:
 	Log.info("Debug module initialized", {}, [Log.TAG_DB])
 	popup_debug.hide()
@@ -35,6 +36,7 @@ func _ready() -> void:
 
 	if OS.get_name() == "iOS" or OS.get_name() == "Android":
 		_verify_logger_export()
+
 
 func _verify_logger_export() -> void:
 	if OS.get_name() == "iOS":
