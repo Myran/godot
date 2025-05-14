@@ -1,7 +1,3 @@
-# File: project/debug/debug.gd
-# Reinstated PendingRequestData (WITHOUT internal timer) for signal await structure.
-# Hangs in C++ module will result in indefinite await on PendingRequestData.completed.
-
 extends Control
 
 signal fb_success(res: Dictionary)
@@ -747,6 +743,7 @@ func _on_rtdb_db_error(code: String, message: String) -> void:
 
 
 # --- RTDB Test Functions ---
+# --- RTDB Test Functions ---
 func _test_rtdb_basic_set_simple_value() -> Array:
 	Log.debug("RTDB Test: Set Simple Value", {}, ["test"])
 	_transaction_count += 1
@@ -825,8 +822,7 @@ func _test_rtdb_advanced_increment_transaction() -> Array:
 		return [false, {"error": "Failed to set initial counter", "d": set_result[1]}]
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Running transaction..."
-		return await _make_rtdb_request("run_transaction_async", counter_path_suffix, [1.0])
-	return []
+	return await _make_rtdb_request("run_transaction_async", counter_path_suffix, [1.0])  # RP: Ensure float if C++ expects float for counter; if int, 1 is fine. Assuming 1.0 for safety given 0.0 above.
 
 
 func _test_rtdb_advanced_set_server_timestamp() -> Array:
@@ -843,15 +839,29 @@ func _test_rtdb_listeners_add() -> Array:
 	if not is_instance_valid(db):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not init."
-			return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+
 	var fp_listener: Array[String] = _test_base_path.duplicate()
 	fp_listener.append_array(_listener_path_suffix)
 	db.add_listener_at_path(fp_listener)
+
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Added listener:\n%s" % [str(fp_listener)]
+
 	var path_for_status_set: Array[String] = fp_listener.duplicate()
 	path_for_status_set.append("status")
-	db.callv("set_value_async", [-1, path_for_status_set, "listening_init"])
+	# Use _make_rtdb_request for the auxiliary set_value operation
+	var set_status_result: Array = await _make_rtdb_request(
+		"set_value_async", path_for_status_set, ["listening_init"]
+	)
+	if not set_status_result[0]:
+		Log.warning(
+			"Failed to set initial listener status in RTDB",
+			{"error_info": set_status_result[1]},
+			["test", "rtdb"]
+		)
+		# Decide if this failure should make the overall _test_rtdb_listeners_add fail
+		# For now, we'll still return true for the listener add request itself.
 	return [true, {"message": "Listener add requested for path: %s" % str(fp_listener)}]
 
 
@@ -860,22 +870,54 @@ func _test_rtdb_listeners_trigger_change() -> Array:
 	if not is_instance_valid(db):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not init."
-			return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+
 	_listen_count += 1
 	var listener_base: Array[String] = _test_base_path.duplicate()
 	listener_base.append_array(_listener_path_suffix)
+
 	var path_count: Array[String] = listener_base.duplicate()
 	path_count.append("count")
+
 	var path_status: Array[String] = listener_base.duplicate()
 	path_status.append("status")
-	db.callv("set_value_async", [-100 - _listen_count, path_count, _listen_count])
-	db.callv(
-		"set_value_async", [-200 - _listen_count, path_status, "triggered_" + str(_listen_count)]
+
+	# Use _make_rtdb_request for the auxiliary set_value operations
+	var set_count_result: Array = await _make_rtdb_request(
+		"set_value_async", path_count, [_listen_count]
 	)
+	if not set_count_result[0]:
+		Log.warning(
+			"Failed to set listener count in RTDB",
+			{"error_info": set_count_result[1]},
+			["test", "rtdb"]
+		)
+		# Potentially return an error or handle as appropriate
+
+	var set_status_result: Array = await _make_rtdb_request(
+		"set_value_async", path_status, ["triggered_" + str(_listen_count)]
+	)
+	if not set_status_result[0]:
+		Log.warning(
+			"Failed to set listener status in RTDB",
+			{"error_info": set_status_result[1]},
+			["test", "rtdb"]
+		)
+		# Potentially return an error or handle as appropriate
+
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Triggered listener change (count: %d)" % _listen_count
-		return [true, {"message": "Listener change trigger sent"}]
-	return []
+	# The success of this test function now depends on the success of the _make_rtdb_request calls.
+	# We'll consider it successful if both DB writes were ack'd, even if the listener itself has issues (that's a separate test).
+	var overall_success = set_count_result[0] and set_status_result[0]
+	var result_payload = {
+		"message": "Listener change trigger sent (count: %d)" % _listen_count,
+		"count_set_success": set_count_result[0],
+		"status_set_success": set_status_result[0],
+		"count_set_payload": set_count_result[1],
+		"status_set_payload": set_status_result[1]
+	}
+	return [overall_success, result_payload]
 
 
 func _test_rtdb_listeners_remove() -> Array:
@@ -883,14 +925,15 @@ func _test_rtdb_listeners_remove() -> Array:
 	if not is_instance_valid(db):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not init."
-			return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+
 	var fp_listener: Array[String] = _test_base_path.duplicate()
 	fp_listener.append_array(_listener_path_suffix)
 	db.remove_listener_at_path(fp_listener)
+
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Removed listener:\n%s" % [str(fp_listener)]
-		return [true, {"message": "Listener remove requested for path: %s" % str(fp_listener)}]
-	return []
+	return [true, {"message": "Listener remove requested for path: %s" % str(fp_listener)}]
 
 
 func _test_rtdb_connection_monitor() -> Array:
@@ -898,12 +941,11 @@ func _test_rtdb_connection_monitor() -> Array:
 	if not is_instance_valid(db):
 		if get_parent().visible and is_instance_valid(status_label):
 			status_label.text = "[ERROR] RTDB not init."
-			return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
+		return [false, {"error_code": "DB_NULL", "message": "RTDB not initialized"}]
 	db.monitor_connection_state()
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = "Monitoring connection..."
-		return [true, {"message": "Connection monitoring started"}]
-	return []
+	return [true, {"message": "Connection monitoring started"}]
 
 
 #-----------------------------------------------------------------------------#

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://du5rvnc3ulg1w"]
 
 [ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://debug/theme_debugmenu.tres" id="1_3au6l"]
-[ext_resource type="Script" uid="uid://clqyb0iapb35n" path="res://debug/debug.gd" id="1_cx13k"]
+[ext_resource type="Script" uid="uid://clqyb0iapb35n" path="res://debug/scene_debug.gd" id="1_cx13k"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -79,3 +79,5 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme = ExtResource("1_3au6l")
+allow_rmb_select = true
+allow_search = false
