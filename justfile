@@ -315,6 +315,73 @@ build-android BUILD_TYPE="apk": pre-build
 build-android-apk: (build-android "apk")
 build-android-aab: (build-android "aab")
 
+# Build and deploy using Gradle directly (matches Godot's remote deploy)
+android-gradle-deploy:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # First insert Firebase dependencies
+    just insert-firebase-dependencies
+    
+    echo "Building with package name: {{ANDROID_PACKAGE_NAME}}"
+    
+    # Create timestamp for unique filename
+    TIMESTAMP=$(date +%s)
+    TEMP_DIR="/tmp/android_deploy"
+    
+    # Create temp directory if it doesn't exist
+    mkdir -p "$TEMP_DIR"
+    
+    # Run Gradle build using the same command as Godot remote deploy
+    cd {{PROJECT_PATH}}/android/build && \
+    ./gradlew validateJavaVersion clean assembleStandardDebug \
+      -Paddons_directory={{PROJECT_PATH}}/addons \
+      -Pexport_package_name={{ANDROID_PACKAGE_NAME}} \
+      -Pexport_version_code=$(date +%Y%m%d%H%M%S) \
+      -Pexport_version_name=1.0.$(date +%Y%m%d%H%M%S) \
+      -Pexport_version_min_sdk=24 \
+      -Pexport_version_target_sdk=34 \
+      -Pexport_enabled_abis=arm64-v8a \
+      -Pplugins_local_binaries= \
+      -Pplugins_remote_binaries= \
+      -Pplugins_maven_repos= \
+      -Pperform_zipalign=true \
+      -Pperform_signing=true \
+      -Pcompress_native_libraries=false
+    
+    # Copy and rename binary (just like Godot does)
+    echo "Copying and renaming APK..."
+    EXPORT_FILENAME="tmpexport.$TIMESTAMP.apk"
+    cd {{PROJECT_PATH}}/android/build && \
+    ./gradlew copyAndRenameBinary \
+      -Pexport_edition=standard \
+      -Pexport_build_type=debug \
+      -Pexport_format=apk \
+      -Pexport_path=file:$TEMP_DIR \
+      -Pexport_filename=$EXPORT_FILENAME
+    
+    # Check if package exists, uninstall if it does, then install
+    echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
+    if adb -s 246d2c533a037ece shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
+        echo "Package exists. Uninstalling..."
+        adb -s 246d2c533a037ece uninstall {{ANDROID_PACKAGE_NAME}}
+    else
+        echo "Package does not exist."
+    fi
+    
+    # Install the new APK
+    echo "Installing APK to device..."
+    adb -s 246d2c533a037ece install "$TEMP_DIR/$EXPORT_FILENAME"
+    
+    # Launch the app
+    echo "Launching the app..."
+    adb -s 246d2c533a037ece shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    
+    echo "APK file is available at: $TEMP_DIR/$EXPORT_FILENAME"
+    
+    echo "Deployment completed successfully!"
+    echo "APK file is available at: $TEMP_DIR/$EXPORT_FILENAME"
+
 # Build and export for iOS
 build-ios: pre-build
     @echo "Building and exporting for iOS..."
