@@ -315,8 +315,8 @@ build-android BUILD_TYPE="apk": pre-build
 build-android-apk: (build-android "apk")
 build-android-aab: (build-android "aab")
 
-# Build and deploy using Gradle directly (matches Godot's remote deploy)
-android-gradle-deploy:
+# Build, install and run Android app using Gradle (matches Godot's remote deploy)
+install-and-run-android-gradle:
     #!/usr/bin/env bash
     set -euo pipefail
     

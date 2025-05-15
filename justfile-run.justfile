@@ -5,13 +5,13 @@ run target *args='':
     #!/usr/bin/env bash
     echo "Running project on {{target}}..."
     if [ "{{args}}" = "debug" ]; then
-        just _run_{{target}} debug
+        just _run-{{target}} debug
     else
-        just _run_{{target}}
+        just _run-{{target}}
     fi
 
 # Run on desktop
-_run_desktop:
+_run-desktop:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
 # Run in debug mode
@@ -42,7 +42,7 @@ run-debug:
     fi
 
 # Run on iOS devices
-_run_ios device debug="": pre-build
+_run-ios device debug="": pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running on iOS {{device}}..."
@@ -74,12 +74,12 @@ _run_ios device debug="": pre-build
     fi
 
 # Run on iPhone
-_run_iphone *args="":
-    just _run_ios "iPhone" {{args}}
+_run-iphone *args="":
+    just _run-ios "iPhone" {{args}}
 
 # Run on iPad
-_run_ipad *args="":
-    just _run_ios "iPad" {{args}}
+_run-ipad *args="":
+    just _run-ios "iPad" {{args}}
 
 # Save and run iphone
 save-and-run-iphone:
@@ -87,7 +87,7 @@ save-and-run-iphone:
 
 
 # Check if package exists, uninstall if it does, then install and run
-_run_android build_type="release":
+_run-android build_type="release":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
@@ -109,13 +109,13 @@ _run_android build_type="release":
     adb -s 246d2c533a037ece shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
 
 # Run Android debug version
-_run_android_debug:
-    just _run_android debug
+_run-android-debug:
+    just _run-android debug
 
 # Install and run on Android (release version)
-install_and_run_android:
-    just _run_android
+install-and-run-android:
+    just _run-android
 
 # Install and run on Android (debug version)
-install_and_run_android_debug:
-    just _run_android debug
+install-and-run-android-debug:
+    just _run-android debug
