@@ -30,14 +30,14 @@ func _ready() -> void:
 ## Prepare the logger for iOS
 func _prepare_for_ios() -> void:
 	print("[Advanced Logger] iOS Loader activated")
-	
+
 	# Load required dependencies
 	var loaded_count = 0
 	for file_path in CORE_FILES:
 		var resource = load(file_path)
 		if resource:
 			loaded_count += 1
-	
+
 	print("[Advanced Logger] iOS Loader: Loaded %d/%d dependencies" % [loaded_count, CORE_FILES.size()])
 
 ## Verify all dependencies are working
@@ -45,16 +45,16 @@ func _verify_ios_dependencies() -> void:
 	# Disable if not iOS
 	if OS.get_name() != "iOS":
 		return
-		
+
 	print("[Advanced Logger] Running iOS dependency verification...")
-	
+
 	# Check for iOS helper
 	var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 	if ios_helper:
 		print("[Advanced Logger] ✓ iOS Helper loaded successfully")
 	else:
 		print("[Advanced Logger] ✗ iOS Helper not found!")
-	
+
 	# Test logging
 	if Log:
 		print("[Advanced Logger] ✓ Log singleton accessible")
