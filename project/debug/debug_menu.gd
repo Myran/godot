@@ -347,7 +347,23 @@ class HSeparatorWithMargin:
 
 ## Show menu content (called externally)
 func show_menu_content() -> void:
+	# Log current state for debugging
+	Log.info("Showing menu content", {
+		"categories_count": categories.size(),
+		"categories": categories.keys()
+	}, ["debug_menu"])
+
+	# Clear any search term
+	if search_field:
+		search_field.text = ""
+	current_search_term = ""
+
+	# Show root category
 	show_category("")
+
+	# Ensure UI is visible and properly positioned
+	if get_parent() and get_parent() is CanvasLayer:
+		get_parent().visible = true
 
 
 ## Create a new category

@@ -53,12 +53,30 @@ func initialize() -> void:
 
 	# Create a canvas layer for the UI
 	canvas_layer = CanvasLayer.new()
+	canvas_layer.name = "DebugMenuCanvasLayer"
 	canvas_layer.layer = 100  # High layer to be on top
 	canvas_layer.visible = false
 	add_child(canvas_layer)
 
 	# Setup the debug menu
 	canvas_layer.add_child(debug_menu)
+
+	# Ensure the debug menu fills the entire screen
+	debug_menu.anchor_right = 1.0
+	debug_menu.anchor_bottom = 1.0
+	debug_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	debug_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+	# Log canvas layer info
+	Log.info("Canvas layer setup", {
+		"canvas_layer_name": canvas_layer.name,
+		"canvas_layer_layer": canvas_layer.layer,
+		"debug_menu_rect": {
+			"position": Vector2(debug_menu.position.x, debug_menu.position.y),
+			"size": Vector2(debug_menu.size.x, debug_menu.size.y),
+			"anchors": [debug_menu.anchor_left, debug_menu.anchor_top, debug_menu.anchor_right, debug_menu.anchor_bottom]
+		}
+	}, ["debug"])
 
 	# Register system debug functions
 	_register_system_debug_functions()
@@ -108,8 +126,24 @@ func show_menu() -> void:
 		initialize()
 
 	if canvas_layer:
+		# Ensure canvas layer is properly sized and visible
 		canvas_layer.visible = true
-		debug_menu.show_menu_content()
+
+		# Force a refresh of the menu content
+		if debug_menu:
+			# Reset any search terms or filters
+			if debug_menu.has_method("_on_search_clear_pressed"):
+				debug_menu._on_search_clear_pressed()
+
+			# Force showing the root category to ensure all items are visible
+			debug_menu.show_menu_content()
+
+			# Log detailed debug info
+			Log.info("Showing debug menu", {
+				"canvas_visible": canvas_layer.visible,
+				"categories_count": debug_menu.categories.size(),
+				"categories": debug_menu.categories.keys()
+			}, ["debug"])
 
 
 ## Hide the debug menu

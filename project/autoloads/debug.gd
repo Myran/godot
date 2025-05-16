@@ -50,8 +50,24 @@ func _on_debug_event(event: DebugEventType, _data: Variant = null) -> void:
 			)
 
 			if controller and controller.has_method("show_menu") and controller.is_initialized:
-				Log.info("Opening new debug menu via controller", {}, [Log.TAG_DEBUG])
+				Log.info("Opening new debug menu via controller", {
+					"controller_id": controller.get_instance_id(),
+					"is_initialized": controller.is_initialized,
+					"has_debug_menu": controller.debug_menu != null,
+					"canvas_valid": controller.canvas_layer != null if controller.get("canvas_layer") != null else false
+				}, [Log.TAG_DEBUG])
+
+				# Try to force initialize if not already
+				if not controller.is_initialized and controller.has_method("initialize"):
+					controller.initialize()
+
 				controller.show_menu()
+
+				# Verify the canvas is actually visible
+				if controller.canvas_layer and not controller.canvas_layer.visible:
+					Log.warning("Canvas layer not visible after show_menu, forcing visibility", {}, [Log.TAG_DEBUG])
+					controller.canvas_layer.visible = true
+
 			elif debug_menu:
 				Log.info("Opening fallback debug menu", {}, [Log.TAG_DEBUG])
 				debug_menu.show_menu_content()
@@ -133,9 +149,121 @@ func _ready() -> void:
 	# Register debug functions with the new debug menu
 	_register_debug_functions()
 
+	# Register RTDB-specific functions
+	_register_rtdb_functions()
+
 	# Run automatic verification to ensure everything is working properly
 	call_deferred("run_automatic_verification")
 
+
+## Register RTDB-specific debug functions
+func _register_rtdb_functions() -> void:
+	# Skip if debug_menu is not available
+	if not debug_menu and not debug_menu_controller:
+		Log.warning("Debug menu not available, skipping RTDB registration", {}, [Log.TAG_DEBUG])
+		return
+
+	# Additional debugging
+	Log.info("Starting RTDB functions registration", {
+		"debug_menu_valid": is_instance_valid(debug_menu),
+		"controller_valid": is_instance_valid(debug_menu_controller),
+		"controller_initialized": debug_menu_controller.is_initialized if debug_menu_controller else false
+	}, [Log.TAG_DEBUG])
+
+	# Use the appropriate debug menu instance
+	var menu_to_use: Node = (
+		debug_menu
+		if debug_menu
+		else debug_menu_controller.debug_menu if debug_menu_controller else null
+	)
+
+	if not menu_to_use:
+		Log.warning("No debug menu available for RTDB registration", {}, [Log.TAG_DEBUG])
+		return
+
+	# Create RTDB categories
+	menu_to_use.create_nested_categories("RTDB Tests/Basic")
+	menu_to_use.create_nested_categories("RTDB Tests/Advanced")
+	menu_to_use.create_nested_categories("RTDB Tests/Listeners")
+
+	# Get reference to scene_debug
+	var scene_debug_instance = get_node_or_null("/root/scene_debug")
+
+	# If scene_debug isn't loaded yet, we need to load it
+	if not scene_debug_instance:
+		# Try to load the scene resource
+		var scene_debug_resource = load("res://debug/scene_debug.tscn")
+		if scene_debug_resource:
+			# Instance but don't add to scene tree yet
+			scene_debug_instance = scene_debug_resource.instantiate()
+
+			# Store the instance for reference but don't add to scene tree
+			# We just need access to its methods
+			Engine.set_meta("scene_debug_instance", scene_debug_instance)
+		else:
+			Log.error("Failed to load scene_debug.tscn", {}, [Log.TAG_DEBUG])
+			return
+
+	# Now register all RTDB test functions from scene_debug
+	if scene_debug_instance:
+		# Get all methods from scene_debug that are RTDB tests
+		for method in scene_debug_instance.get_method_list():
+			var method_name: String = method.name
+			if method_name.begins_with("_test_rtdb_"):
+				var category: String = "RTDB Tests"
+				var display_name: String = method_name.substr(11).capitalize().replace("_", " ")
+
+				# Determine subcategory based on naming convention
+				if method_name.contains("basic_"):
+					category = "RTDB Tests/Basic"
+				elif method_name.contains("advanced_"):
+					category = "RTDB Tests/Advanced"
+				elif method_name.contains("listeners_"):
+					category = "RTDB Tests/Listeners"
+
+				# Create a callable that references the method in scene_debug
+				var test_func: Callable = Callable(scene_debug_instance, method_name)
+
+				# Register the function as a button
+				menu_to_use.add_button(
+					category,
+					display_name,
+					test_func,
+					true,
+					"RTDB test: " + display_name
+				)
+
+				Log.info(
+					"Registered RTDB test function",
+					{"name": method_name, "category": category},
+					[Log.TAG_DEBUG]
+				)
+
+		Log.info("RTDB functions registration complete", {}, [Log.TAG_DEBUG])
+	else:
+		Log.error("Failed to get scene_debug instance", {}, [Log.TAG_DEBUG])
+
+## Check if RTDB functions are registered with the debug menu
+func _are_rtdb_functions_registered() -> bool:
+	if not debug_menu_controller or not is_instance_valid(debug_menu_controller):
+		return false
+
+	if not debug_menu_controller.debug_menu or not is_instance_valid(debug_menu_controller.debug_menu):
+		return false
+
+	# Check for RTDB categories
+	var required_categories: Array[String] = ["RTDB Tests/Basic", "RTDB Tests/Advanced", "RTDB Tests/Listeners"]
+	for category: String in required_categories:
+		if not debug_menu_controller.debug_menu.categories.has(category):
+			return false
+
+	# Check at least one button exists in the Basic category
+	if debug_menu_controller.debug_menu.categories.has("RTDB Tests/Basic"):
+		var category = debug_menu_controller.debug_menu.categories["RTDB Tests/Basic"]
+		if category.buttons.is_empty():
+			return false
+
+	return true
 
 func _verify_logger_export() -> void:
 	if OS.get_name() == "iOS":
@@ -356,6 +484,28 @@ func run_automatic_verification() -> void:
 
 	if simulation_result:
 		Log.info("Debug menu button simulation successful", {}, [Log.TAG_DEBUG])
+
+		# 6. Verify RTDB functions registration
+		if is_instance_valid(debug_menu_controller) and is_instance_valid(debug_menu_controller.debug_menu):
+			var rtdb_categories: Array[String] = ["RTDB Tests/Basic", "RTDB Tests/Advanced", "RTDB Tests/Listeners"]
+			var has_rtdb_categories: bool = true
+
+			for category: String in rtdb_categories:
+				if not debug_menu_controller.debug_menu.categories.has(category):
+					has_rtdb_categories = false
+					Log.warning(
+						"RTDB category not found in debug menu",
+						{"category": category},
+						[Log.TAG_DEBUG]
+					)
+
+			if has_rtdb_categories:
+				Log.info("RTDB categories verification successful", {}, [Log.TAG_DEBUG])
+			else:
+				Log.warning("Some RTDB categories are missing", {}, [Log.TAG_DEBUG])
+				# Try re-registering RTDB functions
+				_register_rtdb_functions()
+
 		_report_verification_result(true, "Verification completed successfully")
 	else:
 		Log.error("Debug menu button simulation failed", {}, [Log.TAG_DEBUG])
@@ -540,6 +690,11 @@ func debug_button_pressed(button_name: String) -> void:
 		"button_db_debug":
 			action(DebugEventType.EVENT_OPEN_DB_DEBUG_MENU)
 		"button_new_debug_menu":
+			# Check if RTDB functions are registered before opening
+			if not _are_rtdb_functions_registered():
+				Log.info("RTDB functions not registered, registering now", {}, [Log.TAG_DEBUG])
+				_register_rtdb_functions()
+
 			# Use the new event type specifically for the new debug menu
 			action(DebugEventType.EVENT_OPEN_NEW_DEBUG_MENU)
 
