@@ -38,3 +38,4 @@ gradle/.build_version
 convertion/project
 .env
 repomix-output.txt
+editor/editor_data/temp
