@@ -18,6 +18,9 @@ config/icon="res://assets/frame.png"
 [autoload]
 
 singleton_cleanup="*res://autoloads/singleton_cleanup.gd"
+Log="*res://addons/advanced_logger/core/logger.gd"
+LoggerIOSLoader="*res://addons/advanced_logger/ios_loader.gd"
+debug_menu_controller="*res://debug/debug_menu_controller.gd"
 debug="*res://autoloads/debug.tscn"
 internet_status="*res://autoloads/internet_status.gd"
 auth="*res://firebase/auth.gd"
@@ -28,8 +31,6 @@ ui="*res://autoloads/ui.gd"
 core="*res://autoloads/core.gd"
 card_controller="*res://autoloads/card_controller.tscn"
 util="*res://misc/util.gd"
-Log="*res://addons/advanced_logger/core/logger.gd"
-LoggerIOSLoader="*res://addons/advanced_logger/ios_loader.gd"
 
 [debug]
 

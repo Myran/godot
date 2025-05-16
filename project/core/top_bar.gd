@@ -16,4 +16,5 @@ func _ready() -> void:
 
 
 func _on_button_debug_pressed() -> void:
+	# The top bar should always open the legacy popup_debug menu
 	debug.action(debug.DebugEventType.EVENT_OPEN_DEBUG_MENU)

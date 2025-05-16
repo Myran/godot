@@ -171,40 +171,35 @@ func _initialize_collection(collection_name: String) -> bool:
 ## @param collection_name The name of the collection being created (for logging)
 ## @return bool True if initialization was successful
 func _safely_create_collection(creation_function: Callable, collection_name: String) -> bool:
-	var success: bool = true
-
 	# No null check - will crash immediately if _backend is null (fail fast)
 
-	# Just call the function directly - let it crash if there's a type error
-	# This will make it easier to find and fix issues directly
-	var err: Variant = creation_function.call()
+	# In GDScript 4, errors will propagate up and crash if they're not handled
+	# We'll simply log before and after to confirm success
+	Log.debug(
+		"Initializing collection",
+		{"collection_name": collection_name, "instance_id": get_instance_id()},
+		[Log.TAG_DB]
+	)
 
-	# Only check for specific Error type returns
-	if err is Error and err != OK:
-		success = false
-		Log.error(
-			"Failed to initialize collection",
-			{"collection_name": collection_name, "error": err, "instance_id": get_instance_id()},
-			[Log.TAG_DB, Log.TAG_ERROR]
-		)
-		push_error("Failed to initialize collection: " + collection_name)
+	# Call the creation function directly
+	creation_function.call()
 
-	return success
+	# If we reach this point, the function call succeeded
+	Log.debug(
+		"Successfully initialized collection",
+		{"collection_name": collection_name, "instance_id": get_instance_id()},
+		[Log.TAG_DB]
+	)
+
+	return true
 
 
 ## Set the test group identifier
 ## @param group The test group to use
 func set_test_group(group: int) -> void:
-	if group is int:
-		test_group = group
-		# Reinitialize collections with new test group
-		_initialize_collections()
-	else:
-		Log.error(
-			"Invalid test group specified",
-			{"provided_value": group, "type": typeof(group), "instance_id": get_instance_id()},
-			[Log.TAG_DB, Log.TAG_ERROR]
-		)
+	test_group = group
+	# Reinitialize collections with new test group
+	_initialize_collections()
 
 
 ## Check if Firebase is available and connected

@@ -32,7 +32,14 @@ func set_current_attack(new_attack: int) -> void:
 
 func init_with_info(_card_info: Dictionary) -> void:
 	card_info = _card_info
-	var abilities_string: String = card_info.abilities
+
+	# Check if abilities exists in the card info
+	var abilities_string: String = ""
+	if card_info.has("abilities"):
+		abilities_string = card_info.abilities
+	else:
+		Log.warning("Card info missing 'abilities' field", {"card_info": card_info}, ["debug"])
+
 	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_string)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
@@ -68,8 +75,20 @@ func upgrade_unit_to_level(_new_level: int) -> void:
 
 
 func upgrade_stats_to_new_level(_level: int) -> void:
-	var health: String = card_info.health
-	var attack: String = card_info.attack
+	# Default values
+	var health: String = "1"
+	var attack: String = "1"
+
+	# Get values only if they exist in card_info
+	if card_info.has("health"):
+		health = card_info.health
+	else:
+		Log.warning("Card info missing 'health' field", {"card_info": card_info}, ["debug"])
+
+	if card_info.has("attack"):
+		attack = card_info.attack
+	else:
+		Log.warning("Card info missing 'attack' field", {"card_info": card_info}, ["debug"])
 	max_health = int(health) * _level
 	max_attack = int(attack) * _level
 	current_attack = max_attack

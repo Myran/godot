@@ -42,23 +42,53 @@ func select_id_from_level(lvl: int) -> String:
 	var cards_with_level: Array = []
 
 	for card: Dictionary in all_cards:
-		var level: String = card.upgrade_level
-		if int(level) == sel_lvl:
-			cards_with_level.append(card)
+		if card.has("upgrade_level"):
+			var level: String = card.upgrade_level
+			if int(level) == sel_lvl:
+				cards_with_level.append(card)
 
-	var picked_card_id: String = (
-		cards_with_level[rng.seeded_rng.next() % cards_with_level.size()].id
-	)
+	# Handle the case where no cards match the level
+	if cards_with_level.size() == 0:
+		Log.warning(
+			"No cards found for level %d, using first card as fallback" % sel_lvl, {}, ["debug"]
+		)
+		# Return first card id as fallback or empty string if no cards exist
+		if all_cards.size() > 0 and all_cards[0].has("id"):
+			return all_cards[0].id
+		return ""
+
+	var picked_card_id: String = ""
+	if cards_with_level.size() > 0:
+		var selected_card: Dictionary = cards_with_level[
+			rng.seeded_rng.next() % cards_with_level.size()
+		]
+		if selected_card.has("id"):
+			picked_card_id = selected_card.id
+
 	return picked_card_id
 
 
 func select_recruited_unit_level(recruit_lvl: int) -> int:
 	var roll: int = (randi() % 99) + 1
-	var c_lvl_2_star_1: String = _rules.chance_lvl_2_star_1
-	var c_lvl_2_star_2: String = _rules.chance_lvl_2_star_2
-	var c_lvl_3_star_1: String = _rules.chance_lvl_3_star_1
-	var c_lvl_3_star_2: String = _rules.chance_lvl_3_star_2
-	var c_lvl_3_star_3: String = _rules.chance_lvl_3_star_3
+
+	# Default values in case the rules don't have these properties
+	var c_lvl_2_star_1: String = "50"
+	var c_lvl_2_star_2: String = "100"
+	var c_lvl_3_star_1: String = "30"
+	var c_lvl_3_star_2: String = "70"
+	var c_lvl_3_star_3: String = "100"
+
+	# Only access properties if they exist in _rules
+	if _rules.has("chance_lvl_2_star_1"):
+		c_lvl_2_star_1 = _rules.chance_lvl_2_star_1
+	if _rules.has("chance_lvl_2_star_2"):
+		c_lvl_2_star_2 = _rules.chance_lvl_2_star_2
+	if _rules.has("chance_lvl_3_star_1"):
+		c_lvl_3_star_1 = _rules.chance_lvl_3_star_1
+	if _rules.has("chance_lvl_3_star_2"):
+		c_lvl_3_star_2 = _rules.chance_lvl_3_star_2
+	if _rules.has("chance_lvl_3_star_3"):
+		c_lvl_3_star_3 = _rules.chance_lvl_3_star_3
 	match recruit_lvl:
 		1:
 			return 1

@@ -24,11 +24,21 @@ func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
 	unit_info = UnitData.new()
 	unit_info.init_with_info(_card_info)
 	unit_info.upgrade_unit_to_level(_card_level)
-	var id: String = _card_info.id
+
+	var id: String = ""
+	if _card_info.has("id"):
+		id = _card_info.id
+	else:
+		Log.warning("Card info missing 'id' field", {"card_info": _card_info}, ["debug"])
 	var img_string: String = card_controller.get_card_image_name(id)
 	var upgrade_level: String = unit_info.card_info.upgrade_level
 	base.set_card_img(img_string)
-	base.set_upgrade_level(int(upgrade_level))
+
+	var upgrade_level_int: int = 1
+	if unit_info.card_info.has("upgrade_level"):
+		upgrade_level_int = int(unit_info.card_info.upgrade_level)
+
+	base.set_upgrade_level(upgrade_level_int)
 	base.set_card_health(unit_info.current_health)
 	base.set_card_attack(unit_info.current_attack)
 	base.set_card_level(unit_info.level)

@@ -83,7 +83,7 @@ class PendingRequestData:
 
 	func _init(
 		p_request_id: int, p_operation: String, p_path: Array[String], p_parent_debug_node: Node
-	):
+	) -> void:
 		request_id = p_request_id
 		operation = p_operation
 		path = p_path
@@ -109,7 +109,7 @@ class PendingRequestData:
 		reason_data: Dictionary = {
 			"error_code": "CANCELLED", "message": "Operation cancelled/stuck"
 		}
-	):
+	) -> void:
 		if _is_completed_internally:
 			return
 		_is_completed_internally = true
@@ -188,7 +188,7 @@ func _initialize_firebase_modules() -> void:
 	if ClassDB.class_exists("FirebaseRemoteConfig"):
 		remote_config = ClassDB.instantiate("FirebaseRemoteConfig")
 		if is_instance_valid(remote_config):
-			var lce = remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
+			var lce: Error = remote_config.connect("loaded", Callable(self, "remote_config_loaded"))
 			if lce != OK:
 				Log.error("Failed to connect remote_config 'loaded'", {}, ["debug"])
 
@@ -198,11 +198,15 @@ func _initialize_firebase_modules() -> void:
 	if Engine.has_singleton("GodotAppleAuth"):
 		godot_apple_auth = Engine.get_singleton("GodotAppleAuth")
 		if is_instance_valid(godot_apple_auth):
-			var cce = godot_apple_auth.connect("credential", Callable(self, "_on_credential"))
+			var cce: Error = godot_apple_auth.connect(
+				"credential", Callable(self, "_on_credential")
+			)
 			if cce != OK:
 				Log.error("Fail GAppleAuth cred conn", {}, ["debug"])
 			# Corrected to only one connection for 'authorization'
-			var ace = godot_apple_auth.connect("authorization", Callable(self, "_on_authorization"))
+			var ace: Error = godot_apple_auth.connect(
+				"authorization", Callable(self, "_on_authorization")
+			)
 			if ace != OK:
 				Log.error("Fail GAppleAuth auth conn", {}, ["debug"])
 
@@ -217,11 +221,11 @@ func _populate_main_categories_view() -> void:
 	item_list_navigator.clear()
 	Log.debug("Populating main categories view", {}, ["debug_ui"])
 	var item_idx: int = 0
-	for category_def in CATEGORIES_DEFINITION:
+	for category_def: Dictionary in CATEGORIES_DEFINITION:
 		var module_instance_valid: bool = false
-		var module_var_name = category_def.get("module_var_name", "")
+		var module_var_name: String = category_def.get("module_var_name", "")
 		if not module_var_name.is_empty():
-			var module_instance = get(module_var_name)
+			var module_instance: Object = get(module_var_name)
 			module_instance_valid = is_instance_valid(module_instance)
 		else:
 			module_instance_valid = true  # Category might not depend on a specific module instance
@@ -274,9 +278,9 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 	var category_prefix: String = category_info.prefix
 	var method_list: Array = get_method_list()
 	var groups: Dictionary = {}
-	for method_info_variant in method_list:
-		var method_info: Dictionary = method_info_variant as Dictionary
-		var method_name: String = method_info.name as String
+	for method_info_variant: Dictionary in method_list:
+		var method_info: Dictionary = method_info_variant
+		var method_name: String = method_info.name
 		if method_name.begins_with(category_prefix):
 			var name_after_prefix: String = method_name.trim_prefix(category_prefix)
 			var underscore_pos: int = name_after_prefix.find("_")
@@ -288,10 +292,10 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 							"display_name": _format_name_for_display(group_name_raw), "count": 0
 						}
 					groups[group_name_raw].count += 1
-	var sorted_group_keys = groups.keys()
+	var sorted_group_keys: Array[String] = groups.keys()
 	sorted_group_keys.sort()
-	for group_name_raw_key in sorted_group_keys:
-		var group_data = groups[group_name_raw_key]
+	for group_name_raw_key: String in sorted_group_keys:
+		var group_data: Dictionary = groups[group_name_raw_key]
 		item_list_navigator.add_item(group_data.display_name)
 		item_list_navigator.set_item_metadata(
 			item_idx_counter,
@@ -304,8 +308,8 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 			}
 		)
 		item_idx_counter += 1
-	var has_run_all_item = category_info.get("has_run_all", false)
-	var min_expected_items_before_groups = 1
+	var has_run_all_item: bool = category_info.get("has_run_all", false)
+	var min_expected_items_before_groups: int = 1
 	if has_run_all_item:
 		min_expected_items_before_groups += 1
 	if groups.is_empty() and item_list_navigator.item_count == min_expected_items_before_groups:  # Check if only "Back" and "Run All" exist
@@ -339,13 +343,11 @@ func _populate_tests_view(group_info: Dictionary) -> void:
 	var group_name_raw: String = group_info.name_raw
 	var full_prefix_for_tests: String = category_prefix + group_name_raw + "_"
 	var method_list: Array = get_method_list()
-	method_list.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool: return (a.name as String) < (b.name as String)
-	)  # Sort for consistent order
+	method_list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.name < b.name)  # Sort for consistent order
 	var items_added: bool = false
-	for method_info_variant in method_list:
-		var method_info: Dictionary = method_info_variant as Dictionary
-		var method_name: String = method_info.name as String
+	for method_info_variant: Dictionary in method_list:
+		var method_info: Dictionary = method_info_variant
+		var method_name: String = method_info.name
 		if method_name.begins_with(full_prefix_for_tests):
 			var test_name_raw: String = method_name.trim_prefix(full_prefix_for_tests)
 			if not test_name_raw.is_empty() and not test_name_raw.contains("."):  # Ensure it's a valid final part of method name
@@ -389,7 +391,7 @@ func _on_navigator_item_activated(index: int) -> void:
 		ITEM_TYPE_GROUP:
 			_populate_tests_view(metadata)
 		ITEM_TYPE_TEST:
-			var method_name: String = metadata.get("method_name")
+			var method_name: String = metadata.get("method_name", "")
 			var display_name: String = metadata.get("display_name", method_name)
 			if has_method(method_name):
 				Log.info("Exec test (manual): %s" % method_name, {}, ["debug", "test"])
@@ -438,7 +440,7 @@ func _on_navigator_item_activated(index: int) -> void:
 		ITEM_TYPE_BACK_TO_MAIN:
 			_populate_main_categories_view()
 		ITEM_TYPE_BACK_TO_GROUPS:
-			var c_info = {
+			var c_info: Dictionary = {
 				"name": metadata.category_name,
 				"prefix": metadata.category_prefix,
 				"has_run_all": metadata.get("category_has_run_all", false)
@@ -538,27 +540,35 @@ func _handle_rtdb_completion_from_cpp_signal(
 		)
 		return
 
-	var pending_req_data: PendingRequestData = _pending_requests[request_id]
+	var old_prd: Variant = _pending_requests[request_id]
+	if not old_prd is PendingRequestData:
+		Log.error(
+			"Found invalid PendingRequestData object!",
+			{"req_id": request_id},
+			["debug", "firebase", Log.TAG_ERROR]
+		)
+		return
+	var pending_req_data: PendingRequestData = old_prd
 	_pending_requests.erase(request_id)  # Erase immediately
 
 	if get_parent().visible and is_instance_valid(status_label):
 		var display_path: String = "/".join(pending_req_data.path)
 		if success:
-			var result_str: String = (
-				JSON.stringify(data_or_error, "  ")
-				if typeof(data_or_error) in [TYPE_DICTIONARY, TYPE_ARRAY]
-				else str(data_or_error)
-			)
+			var result_str: String
+			if typeof(data_or_error) in [TYPE_DICTIONARY, TYPE_ARRAY]:
+				result_str = JSON.stringify(data_or_error, "  ")
+			else:
+				result_str = str(data_or_error)
 			status_label.text = (
 				"Success (Req %d): %s\nPath: %s\nResult: %s"
 				% [request_id, pending_req_data.operation, display_path, result_str]
 			)
 		else:
-			var error_dict: Dictionary = (
-				data_or_error
-				if data_or_error is Dictionary
-				else {"error_code": "UNKNOWN", "message": str(data_or_error)}
-			)  # Ensure message is string
+			var error_dict: Dictionary
+			if data_or_error is Dictionary:
+				error_dict = data_or_error
+			else:
+				error_dict = {"error_code": "UNKNOWN", "message": str(data_or_error)}
 			status_label.text = (
 				"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
 				% [
@@ -609,8 +619,6 @@ func _make_rtdb_request(
 			(old_prd as PendingRequestData)._mark_as_stuck_or_cancelled(
 				{"error_code": "OVERWRITTEN", "message": "Request ID overwritten"}
 			)
-		# _pending_requests.erase(request_id) # Already erased by _handle_rtdb_completion if it was a true duplicate signal
-		# For safety, ensure this new request gets a clean slate if the ID truly collided due to a logic error elsewhere.
 
 	var full_path: Array[String] = _test_base_path.duplicate()
 	full_path.append_array(path_suffix)
