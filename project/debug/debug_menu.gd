@@ -582,11 +582,69 @@ func _append_formatted_data(text_area: RichTextLabel, data: Variant, level: int 
 ## Show a specific category by path
 ## Go back to previous category
 func _on_back_button_pressed() -> void:
+	Log.info("Back button pressed, history size: " + str(navigation_history.size()), {
+		"current_category": current_category_path,
+		"history": navigation_history
+	}, ["debug_menu"])
+
 	if navigation_history.is_empty():
-		show_category("")  # Go to root if no history
+		# Go to root if no history
+		show_category("")
 	else:
+		# Get the previous category from history
 		var previous_category = navigation_history.pop_back()
-		show_category(previous_category)
+
+		# Clear current search term if any
+		if not current_search_term.is_empty() and search_field:
+			search_field.text = ""
+			current_search_term = ""
+
+		# Flag to prevent adding to history when navigating back
+		var old_path = current_category_path
+		current_category_path = previous_category
+
+		# Show the category without modifying history again
+		_display_category_content(previous_category)
+
+		# Update UI state for the category
+		if is_instance_valid(back_button):
+			back_button.visible = (previous_category != "")
+
+		if is_instance_valid(current_path_label):
+			if previous_category == "":
+				current_path_label.visible = false
+			else:
+				current_path_label.visible = true
+
+				# Create a breadcrumb trail for navigation
+				var path_parts: Array = previous_category.split("/", false)
+				var breadcrumb_text: String = ""
+				var full_path_so_far: String = ""
+
+				for i: int in range(path_parts.size()):
+					var part: String = path_parts[i]
+
+					if i > 0:
+						full_path_so_far += "/"
+					full_path_so_far += part
+
+					if i > 0:
+						breadcrumb_text += " > "
+
+					# Make each breadcrumb part a button
+					breadcrumb_text += "[url=" + full_path_so_far + "]" + part + "[/url]"
+
+				current_path_label.text = breadcrumb_text
+
+		# Save the current category path in settings
+		if settings:
+			settings.set_value("navigation", "last_category", previous_category)
+			_save_settings()
+
+		Log.info("Navigated back to: " + previous_category, {
+			"from": old_path,
+			"remaining_history": navigation_history
+		}, ["debug_menu"])
 
 
 ## Create nested categories from a path string (like "Parent/Child/Grandchild")
