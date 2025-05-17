@@ -5,18 +5,24 @@ extends Node
 # Reference to the main debug menu instance
 var debug_menu: Node = null
 
-# Canvas layer for the debug menu UI
-var canvas_layer: CanvasLayer = null
+# Packed scene for the debug menu UI
+var debug_menu_scene: PackedScene = preload("res://debug/debug_menu.tscn")
 
 # Initialization flag
 var is_initialized: bool = false
 
-# Reference to DebugMenu class for type safety
-const DebugMenuClass = preload("res://debug/debug_menu.gd")
+# Instead of trying to use class_name directly, we'll use a more robust approach
+# to create debug menu instances
+var DebugMenuScript = null  # Will be loaded in _ready
 
 
 func _ready() -> void:
 	Log.info("debug_menu_controller _ready called", {}, ["debug"])
+
+	# Load the debug menu script - using runtime loading to avoid circular dependencies
+	DebugMenuScript = load("res://debug/debug_menu.gd")
+	if not DebugMenuScript:
+		Log.error("Could not load debug_menu.gd script!", {}, ["debug"])
 
 	# Register ourselves as a singleton for access by other scripts
 	if not Engine.has_singleton("debug_menu_controller"):
@@ -41,8 +47,12 @@ func initialize() -> void:
 
 	Log.info("Initializing debug menu controller", {}, ["debug"])
 
-	# Create the debug menu instance
-	debug_menu = DebugMenuClass.new()
+	# Create the debug menu instance using the loaded script
+	if DebugMenuScript:
+		debug_menu = DebugMenuScript.new()
+	else:
+		Log.error("Cannot create debug_menu - script not loaded!", {}, ["debug"])
+		return
 
 	# Cannot set dictionary as singleton, log instead
 	Log.info(
@@ -51,31 +61,35 @@ func initialize() -> void:
 		["debug"]
 	)
 
-	# Create a canvas layer for the UI
-	canvas_layer = CanvasLayer.new()
-	canvas_layer.name = "DebugMenuCanvasLayer"
-	canvas_layer.layer = 100  # High layer to be on top
-	canvas_layer.visible = false
-	add_child(canvas_layer)
+	# Instance the debug menu scene
+	var debug_ui = debug_menu_scene.instantiate()
+	debug_ui.name = "DebugMenuUI"
+	add_child(debug_ui)
 
-	# Setup the debug menu
-	canvas_layer.add_child(debug_menu)
+	# Get the Control node from the instanced scene
+	var control_node = debug_ui.get_node("Control")
+	if control_node:
+		# Add our debug menu instance to the scene
+		var content_container = control_node.get_node_or_null("SafeArea/Panel/MarginContainer/VBoxContainer/ScrollContainer/ContentContainer")
+		if content_container:
+			debug_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			debug_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			content_container.add_child(debug_menu)
 
-	# Ensure the debug menu fills the entire screen
-	debug_menu.anchor_right = 1.0
-	debug_menu.anchor_bottom = 1.0
-	debug_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	debug_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		# Connect the close button
+		var close_button = control_node.get_node_or_null("%CloseButton")
+		if close_button:
+			close_button.pressed.connect(hide_menu)
 
-	# Log canvas layer info
-	Log.info("Canvas layer setup", {
-		"canvas_layer_name": canvas_layer.name,
-		"canvas_layer_layer": canvas_layer.layer,
-		"debug_menu_rect": {
-			"position": Vector2(debug_menu.position.x, debug_menu.position.y),
-			"size": Vector2(debug_menu.size.x, debug_menu.size.y),
-			"anchors": [debug_menu.anchor_left, debug_menu.anchor_top, debug_menu.anchor_right, debug_menu.anchor_bottom]
-		}
+	# Hide by default
+	debug_ui.visible = false
+
+	# Debug menu UI info
+	var menu_ref = get_node_or_null("DebugMenuUI")
+	Log.info("Debug menu UI setup", {
+		"debug_ui_valid": is_instance_valid(menu_ref),
+		"debug_ui_name": menu_ref.name if menu_ref else "none",
+		"debug_menu_valid": is_instance_valid(debug_menu)
 	}, ["debug"])
 
 	# Register system debug functions
@@ -90,12 +104,13 @@ func initialize() -> void:
 	if debug_menu:
 		# Add a verification button
 		var verify_func: Callable = func() -> Array[Variant]:
+			var menu_ui = get_node_or_null("DebugMenuUI")
 			return [
 				true,
 				{
 					"controller_initialized": is_initialized,
 					"debug_menu_valid": is_instance_valid(debug_menu),
-					"canvas_visible": canvas_layer.visible if canvas_layer else false,
+					"debug_ui_visible": menu_ui.visible if menu_ui else false,
 					"singleton_found": Engine.has_singleton("debug_menu_controller"),
 					"engine_singleton_matches":
 					Engine.get_singleton("debug_menu_controller") == self
@@ -114,7 +129,8 @@ func initialize() -> void:
 		"Debug menu controller initialized",
 		{
 			"controller_ref": self.get_instance_id(),
-			"debug_menu_ref": debug_menu.get_instance_id() if debug_menu else 0
+			"debug_menu_ref": debug_menu.get_instance_id() if debug_menu else 0,
+			"debug_menu_ui_valid": is_instance_valid(get_node_or_null("DebugMenuUI"))
 		},
 		["debug"]
 	)
@@ -125,9 +141,10 @@ func show_menu() -> void:
 	if not is_initialized:
 		initialize()
 
-	if canvas_layer:
-		# Ensure canvas layer is properly sized and visible
-		canvas_layer.visible = true
+	var debug_ui = get_node_or_null("DebugMenuUI")
+	if debug_ui:
+		# Show the menu UI
+		debug_ui.visible = true
 
 		# Force a refresh of the menu content
 		if debug_menu:
@@ -140,16 +157,21 @@ func show_menu() -> void:
 
 			# Log detailed debug info
 			Log.info("Showing debug menu", {
-				"canvas_visible": canvas_layer.visible,
+				"debug_ui_visible": debug_ui.visible,
 				"categories_count": debug_menu.categories.size(),
 				"categories": debug_menu.categories.keys()
 			}, ["debug"])
+	else:
+		Log.error("Debug menu UI not found", {}, ["debug"])
 
 
 ## Hide the debug menu
 func hide_menu() -> void:
-	if canvas_layer:
-		canvas_layer.visible = false
+	var debug_ui = get_node_or_null("DebugMenuUI")
+	if debug_ui:
+		debug_ui.visible = false
+	else:
+		Log.error("Debug menu UI not found", {}, ["debug"])
 
 
 ## Register a button with the debug menu
@@ -250,7 +272,7 @@ func toggle_menu() -> void:
 	if not is_initialized:
 		initialize()
 		show_menu()
-	elif canvas_layer and canvas_layer.visible:
+	elif is_instance_valid(get_node_or_null("DebugMenuUI")) and get_node_or_null("DebugMenuUI").visible:
 		hide_menu()
 	else:
 		show_menu()

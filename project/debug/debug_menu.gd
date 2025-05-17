@@ -14,8 +14,9 @@ var categories: Dictionary = {}
 var ui_container: Control = null
 var back_button: Button = null
 var current_path_label: RichTextLabel = null
-var search_field: LineEdit = null
-var search_clear_button: Button = null
+# These search fields come from the scene, not created in code
+var search_field: LineEdit = null # Referenced from scene
+var search_clear_button: Button = null # Referenced from scene
 var status_label: Label = null
 var results_text_area: RichTextLabel = null
 
@@ -90,7 +91,7 @@ func _ready() -> void:
 	show_category("")
 
 
-## Load settings from disk
+# Load settings from disk
 func _load_settings() -> void:
 	settings = ConfigFile.new()
 	var error = settings.load(SETTINGS_PATH)
@@ -153,111 +154,66 @@ func _save_settings() -> void:
 
 # Setup UI for debug menu
 func setup_ui() -> void:
-	# Main panel container
-	var panel = PanelContainer.new()
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 1.0
-	add_child(panel)
+	# Instead of creating UI elements, reference them from the scene
+	var parent_control = get_parent_ui_control()
+	if not parent_control:
+		Log.error("DebugMenu: Could not find parent Control node for UI references", {}, ["debug_menu"])
+		return
 
-	# Main layout - VBox for overall arrangement
-	var main_vbox = VBoxContainer.new()
-	main_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	panel.add_child(main_vbox)
+	# Find the container for our content
+	ui_container = get_ui_node("%ContentContainer", "VBoxContainer")
 
-	# Header area with title, back button, etc.
-	var header = HBoxContainer.new()
-	header.set_custom_minimum_size(Vector2(0, 50))
-	main_vbox.add_child(header)
+	# Set up key UI references
+	back_button = get_ui_node("Back", "Button") # Will be dynamically created when needed
+	current_path_label = get_ui_node("%CurrentPathLabel", "RichTextLabel")
+	search_field = get_ui_node("%SearchField", "LineEdit")
+	search_clear_button = search_field.get_parent().get_node_or_null("ClearButton")
+	status_label = get_ui_node("%StatusLabel", "Label")
+	results_text_area = get_ui_node("%ResultsTextArea", "RichTextLabel")
 
-	# Back button
-	back_button = Button.new()
-	back_button.text = "Back"
-	back_button.set_custom_minimum_size(Vector2(80, 0))
-	back_button.pressed.connect(func(): _on_back_button_pressed())
-	back_button.visible = false
-	header.add_child(back_button)
+	# Connect signals
+	if search_field:
+		search_field.text_changed.connect(func(new_text): _on_search_field_text_changed(new_text))
 
-	# Current path label (with breadcrumbs)
-	current_path_label = RichTextLabel.new()
-	current_path_label.bbcode_enabled = true
-	current_path_label.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	current_path_label.set_v_size_flags(Control.SIZE_FILL)
-	current_path_label.set_custom_minimum_size(Vector2(0, 30))
-	current_path_label.scroll_active = false
-	current_path_label.selection_enabled = false
-	current_path_label.meta_underlined = true
-	current_path_label.fit_content = true
-	header.add_child(current_path_label)
+	if search_clear_button:
+		search_clear_button.pressed.connect(_on_search_clear_pressed)
 
-	# Search area
-	var search_container = HBoxContainer.new()
-	main_vbox.add_child(search_container)
+	if current_path_label:
+		current_path_label.meta_clicked.connect(_on_breadcrumb_clicked)
 
-	var search_label = Label.new()
-	search_label.text = "Search:"
-	search_container.add_child(search_label)
 
-	search_field = LineEdit.new()
-	search_field.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	search_field.clear_button_enabled = true
-	search_field.placeholder_text = "Search categories and functions..."
-	search_field.text_changed.connect(func(new_text): _on_search_field_text_changed(new_text))
-	search_container.add_child(search_field)
+## Get UI node from path with error handling
+func get_ui_node(path: String, expected_type_name: String) -> Object:
+	var parent = get_parent_ui_control()
+	if not parent:
+		return null
 
-	search_clear_button = Button.new()
-	search_clear_button.text = "Clear"
-	search_clear_button.pressed.connect(_on_search_clear_pressed)
-	search_container.add_child(search_clear_button)
+	var node = parent.get_node_or_null(path)
+	if not node:
+		Log.warning("DebugMenu: Could not find UI node: " + path, {}, ["debug_menu"])
+		return null
 
-	# Create a split container for main content and results area
-	var split = HSplitContainer.new()
-	split.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	split.set_v_size_flags(Control.SIZE_EXPAND_FILL)
-	main_vbox.add_child(split)
+	if node.get_class() != expected_type_name:
+		Log.warning("DebugMenu: Node type mismatch for " + path, {
+			"expected": expected_type_name,
+			"actual": node.get_class()
+		}, ["debug_menu"])
+		return null
 
-	# Content area (main debug categories and buttons)
-	var content_container = ScrollContainer.new()
-	content_container.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	content_container.set_v_size_flags(Control.SIZE_EXPAND_FILL)
-	split.add_child(content_container)
+	return node
 
-	ui_container = VBoxContainer.new()
-	ui_container.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	ui_container.set_custom_minimum_size(Vector2(400, 0))
-	content_container.add_child(ui_container)
-
-	# Results area (for detailed test output)
-	var results_container = VBoxContainer.new()
-	results_container.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	results_container.set_v_size_flags(Control.SIZE_EXPAND_FILL)
-	split.add_child(results_container)
-
-	var results_label = Label.new()
-	results_label.text = "Test Results"
-	results_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	results_container.add_child(results_label)
-
-	results_text_area = RichTextLabel.new()
-	results_text_area.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	results_text_area.set_v_size_flags(Control.SIZE_EXPAND_FILL)
-	results_text_area.bbcode_enabled = true
-	results_text_area.set_custom_minimum_size(Vector2(300, 0))
-	results_container.add_child(results_text_area)
-
-	# Status bar at bottom
-	status_label = Label.new()
-	status_label.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	status_label.set_custom_minimum_size(Vector2(0, 30))
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	status_label.text = "Ready"
-	main_vbox.add_child(status_label)
-
-	# Set split container position
-	split.split_offset = 300
-
+## Find parent Control node for UI references - renamed to avoid overriding native method
+func get_parent_ui_control() -> Control:
+	var parent = get_parent()
+	while parent and not parent is Control:
+		parent = parent.get_parent()
+	return parent as Control
 
 ## Handle search field text changes
 func _on_search_field_text_changed(new_text: String) -> void:
+	if not search_field:
+		return
+
 	current_search_term = new_text
 
 	if new_text.is_empty():
@@ -273,14 +229,15 @@ func _on_search_field_text_changed(new_text: String) -> void:
 
 ## Clear search field
 func _on_search_clear_pressed() -> void:
-	search_field.text = ""
-	current_search_term = ""
+	if search_field:
+		search_field.text = ""
+		current_search_term = ""
 
-	# Return to regular view
-	if not current_category_path.is_empty():
-		show_category(current_category_path)
-	else:
-		show_category("")
+		# Return to regular view
+		if not current_category_path.is_empty():
+			show_category(current_category_path)
+		else:
+			show_category("")
 
 
 ## Display search results for a given search term
@@ -362,8 +319,16 @@ func show_menu_content() -> void:
 	show_category("")
 
 	# Ensure UI is visible and properly positioned
-	if get_parent() and get_parent() is CanvasLayer:
-		get_parent().visible = true
+	var parent_control = get_parent_control()
+	if parent_control:
+		var canvas_parent = parent_control
+		while canvas_parent and not canvas_parent is CanvasLayer:
+			canvas_parent = canvas_parent.get_parent()
+
+		if canvas_parent and canvas_parent is CanvasLayer:
+			canvas_parent.visible = true
+		elif parent_control.visible == false:
+			parent_control.visible = true
 
 
 ## Create a new category
@@ -420,7 +385,8 @@ func _create_button_ui(button_data: DebugButton) -> Button:
 	var button = Button.new()
 	button.text = button_data.text
 	button.set_h_size_flags(Control.SIZE_EXPAND_FILL)
-	button.set_custom_minimum_size(Vector2(0, 40))  # Larger for mobile touch
+	button.set_custom_minimum_size(Vector2(0, 80))  # Much larger for mobile touch
+	button.add_theme_font_size_override("font_size", 24)  # Larger font for better readability
 
 	# Style differently based on type
 	if button_data.is_category:
@@ -607,34 +573,7 @@ func _on_back_button_pressed() -> void:
 		_display_category_content(previous_category)
 
 		# Update UI state for the category
-		if is_instance_valid(back_button):
-			back_button.visible = (previous_category != "")
-
-		if is_instance_valid(current_path_label):
-			if previous_category == "":
-				current_path_label.visible = false
-			else:
-				current_path_label.visible = true
-
-				# Create a breadcrumb trail for navigation
-				var path_parts: Array = previous_category.split("/", false)
-				var breadcrumb_text: String = ""
-				var full_path_so_far: String = ""
-
-				for i: int in range(path_parts.size()):
-					var part: String = path_parts[i]
-
-					if i > 0:
-						full_path_so_far += "/"
-					full_path_so_far += part
-
-					if i > 0:
-						breadcrumb_text += " > "
-
-					# Make each breadcrumb part a button
-					breadcrumb_text += "[url=" + full_path_so_far + "]" + part + "[/url]"
-
-				current_path_label.text = breadcrumb_text
+		_update_ui_for_category(previous_category)
 
 		# Save the current category path in settings
 		if settings:
@@ -645,6 +584,66 @@ func _on_back_button_pressed() -> void:
 			"from": old_path,
 			"remaining_history": navigation_history
 		}, ["debug_menu"])
+
+## Update UI elements for the current category
+func _update_ui_for_category(category_path: String) -> void:
+	# Create a back button if needed and it doesn't exist
+	if category_path != "":
+		if not back_button:
+			var parent_control = get_parent_ui_control()
+			if parent_control:
+				# Try to find the header container
+				var header_container = parent_control.get_node_or_null("%HeaderContainer")
+				if not header_container:
+					header_container = parent_control.find_child("HeaderContainer", true, false)
+
+				if header_container and header_container is Control:
+					# Create back button
+					back_button = Button.new()
+					back_button.text = "Back"
+					back_button.custom_minimum_size = Vector2(80, 0)
+					back_button.pressed.connect(func(): _on_back_button_pressed())
+
+					# Add to beginning of header
+					header_container.add_child(back_button)
+					header_container.move_child(back_button, 0)
+
+					Log.info("Created back button for navigation", {}, ["debug_menu"])
+
+		# Show back button
+		if back_button:
+			back_button.visible = true
+	else:
+		# Hide back button if we're at root
+		if back_button:
+			back_button.visible = false
+
+	# Update breadcrumb path
+	if is_instance_valid(current_path_label):
+		if category_path == "":
+			current_path_label.visible = false
+		else:
+			current_path_label.visible = true
+
+			# Create a breadcrumb trail for navigation
+			var path_parts: Array = category_path.split("/", false)
+			var breadcrumb_text: String = ""
+			var full_path_so_far: String = ""
+
+			for i: int in range(path_parts.size()):
+				var part: String = path_parts[i]
+
+				if i > 0:
+					full_path_so_far += "/"
+				full_path_so_far += part
+
+				if i > 0:
+					breadcrumb_text += " > "
+
+				# Make each breadcrumb part a button
+				breadcrumb_text += "[url=" + full_path_so_far + "]" + part + "[/url]"
+
+			current_path_label.text = breadcrumb_text
 
 
 ## Create nested categories from a path string (like "Parent/Child/Grandchild")
@@ -692,43 +691,10 @@ func show_category(category_path: String) -> void:
 		# Save the current category path in settings
 		if settings:  # Check if settings object is valid
 			settings.set_value("navigation", "last_category", current_category_path)
+			_save_settings()
 
-	# Show back button if we're not at the root
-	if is_instance_valid(back_button):
-		back_button.visible = (category_path != "")
-
-	# Show current path if we're not at the root
-	if is_instance_valid(current_path_label):
-		if category_path == "":
-			current_path_label.visible = false
-		else:
-			current_path_label.visible = true
-
-			# Create a breadcrumb trail for navigation
-			var path_parts: Array = category_path.split("/", false)
-			var breadcrumb_text: String = ""
-			var full_path_so_far: String = ""  # Renamed to avoid conflict
-
-			for i: int in range(path_parts.size()):
-				var part: String = path_parts[i]
-
-				if i > 0:
-					full_path_so_far += "/"
-				full_path_so_far += part
-
-				if i > 0:
-					breadcrumb_text += " > "
-
-				# Make each breadcrumb part a button
-				breadcrumb_text += "[url=" + full_path_so_far + "]" + part + "[/url]"
-
-			current_path_label.text = breadcrumb_text
-
-			# Handle breadcrumb clicks
-			if not current_path_label.meta_clicked.is_connected(_on_breadcrumb_clicked):
-				current_path_label.meta_clicked.connect(_on_breadcrumb_clicked)
-	else:
-		Log.warning("current_path_label is not valid", {}, ["debug_menu"])
+	# Update UI elements for the category
+	_update_ui_for_category(category_path)
 
 	# Display category content
 	_display_category_content(category_path)

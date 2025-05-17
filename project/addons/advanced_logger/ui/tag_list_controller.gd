@@ -80,7 +80,7 @@ func _connect_signals() -> void:
 		_ignored_tags_list.item_activated.connect(_on_ignored_tag_activated)
 
 
-## Load tags from configuration
+# Load tags from configuration
 func load_tags_from_config() -> void:
 	_available_tags = _config_manager.get_available_tags()
 	_active_tags = _config_manager.get_active_tags()

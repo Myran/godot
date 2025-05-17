@@ -63,10 +63,11 @@ func _on_debug_event(event: DebugEventType, _data: Variant = null) -> void:
 
 				controller.show_menu()
 
-				# Verify the canvas is actually visible
-				if controller.canvas_layer and not controller.canvas_layer.visible:
-					Log.warning("Canvas layer not visible after show_menu, forcing visibility", {}, [Log.TAG_DEBUG])
-					controller.canvas_layer.visible = true
+# Verify the menu UI is actually visible
+				var debug_ui = controller.get_node_or_null("DebugMenuUI")
+				if debug_ui and not debug_ui.visible:
+					Log.warning("Menu UI not visible after show_menu, forcing visibility", {}, [Log.TAG_DEBUG])
+					debug_ui.visible = true
 
 			elif debug_menu:
 				Log.info("Opening fallback debug menu", {}, [Log.TAG_DEBUG])
@@ -181,6 +182,9 @@ func _register_rtdb_functions() -> void:
 		Log.warning("No debug menu available for RTDB registration", {}, [Log.TAG_DEBUG])
 		return
 
+	# Clear existing RTDB categories to prevent duplicates
+	_clean_existing_rtdb_categories(menu_to_use)
+
 	# Create RTDB categories
 	menu_to_use.create_nested_categories("RTDB Tests/Basic")
 	menu_to_use.create_nested_categories("RTDB Tests/Advanced")
@@ -207,41 +211,76 @@ func _register_rtdb_functions() -> void:
 	# Now register all RTDB test functions from scene_debug
 	if scene_debug_instance:
 		# Get all methods from scene_debug that are RTDB tests
+		var rtdb_test_methods: Array = []
 		for method in scene_debug_instance.get_method_list():
+			if method.name.begins_with("_test_rtdb_"):
+				rtdb_test_methods.append(method)
+
+		# Sort methods to ensure consistent ordering
+		rtdb_test_methods.sort_custom(func(a, b): return a.name < b.name)
+
+		# Track if we registered any tests
+		var tests_registered = 0
+
+		# Register the functions in a sorted order
+		for method in rtdb_test_methods:
 			var method_name: String = method.name
-			if method_name.begins_with("_test_rtdb_"):
-				var category: String = "RTDB Tests"
-				var display_name: String = method_name.substr(11).capitalize().replace("_", " ")
+			var category: String = "RTDB Tests"
+			var display_name: String = method_name.substr(11).capitalize().replace("_", " ")
 
-				# Determine subcategory based on naming convention
-				if method_name.contains("basic_"):
-					category = "RTDB Tests/Basic"
-				elif method_name.contains("advanced_"):
-					category = "RTDB Tests/Advanced"
-				elif method_name.contains("listeners_"):
-					category = "RTDB Tests/Listeners"
+			# Determine subcategory based on naming convention
+			if method_name.contains("basic_"):
+				category = "RTDB Tests/Basic"
+			elif method_name.contains("advanced_"):
+				category = "RTDB Tests/Advanced"
+			elif method_name.contains("listeners_"):
+				category = "RTDB Tests/Listeners"
 
-				# Create a callable that references the method in scene_debug
-				var test_func: Callable = Callable(scene_debug_instance, method_name)
+			# Create a callable that references the method in scene_debug
+			var test_func: Callable = Callable(scene_debug_instance, method_name)
 
-				# Register the function as a button
-				menu_to_use.add_button(
-					category,
-					display_name,
-					test_func,
-					true,
-					"RTDB test: " + display_name
-				)
+			# Register the function as a button
+			menu_to_use.add_button(
+				category,
+				display_name,
+				test_func,
+				true,
+				"RTDB test: " + display_name
+			)
 
-				Log.info(
-					"Registered RTDB test function",
-					{"name": method_name, "category": category},
-					[Log.TAG_DEBUG]
-				)
+			tests_registered += 1
 
-		Log.info("RTDB functions registration complete", {}, [Log.TAG_DEBUG])
+			Log.info(
+				"Registered RTDB test function",
+				{"name": method_name, "category": category},
+				[Log.TAG_DEBUG]
+			)
+
+		if tests_registered > 0:
+			Log.info("RTDB functions registration complete, registered " + str(tests_registered) + " tests", {}, [Log.TAG_DEBUG])
+		else:
+			Log.warning("RTDB functions registration found no test methods", {}, [Log.TAG_DEBUG])
 	else:
 		Log.error("Failed to get scene_debug instance", {}, [Log.TAG_DEBUG])
+
+## Clean any existing RTDB categories to prevent duplicates
+func _clean_existing_rtdb_categories(menu: Node) -> void:
+	if not menu or not menu.has_method("create_category"):
+		return
+
+	# Check if there are existing RTDB categories
+	var rtdb_categories = ["RTDB Tests", "RTDB Tests/Basic", "RTDB Tests/Advanced", "RTDB Tests/Listeners"]
+	var found_existing = false
+
+	for category in rtdb_categories:
+		if menu.categories.has(category):
+			found_existing = true
+			# Remove buttons from this category
+			if menu.categories[category] and menu.categories[category].has("buttons"):
+				menu.categories[category].buttons.clear()
+
+	if found_existing:
+		Log.info("Cleaned existing RTDB categories to prevent duplicates", {}, [Log.TAG_DEBUG])
 
 ## Check if RTDB functions are registered with the debug menu
 func _are_rtdb_functions_registered() -> bool:
@@ -453,7 +492,8 @@ func run_automatic_verification() -> void:
 			"instance_id": controller.get_instance_id(),
 			"methods": get_available_methods(controller),
 			"is_initialized":
-			controller.is_initialized if controller.get("is_initialized") != null else "unknown"
+			controller.is_initialized if controller.get("is_initialized") != null else "unknown",
+			"menu_ui_exists": is_instance_valid(controller.get_node_or_null("DebugMenuUI"))
 		},
 		[Log.TAG_DEBUG]
 	)
@@ -479,13 +519,25 @@ func run_automatic_verification() -> void:
 	# Update our reference
 	debug_menu = controller.debug_menu
 
-	# 5. Simulate button press (do not actually open the menu)
+	# 5. Verify the menu UI was instanced properly
+	var menu_ui = controller.get_node_or_null("DebugMenuUI")
+	if not menu_ui or not is_instance_valid(menu_ui):
+		Log.error("DebugMenuUI not found in controller!", {}, [Log.TAG_DEBUG])
+		_report_verification_result(false, "Debug menu UI not valid")
+		return
+
+	Log.info("Debug menu UI verification successful", {
+		"name": menu_ui.name,
+		"visible": menu_ui.visible
+	}, [Log.TAG_DEBUG])
+
+	# 6. Simulate button press (do not actually open the menu)
 	var simulation_result = _simulate_button_press()
 
 	if simulation_result:
 		Log.info("Debug menu button simulation successful", {}, [Log.TAG_DEBUG])
 
-		# 6. Verify RTDB functions registration
+		# 7. Verify RTDB functions registration
 		if is_instance_valid(debug_menu_controller) and is_instance_valid(debug_menu_controller.debug_menu):
 			var rtdb_categories: Array[String] = ["RTDB Tests/Basic", "RTDB Tests/Advanced", "RTDB Tests/Listeners"]
 			var has_rtdb_categories: bool = true

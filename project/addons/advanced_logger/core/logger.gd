@@ -160,7 +160,7 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 		elif key == ConfigManager.KEY_SHOW_SOURCE:
 			_show_source = value
 
-## Loads settings from the ConfigManager
+# Loads settings from the ConfigManager
 func _load_settings() -> void:
 	# In test mode or no config available, use defaults
 	if _config == null:

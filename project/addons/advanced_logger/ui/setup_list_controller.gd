@@ -4,7 +4,7 @@ extends RefCounted
 ## Controller for tag setup list operations
 ##
 ## Manages the tag setups list UI and operations, including
-## loading, saving, renaming, and deleting tag setups.
+# loading, saving, renaming, and deleting tag setups.
 
 signal setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Array)
 signal setup_selected(setup_name: String)
@@ -70,7 +70,7 @@ func _connect_signals() -> void:
 	# Signal connection is now established
 	_signals_connected = true
 
-## Load setups from configuration and refresh the UI
+# Load setups from configuration and refresh the UI
 func load_setups() -> void:
 	# Create default setups if none exist
 	if _setup_manager.get_all_setups().is_empty():
@@ -169,7 +169,7 @@ func save_setup(setup_name: String, active_tags: Array[String], ignored_tags: Ar
 		refresh_setups_list()
 	return result
 
-## Load a tag setup
+# Load a tag setup
 func load_setup(setup_name: String) -> Dictionary:
 	if setup_name == null or setup_name.is_empty():
 		if _setup_manager._config.get_show_editor_debug():
@@ -379,10 +379,9 @@ func _on_setups_list_item_clicked(index: int, at_position: Vector2, mouse_button
 	# Connect to the index_pressed signal
 	popup.id_pressed.connect(func(idx: int):
 		match idx:
-			0: # Load
+			0:
 				load_setup(setup_name)
-			1: # Rename
-				# Extra validation before emitting signal
+			1:
 				if setup_name != null and setup_name is String and not setup_name.is_empty():
 					if _setup_manager._config.get_show_editor_debug():
 						print_rich("[color=#%s]DEBUG: Emitting setup_renamed signal for '%s'[/color]" %
