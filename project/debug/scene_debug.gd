@@ -26,7 +26,6 @@ var admob: Object = null
 
 # UI References
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
-@onready var close_button: Button = %Button_close
 @onready var item_list_navigator: ItemList = %DebugItemList
 
 # Navigation State & Constants
@@ -129,14 +128,13 @@ func _ready() -> void:
 	Engine.print_error_messages = true
 
 	var debug_text: String = "Build is debug" if OS.is_debug_build() else "build is release"
-	var rtdb_label2_node: Node = get_node_or_null("%DebugRichTextLabel2")
-	if is_instance_valid(rtdb_label2_node) and rtdb_label2_node is RichTextLabel:
-		(rtdb_label2_node as RichTextLabel).text = str("OS: ", OS.get_name(), " | ", debug_text)
-	var rtdb_label3_node: Node = get_node_or_null("%DebugRichTextLabel3")
-	if is_instance_valid(rtdb_label3_node) and rtdb_label3_node is RichTextLabel:
-		(rtdb_label3_node as RichTextLabel).text = str(
-			"Commit: ", Engine.get_version_info()["hash"]
-		)
+	if is_instance_valid(status_label):
+		var header_text: String = "OS: %s | %s\nCommit: %s" % [
+			OS.get_name(),
+			debug_text,
+			Engine.get_version_info()["hash"]
+		]
+		status_label.text = header_text
 
 	_initialize_firebase_modules()
 
@@ -150,11 +148,17 @@ func _ready() -> void:
 		)
 
 	_populate_main_categories_view()
-	if is_instance_valid(close_button):
-		close_button.pressed.connect(_on_Button_close_pressed.bind(), CONNECT_DEFERRED)
-	else:
-		Log.error("Close button node not found!", {}, ["debug", "ui", Log.TAG_ERROR])
-	Log.info("Debug Node _ready: Initialization complete.", {}, ["debug", "initialization"])
+	%Panel.gui_input.connect(_on_panel_gui_input)
+
+# Handle panel input (for tap-to-close functionality)
+func _on_panel_gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch and event.is_released():
+		Log.debug("Panel tapped, closing debug view", {}, ["debug", "ui"])
+		_on_Button_close_pressed()
+
+	#elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		#Log.debug("Panel clicked, closing debug view", {}, ["debug", "ui"])
+		#_on_Button_close_pressed()
 
 
 func _initialize_firebase_modules() -> void:
@@ -174,16 +178,14 @@ func _initialize_firebase_modules() -> void:
 				{},
 				["debug", "initialization", Log.TAG_FIREBASE, Log.TAG_ERROR]
 			)
-			if is_instance_valid(status_label):
-				status_label.text = "[ERROR] Failed to instantiate FirebaseDatabase"
+			_update_status_text("[ERROR] Failed to instantiate FirebaseDatabase")
 	else:
 		Log.warning(
 			"FirebaseDatabase C++ module class not found.",
 			{},
 			["debug", "initialization", Log.TAG_FIREBASE]
 		)
-		if is_instance_valid(status_label):
-			status_label.text = "[WARN] FirebaseDatabase C++ module not found"
+		_update_status_text("[WARN] FirebaseDatabase C++ module not found")
 
 	if ClassDB.class_exists("FirebaseRemoteConfig"):
 		remote_config = ClassDB.instantiate("FirebaseRemoteConfig")
@@ -292,7 +294,8 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 							"display_name": _format_name_for_display(group_name_raw), "count": 0
 						}
 					groups[group_name_raw].count += 1
-	var sorted_group_keys: Array[String] = groups.keys()
+	var sorted_group_keys: Array[String]
+	sorted_group_keys.assign(groups.keys())
 	sorted_group_keys.sort()
 	for group_name_raw_key: String in sorted_group_keys:
 		var group_data: Dictionary = groups[group_name_raw_key]
@@ -395,8 +398,7 @@ func _on_navigator_item_activated(index: int) -> void:
 			var display_name: String = metadata.get("display_name", method_name)
 			if has_method(method_name):
 				Log.info("Exec test (manual): %s" % method_name, {}, ["debug", "test"])
-				if get_parent().visible and is_instance_valid(status_label):
-					status_label.text = "Running: %s..." % display_name
+				_update_status_text("Running: %s..." % display_name)
 
 				var result_tuple: Array = await call(method_name)
 				var success: bool = false
@@ -420,14 +422,12 @@ func _on_navigator_item_activated(index: int) -> void:
 					success = false  # Ensure failure on bad format
 
 				if success:
-					if get_parent().visible and is_instance_valid(status_label):
-						status_label.text = "PASS: %s" % display_name
+					_update_status_text("PASS: %s" % display_name)
 					Log.info(
 						"Manual Test PASSED: %s" % method_name, {"p": payload}, ["debug", "test"]
 					)
 				else:
-					if get_parent().visible and is_instance_valid(status_label):
-						status_label.text = "FAIL: %s\nDetails: %s" % [display_name, str(payload)]
+					_update_status_text("FAIL: %s\nDetails: %s" % [display_name, str(payload)])
 					Log.error(
 						"Manual Test FAILED: %s" % method_name,
 						{"err": payload},
@@ -435,8 +435,7 @@ func _on_navigator_item_activated(index: int) -> void:
 					)
 			else:
 				Log.error("Method not found: %s" % method_name, {}, ["debug", "ui", Log.TAG_ERROR])
-				if get_parent().visible and is_instance_valid(status_label):
-					status_label.text = "[ERR] Test method '%s' not found!" % method_name
+				_update_status_text("[ERR] Test method '%s' not found!" % method_name)
 		ITEM_TYPE_BACK_TO_MAIN:
 			_populate_main_categories_view()
 		ITEM_TYPE_BACK_TO_GROUPS:
@@ -450,14 +449,12 @@ func _on_navigator_item_activated(index: int) -> void:
 			var cp: String = metadata.get("category_prefix")
 			var cn: String = metadata.get("category_name")
 			Log.info("Exec 'Run All' for: %s" % cn, {}, ["debug", "test"])
-			if get_parent().visible and is_instance_valid(status_label):
-				status_label.text = "Starting all %s tests..." % cn
+			_update_status_text("Starting all %s tests..." % cn)
 			if not _is_running_all_tests:
 				_run_all_tests_by_prefix(cp)
 			else:
 				Log.warning("Another 'Run All' test sequence is already active.", {}, ["debug"])
-				if get_parent().visible and is_instance_valid(status_label):
-					status_label.text = "A 'Run All' test sequence is already active. Please wait."
+				_update_status_text("A 'Run All' test sequence is already active. Please wait.")
 		_:
 			Log.warning("Unknown item type in nav.", {"t": item_type}, ["debug_ui"])
 
@@ -514,6 +511,17 @@ func _connect_rtdb_signals_dynamically() -> void:
 				)
 
 
+# Helper function to update the status display while preserving header info
+func _update_status_text(new_status: String) -> void:
+	if is_instance_valid(status_label) and get_parent().visible:
+		var debug_text: String = "Build is debug" if OS.is_debug_build() else "build is release"
+		var header_text: String = "OS: %s | %s\nCommit: %s\n\n" % [
+			OS.get_name(),
+			debug_text,
+			Engine.get_version_info()["hash"]
+		]
+		status_label.text = header_text + new_status
+
 func _handle_rtdb_completion_from_cpp_signal(
 	request_id: int,
 	success: bool,
@@ -551,34 +559,33 @@ func _handle_rtdb_completion_from_cpp_signal(
 	var pending_req_data: PendingRequestData = old_prd
 	_pending_requests.erase(request_id)  # Erase immediately
 
-	if get_parent().visible and is_instance_valid(status_label):
-		var display_path: String = "/".join(pending_req_data.path)
-		if success:
-			var result_str: String
-			if typeof(data_or_error) in [TYPE_DICTIONARY, TYPE_ARRAY]:
-				result_str = JSON.stringify(data_or_error, "  ")
-			else:
-				result_str = str(data_or_error)
-			status_label.text = (
-				"Success (Req %d): %s\nPath: %s\nResult: %s"
-				% [request_id, pending_req_data.operation, display_path, result_str]
-			)
+	var display_path: String = "/".join(pending_req_data.path)
+	if success:
+		var result_str: String
+		if typeof(data_or_error) in [TYPE_DICTIONARY, TYPE_ARRAY]:
+			result_str = JSON.stringify(data_or_error, "  ")
 		else:
-			var error_dict: Dictionary
-			if data_or_error is Dictionary:
-				error_dict = data_or_error
-			else:
-				error_dict = {"error_code": "UNKNOWN", "message": str(data_or_error)}
-			status_label.text = (
-				"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
-				% [
-					request_id,
-					pending_req_data.operation,
-					display_path,
-					error_dict.get("error_code", "N/A"),
-					error_dict.get("message", "N/A")
-				]
-			)
+			result_str = str(data_or_error)
+		_update_status_text(
+			"Success (Req %d): %s\nPath: %s\nResult: %s"
+			% [request_id, pending_req_data.operation, display_path, result_str]
+		)
+	else:
+		var error_dict: Dictionary
+		if data_or_error is Dictionary:
+			error_dict = data_or_error
+		else:
+			error_dict = {"error_code": "UNKNOWN", "message": str(data_or_error)}
+		_update_status_text(
+			"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
+			% [
+				request_id,
+				pending_req_data.operation,
+				display_path,
+				error_dict.get("error_code", "N/A"),
+				error_dict.get("message", "N/A")
+			]
+		)
 	if is_instance_valid(pending_req_data):
 		pending_req_data.complete_request(success, data_or_error)
 	else:
