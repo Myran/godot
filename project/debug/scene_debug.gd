@@ -139,7 +139,8 @@ func _ready() -> void:
 	_initialize_firebase_modules()
 
 	if is_instance_valid(item_list_navigator):
-		item_list_navigator.item_activated.connect(_on_navigator_item_activated)
+		# Use item_selected instead of item_activated to respond to single taps
+		item_list_navigator.item_selected.connect(_on_navigator_item_activated)
 	else:
 		Log.error(
 			"DebugItemList node ('item_list_navigator') not found!",
