@@ -282,6 +282,7 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 	var method_list: Array = get_method_list()
 	var groups: Dictionary = {}
 	for method_info_variant: Dictionary in method_list:
+		# Already properly typed with Dictionary
 		var method_info: Dictionary = method_info_variant
 		var method_name: String = method_info.name
 		if method_name.begins_with(category_prefix):
@@ -490,7 +491,7 @@ func _connect_rtdb_signals_dynamically() -> void:
 		"connection_state_changed",
 		"db_error"
 	]
-	for sig_name in rtdb_signals:
+	for sig_name: String in rtdb_signals:
 		var handler_name: String = "_on_rtdb_" + sig_name
 		if not has_method(handler_name):
 			Log.warning(
@@ -557,6 +558,7 @@ func _handle_rtdb_completion_from_cpp_signal(
 			["debug", "firebase", Log.TAG_ERROR]
 		)
 		return
+	# Direct assignment to ensure proper type
 	var pending_req_data: PendingRequestData = old_prd
 	_pending_requests.erase(request_id)  # Erase immediately
 
@@ -861,10 +863,8 @@ func _test_rtdb_advanced_query_top_2_scores() -> Array:
 		status_label.text = "Setting up query data..."
 	var ps_base: Array[String] = ["query_items"]
 	var setup_paths_suffixes = [["item1"], ["item2"], ["item3"]]
-	var setup_data: Array[Dictionary] = [
-		{"name": "A", "score": 50}, {"name": "B", "score": 100}, {"name": "C", "score": 75}
-	]
-	for i in range(setup_paths_suffixes.size()):
+	var setup_data: Array[Dictionary] = [{"name": "A", "score": 50}, {"name": "B", "score": 100}, {"name": "C", "score": 75}]
+	for i: int in range(setup_paths_suffixes.size()):
 		var current_path_suffix: Array[String] = ps_base.duplicate()
 		current_path_suffix.append_array(setup_paths_suffixes[i])
 		var setup_result: Array = await _make_rtdb_request(
@@ -1055,7 +1055,7 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 			{},
 			["debug", Log.TAG_ERROR]
 		)
-		for req_id in pending_ids:  # Iterate over a copy if modification occurs
+		for req_id: int in pending_ids:  # Iterate over a copy if modification occurs
 			var prd = _pending_requests.get(req_id)
 			if is_instance_valid(prd):
 				Log.debug(
@@ -1099,10 +1099,12 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 		["debug", "test", module_name]
 	)
 	var method_list: Array = get_method_list()
-	method_list.sort_custom(func(a, b): return (a.name as String) < (b.name as String))  # Ensure consistent order
+	method_list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_name: String = a.name
+		var b_name: String = b.name
+		return a_name < b_name)  # Ensure consistent order
 
 	await _run_sequential_tests(method_list, test_prefix, module_name)
-
 	if is_instance_valid(item_list_navigator):
 		item_list_navigator.mouse_filter = original_mouse_filter
 		item_list_navigator.modulate.a = original_modulate_alpha
@@ -1118,7 +1120,7 @@ func _run_sequential_tests(method_list: Array, test_prefix: String, module_name:
 	var tests_failed_count: int = 0
 	var passed_test_names: Array[String] = []  # Array to store names of passed tests
 
-	for method_info_variant in method_list:
+	for method_info_variant: Dictionary in method_list:
 		var method_info: Dictionary = (
 			method_info_variant if method_info_variant is Dictionary else {}
 		)
