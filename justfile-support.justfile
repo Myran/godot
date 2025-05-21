@@ -62,7 +62,7 @@ lint:
 # Format GDScript files
 format:
     @echo "Formatting GDScript files..."
-    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec gdformat {} +
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec /Users/mattiasmyhrman/.local/bin/gdformat {} +
 
 format-test:
     @echo "TEST Formatting GDScript files..."
