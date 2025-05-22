@@ -11,19 +11,19 @@ var refill_distance: Vector2
 
 func _ready() -> void:
 	Log.debug("Level controller initializing", {}, [Log.TAG_INITIALIZATION, Log.TAG_LEVEL])
-	debug.debug_event.connect(_on_debug_event)
+	DebugManager.debug_event.connect(_on_debug_event)
 
 
-func _on_debug_event(event: debug.DebugEventType, _data: Array) -> void:
+func _on_debug_event(event: DebugManager.DebugEventType, _data: Array) -> void:
 	match event:
-		debug.DebugEventType.EVENT_RESET_MATCH_LEVEL:
+		DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL:
 			Log.debug(
 				"Debug event: Resetting current level",
 				{"level": current_level_name},
 				[Log.TAG_LEVEL, Log.TAG_DEBUG]
 			)
 			setup_level(current_level_name)
-		debug.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
+		DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			var lvl_name: String = _data[0]
 			Log.debug(
 				"Debug event: Force loading level",

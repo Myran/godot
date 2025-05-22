@@ -129,11 +129,10 @@ func _ready() -> void:
 
 	var debug_text: String = "Build is debug" if OS.is_debug_build() else "build is release"
 	if is_instance_valid(status_label):
-		var header_text: String = "OS: %s | %s\nCommit: %s" % [
-			OS.get_name(),
-			debug_text,
-			Engine.get_version_info()["hash"]
-		]
+		var header_text: String = (
+			"OS: %s | %s\nCommit: %s"
+			% [OS.get_name(), debug_text, Engine.get_version_info()["hash"]]
+		)
 		status_label.text = header_text
 
 	_initialize_firebase_modules()
@@ -151,6 +150,7 @@ func _ready() -> void:
 	_populate_main_categories_view()
 	%Panel.gui_input.connect(_on_panel_gui_input)
 
+
 # Handle panel input (for tap-to-close functionality)
 func _on_panel_gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch and event.is_released():
@@ -158,8 +158,8 @@ func _on_panel_gui_input(event: InputEvent) -> void:
 		_on_Button_close_pressed()
 
 	#elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		#Log.debug("Panel clicked, closing debug view", {}, ["debug", "ui"])
-		#_on_Button_close_pressed()
+	#Log.debug("Panel clicked, closing debug view", {}, ["debug", "ui"])
+	#_on_Button_close_pressed()
 
 
 func _initialize_firebase_modules() -> void:
@@ -517,12 +517,12 @@ func _connect_rtdb_signals_dynamically() -> void:
 func _update_status_text(new_status: String) -> void:
 	if is_instance_valid(status_label) and get_parent().visible:
 		var debug_text: String = "Build is debug" if OS.is_debug_build() else "build is release"
-		var header_text: String = "OS: %s | %s\nCommit: %s\n\n" % [
-			OS.get_name(),
-			debug_text,
-			Engine.get_version_info()["hash"]
-		]
+		var header_text: String = (
+			"OS: %s | %s\nCommit: %s\n\n"
+			% [OS.get_name(), debug_text, Engine.get_version_info()["hash"]]
+		)
 		status_label.text = header_text + new_status
+
 
 func _handle_rtdb_completion_from_cpp_signal(
 	request_id: int,
@@ -570,8 +570,10 @@ func _handle_rtdb_completion_from_cpp_signal(
 		else:
 			result_str = str(data_or_error)
 		_update_status_text(
-			"Success (Req %d): %s\nPath: %s\nResult: %s"
-			% [request_id, pending_req_data.operation, display_path, result_str]
+			(
+				"Success (Req %d): %s\nPath: %s\nResult: %s"
+				% [request_id, pending_req_data.operation, display_path, result_str]
+			)
 		)
 	else:
 		var error_dict: Dictionary
@@ -580,14 +582,16 @@ func _handle_rtdb_completion_from_cpp_signal(
 		else:
 			error_dict = {"error_code": "UNKNOWN", "message": str(data_or_error)}
 		_update_status_text(
-			"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
-			% [
-				request_id,
-				pending_req_data.operation,
-				display_path,
-				error_dict.get("error_code", "N/A"),
-				error_dict.get("message", "N/A")
-			]
+			(
+				"Error (Req %d): %s\nPath: %s\nCode: %s\nMsg: %s"
+				% [
+					request_id,
+					pending_req_data.operation,
+					display_path,
+					error_dict.get("error_code", "N/A"),
+					error_dict.get("message", "N/A")
+				]
+			)
 		)
 	if is_instance_valid(pending_req_data):
 		pending_req_data.complete_request(success, data_or_error)
@@ -863,7 +867,9 @@ func _test_rtdb_advanced_query_top_2_scores() -> Array:
 		status_label.text = "Setting up query data..."
 	var ps_base: Array[String] = ["query_items"]
 	var setup_paths_suffixes = [["item1"], ["item2"], ["item3"]]
-	var setup_data: Array[Dictionary] = [{"name": "A", "score": 50}, {"name": "B", "score": 100}, {"name": "C", "score": 75}]
+	var setup_data: Array[Dictionary] = [
+		{"name": "A", "score": 50}, {"name": "B", "score": 100}, {"name": "C", "score": 75}
+	]
 	for i: int in range(setup_paths_suffixes.size()):
 		var current_path_suffix: Array[String] = ps_base.duplicate()
 		current_path_suffix.append_array(setup_paths_suffixes[i])
@@ -1099,10 +1105,12 @@ func _run_all_tests_by_prefix(test_prefix: String) -> void:
 		["debug", "test", module_name]
 	)
 	var method_list: Array = get_method_list()
-	method_list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var a_name: String = a.name
-		var b_name: String = b.name
-		return a_name < b_name)  # Ensure consistent order
+	method_list.sort_custom(
+		func(a: Dictionary, b: Dictionary) -> bool:
+			var a_name: String = a.name
+			var b_name: String = b.name
+			return a_name < b_name
+	)  # Ensure consistent order
 
 	await _run_sequential_tests(method_list, test_prefix, module_name)
 	if is_instance_valid(item_list_navigator):
@@ -1199,7 +1207,7 @@ func _run_sequential_tests(method_list: Array, test_prefix: String, module_name:
 # Other Module Handlers & General UI                                          #
 #-----------------------------------------------------------------------------#
 func _on_Button_close_pressed() -> void:
-	debug.action(debug.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU)
+	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU)
 
 
 func _test_auth_basic_sign_in_anonymous() -> Array:

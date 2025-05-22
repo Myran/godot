@@ -13,7 +13,8 @@ func _ready() -> void:
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())
-	debug.debug_event.connect(_on_debug_event)
+	# Connect to the new DebugManager instead of the legacy debug system
+	DebugManager.debug_event.connect(_on_debug_event)
 	match OS.get_name():
 		"Windows":
 			Log.info("Running on Windows platform", {}, ["system", "initialization"])
@@ -29,11 +30,11 @@ func _ready() -> void:
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 
-func _on_debug_event(event: debug.DebugEventType, _data: Variant = null) -> void:
-	match event:
-		debug.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU:
+func _on_debug_event(event_type, args: Array = []) -> void:
+	match event_type:
+		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			%PopupDebug.show()
-		debug.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU:
+		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()
 
 

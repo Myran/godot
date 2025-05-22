@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="LogSystemInfoAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/core/log_system_info_action.gd" id="1_8n3p4"]
+
+[resource]
+script = ExtResource("1_8n3p4")
+action_name = "Log System Information"
+category = "System"
+group = "Diagnostics"
+description = "Logs basic system information and environment variables."

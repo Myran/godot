@@ -4,8 +4,7 @@ var current_draft_upgrade_level: int = 0
 
 
 func _ready() -> void:
-	@warning_ignore("return_value_discarded")
-	debug.debug_event.connect(_on_debug_event)
+	DebugManager.debug_event.connect(_on_debug_event)
 
 
 func hold_toggle(col: int, new_state: bool) -> void:
@@ -24,7 +23,7 @@ func upgrade() -> void:
 	core.action(core.UpgradeEvent.new(current_draft_upgrade_level))
 
 
-func _on_debug_event(event: debug.DebugEventType, _data: Array) -> void:
+func _on_debug_event(event: DebugManager.DebugEventType, _data: Array) -> void:
 	match event:
-		debug.DebugEventType.EVENT_RESET_MATCH_LEVEL, debug.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
+		DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL, DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL:
 			current_draft_upgrade_level = 0

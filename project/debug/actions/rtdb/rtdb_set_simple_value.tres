@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBSetSimpleValueAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_set_simple_value_action.gd" id="1_yjtkr"]
+
+[resource]
+script = ExtResource("1_yjtkr")
+action_name = "Set Simple Value"
+category = "RTDB"
+group = "Basic"
+description = "Sets a simple string value at a predefined test path in RTDB."
