@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBSingleValueListenerAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_single_value_listener_action.gd" id="1_listener"]
+
+[resource]
+script = ExtResource("1_listener")
+action_name = "Single Value Listener"
+category = "RTDB"
+group = "Listeners"
+description = "Sets up a listener for changes on a specific RTDB path."

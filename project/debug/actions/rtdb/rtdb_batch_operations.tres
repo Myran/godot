@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBBatchOperationsAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_batch_operations_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "Batch Operations"
+category = "RTDB"
+group = "Advanced"
+description = "Performs multiple RTDB operations in sequence to test batch processing."

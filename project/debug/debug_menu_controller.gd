@@ -29,8 +29,14 @@ var _is_executing_all: bool = false
 func _ready() -> void:
 	Log.info("DebugMenuController ready.", {}, ["debug", "ui", "initialization"])
 
-	if not is_instance_valid(item_list_navigator) or not is_instance_valid(status_label) or not is_instance_valid(run_all_button):
-		Log.error("Required UI elements not found in scene_debug.tscn!", {}, ["debug", "ui", "error"])
+	if (
+		not is_instance_valid(item_list_navigator)
+		or not is_instance_valid(status_label)
+		or not is_instance_valid(run_all_button)
+	):
+		Log.error(
+			"Required UI elements not found in scene_debug.tscn!", {}, ["debug", "ui", "error"]
+		)
 		return
 
 	item_list_navigator.set_deferred("editable", false)
@@ -38,7 +44,6 @@ func _ready() -> void:
 
 	item_list_navigator.item_selected.connect(_on_navigator_item_selected)
 	run_all_button.pressed.connect(_on_run_all_pressed)
-
 
 	DebugManager.debug_event.connect(_on_global_debug_event)
 
@@ -78,8 +83,6 @@ func _populate_main_categories_view() -> void:
 
 	# Try to access the registry in different ways
 	var registry = DebugRegistry
-
-
 
 	# Get categories with a try/except to catch any runtime errors
 	var categories = []
@@ -125,7 +128,9 @@ func _populate_groups_view(category_name: String) -> void:
 		registry = Engine.get_singleton("DebugRegistry")
 
 	if not registry:
-		_update_status_label_text("ERROR: DebugActionRegistry not found while accessing category groups.", true)
+		_update_status_label_text(
+			"ERROR: DebugActionRegistry not found while accessing category groups.", true
+		)
 		return
 
 	var groups = registry.get_groups_for_category(category_name)
@@ -168,7 +173,9 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		registry = Engine.get_singleton("DebugRegistry")
 
 	if not registry:
-		_update_status_label_text("ERROR: DebugActionRegistry not found while accessing group actions.", true)
+		_update_status_label_text(
+			"ERROR: DebugActionRegistry not found while accessing group actions.", true
+		)
 		return
 
 	var actions_in_group = registry.get_actions_for_group(category_name, group_name)
@@ -231,7 +238,9 @@ func _on_run_all_pressed() -> void:
 		registry = Engine.get_singleton("DebugRegistry")
 
 	if not registry:
-		_update_status_label_text("ERROR: DebugActionRegistry not found while running group actions.", true)
+		_update_status_label_text(
+			"ERROR: DebugActionRegistry not found while running group actions.", true
+		)
 		return
 
 	var actions_to_run: Array[DebugAction]
@@ -365,9 +374,8 @@ func _on_button_close_pressed() -> void:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 
 
-
 # Handle global debug events if needed
-func _on_global_debug_event(event_type : DebugManager.DebugEventType, args: Array = []) -> void:
+func _on_global_debug_event(event_type: DebugManager.DebugEventType, args: Array = []) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 		show()
 		Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])

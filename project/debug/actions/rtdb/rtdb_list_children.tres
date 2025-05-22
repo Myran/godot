@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBListChildrenAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_list_children_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "List Children"
+category = "RTDB"
+group = "Path Operations"
+description = "Lists all child keys from a specific RTDB path."

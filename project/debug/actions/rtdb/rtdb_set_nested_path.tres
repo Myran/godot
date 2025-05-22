@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBSetNestedPathAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_set_nested_path_action.gd" id="1_set_nested"]
+
+[resource]
+script = ExtResource("1_set_nested")
+action_name = "Set Nested Path"
+category = "RTDB"
+group = "Paths"
+description = "Creates/updates a nested JSON structure at a test path in RTDB."

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBGetSimpleValueAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_get_simple_value_action.gd" id="1_get_simple"]
+
+[resource]
+script = ExtResource("1_get_simple")
+action_name = "Get Simple Value"
+category = "RTDB"
+group = "Basic"
+description = "Retrieves a simple value from a predefined test path in RTDB."

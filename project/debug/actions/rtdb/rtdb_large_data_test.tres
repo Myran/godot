@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBLargeDataTestAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_large_data_test_action.gd" id="1_large_data"]
+
+[resource]
+script = ExtResource("1_large_data")
+action_name = "Large Data Test"
+category = "RTDB"
+group = "Advanced"
+description = "Tests RTDB with a substantial data payload to verify performance and limits."

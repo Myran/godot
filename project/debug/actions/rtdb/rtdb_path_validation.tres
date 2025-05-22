@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBPathValidationAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_path_validation_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "Path Validation"
+category = "RTDB"
+group = "Path Operations"
+description = "Validates accessibility and structure of various RTDB paths."

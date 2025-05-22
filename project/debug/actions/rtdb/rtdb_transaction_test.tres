@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBTransactionTestAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_transaction_test_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "Transaction Test"
+category = "RTDB"
+group = "Advanced"
+description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."

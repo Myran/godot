@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBGetNestedPathAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_get_nested_path_action.gd" id="1_get_nested"]
+
+[resource]
+script = ExtResource("1_get_nested")
+action_name = "Get Nested Path"
+category = "RTDB"
+group = "Paths"
+description = "Retrieves data from nested paths in RTDB structure."

@@ -10,6 +10,7 @@ func _init():
 	# Don't use Log here as it might not be initialized yet
 	print("DebugActionRegistry instance created")
 
+
 func _ready():
 	# Now Log should be available
 	Log.info("DebugActionRegistry initializing...", {}, ["debug", "system"])
@@ -18,8 +19,11 @@ func _ready():
 	var dir = DirAccess.open(ACTIONS_PATH)
 	if not dir:
 		var err = DirAccess.get_open_error()
-		Log.error("DebugActionRegistry: Actions directory not found: " + ACTIONS_PATH,
-			{"error_code": err}, ["debug", "system"])
+		Log.error(
+			"DebugActionRegistry: Actions directory not found: " + ACTIONS_PATH,
+			{"error_code": err},
+			["debug", "system"]
+		)
 
 		# Create the directory if it doesn't exist
 		DirAccess.make_dir_recursive_absolute(ACTIONS_PATH)
@@ -38,12 +42,20 @@ func _scan_for_actions() -> void:
 
 	# Mobile fallback: directly load known resource files
 	if actions.is_empty():
-		Log.info("No actions found via directory scan, trying direct resource loading...", {}, ["debug", "system"])
+		Log.info(
+			"No actions found via directory scan, trying direct resource loading...",
+			{},
+			["debug", "system"]
+		)
 		_load_known_actions()
 
 	# Ultimate fallback: programmatic registration
 	if actions.is_empty():
-		Log.info("No actions found via resource loading, using programmatic registration...", {}, ["debug", "system"])
+		Log.info(
+			"No actions found via resource loading, using programmatic registration...",
+			{},
+			["debug", "system"]
+		)
 		_register_all_actions_programmatically()
 
 	actions.sort_custom(func(a, b): return a.action_name < b.action_name)  # Sort alphabetically
@@ -68,7 +80,9 @@ func _load_known_actions() -> void:
 				actions.append(resource)
 				Log.debug("Loaded action: " + resource.action_name, {}, ["debug", "system"])
 			else:
-				Log.warning("Resource at " + action_path + " is not a DebugAction", {}, ["debug", "system"])
+				Log.warning(
+					"Resource at " + action_path + " is not a DebugAction", {}, ["debug", "system"]
+				)
 		else:
 			Log.warning("Action resource not found: " + action_path, {}, ["debug", "system"])
 
@@ -91,13 +105,21 @@ func _recursive_scan(path: String) -> void:
 					var resource = load(full_path)
 					if resource is DebugAction:
 						actions.append(resource)
-						Log.debug("Scanned action: " + resource.action_name, {}, ["debug", "system"])
+						Log.debug(
+							"Scanned action: " + resource.action_name, {}, ["debug", "system"]
+						)
 				else:
-					Log.warning("Resource file not accessible: " + full_path, {}, ["debug", "system"])
+					Log.warning(
+						"Resource file not accessible: " + full_path, {}, ["debug", "system"]
+					)
 			file_name = dir.get_next()
 	else:
 		Log.warning(
-			"DebugActionRegistry: Could not open directory for scanning: " + path + " (this is normal on some platforms)",
+			(
+				"DebugActionRegistry: Could not open directory for scanning: "
+				+ path
+				+ " (this is normal on some platforms)"
+			),
 			{},
 			["debug", "system"]
 		)
@@ -117,7 +139,7 @@ func get_categories() -> Array[String]:
 	for action in actions:
 		if action and action.get("category"):
 			cats[action.category] = true
-	var sorted_cats : Array [String]
+	var sorted_cats: Array[String]
 	sorted_cats.assign(cats.keys())
 	sorted_cats.sort()
 	return sorted_cats

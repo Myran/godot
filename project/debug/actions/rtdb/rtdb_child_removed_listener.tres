@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBChildRemovedListenerAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_child_removed_listener_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "Child Removed Listener"
+category = "RTDB"
+group = "Listeners"
+description = "Sets up a listener for when children are removed from a specific RTDB path."

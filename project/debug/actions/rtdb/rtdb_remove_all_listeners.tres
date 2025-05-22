@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBRemoveAllListenersAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_remove_all_listeners_action.gd" id="1_remove_listeners"]
+
+[resource]
+script = ExtResource("1_remove_listeners")
+action_name = "Remove All Listeners"
+category = "RTDB"
+group = "Listeners"
+description = "Removes all active RTDB listeners to clean up test state."

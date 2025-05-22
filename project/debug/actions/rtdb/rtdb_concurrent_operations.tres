@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBConcurrentOperationsAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_concurrent_operations_action.gd" id="1_action"]
+
+[resource]
+script = ExtResource("1_action")
+action_name = "Concurrent Operations"
+category = "RTDB"
+group = "Advanced"
+description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
