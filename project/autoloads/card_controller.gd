@@ -8,7 +8,7 @@ var _rules: Dictionary
 
 
 func get_card_image_name(card_id: String) -> String:
-	var asset_variant_value: int = 0  # Default value
+	var asset_variant_value: int = 1  # Default value
 
 	# Direct access to the asset_variant property
 	if (
