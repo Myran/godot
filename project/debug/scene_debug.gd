@@ -2,37 +2,17 @@
 extends Control
 
 signal fb_success(res: Dictionary)
-@warning_ignore("unused_signal")
-signal _apple_success(res: Dictionary)
+#@warning_ignore("unused_signal")
+#signal _apple_success(res: Dictionary)
 signal apple_auth_respons(res: Dictionary)
-
+enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 # Constants
 const FAKE_INTERSTITIAL_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/4411468910"
 const FAKE_REWARDED_VIDEO_AD_UNIT_IOS: String = "ca-app-pub-3940256099942544/1712485313"
 const _RTDB_TEST_PREFIX: String = "_test_rtdb_"
 const _AUTH_TEST_PREFIX: String = "_test_auth_"
 const _CONFIG_TEST_PREFIX: String = "_test_config_"
-const _test_base_path: Array[String] = ["debug_tests", "rtdb"]
 
-# Firebase Module Instances
-var auth: Object = null
-var db: Object = null  # Instance of C++ FirebaseDatabase
-var remote_config: Object = null
-var messaging: Object = null
-
-# Other Module Instances
-var godot_apple_auth: Object = null
-var admob: Object = null
-
-# UI References
-@onready var status_label: RichTextLabel = %DebugRichTextLabel
-@onready var item_list_navigator: ItemList = %DebugItemList
-
-# Navigation State & Constants
-enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
-var _current_view_level: ViewLevel = ViewLevel.MAIN_CATEGORIES
-var _current_category_info: Dictionary = {}
-var _current_group_info: Dictionary = {}
 const CATEGORIES_DEFINITION: Array[Dictionary] = [
 	{
 		"name": "RTDB Tests",
@@ -62,6 +42,20 @@ const ITEM_TYPE_RUN_ALL_CATEGORY_TESTS: String = "run_all_category_tests"
 const BACK_TO_MAIN_MENU_TEXT: String = "< Back to Main Menu"
 const BACK_TO_GROUPS_TEXT: String = "< Back to Test Groups"
 
+# Firebase Module Instances
+var auth: Object = null
+var db: Object = null  # Instance of C++ FirebaseDatabase
+var remote_config: Object = null
+var messaging: Object = null
+var godot_apple_auth: Object = null
+var admob: Object = null
+var _test_base_path: Array[String] = ["debug_tests", "rtdb"]
+
+# Other Module Instances
+
+var _current_view_level: ViewLevel = ViewLevel.MAIN_CATEGORIES
+var _current_category_info: Dictionary = {}
+var _current_group_info: Dictionary = {}
 # RTDB Test State
 var _next_request_id: int = 0
 var _pending_requests: Dictionary = {}  # Stores request_id_int -> PendingRequestData instance
@@ -69,6 +63,15 @@ var _transaction_count: int = 0  # Declaration for RTDB tests
 
 var _is_running_all_tests: bool = false
 var _current_run_all_category_prefix: String = ""
+
+var _listener_path_suffix: Array[String] = ["live_data"]
+var _listen_count: int = 0
+
+# UI References
+@onready var status_label: RichTextLabel = %DebugRichTextLabel
+@onready var item_list_navigator: ItemList = %DebugItemList
+
+# Navigation State & Constants
 
 
 class PendingRequestData:
@@ -374,6 +377,7 @@ func _populate_tests_view(group_info: Dictionary) -> void:
 	item_list_navigator.ensure_current_is_visible()
 
 
+# Testmove
 func _on_navigator_item_activated(index: int) -> void:
 	if (
 		not is_instance_valid(item_list_navigator)
@@ -909,10 +913,6 @@ func _test_rtdb_advanced_increment_transaction() -> Array:
 func _test_rtdb_advanced_set_server_timestamp() -> Array:
 	Log.debug("RTDB Test: Set Server Timestamp", {}, ["test"])
 	return await _make_rtdb_request("set_server_timestamp_async", ["server_time"])
-
-
-var _listener_path_suffix: Array[String] = ["live_data"]
-var _listen_count: int = 0
 
 
 func _test_rtdb_listeners_add() -> Array:

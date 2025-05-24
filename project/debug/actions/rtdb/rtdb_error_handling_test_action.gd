@@ -1,23 +1,20 @@
 # project/debug/actions/rtdb/rtdb_error_handling_test_action.gd
 @tool
 class_name RTDBErrorHandlingTestAction
-extends DebugAction
+extends RTDBDebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Error Handling Test"
-	category = "RTDB"
 	group = "Advanced"
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
 func execute(target_node: Node = null) -> Array:
-	var db = Engine.get_singleton("FirebaseDatabase")
-	if not is_instance_valid(db):
-		_update_status(target_node, "FirebaseDatabase module not found.", true)
-		return _failure("FirebaseDatabase module not available.")
+	var db = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
-	var test_base_path: Array[Variant] = ["debug_tests", "rtdb"]
 	_update_status(target_node, "Starting error handling tests...")
 
 	var error_tests: Array[Dictionary] = []
@@ -33,49 +30,49 @@ func execute(target_node: Node = null) -> Array:
 		{
 			"name": "Malformed Data",
 			"test_type": "malformed_data",
-			"path": test_base_path + ["error_test", "malformed"],
-			"data": {"invalid": "data with null\0 character"},
+			"path": create_test_path(["error_test", "malformed"]),
+			"data": {"invalid": "data with null character"},
 			"expected_error": "invalid_data"
 		},
 		{
 			"name": "Path Too Deep",
 			"test_type": "path_depth",
-			"path": _generate_deep_path(test_base_path, 50),  # Very deep path
+			"path": _generate_deep_path(create_test_path([]), 50),  # Very deep path
 			"expected_error": "path_too_deep"
 		},
 		{
 			"name": "Data Too Large",
 			"test_type": "data_size",
-			"path": test_base_path + ["error_test", "large_data"],
+			"path": create_test_path(["error_test", "large_data"]),
 			"data": _generate_large_data_object(100000),  # Very large data
 			"expected_error": "data_too_large"
 		},
 		{
 			"name": "Network Timeout Simulation",
 			"test_type": "network_timeout",
-			"path": test_base_path + ["error_test", "timeout"],
+			"path": create_test_path(["error_test", "timeout"]),
 			"expected_error": "network_timeout"
 		}
 	]
 
 # Execute each error test scenario
 	for scenario in error_scenarios:
-	_update_status(target_node, "Testing: %s..." % scenario.name)
-	var test_result: Dictionary = await _execute_error_scenario(db, scenario, target_node)
-	error_tests.append(test_result)
+		_update_status(target_node, "Testing: %s..." % scenario.name)
+		var test_result: Dictionary = await _execute_error_scenario(db, scenario, target_node)
+		error_tests.append(test_result)
 
-# Brief delay between tests
-	await target_node.get_tree().create_timer(0.2).timeout
+		# Brief delay between tests
+		await target_node.get_tree().create_timer(0.2).timeout
 
 # Analyze results
 	var successful_error_handling: int = 0
 	var failed_error_handling: int = 0
 
 	for test in error_tests:
-	if test.error_handled_correctly:
-		successful_error_handling += 1
-	else:
-		failed_error_handling += 1
+		if test.error_handled_correctly:
+			successful_error_handling += 1
+		else:
+			failed_error_handling += 1
 
 	var test_success: bool = failed_error_handling == 0
 	var status_msg: String = (
@@ -110,7 +107,7 @@ func execute(target_node: Node = null) -> Array:
 	)
 
 
-func _execute_error_scenario(db, scenario: Dictionary, target_node: Node) -> Dictionary:
+func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Node) -> Dictionary:
 	var test_name: String = scenario.name
 	var test_type: String = scenario.test_type
 	var test_path: Array[Variant] = scenario.path

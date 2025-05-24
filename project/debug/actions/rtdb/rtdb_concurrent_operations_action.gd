@@ -1,25 +1,22 @@
 # project/debug/actions/rtdb/rtdb_concurrent_operations_action.gd
 @tool
 class_name RTDBConcurrentOperationsAction
-extends DebugAction
+extends RTDBDebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Concurrent Operations"
-	category = "RTDB"
 	group = "Advanced"
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
 func execute(target_node: Node = null) -> Array:
-	var db = Engine.get_singleton("FirebaseDatabase")
-	if not is_instance_valid(db):
-		_update_status(target_node, "FirebaseDatabase module not found.", true)
-		return _failure("FirebaseDatabase module not available.")
+	var db = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
-	var test_base_path: Array[Variant] = ["debug_tests", "rtdb"]
-	var full_path: Array[Variant] = test_base_path + path_suffix
+	var full_path: Array[Variant] = create_test_path(path_suffix)
 
 	_update_status(
 		target_node, "Starting concurrent operations test at path '%s'..." % str(full_path)
@@ -64,8 +61,8 @@ func execute(target_node: Node = null) -> Array:
 
 # Start all operations simultaneously (simulated concurrency)
 	for operation in concurrent_operations:
-	var task: Dictionary = _start_concurrent_operation(db, operation, target_node)
-	concurrent_tasks.append(task)
+		var task: Dictionary = _start_concurrent_operation(db, operation, target_node)
+		concurrent_tasks.append(task)
 
 # Wait for all operations to complete
 	_update_status(
@@ -78,20 +75,20 @@ func execute(target_node: Node = null) -> Array:
 # Collect results from all concurrent operations
 	var completed_operations: Array[Dictionary] = []
 	for task in concurrent_tasks:
-	var result: Dictionary = await _wait_for_operation_completion(task, target_node)
-	completed_operations.append(result)
+		var result: Dictionary = await _wait_for_operation_completion(task, target_node)
+		completed_operations.append(result)
 
-# Analyze results
+	# Analyze results
 	var successful_operations: int = 0
 	var failed_operations: int = 0
 	var total_duration: float = 0.0
 
 	for result in completed_operations:
-	if result.success:
-		successful_operations += 1
-	else:
-		failed_operations += 1
-		total_duration += result.get("duration", 0.0)
+		if result.success:
+			successful_operations += 1
+		else:
+			failed_operations += 1
+			total_duration += result.get("duration", 0.0)
 
 	var average_duration: float = (
 		total_duration / completed_operations.size() if completed_operations.size() > 0 else 0.0
@@ -134,7 +131,9 @@ func execute(target_node: Node = null) -> Array:
 	)
 
 
-func _start_concurrent_operation(db, operation: Dictionary, target_node: Node) -> Dictionary:
+func _start_concurrent_operation(
+	db: Variant, operation: Dictionary, target_node: Node
+) -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 	var request_id: int = start_time % 1000000
 

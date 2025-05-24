@@ -66,7 +66,7 @@ func _update_status_label_text(text: String, is_error: bool = false) -> void:
 				Engine.get_version_info()["hash"]
 			]
 		)
-		var color_tag = "[color=red]" if is_error else "[color=palegreen]"  # Use Godot's named colors
+		var color_tag: String = "[color=red]" if is_error else "[color=palegreen]"  # Use Godot's named colors
 		status_label.text = header_text + color_tag + text + "[/color]"
 
 
@@ -81,11 +81,14 @@ func _populate_main_categories_view() -> void:
 
 	Log.debug("Populating main categories view", {}, ["debug_ui"])
 
-	# Try to access the registry in different ways
-	var registry = DebugRegistry
+	# Access the registry via autoload (fast-failing with proper error handling)
+	if not DebugRegistry:
+		push_error("DebugRegistry autoload not found")
+		return
+	var registry = DebugRegistry  # No type cast needed - runtime will handle it
 
 	# Get categories with a try/except to catch any runtime errors
-	var categories = []
+	var categories: Array[String] = []
 
 	# Try to get categories safely
 	categories = registry.get_categories()
@@ -94,8 +97,8 @@ func _populate_main_categories_view() -> void:
 		item_list_navigator.set_item_disabled(0, true)
 		return
 
-	for i in range(categories.size()):
-		var category_name = categories[i]
+	for i: int in range(categories.size()):
+		var category_name: String = categories[i]
 		item_list_navigator.add_item(category_name)
 		item_list_navigator.set_item_metadata(
 			i, {"type": ITEM_TYPE_CATEGORY, "name": category_name}
@@ -117,30 +120,22 @@ func _populate_groups_view(category_name: String) -> void:
 	item_list_navigator.add_item(BACK_TO_MAIN_MENU_TEXT)
 	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_MAIN})
 
-	# Try to access the registry in different ways
-	var registry = null
-
-	# Try via node path (more reliable in Godot 4)
-	if has_node("/root/DebugRegistry"):
-		registry = get_node("/root/DebugRegistry")
-	# Try via Engine singleton as fallback
-	elif Engine.has_singleton("DebugRegistry"):
-		registry = Engine.get_singleton("DebugRegistry")
-
-	if not registry:
+	# Access the registry via autoload (fast-failing)
+	if not DebugRegistry:
 		_update_status_label_text(
-			"ERROR: DebugActionRegistry not found while accessing category groups.", true
+			"ERROR: DebugRegistry autoload not found while accessing category groups.", true
 		)
 		return
+	var registry = DebugRegistry
 
-	var groups = registry.get_groups_for_category(category_name)
+	var groups: Array[String] = registry.get_groups_for_category(category_name)
 	if groups.is_empty():
 		item_list_navigator.add_item("No groups in this category.")
 		item_list_navigator.set_item_disabled(1, true)
 		return
 
-	for i in range(groups.size()):
-		var group_name = groups[i]
+	for i: int in range(groups.size()):
+		var group_name: String = groups[i]
 		item_list_navigator.add_item(group_name)
 		item_list_navigator.set_item_metadata(i + 1, {"type": ITEM_TYPE_GROUP, "name": group_name})
 
@@ -162,29 +157,23 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	item_list_navigator.add_item(BACK_TO_GROUPS_TEXT)
 	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_GROUPS})
 
-	# Try to access the registry in different ways
-	var registry = null
-
-	# Try via node path (more reliable in Godot 4)
-	if has_node("/root/DebugRegistry"):
-		registry = get_node("/root/DebugRegistry")
-	# Try via Engine singleton as fallback
-	elif Engine.has_singleton("DebugRegistry"):
-		registry = Engine.get_singleton("DebugRegistry")
-
-	if not registry:
+	# Access the registry via autoload (fast-failing)
+	if not DebugRegistry:
 		_update_status_label_text(
-			"ERROR: DebugActionRegistry not found while accessing group actions.", true
+			"ERROR: DebugRegistry autoload not found while accessing group actions.", true
 		)
 		return
+	var registry = DebugRegistry
 
-	var actions_in_group = registry.get_actions_for_group(category_name, group_name)
+	var actions_in_group: Array[DebugAction] = registry.get_actions_for_group(
+		category_name, group_name
+	)
 	if actions_in_group.is_empty():
 		item_list_navigator.add_item("No actions in this group.")
 		item_list_navigator.set_item_disabled(1, true)
 		return
 
-	for i in range(actions_in_group.size()):
+	for i: int in range(actions_in_group.size()):
 		var action: DebugAction = actions_in_group[i]
 		item_list_navigator.add_item(action.action_name)
 		item_list_navigator.set_item_tooltip(i + 1, action.description)
@@ -202,11 +191,11 @@ func _on_navigator_item_selected(index: int) -> void:
 	if index < 0 or index >= item_list_navigator.item_count:
 		return
 
-	var metadata = item_list_navigator.get_item_metadata(index)
+	var metadata: Variant = item_list_navigator.get_item_metadata(index)
 	if not metadata is Dictionary:
 		return
 
-	var item_type = metadata.get("type")
+	var item_type: Variant = metadata.get("type")
 	match item_type:
 		ITEM_TYPE_CATEGORY:
 			_populate_groups_view(metadata.get("name"))
@@ -227,24 +216,16 @@ func _on_run_all_pressed() -> void:
 		Log.warning("Run All already in progress.", {}, ["debug_ui"])
 		return
 
-	# Try to access the registry in different ways
-	var registry = null
-
-	# Try via node path (more reliable in Godot 4)
-	if has_node("/root/DebugRegistry"):
-		registry = get_node("/root/DebugRegistry")
-	# Try via Engine singleton as fallback
-	elif Engine.has_singleton("DebugRegistry"):
-		registry = Engine.get_singleton("DebugRegistry")
-
-	if not registry:
+	# Access the registry via autoload (fast-failing)
+	if not DebugRegistry:
 		_update_status_label_text(
-			"ERROR: DebugActionRegistry not found while running group actions.", true
+			"ERROR: DebugRegistry autoload not found while running group actions.", true
 		)
 		return
+	var registry = DebugRegistry
 
-	var actions_to_run: Array[DebugAction]
-	var scope_name: String
+	var actions_to_run: Array[DebugAction] = []
+	var scope_name: String = ""
 	if _current_view_level == ViewLevel.GROUP_LIST:  # Run all in category
 		scope_name = _current_category_name
 		for group_name in registry.get_groups_for_category(_current_category_name):
@@ -278,7 +259,7 @@ func _execute_single_action(action: DebugAction) -> void:
 
 	var result: Array = await action.execute(self)  # Pass self for status updates
 	var success: bool = result[0]
-	var payload = result[1]
+	var payload: Variant = result[1]
 
 	if success:
 		_update_status_label_text("PASS: %s\nResult: %s" % [action.action_name, str(payload)])
@@ -375,7 +356,7 @@ func _on_button_close_pressed() -> void:
 
 
 # Handle global debug events if needed
-func _on_global_debug_event(event_type: DebugManager.DebugEventType, args: Array = []) -> void:
+func _on_global_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 		show()
 		Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])

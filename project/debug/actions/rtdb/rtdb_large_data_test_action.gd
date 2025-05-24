@@ -1,30 +1,26 @@
 # project/debug/actions/rtdb/rtdb_large_data_test_action.gd
 @tool
 class_name RTDBLargeDataTestAction
-extends DebugAction
+extends RTDBDebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Large Data Test"
-	category = "RTDB"
 	group = "Advanced"
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
 func execute(target_node: Node = null) -> Array:
 # Check if Firebase backend is available
-	if not data_source.is_firebase_available():
-		_update_status(target_node, "Firebase backend not available.", true)
-		return _failure("Firebase backend not available.")
+	var db = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
-	var firebase_backend = data_source.get_firebase_backend()
-	if not firebase_backend:
-		_update_status(target_node, "Unable to get Firebase backend instance.", true)
-		return _failure("Firebase backend instance unavailable.")
+	# Note: This action previously used data_source pattern but now uses direct instantiation
+	# for consistency with other RTDB debug actions
 
 	var path_suffix: Array[Variant] = ["large_data_test"]
-	var test_base_path: Array[Variant] = ["debug_tests", "rtdb"]
-	var full_path: Array[Variant] = test_base_path + path_suffix
+	var full_path: Array[Variant] = create_test_path(path_suffix)
 
 	_update_status(target_node, "Generating large test dataset...")
 
@@ -40,12 +36,16 @@ func execute(target_node: Node = null) -> Array:
 	var start_time: int = Time.get_ticks_msec()
 
 # Use the Firebase backend's set_data method with large data
-	var result: bool = await firebase_backend.set_data(full_path, "", large_data)
+	#var result: bool = await db.set_data(full_path, "", large_data)
+
+	var result: Dictionary = await execute_firebase_operation(
+		db, "set_value_async", [full_path, large_data]
+	)
 
 	var end_time: int = Time.get_ticks_msec()
 	var duration_ms: int = end_time - start_time
 
-	if result:
+	if result.success:
 		_update_status(
 			target_node,
 			"Successfully set large data (%d bytes) in %d ms" % [data_size_estimate, duration_ms]
@@ -54,7 +54,10 @@ func execute(target_node: Node = null) -> Array:
 		# Now test retrieval
 		_update_status(target_node, "Testing retrieval of large data...")
 		var retrieve_start: int = Time.get_ticks_msec()
-		var retrieved_data: Variant = await firebase_backend.get_data(full_path, "")
+		#var retrieved_data: Variant = await db.get_data(full_path, "")
+		var retrieved_data: Variant = await execute_firebase_operation(
+			db, "get_value_async", [full_path, large_data]
+		)
 		var retrieve_end: int = Time.get_ticks_msec()
 		var retrieve_duration: int = retrieve_end - retrieve_start
 

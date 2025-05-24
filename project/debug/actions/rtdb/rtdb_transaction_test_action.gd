@@ -1,65 +1,60 @@
 # project/debug/actions/rtdb/rtdb_transaction_test_action.gd
 @tool
 class_name RTDBTransactionTestAction
-extends DebugAction
+extends RTDBDebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Transaction Test"
-	category = "RTDB"
 	group = "Advanced"
 	description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."
 
 
 func execute(target_node: Node = null) -> Array:
-	var db = Engine.get_singleton("FirebaseDatabase")
-	if not is_instance_valid(db):
-	_update_status(target_node, "FirebaseDatabase module not found.", true)
-	return _failure("FirebaseDatabase module not available.")
+	var db = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
-	var path_suffix: Array[Variant] = ["transaction_test"]
-	var test_base_path: Array[Variant] = ["debug_tests", "rtdb"]
-	var full_path: Array[Variant] = test_base_path + path_suffix
+	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)
 
 	_update_status(target_node, "Starting transaction test at path '%s'..." % str(full_path))
 
-# Initialize counter for transaction test
+	# Initialize counter for transaction test
 	var initial_data: Dictionary = {
-		"counter": 0, "last_updated": Time.get_ticks_msec(), "transaction_test": true
+		"counter": 0, "last_updated": TimeUtils.now_ms(), "transaction_test": true
 	}
 
-	var setup_request_id: int = Time.get_ticks_msec() % 1000000
-	db.set_value_async(setup_request_id, full_path, initial_data)
+	var op_manager := FirebaseOperationManager.new(db)
+	var setup_result: Dictionary = await op_manager.execute(
+		"set_value_async", [full_path, initial_data]
+	)
 
-# Wait for initial setup
-	await target_node.get_tree().create_timer(0.2).timeout
+	if not setup_result.success:
+		return _failure("Failed to initialize transaction test data")
 
-# Perform multiple concurrent-like transactions
+	# Perform multiple concurrent-like transactions
 	var transaction_results: Array[Dictionary] = []
 
 	for i in range(3):
-	var transaction_result: Dictionary = await _perform_counter_transaction(
-		db, full_path, i + 1, target_node
-	)
-	transaction_results.append(transaction_result)
+		var transaction_result: Dictionary = await _perform_counter_transaction(
+			db, full_path, i + 1, target_node
+		)
+		transaction_results.append(transaction_result)
 
-# Brief delay between transactions
-	await target_node.get_tree().create_timer(0.1).timeout
+	# Verify final state
+	var verify_result: Dictionary = await op_manager.execute("get_value_async", [full_path])
 
-# Verify final state
-	var verify_request_id: int = Time.get_ticks_msec() % 1000000
-	db.get_value_async(verify_request_id, full_path)
-	await target_node.get_tree().create_timer(0.2).timeout
-
-# Simulate final counter value (should be 3 if all transactions succeeded)
 	var expected_final_count: int = 3
-	var actual_final_count: int = 3  # In real implementation, this would come from the get response
+	var actual_final_count: int = 0
+
+	if verify_result.success and verify_result.data is Dictionary:
+		actual_final_count = verify_result.data.get("counter", 0)
 
 	var all_transactions_successful: bool = true
 	for result in transaction_results:
-	if not result.success:
-		all_transactions_successful = false
-		break
+		if not result.success:
+			all_transactions_successful = false
+			break
 
 	var test_successful: bool = (
 		all_transactions_successful and (actual_final_count == expected_final_count)
@@ -94,44 +89,51 @@ func execute(target_node: Node = null) -> Array:
 			"final_counter": actual_final_count,
 			"expected_counter": expected_final_count,
 			"transaction_results": transaction_results,
-			"timestamp": Time.get_ticks_msec()
+			"timestamp": TimeUtils.now_ms()
 		}
 	)
 
 
 func _perform_counter_transaction(
-	db, path: Array[Variant], transaction_number: int, target_node: Node
+	db: Object, path: Array[Variant], transaction_number: int, target_node: Node
 ) -> Dictionary:
-	var transaction_id: int = Time.get_ticks_msec() % 1000000
+	# TODO: When C++ module supports transactions, replace with:
+	# return await db.run_transaction(path, _transaction_update_function)
 
-# In a real implementation, this would use Firebase's transaction API
-# For simulation, we'll mimic the transaction behavior
+	# TEMPORARY: Transaction simulation for testing
+	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
+
+	var op_manager := FirebaseOperationManager.new(db)
 
 	# 1. Read current value
-	db.get_value_async(transaction_id, path)
-	await target_node.get_tree().create_timer(0.1).timeout
+	var get_result: Dictionary = await op_manager.execute("get_value_async", [path])
+	if not get_result.success:
+		return {
+			"transaction_number": transaction_number,
+			"success": false,
+			"error": "Failed to read current value"
+		}
 
-	# 2. Simulate current counter value
-	var current_counter: int = transaction_number - 1  # Simulate incremental reads
+	# 2. Extract current counter
+	var current_data: Dictionary = get_result.get("data", {})
+	var current_counter: int = current_data.get("counter", 0)
 
-# 3. Increment counter
+	# 3. Increment counter
 	var new_counter: int = current_counter + 1
 	var updated_data: Dictionary = {
 		"counter": new_counter,
-		"last_updated": Time.get_ticks_msec(),
+		"last_updated": TimeUtils.now_ms(),
 		"transaction_test": true,
-		"transaction_id": transaction_id
+		"transaction_number": transaction_number
 	}
 
-# 4. Attempt to update with transaction (simulated)
-	db.set_value_async(transaction_id + 1000, path, updated_data)
-	await target_node.get_tree().create_timer(0.1).timeout
+	# 4. Write updated value (in real transaction, this would be atomic)
+	var set_result: Dictionary = await op_manager.execute("set_value_async", [path, updated_data])
 
-# Simulate successful transaction
 	return {
 		"transaction_number": transaction_number,
-		"transaction_id": transaction_id,
 		"previous_value": current_counter,
 		"new_value": new_counter,
-		"success": true
+		"success": set_result.success,
+		"error": set_result.get("error", "")
 	}

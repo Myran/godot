@@ -1,44 +1,57 @@
 # project/debug/actions/rtdb/rtdb_remove_all_listeners_action.gd
 @tool
 class_name RTDBRemoveAllListenersAction
-extends DebugAction
+extends RTDBDebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Remove All Listeners"
-	category = "RTDB"
 	group = "Listeners"
-	description = "Removes all active RTDB listeners to clean up test state."
+	description = "Removes active RTDB listeners to clean up test state."
 
 
 func execute(target_node: Node = null) -> Array:
-	var db = Engine.get_singleton("FirebaseDatabase")
-	if not is_instance_valid(db):
-		_update_status(target_node, "FirebaseDatabase module not found.", true)
-		return _failure("FirebaseDatabase module not available.")
+	var db = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
-	_update_status(target_node, "Removing all RTDB listeners...")
+	_update_status(target_node, "Removing RTDB listeners...")
 
-# Call the remove_all_listeners method on the Firebase database
-	var result: bool = db.remove_all_listeners()
+	# The C++ Firebase module only supports one active child listener at a time
+	# We'll remove listeners from common test paths used by debug actions
+	var test_paths: Array[Array] = [
+		create_test_path(["child_events"]),  # Used by child listener actions
+		create_test_path(["single_value"]),  # Used by single value listener
+		create_test_path(["test_data"]),  # Common test path
+		create_test_path([])  # Base debug test path
+	]
 
-	if result:
-		_update_status(target_node, "Successfully removed all RTDB listeners")
+	var removed_count: int = 0
+	for path in test_paths:
+		# The C++ module's remove_listener_at_path() doesn't return a value
+		# It removes the listener if one exists at that path
+		db.remove_listener_at_path(path)
+		removed_count += 1
 
-		Log.info(
-			"RTDBRemoveAllListenersAction executed successfully",
-			{"operation": "remove_all_listeners"},
-			["test", "rtdb", "listeners"]
+		Log.debug(
+			"Attempted to remove listener at path", {"path": path}, ["rtdb", "listeners", "cleanup"]
 		)
 
-		return _success(
-			{
-				"operation": "remove_all_listeners",
-				"timestamp": Time.get_ticks_msec(),
-				"status": "listeners_removed"
-			}
-		)
-	else:
-		var error_msg: String = "Failed to remove all listeners"
-		_update_status(target_node, error_msg, true)
-		return _failure(error_msg, {"operation": "remove_all_listeners"})
+	_update_status(
+		target_node, "Attempted to remove listeners from %d common test paths" % removed_count
+	)
+
+	Log.info(
+		"RTDBRemoveAllListenersAction executed successfully",
+		{"operation": "remove_listeners_at_paths", "paths_attempted": removed_count},
+		["test", "rtdb", "listeners"]
+	)
+
+	return _success(
+		{
+			"operation": "remove_listeners_at_paths",
+			"paths_attempted": removed_count,
+			"timestamp": Time.get_ticks_msec(),
+			"status": "cleanup_attempted"
+		}
+	)

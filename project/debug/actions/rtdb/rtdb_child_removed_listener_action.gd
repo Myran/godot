@@ -1,120 +1,77 @@
 # project/debug/actions/rtdb/rtdb_child_removed_listener_action.gd
 @tool
 class_name RTDBChildRemovedListenerAction
-extends DebugAction
+extends RTDBDebugAction
 
-# Store active listener ID to manage cleanup
-var active_listener_id: String = ""
+var _listener_helper: ListenerTestHelper
+var _active_path: Array[Variant] = []
 
 
-func _init():
+func _init() -> void:
 	action_name = "Child Removed Listener"
-	category = "RTDB"
 	group = "Listeners"
-	description = "Sets up a listener for when children are removed from a specific RTDB path."
+	description = "Sets up a listener for when children are removed from a specific RTDB path and verifies it works."
 
 
 func execute(target_node: Node = null) -> Array:
-	var db = Engine.get_singleton("FirebaseDatabase")
-	if not is_instance_valid(db):
-		_update_status(target_node, "FirebaseDatabase module not found.", true)
-		return _failure("FirebaseDatabase module not available.")
+	var db: Object = get_firebase_database_for_target(target_node)
+	if not db:
+		return get_last_error_result()
 
-	var path_suffix: Array[Variant] = ["child_events"]
-	var test_base_path: Array[Variant] = ["debug_tests", "rtdb"]
-	var full_path: Array[Variant] = test_base_path + path_suffix
+	# Setup test path and helper
+	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
+	_listener_helper = ListenerTestHelper.new()
+	_listener_helper.reset()
 
-	_update_status(
-		target_node, "Setting up child removed listener for path '%s'..." % str(full_path)
-	)
+	_update_status(target_node, "Setting up child removed listener...")
 
-# Create a callback object for the listener
-	var callback_object = ChildRemovedCallbackHandler.new()
-	callback_object.setup(target_node, self, full_path)
+	# Connect to child_removed signal
+	if not db.child_removed.is_connected(_on_child_removed):
+		db.child_removed.connect(_on_child_removed.bind(target_node))
 
-# Add the child removed listener
-	active_listener_id = db.add_child_removed_listener(
-		full_path, callback_object, "on_child_removed"
-	)
+	# Add listener at path
+	db.add_listener_at_path(_active_path)
+	_update_status(target_node, "Listener active for path: %s" % str(_active_path))
 
-	if not active_listener_id.is_empty():
-		_update_status(
-			target_node,
-			(
-				"Child removed listener active for path '%s' (ID: %s)"
-				% [str(full_path), active_listener_id]
-			)
-		)
+	# Create test child then remove it
+	var child_key: String = "temp_child_" + str(TimeUtils.now_ms())
+	var child_path: Array[Variant] = _active_path + [child_key]
+	var child_data: Dictionary = {
+		"timestamp": TimeUtils.now_ms(),
+		"message": "Temporary child for removal test",
+		"child_id": child_key
+	}
 
-# Create a test child and then remove it to trigger the listener
-		var child_key: String = "temp_child_" + str(Time.get_ticks_msec())
-		var child_data: Dictionary = {
-			"timestamp": Time.get_ticks_msec(),
-			"message": "Temporary child for removal test",
-			"child_id": child_key
-		}
-		var child_path: Array[Variant] = full_path + [child_key]
+	# Set child data first
+	_update_status(target_node, "Creating test child...")
+	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, child_data)
 
-		# Set the child data first
-		db.set_value_async(Time.get_ticks_msec() % 1000000, child_path, child_data)
+	# Wait briefly then remove to trigger listener
+	await target_node.get_tree().create_timer(0.5).timeout
 
-		# Wait briefly then remove to trigger removal listener
-		await target_node.get_tree().create_timer(0.3).timeout
-		db.remove_value_async((Time.get_ticks_msec() + 1) % 1000000, child_path)
+	_update_status(target_node, "Removing child to trigger listener...")
+	db.remove_value_async(RTDBDebugAction.generate_request_id(), child_path)
 
-		Log.debug(
-			"RTDBChildRemovedListenerAction executed successfully",
-			{
-				"path": full_path,
-				"listener_id": active_listener_id,
-				"operation": "add_child_removed_listener"
-			},
-			["test", "rtdb", "listeners"]
-		)
+	# Wait for callback
+	_update_status(target_node, "Waiting for listener callback...")
+	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
+	if result.success:
+		_update_status(target_node, "✅ Listener test PASSED")
 		return _success(
 			{
-				"operation": "child_removed_listener",
-				"path": full_path,
-				"listener_id": active_listener_id,
-				"timestamp": Time.get_ticks_msec(),
-				"status": "listening"
+				"operation": "child_removed_listener_test",
+				"path": _active_path,
+				"test_result": "PASSED",
+				"callback_data": result.data,
+				"timestamp": TimeUtils.now_ms()
 			}
 		)
 	else:
-		var error_msg: String = (
-			"Failed to create child removed listener for path '%s'" % str(full_path)
-		)
-		_update_status(target_node, error_msg, true)
-		return _failure(error_msg, {"path": full_path, "operation": "child_removed_listener"})
+		_update_status(target_node, "❌ Listener test FAILED: " + result.error, true)
+		return _failure(result.error)
 
 
-# Helper class to handle child removed listener callbacks
-class ChildRemovedCallbackHandler:
-	var target_node: Node
-	var action_ref: RTDBChildRemovedListenerAction
-	var listened_path: Array[Variant]
-
-	func setup(node: Node, action: RTDBChildRemovedListenerAction, path: Array[Variant]):
-		target_node = node
-		action_ref = action
-		listened_path = path
-
-	func on_child_removed(child_key: String, child_value: Variant):
-		if action_ref and is_instance_valid(target_node):
-			var status_msg: String = (
-				"Child removed '%s' from '%s': %s"
-				% [child_key, str(listened_path), str(child_value)]
-			)
-			action_ref._update_status(target_node, status_msg)
-
-			Log.info(
-				"RTDB Child Removed Listener triggered",
-				{
-					"path": listened_path,
-					"child_key": child_key,
-					"child_value": child_value,
-					"listener_type": "child_removed"
-				},
-				["rtdb", "listeners", "debug"]
-			)
+func _on_child_removed(child_key: String, child_value: Variant, target_node: Node) -> void:
+	_listener_helper.mark_callback_received(child_key, child_value, {"listened_path": _active_path})
+	_update_status(target_node, "Callback received for removed key: %s" % child_key)
