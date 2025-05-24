@@ -83,7 +83,7 @@ build-macos-templates: validate-env
 # Run Godot editor
 edit:
     @echo "Running Godot editor..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor --verbose --debug
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor # --verbose --debug
 
 # Run Godot in headless mode without GUI
 headless:
