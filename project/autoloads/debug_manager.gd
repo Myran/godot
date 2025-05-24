@@ -21,11 +21,13 @@ enum DebugEventType {
 
 # Variables preserved from original debug.gd for backward compatibility
 # These may be refactored later if needed
-@export var use_local_battle_db: bool
-@export var asset_variant: int
+var use_local_battle_db: bool
+var asset_variant: int
 
 
 func _ready():
+	use_local_battle_db = false
+	asset_variant = 1
 	# Connect to our own signal if legacy popup needs to reac
 	debug_event.connect(_on_debug_event)
 
