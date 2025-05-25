@@ -15,7 +15,7 @@ func execute() -> Array:
 	if not db:
 		return get_last_error_result()
 
-	_update_status( "Validating various RTDB paths...")
+	_update_status("Validating various RTDB paths...")
 
 	var validation_results: Array[Dictionary] = []
 
@@ -71,7 +71,7 @@ func execute() -> Array:
 		"Path validation complete: %d successful, %d failed out of %d total"
 		% [successful_validations, failed_validations, validation_results.size()]
 	)
-	_update_status( status_msg)
+	_update_status(status_msg)
 
 	Log.debug(
 		"RTDBPathValidationAction executed successfully",

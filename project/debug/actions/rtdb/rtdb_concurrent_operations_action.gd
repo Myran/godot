@@ -18,9 +18,7 @@ func execute() -> Array:
 	var path_suffix: Array[Variant] = ["concurrent_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 
-	_update_status(
-		_update_status("Starting concurrent operations test at path '%s'..." % str(full_path)
-	)
+	_update_status("Starting concurrent operations test at path '%s'..." % str(full_path))
 
 	var base_timestamp: int = Time.get_ticks_msec()
 	var concurrent_tasks: Array[Dictionary] = []
@@ -65,9 +63,8 @@ func execute() -> Array:
 		concurrent_tasks.append(task)
 
 # Wait for all operations to complete
-	_update_status(
-		_update_status("Waiting for %d concurrent operations to complete..." % concurrent_tasks.size()
-	)
+
+	_update_status("Waiting for %d concurrent operations to complete..." % concurrent_tasks.size())
 
 # Simulate concurrent execution time
 	await Engine.get_main_loop().create_timer(0.5).timeout
@@ -99,7 +96,7 @@ func execute() -> Array:
 		"Concurrent operations completed: %d successful, %d failed. Avg duration: %.2fms"
 		% [successful_operations, failed_operations, average_duration]
 	)
-	_update_status( status_msg, not test_success)
+	_update_status(status_msg, not test_success)
 
 	Log.debug(
 		"RTDBConcurrentOperationsAction executed",
@@ -131,9 +128,7 @@ func execute() -> Array:
 	)
 
 
-func _start_concurrent_operation(
-	db: Variant, operation: Dictionary
-) -> Dictionary:
+func _start_concurrent_operation(db: Variant, operation: Dictionary) -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 	var request_id: int = start_time % 1000000
 

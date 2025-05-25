@@ -17,7 +17,7 @@ func execute() -> Array:
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.BATCH_OPS)
 
-	_update_status( "Starting batch operations test at path '%s'..." % str(full_path))
+	_update_status("Starting batch operations test at path '%s'..." % str(full_path))
 
 	var batch_operations: Array[Dictionary] = []
 	var base_timestamp: int = TimeUtils.now_ms()
@@ -50,9 +50,7 @@ func execute() -> Array:
 # Execute batch operations
 	for i in range(operations_to_perform.size()):
 		var operation: Dictionary = operations_to_perform[i]
-		var operation_result: Dictionary = await _execute_single_operation(
-			db, operation, i
-		)
+		var operation_result: Dictionary = await _execute_single_operation(db, operation, i)
 		batch_operations.append(operation_result)
 
 		# Brief delay between operations
@@ -73,7 +71,7 @@ func execute() -> Array:
 		"Batch operations completed: %d successful, %d failed out of %d total"
 		% [successful_operations, failed_operations, batch_operations.size()]
 	)
-	_update_status( status_msg, not batch_success)
+	_update_status(status_msg, not batch_success)
 
 	Log.debug(
 		"RTDBBatchOperationsAction executed",

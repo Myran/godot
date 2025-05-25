@@ -32,7 +32,12 @@ func register_action(action: ManualDebugAction) -> void:
 		if not _ungrouped_actions.has(action.category):
 			_ungrouped_actions[action.category] = []
 		_ungrouped_actions[action.category].append(action)
-		Log.debug("Registered ungrouped action: %s in category: %s" % [action.action_name, action.category])
+		Log.debug(
+			(
+				"Registered ungrouped action: %s in category: %s"
+				% [action.action_name, action.category]
+			)
+		)
 	else:
 		# Grouped - store in categories/groups hierarchy
 		if not _categories.has(action.category):
@@ -40,7 +45,12 @@ func register_action(action: ManualDebugAction) -> void:
 		if not _categories[action.category].has(action.group):
 			_categories[action.category][action.group] = []
 		_categories[action.category][action.group].append(action)
-		Log.debug("Registered grouped action: %s in %s > %s" % [action.action_name, action.category, action.group])
+		Log.debug(
+			(
+				"Registered grouped action: %s in %s > %s"
+				% [action.action_name, action.category, action.group]
+			)
+		)
 
 
 ## Register action using a callable
@@ -89,7 +99,7 @@ func get_actions_by_category() -> Dictionary:
 
 ## Get ungrouped actions for a specific category
 func get_ungrouped_actions(category: String) -> Array[ManualDebugAction]:
-	var actions : Array[ManualDebugAction]
+	var actions: Array[ManualDebugAction]
 	if _ungrouped_actions.has(category):
 		actions.assign(_ungrouped_actions[category].duplicate())
 		return actions
@@ -123,25 +133,31 @@ func _register_default_actions() -> void:
 	register_callable(
 		"Reset Match Level",
 		func(): DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL),
-		"Gameplay", "", "Reset the current match level"  # No group
+		"Gameplay",
+		"",
+		"Reset the current match level"  # No group
 	)
 
 	# Match Level Actions - grouped together
 	for i in range(1, 6):
 		register_callable(
 			"Load Match Level %d" % i,
-			func(): DebugManager.action(
-				DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL,
-				["level_%02d" % i]
-			),
-			"Gameplay", "Match Levels", "Force load match level %d" % i
+			func():
+				DebugManager.action(
+					DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % i]
+				),
+			"Gameplay",
+			"Match Levels",
+			"Force load match level %d" % i
 		)
 
 	# Enemy/Debug Lineup Actions
 	register_callable(
 		"Populate Enemy Lineup",
 		_populate_enemy_lineup,
-		"Gameplay", "Preset Lineups", "Add test cards to enemy lineup"
+		"Gameplay",
+		"Preset Lineups",
+		"Add test cards to enemy lineup"
 	)
 
 	# Database actions - mixed grouped and ungrouped
@@ -150,8 +166,10 @@ func _register_default_actions() -> void:
 		func():
 			if data_source and data_source.has_method("clear_card_cache"):
 				data_source.clear_card_cache()
-				Log.info("Card cache cleared"),
-		"Database", "Cache", "Clear the card data cache"
+			Log.info("Card cache cleared"),
+		"Database",
+		"Cache",
+		"Clear the card data cache"
 	)
 
 	register_callable(
@@ -159,7 +177,9 @@ func _register_default_actions() -> void:
 		func():
 			DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
 			Log.info("Local battle DB: " + str(DebugManager.use_local_battle_db)),
-		"Database", "", "Toggle between local and remote battle database"  # No group
+		"Database",
+		"",
+		"Toggle between local and remote battle database"  # No group
 	)
 
 	# Quick Actions - all without groups (simpler organization)
@@ -168,7 +188,9 @@ func _register_default_actions() -> void:
 		func():
 			DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
 			Log.info("Asset variant set to: " + str(DebugManager.asset_variant)),
-		"Quick Actions", "", "Cycle through asset variants (1-3)"
+		"Quick Actions",
+		"",
+		"Cycle through asset variants (1-3)"
 	)
 
 	register_callable(
@@ -178,7 +200,9 @@ func _register_default_actions() -> void:
 			Log.info("Local DB: %s" % DebugManager.use_local_battle_db)
 			Log.info("Asset Variant: %d" % DebugManager.asset_variant)
 			Log.info("=================="),
-		"Quick Actions", "", "Print current debug settings"
+		"Quick Actions",
+		"",
+		"Print current debug settings"
 	)
 
 	# System Actions - no groups needed
@@ -187,7 +211,9 @@ func _register_default_actions() -> void:
 		func():
 			OS.request_permissions()
 			Log.info("Garbage collection requested"),
-		"System", "", "Request garbage collection"
+		"System",
+		"",
+		"Request garbage collection"
 	)
 
 

@@ -1,6 +1,7 @@
 # Example of adding manual debug actions to a game
 extends Node
 
+
 # Called when the game needs to register custom debug actions
 func register_custom_debug_actions() -> void:
 	if not DebugManager.manual_actions:
@@ -42,8 +43,7 @@ func register_custom_debug_actions() -> void:
 
 	registry.register_callable(
 		"Toggle God Mode",
-		func():
-			Log.info("God mode toggled (simulated)"),
+		func(): Log.info("God mode toggled (simulated)"),
 		"Cheats",
 		"",  # No group - appears directly under Cheats for quick access
 		"Toggle invincibility"
@@ -94,7 +94,7 @@ func register_custom_debug_actions() -> void:
 		func():
 			if data_source:
 				data_source.clear_all_caches()
-				Log.info("All caches cleared"),
+			Log.info("All caches cleared"),
 		"Database",
 		"Cache",  # Grouped under Cache
 		"Clears all data caches"
@@ -115,9 +115,9 @@ func _spawn_enemy_wave() -> void:
 		return
 
 	#for i in 5:
-		#var enemy = EnemyManager.spawn_enemy("basic_enemy")
-		#if enemy:
-			#enemy.position = Vector2(100 + i * 50, 200)
+	#var enemy = EnemyManager.spawn_enemy("basic_enemy")
+	#if enemy:
+	#enemy.position = Vector2(100 + i * 50, 200)
 
 	Log.info("Spawned 5 enemies")
 
@@ -131,9 +131,8 @@ func create_action_resource_example() -> void:
 	grouped_action.group = "Testing"  # Will appear under Network > Testing
 	grouped_action.description = "Tests connection to game server"
 	grouped_action.requires_confirmation = false
-	grouped_action.action_callable = func():
-		Log.info("Testing network...")
-		# Your network test code here
+	grouped_action.action_callable = func(): Log.info("Testing network...")
+	# Your network test code here
 
 	# Example without a group
 	var ungrouped_action = ManualDebugAction.new()
@@ -142,9 +141,8 @@ func create_action_resource_example() -> void:
 	ungrouped_action.group = ""  # Empty = appears directly under Network
 	ungrouped_action.description = "Disconnect from server"
 	ungrouped_action.requires_confirmation = true
-	ungrouped_action.action_callable = func():
-		Log.info("Disconnecting...")
-		# Your disconnect code here
+	ungrouped_action.action_callable = func(): Log.info("Disconnecting...")
+	# Your disconnect code here
 
 	DebugManager.manual_actions.register_action(grouped_action)
 	DebugManager.manual_actions.register_action(ungrouped_action)

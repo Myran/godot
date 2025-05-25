@@ -15,7 +15,7 @@ func execute() -> Array:
 	if not db:
 		return get_last_error_result()
 
-	_update_status( "Removing RTDB listeners...")
+	_update_status("Removing RTDB listeners...")
 
 	# The C++ Firebase module only supports one active child listener at a time
 	# We'll remove listeners from common test paths used by debug actions
@@ -37,9 +37,7 @@ func execute() -> Array:
 			"Attempted to remove listener at path", {"path": path}, ["rtdb", "listeners", "cleanup"]
 		)
 
-	_update_status(
-		_update_status("Attempted to remove listeners from %d common test paths" % removed_count
-	)
+	_update_status("Attempted to remove listeners from %d common test paths" % removed_count)
 
 	Log.info(
 		"RTDBRemoveAllListenersAction executed successfully",

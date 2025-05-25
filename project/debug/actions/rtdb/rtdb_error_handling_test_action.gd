@@ -15,7 +15,7 @@ func execute() -> Array:
 	if not db:
 		return get_last_error_result()
 
-	_update_status( "Starting error handling tests...")
+	_update_status("Starting error handling tests...")
 
 	var error_tests: Array[Dictionary] = []
 
@@ -57,7 +57,7 @@ func execute() -> Array:
 
 # Execute each error test scenario
 	for scenario in error_scenarios:
-		_update_status( "Testing: %s..." % scenario.name)
+		_update_status("Testing: %s..." % scenario.name)
 		var test_result: Dictionary = await _execute_error_scenario(db, scenario)
 		error_tests.append(test_result)
 
@@ -79,7 +79,7 @@ func execute() -> Array:
 		"Error handling tests completed: %d passed, %d failed out of %d total"
 		% [successful_error_handling, failed_error_handling, error_tests.size()]
 	)
-	_update_status( status_msg, not test_success)
+	_update_status(status_msg, not test_success)
 
 	Log.debug(
 		"RTDBErrorHandlingTestAction executed",

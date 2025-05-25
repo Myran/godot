@@ -22,7 +22,7 @@ func execute() -> Array:
 	var path_suffix: Array[Variant] = ["large_data_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 
-	_update_status( "Generating large test dataset...")
+	_update_status("Generating large test dataset...")
 
 # Create a substantial test dataset
 	var large_data: Dictionary = _generate_large_test_data()
@@ -50,7 +50,7 @@ func execute() -> Array:
 		)
 
 		# Now test retrieval
-		_update_status( "Testing retrieval of large data...")
+		_update_status("Testing retrieval of large data...")
 		var retrieve_start: int = Time.get_ticks_msec()
 		#var retrieved_data: Variant = await db.get_data(full_path, "")
 		var retrieved_data: Variant = await execute_firebase_operation(
@@ -95,7 +95,7 @@ func execute() -> Array:
 		return _success(success_data)
 	else:
 		var error_msg: String = "Failed to set large data at path '%s'" % str(full_path)
-		_update_status( error_msg, true)
+		_update_status(error_msg, true)
 		return _failure(
 			error_msg,
 			{

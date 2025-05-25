@@ -28,9 +28,7 @@ func execute() -> Array:
 		return _failure("Failed to setup nested data: " + setup_result.error)
 
 	# Now get the nested data
-	return await execute_simple_operation(
-		_update_status("get_value_async", nested_path, null, "Get Nested Data"
-	)
+	return await execute_simple_operation("get_value_async", nested_path, null, "Get Nested Data")
 
 
 func _create_nested_test_data() -> Dictionary:

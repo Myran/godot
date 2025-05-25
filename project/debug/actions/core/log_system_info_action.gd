@@ -12,7 +12,7 @@ func _init():
 
 
 func execute(target_node: Node = null) -> Array:
-	_update_status(target_node, "Collecting system information...")
+	_update_status("Collecting system information...")
 
 	var info = {
 		"os_name": OS.get_name(),
@@ -31,6 +31,6 @@ func execute(target_node: Node = null) -> Array:
 		formatted_info += key + ": " + str(info[key]) + "\n"
 
 	Log.info("System info collected by debug action", info, ["debug", "system"])
-	_update_status(target_node, "System Information:\n" + formatted_info)
+	_update_status("System Information:\n" + formatted_info)
 
 	return _success(info)

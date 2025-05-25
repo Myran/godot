@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-    var db: Object = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -19,9 +19,7 @@ func execute() -> Array:
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 	var new_value: String = "Updated Value: " + str(Time.get_ticks_msec())
 
-	_update_status(
-		__update_status("Updating value at path '%s' to '%s'..." % [str(full_path), new_value]
-	)
+	_update_status("Updating value at path '%s' to '%s'..." % [str(full_path), new_value])
 
 	# Execute real Firebase operation instead of fake simulation
 	var result: Dictionary = await execute_firebase_operation(
@@ -29,7 +27,7 @@ func execute() -> Array:
 	)
 
 	if result.success:
-		_update_status(__update_status("Successfully updated value at path '%s'" % str(full_path))
+		_update_status("Successfully updated value at path '%s'" % str(full_path))
 
 		Log.debug(
 			"RTDBUpdateValueAction executed successfully",
@@ -46,7 +44,7 @@ func execute() -> Array:
 			}
 		)
 	else:
-		_update_status(__update_status("Failed to update value: %s" % result.error, true)
+		_update_status("Failed to update value: %s" % result.error, true)
 
 		Log.error(
 			"RTDBUpdateValueAction failed",

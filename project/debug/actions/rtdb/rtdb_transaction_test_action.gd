@@ -17,7 +17,7 @@ func execute() -> Array:
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)
 
-	_update_status( "Starting transaction test at path '%s'..." % str(full_path))
+	_update_status("Starting transaction test at path '%s'..." % str(full_path))
 
 	# Initialize counter for transaction test
 	var initial_data: Dictionary = {
@@ -37,7 +37,7 @@ func execute() -> Array:
 
 	for i in range(3):
 		var transaction_result: Dictionary = await _perform_counter_transaction(
-			db, full_path, i + 1)
+			db, full_path, i + 1
 		)
 		transaction_results.append(transaction_result)
 
@@ -64,7 +64,7 @@ func execute() -> Array:
 		"Transaction test completed: %s. Final counter: %d (expected: %d)"
 		% ["SUCCESS" if test_successful else "FAILED", actual_final_count, expected_final_count]
 	)
-	_update_status( status_msg, not test_successful)
+	_update_status(status_msg, not test_successful)
 
 	Log.debug(
 		"RTDBTransactionTestAction executed",

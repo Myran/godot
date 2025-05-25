@@ -11,6 +11,7 @@ extends Resource
 # Signal for status updates - decouples actions from UI
 signal status_updated(text: String, is_error: bool)
 
+
 # Method to be implemented by specific actions
 # Returns an array: [bool_success, Variant_payload_or_error_info]
 func execute() -> Array:

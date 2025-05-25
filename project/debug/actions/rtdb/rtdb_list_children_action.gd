@@ -18,7 +18,7 @@ func execute() -> Array:
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.LIST_CHILDREN)
 	var op_manager := FirebaseOperationManager.new(db)
 
-	_update_status( "Setting up test children...")
+	_update_status("Setting up test children...")
 
 	# Create test children
 	var test_children: Dictionary = {
@@ -36,14 +36,14 @@ func execute() -> Array:
 		return _failure("Failed to setup test children")
 
 	# Get children back
-	_update_status( "Retrieving children list...")
+	_update_status("Retrieving children list...")
 	var get_result: Dictionary = await op_manager.execute("get_value_async", [full_path])
 
 	if get_result.success:
 		var children_data: Dictionary = get_result.get("data", {})
 		var child_keys: Array = children_data.keys()
 
-		_update_status( "Found %d children: %s" % [child_keys.size(), str(child_keys)])
+		_update_status("Found %d children: %s" % [child_keys.size(), str(child_keys)])
 
 		return _success(
 			{
@@ -56,5 +56,5 @@ func execute() -> Array:
 			}
 		)
 	else:
-		_update_status( "Failed to retrieve children: " + get_result.error, true)
+		_update_status("Failed to retrieve children: " + get_result.error, true)
 		return _failure(get_result.error)

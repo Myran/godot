@@ -47,7 +47,7 @@ func execute() -> Array:
 	var test_child_path: Array[Variant] = full_path + [test_child_key]
 	var initial_value: String = "Listener Test: " + str(Time.get_ticks_msec())
 
-	_update_status( "Creating initial test data...")
+	_update_status("Creating initial test data...")
 	db.set_value_async(Time.get_ticks_msec() % 1000000, test_child_path, initial_value)
 
 	# Wait and update to trigger change
@@ -70,7 +70,7 @@ func execute() -> Array:
 				"Listener test FAILED: No callback received after %.1f seconds"
 				% (timeout_ms / 1000.0)
 			)
-			_update_status( error_msg, true)
+			_update_status(error_msg, true)
 
 			Log.error(
 				"RTDB Single Value Listener test failed - no callback",
@@ -86,7 +86,7 @@ func execute() -> Array:
 	var success_msg: String = (
 		"Listener test PASSED: Callback received with data: %s" % str(callback_data)
 	)
-	_update_status( success_msg)
+	_update_status(success_msg)
 
 	Log.info(
 		"RTDB Single Value Listener test PASSED",
@@ -134,14 +134,14 @@ func _on_value_changed(
 	)
 	_update_status(status_msg)
 
-		Log.info(
-			"RTDB Single Value Listener callback triggered",
-			{
-				"path": listened_path,
-				"child_key": child_key,
-				"child_value": child_value,
-				"listener_type": "single_value_via_child_listener",
-				"callback_confirmed": true
-			},
-			["rtdb", "listeners", "debug", "callback"]
-		)
+	Log.info(
+		"RTDB Single Value Listener callback triggered",
+		{
+			"path": listened_path,
+			"child_key": child_key,
+			"child_value": child_value,
+			"listener_type": "single_value_via_child_listener",
+			"callback_confirmed": true
+		},
+		["rtdb", "listeners", "debug", "callback"]
+	)
