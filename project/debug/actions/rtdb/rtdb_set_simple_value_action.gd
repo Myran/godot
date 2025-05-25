@@ -10,11 +10,10 @@ func _init() -> void:
 	description = "Sets a simple string value at a predefined test path in RTDB."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	var test_value: String = "Test Value: " + str(TimeUtils.now_ms())
 
 	return await execute_simple_operation(
-		target_node,
 		"set_value_async",
 		RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE),
 		test_value,

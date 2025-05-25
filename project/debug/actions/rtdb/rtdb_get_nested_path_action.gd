@@ -10,9 +10,9 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	# First ensure nested data exists
-	var db: Object = get_firebase_database_for_target(target_node)
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -29,7 +29,7 @@ func execute(target_node: Node = null) -> Array:
 
 	# Now get the nested data
 	return await execute_simple_operation(
-		target_node, "get_value_async", nested_path, null, "Get Nested Data"
+		_update_status("get_value_async", nested_path, null, "Get Nested Data"
 	)
 
 

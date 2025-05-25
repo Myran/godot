@@ -10,8 +10,8 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -19,7 +19,7 @@ func execute(target_node: Node = null) -> Array:
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 
 	_update_status(
-		target_node, "Starting concurrent operations test at path '%s'..." % str(full_path)
+		_update_status("Starting concurrent operations test at path '%s'..." % str(full_path)
 	)
 
 	var base_timestamp: int = Time.get_ticks_msec()
@@ -61,21 +61,21 @@ func execute(target_node: Node = null) -> Array:
 
 # Start all operations simultaneously (simulated concurrency)
 	for operation in concurrent_operations:
-		var task: Dictionary = _start_concurrent_operation(db, operation, target_node)
+		var task: Dictionary = _start_concurrent_operation(db, operation)
 		concurrent_tasks.append(task)
 
 # Wait for all operations to complete
 	_update_status(
-		target_node, "Waiting for %d concurrent operations to complete..." % concurrent_tasks.size()
+		_update_status("Waiting for %d concurrent operations to complete..." % concurrent_tasks.size()
 	)
 
 # Simulate concurrent execution time
-	await target_node.get_tree().create_timer(0.5).timeout
+	await Engine.get_main_loop().create_timer(0.5).timeout
 
 # Collect results from all concurrent operations
 	var completed_operations: Array[Dictionary] = []
 	for task in concurrent_tasks:
-		var result: Dictionary = await _wait_for_operation_completion(task, target_node)
+		var result: Dictionary = await _wait_for_operation_completion(task)
 		completed_operations.append(result)
 
 	# Analyze results
@@ -99,7 +99,7 @@ func execute(target_node: Node = null) -> Array:
 		"Concurrent operations completed: %d successful, %d failed. Avg duration: %.2fms"
 		% [successful_operations, failed_operations, average_duration]
 	)
-	_update_status(target_node, status_msg, not test_success)
+	_update_status( status_msg, not test_success)
 
 	Log.debug(
 		"RTDBConcurrentOperationsAction executed",
@@ -132,7 +132,7 @@ func execute(target_node: Node = null) -> Array:
 
 
 func _start_concurrent_operation(
-	db: Variant, operation: Dictionary, target_node: Node
+	db: Variant, operation: Dictionary
 ) -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 	var request_id: int = start_time % 1000000
@@ -157,10 +157,10 @@ func _start_concurrent_operation(
 	}
 
 
-func _wait_for_operation_completion(task: Dictionary, target_node: Node) -> Dictionary:
+func _wait_for_operation_completion(task: Dictionary) -> Dictionary:
 # Simulate variable completion times for different operations
 	var completion_delay: float = randf_range(0.1, 0.3)
-	await target_node.get_tree().create_timer(completion_delay).timeout
+	await Engine.get_main_loop().create_timer(completion_delay).timeout
 
 	var end_time: int = Time.get_ticks_msec()
 	var duration: float = end_time - task.start_time

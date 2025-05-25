@@ -13,8 +13,8 @@ func _init() -> void:
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db: Object = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -23,15 +23,15 @@ func execute(target_node: Node = null) -> Array:
 	_listener_helper = ListenerTestHelper.new()
 	_listener_helper.reset()
 
-	_update_status(target_node, "Setting up child added listener...")
+	_update_status( "Setting up child added listener...")
 
 	# Connect to child_added signal
 	if not db.child_added.is_connected(_on_child_added):
-		db.child_added.connect(_on_child_added.bind(target_node))
+		db.child_added.connect(_on_child_added)
 
 	# Add listener at path
 	db.add_listener_at_path(_active_path)
-	_update_status(target_node, "Listener active for path: %s" % str(_active_path))
+	_update_status( "Listener active for path: %s" % str(_active_path))
 
 	# Add test child to trigger listener
 	var child_key: String = "test_child_" + str(TimeUtils.now_ms())
@@ -42,15 +42,15 @@ func execute(target_node: Node = null) -> Array:
 		"child_id": child_key
 	}
 
-	_update_status(target_node, "Adding test child to trigger listener...")
+	_update_status( "Adding test child to trigger listener...")
 	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, child_data)
 
 	# Wait for callback
-	_update_status(target_node, "Waiting for listener callback...")
+	_update_status( "Waiting for listener callback...")
 	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
 	if result.success:
-		_update_status(target_node, "✅ Listener test PASSED")
+		_update_status( "✅ Listener test PASSED")
 		return _success(
 			{
 				"operation": "child_added_listener_test",
@@ -61,10 +61,10 @@ func execute(target_node: Node = null) -> Array:
 			}
 		)
 	else:
-		_update_status(target_node, "❌ Listener test FAILED: " + result.error, true)
+		_update_status( "❌ Listener test FAILED: " + result.error, true)
 		return _failure(result.error)
 
 
-func _on_child_added(child_key: String, child_value: Variant, target_node: Node) -> void:
+func _on_child_added(child_key: String, child_value: Variant) -> void:
 	_listener_helper.mark_callback_received(child_key, child_value, {"listened_path": _active_path})
-	_update_status(target_node, "Callback received for key: %s" % child_key)
+	_update_status("Callback received for key: %s" % child_key)

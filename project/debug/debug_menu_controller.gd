@@ -460,9 +460,17 @@ func _execute_single_action(action: DebugAction) -> void:
 	_update_status_label_text("Executing: %s..." % action.action_name)
 	Log.info("Executing single action: %s" % action.action_name, {}, ["debug", "test"])
 
-	var result: Array = await action.execute(self)  # Pass self for status updates
+	# Connect to action's status signal
+	if action.status_updated.is_connected(_on_action_status_updated):
+		action.status_updated.disconnect(_on_action_status_updated)
+	action.status_updated.connect(_on_action_status_updated)
+
+	var result: Array = await action.execute()  # No target_node parameter
 	var success: bool = result[0]
 	var payload: Variant = result[1]
+
+	# Disconnect after execution
+	action.status_updated.disconnect(_on_action_status_updated)
 
 	if success:
 		_update_status_label_text("PASS: %s\nResult: %s" % [action.action_name, str(payload)])
@@ -471,6 +479,11 @@ func _execute_single_action(action: DebugAction) -> void:
 
 	_set_ui_for_execution(false)
 	_is_executing_all = false
+
+
+# Handler for action status updates
+func _on_action_status_updated(text: String, is_error: bool) -> void:
+	_update_status_label_text(text, is_error)
 
 
 func _execute_manual_action(action: ManualDebugAction) -> void:
@@ -536,10 +549,17 @@ func _execute_multiple_actions(
 				"[color=palegreen]EXEC: %s[/color] - %s" % [action_name, "Manual action completed"]
 			)
 		else:
-			# Regular debug actions
-			var result: Array = await action.execute(self)
+			# Regular debug actions - connect to signals
+			if action.status_updated.is_connected(_on_action_status_updated):
+				action.status_updated.disconnect(_on_action_status_updated)
+			action.status_updated.connect(_on_action_status_updated)
+			
+			var result: Array = await action.execute()
 			var success: bool = result[0]
 			var payload = result[1]
+			
+			# Disconnect after execution
+			action.status_updated.disconnect(_on_action_status_updated)
 
 			if success:
 				passed_count += 1

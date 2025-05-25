@@ -10,12 +10,12 @@ func _init() -> void:
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
-	_update_status(target_node, "Starting error handling tests...")
+	_update_status( "Starting error handling tests...")
 
 	var error_tests: Array[Dictionary] = []
 
@@ -57,12 +57,12 @@ func execute(target_node: Node = null) -> Array:
 
 # Execute each error test scenario
 	for scenario in error_scenarios:
-		_update_status(target_node, "Testing: %s..." % scenario.name)
-		var test_result: Dictionary = await _execute_error_scenario(db, scenario, target_node)
+		_update_status( "Testing: %s..." % scenario.name)
+		var test_result: Dictionary = await _execute_error_scenario(db, scenario)
 		error_tests.append(test_result)
 
 		# Brief delay between tests
-		await target_node.get_tree().create_timer(0.2).timeout
+		await Engine.get_main_loop().create_timer(0.2).timeout
 
 # Analyze results
 	var successful_error_handling: int = 0
@@ -79,7 +79,7 @@ func execute(target_node: Node = null) -> Array:
 		"Error handling tests completed: %d passed, %d failed out of %d total"
 		% [successful_error_handling, failed_error_handling, error_tests.size()]
 	)
-	_update_status(target_node, status_msg, not test_success)
+	_update_status( status_msg, not test_success)
 
 	Log.debug(
 		"RTDBErrorHandlingTestAction executed",
@@ -107,7 +107,7 @@ func execute(target_node: Node = null) -> Array:
 	)
 
 
-func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Node) -> Dictionary:
+func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:
 	var test_name: String = scenario.name
 	var test_type: String = scenario.test_type
 	var test_path: Array[Variant] = scenario.path
@@ -120,7 +120,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Nod
 		"invalid_path":
 			# Try to access an invalid/restricted path
 			db.get_value_async(request_id, test_path)
-			await target_node.get_tree().create_timer(0.2).timeout
+			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate permission denied error
 			error_occurred = true
 			actual_error_type = "permission_denied"
@@ -128,7 +128,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Nod
 		"malformed_data":
 			# Try to set malformed data
 			db.set_value_async(request_id, test_path, scenario.data)
-			await target_node.get_tree().create_timer(0.2).timeout
+			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate invalid data error
 			error_occurred = true
 			actual_error_type = "invalid_data"
@@ -136,7 +136,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Nod
 		"path_depth":
 			# Try to access very deep path
 			db.get_value_async(request_id, test_path)
-			await target_node.get_tree().create_timer(0.2).timeout
+			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate path too deep error
 			error_occurred = true
 			actual_error_type = "path_too_deep"
@@ -144,7 +144,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Nod
 		"data_size":
 			# Try to set very large data
 			db.set_value_async(request_id, test_path, scenario.data)
-			await target_node.get_tree().create_timer(0.2).timeout
+			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate data too large error
 			error_occurred = true
 			actual_error_type = "data_too_large"
@@ -152,7 +152,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary, target_node: Nod
 		"network_timeout":
 			# Simulate network timeout
 			db.get_value_async(request_id, test_path)
-			await target_node.get_tree().create_timer(0.8).timeout  # Longer delay to simulate timeout
+			await Engine.get_main_loop().create_timer(0.8).timeout  # Longer delay to simulate timeout
 			error_occurred = true
 			actual_error_type = "network_timeout"
 

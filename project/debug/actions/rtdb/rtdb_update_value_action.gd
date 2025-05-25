@@ -10,8 +10,8 @@ func _init() -> void:
 	description = "Updates an existing value at a predefined test path in RTDB."
 
 
-func execute(_target_node: Node = null) -> Array:
-	var db: Object = get_firebase_database_for_target(_target_node)
+func execute() -> Array:
+    var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -20,7 +20,7 @@ func execute(_target_node: Node = null) -> Array:
 	var new_value: String = "Updated Value: " + str(Time.get_ticks_msec())
 
 	_update_status(
-		_target_node, "Updating value at path '%s' to '%s'..." % [str(full_path), new_value]
+		__update_status("Updating value at path '%s' to '%s'..." % [str(full_path), new_value]
 	)
 
 	# Execute real Firebase operation instead of fake simulation
@@ -29,7 +29,7 @@ func execute(_target_node: Node = null) -> Array:
 	)
 
 	if result.success:
-		_update_status(_target_node, "Successfully updated value at path '%s'" % str(full_path))
+		_update_status(__update_status("Successfully updated value at path '%s'" % str(full_path))
 
 		Log.debug(
 			"RTDBUpdateValueAction executed successfully",
@@ -46,7 +46,7 @@ func execute(_target_node: Node = null) -> Array:
 			}
 		)
 	else:
-		_update_status(_target_node, "Failed to update value: %s" % result.error, true)
+		_update_status(__update_status("Failed to update value: %s" % result.error, true)
 
 		Log.error(
 			"RTDBUpdateValueAction failed",

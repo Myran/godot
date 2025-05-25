@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	var nested_data: Dictionary = {
 		"metadata":
 		{"created_at": TimeUtils.now_ms(), "test_type": "nested_structure", "version": "2.0"},
@@ -24,7 +24,6 @@ func execute(target_node: Node = null) -> Array:
 	}
 
 	return await execute_simple_operation(
-		target_node,
 		"set_value_async",
 		RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA),
 		nested_data,

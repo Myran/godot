@@ -16,8 +16,8 @@ func _init() -> void:
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -29,42 +29,40 @@ func execute(target_node: Node = null) -> Array:
 	callback_data = {}
 	test_start_time = Time.get_ticks_msec()
 
-	_update_status(target_node, "Setting up value listener for path '%s'..." % str(full_path))
+	_update_status("Setting up value listener for path '%s'..." % str(full_path))
 
 	# Note: C++ Firebase module only supports child listeners, not single value listeners
 	# We'll use child_changed signal to detect value changes
 	if not db.child_changed.is_connected(_on_value_changed):
-		db.child_changed.connect(_on_value_changed.bind(target_node, full_path))
+		db.child_changed.connect(_on_value_changed.bind(full_path))
 
 	# Use the only available listener method in C++ module
 	db.add_listener_at_path(full_path)
 	active_listener_id = str(full_path)  # Use path as ID for tracking
 
-	_update_status(
-		target_node, "Value listener active for path '%s' (using child listener)" % [str(full_path)]
-	)
+	_update_status("Value listener active for path '%s' (using child listener)" % [str(full_path)])
 
 	# Set up some initial test data to trigger the listener
 	var test_child_key: String = "test_value"
 	var test_child_path: Array[Variant] = full_path + [test_child_key]
 	var initial_value: String = "Listener Test: " + str(Time.get_ticks_msec())
 
-	_update_status(target_node, "Creating initial test data...")
+	_update_status( "Creating initial test data...")
 	db.set_value_async(Time.get_ticks_msec() % 1000000, test_child_path, initial_value)
 
 	# Wait and update to trigger change
-	await target_node.get_tree().create_timer(0.5).timeout
-	_update_status(target_node, "Modifying data to trigger listener...")
+	await Engine.get_main_loop().create_timer(0.5).timeout
+	_update_status("Modifying data to trigger listener...")
 	var updated_value: String = "Updated Listener Test: " + str(Time.get_ticks_msec())
 	db.set_value_async((Time.get_ticks_msec() + 1) % 1000000, test_child_path, updated_value)
 
 	# NOW WAIT TO VERIFY THE LISTENER ACTUALLY FIRES
-	_update_status(target_node, "Waiting for listener callback...")
+	_update_status("Waiting for listener callback...")
 	var timeout_ms: int = 5000  # 5 seconds in milliseconds
 	var wait_start: int = Time.get_ticks_msec()
 
 	while not callback_received:
-		await target_node.get_tree().process_frame
+		await Engine.get_main_loop().process_frame
 		var elapsed_ms: int = Time.get_ticks_msec() - wait_start
 
 		if elapsed_ms > timeout_ms:
@@ -72,7 +70,7 @@ func execute(target_node: Node = null) -> Array:
 				"Listener test FAILED: No callback received after %.1f seconds"
 				% (timeout_ms / 1000.0)
 			)
-			_update_status(target_node, error_msg, true)
+			_update_status( error_msg, true)
 
 			Log.error(
 				"RTDB Single Value Listener test failed - no callback",
@@ -88,7 +86,7 @@ func execute(target_node: Node = null) -> Array:
 	var success_msg: String = (
 		"Listener test PASSED: Callback received with data: %s" % str(callback_data)
 	)
-	_update_status(target_node, success_msg)
+	_update_status( success_msg)
 
 	Log.info(
 		"RTDB Single Value Listener test PASSED",
@@ -119,23 +117,22 @@ func execute(target_node: Node = null) -> Array:
 ## Signal handler for value changes (using child_changed from C++ Firebase module)
 ## Signature matches the C++ module: child_changed(key: String, value: Variant)
 func _on_value_changed(
-	child_key: String, child_value: Variant, target_node: Node, listened_path: Array[Variant]
+	child_key: String, child_value: Variant, listened_path: Array[Variant]
 ) -> void:
-	if is_instance_valid(target_node):
-		# Mark that we received the callback!
-		callback_received = true
-		callback_data = {
-			"child_key": child_key,
-			"child_value": child_value,
-			"listened_path": listened_path,
-			"received_at_ms": Time.get_ticks_msec()
-		}
+	# Mark that we received the callback!
+	callback_received = true
+	callback_data = {
+		"child_key": child_key,
+		"child_value": child_value,
+		"listened_path": listened_path,
+		"received_at_ms": Time.get_ticks_msec()
+	}
 
-		var status_msg: String = (
-			"✅ LISTENER CALLBACK RECEIVED - Value changed at '%s/%s': %s"
-			% [str(listened_path), child_key, str(child_value)]
-		)
-		_update_status(target_node, status_msg)
+	var status_msg: String = (
+		"✅ LISTENER CALLBACK RECEIVED - Value changed at '%s/%s': %s"
+		% [str(listened_path), child_key, str(child_value)]
+	)
+	_update_status(status_msg)
 
 		Log.info(
 			"RTDB Single Value Listener callback triggered",

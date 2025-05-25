@@ -10,9 +10,8 @@ func _init() -> void:
 	description = "Deletes a value from a predefined test path in RTDB."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	return await execute_simple_operation(
-		target_node,
 		"remove_value_async",
 		RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE),
 		null,

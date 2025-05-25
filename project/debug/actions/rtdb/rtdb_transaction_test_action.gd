@@ -10,14 +10,14 @@ func _init() -> void:
 	description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)
 
-	_update_status(target_node, "Starting transaction test at path '%s'..." % str(full_path))
+	_update_status( "Starting transaction test at path '%s'..." % str(full_path))
 
 	# Initialize counter for transaction test
 	var initial_data: Dictionary = {
@@ -37,7 +37,7 @@ func execute(target_node: Node = null) -> Array:
 
 	for i in range(3):
 		var transaction_result: Dictionary = await _perform_counter_transaction(
-			db, full_path, i + 1, target_node
+			db, full_path, i + 1)
 		)
 		transaction_results.append(transaction_result)
 
@@ -64,7 +64,7 @@ func execute(target_node: Node = null) -> Array:
 		"Transaction test completed: %s. Final counter: %d (expected: %d)"
 		% ["SUCCESS" if test_successful else "FAILED", actual_final_count, expected_final_count]
 	)
-	_update_status(target_node, status_msg, not test_successful)
+	_update_status( status_msg, not test_successful)
 
 	Log.debug(
 		"RTDBTransactionTestAction executed",
@@ -95,7 +95,7 @@ func execute(target_node: Node = null) -> Array:
 
 
 func _perform_counter_transaction(
-	db: Object, path: Array[Variant], transaction_number: int, target_node: Node
+	db: Object, path: Array[Variant], transaction_number: int
 ) -> Dictionary:
 	# TODO: When C++ module supports transactions, replace with:
 	# return await db.run_transaction(path, _transaction_update_function)

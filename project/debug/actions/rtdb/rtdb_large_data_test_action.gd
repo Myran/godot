@@ -10,9 +10,9 @@ func _init() -> void:
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 # Check if Firebase backend is available
-	var db = get_firebase_database_for_target(target_node)
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -22,14 +22,13 @@ func execute(target_node: Node = null) -> Array:
 	var path_suffix: Array[Variant] = ["large_data_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 
-	_update_status(target_node, "Generating large test dataset...")
+	_update_status( "Generating large test dataset...")
 
 # Create a substantial test dataset
 	var large_data: Dictionary = _generate_large_test_data()
 	var data_size_estimate: int = JSON.stringify(large_data).length()
 
 	_update_status(
-		target_node,
 		"Setting large data (~%d bytes) at path '%s'..." % [data_size_estimate, str(full_path)]
 	)
 
@@ -47,12 +46,11 @@ func execute(target_node: Node = null) -> Array:
 
 	if result.success:
 		_update_status(
-			target_node,
 			"Successfully set large data (%d bytes) in %d ms" % [data_size_estimate, duration_ms]
 		)
 
 		# Now test retrieval
-		_update_status(target_node, "Testing retrieval of large data...")
+		_update_status( "Testing retrieval of large data...")
 		var retrieve_start: int = Time.get_ticks_msec()
 		#var retrieved_data: Variant = await db.get_data(full_path, "")
 		var retrieved_data: Variant = await execute_firebase_operation(
@@ -72,7 +70,6 @@ func execute(target_node: Node = null) -> Array:
 
 		if retrieved_data != null:
 			_update_status(
-				target_node,
 				(
 					"Large data test completed: Write %dms, Read %dms"
 					% [duration_ms, retrieve_duration]
@@ -98,7 +95,7 @@ func execute(target_node: Node = null) -> Array:
 		return _success(success_data)
 	else:
 		var error_msg: String = "Failed to set large data at path '%s'" % str(full_path)
-		_update_status(target_node, error_msg, true)
+		_update_status( error_msg, true)
 		return _failure(
 			error_msg,
 			{

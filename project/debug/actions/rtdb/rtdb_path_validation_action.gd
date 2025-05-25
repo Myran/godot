@@ -10,12 +10,12 @@ func _init() -> void:
 	description = "Validates accessibility and structure of various RTDB paths."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
-	_update_status(target_node, "Validating various RTDB paths...")
+	_update_status( "Validating various RTDB paths...")
 
 	var validation_results: Array[Dictionary] = []
 
@@ -51,11 +51,11 @@ func execute(target_node: Node = null) -> Array:
 			db.set_value_async(request_id, test_case.path, test_data)
 
 	# Wait for setup to complete
-	await target_node.get_tree().create_timer(0.3).timeout
+	await Engine.get_main_loop().create_timer(0.3).timeout
 
 	# Now validate each path
 	for test_case in test_paths:
-		var path_result: Dictionary = await _validate_single_path(db, test_case, target_node)
+		var path_result: Dictionary = await _validate_single_path(db, test_case)
 		validation_results.append(path_result)
 
 	var successful_validations: int = 0
@@ -71,7 +71,7 @@ func execute(target_node: Node = null) -> Array:
 		"Path validation complete: %d successful, %d failed out of %d total"
 		% [successful_validations, failed_validations, validation_results.size()]
 	)
-	_update_status(target_node, status_msg)
+	_update_status( status_msg)
 
 	Log.debug(
 		"RTDBPathValidationAction executed successfully",
@@ -97,7 +97,7 @@ func execute(target_node: Node = null) -> Array:
 	)
 
 
-func _validate_single_path(db: Variant, test_case: Dictionary, target_node: Node) -> Dictionary:
+func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:
 	var path: Array[Variant] = test_case.path
 	var path_name: String = test_case.name
 	var should_exist: bool = test_case.should_exist
@@ -105,7 +105,7 @@ func _validate_single_path(db: Variant, test_case: Dictionary, target_node: Node
 	db.get_value_async(request_id, path)
 
 # Simulate async response
-	await target_node.get_tree().create_timer(0.2).timeout
+	await Engine.get_main_loop().create_timer(0.2).timeout
 
 # Simulate response based on expectation
 	var path_accessible: bool = should_exist  # In real implementation, this would come from the actual response

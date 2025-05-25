@@ -10,12 +10,12 @@ func _init() -> void:
 	description = "Removes active RTDB listeners to clean up test state."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
-	_update_status(target_node, "Removing RTDB listeners...")
+	_update_status( "Removing RTDB listeners...")
 
 	# The C++ Firebase module only supports one active child listener at a time
 	# We'll remove listeners from common test paths used by debug actions
@@ -38,7 +38,7 @@ func execute(target_node: Node = null) -> Array:
 		)
 
 	_update_status(
-		target_node, "Attempted to remove listeners from %d common test paths" % removed_count
+		_update_status("Attempted to remove listeners from %d common test paths" % removed_count
 	)
 
 	Log.info(

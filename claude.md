@@ -16,6 +16,7 @@ This file contains links to resources and notes created during collaboration wit
 - **[Debug System Completion Report](project/docs/debug_system_completion_report.md)** - Final status report documenting successful completion
 - **[GameTwo Debug System Project Structure](memory://projects/game-two-project-structure-and-development-guide)** - Architecture and development guide
 - **[GameTwo Type Safety Guidelines](memory://projects/game-two-type-safety-guidelines)** - Type safety best practices
+- **[Debug System Refactoring Implementation Plan](memory://projects/game-two-debug-system-refactoring-implementation-plan)** - Comprehensive plan for implementing signal-based decoupling and action unification
 
 ## About This File
 

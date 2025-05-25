@@ -10,14 +10,14 @@ func _init() -> void:
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
 
-func execute(target_node: Node = null) -> Array:
-	var db = get_firebase_database_for_target(target_node)
+func execute() -> Array:
+	var db = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.BATCH_OPS)
 
-	_update_status(target_node, "Starting batch operations test at path '%s'..." % str(full_path))
+	_update_status( "Starting batch operations test at path '%s'..." % str(full_path))
 
 	var batch_operations: Array[Dictionary] = []
 	var base_timestamp: int = TimeUtils.now_ms()
@@ -51,12 +51,12 @@ func execute(target_node: Node = null) -> Array:
 	for i in range(operations_to_perform.size()):
 		var operation: Dictionary = operations_to_perform[i]
 		var operation_result: Dictionary = await _execute_single_operation(
-			db, operation, i, target_node
+			db, operation, i
 		)
 		batch_operations.append(operation_result)
 
 		# Brief delay between operations
-		await target_node.get_tree().create_timer(0.1).timeout
+		await Engine.get_main_loop().create_timer(0.1).timeout
 
 # Count successful operations
 	var successful_operations: int = 0
@@ -73,7 +73,7 @@ func execute(target_node: Node = null) -> Array:
 		"Batch operations completed: %d successful, %d failed out of %d total"
 		% [successful_operations, failed_operations, batch_operations.size()]
 	)
-	_update_status(target_node, status_msg, not batch_success)
+	_update_status( status_msg, not batch_success)
 
 	Log.debug(
 		"RTDBBatchOperationsAction executed",
@@ -104,7 +104,7 @@ func execute(target_node: Node = null) -> Array:
 
 
 func _execute_single_operation(
-	db: Object, operation: Dictionary, operation_index: int, target_node: Node
+	db: Object, operation: Dictionary, operation_index: int
 ) -> Dictionary:
 	var operation_type: String = operation.type
 	var operation_path: Array[Variant] = operation.path

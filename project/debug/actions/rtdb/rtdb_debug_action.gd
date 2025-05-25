@@ -12,8 +12,8 @@ extends DebugAction
 ## [codeblock]
 ## extends RTDBDebugAction
 ##
-## func execute(target_node: Node = null) -> Array:
-##     var db = get_firebase_database_for_target(target_node)
+## func execute() -> Array:
+##     var db = get_firebase_database()
 ##     if not db:
 ##         return get_last_error_result()
 ##
@@ -42,17 +42,17 @@ static func generate_request_id() -> int:
 
 ## Gets a Firebase Database instance with proper error handling.
 ## Returns null if the database cannot be instantiated, and sets appropriate error state.
-func get_firebase_database_for_target(target_node: Node = null) -> Object:
+func get_firebase_database() -> Object:
 	# Check if Firebase class exists
 	if not ClassDB.class_exists("FirebaseDatabase"):
-		_update_status(target_node, "FirebaseDatabase class not found.", true)
+		_update_status("FirebaseDatabase class not found.", true)
 		_last_error_result = _failure("FirebaseDatabase C++ module not available.")
 		return null
 
 	# Instantiate the database
 	var db: Object = ClassDB.instantiate("FirebaseDatabase")
 	if not is_instance_valid(db):
-		_update_status(target_node, "Failed to instantiate FirebaseDatabase.", true)
+		_update_status("Failed to instantiate FirebaseDatabase.", true)
 		_last_error_result = _failure("Could not create FirebaseDatabase instance.")
 		return null
 
@@ -85,18 +85,17 @@ func execute_firebase_operation(
 
 ## Simplified template for common get/set/delete operations
 func execute_simple_operation(
-	target_node: Node,
 	operation: String,
 	test_path: Array[Variant],
 	test_data: Variant = null,
 	operation_name: String = ""
 ) -> Array:
-	var db: Object = get_firebase_database_for_target(target_node)
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
 	var display_name: String = operation_name if operation_name else operation
-	_update_status(target_node, "Executing %s..." % display_name)
+	_update_status("Executing %s..." % display_name)
 
 	var args: Array = [test_path]
 	if test_data != null:
@@ -105,7 +104,7 @@ func execute_simple_operation(
 	var result: Dictionary = await execute_firebase_operation(db, operation, args)
 
 	if result.success:
-		_update_status(target_node, "%s completed successfully" % display_name)
+		_update_status("%s completed successfully" % display_name)
 		return _success(
 			{
 				"operation": operation,
@@ -115,5 +114,5 @@ func execute_simple_operation(
 			}
 		)
 	else:
-		_update_status(target_node, "%s failed: %s" % [display_name, result.error], true)
+		_update_status("%s failed: %s" % [display_name, result.error], true)
 		return _failure(result.error)

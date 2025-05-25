@@ -8,36 +8,24 @@ extends Resource
 @export var group: String = "Default"  # e.g., "Basic", "Listeners", "Connectivity"
 @export_multiline var description: String = "No description."
 
+# Signal for status updates - decouples actions from UI
+signal status_updated(text: String, is_error: bool)
 
 # Method to be implemented by specific actions
-# target_node can be used to emit signals or update UI elements (like a status label)
 # Returns an array: [bool_success, Variant_payload_or_error_info]
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	push_error("Execute method not implemented for action: ", action_name)
 	return [false, {"error": "Not implemented"}]
 
 
-# Helper to update status on the target node's status label
-func _update_status(target_node: Node, text: String, is_error: bool = false) -> void:
-	# Use % to access nodes by unique name regardless of hierarchy
-	var label = target_node.get_node_or_null("%DebugRichTextLabel")
-
-	if label:
-		if label is RichTextLabel:
-			var color_tag = "[color=green]" if not is_error else "[color=red]"
-			label.text = color_tag + text + "[/color]"
-			Log.info(
-				text,
-				{"category": category, "group": group, "action": action_name, "error": is_error},
-				["debug", "test"]
-			)
-		elif label is Label:  # Fallback for simple Label
-			label.text = text
-			Log.info(
-				text,
-				{"category": category, "group": group, "action": action_name, "error": is_error},
-				["debug", "test"]
-			)
+# Helper to update status via signal instead of direct UI access
+func _update_status(text: String, is_error: bool = false) -> void:
+	status_updated.emit(text, is_error)
+	Log.info(
+		text,
+		{"category": category, "group": group, "action": action_name, "error": is_error},
+		["debug", "test"]
+	)
 
 
 # Helper to simplify returning success
