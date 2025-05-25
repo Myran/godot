@@ -17,6 +17,10 @@ func _init() -> void:
 
 
 func _spawn_test_cards() -> void:
+	_spawn_cards_async()
+
+
+func _spawn_cards_async() -> void:
 	if not is_instance_valid(card_controller) or not is_instance_valid(core):
 		Log.error("Cannot spawn cards: Missing card_controller or core")
 		return
