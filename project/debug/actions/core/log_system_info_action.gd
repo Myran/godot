@@ -11,7 +11,7 @@ func _init():
 	description = "Logs basic system information and environment variables."
 
 
-func execute(target_node: Node = null) -> Array:
+func execute() -> Array:
 	_update_status("Collecting system information...")
 
 	var info = {
