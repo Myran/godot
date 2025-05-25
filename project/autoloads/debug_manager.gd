@@ -24,10 +24,16 @@ enum DebugEventType {
 var use_local_battle_db: bool
 var asset_variant: int
 
+var manual_actions: ManualDebugRegistry
+
 
 func _ready():
 	use_local_battle_db = false
 	asset_variant = 1
+
+	# Initialize manual actions registry
+	_initialize_manual_actions()
+
 	# Connect to our own signal if legacy popup needs to reac
 	debug_event.connect(_on_debug_event)
 
@@ -79,6 +85,9 @@ func _on_debug_event(event_type: DebugEventType, args: Array = []) -> void:
 			Log.warning("Unhandled debug event type: " + str(event_type), {}, ["debug", "events"])
 
 
+# Manual debug action registry
+
+
 # Keep legacy helper functions until fully migrated
 func _verify_logger_export() -> void:
 	if OS.get_name() == "iOS":
@@ -93,51 +102,29 @@ func _verify_logger_export() -> void:
 			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
 
 
-# This function is kept for backward compatibility with the legacy popup
-# Eventually, these actions should be migrated to DebugAction resources
+# Initialize manual actions registry
+func _initialize_manual_actions() -> void:
+	manual_actions = ManualDebugRegistry.new()
+	add_child(manual_actions)
+
+	# Register any custom actions specific to this project
+	# Example:
+	# manual_actions.register_callable(
+	#     "Test Feature X",
+	#     func(): print("Testing feature X"),
+	#     "Testing", "Features"
+	# )
+
+
+# Updated to use the manual action registry
 func debug_button_pressed(button_name: String) -> void:
+	# First check if it's a registered manual action
+	if manual_actions and manual_actions.execute_action(button_name):
+		return
+
+	# Handle special cases that aren't manual actions
 	match button_name:
 		"button_close":
 			action(DebugEventType.EVENT_CLOSE_LEGACY_POPUP)
-		"button_db_debug":
-			action(DebugEventType.EVENT_OPEN_DB_DEBUG_MENU)
-		"button_pop_enemy":
-			_populate_enemy_lineup()
-		"select_game":
-			Log.debug("Game selection requested", {}, [Log.TAG_DEBUG, Log.TAG_UI])
-			popup_debug.hide()
-			action(DebugEventType.EVENT_OPEN_GAME_SELECTOR)
-		"reset_current_match_level":
-			action(DebugEventType.EVENT_RESET_MATCH_LEVEL)
-		"match_level_1":
-			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_01"])
-		"match_level_2":
-			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_02"])
-		"match_level_3":
-			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_03"])
-		"match_level_4":
-			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_04"])
-		"match_level_5":
-			action(DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_05"])
 		_:
 			Log.warning("Unhandled button press: " + button_name, {}, ["debug", "ui"])
-
-
-# Legacy function preserved for backward compatibility
-func _populate_enemy_lineup() -> void:
-	if not (Engine.has_singleton("core") and Engine.has_singleton("card_controller")):
-		Log.error("Cannot populate enemy lineup: core or card_controller missing", {}, ["debug"])
-		return
-
-	var core = Engine.get_singleton("core")
-	var card_controller = Engine.get_singleton("card_controller")
-
-	if core and card_controller:
-		for n: int in 3:
-			var new_card = await card_controller.create_unit_from_id(str(n), 1)
-			new_card.block_context = Engine.get_singleton("Cards").CONTEXT.LINEUP
-			core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
-		for n: int in 3:
-			var new_card = await card_controller.create_unit_from_id(str(n), 1)
-			new_card.block_context = Engine.get_singleton("Cards").CONTEXT.LINEUP
-			core.action(core.DebugLineupAddCardEvent.new(new_card, n))

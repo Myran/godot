@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ManualDebugAction" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://debug/manual_debug_action.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+action_name = "Give 1000 Gold"
+button_name = "give_gold_1000"
+category = "Cheats"
+group = "Currency"
+description = "Adds 1000 gold to the player's inventory"
+show_in_menu = true
+requires_confirmation = true
+confirmation_message = "Add 1000 gold to your inventory?"
