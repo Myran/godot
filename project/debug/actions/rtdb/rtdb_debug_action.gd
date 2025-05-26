@@ -20,11 +20,11 @@ extends DebugAction
 ##     # Your RTDB operation code here
 ##     var result = await execute_firebase_operation(db, "get_value_async", [path])
 ## [/codeblock]
-
-var _last_error_result: Array = []
-
 ## Static counter for generating unique request IDs
 static var _request_counter: int = 0
+var _last_error_result: Array = []
+
+
 
 
 func _init() -> void:
@@ -118,6 +118,6 @@ func execute_simple_operation(
 		)
 	else:
 		var result_error: Variant = result.get("error")
-		var _error_string: String = str(result_error)
-		_update_status("%s failed: %s" % [display_name, _error_string], true)
-		return _failure(_error_string)
+		var n_error_string: String = str(result_error)
+		_update_status("%s failed: %s" % [display_name, n_error_string], true)
+		return _failure(n_error_string)

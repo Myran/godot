@@ -125,7 +125,7 @@ static func create_backend() -> DataBackend:
 			{"instance_id": backend_instance.get_instance_id()},
 			[Log.TAG_DB]
 		)
-		@warning_ignore('redundant_await')
+		@warning_ignore("redundant_await")
 		var init_success: bool = await backend_instance.initialize()
 		if init_success:
 			Log.info(
