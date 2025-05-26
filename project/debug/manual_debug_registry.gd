@@ -206,8 +206,6 @@ func _register_default_actions() -> void:
 	)
 
 
-
-
 ## Scan for .tres files containing ManualDebugAction resources
 func _scan_for_manual_actions() -> void:
 	var dir_path := "res://debug/actions/manual/"

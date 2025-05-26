@@ -206,7 +206,11 @@ func set_test_group(group: int) -> void:
 ## @return True if Firebase is available, false otherwise
 func is_firebase_available() -> bool:
 	# No null check - will crash if _backend is null (fail fast)
-	var available: bool = _backend is FirebaseBackend and _backend.is_available()
+	var available: bool = false
+	if _backend is FirebaseBackend:
+		var firebase_backend: FirebaseBackend = _backend as FirebaseBackend
+		available = firebase_backend.is_available()
+
 	Log.debug(
 		"Firebase availability check",
 		{"available": available, "backend_type": _backend.get_class()},
@@ -377,7 +381,7 @@ func _log_active_collections() -> void:
 
 	# Count active collections
 	var active_count: int = 0
-	for collection_name: String in collection_status.keys():
+	for collection_name: String in collection_status:
 		if collection_status[collection_name]:
 			active_count += 1
 

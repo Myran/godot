@@ -36,7 +36,7 @@ func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
 
 	var upgrade_level_int: int = 1
 	if unit_info.card_info.has("upgrade_level"):
-		upgrade_level_int = int(unit_info.card_info.upgrade_level)
+		upgrade_level_int = unit_info.card_info.upgrade_level.to_int()
 
 	base.set_upgrade_level(upgrade_level_int)
 	base.set_card_health(unit_info.current_health)

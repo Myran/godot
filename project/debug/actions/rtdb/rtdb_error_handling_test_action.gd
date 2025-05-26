@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -57,7 +57,9 @@ func execute() -> Array:
 
 # Execute each error test scenario
 	for scenario: Dictionary in error_scenarios:
-		_update_status("Testing: %s..." % scenario.name)
+		var scenario_name: Variant = scenario.get("name")
+		var scenario_name_str: String = str(scenario_name)
+		_update_status("Testing: %s..." % scenario_name_str)
 		var test_result: Dictionary = await _execute_error_scenario(db, scenario)
 		error_tests.append(test_result)
 
@@ -69,7 +71,9 @@ func execute() -> Array:
 	var failed_error_handling: int = 0
 
 	for test: Dictionary in error_tests:
-		if test.error_handled_correctly:
+		var error_handled: Variant = test.get("error_handled_correctly")
+		var error_handled_correctly: bool = error_handled
+		if error_handled_correctly:
 			successful_error_handling += 1
 		else:
 			failed_error_handling += 1
@@ -108,10 +112,14 @@ func execute() -> Array:
 
 
 func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:
-	var test_name: String = scenario.name
-	var test_type: String = scenario.test_type
-	var test_path: Array[Variant] = scenario.path
-	var expected_error: String = scenario.expected_error
+	var test_name_variant: Variant = scenario.get("name")
+	var test_name: String = str(test_name_variant)
+	var test_type_variant: Variant = scenario.get("test_type")
+	var test_type: String = str(test_type_variant)
+	var test_path_variant: Variant = scenario.get("path")
+	var test_path: Array[Variant] = test_path_variant
+	var expected_error_variant: Variant = scenario.get("expected_error")
+	var expected_error: String = str(expected_error_variant)
 	var request_id: int = Time.get_ticks_msec() % 1000000
 	var error_occurred: bool = false
 	var actual_error_type: String = ""
@@ -127,7 +135,8 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:
 
 		"malformed_data":
 			# Try to set malformed data
-			db.set_value_async(request_id, test_path, scenario.data)
+			var scenario_data: Variant = scenario.get("data")
+			db.set_value_async(request_id, test_path, scenario_data)
 			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate invalid data error
 			error_occurred = true
@@ -143,7 +152,8 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:
 
 		"data_size":
 			# Try to set very large data
-			db.set_value_async(request_id, test_path, scenario.data)
+			var scenario_data: Variant = scenario.get("data")
+			db.set_value_async(request_id, test_path, scenario_data)
 			await Engine.get_main_loop().create_timer(0.2).timeout
 			# Simulate data too large error
 			error_occurred = true
@@ -173,7 +183,7 @@ func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:
 
 func _generate_deep_path(base_path: Array[Variant], depth: int) -> Array[Variant]:
 	var deep_path: Array[Variant] = base_path.duplicate()
-	for i in range(depth):
+	for i: int in range(depth):
 		deep_path.append("level_%d" % i)
 	return deep_path
 
@@ -185,13 +195,15 @@ func _generate_large_data_object(size_multiplier: int) -> Dictionary:
 
 # Generate large arrays and nested objects
 	var large_array: Array[String] = []
-	for i in range(size_multiplier):
+	for i: int in range(size_multiplier):
 		large_array.append("data_item_%d_with_some_additional_content_to_increase_size" % i)
 
 	large_data["large_array"] = large_array
 	large_data["nested_objects"] = {}
 
-	for i: int in range(min(size_multiplier / 10, 1000)):  # Limit nested objects
+	var division_result: int = int(size_multiplier / 10.0)  # Explicit conversion to int
+	var nested_object_count: int = min(division_result, 1000)
+	for i: int in range(nested_object_count):  # Limit nested objects
 		large_data.nested_objects["object_%d" % i] = {
 			"id": i,
 			"data": "nested_data_content_for_object_%d" % i,

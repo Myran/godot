@@ -56,5 +56,7 @@ func execute() -> Array:
 			}
 		)
 	else:
-		_update_status("Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true)
+		_update_status(
+			"Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true
+		)
 		return _failure(str(get_result.get("error", "unknown error")))

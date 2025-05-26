@@ -136,16 +136,16 @@ func _load_action_resource(resource_path: String) -> void:
 
 # Add method to register callable-based actions
 func register_callable(
-	name: String,
+	action_name: String,
 	callable: Callable,
 	category: String = "Manual",
 	group: String = "",
 	description: String = ""
 ) -> void:
-	var action: DebugAction = DebugAction.create_from_callable(name, callable, category, group, description)
+	var action: DebugAction = DebugAction.create_from_callable(action_name, callable, category, group, description)
 	_programmatic_actions.append(action)
 	var group_info: String = " (ungrouped)" if group == "" else "/" + group
-	Log.info("Registered programmatic action: %s in %s%s" % [name, category, group_info])
+	Log.info("Registered programmatic action: %s in %s%s" % [action_name, category, group_info])
 
 
 func get_actions() -> Array[DebugAction]:
@@ -273,15 +273,19 @@ func _register_default_manual_actions() -> void:
 	# Match Level Actions - grouped together
 	for i: int in range(1, 6):
 		var level_num: int = i  # Capture the value for the lambda
+		var level_string: String = "level_%02d" % level_num
+		var action_name: String = "Load Match Level %d" % level_num
+		var description: String = "Force load match level %d" % level_num
 		register_callable(
-			"Load Match Level %d" % level_num,
-			func(level: int = level_num) -> void:
+			action_name,
+			func(captured_level_string: String = level_string) -> void:
+				var args_array: Array[String] = [captured_level_string]
 				DebugManager.action(
-					DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % level]
+					DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, args_array
 				),
 			"Gameplay",
 			"Match Levels",
-			"Force load match level %d" % level_num
+			description
 		)
 
 	# Enemy/Debug Lineup Actions
@@ -297,8 +301,10 @@ func _register_default_manual_actions() -> void:
 	register_callable(
 		"Clear Card Cache",
 		func() -> void:
-			if data_source and data_source.has_method("clear_card_cache"):
-				data_source.clear_card_cache()
+			if data_source:
+				var cache_method_exists: bool = data_source.has_method("clear_card_cache")
+				if cache_method_exists:
+					data_source.clear_card_cache()
 			Log.info("Card cache cleared"),
 		"Database",
 		"Cache",
@@ -308,8 +314,11 @@ func _register_default_manual_actions() -> void:
 	register_callable(
 		"Toggle Local Battle DB",
 		func() -> void:
-			DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
-			Log.info("Local battle DB: " + str(DebugManager.use_local_battle_db)),
+			var current_setting: bool = DebugManager.use_local_battle_db
+			var new_setting: bool = not current_setting
+			DebugManager.use_local_battle_db = new_setting
+			var setting_text: String = str(new_setting)
+			Log.info("Local battle DB: " + setting_text),
 		"Database",
 		"",
 		"Toggle between local and remote battle database"  # No group
@@ -319,8 +328,11 @@ func _register_default_manual_actions() -> void:
 	register_callable(
 		"Cycle Asset Variant",
 		func() -> void:
-			DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
-			Log.info("Asset variant set to: " + str(DebugManager.asset_variant)),
+			var current_variant: int = DebugManager.asset_variant
+			var next_variant: int = (current_variant % 3) + 1
+			DebugManager.asset_variant = next_variant
+			var variant_text: String = str(next_variant)
+			Log.info("Asset variant set to: " + variant_text),
 		"Quick Actions",
 		"",
 		"Cycle through asset variants (1-3)"
@@ -330,8 +342,10 @@ func _register_default_manual_actions() -> void:
 		"Print Debug Info",
 		func() -> void:
 			Log.info("=== Debug Info ===")
-			Log.info("Local DB: %s" % DebugManager.use_local_battle_db)
-			Log.info("Asset Variant: %d" % DebugManager.asset_variant)
+			var local_db_setting: bool = DebugManager.use_local_battle_db
+			var asset_variant_num: int = DebugManager.asset_variant
+			Log.info("Local DB: %s" % str(local_db_setting))
+			Log.info("Asset Variant: %d" % asset_variant_num)
 			Log.info("=================="),
 		"Quick Actions",
 		"",

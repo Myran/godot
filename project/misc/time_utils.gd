@@ -1,4 +1,3 @@
-@tool
 class_name TimeUtils
 extends RefCounted
 ## Utility class for consistent time handling across the project.
@@ -21,8 +20,8 @@ static func deadline_ms(timeout_sec: float) -> int:
 
 
 ## Check if a deadline has passed
-static func is_past_deadline(deadline_ms: int) -> bool:
-	return now_ms() > deadline_ms
+static func is_past_deadline(deadline: int) -> bool:
+	return now_ms() > deadline
 
 
 ## Convert seconds to milliseconds

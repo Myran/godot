@@ -61,7 +61,9 @@ func execute() -> Array:
 	var failed_operations: int = 0
 
 	for result: Dictionary in batch_operations:
-		if result.success:
+		var success_variant: Variant = result.get("success")
+		var success_bool: bool = success_variant
+		if success_bool:
 			successful_operations += 1
 		else:
 			failed_operations += 1
@@ -104,9 +106,11 @@ func execute() -> Array:
 func _execute_single_operation(
 	db: Object, operation: Dictionary, operation_index: int
 ) -> Dictionary:
-	var operation_type: String = operation.type
-	var operation_path: Array[Variant] = operation.path
-	var operation_data: Variant = operation.data
+	var operation_type_variant: Variant = operation.get("type")
+	var operation_type: String = str(operation_type_variant)
+	var operation_path_variant: Variant = operation.get("path")
+	var operation_path: Array[Variant] = operation_path_variant
+	var operation_data: Variant = operation.get("data")
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	match operation_type:
@@ -114,13 +118,17 @@ func _execute_single_operation(
 			var result: Dictionary = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
+			var result_success: Variant = result.get("success")
+			var success_bool: bool = result_success
+			var has_error: bool = result.has("error")
+			var error_message: String = str(result.get("error")) if has_error else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
 				"path": operation_path,
-				"success": result.success,
+				"success": success_bool,
 				"data_sent": operation_data,
-				"error": result.get("error") if result.has("error") else ""
+				"error": error_message
 			}
 
 		"update":
@@ -128,24 +136,34 @@ func _execute_single_operation(
 			var result: Dictionary = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
+			var result_success: Variant = result.get("success")
+			var success_bool: bool = result_success
+			var has_error: bool = result.has("error")
+			var error_message: String = str(result.get("error")) if has_error else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
 				"path": operation_path,
-				"success": result.success,
+				"success": success_bool,
 				"data_updated": operation_data,
-				"error": result.get("error") if result.has("error") else ""
+				"error": error_message
 			}
 
 		"get":
 			var result: Dictionary = await op_manager.execute("get_value_async", [operation_path])
+			var result_success: Variant = result.get("success")
+			var success_bool: bool = result_success
+			var has_data: bool = result.has("data")
+			var data_received: Variant = result.get("data") if has_data else null
+			var has_error: bool = result.has("error")
+			var error_message: String = str(result.get("error")) if has_error else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
 				"path": operation_path,
-				"success": result.success,
-				"data_received": result.get("data") if result.has("data") else null,
-				"error": result.get("error") if result.has("error") else ""
+				"success": success_bool,
+				"data_received": data_received,
+				"error": error_message
 			}
 
 		_:

@@ -4,6 +4,31 @@ extends RefCounted
 ## Centralized test path definitions for RTDB debug actions.
 ## All paths are strongly typed as Array[String] for consistency.
 
+
+## Inner class for type-safe path handling
+class Path:
+	var _path: Array[String]
+
+	func _init(path: Array[String]) -> void:
+		_path = path.duplicate()
+
+	## Get as string array
+	func as_strings() -> Array[String]:
+		return _path
+
+	## Get as variant array for Firebase API
+	func as_variants() -> Array[Variant]:
+		var result: Array[Variant] = []
+		result.assign(_path)
+		return result
+
+	## Add timestamp suffix for uniqueness
+	func with_timestamp() -> Path:
+		var result: Array[String] = _path.duplicate()
+		result.append("test_" + str(TimeUtils.now_ms()))
+		return Path.new(result)
+
+
 # Base paths
 const BASE: Array[String] = ["debug_tests", "rtdb"]
 
@@ -21,6 +46,11 @@ const LIST_CHILDREN: Array[String] = ["debug_tests", "rtdb", "list_test"]
 const SINGLE_VALUE: Array[String] = ["debug_tests", "rtdb", "single_value"]
 
 
+## Create a type-safe path from string array
+static func create_path(path: Array[String]) -> Path:
+	return Path.new(path)
+
+
 ## Create a test path with a timestamp suffix for uniqueness
 static func with_timestamp(base_path: Array[String]) -> Array[String]:
 	var result: Array[String] = base_path.duplicate()
@@ -31,6 +61,5 @@ static func with_timestamp(base_path: Array[String]) -> Array[String]:
 ## Convert string array to variant array for Firebase API compatibility
 static func to_variant_array(path: Array[String]) -> Array[Variant]:
 	var result: Array[Variant] = []
-	for element in path:
-		result.append(element)
+	result.assign(path)
 	return result

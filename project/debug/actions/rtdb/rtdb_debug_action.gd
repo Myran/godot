@@ -103,16 +103,21 @@ func execute_simple_operation(
 
 	var result: Dictionary = await execute_firebase_operation(db, operation, args)
 
-	if result.success:
+	var result_success: Variant = result.get("success")
+	var success_bool: bool = result_success
+	if success_bool:
+		var result_data: Variant = result.get("data")
 		_update_status("%s completed successfully" % display_name)
 		return _success(
 			{
 				"operation": operation,
 				"path": test_path,
-				"result": result.data,
+				"result": result_data,
 				"timestamp": TimeUtils.now_ms()
 			}
 		)
 	else:
-		_update_status("%s failed: %s" % [display_name, result.error], true)
-		return _failure(result.error)
+		var result_error: Variant = result.get("error")
+		var _error_string: String = str(result_error)
+		_update_status("%s failed: %s" % [display_name, _error_string], true)
+		return _failure(_error_string)

@@ -1,19 +1,7 @@
 # project/debug/debug_menu_controller.gd (script for scene_debug.tscn root)
 
 extends Control
-
-# Removed manual action service - now using unified DebugActionRegistry
-
-# UI References (ensure these paths match your scene_debug.tscn)
-@onready var status_label: RichTextLabel = %DebugRichTextLabel
-@onready var item_list_navigator: ItemList = %DebugItemList
-@onready var run_all_button: Button = %RunAllButton  # Add this button to your scene if not already present
-
-# Navigation State & Constants (similar to original)
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
-var _current_view_level: ViewLevel = ViewLevel.MAIN_CATEGORIES
-var _current_category_name: String = ""
-var _current_group_name: String = ""
 
 # Constants for metadata
 const ITEM_TYPE_CATEGORY: String = "category_item"
@@ -26,10 +14,34 @@ const ITEM_TYPE_CATEGORY_WITH_ACTIONS: String = "category_with_actions"  # Categ
 const BACK_TO_MAIN_MENU_TEXT: String = "< Back to Main Menu"
 const BACK_TO_GROUPS_TEXT: String = "< Back to Categories"  # Or "Back to Test Groups"
 
+
+var _current_view_level: ViewLevel = ViewLevel.MAIN_CATEGORIES
+var _current_category_name: String = ""
+var _current_group_name: String = ""
 var _is_executing_all: bool = false
+# UI References (ensure these paths match your scene_debug.tscn)
+@onready var status_label: RichTextLabel = %DebugRichTextLabel
+@onready var item_list_navigator: ItemList = %DebugItemList
+@onready var run_all_button: Button = %RunAllButton  # Add this button to your scene if not already present
+
+# Navigation State & Constants (similar to original)
+
+
+
+
+
+
+
+
 
 # Removed manual action service - now using unified DebugActionRegistry
+class ActionExecutionResult:
+	var action: DebugAction
+	var is_manual: bool
 
+	func _init(p_action: DebugAction, p_is_manual: bool) -> void:
+		action = p_action
+		is_manual = p_is_manual
 
 func _ready() -> void:
 	Log.info("DebugMenuController ready.", {}, ["debug", "ui", "initialization"])
@@ -166,7 +178,8 @@ func _populate_groups_view(category_name: String) -> void:
 	# Check if category exists in DebugRegistry
 	if DebugRegistry:
 		var debug_categories: Array[String] = DebugRegistry.get_categories()
-		if debug_categories.has(category_name):
+		var category_found: bool = debug_categories.has(category_name)
+		if category_found:
 			category_exists = true
 
 	# Category exists check is now sufficient with unified registry
@@ -383,7 +396,7 @@ func _on_run_all_pressed() -> void:
 		return
 	var registry: DebugActionRegistry = DebugRegistry
 
-	var actions_to_run: Array = []  # Can contain both DebugAction and ManualDebugAction
+	var actions_to_run: Array[ActionExecutionResult] = []
 	var scope_name: String = ""
 
 	if _current_view_level == ViewLevel.GROUP_LIST:  # Run all in category
@@ -391,12 +404,14 @@ func _on_run_all_pressed() -> void:
 		for group_name: String in registry.get_groups_for_category(_current_category_name):
 			var debug_actions: Array[DebugAction] = registry.get_actions_for_group(_current_category_name, group_name)
 			for action: DebugAction in debug_actions:
-				actions_to_run.append({"action": action, "is_manual": false})
+				var result_item: ActionExecutionResult = ActionExecutionResult.new(action, false)
+				actions_to_run.append(result_item)
 
 		# Add ungrouped actions from unified registry
 		var ungrouped_actions: Array[DebugAction] = registry.get_ungrouped_actions(_current_category_name)
 		for action: DebugAction in ungrouped_actions:
-			actions_to_run.append({"action": action, "is_manual": false})
+			var result_item: ActionExecutionResult = ActionExecutionResult.new(action, false)
+			actions_to_run.append(result_item)
 
 	elif _current_view_level == ViewLevel.TEST_LIST:  # Run all in group
 		scope_name = "%s / %s" % [_current_category_name, _current_group_name]
@@ -404,7 +419,8 @@ func _on_run_all_pressed() -> void:
 			_current_category_name, _current_group_name
 		)
 		for action: DebugAction in debug_actions:
-			actions_to_run.append({"action": action, "is_manual": false})
+			var result_item: ActionExecutionResult = ActionExecutionResult.new(action, false)
+			actions_to_run.append(result_item)
 
 		# All actions now come from unified registry
 
@@ -432,9 +448,10 @@ func _execute_single_action(action: DebugAction) -> void:
 	if action.status_updated.is_connected(_on_action_status_updated):
 		action.status_updated.disconnect(_on_action_status_updated)
 	action.status_updated.connect(_on_action_status_updated)
-
+	@warning_ignore('redundant_await')
 	var result: Array = await action.execute()
-	var success: bool = result[0]
+	var success_variant: Variant = result[0]
+	var success: bool = success_variant
 	var payload: Variant = result[1]
 
 	# Disconnect after execution
@@ -454,7 +471,7 @@ func _on_action_status_updated(text: String, is_error: bool) -> void:
 	_update_status_label_text(text, is_error)
 
 
-func _execute_multiple_actions(actions_to_run: Array, scope_description: String) -> void:
+func _execute_multiple_actions(actions_to_run: Array[ActionExecutionResult], scope_description: String) -> void:
 	_is_executing_all = true
 	_set_ui_for_execution(true)
 	_update_status_label_text(
@@ -474,9 +491,9 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 	var summary_lines: Array[String] = []
 
 	for i: int in range(actions_to_run.size()):
-		var action_data: Dictionary = actions_to_run[i]
-		var action: DebugAction = action_data.action
-		var _is_manual: bool = action_data.is_manual
+		var action_result: ActionExecutionResult = actions_to_run[i]
+		var action: DebugAction = action_result.action
+		#var _is_manual: bool = action_result.is_manual
 		var action_name: String = action.action_name
 
 		_update_status_label_text(
@@ -492,9 +509,10 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 		if action.status_updated.is_connected(_on_action_status_updated):
 			action.status_updated.disconnect(_on_action_status_updated)
 		action.status_updated.connect(_on_action_status_updated)
-
+		@warning_ignore('redundant_await')
 		var result: Array = await action.execute()
-		var success: bool = result[0]
+		var success_variant: Variant = result[0]
+		var success: bool = success_variant
 		var payload: Variant = result[1]
 
 		# Disconnect after execution

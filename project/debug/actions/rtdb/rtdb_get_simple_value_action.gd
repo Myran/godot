@@ -11,9 +11,5 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	return await execute_simple_operation(
-		"get_value_async",
-		RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE),
-		null,
-		action_name
-	)
+	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
+	return await execute_simple_operation("get_value_async", path.as_variants(), null, action_name)
