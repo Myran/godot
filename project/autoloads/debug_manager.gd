@@ -24,17 +24,12 @@ enum DebugEventType {
 var use_local_battle_db: bool
 var asset_variant: int
 
-var manual_actions: ManualDebugRegistry
-
 
 func _ready():
 	use_local_battle_db = false
 	asset_variant = 1
 
-	# Initialize manual actions registry
-	_initialize_manual_actions()
-
-	# Connect to our own signal if legacy popup needs to reac
+	# Connect to our own signal if legacy popup needs to react
 	debug_event.connect(_on_debug_event)
 
 	# If popup_debug is assigned, set it up
@@ -85,9 +80,6 @@ func _on_debug_event(event_type: DebugEventType, args: Array = []) -> void:
 			Log.warning("Unhandled debug event type: " + str(event_type), {}, ["debug", "events"])
 
 
-# Manual debug action registry
-
-
 # Keep legacy helper functions until fully migrated
 func _verify_logger_export() -> void:
 	if OS.get_name() == "iOS":
@@ -102,27 +94,9 @@ func _verify_logger_export() -> void:
 			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
 
 
-# Initialize manual actions registry
-func _initialize_manual_actions() -> void:
-	manual_actions = ManualDebugRegistry.new()
-	add_child(manual_actions)
-
-	# Register any custom actions specific to this project
-	# Example:
-	# manual_actions.register_callable(
-	#     "Test Feature X",
-	#     func(): print("Testing feature X"),
-	#     "Testing", "Features"
-	# )
-
-
-# Updated to use the manual action registry
+# Updated debug button handler - simplified since manual actions are now in DebugRegistry
 func debug_button_pressed(button_name: String) -> void:
-	# First check if it's a registered manual action
-	if manual_actions and manual_actions.execute_action(button_name):
-		return
-
-	# Handle special cases that aren't manual actions
+	# Handle special cases
 	match button_name:
 		"button_close":
 			action(DebugEventType.EVENT_CLOSE_LEGACY_POPUP)

@@ -48,7 +48,9 @@ func execute() -> Array:
 	var actual_final_count: int = 0
 
 	if verify_result.success and verify_result.data is Dictionary:
-		actual_final_count = verify_result.data.get("counter", 0)
+		actual_final_count = (
+			verify_result.data.get("counter") if verify_result.data.has("counter") else 0
+		)
 
 	var all_transactions_successful: bool = true
 	for result in transaction_results:
@@ -115,8 +117,8 @@ func _perform_counter_transaction(
 		}
 
 	# 2. Extract current counter
-	var current_data: Dictionary = get_result.get("data", {})
-	var current_counter: int = current_data.get("counter", 0)
+	var current_data: Dictionary = get_result.get("data") if get_result.has("data") else {}
+	var current_counter: int = current_data.get("counter") if current_data.has("counter") else 0
 
 	# 3. Increment counter
 	var new_counter: int = current_counter + 1
@@ -135,5 +137,5 @@ func _perform_counter_transaction(
 		"previous_value": current_counter,
 		"new_value": new_counter,
 		"success": set_result.success,
-		"error": set_result.get("error", "")
+		"error": set_result.get("error") if set_result.has("error") else ""
 	}

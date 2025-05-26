@@ -229,7 +229,9 @@ func _populate_main_categories_view() -> void:
 	var item_idx: int = 0
 	for category_def: Dictionary in CATEGORIES_DEFINITION:
 		var module_instance_valid: bool = false
-		var module_var_name: String = category_def.get("module_var_name", "")
+		var module_var_name: String = (
+			category_def.get("module_var_name") if category_def.has("module_var_name") else ""
+		)
 		if not module_var_name.is_empty():
 			var module_instance: Object = get(module_var_name)
 			module_instance_valid = is_instance_valid(module_instance)
@@ -243,7 +245,8 @@ func _populate_main_categories_view() -> void:
 					"type": ITEM_TYPE_CATEGORY,
 					"name": category_def.name,
 					"prefix": category_def.prefix,
-					"has_run_all": category_def.get("has_run_all", false)
+					"has_run_all":
+					category_def.get("has_run_all") if category_def.has("has_run_all") else false
 				}
 			)
 			item_idx += 1
@@ -269,7 +272,7 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 	item_list_navigator.add_item(BACK_TO_MAIN_MENU_TEXT)
 	item_list_navigator.set_item_metadata(item_idx_counter, {"type": ITEM_TYPE_BACK_TO_MAIN})
 	item_idx_counter += 1
-	if category_info.get("has_run_all", false):
+	if (category_info.has("has_run_all") and category_info.get("has_run_all")) or false:
 		var run_all_text: String = "Run All " + category_info.name
 		item_list_navigator.add_item(run_all_text)
 		item_list_navigator.set_item_metadata(
@@ -316,7 +319,9 @@ func _populate_groups_view(category_info: Dictionary) -> void:
 			}
 		)
 		item_idx_counter += 1
-	var has_run_all_item: bool = category_info.get("has_run_all", false)
+	var has_run_all_item: bool = (
+		category_info.get("has_run_all") if category_info.has("has_run_all") else false
+	)
 	var min_expected_items_before_groups: int = 1
 	if has_run_all_item:
 		min_expected_items_before_groups += 1
@@ -343,7 +348,12 @@ func _populate_tests_view(group_info: Dictionary) -> void:
 			"type": ITEM_TYPE_BACK_TO_GROUPS,
 			"category_prefix": group_info.category_prefix,
 			"category_name": group_info.category_name,
-			"category_has_run_all": _current_category_info.get("has_run_all", false)
+			"category_has_run_all":
+			(
+				_current_category_info.get("has_run_all")
+				if _current_category_info.has("has_run_all")
+				else false
+			)
 		}
 	)
 	item_idx_counter += 1
@@ -391,7 +401,7 @@ func _on_navigator_item_activated(index: int) -> void:
 		Log.warning("No metadata for item.", {"i": index}, ["debug_ui"])
 		return
 
-	var item_type: String = metadata.get("type", "")
+	var item_type: String = metadata.get("type") if metadata.has("type") else ""
 	Log.debug("Item activated", {"t": item_type, "m": metadata}, ["debug_ui"])
 
 	match item_type:
@@ -400,8 +410,12 @@ func _on_navigator_item_activated(index: int) -> void:
 		ITEM_TYPE_GROUP:
 			_populate_tests_view(metadata)
 		ITEM_TYPE_TEST:
-			var method_name: String = metadata.get("method_name", "")
-			var display_name: String = metadata.get("display_name", method_name)
+			var method_name: String = (
+				metadata.get("method_name") if metadata.has("method_name") else ""
+			)
+			var display_name: String = (
+				metadata.get("display_name") if metadata.has("display_name") else method_name
+			)
 			if has_method(method_name):
 				Log.info("Exec test (manual): %s" % method_name, {}, ["debug", "test"])
 				_update_status_text("Running: %s..." % display_name)
@@ -448,7 +462,12 @@ func _on_navigator_item_activated(index: int) -> void:
 			var c_info: Dictionary = {
 				"name": metadata.category_name,
 				"prefix": metadata.category_prefix,
-				"has_run_all": metadata.get("category_has_run_all", false)
+				"has_run_all":
+				(
+					metadata.get("category_has_run_all")
+					if metadata.has("category_has_run_all")
+					else false
+				)
 			}
 			_populate_groups_view(c_info)
 		ITEM_TYPE_RUN_ALL_CATEGORY_TESTS:
@@ -592,8 +611,8 @@ func _handle_rtdb_completion_from_cpp_signal(
 					request_id,
 					pending_req_data.operation,
 					display_path,
-					error_dict.get("error_code", "N/A"),
-					error_dict.get("message", "N/A")
+					error_dict.get("error_code") if error_dict.has("error_code") else "N/A",
+					error_dict.get("message") if error_dict.has("message") else "N/A"
 				]
 			)
 		)
@@ -896,7 +915,7 @@ func _test_rtdb_advanced_increment_transaction() -> Array:
 	var delete_result: Array = await _make_rtdb_request("remove_value_async", counter_path_suffix)
 	if not delete_result[0]:
 		var err_p: Dictionary = delete_result[1] if delete_result[1] is Dictionary else {}
-		var err_msg_l = str(err_p.get("message", "")).to_lower()
+		var err_msg_l = str(err_p.get("message") if err_p.has("message") else "").to_lower()
 		if not (err_msg_l.contains("not found") or err_msg_l.contains("no data exists")):  # Allow "not found" for initial delete
 			Log.warning("Problem deleting counter (may not exist)", {"r": err_p}, ["test"])
 	if get_parent().visible and is_instance_valid(status_label):
@@ -1358,7 +1377,11 @@ func _on_credential(result: Dictionary) -> void:  # From GodotAppleAuth
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = (
 			"Apple Credential Status: %s"
-			% ("OK" if success else result.get("error", "Unknown Error"))
+			% (
+				"OK"
+				if success
+				else (result.get("error") if result.has("error") else "Unknown Error")
+			)
 		)
 	Log.info(
 		"Apple Auth: Credential Callback", {"result": result, "success": success}, ["apple", "auth"]
@@ -1371,7 +1394,11 @@ func _on_authorization(result: Dictionary) -> void:  # From GodotAppleAuth
 	if get_parent().visible and is_instance_valid(status_label):
 		status_label.text = (
 			"Apple Authorization: %s"
-			% ("Success" if success else result.get("error", "Unknown Error"))
+			% (
+				"Success"
+				if success
+				else (result.get("error") if result.has("error") else "Unknown Error")
+			)
 		)
 	Log.info(
 		"Apple Auth: Authorization Callback",
@@ -1397,7 +1424,10 @@ func messaging_token() -> void:  # Placeholder, actual token string needed from 
 
 func messaging_message(msg_data: Dictionary) -> void:
 	if get_parent().visible and is_instance_valid(status_label):
-		status_label.text = "FCM Message Received: From " + msg_data.get("from", "N/A")
+		status_label.text = (
+			"FCM Message Received: From "
+			+ (msg_data.get("from") if msg_data.has("from") else "N/A")
+		)
 	Log.info("FCM: Message received.", {"data": msg_data}, ["firebase", "messaging"])
 
 

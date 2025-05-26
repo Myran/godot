@@ -11,12 +11,38 @@ extends Resource
 # Signal for status updates - decouples actions from UI
 signal status_updated(text: String, is_error: bool)
 
+# Add support for callable-based actions
+var action_callable: Callable
+
+
+# Add static factory method for creating programmatic actions
+static func create_from_callable(
+	p_name: String,
+	p_callable: Callable,
+	p_category: String = "Manual",
+	p_group: String = "",
+	p_description: String = ""
+) -> DebugAction:
+	var action := DebugAction.new()
+	action.action_name = p_name
+	action.category = p_category
+	action.group = p_group
+	action.description = p_description if p_description else "Execute " + p_name
+	action.action_callable = p_callable
+	return action
+
 
 # Method to be implemented by specific actions
 # Returns an array: [bool_success, Variant_payload_or_error_info]
 func execute() -> Array:
-	push_error("Execute method not implemented for action: ", action_name)
-	return [false, {"error": "Not implemented"}]
+	if action_callable.is_valid():
+		# Execute callable and wrap result
+		action_callable.call()
+		return _success({"executed": true, "type": "callable"})
+	else:
+		# Subclasses override this for resource-based actions
+		push_error("Execute method not implemented for action: ", action_name)
+		return [false, {"error": "Not implemented"}]
 
 
 # Helper to update status via signal instead of direct UI access

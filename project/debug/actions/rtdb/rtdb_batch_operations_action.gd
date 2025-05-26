@@ -120,7 +120,7 @@ func _execute_single_operation(
 				"path": operation_path,
 				"success": result.success,
 				"data_sent": operation_data,
-				"error": result.get("error", "")
+				"error": result.get("error") if result.has("error") else ""
 			}
 
 		"update":
@@ -134,7 +134,7 @@ func _execute_single_operation(
 				"path": operation_path,
 				"success": result.success,
 				"data_updated": operation_data,
-				"error": result.get("error", "")
+				"error": result.get("error") if result.has("error") else ""
 			}
 
 		"get":
@@ -144,8 +144,8 @@ func _execute_single_operation(
 				"type": operation_type,
 				"path": operation_path,
 				"success": result.success,
-				"data_received": result.get("data", null),
-				"error": result.get("error", "")
+				"data_received": result.get("data") if result.has("data") else null,
+				"error": result.get("error") if result.has("error") else ""
 			}
 
 		_:

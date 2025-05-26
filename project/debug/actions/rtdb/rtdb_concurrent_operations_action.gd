@@ -85,7 +85,7 @@ func execute() -> Array:
 			successful_operations += 1
 		else:
 			failed_operations += 1
-			total_duration += result.get("duration", 0.0)
+			total_duration += result.get("duration") if result.has("duration") else 0.0
 
 	var average_duration: float = (
 		total_duration / completed_operations.size() if completed_operations.size() > 0 else 0.0

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBLegacyBasicPushItemAction" load_steps=2 format=3 uid="uid://ip0j6ar63iui"]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_legacy_basic_push_item_action.gd" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+action_name = "Basic Push Item (Legacy)"
+category = "RTDB"
+group = "Legacy Tests"
+description = "Migrated from scene_debug.gd - Pushes an item to RTDB"

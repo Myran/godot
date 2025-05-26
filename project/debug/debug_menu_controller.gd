@@ -2,8 +2,7 @@
 
 extends Control
 
-# Preload service class for manual actions (SOLID: Dependency Inversion)
-const ManualActionDataService = preload("res://debug/manual_action_data_service.gd")
+# Removed manual action service - now using unified DebugActionRegistry
 
 # UI References (ensure these paths match your scene_debug.tscn)
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
@@ -29,15 +28,11 @@ const BACK_TO_GROUPS_TEXT: String = "< Back to Categories"  # Or "Back to Test G
 
 var _is_executing_all: bool = false
 
-# Service for manual action data management (DRY + SOLID principles)
-var _manual_action_service: ManualActionDataService
+# Removed manual action service - now using unified DebugActionRegistry
 
 
 func _ready() -> void:
 	Log.info("DebugMenuController ready.", {}, ["debug", "ui", "initialization"])
-
-	# Initialize the manual action service (SOLID: Dependency Injection)
-	_manual_action_service = ManualActionDataService.new()
 
 	if (
 		not is_instance_valid(item_list_navigator)
@@ -59,10 +54,6 @@ func _ready() -> void:
 
 	_populate_main_categories_view()
 	%Panel.gui_input.connect(_on_panel_gui_input)
-
-	# Log service status for debugging
-	var debug_summary: Dictionary = _manual_action_service.get_debug_summary()
-	Log.debug("Manual action service initialized", debug_summary, ["debug_ui", "manual_actions"])
 
 
 func _on_panel_gui_input(event: InputEvent) -> void:
@@ -99,33 +90,55 @@ func _populate_main_categories_view() -> void:
 	if not _validate_navigation_state("_populate_main_categories_view"):
 		return
 
-	# Get categories from debug registry
+	# Get categories from debug registry (now includes all actions)
 	var categories: Array[String] = []
 	if DebugRegistry:
 		categories = DebugRegistry.get_categories()
+		Log.debug(
+			"Retrieved categories from DebugRegistry",
+			{"categories": categories, "count": categories.size()},
+			["debug_ui"]
+		)
 	else:
 		Log.error("DebugRegistry autoload not found", {}, ["debug_ui", "error"])
 		return
-
-	# Add manual action categories using service (DRY principle)
-	var manual_categories: Array[String] = _manual_action_service.get_categories()
-	for cat_name in manual_categories:
-		if not categories.has(cat_name):
-			categories.append(cat_name)
 
 	if categories.is_empty():
 		item_list_navigator.add_item("No debug actions registered.")
 		item_list_navigator.set_item_disabled(0, true)
 		return
 
-	# Populate category items
-	for i: int in range(categories.size()):
-		var category_name: String = categories[i]
+	# Sort categories: direct actions first, then submenus
+	var categories_with_direct_actions: Array[String] = []
+	var categories_with_only_groups: Array[String] = []
+
+	for category_name in categories:
+		if DebugRegistry.has_ungrouped_actions(category_name):
+			categories_with_direct_actions.append(category_name)
+		else:
+			categories_with_only_groups.append(category_name)
+
+	# Sort each group alphabetically
+	categories_with_direct_actions.sort()
+	categories_with_only_groups.sort()
+
+	# Combine: direct actions first, then submenus
+	var sorted_categories: Array[String] = (
+		categories_with_direct_actions + categories_with_only_groups
+	)
+
+	# Populate category items in sorted order
+	for i: int in range(sorted_categories.size()):
+		var category_name: String = sorted_categories[i]
 		_add_category_item_to_list(category_name, i)
 
 	Log.info(
 		"Main categories populated",
-		{"total_categories": categories.size(), "manual_categories": manual_categories.size()},
+		{
+			"total_categories": sorted_categories.size(),
+			"direct_actions": categories_with_direct_actions.size(),
+			"submenus": categories_with_only_groups.size()
+		},
 		["debug_ui"]
 	)
 
@@ -156,9 +169,7 @@ func _populate_groups_view(category_name: String) -> void:
 		if debug_categories.has(category_name):
 			category_exists = true
 
-	# Check if category exists in Manual Actions (if not found in DebugRegistry)
-	if not category_exists:
-		category_exists = _manual_action_service.validate_category(category_name)
+	# Category exists check is now sufficient with unified registry
 
 	if not category_exists:
 		_update_status_label_text(
@@ -171,7 +182,7 @@ func _populate_groups_view(category_name: String) -> void:
 	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_MAIN})
 
 	# **CRITICAL FIX: Check if category has ungrouped actions - if so, use category_with_actions view**
-	var has_ungrouped: bool = _manual_action_service.has_ungrouped_actions(category_name)
+	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
 
 	if has_ungrouped:
 		Log.debug(
@@ -192,11 +203,7 @@ func _populate_groups_view(category_name: String) -> void:
 		Log.error("DebugRegistry autoload not found", {}, ["debug_ui", "error"])
 		return
 
-	# Add manual action groups using service (DRY principle)
-	var manual_groups: Array[String] = _manual_action_service.get_groups_for_category(category_name)
-	for group_name in manual_groups:
-		if not groups.has(group_name):
-			groups.append(group_name)
+	# Groups are now all in DebugRegistry
 
 	if groups.is_empty():
 		item_list_navigator.add_item("No groups in this category.")
@@ -211,12 +218,7 @@ func _populate_groups_view(category_name: String) -> void:
 
 	Log.info(
 		"Groups populated for category",
-		{
-			"category": category_name,
-			"total_groups": groups.size(),
-			"debug_groups": groups.size() - manual_groups.size(),
-			"manual_groups": manual_groups.size()
-		},
+		{"category": category_name, "total_groups": groups.size()},
 		["debug_ui"]
 	)
 
@@ -246,10 +248,8 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 
 	var item_index: int = 1
 
-	# Get ungrouped actions using service (DRY principle)
-	var ungrouped_actions: Array[ManualDebugAction] = _manual_action_service.get_ungrouped_actions(
-		category_name
-	)
+	# Get ungrouped actions from unified registry
+	var ungrouped_actions: Array[DebugAction] = DebugRegistry.get_ungrouped_actions(category_name)
 
 	if ungrouped_actions.size() > 0:
 		# Add ungrouped actions directly
@@ -257,25 +257,11 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 			item_list_navigator.add_item("• " + action.action_name)  # Bullet to show it's an action
 			item_list_navigator.set_item_tooltip(item_index, action.description)
 			item_list_navigator.set_item_metadata(
-				item_index, {"type": ITEM_TYPE_ACTION, "action_instance": action, "is_manual": true}
+				item_index, {"type": ITEM_TYPE_ACTION, "action_instance": action}
 			)
 			item_index += 1
 
-		# Check if we have groups to add separator
-		var debug_groups: Array[String] = []
-		var manual_groups: Array[String] = []
-
-		if DebugRegistry:
-			debug_groups = DebugRegistry.get_groups_for_category(category_name)
-
-		manual_groups = _manual_action_service.get_groups_for_category(category_name)
-
-		var has_groups: bool = debug_groups.size() > 0 or manual_groups.size() > 0
-
-		if has_groups:
-			item_list_navigator.add_item("─── Groups ───")
-			item_list_navigator.set_item_disabled(item_index, true)
-			item_index += 1
+		# No separator needed - direct actions and groups flow naturally
 
 	# Add groups using service (DRY principle)
 	var all_groups: Array[String] = []
@@ -284,11 +270,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	if DebugRegistry:
 		all_groups = DebugRegistry.get_groups_for_category(category_name)
 
-	# Add manual groups
-	var manual_groups: Array[String] = _manual_action_service.get_groups_for_category(category_name)
-	for group_name in manual_groups:
-		if not all_groups.has(group_name):
-			all_groups.append(group_name)
+	# All groups already retrieved from DebugRegistry above
 
 	# Populate group items
 	for group_name in all_groups:
@@ -303,8 +285,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 		{
 			"category": category_name,
 			"ungrouped_actions": ungrouped_actions.size(),
-			"total_groups": all_groups.size(),
-			"manual_groups": manual_groups.size()
+			"total_groups": all_groups.size()
 		},
 		["debug_ui"]
 	)
@@ -339,12 +320,8 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		category_name, group_name
 	)
 
-	# Get manual actions for this group using service (DRY principle)
-	var manual_actions_to_add: Array = _manual_action_service.get_actions_for_group(
-		category_name, group_name
-	)
-
-	if actions_in_group.is_empty() and manual_actions_to_add.is_empty():
+	# All actions now come from unified registry
+	if actions_in_group.is_empty():
 		item_list_navigator.add_item("No actions in this group.")
 		item_list_navigator.set_item_disabled(1, true)
 		return
@@ -360,21 +337,7 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		)
 		item_index += 1
 
-	# Add manual actions with a separator if we have both types
-	if actions_in_group.size() > 0 and manual_actions_to_add.size() > 0:
-		item_list_navigator.add_item("--- Manual Actions ---")
-		item_list_navigator.set_item_disabled(item_index, true)
-		item_index += 1
-
-	# Add manual actions
-	for manual_action in manual_actions_to_add:
-		item_list_navigator.add_item(manual_action.action_name)
-		item_list_navigator.set_item_tooltip(item_index, manual_action.description)
-		item_list_navigator.set_item_metadata(
-			item_index,
-			{"type": ITEM_TYPE_ACTION, "action_instance": manual_action, "is_manual": true}
-		)
-		item_index += 1
+	# All actions are now handled uniformly through DebugRegistry
 
 
 func _on_navigator_item_selected(index: int) -> void:
@@ -400,12 +363,8 @@ func _on_navigator_item_selected(index: int) -> void:
 			_populate_actions_view(_current_category_name, metadata.get("name"))
 		ITEM_TYPE_ACTION:
 			var action = metadata.get("action_instance")
-			var is_manual: bool = metadata.get("is_manual", false)
 			if action:
-				if is_manual:
-					_execute_manual_action(action)
-				else:
-					_execute_single_action(action)
+				_execute_single_action(action)
 		ITEM_TYPE_BACK_TO_MAIN:
 			_populate_main_categories_view()
 		ITEM_TYPE_BACK_TO_GROUPS:
@@ -435,19 +394,10 @@ func _on_run_all_pressed() -> void:
 			for action in debug_actions:
 				actions_to_run.append({"action": action, "is_manual": false})
 
-		# Add manual actions for this category using service (DRY principle)
-		var all_manual_actions: Dictionary = _manual_action_service.get_all_actions_for_category(
-			_current_category_name
-		)
-
-		# Add grouped manual actions
-		for group_name in all_manual_actions.grouped:
-			for manual_action in all_manual_actions.grouped[group_name]:
-				actions_to_run.append({"action": manual_action, "is_manual": true})
-
-		# Add ungrouped manual actions
-		for manual_action in all_manual_actions.ungrouped:
-			actions_to_run.append({"action": manual_action, "is_manual": true})
+		# Add ungrouped actions from unified registry
+		var ungrouped_actions = registry.get_ungrouped_actions(_current_category_name)
+		for action in ungrouped_actions:
+			actions_to_run.append({"action": action, "is_manual": false})
 
 	elif _current_view_level == ViewLevel.TEST_LIST:  # Run all in group
 		scope_name = "%s / %s" % [_current_category_name, _current_group_name]
@@ -457,12 +407,7 @@ func _on_run_all_pressed() -> void:
 		for action in debug_actions:
 			actions_to_run.append({"action": action, "is_manual": false})
 
-		# Add manual actions for this group using service (DRY principle)
-		var group_manual_actions: Array = _manual_action_service.get_actions_for_group(
-			_current_category_name, _current_group_name
-		)
-		for manual_action in group_manual_actions:
-			actions_to_run.append({"action": manual_action, "is_manual": true})
+		# All actions now come from unified registry
 
 	else:
 		Log.warning("Run All pressed in an unsupported view level.", {}, ["debug_ui"])
@@ -510,25 +455,6 @@ func _on_action_status_updated(text: String, is_error: bool) -> void:
 	_update_status_label_text(text, is_error)
 
 
-func _execute_manual_action(action: ManualDebugAction) -> void:
-	if _is_executing_all:
-		return  # Prevent single execution during "Run All"
-
-	_is_executing_all = true  # Use the same flag to disable UI temporarily
-	_set_ui_for_execution(true)
-	_update_status_label_text("Executing Manual: %s..." % action.action_name)
-	Log.info("Executing manual action: %s" % action.action_name, {}, ["debug", "manual"])
-
-	# Manual actions don't return success/fail, they just execute
-	action.execute()
-
-	# Show completion message
-	_update_status_label_text("Completed: %s\n%s" % [action.action_name, action.description])
-
-	_set_ui_for_execution(false)
-	_is_executing_all = false
-
-
 func _execute_multiple_actions(actions_to_run: Array, scope_description: String) -> void:
 	_is_executing_all = true
 	_set_ui_for_execution(true)
@@ -563,36 +489,28 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 			["debug", "test"]
 		)
 
-		if is_manual:
-			# Manual actions don't return success/fail
-			action.execute()
+		# All actions now use unified execution
+		if action.status_updated.is_connected(_on_action_status_updated):
+			action.status_updated.disconnect(_on_action_status_updated)
+		action.status_updated.connect(_on_action_status_updated)
+
+		var result: Array = await action.execute()
+		var success: bool = result[0]
+		var payload = result[1]
+
+		# Disconnect after execution
+		action.status_updated.disconnect(_on_action_status_updated)
+
+		if success:
 			passed_count += 1
 			summary_lines.append(
-				"[color=palegreen]EXEC: %s[/color] - %s" % [action_name, "Manual action completed"]
+				"[color=palegreen]PASS: %s[/color] - Result: %s" % [action_name, str(payload)]
 			)
 		else:
-			# Regular debug actions - connect to signals
-			if action.status_updated.is_connected(_on_action_status_updated):
-				action.status_updated.disconnect(_on_action_status_updated)
-			action.status_updated.connect(_on_action_status_updated)
-
-			var result: Array = await action.execute()
-			var success: bool = result[0]
-			var payload = result[1]
-
-			# Disconnect after execution
-			action.status_updated.disconnect(_on_action_status_updated)
-
-			if success:
-				passed_count += 1
-				summary_lines.append(
-					"[color=palegreen]PASS: %s[/color] - Result: %s" % [action_name, str(payload)]
-				)
-			else:
-				failed_count += 1
-				summary_lines.append(
-					"[color=red]FAIL: %s[/color] - Error: %s" % [action_name, str(payload)]
-				)
+			failed_count += 1
+			summary_lines.append(
+				"[color=red]FAIL: %s[/color] - Error: %s" % [action_name, str(payload)]
+			)
 
 		# Small delay to allow UI to update if many tests run quickly
 		if OS.has_feature("web"):  # Browsers might need more aggressive yielding
@@ -650,14 +568,6 @@ func show_menu_content() -> void:
 
 ## Validate navigation state before population (prevents errors)
 func _validate_navigation_state(caller_method: String) -> bool:
-	if not _manual_action_service:
-		Log.error(
-			"Manual action service not initialized",
-			{"caller": caller_method},
-			["debug_ui", "error"]
-		)
-		return false
-
 	if not DebugRegistry:
 		Log.error(
 			"DebugRegistry autoload not found", {"caller": caller_method}, ["debug_ui", "error"]
@@ -670,12 +580,14 @@ func _validate_navigation_state(caller_method: String) -> bool:
 ## Add a category item to the list with proper metadata (DRY principle)
 func _add_category_item_to_list(category_name: String, index: int) -> void:
 	# Check if this category has ungrouped actions
-	var has_direct_actions: bool = _manual_action_service.has_ungrouped_actions(category_name)
+	var has_direct_actions: bool = DebugRegistry.has_ungrouped_actions(category_name)
 
-	# Add visual indicator for categories with direct actions
+	# Add visual indicator for categories with direct actions vs submenus only
 	var display_name: String = category_name
 	if has_direct_actions:
-		display_name = category_name + " ►"  # Arrow indicates expandable
+		display_name = "• " + category_name  # Bullet indicates direct actions available
+	else:
+		display_name = "▸ " + category_name  # Arrow indicates submenus only
 
 	item_list_navigator.add_item(display_name)
 

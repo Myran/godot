@@ -32,6 +32,7 @@ func _spawn_cards_async() -> void:
 		if card:
 			# Add to player's hand or appropriate location
 			core.action(core.DrawCardEvent.new(card))
-			Log.debug("Spawned card: " + str(card.get("id", "unknown")))
+			var card_id = card.get("id") if card.has("id") else "unknown"
+			Log.debug("Spawned card: " + str(card_id))
 
 	Log.info("Test cards spawned successfully")

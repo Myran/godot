@@ -40,7 +40,7 @@ func execute() -> Array:
 	var get_result: Dictionary = await op_manager.execute("get_value_async", [full_path])
 
 	if get_result.success:
-		var children_data: Dictionary = get_result.get("data", {})
+		var children_data: Dictionary = get_result.get("data") if get_result.has("data") else {}
 		var child_keys: Array = children_data.keys()
 
 		_update_status("Found %d children: %s" % [child_keys.size(), str(child_keys)])

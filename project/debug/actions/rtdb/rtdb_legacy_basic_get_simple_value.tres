@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RTDBLegacyBasicGetSimpleValueAction" load_steps=2 format=3 uid="uid://doyh3xtv4ke6r"]
+
+[ext_resource type="Script" path="res://debug/actions/rtdb/rtdb_legacy_basic_get_simple_value_action.gd" id="1_1"]
+
+[resource]
+script = ExtResource("1_1")
+action_name = "Basic Get Simple Value (Legacy)"
+category = "RTDB"
+group = "Legacy Tests"
+description = "Migrated from scene_debug.gd - Gets a simple value from RTDB"
