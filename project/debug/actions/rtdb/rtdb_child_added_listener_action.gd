@@ -61,8 +61,8 @@ func execute() -> Array:
 			}
 		)
 	else:
-		_update_status("❌ Listener test FAILED: " + result.error, true)
-		return _failure(result.error)
+		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
+		return _failure(str(result.get("error", "unknown error")))
 
 
 func _on_child_added(child_key: String, child_value: Variant) -> void:

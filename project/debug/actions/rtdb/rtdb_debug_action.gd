@@ -79,7 +79,7 @@ func execute_firebase_operation(
 	if not is_instance_valid(db):
 		return {"success": false, "error": "Database instance invalid"}
 
-	var op_manager := FirebaseOperationManager.new(db)
+	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 	return await op_manager.execute(operation, args, timeout_sec)
 
 

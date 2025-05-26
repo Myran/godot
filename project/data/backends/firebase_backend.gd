@@ -227,7 +227,7 @@ func _connect_signals() -> void:
 					+ ")"
 				)
 
-			var err_msg := (
+			var err_msg: String = (
 				"Failed to connect RTDB signal '%s' to %s::%s. Error: %s"
 				% [signal_name, bound_object_info, handler_callable.get_method(), error_string(err)]
 			)
@@ -295,7 +295,7 @@ func _execute_rtdb_operation_and_await(
 		return {"status": "error", "code": "INVALID_PATH_TYPE", "message": "Path must be an Array."}
 
 	var request_id: int = _get_next_request_id()
-	var signal_helper := RequestSignalHelper.new()
+	var signal_helper: RequestSignalHelper = RequestSignalHelper.new()
 	var timer_instance_id: Variant = null
 
 	_pending_direct_awaits[request_id] = {
@@ -316,7 +316,7 @@ func _execute_rtdb_operation_and_await(
 			"message": "Root node unavailable for Timer creation."
 		}
 
-	var timeout_timer := Timer.new()
+	var timeout_timer: Timer = Timer.new()
 	timeout_timer.name = "FB_DirectTimer_%s_%d" % [_backend_instance_id_str, request_id]
 	root_node.add_child(timeout_timer)
 	timer_instance_id = timeout_timer.get_instance_id()
@@ -325,7 +325,7 @@ func _execute_rtdb_operation_and_await(
 	timeout_timer.wait_time = timeout_sec
 	timeout_timer.one_shot = true
 
-	var timeout_callable := func() -> void:
+	var timeout_callable: Callable = func() -> void:
 		if _is_being_freed:
 			var timer_node_on_free: Timer = instance_from_id(timer_instance_id as int) as Timer
 			if is_instance_valid(timer_node_on_free):
@@ -596,7 +596,7 @@ func _complete_direct_await(
 
 	# Store the signal helper, then erase the main entry from _pending_direct_awaits
 	# This is the "settler cleans" pattern.
-	var temp_signal_helper = signal_helper_to_emit  # Keep a reference before erasing
+	var temp_signal_helper: RequestSignalHelper = signal_helper_to_emit  # Keep a reference before erasing
 	_pending_direct_awaits.erase(request_id)  # ERASE HERE, BEFORE EMITTING
 
 	if is_instance_valid(temp_signal_helper):

@@ -30,7 +30,7 @@ func _ready() -> void:
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 
-func _on_debug_event(event_type, args: Array = []) -> void:
+func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	match event_type:
 		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			%PopupDebug.show()

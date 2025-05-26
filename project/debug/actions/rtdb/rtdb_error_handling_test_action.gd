@@ -56,7 +56,7 @@ func execute() -> Array:
 	]
 
 # Execute each error test scenario
-	for scenario in error_scenarios:
+	for scenario: Dictionary in error_scenarios:
 		_update_status("Testing: %s..." % scenario.name)
 		var test_result: Dictionary = await _execute_error_scenario(db, scenario)
 		error_tests.append(test_result)
@@ -68,7 +68,7 @@ func execute() -> Array:
 	var successful_error_handling: int = 0
 	var failed_error_handling: int = 0
 
-	for test in error_tests:
+	for test: Dictionary in error_tests:
 		if test.error_handled_correctly:
 			successful_error_handling += 1
 		else:
@@ -191,7 +191,7 @@ func _generate_large_data_object(size_multiplier: int) -> Dictionary:
 	large_data["large_array"] = large_array
 	large_data["nested_objects"] = {}
 
-	for i in range(min(size_multiplier / 10, 1000)):  # Limit nested objects
+	for i: int in range(min(size_multiplier / 10, 1000)):  # Limit nested objects
 		large_data.nested_objects["object_%d" % i] = {
 			"id": i,
 			"data": "nested_data_content_for_object_%d" % i,

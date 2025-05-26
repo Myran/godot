@@ -361,7 +361,7 @@ func _load_local_data() -> bool:
 	# Log more detailed structure information for debugging
 	if top_level_keys.size() > 0:
 		var structure_info: Dictionary = {}
-		for key_name in top_level_keys:
+		for key_name: String in top_level_keys:
 			if key_name is String:
 				var value_item: Variant = local_data[key_name]
 				if value_item is Dictionary:

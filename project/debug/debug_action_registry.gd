@@ -1,4 +1,5 @@
 # project/debug/debug_action_registry.gd
+class_name DebugActionRegistry
 extends Node
 
 # Note: This registry now handles both resource-based and programmatic actions
@@ -42,7 +43,7 @@ func _scan_for_actions() -> void:
 		func(a: DebugAction, b: DebugAction) -> bool: return a.action_name < b.action_name
 	)
 
-	var total_actions = actions.size() + _programmatic_actions.size()
+	var total_actions: int = actions.size() + _programmatic_actions.size()
 	Log.info(
 		(
 			"DebugActionRegistry: Loaded %d resource actions, %d programmatic actions (total: %d)"
@@ -53,7 +54,7 @@ func _scan_for_actions() -> void:
 	)
 
 	# Log available categories for debugging
-	var categories = get_categories()
+	var categories: Array[String] = get_categories()
 	Log.info(
 		"Available categories after initialization: %s" % str(categories), {}, ["debug", "system"]
 	)
@@ -141,9 +142,9 @@ func register_callable(
 	group: String = "",
 	description: String = ""
 ) -> void:
-	var action := DebugAction.create_from_callable(name, callable, category, group, description)
+	var action: DebugAction = DebugAction.create_from_callable(name, callable, category, group, description)
 	_programmatic_actions.append(action)
-	var group_info = " (ungrouped)" if group == "" else "/" + group
+	var group_info: String = " (ungrouped)" if group == "" else "/" + group
 	Log.info("Registered programmatic action: %s in %s%s" % [name, category, group_info])
 
 
@@ -171,7 +172,7 @@ func get_categories() -> Array[String]:
 		if action and not action.category.is_empty():
 			categories[action.category] = true
 
-	var sorted_categories: Array[String]
+	var sorted_categories: Array[String] = []
 	sorted_categories.assign(categories.keys())
 	sorted_categories.sort()
 	return sorted_categories
@@ -190,7 +191,7 @@ func get_groups_for_category(category_name: String) -> Array[String]:
 		if action.category == category_name and not action.group.is_empty():
 			groups[action.group] = true
 
-	var sorted_groups: Array[String]
+	var sorted_groups: Array[String] = []
 	sorted_groups.assign(groups.keys())
 	sorted_groups.sort()
 	return sorted_groups
@@ -263,18 +264,18 @@ func _register_default_manual_actions() -> void:
 	# Gameplay Actions - some with groups, some without
 	register_callable(
 		"Reset Match Level",
-		func(): DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL),
+		func() -> void: DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL),
 		"Gameplay",
 		"",
 		"Reset the current match level"  # No group
 	)
 
 	# Match Level Actions - grouped together
-	for i in range(1, 6):
-		var level_num = i  # Capture the value for the lambda
+	for i: int in range(1, 6):
+		var level_num: int = i  # Capture the value for the lambda
 		register_callable(
 			"Load Match Level %d" % level_num,
-			func(level = level_num):
+			func(level: int = level_num) -> void:
 				DebugManager.action(
 					DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % level]
 				),
@@ -295,7 +296,7 @@ func _register_default_manual_actions() -> void:
 	# Database actions - mixed grouped and ungrouped
 	register_callable(
 		"Clear Card Cache",
-		func():
+		func() -> void:
 			if data_source and data_source.has_method("clear_card_cache"):
 				data_source.clear_card_cache()
 			Log.info("Card cache cleared"),
@@ -306,7 +307,7 @@ func _register_default_manual_actions() -> void:
 
 	register_callable(
 		"Toggle Local Battle DB",
-		func():
+		func() -> void:
 			DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
 			Log.info("Local battle DB: " + str(DebugManager.use_local_battle_db)),
 		"Database",
@@ -317,7 +318,7 @@ func _register_default_manual_actions() -> void:
 	# Quick Actions - all without groups (simpler organization)
 	register_callable(
 		"Cycle Asset Variant",
-		func():
+		func() -> void:
 			DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
 			Log.info("Asset variant set to: " + str(DebugManager.asset_variant)),
 		"Quick Actions",
@@ -327,7 +328,7 @@ func _register_default_manual_actions() -> void:
 
 	register_callable(
 		"Print Debug Info",
-		func():
+		func() -> void:
 			Log.info("=== Debug Info ===")
 			Log.info("Local DB: %s" % DebugManager.use_local_battle_db)
 			Log.info("Asset Variant: %d" % DebugManager.asset_variant)
@@ -340,7 +341,7 @@ func _register_default_manual_actions() -> void:
 	# System Actions - no groups needed
 	register_callable(
 		"Force Garbage Collection",
-		func():
+		func() -> void:
 			OS.request_permissions()
 			Log.info("Garbage collection requested"),
 		"System",
@@ -358,14 +359,14 @@ func _populate_enemy_lineup() -> void:
 		return
 
 	# Create enemy cards
-	for n in 3:
-		var new_card = await card_controller.create_unit_from_id(str(n), 1)
+	for n: int in 3:
+		var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 		new_card.block_context = Cards.CONTEXT.LINEUP
 		core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
 
 	# Create debug cards
-	for n in 3:
-		var new_card = await card_controller.create_unit_from_id(str(n), 1)
+	for n: int in 3:
+		var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
 		new_card.block_context = Cards.CONTEXT.LINEUP
 		core.action(core.DebugLineupAddCardEvent.new(new_card, n))
 

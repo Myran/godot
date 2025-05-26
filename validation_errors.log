@@ -1,42 +1,49 @@
 WorkerThreadPool: 8 threads, 2 max low-priority.
-Godot Engine v4.4.rc.custom_build.78f73d476 (2025-03-01 20:19:08 UTC) - https://godotengine.org
+Godot Engine v4.5.dev.custom_build.4a0ce10a5 (2025-05-12 06:44:00 UTC) - https://godotengine.org
 TextServer: Added interface "Dummy"
 TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
 Using "default" pen tablet driver...
 
 TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
-CameraServer: Registered camera FaceTime HD Camera with ID 1 and position 0 at index 0
-CORE API HASH: 1539128922
-EDITOR API HASH: 2189602513
-Loading resource: res://autoloads/debug.tscn
-Loading resource: res://autoloads/debug.gd
-Loading resource: res://autoloads/internet_status.gd
-Loading resource: res://firebase/auth.gd
-Loading resource: res://data/data_source.gd
+CORE API HASH: 4139892499
+EDITOR API HASH: 1732618343
+Loading resource: res://autoloads/singleton_cleanup.gd
+Loading resource: res://autoloads/debug_manager.gd
+Loading resource: res://debug/debug_action_registry.gd
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Integer used when an enum value is expected. If this is intended cast the integer to the enum type.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "bool" is unsafe.'
+ERROR: 'Casting "Variant" to "String" is unsafe.'
+ERROR: 'Casting "Variant" to "bool" is unsafe.'
+ERROR: 'Casting "Variant" to "bool" is unsafe.'
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+ERROR: 'Casting "Variant" to "Object" is unsafe.'
+ERROR: 'Casting "Variant" to "Object" is unsafe.'
+ERROR: 'Casting "Variant" to "FirebaseBackend" is unsafe.'
+ERROR: 'Casting "Variant" to "Object" is unsafe.'
 ERROR: 'Values of the ternary operator are not mutually compatible.'
-ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
-ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
-ERROR: '"for" iterator variable "item" has no static type.'
+ERROR: 'Casting "Variant" to "Object" is unsafe.'
 ERROR: 'The argument 1 of the constructor "int()" requires the subtype "int", "bool", or "float" but the supertype "Variant" was provided.'
-ERROR: '"for" iterator variable "part" has no static type.'
-ERROR: '"for" iterator variable "part" has an implicitly inferred static type.'
-ERROR: 'The argument 1 of the function "assign()" requires the subtype "Array" but the supertype "Variant" was provided.'
-ERROR: 'The argument 1 of the constructor "int()" requires the subtype "int", "bool", or "float" but the supertype "Variant" was provided.'
-ERROR: 'Casting "Variant" to "String" is unsafe.'
-ERROR: 'Casting "Variant" to "String" is unsafe.'
-ERROR: 'Variable "data" has no static type.'
-ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+ERROR: 'The local function parameter "name" is shadowing an already-declared property in the base class "Node".'
+DebugActionRegistry instance created
+Loading resource: res://firebase/auth.gd
 Loading resource: res://autoloads/seeded_rng_singleton.gd
 Loading resource: res://autoloads/card_controller.tscn
 Loading resource: res://autoloads/card_controller.gd
 Loading resource: res://misc/util.gd
+Loading resource: res://addons/advanced_logger/ios_loader.gd
 Loaded system CA certificates
 Loading resource: res://main.tscn
 Loading resource: res://main.gd
 Loading resource: res://debug/scene_debug.tscn
 Loading resource: res://debug/theme_debugmenu.tres
-Loading resource: res://debug/debug.gd
-Loading resource: res://debug/button_debug_menu.tscn
+Loading resource: res://debug/debug_menu_controller.gd
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
+ERROR: '"await" keyword not needed in this case, because the expression isn't a coroutine nor a signal.'
 Loading resource: res://core/game.tscn
 Loading resource: res://core/game.gd
 Loading resource: res://assets/ui/ui_bar_2.png
@@ -152,86 +159,215 @@ Loading resource: res://assets/testart/prepare_background_test_2.png
 Loading resource: res://.godot/imported/prepare_background_test_2.png-5a91bb5177e3849c66ac15477b0e82f7.ctex
 Loading resource: res://core/canvas_layer_unhandled_events.gd
 Loading resource: res://core/canvas_layer_background.gd
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDebug module initialized[39m [38;2;146;131;116m(debug.gd:46)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[network]                     [39m [38;2;125;174;163mInternet status checker initialized[39m [38;2;146;131;116m(internet_status.gd:11)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mDebugManager (Global Event Bus) initialized.[39m [38;2;146;131;116m(debug_manager.gd:43)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mDebugActionRegistry initializing...[39m [38;2;146;131;116m(debug_action_registry.gd:20)[39m[0m
+Loading resource: res://debug/actions/core/log_system_info.tres
+Loading resource: res://debug/actions/core/log_system_info_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Log System Information[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_batch_operations.tres
+Loading resource: res://debug/actions/rtdb/rtdb_batch_operations_action.gd
+ERROR: 'The local function parameter "deadline_ms" is shadowing an already-declared function at line 19 in the current class.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'Casting "Variant" to "int" is unsafe.'
+ERROR: 'The argument 1 of the function "_failure()" requires the subtype "String" but the supertype "Variant" was provided.'
+ERROR: '"for" iterator variable "element" has an implicitly inferred static type.'
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Batch Operations[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_child_added_listener.tres
+Loading resource: res://debug/actions/rtdb/rtdb_child_added_listener_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Child Added Listener[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_child_changed_listener.tres
+Loading resource: res://debug/actions/rtdb/rtdb_child_changed_listener_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Child Changed Listener[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_child_removed_listener.tres
+Loading resource: res://debug/actions/rtdb/rtdb_child_removed_listener_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Child Removed Listener[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_concurrent_operations.tres
+Loading resource: res://debug/actions/rtdb/rtdb_concurrent_operations_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Concurrent Operations[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_delete_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_delete_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Delete Value[39m [38;2;146;131;116m(debug_action_registry.gd:132)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_error_handling_test.tres
+Loading resource: res://debug/actions/rtdb/rtdb_error_handling_test_action.gd
+
+Debugger Break, Reason: 'Parser Error: Expected expression after "/" operator.'
+*Frame 0 - res://debug/actions/rtdb/rtdb_error_handling_test_action.gd:194 in function ''
+Enter "help" for assistance.
+debug> [1;35mSCRIPT ERROR:[0;95m Parse Error: Expected expression after "/" operator.
+[0;90m          at: GDScript::reload (res://debug/actions/rtdb/rtdb_error_handling_test_action.gd:194)[0m
+[0;90m          GDScript backtrace (most recent call first):
+              [0] _load_action_resource (res://debug/debug_action_registry.gd:129)
+              [1] _load_known_actions (res://debug/debug_action_registry.gd:95)
+              [2] _scan_for_actions (res://debug/debug_action_registry.gd:30)
+              [3] _ready (res://debug/debug_action_registry.gd:21)[0m
+[1;31mERROR:[0;91m Failed to load script "res://debug/actions/rtdb/rtdb_error_handling_test_action.gd" with error "Parse error".
+[0;90m   at: load (modules/gdscript/gdscript.cpp:3023)[0m
+[0;90m   GDScript backtrace (most recent call first):
+       [0] _load_action_resource (res://debug/debug_action_registry.gd:129)
+       [1] _load_known_actions (res://debug/debug_action_registry.gd:95)
+       [2] _scan_for_actions (res://debug/debug_action_registry.gd:30)
+       [3] _ready (res://debug/debug_action_registry.gd:21)[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;216;166;87mWARNING   [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;216;166;87mResource is not a DebugAction: res://debug/actions/rtdb/rtdb_error_handling_test.tres[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_get_nested_path.tres
+Loading resource: res://debug/actions/rtdb/rtdb_get_nested_path_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Get Nested Path[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_get_simple_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_get_simple_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Get Simple Value[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_large_data_test.tres
+Loading resource: res://debug/actions/rtdb/rtdb_large_data_test_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Large Data Test[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_list_children.tres
+Loading resource: res://debug/actions/rtdb/rtdb_list_children_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: List Children[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_path_validation.tres
+Loading resource: res://debug/actions/rtdb/rtdb_path_validation_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Path Validation[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_remove_all_listeners.tres
+Loading resource: res://debug/actions/rtdb/rtdb_remove_all_listeners_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Remove All Listeners[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_set_nested_path.tres
+Loading resource: res://debug/actions/rtdb/rtdb_set_nested_path_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Set Nested Path[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_set_simple_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_set_simple_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Set Simple Value[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_single_value_listener.tres
+Loading resource: res://debug/actions/rtdb/rtdb_single_value_listener_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Single Value Listener[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_transaction_test.tres
+Loading resource: res://debug/actions/rtdb/rtdb_transaction_test_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Transaction Test[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_update_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_update_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Update Value[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_set_simple_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_set_simple_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Basic Set Simple Value (Legacy)[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_get_simple_value.tres
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_get_simple_value_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Basic Get Simple Value (Legacy)[39m [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_push_item.tres
+Loading resource: res://debug/actions/rtdb/rtdb_legacy_basic_push_item_action.gd
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mLoaded action: Basic Push Item (Legacy)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mDebugActionRegistry: Loaded 21 resource actions, 0 programmatic actions (total: 21)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mAvailable categories after initialization: ["RTDB", "System"][39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mRegistering default manual actions in unified registry[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Reset Match Level in Gameplay (ungrouped)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Load Match Level 1 in Gameplay/Match Levels[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Load Match Level 2 in Gameplay/Match Levels[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Load Match Level 3 in Gameplay/Match Levels[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Load Match Level 4 in Gameplay/Match Levels[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Load Match Level 5 in Gameplay/Match Levels[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Populate Enemy Lineup in Gameplay/Preset Lineups[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Clear Card Cache in Database/Cache[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Toggle Local Battle DB in Database (ungrouped)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Cycle Asset Variant in Quick Actions (ungrouped)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Print Debug Info in Quick Actions (ungrouped)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m                                             [39m [38;2;125;174;163mRegistered programmatic action: Force Garbage Collection in System (ungrouped)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, system]                              [39m [38;2;125;174;163mDefault manual actions registered[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[network]                                    [39m [38;2;125;174;163mInternet status checker (HTTPRequest) initialized[39m [38;2;146;131;116m(:194)[39m[0m
 Facebook plugin not found!
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDataSource initializing[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:37)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[ui, system]                  [39m [38;2;125;174;163mUI autoload initialized[39m [38;2;146;131;116m(ui.gd:77)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system]                      [39m [38;2;125;174;163mCore autoload initialized[39m [38;2;146;131;116m(core.gd:184)[39m[0m
-[38;2;216;166;87mWARNING   [39m [38;2;169;182;101m[firebase]                    [39m [38;2;216;166;87mFacebook SDK not available[39m [38;2;146;131;116m(debug.gd:80)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, level]       [39m [38;2;124;111;100mLevel controller initializing[39m [38;2;146;131;116m(level_controller.gd:13)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;124;111;100mGame initializing[39m [38;2;146;131;116m(game.gd:37)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mMain scene initialized[39m [38;2;146;131;116m(main.gd:5)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mDataSource initializing[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[ui, system]                                 [39m [38;2;125;174;163mUI autoload initialized[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system]                                     [39m [38;2;125;174;163mCore autoload initialized[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug, ui, initialization]                  [39m [38;2;125;174;163mDebugMenuController ready.[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mPopulating main categories view[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mRetrieved categories from DebugRegistry[39m { "categories": ["Database", "Gameplay", "Quick Actions", "RTDB", "System"], "count": 5 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mAdded category item[39m { "category": "Database", "has_direct_actions": true, "index": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mAdded category item[39m { "category": "Gameplay", "has_direct_actions": true, "index": 1 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mAdded category item[39m { "category": "Quick Actions", "has_direct_actions": true, "index": 2 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mAdded category item[39m { "category": "System", "has_direct_actions": true, "index": 3 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;189;174;147mAdded category item[39m { "category": "RTDB", "has_direct_actions": false, "index": 4 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[debug_ui]                                   [39m [38;2;125;174;163mMain categories populated[39m { "total_categories": 5, "direct_actions": 4, "submenus": 1 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[initialization, level]                      [39m [38;2;189;174;147mLevel controller initializing[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[initialization, system]                     [39m [38;2;189;174;147mGame initializing[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]                     [39m [38;2;125;174;163mMain scene initialized[39m [38;2;146;131;116m(:194)[39m[0m
 ============================================
 [38;2;125;174;163mAdvanced Logger debug filter logging DISABLED[39m[0m
 ============================================
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mUsing updated DataSource implementation[39m [38;2;146;131;116m(main.gd:14)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]      [39m [38;2;125;174;163mRunning on macOS platform[39m [38;2;146;131;116m(main.gd:23)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mStarting DataSource initialization[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:47)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRunning in editor, using local data source[39m [38;2;146;131;116m(backend_factory.gd:18)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCreating local JSON backend[39m { "custom_file_path": false } [38;2;146;131;116m(backend_factory.gd:93)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mLocalJSONBackend initializing[39m { "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:22)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mLocalJSONBackend file paths[39m { "battle_db_file": "res://resources/gameone-577cb-export.json", "current_file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:35)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mUsing battle database file[39m { "file": "res://resources/gameone-577cb-export.json" } [38;2;146;131;116m(local_json_backend.gd:45)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;125;174;163mLoading local data file[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:238)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mFile opened successfully, reading content[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:255)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data]                  [39m [38;2;124;111;100mFile read complete[39m { "file": "res://resources/gameone-577cb-export.json", "size_bytes": 417498, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:261)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;125;174;163mLocal data file loaded successfully[39m { "file": "res://resources/gameone-577cb-export.json", "top_level_keys": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "events", "players", "zen", "zen_players"], "key_count": 5, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:277)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[local_data, database]        [39m [38;2;124;111;100mData structure details[39m { "structure": { "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": { "type": "Dictionary", "size": 12, "keys": ["cards_0", "event_data_0", "items_0", "levels_0", "rules_0"] }, "events": { "type": "Dictionary", "size": 2, "keys": ["event_1", "event_2"] }, "players": { "type": "Dictionary", "size": 14, "keys": ["0IFVa4UfguWtMqKt9vaG0Ejhcm43", "3ejbxJpfzggt53MMoSmaLZk0KZt1", "BSsTupQkUjSZrm6RrbfSrCWDRnk1", "FLhqBCvW6MYlB0YbBRITU3m77ST2", "MM8J6PopV5ffHXFMI3H4pfSSES12"] }, "zen": { "type": "Dictionary", "size": 1, "keys": ["levels"] }, "zen_players": { "type": "Dictionary", "size": 20, "keys": ["0XW0aF3mgWQUr6k9ugrUlgvIss92", "2lVS33FUs3OcHdbxL61iP4wG1sj2", "6RVtUgcHwBZdA1PQ4jn26OIhkfN2", "7E7oaVZIOkWjPXzLt8UZgfcd6Iq2", "90PmPtA0Czcla470z2XP6PzNgXj1"] } }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:310)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mLocal backend initialized successfully[39m [38;2;146;131;116m(backend_factory.gd:59)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBackend created[39m { "backend_type": "RefCounted", "using_local_data": true, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:58)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collections[39m { "test_group": 0, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "cards", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Cards", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mCardCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(card_collection.gd:20)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "levels", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Levels", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mLevelCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(level_collection.gd:17)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "items", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Items", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mItemCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(item_collection.gd:26)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "players", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Players", "base_path": ["players"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mPlayerCollection initialized[39m [38;2;146;131;116m(player_collection.gd:8)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "events", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Events", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mEventCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(event_collection.gd:12)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mInitializing collection[39m { "collection_name": "rules", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:122)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBaseCollection initialized[39m { "collection_name": "Rules", "base_path": ["sheets"] } [38;2;146;131;116m(base_collection.gd:29)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRulesCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(rules_collection.gd:12)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mDataSource collections initialized successfully[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:110)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mWaiting for backend startup[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:72)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mDataSource initialization complete[39m { "firebase_available": false, "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;124;111;100mSetting up game systems[39m [38;2;146;131;116m(game.gd:53)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting rules data[39m { "collection_name": "Rules", "collection_key": "rules_0", "collection_id": -9223371873478244141, "stack_trace": [{ "function": "_get_stack_trace", "file": "rules_collection.gd", "line": 64 }, { "function": "get_rules", "file": "rules_collection.gd", "line": 17 }] } [38;2;146;131;116m(rules_collection.gd:17)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mGetting local data[39m { "path": ["sheets"], "key": "rules_0", "call_stack": [{ "function": "get_rules", "file": "rules_collection.gd", "line": 23 }, { "function": "get_rules_data", "file": "data_source.gd", "line": 385 }, { "function": "setup", "file": "card_controller.gd", "line": 15 }], "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:60)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mFound sheets ID in data[39m { "sheets_id": "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:80)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mFound key directly in sheets data[39m { "key": "rules_0", "result_info": { "type": 28, "size": 1, "is_array": true }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:90)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mRules data request completed[39m { "duration_ms": 1, "result_null": false, "result_empty": false, "collection_name": "Rules", "collection_id": -9223371873478244141 } [38;2;146;131;116m(rules_collection.gd:26)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mValidating rules data structure[39m { "result_keys": ["battle_reward_loss", "battle_reward_win", "chance_lvl_2_star_1", "chance_lvl_2_star_2", "chance_lvl_3_star_1", "chance_lvl_3_star_2", "chance_lvl_3_star_3", "id", "notch_devices", "start_energy", "upgrade_cost_lvl_2", "upgrade_cost_lvl_3", "upgrade_slots_lvl_1", "upgrade_slots_lvl_2", "upgrade_slots_lvl_3", "value_recruit_unit", "value_roll", "value_sell_item", "value_sell_unit", "value_upgrade"], "collection_name": "Rules", "collection_id": -9223371873478244141 } [38;2;146;131;116m(rules_collection.gd:54)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:208)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting all cards[39m { "use_cache": true, "cache_initialized": false, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906, "stack_trace": [{ "function": "_get_stack_trace", "file": "card_collection.gd", "line": 190 }, { "function": "get_all", "file": "card_collection.gd", "line": 35 }] } [38;2;146;131;116m(card_collection.gd:35)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mGetting local data[39m { "path": ["sheets"], "key": "cards_0", "call_stack": [{ "function": "get_all", "file": "card_collection.gd", "line": 47 }, { "function": "activate_card_cache", "file": "data_source.gd", "line": 216 }, { "function": "setup", "file": "card_controller.gd", "line": 16 }], "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:60)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;124;111;100mFound sheets ID in data[39m { "sheets_id": "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:80)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]        [39m [38;2;125;174;163mFound key directly in sheets data[39m { "key": "cards_0", "result_info": { "type": 28, "size": 19, "is_array": true }, "backend_id": -9223371876967905075 } [38;2;146;131;116m(local_json_backend.gd:90)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mRetrieved card data array directly[39m { "duration_ms": 0, "count": 19, "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:57)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mBackend get_data call completed[39m { "duration_ms": 0, "collection_name": "Cards", "collection_key": "cards_0", "result_null": false, "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:83)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mProcessing card data result[39m { "result_type": 28, "is_array": true, "result_size": 19, "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:125)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mRetrieved all cards[39m { "count": 19, "collection_name": "Cards", "collection_key": "cards_0", "empty_result": false, "duration_ms": 0, "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:138)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mValidating card data structure[39m { "sample_card_keys": ["abilities", "attack", "card_name", "description", "health", "id", "name", "tags", "tribe", "upgrade_level"], "required_keys": ["id", "name", "abilities", "health"], "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:155)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard data validation successful[39m { "collection_name": "Cards", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:175)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 0, "data_source": "local", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:219)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[level, initialization]       [39m [38;2;125;174;163mSetting up level[39m { "level_name": "default" } [38;2;146;131;116m(level_controller.gd:29)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[clicker, game_state]         [39m [38;2;124;111;100mRefillDistance set for level[39m { "distance": (0.0, 225.0), "level": "default" } [38;2;146;131;116m(level_controller.gd:41)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, initialization]       [39m [38;2;124;111;100mCreating blocks from level layout[39m [38;2;146;131;116m(level_controller.gd:46)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "0", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "0" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]                     [39m [38;2;125;174;163mUsing updated DataSource implementation[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[system, initialization]                     [39m [38;2;125;174;163mRunning on macOS platform[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mStarting DataSource initialization[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mRunning in editor, selecting local data source[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mBackendFactory: Creating local JSON backend instance.[39m { "custom_file_path": false } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;125;174;163mLocalJSONBackend initializing[39m { "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mLocalJSONBackend file paths[39m { "battle_db_file": "res://resources/gameone-577cb-export.json", "current_file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data]                                 [39m [38;2;125;174;163mLocalJSONBackend instance created successfully. Class: RefCounted[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBackendFactory: Initializing chosen backend: RefCounted (Instance ID: -9223371832894158622)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[local_data]                                 [39m [38;2;189;174;147mUsing battle database file[39m { "file": "res://resources/gameone-577cb-export.json" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]                       [39m [38;2;125;174;163mLoading local data file[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[local_data]                                 [39m [38;2;189;174;147mFile opened successfully, reading content[39m { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[local_data]                                 [39m [38;2;189;174;147mFile read complete[39m { "file": "res://resources/gameone-577cb-export.json", "size_bytes": 417498, "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[local_data, database]                       [39m [38;2;125;174;163mLocal data file loaded successfully[39m { "file": "res://resources/gameone-577cb-export.json", "top_level_keys": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "events", "players", "zen", "zen_players"], "key_count": 5, "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[local_data, database]                       [39m [38;2;189;174;147mData structure details[39m { "structure": { "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": { "type": "Dictionary", "size": 12, "keys": ["cards_0", "event_data_0", "items_0", "levels_0", "rules_0"] }, "events": { "type": "Dictionary", "size": 2, "keys": ["event_1", "event_2"] }, "players": { "type": "Dictionary", "size": 14, "keys": ["0IFVa4UfguWtMqKt9vaG0Ejhcm43", "3ejbxJpfzggt53MMoSmaLZk0KZt1", "BSsTupQkUjSZrm6RrbfSrCWDRnk1", "FLhqBCvW6MYlB0YbBRITU3m77ST2", "MM8J6PopV5ffHXFMI3H4pfSSES12"] }, "zen": { "type": "Dictionary", "size": 1, "keys": ["levels"] }, "zen_players": { "type": "Dictionary", "size": 20, "keys": ["0XW0aF3mgWQUr6k9ugrUlgvIss92", "2lVS33FUs3OcHdbxL61iP4wG1sj2", "6RVtUgcHwBZdA1PQ4jn26OIhkfN2", "7E7oaVZIOkWjPXzLt8UZgfcd6Iq2", "90PmPtA0Czcla470z2XP6PzNgXj1"] } }, "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mBackendFactory: Successfully initialized backend: RefCounted (Instance ID: -9223371832894158622)[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBackend created[39m { "backend_type": "RefCounted", "using_local_data": true, "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collections[39m { "test_group": 0, "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "cards", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "cards", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "cards", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mCardCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "cards", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "levels", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "levels", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "Levels", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mLevelCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "levels", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "items", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "items", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "items", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mItemCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "items", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "players", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "players", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "players", "base_path": ["players"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mPlayerCollection initialized[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "players", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "events", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "events", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "events", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mEventCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "events", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "rules", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mInitializing collection[39m { "collection_name": "rules", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBaseCollection initialized[39m { "collection_name": "rules", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mRulesCollection initialized[39m { "test_group": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mSuccessfully initialized collection[39m { "collection_name": "rules", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mDataSource collections initialized successfully[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mWaiting for backend startup[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mDataSource initialization complete[39m { "firebase_available": false, "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[initialization, system]                     [39m [38;2;189;174;147mSetting up game systems[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting rules data[39m { "collection_name": "rules", "collection_key": "rules_0", "collection_id": -9223371830562125591, "stack_trace": [{ "function": "", "file": "", "line": 194 }] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mGetting local data[39m { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "rules_0", "call_stack": [{ "function": "", "file": "", "line": 194 }], "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mNavigating path with JSONPathNavigator[39m { "original_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "navigation_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;125;174;163mSuccessfully navigated to data[39m { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "rules_0", "value_info": { "type": 28, "size": 1, "is_array": true }, "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mRules data request completed[39m { "duration_ms": 0, "result_null": false, "result_empty": false, "collection_name": "rules", "collection_id": -9223371830562125591 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mValidating rules data structure[39m { "result_keys": ["battle_reward_loss", "battle_reward_win", "chance_lvl_2_star_1", "chance_lvl_2_star_2", "chance_lvl_3_star_1", "chance_lvl_3_star_2", "chance_lvl_3_star_3", "id", "notch_devices", "start_energy", "upgrade_cost_lvl_2", "upgrade_cost_lvl_3", "upgrade_slots_lvl_1", "upgrade_slots_lvl_2", "upgrade_slots_lvl_3", "value_recruit_unit", "value_roll", "value_sell_item", "value_sell_unit", "value_upgrade"], "collection_name": "rules", "collection_id": -9223371830562125591 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]                            [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting all cards[39m { "use_cache": true, "cache_initialized": false, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877, "stack_trace": [{ "function": "", "file": "", "line": 194 }] } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mGetting local data[39m { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "cards_0", "call_stack": [{ "function": "", "file": "", "line": 194 }], "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;189;174;147mNavigating path with JSONPathNavigator[39m { "original_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "navigation_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database, local_data]                       [39m [38;2;125;174;163mSuccessfully navigated to data[39m { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "cards_0", "value_info": { "type": 28, "size": 19, "is_array": true }, "backend_id": -9223371832894158622 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mRetrieved card data array directly[39m { "duration_ms": 1, "count": 19, "collection_name": "cards", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mBackend get_data call completed[39m { "duration_ms": 1, "collection_name": "cards", "collection_key": "cards_0", "result_null": false, "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mProcessing card data result[39m { "result_type": 28, "is_array": true, "result_size": 19, "collection_name": "cards", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mRetrieved all cards[39m { "count": 19, "collection_name": "cards", "collection_key": "cards_0", "empty_result": false, "duration_ms": 1, "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mValidating card data structure[39m { "sample_card_keys": ["abilities", "attack", "card_name", "description", "health", "id", "name", "tags", "tribe", "upgrade_level"], "required_keys": ["id", "name", "abilities", "health"], "collection_name": "cards", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard data validation successful[39m { "collection_name": "cards", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]                            [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 1, "data_source": "local", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[level, initialization]                      [39m [38;2;125;174;163mSetting up level[39m { "level_name": "default" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[clicker, game_state]                        [39m [38;2;189;174;147mRefillDistance set for level[39m { "distance": (0.0, 225.0), "level": "default" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, initialization]                      [39m [38;2;189;174;147mCreating blocks from level layout[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mCreating random block[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mGetting card from pool[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting card info[39m { "card_id": "12", "use_cache": true } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard found[39m { "card_id": "12" } [38;2;146;131;116m(:194)[39m[0m
 Loading resource: res://core/clicker/blocks/block_base_card.tscn
 Loading resource: res://assets/frames/frame_icon.png
 Loading resource: res://.godot/imported/frame_icon.png-a3e81cd472d2d589bc926b7918ce573e.ctex
@@ -263,116 +399,772 @@ Loading resource: res://core/card/icon_level_small.tscn
 Loading resource: res://core/card/panel_container_level_top.gd
 Loading resource: res://assets/effects/bubble.png
 Loading resource: res://.godot/imported/bubble.png-683bf9094485ef6f389913837db4c502.ctex
-Loading resource: res://assets/card_images/card_image_1_0.png
-Loading resource: res://.godot/imported/card_image_1_0.png-6c27c4cf163b8ea49db34b763610450a.ctex
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "10", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "10" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
-Loading resource: res://core/clicker/blocks/block_base_card.tscn
-Loading resource: res://core/card/icon_level_small.tscn
-Loading resource: res://assets/card_images/card_image_1_10.png
-Loading resource: res://.godot/imported/card_image_1_10.png-219b59d5f832786b5a1a2badf1732eb1.ctex
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "4", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "4" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
-Loading resource: res://core/clicker/blocks/block_base_card.tscn
-Loading resource: res://core/card/icon_level_small.tscn
-Loading resource: res://assets/card_images/card_image_1_4.png
-Loading resource: res://.godot/imported/card_image_1_4.png-196d254936bb9f0ea95d4f742c12bd3b.ctex
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "1", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "1" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+Loading resource: res://assets/card_images/card_image_1_12.png
+Loading resource: res://.godot/imported/card_image_1_12.png-e7ce216b939e3df228c1dde33c38af5e.ctex
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (0, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mCreating random block[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mGetting card from pool[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting card info[39m { "card_id": "1", "use_cache": true } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard found[39m { "card_id": "1" } [38;2;146;131;116m(:194)[39m[0m
 Loading resource: res://core/clicker/blocks/block_base_card.tscn
 Loading resource: res://core/card/icon_level_small.tscn
 Loading resource: res://assets/card_images/card_image_1_1.png
 Loading resource: res://.godot/imported/card_image_1_1.png-c9d7af7af0b4dc5d082bd68bebd2b8a7.ctex
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mCreating random block[39m [38;2;146;131;116m(level_controller.gd:78)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, card]                 [39m [38;2;124;111;100mGetting card from pool[39m [38;2;146;131;116m(level_controller.gd:85)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                    [39m [38;2;125;174;163mGetting card info[39m { "card_id": "0", "use_cache": true } [38;2;146;131;116m(card_collection.gd:211)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mCard found[39m { "card_id": "0" } [38;2;146;131;116m(card_collection.gd:217)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (1, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mCreating random block[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mGetting card from pool[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting card info[39m { "card_id": "4", "use_cache": true } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard found[39m { "card_id": "4" } [38;2;146;131;116m(:194)[39m[0m
 Loading resource: res://core/clicker/blocks/block_base_card.tscn
 Loading resource: res://core/card/icon_level_small.tscn
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (0, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (4, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (1, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (2, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[level, grid]                 [39m [38;2;124;111;100mAdding block to grid[39m { "grid_pos": (3, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(level_controller.gd:92)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[initialization, system]      [39m [38;2;125;174;163mInitializing game[39m [38;2;146;131;116m(game.gd:61)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:208)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database, cache]             [39m [38;2;124;111;100mUsing card cache[39m { "cache_size": 19, "collection_name": "Cards", "collection_key": "cards_0", "collection_id": -9223371875323737906 } [38;2;146;131;116m(card_collection.gd:27)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(data_source.gd:195)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]             [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 0, "data_source": "local", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:219)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "START" } [38;2;146;131;116m(game_handler.gd:7)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[database]                    [39m [38;2;124;111;100mActive collections[39m { "collections": { "cards": true, "levels": true, "items": true, "players": true, "events": true, "rules": true }, "active_count": 6, "backend_type": "RefCounted", "instance_id": 92996109833 } [38;2;146;131;116m(data_source.gd:489)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state]                  [39m [38;2;125;174;163mGame starting[39m [38;2;146;131;116m(game.gd:220)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, event_handling]  [39m [38;2;124;111;100mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(game.gd:91)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state transition[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(game.gd:108)[39m[0m
-[38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition][39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(game_handler.gd:7)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[game_state, ui]              [39m [38;2;124;111;100mSwitching to preparation mode[39m [38;2;146;131;116m(game.gd:236)[39m[0m
-[38;2;124;111;100mDEBUG     [39m [38;2;169;182;101m[network]                     [39m [38;2;124;111;100mSocket status[39m { "status": 0 } [38;2;146;131;116m(internet_status.gd:27)[39m[0m
+Loading resource: res://assets/card_images/card_image_1_4.png
+Loading resource: res://.godot/imported/card_image_1_4.png-196d254936bb9f0ea95d4f742c12bd3b.ctex
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (2, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mCreating random block[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mGetting card from pool[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting card info[39m { "card_id": "10", "use_cache": true } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard found[39m { "card_id": "10" } [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+Loading resource: res://assets/card_images/card_image_1_10.png
+Loading resource: res://.godot/imported/card_image_1_10.png-219b59d5f832786b5a1a2badf1732eb1.ctex
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (3, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mCreating random block[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, card]                                [39m [38;2;189;174;147mGetting card from pool[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[database]                                   [39m [38;2;125;174;163mGetting card info[39m { "card_id": "10", "use_cache": true } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mCard found[39m { "card_id": "10" } [38;2;146;131;116m(:194)[39m[0m
+Loading resource: res://core/clicker/blocks/block_base_card.tscn
+Loading resource: res://core/card/icon_level_small.tscn
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (4, 0), "block_type": 1, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (0, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (0, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (0, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (4, 1), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (4, 2), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (4, 3), "block_type": 4, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (1, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (2, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (3, 1), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (1, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (2, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (3, 2), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (1, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (2, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[level, grid]                                [39m [38;2;189;174;147mAdding block to grid[39m { "grid_pos": (3, 3), "block_type": 5, "refill": 0 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[initialization, system]                     [39m [38;2;125;174;163mInitializing game[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]                            [39m [38;2;125;174;163mActivating card cache[39m { "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database, cache]                            [39m [38;2;189;174;147mUsing card cache[39m { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371831904302877 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mFirebase availability check[39m { "available": false, "backend_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[cache, database]                            [39m [38;2;125;174;163mCard cache activated[39m { "count": 19, "duration_ms": 0, "data_source": "local", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition]               [39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "START" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[database]                                   [39m [38;2;189;174;147mActive collections[39m { "collections": { "cards": true, "levels": true, "items": true, "players": true, "events": true, "rules": true }, "active_count": 6, "backend_type": "RefCounted", "instance_id": 109370672635 } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state]                                 [39m [38;2;125;174;163mGame starting[39m [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, event]                          [39m [38;2;189;174;147mResolving core event[39m { "event_type": "RefCounted" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition]               [39m [38;2;125;174;163mGame state transition[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;125;174;163mINFO      [39m [38;2;169;182;101m[game_state, state_transition]               [39m [38;2;125;174;163mGame state changing[39m { "from": "START", "to": "PREPARE" } [38;2;146;131;116m(:194)[39m[0m
+[38;2;146;131;116m2025-05-26 12:04:40[39m [38;2;189;174;147mDEBUG     [39m [38;2;169;182;101m[game_state, ui]                             [39m [38;2;189;174;147mSwitching to preparation mode[39m [38;2;146;131;116m(:194)[39m[0m
+Singleton cleanup completed
+Singleton cleanup completed
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+[1;33mWARNING:[0;93m ObjectDB instances leaked at exit (run with --verbose for details).
+[0;90m     at: cleanup (core/object/object.cpp:2489)[0m
+Leaked instance: GDScriptNativeClass:9223372043985093000
+Leaked instance: GDScriptNativeClass:9223372048716268194
+Leaked instance: GDScriptNativeClass:9223372048867263147
+Leaked instance: GDScriptNativeClass:9223372051216073527
+Leaked instance: GDScriptNativeClass:9223372051266405178
+Leaked instance: GDScriptNativeClass:9223372051534840650
+Leaked instance: GDScriptNativeClass:9223372052189152113
+Leaked instance: GDScript:9223372065023722923 - Resource path: res://addons/advanced_logger/core/logger.gd
+Leaked instance: GDScript:9223372065292158381 - Resource path: res://addons/advanced_logger/utils/tag_manager.gd
+Leaked instance: GDScript:9223372065577371055 - Resource path: res://addons/advanced_logger/utils/config_manager.gd
+Leaked instance: GDScript:9223372065862583729 - Resource path: res://addons/advanced_logger/core/log_formatter.gd
+Leaked instance: GDScript:9223372066248459700 - Resource path: res://addons/advanced_logger/utils/tag_categories.gd
+Leaked instance: GDScript:9223372066667890102 - Resource path: res://addons/advanced_logger/utils/android_logger_helper.gd
+Leaked instance: GDScript:9223372066818885047 - Resource path: res://addons/advanced_logger/utils/ios_logger_helper.gd
+Leaked instance: GDScript:9223372067204761018 - Resource path: res://addons/advanced_logger/utils/mobile_formatter.gd
+Leaked instance: GDScript:9223372071331956181 - Resource path: res://debug/actions/debug_action.gd
+Leaked instance: GDScript:9223372076750996977 - Resource path: res://data/backends/navigation_result.gd
+Leaked instance: Object:173526746690
+Leaked instance: GDScript:9223372164965598793 - Resource path: 
+Hint: Leaked instances typically happen when nodes are removed from the scene tree (with `remove_child()`) but not freed (with `free()` or `queue_free()`).
+[1;31mERROR:[0;91m 10 resources still in use at exit.
+[0;90m   at: clear (core/io/resource.cpp:629)[0m
+Resource still in use: res://addons/advanced_logger/core/logger.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/tag_manager.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/config_manager.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/core/log_formatter.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/tag_categories.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/android_logger_helper.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/ios_logger_helper.gd (GDScript)
+Resource still in use: res://addons/advanced_logger/utils/mobile_formatter.gd (GDScript)
+Resource still in use: res://debug/actions/debug_action.gd (GDScript)
+Resource still in use: res://data/backends/navigation_result.gd (GDScript)
+Orphan StringName: res://data/backends/navigation_result.gd::142::NavigationResult.as_int (static: 0, total: 1)
+Orphan StringName: from_cat (static: 0, total: 2)
+Orphan StringName: _buffer_size (static: 0, total: 4)
+Orphan StringName: entry_data (static: 0, total: 2)
+Orphan StringName: _log (static: 0, total: 8)
+Orphan StringName: TAG_NETWORK (static: 0, total: 2)
+Orphan StringName: TAG_GAME_STATE (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::139::ALogger._on_config_changed (static: 0, total: 1)
+Orphan StringName: call (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::314::ConfigManager.clear_section (static: 0, total: 1)
+Orphan StringName: _enable_buffer_dump (static: 0, total: 4)
+Orphan StringName: cleanup_instance (static: 0, total: 4)
+Orphan StringName: get_show_editor_debug (static: 0, total: 3)
+Orphan StringName: AndroidLoggerHelper (static: 0, total: 7)
+Orphan StringName: res://data/backends/navigation_result.gd::97::NavigationResult.is_array (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::118::ConfigManager._load_config (static: 0, total: 1)
+Orphan StringName: show_timestamp (static: 0, total: 1)
+Orphan StringName: TAG_AUTH (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::355::ALogger._get_active_level_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::504::ConfigManager.cleanup_instance (static: 0, total: 1)
+Orphan StringName: logger (static: 0, total: 2)
+Orphan StringName: _upgrade_config_if_needed (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::395::ConfigManager.set_available_tags (static: 0, total: 1)
+Orphan StringName: TAG_FACEBOOK (static: 0, total: 2)
+Orphan StringName: header_footer_color (static: 0, total: 2)
+Orphan StringName: is_valid_tag (static: 0, total: 8)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::703::ALogger.remove_tag (static: 0, total: 1)
+Orphan StringName: @static_initializer (static: 1, total: 2)
+Orphan StringName: print (static: 0, total: 6)
+Orphan StringName: default_float (static: 0, total: 1)
+Orphan StringName: TAG_LEVEL_CRITICAL (static: 0, total: 2)
+Orphan StringName: process_log_message (static: 0, total: 7)
+Orphan StringName: _should_show_level (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::677::ALogger.add_tag (static: 0, total: 1)
+Orphan StringName: set_ignored_tags (static: 0, total: 5)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::0::ConfigManager.@implicit_new (static: 0, total: 1)
+Orphan StringName: format_tag_for_display (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/tag_categories.gd::10::TagCategories.category_to_string (static: 0, total: 1)
+Orphan StringName: DEFAULT_SHOW_SOURCE (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::30::MobileFormatter._format_buffer_entry (static: 0, total: 1)
+Orphan StringName: validated_tags (static: 0, total: 6)
+Orphan StringName: set_show_source (static: 0, total: 7)
+Orphan StringName: type_name (static: 0, total: 2)
+Orphan StringName: status_updated (static: 0, total: 3)
+Orphan StringName: TAG_APPLE (static: 0, total: 2)
+Orphan StringName: normalize_tag (static: 0, total: 4)
+Orphan StringName: regex (static: 0, total: 10)
+Orphan StringName: as_array (static: 0, total: 3)
+Orphan StringName: _create_default_config (static: 0, total: 4)
+Orphan StringName: Error (static: 0, total: 9)
+Orphan StringName: _should_show_tags (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::833::ALogger.set_enable_buffer_dump (static: 0, total: 1)
+Orphan StringName: search (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::407::ALogger._trim_buffer (static: 0, total: 1)
+Orphan StringName: TAG_FIREBASE (static: 0, total: 2)
+Orphan StringName: ALogger.LogLevel (static: 0, total: 8)
+Orphan StringName: config_changed (static: 0, total: 7)
+Orphan StringName: level_pattern (static: 0, total: 2)
+Orphan StringName: get_level_string (static: 0, total: 4)
+Orphan StringName: line (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::205::ALogger.error (static: 0, total: 1)
+Orphan StringName: TAG_DEBUG (static: 0, total: 2)
+Orphan StringName: join (static: 0, total: 3)
+Orphan StringName: has_only_level_tags (static: 0, total: 2)
+Orphan StringName: filter_tags (static: 0, total: 3)
+Orphan StringName: all_tags (static: 0, total: 1)
+Orphan StringName: SECTION_SETUPS (static: 0, total: 2)
+Orphan StringName: connections (static: 0, total: 2)
+Orphan StringName: what (static: 0, total: 1)
+Orphan StringName: category (static: 0, total: 7)
+Orphan StringName: formatted (static: 0, total: 8)
+Orphan StringName: _on_config_changed (static: 0, total: 5)
+Orphan StringName: _debug_print_tag_result (static: 0, total: 4)
+Orphan StringName: is_error (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::778::ALogger._update_ignored_tags_in_config (static: 0, total: 1)
+Orphan StringName: p_category (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::34::IosLoggerHelper.strip_formatting (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::437::ConfigManager.set_enable_buffer_dump (static: 0, total: 1)
+Orphan StringName: LEVEL_HTML_COLORS (static: 0, total: 2)
+Orphan StringName: res://debug/actions/debug_action.gd::65::DebugAction._failure (static: 0, total: 1)
+Orphan StringName: TagManager (static: 0, total: 5)
+Orphan StringName: TAG_DB (static: 0, total: 2)
+Orphan StringName: KEY_USE_COLORS (static: 0, total: 2)
+Orphan StringName: KEY_BUFFER_SIZE (static: 0, total: 2)
+Orphan StringName: sorted_tags (static: 0, total: 2)
+Orphan StringName: second (static: 0, total: 2)
+Orphan StringName: TAG_UI (static: 0, total: 2)
+Orphan StringName: _use_colors (static: 0, total: 4)
+Orphan StringName: error (static: 0, total: 3)
+Orphan StringName: clear_tags (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::40::IosLoggerHelper.process_log_message (static: 0, total: 1)
+Orphan StringName: year (static: 0, total: 1)
+Orphan StringName: tag_arrays (static: 0, total: 1)
+Orphan StringName: p_description (static: 0, total: 1)
+Orphan StringName: _active_tags (static: 0, total: 3)
+Orphan StringName: _trim_buffer (static: 0, total: 5)
+Orphan StringName: new_array (static: 0, total: 3)
+Orphan StringName: res://debug/actions/debug_action.gd::38::DebugAction.execute (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::647::ALogger.set_level (static: 0, total: 1)
+Orphan StringName: path (static: 0, total: 3)
+Orphan StringName: add_tag (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::0::IosLoggerHelper.@implicit_new (static: 0, total: 1)
+Orphan StringName: log_tags (static: 0, total: 3)
+Orphan StringName: string_value (static: 0, total: 8)
+Orphan StringName: TAG_RNG (static: 0, total: 2)
+Orphan StringName: setup_keys (static: 0, total: 2)
+Orphan StringName: typeof (static: 0, total: 6)
+Orphan StringName: _failure (static: 0, total: 3)
+Orphan StringName: ConfigManager (static: 0, total: 8)
+Orphan StringName: color_to_use (static: 0, total: 2)
+Orphan StringName: get_show_timestamp (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::409::ConfigManager.get_show_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::70::MobileFormatter.strip_formatting (static: 0, total: 1)
+Orphan StringName: LINE_KEY (static: 0, total: 4)
+Orphan StringName: KEY_SHOW_EDITOR_DEBUG (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::417::ALogger._dump_buffer (static: 0, total: 1)
+Orphan StringName: TAG_LEVEL (static: 0, total: 2)
+Orphan StringName: TAG_TEST (static: 0, total: 2)
+Orphan StringName: substr (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::119::NavigationResult.as_array (static: 0, total: 1)
+Orphan StringName: _has_custom_buffer_dump (static: 0, total: 4)
+Orphan StringName: clear_ignored_tags (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::21::AndroidLoggerHelper.configure_for_android (static: 0, total: 1)
+Orphan StringName: regular_tags (static: 0, total: 2)
+Orphan StringName: month (static: 0, total: 1)
+Orphan StringName: TAG_DRAFT (static: 0, total: 2)
+Orphan StringName: IosLoggerHelper (static: 0, total: 7)
+Orphan StringName: set_tag_setup (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::229::ALogger._log (static: 0, total: 1)
+Orphan StringName: as_float (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::793::ALogger.set_show_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::148::ConfigManager._create_default_config (static: 0, total: 1)
+Orphan StringName: as_string (static: 0, total: 3)
+Orphan StringName: has_active_level_filter (static: 0, total: 2)
+Orphan StringName: DEFAULT_LOG_LEVEL (static: 0, total: 2)
+Orphan StringName: _has_custom_buffer_size (static: 0, total: 4)
+Orphan StringName: get_log_level (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::385::ALogger._debug_print_tag_check_start (static: 0, total: 1)
+Orphan StringName: DEFAULT_SHOW_EDITOR_DEBUG (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::440::ConfigManager.get_show_editor_debug (static: 0, total: 1)
+Orphan StringName: set_available_tags (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::480::ConfigManager.reset_to_defaults (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::335::ConfigManager.set_log_level (static: 0, total: 1)
+Orphan StringName: push_warning (static: 0, total: 7)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::380::ALogger._debug_print_filter_result (static: 0, total: 1)
+Orphan StringName: _update_format_setting (static: 0, total: 7)
+Orphan StringName: disconnect (static: 1, total: 2)
+Orphan StringName: error_info (static: 0, total: 2)
+Orphan StringName: filtered_tags (static: 0, total: 8)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::830::ALogger.get_buffer_size (static: 0, total: 1)
+Orphan StringName: set_value (static: 0, total: 16)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::443::ConfigManager.set_show_editor_debug (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::458::ConfigManager.set_tag_setup (static: 0, total: 1)
+Orphan StringName: ConfigFile (static: 1, total: 4)
+Orphan StringName: DEFAULT_BUFFER_SIZE (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::363::ALogger._get_active_topic_tags (static: 0, total: 1)
+Orphan StringName: timestamp (static: 0, total: 2)
+Orphan StringName: message (static: 0, total: 20)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::21::IosLoggerHelper.configure_for_ios (static: 0, total: 1)
+Orphan StringName: setup_data (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd (static: 0, total: 53)
+Orphan StringName: error_message (static: 0, total: 5)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::303::ConfigManager.has_value (static: 0, total: 1)
+Orphan StringName: action_callable (static: 0, total: 4)
+Orphan StringName: _get_active_level_tags (static: 0, total: 4)
+Orphan StringName: KEY_ACTIVE_TAGS (static: 0, total: 2)
+Orphan StringName: TAG_GRID (static: 0, total: 2)
+Orphan StringName: _update_active_tags_in_config (static: 0, total: 7)
+Orphan StringName: DEFAULT_SHOW_TIMESTAMP (static: 0, total: 2)
+Orphan StringName: get_ignored_tags (static: 0, total: 4)
+Orphan StringName: TagCategories (static: 0, total: 5)
+Orphan StringName: set_show_tags (static: 0, total: 7)
+Orphan StringName: split (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::23::TagManager.is_valid_tag (static: 0, total: 1)
+Orphan StringName: configure_for_android (static: 0, total: 4)
+Orphan StringName: set_use_colors (static: 0, total: 9)
+Orphan StringName: _get_source_info (static: 0, total: 4)
+Orphan StringName: path_data (static: 0, total: 1)
+Orphan StringName: group (static: 0, total: 6)
+Orphan StringName: _show_source (static: 0, total: 4)
+Orphan StringName: create_from_callable (static: 0, total: 3)
+Orphan StringName: stack (static: 0, total: 3)
+Orphan StringName: KEY_AVAILABLE_TAGS (static: 0, total: 2)
+Orphan StringName: tags_part (static: 0, total: 2)
+Orphan StringName: warning (static: 0, total: 3)
+Orphan StringName: level_tags (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/tag_categories.gd::18::TagCategories.from_string (static: 0, total: 1)
+Orphan StringName: append (static: 0, total: 17)
+Orphan StringName: payload (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::451::ConfigManager.get_tag_setup (static: 0, total: 1)
+Orphan StringName: MobileFormatter (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::373::ALogger._debug_print_filter_check_start (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::193::ALogger.info (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::69::NavigationResult.new_dictionary (static: 0, total: 1)
+Orphan StringName: tag_part (static: 0, total: 2)
+Orphan StringName: Empty (static: 0, total: 1)
+Orphan StringName: action (static: 0, total: 2)
+Orphan StringName: connect (static: 1, total: 2)
+Orphan StringName: replace (static: 0, total: 2)
+Orphan StringName: int_value (static: 0, total: 6)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::841::ALogger.get_enable_buffer_dump (static: 0, total: 1)
+Orphan StringName: emit (static: 0, total: 2)
+Orphan StringName: is_value (static: 0, total: 3)
+Orphan StringName: NavigationResult.ResultType (static: 0, total: 2)
+Orphan StringName: as_dictionary (static: 0, total: 3)
+Orphan StringName: as_int (static: 0, total: 3)
+Orphan StringName: strip_formatting (static: 0, total: 13)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::85::ConfigManager.get_instance (static: 0, total: 1)
+Orphan StringName: dir_exists (static: 0, total: 1)
+Orphan StringName: _instance (static: 0, total: 3)
+Orphan StringName: TAG_COMBAT (static: 0, total: 2)
+Orphan StringName: TAG_STATE_TRANSITION (static: 0, total: 2)
+Orphan StringName: CONFIG_PATH (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::12::AndroidLoggerHelper.get_config_path (static: 0, total: 1)
+Orphan StringName: level_prefix (static: 0, total: 2)
+Orphan StringName: should_show_tags (static: 0, total: 3)
+Orphan StringName: new_dictionary (static: 0, total: 3)
+Orphan StringName: use_plain_formatting (static: 0, total: 2)
+Orphan StringName: is_empty (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::324::ALogger._should_show_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::427::ConfigManager.get_buffer_size (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::22::MobileFormatter.format_log_message (static: 0, total: 1)
+Orphan StringName: tags (static: 0, total: 27)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::199::ALogger.warning (static: 0, total: 1)
+Orphan StringName: get_level (static: 0, total: 3)
+Orphan StringName: TAG_DATA (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::357::ConfigManager.get_ignored_tags (static: 0, total: 1)
+Orphan StringName: value (static: 0, total: 9)
+Orphan StringName: TAG_LOCAL (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::244::ConfigManager._get_platform_config_path (static: 0, total: 1)
+Orphan StringName: TAG_RULE (static: 0, total: 2)
+Orphan StringName: current_path (static: 0, total: 2)
+Orphan StringName: KEY_IGNORED_TAGS (static: 0, total: 2)
+Orphan StringName: TAG_LEVEL_WARNING (static: 0, total: 2)
+Orphan StringName: separator (static: 0, total: 2)
+Orphan StringName: TAG_RULES (static: 0, total: 2)
+Orphan StringName: ignored_tags (static: 0, total: 3)
+Orphan StringName: DEFAULT_USE_COLORS (static: 0, total: 2)
+Orphan StringName: android_helper (static: 0, total: 2)
+Orphan StringName: log_entry_data (static: 0, total: 3)
+Orphan StringName: compile (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::0::TagManager.@implicit_new (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::768::ALogger._update_active_tags_in_config (static: 0, total: 1)
+Orphan StringName: _handle_buffering (static: 0, total: 4)
+Orphan StringName: @container_pos (static: 0, total: 50)
+Orphan StringName: DebugAction (static: 0, total: 4)
+Orphan StringName: show_tags (static: 0, total: 1)
+Orphan StringName: log_data (static: 0, total: 2)
+Orphan StringName: platform (static: 0, total: 12)
+Orphan StringName: get_instance (static: 0, total: 4)
+Orphan StringName: TAG_ITEM (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::558::ALogger._print_formatted_log (static: 0, total: 1)
+Orphan StringName: merged_tags (static: 0, total: 2)
+Orphan StringName: was_ignored (static: 0, total: 2)
+Orphan StringName: data_to_print (static: 0, total: 2)
+Orphan StringName: TAG_PERFORMANCE (static: 0, total: 2)
+Orphan StringName: active_topic_tags (static: 0, total: 2)
+Orphan StringName: to_lower (static: 0, total: 1)
+Orphan StringName: TAG_SYSTEM (static: 0, total: 2)
+Orphan StringName: make_dir (static: 0, total: 1)
+Orphan StringName: TAG_LEVEL_INFO (static: 0, total: 2)
+Orphan StringName: DEFAULT_ENABLE_BUFFER_DUMP (static: 0, total: 2)
+Orphan StringName: text (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::424::ConfigManager.set_show_source (static: 0, total: 1)
+Orphan StringName: day (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/log_formatter.gd::0::LogFormatter.@implicit_new (static: 0, total: 1)
+Orphan StringName: TAG_CLICKER (static: 0, total: 2)
+Orphan StringName: dir (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::112::ConfigManager._init (static: 0, total: 1)
+Orphan StringName: TAG_LEVEL_PREFIX (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::788::ALogger.set_show_timestamp (static: 0, total: 1)
+Orphan StringName: Resource (static: 3, total: 5)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::0::MobileFormatter.@implicit_new (static: 0, total: 1)
+Orphan StringName: get_formatted_string (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::8::IosLoggerHelper.is_ios (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::265::ConfigManager._is_mobile_platform (static: 0, total: 1)
+Orphan StringName: clear_section (static: 0, total: 4)
+Orphan StringName: timestamp_color_override (static: 0, total: 3)
+Orphan StringName: default_int (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::415::ConfigManager.get_use_colors (static: 0, total: 1)
+Orphan StringName: sort_tags (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::0::ConfigManager.@static_initializer (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::349::ConfigManager.set_active_tags (static: 0, total: 1)
+Orphan StringName: has_level_prefix (static: 0, total: 2)
+Orphan StringName: dump_timestamp (static: 0, total: 2)
+Orphan StringName: _config_loaded (static: 0, total: 4)
+Orphan StringName: _ignored_tags (static: 0, total: 3)
+Orphan StringName: is_level_tag (static: 0, total: 6)
+Orphan StringName: enable (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::273::ALogger._should_output_log (static: 0, total: 1)
+Orphan StringName: _current_level (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd (static: 0, total: 11)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::37::AndroidLoggerHelper.process_log_message (static: 0, total: 1)
+Orphan StringName: default_dict (static: 0, total: 1)
+Orphan StringName: set_enable_buffer_dump (static: 0, total: 8)
+Orphan StringName: _debug_print_tag_check_start (static: 0, total: 4)
+Orphan StringName: get (static: 0, total: 5)
+Orphan StringName: default_bool (static: 0, total: 1)
+Orphan StringName: new_not_found (static: 0, total: 3)
+Orphan StringName: configure_for_ios (static: 0, total: 4)
+Orphan StringName: dt (static: 0, total: 4)
+Orphan StringName: formatted_log (static: 0, total: 2)
+Orphan StringName: details (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::868::ALogger._update_format_setting (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::59::NavigationResult.new_not_found (static: 0, total: 1)
+Orphan StringName: keys (static: 0, total: 5)
+Orphan StringName: res://addons/advanced_logger/core/log_formatter.gd::156::LogFormatter._pad_right (static: 0, total: 1)
+Orphan StringName: has (static: 0, total: 12)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::207::ConfigManager.set_value (static: 0, total: 1)
+Orphan StringName: from_string (static: 0, total: 4)
+Orphan StringName: available_tags (static: 0, total: 1)
+Orphan StringName: TAG_LEVEL_ERROR (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::803::ALogger.set_show_source (static: 0, total: 1)
+Orphan StringName: TAG_UI_ANIMATION (static: 0, total: 2)
+Orphan StringName: Category (static: 0, total: 2)
+Orphan StringName: connection (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::8::AndroidLoggerHelper.is_android (static: 0, total: 1)
+Orphan StringName: KEY_SHOW_TAGS (static: 0, total: 2)
+Orphan StringName: default_value (static: 0, total: 1)
+Orphan StringName: res://debug/actions/debug_action.gd::60::DebugAction._success (static: 0, total: 1)
+Orphan StringName: active_tags (static: 0, total: 3)
+Orphan StringName: res://data/backends/navigation_result.gd (static: 0, total: 16)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::844::ALogger.set_debug_filter_logging (static: 0, total: 1)
+Orphan StringName: res://debug/actions/debug_action.gd::26::DebugAction.create_from_callable (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::368::ConfigManager._is_reserved_category_name (static: 0, total: 1)
+Orphan StringName: info (static: 0, total: 4)
+Orphan StringName: plain_text (static: 0, total: 4)
+Orphan StringName: get_string (static: 0, total: 1)
+Orphan StringName: _update_ignored_tags_in_config (static: 0, total: 7)
+Orphan StringName: show_based_on_threshold (static: 0, total: 2)
+Orphan StringName: LEVEL_COLORS (static: 0, total: 2)
+Orphan StringName: strip_edges (static: 0, total: 1)
+Orphan StringName: p_error_message (static: 0, total: 2)
+Orphan StringName: res://data/backends/navigation_result.gd::103::NavigationResult.is_value (static: 0, total: 1)
+Orphan StringName: key (static: 0, total: 9)
+Orphan StringName: TAGS_WIDTH (static: 0, total: 2)
+Orphan StringName: push_error (static: 0, total: 2)
+Orphan StringName: remove_tag (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::91::ConfigManager.cleanup (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::798::ALogger.set_use_colors (static: 0, total: 1)
+Orphan StringName: source_text (static: 0, total: 2)
+Orphan StringName: tags_text (static: 0, total: 2)
+Orphan StringName: len (static: 0, total: 2)
+Orphan StringName: p_group (static: 0, total: 1)
+Orphan StringName: TAG_EVENT (static: 0, total: 2)
+Orphan StringName: _is_valid_level (static: 0, total: 4)
+Orphan StringName: _debug_print_filter_result (static: 0, total: 4)
+Orphan StringName: ios_formatted (static: 0, total: 2)
+Orphan StringName: _init (static: 0, total: 9)
+Orphan StringName: SOURCE_KEY (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::431::ConfigManager.set_buffer_size (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::91::NavigationResult.is_dictionary (static: 0, total: 1)
+Orphan StringName: max (static: 0, total: 1)
+Orphan StringName: reset_to_defaults (static: 0, total: 3)
+Orphan StringName: _config (static: 0, total: 8)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::418::ConfigManager.set_use_colors (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::128::NavigationResult.as_string (static: 0, total: 1)
+Orphan StringName: _show_tags (static: 0, total: 4)
+Orphan StringName: SECTION_LOGGER (static: 0, total: 2)
+Orphan StringName: TAG_ERROR (static: 0, total: 2)
+Orphan StringName: get_use_colors (static: 0, total: 4)
+Orphan StringName: user_config_path (static: 0, total: 2)
+Orphan StringName: to_category (static: 0, total: 1)
+Orphan StringName: _add_to_buffer (static: 0, total: 4)
+Orphan StringName: _update_source_info_from_frame (static: 0, total: 4)
+Orphan StringName: is_ios (static: 0, total: 5)
+Orphan StringName: show_based_on_active_level (static: 0, total: 2)
+Orphan StringName: execute (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::463::ConfigManager.get_all_tag_setups (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::0::AndroidLoggerHelper.@implicit_new (static: 0, total: 1)
+Orphan StringName: capitalize (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::208::TagManager.filter_tags (static: 0, total: 1)
+Orphan StringName: NavigationResult (static: 0, total: 7)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::219::ALogger._validate_message (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::812::ALogger.set_buffer_size (static: 0, total: 1)
+Orphan StringName: content (static: 0, total: 2)
+Orphan StringName: default_str (static: 0, total: 1)
+Orphan StringName: close (static: 0, total: 1)
+Orphan StringName: context (static: 0, total: 19)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::434::ConfigManager.get_enable_buffer_dump (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::70::TagManager.should_show_tags (static: 0, total: 1)
+Orphan StringName: p_value (static: 0, total: 1)
+Orphan StringName: was_active (static: 0, total: 2)
+Orphan StringName: is_dictionary (static: 0, total: 4)
+Orphan StringName: is_android (static: 0, total: 5)
+Orphan StringName: as_bool (static: 0, total: 3)
+Orphan StringName: result_type (static: 0, total: 4)
+Orphan StringName: file_name (static: 0, total: 2)
+Orphan StringName: _update_status (static: 0, total: 3)
+Orphan StringName: config_path (static: 0, total: 2)
+Orphan StringName: get_available_tags (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::666::ALogger.get_level (static: 0, total: 1)
+Orphan StringName: _validate_message (static: 0, total: 9)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::269::TagManager.sort_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_categories.gd (static: 0, total: 3)
+Orphan StringName: found (static: 0, total: 4)
+Orphan StringName: get_buffer_size (static: 0, total: 7)
+Orphan StringName: set_level (static: 0, total: 3)
+Orphan StringName: category_str (static: 0, total: 1)
+Orphan StringName: dir_path (static: 0, total: 2)
+Orphan StringName: level_str (static: 0, total: 4)
+Orphan StringName: LEVEL_TAGS (static: 0, total: 2)
+Orphan StringName: show_source (static: 0, total: 1)
+Orphan StringName: level_tag (static: 0, total: 3)
+Orphan StringName: debug (static: 0, total: 3)
+Orphan StringName: _success (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::488::ALogger._create_default_source_info (static: 0, total: 1)
+Orphan StringName: source_info (static: 0, total: 7)
+Orphan StringName: set_debug_filter_logging (static: 0, total: 3)
+Orphan StringName: res://data/backends/navigation_result.gd::77::NavigationResult.new_array (static: 0, total: 1)
+Orphan StringName: _find_non_logger_frame (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd::32::AndroidLoggerHelper.strip_formatting (static: 0, total: 1)
+Orphan StringName: set_log_level (static: 0, total: 5)
+Orphan StringName: padded_level (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd::12::IosLoggerHelper.get_config_path (static: 0, total: 1)
+Orphan StringName: str (static: 0, total: 6)
+Orphan StringName: sub (static: 0, total: 2)
+Orphan StringName: tag_array (static: 0, total: 2)
+Orphan StringName: _configure_for_platform (static: 0, total: 4)
+Orphan StringName: tag (static: 0, total: 44)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::400::ALogger._add_to_buffer (static: 0, total: 1)
+Orphan StringName: buffer_copy (static: 0, total: 2)
+Orphan StringName: _debug_print_filter_check_start (static: 0, total: 4)
+Orphan StringName: _format_standard_entry (static: 0, total: 4)
+Orphan StringName: width (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::249::ALogger._create_log_entry_data (static: 0, total: 1)
+Orphan StringName: level_tags_count (static: 0, total: 2)
+Orphan StringName: minute (static: 0, total: 2)
+Orphan StringName: dict (static: 0, total: 1)
+Orphan StringName: remove_ignored_tag (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/log_formatter.gd (static: 0, total: 4)
+Orphan StringName: use (static: 0, total: 2)
+Orphan StringName: duplicate (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::166::ALogger._load_settings (static: 0, total: 1)
+Orphan StringName: critical (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::332::ConfigManager.get_log_level (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::198::NavigationResult.get_formatted_string (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_categories.gd::0::TagCategories.@implicit_new (static: 0, total: 1)
+Orphan StringName: ResultType (static: 0, total: 2)
+Orphan StringName: original_size (static: 0, total: 2)
+Orphan StringName: begins_with (static: 0, total: 2)
+Orphan StringName: is_array (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::287::ALogger._should_show_level (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::244::TagManager.is_level_tag (static: 0, total: 1)
+Orphan StringName: res://debug/actions/debug_action.gd::0::DebugAction.@implicit_new (static: 0, total: 1)
+Orphan StringName: Node (static: 7, total: 10)
+Orphan StringName: TAG_INPUT (static: 0, total: 2)
+Orphan StringName: setup_name (static: 0, total: 4)
+Orphan StringName: _load_settings (static: 0, total: 4)
+Orphan StringName: @counter_pos (static: 0, total: 50)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::272::ConfigManager.save (static: 0, total: 1)
+Orphan StringName: level (static: 0, total: 21)
+Orphan StringName: _load_config (static: 0, total: 9)
+Orphan StringName: move_tag (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::392::ALogger._debug_print_tag_result (static: 0, total: 1)
+Orphan StringName: _get_active_topic_tags (static: 0, total: 4)
+Orphan StringName: array (static: 0, total: 1)
+Orphan StringName: new_value (static: 0, total: 3)
+Orphan StringName: SECTION_FORMAT (static: 0, total: 2)
+Orphan StringName: _format_buffer_entry (static: 0, total: 4)
+Orphan StringName: get_tag_setup (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::338::ConfigManager.get_active_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/ios_logger_helper.gd (static: 0, total: 6)
+Orphan StringName: TAG_VALIDATION (static: 0, total: 2)
+Orphan StringName: _debug_filter_logging (static: 0, total: 4)
+Orphan StringName: res://data/backends/navigation_result.gd::178::NavigationResult.as_bool (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::760::ALogger.clear_ignored_tags (static: 0, total: 1)
+Orphan StringName: LOG_LEVEL_WIDTH (static: 0, total: 2)
+Orphan StringName: set_show_editor_debug (static: 0, total: 4)
+Orphan StringName: topic_tags (static: 0, total: 2)
+Orphan StringName: lower_str (static: 0, total: 2)
+Orphan StringName: category_to_string (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::473::ALogger._get_source_info (static: 0, total: 1)
+Orphan StringName: set_show_timestamp (static: 0, total: 7)
+Orphan StringName: res://data/backends/navigation_result.gd::85::NavigationResult.new_value (static: 0, total: 1)
+Orphan StringName: lower_tag (static: 0, total: 2)
+Orphan StringName: get_active_tags (static: 0, total: 4)
+Orphan StringName: RefCounted (static: 2, total: 11)
+Orphan StringName: _dump_buffer (static: 0, total: 4)
+Orphan StringName: set_buffer_size (static: 0, total: 8)
+Orphan StringName: bool_value (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::211::ALogger.critical (static: 0, total: 1)
+Orphan StringName: description (static: 0, total: 6)
+Orphan StringName: TAG_WIN_CONDITION (static: 0, total: 2)
+Orphan StringName: TAG_CARD (static: 0, total: 2)
+Orphan StringName: value_data (static: 0, total: 1)
+Orphan StringName: Object (static: 2, total: 4)
+Orphan StringName: file (static: 0, total: 2)
+Orphan StringName: save (static: 0, total: 5)
+Orphan StringName: path_join (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::250::TagManager.normalize_tag (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::497::ALogger._find_non_logger_frame (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::54::TagManager.validate_tags (static: 0, total: 1)
+Orphan StringName: _is_mobile_platform (static: 0, total: 5)
+Orphan StringName: format_log (static: 0, total: 4)
+Orphan StringName: format_log_message (static: 0, total: 5)
+Orphan StringName: DEFAULT_SHOW_TAGS (static: 0, total: 2)
+Orphan StringName: TAG_CACHE (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::873::ALogger._notification (static: 0, total: 1)
+Orphan StringName: _should_output_log (static: 0, total: 4)
+Orphan StringName: validate_tags (static: 0, total: 4)
+Orphan StringName: is_buffer_dump_entry (static: 0, total: 2)
+Orphan StringName: has_value (static: 0, total: 3)
+Orphan StringName: identifier (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::187::ALogger.debug (static: 0, total: 1)
+Orphan StringName: section (static: 0, total: 5)
+Orphan StringName: get_show_tags (static: 0, total: 4)
+Orphan StringName: from_category (static: 0, total: 1)
+Orphan StringName: _buffer_dumped_recently (static: 0, total: 4)
+Orphan StringName: _notification (static: 0, total: 3)
+Orphan StringName: float_value (static: 0, total: 4)
+Orphan StringName: TAG_UI_INPUT (static: 0, total: 2)
+Orphan StringName: FUNCTION_KEY (static: 0, total: 2)
+Orphan StringName: _create_default_source_info (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::662::ALogger._is_valid_level (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::384::ConfigManager.get_available_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/log_formatter.gd::39::LogFormatter.format_log (static: 0, total: 1)
+Orphan StringName: result (static: 0, total: 14)
+Orphan StringName: to_cat (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd (static: 0, total: 6)
+Orphan StringName: is_connected (static: 0, total: 1)
+Orphan StringName: _print_formatted_log (static: 0, total: 5)
+Orphan StringName: LogLevel (static: 0, total: 3)
+Orphan StringName: erase (static: 0, total: 5)
+Orphan StringName: path_part (static: 0, total: 2)
+Orphan StringName: FILE_KEY (static: 0, total: 4)
+Orphan StringName: is_instance_valid (static: 0, total: 3)
+Orphan StringName: parts (static: 0, total: 8)
+Orphan StringName: TAG_STAT (static: 0, total: 2)
+Orphan StringName: p_name (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/log_formatter.gd::141::LogFormatter._get_level_html_color (static: 0, total: 1)
+Orphan StringName: ios_helper (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::376::ConfigManager.set_ignored_tags (static: 0, total: 1)
+Orphan StringName: get_as_text (static: 0, total: 1)
+Orphan StringName: merge_tags (static: 0, total: 3)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::715::ALogger.clear_tags (static: 0, total: 1)
+Orphan StringName: _pad_right (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::406::ConfigManager.set_show_timestamp (static: 0, total: 1)
+Orphan StringName: get_config_path (static: 0, total: 7)
+Orphan StringName: res://debug/actions/debug_action.gd::50::DebugAction._update_status (static: 0, total: 1)
+Orphan StringName: trim_prefix (static: 0, total: 1)
+Orphan StringName: _log_buffer (static: 0, total: 3)
+Orphan StringName: default_array (static: 0, total: 1)
+Orphan StringName: KEY_LOG_LEVEL (static: 0, total: 2)
+Orphan StringName: TAG_PLAYER (static: 0, total: 2)
+Orphan StringName: @implicit_new (static: 0, total: 10)
+Orphan StringName: LogFormatter (static: 0, total: 5)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::194::ConfigManager.get_value (static: 0, total: 1)
+Orphan StringName: _get_platform_config_path (static: 0, total: 4)
+Orphan StringName: KEY_SHOW_TIMESTAMP (static: 0, total: 2)
+Orphan StringName: p_found (static: 0, total: 1)
+Orphan StringName: @match_value (static: 0, total: 14)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::125::TagManager.move_tag (static: 0, total: 1)
+Orphan StringName: show (static: 0, total: 7)
+Orphan StringName: _create_log_entry_data (static: 0, total: 4)
+Orphan StringName: get_show_source (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::748::ALogger.remove_ignored_tag (static: 0, total: 1)
+Orphan StringName: set_active_tags (static: 0, total: 5)
+Orphan StringName: res://data/backends/navigation_result.gd::43::NavigationResult._init (static: 0, total: 1)
+Orphan StringName: _get_level_html_color (static: 0, total: 4)
+Orphan StringName: print_rich (static: 0, total: 11)
+Orphan StringName: active_level_tags (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::412::ConfigManager.set_show_tags (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::9::MobileFormatter.get_level_string (static: 0, total: 1)
+Orphan StringName: TAG_ANIMATION (static: 0, total: 2)
+Orphan StringName: repeat (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::421::ConfigManager.get_show_source (static: 0, total: 1)
+Orphan StringName: temp_instance (static: 0, total: 2)
+Orphan StringName: get_all_tag_setups (static: 0, total: 3)
+Orphan StringName: KEY_ENABLE_BUFFER_DUMP (static: 0, total: 2)
+Orphan StringName: KEY_SHOW_SOURCE (static: 0, total: 2)
+Orphan StringName: size (static: 0, total: 5)
+Orphan StringName: @match_type (static: 0, total: 14)
+Orphan StringName: reason (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::232::TagManager.merge_tags (static: 0, total: 1)
+Orphan StringName: free (static: 0, total: 1)
+Orphan StringName: res://data/backends/navigation_result.gd::160::NavigationResult.as_float (static: 0, total: 1)
+Orphan StringName: get_value (static: 0, total: 15)
+Orphan StringName: LoggerScript (static: 0, total: 2)
+Orphan StringName: frame (static: 0, total: 5)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::403::ConfigManager.get_show_timestamp (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd::169::ConfigManager._upgrade_config_if_needed (static: 0, total: 1)
+Orphan StringName: res://debug/actions/debug_action.gd (static: 0, total: 6)
+Orphan StringName: res://addons/advanced_logger/utils/tag_manager.gd::184::TagManager.format_tag_for_display (static: 0, total: 1)
+Orphan StringName: InputHandler.Empty (static: 0, total: 1)
+Orphan StringName: use_colors (static: 0, total: 1)
+Orphan StringName: get_enable_buffer_dump (static: 0, total: 7)
+Orphan StringName: res://data/backends/navigation_result.gd::0::NavigationResult.@implicit_new (static: 0, total: 1)
+Orphan StringName: TAG_BATTLE (static: 0, total: 2)
+Orphan StringName: p_context (static: 0, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/config_manager.gd (static: 0, total: 43)
+Orphan StringName: ALogger (static: 0, total: 5)
+Orphan StringName: res://data/backends/navigation_result.gd::110::NavigationResult.as_dictionary (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::260::ALogger._handle_buffering (static: 0, total: 1)
+Orphan StringName: p_path (static: 0, total: 4)
+Orphan StringName: _show_timestamp (static: 0, total: 4)
+Orphan StringName: res://addons/advanced_logger/utils/android_logger_helper.gd (static: 0, total: 6)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::0::ALogger.@implicit_new (static: 0, total: 1)
+Orphan StringName: add_ignored_tag (static: 0, total: 3)
+Orphan StringName: TAG_GAME (static: 0, total: 2)
+Orphan StringName: RegEx (static: 1, total: 2)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::531::ALogger._configure_for_platform (static: 0, total: 1)
+Orphan StringName: action_name (static: 0, total: 6)
+Orphan StringName: p_result_type (static: 0, total: 1)
+Orphan StringName: Script (static: 1, total: 2)
+Orphan StringName: res://addons/advanced_logger/utils/mobile_formatter.gd::48::MobileFormatter._format_standard_entry (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::512::ALogger._update_source_info_from_frame (static: 0, total: 1)
+Orphan StringName: cleaned (static: 0, total: 2)
+Orphan StringName: _is_reserved_category_name (static: 0, total: 9)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::124::ALogger._init (static: 0, total: 1)
+Orphan StringName: res://addons/advanced_logger/core/logger.gd::725::ALogger.add_ignored_tag (static: 0, total: 1)
+Orphan StringName: hour (static: 0, total: 2)
+Orphan StringName: TAG_LEVEL_DEBUG (static: 0, total: 2)
+Orphan StringName: cleanup (static: 0, total: 3)
+Orphan StringName: TAG_INITIALIZATION (static: 0, total: 2)
+Orphan StringName: source (static: 0, total: 2)
+Orphan StringName: p_callable (static: 0, total: 1)
+StringName: 617 unclaimed string names at exit.

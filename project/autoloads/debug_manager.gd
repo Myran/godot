@@ -25,7 +25,7 @@ var use_local_battle_db: bool
 var asset_variant: int
 
 
-func _ready():
+func _ready() -> void:
 	use_local_battle_db = false
 	asset_variant = 1
 

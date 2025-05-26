@@ -47,10 +47,10 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 			connection_status.available = false
 			connection_status.completed = true
 
-	var has_internet_conn_err: Error = internet_status_node.has_internet.connect(
+	var has_internet_conn_err: int = internet_status_node.has_internet.connect(
 		has_internet_callable, CONNECT_ONE_SHOT
 	)
-	var no_internet_conn_err: Error = internet_status_node.no_internet.connect(
+	var no_internet_conn_err: int = internet_status_node.no_internet.connect(
 		no_internet_callable, CONNECT_ONE_SHOT
 	)
 
@@ -264,7 +264,7 @@ static func create_firebase_backend() -> FirebaseBackend:  # Return type explici
 				[Log.TAG_DB, Log.TAG_FIREBASE]
 			)
 		)
-		var fb_backend_typed_instance := fb_backend_instance_variant as FirebaseBackend
+		var fb_backend_typed_instance: FirebaseBackend = fb_backend_instance_variant as FirebaseBackend
 		return fb_backend_typed_instance
 	else:
 		(

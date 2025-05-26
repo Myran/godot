@@ -205,16 +205,7 @@ func _register_default_actions() -> void:
 		"Print current debug settings"
 	)
 
-	# System Actions - no groups needed
-	register_callable(
-		"Force Garbage Collection",
-		func():
-			OS.request_permissions()
-			Log.info("Garbage collection requested"),
-		"System",
-		"",
-		"Request garbage collection"
-	)
+
 
 
 ## Scan for .tres files containing ManualDebugAction resources

@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -58,7 +58,7 @@ func execute() -> Array:
 	]
 
 # Start all operations simultaneously (simulated concurrency)
-	for operation in concurrent_operations:
+	for operation: Dictionary in concurrent_operations:
 		var task: Dictionary = _start_concurrent_operation(db, operation)
 		concurrent_tasks.append(task)
 
@@ -71,7 +71,7 @@ func execute() -> Array:
 
 # Collect results from all concurrent operations
 	var completed_operations: Array[Dictionary] = []
-	for task in concurrent_tasks:
+	for task: Dictionary in concurrent_tasks:
 		var result: Dictionary = await _wait_for_operation_completion(task)
 		completed_operations.append(result)
 
@@ -80,7 +80,7 @@ func execute() -> Array:
 	var failed_operations: int = 0
 	var total_duration: float = 0.0
 
-	for result in completed_operations:
+	for result: Dictionary in completed_operations:
 		if result.success:
 			successful_operations += 1
 		else:

@@ -12,7 +12,7 @@ func _init() -> void:
 
 func execute() -> Array:
 # Check if Firebase backend is available
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -122,7 +122,7 @@ func _generate_large_test_data() -> Dictionary:
 	}
 
 # Generate user data (simulate 100 users)
-	for i in range(100):
+	for i: int in range(100):
 		var user_id: String = "user_%d" % i
 		data.users[user_id] = {
 			"id": user_id,
@@ -148,7 +148,7 @@ func _generate_large_test_data() -> Dictionary:
 		}
 
 # Generate session data (simulate 200 sessions)
-	for i in range(200):
+	for i: int in range(200):
 		var session_id: String = "session_%d" % i
 		data.sessions[session_id] = {
 			"id": session_id,
@@ -160,7 +160,7 @@ func _generate_large_test_data() -> Dictionary:
 		}
 
 # Generate event data (simulate 500 events)
-	for i in range(500):
+	for i: int in range(500):
 		data.events.append(
 			{
 				"event_id": "event_%d" % i,
@@ -191,7 +191,7 @@ func _generate_large_test_data() -> Dictionary:
 	}
 
 # Add feature flags
-	for i in range(20):
+	for i: int in range(20):
 		var flag_name: String = "feature_flag_%d" % i
 		data.configuration.feature_flags[flag_name] = randi() % 2 == 0
 
@@ -219,7 +219,7 @@ func _generate_achievements(user_index: int) -> Array[String]:
 
 # Give users random achievements based on their index
 	var achievement_count: int = (user_index % 5) + 1
-	for i in range(achievement_count):
+	for i: int in range(achievement_count):
 		var achievement: String = possible_achievements[
 			(user_index + i) % possible_achievements.size()
 		]

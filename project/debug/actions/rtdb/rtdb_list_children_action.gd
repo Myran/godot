@@ -16,7 +16,7 @@ func execute() -> Array:
 		return get_last_error_result()
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.LIST_CHILDREN)
-	var op_manager := FirebaseOperationManager.new(db)
+	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	_update_status("Setting up test children...")
 
@@ -56,5 +56,5 @@ func execute() -> Array:
 			}
 		)
 	else:
-		_update_status("Failed to retrieve children: " + get_result.error, true)
-		return _failure(get_result.error)
+		_update_status("Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true)
+		return _failure(str(get_result.get("error", "unknown error")))

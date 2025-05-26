@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -40,7 +40,7 @@ func execute() -> Array:
 	]
 
 # Set up test data for valid paths
-	for test_case in test_paths:
+	for test_case: Dictionary in test_paths:
 		if test_case.should_exist:
 			var test_data: Dictionary = {
 				"timestamp": Time.get_ticks_msec(),
@@ -54,14 +54,14 @@ func execute() -> Array:
 	await Engine.get_main_loop().create_timer(0.3).timeout
 
 	# Now validate each path
-	for test_case in test_paths:
+	for test_case: Dictionary in test_paths:
 		var path_result: Dictionary = await _validate_single_path(db, test_case)
 		validation_results.append(path_result)
 
 	var successful_validations: int = 0
 	var failed_validations: int = 0
 
-	for result in validation_results:
+	for result: Dictionary in validation_results:
 		if result.validation_success:
 			successful_validations += 1
 		else:

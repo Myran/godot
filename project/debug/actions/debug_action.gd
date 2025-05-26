@@ -23,7 +23,7 @@ static func create_from_callable(
 	p_group: String = "",
 	p_description: String = ""
 ) -> DebugAction:
-	var action := DebugAction.new()
+	var action: DebugAction = DebugAction.new()
 	action.action_name = p_name
 	action.category = p_category
 	action.group = p_group
@@ -62,6 +62,6 @@ func _success(payload: Variant = null) -> Array:
 
 # Helper to simplify returning failure
 func _failure(error_message: String, details: Dictionary = {}) -> Array:
-	var error_info = {"error": error_message}
+	var error_info: Dictionary = {"error": error_message}
 	error_info.merge(details, true)
 	return [false, error_info]

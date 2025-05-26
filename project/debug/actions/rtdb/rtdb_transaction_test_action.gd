@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -24,7 +24,7 @@ func execute() -> Array:
 		"counter": 0, "last_updated": TimeUtils.now_ms(), "transaction_test": true
 	}
 
-	var op_manager := FirebaseOperationManager.new(db)
+	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 	var setup_result: Dictionary = await op_manager.execute(
 		"set_value_async", [full_path, initial_data]
 	)
@@ -35,7 +35,7 @@ func execute() -> Array:
 	# Perform multiple concurrent-like transactions
 	var transaction_results: Array[Dictionary] = []
 
-	for i in range(3):
+	for i: int in range(3):
 		var transaction_result: Dictionary = await _perform_counter_transaction(
 			db, full_path, i + 1
 		)
@@ -53,7 +53,7 @@ func execute() -> Array:
 		)
 
 	var all_transactions_successful: bool = true
-	for result in transaction_results:
+	for result: Dictionary in transaction_results:
 		if not result.success:
 			all_transactions_successful = false
 			break
@@ -105,7 +105,7 @@ func _perform_counter_transaction(
 	# TEMPORARY: Transaction simulation for testing
 	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
 
-	var op_manager := FirebaseOperationManager.new(db)
+	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	# 1. Read current value
 	var get_result: Dictionary = await op_manager.execute("get_value_async", [path])

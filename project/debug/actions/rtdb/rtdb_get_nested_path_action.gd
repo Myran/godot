@@ -25,7 +25,7 @@ func execute() -> Array:
 	)
 
 	if not setup_result.success:
-		return _failure("Failed to setup nested data: " + setup_result.error)
+		return _failure("Failed to setup nested data: " + str(setup_result.get("error", "unknown error")))
 
 	# Now get the nested data
 	return await execute_simple_operation("get_value_async", nested_path, null, "Get Nested Data")

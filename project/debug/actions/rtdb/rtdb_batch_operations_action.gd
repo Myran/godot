@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -48,7 +48,7 @@ func execute() -> Array:
 	]
 
 # Execute batch operations
-	for i in range(operations_to_perform.size()):
+	for i: int in range(operations_to_perform.size()):
 		var operation: Dictionary = operations_to_perform[i]
 		var operation_result: Dictionary = await _execute_single_operation(db, operation, i)
 		batch_operations.append(operation_result)
@@ -60,7 +60,7 @@ func execute() -> Array:
 	var successful_operations: int = 0
 	var failed_operations: int = 0
 
-	for result in batch_operations:
+	for result: Dictionary in batch_operations:
 		if result.success:
 			successful_operations += 1
 		else:
@@ -107,7 +107,7 @@ func _execute_single_operation(
 	var operation_type: String = operation.type
 	var operation_path: Array[Variant] = operation.path
 	var operation_data: Variant = operation.data
-	var op_manager := FirebaseOperationManager.new(db)
+	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	match operation_type:
 		"set":

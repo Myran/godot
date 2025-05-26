@@ -65,12 +65,12 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> Dictionary:
 		await Engine.get_main_loop().process_frame
 
 		if TimeUtils.is_past_deadline(deadline):
-			var op_data: Dictionary = _pending_ops[request_id]
+			var timeout_op_data: Dictionary = _pending_ops[request_id]
 			return {
 				"success": false,
 				"error": "Operation timed out after %.1f seconds" % timeout_sec,
-				"operation": op_data.operation,
-				"duration_ms": TimeUtils.elapsed_ms(op_data.start_time)
+				"operation": timeout_op_data.operation,
+				"duration_ms": TimeUtils.elapsed_ms(timeout_op_data.start_time as int)
 			}
 
 	if not _pending_ops.has(request_id):
@@ -83,13 +83,13 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> Dictionary:
 			"success": false,
 			"error": op_data.error,
 			"data": op_data.result,
-			"duration_ms": TimeUtils.elapsed_ms(op_data.start_time)
+			"duration_ms": TimeUtils.elapsed_ms(op_data.start_time as int)
 		}
 	else:
 		return {
 			"success": true,
 			"data": op_data.result,
-			"duration_ms": TimeUtils.elapsed_ms(op_data.start_time)
+			"duration_ms": TimeUtils.elapsed_ms(op_data.start_time as int)
 		}
 
 

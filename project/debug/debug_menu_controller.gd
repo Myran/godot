@@ -112,7 +112,7 @@ func _populate_main_categories_view() -> void:
 	var categories_with_direct_actions: Array[String] = []
 	var categories_with_only_groups: Array[String] = []
 
-	for category_name in categories:
+	for category_name: String in categories:
 		if DebugRegistry.has_ungrouped_actions(category_name):
 			categories_with_direct_actions.append(category_name)
 		else:
@@ -253,7 +253,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 
 	if ungrouped_actions.size() > 0:
 		# Add ungrouped actions directly
-		for action in ungrouped_actions:
+		for action: DebugAction in ungrouped_actions:
 			item_list_navigator.add_item("• " + action.action_name)  # Bullet to show it's an action
 			item_list_navigator.set_item_tooltip(item_index, action.description)
 			item_list_navigator.set_item_metadata(
@@ -273,7 +273,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	# All groups already retrieved from DebugRegistry above
 
 	# Populate group items
-	for group_name in all_groups:
+	for group_name: String in all_groups:
 		item_list_navigator.add_item("▸ " + group_name)  # Arrow to show it's expandable
 		item_list_navigator.set_item_metadata(
 			item_index, {"type": ITEM_TYPE_GROUP, "name": group_name}
@@ -314,7 +314,7 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 			"ERROR: DebugRegistry autoload not found while accessing group actions.", true
 		)
 		return
-	var registry = DebugRegistry
+	var registry: DebugActionRegistry = DebugRegistry
 
 	var actions_in_group: Array[DebugAction] = registry.get_actions_for_group(
 		category_name, group_name
@@ -349,22 +349,21 @@ func _on_navigator_item_selected(index: int) -> void:
 	if index < 0 or index >= item_list_navigator.item_count:
 		return
 
-	var metadata: Variant = item_list_navigator.get_item_metadata(index)
-	if not metadata is Dictionary:
-		return
-
-	var item_type: Variant = metadata.get("type")
+	var metadata: Dictionary = item_list_navigator.get_item_metadata(index)
+	var item_type: String = metadata.get("type")
 	match item_type:
 		ITEM_TYPE_CATEGORY:
-			_populate_groups_view(metadata.get("name"))
+			var category_name: String = metadata.get("name")
+			_populate_groups_view(category_name)
 		ITEM_TYPE_CATEGORY_WITH_ACTIONS:
-			_populate_category_with_actions_view(metadata.get("name"))
+			var category_name: String = metadata.get("name")
+			_populate_category_with_actions_view(category_name)
 		ITEM_TYPE_GROUP:
-			_populate_actions_view(_current_category_name, metadata.get("name"))
+			var group_name: String = metadata.get("name")
+			_populate_actions_view(_current_category_name, group_name)
 		ITEM_TYPE_ACTION:
-			var action = metadata.get("action_instance")
-			if action:
-				_execute_single_action(action)
+			var action: DebugAction = metadata.get("action_instance")
+			_execute_single_action(action)
 		ITEM_TYPE_BACK_TO_MAIN:
 			_populate_main_categories_view()
 		ITEM_TYPE_BACK_TO_GROUPS:
@@ -382,29 +381,29 @@ func _on_run_all_pressed() -> void:
 			"ERROR: DebugRegistry autoload not found while running group actions.", true
 		)
 		return
-	var registry = DebugRegistry
+	var registry: DebugActionRegistry = DebugRegistry
 
 	var actions_to_run: Array = []  # Can contain both DebugAction and ManualDebugAction
 	var scope_name: String = ""
 
 	if _current_view_level == ViewLevel.GROUP_LIST:  # Run all in category
 		scope_name = _current_category_name
-		for group_name in registry.get_groups_for_category(_current_category_name):
-			var debug_actions = registry.get_actions_for_group(_current_category_name, group_name)
-			for action in debug_actions:
+		for group_name: String in registry.get_groups_for_category(_current_category_name):
+			var debug_actions: Array[DebugAction] = registry.get_actions_for_group(_current_category_name, group_name)
+			for action: DebugAction in debug_actions:
 				actions_to_run.append({"action": action, "is_manual": false})
 
 		# Add ungrouped actions from unified registry
-		var ungrouped_actions = registry.get_ungrouped_actions(_current_category_name)
-		for action in ungrouped_actions:
+		var ungrouped_actions: Array[DebugAction] = registry.get_ungrouped_actions(_current_category_name)
+		for action: DebugAction in ungrouped_actions:
 			actions_to_run.append({"action": action, "is_manual": false})
 
 	elif _current_view_level == ViewLevel.TEST_LIST:  # Run all in group
 		scope_name = "%s / %s" % [_current_category_name, _current_group_name]
-		var debug_actions = registry.get_actions_for_group(
+		var debug_actions: Array[DebugAction] = registry.get_actions_for_group(
 			_current_category_name, _current_group_name
 		)
-		for action in debug_actions:
+		for action: DebugAction in debug_actions:
 			actions_to_run.append({"action": action, "is_manual": false})
 
 		# All actions now come from unified registry
@@ -434,7 +433,7 @@ func _execute_single_action(action: DebugAction) -> void:
 		action.status_updated.disconnect(_on_action_status_updated)
 	action.status_updated.connect(_on_action_status_updated)
 
-	var result: Array = await action.execute()  # No target_node parameter
+	var result: Array = await action.execute()
 	var success: bool = result[0]
 	var payload: Variant = result[1]
 
@@ -470,14 +469,14 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 		["debug", "test"]
 	)
 
-	var passed_count := 0
-	var failed_count := 0
+	var passed_count: int = 0
+	var failed_count: int = 0
 	var summary_lines: Array[String] = []
 
-	for i in range(actions_to_run.size()):
+	for i: int in range(actions_to_run.size()):
 		var action_data: Dictionary = actions_to_run[i]
-		var action = action_data.action
-		var is_manual: bool = action_data.is_manual
+		var action: DebugAction = action_data.action
+		var _is_manual: bool = action_data.is_manual
 		var action_name: String = action.action_name
 
 		_update_status_label_text(
@@ -496,7 +495,7 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 
 		var result: Array = await action.execute()
 		var success: bool = result[0]
-		var payload = result[1]
+		var payload: Variant = result[1]
 
 		# Disconnect after execution
 		action.status_updated.disconnect(_on_action_status_updated)
@@ -518,7 +517,7 @@ func _execute_multiple_actions(actions_to_run: Array, scope_description: String)
 		else:
 			await get_tree().create_timer(0.01).timeout
 
-	var final_summary = (
+	var final_summary: String = (
 		"Execution Complete for '%s':\n%d Passed, %d Failed.\n\n"
 		% [scope_description, passed_count, failed_count]
 	)

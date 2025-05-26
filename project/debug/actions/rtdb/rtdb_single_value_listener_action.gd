@@ -17,7 +17,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 

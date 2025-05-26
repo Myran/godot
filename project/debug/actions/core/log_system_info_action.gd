@@ -4,7 +4,7 @@ class_name LogSystemInfoAction
 extends DebugAction
 
 
-func _init():
+func _init() -> void:
 	action_name = "Log System Information"
 	category = "System"
 	group = "Diagnostics"
@@ -14,7 +14,7 @@ func _init():
 func execute() -> Array:
 	_update_status("Collecting system information...")
 
-	var info = {
+	var info: Dictionary = {
 		"os_name": OS.get_name(),
 		"os_version": OS.get_version(),
 		"godot_version": Engine.get_version_info(),
@@ -26,8 +26,8 @@ func execute() -> Array:
 		"time": Time.get_datetime_string_from_system()
 	}
 
-	var formatted_info = ""
-	for key in info.keys():
+	var formatted_info: String = ""
+	for key: String in info.keys():
 		formatted_info += key + ": " + str(info[key]) + "\n"
 
 	Log.info("System info collected by debug action", info, ["debug", "system"])

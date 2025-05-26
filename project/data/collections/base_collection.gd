@@ -200,7 +200,7 @@ func save_data(path: Array[Variant], data: Variant) -> bool:
 ## @return The cache key
 func _get_cache_key(path: Array[Variant]) -> String:
 	var key: String = ""
-	for part in path:
+	for part: Variant in path:
 		key += str(part) + "/"
 	return key.strip_edges(false, true)
 

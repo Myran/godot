@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute() -> Array:
-	var db = get_firebase_database()
+	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()
 
@@ -27,7 +27,7 @@ func execute() -> Array:
 	]
 
 	var removed_count: int = 0
-	for path in test_paths:
+	for path: Array in test_paths:
 		# The C++ module's remove_listener_at_path() doesn't return a value
 		# It removes the listener if one exists at that path
 		db.remove_listener_at_path(path)
