@@ -830,7 +830,7 @@ func set_data(p_path: Array[Variant], key: String, data_to_set: Variant) -> bool
 	)
 
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").to_bool() # C++ signal for set_value_completed sends success (bool) as payload
+		return result_dict.get("payload").to_bool()  # C++ signal for set_value_completed sends success (bool) as payload
 	Log.error(
 		"FB_Backend: set_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -931,7 +931,7 @@ func set_server_timestamp(p_path: Array[Variant]) -> bool:
 		"set_server_timestamp_async", p_path
 	)
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").as_bool() # C++ signal sends success (bool)
+		return result_dict.get("payload").as_bool()  # C++ signal sends success (bool)
 	Log.error(
 		"FB_Backend: set_server_timestamp (DirectAwait) failed.",
 		{"path": p_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},

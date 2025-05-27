@@ -3,6 +3,8 @@
 [ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://debug/theme_debugmenu.tres" id="1_vvkks"]
 
 [node name="Button" type="Button"]
+offset_right = 321.0
+offset_bottom = 133.0
 size_flags_vertical = 8
 theme = ExtResource("1_vvkks")
 text = "TestButton

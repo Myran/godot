@@ -142,7 +142,9 @@ func register_callable(
 	group: String = "",
 	description: String = ""
 ) -> void:
-	var action: DebugAction = DebugAction.create_from_callable(action_name, callable, category, group, description)
+	var action: DebugAction = DebugAction.create_from_callable(
+		action_name, callable, category, group, description
+	)
 	_programmatic_actions.append(action)
 	var group_info: String = " (ungrouped)" if group == "" else "/" + group
 	Log.info("Registered programmatic action: %s in %s%s" % [action_name, category, group_info])
@@ -301,10 +303,8 @@ func _register_default_manual_actions() -> void:
 	register_callable(
 		"Clear Card Cache",
 		func() -> void:
-			if data_source:
-				var cache_method_exists: bool = data_source.has_method("clear_card_cache")
-				if cache_method_exists:
-					data_source.clear_card_cache()
+			if data_source and data_source.has_method("clear_card_cache"):
+				data_source.clear_card_cache()
 			Log.info("Card cache cleared"),
 		"Database",
 		"Cache",

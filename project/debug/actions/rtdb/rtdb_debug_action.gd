@@ -25,8 +25,6 @@ static var _request_counter: int = 0
 var _last_error_result: Array = []
 
 
-
-
 func _init() -> void:
 	# Set category to RTDB by default, subclasses can override
 	category = "RTDB"
