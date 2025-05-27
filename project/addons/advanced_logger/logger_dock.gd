@@ -272,22 +272,26 @@ func _update_startup_message() -> void:
 	# Create message about current active and ignored tags
 	var message: String = ""
 
-	if active_tags.size() > 0:
-		message += "Active filter tags: " + ", ".join(active_tags)
-	else:
-		message += "No active filter tags (showing all logs except ignored)"
-
-	if ignored_tags.size() > 0:
-		message += "\nIgnored tags: " + ", ".join(ignored_tags)
-	else:
-		message += "\nNo ignored tags"
-
-	_startup_message.text = message
-
-	# Also print to console for convenience
 	if _show_editor_debug:
+		# Show detailed tag information when debug is enabled
+		if active_tags.size() > 0:
+			message += "Active filter tags: " + ", ".join(active_tags)
+		else:
+			message += "No active filter tags (showing all logs except ignored)"
+
+		if ignored_tags.size() > 0:
+			message += "\nIgnored tags: " + ", ".join(ignored_tags)
+		else:
+			message += "\nNo ignored tags"
+
+		# Also print to console when debug is enabled
 		print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 		print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
+	else:
+		# Show simplified message when debug is disabled
+		message = "Logger initialized. Enable 'Show Editor Debug' in Settings tab for detailed logging tests."
+
+	_startup_message.text = message
 
 	# Update tooltips for level tags
 	_update_level_tag_tooltips()
