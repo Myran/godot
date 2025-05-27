@@ -704,11 +704,14 @@ func _pretty_print_value(value: Variant, indent_level: int = 0, max_depth: int =
 		return "[color=gray]null[/color]"
 
 	if value is Dictionary:
-		return _format_dictionary(value, indent_level, max_depth)
+		var val_dic : Dictionary = value
+		return _format_dictionary(val_dic, indent_level, max_depth)
+
 	elif value is Array:
-		return _format_array(value, indent_level, max_depth)
+		var val_array : Array = value
+		return _format_array(val_array, indent_level, max_depth)
 	elif value is String:
-		var str_val: String = value as String
+		var str_val: String = value
 		if str_val.length() > 200:
 			return '"%s..."' % str_val.substr(0, 197)
 		else:
@@ -743,7 +746,7 @@ func _format_dictionary(dict: Dictionary, indent_level: int = 0, max_depth: int 
 	var max_items: int = 25 if indent_level == 0 else 15
 	var items_shown: int = 0
 
-	for key in keys:
+	for key: Variant in keys:
 		if items_shown >= max_items:
 			result += (
 				child_indent
@@ -788,14 +791,14 @@ func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> S
 	# For small arrays of simple values, show inline
 	if array.size() <= 3 and indent_level > 0:
 		var all_simple: bool = true
-		for item in array:
+		for item: Variant in array:
 			if item is Dictionary or item is Array:
 				all_simple = false
 				break
 
 		if all_simple:
 			var items: Array[String] = []
-			for item in array:
+			for item: Variant in array:
 				items.append(_pretty_print_value(item, indent_level + 1, max_depth))
 			return "[ %s ]" % ", ".join(items)
 
@@ -806,7 +809,7 @@ func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> S
 	var max_items: int = 20 if indent_level == 0 else 10
 	var items_shown: int = 0
 
-	for i in range(array.size()):
+	for i: int in range(array.size()):
 		if items_shown >= max_items:
 			result += (
 				child_indent
@@ -846,7 +849,7 @@ func _format_payload_summary(payload: Variant) -> String:
 
 	# Handle dictionary payloads (common from Firebase actions)
 	if payload is Dictionary:
-		var dict_payload: Dictionary = payload as Dictionary
+		var dict_payload: Dictionary = payload
 
 		# Firebase operation result
 		if dict_payload.has("operation") and dict_payload.has("result"):
@@ -864,7 +867,11 @@ func _format_payload_summary(payload: Variant) -> String:
 			):
 				var path_str: String = ""
 				if path_data is Array:
-					path_str = "/".join(path_data)  # Convert array to path-like string
+					var path_array: Array = path_data
+					var string_array: PackedStringArray = PackedStringArray()
+					for item: Variant in path_array:
+						string_array.append(str(item))
+					path_str = "/".join(string_array)  # Convert array to path-like string
 				else:
 					path_str = str(path_data)
 				summary += "Path: %s\n" % path_str
@@ -891,7 +898,7 @@ func _format_error_message(payload: Variant) -> String:
 
 	# Handle dictionary errors (common from Firebase)
 	if payload is Dictionary:
-		var dict_payload: Dictionary = payload as Dictionary
+		var dict_payload: Dictionary = payload
 
 		# Firebase error with structured info
 		if dict_payload.has("error"):
@@ -1032,7 +1039,7 @@ func _build_execution_summary(
 	# Show failed actions in detail (high priority)
 	if failed > 0:
 		summary += "[color=red]🚨 FAILED ACTIONS:[/color]\n"
-		for i in range(failed_actions.size()):
+		for i: int in range(failed_actions.size()):
 			var failure: Dictionary = failed_actions[i]
 			var action_name: String = failure.get("name", "Unknown")
 			var error_msg: String = failure.get("error", "Unknown error")
@@ -1045,7 +1052,7 @@ func _build_execution_summary(
 		# Always show all passed actions, formatted compactly
 		summary += "[color=palegreen]✅ PASSED ACTIONS (%d):[/color]\n" % passed
 		var line: String = "  "
-		for i in range(passed_actions.size()):
+		for i: int in range(passed_actions.size()):
 			var action_name: String = passed_actions[i]
 			var short_name: String = action_name
 			if short_name.length() > 20:
