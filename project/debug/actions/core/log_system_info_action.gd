@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Logs basic system information and environment variables."
 
 
-func execute() -> Array:
+func execute() -> void:
 	_update_status("Collecting system information...")
 
 	var info: Dictionary = {
@@ -33,4 +33,4 @@ func execute() -> Array:
 	Log.info("System info collected by debug action", info, ["debug", "system"])
 	_update_status("System Information:\n" + formatted_info)
 
-	return _success(info)
+	execution_completed.emit(true, info)

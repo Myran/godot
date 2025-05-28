@@ -1,395 +1,260 @@
 # project/debug/debug_action_registry.gd
+# Programmatic-only debug action registry for GameTwo
+# All debug actions are registered via code - no resource file dependencies
+
 class_name DebugActionRegistry
 extends Node
 
-# Note: This registry now handles both resource-based and programmatic actions
-# Manual actions are registered directly here during _ready()
-
-var actions: Array[DebugAction] = []
-const ACTIONS_PATH: String = "res://debug/actions/"
-
-# Add support for programmatic registration
-var _programmatic_actions: Array[DebugAction] = []
+# Internal storage: category -> group -> Array[DebugAction]
+var _actions: Dictionary = {}
+var _flat_actions: Array[DebugAction] = []
 
 
 func _init() -> void:
-	print("DebugActionRegistry instance created")
+	# Debug logging happens in _ready() when Log autoload is available
+	pass
 
 
 func _ready() -> void:
-	Log.info("DebugActionRegistry initializing...", {}, ["debug", "system"])
-	_scan_for_actions()
-	_register_default_manual_actions()
+	assert(self == DebugRegistry, "DebugActionRegistry must be the DebugRegistry autoload")
+	Log.info("Initializing programmatic debug action registry...", {}, ["debug", "system"])
+
+	var start_time := Time.get_ticks_msec()
+	_register_all_actions()
+	var end_time := Time.get_ticks_msec()
+
+	Log.info(
+		"Debug action registry initialized",
+		{
+			"total_actions": _flat_actions.size(),
+			"categories": get_categories().size(),
+			"init_time_ms": end_time - start_time
+		},
+		["debug", "init"]
+	)
 
 
-func _scan_for_actions() -> void:
-	actions.clear()
+func _register_all_actions() -> void:
+	# Register actions from organized category files
+	_register_category_actions("RTDB", RTDBDebugActions)
+	_register_category_actions("Core", CoreDebugActions)
+	_register_category_actions("Game", GameDebugActions)
 
-	# Use Android-compatible resource loading approach
-	# DirAccess.open() doesn't work reliably on Android with packaged resources
-	_load_known_actions()
+	# Register built-in utility actions
+	_register_builtin_actions()
 
-	# If no actions loaded, try fallback directory scanning (for development)
-	if actions.is_empty():
-		Log.warning(
-			"No actions loaded via known resource paths, trying fallback directory scan",
-			{},
-			["debug", "system"]
+
+func _register_category_actions(category_name: String, actions_class) -> void:
+	"""Register actions from a category-specific class with error handling"""
+	var initial_count := _flat_actions.size()
+
+	if actions_class and actions_class.has_method("register_all"):
+		actions_class.register_all(self)
+		var added_count := _flat_actions.size() - initial_count
+		Log.debug(
+			"Registered category actions",
+			{"category": category_name, "actions_added": added_count},
+			["debug", "registration"]
 		)
-		_recursive_scan_fallback(ACTIONS_PATH)
-
-	# Sort actions alphabetically
-	actions.sort_custom(
-		func(a: DebugAction, b: DebugAction) -> bool: return a.action_name < b.action_name
-	)
-
-	var total_actions: int = actions.size() + _programmatic_actions.size()
-	Log.info(
-		(
-			"DebugActionRegistry: Loaded %d resource actions, %d programmatic actions (total: %d)"
-			% [actions.size(), _programmatic_actions.size(), total_actions]
-		),
-		{},
-		["debug", "system"]
-	)
-
-	# Log available categories for debugging
-	var categories: Array[String] = get_categories()
-	Log.info(
-		"Available categories after initialization: %s" % str(categories), {}, ["debug", "system"]
-	)
-
-
-func _load_known_actions() -> void:
-	# Known action resource paths - Android-compatible approach
-	# This list should be updated when new actions are added
-	var known_action_paths: Array[String] = [
-		# Core actions
-		"res://debug/actions/core/log_system_info.tres",
-		# RTDB actions
-		"res://debug/actions/rtdb/rtdb_batch_operations.tres",
-		"res://debug/actions/rtdb/rtdb_child_added_listener.tres",
-		"res://debug/actions/rtdb/rtdb_child_changed_listener.tres",
-		"res://debug/actions/rtdb/rtdb_child_removed_listener.tres",
-		"res://debug/actions/rtdb/rtdb_concurrent_operations.tres",
-		"res://debug/actions/rtdb/rtdb_delete_value.tres",
-		"res://debug/actions/rtdb/rtdb_error_handling_test.tres",
-		"res://debug/actions/rtdb/rtdb_get_nested_path.tres",
-		"res://debug/actions/rtdb/rtdb_get_simple_value.tres",
-		"res://debug/actions/rtdb/rtdb_large_data_test.tres",
-		"res://debug/actions/rtdb/rtdb_list_children.tres",
-		"res://debug/actions/rtdb/rtdb_path_validation.tres",
-		"res://debug/actions/rtdb/rtdb_remove_all_listeners.tres",
-		"res://debug/actions/rtdb/rtdb_set_nested_path.tres",
-		"res://debug/actions/rtdb/rtdb_set_simple_value.tres",
-		"res://debug/actions/rtdb/rtdb_single_value_listener.tres",
-		"res://debug/actions/rtdb/rtdb_transaction_test.tres",
-		"res://debug/actions/rtdb/rtdb_update_value.tres",
-		# Legacy RTDB actions (migrated from scene_debug.gd)
-		"res://debug/actions/rtdb/rtdb_legacy_basic_set_simple_value.tres",
-		"res://debug/actions/rtdb/rtdb_legacy_basic_get_simple_value.tres",
-		"res://debug/actions/rtdb/rtdb_legacy_basic_push_item.tres",
-	]
-
-	for resource_path: String in known_action_paths:
-		_load_action_resource(resource_path)
-
-
-func _recursive_scan_fallback(path: String) -> void:
-	# Fallback directory scanning for development environments
-	# This may not work on Android but is useful for desktop development
-	var dir: DirAccess = DirAccess.open(path)
-	if not dir:
-		Log.warning("Could not scan actions directory (fallback): " + path, {}, ["debug", "system"])
-		return
-
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-
-	while file_name != "":
-		if file_name.begins_with("."):
-			file_name = dir.get_next()
-			continue
-
-		var full_path: String = path.path_join(file_name)
-
-		if dir.current_is_dir():
-			_recursive_scan_fallback(full_path)
-		elif file_name.ends_with(".tres"):
-			_load_action_resource(full_path)
-
-		file_name = dir.get_next()
-
-
-func _load_action_resource(resource_path: String) -> void:
-	if not ResourceLoader.exists(resource_path):
-		Log.warning("Action resource not found: " + resource_path, {}, ["debug", "system"])
-		return
-
-	var resource: Resource = load(resource_path)
-	if resource is DebugAction:
-		actions.append(resource as DebugAction)
-		Log.info("Loaded action: " + (resource as DebugAction).action_name, {}, ["debug", "system"])
 	else:
-		Log.warning("Resource is not a DebugAction: " + resource_path, {}, ["debug", "system"])
+		Log.error("Invalid actions class for category: " + category_name, {}, ["debug", "error"])
 
 
-# Add method to register callable-based actions
+func _register_builtin_actions() -> void:
+	"""Register built-in utility actions that don't require separate files"""
+
+	# System memory utilities
+	register_action(
+		(
+			DebugAction
+			. create("Force Low Memory Warning", _force_low_memory)
+			. set_category("System")
+			. set_group("Memory")
+			. set_description("Simulates low memory condition for testing memory management")
+		)
+	)
+
+	# Registry introspection utilities
+	register_action(
+		(
+			DebugAction
+			. create("Show Registry Stats", _show_registry_stats)
+			. set_category("System")
+			. set_group("Debug")
+			. set_description("Display debug action registry statistics")
+		)
+	)
+
+
+func register_action(action: DebugAction) -> bool:
+	"""Register a debug action with comprehensive validation"""
+
+	# Validation checks
+	if not action:
+		Log.error("Cannot register null action", {}, ["debug", "error"])
+		return false
+
+	if action.action_name.is_empty():
+		Log.error("Cannot register action with empty name", {}, ["debug", "error"])
+		return false
+
+	# Check for duplicate action names within the same category
+	if _is_action_duplicate(action):
+		Log.warning(
+			"Action already exists, skipping registration",
+			{"name": action.action_name, "category": action.category},
+			["debug", "registration"]
+		)
+		return false
+
+	# Set default category if empty
+	if action.category.is_empty():
+		action.category = "Uncategorized"
+
+	# Ensure category exists
+	if not _actions.has(action.category):
+		_actions[action.category] = {}
+
+	# Ensure group exists
+	var group_name := action.group if not action.group.is_empty() else "_ungrouped"
+	if not _actions[action.category].has(group_name):
+		var new_array: Array[DebugAction] = []
+		_actions[action.category][group_name] = new_array
+
+	# Register the action
+	_actions[action.category][group_name].append(action)
+	_flat_actions.append(action)
+
+	Log.debug(
+		"Debug action registered successfully",
+		{
+			"name": action.action_name,
+			"category": action.category,
+			"group": action.group,
+			"total_actions": _flat_actions.size()
+		},
+		["debug", "registration"]
+	)
+
+	return true
+
+
+func _is_action_duplicate(action: DebugAction) -> bool:
+	"""Check if an action with the same name already exists in the same category"""
+	for existing_action in _flat_actions:
+		if (
+			existing_action.action_name == action.action_name
+			and existing_action.category == action.category
+		):
+			return true
+	return false
+
+
+# Legacy compatibility method - prefer register_action() for new code
 func register_callable(
 	action_name: String,
 	callable: Callable,
 	category: String = "Manual",
 	group: String = "",
 	description: String = ""
-) -> void:
-	var action: DebugAction = DebugAction.create_from_callable(
+) -> bool:
+	"""Legacy method for backward compatibility - creates DebugAction from callable"""
+	var action := DebugAction.create_from_callable(
 		action_name, callable, category, group, description
 	)
-	_programmatic_actions.append(action)
-	var group_info: String = " (ungrouped)" if group == "" else "/" + group
-	Log.info("Registered programmatic action: %s in %s%s" % [action_name, category, group_info])
+	return register_action(action)
 
 
-func get_actions() -> Array[DebugAction]:
-	# Combine resource-based and programmatic actions
-	var all_actions: Array[DebugAction] = actions.duplicate()
-	all_actions.append_array(_programmatic_actions)
-	return all_actions
-
-
+# Public API methods for accessing registered actions
 func get_categories() -> Array[String]:
-	# Ensure actions are loaded
-	if actions.is_empty():
-		_scan_for_actions()
-
-	var categories: Dictionary = {}
-
-	# Add from resource-based actions
-	for action: DebugAction in actions:
-		if action and not action.category.is_empty():
-			categories[action.category] = true
-
-	# Add from programmatic actions
-	for action: DebugAction in _programmatic_actions:
-		if action and not action.category.is_empty():
-			categories[action.category] = true
-
-	var sorted_categories: Array[String] = []
-	sorted_categories.assign(categories.keys())
-	sorted_categories.sort()
-	return sorted_categories
+	"""Get all registered categories, sorted alphabetically"""
+	var categories: Array[String] = []
+	categories.assign(_actions.keys())
+	categories.sort()
+	return categories
 
 
 func get_groups_for_category(category_name: String) -> Array[String]:
-	var groups: Dictionary = {}
+	"""Get all groups within a category, excluding ungrouped actions"""
+	if not _actions.has(category_name):
+		Log.debug("Category not found: " + category_name, {}, ["debug", "registry"])
+		var empty_array: Array[String] = []
+		return empty_array
 
-	# Add from resource-based actions
-	for action: DebugAction in actions:
-		if action.category == category_name and not action.group.is_empty():
-			groups[action.group] = true
-
-	# Add from programmatic actions
-	for action: DebugAction in _programmatic_actions:
-		if action.category == category_name and not action.group.is_empty():
-			groups[action.group] = true
-
-	var sorted_groups: Array[String] = []
-	sorted_groups.assign(groups.keys())
-	sorted_groups.sort()
-	return sorted_groups
+	var groups: Array[String] = []
+	groups.assign(_actions[category_name].keys())
+	groups.erase("_ungrouped")  # Remove internal ungrouped key
+	groups.sort()
+	return groups
 
 
 func get_actions_for_group(category_name: String, group_name: String) -> Array[DebugAction]:
-	var group_actions: Array[DebugAction] = []
+	if not _actions.has(category_name):
+		var empty_array: Array[DebugAction] = []
+		return empty_array
 
-	# Add from resource-based actions
-	for action: DebugAction in actions:
-		if action.category == category_name and action.group == group_name:
-			group_actions.append(action)
+	var group_key := group_name if not group_name.is_empty() else "_ungrouped"
+	if not _actions[category_name].has(group_key):
+		var empty_array: Array[DebugAction] = []
+		return empty_array
 
-	# Add from programmatic actions
-	for action: DebugAction in _programmatic_actions:
-		if action.category == category_name and action.group == group_name:
-			group_actions.append(action)
-
-	return group_actions
+	var actions_array: Array[DebugAction] = _actions[category_name][group_key]
+	return actions_array
 
 
-# Get ungrouped actions for a specific category
 func get_ungrouped_actions(category_name: String) -> Array[DebugAction]:
-	var ungrouped: Array[DebugAction] = []
-
-	# Add from resource-based actions
-	for action: DebugAction in actions:
-		if action.category == category_name and action.group == "":
-			ungrouped.append(action)
-
-	# Add from programmatic actions
-	for action: DebugAction in _programmatic_actions:
-		if action.category == category_name and action.group == "":
-			ungrouped.append(action)
-
-	return ungrouped
+	return get_actions_for_group(category_name, "")
 
 
-# Check if category has ungrouped actions
 func has_ungrouped_actions(category_name: String) -> bool:
-	# Check resource-based actions
-	for action: DebugAction in actions:
-		if action.category == category_name and action.group == "":
-			return true
-
-	# Check programmatic actions
-	for action: DebugAction in _programmatic_actions:
-		if action.category == category_name and action.group == "":
-			return true
-
-	return false
+	return _actions.has(category_name) and _actions[category_name].has("_ungrouped")
 
 
-func register_action(action: DebugAction) -> void:
-	if not action:
-		push_error("Cannot register null action")
-		return
-
-	if actions.has(action):
-		return  # Already registered
-
-	actions.append(action)
-	Log.debug("Manually registered action: " + action.action_name, {}, ["debug", "system"])
+func get_all_actions() -> Array[DebugAction]:
+	return _flat_actions
 
 
-# Register all default manual actions directly in the unified registry
-func _register_default_manual_actions() -> void:
-	Log.info("Registering default manual actions in unified registry", {}, ["debug", "system"])
-
-	# Gameplay Actions - some with groups, some without
-	register_callable(
-		"Reset Match Level",
-		func() -> void: DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL),
-		"Gameplay",
-		"",
-		"Reset the current match level"  # No group
-	)
-
-	# Match Level Actions - grouped together
-	for i: int in range(1, 6):
-		var level_num: int = i  # Capture the value for the lambda
-		var level_string: String = "level_%02d" % level_num
-		var action_name: String = "Load Match Level %d" % level_num
-		var description: String = "Force load match level %d" % level_num
-		register_callable(
-			action_name,
-			func(captured_level_string: String = level_string) -> void:
-				var args_array: Array[String] = [captured_level_string]
-				DebugManager.action(
-					DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, args_array
-				),
-			"Gameplay",
-			"Match Levels",
-			description
-		)
-
-	# Enemy/Debug Lineup Actions
-	register_callable(
-		"Populate Enemy Lineup",
-		_populate_enemy_lineup,
-		"Gameplay",
-		"Preset Lineups",
-		"Add test cards to enemy lineup"
-	)
-
-	# Database actions - mixed grouped and ungrouped
-	register_callable(
-		"Clear Card Cache",
-		func() -> void:
-			if data_source and data_source.has_method("clear_card_cache"):
-				data_source.clear_card_cache()
-			Log.info("Card cache cleared"),
-		"Database",
-		"Cache",
-		"Clear the card data cache"
-	)
-
-	register_callable(
-		"Toggle Local Battle DB",
-		func() -> void:
-			var current_setting: bool = DebugManager.use_local_battle_db
-			var new_setting: bool = not current_setting
-			DebugManager.use_local_battle_db = new_setting
-			var setting_text: String = str(new_setting)
-			Log.info("Local battle DB: " + setting_text),
-		"Database",
-		"",
-		"Toggle between local and remote battle database"  # No group
-	)
-
-	# Quick Actions - all without groups (simpler organization)
-	register_callable(
-		"Cycle Asset Variant",
-		func() -> void:
-			var current_variant: int = DebugManager.asset_variant
-			var next_variant: int = (current_variant % 3) + 1
-			DebugManager.asset_variant = next_variant
-			var variant_text: String = str(next_variant)
-			Log.info("Asset variant set to: " + variant_text),
-		"Quick Actions",
-		"",
-		"Cycle through asset variants (1-3)"
-	)
-
-	register_callable(
-		"Print Debug Info",
-		func() -> void:
-			Log.info("=== Debug Info ===")
-			var local_db_setting: bool = DebugManager.use_local_battle_db
-			var asset_variant_num: int = DebugManager.asset_variant
-			Log.info("Local DB: %s" % str(local_db_setting))
-			Log.info("Asset Variant: %d" % asset_variant_num)
-			Log.info("=================="),
-		"Quick Actions",
-		"",
-		"Print current debug settings"
-	)
-
-	# System Actions - no groups needed
-	register_callable(
-		"Force Garbage Collection",
-		func() -> void:
-			OS.request_permissions()
-			Log.info("Garbage collection requested"),
-		"System",
-		"",
-		"Request garbage collection"
-	)
-
-	Log.info("Default manual actions registered", {}, ["debug", "system"])
+# Legacy method for compatibility
+func get_actions() -> Array[DebugAction]:
+	return get_all_actions()
 
 
-# Legacy function preserved for enemy lineup action
-func _populate_enemy_lineup() -> void:
-	if not is_instance_valid(core) or not is_instance_valid(card_controller):
-		Log.error("Cannot populate enemy lineup: core or card_controller missing")
-		return
+# Built-in utility action implementations
+static func _force_low_memory() -> void:
+	"""Simulate low memory condition for testing memory management systems"""
+	Log.warning("Simulating low memory condition for testing", {}, ["debug", "system", "memory"])
 
-	# Create enemy cards
-	for n: int in 3:
-		var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
-		new_card.block_context = Cards.CONTEXT.LINEUP
-		core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
+	# Request garbage collection using available methods
+	# Note: Godot doesn't have a direct GC method, so we use memory pressure signals
+	if OS.has_method("low_processor_usage_mode"):
+		var old_mode = OS.low_processor_usage_mode
+		OS.low_processor_usage_mode = true
+		OS.low_processor_usage_mode = old_mode
 
-	# Create debug cards
-	for n: int in 3:
-		var new_card: Card = await card_controller.create_unit_from_id(str(n), 1)
-		new_card.block_context = Cards.CONTEXT.LINEUP
-		core.action(core.DebugLineupAddCardEvent.new(new_card, n))
-
-	Log.info("Enemy lineup populated with test cards")
+	Log.info("Low memory simulation completed", {}, ["debug", "system", "memory"])
 
 
-# Programmatic registration - following YAGNI, only register actions that exist
-func _register_all_actions_programmatically() -> void:
-	# Disabled - causes class loading issues in some environments
-	# Use resource scanning instead
-	Log.info("Programmatic registration disabled, using resource scanning", {}, ["debug", "system"])
-	return
+func _show_registry_stats() -> void:
+	"""Display comprehensive debug action registry statistics"""
+	var stats := {
+		"total_actions": _flat_actions.size(),
+		"total_categories": get_categories().size(),
+		"categories": {}
+	}
+
+	# Collect per-category statistics
+	for category in get_categories():
+		var category_stats := {
+			"groups": get_groups_for_category(category).size(),
+			"ungrouped_actions": get_ungrouped_actions(category).size(),
+			"total_actions": 0
+		}
+
+		# Count actions in all groups
+		for group in get_groups_for_category(category):
+			category_stats.total_actions += get_actions_for_group(category, group).size()
+		category_stats.total_actions += category_stats.ungrouped_actions
+
+		stats.categories[category] = category_stats
+
+	Log.info("Debug Action Registry Statistics", stats, ["debug", "registry", "stats"])

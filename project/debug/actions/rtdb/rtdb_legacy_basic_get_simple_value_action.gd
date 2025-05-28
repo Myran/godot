@@ -9,7 +9,7 @@ func _init() -> void:
 	description = "Migrated from scene_debug.gd - Gets a simple value from RTDB"
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	Log.debug("RTDB Test: Get Simple Value", {}, ["test"])
 	_update_status("Running basic get simple value test...")
 

@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()

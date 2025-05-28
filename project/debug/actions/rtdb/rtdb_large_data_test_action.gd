@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 # Check if Firebase backend is available
 	var db: Object = get_firebase_database()
 	if not db:

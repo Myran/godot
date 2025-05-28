@@ -10,6 +10,6 @@ func _init() -> void:
 	description = "Retrieves a simple value from a predefined test path in RTDB."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
 	return await execute_simple_operation("get_value_async", path.as_variants(), null, action_name)

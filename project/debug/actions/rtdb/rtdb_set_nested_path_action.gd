@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var nested_data: Dictionary = {
 		"metadata":
 		{"created_at": TimeUtils.now_ms(), "test_type": "nested_structure", "version": "2.0"},

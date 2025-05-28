@@ -16,7 +16,7 @@ func _init() -> void:
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()

@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Validates accessibility and structure of various RTDB paths."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()

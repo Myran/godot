@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Sets a simple string value at a predefined test path in RTDB."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var test_value: String = "Test Value: " + str(TimeUtils.now_ms())
 
 	return await execute_simple_operation(

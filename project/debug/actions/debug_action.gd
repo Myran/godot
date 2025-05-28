@@ -7,15 +7,55 @@ extends Resource
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"
 @export var group: String = "Default"  # e.g., "Basic", "Listeners", "Connectivity"
 @export_multiline var description: String = "No description."
+@export var requires_confirmation: bool = false
+@export var keyboard_shortcut: String = ""
 
 # Signal for status updates - decouples actions from UI
 signal status_updated(text: String, is_error: bool)
+signal execution_completed(success: bool, result: Variant)
 
 # Add support for callable-based actions
 var action_callable: Callable
 
 
-# Add static factory method for creating programmatic actions
+func _init(p_name: String = "", p_callable: Callable = Callable()) -> void:
+	action_name = p_name
+	action_callable = p_callable
+
+
+# Builder pattern methods for fluent configuration
+func set_category(p_category: String) -> DebugAction:
+	category = p_category
+	return self
+
+
+func set_group(p_group: String) -> DebugAction:
+	group = p_group
+	return self
+
+
+func set_description(p_description: String) -> DebugAction:
+	description = p_description
+	return self
+
+
+func set_requires_confirmation(p_requires_confirmation: bool) -> DebugAction:
+	requires_confirmation = p_requires_confirmation
+	return self
+
+
+func set_keyboard_shortcut(p_shortcut: String) -> DebugAction:
+	keyboard_shortcut = p_shortcut
+	return self
+
+
+# Static factory method for creating programmatic actions
+static func create(p_name: String, p_callable: Callable) -> DebugAction:
+	var action := DebugAction.new(p_name, p_callable)
+	return action
+
+
+# Legacy factory method for compatibility
 static func create_from_callable(
 	p_name: String,
 	p_callable: Callable,
@@ -23,24 +63,32 @@ static func create_from_callable(
 	p_group: String = "",
 	p_description: String = ""
 ) -> DebugAction:
-	var action: DebugAction = DebugAction.new()
-	action.action_name = p_name
+	var action := DebugAction.new(p_name, p_callable)
 	action.category = p_category
 	action.group = p_group
 	action.description = p_description if p_description else "Execute " + p_name
-	action.action_callable = p_callable
 	return action
 
 
-# Method to be implemented by specific actions
-# Returns an array: [bool_success, Variant_payload_or_error_info]
-func execute() -> Array:
+# Enhanced execute method with proper async support and signals
+func execute() -> void:
 	if action_callable.is_valid():
-		# Execute callable and wrap result
+		_update_status("Executing " + action_name + "...")
+		var result = await action_callable.call()
+		execution_completed.emit(true, result)
+		_update_status("Completed: " + action_name)
+	else:
+		# Subclasses can override this for resource-based actions
+		_update_status("ERROR: No execute method defined for " + action_name, true)
+		execution_completed.emit(false, "No execute method defined")
+
+
+# Legacy method that returns array (for compatibility)
+func execute_legacy() -> Array:
+	if action_callable.is_valid():
 		action_callable.call()
 		return _success({"executed": true, "type": "callable"})
 	else:
-		# Subclasses override this for resource-based actions
 		push_error("Execute method not implemented for action: ", action_name)
 		return [false, {"error": "Not implemented"}]
 

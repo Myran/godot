@@ -244,7 +244,7 @@ func _populate_groups_view(category_name: String) -> void:
 		return
 
 	item_list_navigator.add_item(BACK_TO_MAIN_MENU_TEXT)
-	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_MAIN})
+	item_list_navigator.set_item_metadata(0, MenuListItemData.create_back_to_main())
 
 	# **CRITICAL FIX: Check if category has ungrouped actions - if so, use category_with_actions view**
 	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
@@ -279,7 +279,9 @@ func _populate_groups_view(category_name: String) -> void:
 	for i: int in range(groups.size()):
 		var group_name: String = groups[i]
 		item_list_navigator.add_item(group_name)
-		item_list_navigator.set_item_metadata(i + 1, {"type": ITEM_TYPE_GROUP, "name": group_name})
+		item_list_navigator.set_item_metadata(
+			i + 1, MenuListItemData.create_group(category_name, group_name)
+		)
 
 	Log.info(
 		"Groups populated for category",
@@ -318,7 +320,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	# for categories with verified ungrouped actions
 
 	item_list_navigator.add_item(BACK_TO_MAIN_MENU_TEXT)
-	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_MAIN})
+	item_list_navigator.set_item_metadata(0, MenuListItemData.create_back_to_main())
 
 	var item_index: int = 1
 
@@ -331,7 +333,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 			item_list_navigator.add_item("• " + action.action_name)  # Bullet to show it's an action
 			item_list_navigator.set_item_tooltip(item_index, action.description)
 			item_list_navigator.set_item_metadata(
-				item_index, {"type": ITEM_TYPE_ACTION, "action_instance": action}
+				item_index, MenuListItemData.create_action(action, category_name, "")
 			)
 			item_index += 1
 
@@ -350,7 +352,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	for group_name: String in all_groups:
 		item_list_navigator.add_item("▸ " + group_name)  # Arrow to show it's expandable
 		item_list_navigator.set_item_metadata(
-			item_index, {"type": ITEM_TYPE_GROUP, "name": group_name}
+			item_index, MenuListItemData.create_group(category_name, group_name)
 		)
 		item_index += 1
 
@@ -389,7 +391,9 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	)
 
 	item_list_navigator.add_item(BACK_TO_GROUPS_TEXT)
-	item_list_navigator.set_item_metadata(0, {"type": ITEM_TYPE_BACK_TO_GROUPS})
+	item_list_navigator.set_item_metadata(
+		0, MenuListItemData.create_back_to_groups(_current_category_name)
+	)
 
 	# Access the registry via autoload (fast-failing)
 	if not DebugRegistry:
@@ -416,7 +420,7 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		item_list_navigator.add_item(action.action_name)
 		item_list_navigator.set_item_tooltip(item_index, action.description)
 		item_list_navigator.set_item_metadata(
-			item_index, {"type": ITEM_TYPE_ACTION, "action_instance": action}
+			item_index, MenuListItemData.create_action(action, category_name, group_name)
 		)
 		item_index += 1
 
@@ -432,24 +436,17 @@ func _on_navigator_item_selected(index: int) -> void:
 	if index < 0 or index >= item_list_navigator.item_count:
 		return
 
-	var metadata: Dictionary = item_list_navigator.get_item_metadata(index)
-	var item_type: String = metadata.get("type")
-	match item_type:
-		ITEM_TYPE_CATEGORY:
-			var category_name: String = metadata.get("name")
-			_populate_groups_view(category_name)
-		ITEM_TYPE_CATEGORY_WITH_ACTIONS:
-			var category_name: String = metadata.get("name")
-			_populate_category_with_actions_view(category_name)
-		ITEM_TYPE_GROUP:
-			var group_name: String = metadata.get("name")
-			_populate_actions_view(_current_category_name, group_name)
-		ITEM_TYPE_ACTION:
-			var action: DebugAction = metadata.get("action_instance")
-			_execute_single_action(action)
-		ITEM_TYPE_BACK_TO_MAIN:
+	var metadata: MenuListItemData = item_list_navigator.get_item_metadata(index)
+	match metadata.type:
+		MenuListItemData.ItemType.CATEGORY:
+			_populate_groups_view(metadata.category_name)
+		MenuListItemData.ItemType.ACTION:
+			_execute_single_action(metadata.action_instance)
+		MenuListItemData.ItemType.GROUP:
+			_populate_actions_view(_current_category_name, metadata.group_name)
+		MenuListItemData.ItemType.BACK_TO_MAIN:
 			_populate_main_categories_view()
-		ITEM_TYPE_BACK_TO_GROUPS:
+		MenuListItemData.ItemType.BACK_TO_GROUPS:
 			_populate_groups_view(_current_category_name)
 
 
@@ -513,7 +510,7 @@ func _execute_single_action(action: DebugAction) -> void:
 	if _is_executing_all:
 		return  # Prevent single execution during "Run All"
 
-	_is_executing_all = true  # Use the same flag to disable UI temporarily
+	_is_executing_all = true
 	_set_ui_for_execution(true)
 	_update_status_label_text("Executing: %s..." % action.action_name)
 	Log.info("Executing single action: %s" % action.action_name, {}, ["debug", "test"])
@@ -522,19 +519,34 @@ func _execute_single_action(action: DebugAction) -> void:
 	if action.status_updated.is_connected(_on_action_status_updated):
 		action.status_updated.disconnect(_on_action_status_updated)
 	action.status_updated.connect(_on_action_status_updated)
-	@warning_ignore("redundant_await")
-	var result: Array = await action.execute()
-	var success_variant: Variant = result[0]
-	var success: bool = success_variant
-	var payload: Variant = result[1]
 
-	# Disconnect after execution
-	action.status_updated.disconnect(_on_action_status_updated)
+	# Connect to completion signal
+	if action.execution_completed.is_connected(_on_action_execution_completed):
+		action.execution_completed.disconnect(_on_action_execution_completed)
+	action.execution_completed.connect(_on_action_execution_completed)
 
-	# Store action data for toggle functionality
+	# Store action reference
+	_last_action_data = {"action": action, "success": false, "payload": null}
+
+	# Execute action using new signal-based method
+	action.execute()
+
+
+func _on_action_execution_completed(success: bool, payload: Variant) -> void:
+	var action: DebugAction = _last_action_data.get("action", null)
+	if not action:
+		return
+
+	# Disconnect signals
+	if action.status_updated.is_connected(_on_action_status_updated):
+		action.status_updated.disconnect(_on_action_status_updated)
+	if action.execution_completed.is_connected(_on_action_execution_completed):
+		action.execution_completed.disconnect(_on_action_execution_completed)
+
+	# Update stored data
 	_last_action_data = {"action": action, "success": success, "payload": payload}
 
-	# Always show full detailed report
+	# Show results
 	var report: String = _build_single_action_report(action, success, payload)
 	_update_status_label_text(report, not success)
 	_update_toggle_button_state()
@@ -551,108 +563,166 @@ func _on_action_status_updated(text: String, is_error: bool) -> void:
 func _execute_multiple_actions(
 	actions_to_run: Array[ActionExecutionResult], scope_description: String
 ) -> void:
+	if actions_to_run.is_empty():
+		_update_status_label_text("No actions to execute in %s." % scope_description)
+		return
+
 	_is_executing_all = true
 	_set_ui_for_execution(true)
+
+	Log.info(
+		"Starting Run All execution",
+		{"scope": scope_description, "action_count": actions_to_run.size()},
+		["debug", "ui", "run_all"]
+	)
+
+	# Initialize execution state
+	var execution_results: Array[Dictionary] = []
+	var current_action_index: int = 0
+
 	_update_status_label_text(
-		(
-			"Running %s actions for: %s\n\n[color=gray]Progress will be shown below...[/color]"
-			% [actions_to_run.size(), scope_description]
-		)
-	)
-	Log.info(
-		(
-			"Starting execution of %d actions for scope: %s"
-			% [actions_to_run.size(), scope_description]
-		),
-		{},
-		["debug", "test"]
+		"Running %d actions in %s..." % [actions_to_run.size(), scope_description]
 	)
 
-	var passed_count: int = 0
-	var failed_count: int = 0
-	var failed_actions: Array[Dictionary] = []  # Store more detailed failure info
-	var passed_actions: Array[String] = []
-	var progress_text: String = ""
-
-	for i: int in range(actions_to_run.size()):
-		var action_result: ActionExecutionResult = actions_to_run[i]
-		var action: DebugAction = action_result.action
-		var action_name: String = action.action_name
-
-		# Show concise progress instead of full details
-		progress_text += "[color=yellow]◐[/color] %s..." % action_name
-		_update_status_label_text(
-			(
-				"Running %s actions for: %s\n\n%s"
-				% [actions_to_run.size(), scope_description, progress_text]
-			)
-		)
-
-		Log.info(
-			"Executing action [%d/%d]: %s" % [i + 1, actions_to_run.size(), action_name],
-			{},
-			["debug", "test"]
-		)
-
-		# Execute action
-		if action.status_updated.is_connected(_on_action_status_updated):
-			action.status_updated.disconnect(_on_action_status_updated)
-		action.status_updated.connect(_on_action_status_updated)
-		@warning_ignore("redundant_await")
-		var result: Array = await action.execute()
-		var success_variant: Variant = result[0]
-		var success: bool = success_variant
-		var payload: Variant = result[1]
-
-		# Disconnect after execution
-		action.status_updated.disconnect(_on_action_status_updated)
-
-		# Update progress with result
-		if success:
-			passed_count += 1
-			passed_actions.append(action_name)
-			# Replace the loading indicator with success
-			progress_text = progress_text.replace(
-				"[color=yellow]◐[/color] %s..." % action_name,
-				"[color=palegreen]✓[/color] %s" % action_name
-			)
-		else:
-			failed_count += 1
-			var error_summary: String = _format_error_message(payload)
-			failed_actions.append({"name": action_name, "error": error_summary, "payload": payload})  # Keep for detailed logging
-			# Replace the loading indicator with failure
-			progress_text = progress_text.replace(
-				"[color=yellow]◐[/color] %s..." % action_name,
-				"[color=red]✗[/color] %s" % action_name
-			)
-
-		progress_text += "\n"
-
-		# Small delay to allow UI to update
-		if OS.has_feature("web"):
-			await get_tree().process_frame
-		else:
-			await get_tree().create_timer(0.01).timeout
-
-	var final_summary: String = _build_execution_summary(
-		scope_description, passed_count, failed_count, passed_actions, failed_actions
-	)
-	_update_status_label_text(final_summary, failed_count > 0)
-	Log.info(
-		(
-			final_summary
-			. replace("[color=palegreen]", "")
-			. replace("[color=red]", "")
-			. replace("[color=orange]", "")
-			. replace("[color=gray]", "")
-			. replace("[/color]", "")
-		),
-		{},
-		["debug", "test"]
+	# Start sequential execution
+	_execute_next_action_in_sequence(
+		actions_to_run, current_action_index, execution_results, scope_description
 	)
 
-	_set_ui_for_execution(false)
+
+# State variables for Run All execution
+var _run_all_actions: Array[ActionExecutionResult] = []
+var _run_all_current_index: int = 0
+var _run_all_results: Array[Dictionary] = []
+var _run_all_scope: String = ""
+
+# Sequential action execution for Run All functionality
+func _execute_next_action_in_sequence(
+	actions_to_run: Array[ActionExecutionResult],
+	current_index: int,
+	results: Array[Dictionary],
+	scope_description: String
+) -> void:
+	# Store state for callback access
+	_run_all_actions = actions_to_run
+	_run_all_current_index = current_index
+	_run_all_results = results
+	_run_all_scope = scope_description
+
+	# Check if we've completed all actions
+	if current_index >= actions_to_run.size():
+		_complete_run_all_execution(results, scope_description)
+		return
+
+	var action_result: ActionExecutionResult = actions_to_run[current_index]
+	var action: DebugAction = action_result.action
+
+	_update_status_label_text(
+		"Running %d/%d: %s..." % [current_index + 1, actions_to_run.size(), action.action_name]
+	)
+
+	Log.debug(
+		"Executing action in sequence",
+		{"index": current_index + 1, "total": actions_to_run.size(), "action": action.action_name},
+		["debug", "run_all"]
+	)
+
+	# Connect to completion callback method
+	if action.execution_completed.is_connected(_on_run_all_action_completed):
+		action.execution_completed.disconnect(_on_run_all_action_completed)
+	action.execution_completed.connect(_on_run_all_action_completed, CONNECT_ONE_SHOT)
+
+	# Execute the action
+	action.execute()
+
+
+# Callback for Run All action completion
+func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
+	# Record the result
+	var result_data: Dictionary = {
+		"action_name": _run_all_actions[_run_all_current_index].action.action_name,
+		"success": success,
+		"payload": payload,
+		"index": _run_all_current_index
+	}
+	_run_all_results.append(result_data)
+
+	# Continue with next action
+	_execute_next_action_in_sequence(
+		_run_all_actions, _run_all_current_index + 1, _run_all_results, _run_all_scope
+	)
+
+
+func _complete_run_all_execution(results: Array[Dictionary], scope_description: String) -> void:
 	_is_executing_all = false
+	_set_ui_for_execution(false)
+
+	# Generate execution summary
+	var total_actions: int = results.size()
+	var successful_actions: int = 0
+	var failed_actions: int = 0
+
+	for result: Dictionary in results:
+		if result.get("success", false):
+			successful_actions += 1
+		else:
+			failed_actions += 1
+
+	# Create summary report
+	var summary: String = _build_run_all_summary(
+		results, scope_description, successful_actions, failed_actions
+	)
+	var has_failures: bool = failed_actions > 0
+
+	_update_status_label_text(summary, has_failures)
+
+	Log.info(
+		"Run All execution completed",
+		{
+			"scope": scope_description,
+			"total": total_actions,
+			"successful": successful_actions,
+			"failed": failed_actions
+		},
+		["debug", "run_all", "summary"]
+	)
+
+
+func _build_run_all_summary(
+	results: Array[Dictionary], scope_description: String, successful: int, failed: int
+) -> String:
+	var total: int = results.size()
+	var summary: String = ""
+
+	# Header with overall results
+	summary += "[b]Run All Results - %s[/b]\n" % scope_description
+	summary += "Total: %d | " % total
+	summary += "[color=palegreen]Success: %d[/color] | " % successful
+	if failed > 0:
+		summary += "[color=red]Failed: %d[/color]\n\n" % failed
+	else:
+		summary += "[color=gray]Failed: 0[/color]\n\n"
+
+	# Detailed results (show first few, then summary)
+	var max_details: int = 5
+	var shown_details: int = 0
+
+	for result: Dictionary in results:
+		if shown_details >= max_details:
+			var remaining: int = total - shown_details
+			summary += "[color=gray]... and %d more actions[/color]\n" % remaining
+			break
+
+		var action_name: String = result.get("action_name", "Unknown Action")
+		var success: bool = result.get("success", false)
+		var status_color: String = (
+			"[color=palegreen]✓[/color]" if success else "[color=red]✗[/color]"
+		)
+
+		summary += "%s %s\n" % [status_color, action_name]
+		shown_details += 1
+
+	return summary
 
 
 func _set_ui_for_execution(is_executing: bool) -> void:
@@ -692,6 +762,66 @@ func show_menu_content() -> void:
 	Log.debug("Debug menu shown via direct call.", {}, ["debug", "ui"])
 
 
+# Validation helper for navigation state
+func _validate_navigation_state(context: String) -> bool:
+	"""Validate that DebugRegistry is available and functional"""
+	if not DebugRegistry:
+		Log.error(
+			"DebugRegistry not available in context: " + context, {}, ["debug", "ui", "error"]
+		)
+		_update_status_label_text("ERROR: Debug system not properly initialized.", true)
+		return false
+	return true
+
+
+# Add category item to the navigation list with proper visual indicators
+func _add_category_item_to_list(category_name: String, index: int) -> void:
+	"""Add a category item with proper visual indicators"""
+	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
+	var display_name: String = ""
+
+	if has_ungrouped:
+		display_name = "• " + category_name  # Bullet indicates direct actions available
+	else:
+		display_name = "▸ " + category_name  # Arrow indicates submenu only
+
+	item_list_navigator.add_item(display_name)
+	item_list_navigator.set_item_metadata(
+		index, MenuListItemData.create_category(category_name, true)
+	)
+
+
+# Build report for single action execution
+func _build_single_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
+	"""Generate a comprehensive report for a single action execution"""
+	var report: String = ""
+
+	# Header with action name and status
+	var status_color: String = "[color=palegreen]" if success else "[color=red]"
+	var status_text: String = "SUCCESS" if success else "FAILED"
+
+	report += "[b]%s[/b]\n" % action.action_name
+	report += "%s%s[/color]\n\n" % [status_color, status_text]
+
+	# Add description if available
+	if not action.description.is_empty():
+		report += "[i]%s[/i]\n\n" % action.description
+
+	# Add payload information if present
+	if payload != null:
+		report += "[b]Result:[/b]\n"
+		report += _pretty_print_value(payload, 0, 3)
+		report += "\n\n"
+
+	# Add category and group info
+	report += "[color=gray]Category: %s" % action.category
+	if not action.group.is_empty():
+		report += " | Group: %s" % action.group
+	report += "[/color]"
+
+	return report
+
+
 # SOLID Principle: Single Responsibility - Helper methods for specific tasks
 
 
@@ -704,11 +834,11 @@ func _pretty_print_value(value: Variant, indent_level: int = 0, max_depth: int =
 		return "[color=gray]null[/color]"
 
 	if value is Dictionary:
-		var val_dic : Dictionary = value
+		var val_dic: Dictionary = value
 		return _format_dictionary(val_dic, indent_level, max_depth)
 
 	elif value is Array:
-		var val_array : Array = value
+		var val_array: Array = value
 		return _format_array(val_array, indent_level, max_depth)
 	elif value is String:
 		var str_val: String = value
@@ -943,179 +1073,3 @@ func _format_error_message(payload: Variant) -> String:
 		return payload_str.substr(0, 77) + "..."
 	else:
 		return payload_str
-
-
-## Build a professional single action execution report
-func _build_single_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
-	var report: String = ""
-
-	# Header with action info
-	if success:
-		report += "[color=palegreen]✅ ACTION COMPLETED[/color]\n"
-	else:
-		report += "[color=red]❌ ACTION FAILED[/color]\n"
-
-	report += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-	report += "Action: [color=cyan]%s[/color]\n" % action.action_name
-	report += "Category: [color=yellow]%s[/color]" % action.category
-	if action.group != "":
-		report += " / [color=yellow]%s[/color]" % action.group
-	report += "\n"
-
-	if action.description != "":
-		report += "Description: [color=gray]%s[/color]\n" % action.description
-
-	report += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-
-	# Results section
-	if success:
-		report += "[color=palegreen]🎯 RESULT:[/color]\n"
-		if payload == null:
-			report += "  [color=palegreen]✓ Operation completed successfully[/color]\n"
-		else:
-			# Use pretty-printing for better result display
-			var formatted_result: String = _pretty_print_value(payload, 1, 5)
-			report += "  %s\n" % formatted_result.replace("\n", "\n  ")
-
-		report += "\n[color=palegreen]✨ Action executed successfully![/color]\n"
-	else:
-		report += "[color=red]💥 ERROR DETAILS:[/color]\n"
-		var error_msg: String = _format_error_message(payload)
-		report += "  [color=red]✗ %s[/color]\n\n" % error_msg
-
-		# Add troubleshooting hints based on error type
-		var hint: String = _get_error_hint(error_msg)
-		if hint != "":
-			report += "[color=orange]💡 TROUBLESHOOTING HINT:[/color]\n"
-			report += "  [color=gray]%s[/color]\n" % hint
-
-	return report
-
-
-## Get troubleshooting hints for common error types
-func _get_error_hint(error_msg: String) -> String:
-	var error_lower: String = error_msg.to_lower()
-
-	if error_lower.contains("permission") or error_lower.contains("denied"):
-		return "Check Firebase security rules or authentication status"
-	elif error_lower.contains("network") or error_lower.contains("connection"):
-		return "Verify internet connection and Firebase configuration"
-	elif error_lower.contains("timeout"):
-		return "Try again or check if the service is responding slowly"
-	elif error_lower.contains("not found") or error_lower.contains("missing"):
-		return "Verify the resource exists and the path is correct"
-	elif error_lower.contains("firebase"):
-		return "Check Firebase project setup and API keys"
-	else:
-		return ""
-
-
-## Build a clean, summarized execution report
-func _build_execution_summary(
-	scope: String,
-	passed: int,
-	failed: int,
-	passed_actions: Array[String],
-	failed_actions: Array[Dictionary]
-) -> String:
-	var summary: String = ""
-	var total: int = passed + failed
-	var success_rate: float = (float(passed) / float(total)) * 100.0 if total > 0 else 0.0
-
-	# Header with overall results and success rate
-	if failed == 0:
-		summary += "[color=palegreen]🎉 ALL ACTIONS PASSED[/color]\n"
-	else:
-		summary += "[color=orange]⚠️ EXECUTION COMPLETE[/color]\n"
-
-	summary += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-	summary += "Scope: [color=cyan]%s[/color]\n" % scope
-	summary += (
-		"Success Rate: [color=palegreen]%.1f%%[/color] ([color=palegreen]%d passed[/color], [color=red]%d failed[/color])\n"
-		% [success_rate, passed, failed]
-	)
-	summary += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-
-	# Show failed actions in detail (high priority)
-	if failed > 0:
-		summary += "[color=red]🚨 FAILED ACTIONS:[/color]\n"
-		for i: int in range(failed_actions.size()):
-			var failure: Dictionary = failed_actions[i]
-			var action_name: String = failure.get("name", "Unknown")
-			var error_msg: String = failure.get("error", "Unknown error")
-			summary += "  [color=red]%d.[/color] [color=red]✗ %s[/color]\n" % [i + 1, action_name]
-			summary += "     [color=gray]└─ %s[/color]\n" % error_msg
-		summary += "\n"
-
-	# Show passed actions summary (lower priority)
-	if passed > 0:
-		# Always show all passed actions, formatted compactly
-		summary += "[color=palegreen]✅ PASSED ACTIONS (%d):[/color]\n" % passed
-		var line: String = "  "
-		for i: int in range(passed_actions.size()):
-			var action_name: String = passed_actions[i]
-			var short_name: String = action_name
-			if short_name.length() > 20:
-				short_name = short_name.substr(0, 17) + "..."
-
-			line += "[color=palegreen]✓[/color] %s" % short_name
-			if i < passed_actions.size() - 1:
-				line += ", "
-
-			# Break line if getting too long
-			if line.length() > 70:
-				summary += line + "\n  "
-				line = ""
-
-		if line.strip_edges() != "":
-			summary += line + "\n"
-
-	# Add quick action hint
-	if failed > 0:
-		summary += "\n[color=gray]💡 Focus on fixing the failed actions above[/color]\n"
-	else:
-		summary += "\n[color=palegreen]🎯 All systems working correctly![/color]\n"
-
-	return summary
-
-
-## Validate navigation state before population (prevents errors)
-func _validate_navigation_state(caller_method: String) -> bool:
-	if not DebugRegistry:
-		Log.error(
-			"DebugRegistry autoload not found", {"caller": caller_method}, ["debug_ui", "error"]
-		)
-		return false
-
-	return true
-
-
-## Add a category item to the list with proper metadata (DRY principle)
-func _add_category_item_to_list(category_name: String, index: int) -> void:
-	# Check if this category has ungrouped actions
-	var has_direct_actions: bool = DebugRegistry.has_ungrouped_actions(category_name)
-
-	# Add visual indicator for categories with direct actions vs submenus only
-	var display_name: String = category_name
-	if has_direct_actions:
-		display_name = "• " + category_name  # Bullet indicates direct actions available
-	else:
-		display_name = "▸ " + category_name  # Arrow indicates submenus only
-
-	item_list_navigator.add_item(display_name)
-
-	# Use different metadata type for categories with direct actions
-	if has_direct_actions:
-		item_list_navigator.set_item_metadata(
-			index, {"type": ITEM_TYPE_CATEGORY_WITH_ACTIONS, "name": category_name}
-		)
-	else:
-		item_list_navigator.set_item_metadata(
-			index, {"type": ITEM_TYPE_CATEGORY, "name": category_name}
-		)
-
-	Log.debug(
-		"Added category item",
-		{"category": category_name, "has_direct_actions": has_direct_actions, "index": index},
-		["debug_ui"]
-	)

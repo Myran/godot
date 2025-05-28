@@ -10,7 +10,7 @@ func _init() -> void:
 	description = "Removes active RTDB listeners to clean up test state."
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	var db: Object = get_firebase_database()
 	if not db:
 		return get_last_error_result()

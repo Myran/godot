@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Migrated from scene_debug.gd - Pushes an item to RTDB"
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	Log.debug("RTDB Test: Push Item", {}, ["test"])
 	_update_status("Running basic push item test...")
 

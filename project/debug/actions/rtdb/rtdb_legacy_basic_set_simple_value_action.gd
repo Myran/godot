@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Migrated from scene_debug.gd - Sets a simple value in RTDB"
 
 
-func execute() -> Array:
+func execute_legacy() -> Array:
 	Log.debug("RTDB Test: Set Simple Value", {}, ["test"])
 	_update_status("Running basic set simple value test...")
 
