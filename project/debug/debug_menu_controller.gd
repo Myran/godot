@@ -3,6 +3,12 @@
 extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
+# Font sizes for RichTextLabel content
+const FONT_SIZE_XXL = 40
+const FONT_SIZE_XL = 36
+const FONT_SIZE_L = 32
+const FONT_SIZE_M = 24
+
 # Constants for metadata
 const ITEM_TYPE_CATEGORY: String = "category_item"
 const ITEM_TYPE_GROUP: String = "group_item"
@@ -190,23 +196,23 @@ func _build_styled_header() -> String:
 	)
 
 	return (
-		"[font_size=14][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n" % UI_COLORS.info
+		"[font_size=%s][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 		+ (
-			"[font_size=12][color=%s]%s • %s • %s[/color][/font_size]"
-			% [UI_COLORS.text_secondary, OS.get_name(), build_type, shortened_hash]
+			"[font_size=%s][color=%s]%s • %s • %s[/color][/font_size]"
+			% [FONT_SIZE_M, UI_COLORS.text_secondary, OS.get_name(), build_type, shortened_hash]
 		)
 	)
 
 
 func _apply_error_styling(text: String) -> String:
 	return (
-		"[font_size=14][color=%s]⚠ ERROR[/color][/font_size]\n" % UI_COLORS.danger
-		+ "[font_size=13][color=%s]%s[/color][/font_size]" % [UI_COLORS.text_primary, text]
+		"[font_size=%s][color=%s]⚠ ERROR[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.danger]
+		+ "[font_size=%s][color=%s]%s[/color][/font_size]" % [FONT_SIZE_L, UI_COLORS.text_primary, text]
 	)
 
 
 func _apply_success_styling(text: String) -> String:
-	return "[font_size=13][color=%s]%s[/color][/font_size]" % [UI_COLORS.text_primary, text]
+	return "[font_size=%s][color=%s]%s[/color][/font_size]" % [FONT_SIZE_L, UI_COLORS.text_primary, text]
 
 
 func _populate_main_categories_view() -> void:
@@ -784,13 +790,13 @@ func _build_run_all_summary(
 	var summary: String = ""
 
 	# Enhanced header with modern styling
-	summary += "[font_size=16][b]RUN ALL COMPLETE[/b][/font_size]\n"
+	summary += "[font_size=%s][b]RUN ALL COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
 	summary += (
-		"[font_size=14][color=%s]%s[/color][/font_size]\n\n" % [UI_COLORS.accent, scope_description]
+		"[font_size=%s][color=%s]%s[/color][/font_size]\n\n" % [FONT_SIZE_XL, UI_COLORS.accent, scope_description]
 	)
 
 	# Statistics section with beautiful formatting
-	summary += "[font_size=14][color=%s]SUMMARY[/color][/font_size]\n" % UI_COLORS.info
+	summary += "[font_size=%s][color=%s]SUMMARY[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 	summary += (
 		"[color=%s]Total Actions:[/color] [color=%s]%d[/color]\n"
@@ -818,10 +824,10 @@ func _build_run_all_summary(
 	)
 
 	# Detailed results - NO TRUNCATION, show ALL actions
-	summary += "[font_size=14][color=%s]DETAILED RESULTS[/color][/font_size]\n" % UI_COLORS.info
+	summary += "[font_size=%s][color=%s]DETAILED RESULTS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 
-	for i in range(results.size()):
+	for i : int in range(results.size()):
 		var result: Dictionary = results[i]
 		var action_name: String = result.get("action_name", "Unknown Action")
 		var success: bool = result.get("success", false)
@@ -956,30 +962,30 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 	var status_text: String = "SUCCESS" if success else "FAILED"
 
 	# Action title with proper typography hierarchy
-	report += "[font_size=16][b]%s[/b][/font_size]\n" % action.action_name
+	report += "[font_size=%s][b]%s[/b][/font_size]\n" % [FONT_SIZE_XXL, action.action_name]
 	report += (
-		"[font_size=14][color=%s]%s %s[/color][/font_size]\n\n"
-		% [status_color, status_icon, status_text]
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, status_color, status_icon, status_text]
 	)
 
 	# Add description with improved readability
 	if not action.description.is_empty():
 		report += (
-			"[font_size=12][color=%s][i]%s[/i][/color][/font_size]\n\n"
-			% [UI_COLORS.text_secondary, action.description]
+			"[font_size=%s][color=%s][i]%s[/i][/color][/font_size]\n\n"
+			% [FONT_SIZE_M, UI_COLORS.text_secondary, action.description]
 		)
 
 	# Add payload information with NO TRUNCATION
 	if payload != null:
 		report += (
-			"[font_size=14][b][color=%s]RESULT DATA[/color][/b][/font_size]\n" % UI_COLORS.info
+			"[font_size=%s][b][color=%s]RESULT DATA[/color][/b][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 		report += _pretty_print_value_no_truncation(payload, 0)
 		report += "\n\n"
 
 	# Add metadata section with better organization
-	report += "[font_size=12][color=%s]METADATA[/color][/font_size]\n" % UI_COLORS.info
+	report += "[font_size=%s][color=%s]METADATA[/color][/font_size]\n" % [FONT_SIZE_M, UI_COLORS.info]
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
 	report += (
 		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
