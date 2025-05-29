@@ -11,10 +11,14 @@ func _init() -> void:
 	description = "Updates an existing value at a predefined test path in RTDB."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+	
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	var path_suffix: Array[Variant] = ["update_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -36,14 +40,12 @@ func execute_legacy() -> Array:
 			["test", "rtdb"]
 		)
 
-		return _success(
-			{
-				"operation": "update_value",
-				"path": full_path,
-				"value": new_value,
-				"timestamp": Time.get_ticks_msec()
-			}
-		)
+		execution_completed.emit(true, {
+			"operation": "update_value",
+			"path": full_path,
+			"value": new_value,
+			"timestamp": Time.get_ticks_msec()
+		})
 	else:
 		_update_status("Failed to update value: %s" % result.error, true)
 
@@ -58,4 +60,4 @@ func execute_legacy() -> Array:
 			["test", "rtdb", "error"]
 		)
 
-		return _failure("Failed to update value: " + str(result.error))
+		execution_completed.emit(false, {"error": "Failed to update value: " + str(result.error)})

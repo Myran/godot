@@ -11,10 +11,15 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -114,8 +119,7 @@ func execute_legacy() -> Array:
 		["test", "rtdb", "advanced"]
 	)
 
-	return _success(
-		{
+	execution_completed.emit(true, {
 			"operation": "concurrent_operations",
 			"path": full_path,
 			"success": test_success,
@@ -127,8 +131,6 @@ func execute_legacy() -> Array:
 			"timestamp": Time.get_ticks_msec()
 		}
 	)
-
-
 func _start_concurrent_operation(db: Variant, operation: Dictionary) -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 	var request_id: int = start_time % 1000000

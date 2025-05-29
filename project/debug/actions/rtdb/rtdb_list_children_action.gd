@@ -11,10 +11,15 @@ func _init() -> void:
 	description = "Lists all child keys from a specific RTDB path."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.LIST_CHILDREN)
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
@@ -34,7 +39,7 @@ func execute_legacy() -> Array:
 	)
 
 	if not setup_result.success:
-		return _failure("Failed to setup test children")
+		execution_completed.emit(false, {"error": "Failed to setup test children"})
 
 	# Get children back
 	_update_status("Retrieving children list...")
@@ -46,8 +51,7 @@ func execute_legacy() -> Array:
 
 		_update_status("Found %d children: %s" % [child_keys.size(), str(child_keys)])
 
-		return _success(
-			{
+		execution_completed.emit(true, {
 				"operation": "list_children",
 				"path": full_path,
 				"child_keys": child_keys,
@@ -60,4 +64,4 @@ func execute_legacy() -> Array:
 		_update_status(
 			"Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true
 		)
-		return _failure(str(get_result.get("error", "unknown error")))
+		execution_completed.emit(false, {"error": str(str(get_result.get("error", "unknown error")))})

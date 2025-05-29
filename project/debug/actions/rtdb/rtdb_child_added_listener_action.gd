@@ -14,10 +14,15 @@ func _init() -> void:
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
@@ -52,8 +57,7 @@ func execute_legacy() -> Array:
 
 	if result.success:
 		_update_status("✅ Listener test PASSED")
-		return _success(
-			{
+		execution_completed.emit(true, {
 				"operation": "child_added_listener_test",
 				"path": _active_path,
 				"test_result": "PASSED",
@@ -63,9 +67,7 @@ func execute_legacy() -> Array:
 		)
 	else:
 		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
-		return _failure(str(result.get("error", "unknown error")))
-
-
+		execution_completed.emit(false, {"error": str(str(result.get("error", "unknown error")))})
 func _on_child_added(child_key: String, child_value: Variant) -> void:
 	_listener_helper.mark_callback_received(child_key, child_value, {"listened_path": _active_path})
 	_update_status("Callback received for key: %s" % child_key)

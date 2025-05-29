@@ -11,11 +11,14 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
 	# First ensure nested data exists
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	var nested_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA)
 
@@ -26,14 +29,18 @@ func execute_legacy() -> Array:
 	)
 
 	if not setup_result.success:
-		return _failure(
-			"Failed to setup nested data: " + str(setup_result.get("error", "unknown error"))
-		)
+		execution_completed.emit(false, {
+			"error": "Failed to setup nested data: " + str(setup_result.get("error", "unknown error"))
+		})
+		return
 
 	# Now get the nested data
-	return await execute_simple_operation("get_value_async", nested_path, null, "Get Nested Data")
+	var result: Array = await execute_simple_operation("get_value_async", nested_path, null, "Get Nested Data")
 
-
+	# Emit completion signal based on result
+	var success: bool = result[0] if result.size() > 0 else false
+	var payload: Variant = result[1] if result.size() > 1 else null
+	execution_completed.emit(success, payload)
 func _create_nested_test_data() -> Dictionary:
 	return {
 		"metadata":

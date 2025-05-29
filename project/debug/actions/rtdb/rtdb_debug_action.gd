@@ -30,23 +30,11 @@ func _init() -> void:
 	category = "RTDB"
 
 
-# Override the new execute method to call our legacy method
+# Default execute method - subclasses should override this
 func execute() -> void:
-	_update_status("Executing " + action_name + "...")
-	var result: Array = await execute_legacy()
-	var success: bool = result[0] if result.size() > 0 else false
-	var payload: Variant = result[1] if result.size() > 1 else null
-	execution_completed.emit(success, payload)
-	if success:
-		_update_status("Completed: " + action_name)
-	else:
-		_update_status("Failed: " + action_name, true)
-
-
-# Subclasses should override this method instead of execute()
-func execute_legacy() -> Array:
-	push_error("execute_legacy() not implemented in " + get_script().get_path())
-	return _failure("Not implemented")
+	push_error("execute() not implemented in " + get_script().get_path())
+	_update_status("ERROR: execute() not implemented", true)
+	execution_completed.emit(false, {"error": "Not implemented"})
 
 
 ## Generate a unique request ID using a simple counter

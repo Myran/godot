@@ -83,16 +83,6 @@ func execute() -> void:
 		execution_completed.emit(false, "No execute method defined")
 
 
-# Legacy method that returns array (for compatibility)
-func execute_legacy() -> Array:
-	if action_callable.is_valid():
-		action_callable.call()
-		return _success({"executed": true, "type": "callable"})
-	else:
-		push_error("Execute method not implemented for action: ", action_name)
-		return [false, {"error": "Not implemented"}]
-
-
 # Helper to update status via signal instead of direct UI access
 func _update_status(text: String, is_error: bool = false) -> void:
 	status_updated.emit(text, is_error)

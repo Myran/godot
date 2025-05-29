@@ -11,11 +11,16 @@ func _init() -> void:
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 # Check if Firebase backend is available
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	# Note: This action previously used data_source pattern but now uses direct instantiation
 	# for consistency with other RTDB debug actions
@@ -93,21 +98,17 @@ func execute_legacy() -> Array:
 			["test", "rtdb", "performance"]
 		)
 
-		return _success(success_data)
+		execution_completed.emit(true, success_data)
 	else:
 		var error_msg: String = "Failed to set large data at path '%s'" % str(full_path)
 		_update_status(error_msg, true)
-		return _failure(
-			error_msg,
-			{
-				"path": full_path,
-				"data_size_bytes": data_size_estimate,
-				"duration_ms": duration_ms,
-				"operation": "large_data_test"
-			}
-		)
-
-
+		execution_completed.emit(false, {
+			"error": error_msg,
+			"path": full_path,
+			"data_size_bytes": data_size_estimate,
+			"duration_ms": duration_ms,
+			"operation": "large_data_test"
+		})
 func _generate_large_test_data() -> Dictionary:
 	var data: Dictionary = {
 		"metadata":

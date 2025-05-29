@@ -4,11 +4,62 @@ extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
 # Font sizes for RichTextLabel content
-const FONT_SIZE_XXL = 40
-const FONT_SIZE_XL = 36
-const FONT_SIZE_L = 32
+const FONT_SIZE_XXL = 34
+const FONT_SIZE_XL = 32
+const FONT_SIZE_L = 30
 const FONT_SIZE_M = 24
+#const UI_COLORS = {
+	#"primary": "#4CAF50",  # Professional green
+	#"success": "#4CAF50",  # Success green
+	#"warning": "#FF9800",  # Warning orange
+	#"danger": "#F44336",  # Error red
+	#"info": "#2196F3",  # Info blue
+	#"secondary": "#607D8B",  # Secondary gray-blue
+	#"muted": "#9E9E9E",  # Muted gray
+	#"accent": "#E91E63",  # Accent pink
+	#"background": "#37474F",  # Dark background
+	#"surface": "#455A64",  # Surface gray
+	#"text_primary": "#FFFFFF",  # Primary text
+	#"text_secondary": "#B0BEC5",  # Secondary text
+	#"key": "#FFC107",  # Key/property yellow
+	#"string": "#4CAF50",  # String green
+	#"number": "#03DAC6",  # Number cyan
+	#"boolean": "#FF9800",  # Boolean orange
+	#"null_value": "#9E9E9E",  # Null gray
+#}
+const UI_COLORS = {
+	"background": "#37474F",  # Maintain existing background
+	"surface": "#455A64",      # Maintain existing surface
+	"muted": "#9E9E9E",  # Muted gray
+	# Core UI colors
+	"primary": "#64B5F6",      # Soft blue - primary actions
+	"secondary": "#81C784",    # Muted green - secondary elements
 
+	# Unified amber for all warm tones
+	"accent": "#FFB74D",       # Amber - used for highlights, warnings, and booleans
+
+	# Status colors
+	"success": "#81C784",      # Success green - matches secondary
+	"warning": "#FFB74D",      # Warning - matches accent
+	"danger": "#E57373",       # Soft red - errors
+	"info": "#4FC3F7",         # Light blue - informational
+
+	# Text and UI elements
+	"text_primary": "#FFFFFF", # Pure white - main content
+	"text_secondary": "#CFD8DC",# Light gray - secondary text
+	"text_tertiary": "#90A4AE",# Muted blue-gray - less important info
+
+	# Data visualization
+	"key": "#FFB74D",          # Property key - matches accent
+	"string": "#81C784",       # String value - matches success
+	"number": "#4FC3F7",       # Number value - matches info
+	"boolean": "#FFB74D",      # Boolean value - matches accent
+	"null_value": "#90A4AE",   # Null value - matches text_tertiary
+
+	# UI elements
+	"border": "#546E7A",       # Border color - subtle separation
+	"highlight": "#FFECB3",    # Highlight color - light version of accent
+}
 # Constants for metadata
 const ITEM_TYPE_CATEGORY: String = "category_item"
 const ITEM_TYPE_GROUP: String = "group_item"
@@ -44,6 +95,61 @@ class ActionExecutionResult:
 	func _init(p_action: DebugAction, p_is_manual: bool) -> void:
 		action = p_action
 		is_manual = p_is_manual
+
+
+# Helper methods for UI operations
+func _add_list_item(text: String, metadata: MenuListItemData = null, tooltip: String = "", disabled: bool = false) -> int:
+	"""Add an item to the navigation list with optional metadata and tooltip"""
+	var index: int = item_list_navigator.get_item_count()
+	item_list_navigator.add_item(text)
+
+	if metadata:
+		item_list_navigator.set_item_metadata(index, metadata)
+
+	if not tooltip.is_empty():
+		item_list_navigator.set_item_tooltip(index, tooltip)
+
+	if disabled:
+		item_list_navigator.set_item_disabled(index, true)
+
+	return index
+
+
+func _add_navigation_item(text: String, metadata: MenuListItemData) -> void:
+	"""Add a navigation item (back button) to the list"""
+	_add_list_item(text, metadata)
+
+
+func _add_action_item(action: DebugAction, category: String, group: String = "", prefix: String = "") -> void:
+	"""Add a debug action item to the list"""
+	var display_text: String = prefix + action.action_name
+	var metadata: MenuListItemData = MenuListItemData.create_action(action, category, group)
+	_add_list_item(display_text, metadata, action.description)
+
+
+func _add_group_item(group_name: String, category: String, prefix: String = "▸ ") -> void:
+	"""Add a group item to the list"""
+	var display_text: String = prefix + group_name
+	var metadata: MenuListItemData = MenuListItemData.create_group(category, group_name)
+	_add_list_item(display_text, metadata)
+
+
+func _clear_navigation_state() -> void:
+	"""Clear navigation state and reset UI visibility"""
+	_last_action_data.clear()
+	_is_list_hidden = false
+	if is_instance_valid(item_list_navigator):
+		item_list_navigator.visible = true
+	if is_instance_valid(run_all_button):
+		run_all_button.visible = true
+	_update_toggle_button_state()
+
+
+func _set_run_all_button_text(text: String, visible: bool = true) -> void:
+	"""Update the run all button text and visibility"""
+	if is_instance_valid(run_all_button):
+		run_all_button.text = text
+		run_all_button.visible = visible
 
 
 func _ready() -> void:
@@ -141,25 +247,7 @@ func _update_toggle_button_state() -> void:
 
 
 # Modern UX Color Palette - Semantic and accessible colors
-const UI_COLORS = {
-	"primary": "#4CAF50",  # Professional green
-	"success": "#4CAF50",  # Success green
-	"warning": "#FF9800",  # Warning orange
-	"danger": "#F44336",  # Error red
-	"info": "#2196F3",  # Info blue
-	"secondary": "#607D8B",  # Secondary gray-blue
-	"muted": "#9E9E9E",  # Muted gray
-	"accent": "#E91E63",  # Accent pink
-	"background": "#37474F",  # Dark background
-	"surface": "#455A64",  # Surface gray
-	"text_primary": "#FFFFFF",  # Primary text
-	"text_secondary": "#B0BEC5",  # Secondary text
-	"key": "#FFC107",  # Key/property yellow
-	"string": "#4CAF50",  # String green
-	"number": "#03DAC6",  # Number cyan
-	"boolean": "#FF9800",  # Boolean orange
-	"null_value": "#9E9E9E",  # Null gray
-}
+
 
 
 func _update_status_label_text(text: String, is_error: bool = false) -> void:
@@ -221,17 +309,9 @@ func _populate_main_categories_view() -> void:
 	_current_group_name = ""
 	item_list_navigator.clear()
 
-	# Clear last action data and reset navigation visibility
-	_last_action_data.clear()
-	_is_list_hidden = false
-	if is_instance_valid(item_list_navigator):
-		item_list_navigator.visible = true
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = true
-	_update_toggle_button_state()
-
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = false
+	# Clear navigation state and reset UI
+	_clear_navigation_state()
+	_set_run_all_button_text("", false)
 
 	Log.debug("Populating main categories view", {}, ["debug_ui"])
 
@@ -253,8 +333,7 @@ func _populate_main_categories_view() -> void:
 		return
 
 	if categories.is_empty():
-		item_list_navigator.add_item("No debug actions registered.")
-		item_list_navigator.set_item_disabled(0, true)
+		_add_list_item("No debug actions registered.", null, "", true)
 		return
 
 	# Sort categories: direct actions first, then submenus

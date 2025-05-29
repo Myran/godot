@@ -162,6 +162,17 @@ func _register_manual_actions() -> void:
 		)
 	)
 
+	# Player Card Actions
+	register_action(
+		(
+			DebugAction
+			. create("Spawn Test Cards", _spawn_test_cards)
+			. set_category("Gameplay")
+			. set_group("Cards")
+			. set_description("Spawns 3 random test cards for the player")
+		)
+	)
+
 	# Database actions
 	register_action(
 		(
@@ -421,6 +432,25 @@ static func _populate_enemy_lineup() -> void:
 			core.action(core.DebugLineupAddCardEvent.new(new_card, n))
 
 	Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
+
+
+static func _spawn_test_cards() -> void:
+	# Spawn 3 random test cards for the player
+	if not is_instance_valid(card_controller) or not is_instance_valid(core):
+		Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
+		return
+
+	Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
+
+	for i: int in 3:
+		var card: Variant = await card_controller.get_card_from_pool()
+		if card:
+			# Add to player's hand or appropriate location
+			core.action(core.DrawCardEvent.new(card))
+			var card_id: String = str(card.get("id")) if card.has("id") else "unknown"
+			Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
+
+	Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
 
 
 static func _clear_card_cache() -> void:

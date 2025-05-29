@@ -11,10 +11,15 @@ func _init() -> void:
 	description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)
 
@@ -31,7 +36,7 @@ func execute_legacy() -> Array:
 	)
 
 	if not setup_result.success:
-		return _failure("Failed to initialize transaction test data")
+		execution_completed.emit(false, {"error": "Failed to initialize transaction test data"})
 
 	# Perform multiple concurrent-like transactions
 	var transaction_results: Array[Dictionary] = []
@@ -83,8 +88,7 @@ func execute_legacy() -> Array:
 		["test", "rtdb", "advanced"]
 	)
 
-	return _success(
-		{
+	execution_completed.emit(true, {
 			"operation": "transaction_test",
 			"path": full_path,
 			"success": test_successful,
@@ -95,8 +99,6 @@ func execute_legacy() -> Array:
 			"timestamp": TimeUtils.now_ms()
 		}
 	)
-
-
 func _perform_counter_transaction(
 	db: Object, path: Array[Variant], transaction_number: int
 ) -> Dictionary:

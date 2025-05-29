@@ -11,10 +11,15 @@ func _init() -> void:
 	description = "Removes active RTDB listeners to clean up test state."
 
 
-func execute_legacy() -> Array:
+func execute() -> void:
+	_update_status("Executing " + action_name + "...")
+
+	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		return get_last_error_result()
+		var error_result: Array = get_last_error_result()
+		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		return
 
 	_update_status("Removing RTDB listeners...")
 
@@ -46,11 +51,9 @@ func execute_legacy() -> Array:
 		["test", "rtdb", "listeners"]
 	)
 
-	return _success(
-		{
+	execution_completed.emit(true, {
 			"operation": "remove_listeners_at_paths",
 			"paths_attempted": removed_count,
 			"timestamp": Time.get_ticks_msec(),
 			"status": "cleanup_attempted"
-		}
-	)
+		})
