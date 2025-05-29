@@ -54,6 +54,9 @@ func _ready() -> void:
 		)
 		return
 
+	# Configure UI elements for optimal display and NO TRUNCATION
+	_configure_ui_elements()
+
 	item_list_navigator.set_deferred("editable", false)
 	run_all_button.disabled = true
 
@@ -68,6 +71,30 @@ func _ready() -> void:
 
 	# Initialize toggle button state
 	_update_toggle_button_state()
+
+
+# Configure UI elements for optimal no-truncation display
+func _configure_ui_elements() -> void:
+	if is_instance_valid(status_label):
+		# Enable RichTextLabel features for proper formatting
+		status_label.bbcode_enabled = true
+		status_label.scroll_following = true
+		status_label.fit_content = true
+		status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+		# Enable scrolling for long content
+		status_label.scroll_active = true
+
+		# Remove any size constraints that might cause truncation
+		status_label.clip_contents = false
+
+	if is_instance_valid(item_list_navigator):
+		# Improve list appearance
+		item_list_navigator.auto_height = true
+
+	if is_instance_valid(text_toggle_button):
+		# Style the toggle button
+		text_toggle_button.flat = false
 
 
 func _on_panel_gui_input(event: InputEvent) -> void:
@@ -107,18 +134,79 @@ func _update_toggle_button_state() -> void:
 		text_toggle_button.text = "▼ Hide Navigation"
 
 
+# Modern UX Color Palette - Semantic and accessible colors
+const UI_COLORS = {
+	"primary": "#4CAF50",  # Professional green
+	"success": "#4CAF50",  # Success green
+	"warning": "#FF9800",  # Warning orange
+	"danger": "#F44336",  # Error red
+	"info": "#2196F3",  # Info blue
+	"secondary": "#607D8B",  # Secondary gray-blue
+	"muted": "#9E9E9E",  # Muted gray
+	"accent": "#E91E63",  # Accent pink
+	"background": "#37474F",  # Dark background
+	"surface": "#455A64",  # Surface gray
+	"text_primary": "#FFFFFF",  # Primary text
+	"text_secondary": "#B0BEC5",  # Secondary text
+	"key": "#FFC107",  # Key/property yellow
+	"string": "#4CAF50",  # String green
+	"number": "#03DAC6",  # Number cyan
+	"boolean": "#FF9800",  # Boolean orange
+	"null_value": "#9E9E9E",  # Null gray
+}
+
+
 func _update_status_label_text(text: String, is_error: bool = false) -> void:
 	if is_instance_valid(status_label):
-		var header_text: String = (
-			"OS: %s | Build: %s\nCommit: %s\n\n"
-			% [
-				OS.get_name(),
-				"Debug" if OS.is_debug_build() else "Release",
-				Engine.get_version_info()["hash"]
-			]
+		# Configure RichTextLabel for optimal display
+		status_label.bbcode_enabled = true
+		status_label.scroll_following = true
+		status_label.fit_content = true
+
+		# Build header with improved styling
+		var header: String = _build_styled_header()
+
+		# Apply semantic styling based on content type
+		var styled_content: String = ""
+		if is_error:
+			styled_content = _apply_error_styling(text)
+		else:
+			styled_content = _apply_success_styling(text)
+
+		# Combine with proper spacing and structure
+		status_label.text = header + "\n" + styled_content
+
+		# Ensure scrolling works properly
+		await get_tree().process_frame
+		if status_label.get_v_scroll_bar():
+			status_label.get_v_scroll_bar().value = status_label.get_v_scroll_bar().max_value
+
+
+func _build_styled_header() -> String:
+	var build_type: String = "Debug" if OS.is_debug_build() else "Release"
+	var commit_hash: String = Engine.get_version_info().get("hash", "unknown")
+	var shortened_hash: String = (
+		commit_hash.substr(0, 8) if commit_hash.length() > 8 else commit_hash
+	)
+
+	return (
+		"[font_size=14][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n" % UI_COLORS.info
+		+ (
+			"[font_size=12][color=%s]%s • %s • %s[/color][/font_size]"
+			% [UI_COLORS.text_secondary, OS.get_name(), build_type, shortened_hash]
 		)
-		var color_tag: String = "[color=red]" if is_error else "[color=palegreen]"  # Use Godot's named colors
-		status_label.text = header_text + color_tag + text + "[/color]"
+	)
+
+
+func _apply_error_styling(text: String) -> String:
+	return (
+		"[font_size=14][color=%s]⚠ ERROR[/color][/font_size]\n" % UI_COLORS.danger
+		+ "[font_size=13][color=%s]%s[/color][/font_size]" % [UI_COLORS.text_primary, text]
+	)
+
+
+func _apply_success_styling(text: String) -> String:
+	return "[font_size=13][color=%s]%s[/color][/font_size]" % [UI_COLORS.text_primary, text]
 
 
 func _populate_main_categories_view() -> void:
@@ -695,35 +783,100 @@ func _build_run_all_summary(
 	var total: int = results.size()
 	var summary: String = ""
 
-	# Header with overall results
-	summary += "[b]Run All Results - %s[/b]\n" % scope_description
-	summary += "Total: %d | " % total
-	summary += "[color=palegreen]Success: %d[/color] | " % successful
-	if failed > 0:
-		summary += "[color=red]Failed: %d[/color]\n\n" % failed
-	else:
-		summary += "[color=gray]Failed: 0[/color]\n\n"
+	# Enhanced header with modern styling
+	summary += "[font_size=16][b]RUN ALL COMPLETE[/b][/font_size]\n"
+	summary += (
+		"[font_size=14][color=%s]%s[/color][/font_size]\n\n" % [UI_COLORS.accent, scope_description]
+	)
 
-	# Detailed results (show first few, then summary)
-	var max_details: int = 5
-	var shown_details: int = 0
+	# Statistics section with beautiful formatting
+	summary += "[font_size=14][color=%s]SUMMARY[/color][/font_size]\n" % UI_COLORS.info
+	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	summary += (
+		"[color=%s]Total Actions:[/color] [color=%s]%d[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.number, total]
+	)
+	summary += (
+		"[color=%s]Successful:[/color] [color=%s]%d[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.success, successful]
+	)
+	summary += (
+		"[color=%s]Failed:[/color] [color=%s]%d[/color]\n\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.danger if failed > 0 else UI_COLORS.muted, failed]
+	)
 
-	for result: Dictionary in results:
-		if shown_details >= max_details:
-			var remaining: int = total - shown_details
-			summary += "[color=gray]... and %d more actions[/color]\n" % remaining
-			break
+	# Success rate with visual indicator
+	var success_rate: float = (float(successful) / float(total)) * 100.0 if total > 0 else 0.0
+	var rate_color: String = (
+		UI_COLORS.success
+		if success_rate >= 80.0
+		else (UI_COLORS.warning if success_rate >= 50.0 else UI_COLORS.danger)
+	)
+	summary += (
+		"[color=%s]Success Rate:[/color] [color=%s]%.1f%%[/color]\n\n"
+		% [UI_COLORS.text_secondary, rate_color, success_rate]
+	)
 
+	# Detailed results - NO TRUNCATION, show ALL actions
+	summary += "[font_size=14][color=%s]DETAILED RESULTS[/color][/font_size]\n" % UI_COLORS.info
+	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
+
+	for i in range(results.size()):
+		var result: Dictionary = results[i]
 		var action_name: String = result.get("action_name", "Unknown Action")
 		var success: bool = result.get("success", false)
-		var status_color: String = (
-			"[color=palegreen]✓[/color]" if success else "[color=red]✗[/color]"
+		var payload: Variant = result.get("payload", null)
+
+		# Action status with enhanced styling
+		var status_icon: String = "✓" if success else "✗"
+		var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
+		var index_str: String = "[color=%s][%02d][/color]" % [UI_COLORS.number, i + 1]
+
+		summary += (
+			"%s [color=%s]%s[/color] [color=%s]%s[/color]"
+			% [index_str, status_color, status_icon, UI_COLORS.text_primary, action_name]
 		)
 
-		summary += "%s %s\n" % [status_color, action_name]
-		shown_details += 1
+		# Add error details if failed
+		if not success and payload != null:
+			var error_summary: String = _extract_concise_error(payload)
+			if not error_summary.is_empty():
+				summary += " [color=%s]- %s[/color]" % [UI_COLORS.danger, error_summary]
+
+		summary += "\n"
+
+	# Add timing information if available
+	summary += (
+		"\n[color=%s]Execution completed at %s[/color]"
+		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
+	)
 
 	return summary
+
+
+# Helper to extract concise error information without truncation
+func _extract_concise_error(payload: Variant) -> String:
+	if payload == null:
+		return ""
+
+	var payload_str: String = str(payload)
+
+	# Look for common error patterns and return meaningful messages
+	if payload_str.contains("PERMISSION_DENIED"):
+		return "Permission denied"
+	elif payload_str.contains("NETWORK_ERROR"):
+		return "Network error"
+	elif payload_str.contains("timeout"):
+		return "Timeout"
+	elif payload_str.contains("not found"):
+		return "Not found"
+	elif payload_str.contains("Firebase"):
+		return "Firebase error"
+	elif payload_str.length() > 50:
+		# Show first part of error without hard truncation - let UI handle wrapping
+		return payload_str.substr(0, 50) + "..."
+	else:
+		return payload_str
 
 
 func _set_ui_for_execution(is_executing: bool) -> void:
@@ -794,31 +947,56 @@ func _add_category_item_to_list(category_name: String, index: int) -> void:
 
 # Build report for single action execution
 func _build_single_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
-	"""Generate a comprehensive report for a single action execution"""
+	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
 	var report: String = ""
 
-	# Header with action name and status
-	var status_color: String = "[color=palegreen]" if success else "[color=red]"
+	# Header with enhanced styling and status indicators
+	var status_icon: String = "✓" if success else "✗"
+	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	var status_text: String = "SUCCESS" if success else "FAILED"
 
-	report += "[b]%s[/b]\n" % action.action_name
-	report += "%s%s[/color]\n\n" % [status_color, status_text]
+	# Action title with proper typography hierarchy
+	report += "[font_size=16][b]%s[/b][/font_size]\n" % action.action_name
+	report += (
+		"[font_size=14][color=%s]%s %s[/color][/font_size]\n\n"
+		% [status_color, status_icon, status_text]
+	)
 
-	# Add description if available
+	# Add description with improved readability
 	if not action.description.is_empty():
-		report += "[i]%s[/i]\n\n" % action.description
+		report += (
+			"[font_size=12][color=%s][i]%s[/i][/color][/font_size]\n\n"
+			% [UI_COLORS.text_secondary, action.description]
+		)
 
-	# Add payload information if present
+	# Add payload information with NO TRUNCATION
 	if payload != null:
-		report += "[b]Result:[/b]\n"
-		report += _pretty_print_value(payload, 0, 3)
+		report += (
+			"[font_size=14][b][color=%s]RESULT DATA[/color][/b][/font_size]\n" % UI_COLORS.info
+		)
+		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
+		report += _pretty_print_value_no_truncation(payload, 0)
 		report += "\n\n"
 
-	# Add category and group info
-	report += "[color=gray]Category: %s" % action.category
+	# Add metadata section with better organization
+	report += "[font_size=12][color=%s]METADATA[/color][/font_size]\n" % UI_COLORS.info
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
+	report += (
+		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	)
 	if not action.group.is_empty():
-		report += " | Group: %s" % action.group
-	report += "[/color]"
+		report += (
+			"[color=%s]Group:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		)
+
+	# Add timestamp
+	var timestamp: String = Time.get_datetime_string_from_system()
+	report += (
+		"[color=%s]Executed:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.text_primary, timestamp]
+	)
 
 	return report
 
@@ -826,70 +1004,69 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 # SOLID Principle: Single Responsibility - Helper methods for specific tasks
 
 
-## Pretty-print a value with proper formatting and colors
-func _pretty_print_value(value: Variant, indent_level: int = 0, max_depth: int = 5) -> String:
+## Pretty-print a value with NO TRUNCATION and modern styling
+func _pretty_print_value_no_truncation(
+	value: Variant, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if indent_level > max_depth:
-		return "[color=gray]<too deep>[/color]"
+		return "[color=%s]<maximum depth reached>[/color]" % UI_COLORS.warning
 
 	if value == null:
-		return "[color=gray]null[/color]"
+		return "[color=%s]null[/color]" % UI_COLORS.null_value
 
 	if value is Dictionary:
 		var val_dic: Dictionary = value
-		return _format_dictionary(val_dic, indent_level, max_depth)
+		return _format_dictionary_no_truncation(val_dic, indent_level, max_depth)
 
 	elif value is Array:
 		var val_array: Array = value
-		return _format_array(val_array, indent_level, max_depth)
+		return _format_array_no_truncation(val_array, indent_level, max_depth)
 	elif value is String:
 		var str_val: String = value
-		if str_val.length() > 200:
-			return '"%s..."' % str_val.substr(0, 197)
-		else:
-			return '"%s"' % str_val
+		# NO TRUNCATION - show full string with proper formatting
+		var escaped_str: String = str_val.replace("\n", "\\n").replace("\t", "\\t")
+		return '[color=%s]"%s"[/color]' % [UI_COLORS.string, escaped_str]
 	elif value is bool:
-		return "[color=orange]%s[/color]" % str(value)
+		return "[color=%s]%s[/color]" % [UI_COLORS.boolean, str(value)]
 	elif value is int or value is float:
-		return "[color=cyan]%s[/color]" % str(value)
+		return "[color=%s]%s[/color]" % [UI_COLORS.number, str(value)]
 	else:
-		var str_val: String = str(value)
-		if str_val.length() > 100:
-			return "%s..." % str_val.substr(0, 97)
-		else:
-			return str_val
+		# NO TRUNCATION - show full value regardless of length
+		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
 
 
-## Format dictionary with proper indentation and structure
-func _format_dictionary(dict: Dictionary, indent_level: int = 0, max_depth: int = 5) -> String:
+## Legacy method for backward compatibility (still used in some places)
+func _pretty_print_value(value: Variant, indent_level: int = 0, max_depth: int = 5) -> String:
+	# Redirect to no-truncation version for consistency
+	return _pretty_print_value_no_truncation(value, indent_level, max_depth)
+
+
+## Format dictionary with NO TRUNCATION and enhanced styling
+func _format_dictionary_no_truncation(
+	dict: Dictionary, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if dict.is_empty():
-		return "[color=gray]{ }[/color]"
+		return "[color=%s]{ }[/color]" % UI_COLORS.muted
 
 	if indent_level > max_depth:
-		return "[color=gray]{ ... }[/color]"
+		return "[color=%s]{ <max depth> }[/color]" % UI_COLORS.warning
 
 	var indent: String = "  ".repeat(indent_level)
 	var child_indent: String = "  ".repeat(indent_level + 1)
-	var result: String = "{\n"
+	var result: String = "[color=%s]{[/color]\n" % UI_COLORS.text_secondary
 
 	var keys: Array = dict.keys()
 	keys.sort()  # Sort keys for consistent display
 
-	var max_items: int = 25 if indent_level == 0 else 15
-	var items_shown: int = 0
-
+	# NO ITEM LIMIT - show all items regardless of count
 	for key: Variant in keys:
-		if items_shown >= max_items:
-			result += (
-				child_indent
-				+ "[color=gray]... (%d more items)[/color]\n" % (keys.size() - max_items)
-			)
-			break
-
 		var value: Variant = dict[key]
-		var key_str: String = "[color=yellow]%s[/color]" % str(key)
-		var value_str: String = _pretty_print_value(value, indent_level + 1, max_depth)
+		var key_str: String = "[color=%s]%s[/color]" % [UI_COLORS.key, str(key)]
+		var value_str: String = _pretty_print_value_no_truncation(
+			value, indent_level + 1, max_depth
+		)
 
-		# Handle multiline values
+		# Handle multiline values with better formatting
 		if "\n" in value_str:
 			result += (
 				child_indent
@@ -905,22 +1082,27 @@ func _format_dictionary(dict: Dictionary, indent_level: int = 0, max_depth: int 
 		else:
 			result += child_indent + "%s: %s\n" % [key_str, value_str]
 
-		items_shown += 1
-
-	result += indent + "}"
+	result += indent + "[color=%s]}[/color]" % UI_COLORS.text_secondary
 	return result
 
 
-## Format array with proper structure and readability
-func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> String:
+## Legacy method for backward compatibility
+func _format_dictionary(dict: Dictionary, indent_level: int = 0, max_depth: int = 5) -> String:
+	return _format_dictionary_no_truncation(dict, indent_level, max_depth)
+
+
+## Format array with NO TRUNCATION and enhanced styling
+func _format_array_no_truncation(
+	array: Array, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if array.is_empty():
-		return "[color=gray][ ][/color]"
+		return "[color=%s][ ][/color]" % UI_COLORS.muted
 
 	if indent_level > max_depth:
-		return "[color=gray][ ... ][/color]"
+		return "[color=%s][ <max depth> ][/color]" % UI_COLORS.warning
 
-	# For small arrays of simple values, show inline
-	if array.size() <= 3 and indent_level > 0:
+	# For small arrays of simple values, show inline with better styling
+	if array.size() <= 5 and indent_level > 0:
 		var all_simple: bool = true
 		for item: Variant in array:
 			if item is Dictionary or item is Array:
@@ -930,34 +1112,29 @@ func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> S
 		if all_simple:
 			var items: Array[String] = []
 			for item: Variant in array:
-				items.append(_pretty_print_value(item, indent_level + 1, max_depth))
-			return "[ %s ]" % ", ".join(items)
+				items.append(_pretty_print_value_no_truncation(item, indent_level + 1, max_depth))
+			return (
+				"[color=%s][[/color] %s [color=%s]][/color]"
+				% [UI_COLORS.text_secondary, ", ".join(items), UI_COLORS.text_secondary]
+			)
 
 	var indent: String = "  ".repeat(indent_level)
 	var child_indent: String = "  ".repeat(indent_level + 1)
-	var result: String = "[\n"
+	var result: String = "[color=%s][[/color]\n" % UI_COLORS.text_secondary
 
-	var max_items: int = 20 if indent_level == 0 else 10
-	var items_shown: int = 0
-
+	# NO ITEM LIMIT - show all items regardless of count
 	for i: int in range(array.size()):
-		if items_shown >= max_items:
-			result += (
-				child_indent
-				+ "[color=gray]... (%d more items)[/color]\n" % (array.size() - max_items)
-			)
-			break
-
 		var item: Variant = array[i]
-		var item_str: String = _pretty_print_value(item, indent_level + 1, max_depth)
+		var item_str: String = _pretty_print_value_no_truncation(item, indent_level + 1, max_depth)
 
-		# Handle multiline items
+		# Handle multiline items with better formatting
 		if "\n" in item_str:
 			result += (
 				child_indent
 				+ (
-					"[%d]: \n%s%s\n"
+					"[color=%s][%d]:[/color]\n%s%s\n"
 					% [
+						UI_COLORS.number,
 						i,
 						"  ".repeat(indent_level + 2),
 						item_str.replace("\n", "\n" + "  ".repeat(indent_level + 2))
@@ -965,12 +1142,17 @@ func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> S
 				)
 			)
 		else:
-			result += child_indent + "[%d]: %s\n" % [i, item_str]
+			result += (
+				child_indent + "[color=%s][%d]:[/color] %s\n" % [UI_COLORS.number, i, item_str]
+			)
 
-		items_shown += 1
-
-	result += indent + "]"
+	result += indent + "[color=%s]][/color]" % UI_COLORS.text_secondary
 	return result
+
+
+## Legacy method for backward compatibility
+func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> String:
+	return _format_array_no_truncation(array, indent_level, max_depth)
 
 
 ## Extract key information from complex payloads for display
@@ -1025,9 +1207,9 @@ func _format_payload_summary(payload: Variant) -> String:
 ## Format error message from payload, extracting meaningful info instead of raw dict
 func _format_error_message(payload: Variant) -> String:
 	if payload == null:
-		return "Unknown error"
+		return "[color=%s]Unknown error - no details provided[/color]" % UI_COLORS.danger
 
-	# Handle dictionary errors (common from Firebase)
+	# Handle dictionary errors (common from Firebase) - NO TRUNCATION
 	if payload is Dictionary:
 		var dict_payload: Dictionary = payload
 
@@ -1036,41 +1218,66 @@ func _format_error_message(payload: Variant) -> String:
 			var error_data: Variant = dict_payload.get("error")
 			var error_str: String = str(error_data)
 
-			# Extract meaningful error messages
+			# Extract meaningful error messages with full context
 			if error_str.contains("PERMISSION_DENIED"):
-				return "Permission denied - check Firebase rules"
+				return (
+					"[color=%s]Permission denied[/color] - check Firebase rules\n[color=%s]Full error:[/color] %s"
+					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
+				)
 			elif error_str.contains("NETWORK_ERROR"):
-				return "Network connection issue"
+				return (
+					"[color=%s]Network connection issue[/color]\n[color=%s]Full error:[/color] %s"
+					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
+				)
 			elif error_str.contains("DATABASE_ERROR"):
-				return "Database operation failed"
+				return (
+					"[color=%s]Database operation failed[/color]\n[color=%s]Full error:[/color] %s"
+					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
+				)
 			elif error_str.contains("timeout") or error_str.contains("TIMEOUT"):
-				return "Operation timed out"
+				return (
+					"[color=%s]Operation timed out[/color]\n[color=%s]Full error:[/color] %s"
+					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
+				)
 			elif error_str.contains("not found") or error_str.contains("NOT_FOUND"):
-				return "Resource not found"
-			elif error_str.length() > 60:
-				return error_str.substr(0, 57) + "..."
+				return (
+					"[color=%s]Resource not found[/color]\n[color=%s]Full error:[/color] %s"
+					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
+				)
 			else:
-				return error_str
+				# NO TRUNCATION - show full error with styling
+				return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
 
-		# Generic dictionary error
-		elif dict_payload.size() <= 3:
-			return str(dict_payload)
+		# Generic dictionary error - show full structured data
 		else:
-			return "Complex error (see logs for details)"
+			return (
+				"[color=%s]Structured error:[/color]\n%s"
+				% [UI_COLORS.danger, _pretty_print_value_no_truncation(dict_payload)]
+			)
 
 	var payload_str: String = str(payload)
 
-	# Try to extract meaningful error info from string patterns
+	# Try to extract meaningful error info from string patterns - NO TRUNCATION
 	if payload_str.contains("FirebaseDatabase"):
-		return "Firebase connection issue"
+		return (
+			"[color=%s]Firebase connection issue[/color]\n[color=%s]Details:[/color] %s"
+			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
+		)
 	elif payload_str.contains("timeout"):
-		return "Operation timed out"
+		return (
+			"[color=%s]Operation timed out[/color]\n[color=%s]Details:[/color] %s"
+			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
+		)
 	elif payload_str.contains("permission"):
-		return "Permission denied"
+		return (
+			"[color=%s]Permission denied[/color]\n[color=%s]Details:[/color] %s"
+			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
+		)
 	elif payload_str.contains("not found"):
-		return "Resource not found"
-	elif payload_str.length() > 80:
-		# If it's a long string (probably a dict), truncate it
-		return payload_str.substr(0, 77) + "..."
+		return (
+			"[color=%s]Resource not found[/color]\n[color=%s]Details:[/color] %s"
+			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
+		)
 	else:
-		return payload_str
+		# NO TRUNCATION - show full error message with proper styling
+		return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
