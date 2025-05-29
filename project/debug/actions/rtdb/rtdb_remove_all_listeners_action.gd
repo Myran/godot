@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Remove All Listeners"
 	group = "Listeners"
 	description = "Removes active RTDB listeners to clean up test state."

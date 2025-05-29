@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Error Handling Test"
 	group = "Advanced"
 	description = "Deliberately triggers various error conditions to test error handling and recovery."

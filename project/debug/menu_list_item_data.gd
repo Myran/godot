@@ -17,16 +17,16 @@ func _init(p_type: ItemType = ItemType.CATEGORY) -> void:
 	type = p_type
 
 
-static func create_category(name: String, has_run_all: bool = false) -> MenuListItemData:
-	var data := MenuListItemData.new(ItemType.CATEGORY)
+static func create_category(name: String, _has_run_all: bool = false) -> MenuListItemData:
+	var data: MenuListItemData = MenuListItemData.new(ItemType.CATEGORY)
 	data.display_name = name
 	data.category_name = name
-	data.has_run_all = has_run_all
+	data.has_run_all = _has_run_all
 	return data
 
 
 static func create_group(category: String, group: String) -> MenuListItemData:
-	var data := MenuListItemData.new(ItemType.GROUP)
+	var data: MenuListItemData = MenuListItemData.new(ItemType.GROUP)
 	data.display_name = group
 	data.category_name = category
 	data.group_name = group
@@ -36,7 +36,7 @@ static func create_group(category: String, group: String) -> MenuListItemData:
 static func create_action(
 	action: DebugAction, category: String, group: String = ""
 ) -> MenuListItemData:
-	var data := MenuListItemData.new(ItemType.ACTION)
+	var data: MenuListItemData = MenuListItemData.new(ItemType.ACTION)
 	data.display_name = action.action_name
 	data.category_name = category
 	data.group_name = group
@@ -45,14 +45,14 @@ static func create_action(
 
 
 static func create_back_to_main() -> MenuListItemData:
-	var data := MenuListItemData.new(ItemType.BACK_TO_MAIN)
+	var data: MenuListItemData = MenuListItemData.new(ItemType.BACK_TO_MAIN)
 	data.display_name = "< Back to Main"
 	data.prefix = ""
 	return data
 
 
 static func create_back_to_groups(category: String) -> MenuListItemData:
-	var data := MenuListItemData.new(ItemType.BACK_TO_GROUPS)
+	var data: MenuListItemData = MenuListItemData.new(ItemType.BACK_TO_GROUPS)
 	data.display_name = "< Back to Groups"
 	data.category_name = category
 	data.prefix = ""

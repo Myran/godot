@@ -11,6 +11,7 @@ var test_start_time: int = 0
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Single Value Listener"
 	group = "Listeners"
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."

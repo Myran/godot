@@ -8,6 +8,7 @@ var _active_path: Array[Variant] = []
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Child Changed Listener"
 	group = "Listeners"
 	description = "Sets up a listener for when children are changed at a specific RTDB path and verifies it works."

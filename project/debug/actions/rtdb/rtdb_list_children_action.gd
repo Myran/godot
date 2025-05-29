@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "List Children"
 	group = "Path Operations"
 	description = "Lists all child keys from a specific RTDB path."

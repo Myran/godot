@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Set Simple Value"
 	group = "Basic"
 	description = "Sets a simple string value at a predefined test path in RTDB."

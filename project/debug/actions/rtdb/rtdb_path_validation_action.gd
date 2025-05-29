@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Path Validation"
 	group = "Path Operations"
 	description = "Validates accessibility and structure of various RTDB paths."

@@ -596,6 +596,7 @@ var _run_all_current_index: int = 0
 var _run_all_results: Array[Dictionary] = []
 var _run_all_scope: String = ""
 
+
 # Sequential action execution for Run All functionality
 func _execute_next_action_in_sequence(
 	actions_to_run: Array[ActionExecutionResult],
@@ -776,7 +777,7 @@ func _validate_navigation_state(context: String) -> bool:
 
 # Add category item to the navigation list with proper visual indicators
 func _add_category_item_to_list(category_name: String, index: int) -> void:
-	"""Add a category item with proper visual indicators"""
+	# Add a category item with proper visual indicators
 	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
 	var display_name: String = ""
 

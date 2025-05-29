@@ -6,6 +6,7 @@ var _transaction_count: int = 0
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Basic Set Simple Value (Legacy)"
 	group = "Legacy Tests"
 	description = "Migrated from scene_debug.gd - Sets a simple value in RTDB"

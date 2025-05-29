@@ -5,6 +5,7 @@ extends RTDBDebugAction
 
 
 func _init() -> void:
+	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Transaction Test"
 	group = "Advanced"
 	description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."

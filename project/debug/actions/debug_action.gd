@@ -51,7 +51,7 @@ func set_keyboard_shortcut(p_shortcut: String) -> DebugAction:
 
 # Static factory method for creating programmatic actions
 static func create(p_name: String, p_callable: Callable) -> DebugAction:
-	var action := DebugAction.new(p_name, p_callable)
+	var action: DebugAction = DebugAction.new(p_name, p_callable)
 	return action
 
 
@@ -63,7 +63,7 @@ static func create_from_callable(
 	p_group: String = "",
 	p_description: String = ""
 ) -> DebugAction:
-	var action := DebugAction.new(p_name, p_callable)
+	var action: DebugAction = DebugAction.new(p_name, p_callable)
 	action.category = p_category
 	action.group = p_group
 	action.description = p_description if p_description else "Execute " + p_name
@@ -74,7 +74,7 @@ static func create_from_callable(
 func execute() -> void:
 	if action_callable.is_valid():
 		_update_status("Executing " + action_name + "...")
-		var result = await action_callable.call()
+		var result: Variant = await action_callable.call()
 		execution_completed.emit(true, result)
 		_update_status("Completed: " + action_name)
 	else:
