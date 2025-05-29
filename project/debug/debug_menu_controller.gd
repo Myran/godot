@@ -4,10 +4,10 @@ extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
 # Font sizes for RichTextLabel content
-const FONT_SIZE_XXL = 34
-const FONT_SIZE_XL = 32
-const FONT_SIZE_L = 30
-const FONT_SIZE_M = 24
+const FONT_SIZE_XXL : int = 34
+const FONT_SIZE_XL : int = 32
+const FONT_SIZE_L : int = 30
+const FONT_SIZE_M : int = 24
 #const UI_COLORS = {
 	#"primary": "#4CAF50",  # Professional green
 	#"success": "#4CAF50",  # Success green
