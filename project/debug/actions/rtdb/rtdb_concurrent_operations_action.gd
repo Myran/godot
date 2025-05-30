@@ -18,7 +18,10 @@ func execute() -> void:
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		execution_completed.emit(
+			false,
+			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
+		)
 		return
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
@@ -119,7 +122,9 @@ func execute() -> void:
 		["test", "rtdb", "advanced"]
 	)
 
-	execution_completed.emit(true, {
+	execution_completed.emit(
+		true,
+		{
 			"operation": "concurrent_operations",
 			"path": full_path,
 			"success": test_success,
@@ -131,6 +136,8 @@ func execute() -> void:
 			"timestamp": Time.get_ticks_msec()
 		}
 	)
+
+
 func _start_concurrent_operation(db: Variant, operation: Dictionary) -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 	var request_id: int = start_time % 1000000

@@ -29,7 +29,7 @@ func execute() -> void:
 	var result: Array = await execute_simple_operation(
 		"set_value_async", test_path, test_data, "Basic Set Simple Value"
 	)
-	
+
 	# Emit completion signal based on result
 	var success: bool = result[0] if result.size() > 0 else false
 	var payload: Variant = result[1] if result.size() > 1 else null

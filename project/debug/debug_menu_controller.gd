@@ -4,61 +4,38 @@ extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
 # Font sizes for RichTextLabel content
-const FONT_SIZE_XXL : int = 34
-const FONT_SIZE_XL : int = 32
-const FONT_SIZE_L : int = 30
-const FONT_SIZE_M : int = 24
-#const UI_COLORS = {
-	#"primary": "#4CAF50",  # Professional green
-	#"success": "#4CAF50",  # Success green
-	#"warning": "#FF9800",  # Warning orange
-	#"danger": "#F44336",  # Error red
-	#"info": "#2196F3",  # Info blue
-	#"secondary": "#607D8B",  # Secondary gray-blue
-	#"muted": "#9E9E9E",  # Muted gray
-	#"accent": "#E91E63",  # Accent pink
-	#"background": "#37474F",  # Dark background
-	#"surface": "#455A64",  # Surface gray
-	#"text_primary": "#FFFFFF",  # Primary text
-	#"text_secondary": "#B0BEC5",  # Secondary text
-	#"key": "#FFC107",  # Key/property yellow
-	#"string": "#4CAF50",  # String green
-	#"number": "#03DAC6",  # Number cyan
-	#"boolean": "#FF9800",  # Boolean orange
-	#"null_value": "#9E9E9E",  # Null gray
-#}
+const FONT_SIZE_XXL: int = 34
+const FONT_SIZE_XL: int = 32
+const FONT_SIZE_L: int = 30
+const FONT_SIZE_M: int = 24
+
 const UI_COLORS = {
 	"background": "#37474F",  # Maintain existing background
-	"surface": "#455A64",      # Maintain existing surface
+	"surface": "#455A64",  # Maintain existing surface
 	"muted": "#9E9E9E",  # Muted gray
 	# Core UI colors
-	"primary": "#64B5F6",      # Soft blue - primary actions
-	"secondary": "#81C784",    # Muted green - secondary elements
-
+	"primary": "#64B5F6",  # Soft blue - primary actions
+	"secondary": "#81C784",  # Muted green - secondary elements
 	# Unified amber for all warm tones
-	"accent": "#FFB74D",       # Amber - used for highlights, warnings, and booleans
-
+	"accent": "#FFB74D",  # Amber - used for highlights, warnings, and booleans
 	# Status colors
-	"success": "#81C784",      # Success green - matches secondary
-	"warning": "#FFB74D",      # Warning - matches accent
-	"danger": "#E57373",       # Soft red - errors
-	"info": "#4FC3F7",         # Light blue - informational
-
+	"success": "#81C784",  # Success green - matches secondary
+	"warning": "#FFB74D",  # Warning - matches accent
+	"danger": "#E57373",  # Soft red - errors
+	"info": "#4FC3F7",  # Light blue - informational
 	# Text and UI elements
-	"text_primary": "#FFFFFF", # Pure white - main content
-	"text_secondary": "#CFD8DC",# Light gray - secondary text
-	"text_tertiary": "#90A4AE",# Muted blue-gray - less important info
-
+	"text_primary": "#FFFFFF",  # Pure white - main content
+	"text_secondary": "#CFD8DC",  # Light gray - secondary text
+	"text_tertiary": "#90A4AE",  # Muted blue-gray - less important info
 	# Data visualization
-	"key": "#FFB74D",          # Property key - matches accent
-	"string": "#81C784",       # String value - matches success
-	"number": "#4FC3F7",       # Number value - matches info
-	"boolean": "#FFB74D",      # Boolean value - matches accent
-	"null_value": "#90A4AE",   # Null value - matches text_tertiary
-
+	"key": "#FFB74D",  # Property key - matches accent
+	"string": "#81C784",  # String value - matches success
+	"number": "#4FC3F7",  # Number value - matches info
+	"boolean": "#FFB74D",  # Boolean value - matches accent
+	"null_value": "#90A4AE",  # Null value - matches text_tertiary
 	# UI elements
-	"border": "#546E7A",       # Border color - subtle separation
-	"highlight": "#FFECB3",    # Highlight color - light version of accent
+	"border": "#546E7A",  # Border color - subtle separation
+	"highlight": "#FFECB3",  # Highlight color - light version of accent
 }
 # Constants for metadata
 const ITEM_TYPE_CATEGORY: String = "category_item"
@@ -98,7 +75,9 @@ class ActionExecutionResult:
 
 
 # Helper methods for UI operations
-func _add_list_item(text: String, metadata: MenuListItemData = null, tooltip: String = "", disabled: bool = false) -> int:
+func _add_list_item(
+	text: String, metadata: MenuListItemData = null, tooltip: String = "", disabled: bool = false
+) -> int:
 	"""Add an item to the navigation list with optional metadata and tooltip"""
 	var index: int = item_list_navigator.get_item_count()
 	item_list_navigator.add_item(text)
@@ -120,7 +99,9 @@ func _add_navigation_item(text: String, metadata: MenuListItemData) -> void:
 	_add_list_item(text, metadata)
 
 
-func _add_action_item(action: DebugAction, category: String, group: String = "", prefix: String = "") -> void:
+func _add_action_item(
+	action: DebugAction, category: String, group: String = "", prefix: String = ""
+) -> void:
 	"""Add a debug action item to the list"""
 	var display_text: String = prefix + action.action_name
 	var metadata: MenuListItemData = MenuListItemData.create_action(action, category, group)
@@ -241,13 +222,12 @@ func _update_toggle_button_state() -> void:
 	text_toggle_button.disabled = false
 
 	if _is_list_hidden:
-		text_toggle_button.text = "▲ Show Navigation"
+		text_toggle_button.text = "Debug Menu"
 	else:
-		text_toggle_button.text = "▼ Hide Navigation"
+		text_toggle_button.text = "Debug Menu"
 
 
 # Modern UX Color Palette - Semantic and accessible colors
-
 
 
 func _update_status_label_text(text: String, is_error: bool = false) -> void:
@@ -284,7 +264,10 @@ func _build_styled_header() -> String:
 	)
 
 	return (
-		"[font_size=%s][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+		(
+			"[font_size=%s][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.info]
+		)
 		+ (
 			"[font_size=%s][color=%s]%s • %s • %s[/color][/font_size]"
 			% [FONT_SIZE_M, UI_COLORS.text_secondary, OS.get_name(), build_type, shortened_hash]
@@ -295,12 +278,18 @@ func _build_styled_header() -> String:
 func _apply_error_styling(text: String) -> String:
 	return (
 		"[font_size=%s][color=%s]⚠ ERROR[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.danger]
-		+ "[font_size=%s][color=%s]%s[/color][/font_size]" % [FONT_SIZE_L, UI_COLORS.text_primary, text]
+		+ (
+			"[font_size=%s][color=%s]%s[/color][/font_size]"
+			% [FONT_SIZE_L, UI_COLORS.text_primary, text]
+		)
 	)
 
 
 func _apply_success_styling(text: String) -> String:
-	return "[font_size=%s][color=%s]%s[/color][/font_size]" % [FONT_SIZE_L, UI_COLORS.text_primary, text]
+	return (
+		"[font_size=%s][color=%s]%s[/color][/font_size]"
+		% [FONT_SIZE_L, UI_COLORS.text_primary, text]
+	)
 
 
 func _populate_main_categories_view() -> void:
@@ -871,11 +860,14 @@ func _build_run_all_summary(
 	# Enhanced header with modern styling
 	summary += "[font_size=%s][b]RUN ALL COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
 	summary += (
-		"[font_size=%s][color=%s]%s[/color][/font_size]\n\n" % [FONT_SIZE_XL, UI_COLORS.accent, scope_description]
+		"[font_size=%s][color=%s]%s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, UI_COLORS.accent, scope_description]
 	)
 
 	# Statistics section with beautiful formatting
-	summary += "[font_size=%s][color=%s]SUMMARY[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	summary += (
+		"[font_size=%s][color=%s]SUMMARY[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 	summary += (
 		"[color=%s]Total Actions:[/color] [color=%s]%d[/color]\n"
@@ -903,10 +895,13 @@ func _build_run_all_summary(
 	)
 
 	# Detailed results - NO TRUNCATION, show ALL actions
-	summary += "[font_size=%s][color=%s]DETAILED RESULTS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	summary += (
+		"[font_size=%s][color=%s]DETAILED RESULTS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 
-	for i : int in range(results.size()):
+	for i: int in range(results.size()):
 		var result: Dictionary = results[i]
 		var action_name: String = result.get("action_name", "Unknown Action")
 		var success: bool = result.get("success", false)
@@ -1057,14 +1052,17 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 	# Add payload information with NO TRUNCATION
 	if payload != null:
 		report += (
-			"[font_size=%s][b][color=%s]RESULT DATA[/color][/b][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+			"[font_size=%s][b][color=%s]RESULT DATA[/color][/b][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.info]
 		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 		report += _pretty_print_value_no_truncation(payload, 0)
 		report += "\n\n"
 
 	# Add metadata section with better organization
-	report += "[font_size=%s][color=%s]METADATA[/color][/font_size]\n" % [FONT_SIZE_M, UI_COLORS.info]
+	report += (
+		"[font_size=%s][color=%s]METADATA[/color][/font_size]\n" % [FONT_SIZE_M, UI_COLORS.info]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
 	report += (
 		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"

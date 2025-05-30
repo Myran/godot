@@ -31,7 +31,7 @@ func execute() -> void:
 	var result: Array = await execute_simple_operation(
 		"push_and_update_async", test_path, push_data, "Basic Push Item"
 	)
-	
+
 	# Emit completion signal based on result
 	var success: bool = result[0] if result.size() > 0 else false
 	var payload: Variant = result[1] if result.size() > 1 else null

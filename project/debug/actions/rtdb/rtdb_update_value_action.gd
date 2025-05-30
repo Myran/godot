@@ -13,11 +13,14 @@ func _init() -> void:
 
 func execute() -> void:
 	_update_status("Executing " + action_name + "...")
-	
+
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		execution_completed.emit(
+			false,
+			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
+		)
 		return
 
 	var path_suffix: Array[Variant] = ["update_test"]
@@ -40,12 +43,15 @@ func execute() -> void:
 			["test", "rtdb"]
 		)
 
-		execution_completed.emit(true, {
-			"operation": "update_value",
-			"path": full_path,
-			"value": new_value,
-			"timestamp": Time.get_ticks_msec()
-		})
+		execution_completed.emit(
+			true,
+			{
+				"operation": "update_value",
+				"path": full_path,
+				"value": new_value,
+				"timestamp": Time.get_ticks_msec()
+			}
+		)
 	else:
 		_update_status("Failed to update value: %s" % result.error, true)
 

@@ -21,7 +21,10 @@ func execute() -> void:
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		execution_completed.emit(
+			false,
+			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
+		)
 		return
 
 	# Setup test path and helper
@@ -64,7 +67,9 @@ func execute() -> void:
 
 	if result.success:
 		_update_status("✅ Listener test PASSED")
-		execution_completed.emit(true, {
+		execution_completed.emit(
+			true,
+			{
 				"operation": "child_removed_listener_test",
 				"path": _active_path,
 				"test_result": "PASSED",
@@ -75,6 +80,8 @@ func execute() -> void:
 	else:
 		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
 		execution_completed.emit(false, {"error": str(str(result.get("error", "unknown error")))})
+
+
 func _on_child_removed(child_key: String, child_value: Variant) -> void:
 	_listener_helper.mark_callback_received(child_key, child_value, {"listened_path": _active_path})
 	_update_status("Callback received for removed key: %s" % child_key)

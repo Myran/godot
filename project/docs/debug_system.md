@@ -87,21 +87,38 @@ The debug menu uses visual indicators:
 
 ### Method 1: Simple Actions (Recommended) ⭐
 
-Add actions directly to registration files:
+Add actions to appropriate registration files based on domain:
 
+**For Infrastructure/Platform utilities:**
 ```gdscript
-# In rtdb_actions.gd, core_actions.gd, or game_actions.gd
+# In system_actions.gd
 registry.register_action(
     DebugAction
-    .create("My Custom Action", _my_custom_function)
-    .set_category("My Category")
+    .create("My System Utility", _my_system_function)
+    .set_category("System")
     .set_group("My Group")  # Optional - use "" for ungrouped
-    .set_description("What this action does")
+    .set_description("Platform-level utility action")
 )
 
-static func _my_custom_function() -> void:
-    Log.info("My action executed!", {}, ["debug", "custom"])
-    # Your debug logic here
+static func _my_system_function() -> void:
+    Log.info("System action executed!", {}, ["debug", "system"])
+    # System-level logic here (OS, engine, infrastructure)
+```
+
+**For GameTwo domain-specific actions:**
+```gdscript
+# In game_actions_manual.gd
+registry.register_action(
+    DebugAction
+    .create("My Game Action", _my_game_function)
+    .set_category("Gameplay")
+    .set_group("My Group")  # Optional - use "" for ungrouped
+    .set_description("GameTwo-specific action")
+)
+
+static func _my_game_function() -> void:
+    Log.info("Game action executed!", {}, ["debug", "game"])
+    # GameTwo domain logic here (cards, levels, gameplay)
 ```
 
 ### Method 2: Complex Actions
@@ -136,10 +153,16 @@ registry.register_action(MyComplexAction.new())
 
 ### Registration Files Organization
 
-**Add actions to the appropriate file:**
+**Add actions to the appropriate file based on domain:**
+- **system_actions.gd** - Infrastructure/platform utilities (OS, engine, connectivity)
+- **game_actions_manual.gd** - GameTwo domain-specific actions (gameplay, cards, levels)
 - **rtdb_actions.gd** - Firebase/database related actions
 - **core_actions.gd** - System, memory, logging actions  
-- **game_actions.gd** - Gameplay, UI, game logic actions
+- **game_actions.gd** - Additional gameplay actions
+
+**Domain Guidelines:**
+- **System Actions**: Platform-independent utilities that could work in other projects
+- **Game Actions**: GameTwo-specific functionality that depends on game systems
 
 ## Components Reference
 
@@ -201,26 +224,35 @@ MenuListItemData.create_back_to_groups(category)
 - **SOLID Principles**: Open for extension, closed for modification
 
 ### Developer Experience ✅
-- **Easy Extension**: Add actions by editing registration files
+- **Easy Extension**: Add actions by editing appropriate registration files
 - **Clear Patterns**: Consistent registration and execution patterns
 - **Instant Feedback**: Actions available immediately after code changes
 - **No Resources**: No .tres files to manage or sync
+- **Focused Files**: Small, focused files with single responsibilities
+
+### Architecture Excellence ✅
+- **Registry Refactoring**: 69% size reduction (497→155 lines)
+- **Domain Separation**: Clear system vs game action boundaries  
+- **SOLID Compliance**: Each file has single, focused responsibility
+- **Maintainability**: Easy to understand, modify, and extend
 
 ## Directory Structure
 
 ```
 /project/debug/
-├── debug_action_registry.gd     # Main registry with programmatic registration
+├── debug_action_registry.gd     # PURE registry logic (155 lines)
 ├── debug_menu_controller.gd     # Type-safe UI controller  
 ├── debug_manager.gd             # Event bus autoload
 ├── menu_list_item_data.gd       # Type-safe metadata class
 └── actions/
     ├── debug_action.gd          # Enhanced base class
-    ├── registrations/           # Programmatic registration files
-    │   ├── rtdb_actions.gd     # 22 Firebase/RTDB actions
-    │   ├── core_actions.gd     # 7 system actions
-    │   └── game_actions.gd     # 15+ gameplay actions
-    └── [implementation files]   # Action implementation classes
+    ├── registrations/           # Clean separation by domain
+    │   ├── system_actions.gd    # 3 infrastructure actions (100 lines)
+    │   ├── game_actions_manual.gd # 9 GameTwo domain actions (256 lines)
+    │   ├── rtdb_actions.gd      # 22 Firebase/RTDB actions
+    │   ├── core_actions.gd      # System actions
+    │   └── game_actions.gd      # Additional game actions
+    └── [implementation files]    # Action implementation classes
 ```
 
 ## Validation
@@ -257,7 +289,7 @@ just format && just validate  # All checks pass ✅
 ## Best Practices
 
 ### Action Creation ✅
-1. **Use registration files**: Add to rtdb_actions.gd, core_actions.gd, or game_actions.gd
+1. **Use registration files**: Add to system_actions.gd, game_actions_manual.gd, or domain-specific files
 2. **Follow naming**: Clear, descriptive action names
 3. **Organize properly**: Choose appropriate category and group
 4. **Add descriptions**: Help users understand action purpose

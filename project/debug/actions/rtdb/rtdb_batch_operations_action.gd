@@ -18,7 +18,10 @@ func execute() -> void:
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		execution_completed.emit(
+			false,
+			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
+		)
 		return
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.BATCH_OPS)
@@ -95,7 +98,9 @@ func execute() -> void:
 		["test", "rtdb", "advanced"]
 	)
 
-	execution_completed.emit(true, {
+	execution_completed.emit(
+		true,
+		{
 			"operation": "batch_operations",
 			"path": full_path,
 			"success": batch_success,
@@ -106,6 +111,8 @@ func execute() -> void:
 			"timestamp": TimeUtils.now_ms()
 		}
 	)
+
+
 func _execute_single_operation(
 	db: Object, operation: Dictionary, operation_index: int
 ) -> Dictionary:

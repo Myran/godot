@@ -18,7 +18,10 @@ func execute() -> void:
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"})
+		execution_completed.emit(
+			false,
+			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
+		)
 		return
 
 	_update_status("Validating various RTDB paths...")
@@ -91,7 +94,9 @@ func execute() -> void:
 		["test", "rtdb", "path_operations"]
 	)
 
-	execution_completed.emit(true, {
+	execution_completed.emit(
+		true,
+		{
 			"operation": "path_validation",
 			"total_paths": validation_results.size(),
 			"successful_validations": successful_validations,
@@ -100,6 +105,8 @@ func execute() -> void:
 			"timestamp": Time.get_ticks_msec()
 		}
 	)
+
+
 func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:
 	var path: Array[Variant] = test_case.path
 	var path_name: String = test_case.name
