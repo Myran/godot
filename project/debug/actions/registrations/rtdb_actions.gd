@@ -3,7 +3,7 @@ class_name RTDBDebugActions
 extends RefCounted
 
 
-static func register_all(registry) -> void:
+static func register_all(registry: DebugActionRegistry) -> void:
 	# Register all RTDB debug actions
 	Log.info("Registering RTDB debug actions...", {}, ["debug", "rtdb", "registration"])
 
