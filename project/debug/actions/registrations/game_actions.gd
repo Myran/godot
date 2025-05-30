@@ -91,16 +91,16 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 
 
 #static func _register_card_actions(registry: DebugActionRegistry) -> void:
-	## Player Card Actions
-	#registry.register_action(
-		#(
-			#DebugAction
-			#. create("Spawn Test Cards", _spawn_test_cards)
-			#. set_category("Gameplay")
-			#. set_group("Cards")
-			#. set_description("Spawns 3 random test cards for the player")
-		#)
-	#)
+## Player Card Actions
+#registry.register_action(
+#(
+#DebugAction
+#. create("Spawn Test Cards", _spawn_test_cards)
+#. set_category("Gameplay")
+#. set_group("Cards")
+#. set_description("Spawns 3 random test cards for the player")
+#)
+#)
 
 
 static func _register_database_actions(registry: DebugActionRegistry) -> void:
@@ -197,23 +197,23 @@ static func _populate_enemy_lineup() -> void:
 
 
 #static func _spawn_test_cards() -> void:
-	## Spawn 3 random test cards for the player
-	#if not is_instance_valid(card_controller) or not is_instance_valid(core):
-		#Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
-		#return
+## Spawn 3 random test cards for the player
+#if not is_instance_valid(card_controller) or not is_instance_valid(core):
+#Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
+#return
 #
-	#Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
+#Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
 #
-	#for i: int in 3:
-		#var card: Variant = await card_controller.get_card_from_pool()
-		#if card:
-			#var typed_card: Card = card  # Fail fast if not actually a Card
-			## Add to player's hand or appropriate location
-			#core.action(core.DrawCardEvent.new(typed_card))
-			#var card_id: String = str(typed_card.get("id")) if typed_card.has("id") else "unknown"
-			#Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
+#for i: int in 3:
+#var card: Variant = await card_controller.get_card_from_pool()
+#if card:
+#var typed_card: Card = card  # Fail fast if not actually a Card
+## Add to player's hand or appropriate location
+#core.action(core.DrawCardEvent.new(typed_card))
+#var card_id: String = str(typed_card.get("id")) if typed_card.has("id") else "unknown"
+#Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
 #
-	#Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
+#Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
 
 
 static func _clear_card_cache() -> void:

@@ -1,0 +1,173 @@
+extends Node
+
+func _init() -> void:
+	print("DebugStartupCoordinator _init() called")
+
+func _ready() -> void:
+	print("DebugStartupCoordinator _ready() called")
+	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
+
+	# Fail fast on missing dependency - that's it
+	if not has_node("/root/DebugRegistry"):
+		Log.error("DebugRegistry missing", {}, ["debug", "startup", "fatal"])
+		print("ERROR: DebugRegistry not found at /root/DebugRegistry")
+		return
+
+	Log.info("DebugRegistry found, getting actions...", {}, ["debug", "startup"])
+
+	# Get actions from command line or config (inline platform logic)
+	var actions := _get_action_names()
+	Log.info("Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"])
+
+	if actions.is_empty():
+		Log.info("No debug startup actions to execute", {}, ["debug", "startup"])
+		return
+
+	# Wait for game ready then execute
+	Log.info("Waiting for game ready...", {}, ["debug", "startup"])
+	await _wait_for_game_ready()
+
+	Log.info("Executing debug startup actions", {"count": actions.size()}, ["debug", "startup"])
+	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
+
+	# Simple execution loop - trust the registry to handle its own errors
+	for action_name in actions:
+		Log.info("Searching for action", {"action": action_name}, ["debug", "startup"])
+		var action := _get_action_by_name(registry, action_name)
+		if action:
+			Log.info("Executing action", {"action": action_name}, ["debug", "startup"])
+			action.execute()
+			await action.execution_completed
+		else:
+			Log.error("Action not found", {"action": action_name}, ["debug", "startup", "error"])
+
+	Log.info("Debug startup complete", {}, ["debug", "startup"])
+	_cleanup_mobile_config()
+
+func _get_action_names() -> Array[String]:
+	print("Getting action names, mobile feature: ", OS.has_feature("mobile"))
+	# Inline platform differences - no abstraction needed for 2 conditions
+	if OS.has_feature("mobile"):
+		# TEMP: Use res:// path until we fix user:// path resolution
+		var actions := _parse_config_file("res://debug_startup_actions.json")
+		print("Mobile config parsed, actions: ", actions)
+		return actions
+	else:
+		# Desktop: try command line first, fallback to config
+		var cmd_actions := _parse_command_line()
+		return cmd_actions if not cmd_actions.is_empty() else _parse_config_file("res://debug_startup_actions.json")
+
+func _get_action_by_name(registry: DebugActionRegistry, action_name: String) -> DebugAction:
+	# Search through all actions since registry doesn't provide get_action(name)
+	var all_actions := registry.get_all_actions()
+	for action in all_actions:
+		if action.action_name == action_name:
+			return action
+	return null
+
+func _parse_command_line() -> Array[String]:
+	var args: PackedStringArray = OS.get_cmdline_args()
+	var actions: Array[String] = []
+
+	for i in range(args.size()):
+		if args[i] == "--debug-actions" and i + 1 < args.size():
+			# Split comma-separated actions
+			var action_list := args[i + 1].split(",")
+			for action in action_list:
+				actions.append(action.strip_edges())
+		elif args[i] == "--debug-action" and i + 1 < args.size():
+			# Single action
+			actions.append(args[i + 1].strip_edges())
+
+	return actions
+
+func _parse_config_file(path: String) -> Array[String]:
+	print("Parsing config file: ", path)
+
+	# Debug: Show the actual resolved path BEFORE trying to open
+	var resolved_path = ProjectSettings.globalize_path(path)
+	print("Resolved path: ", resolved_path)
+	
+	# Debug: Show user:// directory path and contents BEFORE trying to open
+	var user_dir_path = ProjectSettings.globalize_path("user://")
+	print("User directory resolves to: ", user_dir_path)
+
+	# Debug: Check if directory exists and list contents
+	var dir = DirAccess.open("user://")
+	if dir:
+		print("User directory exists. Contents:")
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		var file_count = 0
+		while file_name != "":
+			print("  - ", file_name)
+			file_name = dir.get_next()
+			file_count += 1
+		dir.list_dir_end()
+		if file_count == 0:
+			print("  (directory is empty)")
+	else:
+		print("Could not open user:// directory")
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		print("Config file not found: ", path)
+		print("Resolved path not found: ", resolved_path)
+
+		# Check if we can create a test file to verify write access
+		print("Testing write access to user:// directory...")
+		var test_file = FileAccess.open("user://test_write.txt", FileAccess.WRITE)
+		if test_file:
+			test_file.store_string("test")
+			test_file.close()
+			print("Write test successful - directory is writable")
+			# Clean up test file
+			var test_dir = DirAccess.open("user://")
+			if test_dir:
+				test_dir.remove("test_write.txt")
+		else:
+			print("Write test failed - directory not writable")
+
+		return []
+
+	print("Config file found, reading content...")
+	# Trust Godot's RAII - file auto-closes when out of scope
+	var json_text := file.get_as_text()
+	print("JSON content: ", json_text)
+	var json := JSON.new()
+	var result := json.parse(json_text)
+
+	if result != OK:
+		Log.error("Invalid JSON config", {"path": path, "error": json.get_error_message()}, ["debug", "startup", "error"])
+		print("JSON parse error: ", json.get_error_message())
+		return []
+
+	var data := json.data as Dictionary
+	if data.has("actions"):
+		var raw_actions := data.actions as Array
+		var actions: Array[String] = []
+		for action in raw_actions:
+			actions.append(str(action))
+		print("Parsed actions: ", actions)
+		return actions
+
+	print("No actions found in config")
+	return []
+
+func _wait_for_game_ready() -> void:
+	Log.info("Waiting for tree ready...", {}, ["debug", "startup"])
+	await get_tree().get_root().ready
+
+	# Wait a few frames to ensure autoloads are initialized
+	for i in range(3):
+		await get_tree().process_frame
+
+	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
+
+func _cleanup_mobile_config() -> void:
+	if not OS.has_feature("mobile"):
+		return
+
+	# TEMP: No cleanup needed when using res:// path
+	print("Mobile config cleanup skipped (using res:// path)")
+	# TODO: Restore user:// cleanup once path resolution is fixed
