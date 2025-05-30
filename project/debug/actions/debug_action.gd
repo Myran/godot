@@ -5,7 +5,7 @@ extends Resource
 
 @export var action_name: String = "Unnamed Action"
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"
-@export var group: String = "Default"  # e.g., "Basic", "Listeners", "Connectivity"
+@export var group: String = ""  # e.g., "Basic", "Listeners", "Connectivity"
 @export_multiline var description: String = "No description."
 @export var requires_confirmation: bool = false
 @export var keyboard_shortcut: String = ""

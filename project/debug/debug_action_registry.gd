@@ -79,6 +79,7 @@ func register_action(action: DebugAction) -> bool:
 
 	# Register the action
 	_actions[action.category][group_name].append(action)
+
 	_flat_actions.append(action)
 
 	Log.debug(
@@ -86,7 +87,7 @@ func register_action(action: DebugAction) -> bool:
 		{
 			"name": action.action_name,
 			"category": action.category,
-			"group": action.group,
+			"group": action.group if not action.group.is_empty() else "none",
 			"total_actions": _flat_actions.size()
 		},
 		["debug", "registration"]
