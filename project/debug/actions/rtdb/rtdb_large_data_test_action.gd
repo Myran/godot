@@ -86,8 +86,9 @@ func execute() -> void:
 			)
 			success_data["retrieval_success"] = true
 
-			# Verify data integrity
+			# Verify data integrity with fail-fast expectations
 			if retrieved_data is Dictionary and retrieved_data.has("metadata"):
+				var _verified_data: Dictionary = retrieved_data  # Fail fast if not Dictionary
 				success_data["data_integrity_check"] = "passed"
 			else:
 				success_data["data_integrity_check"] = "failed"

@@ -35,17 +35,19 @@ func _ready() -> void:
 
 func _register_all_actions() -> void:
 	# Register system-level actions (infrastructure/platform)
-	var system_actions_script = load("res://debug/actions/registrations/system_actions.gd")
+	var system_actions_script: GDScript = load(
+		"res://debug/actions/registrations/system_actions.gd"
+	)
 	if system_actions_script:
 		system_actions_script.register_all(self)
 
 	# Load and register actions from registration scripts
-	var rtdb_actions_script = load("res://debug/actions/registrations/rtdb_actions.gd")
+	var rtdb_actions_script: GDScript = load("res://debug/actions/registrations/rtdb_actions.gd")
 	if rtdb_actions_script:
 		rtdb_actions_script.register_all(self)
 
 	# Register game-specific actions (GameTwo domain logic)
-	var game_actions_script = load("res://debug/actions/registrations/game_actions.gd")
+	var game_actions_script: GDScript = load("res://debug/actions/registrations/game_actions.gd")
 	if game_actions_script:
 		game_actions_script.register_all(self)
 

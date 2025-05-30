@@ -9,7 +9,7 @@ const FONT_SIZE_XL: int = 32
 const FONT_SIZE_L: int = 30
 const FONT_SIZE_M: int = 24
 
-const UI_COLORS = {
+const UI_COLORS: Dictionary = {
 	"background": "#37474F",  # Maintain existing background
 	"surface": "#455A64",  # Maintain existing surface
 	"muted": "#9E9E9E",  # Muted gray
@@ -126,11 +126,11 @@ func _clear_navigation_state() -> void:
 	_update_toggle_button_state()
 
 
-func _set_run_all_button_text(text: String, visible: bool = true) -> void:
+func _set_run_all_button_text(text: String, _is_visible: bool = true) -> void:
 	"""Update the run all button text and visibility"""
 	if is_instance_valid(run_all_button):
 		run_all_button.text = text
-		run_all_button.visible = visible
+		run_all_button.visible = _is_visible
 
 
 func _ready() -> void:

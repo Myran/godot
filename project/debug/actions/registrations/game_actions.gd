@@ -9,7 +9,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_gameplay_actions(registry)
 	_register_match_level_actions(registry)
 	_register_lineup_actions(registry)
-	_register_card_actions(registry)
+	#_register_card_actions(registry)
 	_register_database_actions(registry)
 	_register_quick_actions(registry)
 
@@ -33,7 +33,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 1", func(): _load_match_level(1))
+			. create("Load Match Level 1", func() -> void: _load_match_level(1))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 1")
@@ -42,7 +42,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 2", func(): _load_match_level(2))
+			. create("Load Match Level 2", func() -> void: _load_match_level(2))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 2")
@@ -51,7 +51,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 3", func(): _load_match_level(3))
+			. create("Load Match Level 3", func() -> void: _load_match_level(3))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 3")
@@ -60,7 +60,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 4", func(): _load_match_level(4))
+			. create("Load Match Level 4", func() -> void: _load_match_level(4))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 4")
@@ -69,7 +69,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 5", func(): _load_match_level(5))
+			. create("Load Match Level 5", func() -> void: _load_match_level(5))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 5")
@@ -90,17 +90,17 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	)
 
 
-static func _register_card_actions(registry: DebugActionRegistry) -> void:
-	# Player Card Actions
-	registry.register_action(
-		(
-			DebugAction
-			. create("Spawn Test Cards", _spawn_test_cards)
-			. set_category("Gameplay")
-			. set_group("Cards")
-			. set_description("Spawns 3 random test cards for the player")
-		)
-	)
+#static func _register_card_actions(registry: DebugActionRegistry) -> void:
+	## Player Card Actions
+	#registry.register_action(
+		#(
+			#DebugAction
+			#. create("Spawn Test Cards", _spawn_test_cards)
+			#. set_category("Gameplay")
+			#. set_group("Cards")
+			#. set_description("Spawns 3 random test cards for the player")
+		#)
+	#)
 
 
 static func _register_database_actions(registry: DebugActionRegistry) -> void:
@@ -181,36 +181,39 @@ static func _populate_enemy_lineup() -> void:
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
-			new_card.block_context = Cards.CONTEXT.LINEUP
-			core.action(core.EnemyLineupAddCardEvent.new(new_card, n))
+			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			typed_card.block_context = Cards.CONTEXT.LINEUP
+			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
 
 	# Create debug cards
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
-			new_card.block_context = Cards.CONTEXT.LINEUP
-			core.action(core.DebugLineupAddCardEvent.new(new_card, n))
+			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			typed_card.block_context = Cards.CONTEXT.LINEUP
+			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
 	Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
 
 
-static func _spawn_test_cards() -> void:
-	# Spawn 3 random test cards for the player
-	if not is_instance_valid(card_controller) or not is_instance_valid(core):
-		Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
-		return
-
-	Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
-
-	for i: int in 3:
-		var card: Variant = await card_controller.get_card_from_pool()
-		if card:
-			# Add to player's hand or appropriate location
-			core.action(core.DrawCardEvent.new(card))
-			var card_id: String = str(card.get("id")) if card.has("id") else "unknown"
-			Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
-
-	Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
+#static func _spawn_test_cards() -> void:
+	## Spawn 3 random test cards for the player
+	#if not is_instance_valid(card_controller) or not is_instance_valid(core):
+		#Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
+		#return
+#
+	#Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
+#
+	#for i: int in 3:
+		#var card: Variant = await card_controller.get_card_from_pool()
+		#if card:
+			#var typed_card: Card = card  # Fail fast if not actually a Card
+			## Add to player's hand or appropriate location
+			#core.action(core.DrawCardEvent.new(typed_card))
+			#var card_id: String = str(typed_card.get("id")) if typed_card.has("id") else "unknown"
+			#Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
+#
+	#Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
 
 
 static func _clear_card_cache() -> void:

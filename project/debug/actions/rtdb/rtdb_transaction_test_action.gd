@@ -57,9 +57,9 @@ func execute() -> void:
 	var actual_final_count: int = 0
 
 	if verify_result.success and verify_result.data is Dictionary:
-		actual_final_count = (
-			verify_result.data.get("counter") if verify_result.data.has("counter") else 0
-		)
+		# Fail-fast: We expect Firebase to return a Dictionary when successful
+		var verified_data: Dictionary = verify_result.data
+		actual_final_count = verified_data.get("counter", 0)
 
 	var all_transactions_successful: bool = true
 	for result: Dictionary in transaction_results:

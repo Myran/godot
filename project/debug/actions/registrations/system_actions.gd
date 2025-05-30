@@ -30,7 +30,7 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("Show Registry Stats", func(): _show_registry_stats(registry))
+			. create("Show Registry Stats", func() -> void: _show_registry_stats(registry))
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Display debug action registry statistics")
