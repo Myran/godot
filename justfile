@@ -327,8 +327,8 @@ save-android-project:
     echo "📦 Exporting project files to Android build directory..."
     
     # Export project files using Godot's export system
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android" \
-        --export-pack ../android_project_export.pck
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android apk" \
+        ../android_project_export.apk
     
     echo "✅ Project files exported successfully"
 
