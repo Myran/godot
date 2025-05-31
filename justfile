@@ -407,6 +407,13 @@ restart-android-app:
 # Complete build, install and run workflow (convenience command)
 install-and-run-android-gradle: save-android-project install-android-app run-android-app
 
+# Complete Android development workflow with optional debug config and testing
+android-build-run CONFIG="current" TEST="false":
+    just install-and-run-android-gradle
+    @if [ "{{CONFIG}}" != "current" ]; then just push-debug-config {{CONFIG}}; fi
+    just restart-android-app
+    @if [ "{{TEST}}" == "true" ]; then just test-android-debug-startup {{CONFIG}}; fi
+
 # ================================
 # DEBUG CONFIG MANAGEMENT
 # ================================
