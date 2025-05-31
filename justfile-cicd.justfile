@@ -24,7 +24,7 @@ generate-gitlab-ci:
     echo '    - just build-editor' >> .gitlab-ci.yml
     echo '    - just build-templates' >> .gitlab-ci.yml
     echo '    - just build-android' >> .gitlab-ci.yml
-    echo '    - just build-ios' >> .gitlab-ci.yml
+    echo '    - just ios-build' >> .gitlab-ci.yml
     echo '  artifacts:' >> .gitlab-ci.yml
     echo '    paths:' >> .gitlab-ci.yml
     echo '      - editor/' >> .gitlab-ci.yml
@@ -63,7 +63,7 @@ ci-cd: validate-env
     just full-process
 
 # Deploy to App Store
-deploy-ios: build-ios
+deploy-ios: ios-build
     @echo "Deploying to App Store..."
     cd export/ios && fastlane beta
 
