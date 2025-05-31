@@ -1,11 +1,11 @@
 # Run-related commands for Godot 4 Projects
 
-# Run project on desktop
+# LEVEL 1: Launch in Godot editor (1-2 sec, no build needed)
 run-desktop:
     @echo "Running project on desktop..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
-# Run project on desktop in debug mode
+# LEVEL 1: Launch in Godot editor with debug (1-2 sec, no build needed)
 run-desktop-debug:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -32,7 +32,7 @@ run-desktop-debug:
         echo "Debug process terminated"
     fi
 
-# Run project on iPhone
+# LEVEL 1: Launch existing app (1-2 sec, no changes)
 run-iphone: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
@@ -49,7 +49,7 @@ run-iphone: pre-build
     echo "Launching app on iPhone..."
     xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
 
-# Run project on iPhone in debug mode
+# LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
 run-iphone-debug: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
@@ -66,7 +66,7 @@ run-iphone-debug: pre-build
     echo "Launching app on iPhone in debug mode..."
     xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
 
-# Run project on iPad
+# LEVEL 1: Launch existing app (1-2 sec, no changes)
 run-ipad: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
@@ -83,7 +83,7 @@ run-ipad: pre-build
     echo "Launching app on iPad..."
     xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
 
-# Run project on iPad in debug mode
+# LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
 run-ipad-debug: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
@@ -100,7 +100,7 @@ run-ipad-debug: pre-build
     echo "Launching app on iPad in debug mode..."
     xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
 
-# Run project on Android (release version)
+# LEVEL 1: Install & launch APK (30 sec, requires existing APK)
 run-android:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -119,7 +119,7 @@ run-android:
     echo "Running the app..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
 
-# Run project on Android (debug version)
+# LEVEL 1: Install & launch debug APK (30 sec, requires existing APK)
 run-android-debug:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -138,17 +138,23 @@ run-android-debug:
     echo "Running the app..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
 
-# Build iOS project and run on iPhone
-build-and-run-iphone:
-    @echo "Building iOS project and running on iPhone..."
+# LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
+update-content-iphone:
+    @echo "Updating game content and running on iPhone..."
     just ios-update-pck
     just run-iphone
 
-# Build iOS project and run on iPad  
-build-and-run-ipad:
-    @echo "Building iOS project and running on iPad..."
+# LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
+update-content-ipad:
+    @echo "Updating game content and running on iPad..."
     just ios-update-pck
     just run-ipad
+
+# Legacy alias for update-content-iphone (DEPRECATED)
+build-and-run-iphone: update-content-iphone
+
+# Legacy alias for update-content-ipad (DEPRECATED)  
+build-and-run-ipad: update-content-ipad
 
 # Legacy aliases for backward compatibility (DEPRECATED - use explicit run-* commands)
 run target *args='':
@@ -156,8 +162,8 @@ run target *args='':
     @echo "   Examples: just run-iphone, just run-android, just run-desktop"
     @echo "   Run 'just --list | grep run-' to see all available run commands"
 
-# Legacy aliases (DEPRECATED)
+# Legacy aliases (DEPRECATED - use new clear names)
 install-and-run-android: run-android
 install-and-run-android-debug: run-android-debug
-save-and-run-iphone: build-and-run-iphone
+save-and-run-iphone: update-content-iphone
 run-debug: run-desktop-debug
