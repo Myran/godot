@@ -18,7 +18,9 @@ export PROJECT_PATH := justfile_directory() + "/project"
 export ANDROID_SDK_PATH := env_var_or_default("ANDROID_SDK_PATH", "~/Library/Android/sdk")
 export ANDROID_NDK_PATH := env_var_or_default("ANDROID_NDK_PATH", ANDROID_SDK_PATH + "/ndk/25.1.8937393")
 export ANDROID_PACKAGE_NAME := env_var_or_default("ANDROID_PACKAGE_NAME", "com.primaryhive." + GAME_NAME)
-export IOS_BUNDLE_IDENTIFIER := env_var_or_default("IOS_BUNDLE_IDENTIFIER", "com.godotengine." + GAME_NAME)
+export IOS_BUNDLE_IDENTIFIER := env_var_or_default("IOS_BUNDLE_IDENTIFIER", "com.primaryhive." + GAME_NAME)
+export IOS_IPHONE_DEVICE_ID := env_var_or_default("IOS_IPHONE_DEVICE_ID", "C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48")
+export IOS_IPAD_DEVICE_ID := env_var_or_default("IOS_IPAD_DEVICE_ID", "A4045434-B5F5-48B5-8654-C128A403149A")
 export KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")
 export KEYSTORE_PASSWORD := env_var_or_default("KEYSTORE_PASSWORD", "lovegametwo")
 export KEY_PASSWORD := env_var_or_default("KEY_PASSWORD", "lovegametwo")
@@ -804,6 +806,13 @@ help-run:
     echo "  • iOS commands require Xcode and device setup"
     echo "  • Android commands use device ID: {{ANDROID_DEVICE_ID}}"
     echo "  • Desktop commands run in the editor environment"
+    echo ""
+    echo "⚙️  DEVICE CONFIGURATION"
+    echo "  Configure device IDs via environment variables:"
+    echo "  • IOS_IPHONE_DEVICE_ID={{IOS_IPHONE_DEVICE_ID}}"
+    echo "  • IOS_IPAD_DEVICE_ID={{IOS_IPAD_DEVICE_ID}}"
+    echo "  • ANDROID_DEVICE_ID={{ANDROID_DEVICE_ID}}"
+    echo "  • IOS_BUNDLE_IDENTIFIER={{IOS_BUNDLE_IDENTIFIER}}"
     echo ""
     echo "🔧 LEGACY SUPPORT"
     echo "  The old 'just run <target>' command still works but shows a"

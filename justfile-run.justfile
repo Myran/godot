@@ -141,13 +141,13 @@ run-android-debug:
 # Build iOS project and run on iPhone
 build-and-run-iphone:
     @echo "Building iOS project and running on iPhone..."
-    just save-ios-to-app
+    just ios-update-pck
     just run-iphone
 
 # Build iOS project and run on iPad  
 build-and-run-ipad:
     @echo "Building iOS project and running on iPad..."
-    just save-ios-to-app
+    just ios-update-pck
     just run-ipad
 
 # Legacy aliases for backward compatibility (DEPRECATED - use explicit run-* commands)
