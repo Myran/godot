@@ -149,7 +149,8 @@ func _on_scan_tags() -> void:
 		)
 
 	# Test iOS logging while scanning
-	_test_platform_logging()
+	if _show_editor_debug:
+		_test_platform_logging()
 
 	# Signal the results
 	tags_scanned.emit(added_count)
