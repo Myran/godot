@@ -75,8 +75,8 @@ func execute() -> void:
 	if action_callable.is_valid():
 		_update_status("Executing " + action_name + "...")
 		var result: Variant = await action_callable.call()
-		execution_completed.emit(true, result)
 		_update_status("Completed: " + action_name)
+		execution_completed.emit(true, result)
 	else:
 		# Subclasses can override this for resource-based actions
 		_update_status("ERROR: No execute method defined for " + action_name, true)

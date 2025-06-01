@@ -83,8 +83,11 @@ help:
     echo "  just restart-android-app         # Force restart Android app"
     echo ""
     echo "🐛 DEBUG CONFIGS"
+    echo "  just push-config <config>        # Push config to user:// (2 sec!) ⚡ RECOMMENDED"
+    echo "  just push-config-restart <config># Push + restart app (5 sec!) 🚀 RECOMMENDED"
+    echo "  just config-status               # Check current config status"
     echo "  just config-list                 # List available configs"
-    echo "  just hotconfig-android <config>  # Hot push config (2 sec!)"
+    echo "  just hotconfig-android <config>  # Hot push config (legacy, 2 sec!)"
     echo "  just config-clear                # Clear external config"
     echo ""
     echo "🛠️  SETUP"
@@ -390,10 +393,15 @@ export-apk-android:
 # ANDROID COMMANDS - FAST BUILD (NO HOT RELOAD)
 # ================================
 
-# Fast Android rebuild and install - Gradle only (30-60 sec, no templates)
+# Fast Android rebuild and install - Hybrid approach (30-60 sec, no templates)
 fastbuild-android:
-    @echo "⚡ Fast Android rebuild (30-60 sec)..."
+    @echo "⚡ Fast Android rebuild with hybrid approach (30-60 sec)..."
+    @echo "   🔄 Step 1: Processing GDScript changes with Godot export..."
+    @echo "   🔨 Step 2: Fast gradle build with custom parameters..."
     @echo "   ⚠️  Android limitation: Full reinstall required (no hot reload like iOS)"
+    # First: Process GDScript changes via Godot export (creates/updates android build files)
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android apk" /tmp/temp_android_export.apk
+    # Second: Use direct gradle for fast, customized build and install
     just _gradle-build-install-android
     just launch-android
 
@@ -480,6 +488,145 @@ hotconfig-android CONFIG_NAME:
     @just restart-android-app
     @echo "✅ Config updated without rebuild!"
 
+
+# ================================ 
+# CONSOLIDATED CONFIG COMMANDS (RECOMMENDED)
+# ================================
+
+# Push config to device user:// directory (no restart) - FAST: 2 seconds
+push-config CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📱 Pushing config to Android device..."
+    
+    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+    
+    # Verify config file exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        exit 1
+    fi
+    
+    # Verify device connection
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Device {{ANDROID_DEVICE_ID}} not connected"
+        exit 1
+    fi
+    
+    echo "📄 Config content to push:"
+    cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
+    echo ""
+    
+    # Android user:// directory maps to app's private files directory: /data/data/{package}/files/
+    USER_DIR="/data/data/{{ANDROID_PACKAGE_NAME}}/files"
+    REMOTE_CONFIG="$USER_DIR/debug_startup_actions.json"
+    
+    echo "🔧 Pushing to user:// directory (app private storage)..."
+    echo "📁 Target: $REMOTE_CONFIG"
+    
+    # Check if app is debuggable and run-as works
+    echo "🔍 Testing run-as access to app private directory..."
+    if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} echo 'Access OK'" 2>/dev/null | grep -q "Access OK"; then
+        echo "✅ run-as access confirmed"
+        
+        # Use temporary location on external storage first
+        TEMP_CONFIG="/sdcard/temp_debug_config.json"
+        
+        echo "📱 Uploading config to temporary location..."
+        if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
+            echo "✅ Config uploaded to temp location"
+            
+            # Copy from temp to app private directory using run-as
+            echo "📁 Copying to app private directory (user://)..."
+            if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
+                echo "✅ Config copied to user:// directory"
+                
+                # Cleanup temp file
+                adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
+                
+                # Verify file exists in user:// directory
+                echo "🔍 Verifying config in user:// directory..."
+                if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} ls files/debug_startup_actions.json" >/dev/null 2>&1; then
+                    echo "✅ Config file verified in user:// directory!"
+                    
+                    # Show content to verify
+                    echo "📄 Config content from user:// directory:"
+                    adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cat files/debug_startup_actions.json" 2>/dev/null || echo "  (could not read content)"
+                else
+                    echo "❌ Config file not found in user:// directory after copy"
+                    
+                    # Debug: List files in user:// directory:"
+                    echo "📋 Files in user:// directory:"
+                    adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} ls -la files/" 2>/dev/null || echo "  (could not list files)"
+                    exit 1
+                fi
+            else
+                echo "❌ Failed to copy config to user:// directory"
+                echo "💡 This might be a permissions issue or the app is not debuggable"
+                exit 1
+            fi
+        else
+            echo "❌ Failed to upload config to temp location"
+            exit 1
+        fi
+    else
+        echo "❌ Cannot access app private directory with run-as"
+        echo "💡 This usually means:"
+        echo "   - App is not debuggable (release build)"
+        echo "   - App is not installed"  
+        echo "   - Device doesn't support run-as"
+        exit 1
+    fi
+    
+    echo "✅ Config pushed to user:// directory!"
+    echo "💡 App will use this config on next start/restart"
+    echo "💡 Use 'just push-config-restart {{CONFIG_NAME}}' to push + restart immediately"
+
+# Push config to device AND restart app - FAST: 5 seconds 
+push-config-restart CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🚀 Pushing config and restarting app..."
+    
+    # First push the config (reuse the push-config command)
+    just push-config {{CONFIG_NAME}}
+    
+    echo ""
+    echo "🔄 Restarting app to apply new config..."
+    just restart-android-app
+    
+    echo "✅ Config pushed and app restarted!"
+    echo "💡 Monitor with: just test-android-debug-startup {{CONFIG_NAME}}"
+
+# Check current config status
+config-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📱 Android Debug Config Status"
+    echo "============================="
+    echo "Device: {{ANDROID_DEVICE_ID}}"
+    echo "Package: {{ANDROID_PACKAGE_NAME}}"
+    echo ""
+    
+    # Check external config in user:// directory on device
+    echo "📱 External config status in user:// directory:"
+    if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} ls files/debug_startup_actions.json" >/dev/null 2>&1; then
+        echo "✅ External config exists in user:// (ACTIVE - highest priority)"
+        echo "📄 Content:"
+        adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cat files/debug_startup_actions.json" 2>/dev/null | jq . 2>/dev/null || \
+        adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cat files/debug_startup_actions.json" 2>/dev/null || echo "  (could not read content)"
+    else
+        echo "❌ No external config in user:// directory"
+    fi
+    echo ""
+    
+    echo "💡 Available commands:"
+    echo "  just push-config <config>        # Push config (no restart)"
+    echo "  just push-config-restart <config># Push config + restart app"
+    echo "  just restart-android-app         # Just restart app"
 
 # ================================
 # DEBUG CONFIG MANAGEMENT

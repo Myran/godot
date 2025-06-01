@@ -12,7 +12,8 @@ enum DebugEventType {
 	EVENT_RESET_MATCH_LEVEL,  # Preserved from original debug.gd
 	EVENT_FORCE_LOAD_MATCH_LEVEL,  # Preserved from original debug.gd
 	EVENT_OPEN_DB_DEBUG_MENU,  # Preserved from original debug.gd
-	EVENT_CLOSE_DB_DEBUG_MENU  # Preserved from original debug.gd
+	EVENT_CLOSE_DB_DEBUG_MENU,  # Preserved from original debug.gd
+	EVENT_QUIT
 }
 
 # Keep legacy popup here if desired, or move its control elsewhere
@@ -52,6 +53,8 @@ func action(type: DebugEventType, args: Array = []) -> void:
 
 func _on_debug_event(event_type: DebugEventType, args: Array = []) -> void:
 	match event_type:
+		DebugEventType.EVENT_QUIT:
+			get_tree().quit(0)
 		DebugEventType.EVENT_OPEN_LEGACY_POPUP:
 			if popup_debug:
 				popup_debug.show()

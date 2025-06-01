@@ -142,6 +142,8 @@ func _init() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
+		if not is_instance_valid(Log):
+			return
 		Log.error(
 			"FirebaseBackend PREDELETE notification (DirectAwait Pattern)",
 			{

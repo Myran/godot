@@ -1,7 +1,9 @@
 extends Node
 
+
 func _init() -> void:
 	print("DebugStartupCoordinator _init() called")
+
 
 func _ready() -> void:
 	print("DebugStartupCoordinator _ready() called")
@@ -17,7 +19,9 @@ func _ready() -> void:
 
 	# Get actions from command line or config (inline platform logic)
 	var actions := _get_action_names()
-	Log.info("Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"])
+	Log.info(
+		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
+	)
 
 	if actions.is_empty():
 		Log.info("No debug startup actions to execute", {}, ["debug", "startup"])
@@ -37,25 +41,44 @@ func _ready() -> void:
 		if action:
 			Log.info("Executing action", {"action": action_name}, ["debug", "startup"])
 			action.execute()
-			await action.execution_completed
+			#	await action.execution_completed
+			Log.info("Next action..", {}, ["debug", "startup"])
 		else:
 			Log.error("Action not found", {"action": action_name}, ["debug", "startup", "error"])
 
 	Log.info("Debug startup complete", {}, ["debug", "startup"])
-	_cleanup_mobile_config()
+	# _cleanup_mobile_config()  # Disabled: Keep external config persistent for reuse
+
 
 func _get_action_names() -> Array[String]:
 	print("Getting action names, mobile feature: ", OS.has_feature("mobile"))
 	# Inline platform differences - no abstraction needed for 2 conditions
 	if OS.has_feature("mobile"):
-		# TEMP: Use res:// path until we fix user:// path resolution
-		var actions := _parse_config_file("res://debug_startup_actions.json")
-		print("Mobile config parsed, actions: ", actions)
-		return actions
+		# Check user:// first (external config), then fallback to res:// (embedded config)
+		print("Checking for external config in user:// directory...")
+		
+		# FIXED: Check if external config file EXISTS, not if actions array is empty
+		var external_config_path := "user://debug_startup_actions.json"
+		if FileAccess.file_exists(external_config_path):
+			print("External config file found, parsing...")
+			var external_actions := _parse_config_file(external_config_path)
+			print("External config found in user:// with actions: ", external_actions)
+			print("Using external config (even if empty - respecting user choice)")
+			return external_actions
+		
+		print("No external config file found, using embedded config...")
+		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
+		print("Embedded config parsed, actions: ", embedded_actions)
+		return embedded_actions
 	else:
 		# Desktop: try command line first, fallback to config
 		var cmd_actions := _parse_command_line()
-		return cmd_actions if not cmd_actions.is_empty() else _parse_config_file("res://debug_startup_actions.json")
+		return (
+			cmd_actions
+			if not cmd_actions.is_empty()
+			else _parse_config_file("res://debug_startup_actions.json")
+		)
+
 
 func _get_action_by_name(registry: DebugActionRegistry, action_name: String) -> DebugAction:
 	# Search through all actions since registry doesn't provide get_action(name)
@@ -64,6 +87,7 @@ func _get_action_by_name(registry: DebugActionRegistry, action_name: String) -> 
 		if action.action_name == action_name:
 			return action
 	return null
+
 
 func _parse_command_line() -> Array[String]:
 	var args: PackedStringArray = OS.get_cmdline_args()
@@ -81,13 +105,14 @@ func _parse_command_line() -> Array[String]:
 
 	return actions
 
+
 func _parse_config_file(path: String) -> Array[String]:
 	print("Parsing config file: ", path)
 
 	# Debug: Show the actual resolved path BEFORE trying to open
 	var resolved_path = ProjectSettings.globalize_path(path)
 	print("Resolved path: ", resolved_path)
-	
+
 	# Debug: Show user:// directory path and contents BEFORE trying to open
 	var user_dir_path = ProjectSettings.globalize_path("user://")
 	print("User directory resolves to: ", user_dir_path)
@@ -138,7 +163,11 @@ func _parse_config_file(path: String) -> Array[String]:
 	var result := json.parse(json_text)
 
 	if result != OK:
-		Log.error("Invalid JSON config", {"path": path, "error": json.get_error_message()}, ["debug", "startup", "error"])
+		Log.error(
+			"Invalid JSON config",
+			{"path": path, "error": json.get_error_message()},
+			["debug", "startup", "error"]
+		)
 		print("JSON parse error: ", json.get_error_message())
 		return []
 
@@ -154,6 +183,7 @@ func _parse_config_file(path: String) -> Array[String]:
 	print("No actions found in config")
 	return []
 
+
 func _wait_for_game_ready() -> void:
 	Log.info("Waiting for tree ready...", {}, ["debug", "startup"])
 	await get_tree().get_root().ready
@@ -164,10 +194,23 @@ func _wait_for_game_ready() -> void:
 
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
 
+
 func _cleanup_mobile_config() -> void:
 	if not OS.has_feature("mobile"):
 		return
 
-	# TEMP: No cleanup needed when using res:// path
-	print("Mobile config cleanup skipped (using res:// path)")
-	# TODO: Restore user:// cleanup once path resolution is fixed
+	# Clean up external config file if it exists
+	var external_config_path := "user://debug_startup_actions.json"
+	if FileAccess.file_exists(external_config_path):
+		print("Cleaning up external config file: ", external_config_path)
+		var dir := DirAccess.open("user://")
+		if dir:
+			var result := dir.remove("debug_startup_actions.json")
+			if result == OK:
+				print("External config file cleaned up successfully")
+			else:
+				print("Failed to clean up external config file: ", result)
+		else:
+			print("Could not access user:// directory for cleanup")
+	else:
+		print("No external config file to clean up")
