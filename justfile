@@ -45,7 +45,8 @@ default:
     @just help
 c:
     @just --choose
-    
+l:
+    @just -l
 # Comprehensive help system for all commands
 help:
     #!/usr/bin/env bash
@@ -53,75 +54,52 @@ help:
     echo "🚀 GameTwo Development Environment"
     echo "=================================="
     echo ""
-    echo "⚡ DAILY COMMANDS"
-    echo "  just android-dev [config]        # Complete Android workflow"
-    echo "  just ios-dev                     # Complete iOS workflow"  
-    echo "  just check [log]                 # Validate GDScript code"
-    echo "  just open                        # Open Godot editor"
+    echo "⚡ DAILY DEVELOPMENT"
+    echo "  just hotreload-ios-iphone        # iOS hot reload (5-10 sec) ✨"
+    echo "  just hotreload-ios-ipad          # iOS hot reload (5-10 sec) ✨"
+    echo "  just fastbuild-android           # Android fast build (30-60 sec) ⚡"
+    echo "  just run-desktop                 # Desktop (instant) 🚀"
     echo ""
-    echo "📱 RUN ON DEVICES"
-    echo "  just run-desktop                 # Run on desktop"
-    echo "  just run-android                 # Run on Android (automated)"
-    echo "  just run-iphone                  # Run on iPhone"
-    echo "  just run-ipad                    # Run on iPad"
-    echo "  just android-dev                 # Complete Android workflow"
+    echo "🏗️  BUILD COMMANDS"
+    echo "  just build-all                   # Everything for both platforms (40 min)"
+    echo "  just build-all-android           # Android only (20 min)"
+    echo "  just build-all-ios               # iOS only (20 min)"
+    echo "  just build-status                # Check what's built"
     echo ""
-    echo "🏃 DEVELOPMENT WORKFLOWS"
+    echo "📦 QUICK BUILDS (Skip editor/templates)"
+    echo "  just quick-build-android         # Android APK + AAB (2-3 min)"
+    echo "  just quick-build-ios             # iOS project (2-3 min)"
+    echo "  just quick-build-all             # Both platforms (5-10 min)"
     echo ""
-    echo "  📱 LEVEL 1: Launch Only (1-2 sec)"
-    echo "    just run-desktop               # Godot editor"
-    echo "    just run-iphone                # iPhone (existing app)"
-    echo "    just run-ipad                  # iPad (existing app)"
-    echo "    just run-android               # Android (install + launch)"
+    echo "🔥 HOT UPDATES"
+    echo "  just hotreload-ios-iphone        # Replace iOS game data (5-10 sec)"
+    echo "  just hotreload-ios-ipad          # Replace iOS game data (5-10 sec)"
+    echo "  just hotconfig-android <config>  # Push config only (2 sec!)"
     echo ""
-    echo "  🔄 LEVEL 2: Quick Updates (5-10 sec)"  
-    echo "    just update-content-iphone     # Update game data + launch"
-    echo "    just update-content-ipad       # Update game data + launch"
-    echo ""
-    echo "  🔨 LEVEL 3: Full Rebuild (2-5 min)"
-    echo "    just build-install-ios         # Complete iOS rebuild"
-    echo "    just android-dev               # Complete Android workflow"
-    echo ""
-    echo "🤖 ANDROID (Fully Automated)"
-    echo "  just android-export-apk          # Export APK (android-export)"
-    echo "  just android-build-install       # Build & install (android-install)"
-    echo "  just android-launch              # Launch app (android-run)"
-    echo "  just android-restart             # Restart app"
-    echo "  just android-quick [config]      # Quick config testing"
-    echo "  just android-logs [duration]     # Monitor logs"
-    echo ""
-    echo "🍎 iOS (Manual Steps Required)"  
-    echo "  just ios-export-pck              # Export game data (ios-export)"
-    echo "  just ios-build                   # Build with Xcode (ios-build)"
-    echo "  just ios-launch-help             # Launch instructions"
-    echo "  just ios-update-pck              # Update game data (save-ios-to-app)"
+    echo "🚀 LAUNCH COMMANDS"
+    echo "  just launch-android              # Launch existing Android app"
+    echo "  just launch-ios-iphone           # Launch existing iPhone app"
+    echo "  just launch-ios-ipad             # Launch existing iPad app"
+    echo "  just restart-android-app         # Force restart Android app"
     echo ""
     echo "🐛 DEBUG CONFIGS"
-    echo "  just config-list                 # List configs"
-    echo "  just config-push <n>          # Test config quickly"
-    echo "  just config-clear                # Clear config"
-    echo ""
-    echo "🚀 PRODUCTION"
-    echo "  just android-export-prod apk     # Production APK"
-    echo "  just android-export-prod aab     # Play Store bundle"
-    echo "  just ios-build                   # iOS build for Archive"
+    echo "  just config-list                 # List available configs"
+    echo "  just hotconfig-android <config>  # Hot push config (2 sec!)"
+    echo "  just config-clear                # Clear external config"
     echo ""
     echo "🛠️  SETUP"
     echo "  just templates-all               # Build all templates"
     echo "  just setup-android               # Setup Android environment"
     echo "  just build-editor                # Build custom Godot editor"
     echo ""
-    echo ""
     echo "📖 DETAILED HELP"
-    echo "  just help-run                    # Run commands guide"
+    echo "  just help-timing                 # Platform timing comparison"
+    echo "  just help-build                  # Build system guide"
     echo "  just help-android                # Android workflow guide"
     echo "  just help-ios                    # iOS workflow guide"
-    echo "  just help-debug                  # Debug config guide"
-    echo "  just help-production             # Production build guide"
-    echo "  just help-templates              # Template setup guide"
     echo "  just help-workflows              # Common workflow patterns"
     echo ""
-    echo "📋 just --list  🔍 just show <cmd>  💡 just help-workflows"
+    echo "📋 just --list  🔍 just show <cmd>  💡 just help-timing"
 
 # Gruvbox Material colors
 _gruvbox-colors:
@@ -141,7 +119,7 @@ _gruvbox-colors:
     @export ORANGE="#e78a4e"
     @export GRAY="#928374"
 
-# Build Godot editor
+# Build custom Godot editor from source
 build-editor: validate-env
     @echo "Building Godot editor..."
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor use_lto=yes --jobs={{jobs}} # vulkan_sdk_path=
@@ -161,9 +139,6 @@ templates-all:
     just templates-ios
     just templates-android
 
-# Legacy alias for templates-all
-build-templates: templates-all
-
 # build macos
 build-macos-templates: validate-env
     @echo "Building export templates..."
@@ -173,13 +148,10 @@ build-macos-templates: validate-env
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_debug.* templates/
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_release.* templates/
 
-# Run Godot editor
-open:
+# Open Godot editor for development
+edit:
     @echo "Running Godot editor..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --editor # --verbose --debug
-
-# Legacy alias for open command
-edit: open
 
 # Show the implementation of a specific command
 show COMMAND:
@@ -258,6 +230,8 @@ check OUTPUT="console":
         exit 1
     fi
 
+# Alias for check command (mentioned in project docs)
+validate OUTPUT="console": (check OUTPUT)
 
 # Pre-build hook
 pre-build:
@@ -364,53 +338,74 @@ setup-android:
     touch project/android/.gdignore
     echo "Done installing Android template"
 
-# Legacy alias for setup-android
-install-android-template: setup-android
-
-# Build and export for Android
-build-android BUILD_TYPE="apk": pre-build
-    @echo "Building and exporting for Android ({{BUILD_TYPE}})..."
+# LEVEL 3: Export AAB files via Godot (2-3 min, debug + release)
+export-aab-android: pre-build
+    @echo "📦 Exporting Android AAB files (debug + release)..."
     echo $ANDROID_KEYSTORE | base64 -d > android.keystore
     
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
-        --export-debug "Android {{BUILD_TYPE}}" \
-        ../export/android/{{GAME_NAME}}_debug.{{BUILD_TYPE}} --headless
+        --export-debug "Android aab" \
+        ../export/android/{{GAME_NAME}}_debug.aab --headless
     
     # Release build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
-        --export-release "Android {{BUILD_TYPE}}" \
-        ../export/android/{{GAME_NAME}}.{{BUILD_TYPE}} --headless
+        --export-release "Android aab" \
+        ../export/android/{{GAME_NAME}}.aab --headless
+    
+    @echo "✅ Android AAB files exported successfully"
+    @echo "📁 Debug: export/android/{{GAME_NAME}}_debug.aab"
+    @echo "📁 Release: export/android/{{GAME_NAME}}.aab"
 
-# Alias commands for easier use
-build-android-apk: (build-android "apk")
-build-android-aab: (build-android "aab")
+# LEVEL 3: Export both APK and AAB files (2-3 min, all formats)
+export-all-android:
+    @echo "📦 Exporting all Android formats (APK + AAB)..."
+    just export-apk-android
+    just export-aab-android
+    @echo "✅ All Android formats exported!"
 
 # ================================
 # ANDROID DEVELOPMENT WORKFLOW
 # ================================
 
-# Export complete Android APK file  
-android-export-apk:
+# LEVEL 3: Export APK files via Godot (2-3 min, debug + release)
+export-apk-android:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "📦 Exporting complete Android APK..."
+    echo "📦 Exporting Android APK files (debug + release)..."
     
-    # Export project files using Godot's export system
+    # Export debug APK
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android apk" \
-        ../android_project_export.apk
+        ../export/android/{{GAME_NAME}}_debug.apk
     
-    echo "✅ Android APK exported successfully"
+    # Export release APK  
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-release "Android apk" \
+        ../export/android/{{GAME_NAME}}.apk
+    
+    echo "✅ Android APK files exported successfully"
+    echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
+    echo "📁 Release: export/android/{{GAME_NAME}}.apk"
 
-# Build Android APK and install to device
-android-build-install:
+# ================================
+# ANDROID COMMANDS - FAST BUILD (NO HOT RELOAD)
+# ================================
+
+# Fast Android rebuild and install - Gradle only (30-60 sec, no templates)
+fastbuild-android:
+    @echo "⚡ Fast Android rebuild (30-60 sec)..."
+    @echo "   ⚠️  Android limitation: Full reinstall required (no hot reload like iOS)"
+    just _gradle-build-install-android
+    just launch-android
+
+# Internal helper: Gradle build + install (no launch)
+_gradle-build-install-android:
     #!/usr/bin/env bash
     set -euo pipefail
     
     # First insert Firebase dependencies
     just insert-firebase-dependencies
     
-    echo "🔨 Building Android APK with package: {{ANDROID_PACKAGE_NAME}}"
+    echo "🔨 Building Android APK with Gradle..."
     
     # Create timestamp for unique filename
     TIMESTAMP=$(date +%s)
@@ -457,38 +452,33 @@ android-build-install:
     echo "💾 APK saved at: $TEMP_DIR/$EXPORT_FILENAME"
 
 # Launch Android app on device
-android-launch:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🚀 Launching {{ANDROID_PACKAGE_NAME}}..."
-    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-    echo "✅ App launched!"
-
+launch-android:
+    @echo "🚀 Launching Android app..."
+    @adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    @echo "✅ App launched!"
 
 # Force stop and restart the Android app
-android-restart:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔄 Restarting {{ANDROID_PACKAGE_NAME}}..."
-    adb -s {{ANDROID_DEVICE_ID}} shell am force-stop {{ANDROID_PACKAGE_NAME}}
-    sleep 1
-    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-    echo "✅ App restarted!"
+restart-android-app:
+    @echo "🔄 Restarting Android app..."
+    @adb -s {{ANDROID_DEVICE_ID}} shell am force-stop {{ANDROID_PACKAGE_NAME}}
+    @sleep 1
+    @adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    @echo "✅ App restarted!"
 
-# Legacy aliases for android-restart command
-restart: android-restart
-restart-android-app: android-restart
+# Complete Android development workflow with optional debug config
+iterate-android CONFIG="current":
+    @echo "🔄 Android development iteration..."
+    just fastbuild-android
+    @if [ "{{CONFIG}}" != "current" ]; then just hotconfig-android {{CONFIG}}; fi
 
-# Complete Android workflow: export APK → build & install → launch
-android-full-workflow: android-export-apk android-build-install android-launch
-
-
-# Complete Android development workflow with optional debug config and testing
-android-dev CONFIG="current" TEST="false":
-    just android-full-workflow
-    @if [ "{{CONFIG}}" != "current" ]; then just config-push {{CONFIG}}; fi
-    just android-restart
-    @if [ "{{TEST}}" == "true" ]; then just android-test {{CONFIG}}; fi
+# Hot config push for Android (2 sec!)
+hotconfig-android CONFIG_NAME:
+    @echo "🔥 Hot config update for Android (2 sec)..."
+    @adb -s {{ANDROID_DEVICE_ID}} push \
+        project/debug_configs/{{CONFIG_NAME}}.json \
+    /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json
+    @just restart-android-app
+    @echo "✅ Config updated without rebuild!"
 
 
 # ================================
@@ -528,17 +518,12 @@ config-setup:
     echo "  📁 project/debug_configs/"
     ls -la project/debug_configs/
     echo ""
-    echo "💡 Use 'just set-debug-config <name>' to switch configs"
-    echo "   Example: just set-debug-config system-testing"
+    echo "💡 Use 'just config-set <name>' to switch configs"
+    echo "   Example: just config-set system-testing"
 
-# Legacy alias for config-setup
-setup-debug-configs: config-setup
 
 # Set a specific debug configuration (updates embedded config)
 config-set CONFIG_NAME:
-
-# Legacy alias for config-set
-set-debug-config CONFIG_NAME: (config-set CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -548,7 +533,7 @@ set-debug-config CONFIG_NAME: (config-set CONFIG_NAME)
     if [ ! -f "$CONFIG_FILE" ]; then
         echo "❌ Config file not found: $CONFIG_FILE"
         echo "📋 Available configs:"
-        ls -1 project/debug_configs/*.json 2>/dev/null | xargs -I {} basename {} .json | sed 's/^/  - /' || echo "  (none found - run 'just setup-debug-configs' first)"
+        ls -1 project/debug_configs/*.json 2>/dev/null | xargs -I {} basename {} .json | sed 's/^/  - /' || echo "  (none found - run 'just config-setup' first)"
         exit 1
     fi
     
@@ -610,7 +595,7 @@ restart-with-config CONFIG_NAME:
     echo "✅ App restarted with config: {{CONFIG_NAME}}"
 
 # Remove external debug config (fall back to embedded config)
-clear-external-debug-config:
+config-clear:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -623,7 +608,7 @@ clear-external-debug-config:
     echo "💡 Run 'just restart-android-app' to apply changes"
 
 # List available debug configurations
-list-debug-configs:
+config-list:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📋 Available debug configurations:"
@@ -631,7 +616,7 @@ list-debug-configs:
     
     if [ ! -d "project/debug_configs" ]; then
         echo "❌ No debug configs directory found"
-        echo "💡 Run 'just setup-debug-configs' to create sample configs"
+        echo "💡 Run 'just config-setup' to create sample configs"
         exit 1
     fi
     
@@ -646,7 +631,7 @@ list-debug-configs:
     
     echo "💡 Usage:"
     echo "  just restart-with-config <name>     # Quick testing (external config)"
-    echo "  just set-debug-config <name>        # Update embedded config"
+    echo "  just config-set <name>        # Update embedded config"
 
 # ================================
 # DEBUG TESTING & MONITORING
@@ -778,8 +763,8 @@ check-android-debug-status:
     echo "💡 Priority: External config overrides embedded config"
     echo "🔧 Commands:"
     echo "  just restart-with-config <name>     # Quick external config test"
-    echo "  just clear-external-debug-config    # Remove external, use embedded"
-    echo "  just set-debug-config <name>        # Update embedded config"
+    echo "  just config-clear                   # Remove external, use embedded"
+    echo "  just config-set <name>        # Update embedded config"
 
 # Android-specific help and workflow guide
 # Detailed help for run commands
@@ -795,20 +780,25 @@ help-run:
     echo "📱 LEVEL 1: Launch Only (1-2 seconds)"
     echo "  just run-desktop             # Launch in Godot editor"
     echo "  just run-desktop-debug       # Launch with debug output"
-    echo "  just run-iphone              # Launch existing iOS app"
-    echo "  just run-iphone-debug        # Launch iOS app (debug)"
-    echo "  just run-ipad                # Launch existing iOS app"
-    echo "  just run-ipad-debug          # Launch iOS app (debug)"
-    echo "  just run-android             # Install & launch Android APK"
-    echo "  just run-android-debug       # Install & launch debug APK"
+    echo "  just launch-ios-iphone       # Launch existing iOS app"
+    echo "  just launch-ios-iphone-debug # Launch iOS app (debug)"
+    echo "  just launch-ios-ipad         # Launch existing iOS app"
+    echo "  just launch-ios-ipad-debug   # Launch iOS app (debug)"
+    echo "  just launch-android          # Launch existing Android app"
+    echo "  just run-android-debug       # Launch existing Android app (debug)"
     echo ""
-    echo "🔄 LEVEL 2: Quick Updates (5-10 seconds)"
-    echo "  just update-content-iphone   # Export game data → update → launch"
-    echo "  just update-content-ipad     # Export game data → update → launch"
+    echo "🔄 LEVEL 2: Quick Updates"
+    echo "  iOS (5-10 seconds):"
+    echo "    just hotreload-ios-iphone # Export game data → update → launch"
+    echo "    just hotreload-ios-ipad   # Export game data → update → launch"
+    echo "  Android (30 sec - 2 min):"
+    echo "    just install-apk-android   # Install existing APK → launch"
+    echo "    just fastbuild-android     # Gradle build → install → launch"
     echo ""
     echo "🔨 LEVEL 3: Full Rebuild (2-5 minutes)"
     echo "  just build-install-ios       # Complete iOS project rebuild"
-    echo "  just android-dev             # Complete Android workflow"
+    echo "  just export-apk-android      # Export Android APK files"
+    echo "  just export-aab-android      # Export Android AAB files"
     echo ""
     echo "📋 WHAT EACH LEVEL DOES"
     echo "  LEVEL 1: App already built/installed → just launch"
@@ -822,7 +812,7 @@ help-run:
     echo ""
     echo "💡 TYPICAL WORKFLOW"
     echo "  Day 1: just build-install-ios        # Full setup (once)"
-    echo "  Daily: just update-content-iphone    # Fast iteration"
+    echo "  Daily: just hotreload-ios-iphone    # Fast iteration"
     echo ""
     echo "⚙️  DEVICE CONFIGURATION"
     echo "  Configure device IDs via environment variables:"
@@ -850,42 +840,43 @@ help-android:
     echo "Package: {{ANDROID_PACKAGE_NAME}}"
     echo ""
     echo "⚡ QUICK START:"
-    echo "  just android-dev                     # Complete build → install → run workflow"
-    echo "  just android-dev gameplay-testing   # With debug config"
-    echo "  just android-dev system-testing true # With debug config + monitoring"
+    echo "  just fastbuild-android               # Complete build → install → run workflow (30-60 sec)"
+    echo "  just iterate-android gameplay-testing # With debug config"
+    echo "  just quick-test system-testing       # Quick config test with monitoring"
     echo ""
     echo "🔧 STEP-BY-STEP COMMANDS:"
-    echo "  1️⃣  just android-export-apk          # Export complete APK file (android-export)"
-    echo "  2️⃣  just android-build-install       # Build APK with Gradle + install to device (android-install)"
-    echo "  3️⃣  just android-launch              # Launch app on device via adb (android-run)"
-    echo "  4️⃣  just android-restart             # Quick restart (for config changes)"
+    echo "  1️⃣  just export-apk-android          # Export complete APK file (2-3 min)"
+    echo "  2️⃣  just install-apk-android         # Install APK to device"
+    echo "  3️⃣  just launch-android              # Launch app on device via adb"
+    echo "  4️⃣  just restart-android-app         # Quick restart (for config changes)"
     echo ""
     echo "🐛 DEBUG CONFIGURATION WORKFLOW:"
     echo "  just config-list                     # See available debug configs"
-    echo "  just android-quick system-testing    # Push config + restart (rapid iteration)"
-    echo "  just config-push gameplay-testing    # Push specific config to device"
-    echo "  just android-logs 30                 # Monitor device logs for 30 seconds"
-    echo "  just android-status                  # Check device + app status"
-    echo "  just android-test performance-testing # Test debug startup system"
+    echo "  just restart-with-config system-testing # Push config + restart (rapid iteration)"
+    echo "  just push-debug-config gameplay-testing # Push specific config to device"
+    echo "  just test-android-debug-startup 30   # Monitor debug startup and logs"
+    echo "  just check-android-debug-status      # Check device + app status"
+    echo "  just quick-test performance-testing  # Test debug startup system"
     echo ""
     echo "📱 DEVELOPMENT LOOP (FASTEST):"
     echo "  # Initial setup:"
-    echo "  just android-dev                     # Full workflow"
+    echo "  just fastbuild-android               # Full workflow (30-60 sec)"
     echo ""
     echo "  # Rapid iteration:"
-    echo "  just android-quick testing           # Quick config changes"
-    echo "  just android-restart                 # Just restart app"
-    echo "  just android-logs                    # Monitor what's happening"
+    echo "  just restart-with-config testing     # Quick config changes"
+    echo "  just restart-android-app             # Just restart app"
+    echo "  just hotconfig-android <config>      # Hot push config (2 sec!)"
     echo ""
     echo "🚀 PRODUCTION BUILDS:"
-    echo "  just android-export-prod apk         # Production APK for testing"
-    echo "  just android-export-prod aab         # App Bundle for Play Store"
+    echo "  just export-apk-android              # Production APK for testing"
+    echo "  just export-aab-android              # App Bundle for Play Store"
+    echo "  just deploy-android                  # Deploy to Play Store"
     echo ""
     echo "🔍 TROUBLESHOOTING:"
     echo "  • Device not found: Check 'adb devices' and ANDROID_DEVICE_ID variable"
     echo "  • Install fails: Run 'adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}}'"
-    echo "  • App won't start: Check 'just android-logs' for errors"
-    echo "  • Gradle issues: Run 'just clean-android' then retry"
+    echo "  • App won't start: Check 'just test-android-debug-startup' for errors"
+    echo "  • Gradle issues: Run 'just clean-android-templates' then retry"
     echo ""
 
 # iOS-specific help and workflow guide  
@@ -900,7 +891,7 @@ help-ios:
     echo "Reason: iOS security model requires manual interaction with Xcode/Simulator/iPhone/iPad"
     echo ""
     echo "⚡ QUICK START:"
-    echo "  just ios-dev                         # Export game data + build with Xcode"
+    echo "  just build-install-ios                         # Export game data + build with Xcode"
     echo "  just ios-launch-help                 # Get instructions for manual launch"
     echo ""
     echo "🔧 STEP-BY-STEP WORKFLOW:"
@@ -912,7 +903,7 @@ help-ios:
     echo "📱 DEVELOPMENT WORKFLOWS:"
     echo ""
     echo "  🎯 COMPLETE WORKFLOW:"
-    echo "    just ios-dev                       # Automated: export + build"
+    echo "    just build-install-ios                       # Automated: export + build"
     echo "    # Then manually: Open Xcode workspace and run"
     echo ""
     echo "  🔄 QUICK ITERATION (Game Changes Only):"
@@ -979,34 +970,34 @@ help-debug:
     echo "⚡ QUICK START:"
     echo "  just config-setup                    # Create sample debug configurations"
     echo "  just config-list                     # See available configs"
-    echo "  just android-dev gameplay-testing    # Test with specific config"
-    echo "  just android-quick system-testing    # Quick config iteration"
+    echo "  just iterate-android gameplay-testing # Test with specific config"
+    echo "  just quick-test system-testing       # Quick config iteration"
     echo ""
     echo "🔧 CONFIGURATION MANAGEMENT:"
     echo "  just config-setup                    # Create sample debug configurations"
     echo "  just config-list                     # List all available configs"
     echo "  just config-set performance-testing  # Set embedded debug config"
-    echo "  just config-push gameplay-testing    # Push config to device (quick testing)"
+    echo "  just push-debug-config gameplay-testing # Push config to device (quick testing)"
     echo "  just config-clear                    # Clear external config, use embedded"
     echo ""
     echo "🔄 DEBUG WORKFLOW PATTERNS:"
     echo ""
     echo "  🎯 RAPID CONFIG ITERATION:"
-    echo "    just android-dev                   # Initial setup"
-    echo "    just android-quick testing         # Test config changes (fast)"
-    echo "    just android-quick performance     # Test different config"
-    echo "    just android-logs 30               # Monitor results"
+    echo "    just fastbuild-android             # Initial setup"
+    echo "    just restart-with-config testing   # Test config changes (fast)"
+    echo "    just quick-test performance        # Test different config"
+    echo "    just test-android-debug-startup 30 # Monitor results"
     echo ""
     echo "  🧪 SYSTEMATIC TESTING:"
     echo "    just config-list                   # See all available configs"
-    echo "    just android-dev gameplay-testing true # Test with monitoring"
-    echo "    just android-test performance-testing  # Test debug startup"
-    echo "    just android-status                # Check device status"
+    echo "    just iterate-android gameplay-testing # Test with specific config"
+    echo "    just test-android-debug-startup performance-testing # Test debug startup"
+    echo "    just check-android-debug-status    # Check device status"
     echo ""
     echo "  📊 PERFORMANCE ANALYSIS:"
-    echo "    just android-dev performance-testing # Launch with perf config"
-    echo "    just android-logs 60               # Extended monitoring"
-    echo "    just android-quick baseline        # Compare with baseline"
+    echo "    just iterate-android performance-testing # Launch with perf config"
+    echo "    just test-android-debug-startup 60 # Extended monitoring"
+    echo "    just restart-with-config baseline   # Compare with baseline"
     echo ""
     echo "📱 CONFIGURATION TYPES:"
     echo "  • gameplay-testing: Gameplay mechanics and features"
@@ -1016,15 +1007,15 @@ help-debug:
     echo "  • database-testing: Database and persistence testing"
     echo ""
     echo "🔍 MONITORING & DEBUGGING:"
-    echo "  just android-logs [duration]         # Monitor device logs"
-    echo "  just android-status                  # Check device & app status"
-    echo "  just android-test [config]           # Test debug startup system"
+    echo "  just test-android-debug-startup [duration] # Monitor device logs"
+    echo "  just check-android-debug-status      # Check device & app status"
+    echo "  just quick-test [config]             # Test debug startup system"
     echo "  just check log                       # Validate GDScript and log errors"
     echo ""
     echo "💡 BEST PRACTICES:"
-    echo "  ✅ Use android-quick for rapid config iteration (fastest)"
-    echo "  ✅ Use android-dev with config for complete testing"
-    echo "  ✅ Always run android-logs to see immediate feedback"
+    echo "  ✅ Use restart-with-config for rapid config iteration (fastest)"
+    echo "  ✅ Use iterate-android with config for complete testing"
+    echo "  ✅ Always run test-android-debug-startup to see immediate feedback"
     echo "  ✅ Use config-clear to return to baseline"
     echo "  ⚠️  External configs override embedded configs"
     echo "  ⚠️  Remember to config-clear when done testing"
@@ -1279,7 +1270,7 @@ help-workflows:
     echo "  📱 ANDROID RAPID ITERATION:"
     echo "    just android-dev                   # Initial setup (once)"
     echo "    # Then for each change:"
-    echo "    just android-restart               # Quick restart (fastest)"
+    echo "    just restart-android-app           # Quick restart (fastest)"
     echo "    just android-logs 10               # Check results"
     echo "    # Perfect for: UI tweaks, small logic changes"
     echo ""
@@ -1291,7 +1282,7 @@ help-workflows:
     echo "    # Perfect for: Feature flags, performance tuning"
     echo ""
     echo "  🍎 iOS DEVELOPMENT CYCLE:"
-    echo "    just ios-dev                       # Export + build"
+    echo "    just build-install-ios                       # Export + build"
     echo "    just ios-launch-help               # Get launch instructions (new command)"
     echo "    # Then manually launch in Xcode (iPhone/iPad Simulator or real device)"
     echo "    # For quick iteration:"
@@ -1320,7 +1311,7 @@ help-workflows:
     echo "    just config-clear                  # Clear debug configs"
     echo "    just android-dev                   # Test clean build"
     echo "    just android-export-prod apk       # Create test build"
-    echo "    just ios-dev                       # Test iOS build"
+    echo "    just build-install-ios                       # Test iOS build"
     echo "    # Perfect for: Release preparation"
     echo ""
     echo "  📦 PRODUCTION DEPLOYMENT:"
@@ -1345,10 +1336,10 @@ help-workflows:
     echo "    # Perfect for: After Godot updates"
     echo ""
     echo "💡 WORKFLOW SELECTION GUIDE:"
-    echo "  • Small changes: android-restart"
+    echo "  • Small changes: restart-android-app"
     echo "  • Config testing: android-quick"
     echo "  • Major changes: android-dev"
-    echo "  • iOS changes: ios-dev + manual launch"
+    echo "  • iOS changes: build-install-ios + manual launch"
     echo "  • Bug hunting: check + logs + systematic testing"
     echo "  • Performance: performance-testing config"
     echo "  • Release prep: full validation + clean builds"
@@ -1393,23 +1384,167 @@ build-install-ios:
     @echo "✅ iOS development workflow complete!"
     @echo "💡 Next: Use ios-launch-help for manual launch steps"
 
-# Legacy alias for build-install-ios (DEPRECATED)
-ios-dev: build-install-ios
 
 
 
-# Full build and deploy process
+# ================================
+# BUILD COMMANDS - PLATFORM SPECIFIC
+# ================================
+
+# Full build and deploy process for all platforms
 build-all: validate-env
-    @echo "Running full build and deploy process..."
-    just install-deps
-    just build-editor
-    just build-templates
-    just update-version
-    #just format
+    @echo "🏗️  FULL BUILD - ALL PLATFORMS"
+    @echo "=============================="
+    @echo "⏱️  Estimated time: 40-50 minutes"
+    @echo ""
+    @echo "💡 TIP: Use platform-specific builds to save time:"
+    @echo "   • just build-all-android (20 min)"
+    @echo "   • just build-all-ios (20 min)"
+    @echo ""
+    @echo "Press Enter to continue..."
+    @read
+    
+    just _build-common
+    just _build-android-full
+    just _build-ios-full
+    
+    @echo "✅ Full build complete for all platforms!"
+    @just build-status
+
+# Build everything for Android only
+build-all-android: validate-env
+    @echo "🤖 FULL BUILD - ANDROID ONLY"
+    @echo "============================"
+    @echo "⏱️  Estimated time: 20-25 minutes"
+    @echo ""
+    
+    just _build-common
+    just _build-android-full
+    
+    @echo "✅ Android full build complete!"
+
+# Build everything for iOS only
+build-all-ios: validate-env
+    @echo "🍎 FULL BUILD - iOS ONLY"
+    @echo "======================="
+    @echo "⏱️  Estimated time: 20-25 minutes"
+    @echo ""
+    
+    just _build-common
+    just _build-ios-full
+    
+    @echo "✅ iOS full build complete!"
+
+# Quick build commands (skip editor/templates)
+quick-build-android:
+    @echo "⚡ Quick Android build (2-3 min)..."
     just insert-firebase-dependencies
-    just build-android apk
-    just build-android aab
+    just export-apk-android
+    just export-aab-android
+    @echo "✅ Quick Android build complete!"
+
+quick-build-ios:
+    @echo "⚡ Quick iOS build (2-3 min)..."
+    just ios-export-pck
     just ios-build
+    @echo "✅ Quick iOS build complete!"
+
+quick-build-all:
+    @echo "⚡ Quick build for all platforms (5-10 min)..."
+    just quick-build-android
+    just quick-build-ios
+    @echo "✅ Quick build complete!"
+
+# Build status check
+build-status:
+    @echo "📊 BUILD STATUS CHECK"
+    @echo "===================="
+    @echo ""
+    @echo "EDITOR:"
+    @if [ -f "editor/{{GODOT_EXECUTABLE}}" ]; then \
+        echo "  ✅ Built"; \
+    else \
+        echo "  ❌ Not built"; \
+    fi
+    @echo ""
+    @echo "TEMPLATES:"
+    @if [ -f "templates/android_debug.apk" ]; then \
+        echo "  ✅ Android: Built"; \
+    else \
+        echo "  ❌ Android: Not built"; \
+    fi
+    @if [ -f "templates/ios.zip" ]; then \
+        echo "  ✅ iOS: Built"; \
+    else \
+        echo "  ❌ iOS: Not built"; \
+    fi
+    @echo ""
+    @echo "ANDROID EXPORTS:"
+    @if [ -f "export/android/{{GAME_NAME}}.apk" ]; then \
+        echo "  ✅ APK: export/android/{{GAME_NAME}}.apk"; \
+    else \
+        echo "  ❌ APK: Not exported"; \
+    fi
+    @if [ -f "export/android/{{GAME_NAME}}.aab" ]; then \
+        echo "  ✅ AAB: export/android/{{GAME_NAME}}.aab"; \
+    else \
+        echo "  ❌ AAB: Not exported"; \
+    fi
+    @echo ""
+    @echo "iOS EXPORTS:"
+    @if [ -d "export/ios/{{GAME_NAME}}.xcworkspace" ]; then \
+        echo "  ✅ Xcode project: Exported"; \
+    else \
+        echo "  ❌ Xcode project: Not exported"; \
+    fi
+    @if [ -d "export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app" ]; then \
+        echo "  ✅ iOS app: Built"; \
+    else \
+        echo "  ❌ iOS app: Not built"; \
+    fi
+
+# ================================
+# INTERNAL BUILD HELPERS (DRY)
+# ================================
+
+# Common build steps
+_build-common:
+    @echo "📦 [1/3] Installing dependencies..."
+    just install-deps
+    @echo "🔨 [2/3] Building Godot editor..."
+    just build-editor
+    @echo "📝 [3/3] Updating version..."
+    just update-version
+
+# Android full build steps
+_build-android-full:
+    @echo ""
+    @echo "🤖 ANDROID BUILD STEPS"
+    @echo "===================="
+    @echo "📦 [1/4] Building Android templates..."
+    just templates-android
+    @echo "🔥 [2/4] Setting up Firebase..."
+    just insert-firebase-dependencies
+    @echo "📱 [3/4] Exporting Android APK..."
+    just export-apk-android
+    @echo "📦 [4/4] Exporting Android AAB..."
+    just export-aab-android
+
+# iOS full build steps
+_build-ios-full:
+    @echo ""
+    @echo "🍎 iOS BUILD STEPS"
+    @echo "================="
+    @echo "📦 [1/3] Building iOS templates..."
+    just templates-ios
+    @echo "📱 [2/3] Exporting iOS project..."
+    just ios-export-pck
+    @echo "🔨 [3/3] Building with Xcode..."
+    just ios-build
+
+# ================================
+# OLD BUILD-ALL BUGFIX
+# ================================
 
 replace TARGET_FILE PATTERN REPLACEMENT_FILE:
     #!/usr/bin/env bash

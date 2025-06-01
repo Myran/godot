@@ -23,7 +23,7 @@ generate-gitlab-ci:
     echo '    - just install-deps' >> .gitlab-ci.yml
     echo '    - just build-editor' >> .gitlab-ci.yml
     echo '    - just build-templates' >> .gitlab-ci.yml
-    echo '    - just build-android' >> .gitlab-ci.yml
+    echo '    - just export-all-android' >> .gitlab-ci.yml
     echo '    - just ios-build' >> .gitlab-ci.yml
     echo '  artifacts:' >> .gitlab-ci.yml
     echo '    paths:' >> .gitlab-ci.yml
@@ -67,7 +67,7 @@ deploy-ios: ios-build
     @echo "Deploying to App Store..."
     cd export/ios && fastlane beta
 
-# Deploy to Play Store
-deploy-android: build-android
+# DEPLOY: Deploy to Play Store (requires AAB files)
+deploy-android: export-aab-android
     @echo "Deploying to Play Store..."
     cd export/android && fastlane internal

@@ -33,7 +33,7 @@ run-desktop-debug:
     fi
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-run-iphone: pre-build
+launch-ios-iphone: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running on iPhone..."
@@ -50,7 +50,7 @@ run-iphone: pre-build
     xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
 
 # LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-run-iphone-debug: pre-build
+launch-ios-iphone-debug: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running on iPhone in debug mode..."
@@ -67,7 +67,7 @@ run-iphone-debug: pre-build
     xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-run-ipad: pre-build
+launch-ios-ipad: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running on iPad..."
@@ -84,7 +84,7 @@ run-ipad: pre-build
     xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
 
 # LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-run-ipad-debug: pre-build
+launch-ios-ipad-debug: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Running on iPad in debug mode..."
@@ -100,11 +100,18 @@ run-ipad-debug: pre-build
     echo "Launching app on iPad in debug mode..."
     xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
 
-# LEVEL 1: Install & launch APK (30 sec, requires existing APK)
-run-android:
+
+# LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
+run-android-debug:
+    @echo "🐛 Launching existing Android app in debug mode..."
+    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    @echo "✅ App launched in debug mode!"
+
+# LEVEL 2a: Install existing APK + launch (30 sec, requires pre-built APK)
+install-apk-android:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Running on Android (release)..."
+    echo "📦 Installing & launching Android APK..."
     echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
     if adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
         echo "Package exists. Uninstalling..."
@@ -118,12 +125,13 @@ run-android:
     
     echo "Running the app..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    echo "✅ APK installed and launched!"
 
-# LEVEL 1: Install & launch debug APK (30 sec, requires existing APK)
-run-android-debug:
+# LEVEL 2a: Install existing debug APK + launch (30 sec, requires pre-built APK)  
+install-apk-debug-android:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Running on Android (debug)..."
+    echo "📦 Installing & launching debug Android APK..."
     echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
     if adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
         echo "Package exists. Uninstalling..."
@@ -137,33 +145,18 @@ run-android-debug:
     
     echo "Running the app..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    echo "✅ Debug APK installed and launched!"
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-update-content-iphone:
+hotreload-ios-iphone:
     @echo "Updating game content and running on iPhone..."
     just ios-update-pck
-    just run-iphone
+    just launch-ios-iphone
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-update-content-ipad:
+hotreload-ios-ipad:
     @echo "Updating game content and running on iPad..."
     just ios-update-pck
-    just run-ipad
+    just launch-ios-ipad
 
-# Legacy alias for update-content-iphone (DEPRECATED)
-build-and-run-iphone: update-content-iphone
 
-# Legacy alias for update-content-ipad (DEPRECATED)  
-build-and-run-ipad: update-content-ipad
-
-# Legacy aliases for backward compatibility (DEPRECATED - use explicit run-* commands)
-run target *args='':
-    @echo "⚠️  DEPRECATED: Use explicit 'just run-{{target}}' commands instead"
-    @echo "   Examples: just run-iphone, just run-android, just run-desktop"
-    @echo "   Run 'just --list | grep run-' to see all available run commands"
-
-# Legacy aliases (DEPRECATED - use new clear names)
-install-and-run-android: run-android
-install-and-run-android-debug: run-android-debug
-save-and-run-iphone: update-content-iphone
-run-debug: run-desktop-debug

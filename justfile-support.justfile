@@ -119,8 +119,6 @@ status:
     @echo "Project Status:"
     @echo "Godot submodule:"
     cd {{GODOT_SUBMODULE_PATH}} && git status -s
-    @echo "Environment submodule:"
-    cd env && git status -s
     @echo "Main project:"
     git status -s
 
