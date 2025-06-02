@@ -1,1 +1,1 @@
-{"actions": ["RTDB Status", "RTDB Get Simple Value", "RTDB List Children"]}
+{"actions": ["Get Simple Value", "Set Simple Value", "Delete Value", "Update Value"]}

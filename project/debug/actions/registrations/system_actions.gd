@@ -41,14 +41,20 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("Quit Application", func() -> void: DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT))
+			. create(
+				"Quit Application",
+				func() -> void: DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
+			)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Quit Application")
 		)
 	)
+
+
 #static func _quit() -> void:
-	#DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
+#DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
+
 
 static func _register_connectivity_actions(registry: DebugActionRegistry) -> void:
 	# RTDB Status check - always available

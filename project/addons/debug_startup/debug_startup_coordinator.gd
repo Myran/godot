@@ -47,6 +47,11 @@ func _ready() -> void:
 			Log.error("Action not found", {"action": action_name}, ["debug", "startup", "error"])
 
 	Log.info("Debug startup complete", {}, ["debug", "startup"])
+	
+	# Clear test context if it was set
+	if DebugAction.is_test_active():
+		DebugAction.clear_test_context()
+	
 	# _cleanup_mobile_config()  # Disabled: Keep external config persistent for reuse
 
 
@@ -172,6 +177,16 @@ func _parse_config_file(path: String) -> Array[String]:
 		return []
 
 	var data := json.data as Dictionary
+	
+	# Check for test metadata and set test context if present
+	if data.has("test_metadata"):
+		var test_metadata := data.test_metadata as Dictionary
+		if test_metadata.has("test_id"):
+			var test_id := str(test_metadata.test_id)
+			print("Test metadata found, setting test context: ", test_id)
+			DebugAction.set_test_context(test_id)
+			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
+	
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
 		var actions: Array[String] = []
