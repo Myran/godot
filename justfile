@@ -2,6 +2,7 @@
 
 # Main build Justfile for Godot 4 Projects
 # Import other Justfiles
+import "justfile-help.justfile"
 import "justfile-run.justfile"
 import "justfile-cicd.justfile"
 import "justfile-support.justfile"
@@ -69,65 +70,8 @@ c:
     @just --choose
 l:
     @just -l
-# Comprehensive help system for all commands
-help:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🚀 GameTwo Development Environment"
-    echo "=================================="
-    echo ""
-    echo "🏗️  BUILD COMMANDS"
-    echo "  just build-all                   # Everything for both platforms (40 min)"
-    echo "  just build-all-android           # Android only (20 min)"
-    echo "  just build-all-ios               # iOS only (20 min)"
-    echo "  just fastbuild-android           # Android fast build (30-60 sec) ⚡"
-    echo "  just build-status                # Check what's built"
-    echo ""
-    echo "📦 QUICK BUILDS (Skip editor/templates)"
-    echo "  just quick-build-android         # Android APK + AAB (2-3 min)"
-    echo "  just quick-build-ios             # iOS project (2-3 min)"
-    echo "  just quick-build-all             # Both platforms (5-10 min)"
-    echo ""
-    echo "🚀 LAUNCH COMMANDS"
-    echo "  just run-desktop                 # Desktop (instant) 🚀"
-    echo "  just launch-android              # Launch existing Android app"
-    echo "  just launch-ios-iphone           # Launch existing iPhone app"
-    echo "  just launch-ios-ipad             # Launch existing iPad app"
-    echo "  just hotreload-ios-iphone        # iOS hot reload (5-10 sec) ✨"
-    echo "  just hotreload-ios-ipad          # iOS hot reload (5-10 sec) ✨"
-    echo "  just restart-android-app         # Force restart Android app"
-    echo ""
-    echo "🔧 CONFIG MANAGEMENT"
-    echo "  just config-push-android <config>    # Push config to device (2 sec!) ⚡"
-    echo "  just config-restart-android <config> # Push config + restart (5 sec!) 🚀"
-    echo "  just config-status-android           # Check current config status"
-    echo "  just config-list                     # List available configs"
-    echo "  just config-clear-android            # Clear external config"
-    echo "  just config-setup                    # Create debug config directory"
-    echo ""
-    echo "🧪 TESTING"
-    echo "  just test-config-android <config>    # Automated test (RESTARTS app by default)"
-    echo "  just test-monitor-android <config>   # Monitor debug startup logs"
-    echo "  just test-quick-android <config>     # Quick test with monitoring"
-    echo "  just test-all-android                # Run all test configurations"
-    echo ""
-    echo "💡 TESTING BEHAVIOR:"
-    echo "  test-config-android automatically RESTARTS the app to ensure config is loaded"
-    echo "  Use NO_RESTART=\"true\" for rapid iteration: test-config-android <config> 30 true"
-    echo ""
-    echo "🛠️  SETUP"
-    echo "  just templates-all               # Build all templates"
-    echo "  just setup-android               # Setup Android environment"
-    echo "  just build-editor                # Build custom Godot editor"
-    echo ""
-    echo "📖 DETAILED HELP"
-    echo "  just help-timing                 # Platform timing comparison"
-    echo "  just help-build                  # Build system guide"
-    echo "  just help-android                # Android workflow guide"
-    echo "  just help-ios                    # iOS workflow guide"
-    echo "  just help-workflows              # Common workflow patterns"
-    echo ""
-    echo "📋 just --list  🔍 just show <cmd>  💡 just help-timing"
+# Main help command - comprehensive help system imported from justfile-help.justfile
+# All detailed help commands (help-timing, help-build, help-android, etc.) are available there
 
 # Gruvbox Material colors
 _gruvbox-colors:
