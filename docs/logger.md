@@ -131,6 +131,37 @@ Log.enable_testing_mode()
 Log.disable_testing_mode()
 ```
 
+### Integration with GameTwo Testing System
+
+The Advanced Logger integrates seamlessly with GameTwo's automated testing system:
+
+```bash
+# Run automated tests that analyze log patterns
+just test-config-android system-testing     # Tests with app restart (reliable)
+just test-config-android system-testing 30 true  # Tests without restart (fast)
+just test-all-android                       # Run all test configurations
+```
+
+The testing system looks for specific log patterns to determine test success/failure:
+
+```gdscript
+# Test success patterns the system recognizes
+Log.info("DEBUG_TEST_SUCCESS", {
+    "test_id": "test_20250602_143052_a1b2",
+    "action": "Print Debug Info",
+    "category": "Quick Actions"
+}, ["debug", "test", "success"])
+
+# Test failure patterns
+Log.error("DEBUG_TEST_FAILURE", {
+    "test_id": "test_20250602_143052_a1b2", 
+    "action": "Missing Action",
+    "error": "Action not found in registry"
+}, ["debug", "test", "failure"])
+```
+
+See `docs/automated-test-integration.md` for complete testing system documentation.
+
 ### Configuration Options
 
 ```gdscript
