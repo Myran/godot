@@ -43,17 +43,12 @@ func _on_execution_completed(success: bool, result: Variant) -> void:
 
 # Enhanced execute method with test tracking
 func execute() -> void:
-	print("=== RTDBDebugAction.execute() CALLED ===")
-	print("Action name: ", action_name)
-	
 	# Track test execution if we're in test context
 	if DebugAction.current_test_id != "":
 		DebugAction.test_action_count += 1
 
-	print("=== About to call execute_rtdb_action() ===")
 	# Call the actual implementation
 	execute_rtdb_action()
-	print("=== execute_rtdb_action() returned ===")
 
 
 # Default execute implementation - subclasses should override this
@@ -103,10 +98,6 @@ func get_firebase_database():
 func execute_simple_operation(
 	method: String, path_variants: Array, value: Variant, operation_name: String
 ) -> Array:
-	print("=== execute_simple_operation CALLED ===")
-	print("Method: ", method)
-	print("Operation: ", operation_name)
-	
 	Log.debug(
 		"Executing RTDB operation",
 		{
