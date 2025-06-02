@@ -54,16 +54,11 @@ help:
     echo "🚀 GameTwo Development Environment"
     echo "=================================="
     echo ""
-    echo "⚡ DAILY DEVELOPMENT"
-    echo "  just hotreload-ios-iphone        # iOS hot reload (5-10 sec) ✨"
-    echo "  just hotreload-ios-ipad          # iOS hot reload (5-10 sec) ✨"
-    echo "  just fastbuild-android           # Android fast build (30-60 sec) ⚡"
-    echo "  just run-desktop                 # Desktop (instant) 🚀"
-    echo ""
     echo "🏗️  BUILD COMMANDS"
     echo "  just build-all                   # Everything for both platforms (40 min)"
     echo "  just build-all-android           # Android only (20 min)"
     echo "  just build-all-ios               # iOS only (20 min)"
+    echo "  just fastbuild-android           # Android fast build (30-60 sec) ⚡"
     echo "  just build-status                # Check what's built"
     echo ""
     echo "📦 QUICK BUILDS (Skip editor/templates)"
@@ -71,30 +66,28 @@ help:
     echo "  just quick-build-ios             # iOS project (2-3 min)"
     echo "  just quick-build-all             # Both platforms (5-10 min)"
     echo ""
-    echo "🔥 HOT UPDATES"
-    echo "  just hotreload-ios-iphone        # Replace iOS game data (5-10 sec)"
-    echo "  just hotreload-ios-ipad          # Replace iOS game data (5-10 sec)"
-    echo "  just hotconfig-android <config>  # Push config only (2 sec!)"
-    echo ""
     echo "🚀 LAUNCH COMMANDS"
+    echo "  just run-desktop                 # Desktop (instant) 🚀"
     echo "  just launch-android              # Launch existing Android app"
     echo "  just launch-ios-iphone           # Launch existing iPhone app"
     echo "  just launch-ios-ipad             # Launch existing iPad app"
+    echo "  just hotreload-ios-iphone        # iOS hot reload (5-10 sec) ✨"
+    echo "  just hotreload-ios-ipad          # iOS hot reload (5-10 sec) ✨"
     echo "  just restart-android-app         # Force restart Android app"
     echo ""
-    echo "🐛 DEBUG CONFIGS"
-    echo "  just push-config <config>        # Push config to user:// (2 sec!) ⚡ RECOMMENDED"
-    echo "  just push-config-restart <config># Push + restart app (5 sec!) 🚀 RECOMMENDED"
-    echo "  just config-status               # Check current config status"
-    echo "  just config-list                 # List available configs"
-    echo "  just hotconfig-android <config>  # Hot push config (legacy, 2 sec!)"
-    echo "  just config-clear                # Clear external config"
+    echo "🔧 CONFIG MANAGEMENT"
+    echo "  just config-push-android <config>    # Push config to device (2 sec!) ⚡"
+    echo "  just config-restart-android <config> # Push config + restart (5 sec!) 🚀"
+    echo "  just config-status-android           # Check current config status"
+    echo "  just config-list                     # List available configs"
+    echo "  just config-clear-android            # Clear external config"
+    echo "  just config-setup                    # Create debug config directory"
     echo ""
-    echo "🧪 SMART TESTING"
-    echo "  just config-test-smart <config>  # Smart test with pass/fail detection (30 sec)"
-    echo "  just test-smart-database         # Test database configuration" 
-    echo "  just test-smart-system           # Test system configuration"
-    echo "  just test-all-configs            # Run all test configurations"
+    echo "🧪 TESTING"
+    echo "  just test-config-android <config>    # Automated test with pass/fail detection"
+    echo "  just test-monitor-android <config>   # Monitor debug startup logs"
+    echo "  just test-quick-android <config>     # Quick test with monitoring"
+    echo "  just test-all-android                # Run all test configurations"
     echo ""
     echo "🛠️  SETUP"
     echo "  just templates-all               # Build all templates"
@@ -483,24 +476,15 @@ restart-android-app:
 iterate-android CONFIG="current":
     @echo "🔄 Android development iteration..."
     just fastbuild-android
-    @if [ "{{CONFIG}}" != "current" ]; then just hotconfig-android {{CONFIG}}; fi
-
-# Hot config push for Android (2 sec!)
-hotconfig-android CONFIG_NAME:
-    @echo "🔥 Hot config update for Android (2 sec)..."
-    @adb -s {{ANDROID_DEVICE_ID}} push \
-        project/debug_configs/{{CONFIG_NAME}}.json \
-    /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json
-    @just restart-android-app
-    @echo "✅ Config updated without rebuild!"
+    @if [ "{{CONFIG}}" != "current" ]; then just config-restart-android {{CONFIG}}; fi
 
 
 # ================================ 
-# CONSOLIDATED CONFIG COMMANDS (RECOMMENDED)
+# CONFIG MANAGEMENT COMMANDS
 # ================================
 
-# Push config to device user:// directory (no restart) - FAST: 2 seconds
-push-config CONFIG_NAME:
+# Push config to Android device user:// directory (no restart) - FAST: 2 seconds
+config-push-android CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -587,27 +571,27 @@ push-config CONFIG_NAME:
     
     echo "✅ Config pushed to user:// directory!"
     echo "💡 App will use this config on next start/restart"
-    echo "💡 Use 'just push-config-restart {{CONFIG_NAME}}' to push + restart immediately"
+    echo "💡 Use 'just config-restart-android {{CONFIG_NAME}}' to push + restart immediately"
 
-# Push config to device AND restart app - FAST: 5 seconds 
-push-config-restart CONFIG_NAME:
+# Push config to Android device AND restart app - FAST: 5 seconds 
+config-restart-android CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🚀 Pushing config and restarting app..."
+    echo "🚀 Pushing config and restarting Android app..."
     
-    # First push the config (reuse the push-config command)
-    just push-config {{CONFIG_NAME}}
+    # First push the config (reuse the config-push-android command)
+    just config-push-android {{CONFIG_NAME}}
     
     echo ""
     echo "🔄 Restarting app to apply new config..."
     just restart-android-app
     
     echo "✅ Config pushed and app restarted!"
-    echo "💡 Monitor with: just test-android-debug-startup {{CONFIG_NAME}}"
+    echo "💡 Monitor with: just test-monitor-android {{CONFIG_NAME}}"
 
-# Check current config status
-config-status:
+# Check current Android config status
+config-status-android:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -630,9 +614,9 @@ config-status:
     echo ""
     
     echo "💡 Available commands:"
-    echo "  just push-config <config>        # Push config (no restart)"
-    echo "  just push-config-restart <config># Push config + restart app"
-    echo "  just restart-android-app         # Just restart app"
+    echo "  just config-push-android <config>    # Push config (no restart)"
+    echo "  just config-restart-android <config> # Push config + restart app"
+    echo "  just restart-android-app             # Just restart app"
 
 # ================================
 # DEBUG CONFIG MANAGEMENT
@@ -699,11 +683,9 @@ config-set CONFIG_NAME:
     
     echo "✅ Debug config updated!"
     echo "💡 Next steps:"
-    echo "   1. For development: just push-debug-config {{CONFIG_NAME}} && just restart-android-app"
+    echo "   1. For development: just config-restart-android {{CONFIG_NAME}}"
     echo "   2. For full rebuild: just save-android-project && just install-android-app"
 
-# Push debug config to Android device (external config for quick testing)
-push-debug-config CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -738,17 +720,9 @@ push-debug-config CONFIG_NAME:
     echo "📱 Location: $REMOTE_CONFIG"
     echo "💡 Run 'just restart-android-app' to apply changes"
 
-# Set config and restart app in one command (for rapid iteration)
-restart-with-config CONFIG_NAME:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔄 Setting config '{{CONFIG_NAME}}' and restarting app..."
-    just push-debug-config {{CONFIG_NAME}}
-    just restart-android-app
-    echo "✅ App restarted with config: {{CONFIG_NAME}}"
 
-# Remove external debug config (fall back to embedded config)
-config-clear:
+# Remove external debug config from Android device (fall back to embedded config)
+config-clear-android:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -790,8 +764,8 @@ config-list:
 # DEBUG TESTING & MONITORING
 # ================================
 
-# Test debug startup system with current configuration
-test-android-debug-startup CONFIG_NAME="current":
+# Monitor Android debug startup system with current configuration
+test-monitor-android CONFIG_NAME="current":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -854,17 +828,17 @@ test-android-debug-startup CONFIG_NAME="current":
         echo "💾 Full log: $LOG_FILE"
     fi
 
-# Quick test with a specific config (push config + restart + monitor)
-quick-test CONFIG_NAME:
+# Quick test with a specific Android config (push config + restart + monitor)
+test-quick-android CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🚀 Quick test with config: {{CONFIG_NAME}}"
-    just restart-with-config {{CONFIG_NAME}}
+    just config-restart-android {{CONFIG_NAME}}
     sleep 2
-    just monitor-debug-logs 10
+    just test-monitor-android {{CONFIG_NAME}} 10
 
-# Smart test with automatic pass/fail determination and unique test IDs
-config-test-smart CONFIG_NAME DURATION="30":
+# Automated test with pass/fail determination and unique test IDs for Android
+test-config-android CONFIG_NAME DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1059,16 +1033,9 @@ config-test-smart CONFIG_NAME DURATION="30":
     
     exit $test_result
 
-# Database-specific smart test (convenience recipe)
-test-smart-database DURATION="30":
-    just config-test-smart database-testing {{DURATION}}
 
-# System-specific smart test (convenience recipe)  
-test-smart-system DURATION="30":
-    just config-test-smart system-testing {{DURATION}}
-
-# Run all standard test configurations
-test-all-configs:
+# Run all standard test configurations on Android
+test-all-android:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🧪 Running all test configurations..."
@@ -1079,7 +1046,7 @@ test-all-configs:
     
     for config in "${configs[@]}"; do
         echo "Testing configuration: $config"
-        if just config-test-smart "$config" 30; then
+        if just test-config-android "$config" 30; then
             echo "✅ $config PASSED"
         else
             echo "❌ $config FAILED"
