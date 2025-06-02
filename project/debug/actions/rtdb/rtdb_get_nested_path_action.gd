@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 	# First ensure nested data exists
 	var db: Object = get_firebase_database()

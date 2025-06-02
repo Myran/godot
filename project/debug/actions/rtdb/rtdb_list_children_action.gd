@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Lists all child keys from a specific RTDB path."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy

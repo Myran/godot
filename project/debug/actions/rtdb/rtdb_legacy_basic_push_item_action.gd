@@ -1,9 +1,9 @@
-# Migrated from scene_debug.gd _test_rtdb_basic_push_item
+# project/debug/actions/rtdb/rtdb_legacy_basic_push_item_action.gd
 @tool
+class_name RTDBLegacyPushItemAction
 extends RTDBDebugAction
 
 var _transaction_count: int = 0
-
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
@@ -11,14 +11,13 @@ func _init() -> void:
 	group = "Legacy Tests"
 	description = "Migrated from scene_debug.gd - Pushes an item to RTDB"
 
-
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	Log.debug("RTDB Test: Push Item", {}, ["test"])
 	_update_status("Running basic push item test...")
 
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = _last_error_result
+		var error_result: Array = get_last_error_result()
 		execution_completed.emit(false, error_result[1] if error_result.size() > 1 else null)
 		return
 

@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 	var nested_data: Dictionary = {
 		"metadata":
