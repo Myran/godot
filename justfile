@@ -84,10 +84,14 @@ help:
     echo "  just config-setup                    # Create debug config directory"
     echo ""
     echo "🧪 TESTING"
-    echo "  just test-config-android <config>    # Automated test with pass/fail detection"
+    echo "  just test-config-android <config>    # Automated test (RESTARTS app by default)"
     echo "  just test-monitor-android <config>   # Monitor debug startup logs"
     echo "  just test-quick-android <config>     # Quick test with monitoring"
     echo "  just test-all-android                # Run all test configurations"
+    echo ""
+    echo "💡 TESTING BEHAVIOR:"
+    echo "  test-config-android automatically RESTARTS the app to ensure config is loaded"
+    echo "  Use NO_RESTART=\"true\" for rapid iteration: test-config-android <config> 30 true"
     echo ""
     echo "🛠️  SETUP"
     echo "  just templates-all               # Build all templates"
@@ -838,13 +842,15 @@ test-quick-android CONFIG_NAME:
     just test-monitor-android {{CONFIG_NAME}} 10
 
 # Automated test with pass/fail determination and unique test IDs for Android
-test-config-android CONFIG_NAME DURATION="30":
+# Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
+test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # Configuration
     CONFIG_NAME="{{CONFIG_NAME}}"
     DURATION="{{DURATION}}"
+    NO_RESTART="{{NO_RESTART}}"
     ANDROID_DEVICE_ID="${ANDROID_DEVICE_ID:-{{ANDROID_DEVICE_ID}}}"
     ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME:-{{ANDROID_PACKAGE_NAME}}}"
     
@@ -907,10 +913,18 @@ test-config-android CONFIG_NAME DURATION="30":
     # Cleanup temp files
     adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
     rm "$enhanced_config"
-    
-    echo "🚀 Starting test..."
-    # Launch app
-    adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+
+    # Force restart app to ensure config is loaded (unless explicitly disabled)
+    if [ "$NO_RESTART" != "true" ]; then
+        echo "🔄 Restarting app to ensure config is loaded..."
+        adb -s "$ANDROID_DEVICE_ID" shell am force-stop "$ANDROID_PACKAGE_NAME" 2>/dev/null || true
+        sleep 1
+        echo "🚀 Starting test with fresh app instance..."
+        adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+    else
+        echo "⚡ Starting test without restart (using current app state)..."
+        adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+    fi
     
     # Monitor test execution
     echo "📊 Monitoring test execution..."
@@ -1365,34 +1379,40 @@ help-debug:
     echo "⚡ QUICK START:"
     echo "  just config-setup                    # Create sample debug configurations"
     echo "  just config-list                     # See available configs"
-    echo "  just iterate-android gameplay-testing # Test with specific config"
-    echo "  just quick-test system-testing       # Quick config iteration"
+    echo "  just test-config-android minimal-testing # Test with automatic restart"
+    echo "  just test-quick-android system-testing   # Quick test with monitoring"
     echo ""
     echo "🔧 CONFIGURATION MANAGEMENT:"
     echo "  just config-setup                    # Create sample debug configurations"
     echo "  just config-list                     # List all available configs"
     echo "  just config-set performance-testing  # Set embedded debug config"
-    echo "  just push-debug-config gameplay-testing # Push config to device (quick testing)"
-    echo "  just config-clear                    # Clear external config, use embedded"
+    echo "  just config-push-android gameplay-testing # Push config to device (quick)"
+    echo "  just config-clear-android            # Clear external config, use embedded"
+    echo ""
+    echo "🧪 TESTING BEHAVIOR:"
+    echo "  just test-config-android <config>    # RELIABLE: Restarts app, tests actual config"
+    echo "  just test-config-android <config> 30 true # FAST: No restart, tests current state"
+    echo "  just test-monitor-android <config>   # Monitor logs without config changes"
+    echo "  just test-quick-android <config>     # Push config + restart + quick monitor"
     echo ""
     echo "🔄 DEBUG WORKFLOW PATTERNS:"
     echo ""
     echo "  🎯 RAPID CONFIG ITERATION:"
-    echo "    just fastbuild-android             # Initial setup"
-    echo "    just restart-with-config testing   # Test config changes (fast)"
-    echo "    just quick-test performance        # Test different config"
-    echo "    just test-android-debug-startup 30 # Monitor results"
+    echo "    just fastbuild-android                   # Initial setup"
+    echo "    just config-restart-android testing      # Test config changes (fast)"
+    echo "    just test-quick-android performance      # Test different config"
+    echo "    just test-monitor-android minimal-testing 30 # Monitor results"
     echo ""
     echo "  🧪 SYSTEMATIC TESTING:"
-    echo "    just config-list                   # See all available configs"
-    echo "    just iterate-android gameplay-testing # Test with specific config"
-    echo "    just test-android-debug-startup performance-testing # Test debug startup"
-    echo "    just check-android-debug-status    # Check device status"
+    echo "    just config-list                         # See all available configs"
+    echo "    just test-config-android gameplay-testing # Reliable test with restart"
+    echo "    just test-monitor-android performance-testing # Monitor debug startup"
+    echo "    just config-status-android               # Check device status"
     echo ""
     echo "  📊 PERFORMANCE ANALYSIS:"
-    echo "    just iterate-android performance-testing # Launch with perf config"
-    echo "    just test-android-debug-startup 60 # Extended monitoring"
-    echo "    just restart-with-config baseline   # Compare with baseline"
+    echo "    just test-config-android performance-testing # Launch with perf config"
+    echo "    just test-monitor-android performance-testing 60 # Extended monitoring"
+    echo "    just config-restart-android baseline     # Compare with baseline"
     echo ""
     echo "📱 CONFIGURATION TYPES:"
     echo "  • gameplay-testing: Gameplay mechanics and features"
