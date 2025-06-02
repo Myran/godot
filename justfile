@@ -1072,7 +1072,7 @@ test-all-android:
     echo "📋 Final Results:"
     echo "=================="
     for config in "${configs[@]}"; do
-        if [[ " ${failed_configs[*]} " =~ " $config " ]]; then
+        if [ ${#failed_configs[@]} -gt 0 ] && [[ " ${failed_configs[*]} " =~ " $config " ]]; then
             echo "❌ $config: FAILED"
         else
             echo "✅ $config: PASSED"  
