@@ -63,6 +63,7 @@ GODOT_SUBMODULE_PATH := "godot"
 # Utility functions
 timestamp := `date +%Y%m%d%H%M%S`
 jobs := `sysctl -n hw.logicalcpu`
+
     
 default:
     @just help
@@ -70,6 +71,133 @@ c:
     @just --choose
 l:
     @just -l
+
+# ================================
+# VALIDATION FUNCTIONS
+# ================================
+
+# Validate Android device connectivity (lenient - allows basic commands to work)
+_validate-android-device:
+    @true
+
+# Strict Android device validation (requires actual device connection)
+_require-android-device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Android device not connected: {{ANDROID_DEVICE_ID}}"
+        echo "💡 Check device connection and run: adb devices"
+        exit 1
+    fi
+    echo "✅ Android device connected"
+
+# Validate config file exists
+_validate-config-exists CONFIG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls -1 project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | sed 's/^/  /' || echo "  (no configs found)"
+        exit 1
+    fi
+
+# Validate iOS development tools are available
+_validate-ios-tools:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! xcrun devicectl list devices >/dev/null 2>&1; then
+        echo "❌ iOS development tools not available"
+        echo "💡 Install Xcode Command Line Tools: xcode-select --install"
+        exit 1
+    fi
+
+# Validate iOS device connectivity  
+_validate-ios-device DEVICE_TYPE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Get device ID based on type
+    if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    else
+        echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
+        exit 1
+    fi
+    
+    # Check device connectivity
+    if ! xcrun devicectl list devices | grep -q "$DEVICE_ID" 2>/dev/null; then
+        echo "❌ $DEVICE_NAME not connected: $DEVICE_ID"
+        echo "💡 Check device connection and run: xcrun devicectl list devices"
+        exit 1
+    fi
+
+# Validate file or directory exists
+_validate-path-exists PATH:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -e "{{PATH}}" ]; then
+        echo "❌ Path not found: {{PATH}}"
+        exit 1
+    fi
+
+# Validate Godot editor is available
+_validate-godot-editor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    EDITOR_PATH="./editor/{{GODOT_EXECUTABLE}}"
+    if [ ! -f "$EDITOR_PATH" ]; then
+        echo "❌ Godot editor not found: $EDITOR_PATH"
+        echo "💡 Build the editor first: just build-editor"
+        exit 1
+    fi
+
+# Validate Android package installation status
+_validate-android-package-installed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null; then
+        echo "❌ Android package not installed: {{ANDROID_PACKAGE_NAME}}"
+        echo "💡 Install APK first: just install-apk-android"
+        exit 1
+    fi
+
+# Validate directory exists, create if missing
+_ensure-directory-exists DIR:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -d "{{DIR}}" ]; then
+        echo "📁 Creating directory: {{DIR}}"
+        mkdir -p "{{DIR}}"
+    fi
+
+# Combined validation for Android development workflow
+_validate-android-workflow:
+    @just _require-android-device
+    @echo "✅ Android workflow validated"
+
+# Combined validation for iOS development workflow  
+_validate-ios-workflow DEVICE_TYPE:
+    @just _validate-ios-tools
+    @just _validate-ios-device {{DEVICE_TYPE}}
+    @echo "✅ iOS {{DEVICE_TYPE}} validated"
+
+# Combined validation for config workflow (config validation only)
+_validate-config-workflow CONFIG:
+    @just _validate-config-exists {{CONFIG}}
+    @echo "✅ Config validated"
+
+# Combined validation for Android config workflow (config + device validation)
+_validate-android-config-workflow CONFIG:
+    @just _validate-config-exists {{CONFIG}}
+    @just _require-android-device
+    @echo "✅ Android config workflow validated"
+
 # Main help command - comprehensive help system imported from justfile-help.justfile
 # All detailed help commands (help-timing, help-build, help-android, etc.) are available there
 
@@ -341,7 +469,7 @@ export-all-android:
 # ================================
 
 # LEVEL 3: Export APK files via Godot (2-3 min, debug + release)
-export-apk-android:
+export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
@@ -363,7 +491,7 @@ export-apk-android:
 # ================================
 
 # Fast Android rebuild and install - Hybrid approach (30-60 sec, no templates)
-fastbuild-android:
+fastbuild-android: _validate-android-workflow _validate-godot-editor
     @echo "⚡ Fast Android rebuild with hybrid approach (30-60 sec)..."
     @echo "   🔄 Step 1: Processing GDScript changes with Godot export..."
     @echo "   🔨 Step 2: Fast gradle build with custom parameters..."
@@ -429,13 +557,13 @@ _gradle-build-install-android:
     echo "💾 APK saved at: $TEMP_DIR/$EXPORT_FILENAME"
 
 # Launch Android app on device
-launch-android:
+launch-android: _validate-android-workflow
     @echo "🚀 Launching Android app..."
     @adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     @echo "✅ App launched!"
 
 # Force stop and restart the Android app
-restart-android-app:
+restart-android-app: _validate-android-workflow
     @echo "🔄 Restarting Android app..."
     @adb -s {{ANDROID_DEVICE_ID}} shell am force-stop {{ANDROID_PACKAGE_NAME}}
     @sleep 1
@@ -454,25 +582,13 @@ iterate-android CONFIG="current":
 # ================================
 
 # Push config to Android device user:// directory (no restart) - FAST: 2 seconds
-config-push-android CONFIG_NAME:
+config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
     echo "📱 Pushing config to Android device..."
     
     CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
-    
-    # Verify config file exists
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config file not found: $CONFIG_FILE"
-        exit 1
-    fi
-    
-    # Verify device connection
-    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
-        echo "❌ Device {{ANDROID_DEVICE_ID}} not connected"
-        exit 1
-    fi
     
     echo "📄 Config content to push:"
     cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
@@ -544,21 +660,14 @@ config-push-android CONFIG_NAME:
     echo "💡 Use 'just config-restart-android {{CONFIG_NAME}}' to push + restart immediately"
 
 # Push config to Android device AND restart app - FAST: 5 seconds 
-config-restart-android CONFIG_NAME:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    echo "🚀 Pushing config and restarting Android app..."
-    
-    # First push the config (reuse the config-push-android command)
-    just config-push-android {{CONFIG_NAME}}
-    
-    echo ""
-    echo "🔄 Restarting app to apply new config..."
-    just restart-android-app
-    
-    echo "✅ Config pushed and app restarted!"
-    echo "💡 Monitor with: just test-monitor-android {{CONFIG_NAME}}"
+config-restart-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
+    @echo "🚀 Pushing config and restarting Android app..."
+    @just config-push-android {{CONFIG_NAME}}
+    @echo ""
+    @echo "🔄 Restarting app to apply new config..."
+    @just restart-android-app
+    @echo "✅ Config pushed and app restarted!"
+    @echo "💡 Monitor with: just test-monitor-android {{CONFIG_NAME}}"
 
 # Check current Android config status
 config-status-android:
@@ -1242,6 +1351,12 @@ help-android:
     echo "  just restart-android-app             # Just restart app"
     echo "  just hotconfig-android <config>      # Hot push config (2 sec!)"
     echo ""
+    echo "🧪 TESTING BEHAVIOR:"
+    echo "  • test-config-android automatically RESTARTS the app to ensure config is loaded"
+    echo "  • This guarantees reliable test results but takes ~5 seconds"
+    echo "  • For rapid iteration: test-config-android <config> 30 true (skips restart)"
+    echo "  • Use test-monitor-android <config> to watch debug startup logs"
+    echo ""
     echo "🚀 PRODUCTION BUILDS:"
     echo "  just export-apk-android              # Production APK for testing"
     echo "  just export-aab-android              # App Bundle for Play Store"
@@ -1258,77 +1373,96 @@ help-android:
 help-ios:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🍎 iOS Development Workflow Guide"
+    echo "📱 iOS Development Workflow Guide"
     echo "=================================="
+    echo "Devices: iPhone ({{IOS_IPHONE_DEVICE_ID}}) | iPad ({{IOS_IPAD_DEVICE_ID}})"
+    echo "Bundle: {{IOS_BUNDLE_IDENTIFIER}}"
     echo ""
-    echo "📋 OVERVIEW:"
-    echo "iOS development is MIXED AUTO/MANUAL - automation where possible, manual steps where required"
-    echo "Reason: iOS security model requires manual interaction with Xcode/Simulator/iPhone/iPad"
+    echo "🔍 OVERVIEW:"
+    echo "iOS development combines AUTOMATION + MANUAL steps due to Apple's security model"
+    echo "Automated: Building, exporting, hot reloading | Manual: Some launching, device deployment"
     echo ""
     echo "⚡ QUICK START:"
-    echo "  just build-install-ios                         # Export game data + build with Xcode"
-    echo "  just ios-launch-help                 # Get instructions for manual launch"
+    echo "  just build-install-ios              # Complete build + export (2-5 min)"
+    echo "  just launch-ios-iphone              # Launch on iPhone (requires built app)"
+    echo "  just hotreload-ios-iphone           # Hot reload content changes (5-10 sec)"
     echo ""
-    echo "🔧 STEP-BY-STEP WORKFLOW:"
-    echo "  1️⃣  just ios-export-pck              # ✅ AUTOMATED: Export game data (PCK file) (ios-export)"
-    echo "  2️⃣  just ios-build                   # ✅ AUTOMATED: Build iOS project with Xcode (ios-build)"
-    echo "  3️⃣  just ios-launch-help             # ⚠️  MANUAL: Shows launch instructions (new command)"
-    echo "  4️⃣  [Manual] Open Xcode → Run        # ⚠️  MANUAL: Launch in Xcode or Simulator"
+    echo "📋 STEP-BY-STEP SETUP:"
+    echo "  1. just templates-ios               # Build iOS export templates (20 min, once)"
+    echo "  2. just build-install-ios           # Export + build project (2-5 min)"
+    echo "  3. just launch-ios-iphone           # Launch on device"
     echo ""
-    echo "📱 DEVELOPMENT WORKFLOWS:"
+    echo "🔄 DEVELOPMENT WORKFLOWS:"
     echo ""
-    echo "  🎯 COMPLETE WORKFLOW:"
-    echo "    just build-install-ios                       # Automated: export + build"
-    echo "    # Then manually: Open Xcode workspace and run"
+    echo "  🏗️  COMPLETE WORKFLOW (Code + Content Changes):"
+    echo "    just build-install-ios            # Full rebuild + export (2-5 min)"
+    echo "    just launch-ios-iphone            # Launch on iPhone"
+    echo "    just launch-ios-ipad              # Launch on iPad"
     echo ""
-    echo "  🔄 QUICK ITERATION (Game Changes Only):"
-    echo "    just ios-export-pck                # Export new game data (ios-export)"
-    echo "    just ios-update-pck                # Update data in built app (save-ios-to-app)"
-    echo "    # Then manually: Restart app in Simulator"
+    echo "  ⚡ HOT RELOAD WORKFLOW (Content Only - FASTEST):"
+    echo "    just hotreload-ios-iphone         # Update content + launch (5-10 sec)"
+    echo "    just hotreload-ios-ipad           # Update content + launch (5-10 sec)"
     echo ""
-    echo "  🏗️  CODE CHANGES (Requires Rebuild):"
-    echo "    just ios-export-pck                # Export new game data (ios-export)"
-    echo "    just ios-build                     # Rebuild iOS project (ios-build)"
-    echo "    # Then manually: Run in Xcode"
+    echo "  🔨 REBUILD WORKFLOW (Code Changes):"
+    echo "    just ios-export-pck               # Export game data only"
+    echo "    just ios-build                    # Rebuild iOS project"
+    echo "    just ios-update-pck               # Update app with new data"
     echo ""
-    echo "🛠️  MANUAL STEPS EXPLAINED:"
+    echo "🚀 LAUNCH COMMANDS:"
     echo ""
-    echo "  📂 LAUNCH iOS APP:"
-    echo "    just ios-launch-help               # Shows these options:"
-    echo "    • Option 1: open export/ios/{{GAME_NAME}}.xcworkspace"
-    echo "    • Option 2: Use Xcode → Open → select workspace → Run"
-    echo "    • Option 3: Deploy to device via Xcode (requires dev cert)"
+    echo "  📱 DEVICE LAUNCH (Automated):"
+    echo "    just launch-ios-iphone            # Launch on iPhone"
+    echo "    just launch-ios-iphone-debug      # Launch on iPhone (debug mode)"
+    echo "    just launch-ios-ipad              # Launch on iPad"
+    echo "    just launch-ios-ipad-debug        # Launch on iPad (debug mode)"
     echo ""
-    echo "  🔄 RESTART iOS APP:"
-    echo "    just ios-restart-help              # Shows these options (new command):"
-    echo "    • Simulator: Device → Restart"
-    echo "    • Simulator: Stop app → Relaunch"  
-    echo "    • Device: Force close → Relaunch"
+    echo "  ⚡ HOT RELOAD (Content Updates):"
+    echo "    just hotreload-ios-iphone         # iPhone hot reload (5-10 sec)"
+    echo "    just hotreload-ios-ipad           # iPad hot reload (5-10 sec)"
     echo ""
-    echo "🚀 PRODUCTION BUILDS:"
-    echo "  just ios-build                       # Build iOS project"
-    echo "  # Then manually: Xcode → Archive → Upload to App Store"
+    echo "  💡 MANUAL LAUNCH OPTIONS:"
+    echo "    just ios-launch-help              # Get manual launch instructions"
+    echo "    just ios-restart-help             # Get manual restart instructions"
     echo ""
-    echo "💡 iOS vs ANDROID DIFFERENCES:"
-    echo "  📱 Android: Complete automation (adb handles everything)"
-    echo "  🍎 iOS: Mixed automation (Apple security requires manual steps)"
+    echo "🏗️  BUILD COMMANDS:"
     echo ""
-    echo "  ✅ What's automated:"
-    echo "    • Game data export (PCK files)"
-    echo "    • Xcode project building"
-    echo "    • Game data updates"
+    echo "  📦 EXPORT & BUILD:"
+    echo "    just build-install-ios            # Complete build + export (2-5 min)"
+    echo "    just quick-build-ios              # Quick export (skip templates, 2-3 min)"
+    echo "    just ios-build                    # Build iOS project only"
+    echo "    just ios-export-pck               # Export game data only"
     echo ""
-    echo "  ⚠️  What requires manual steps:"
-    echo "    • App launching (Xcode/Simulator)"
-    echo "    • App restarting (Simulator/Device)"
-    echo "    • Device deployment (requires certificates)"
-    echo "    • App Store submission (Xcode Archive)"
+    echo "  🔧 TEMPLATE MANAGEMENT:"
+    echo "    just templates-ios                # Build iOS export templates (20 min)"
+    echo "    just ios-build-template           # Build iOS template only"
+    echo "    just package-ios-template         # Package iOS template"
+    echo ""
+    echo "  📲 DATA UPDATES:"
+    echo "    just ios-update-pck               # Update built app with new game data"
+    echo ""
+    echo "🧪 iOS ADVANTAGES vs Android:"
+    echo "  ✅ HOT RELOAD: Content updates without full reinstall (5-10 sec vs 30-60 sec)"
+    echo "  ✅ DEVICE TARGETING: Automated iPhone/iPad device selection"
+    echo "  ✅ DEBUG MODES: Built-in debug launch options"
+    echo "  ⚠️  MANUAL STEPS: Some operations require Xcode interaction"
+    echo ""
+    echo "🏭 PRODUCTION BUILDS:"
+    echo "  just ios-build                      # Build for App Store"
+    echo "  just deploy-ios                     # Deploy to App Store"
+    echo "  # Manual: Xcode → Archive → Upload to App Store Connect"
     echo ""
     echo "🔍 TROUBLESHOOTING:"
+    echo "  • Device not found: Check 'xcrun devicectl list devices' and device IDs"
     echo "  • Build fails: Check Xcode project settings and certificates"
-    echo "  • PCK not loading: Verify ios-update-pck path matches Xcode build"
-    echo "  • Simulator issues: Device → Erase All Content and Settings"
-    echo "  • Missing workspace: Run 'just ios-build' to regenerate"
+    echo "  • Hot reload fails: Run 'just build-install-ios' for fresh build"
+    echo "  • App won't launch: Check device connection and app installation"
+    echo "  • Missing templates: Run 'just templates-ios' to rebuild"
+    echo ""
+    echo "💡 DEVELOPMENT TIPS:"
+    echo "  • Use hot reload for rapid content iteration (5-10 sec)"
+    echo "  • iPhone vs iPad: Commands automatically target correct device"
+    echo "  • Debug modes available for both devices (-debug variants)"
+    echo "  • Manual launch options available when automation fails"
 
 
 # Debug configuration and workflow help

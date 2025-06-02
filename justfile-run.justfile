@@ -5,7 +5,7 @@
 # ================================
 
 # Generic iOS app launcher - handles device selection and debug modes
-_ios-launch-app DEVICE_TYPE DEBUG_MODE="false": pre-build
+_ios-launch-app DEVICE_TYPE DEBUG_MODE="false": (_validate-ios-workflow DEVICE_TYPE) pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -43,7 +43,7 @@ _ios-launch-app DEVICE_TYPE DEBUG_MODE="false": pre-build
     xcrun devicectl device process launch --device ${DEVICE_ID} ${LAUNCH_FLAGS} ${BUNDLE_ID}
 
 # Generic Android APK installer - handles debug/release variants
-_android-install-apk APK_TYPE="release":
+_android-install-apk APK_TYPE="release": _validate-android-workflow
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -56,6 +56,13 @@ _android-install-apk APK_TYPE="release":
         APK_NAME="release"
     else
         echo "❌ Invalid APK type: {{APK_TYPE}}. Use 'debug' or 'release'"
+        exit 1
+    fi
+    
+    # Validate APK file exists
+    if [ ! -f "$APK_FILE" ]; then
+        echo "❌ APK file not found: $APK_FILE"
+        echo "💡 Build APK first: just export-apk-android"
         exit 1
     fi
     
@@ -86,7 +93,7 @@ _ios-hotreload DEVICE_TYPE:
 # ================================
 
 # LEVEL 1: Launch in Godot editor (1-2 sec, no build needed)
-run-desktop:
+run-desktop: _validate-godot-editor
     @echo "Running project on desktop..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
 
