@@ -3,11 +3,13 @@
 class_name RTDBLegacyGetSimpleValueAction
 extends RTDBDebugAction
 
+
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
 	action_name = "Basic Get Simple Value (Legacy)"
 	group = "Legacy Tests"
 	description = "Migrated from scene_debug.gd - Gets a simple value from RTDB"
+
 
 func execute_rtdb_action() -> void:
 	Log.debug("RTDB Test: Get Simple Value", {}, ["test"])

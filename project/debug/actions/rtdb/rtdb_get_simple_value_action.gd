@@ -3,17 +3,22 @@
 class_name RTDBGetSimpleValueAction
 extends RTDBDebugAction
 
+
 func _init() -> void:
 	super._init()
 	action_name = "Get Simple Value"
 
+
 func execute_rtdb_action() -> void:
+	print("=== RTDBGetSimpleValueAction.execute_rtdb_action() CALLED ===")
 	_update_status("Executing " + action_name + "...")
 
 	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
+	print("=== About to call execute_simple_operation ===")
 	var result: Array = await execute_simple_operation(
 		"get_value_async", path.as_variants(), null, action_name
 	)
+	print("=== execute_simple_operation returned ===")
 
 	# Emit completion signal based on result
 	var success: bool = result[0] if result.size() > 0 else false

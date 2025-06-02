@@ -3,9 +3,11 @@
 class_name RTDBSetSimpleValueAction
 extends RTDBDebugAction
 
+
 func _init() -> void:
 	super._init()
 	action_name = "Set Simple Value"
+
 
 func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
