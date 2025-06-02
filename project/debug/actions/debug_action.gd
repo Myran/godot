@@ -17,6 +17,12 @@ signal execution_completed(success: bool, result: Variant)
 # Add support for callable-based actions
 var action_callable: Callable
 
+# Static test tracking variables for smart test system
+static var current_test_id: String = ""
+static var test_action_count: int = 0
+static var test_success_count: int = 0
+static var test_failure_count: int = 0
+
 
 func _init(p_name: String = "", p_callable: Callable = Callable()) -> void:
 	action_name = p_name
@@ -49,6 +55,42 @@ func set_keyboard_shortcut(p_shortcut: String) -> DebugAction:
 	return self
 
 
+# Static test context management for smart testing
+static func set_test_context(test_id: String) -> void:
+	"""Set the current test ID for all debug actions"""
+	current_test_id = test_id
+	test_action_count = 0
+	test_success_count = 0
+	test_failure_count = 0
+	Log.info("DEBUG_TEST_START", {"test_id": test_id}, ["debug", "test", "start"])
+
+
+static func clear_test_context() -> void:
+	"""Clear test context and emit completion signal"""
+	if current_test_id != "":
+		Log.info(
+			"DEBUG_TEST_COMPLETE",
+			{
+				"test_id": current_test_id,
+				"total_actions": test_action_count,
+				"successful_actions": test_success_count,
+				"failed_actions": test_failure_count
+			},
+			["debug", "test", "complete"]
+		)
+		current_test_id = ""
+
+
+static func get_current_test_id() -> String:
+	"""Get the current test ID (useful for debugging)"""
+	return current_test_id
+
+
+static func is_test_active() -> bool:
+	"""Check if we're currently in a test context"""
+	return current_test_id != ""
+
+
 # Static factory method for creating programmatic actions
 static func create(p_name: String, p_callable: Callable) -> DebugAction:
 	var action: DebugAction = DebugAction.new(p_name, p_callable)
@@ -70,17 +112,71 @@ static func create_from_callable(
 	return action
 
 
-# Enhanced execute method with proper async support and signals
+# Enhanced execute method with smart test tracking
 func execute() -> void:
+	# Track test execution if we're in test context
+	if current_test_id != "":
+		test_action_count += 1
+
+	var start_time: int = Time.get_ticks_msec()
+	var success: bool = false
+	var error_message: String = ""
+	var result: Variant = null
+
+	_update_status("Executing " + action_name + "...")
+
 	if action_callable.is_valid():
-		_update_status("Executing " + action_name + "...")
-		var result: Variant = await action_callable.call()
-		_update_status("Completed: " + action_name)
-		execution_completed.emit(true, result)
+		# Execute the action - GDScript doesn't have try/except
+		result = await action_callable.call()
+
+		# Check if execution was successful (basic check)
+		if result != null or action_callable.get_method() != "":
+			success = true
+			_update_status("Completed: " + action_name)
+		else:
+			success = false
+			error_message = "Action returned null or invalid result"
+			_update_status("ERROR: " + action_name + " execution issue", true)
 	else:
-		# Subclasses can override this for resource-based actions
+		# No callable defined
+		success = false
+		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)
-		execution_completed.emit(false, "No execute method defined")
+
+	var duration_ms: int = Time.get_ticks_msec() - start_time
+
+	# Emit test tracking signals if in test context
+	if current_test_id != "":
+		if success:
+			test_success_count += 1
+			Log.info(
+				"DEBUG_TEST_SUCCESS",
+				{
+					"test_id": current_test_id,
+					"action": action_name,
+					"category": category,
+					"group": group,
+					"duration_ms": duration_ms
+				},
+				["debug", "test", "success"]
+			)
+		else:
+			test_failure_count += 1
+			Log.error(
+				"DEBUG_TEST_FAILURE",
+				{
+					"test_id": current_test_id,
+					"action": action_name,
+					"category": category,
+					"group": group,
+					"error": error_message,
+					"duration_ms": duration_ms
+				},
+				["debug", "test", "failure"]
+			)
+
+	# Always emit completion signal for UI updates
+	execution_completed.emit(success, result if success else error_message)
 
 
 # Helper to update status via signal instead of direct UI access

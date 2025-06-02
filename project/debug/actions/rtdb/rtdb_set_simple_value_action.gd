@@ -1,17 +1,4 @@
-# project/debug/actions/rtdb/rtdb_set_simple_value_action.gd
-@tool
-class_name RTDBSetSimpleValueAction
-extends RTDBDebugAction
-
-
-func _init() -> void:
-	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Set Simple Value"
-	group = "Basic"
-	description = "Sets a simple string value at a predefined test path in RTDB."
-
-
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 	var test_value: String = "Test Value: " + str(TimeUtils.now_ms())
 

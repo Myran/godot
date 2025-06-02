@@ -1,17 +1,4 @@
-# project/debug/actions/rtdb/rtdb_get_simple_value_action.gd
-@tool
-class_name RTDBGetSimpleValueAction
-extends RTDBDebugAction
-
-
-func _init() -> void:
-	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Get Simple Value"
-	group = "Basic"
-	description = "Retrieves a simple value from a predefined test path in RTDB."
-
-
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 
 	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
