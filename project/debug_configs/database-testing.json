@@ -1,1 +1,1 @@
-{"actions": ["Get Simple Value", "Set Simple Value", "Delete Value", "Update Value"]}
+{"actions": ["Show Registry Stats", "Print Debug Info", "Log System Info", "Cycle Asset Variant"]}

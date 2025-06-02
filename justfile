@@ -90,6 +90,12 @@ help:
     echo "  just hotconfig-android <config>  # Hot push config (legacy, 2 sec!)"
     echo "  just config-clear                # Clear external config"
     echo ""
+    echo "🧪 SMART TESTING"
+    echo "  just config-test-smart <config>  # Smart test with pass/fail detection (30 sec)"
+    echo "  just test-smart-database         # Test database configuration" 
+    echo "  just test-smart-system           # Test system configuration"
+    echo "  just test-all-configs            # Run all test configurations"
+    echo ""
     echo "🛠️  SETUP"
     echo "  just templates-all               # Build all templates"
     echo "  just setup-android               # Setup Android environment"
@@ -859,7 +865,278 @@ quick-test CONFIG_NAME:
 
 # Smart test with automatic pass/fail determination and unique test IDs
 config-test-smart CONFIG_NAME DURATION="30":
-    ./config-test-smart.sh {{CONFIG_NAME}} {{DURATION}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Configuration
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    DURATION="{{DURATION}}"
+    ANDROID_DEVICE_ID="${ANDROID_DEVICE_ID:-{{ANDROID_DEVICE_ID}}}"
+    ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME:-{{ANDROID_PACKAGE_NAME}}}"
+    
+    # Generate unique test ID
+    TEST_ID="test_$(date +%Y%m%d_%H%M%S)_$(head -c 4 /dev/urandom | xxd -p)"
+    
+    echo "🧪 Smart Test: $CONFIG_NAME"
+    echo "🆔 Test ID: $TEST_ID"
+    echo "⏱️  Duration: $DURATION seconds"
+    echo ""
+    
+    # Check prerequisites
+    if ! adb -s "$ANDROID_DEVICE_ID" shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Device not connected"
+        exit 1
+    fi
+    
+    if ! adb -s "$ANDROID_DEVICE_ID" shell pm list packages | grep -q "$ANDROID_PACKAGE_NAME"; then
+        echo "❌ App not installed"
+        exit 1
+    fi
+    
+    if [ ! -f "project/debug_configs/$CONFIG_NAME.json" ]; then
+        echo "❌ Config file not found: project/debug_configs/$CONFIG_NAME.json"
+        exit 1
+    fi
+    
+    echo "✅ Prerequisites satisfied"
+    echo ""
+    
+    # Create results directory
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    test_dir="test_results/smart_${CONFIG_NAME}_$timestamp"
+    mkdir -p "$test_dir"
+    
+    # Apply config with test ID
+    echo "🔄 Applying config with test ID..."
+    
+    # Create enhanced config with test ID metadata
+    enhanced_config=$(mktemp)
+    jq --arg test_id "$TEST_ID" '. + {"test_metadata": {"test_id": $test_id, "config": "'$CONFIG_NAME'", "timestamp": "'$timestamp'"}}' \
+        "project/debug_configs/$CONFIG_NAME.json" > "$enhanced_config"
+    
+    # Push config to device using proper permissions approach
+    TEMP_CONFIG="/sdcard/temp_debug_config_$TEST_ID.json"
+    
+    # Push to temporary location first
+    adb -s "$ANDROID_DEVICE_ID" push "$enhanced_config" "$TEMP_CONFIG"
+    
+    # Copy to app private directory using run-as
+    if adb -s "$ANDROID_DEVICE_ID" shell "run-as $ANDROID_PACKAGE_NAME cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
+        echo "✅ Config applied successfully"
+    else
+        echo "❌ Failed to apply config to app directory"
+        adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
+        rm "$enhanced_config"
+        exit 1
+    fi
+    
+    # Cleanup temp files
+    adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
+    rm "$enhanced_config"
+    
+    echo "🚀 Starting test..."
+    # Launch app
+    adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+    
+    # Monitor test execution
+    echo "📊 Monitoring test execution..."
+    echo "   Looking for test ID: $TEST_ID"
+    
+    log_file="$test_dir/test_logs.log"
+    test_result=1
+    test_complete=false
+    success_count=0
+    failure_count=0
+    startup_count=0
+    
+    # Start log capture
+    adb -s "$ANDROID_DEVICE_ID" logcat -v time > "$log_file" 2>/dev/null &
+    LOGCAT_PID=$!
+    
+    # Monitor for completion
+    for i in $(seq 1 $DURATION); do
+        sleep 1
+        
+        if [ -f "$log_file" ]; then
+            # Check for test completion
+            if grep -q "DEBUG_TEST_COMPLETE.*$TEST_ID" "$log_file" 2>/dev/null; then
+                test_complete=true
+                break
+            fi
+            
+            # Count interim results (clean output)
+            success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        fi
+        
+        # Progress indicator
+        if [ $((i % 5)) -eq 0 ]; then
+            echo "   Progress: $i/${DURATION}s (✅$success_count ❌$failure_count)"
+        fi
+    done
+    
+    # Stop log capture
+    kill $LOGCAT_PID 2>/dev/null || true
+    wait $LOGCAT_PID 2>/dev/null || true
+    
+    echo ""
+    echo "📋 Test Results Analysis"
+    echo "========================"
+    
+    # Parse final results
+    if [ -f "$log_file" ]; then
+        # Parse final results (clean output)
+        success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        startup_count=$(grep -c "debug.*startup.*$TEST_ID\|DEBUG_TEST_START.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        
+        # Ensure variables are integers (strip any whitespace/newlines and validate)
+        success_count=$(echo "$success_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        failure_count=$(echo "$failure_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        startup_count=$(echo "$startup_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        
+        echo "🆔 Test ID: $TEST_ID"
+        echo "📊 Startup events: $startup_count"
+        echo "📊 Successful actions: $success_count"
+        echo "📊 Failed actions: $failure_count"
+        
+        # Determine overall result
+        if [ "$test_complete" = true ]; then
+            echo "✅ Test completed normally"
+            
+            if [ "$failure_count" -eq 0 ] && [ "$success_count" -gt 0 ]; then
+                echo "🎉 OVERALL RESULT: PASS"
+                test_result=0
+            elif [ "$failure_count" -gt 0 ]; then
+                echo "❌ OVERALL RESULT: FAIL (failures detected)"
+                test_result=1
+            else
+                echo "⚠️  OVERALL RESULT: INCONCLUSIVE (no actions executed)"
+                test_result=1
+            fi
+        else
+            echo "⏰ Test timed out"
+            if [ "$failure_count" -gt 0 ]; then
+                echo "❌ OVERALL RESULT: FAIL (timeout + failures)"
+                test_result=1
+            else
+                echo "⚠️  OVERALL RESULT: TIMEOUT"
+                test_result=1
+            fi
+        fi
+    else
+        echo "❌ No log file found"
+        test_result=1
+    fi
+    
+    # Save results
+    cat > "$test_dir/test_results.json" << EOF
+    {
+        "test_id": "$TEST_ID",
+        "config": "$CONFIG_NAME",
+        "timestamp": "$timestamp",
+        "duration": $DURATION,
+        "test_complete": $test_complete,
+        "successful_actions": $success_count,
+        "failed_actions": $failure_count,
+        "startup_events": $startup_count,
+        "overall_result": $([ $test_result -eq 0 ] && echo '"PASS"' || echo '"FAIL"')
+    }
+    EOF
+    
+    echo ""
+    echo "💾 Test artifacts saved:"
+    echo "   📄 Logs: $test_dir/test_logs.log"
+    echo "   📊 Results: $test_dir/test_results.json"
+    echo "   🆔 Test ID: $TEST_ID"
+    echo ""
+    
+    if [ $test_result -eq 0 ]; then
+        echo "🎉 Test PASSED"
+    else
+        echo "💥 Test FAILED"
+    fi
+    
+    exit $test_result
+
+# Database-specific smart test (convenience recipe)
+test-smart-database DURATION="30":
+    just config-test-smart database-testing {{DURATION}}
+
+# System-specific smart test (convenience recipe)  
+test-smart-system DURATION="30":
+    just config-test-smart system-testing {{DURATION}}
+
+# Run all standard test configurations
+test-all-configs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧪 Running all test configurations..."
+    echo ""
+    
+    configs=("system-testing" "database-testing" "minimal-testing" "performance-testing")
+    failed_configs=()
+    
+    for config in "${configs[@]}"; do
+        echo "Testing configuration: $config"
+        if just config-test-smart "$config" 30; then
+            echo "✅ $config PASSED"
+        else
+            echo "❌ $config FAILED"
+            failed_configs+=("$config")
+        fi
+        echo ""
+    done
+    
+    echo "📋 Final Results:"
+    echo "=================="
+    for config in "${configs[@]}"; do
+        if [[ " ${failed_configs[*]} " =~ " $config " ]]; then
+            echo "❌ $config: FAILED"
+        else
+            echo "✅ $config: PASSED"  
+        fi
+    done
+    
+    if [ ${#failed_configs[@]} -eq 0 ]; then
+        echo ""
+        echo "🎉 All configurations PASSED!"
+        exit 0
+    else
+        echo ""
+        echo "💥 ${#failed_configs[@]} configuration(s) FAILED"
+        exit 1
+    fi
+
+# Build iOS executable with optimized settings  
+build-ios-executable:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🍎 Building iOS executable..."
+    
+    cd godot
+    
+    echo "============================="
+    echo "BUILDING IPHONE RELEASE ARM64"
+    echo "============================="
+    scons p=ios tools=no target=template_release arch=arm64 --jobs={{jobs}} \
+        module_bmp_enabled=no module_bullet_enabled=no module_csg_enabled=no \
+        module_dds_enabled=no module_enet_enabled=no module_etc_enabled=no \
+        module_gdnative_enabled=no module_gridmap_enabled=no module_hdr_enabled=no \
+        module_mbedtls_enabled=yes module_mobile_vr_enabled=no module_opus_enabled=no \
+        module_pvr_enabled=no module_recast_enabled=no module_regex_enabled=no \
+        module_squish_enabled=no module_tga_enabled=no module_thekla_unwrap_enabled=no \
+        module_theora_enabled=no module_tinyexr_enabled=no module_vorbis_enabled=no \
+        module_webm_enabled=no module_websocket_enabled=no disable_advanced_gui=no \
+        disable_3d=yes optimize=size use_lto=yes
+    
+    echo "============================="
+    echo "BUILDING IPHONE DEBUG ARM64"
+    echo "============================="
+    scons p=ios tools=no target=template_debug arch=arm64 --jobs={{jobs}}
+    
+    cd ..
+    echo "✅ iOS executable build complete"
 
 # Monitor Android debug logs in real-time
 monitor-debug-logs DURATION="30":
