@@ -9,28 +9,50 @@ import "justfile-support.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
 
-# Environment variables
-export GAME_NAME := env_var_or_default("CI_PROJECT_NAME", "gametwo")
-export GODOT_VERSION := "4.0"
-export GODOT_BUILD_VERSION := "4.3.rc"
-export GODOT_EXECUTABLE := "godot.macos.editor.arm64"  # For Apple Silicon Macs
-export PROJECT_PATH := justfile_directory() + "/project"
-export ANDROID_SDK_PATH := env_var_or_default("ANDROID_SDK_PATH", "~/Library/Android/sdk")
-export ANDROID_NDK_PATH := env_var_or_default("ANDROID_NDK_PATH", ANDROID_SDK_PATH + "/ndk/25.1.8937393")
-export ANDROID_PACKAGE_NAME := env_var_or_default("ANDROID_PACKAGE_NAME", "com.primaryhive." + GAME_NAME)
-export IOS_BUNDLE_IDENTIFIER := env_var_or_default("IOS_BUNDLE_IDENTIFIER", "com.primaryhive." + GAME_NAME)
-export IOS_IPHONE_DEVICE_ID := env_var_or_default("IOS_IPHONE_DEVICE_ID", "C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48")
-export IOS_IPAD_DEVICE_ID := env_var_or_default("IOS_IPAD_DEVICE_ID", "A4045434-B5F5-48B5-8654-C128A403149A")
-export KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")
+# ================================
+# CORE PROJECT CONFIGURATION
+# ================================
+GAME_NAME := env_var_or_default("CI_PROJECT_NAME", "gametwo")
+PROJECT_PATH := justfile_directory() + "/project"
+GODOT_EXECUTABLE := "godot.macos.editor.arm64"  # For Apple Silicon Macs
+GODOT_VERSION := "4.0"
+GODOT_BUILD_VERSION := "4.3.rc"
+
+# ================================
+# DEVICE CONFIGURATION
+# ================================
+# iOS Devices
+IOS_IPHONE_DEVICE_ID := env_var_or_default("IOS_IPHONE_DEVICE_ID", "C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48")
+IOS_IPAD_DEVICE_ID := env_var_or_default("IOS_IPAD_DEVICE_ID", "A4045434-B5F5-48B5-8654-C128A403149A")
+
+# Android Devices  
+ANDROID_DEVICE_ID := env_var_or_default("ANDROID_DEVICE_ID", "246d2c533a037ece")
+ANDROID_DEVICE_IP := env_var_or_default("ANDROID_DEVICE_IP", "192.168.1.100")
+
+# ================================
+# PLATFORM IDENTIFIERS
+# ================================
+ANDROID_PACKAGE_NAME := env_var_or_default("ANDROID_PACKAGE_NAME", "com.primaryhive." + GAME_NAME)
+IOS_BUNDLE_IDENTIFIER := env_var_or_default("IOS_BUNDLE_IDENTIFIER", "com.primaryhive." + GAME_NAME)
+
+# ================================
+# BUILD PATHS & TOOLS
+# ================================
+ANDROID_SDK_PATH := env_var_or_default("ANDROID_SDK_PATH", "~/Library/Android/sdk")
+ANDROID_NDK_PATH := env_var_or_default("ANDROID_NDK_PATH", ANDROID_SDK_PATH + "/ndk/25.1.8937393")
+ANDROID_GRADLE_DIR := "build/gradle"
+KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")
+
+# ================================
+# CREDENTIALS (Environment-based)
+# ================================
+# Only sensitive data remains as exports for security
 export KEYSTORE_PASSWORD := env_var_or_default("KEYSTORE_PASSWORD", "lovegametwo")
 export KEY_PASSWORD := env_var_or_default("KEY_PASSWORD", "lovegametwo")
 export APPLE_TEAM_ID := env_var_or_default("APPLE_TEAM_ID", "123")
 export APPLE_ID := env_var_or_default("APPLE_ID", "123")
 export APP_STORE_CONNECT_API_KEY_PATH := env_var_or_default("APP_STORE_CONNECT_API_KEY_PATH", "123")
 export IOS_PROVISIONING_PROFILE_UUID := env_var_or_default("IOS_PROVISIONING_PROFILE_UUID", "123")
-export ANDROID_DEVICE_IP := env_var_or_default("ANDROID_DEVICE_IP", "192.168.1.100")
-export ANDROID_DEVICE_ID := env_var_or_default("ANDROID_DEVICE_ID", "246d2c533a037ece")
-export ANDROID_GRADLE_DIR := "build/gradle"
 
 # Godot submodule settings
 GODOT_REPO := "https://github.com/godotengine/godot.git"
