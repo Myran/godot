@@ -1,5 +1,90 @@
 # Run-related commands for Godot 4 Projects
 
+# ================================
+# PLATFORM ABSTRACTION FUNCTIONS
+# ================================
+
+# Generic iOS app launcher - handles device selection and debug modes
+_ios-launch-app DEVICE_TYPE DEBUG_MODE="false": pre-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Device selection
+    if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    else
+        echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
+        exit 1
+    fi
+    
+    BUNDLE_ID="{{IOS_BUNDLE_IDENTIFIER}}"
+    
+    # Debug mode selection
+    if [ "{{DEBUG_MODE}}" = "true" ]; then
+        echo "Running on $DEVICE_NAME in debug mode..."
+        LAUNCH_FLAGS="--start-stopped"
+        DEBUG_TEXT=" in debug mode"
+    else
+        echo "Running on $DEVICE_NAME..."
+        LAUNCH_FLAGS="--activate"
+        DEBUG_TEXT=""
+    fi
+    
+    # Install the app
+    echo "Installing app on $DEVICE_NAME..."
+    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
+    
+    # Launch the app
+    echo "Launching app on $DEVICE_NAME$DEBUG_TEXT..."
+    xcrun devicectl device process launch --device ${DEVICE_ID} ${LAUNCH_FLAGS} ${BUNDLE_ID}
+
+# Generic Android APK installer - handles debug/release variants
+_android-install-apk APK_TYPE="release":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # APK selection
+    if [ "{{APK_TYPE}}" = "debug" ]; then
+        APK_FILE="export/android/{{GAME_NAME}}_debug.apk"
+        APK_NAME="debug"
+    elif [ "{{APK_TYPE}}" = "release" ]; then
+        APK_FILE="export/android/{{GAME_NAME}}.apk"
+        APK_NAME="release"
+    else
+        echo "❌ Invalid APK type: {{APK_TYPE}}. Use 'debug' or 'release'"
+        exit 1
+    fi
+    
+    echo "📦 Installing & launching $APK_NAME Android APK..."
+    echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
+    if adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
+        echo "Package exists. Uninstalling..."
+        adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}}
+    else
+        echo "Package does not exist."
+    fi
+    
+    echo "Installing $APK_NAME APK..."
+    adb -s {{ANDROID_DEVICE_ID}} install $APK_FILE
+    
+    echo "Running the app..."
+    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
+    echo "✅ $APK_NAME APK installed and launched!"
+
+# Generic iOS hot reload - handles device selection
+_ios-hotreload DEVICE_TYPE:
+    @echo "Updating game content and running on {{DEVICE_TYPE}}..."
+    just ios-update-pck
+    just _ios-launch-app {{DEVICE_TYPE}}
+
+# ================================
+# DESKTOP COMMANDS
+# ================================
+
 # LEVEL 1: Launch in Godot editor (1-2 sec, no build needed)
 run-desktop:
     @echo "Running project on desktop..."
@@ -32,73 +117,21 @@ run-desktop-debug:
         echo "Debug process terminated"
     fi
 
-# LEVEL 1: Launch existing app (1-2 sec, no changes)
-launch-ios-iphone: pre-build
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running on iPhone..."
-    
-    DEVICE_ID="C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48"
-    BUNDLE_ID="com.primaryhive.gametwo"
-    
-    # Install the app on iPhone
-    echo "Installing app on iPhone..."
-    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
-    
-    # Launch the app on iPhone
-    echo "Launching app on iPhone..."
-    xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
-
-# LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-launch-ios-iphone-debug: pre-build
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running on iPhone in debug mode..."
-    
-    DEVICE_ID="C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48"
-    BUNDLE_ID="com.primaryhive.gametwo"
-    
-    # Install the app on iPhone
-    echo "Installing app on iPhone..."
-    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
-    
-    # Launch the app on iPhone in debug mode
-    echo "Launching app on iPhone in debug mode..."
-    xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
+# ================================
+# iOS LAUNCH COMMANDS (Using Generic Functions)
+# ================================
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-launch-ios-ipad: pre-build
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running on iPad..."
-    
-    DEVICE_ID="A4045434-B5F5-48B5-8654-C128A403149A"
-    BUNDLE_ID="com.primaryhive.gametwo"
-    
-    # Install the app on iPad
-    echo "Installing app on iPad..."
-    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
-    
-    # Launch the app on iPad
-    echo "Launching app on iPad..."
-    xcrun devicectl device process launch --device ${DEVICE_ID} --activate ${BUNDLE_ID}
+launch-ios-iphone: (_ios-launch-app "iphone")
 
 # LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-launch-ios-ipad-debug: pre-build
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running on iPad in debug mode..."
-    
-    DEVICE_ID="A4045434-B5F5-48B5-8654-C128A403149A"
-    BUNDLE_ID="com.primaryhive.gametwo"
-    
-    # Install the app on iPad
-    echo "Installing app on iPad..."
-    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
-    
-    # Launch the app on iPad in debug mode
-    echo "Launching app on iPad in debug mode..."
-    xcrun devicectl device process launch --device ${DEVICE_ID} --start-stopped ${BUNDLE_ID}
+launch-ios-iphone-debug: (_ios-launch-app "iphone" "true")
+
+# LEVEL 1: Launch existing app (1-2 sec, no changes)
+launch-ios-ipad: (_ios-launch-app "ipad")
+
+# LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
+launch-ios-ipad-debug: (_ios-launch-app "ipad" "true")
 
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
@@ -107,56 +140,24 @@ run-android-debug:
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     @echo "✅ App launched in debug mode!"
 
+# ================================
+# ANDROID COMMANDS (Using Generic Functions)
+# ================================
+
 # LEVEL 2a: Install existing APK + launch (30 sec, requires pre-built APK)
-install-apk-android:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "📦 Installing & launching Android APK..."
-    echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
-    if adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
-        echo "Package exists. Uninstalling..."
-        adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}}
-    else
-        echo "Package does not exist."
-    fi
-    
-    echo "Installing release APK..."
-    adb -s {{ANDROID_DEVICE_ID}} install export/android/{{GAME_NAME}}.apk
-    
-    echo "Running the app..."
-    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-    echo "✅ APK installed and launched!"
+install-apk-android: (_android-install-apk "release")
 
 # LEVEL 2a: Install existing debug APK + launch (30 sec, requires pre-built APK)  
-install-apk-debug-android:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "📦 Installing & launching debug Android APK..."
-    echo "Checking if package {{ANDROID_PACKAGE_NAME}} exists..."
-    if adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
-        echo "Package exists. Uninstalling..."
-        adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}}
-    else
-        echo "Package does not exist."
-    fi
-    
-    echo "Installing debug APK..."
-    adb -s {{ANDROID_DEVICE_ID}} install export/android/{{GAME_NAME}}_debug.apk
-    
-    echo "Running the app..."
-    adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-    echo "✅ Debug APK installed and launched!"
+install-apk-debug-android: (_android-install-apk "debug")
+
+# ================================
+# HOT RELOAD COMMANDS (Using Generic Functions)
+# ================================
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-hotreload-ios-iphone:
-    @echo "Updating game content and running on iPhone..."
-    just ios-update-pck
-    just launch-ios-iphone
+hotreload-ios-iphone: (_ios-hotreload "iphone")
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-hotreload-ios-ipad:
-    @echo "Updating game content and running on iPad..."
-    just ios-update-pck
-    just launch-ios-ipad
+hotreload-ios-ipad: (_ios-hotreload "ipad")
 
 
