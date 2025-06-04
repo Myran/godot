@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy

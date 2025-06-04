@@ -52,12 +52,9 @@ func _ready() -> void:
 
 	Log.info("Debug startup complete", {}, ["debug", "startup"])
 
-	# Clear test context if it was set - check if DebugAction is available first
-	if ClassDB.class_exists("DebugAction"):
-		var debug_action_class = load("res://debug/actions/debug_action.gd")
-		if debug_action_class and debug_action_class.has_method("is_test_active"):
-			if debug_action_class.is_test_active():
-				debug_action_class.clear_test_context()
+	# Clear test context if it was set - this emits DEBUG_TEST_COMPLETE signal
+	if DebugAction.is_test_active():
+		DebugAction.clear_test_context()
 
 	# _cleanup_mobile_config()  # Disabled: Keep external config persistent for reuse
 

@@ -60,18 +60,18 @@ func execute_rtdb_action() -> void:
 
 # Get Firebase backend instance through data source
 func get_firebase_database():
-	if not Engine.has_singleton("data_source"):
+	# In Godot 4, autoloads are directly accessible by name
+	if not data_source:
 		Log.error(
 			"DataSource singleton not available for RTDB operations", {}, ["debug", "rtdb", "error"]
 		)
 		return null
 
-	var data_source = Engine.get_singleton("data_source")
-	if not data_source:
-		Log.error("DataSource singleton is null", {}, ["debug", "rtdb", "error"])
+	# Check if DataSource is initialized
+	if not data_source.is_initialized():
+		Log.error("DataSource not yet initialized for RTDB operations", {}, ["debug", "rtdb", "error"])
 		return null
 
-	# Access the backend directly
 	# Access the backend directly
 	var backend = data_source._backend
 	if backend:

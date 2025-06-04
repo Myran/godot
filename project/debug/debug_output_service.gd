@@ -63,7 +63,8 @@ static func _send_to_debug_menu_if_available(text: String, is_error: bool = fals
 
 static func _get_debug_menu_controller():
 	# Get the debug menu controller if it exists
-	var tree = Engine.get_main_loop() as SceneTree
+	# Use try-catch equivalent to prevent crashes during engine initialization
+	var tree = _safely_get_scene_tree()
 	if not tree:
 		return null
 	
@@ -72,9 +73,22 @@ static func _get_debug_menu_controller():
 		return debug_menu_nodes[0]  # Return the first debug menu controller
 	return null
 
+static func _safely_get_scene_tree() -> SceneTree:
+	# Safely get the scene tree without crashing during engine initialization
+	# Return null if the engine isn't ready yet
+	if Engine.is_editor_hint():
+		return null
+	
+	# Check if we can safely access the main loop
+	var main_loop = Engine.get_main_loop()
+	if main_loop == null:
+		return null
+	
+	return main_loop as SceneTree
+
 static func _should_output_to_console() -> bool:
 	# Output to console during test context or when no debug menu UI is available
-	return DebugAction.is_test_active() or not _get_debug_menu_controller()
+	return DebugAction.is_test_active() or _get_debug_menu_controller() == null
 
 static func _is_manual_context() -> bool:
 	# Check if debug menu is available
