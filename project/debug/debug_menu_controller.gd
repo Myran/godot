@@ -998,14 +998,16 @@ func _on_button_close_pressed() -> void:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 
 
-# Handle global debug events if needed
+ # Handle global debug events if needed
 func _on_global_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
-	if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
-		show()
-		Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])
-	elif event_type == DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
-		hide()
-		Log.debug("Debug menu closed via global event.", {}, ["debug", "ui"])
+	if event_type == DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST:
+		_toggle_result_expansion()
+	#if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
+		#show()
+		#Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])
+	#elif event_type == DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
+		#hide()
+		#Log.debug("Debug menu closed via global event.", {}, ["debug", "ui"])
 
 
 # For showing the menu programmatically

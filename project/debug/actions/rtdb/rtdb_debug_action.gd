@@ -83,17 +83,18 @@ func get_firebase_database():
 	# Access the backend directly
 	var backend = data_source._backend
 	if backend:
-		if backend.get_class() == "FirebaseBackend":
+		# Check if backend is FirebaseBackend using 'is' operator
+		if backend is FirebaseBackend:
 			Log.debug(
 				"Found Firebase backend for RTDB operations",
-				{"backend_type": backend.get_class()},
+				{"backend_type": backend.get_script().get_path() if backend.get_script() else "unknown"},
 				["debug", "rtdb"]
 			)
 			return backend
 		else:
 			Log.warning(
 				"Backend is not Firebase type",
-				{"backend_type": backend.get_class()},
+				{"backend_type": backend.get_script().get_path() if backend.get_script() else backend.get_class()},
 				["debug", "rtdb", "warning"]
 			)
 			return null

@@ -13,7 +13,8 @@ enum DebugEventType {
 	EVENT_FORCE_LOAD_MATCH_LEVEL,  # Preserved from original debug.gd
 	EVENT_OPEN_DB_DEBUG_MENU,  # Preserved from original debug.gd
 	EVENT_CLOSE_DB_DEBUG_MENU,  # Preserved from original debug.gd
-	EVENT_QUIT
+	EVENT_QUIT,
+	EVENT_TOGGLE_DEBUG_MENU_LIST
 }
 
 # Keep legacy popup here if desired, or move its control elsewhere

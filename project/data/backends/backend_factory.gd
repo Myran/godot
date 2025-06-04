@@ -10,7 +10,8 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		Log.warning("InternetStatus singleton not found, assuming connected", {}, [Log.TAG_NETWORK])
 		return true
 
-	Log.debug("Requesting internet status check", {}, [Log.TAG_NETWORK])
+	Log.info("Starting internet status check", {"timeout_sec": timeout_sec}, [Log.TAG_NETWORK])
+	var check_start_time = Time.get_ticks_msec()
 	internet_status.get_status()
 
 	var connection_status: Dictionary = {"available": false, "completed": false}
@@ -59,8 +60,13 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		return false
 	timeout_timer.start()
 
+	var frame_count = 0
 	while not connection_status.completed:
 		await Engine.get_main_loop().process_frame
+		frame_count += 1
+		if frame_count % 60 == 0:  # Log every second (assuming 60 fps)
+			var elapsed = (Time.get_ticks_msec() - check_start_time) / 1000.0
+			Log.debug("Still waiting for internet check", {"elapsed_sec": elapsed, "timeout_sec": timeout_sec}, [Log.TAG_NETWORK])
 
 	# Cleanup
 	if internet_status.has_internet.is_connected(has_internet_callable):
@@ -69,11 +75,15 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		internet_status.no_internet.disconnect(no_internet_callable)
 	timeout_timer.queue_free()
 
+	var check_duration = (Time.get_ticks_msec() - check_start_time) / 1000.0
 	var internet_available: bool = connection_status.available
 	if internet_available:
-		Log.info("Internet connection available", {}, [Log.TAG_NETWORK])
+		Log.info("Internet connection available", {"duration_sec": check_duration}, [Log.TAG_NETWORK])
 	else:
-		Log.warning("Internet connection unavailable or timed out", {}, [Log.TAG_NETWORK])
+		Log.warning("Internet connection unavailable or timed out", {
+			"duration_sec": check_duration,
+			"was_timeout": check_duration >= timeout_sec
+		}, [Log.TAG_NETWORK])
 
 	return internet_available
 
@@ -81,25 +91,39 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 static func create_backend() -> DataBackend:
 	var selected_backend_type: BackendSelection = BackendSelection.NONE
 
-	if OS.has_feature("editor"):
+	# Log all decision factors
+	var is_editor = OS.has_feature("editor") 
+	var force_local = ProjectSettings.get_setting("game/debug/force_local_data", false)
+	
+	Log.info("Backend selection starting", {
+		"is_editor": is_editor,
+		"force_local_data": force_local,
+		"platform": OS.get_name()
+	}, [Log.TAG_DB])
+
+	if is_editor:
 		Log.info("Running in editor, selecting local data source", {}, [Log.TAG_DB])
 		selected_backend_type = BackendSelection.LOCAL
-	elif ProjectSettings.get_setting("game/debug/force_local_data", false):
+	elif force_local:
 		Log.info("Debug flag forcing local data source", {}, [Log.TAG_DB])
 		selected_backend_type = BackendSelection.LOCAL
 	else:
-		Log.debug("Attempting to use Firebase, checking internet", {}, [Log.TAG_DB])
+		Log.info("Checking internet for Firebase backend selection", {}, [Log.TAG_DB])
+		var internet_check_start = Time.get_ticks_msec()
 		var internet_is_available: bool = await _check_internet_availability()
+		var internet_check_duration = (Time.get_ticks_msec() - internet_check_start) / 1000.0
 
 		if internet_is_available:
 			Log.info(
-				"Internet available, selecting Firebase backend", {}, [Log.TAG_DB, Log.TAG_FIREBASE]
+				"Internet available, selecting Firebase backend", 
+				{"check_duration_sec": internet_check_duration}, 
+				[Log.TAG_DB, Log.TAG_FIREBASE]
 			)
 			selected_backend_type = BackendSelection.FIREBASE
 		else:
 			Log.warning(
 				"Internet unavailable, falling back to local data source",
-				{},
+				{"check_duration_sec": internet_check_duration},
 				[Log.TAG_DB, Log.TAG_FIREBASE]
 			)
 			selected_backend_type = BackendSelection.LOCAL
