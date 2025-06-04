@@ -4,6 +4,9 @@
 class_name DebugActionRegistry
 extends Node
 
+# Signal emitted when registry initialization is complete
+signal registry_initialized(action_count: int)
+
 # Internal storage: category -> group -> Array[DebugAction]
 var _actions: Dictionary = {}
 var _flat_actions: Array[DebugAction] = []
@@ -31,6 +34,9 @@ func _ready() -> void:
 		},
 		["debug", "init"]
 	)
+
+	# Emit signal to notify that registry is ready
+	registry_initialized.emit(_flat_actions.size())
 
 
 func _register_all_actions() -> void:

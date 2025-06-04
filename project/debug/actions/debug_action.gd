@@ -3,6 +3,9 @@
 class_name DebugAction
 extends Resource
 
+# Preload the output service for unified output handling
+const DebugOutputService = preload("res://debug/debug_output_service.gd")
+
 @export var action_name: String = "Unnamed Action"
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"
 @export var group: String = ""  # e.g., "Basic", "Listeners", "Connectivity"
@@ -175,13 +178,22 @@ func execute() -> void:
 				["debug", "test", "failure"]
 			)
 
-	# Always emit completion signal for UI updates
+	# NEW: Unified output for completion using DebugOutputService
+	DebugOutputService.output_action_result(self, success, result if success else error_message)
+
+	# EXISTING: Keep signal for backward compatibility
 	execution_completed.emit(success, result if success else error_message)
 
 
 # Helper to update status via signal instead of direct UI access
 func _update_status(text: String, is_error: bool = false) -> void:
+	# NEW: Unified output for all execution paths using DebugOutputService
+	DebugOutputService.output_action_status(self, text, is_error)
+
+	# EXISTING: Keep signal for backward compatibility
 	status_updated.emit(text, is_error)
+
+	# Keep original logging for system logs
 	Log.info(
 		text,
 		{"category": category, "group": group, "action": action_name, "error": is_error},

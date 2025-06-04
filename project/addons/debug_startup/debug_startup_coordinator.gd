@@ -31,8 +31,12 @@ func _ready() -> void:
 	Log.info("Waiting for game ready...", {}, ["debug", "startup"])
 	await _wait_for_game_ready()
 
-	Log.info("Executing debug startup actions", {"count": actions.size()}, ["debug", "startup"])
+	# Wait for action registry to be fully initialized using proper signal-based approach
+	Log.info("Waiting for action registry initialization...", {}, ["debug", "startup"])
 	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
+	await _wait_for_registry_ready(registry)
+
+	Log.info("Executing debug startup actions", {"count": actions.size()}, ["debug", "startup"])
 
 	# Simple execution loop - trust the registry to handle its own errors
 	for action_name in actions:
@@ -47,11 +51,14 @@ func _ready() -> void:
 			Log.error("Action not found", {"action": action_name}, ["debug", "startup", "error"])
 
 	Log.info("Debug startup complete", {}, ["debug", "startup"])
-	
-	# Clear test context if it was set
-	if DebugAction.is_test_active():
-		DebugAction.clear_test_context()
-	
+
+	# Clear test context if it was set - check if DebugAction is available first
+	if ClassDB.class_exists("DebugAction"):
+		var debug_action_class = load("res://debug/actions/debug_action.gd")
+		if debug_action_class and debug_action_class.has_method("is_test_active"):
+			if debug_action_class.is_test_active():
+				debug_action_class.clear_test_context()
+
 	# _cleanup_mobile_config()  # Disabled: Keep external config persistent for reuse
 
 
@@ -61,7 +68,7 @@ func _get_action_names() -> Array[String]:
 	if OS.has_feature("mobile"):
 		# Check user:// first (external config), then fallback to res:// (embedded config)
 		print("Checking for external config in user:// directory...")
-		
+
 		# FIXED: Check if external config file EXISTS, not if actions array is empty
 		var external_config_path := "user://debug_startup_actions.json"
 		if FileAccess.file_exists(external_config_path):
@@ -70,7 +77,7 @@ func _get_action_names() -> Array[String]:
 			print("External config found in user:// with actions: ", external_actions)
 			print("Using external config (even if empty - respecting user choice)")
 			return external_actions
-		
+
 		print("No external config file found, using embedded config...")
 		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
 		print("Embedded config parsed, actions: ", embedded_actions)
@@ -177,7 +184,7 @@ func _parse_config_file(path: String) -> Array[String]:
 		return []
 
 	var data := json.data as Dictionary
-	
+
 	# Check for test metadata and set test context if present
 	if data.has("test_metadata"):
 		var test_metadata := data.test_metadata as Dictionary
@@ -186,7 +193,7 @@ func _parse_config_file(path: String) -> Array[String]:
 			print("Test metadata found, setting test context: ", test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
-	
+
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
 		var actions: Array[String] = []
@@ -208,6 +215,23 @@ func _wait_for_game_ready() -> void:
 		await get_tree().process_frame
 
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
+
+
+func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
+	# Proper event-driven approach: wait for the registry's initialization signal
+	if not registry:
+		Log.error("Registry not available", {}, ["debug", "startup", "error"])
+		return
+
+	# Check if already initialized
+	if registry.get_all_actions().size() > 0:
+		Log.info("Action registry already ready", {"action_count": registry.get_all_actions().size()}, ["debug", "startup"])
+		return
+
+	# Wait for the registry_initialized signal
+	Log.info("Waiting for registry initialization signal...", {}, ["debug", "startup"])
+	var action_count: int = await registry.registry_initialized
+	Log.info("Action registry ready", {"action_count": action_count}, ["debug", "startup"])
 
 
 func _cleanup_mobile_config() -> void:

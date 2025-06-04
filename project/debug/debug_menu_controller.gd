@@ -3,6 +3,9 @@
 extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
+# Preload the output service for unified output handling
+const DebugOutputService = preload("res://debug/debug_output_service.gd")
+
 # Font sizes for RichTextLabel content
 const FONT_SIZE_XXL: int = 34
 const FONT_SIZE_XL: int = 32
@@ -158,6 +161,9 @@ func _ready() -> void:
 	text_toggle_button.pressed.connect(_on_text_toggle_button_pressed)
 
 	DebugManager.debug_event.connect(_on_global_debug_event)
+
+	# Add to group so DebugOutputService can detect manual context
+	add_to_group("debug_menu")
 
 	_populate_main_categories_view()
 	%Panel.gui_input.connect(_on_panel_gui_input)
@@ -995,6 +1001,17 @@ func show_menu_content() -> void:
 	show()
 	Log.debug("Debug menu shown via direct call.", {}, ["debug", "ui"])
 
+# Method called by DebugOutputService to display output from both manual and startup execution
+func display_output_from_service(text: String, is_error: bool = false) -> void:
+	# This method allows the debug menu to show output from both manual button clicks
+	# and startup/test file execution, providing unified output display
+	_update_status_label_text(text, is_error)
+
+	# If the debug menu is not currently visible, show it to display the results
+	if not visible:
+		show()
+		Log.debug("Debug menu opened to display execution results", {}, ["debug", "ui"])
+
 
 # Validation helper for navigation state
 func _validate_navigation_state(context: String) -> bool:
@@ -1028,339 +1045,14 @@ func _add_category_item_to_list(category_name: String, index: int) -> void:
 # Build report for single action execution
 func _build_single_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
 	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
-	var report: String = ""
-
-	# Header with enhanced styling and status indicators
-	var status_icon: String = "✓" if success else "✗"
-	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-	var status_text: String = "SUCCESS" if success else "FAILED"
-
-	# Action title with proper typography hierarchy
-	report += "[font_size=%s][b]%s[/b][/font_size]\n" % [FONT_SIZE_XXL, action.action_name]
-	report += (
-		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
-		% [FONT_SIZE_XL, status_color, status_icon, status_text]
-	)
-
-	# Add description with improved readability
-	if not action.description.is_empty():
-		report += (
-			"[font_size=%s][color=%s][i]%s[/i][/color][/font_size]\n\n"
-			% [FONT_SIZE_M, UI_COLORS.text_secondary, action.description]
-		)
-
-	# Add payload information with NO TRUNCATION
-	if payload != null:
-		report += (
-			"[font_size=%s][b][color=%s]RESULT DATA[/color][/b][/font_size]\n"
-			% [FONT_SIZE_XL, UI_COLORS.info]
-		)
-		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
-		report += _pretty_print_value_no_truncation(payload, 0)
-		report += "\n\n"
-
-	# Add metadata section with better organization
-	report += (
-		"[font_size=%s][color=%s]METADATA[/color][/font_size]\n" % [FONT_SIZE_M, UI_COLORS.info]
-	)
-	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
-	report += (
-		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
-		% [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
-	)
-	if not action.group.is_empty():
-		report += (
-			"[color=%s]Group:[/color] [color=%s]%s[/color]\n"
-			% [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
-		)
-
-	# Add timestamp
-	var timestamp: String = Time.get_datetime_string_from_system()
-	report += (
-		"[color=%s]Executed:[/color] [color=%s]%s[/color]\n"
-		% [UI_COLORS.text_secondary, UI_COLORS.text_primary, timestamp]
-	)
-
-	return report
+	# Delegate to DebugOutputService for consistent formatting across all execution paths
+	return DebugOutputService.format_completion_report(action, success, payload)
 
 
 # SOLID Principle: Single Responsibility - Helper methods for specific tasks
 
 
-## Pretty-print a value with NO TRUNCATION and modern styling
-func _pretty_print_value_no_truncation(
-	value: Variant, indent_level: int = 0, max_depth: int = 10
-) -> String:
-	if indent_level > max_depth:
-		return "[color=%s]<maximum depth reached>[/color]" % UI_COLORS.warning
-
-	if value == null:
-		return "[color=%s]null[/color]" % UI_COLORS.null_value
-
-	if value is Dictionary:
-		var val_dic: Dictionary = value
-		return _format_dictionary_no_truncation(val_dic, indent_level, max_depth)
-
-	elif value is Array:
-		var val_array: Array = value
-		return _format_array_no_truncation(val_array, indent_level, max_depth)
-	elif value is String:
-		var str_val: String = value
-		# NO TRUNCATION - show full string with proper formatting
-		var escaped_str: String = str_val.replace("\n", "\\n").replace("\t", "\\t")
-		return '[color=%s]"%s"[/color]' % [UI_COLORS.string, escaped_str]
-	elif value is bool:
-		return "[color=%s]%s[/color]" % [UI_COLORS.boolean, str(value)]
-	elif value is int or value is float:
-		return "[color=%s]%s[/color]" % [UI_COLORS.number, str(value)]
-	else:
-		# NO TRUNCATION - show full value regardless of length
-		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
-
-
-## Legacy method for backward compatibility (still used in some places)
-func _pretty_print_value(value: Variant, indent_level: int = 0, max_depth: int = 5) -> String:
-	# Redirect to no-truncation version for consistency
-	return _pretty_print_value_no_truncation(value, indent_level, max_depth)
-
-
-## Format dictionary with NO TRUNCATION and enhanced styling
-func _format_dictionary_no_truncation(
-	dict: Dictionary, indent_level: int = 0, max_depth: int = 10
-) -> String:
-	if dict.is_empty():
-		return "[color=%s]{ }[/color]" % UI_COLORS.muted
-
-	if indent_level > max_depth:
-		return "[color=%s]{ <max depth> }[/color]" % UI_COLORS.warning
-
-	var indent: String = "  ".repeat(indent_level)
-	var child_indent: String = "  ".repeat(indent_level + 1)
-	var result: String = "[color=%s]{[/color]\n" % UI_COLORS.text_secondary
-
-	var keys: Array = dict.keys()
-	keys.sort()  # Sort keys for consistent display
-
-	# NO ITEM LIMIT - show all items regardless of count
-	for key: Variant in keys:
-		var value: Variant = dict[key]
-		var key_str: String = "[color=%s]%s[/color]" % [UI_COLORS.key, str(key)]
-		var value_str: String = _pretty_print_value_no_truncation(
-			value, indent_level + 1, max_depth
-		)
-
-		# Handle multiline values with better formatting
-		if "\n" in value_str:
-			result += (
-				child_indent
-				+ (
-					"%s:\n%s%s\n"
-					% [
-						key_str,
-						"  ".repeat(indent_level + 2),
-						value_str.replace("\n", "\n" + "  ".repeat(indent_level + 2))
-					]
-				)
-			)
-		else:
-			result += child_indent + "%s: %s\n" % [key_str, value_str]
-
-	result += indent + "[color=%s]}[/color]" % UI_COLORS.text_secondary
-	return result
-
-
-## Legacy method for backward compatibility
-func _format_dictionary(dict: Dictionary, indent_level: int = 0, max_depth: int = 5) -> String:
-	return _format_dictionary_no_truncation(dict, indent_level, max_depth)
-
-
-## Format array with NO TRUNCATION and enhanced styling
-func _format_array_no_truncation(
-	array: Array, indent_level: int = 0, max_depth: int = 10
-) -> String:
-	if array.is_empty():
-		return "[color=%s][ ][/color]" % UI_COLORS.muted
-
-	if indent_level > max_depth:
-		return "[color=%s][ <max depth> ][/color]" % UI_COLORS.warning
-
-	# For small arrays of simple values, show inline with better styling
-	if array.size() <= 5 and indent_level > 0:
-		var all_simple: bool = true
-		for item: Variant in array:
-			if item is Dictionary or item is Array:
-				all_simple = false
-				break
-
-		if all_simple:
-			var items: Array[String] = []
-			for item: Variant in array:
-				items.append(_pretty_print_value_no_truncation(item, indent_level + 1, max_depth))
-			return (
-				"[color=%s][[/color] %s [color=%s]][/color]"
-				% [UI_COLORS.text_secondary, ", ".join(items), UI_COLORS.text_secondary]
-			)
-
-	var indent: String = "  ".repeat(indent_level)
-	var child_indent: String = "  ".repeat(indent_level + 1)
-	var result: String = "[color=%s][[/color]\n" % UI_COLORS.text_secondary
-
-	# NO ITEM LIMIT - show all items regardless of count
-	for i: int in range(array.size()):
-		var item: Variant = array[i]
-		var item_str: String = _pretty_print_value_no_truncation(item, indent_level + 1, max_depth)
-
-		# Handle multiline items with better formatting
-		if "\n" in item_str:
-			result += (
-				child_indent
-				+ (
-					"[color=%s][%d]:[/color]\n%s%s\n"
-					% [
-						UI_COLORS.number,
-						i,
-						"  ".repeat(indent_level + 2),
-						item_str.replace("\n", "\n" + "  ".repeat(indent_level + 2))
-					]
-				)
-			)
-		else:
-			result += (
-				child_indent + "[color=%s][%d]:[/color] %s\n" % [UI_COLORS.number, i, item_str]
-			)
-
-	result += indent + "[color=%s]][/color]" % UI_COLORS.text_secondary
-	return result
-
-
-## Legacy method for backward compatibility
-func _format_array(array: Array, indent_level: int = 0, max_depth: int = 5) -> String:
-	return _format_array_no_truncation(array, indent_level, max_depth)
-
-
-## Extract key information from complex payloads for display
-func _format_payload_summary(payload: Variant) -> String:
-	if payload == null:
-		return "No result data"
-
-	# Handle dictionary payloads (common from Firebase actions)
-	if payload is Dictionary:
-		var dict_payload: Dictionary = payload
-
-		# Firebase operation result
-		if dict_payload.has("operation") and dict_payload.has("result"):
-			var operation: String = str(dict_payload.get("operation"))
-			var result_data: Variant = dict_payload.get("result")
-			var path_data: Variant = dict_payload.get("path", "")
-
-			var summary: String = "Operation: %s\n" % operation
-			if (
-				path_data != null
-				and (
-					(path_data is Array and path_data.size() > 0)
-					or (path_data is String and path_data != "")
-				)
-			):
-				var path_str: String = ""
-				if path_data is Array:
-					var path_array: Array = path_data
-					var string_array: PackedStringArray = PackedStringArray()
-					for item: Variant in path_array:
-						string_array.append(str(item))
-					path_str = "/".join(string_array)  # Convert array to path-like string
-				else:
-					path_str = str(path_data)
-				summary += "Path: %s\n" % path_str
-
-			# Pretty-print result data for better readability
-			summary += "Result:\n"
-			var formatted_result: String = _pretty_print_value(result_data, 1, 5)
-			summary += "  %s" % formatted_result.replace("\n", "\n  ")
-
-			return summary
-
-		# Generic dictionary - use pretty-printing for better readability
-		else:
-			return "Result:\n  %s" % _pretty_print_value(dict_payload, 1, 5).replace("\n", "\n  ")
-
-	# Handle simple types with pretty-printing
-	return "Result: %s" % _pretty_print_value(payload, 0, 5)
-
-
-## Format error message from payload, extracting meaningful info instead of raw dict
-func _format_error_message(payload: Variant) -> String:
-	if payload == null:
-		return "[color=%s]Unknown error - no details provided[/color]" % UI_COLORS.danger
-
-	# Handle dictionary errors (common from Firebase) - NO TRUNCATION
-	if payload is Dictionary:
-		var dict_payload: Dictionary = payload
-
-		# Firebase error with structured info
-		if dict_payload.has("error"):
-			var error_data: Variant = dict_payload.get("error")
-			var error_str: String = str(error_data)
-
-			# Extract meaningful error messages with full context
-			if error_str.contains("PERMISSION_DENIED"):
-				return (
-					"[color=%s]Permission denied[/color] - check Firebase rules\n[color=%s]Full error:[/color] %s"
-					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
-				)
-			elif error_str.contains("NETWORK_ERROR"):
-				return (
-					"[color=%s]Network connection issue[/color]\n[color=%s]Full error:[/color] %s"
-					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
-				)
-			elif error_str.contains("DATABASE_ERROR"):
-				return (
-					"[color=%s]Database operation failed[/color]\n[color=%s]Full error:[/color] %s"
-					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
-				)
-			elif error_str.contains("timeout") or error_str.contains("TIMEOUT"):
-				return (
-					"[color=%s]Operation timed out[/color]\n[color=%s]Full error:[/color] %s"
-					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
-				)
-			elif error_str.contains("not found") or error_str.contains("NOT_FOUND"):
-				return (
-					"[color=%s]Resource not found[/color]\n[color=%s]Full error:[/color] %s"
-					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
-				)
-			else:
-				# NO TRUNCATION - show full error with styling
-				return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
-
-		# Generic dictionary error - show full structured data
-		else:
-			return (
-				"[color=%s]Structured error:[/color]\n%s"
-				% [UI_COLORS.danger, _pretty_print_value_no_truncation(dict_payload)]
-			)
-
-	var payload_str: String = str(payload)
-
-	# Try to extract meaningful error info from string patterns - NO TRUNCATION
-	if payload_str.contains("FirebaseDatabase"):
-		return (
-			"[color=%s]Firebase connection issue[/color]\n[color=%s]Details:[/color] %s"
-			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
-		)
-	elif payload_str.contains("timeout"):
-		return (
-			"[color=%s]Operation timed out[/color]\n[color=%s]Details:[/color] %s"
-			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
-		)
-	elif payload_str.contains("permission"):
-		return (
-			"[color=%s]Permission denied[/color]\n[color=%s]Details:[/color] %s"
-			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
-		)
-	elif payload_str.contains("not found"):
-		return (
-			"[color=%s]Resource not found[/color]\n[color=%s]Details:[/color] %s"
-			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
-		)
-	else:
-		# NO TRUNCATION - show full error message with proper styling
-		return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
+# All formatting methods have been moved to DebugOutputFormatter for DRY principle
+# Methods removed: _pretty_print_value_no_truncation, _format_dictionary_no_truncation,
+# _format_array_no_truncation, _format_payload_summary, _format_error_message
+# These are now handled by DebugOutputService which uses DebugOutputFormatter
