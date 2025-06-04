@@ -14,6 +14,7 @@ func _ready() -> void:
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())
 	# Connect to the new DebugManager instead of the legacy debug system
+
 	DebugManager.debug_event.connect(_on_debug_event)
 	match OS.get_name():
 		"Windows":
@@ -29,6 +30,8 @@ func _ready() -> void:
 		"Web":
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
+
+	DebugStartupCoordinator.startDebugCoordinator()
 
 func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	match event_type:

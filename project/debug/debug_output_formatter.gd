@@ -57,34 +57,34 @@ func _format_status_message(action: DebugAction, text: String, is_error: bool) -
 func _build_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
 	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
 	var report: String = ""
-	
+
 	# Header with modern styling
 	report += "[font_size=%s][b]ACTION EXECUTION COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
-	
+
 	# Action details section
 	report += "[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 	report += "[color=%s]Name:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
 	report += "[color=%s]Category:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
-	
+
 	if action.group != "":
 		report += "[color=%s]Group:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
-	
+
 	if action.description != "":
 		report += "[color=%s]Description:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
-	
+
 	report += "\n"
-	
+
 	# Status section with enhanced visual indicators
 	var status_icon: String = "✓" if success else "✗"
 	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	var status_text: String = "SUCCESS" if success else "FAILURE"
-	
+
 	report += "[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 	report += "[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n" % [FONT_SIZE_XL, status_color, status_icon, status_text]
-	
+
 	# Result/error details
 	if success:
 		report += "[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
@@ -99,10 +99,10 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 		var error_message: String = _format_error_message(payload)
 		report += error_message + "\n"
-	
+
 	# Timestamp
 	report += "\n[color=%s]Completed at: %s[/color]" % [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
-	
+
 	return report
 
 # Pretty-print a value with NO TRUNCATION and modern styling

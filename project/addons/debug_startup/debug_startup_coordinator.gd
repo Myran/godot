@@ -7,6 +7,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	print("DebugStartupCoordinator _ready() called")
+
+func startDebugCoordinator()->void:
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
 	# Fail fast on missing dependency - that's it
@@ -26,7 +28,7 @@ func _ready() -> void:
 	if actions.is_empty():
 		Log.info("No debug startup actions to execute", {}, ["debug", "startup"])
 		return
-
+	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	# Wait for game ready then execute
 	Log.info("Waiting for game ready...", {}, ["debug", "startup"])
 	await _wait_for_game_ready()
@@ -242,17 +244,17 @@ func _wait_for_data_source_ready() -> void:
 	if not has_node("/root/data_source"):
 		Log.warning("DataSource autoload not found, skipping DataSource wait", {}, ["debug", "startup"])
 		return
-	
+
 	var data_source_node = get_node("/root/data_source")
 	if not data_source_node:
 		Log.warning("DataSource node not available, skipping DataSource wait", {}, ["debug", "startup"])
 		return
-	
+
 	# Check if already initialized
 	if data_source_node.has_method("is_initialized") and data_source_node.is_initialized():
 		Log.info("DataSource already initialized", {}, ["debug", "startup"])
 		return
-	
+
 	# Wait for startup_completed signal
 	if data_source_node.has_signal("startup_completed"):
 		Log.info("Waiting for DataSource startup_completed signal...", {}, ["debug", "startup"])

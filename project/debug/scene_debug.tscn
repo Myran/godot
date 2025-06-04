@@ -52,6 +52,7 @@ grow_horizontal = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
+theme_override_font_sizes/font_size = 50
 disabled = true
 text = "Expand"
 
@@ -70,6 +71,7 @@ context_menu_enabled = true
 [node name="RunAllButton" type="Button" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 50
 disabled = true
 text = "Run All Tests"
 

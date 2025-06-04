@@ -18,13 +18,13 @@ static func _ensure_initialized() -> bool:
 static func output_action_status(action: DebugAction, text: String, is_error: bool = false) -> void:
 	if not _ensure_initialized():
 		return
-	
+
 	# Always log to system first (most reliable)
 	_log_to_system(action, text, is_error)
-	
+
 	# Try to send to debug menu UI if available (both manual and startup execution)
 	_send_to_debug_menu_if_available(text, is_error)
-	
+
 	# Also output to console if appropriate
 	if _should_output_to_console():
 		_formatter.format_and_output_status(action, text, is_error)
@@ -32,13 +32,13 @@ static func output_action_status(action: DebugAction, text: String, is_error: bo
 static func output_action_result(action: DebugAction, success: bool, result: Variant) -> void:
 	if not _ensure_initialized():
 		return
-	
+
 	var report = _formatter.format_completion_report(action, success, result)
 	_log_to_system(action, report, not success)
-	
+
 	# Try to send formatted report to debug menu UI if available
 	_send_to_debug_menu_if_available(report, not success)
-	
+
 	# Also output to console if appropriate
 	if _should_output_to_console():
 		_formatter.output_formatted_text(report)
@@ -46,7 +46,7 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 static func format_completion_report(action: DebugAction, success: bool, result: Variant) -> String:
 	if not _ensure_initialized():
 		return "Error: DebugOutputService not initialized"
-	
+
 	return _formatter.format_completion_report(action, success, result)
 
 static func _log_to_system(action: DebugAction, text: String, is_error: bool) -> void:
@@ -67,7 +67,7 @@ static func _get_debug_menu_controller():
 	var tree = _safely_get_scene_tree()
 	if not tree:
 		return null
-	
+
 	var debug_menu_nodes = tree.get_nodes_in_group("debug_menu")
 	if debug_menu_nodes.size() > 0:
 		return debug_menu_nodes[0]  # Return the first debug menu controller
@@ -78,12 +78,12 @@ static func _safely_get_scene_tree() -> SceneTree:
 	# Return null if the engine isn't ready yet
 	if Engine.is_editor_hint():
 		return null
-	
+
 	# Check if we can safely access the main loop
 	var main_loop = Engine.get_main_loop()
 	if main_loop == null:
 		return null
-	
+
 	return main_loop as SceneTree
 
 static func _should_output_to_console() -> bool:

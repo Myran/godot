@@ -172,7 +172,7 @@ func _ready() -> void:
 
 	# Initialize toggle button state
 	_update_toggle_button_state()
-	
+
 	# Start monitoring for test mode changes
 	_start_test_mode_monitoring()
 
@@ -1076,10 +1076,10 @@ func _start_test_mode_monitoring() -> void:
 func _check_test_mode_status() -> void:
 	"""Check if test mode status has changed and update UI accordingly"""
 	var current_test_active: bool = DebugAction.is_test_active()
-	
+
 	if current_test_active != _is_test_mode_active:
 		_is_test_mode_active = current_test_active
-		
+
 		if _is_test_mode_active:
 			_enter_test_mode()
 		else:
@@ -1091,10 +1091,10 @@ func _enter_test_mode() -> void:
 		# Remember that UI was hidden by test mode, not user
 		_ui_hidden_by_test = true
 		_toggle_result_expansion()
-		
+
 		# Update status to show test mode is active
 		_update_status_label_text("🧪 Test Mode Active - UI Hidden for Clean Output View")
-		
+
 		Log.debug("Entered test mode - UI hidden automatically", {}, ["debug", "ui", "test"])
 
 func _exit_test_mode() -> void:
@@ -1103,7 +1103,7 @@ func _exit_test_mode() -> void:
 		# Only restore if UI was hidden by test mode (not user)
 		_ui_hidden_by_test = false
 		_toggle_result_expansion()
-		
+
 		Log.debug("Exited test mode - UI restored automatically", {}, ["debug", "ui", "test"])
 
 
