@@ -7,10 +7,18 @@ extends DebugAction
 func _init() -> void:
 	# Set category to RTDB by default, subclasses can override
 	category = "RTDB"
+	
+	# Connect the completion signal to our test counting method
+	execution_completed.connect(_on_execution_completed)
+	# DEBUG: Confirm signal connection
+	Log.info("RTDB signal connected", {"action_class": get_script().get_path()}, ["debug", "rtdb", "signal"])
 
 
 # Handle test tracking when action completes
 func _on_execution_completed(success: bool, result: Variant) -> void:
+	# DEBUG: Simple print to verify signal handler is called
+	print("🔥 RTDB SIGNAL HANDLER CALLED: success=", success, " action=", action_name)
+	
 	if DebugAction.current_test_id != "":
 		if success:
 			DebugAction.test_success_count += 1
@@ -43,7 +51,7 @@ func _on_execution_completed(success: bool, result: Variant) -> void:
 
 # Enhanced execute method with test tracking
 func execute() -> void:
-	# Track test execution if we're in test context
+	# Track test execution if we're in test context (action count only, success/failure counted in signal handler)
 	if DebugAction.current_test_id != "":
 		DebugAction.test_action_count += 1
 
@@ -114,6 +122,8 @@ func execute_simple_operation(
 		var error_msg = "Firebase backend not available for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
+		
+		# Signal handler will count this failure - no direct counting needed
 		execution_completed.emit(false, {"error": error_msg})
 		return [false, {"error": error_msg}]
 
@@ -121,6 +131,8 @@ func execute_simple_operation(
 		var error_msg = "Firebase backend not initialized for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
+		
+		# Signal handler will count this failure - no direct counting needed
 		execution_completed.emit(false, {"error": error_msg})
 		return [false, {"error": error_msg}]
 
@@ -151,6 +163,8 @@ func execute_simple_operation(
 			var error_msg = "Unsupported RTDB method: " + method
 			Log.error(error_msg, {"method": method}, ["debug", "rtdb", "error"])
 			_update_status("ERROR: " + error_msg, true)
+			
+			# Signal handler will count this failure - no direct counting needed
 			execution_completed.emit(false, {"error": error_msg})
 			return [false, {"error": error_msg}]
 

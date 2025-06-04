@@ -19,7 +19,5 @@ func execute_rtdb_action() -> void:
 		test_value,
 		action_name
 	)
-	# Emit completion signal based on result
-	var success: bool = result[0] if result.size() > 0 else false
-	var payload: Variant = result[1] if result.size() > 1 else null
-	execution_completed.emit(success, payload)
+	# execute_simple_operation() already emits execution_completed signal
+	# No need to emit again here to avoid double counting

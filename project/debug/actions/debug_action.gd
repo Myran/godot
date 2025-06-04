@@ -132,14 +132,18 @@ func execute() -> void:
 		# Execute the action - GDScript doesn't have try/except
 		result = await action_callable.call()
 
-		# Check if execution was successful (basic check)
-		if result != null or action_callable.get_method() != "":
+		# Check if execution was successful (improved error detection)
+		if result == false or (result is Dictionary and result.has("error")) or (result is Array and result.size() > 0 and result[0] == false):
+			success = false
+			error_message = str(result) if result != false else "Action returned false"
+			_update_status("ERROR: " + action_name + " failed", true)
+		elif result != null:
 			success = true
 			_update_status("Completed: " + action_name)
 		else:
 			success = false
-			error_message = "Action returned null or invalid result"
-			_update_status("ERROR: " + action_name + " execution issue", true)
+			error_message = "Action returned null"
+			_update_status("ERROR: " + action_name + " returned null", true)
 	else:
 		# No callable defined
 		success = false

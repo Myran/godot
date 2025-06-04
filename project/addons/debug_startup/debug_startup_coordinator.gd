@@ -44,6 +44,8 @@ func _ready() -> void:
 		var action := _get_action_by_name(registry, action_name)
 		if action:
 			Log.info("Executing action", {"action": action_name}, ["debug", "startup"])
+			# DEBUG: Log the exact class being executed
+			print("🔥 EXECUTING ACTION CLASS: ", action.get_script().get_path(), " name=", action_name)
 			action.execute()
 			#	await action.execution_completed
 			Log.info("Next action..", {}, ["debug", "startup"])

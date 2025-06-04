@@ -59,6 +59,8 @@ var _is_executing_all: bool = false
 # Navigation list toggle state
 var _last_action_data: Dictionary = {}
 var _is_list_hidden: bool = false  # Track if navigation list is hidden
+var _is_test_mode_active: bool = false  # Track if automated test is running
+var _ui_hidden_by_test: bool = false  # Track if UI was hidden by test mode (not user)
 # UI References (ensure these paths match your scene_debug.tscn)
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
 @onready var item_list_navigator: ItemList = %DebugItemList
@@ -170,6 +172,9 @@ func _ready() -> void:
 
 	# Initialize toggle button state
 	_update_toggle_button_state()
+	
+	# Start monitoring for test mode changes
+	_start_test_mode_monitoring()
 
 
 # Configure UI elements for optimal no-truncation display
@@ -227,10 +232,17 @@ func _update_toggle_button_state() -> void:
 	text_toggle_button.visible = true
 	text_toggle_button.disabled = false
 
-	if _is_list_hidden:
-		text_toggle_button.text = "Debug Menu"
+	# Update button text based on state
+	if _is_test_mode_active:
+		if _is_list_hidden:
+			text_toggle_button.text = "🧪 Test View"
+		else:
+			text_toggle_button.text = "🧪 Test Menu"
 	else:
-		text_toggle_button.text = "Debug Menu"
+		if _is_list_hidden:
+			text_toggle_button.text = "Debug Menu"
+		else:
+			text_toggle_button.text = "Debug Menu"
 
 
 # Modern UX Color Palette - Semantic and accessible colors
@@ -1050,6 +1062,49 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 
 
 # SOLID Principle: Single Responsibility - Helper methods for specific tasks
+
+# Test Mode Management - Auto-hide UI during automated tests
+func _start_test_mode_monitoring() -> void:
+	"""Start monitoring for test mode changes to auto-hide UI during tests"""
+	# Check for test mode every 0.5 seconds
+	var timer := Timer.new()
+	timer.wait_time = 0.5
+	timer.timeout.connect(_check_test_mode_status)
+	timer.autostart = true
+	add_child(timer)
+
+func _check_test_mode_status() -> void:
+	"""Check if test mode status has changed and update UI accordingly"""
+	var current_test_active: bool = DebugAction.is_test_active()
+	
+	if current_test_active != _is_test_mode_active:
+		_is_test_mode_active = current_test_active
+		
+		if _is_test_mode_active:
+			_enter_test_mode()
+		else:
+			_exit_test_mode()
+
+func _enter_test_mode() -> void:
+	"""Automatically hide UI elements when entering test mode"""
+	if not _is_list_hidden:
+		# Remember that UI was hidden by test mode, not user
+		_ui_hidden_by_test = true
+		_toggle_result_expansion()
+		
+		# Update status to show test mode is active
+		_update_status_label_text("🧪 Test Mode Active - UI Hidden for Clean Output View")
+		
+		Log.debug("Entered test mode - UI hidden automatically", {}, ["debug", "ui", "test"])
+
+func _exit_test_mode() -> void:
+	"""Restore UI elements when exiting test mode"""
+	if _ui_hidden_by_test and _is_list_hidden:
+		# Only restore if UI was hidden by test mode (not user)
+		_ui_hidden_by_test = false
+		_toggle_result_expansion()
+		
+		Log.debug("Exited test mode - UI restored automatically", {}, ["debug", "ui", "test"])
 
 
 # All formatting methods have been moved to DebugOutputFormatter for DRY principle
