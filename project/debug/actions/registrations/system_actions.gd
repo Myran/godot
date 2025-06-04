@@ -30,7 +30,7 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("Show Registry Stats", func() -> void: _show_registry_stats(registry))
+			. create("Show Registry Stats", func() -> bool: return _show_registry_stats(registry))
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Display debug action registry statistics")
@@ -41,10 +41,7 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"Quit Application",
-				func() -> void: DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
-			)
+			. create("Quit Application", func() -> bool: return _quit_application())
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Quit Application")
@@ -70,7 +67,7 @@ static func _register_connectivity_actions(registry: DebugActionRegistry) -> voi
 
 
 # System action implementations
-static func _force_low_memory() -> void:
+static func _force_low_memory() -> bool:
 	# Simulate low memory condition
 	Log.warning("Simulating low memory condition for testing", {}, ["debug", "system", "memory"])
 
@@ -80,9 +77,10 @@ static func _force_low_memory() -> void:
 		OS.low_processor_usage_mode = old_mode
 
 	Log.info("Low memory simulation completed", {}, ["debug", "system", "memory"])
+	return true
 
 
-static func _show_registry_stats(registry: DebugActionRegistry) -> void:
+static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 	# Display debug action registry statistics
 	var stats: Dictionary = {
 		"total_actions": registry.get_all_actions().size(),
@@ -104,9 +102,16 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> void:
 		stats.categories[category] = category_stats
 
 	Log.info("Debug Action Registry Statistics", stats, ["debug", "registry", "stats"])
+	return true
 
 
-static func _rtdb_status_check() -> void:
+static func _quit_application() -> bool:
+	# Quit the application
+	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
+	return true
+
+
+static func _rtdb_status_check() -> bool:
 	# Check RTDB status and availability
 	var status: Dictionary = {
 		"firebase_database_available": ClassDB.class_exists("FirebaseDatabase"),
@@ -116,3 +121,4 @@ static func _rtdb_status_check() -> void:
 	}
 
 	Log.info("RTDB Status Check", status, ["debug", "rtdb", "status"])
+	return true

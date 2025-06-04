@@ -36,6 +36,10 @@ func _ready() -> void:
 	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
 	await _wait_for_registry_ready(registry)
 
+	# Wait for DataSource initialization to avoid RTDB/Database action failures
+	Log.info("Waiting for DataSource initialization...", {}, ["debug", "startup"])
+	await _wait_for_data_source_ready()
+
 	Log.info("Executing debug startup actions", {"count": actions.size()}, ["debug", "startup"])
 
 	# Simple execution loop - trust the registry to handle its own errors
@@ -231,6 +235,31 @@ func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
 	Log.info("Waiting for registry initialization signal...", {}, ["debug", "startup"])
 	var action_count: int = await registry.registry_initialized
 	Log.info("Action registry ready", {"action_count": action_count}, ["debug", "startup"])
+
+
+func _wait_for_data_source_ready() -> void:
+	# Wait for DataSource initialization to prevent RTDB/Database action failures
+	if not has_node("/root/data_source"):
+		Log.warning("DataSource autoload not found, skipping DataSource wait", {}, ["debug", "startup"])
+		return
+	
+	var data_source_node = get_node("/root/data_source")
+	if not data_source_node:
+		Log.warning("DataSource node not available, skipping DataSource wait", {}, ["debug", "startup"])
+		return
+	
+	# Check if already initialized
+	if data_source_node.has_method("is_initialized") and data_source_node.is_initialized():
+		Log.info("DataSource already initialized", {}, ["debug", "startup"])
+		return
+	
+	# Wait for startup_completed signal
+	if data_source_node.has_signal("startup_completed"):
+		Log.info("Waiting for DataSource startup_completed signal...", {}, ["debug", "startup"])
+		await data_source_node.startup_completed
+		Log.info("DataSource initialization complete", {}, ["debug", "startup"])
+	else:
+		Log.warning("DataSource doesn't have startup_completed signal, continuing without wait", {}, ["debug", "startup"])
 
 
 func _cleanup_mobile_config() -> void:

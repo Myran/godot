@@ -33,7 +33,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 1", func() -> void: _load_match_level(1))
+			. create("Load Match Level 1", func() -> bool: return _load_match_level(1))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 1")
@@ -42,7 +42,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 2", func() -> void: _load_match_level(2))
+			. create("Load Match Level 2", func() -> bool: return _load_match_level(2))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 2")
@@ -51,7 +51,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 3", func() -> void: _load_match_level(3))
+			. create("Load Match Level 3", func() -> bool: return _load_match_level(3))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 3")
@@ -60,7 +60,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 4", func() -> void: _load_match_level(4))
+			. create("Load Match Level 4", func() -> bool: return _load_match_level(4))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 4")
@@ -69,7 +69,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 5", func() -> void: _load_match_level(5))
+			. create("Load Match Level 5", func() -> bool: return _load_match_level(5))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 5")
@@ -147,33 +147,37 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 
 
 # Game action implementations
-static func _reset_match_level() -> void:
+static func _reset_match_level() -> bool:
 	# Reset the current match level
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
 		Log.info("Match level reset", {}, ["debug", "gameplay"])
+		return true
 	else:
 		Log.error("DebugManager not available", {}, ["debug", "error"])
+		return false
 
 
-static func _load_match_level(level_num: int) -> void:
+static func _load_match_level(level_num: int) -> bool:
 	# Load a specific match level
 	if DebugManager:
 		DebugManager.action(
 			DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % level_num]
 		)
 		Log.info("Loading match level %d" % level_num, {}, ["debug", "gameplay"])
+		return true
 	else:
 		Log.error("DebugManager not available", {}, ["debug", "error"])
+		return false
 
 
-static func _populate_enemy_lineup() -> void:
+static func _populate_enemy_lineup() -> bool:
 	# Add test cards to enemy lineup
 	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		Log.error(
 			"Cannot populate enemy lineup: core or card_controller missing", {}, ["debug", "error"]
 		)
-		return
+		return false
 
 	Log.info("Populating enemy lineup with test cards", {}, ["debug", "gameplay"])
 
@@ -194,6 +198,7 @@ static func _populate_enemy_lineup() -> void:
 			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
 	Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
+	return true
 
 
 #static func _spawn_test_cards() -> void:
@@ -216,45 +221,54 @@ static func _populate_enemy_lineup() -> void:
 #Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
 
 
-static func _clear_card_cache() -> void:
+static func _clear_card_cache() -> bool:
 	# Clear the card data cache
 	if data_source and data_source.has_method("clear_card_cache"):
 		data_source.clear_card_cache()
 		Log.info("Card cache cleared", {}, ["debug", "database"])
+		return true
 	else:
 		Log.warning(
 			"data_source not available or doesn't support clear_card_cache",
 			{},
 			["debug", "database"]
 		)
+		return false
 
 
-static func _toggle_local_battle_db() -> void:
+static func _toggle_local_battle_db() -> bool:
 	# Toggle between local and remote battle database
 	if DebugManager:
 		DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
 		Log.info(
 			"Local battle DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "database"]
 		)
+		return true
 	else:
 		Log.error("DebugManager not available", {}, ["debug", "error"])
+		return false
 
 
-static func _cycle_asset_variant() -> void:
+static func _cycle_asset_variant() -> bool:
 	# Cycle through asset variants (1-3)
 	if DebugManager:
 		DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
 		Log.info("Asset variant set to: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
+		return true
 	else:
 		Log.error("DebugManager not available", {}, ["debug", "error"])
+		return false
 
 
-static func _print_debug_info() -> void:
+static func _print_debug_info() -> bool:
 	# Print current debug settings
 	Log.info("=== Debug Info ===", {}, ["debug", "quick"])
 	if DebugManager:
 		Log.info("Local DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "quick"])
 		Log.info("Asset Variant: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
+		Log.info("==================", {}, ["debug", "quick"])
+		return true
 	else:
 		Log.warning("DebugManager not available", {}, ["debug", "quick"])
-	Log.info("==================", {}, ["debug", "quick"])
+		Log.info("==================", {}, ["debug", "quick"])
+		return false
