@@ -4,7 +4,7 @@ extends Node
 func _ready() -> void:
 	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
-
+	%PopupDebug.about_to_popup.connect(set_popup_size())
 	var _args: PackedStringArray = OS.get_cmdline_user_args()
 	# Check if a specific flag exists
 
@@ -32,7 +32,9 @@ func _ready() -> void:
 
 
 	DebugStartupCoordinator.startDebugCoordinator()
-
+func set_popup_size():
+	%PopupDebug.min_size = DisplayServer.screen_get_size()
+	pass
 func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	match event_type:
 		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:

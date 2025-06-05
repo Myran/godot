@@ -8,62 +8,18 @@ func _init() -> void:
 	# Set category to RTDB by default, subclasses can override
 	category = "RTDB"
 
-	# Connect the completion signal to our test counting method
-	execution_completed.connect(_on_execution_completed)
-	# DEBUG: Confirm signal connection
-	Log.info("RTDB signal connected", {"action_class": get_script().get_path()}, ["debug", "rtdb", "signal"])
-
-
-# Handle test tracking when action completes
-func _on_execution_completed(success: bool, result: Variant) -> void:
-	# DEBUG: Simple print to verify signal handler is called
-	print("🔥 RTDB SIGNAL HANDLER CALLED: success=", success, " action=", action_name)
-
-	if DebugAction.current_test_id != "":
-		if success:
-			DebugAction.test_success_count += 1
-			Log.info(
-				"DEBUG_TEST_SUCCESS",
-				{
-					"test_id": DebugAction.current_test_id,
-					"action": action_name,
-					"category": category,
-					"group": group,
-					"duration_ms": 0  # Could be enhanced with timing
-				},
-				["debug", "test", "success"]
-			)
-		else:
-			DebugAction.test_failure_count += 1
-			Log.error(
-				"DEBUG_TEST_FAILURE",
-				{
-					"test_id": DebugAction.current_test_id,
-					"action": action_name,
-					"category": category,
-					"group": group,
-					"error": str(result),
-					"duration_ms": 0  # Could be enhanced with timing
-				},
-				["debug", "test", "failure"]
-			)
-
-
-# Enhanced execute method with test tracking
-func execute() -> void:
-	# Track test execution if we're in test context (action count only, success/failure counted in signal handler)
-	if DebugAction.current_test_id != "":
-		DebugAction.test_action_count += 1
-
-	# Call the actual implementation
-	execute_rtdb_action()
+	# Set the action callable to execute_rtdb_action
+	# This ensures the base class execute() method handles all test tracking
+	action_callable = Callable(self, "execute_rtdb_action")
 
 
 # Default execute implementation - subclasses should override this
-func execute_rtdb_action() -> void:
+# Returns bool to indicate success/failure for test tracking
+func execute_rtdb_action():
 	push_error("execute_rtdb_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_rtdb_action() not implemented", true)
 	execution_completed.emit(false, {"error": "Not implemented"})
+	return false  # Return false to indicate failure
 
 
 # Get Firebase backend instance through data source
@@ -104,9 +60,10 @@ func get_firebase_database():
 
 
 # Helper method for RTDB operations using Firebase backend
+# Returns true/false for the base class test tracking
 func execute_simple_operation(
 	method: String, path_variants: Array, value: Variant, operation_name: String
-) -> Array:
+) -> bool:
 	Log.debug(
 		"Executing RTDB operation",
 		{
@@ -124,18 +81,18 @@ func execute_simple_operation(
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 
-		# Signal handler will count this failure - no direct counting needed
+		# Emit completion signal for UI updates
 		execution_completed.emit(false, {"error": error_msg})
-		return [false, {"error": error_msg}]
+		return false
 
 	if not firebase_backend.is_available():
 		var error_msg = "Firebase backend not initialized for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 
-		# Signal handler will count this failure - no direct counting needed
+		# Emit completion signal for UI updates
 		execution_completed.emit(false, {"error": error_msg})
-		return [false, {"error": error_msg}]
+		return false
 
 	var result: Variant
 	_update_status("Executing " + operation_name + "...")
@@ -165,9 +122,9 @@ func execute_simple_operation(
 			Log.error(error_msg, {"method": method}, ["debug", "rtdb", "error"])
 			_update_status("ERROR: " + error_msg, true)
 
-			# Signal handler will count this failure - no direct counting needed
+			# Emit completion signal for UI updates
 			execution_completed.emit(false, {"error": error_msg})
-			return [false, {"error": error_msg}]
+			return false
 
 	# Handle result
 	if result != null:
@@ -178,7 +135,7 @@ func execute_simple_operation(
 		)
 		_update_status(operation_name + " completed successfully")
 		execution_completed.emit(true, {"result": result})
-		return [true, {"result": result}]
+		return true
 	else:
 		Log.warning(
 			"RTDB operation returned null",
@@ -187,7 +144,7 @@ func execute_simple_operation(
 		)
 		_update_status(operation_name + " completed (null result)")
 		execution_completed.emit(true, {"result": null})
-		return [true, {"result": null}]
+		return true
 
 
 func get_last_error_result() -> Array:

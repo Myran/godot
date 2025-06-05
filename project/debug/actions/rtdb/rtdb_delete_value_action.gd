@@ -11,7 +11,7 @@ func _init() -> void:
 
 func execute_rtdb_action() -> void:
 	_update_status("Executing " + action_name + "...")
-	var result: Array = await execute_simple_operation(
+	var result: Variant = await execute_simple_operation(
 		"remove_value_async",
 		RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE),
 		null,

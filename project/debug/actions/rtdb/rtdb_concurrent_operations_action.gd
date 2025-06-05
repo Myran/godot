@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func execute_rtdb_action() -> void:
+func execute_rtdb_action():
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
@@ -22,7 +22,7 @@ func execute_rtdb_action() -> void:
 			false,
 			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
 		)
-		return
+		return false
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -136,6 +136,9 @@ func execute_rtdb_action() -> void:
 			"timestamp": Time.get_ticks_msec()
 		}
 	)
+
+	# Return success status for base class test tracking
+	return test_success
 
 
 func _start_concurrent_operation(db: Variant, operation: Dictionary) -> Dictionary:

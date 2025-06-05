@@ -92,9 +92,9 @@ static func create_backend() -> DataBackend:
 	var selected_backend_type: BackendSelection = BackendSelection.NONE
 
 	# Log all decision factors
-	var is_editor = OS.has_feature("editor") 
+	var is_editor = OS.has_feature("editor")
 	var force_local = ProjectSettings.get_setting("game/debug/force_local_data", false)
-	
+
 	Log.info("Backend selection starting", {
 		"is_editor": is_editor,
 		"force_local_data": force_local,
@@ -115,8 +115,8 @@ static func create_backend() -> DataBackend:
 
 		if internet_is_available:
 			Log.info(
-				"Internet available, selecting Firebase backend", 
-				{"check_duration_sec": internet_check_duration}, 
+				"Internet available, selecting Firebase backend",
+				{"check_duration_sec": internet_check_duration},
 				[Log.TAG_DB, Log.TAG_FIREBASE]
 			)
 			selected_backend_type = BackendSelection.FIREBASE

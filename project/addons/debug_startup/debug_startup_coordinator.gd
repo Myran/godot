@@ -54,8 +54,9 @@ func startDebugCoordinator()->void:
 			# DEBUG: Log the exact class being executed
 			print("🔥 EXECUTING ACTION CLASS: ", action.get_script().get_path(), " name=", action_name)
 			action.execute()
-			#	await action.execution_completed
-			Log.info("Next action..", {}, ["debug", "startup"])
+			# Wait for action to complete before moving to next one
+			await action.execution_completed
+			Log.info("Action completed", {"action": action_name}, ["debug", "startup"])
 		else:
 			Log.error("Action not found", {"action": action_name}, ["debug", "startup", "error"])
 

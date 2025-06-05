@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
-func execute() -> void:
+func execute_rtdb_action():
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
@@ -23,7 +23,7 @@ func execute() -> void:
 			false,
 			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
 		)
-		return
+		return false
 
 	# Note: This action previously used data_source pattern but now uses direct instantiation
 	# for consistency with other RTDB debug actions
@@ -103,6 +103,7 @@ func execute() -> void:
 		)
 
 		execution_completed.emit(true, success_data)
+		return true  # Return success for base class test tracking
 	else:
 		var error_msg: String = "Failed to set large data at path '%s'" % str(full_path)
 		_update_status(error_msg, true)
@@ -116,6 +117,7 @@ func execute() -> void:
 				"operation": "large_data_test"
 			}
 		)
+		return false  # Return failure for base class test tracking
 
 
 func _generate_large_test_data() -> Dictionary:

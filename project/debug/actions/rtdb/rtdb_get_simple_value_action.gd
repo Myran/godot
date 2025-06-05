@@ -9,13 +9,13 @@ func _init() -> void:
 	action_name = "Get Simple Value"
 
 
-func execute_rtdb_action() -> void:
+func execute_rtdb_action():
 	_update_status("Executing " + action_name + "...")
 
 	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
-	var result: Array = await execute_simple_operation(
+	var success: bool = await execute_simple_operation(
 		"get_value_async", path.as_variants(), null, action_name
 	)
 
-	# execute_simple_operation() already emits execution_completed signal
-	# No need to emit again here to avoid double counting
+	# Return the result for the base class test tracking
+	return success
