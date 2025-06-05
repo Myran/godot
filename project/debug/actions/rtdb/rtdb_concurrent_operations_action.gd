@@ -52,10 +52,7 @@ func execute_rtdb_action() -> bool:
 	# Execute operations sequentially (real Firebase operations)
 	for operation: Dictionary in operations:
 		var success: bool = await execute_simple_operation(
-			operation.method,
-			operation.path,
-			operation.data,
-			operation.name
+			operation.method, operation.path, operation.data, operation.name
 		)
 
 		if success:

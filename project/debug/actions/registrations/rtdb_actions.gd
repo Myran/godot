@@ -25,25 +25,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		registry, RTDBSetNestedPathAction.new(), "RTDBSetNestedPathAction", counters
 	)
 	_register_with_count(registry, RTDBListChildrenAction.new(), "RTDBListChildrenAction", counters)
-
-	# Legacy Basic Operations (for compatibility testing) - loaded via script path
-	var legacy_get_script: GDScript = preload(
-		"res://debug/actions/rtdb/rtdb_legacy_basic_get_simple_value_action.gd"
-	)
-	var legacy_get_action: DebugAction = legacy_get_script.new()  # Fail fast if not DebugAction
-	_register_with_count(registry, legacy_get_action, "RTDBLegacyGetSimpleValueAction", counters)
-
-	var legacy_set_script: GDScript = preload(
-		"res://debug/actions/rtdb/rtdb_legacy_basic_set_simple_value_action.gd"
-	)
-	var legacy_set_action: DebugAction = legacy_set_script.new()  # Fail fast if not DebugAction
-	_register_with_count(registry, legacy_set_action, "RTDBLegacySetSimpleValueAction", counters)
-
-	var legacy_push_script: GDScript = preload(
-		"res://debug/actions/rtdb/rtdb_legacy_basic_push_item_action.gd"
-	)
-	var legacy_push_action: DebugAction = legacy_push_script.new()  # Fail fast if not DebugAction
-	_register_with_count(registry, legacy_push_action, "RTDBLegacyPushItemAction", counters)
+	_register_with_count(registry, RTDBPushItemAction.new(), "RTDBPushItemAction", counters)
 
 	# Listener Operations
 	_register_with_count(

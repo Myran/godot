@@ -134,12 +134,13 @@ func execute_simple_operation(
 			var duration_ms: int = Time.get_ticks_msec() - start_time_ms
 			var error_msg: String = "Unsupported RTDB method: " + method
 			Log.error(
-				error_msg, 
+				error_msg,
 				{
-					"method": method, 
-					"duration_ms": duration_ms, 
-					"available_methods": ["get_value_async", "set_value_async", "remove_value_async", "push_value_async"]
-				}, 
+					"method": method,
+					"duration_ms": duration_ms,
+					"available_methods":
+					["get_value_async", "set_value_async", "remove_value_async", "push_value_async"]
+				},
 				["debug", "rtdb", "error"]
 			)
 			_update_status("ERROR: " + error_msg + " (" + str(duration_ms) + "ms)", true)
@@ -150,16 +151,17 @@ func execute_simple_operation(
 
 	# Handle result with performance tracking
 	var duration_ms: int = Time.get_ticks_msec() - start_time_ms
-	
+
 	if result != null:
 		Log.info(
 			"RTDB operation completed successfully",
 			{
-				"operation": operation_name, 
-				"method": method, 
+				"operation": operation_name,
+				"method": method,
 				"result_type": typeof(result),
 				"duration_ms": duration_ms,
-				"performance": "GOOD" if duration_ms < 500 else ("SLOW" if duration_ms < 2000 else "VERY_SLOW")
+				"performance":
+				"GOOD" if duration_ms < 500 else ("SLOW" if duration_ms < 2000 else "VERY_SLOW")
 			},
 			["debug", "rtdb", "success"]
 		)
@@ -169,11 +171,7 @@ func execute_simple_operation(
 	else:
 		Log.warning(
 			"RTDB operation returned null",
-			{
-				"operation": operation_name, 
-				"method": method,
-				"duration_ms": duration_ms
-			},
+			{"operation": operation_name, "method": method, "duration_ms": duration_ms},
 			["debug", "rtdb", "warning"]
 		)
 		_update_status(operation_name + " completed (null result, " + str(duration_ms) + "ms)")

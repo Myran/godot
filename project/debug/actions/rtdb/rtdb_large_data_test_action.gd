@@ -13,57 +13,56 @@ func _init() -> void:
 
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
-	
-	# Use unique path to avoid test interference  
+
+	# Use unique path to avoid test interference
 	var path_suffix: Array[Variant] = ["large_data_test"]
 	var test_path: Array[Variant] = create_test_path(path_suffix)
-	
+
 	_update_status("Generating large test dataset...")
-	
+
 	# Create a substantial test dataset
 	var large_data: Dictionary = _generate_large_test_data()
 	var data_size_estimate: int = JSON.stringify(large_data).length()
-	
+
 	_update_status("Setting large data (~%d bytes)..." % [data_size_estimate])
-	
+
 	var start_time: int = Time.get_ticks_msec()
-	
-	# Use the working pattern: execute_simple_operation  
+
+	# Use the working pattern: execute_simple_operation
 	var write_success: bool = await execute_simple_operation(
-		"set_value_async",
-		test_path,
-		large_data,
-		action_name + " (Write)"
+		"set_value_async", test_path, large_data, action_name + " (Write)"
 	)
-	
+
 	var end_time: int = Time.get_ticks_msec()
 	var write_duration: int = end_time - start_time
-	
+
 	if not write_success:
 		_update_status("ERROR: Failed to write large data", true)
-		execution_completed.emit(false, {
-			"error": "Large data write failed",
-			"data_size_bytes": data_size_estimate,
-			"write_duration_ms": write_duration
-		})
+		execution_completed.emit(
+			false,
+			{
+				"error": "Large data write failed",
+				"data_size_bytes": data_size_estimate,
+				"write_duration_ms": write_duration
+			}
+		)
 		return false
-	
-	_update_status("Successfully wrote large data (%d bytes) in %d ms" % [data_size_estimate, write_duration])
-	
-	# Now test retrieval  
+
+	_update_status(
+		"Successfully wrote large data (%d bytes) in %d ms" % [data_size_estimate, write_duration]
+	)
+
+	# Now test retrieval
 	_update_status("Testing retrieval of large data...")
 	var retrieve_start: int = Time.get_ticks_msec()
-	
+
 	var retrieved_data: Variant = await execute_simple_operation(
-		"get_value_async", 
-		test_path,
-		null,
-		action_name + " (Read)"
+		"get_value_async", test_path, null, action_name + " (Read)"
 	)
-	
+
 	var retrieve_end: int = Time.get_ticks_msec()
 	var retrieve_duration: int = retrieve_end - retrieve_start
-	
+
 	var success_data: Dictionary = {
 		"operation": "large_data_test",
 		"data_size_bytes": data_size_estimate,
@@ -71,11 +70,13 @@ func execute_rtdb_action() -> bool:
 		"retrieve_duration_ms": retrieve_duration,
 		"timestamp": Time.get_ticks_msec()
 	}
-	
+
 	if retrieved_data != null:
-		_update_status("Large data test completed: Write %dms, Read %dms" % [write_duration, retrieve_duration])
+		_update_status(
+			"Large data test completed: Write %dms, Read %dms" % [write_duration, retrieve_duration]
+		)
 		success_data["retrieval_success"] = true
-		
+
 		# Basic data integrity check
 		if retrieved_data is Dictionary and retrieved_data.has("metadata"):
 			success_data["data_integrity_check"] = "passed"
@@ -84,9 +85,13 @@ func execute_rtdb_action() -> bool:
 	else:
 		success_data["retrieval_success"] = false
 		success_data["data_integrity_check"] = "not_tested"
-	
-	Log.info("RTDBLargeDataTestAction executed successfully", success_data, ["test", "rtdb", "performance"])
-	
+
+	Log.info(
+		"RTDBLargeDataTestAction executed successfully",
+		success_data,
+		["test", "rtdb", "performance"]
+	)
+
 	execution_completed.emit(true, success_data)
 	return true
 
