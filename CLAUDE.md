@@ -1,0 +1,115 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine. The project features a custom-compiled Godot engine with specialized modules for Firebase integration, Facebook SDK, and advanced data management.
+
+## Architecture
+
+### Core Components
+- **Data Abstraction Layer**: Unified interface supporting multiple backends (Firebase RTDB, local storage) via `DataSource` pattern
+- **Debug System**: Comprehensive testing framework with config-driven automated testing and device deployment
+- **Custom Godot Build**: Modified Godot 4.3 engine with integrated Firebase and Facebook modules
+- **Mobile-First Design**: Optimized for 1080x1920 portrait orientation with touch controls
+
+### Key Directories
+- `project/` - Main Godot project files and game logic
+- `godot/` - Custom Godot engine source code and build artifacts
+- `firebase/` - Firebase configuration and integration files
+- `export/` - Platform-specific export configurations (iOS/Android)
+- `tools/` - Development utilities and helper scripts
+
+## Essential Development Commands
+
+### Quick Testing (5-second cycles)
+```bash
+just run-desktop                           # Instant local testing
+just fastbuild-android                    # rebuild android quickly after gdscript changes
+just config-restart-android testing        # Push specific config + restart on device
+just config-restart-ios testing           # iOS equivalent
+```
+
+### Full Testing
+```bash
+just test-all-android                     # Comprehensive Android testing
+just test-all-ios                        # Comprehensive iOS testing
+just help                               # View all available commands
+```
+
+### Engine Development
+```bash
+just godot-build-editor                   # Build custom Godot editor
+just godot-build-templates               # Build export templates
+```
+
+## Data Architecture
+
+The project uses a sophisticated data abstraction layer:
+
+### DataSource Pattern
+- `FirebaseDataSource` - Firebase Realtime Database backend
+- `LocalDataSource` - Local storage backend  
+- `DataSourceManager` - Handles backend switching and fallbacks
+
+### Configuration System
+- JSON-based configuration management
+- Hot-swappable configs via debug system
+- Environment-specific settings (testing/production)
+
+## Debug System
+
+Advanced testing infrastructure with:
+
+### Automated Testing
+- Config-driven test execution
+- Device deployment automation
+- Log analysis and result validation
+- Cross-platform test consistency
+
+### Debug Actions
+Located in `project/debug/actions/`, includes:
+- Real-time database operations
+- Performance testing
+- Network connectivity validation
+- Data integrity checks
+
+## Development Workflow
+0. **Planning** : think trough implementation and assess ways to improve quality and simplicity. use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
+1. **Local Development**: Use `just run-desktop` for rapid iteration and use Godot tools
+2. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of tests. Use 'just fastbuild-android' if to build and transfer changes to android
+3. **Full Validation**: Run `just test-all-[platform]` before commits
+4. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+
+## Firebase Integration
+
+- Real-time database for live data synchronization
+- Custom authentication flow
+- Analytics and crash reporting
+- Cloud functions for server-side logic
+
+## Mobile Deployment
+
+### Platform Requirements
+- **Android**: API level 21+ (Android 5.0+)
+- **iOS**: iOS 12.0+
+- **Resolution**: Optimized for 1080x1920 portrait
+
+### Export Process
+- Automated builds via justfile commands
+- Platform-specific configurations in `export/` directory
+- Integrated signing and provisioning
+#### Tools
+- Use Godot tools to start editor , run project and read output quickly if current iteration is not device specific
+- Validate changes in gdscript with 'just format' and 'just validate'
+- run all tests after a change is complete to verify integrity
+
+
+## Testing Philosophy
+
+The project emphasizes rapid iteration with comprehensive validation:
+- 5-second config testing cycles for immediate feedback
+- Automated device deployment eliminates manual steps
+- Configuration-driven testing ensures consistency
+- Retroactive log analysis enables thorough debugging
