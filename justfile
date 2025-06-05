@@ -1114,6 +1114,16 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
     echo "   🆔 Test ID: $TEST_ID"
     echo ""
     
+    echo "📊 Log Analysis Commands:"
+    echo "   🔍 just logs-results-simple $TEST_ID $test_dir"
+    echo "   📈 just logs-performance $TEST_ID"
+    echo "   🚨 just logs-errors-only $TEST_ID"
+    echo "   📝 just logs-test-id $TEST_ID"
+    if [ $test_result -eq 0 ]; then
+        echo "   🧹 just logs-cleanup-force 5"
+    fi
+    echo ""
+    
     if [ $test_result -eq 0 ]; then
         echo "🎉 Test PASSED"
     else
@@ -1303,11 +1313,12 @@ logs-performance TEST_ID:
     echo "⏱️  Performance Analysis for: {{TEST_ID}}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
+    # Extract JSON data from logs and parse with jq
     grep "{{TEST_ID}}" "$LOG_FILE" | \
-    grep "duration_ms" | \
-    sed 's/^.*I\/godot.*: //' | \
+    grep "DEBUG_TEST_SUCCESS.*duration_ms" | \
+    sed 's/^.*DEBUG_TEST_SUCCESS //' | \
     jq -r 'select(.duration_ms != null) | "[\(.action)]: \(.duration_ms)ms" + (if .duration_ms > 1000 then " ⚠️ SLOW" elif .duration_ms > 500 then " 🐌 SLOW-ISH" else " ✅ GOOD" end)' 2>/dev/null | \
-    sort -t: -k2 -n
+    sort -t: -k2 -n || echo "No performance data found for test ID: {{TEST_ID}}"
 
 # Clean up old test logs (keeps most recent 10, removes the rest)
 logs-cleanup KEEP="10":
