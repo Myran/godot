@@ -1164,6 +1164,210 @@ test-all-android:
         exit 1
     fi
 
+# ================================
+# LOG FILTERING AND ANALYSIS HELPERS
+# ================================
+
+# Show only logs for a specific test ID (saves tons of reading!)
+logs-test-id TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Find the most recent test logs containing this test ID
+    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No logs found for test ID: {{TEST_ID}}"
+        echo "💡 Available test IDs:"
+        find test_results -name "test_logs.log" -exec basename {} \; | sed 's/test_logs.log//' | head -5
+        exit 1
+    fi
+    
+    echo "🔍 Filtering logs for test ID: {{TEST_ID}}"
+    echo "📁 Log file: $LOG_FILE"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    grep "{{TEST_ID}}" "$LOG_FILE" | \
+    sed 's/^.*I\/godot.*: //' | \
+    grep -v "BUFFER\|font_size"
+
+# Show only test results (SUCCESS/FAILURE) for a specific test ID
+logs-results-only TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📊 Test Results for: {{TEST_ID}}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    # Search all log files for the test ID and show results
+    find test_results -name "test_logs.log" -type f | \
+    xargs grep -l "{{TEST_ID}}" 2>/dev/null | \
+    head -1 | \
+    xargs grep "{{TEST_ID}}" 2>/dev/null | \
+    grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    sed 's/^.*I\/godot.*: //' | \
+    sed 's/.*DEBUG_TEST_\(SUCCESS\|FAILURE\).*"action": "\([^"]*\)".*"duration_ms": \([0-9]*\).*/[\1] \2: \3ms/' | \
+    sed 's/\[SUCCESS\]/✅ [SUCCESS]/' | \
+    sed 's/\[FAILURE\]/❌ [FAILURE]/'
+
+# Simple results filter (when you know the log file) - Clean output
+logs-results-simple TEST_ID LOG_DIR:
+    #!/usr/bin/env bash
+    echo "📊 Results for {{TEST_ID}} in {{LOG_DIR}}:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    grep "{{TEST_ID}}" "{{LOG_DIR}}/test_logs.log" | \
+    grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    sed 's/^.*DEBUG_TEST_SUCCESS.*/✅ SUCCESS/' | \
+    sed 's/^.*DEBUG_TEST_FAILURE.*/❌ FAILURE/' | \
+    paste - <(grep "{{TEST_ID}}" "{{LOG_DIR}}/test_logs.log" | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/') | \
+    paste - <(grep "{{TEST_ID}}" "{{LOG_DIR}}/test_logs.log" | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1ms/') | \
+    column -t -s $'\t'
+
+# Even simpler - just show action names and status  
+logs-quick TEST_ID LOG_DIR:
+    #!/usr/bin/env bash
+    echo "⚡ Quick Results for {{TEST_ID}}:"
+    grep "{{TEST_ID}}" "{{LOG_DIR}}/test_logs.log" | \
+    grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    grep -o '"action": "[^"]*".*"duration_ms": [0-9]*' | \
+    sed 's/"action": "\([^"]*\)".*"duration_ms": \([0-9]*\)/\1: \2ms/' | \
+    while read line; do
+        if grep -q "DEBUG_TEST_SUCCESS" <<< "$(grep "$line" "{{LOG_DIR}}/test_logs.log")"; then
+            echo "✅ $line"
+        else
+            echo "❌ $line"
+        fi
+    done
+
+# Show recent test directories and their IDs  
+logs-list-recent:
+    #!/usr/bin/env bash
+    echo "📁 Recent Test Results:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    find test_results -name "test_results.json" -type f | \
+    head -10 | \
+    while read file; do
+        if [ -f "$file" ]; then
+            test_id=$(jq -r '.test_id // "unknown"' "$file" 2>/dev/null || echo "unknown")
+            config=$(jq -r '.config // "unknown"' "$file" 2>/dev/null || echo "unknown")  
+            result=$(jq -r '.overall_result // "unknown"' "$file" 2>/dev/null || echo "unknown")
+            timestamp=$(jq -r '.timestamp // "unknown"' "$file" 2>/dev/null || echo "unknown")
+            
+            status_icon="❓"
+            if [ "$result" = "PASS" ]; then
+                status_icon="✅"
+            elif [ "$result" = "FAIL" ]; then
+                status_icon="❌"
+            fi
+            
+            echo "$status_icon $test_id [$config] - $timestamp"
+            echo "   📄 just logs-test-id $test_id"
+            echo "   📊 just logs-results-only $test_id"
+        fi
+    done
+
+# Show errors only for a specific test ID (perfect for debugging!)
+logs-errors-only TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No logs found for test ID: {{TEST_ID}}"
+        exit 1
+    fi
+    
+    echo "🚨 Errors for test ID: {{TEST_ID}}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    grep "{{TEST_ID}}" "$LOG_FILE" | \
+    grep -i "error\|fail\|DEBUG_TEST_FAILURE" | \
+    sed 's/^.*I\/godot.*: //' | \
+    grep -v "BUFFER\|font_size"
+
+# Show performance breakdown for a specific test ID
+logs-performance TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No logs found for test ID: {{TEST_ID}}"
+        exit 1
+    fi
+    
+    echo "⏱️  Performance Analysis for: {{TEST_ID}}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    grep "{{TEST_ID}}" "$LOG_FILE" | \
+    grep "duration_ms" | \
+    sed 's/^.*I\/godot.*: //' | \
+    jq -r 'select(.duration_ms != null) | "[\(.action)]: \(.duration_ms)ms" + (if .duration_ms > 1000 then " ⚠️ SLOW" elif .duration_ms > 500 then " 🐌 SLOW-ISH" else " ✅ GOOD" end)' 2>/dev/null | \
+    sort -t: -k2 -n
+
+# Clean up old test logs (keeps most recent 10, removes the rest)
+logs-cleanup KEEP="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    KEEP_COUNT={{KEEP}}
+    echo "🧹 Cleaning up old test logs (keeping most recent $KEEP_COUNT)..."
+    
+    # Count current logs
+    TOTAL_COUNT=$(find test_results -name 'smart_*' -type d | wc -l | tr -d ' ')
+    
+    if [ "$TOTAL_COUNT" -le "$KEEP_COUNT" ]; then
+        echo "✅ Only $TOTAL_COUNT test directories found, nothing to clean"
+        exit 0
+    fi
+    
+    TO_DELETE=$((TOTAL_COUNT - KEEP_COUNT))
+    
+    echo "📊 Found $TOTAL_COUNT test directories"
+    echo "🗑️  Will delete $TO_DELETE oldest directories (keeping newest $KEEP_COUNT)"
+    echo ""
+    
+    # Show what will be deleted (oldest directories)
+    echo "🗂️  Directories to be deleted:"
+    find test_results -name 'smart_*' -type d | sort | head -n "$TO_DELETE" | sed 's/^/  /'
+    echo ""
+    
+    read -p "❓ Proceed with deletion? (y/N): " confirm
+    if [[ $confirm =~ ^[Yy]$ ]]; then
+        # Delete oldest directories
+        find test_results -name 'smart_*' -type d | sort | head -n "$TO_DELETE" | xargs rm -rf
+        
+        REMAINING=$(find test_results -name 'smart_*' -type d | wc -l | tr -d ' ')
+        echo "✅ Cleanup complete! $REMAINING test directories remaining"
+    else
+        echo "❌ Cleanup cancelled"
+    fi
+
+# Force cleanup without confirmation (use carefully!)
+logs-cleanup-force KEEP="10":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    KEEP_COUNT={{KEEP}}
+    TOTAL_COUNT=$(find test_results -name 'smart_*' -type d | wc -l | tr -d ' ')
+    
+    if [ "$TOTAL_COUNT" -le "$KEEP_COUNT" ]; then
+        echo "✅ Only $TOTAL_COUNT test directories found, nothing to clean"
+        exit 0
+    fi
+    
+    TO_DELETE=$((TOTAL_COUNT - KEEP_COUNT))
+    
+    echo "🧹 Force cleaning $TO_DELETE old test directories..."
+    find test_results -name 'smart_*' -type d | sort | head -n "$TO_DELETE" | xargs rm -rf
+    
+    REMAINING=$(find test_results -name 'smart_*' -type d | wc -l | tr -d ' ')
+    echo "✅ Cleanup complete! $REMAINING test directories remaining"
+
 # Build iOS executable with optimized settings  
 build-ios-executable:
     #!/usr/bin/env bash

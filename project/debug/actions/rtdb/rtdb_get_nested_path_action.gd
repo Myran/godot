@@ -27,18 +27,12 @@ func execute_rtdb_action() -> bool:
 
 	# Set up nested test data first
 	var nested_data: Dictionary = _create_nested_test_data()
-	var setup_result: Dictionary = await execute_firebase_operation(
-		db, "set_value_async", [nested_path, nested_data]
+	var setup_success: bool = await execute_simple_operation(
+		"set_value_async", nested_path, nested_data, "Setup Nested Data"
 	)
 
-	if not setup_result.success:
-		execution_completed.emit(
-			false,
-			{
-				"error":
-				"Failed to setup nested data: " + str(setup_result.get("error", "unknown error"))
-			}
-		)
+	if not setup_success:
+		# execution_completed signal already handled by execute_simple_operation
 		return false
 
 	# Now get the nested data

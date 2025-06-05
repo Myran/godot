@@ -14,18 +14,7 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
-	var db: Object = get_firebase_database()
-	if not db:
-		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return false
-
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.LIST_CHILDREN)
-	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	_update_status("Setting up test children...")
 
@@ -36,42 +25,21 @@ func execute_rtdb_action() -> bool:
 		"child_3": {"name": "Third Child", "timestamp": TimeUtils.now_ms() + 2, "type": "test"}
 	}
 
-	# Set test data
-	var setup_result: Dictionary = await op_manager.execute(
-		"set_value_async", [full_path, test_children]
+	# Set test data using standardized interface
+	var setup_success: bool = await execute_simple_operation(
+		"set_value_async", full_path, test_children, "Setup Test Children"
 	)
 
-	if not setup_result.success:
-		execution_completed.emit(false, {"error": "Failed to setup test children"})
+	if not setup_success:
+		# execution_completed signal already handled by execute_simple_operation
 		return false
 
-	# Get children back
+	# Get children back using standardized interface
 	_update_status("Retrieving children list...")
-	var get_result: Dictionary = await op_manager.execute("get_value_async", [full_path])
+	var get_success: bool = await execute_simple_operation(
+		"get_value_async", full_path, null, "Get Children List"
+	)
 
-	if get_result.success:
-		var children_data: Dictionary = get_result.get("data") if get_result.has("data") else {}
-		var child_keys: Array = children_data.keys()
-
-		_update_status("Found %d children: %s" % [child_keys.size(), str(child_keys)])
-
-		execution_completed.emit(
-			true,
-			{
-				"operation": "list_children",
-				"path": full_path,
-				"child_keys": child_keys,
-				"child_count": child_keys.size(),
-				"children_data": children_data,
-				"timestamp": TimeUtils.now_ms()
-			}
-		)
-		return true
-	else:
-		_update_status(
-			"Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true
-		)
-		execution_completed.emit(
-			false, {"error": str(str(get_result.get("error", "unknown error")))}
-		)
-		return false
+	# The execution_completed signal is handled inside execute_simple_operation
+	# Just return the success status for test tracking
+	return get_success

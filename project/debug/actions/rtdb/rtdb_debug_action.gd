@@ -72,6 +72,7 @@ func get_firebase_database() -> Object:
 func execute_simple_operation(
 	method: String, path_variants: Array, value: Variant, operation_name: String
 ) -> bool:
+	var start_time_ms: int = Time.get_ticks_msec()
 	Log.debug(
 		"Executing RTDB operation",
 		{
@@ -123,35 +124,60 @@ func execute_simple_operation(
 			# Convert path to proper format
 			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
 			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
-			result = await firebase_backend.delete_data(path, key)
+			result = await firebase_backend.remove_data(path, key)
+
+		"push_value_async":
+			# Push data to Firebase, returns the generated push key
+			result = await firebase_backend.push_data(path_variants, value)
 
 		_:
+			var duration_ms: int = Time.get_ticks_msec() - start_time_ms
 			var error_msg: String = "Unsupported RTDB method: " + method
-			Log.error(error_msg, {"method": method}, ["debug", "rtdb", "error"])
-			_update_status("ERROR: " + error_msg, true)
+			Log.error(
+				error_msg, 
+				{
+					"method": method, 
+					"duration_ms": duration_ms, 
+					"available_methods": ["get_value_async", "set_value_async", "remove_value_async", "push_value_async"]
+				}, 
+				["debug", "rtdb", "error"]
+			)
+			_update_status("ERROR: " + error_msg + " (" + str(duration_ms) + "ms)", true)
 
 			# Emit completion signal for UI updates
-			execution_completed.emit(false, {"error": error_msg})
+			execution_completed.emit(false, {"error": error_msg, "duration_ms": duration_ms})
 			return false
 
-	# Handle result
+	# Handle result with performance tracking
+	var duration_ms: int = Time.get_ticks_msec() - start_time_ms
+	
 	if result != null:
 		Log.info(
 			"RTDB operation completed successfully",
-			{"operation": operation_name, "method": method, "result_type": typeof(result)},
+			{
+				"operation": operation_name, 
+				"method": method, 
+				"result_type": typeof(result),
+				"duration_ms": duration_ms,
+				"performance": "GOOD" if duration_ms < 500 else ("SLOW" if duration_ms < 2000 else "VERY_SLOW")
+			},
 			["debug", "rtdb", "success"]
 		)
-		_update_status(operation_name + " completed successfully")
-		execution_completed.emit(true, {"result": result})
+		_update_status(operation_name + " completed successfully (" + str(duration_ms) + "ms)")
+		execution_completed.emit(true, {"result": result, "duration_ms": duration_ms})
 		return true
 	else:
 		Log.warning(
 			"RTDB operation returned null",
-			{"operation": operation_name, "method": method},
+			{
+				"operation": operation_name, 
+				"method": method,
+				"duration_ms": duration_ms
+			},
 			["debug", "rtdb", "warning"]
 		)
-		_update_status(operation_name + " completed (null result)")
-		execution_completed.emit(true, {"result": null})
+		_update_status(operation_name + " completed (null result, " + str(duration_ms) + "ms)")
+		execution_completed.emit(true, {"result": null, "duration_ms": duration_ms})
 		return true
 
 

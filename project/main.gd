@@ -9,7 +9,7 @@ func _ready() -> void:
 	# Check if a specific flag exists
 
 	# Log which data source implementation is being used
-	Log.info("Using updated DataSource implementation", {}, ["system", "initialization"])
+	#Log.info("Using updated DataSource implementation", {}, ["system", "initialization"])
 	#await data_source.activate_card_cache()
 	#var scene = preload("res://cardtest/battle_3.tscn")
 	#add_child(scene.instantiate())
@@ -38,7 +38,7 @@ func _ready() -> void:
 
 func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	match event_type:
-		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
+		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU	:
 			%PopupDebug.show()
 		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()

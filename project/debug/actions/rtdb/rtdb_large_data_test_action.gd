@@ -11,113 +11,84 @@ func _init() -> void:
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
 
 
-func execute_rtdb_action():
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
-
-	# Converted from execute_legacy
-# Check if Firebase backend is available
-	var db: Object = get_firebase_database()
-	if not db:
-		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return false
-
-	# Note: This action previously used data_source pattern but now uses direct instantiation
-	# for consistency with other RTDB debug actions
-
+	
+	# Use unique path to avoid test interference  
 	var path_suffix: Array[Variant] = ["large_data_test"]
-	var full_path: Array[Variant] = create_test_path(path_suffix)
-
+	var test_path: Array[Variant] = create_test_path(path_suffix)
+	
 	_update_status("Generating large test dataset...")
-
-# Create a substantial test dataset
+	
+	# Create a substantial test dataset
 	var large_data: Dictionary = _generate_large_test_data()
 	var data_size_estimate: int = JSON.stringify(large_data).length()
-
-	_update_status(
-		"Setting large data (~%d bytes) at path '%s'..." % [data_size_estimate, str(full_path)]
-	)
-
+	
+	_update_status("Setting large data (~%d bytes)..." % [data_size_estimate])
+	
 	var start_time: int = Time.get_ticks_msec()
-
-# Use the Firebase backend's set_data method with large data
-	#var result: bool = await db.set_data(full_path, "", large_data)
-
-	var result: Dictionary = await execute_firebase_operation(
-		db, "set_value_async", [full_path, large_data]
+	
+	# Use the working pattern: execute_simple_operation  
+	var write_success: bool = await execute_simple_operation(
+		"set_value_async",
+		test_path,
+		large_data,
+		action_name + " (Write)"
 	)
-
+	
 	var end_time: int = Time.get_ticks_msec()
-	var duration_ms: int = end_time - start_time
-
-	if result.success:
-		_update_status(
-			"Successfully set large data (%d bytes) in %d ms" % [data_size_estimate, duration_ms]
-		)
-
-		# Now test retrieval
-		_update_status("Testing retrieval of large data...")
-		var retrieve_start: int = Time.get_ticks_msec()
-		#var retrieved_data: Variant = await db.get_data(full_path, "")
-		var retrieved_data: Variant = await execute_firebase_operation(
-			db, "get_value_async", [full_path, large_data]
-		)
-		var retrieve_end: int = Time.get_ticks_msec()
-		var retrieve_duration: int = retrieve_end - retrieve_start
-
-		var success_data: Dictionary = {
-			"operation": "large_data_test",
-			"path": full_path,
+	var write_duration: int = end_time - start_time
+	
+	if not write_success:
+		_update_status("ERROR: Failed to write large data", true)
+		execution_completed.emit(false, {
+			"error": "Large data write failed",
 			"data_size_bytes": data_size_estimate,
-			"write_duration_ms": duration_ms,
-			"retrieve_duration_ms": retrieve_duration,
-			"timestamp": Time.get_ticks_msec()
-		}
-
-		if retrieved_data != null:
-			_update_status(
-				(
-					"Large data test completed: Write %dms, Read %dms"
-					% [duration_ms, retrieve_duration]
-				)
-			)
-			success_data["retrieval_success"] = true
-
-			# Verify data integrity with fail-fast expectations
-			if retrieved_data is Dictionary and retrieved_data.has("metadata"):
-				var _verified_data: Dictionary = retrieved_data  # Fail fast if not Dictionary
-				success_data["data_integrity_check"] = "passed"
-			else:
-				success_data["data_integrity_check"] = "failed"
+			"write_duration_ms": write_duration
+		})
+		return false
+	
+	_update_status("Successfully wrote large data (%d bytes) in %d ms" % [data_size_estimate, write_duration])
+	
+	# Now test retrieval  
+	_update_status("Testing retrieval of large data...")
+	var retrieve_start: int = Time.get_ticks_msec()
+	
+	var retrieved_data: Variant = await execute_simple_operation(
+		"get_value_async", 
+		test_path,
+		null,
+		action_name + " (Read)"
+	)
+	
+	var retrieve_end: int = Time.get_ticks_msec()
+	var retrieve_duration: int = retrieve_end - retrieve_start
+	
+	var success_data: Dictionary = {
+		"operation": "large_data_test",
+		"data_size_bytes": data_size_estimate,
+		"write_duration_ms": write_duration,
+		"retrieve_duration_ms": retrieve_duration,
+		"timestamp": Time.get_ticks_msec()
+	}
+	
+	if retrieved_data != null:
+		_update_status("Large data test completed: Write %dms, Read %dms" % [write_duration, retrieve_duration])
+		success_data["retrieval_success"] = true
+		
+		# Basic data integrity check
+		if retrieved_data is Dictionary and retrieved_data.has("metadata"):
+			success_data["data_integrity_check"] = "passed"
 		else:
-			success_data["retrieval_success"] = false
-			success_data["data_integrity_check"] = "not_tested"
-
-		Log.info(
-			"RTDBLargeDataTestAction executed successfully",
-			success_data,
-			["test", "rtdb", "performance"]
-		)
-
-		execution_completed.emit(true, success_data)
-		return true  # Return success for base class test tracking
+			success_data["data_integrity_check"] = "failed"
 	else:
-		var error_msg: String = "Failed to set large data at path '%s'" % str(full_path)
-		_update_status(error_msg, true)
-		execution_completed.emit(
-			false,
-			{
-				"error": error_msg,
-				"path": full_path,
-				"data_size_bytes": data_size_estimate,
-				"duration_ms": duration_ms,
-				"operation": "large_data_test"
-			}
-		)
-		return false  # Return failure for base class test tracking
+		success_data["retrieval_success"] = false
+		success_data["data_integrity_check"] = "not_tested"
+	
+	Log.info("RTDBLargeDataTestAction executed successfully", success_data, ["test", "rtdb", "performance"])
+	
+	execution_completed.emit(true, success_data)
+	return true
 
 
 func _generate_large_test_data() -> Dictionary:

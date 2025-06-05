@@ -30,7 +30,7 @@ func execute_rtdb_action() -> bool:
 	var test_path: Array[Variant] = ["pushed_items"]
 
 	var success: bool = await execute_simple_operation(
-		"push_and_update_async", test_path, push_data, "Basic Push Item"
+		"push_value_async", test_path, push_data, "Basic Push Item"
 	)
 
 	# The execution_completed signal is handled inside execute_simple_operation
