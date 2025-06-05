@@ -28,7 +28,7 @@ func startDebugCoordinator()->void:
 	if actions.is_empty():
 		Log.info("No debug startup actions to execute", {}, ["debug", "startup"])
 		return
-	#DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
+	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	DebugManager.action(DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST)
 	# Wait for game ready then execute
 	Log.info("Waiting for game ready...", {}, ["debug", "startup"])
