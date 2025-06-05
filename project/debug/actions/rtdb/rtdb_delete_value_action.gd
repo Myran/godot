@@ -45,14 +45,18 @@ func execute_rtdb_action() -> bool:
 		execution_completed.emit(false, {"error": "Delete operation returned false"})
 		return false
 	
-	# Validate that the data was actually deleted
+	# Validate that the data was actually deleted by calling Firebase backend directly
 	_update_status("Validating deletion...")
-	var validation_result: Variant = await execute_simple_operation(
-		"get_value_async",
-		test_path,
-		null,
-		"Validate Deletion"
-	)
+	var firebase_backend: Object = get_firebase_database()
+	if not firebase_backend:
+		_update_status("ERROR: Cannot validate deletion - Firebase backend unavailable", true)
+		execution_completed.emit(false, {"error": "Validation failed: Firebase backend unavailable"})
+		return false
+	
+	# Get the actual result to validate deletion
+	var key: String = test_path[-1] if test_path.size() > 0 else ""
+	var path: Array = test_path.slice(0, -1) if test_path.size() > 1 else []
+	var validation_result: Variant = await firebase_backend.get_data(path, key)
 	
 	# If we get null/empty, deletion worked
 	if validation_result == null:
