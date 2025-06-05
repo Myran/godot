@@ -9,11 +9,13 @@ const DebugOutputFormatter = preload("res://debug/debug_output_formatter.gd")
 static var _formatter: DebugOutputFormatter
 static var _initialized: bool = false
 
+
 static func _ensure_initialized() -> bool:
 	if not _initialized:
 		_formatter = DebugOutputFormatter.new()
 		_initialized = true
 	return true
+
 
 static func output_action_status(action: DebugAction, text: String, is_error: bool = false) -> void:
 	if not _ensure_initialized():
@@ -29,11 +31,12 @@ static func output_action_status(action: DebugAction, text: String, is_error: bo
 	if _should_output_to_console():
 		_formatter.format_and_output_status(action, text, is_error)
 
+
 static func output_action_result(action: DebugAction, success: bool, result: Variant) -> void:
 	if not _ensure_initialized():
 		return
 
-	var report = _formatter.format_completion_report(action, success, result)
+	var report: String = _formatter.format_completion_report(action, success, result)
 	_log_to_system(action, report, not success)
 
 	# Try to send formatted report to debug menu UI if available
@@ -43,11 +46,13 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 	if _should_output_to_console():
 		_formatter.output_formatted_text(report)
 
+
 static func format_completion_report(action: DebugAction, success: bool, result: Variant) -> String:
 	if not _ensure_initialized():
 		return "Error: DebugOutputService not initialized"
 
 	return _formatter.format_completion_report(action, success, result)
+
 
 static func _log_to_system(action: DebugAction, text: String, is_error: bool) -> void:
 	if is_error:
@@ -55,23 +60,26 @@ static func _log_to_system(action: DebugAction, text: String, is_error: bool) ->
 	else:
 		Log.info(text, {"action": action.action_name}, ["debug", "test"])
 
+
 static func _send_to_debug_menu_if_available(text: String, is_error: bool = false) -> void:
 	# Send output to debug menu UI if it exists (both manual and startup execution)
-	var debug_menu = _get_debug_menu_controller()
+	var debug_menu: Variant = _get_debug_menu_controller()
 	if debug_menu and debug_menu.has_method("display_output_from_service"):
 		debug_menu.display_output_from_service(text, is_error)
 
-static func _get_debug_menu_controller():
+
+static func _get_debug_menu_controller() -> Variant:
 	# Get the debug menu controller if it exists
 	# Use try-catch equivalent to prevent crashes during engine initialization
-	var tree = _safely_get_scene_tree()
+	var tree: SceneTree = _safely_get_scene_tree()
 	if not tree:
 		return null
 
-	var debug_menu_nodes = tree.get_nodes_in_group("debug_menu")
+	var debug_menu_nodes: Array = tree.get_nodes_in_group("debug_menu")
 	if debug_menu_nodes.size() > 0:
 		return debug_menu_nodes[0]  # Return the first debug menu controller
 	return null
+
 
 static func _safely_get_scene_tree() -> SceneTree:
 	# Safely get the scene tree without crashing during engine initialization
@@ -80,15 +88,17 @@ static func _safely_get_scene_tree() -> SceneTree:
 		return null
 
 	# Check if we can safely access the main loop
-	var main_loop = Engine.get_main_loop()
+	var main_loop: MainLoop = Engine.get_main_loop()
 	if main_loop == null:
 		return null
 
 	return main_loop as SceneTree
 
+
 static func _should_output_to_console() -> bool:
 	# Output to console during test context or when no debug menu UI is available
 	return DebugAction.is_test_active() or _get_debug_menu_controller() == null
+
 
 static func _is_manual_context() -> bool:
 	# Check if debug menu is available

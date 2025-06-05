@@ -9,7 +9,7 @@ func _init() -> void:
 	action_name = "Update Value"
 
 
-func execute_rtdb_action() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	var db: Object = get_firebase_database()
@@ -19,7 +19,7 @@ func execute_rtdb_action() -> void:
 			false,
 			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
 		)
-		return
+		return false
 
 	var path_suffix: Array[Variant] = ["update_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -50,6 +50,7 @@ func execute_rtdb_action() -> void:
 				"timestamp": Time.get_ticks_msec()
 			}
 		)
+		return true
 	else:
 		_update_status("Failed to update value: %s" % result.error, true)
 
@@ -65,3 +66,4 @@ func execute_rtdb_action() -> void:
 		)
 
 		execution_completed.emit(false, {"error": "Failed to update value: " + str(result.error)})
+		return false

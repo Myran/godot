@@ -1,11 +1,8 @@
 {
-  "test_metadata": {
-	"test_id": "test_counting_verification_desktop"
-  },
   "actions": [
-	"Clear Card Cache",
-	"Toggle Local Battle DB",
+	"RTDB Status",
 	"Get Simple Value",
-	"Set Simple Value"
+	"Set Simple Value",
+	"Delete Value"
   ]
 }

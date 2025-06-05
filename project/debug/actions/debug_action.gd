@@ -133,7 +133,11 @@ func execute() -> void:
 		result = await action_callable.call()
 
 		# Check if execution was successful (improved error detection)
-		if result == false or (result is Dictionary and result.has("error")) or (result is Array and result.size() > 0 and result[0] == false):
+		if (
+			result == false
+			or (result is Dictionary and result.has("error"))
+			or (result is Array and result.size() > 0 and result[0] == false)
+		):
 			success = false
 			error_message = str(result) if result != false else "Action returned false"
 			_update_status("ERROR: " + action_name + " failed", true)

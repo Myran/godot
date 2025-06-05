@@ -36,11 +36,11 @@ func _ready() -> void:
 
 	# If popup_debug is assigned, set it up
 	#if popup_debug:
-		#popup_debug.hide()
-		## Connect buttons if container is assigned
-		#if v_box_container_buttons:
-			#for btn: Button in v_box_container_buttons.get_children():
-				#btn.pressed.connect(debug_button_pressed.bind(btn.name))
+	#popup_debug.hide()
+	## Connect buttons if container is assigned
+	#if v_box_container_buttons:
+	#for btn: Button in v_box_container_buttons.get_children():
+	#btn.pressed.connect(debug_button_pressed.bind(btn.name))
 
 	Log.info("DebugManager (Global Event Bus) initialized.", {}, ["debug", "system"])
 
@@ -53,35 +53,35 @@ func action(type: DebugEventType, args: Array = []) -> void:
 
 
 #func _on_debug_event(event_type: DebugEventType, args: Array = []) -> void:
-	#match event_type:
-		#DebugEventType.EVENT_QUIT:
-			#get_tree().quit(0)
-		#DebugEventType.EVENT_OPEN_LEGACY_POPUP:
-			#if popup_debug:
-				#popup_debug.show()
-				#Log.debug("Legacy debug popup opened.", {}, ["debug", "ui"])
+#match event_type:
+#DebugEventType.EVENT_QUIT:
+#get_tree().quit(0)
+#DebugEventType.EVENT_OPEN_LEGACY_POPUP:
+#if popup_debug:
+#popup_debug.show()
+#Log.debug("Legacy debug popup opened.", {}, ["debug", "ui"])
 #
-		#DebugEventType.EVENT_CLOSE_LEGACY_POPUP:
-			#if popup_debug:
-				#popup_debug.hide()
-				#Log.debug("Legacy debug popup closed.", {}, ["debug", "ui"])
+#DebugEventType.EVENT_CLOSE_LEGACY_POPUP:
+#if popup_debug:
+#popup_debug.hide()
+#Log.debug("Legacy debug popup closed.", {}, ["debug", "ui"])
 #
-		#DebugEventType.EVENT_OPEN_DEBUG_MENU:
-			## This event will be handled by the main.gd script to show the new debug menu
-			#Log.debug("Open debug menu event emitted", {}, ["debug", "ui"])
+#DebugEventType.EVENT_OPEN_DEBUG_MENU:
+## This event will be handled by the main.gd script to show the new debug menu
+#Log.debug("Open debug menu event emitted", {}, ["debug", "ui"])
 #
-		## Original debug.gd events handling for backward compatibility
-		#DebugEventType.EVENT_OPEN_DB_DEBUG_MENU:
-			## Handle legacy behavior
-			## This would previously open scene_debug.tscn
-			#Log.info("Opening DB debug menu (will be handled by main.gd)", {}, ["debug", "ui"])
+## Original debug.gd events handling for backward compatibility
+#DebugEventType.EVENT_OPEN_DB_DEBUG_MENU:
+## Handle legacy behavior
+## This would previously open scene_debug.tscn
+#Log.info("Opening DB debug menu (will be handled by main.gd)", {}, ["debug", "ui"])
 #
-		## Other events preserved from original debug.gd
-		#DebugEventType.EVENT_OPEN_GAME_SELECTOR, DebugEventType.EVENT_RESET_MATCH_LEVEL, DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU:
-			#Log.debug("Event emitted: " + str(event_type), {"args": args}, ["debug", "events"])
+## Other events preserved from original debug.gd
+#DebugEventType.EVENT_OPEN_GAME_SELECTOR, DebugEventType.EVENT_RESET_MATCH_LEVEL, DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU:
+#Log.debug("Event emitted: " + str(event_type), {"args": args}, ["debug", "events"])
 #
-		#_:
-			#Log.warning("Unhandled debug event type: " + str(event_type), {}, ["debug", "events"])
+#_:
+#Log.warning("Unhandled debug event type: " + str(event_type), {}, ["debug", "events"])
 
 
 # Keep legacy helper functions until fully migrated
@@ -97,12 +97,11 @@ func _verify_logger_export() -> void:
 		else:
 			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
 
-
 # Updated debug button handler - simplified since manual actions are now in DebugRegistry
 #func debug_button_pressed(button_name: String) -> void:
-	## Handle special cases
-	#match button_name:
-		#"button_close":
-			#action(DebugEventType.EVENT_CLOSE_LEGACY_POPUP)
-		#_:
-			#Log.warning("Unhandled button press: " + button_name, {}, ["debug", "ui"])
+## Handle special cases
+#match button_name:
+#"button_close":
+#action(DebugEventType.EVENT_CLOSE_LEGACY_POPUP)
+#_:
+#Log.warning("Unhandled button press: " + button_name, {}, ["debug", "ui"])

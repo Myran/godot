@@ -998,22 +998,23 @@ func _on_button_close_pressed() -> void:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 
 
- # Handle global debug events if needed
+# Handle global debug events if needed
 func _on_global_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST:
 		_toggle_result_expansion()
 	#if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
-		#show()
-		#Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])
+	#show()
+	#Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])
 	#elif event_type == DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
-		#hide()
-		#Log.debug("Debug menu closed via global event.", {}, ["debug", "ui"])
+	#hide()
+	#Log.debug("Debug menu closed via global event.", {}, ["debug", "ui"])
 
 
 # For showing the menu programmatically
 func show_menu_content() -> void:
 	show()
 	Log.debug("Debug menu shown via direct call.", {}, ["debug", "ui"])
+
 
 # Method called by DebugOutputService to display output from both manual and startup execution
 func display_output_from_service(text: String, is_error: bool = false) -> void:
@@ -1065,6 +1066,7 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 
 # SOLID Principle: Single Responsibility - Helper methods for specific tasks
 
+
 # Test Mode Management - Auto-hide UI during automated tests
 func _start_test_mode_monitoring() -> void:
 	"""Start monitoring for test mode changes to auto-hide UI during tests"""
@@ -1074,6 +1076,7 @@ func _start_test_mode_monitoring() -> void:
 	timer.timeout.connect(_check_test_mode_status)
 	timer.autostart = true
 	add_child(timer)
+
 
 func _check_test_mode_status() -> void:
 	"""Check if test mode status has changed and update UI accordingly"""
@@ -1087,6 +1090,7 @@ func _check_test_mode_status() -> void:
 		else:
 			_exit_test_mode()
 
+
 func _enter_test_mode() -> void:
 	"""Automatically hide UI elements when entering test mode"""
 	if not _is_list_hidden:
@@ -1099,6 +1103,7 @@ func _enter_test_mode() -> void:
 
 		Log.debug("Entered test mode - UI hidden automatically", {}, ["debug", "ui", "test"])
 
+
 func _exit_test_mode() -> void:
 	"""Restore UI elements when exiting test mode"""
 	if _ui_hidden_by_test and _is_list_hidden:
@@ -1107,7 +1112,6 @@ func _exit_test_mode() -> void:
 		_toggle_result_expansion()
 
 		Log.debug("Exited test mode - UI restored automatically", {}, ["debug", "ui", "test"])
-
 
 # All formatting methods have been moved to DebugOutputFormatter for DRY principle
 # Methods removed: _pretty_print_value_no_truncation, _format_dictionary_no_truncation,

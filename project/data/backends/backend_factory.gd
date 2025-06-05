@@ -66,7 +66,11 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		frame_count += 1
 		if frame_count % 60 == 0:  # Log every second (assuming 60 fps)
 			var elapsed = (Time.get_ticks_msec() - check_start_time) / 1000.0
-			Log.debug("Still waiting for internet check", {"elapsed_sec": elapsed, "timeout_sec": timeout_sec}, [Log.TAG_NETWORK])
+			Log.debug(
+				"Still waiting for internet check",
+				{"elapsed_sec": elapsed, "timeout_sec": timeout_sec},
+				[Log.TAG_NETWORK]
+			)
 
 	# Cleanup
 	if internet_status.has_internet.is_connected(has_internet_callable):
@@ -78,12 +82,15 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 	var check_duration = (Time.get_ticks_msec() - check_start_time) / 1000.0
 	var internet_available: bool = connection_status.available
 	if internet_available:
-		Log.info("Internet connection available", {"duration_sec": check_duration}, [Log.TAG_NETWORK])
+		Log.info(
+			"Internet connection available", {"duration_sec": check_duration}, [Log.TAG_NETWORK]
+		)
 	else:
-		Log.warning("Internet connection unavailable or timed out", {
-			"duration_sec": check_duration,
-			"was_timeout": check_duration >= timeout_sec
-		}, [Log.TAG_NETWORK])
+		Log.warning(
+			"Internet connection unavailable or timed out",
+			{"duration_sec": check_duration, "was_timeout": check_duration >= timeout_sec},
+			[Log.TAG_NETWORK]
+		)
 
 	return internet_available
 
@@ -95,11 +102,11 @@ static func create_backend() -> DataBackend:
 	var is_editor = OS.has_feature("editor")
 	var force_local = ProjectSettings.get_setting("game/debug/force_local_data", false)
 
-	Log.info("Backend selection starting", {
-		"is_editor": is_editor,
-		"force_local_data": force_local,
-		"platform": OS.get_name()
-	}, [Log.TAG_DB])
+	Log.info(
+		"Backend selection starting",
+		{"is_editor": is_editor, "force_local_data": force_local, "platform": OS.get_name()},
+		[Log.TAG_DB]
+	)
 
 	if is_editor:
 		Log.info("Running in editor, selecting local data source", {}, [Log.TAG_DB])

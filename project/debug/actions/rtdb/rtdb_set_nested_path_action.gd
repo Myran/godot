@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-func execute_rtdb_action() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 	var nested_data: Dictionary = {
 		"metadata":
@@ -25,13 +25,13 @@ func execute_rtdb_action() -> void:
 		"stats": {"total_tests": 456, "success_rate": 0.98, "last_updated": TimeUtils.now_ms()}
 	}
 
-	var result: Array = await execute_simple_operation(
+	var success: bool = await execute_simple_operation(
 		"set_value_async",
 		RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA),
 		nested_data,
 		action_name
 	)
-	# Emit completion signal based on result
-	var success: bool = result[0] if result.size() > 0 else false
-	var payload: Variant = result[1] if result.size() > 1 else null
-	execution_completed.emit(success, payload)
+
+	# The execution_completed signal is handled inside execute_simple_operation
+	# Just return the success status for test tracking
+	return success

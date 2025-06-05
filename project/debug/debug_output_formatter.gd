@@ -31,27 +31,32 @@ const UI_COLORS: Dictionary = {
 	"highlight": "#FFECB3",
 }
 
+
 func format_and_output_status(action: DebugAction, text: String, is_error: bool) -> void:
-	var formatted = _format_status_message(action, text, is_error)
+	var formatted: String = _format_status_message(action, text, is_error)
 	output_formatted_text(formatted)
+
 
 func format_completion_report(action: DebugAction, success: bool, result: Variant) -> String:
 	return _build_action_report(action, success, result)
+
 
 func output_formatted_text(formatted_text: String) -> void:
 	match OS.get_name():
 		"Android", "iOS":
 			# Strip BBCode for mobile platforms
-			var plain = _strip_bbcode_tags(formatted_text)
+			var plain: String = _strip_bbcode_tags(formatted_text)
 			print(plain)
 		_:
 			print_rich(formatted_text)
 
-func _format_status_message(action: DebugAction, text: String, is_error: bool) -> String:
+
+func _format_status_message(_action: DebugAction, text: String, is_error: bool) -> String:
 	if is_error:
 		return "[color=%s]⚠ %s[/color]" % [UI_COLORS.danger, text]
 	else:
 		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, text]
+
 
 # Build comprehensive action report - extracted from debug_menu_controller.gd
 func _build_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
@@ -63,16 +68,31 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
 	# Action details section
-	report += "[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	report += (
+		"[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	report += "[color=%s]Name:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
-	report += "[color=%s]Category:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	report += (
+		"[color=%s]Name:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
+	)
+	report += (
+		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	)
 
 	if action.group != "":
-		report += "[color=%s]Group:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		report += (
+			"[color=%s]Group:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		)
 
 	if action.description != "":
-		report += "[color=%s]Description:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
+		report += (
+			"[color=%s]Description:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
+		)
 
 	report += "\n"
 
@@ -81,32 +101,53 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	var status_text: String = "SUCCESS" if success else "FAILURE"
 
-	report += "[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	report += (
+		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	report += "[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n" % [FONT_SIZE_XL, status_color, status_icon, status_text]
+	report += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, status_color, status_icon, status_text]
+	)
 
 	# Result/error details
 	if success:
-		report += "[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+		report += (
+			"[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.info]
+		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 		if payload != null:
 			var formatted_payload: String = _format_payload_summary(payload)
 			report += formatted_payload + "\n"
 		else:
-			report += "[color=%s]Action completed successfully with no return data[/color]\n" % UI_COLORS.muted
+			report += (
+				"[color=%s]Action completed successfully with no return data[/color]\n"
+				% UI_COLORS.muted
+			)
 	else:
-		report += "[font_size=%s][color=%s]ERROR DETAILS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.danger]
+		report += (
+			"[font_size=%s][color=%s]ERROR DETAILS[/color][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.danger]
+		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 		var error_message: String = _format_error_message(payload)
 		report += error_message + "\n"
 
 	# Timestamp
-	report += "\n[color=%s]Completed at: %s[/color]" % [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
+	report += (
+		"\n[color=%s]Completed at: %s[/color]"
+		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
+	)
 
 	return report
 
+
 # Pretty-print a value with NO TRUNCATION and modern styling
-func _pretty_print_value_no_truncation(value: Variant, indent_level: int = 0, max_depth: int = 10) -> String:
+func _pretty_print_value_no_truncation(
+	value: Variant, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if indent_level > max_depth:
 		return "[color=%s]<maximum depth reached>[/color]" % UI_COLORS.warning
 
@@ -132,8 +173,11 @@ func _pretty_print_value_no_truncation(value: Variant, indent_level: int = 0, ma
 		# NO TRUNCATION - show full value regardless of length
 		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
 
+
 # Format dictionary with NO TRUNCATION and enhanced styling
-func _format_dictionary_no_truncation(dict: Dictionary, indent_level: int = 0, max_depth: int = 10) -> String:
+func _format_dictionary_no_truncation(
+	dict: Dictionary, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if dict.is_empty():
 		return "[color=%s]{ }[/color]" % UI_COLORS.muted
 
@@ -151,7 +195,9 @@ func _format_dictionary_no_truncation(dict: Dictionary, indent_level: int = 0, m
 	for key: Variant in keys:
 		var value: Variant = dict[key]
 		var key_str: String = "[color=%s]%s[/color]" % [UI_COLORS.key, str(key)]
-		var value_str: String = _pretty_print_value_no_truncation(value, indent_level + 1, max_depth)
+		var value_str: String = _pretty_print_value_no_truncation(
+			value, indent_level + 1, max_depth
+		)
 
 		# Handle multiline values with better formatting
 		if "\n" in value_str:
@@ -172,8 +218,11 @@ func _format_dictionary_no_truncation(dict: Dictionary, indent_level: int = 0, m
 	result += indent + "[color=%s]}[/color]" % UI_COLORS.text_secondary
 	return result
 
+
 # Format array with NO TRUNCATION and enhanced styling
-func _format_array_no_truncation(array: Array, indent_level: int = 0, max_depth: int = 10) -> String:
+func _format_array_no_truncation(
+	array: Array, indent_level: int = 0, max_depth: int = 10
+) -> String:
 	if array.is_empty():
 		return "[color=%s][ ][/color]" % UI_COLORS.muted
 
@@ -228,6 +277,7 @@ func _format_array_no_truncation(array: Array, indent_level: int = 0, max_depth:
 	result += indent + "[color=%s]][/color]" % UI_COLORS.text_secondary
 	return result
 
+
 # Extract key information from complex payloads for display
 func _format_payload_summary(payload: Variant) -> String:
 	if payload == null:
@@ -271,10 +321,14 @@ func _format_payload_summary(payload: Variant) -> String:
 
 		# Generic dictionary - use pretty-printing for better readability
 		else:
-			return "Result:\n  %s" % _pretty_print_value_no_truncation(dict_payload, 1, 5).replace("\n", "\n  ")
+			return (
+				"Result:\n  %s"
+				% _pretty_print_value_no_truncation(dict_payload, 1, 5).replace("\n", "\n  ")
+			)
 
 	# Handle simple types with pretty-printing
 	return "Result: %s" % _pretty_print_value_no_truncation(payload, 0, 5)
+
 
 # Format error message from payload, extracting meaningful info instead of raw dict
 func _format_error_message(payload: Variant) -> String:
@@ -354,8 +408,9 @@ func _format_error_message(payload: Variant) -> String:
 		# NO TRUNCATION - show full error message with proper styling
 		return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
 
+
 # Helper method to strip BBCode tags for mobile platforms
 func _strip_bbcode_tags(text: String) -> String:
-	var regex = RegEx.new()
+	var regex: RegEx = RegEx.new()
 	regex.compile("\\[/?[^\\]]+\\]")
 	return regex.sub(text, "", true)

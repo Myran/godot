@@ -15,7 +15,7 @@ func _init() -> void:
 
 # Default execute implementation - subclasses should override this
 # Returns bool to indicate success/failure for test tracking
-func execute_rtdb_action():
+func execute_rtdb_action() -> bool:
 	push_error("execute_rtdb_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_rtdb_action() not implemented", true)
 	execution_completed.emit(false, {"error": "Not implemented"})
@@ -23,7 +23,7 @@ func execute_rtdb_action():
 
 
 # Get Firebase backend instance through data source
-func get_firebase_database():
+func get_firebase_database() -> Object:
 	# In Godot 4, autoloads are directly accessible by name
 	if not data_source:
 		Log.error(
@@ -33,24 +33,32 @@ func get_firebase_database():
 
 	# Check if DataSource is initialized
 	if not data_source.is_initialized():
-		Log.error("DataSource not yet initialized for RTDB operations", {}, ["debug", "rtdb", "error"])
+		Log.error(
+			"DataSource not yet initialized for RTDB operations", {}, ["debug", "rtdb", "error"]
+		)
 		return null
 
 	# Access the backend directly
-	var backend = data_source._backend
+	var backend: Variant = data_source._backend
 	if backend:
 		# Check if backend is FirebaseBackend using 'is' operator
 		if backend is FirebaseBackend:
 			Log.debug(
 				"Found Firebase backend for RTDB operations",
-				{"backend_type": backend.get_script().get_path() if backend.get_script() else "unknown"},
+				{
+					"backend_type":
+					backend.get_script().get_path() if backend.get_script() else "unknown"
+				},
 				["debug", "rtdb"]
 			)
 			return backend
 		else:
 			Log.warning(
 				"Backend is not Firebase type",
-				{"backend_type": backend.get_script().get_path() if backend.get_script() else backend.get_class()},
+				{
+					"backend_type":
+					backend.get_script().get_path() if backend.get_script() else backend.get_class()
+				},
 				["debug", "rtdb", "warning"]
 			)
 			return null
@@ -75,9 +83,9 @@ func execute_simple_operation(
 		["debug", "rtdb"]
 	)
 
-	var firebase_backend = get_firebase_database()
+	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		var error_msg = "Firebase backend not available for " + operation_name
+		var error_msg: String = "Firebase backend not available for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 
@@ -86,7 +94,7 @@ func execute_simple_operation(
 		return false
 
 	if not firebase_backend.is_available():
-		var error_msg = "Firebase backend not initialized for " + operation_name
+		var error_msg: String = "Firebase backend not initialized for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 
@@ -101,24 +109,24 @@ func execute_simple_operation(
 	match method:
 		"get_value_async":
 			# Convert path to proper format
-			var key = path_variants[-1] if path_variants.size() > 0 else ""
-			var path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
+			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.get_data(path, key)
 
 		"set_value_async":
 			# Convert path to proper format
-			var key = path_variants[-1] if path_variants.size() > 0 else ""
-			var path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
+			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.set_data(path, key, value)
 
 		"remove_value_async":
 			# Convert path to proper format
-			var key = path_variants[-1] if path_variants.size() > 0 else ""
-			var path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
+			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.delete_data(path, key)
 
 		_:
-			var error_msg = "Unsupported RTDB method: " + method
+			var error_msg: String = "Unsupported RTDB method: " + method
 			Log.error(error_msg, {"method": method}, ["debug", "rtdb", "error"])
 			_update_status("ERROR: " + error_msg, true)
 
@@ -157,7 +165,7 @@ func create_test_path(path_suffix: Array = []) -> Array[Variant]:
 	return base_path
 
 
-func execute_firebase_operation(db: Object, operation: String, args: Array) -> Dictionary:
+func execute_firebase_operation(_db: Object, _operation: String, _args: Array) -> Dictionary:
 	push_error("execute_firebase_operation() not implemented in base RTDBDebugAction")
 	return {"success": false, "error": "execute_firebase_operation not implemented"}
 

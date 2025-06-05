@@ -9,7 +9,7 @@ func _init() -> void:
 	action_name = "Set Simple Value"
 
 
-func execute_rtdb_action():
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 	var test_value: String = "Test Value: " + str(TimeUtils.now_ms())
 

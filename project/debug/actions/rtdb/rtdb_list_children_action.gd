@@ -11,7 +11,7 @@ func _init() -> void:
 	description = "Lists all child keys from a specific RTDB path."
 
 
-func execute_rtdb_action() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
@@ -22,7 +22,7 @@ func execute_rtdb_action() -> void:
 			false,
 			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
 		)
-		return
+		return false
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.LIST_CHILDREN)
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
@@ -43,6 +43,7 @@ func execute_rtdb_action() -> void:
 
 	if not setup_result.success:
 		execution_completed.emit(false, {"error": "Failed to setup test children"})
+		return false
 
 	# Get children back
 	_update_status("Retrieving children list...")
@@ -65,6 +66,7 @@ func execute_rtdb_action() -> void:
 				"timestamp": TimeUtils.now_ms()
 			}
 		)
+		return true
 	else:
 		_update_status(
 			"Failed to retrieve children: " + str(get_result.get("error", "unknown error")), true
@@ -72,3 +74,4 @@ func execute_rtdb_action() -> void:
 		execution_completed.emit(
 			false, {"error": str(str(get_result.get("error", "unknown error")))}
 		)
+		return false
