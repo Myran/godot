@@ -1076,6 +1076,31 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
         echo "📊 Startup events: $startup_count"
         echo "📊 Successful actions: $success_count"
         echo "📊 Failed actions: $failure_count"
+        echo ""
+        
+        # Show individual action results
+        echo "📋 Individual Action Results:"
+        if [ "$success_count" -gt 0 ] || [ "$failure_count" -gt 0 ]; then
+            # Extract and display individual action results
+            action_lines=$(grep "$TEST_ID" "$log_file" 2>/dev/null | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE")
+            if [ -n "$action_lines" ]; then
+                echo "$action_lines" | while read -r line; do
+                    if echo "$line" | grep -q "DEBUG_TEST_SUCCESS"; then
+                        status="✅"
+                    else
+                        status="❌"
+                    fi
+                    action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
+                    duration=$(echo "$line" | grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1/')
+                    echo "  $status $action (${duration}ms)"
+                done | sort
+            else
+                echo "  (no detailed action results found)"
+            fi
+        else
+            echo "  (no actions executed)"
+        fi
+        echo ""
         
         # Determine overall result
         if [ "$test_complete" = true ]; then
@@ -1217,15 +1242,67 @@ test-list-android TEST_LIST_NAME="default-all":
     echo ""
     
     failed_configs=()
+    # Create temporary files to store results instead of associative arrays
+    temp_results=$(mktemp)
     
     for config in "${configs[@]}"; do
         echo "Testing configuration: $config"
-        if just test-config-android "$config" 30; then
+        
+        # Determine timeout based on config type - comprehensive tests need more time
+        if echo "$config" | grep -q "comprehensive"; then
+            timeout=60  # 60 seconds for comprehensive tests
+        elif echo "$config" | grep -q "performance\|stress\|large"; then
+            timeout=45  # 45 seconds for performance tests
+        else
+            timeout=30  # 30 seconds for standard tests
+        fi
+        
+        # Capture the test output to extract test ID and action results
+        test_output=$(just test-config-android "$config" "$timeout" 2>&1)
+        test_exit_code=$?
+        
+        if [ $test_exit_code -eq 0 ]; then
             echo "✅ $config PASSED"
+            config_status="PASSED"
         else
             echo "❌ $config FAILED"
             failed_configs+=("$config")
+            config_status="FAILED"
         fi
+        
+        # Extract test ID from output for detailed results
+        test_id=$(echo "$test_output" | grep "🆔 Test ID:" | sed 's/.*Test ID: //' | head -1)
+        
+        # Extract action results if available
+        if [ -n "$test_id" ]; then
+            # Find the most recent log file containing this test ID
+            log_file=$(find test_results -name "test_logs.log" -exec grep -l "$test_id" {} \; 2>/dev/null | head -1)
+            
+            if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+                # Extract individual action results
+                action_lines=$(grep "$test_id" "$log_file" 2>/dev/null | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE")
+                if [ -n "$action_lines" ]; then
+                    action_results=$(echo "$action_lines" | while read -r line; do
+                        if echo "$line" | grep -q "DEBUG_TEST_SUCCESS"; then
+                            status="✅"
+                        else
+                            status="❌"
+                        fi
+                        action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
+                        echo "$status $action"
+                    done | sort | tr '\n' '; ' | sed 's/; $//')
+                else
+                    action_results=""
+                fi
+                
+                echo "$config|$config_status|$action_results" >> "$temp_results"
+            else
+                echo "$config|$config_status|" >> "$temp_results"
+            fi
+        else
+            echo "$config|$config_status|" >> "$temp_results"
+        fi
+        
         echo ""
     done
     
@@ -1237,7 +1314,18 @@ test-list-android TEST_LIST_NAME="default-all":
         else
             echo "✅ $config: PASSED"  
         fi
+        
+        # Show detailed action results if available
+        if [ -f "$temp_results" ]; then
+            action_details=$(grep "^$config|" "$temp_results" | cut -d'|' -f3)
+            if [ -n "$action_details" ]; then
+                echo "   Actions: $action_details"
+            fi
+        fi
     done
+    
+    # Clean up temporary file
+    rm -f "$temp_results"
     
     if [ ${#failed_configs[@]} -eq 0 ]; then
         echo ""

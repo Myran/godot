@@ -24,7 +24,10 @@
       "Bash(adb logcat:*)",
       "Bash(ls:*)",
       "Bash(sed:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(timeout 20 adb logcat:*)",
+      "Bash(adb shell:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
