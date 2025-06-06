@@ -1140,7 +1140,7 @@ test-all-android:
     echo "🧪 Running all test configurations..."
     echo ""
     
-    configs=("system-testing" "database-testing" "minimal-testing" "performance-testing")
+    configs=("system-testing" "database-testing" "minimal-testing" "performance-testing" "cpp-firebase-comprehensive-test" "backend-firebase-comprehensive-test")
     failed_configs=()
     
     for config in "${configs[@]}"; do

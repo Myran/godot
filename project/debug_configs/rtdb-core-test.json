@@ -1,8 +1,0 @@
-{
-  "actions": [
-    "RTDB Status",
-    "Get Simple Value",
-    "Set Simple Value",
-    "Delete Value"
-  ]
-}

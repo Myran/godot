@@ -1,0 +1,13 @@
+{
+  "description": "Comprehensive C++ Firebase testing suite - complete C++ layer validation",
+  "actions": [
+    "C++ Set Value Test",
+    "C++ Get Value Test",
+    "C++ Remove Value Test",
+    "C++ Signal Integrity Test",
+    "C++ Error Handling Test",
+    "C++ Concurrent Operations Test",
+    "C++ Large Data Test",
+    "C++ Timeout Behavior Test"
+  ]
+}

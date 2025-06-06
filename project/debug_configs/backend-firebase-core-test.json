@@ -1,0 +1,9 @@
+{
+  "description": "Core Firebase Backend functionality tests - wrapper layer validation",
+  "actions": [
+    "Backend Async Pattern Test",
+    "Backend Method Mapping Test",
+    "Backend Lifecycle Test",
+    "Backend Timer Manager Test"
+  ]
+}

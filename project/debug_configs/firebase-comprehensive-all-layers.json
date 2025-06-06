@@ -1,0 +1,20 @@
+{
+  "description": "Complete Firebase RTDB testing across all layers - C++ + Backend comprehensive coverage",
+  "actions": [
+    "C++ Set Value Test",
+    "C++ Get Value Test",
+    "C++ Remove Value Test",
+    "C++ Signal Integrity Test",
+    "C++ Error Handling Test",
+    "C++ Concurrent Operations Test",
+    "C++ Large Data Test",
+    "C++ Timeout Behavior Test",
+    "Backend Async Pattern Test",
+    "Backend Method Mapping Test",
+    "Backend Lifecycle Test",
+    "Backend Timer Manager Test",
+    "Backend Error Handling Test",
+    "Backend Performance Test",
+    "Backend Request Tracking Test"
+  ]
+}

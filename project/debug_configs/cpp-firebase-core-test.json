@@ -1,0 +1,9 @@
+{
+  "description": "Core C++ Firebase functionality tests - direct C++ module validation",
+  "actions": [
+    "C++ Set Value Test",
+    "C++ Get Value Test", 
+    "C++ Remove Value Test",
+    "C++ Signal Integrity Test"
+  ]
+}
