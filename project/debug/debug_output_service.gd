@@ -3,16 +3,16 @@ class_name DebugOutputService
 extends RefCounted
 
 # Preload the formatter class
-const DebugOutputFormatter = preload("res://debug/debug_output_formatter.gd")
+const DebugOutputFormatterClass = preload("res://debug/debug_output_formatter.gd")
 
 # Simple static interface
-static var _formatter: DebugOutputFormatter
+static var _formatter: DebugOutputFormatterClass
 static var _initialized: bool = false
 
 
 static func _ensure_initialized() -> bool:
 	if not _initialized:
-		_formatter = DebugOutputFormatter.new()
+		_formatter = DebugOutputFormatterClass.new()
 		_initialized = true
 	return true
 

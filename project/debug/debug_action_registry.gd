@@ -52,7 +52,7 @@ func _register_all_actions() -> void:
 	if cpp_firebase_actions_script:
 		cpp_firebase_actions_script.register_all(self)
 
-	# Load and register Backend Firebase actions (NEW)  
+	# Load and register Backend Firebase actions (NEW)
 	var backend_firebase_actions_script: GDScript = load("res://debug/actions/registrations/backend_firebase_actions.gd")
 	if backend_firebase_actions_script:
 		backend_firebase_actions_script.register_all(self)

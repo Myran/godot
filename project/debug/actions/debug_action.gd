@@ -4,7 +4,7 @@ class_name DebugAction
 extends Resource
 
 # Preload the output service for unified output handling
-const DebugOutputService = preload("res://debug/debug_output_service.gd")
+const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 
 @export var action_name: String = "Unnamed Action"
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"

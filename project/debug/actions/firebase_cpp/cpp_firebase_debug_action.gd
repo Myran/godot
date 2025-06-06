@@ -75,6 +75,85 @@ func execute_cpp_operation(method_name: String, args: Array, operation_name: Str
 	_update_status(op_name + " completed (" + str(duration) + "ms)")
 	return true
 
+# Execute C++ operation with timeout handling
+func execute_cpp_operation_with_timeout(method_name: String, args: Array, timeout: float, operation_name: String = "") -> Dictionary:
+	var start_time: float = Time.get_ticks_msec()
+	var db: Object = get_cpp_firebase_database()
+	
+	if not is_instance_valid(db):
+		var error_result: Dictionary = {
+			"status": "error",
+			"code": "DB_UNAVAILABLE", 
+			"message": "C++ Firebase instance not available",
+			"duration_ms": Time.get_ticks_msec() - start_time
+		}
+		_update_status("ERROR: C++ Firebase instance not available", true)
+		return error_result
+	
+	var op_name: String = operation_name if not operation_name.is_empty() else method_name
+	_update_status("Executing C++ " + op_name + " with timeout...")
+	
+	# Generate unique request ID
+	var request_id: int = Time.get_ticks_msec()
+	var full_args: Array = [request_id] + args
+	
+	var result: Dictionary = {}
+	var completed: bool = false
+	
+	# Connect to completion signal for this request
+	var signal_name: String = method_name.replace("_async", "_completed")
+	var handler: Callable = func(recv_request_id: int, success: bool, data: Variant):
+		if recv_request_id == request_id and not completed:
+			completed = true
+			var duration: float = Time.get_ticks_msec() - start_time
+			if success:
+				result = {
+					"status": "success",
+					"result": data,
+					"duration_ms": duration
+				}
+				Log.info("C++ operation completed", {"method": method_name, "duration_ms": duration}, ["debug", "cpp_firebase"])
+				_update_status(op_name + " completed (" + str(duration) + "ms)")
+			else:
+				result = {
+					"status": "error", 
+					"code": "CPP_ERROR",
+					"message": str(data),
+					"result": data,
+					"duration_ms": duration
+				}
+				Log.error("C++ operation failed", {"method": method_name, "error": data}, ["debug", "cpp_firebase", "error"])
+				_update_status("ERROR: " + op_name + " failed", true)
+	
+	# Connect signal temporarily if it exists
+	if db.has_signal(signal_name):
+		db.connect(signal_name, handler, CONNECT_ONE_SHOT)
+	
+	# Call C++ method
+	db.callv(method_name, full_args)
+	
+	# Wait for completion or timeout
+	var timeout_ms: float = timeout * 1000.0
+	var elapsed: float = 0.0
+	
+	while not completed and elapsed < timeout_ms:
+		await Engine.get_main_loop().process_frame
+		elapsed = Time.get_ticks_msec() - start_time
+	
+	# Handle timeout
+	if not completed:
+		result = {
+			"status": "error",
+			"code": "TIMEOUT",
+			"message": "Operation timed out after " + str(timeout) + " seconds",
+			"duration_ms": elapsed
+		}
+		_update_status("ERROR: " + op_name + " timed out", true)
+	
+	var duration: float = Time.get_ticks_msec() - start_time
+	_update_status(op_name + " completed (" + str(duration) + "ms)")
+	return result
+
 # Default implementation - subclasses override this
 func execute_cpp_action() -> bool:
 	push_error("execute_cpp_action() not implemented in " + get_script().get_path())

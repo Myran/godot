@@ -4,7 +4,7 @@ extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
 # Preload the output service for unified output handling
-const DebugOutputService = preload("res://debug/debug_output_service.gd")
+const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 
 # Font sizes for RichTextLabel content
 const FONT_SIZE_XXL: int = 34
