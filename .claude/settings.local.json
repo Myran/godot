@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(just list-test-lists:*)",
+      "Bash(just test-list-android:*)",
+      "Bash(jq:*)"
+    ],
+    "deny": []
+  }
+}
