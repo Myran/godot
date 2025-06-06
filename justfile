@@ -91,6 +91,19 @@ _require-android-device:
     fi
     echo "✅ Android device connected"
 
+# Clean up temporary config file if it was auto-generated
+_cleanup-temp-config CONFIG:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    
+    # Check if this is a temporary config by looking for our specific description pattern
+    if [ -f "$CONFIG_FILE" ] && grep -q "Temporary config for single action:" "$CONFIG_FILE" 2>/dev/null; then
+        echo "🧹 Cleaning up temporary config: $CONFIG_FILE"
+        rm "$CONFIG_FILE"
+        echo "✅ Temporary config cleaned up"
+    fi
+
 # Validate config file exists or create temporary config for single action
 _validate-config-exists CONFIG:
     #!/usr/bin/env bash
@@ -99,7 +112,7 @@ _validate-config-exists CONFIG:
     
     # Check if config file exists
     if [ -f "$CONFIG_FILE" ]; then
-        return 0
+        exit 0
     fi
     
     # Config file doesn't exist - check if CONFIG is an action name
@@ -112,17 +125,10 @@ _validate-config-exists CONFIG:
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
         
         ACTION_NAME="{{CONFIG}}"
-        cat > "$CONFIG_FILE" << EOF
-    {
-      "description": "Temporary config for single action: $ACTION_NAME",
-      "actions": [
-        "$ACTION_NAME"
-      ]
-    }
-    EOF
+        echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary config created: $CONFIG_FILE"
         echo "💡 This temporary config will be cleaned up automatically"
-        return 0
+        exit 0
     fi
     
     # Neither config file nor action name found
@@ -221,12 +227,12 @@ _validate-ios-workflow DEVICE_TYPE:
 
 # Combined validation for config workflow (config validation only)
 _validate-config-workflow CONFIG:
-    @just _validate-config-exists {{CONFIG}}
+    @just _validate-config-exists "{{CONFIG}}"
     @echo "✅ Config validated"
 
 # Combined validation for Android config workflow (config + device validation)
 _validate-android-config-workflow CONFIG:
-    @just _validate-config-exists {{CONFIG}}
+    @just _validate-config-exists "{{CONFIG}}"
     @just _require-android-device
     @echo "✅ Android config workflow validated"
 
@@ -690,16 +696,19 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     echo "✅ Config pushed to user:// directory!"
     echo "💡 App will use this config on next start/restart"
     echo "💡 Use 'just config-restart-android {{CONFIG_NAME}}' to push + restart immediately"
+    
+    # Clean up temporary config if it was auto-generated
+    just _cleanup-temp-config "{{CONFIG_NAME}}"
 
 # Push config to Android device AND restart app - FAST: 5 seconds 
 config-restart-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     @echo "🚀 Pushing config and restarting Android app..."
-    @just config-push-android {{CONFIG_NAME}}
+    @just config-push-android "{{CONFIG_NAME}}"
     @echo ""
     @echo "🔄 Restarting app to apply new config..."
     @just restart-android-app
     @echo "✅ Config pushed and app restarted!"
-    @echo "💡 Monitor with: just test-monitor-android {{CONFIG_NAME}}"
+    @echo "💡 Monitor with: just test-monitor-android \"{{CONFIG_NAME}}\""
 
 # Check current Android config status
 config-status-android:
