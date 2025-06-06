@@ -91,17 +91,49 @@ _require-android-device:
     fi
     echo "✅ Android device connected"
 
-# Validate config file exists
+# Validate config file exists or create temporary config for single action
 _validate-config-exists CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
     CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config file not found: $CONFIG_FILE"
-        echo "💡 Available configs:"
-        ls -1 project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | sed 's/^/  /' || echo "  (no configs found)"
-        exit 1
+    
+    # Check if config file exists
+    if [ -f "$CONFIG_FILE" ]; then
+        return 0
     fi
+    
+    # Config file doesn't exist - check if CONFIG is an action name
+    echo "🔍 Config file not found: $CONFIG_FILE"
+    echo "🔍 Checking if '{{CONFIG}}' is an action name..."
+    
+    # Look for the action in existing config files to see if it's a valid action name
+    if grep -r "\"{{CONFIG}}\"" project/debug_configs/*.json >/dev/null 2>&1; then
+        echo "✅ Found '{{CONFIG}}' as an action name"
+        echo "🔧 Creating temporary config for single action: {{CONFIG}}"
+        
+        ACTION_NAME="{{CONFIG}}"
+        cat > "$CONFIG_FILE" << EOF
+    {
+      "description": "Temporary config for single action: $ACTION_NAME",
+      "actions": [
+        "$ACTION_NAME"
+      ]
+    }
+    EOF
+        echo "✅ Temporary config created: $CONFIG_FILE"
+        echo "💡 This temporary config will be cleaned up automatically"
+        return 0
+    fi
+    
+    # Neither config file nor action name found
+    echo "❌ Neither config file nor action name found for: {{CONFIG}}"
+    echo ""
+    echo "💡 Available config files:"
+    ls -1 project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | sed 's/^/  /' || echo "  (no configs found)"
+    echo ""
+    echo "💡 Example action names (from existing configs):"
+    grep -h "\"[A-Z].*Test\"" project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/  \1/' | sort -u | head -10 || echo "  (no action examples found)"
+    exit 1
 
 # Validate iOS development tools are available
 _validate-ios-tools:
