@@ -1,9 +1,0 @@
-{
-  "description": "Updated database testing with working Firebase core tests",
-  "actions": [
-    "Clear Card Cache",
-    "Toggle Local Battle DB", 
-    "C++ Set Value Test",
-    "Backend Async Pattern Test"
-  ]
-}

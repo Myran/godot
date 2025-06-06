@@ -6,7 +6,9 @@
       "Bash(mkdir:*)",
       "Bash(just list-test-lists:*)",
       "Bash(just test-list-android:*)",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Bash(just)",
+      "Bash(just help)"
     ],
     "deny": []
   }

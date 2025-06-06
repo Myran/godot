@@ -3,7 +3,6 @@
   "description": "Complete test suite covering all major functionality areas",
   "configs": [
     "system-testing",
-    "database-testing", 
     "minimal-testing",
     "performance-testing",
     "cpp-firebase-comprehensive-test",

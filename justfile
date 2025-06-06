@@ -1182,8 +1182,11 @@ test-list-android TEST_LIST_NAME="default-all":
     echo "📝 $TEST_DESC"
     echo ""
     
-    # Load configs into bash array
-    mapfile -t configs < <(jq -r '.configs[]' "$TEST_LIST_FILE")
+    # Load configs into bash array (portable approach)
+    configs=()
+    while IFS= read -r config; do
+        configs+=("$config")
+    done < <(jq -r '.configs[]' "$TEST_LIST_FILE")
     
     if [ ${#configs[@]} -eq 0 ]; then
         echo "❌ No test configurations found in $TEST_LIST_FILE"
