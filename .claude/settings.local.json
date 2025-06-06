@@ -22,7 +22,9 @@
       "Bash(just:*)",
       "Bash(cat:*)",
       "Bash(adb logcat:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(sed:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
