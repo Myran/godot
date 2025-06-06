@@ -780,19 +780,12 @@ config-setup:
 
 
 # Set a specific debug configuration (updates embedded config)
-config-set CONFIG_NAME:
+config-set CONFIG_NAME: (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
     TARGET_FILE="project/debug_startup_actions.json"
-    
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config file not found: $CONFIG_FILE"
-        echo "📋 Available configs:"
-        ls -1 project/debug_configs/*.json 2>/dev/null | xargs -I {} basename {} .json | sed 's/^/  - /' || echo "  (none found - run 'just config-setup' first)"
-        exit 1
-    fi
     
     echo "📝 Setting debug config to: {{CONFIG_NAME}}"
     echo "📄 Config content:"
@@ -805,40 +798,9 @@ config-set CONFIG_NAME:
     echo "💡 Next steps:"
     echo "   1. For development: just config-restart-android {{CONFIG_NAME}}"
     echo "   2. For full rebuild: just save-android-project && just install-android-app"
-
-    #!/usr/bin/env bash
-    set -euo pipefail
     
-    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
-    ANDROID_PATH="/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files"
-    REMOTE_CONFIG="$ANDROID_PATH/debug_startup_actions.json"
-    
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config file not found: $CONFIG_FILE"
-        echo "📋 Available configs:"
-        ls -1 project/debug_configs/*.json 2>/dev/null | xargs -I {} basename {} .json | sed 's/^/  - /' || echo "  (none found)"
-        exit 1
-    fi
-    
-    # Verify device connection
-    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
-        echo "❌ Device {{ANDROID_DEVICE_ID}} not connected"
-        exit 1
-    fi
-    
-    # Create app data directory
-    adb -s {{ANDROID_DEVICE_ID}} shell "mkdir -p $ANDROID_PATH" 2>/dev/null || true
-    
-    echo "📱 Pushing debug config '{{CONFIG_NAME}}' to device..."
-    echo "📄 Config content:"
-    cat "$CONFIG_FILE" | jq .
-    
-    # Push config to device
-    adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$REMOTE_CONFIG"
-    
-    echo "✅ Config pushed to device!"
-    echo "📱 Location: $REMOTE_CONFIG"
-    echo "💡 Run 'just restart-android-app' to apply changes"
+    # Clean up temporary config if it was auto-generated
+    just _cleanup-temp-config "{{CONFIG_NAME}}"
 
 
 # Remove external debug config from Android device (fall back to embedded config)
@@ -888,6 +850,11 @@ config-list:
 test-monitor-android CONFIG_NAME="current":
     #!/usr/bin/env bash
     set -euo pipefail
+    
+    # Validate config if not "current"
+    if [ "{{CONFIG_NAME}}" != "current" ]; then
+        just _validate-config-exists "{{CONFIG_NAME}}"
+    fi
     
     echo "=== Android Debug Startup Test ==="
     echo "Device: {{ANDROID_DEVICE_ID}}"
@@ -947,19 +914,24 @@ test-monitor-android CONFIG_NAME="current":
         echo ""
         echo "💾 Full log: $LOG_FILE"
     fi
+    
+    # Clean up temporary config if it was auto-generated and not "current"
+    if [ "{{CONFIG_NAME}}" != "current" ]; then
+        just _cleanup-temp-config "{{CONFIG_NAME}}"
+    fi
 
 # Quick test with a specific Android config (push config + restart + monitor)
 test-quick-android CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🚀 Quick test with config: {{CONFIG_NAME}}"
-    just config-restart-android {{CONFIG_NAME}}
+    just config-restart-android "{{CONFIG_NAME}}"
     sleep 2
-    just test-monitor-android {{CONFIG_NAME}} 10
+    just test-monitor-android "{{CONFIG_NAME}}"
 
 # Automated test with pass/fail determination and unique test IDs for Android
 # Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
-test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
+test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1007,7 +979,8 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
     
     # Create enhanced config with test ID metadata
     enhanced_config=$(mktemp)
-    jq --arg test_id "$TEST_ID" '. + {"test_metadata": {"test_id": $test_id, "config": "'$CONFIG_NAME'", "timestamp": "'$timestamp'"}}' \
+    jq --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg timestamp "$timestamp" \
+        '. + {"test_metadata": {"test_id": $test_id, "config": $config_name, "timestamp": $timestamp}}' \
         "project/debug_configs/$CONFIG_NAME.json" > "$enhanced_config"
     
     # Push config to device using proper permissions approach
@@ -1170,6 +1143,9 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
     else
         echo "💥 Test FAILED"
     fi
+    
+    # Clean up temporary config if it was auto-generated
+    just _cleanup-temp-config "{{CONFIG_NAME}}"
     
     exit $test_result
 
