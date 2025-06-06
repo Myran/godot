@@ -14,7 +14,15 @@
       "mcp__godot__get_debug_output",
       "Bash(grep:*)",
       "mcp__godot__stop_project",
-      "Bash(just test-all-android:*)"
+      "Bash(just test-all-android:*)",
+      "Bash(/Applications/Godot.app/Contents/MacOS/Godot --headless --editor --quit)",
+      "mcp__godot__get_godot_version",
+      "Bash(pkill:*)",
+      "Bash(just run-desktop:*)",
+      "Bash(just:*)",
+      "Bash(cat:*)",
+      "Bash(adb logcat:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

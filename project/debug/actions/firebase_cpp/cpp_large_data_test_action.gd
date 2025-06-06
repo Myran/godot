@@ -87,7 +87,7 @@ func execute_cpp_action() -> bool:
 		})
 		
 		# Small delay between tests
-		await get_tree().create_timer(0.5).timeout
+		await Engine.get_main_loop().create_timer(0.5).timeout
 	
 	var success_rate = float(successful_tests) / float(total_tests)
 	var overall_success = success_rate >= 0.75  # 75% of large data tests should pass
