@@ -33,9 +33,18 @@ just config-restart-ios testing           # iOS equivalent
 
 ### Full Testing
 ```bash
-just test-all-android                     # Comprehensive Android testing
-just test-all-ios                        # Comprehensive iOS testing
+just test-all-android                     # Comprehensive Android testing (all configs)
+just test-list-android <test-list>        # Run specific test list
+just list-test-lists                      # Show available test lists
 just help                               # View all available commands
+```
+
+### Test List Shortcuts
+```bash
+just test-suite-firebase-android          # Firebase-focused tests only
+just test-suite-quick-android             # Quick validation tests
+just test-suite-performance-android       # Performance testing suite
+just test-suite-minimal-android           # Minimal smoke test
 ```
 
 ### Engine Development
@@ -112,4 +121,22 @@ The project emphasizes rapid iteration with comprehensive validation:
 - 5-second config testing cycles for immediate feedback
 - Automated device deployment eliminates manual steps
 - Configuration-driven testing ensures consistency
+- Configurable test lists in `project/test-lists/` for flexible test organization
 - Retroactive log analysis enables thorough debugging
+
+### Test List System
+Test configurations are organized into reusable test lists:
+- `default-all.json` - Complete test suite (used by `test-all-android`)
+- `firebase-only.json` - Firebase-focused testing
+- `quick-validation.json` - Essential tests for rapid development cycles
+- `performance-focus.json` - Performance and stress testing
+- `minimal-smoke.json` - Basic functionality verification
+
+Create custom test lists by adding JSON files to `project/test-lists/` with the format:
+```json
+{
+  "name": "Custom Test Suite",
+  "description": "Description of what this test suite covers",
+  "configs": ["config1", "config2", "config3"]
+}
+```

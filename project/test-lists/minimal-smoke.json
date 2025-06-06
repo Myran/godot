@@ -1,0 +1,7 @@
+{
+  "name": "Minimal Smoke Test",
+  "description": "Minimal smoke test for basic functionality verification", 
+  "configs": [
+    "minimal-testing"
+  ]
+}

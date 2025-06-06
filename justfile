@@ -1133,14 +1133,69 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false":
     exit $test_result
 
 
-# Run all standard test configurations on Android
-test-all-android:
+# Helper function to load test configurations from a test list file
+_load_test_list TEST_LIST_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🧪 Running all test configurations..."
+    
+    TEST_LIST_FILE="project/test-lists/{{TEST_LIST_NAME}}.json"
+    
+    if [ ! -f "$TEST_LIST_FILE" ]; then
+        echo "❌ Test list file not found: $TEST_LIST_FILE"
+        echo "Available test lists:"
+        ls project/test-lists/*.json 2>/dev/null | sed 's/.*\///; s/\.json$//' | sed 's/^/  - /' || echo "  (none found)"
+        exit 1
+    fi
+    
+    # Extract configs array from JSON using jq
+    if ! command -v jq &> /dev/null; then
+        echo "❌ jq is required for parsing test list files. Please install jq."
+        exit 1
+    fi
+    
+    jq -r '.configs[]' "$TEST_LIST_FILE"
+
+# Run test configurations from a specified test list on Android
+test-list-android TEST_LIST_NAME="default-all":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_LIST_FILE="project/test-lists/{{TEST_LIST_NAME}}.json"
+    
+    # Load test list metadata
+    if [ ! -f "$TEST_LIST_FILE" ]; then
+        echo "❌ Test list file not found: $TEST_LIST_FILE"
+        echo "Available test lists:"
+        ls project/test-lists/*.json 2>/dev/null | sed 's/.*\///; s/\.json$//' | sed 's/^/  - /' || echo "  (none found)"
+        exit 1
+    fi
+    
+    if ! command -v jq &> /dev/null; then
+        echo "❌ jq is required for parsing test list files. Please install jq."
+        exit 1
+    fi
+    
+    TEST_NAME=$(jq -r '.name' "$TEST_LIST_FILE")
+    TEST_DESC=$(jq -r '.description' "$TEST_LIST_FILE")
+    
+    echo "🧪 Running test list: $TEST_NAME"
+    echo "📝 $TEST_DESC"
     echo ""
     
-    configs=("system-testing" "database-testing" "minimal-testing" "performance-testing" "cpp-firebase-comprehensive-test" "backend-firebase-comprehensive-test")
+    # Load configs into bash array
+    mapfile -t configs < <(jq -r '.configs[]' "$TEST_LIST_FILE")
+    
+    if [ ${#configs[@]} -eq 0 ]; then
+        echo "❌ No test configurations found in $TEST_LIST_FILE"
+        exit 1
+    fi
+    
+    echo "📋 Test configurations to run: ${#configs[@]}"
+    for config in "${configs[@]}"; do
+        echo "  - $config"
+    done
+    echo ""
+    
     failed_configs=()
     
     for config in "${configs[@]}"; do
@@ -1154,7 +1209,7 @@ test-all-android:
         echo ""
     done
     
-    echo "📋 Final Results:"
+    echo "📋 Final Results for: $TEST_NAME"
     echo "=================="
     for config in "${configs[@]}"; do
         if [ ${#failed_configs[@]} -gt 0 ] && [[ " ${failed_configs[*]} " =~ " $config " ]]; then
@@ -1173,6 +1228,55 @@ test-all-android:
         echo "💥 ${#failed_configs[@]} configuration(s) FAILED"
         exit 1
     fi
+
+# Run all standard test configurations on Android (uses default-all test list)
+test-all-android:
+    just test-list-android default-all
+
+# Convenient shortcuts for common test lists
+test-suite-firebase-android:
+    just test-list-android firebase-only
+
+test-suite-quick-android:
+    just test-list-android quick-validation
+
+test-suite-performance-android:
+    just test-list-android performance-focus
+
+test-suite-minimal-android:
+    just test-list-android minimal-smoke
+
+# List available test lists
+list-test-lists:
+    #!/usr/bin/env bash
+    echo "📋 Available test lists:"
+    echo "======================="
+    
+    if [ ! -d "project/test-lists" ]; then
+        echo "❌ No test-lists directory found"
+        exit 1
+    fi
+    
+    if ! command -v jq &> /dev/null; then
+        echo "❌ jq is required for parsing test list files. Please install jq."
+        exit 1
+    fi
+    
+    for file in project/test-lists/*.json; do
+        if [ -f "$file" ]; then
+            filename=$(basename "$file" .json)
+            name=$(jq -r '.name' "$file")
+            description=$(jq -r '.description' "$file")
+            config_count=$(jq -r '.configs | length' "$file")
+            
+            echo ""
+            echo "🏷️  $filename"
+            echo "   Name: $name"
+            echo "   Description: $description"
+            echo "   Configs: $config_count"
+            echo "   Usage: just test-list-android $filename"
+        fi
+    done
 
 # ================================
 # LOG FILTERING AND ANALYSIS HELPERS

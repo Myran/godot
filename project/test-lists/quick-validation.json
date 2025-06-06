@@ -1,0 +1,8 @@
+{
+  "name": "Quick Validation",
+  "description": "Essential tests for rapid validation during development",
+  "configs": [
+    "system-testing",
+    "minimal-testing"
+  ]
+}

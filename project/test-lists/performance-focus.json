@@ -1,0 +1,8 @@
+{
+  "name": "Performance Testing",
+  "description": "Performance and stress testing suite",
+  "configs": [
+    "performance-testing",
+    "cpp-firebase-comprehensive-test"
+  ]
+}

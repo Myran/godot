@@ -1,0 +1,9 @@
+{
+  "name": "Firebase Focus",
+  "description": "Firebase-focused testing for database and backend validation",
+  "configs": [
+    "database-testing",
+    "cpp-firebase-comprehensive-test", 
+    "backend-firebase-comprehensive-test"
+  ]
+}
