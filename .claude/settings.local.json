@@ -8,7 +8,13 @@
       "Bash(just test-list-android:*)",
       "Bash(jq:*)",
       "Bash(just)",
-      "Bash(just help)"
+      "Bash(just help)",
+      "mcp__godot__launch_editor",
+      "mcp__godot__run_project",
+      "mcp__godot__get_debug_output",
+      "Bash(grep:*)",
+      "mcp__godot__stop_project",
+      "Bash(just test-all-android:*)"
     ],
     "deny": []
   }
