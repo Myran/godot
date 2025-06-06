@@ -1719,6 +1719,8 @@ help-android:
     echo "  • Gradle issues: Run 'just clean-android-templates' then retry"
     echo "  • Log analysis: Use 'just logs-errors-only TEST_ID' to focus on specific issues"
     echo ""
+    echo "💡 For action name shortcuts and advanced debug workflows: just help-debug"
+    echo ""
 
 # iOS-specific help and workflow guide  
 help-ios:
@@ -1839,6 +1841,12 @@ help-debug:
     echo "  just config-set performance-testing  # Set embedded debug config"
     echo "  just config-push-android gameplay-testing # Push config to device (quick)"
     echo "  just config-clear-android            # Clear external config, use embedded"
+    echo ""
+    echo "💡 ACTION NAME SHORTCUTS (No JSON files needed!):"
+    echo "  just config-restart-android 'Show Registry Stats'    # Use any action directly"
+    echo "  just test-quick-android 'Backend Performance Test'   # Test single action"
+    echo "  just test-config-android 'C++ Set Value Test'        # Automated test"
+    echo "  just config-set 'Print Debug Info'                   # Set single action config"
     echo ""
     echo "🧪 TESTING BEHAVIOR:"
     echo "  just test-config-android <config>    # RELIABLE: Restarts app, tests actual config"

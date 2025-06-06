@@ -31,6 +31,14 @@ just config-restart-android testing        # Push specific config + restart on d
 just config-restart-ios testing           # iOS equivalent
 ```
 
+### Action Name Testing (No JSON files needed!)
+```bash
+just config-restart-android 'Show Registry Stats'    # Test any action directly
+just test-quick-android 'Backend Performance Test'   # Quick test single action
+just test-config-android 'C++ Set Value Test'        # Automated test with results
+just config-set 'Print Debug Info'                   # Set single action as embedded config
+```
+
 ### Full Testing
 ```bash
 just test-all-android                     # Comprehensive Android testing (all configs)
@@ -85,11 +93,25 @@ Located in `project/debug/actions/`, includes:
 - Data integrity checks
 
 ## Development Workflow
-0. **Planning** : think trough implementation and assess ways to improve quality and simplicity. use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
+0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
 1. **Local Development**: Use `just run-desktop` for rapid iteration and use Godot tools
-2. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of tests. Use 'just fastbuild-android' if to build and transfer changes to android
-3. **Full Validation**: Run `just test-all-[platform]` before commits
-4. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+2. **Action Testing**: Use action names directly for instant testing: `just config-restart-android 'Action Name'`
+3. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of tests. Use 'just fastbuild-android' to build and transfer changes to android
+4. **Full Validation**: Run `just test-all-[platform]` before commits
+5. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+
+### Action Name Shortcuts
+Instead of creating JSON config files, you can now test individual actions directly:
+- **Quick Testing**: `just config-restart-android 'Action Name'` - 5 second cycle
+- **Automated Testing**: `just test-config-android 'Action Name'` - Full test with results
+- **Log Monitoring**: `just test-monitor-android 'Action Name'` - Watch logs in real-time
+- **Config Management**: `just config-set 'Action Name'` - Set as embedded config
+
+All commands automatically:
+- Detect if the argument is an action name vs config file
+- Create temporary JSON configs for single actions
+- Clean up temporary files after successful operations
+- Handle action names with spaces when properly quoted
 
 ## Firebase Integration
 
