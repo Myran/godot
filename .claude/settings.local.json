@@ -44,7 +44,10 @@
       "mcp__tavily-mcp__tavily-search",
       "Bash(awk:*)",
       "mcp__basic-memory__write_note",
-      "mcp__mcp-shrimp-task-manager__process_thought"
+      "mcp__mcp-shrimp-task-manager__process_thought",
+      "mcp__wcgw__Initialize",
+      "mcp__wcgw__ReadFiles",
+      "mcp__wcgw__BashCommand"
     ],
     "deny": []
   }
