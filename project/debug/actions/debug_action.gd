@@ -132,22 +132,13 @@ func execute() -> void:
 		# Execute the action - GDScript doesn't have try/except
 		result = await action_callable.call()
 
-		# Check if execution was successful (improved error detection)
-		if (
-			result == false
-			or (result is Dictionary and result.has("error"))
-			or (result is Array and result.size() > 0 and result[0] == false)
-		):
-			success = false
-			error_message = str(result) if result != false else "Action returned false"
-			_update_status("ERROR: " + action_name + " failed", true)
-		elif result != null:
-			success = true
+		# Determine success based on standardized return patterns
+		success = _evaluate_action_result(result)
+		if success:
 			_update_status("Completed: " + action_name)
 		else:
-			success = false
-			error_message = "Action returned null"
-			_update_status("ERROR: " + action_name + " returned null", true)
+			error_message = _extract_error_message(result)
+			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
 		# No callable defined
 		success = false
@@ -186,19 +177,66 @@ func execute() -> void:
 				["debug", "test", "failure"]
 			)
 
-	# NEW: Unified output for completion using DebugOutputService
-	DebugOutputService.output_action_result(self, success, result if success else error_message)
 
-	# EXISTING: Keep signal for backward compatibility
-	execution_completed.emit(success, result if success else error_message)
+# Type-safe result evaluation methods
+func _evaluate_action_result(result: Variant) -> bool:
+	"""Determine if an action result indicates success using standardized patterns"""
+	# Handle null/void results as failure
+	if result == null:
+		return false
+	
+	# Handle boolean results
+	if result is bool:
+		return result
+	
+	# Handle array pattern [success: bool, data: Variant]
+	if result is Array and result.size() >= 1:
+		return result[0] == true
+	
+	# Handle dictionary with error key
+	if result is Dictionary and result.has("error"):
+		return false
+	
+	# Handle dictionary with success key
+	if result is Dictionary and result.has("success"):
+		return result["success"] == true
+	
+	# Any other non-null result is considered success
+	return true
+
+
+func _extract_error_message(result: Variant) -> String:
+	"""Extract error message from failed action result"""
+	if result == null:
+		return "Action returned null"
+	
+	if result == false:
+		return "Action returned false"
+	
+	# Handle array pattern [false, error_data]
+	if result is Array and result.size() >= 2:
+		var error_data = result[1]
+		if error_data is String:
+			return error_data
+		elif error_data is Dictionary and error_data.has("error"):
+			return str(error_data["error"])
+		else:
+			return str(error_data)
+	
+	# Handle dictionary with error key
+	if result is Dictionary and result.has("error"):
+		return str(result["error"])
+	
+	# Fallback to string representation
+	return str(result)
 
 
 # Helper to update status via signal instead of direct UI access
 func _update_status(text: String, is_error: bool = false) -> void:
-	# NEW: Unified output for all execution paths using DebugOutputService
+	# Unified output for all execution paths using DebugOutputService
 	DebugOutputService.output_action_status(self, text, is_error)
 
-	# EXISTING: Keep signal for backward compatibility
+	# Emit status update signal
 	status_updated.emit(text, is_error)
 
 	# Keep original logging for system logs
@@ -209,13 +247,3 @@ func _update_status(text: String, is_error: bool = false) -> void:
 	)
 
 
-# Helper to simplify returning success
-func _success(payload: Variant = null) -> Array:
-	return [true, payload]
-
-
-# Helper to simplify returning failure
-func _failure(error_message: String, details: Dictionary = {}) -> Array:
-	var error_info: Dictionary = {"error": error_message}
-	error_info.merge(details, true)
-	return [false, error_info]
