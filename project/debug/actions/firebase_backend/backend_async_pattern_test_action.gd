@@ -18,7 +18,6 @@ func execute_backend_action() -> bool:
 	var set_success = await test_backend_async_pattern("set_data", test_path, test_key, test_value, "Backend Set Data")
 	
 	if not set_success:
-		execution_completed.emit(false, {"error": "Set operation failed"})
 		return false
 	
 	# Test get_data pattern  
@@ -31,5 +30,4 @@ func execute_backend_action() -> bool:
 	else:
 		_update_status("Backend async pattern test FAILED", true)
 	
-	execution_completed.emit(overall_success, {"set_success": set_success, "get_success": get_success})
 	return overall_success

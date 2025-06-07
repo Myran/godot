@@ -12,7 +12,6 @@ func execute_backend_action() -> bool:
 	
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
-		execution_completed.emit(false, {"error": "Backend not available"})
 		return false
 	
 	var error_tests = []
@@ -102,5 +101,4 @@ func execute_backend_action() -> bool:
 		_update_status("Error Handling test FAILED (" + str(successful_error_handling) + "/" + str(total_error_tests) + ")", true)
 		Log.error("Backend error handling validation failed", test_results, ["debug", "backend_firebase", "error"])
 	
-	execution_completed.emit(overall_success, test_results)
 	return overall_success

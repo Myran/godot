@@ -1,0 +1,94 @@
+# project/debug/debug_action_result.gd.template
+# Future enhancement: Unified result class for debug action completion
+# This template documents the planned DebugActionResult class design
+# for consistent completion handling across all debug actions.
+
+@tool
+class_name DebugActionResult
+extends RefCounted
+
+## Unified result class for debug action completion
+## Provides type-safe, consistent handling of action results across all debug action categories
+
+var success: bool
+var data: Variant
+var error_message: String 
+var duration_ms: int
+var operation: String
+
+func _init(p_success: bool = false, p_data: Variant = null, p_error: String = "", p_duration: int = 0, p_operation: String = ""):
+	success = p_success
+	data = p_data
+	error_message = p_error
+	duration_ms = p_duration
+	operation = p_operation
+
+## Static factory methods for clean result creation
+static func success(p_data: Variant = null, p_duration_ms: int = 0, p_operation: String = "") -> DebugActionResult:
+	return DebugActionResult.new(true, p_data, "", p_duration_ms, p_operation)
+
+static func failure(p_error: String, p_data: Variant = null, p_duration_ms: int = 0, p_operation: String = "") -> DebugActionResult:
+	return DebugActionResult.new(false, p_data, p_error, p_duration_ms, p_operation)
+
+## Query methods
+func is_success() -> bool:
+	return success
+
+func is_failure() -> bool:
+	return not success
+
+func get_data() -> Variant:
+	return data
+
+func get_error() -> String:
+	return error_message
+
+func get_duration() -> int:
+	return duration_ms
+
+## Compatibility method for existing DebugOutputService
+func to_completion_args() -> Array:
+	"""Returns [success: bool, data: Variant] for current completion system"""
+	if success:
+		return [true, data]
+	else:
+		var error_data = {"error": error_message}
+		if duration_ms > 0:
+			error_data["duration_ms"] = duration_ms
+		if operation != "":
+			error_data["operation"] = operation
+		return [false, error_data]
+
+## Serialization for logging and debugging
+func to_dict() -> Dictionary:
+	return {
+		"success": success,
+		"data": data,
+		"error_message": error_message,
+		"duration_ms": duration_ms,
+		"operation": operation
+	}
+
+func to_string() -> String:
+	if success:
+		return "SUCCESS: %s (%dms)" % [operation, duration_ms]
+	else:
+		return "FAILURE: %s - %s (%dms)" % [operation, error_message, duration_ms]
+
+## Usage Examples:
+## 
+## # Success case:
+## return DebugActionResult.success({"user_count": 42}, 150, "Get User Count")
+##
+## # Failure case: 
+## return DebugActionResult.failure("Network timeout", null, 5000, "Get User Data")
+##
+## # In action execute method:
+## func execute_action() -> DebugActionResult:
+##     var start_time = Time.get_ticks_msec()
+##     # ... perform operation ...
+##     var duration = Time.get_ticks_msec() - start_time
+##     if operation_successful:
+##         return DebugActionResult.success(result_data, duration, action_name)
+##     else:
+##         return DebugActionResult.failure(error_message, null, duration, action_name)

@@ -84,7 +84,6 @@ func execute_cpp_action() -> bool:
 	else:
 		_update_status("Basic operations test FAILED (" + str(passed_tests) + "/" + str(total_tests) + " operations worked)", true)
 	
-	execution_completed.emit(overall_success, test_result)
 	return overall_success
 
 # Removed timeout-related helper methods since timeout functionality was removed

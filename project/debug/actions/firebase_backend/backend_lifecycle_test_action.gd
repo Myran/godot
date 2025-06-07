@@ -35,7 +35,6 @@ func execute_backend_action() -> bool:
 			"lifecycle_tests": lifecycle_tests,
 			"lifecycle_validation": false
 		}
-		execution_completed.emit(false, test_results)
 		return false
 	
 	# Test 2: Backend initialization state
@@ -142,5 +141,4 @@ func execute_backend_action() -> bool:
 		_update_status("Lifecycle test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true)
 		Log.error("Backend lifecycle validation failed", test_results, ["debug", "backend_firebase", "error"])
 	
-	execution_completed.emit(overall_success, test_results)
 	return overall_success

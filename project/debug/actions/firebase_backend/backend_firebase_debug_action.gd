@@ -89,5 +89,4 @@ func test_backend_async_pattern(method_name: String, path: Array, key: String, v
 func execute_backend_action() -> bool:
 	push_error("execute_backend_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_backend_action() not implemented", true)
-	execution_completed.emit(false, {"error": "Not implemented"})
 	return false

@@ -110,5 +110,4 @@ func execute_cpp_action() -> bool:
 	else:
 		_update_status("Concurrent operations test FAILED", true)
 
-	execution_completed.emit(overall_success, test_result)
 	return overall_success

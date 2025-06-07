@@ -12,7 +12,6 @@ func execute_backend_action() -> bool:
 	
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
-		execution_completed.emit(false, {"error": "Backend not available"})
 		return false
 	
 	var tracking_tests = []
@@ -165,5 +164,4 @@ func execute_backend_action() -> bool:
 		_update_status("Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true)
 		Log.error("Backend request tracking validation failed", test_results, ["debug", "backend_firebase", "error"])
 	
-	execution_completed.emit(overall_success, test_results)
 	return overall_success

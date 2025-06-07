@@ -17,18 +17,14 @@ func _init() -> void:
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return
+		return false
 
 	var path_suffix: Array[Variant] = ["listener_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -87,16 +83,7 @@ func execute() -> void:
 				["test", "rtdb", "listeners", "failure"]
 			)
 
-			execution_completed.emit(
-				false,
-				{
-					"error": error_msg,
-					"path": full_path,
-					"timeout_ms": timeout_ms,
-					"callback_received": false
-				}
-			)
-			return
+			return false
 
 	# SUCCESS - callback was received!
 	var success_msg: String = (
@@ -116,19 +103,7 @@ func execute() -> void:
 		["test", "rtdb", "listeners", "success"]
 	)
 
-	execution_completed.emit(
-		true,
-		{
-			"operation": "single_value_listener_test",
-			"path": full_path,
-			"listener_id": active_listener_id,
-			"callback_received": true,
-			"callback_data": callback_data,
-			"test_result": "PASSED",
-			"timestamp": Time.get_ticks_msec(),
-			"implementation": "child_listener_based"
-		}
-	)
+	return true
 
 
 ## Signal handler for value changes (using child_changed from C++ Firebase module)

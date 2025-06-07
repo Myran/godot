@@ -9,9 +9,10 @@ func _init() -> void:
 	category = "System"
 	group = "Diagnostics"
 	description = "Logs basic system information and environment variables."
+	action_callable = Callable(self, "log_system_info")
 
 
-func execute() -> void:
+func log_system_info() -> bool:
 	_update_status("Collecting system information...")
 
 	var info: Dictionary = {
@@ -33,4 +34,4 @@ func execute() -> void:
 	Log.info("System info collected by debug action", info, ["debug", "system"])
 	_update_status("System Information:\n" + formatted_info)
 
-	execution_completed.emit(true, info)
+	return true

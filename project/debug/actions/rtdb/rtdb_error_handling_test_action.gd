@@ -11,18 +11,14 @@ func _init() -> void:
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return
+		return false
 
 	_update_status("Starting error handling tests...")
 
@@ -107,18 +103,7 @@ func execute() -> void:
 		["test", "rtdb", "advanced", "error_handling"]
 	)
 
-	execution_completed.emit(
-		true,
-		{
-			"operation": "error_handling_test",
-			"success": test_success,
-			"total_tests": error_tests.size(),
-			"passed_tests": successful_error_handling,
-			"failed_tests": failed_error_handling,
-			"test_results": error_tests,
-			"timestamp": Time.get_ticks_msec()
-		}
-	)
+	return true
 
 
 func _execute_error_scenario(db: Variant, scenario: Dictionary) -> Dictionary:

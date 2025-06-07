@@ -82,5 +82,4 @@ func execute_cpp_operation(method_name: String, args: Array, operation_name: Str
 func execute_cpp_action() -> bool:
 	push_error("execute_cpp_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_cpp_action() not implemented", true)
-	execution_completed.emit(false, {"error": "Not implemented"})
 	return false

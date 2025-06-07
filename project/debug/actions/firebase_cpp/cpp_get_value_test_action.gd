@@ -18,7 +18,6 @@ func execute_cpp_action() -> bool:
 	var set_result = await execute_cpp_operation("set_value_async", [test_path, test_value], "C++ Set (for Get test)")
 	
 	if not set_result:
-		execution_completed.emit(false, {"error": "Failed to set test value"})
 		return false
 	
 	# Now get the value directly via C++
@@ -34,5 +33,4 @@ func execute_cpp_action() -> bool:
 		Log.error("C++ Get test failed", {"test_path": test_path}, ["debug", "cpp_firebase", "error"])
 		_update_status("C++ Get Value test FAILED", true)
 	
-	execution_completed.emit(success, {"result": get_result})
 	return success

@@ -18,7 +18,6 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	push_error("execute_rtdb_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_rtdb_action() not implemented", true)
-	execution_completed.emit(false, {"error": "Not implemented"})
 	return false  # Return false to indicate failure
 
 
@@ -89,18 +88,12 @@ func execute_simple_operation(
 		var error_msg: String = "Firebase backend not available for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
-
-		# Emit completion signal for UI updates
-		execution_completed.emit(false, {"error": error_msg})
 		return false
 
 	if not firebase_backend.is_available():
 		var error_msg: String = "Firebase backend not initialized for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
-
-		# Emit completion signal for UI updates
-		execution_completed.emit(false, {"error": error_msg})
 		return false
 
 	var result: Variant
@@ -144,9 +137,6 @@ func execute_simple_operation(
 				["debug", "rtdb", "error"]
 			)
 			_update_status("ERROR: " + error_msg + " (" + str(duration_ms) + "ms)", true)
-
-			# Emit completion signal for UI updates
-			execution_completed.emit(false, {"error": error_msg, "duration_ms": duration_ms})
 			return false
 
 	# Handle result with performance tracking
@@ -166,7 +156,6 @@ func execute_simple_operation(
 			["debug", "rtdb", "success"]
 		)
 		_update_status(operation_name + " completed successfully (" + str(duration_ms) + "ms)")
-		execution_completed.emit(true, {"result": result, "duration_ms": duration_ms})
 		return true
 	else:
 		Log.warning(
@@ -175,7 +164,6 @@ func execute_simple_operation(
 			["debug", "rtdb", "warning"]
 		)
 		_update_status(operation_name + " completed (null result, " + str(duration_ms) + "ms)")
-		execution_completed.emit(true, {"result": null, "duration_ms": duration_ms})
 		return true
 
 

@@ -16,5 +16,4 @@ func execute_cpp_action() -> bool:
 	var result = await execute_cpp_operation("set_value_async", [test_path, test_value], "C++ Set Value")
 	
 	var success = result != null
-	execution_completed.emit(success, {"result": result})
 	return success

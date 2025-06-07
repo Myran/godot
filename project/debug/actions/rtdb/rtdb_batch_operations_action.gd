@@ -11,18 +11,14 @@ func _init() -> void:
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return
+		return false
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.BATCH_OPS)
 
@@ -98,19 +94,7 @@ func execute() -> void:
 		["test", "rtdb", "advanced"]
 	)
 
-	execution_completed.emit(
-		true,
-		{
-			"operation": "batch_operations",
-			"path": full_path,
-			"success": batch_success,
-			"total_operations": batch_operations.size(),
-			"successful_operations": successful_operations,
-			"failed_operations": failed_operations,
-			"operations": batch_operations,
-			"timestamp": TimeUtils.now_ms()
-		}
-	)
+	return true
 
 
 func _execute_single_operation(

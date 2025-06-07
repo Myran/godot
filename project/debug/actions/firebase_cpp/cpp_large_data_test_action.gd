@@ -101,7 +101,6 @@ func execute_cpp_action() -> bool:
 	else:
 		_update_status("Large data test FAILED (" + str(successful_tests) + "/" + str(total_tests) + " succeeded)", true)
 	
-	execution_completed.emit(overall_success, final_result)
 	return overall_success
 
 # Generate test data of specified size

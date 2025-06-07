@@ -25,7 +25,6 @@ func execute_rtdb_action() -> bool:
 
 	if not setup_success:
 		_update_status("ERROR: Failed to setup test data for deletion", true)
-		execution_completed.emit(false, {"error": "Setup failed: Cannot create test data"})
 		return false
 
 	# Now attempt to delete the data
@@ -36,7 +35,6 @@ func execute_rtdb_action() -> bool:
 
 	if not delete_success:
 		_update_status("ERROR: Delete operation failed", true)
-		execution_completed.emit(false, {"error": "Delete operation returned false"})
 		return false
 
 	# Validate that the data was actually deleted by calling Firebase backend directly
@@ -44,9 +42,6 @@ func execute_rtdb_action() -> bool:
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
 		_update_status("ERROR: Cannot validate deletion - Firebase backend unavailable", true)
-		execution_completed.emit(
-			false, {"error": "Validation failed: Firebase backend unavailable"}
-		)
 		return false
 
 	# Get the actual result to validate deletion
@@ -57,15 +52,7 @@ func execute_rtdb_action() -> bool:
 	# If we get null/empty, deletion worked
 	if validation_result == null:
 		_update_status("Delete validation successful - data confirmed removed")
-		execution_completed.emit(true, {"result": "Data successfully deleted and validated"})
 		return true
 	else:
 		_update_status("ERROR: Delete validation failed - data still exists", true)
-		execution_completed.emit(
-			false,
-			{
-				"error": "Validation failed: Data still exists after delete",
-				"remaining_data": validation_result
-			}
-		)
 		return false

@@ -11,18 +11,14 @@ func _init() -> void:
 	description = "Validates accessibility and structure of various RTDB paths."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return
+		return false
 
 	_update_status("Validating various RTDB paths...")
 
@@ -94,17 +90,7 @@ func execute() -> void:
 		["test", "rtdb", "path_operations"]
 	)
 
-	execution_completed.emit(
-		true,
-		{
-			"operation": "path_validation",
-			"total_paths": validation_results.size(),
-			"successful_validations": successful_validations,
-			"failed_validations": failed_validations,
-			"validation_results": validation_results,
-			"timestamp": Time.get_ticks_msec()
-		}
-	)
+	return true
 
 
 func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:

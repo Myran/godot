@@ -38,14 +38,6 @@ func execute_rtdb_action() -> bool:
 
 	if not write_success:
 		_update_status("ERROR: Failed to write large data", true)
-		execution_completed.emit(
-			false,
-			{
-				"error": "Large data write failed",
-				"data_size_bytes": data_size_estimate,
-				"write_duration_ms": write_duration
-			}
-		)
 		return false
 
 	_update_status(
@@ -92,7 +84,6 @@ func execute_rtdb_action() -> bool:
 		["test", "rtdb", "performance"]
 	)
 
-	execution_completed.emit(true, success_data)
 	return true
 
 

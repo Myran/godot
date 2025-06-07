@@ -56,5 +56,4 @@ func execute_cpp_action() -> bool:
 		_update_status("Signal integrity test FAILED (" + str(successful_operations) + "/" + str(operations_count) + ")", true)
 		Log.error("C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"])
 	
-	execution_completed.emit(success, test_result)
 	return success

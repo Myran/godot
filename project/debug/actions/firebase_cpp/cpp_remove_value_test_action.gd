@@ -18,7 +18,6 @@ func execute_cpp_action() -> bool:
 	var set_result = await execute_cpp_operation("set_value_async", [test_path, test_value], "C++ Set (for Remove test)")
 	
 	if not set_result:
-		execution_completed.emit(false, {"error": "Failed to set test value"})
 		return false
 	
 	# Now remove the value directly via C++
@@ -34,5 +33,4 @@ func execute_cpp_action() -> bool:
 		Log.error("C++ Remove test failed", {"test_path": test_path}, ["debug", "cpp_firebase", "error"])
 		_update_status("C++ Remove Value test FAILED", true)
 	
-	execution_completed.emit(success, {"result": remove_result})
 	return success

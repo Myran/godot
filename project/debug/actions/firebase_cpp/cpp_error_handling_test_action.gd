@@ -104,7 +104,6 @@ func execute_cpp_action() -> bool:
 	else:
 		_update_status("Error handling test FAILED (" + str(passed_tests) + "/" + str(total_tests) + " scenarios handled)", true)
 
-	execution_completed.emit(overall_success, test_result)
 	return overall_success
 
 # Helper function to determine if an error was properly handled (simplified for basic operations)

@@ -14,18 +14,14 @@ func _init() -> void:
 	description = "Sets up a listener for when children are removed from a specific RTDB path and verifies it works."
 
 
-func execute() -> void:
+func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var error_result: Array = get_last_error_result()
-		execution_completed.emit(
-			false,
-			error_result[1] if error_result.size() > 1 else {"error": "Database connection failed"}
-		)
-		return
+		return false
 
 	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
@@ -67,19 +63,10 @@ func execute() -> void:
 
 	if result.success:
 		_update_status("✅ Listener test PASSED")
-		execution_completed.emit(
-			true,
-			{
-				"operation": "child_removed_listener_test",
-				"path": _active_path,
-				"test_result": "PASSED",
-				"callback_data": result.data,
-				"timestamp": TimeUtils.now_ms()
-			}
-		)
+		return true
 	else:
 		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
-		execution_completed.emit(false, {"error": str(str(result.get("error", "unknown error")))})
+		return false
 
 
 func _on_child_removed(child_key: String, child_value: Variant) -> void:
