@@ -27,7 +27,23 @@
       "Bash(cp:*)",
       "Bash(timeout 20 adb logcat:*)",
       "Bash(adb shell:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "mcp__mcp-shrimp-task-manager__plan_task",
+      "mcp__mcp-shrimp-task-manager__analyze_task",
+      "mcp__mcp-shrimp-task-manager__reflect_task",
+      "mcp__mcp-shrimp-task-manager__split_tasks",
+      "mcp__mcp-shrimp-task-manager__execute_task",
+      "mcp__mcp-shrimp-task-manager__verify_task",
+      "Bash(# Test ACTION_SUCCESS_PATTERN\nACTION_SUCCESS_PATTERN=\"DEBUG_TEST_SUCCESS.*action.*([^,]+).*duration_ms.*([0-9]+)\"\ntest_line='I/System.out(12345): {\"message\":\"DEBUG_TEST_SUCCESS\",\"data\":{\"test_id\":\"test_123\",\"action\":\"C++ Firebase Init Test\",\"category\":\"Firebase\",\"group\":\"C++\",\"duration_ms\":1250},\"tags\":[\"debug\",\"test\",\"success\"]}'\n\nif echo \"$test_line\" | grep -qE \"$ACTION_SUCCESS_PATTERN\"; then\n    action_name=$(echo \"$test_line\" | sed -n 's/.*\"action\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p')\n    duration=$(echo \"$test_line\" | sed -n 's/.*\"duration_ms\"[[:space:]]*:[[:space:]]*\\([0-9]*\\).*/\\1/p')\n    echo \"✅ ACTION_SUCCESS pattern works - action: '$action_name', duration: ${duration}ms\"\nelse\n    echo \"❌ ACTION_SUCCESS pattern failed\"\nfi)",
+      "Bash(# Test ACTION_FAILURE_PATTERN\nACTION_FAILURE_PATTERN=\"DEBUG_TEST_FAILURE.*action.*([^,]+).*error.*([^}]+)\"\ntest_line='I/System.out(12345): {\"message\":\"DEBUG_TEST_FAILURE\",\"data\":{\"test_id\":\"test_123\",\"action\":\"C++ Firebase Connection Test\",\"category\":\"Firebase\",\"group\":\"C++\",\"error\":\"Connection timeout after 30 seconds\",\"duration_ms\":30000},\"tags\":[\"debug\",\"test\",\"failure\"]}'\n\nif echo \"$test_line\" | grep -qE \"$ACTION_FAILURE_PATTERN\"; then\n    action_name=$(echo \"$test_line\" | sed -n 's/.*\"action\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p')\n    error_msg=$(echo \"$test_line\" | sed -n 's/.*\"error\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p')\n    echo \"✅ ACTION_FAILURE pattern works - action: '$action_name', error: '$error_msg'\"\nelse\n    echo \"❌ ACTION_FAILURE pattern failed\"\nfi)",
+      "Bash(# Test duration calculation\nduration=1250\nduration_sec=$(echo \"scale=2; $duration / 1000\" | bc -l 2>/dev/null || echo \"0.0\")\necho \"✅ Duration calculation: ${duration}ms = ${duration_sec}s\"\n\n# Test timeout monitoring logic\nstart_time=$(date +%s.%N)\nsleep 0.1  # Small delay\ncurrent_time=$(date +%s.%N)\nelapsed=$(echo \"$current_time - $start_time\" | bc -l 2>/dev/null || echo \"0\")\nelapsed_int=${elapsed%.*}\necho \"✅ Timeout calculation: elapsed = ${elapsed}s, int part = ${elapsed_int}s\")",
+      "mcp__mcp-shrimp-task-manager__list_tasks",
+      "Bash(bash:*)",
+      "Bash(adb:*)",
+      "mcp__mcp-shrimp-task-manager__research_mode",
+      "mcp__tavily-mcp__tavily-search",
+      "Bash(awk:*)",
+      "mcp__basic-memory__write_note"
     ],
     "deny": []
   }

@@ -23,20 +23,27 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine. The
 
 ## Essential Development Commands
 
-### Quick Testing (5-second cycles)
+### ⚡ Individual Action Testing (PREFERRED for debugging)
+**Test any single debug action instantly - no JSON config files needed!**
 ```bash
-just run-desktop                           # Instant local testing
-just fastbuild-android                    # rebuild android quickly after gdscript changes
-just config-restart-android testing        # Push specific config + restart on device
-just config-restart-ios testing           # iOS equivalent
+# 🚀 Quick iteration (5-second cycles)
+just config-restart-android 'C++ Error Handling Test'   # Instant action test + restart
+just config-restart-ios 'Firebase Status Check'         # iOS equivalent
+
+# 🔍 Debugging & Development  
+just test-config-android 'C++ Set Value Test'           # Full automated test with results
+just test-monitor-android 'Backend Performance Test'    # Real-time log monitoring
+just fastbuild-android                                  # Rebuild after code changes
+
+# ⚙️ Configuration Management
+just config-set 'Print Debug Info'                      # Set single action as default config
 ```
 
-### Action Name Testing (No JSON files needed!)
+### Traditional Config Testing
 ```bash
-just config-restart-android 'Show Registry Stats'    # Test any action directly
-just test-quick-android 'Backend Performance Test'   # Quick test single action
-just test-config-android 'C++ Set Value Test'        # Automated test with results
-just config-set 'Print Debug Info'                   # Set single action as embedded config
+just run-desktop                           # Instant local testing
+just config-restart-android testing        # Push JSON config + restart on device
+just config-restart-ios testing           # iOS equivalent
 ```
 
 ### Full Testing
@@ -95,23 +102,116 @@ Located in `project/debug/actions/`, includes:
 ## Development Workflow
 0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
 1. **Local Development**: Use `just run-desktop` for rapid iteration and use Godot tools
-2. **Action Testing**: Use action names directly for instant testing: `just config-restart-android 'Action Name'`
-3. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of tests. Use 'just fastbuild-android' to build and transfer changes to android
-4. **Full Validation**: Run `just test-all-[platform]` before commits
-5. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+2. **🎯 Individual Action Testing**: Use action names directly: `just config-restart-android 'Action Name'` (FASTEST debugging method)
+3. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of full test configs
+4. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
+5. **Full Validation**: Run `just test-all-[platform]` before commits
+6. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
 
-### Action Name Shortcuts
-Instead of creating JSON config files, you can now test individual actions directly:
-- **Quick Testing**: `just config-restart-android 'Action Name'` - 5 second cycle
-- **Automated Testing**: `just test-config-android 'Action Name'` - Full test with results
-- **Log Monitoring**: `just test-monitor-android 'Action Name'` - Watch logs in real-time
-- **Config Management**: `just config-set 'Action Name'` - Set as embedded config
+## 🧠 Advanced Planning & Task Management
 
+### When to Use Shrimp Task Manager MCP
+**Use for complex technical planning requiring systematic breakdown:**
+- Multi-component system design (like enhanced monitoring systems)
+- Features requiring 5+ interconnected tasks  
+- Architecture changes affecting multiple systems
+- Technical debt reduction requiring coordinated changes
+- Integration projects involving external libraries/SDKs
+
+**Don't use for simple tasks:**
+- Single file modifications
+- Bug fixes with clear scope
+- Adding individual debug actions
+- Simple configuration changes
+- Documentation updates
+
+### Shrimp Task Manager Benefits vs. Basic TodoWrite
+**Shrimp MCP provides:**
+- ✅ **Systematic methodology**: Enforced planning phases (plan → analyze → reflect → split)
+- ✅ **Quality validation**: Built-in architectural consistency checks and over-engineering prevention
+- ✅ **Dependency management**: Automatic validation of task dependencies and execution order
+- ✅ **Engineering best practices**: Guided toward maintainable, testable task breakdown
+- ✅ **Senior architect review**: Acts like having an experienced reviewer check your planning
+
+**Basic TodoWrite sufficient for:**
+- ✅ Simple task tracking and progress monitoring
+- ✅ Straightforward feature additions
+- ✅ Bug fix workflows
+- ✅ Daily development task management
+
+### Planning Tool Selection Guide
+```bash
+# Complex system design - Use Shrimp Task Manager
+Task: "Implement enhanced test monitoring with action-level granularity"
+→ mcp__mcp-shrimp-task-manager__plan_task
+
+# Simple feature addition - Use TodoWrite  
+Task: "Add new debug action for data validation"
+→ TodoWrite
+
+# Medium complexity - Start with TodoWrite, escalate if needed
+Task: "Refactor debug action execution flow"
+→ TodoWrite first, then Shrimp if task grows complex
+```
+
+## 🔧 Individual Action Testing (Debugging Superpower)
+
+**Instead of creating JSON config files, test any debug action directly by name:**
+
+### Core Commands
+```bash
+# 🚀 Instant Testing (5-second iteration cycles)
+just config-restart-android 'C++ Error Handling Test'
+just config-restart-ios 'Firebase Connection Test'
+
+# 🔍 Advanced Testing & Monitoring  
+just test-config-android 'Large Data Performance Test'    # Full automated test with detailed results
+just test-monitor-android 'Concurrent Operations Test'    # Real-time log monitoring with filtering
+```
+
+### When to Use Each Method
+- **Individual Actions**: 🎯 Debugging specific issues, developing new features, isolating problems
+- **Config Files**: 📋 Running test suites, comprehensive validation, CI/CD pipelines
+- **Full Test Lists**: 🧪 Pre-commit validation, integration testing, release verification
+
+### Smart Command Detection
 All commands automatically:
-- Detect if the argument is an action name vs config file
-- Create temporary JSON configs for single actions
-- Clean up temporary files after successful operations
-- Handle action names with spaces when properly quoted
+- ✅ Detect if argument is an action name vs config file
+- ✅ Create temporary JSON configs for single actions  
+- ✅ Clean up temporary files after operations
+- ✅ Handle action names with spaces when properly quoted
+- ✅ Provide immediate feedback on action availability
+
+### 💡 Pro Tips for Debugging
+```bash
+# 1. Isolate problematic actions immediately (saves hours of debugging!)
+just test-config-android 'Failing Action Name'
+
+# 2. Monitor logs in real-time during development
+just test-monitor-android 'New Feature Action'
+
+# 3. Quick validation after code changes
+just fastbuild-android && just config-restart-android 'Test Action'
+
+# 4. Set frequently used action as default
+just config-set 'Daily Development Action'
+```
+
+### ⚠️ Common Debugging Mistake: Don't Use Full Test Suites for Single Issues
+**AVOID**: Running full test configs when debugging specific problems
+```bash
+# ❌ Slow - runs 8 actions when only 1 is broken
+just config-restart-android cpp-firebase-comprehensive-test
+
+# ✅ Fast - targets exact problem in 5 seconds  
+just config-restart-android 'C++ Error Handling Test'
+```
+
+**Why Individual Actions Are Better for Debugging:**
+- 🚀 **5x faster iteration** - no waiting for unrelated actions
+- 🎯 **Precise isolation** - pinpoint exact failure location  
+- 📝 **Cleaner logs** - easier to spot issues without noise
+- 🔄 **Rapid testing** - fix and verify in seconds, not minutes
 
 ## Firebase Integration
 

@@ -887,10 +887,12 @@ test-monitor-android CONFIG_NAME="current":
     fi
     echo ""
     
-    # Start monitoring
+    # Clear old logs and start monitoring
+    echo "🧹 Clearing old logs for fresh monitoring..."
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c
     echo "📊 Starting log monitoring..."
     LOG_FILE="android_debug_{{timestamp}}.log"
-    adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s 'System.out:*' 'GameTwo:*' 'GodotIO:*' > "$LOG_FILE" &
+    adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot > "$LOG_FILE" &
     LOGCAT_PID=$!
     
     # Restart app
@@ -914,6 +916,453 @@ test-monitor-android CONFIG_NAME="current":
         echo ""
         echo "💾 Full log: $LOG_FILE"
     fi
+    
+    # Clean up temporary config if it was auto-generated and not "current"
+    if [ "{{CONFIG_NAME}}" != "current" ]; then
+        just _cleanup-temp-config "{{CONFIG_NAME}}"
+    fi
+
+# Enhanced monitoring with action-level granularity and real-time progress tracking
+test-monitor-detailed-android CONFIG_NAME="current":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Validate config if not "current"
+    if [ "{{CONFIG_NAME}}" != "current" ]; then
+        just _validate-config-exists "{{CONFIG_NAME}}"
+    fi
+    
+    # ANSI Color codes for ProgressDisplay
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly MAGENTA='\033[0;35m'
+    readonly CYAN='\033[0;36m'
+    readonly WHITE='\033[1;37m'
+    readonly BOLD='\033[1m'
+    readonly RESET='\033[0m'
+    readonly CLEAR_LINE='\033[2K'
+    readonly SAVE_CURSOR='\033[s'
+    readonly RESTORE_CURSOR='\033[u'
+    
+    # ProgressDisplay class implementation
+    progress_display_init() {
+        local temp_dir="$1"
+        echo "0" > "$temp_dir/total_actions"
+        echo "0" > "$temp_dir/completed_actions"
+        echo "0" > "$temp_dir/failed_actions"
+        echo "" > "$temp_dir/current_action_name"
+        echo "" > "$temp_dir/action_queue"
+        echo "$(date +%s.%N)" > "$temp_dir/session_start"
+    }
+    
+    progress_display_update() {
+        local temp_dir="$1"
+        local action_index="$2"
+        local action_name="$3"
+        local status="$4"
+        local duration="${5:-}"
+        local error_msg="${6:-}"
+        
+        # Update counters
+        local total=$(cat "$temp_dir/total_actions" 2>/dev/null || echo "0")
+        local completed=$(cat "$temp_dir/completed_actions" 2>/dev/null || echo "0")
+        local failed=$(cat "$temp_dir/failed_actions" 2>/dev/null || echo "0")
+        
+        # Only update display for significant events
+        if [ "$status" = "START" ] || [ "$status" = "SUCCESS" ] || [ "$status" = "FAILURE" ] || [ "$status" = "TIMEOUT" ]; then
+            printf "\n${BOLD}${CYAN}=== Enhanced Android Debug Monitoring ===${RESET}\n"
+            printf "${WHITE}Device: ${YELLOW}{{ANDROID_DEVICE_ID}}${RESET}\n"
+            printf "${WHITE}Package: ${YELLOW}{{ANDROID_PACKAGE_NAME}}${RESET}\n"
+            printf "${WHITE}Config: ${YELLOW}{{CONFIG_NAME}}${RESET}\n"
+            echo ""
+            
+            # Progress overview
+            local session_start=$(cat "$temp_dir/session_start" 2>/dev/null || echo "$(date +%s.%N)")
+            local elapsed_total=$(echo "$(date +%s.%N) - $session_start" | bc -l 2>/dev/null || echo "0")
+            local elapsed_min=$(echo "scale=1; $elapsed_total / 60" | bc -l 2>/dev/null || echo "0.0")
+            
+            printf "${BOLD}${BLUE}📊 Progress Overview${RESET}\n"
+            if [ "$total" -gt 0 ]; then
+                local success_rate=$(echo "scale=1; ($completed - $failed) * 100 / $total" | bc -l 2>/dev/null || echo "0.0")
+                printf "${WHITE}Actions: ${GREEN}%d completed${RESET} ${RED}%d failed${RESET} ${CYAN}%d total${RESET} (${YELLOW}%.1f%% success${RESET})\n" \
+                       "$completed" "$failed" "$total" "$success_rate"
+            else
+                printf "${WHITE}Actions: ${CYAN}Waiting for first action...${RESET}\n"
+            fi
+            printf "${WHITE}Session time: ${MAGENTA}%.1f min${RESET}\n" "$elapsed_min"
+            echo ""
+        fi
+        
+        # Current action status with enhanced visual feedback
+        case "$status" in
+            "START")
+                echo "$action_name" > "$temp_dir/current_action_name"
+                printf "${BOLD}${MAGENTA}[%d] ⚡ Running: ${YELLOW}%s${RESET}\n" "$action_index" "$action_name"
+                # Show live timer
+                local action_start=$(date +%s.%N)
+                echo "$action_start" > "$temp_dir/current_action_start"
+                ;;
+            "SUCCESS")
+                echo "$((completed + 1))" > "$temp_dir/completed_actions"
+                if [ "$duration" = "N/A" ]; then
+                    printf "${BOLD}${GREEN}[%d] ✅ Success: ${WHITE}%s${RESET} ${CYAN}(completed)${RESET}\n" \
+                           "$action_index" "$action_name"
+                else
+                    printf "${BOLD}${GREEN}[%d] ✅ Success: ${WHITE}%s${RESET} ${CYAN}(%.2fs)${RESET}\n" \
+                           "$action_index" "$action_name" "$duration"
+                fi
+                echo "" > "$temp_dir/current_action_name"
+                ;;
+            "FAILURE")
+                echo "$((failed + 1))" > "$temp_dir/failed_actions"
+                echo "$((completed + 1))" > "$temp_dir/completed_actions"
+                printf "${BOLD}${RED}[%d] ❌ Failed: ${WHITE}%s${RESET}\n" "$action_index" "$action_name"
+                if [ -n "$error_msg" ]; then
+                    printf "${RED}    └─ Error: %s${RESET}\n" "$error_msg"
+                fi
+                echo "" > "$temp_dir/current_action_name"
+                ;;
+            "TIMEOUT")
+                echo "$((failed + 1))" > "$temp_dir/failed_actions"
+                echo "$((completed + 1))" > "$temp_dir/completed_actions"
+                printf "${BOLD}${RED}[%d] ⏰ Timeout: ${WHITE}%s${RESET} ${YELLOW}(%.1fs)${RESET}\n" \
+                       "$action_index" "$action_name" "$duration"
+                echo "" > "$temp_dir/current_action_name"
+                ;;
+        esac
+        
+        # Show live action timer if action is running
+        if [ "$status" = "START" ]; then
+            printf "${CYAN}    └─ Executing... ${YELLOW}⏳${RESET}\n"
+        fi
+        
+        # Recent actions summary (last 3)
+        if [ "$completed" -gt 0 ] || [ "$failed" -gt 0 ]; then
+            printf "\n${BOLD}${BLUE}📋 Recent Actions${RESET}\n"
+            # This would show recent action history - simplified for now
+            printf "${WHITE}Recent activity logged to enhanced_monitor_*.log${RESET}\n"
+        fi
+        
+        echo ""
+    }
+    
+    progress_display_live_timer() {
+        local temp_dir="$1"
+        
+        while [ -f "$temp_dir/monitoring" ]; do
+            if [ -f "$temp_dir/current_action_start" ] && [ -s "$temp_dir/current_action_name" ]; then
+                local action_start=$(cat "$temp_dir/current_action_start" 2>/dev/null || echo "")
+                local action_name=$(cat "$temp_dir/current_action_name" 2>/dev/null || echo "")
+                
+                if [ -n "$action_start" ] && [ -n "$action_name" ]; then
+                    local current_time=$(date +%s.%N)
+                    local elapsed=$(echo "$current_time - $action_start" | bc -l 2>/dev/null || echo "0")
+                    local elapsed_display=$(printf "%.1f" "$elapsed")
+                    
+                    # Update the running timer line
+                    printf "\r${CYAN}    └─ Executing... ${YELLOW}⏳ ${elapsed_display}s${RESET}"
+                fi
+            fi
+            sleep 0.1  # 10Hz update rate as specified
+        done
+    }
+    
+    echo "=== Enhanced Android Debug Monitoring ==="
+    echo "Device: {{ANDROID_DEVICE_ID}}"
+    echo "Package: {{ANDROID_PACKAGE_NAME}}"
+    echo "Config: {{CONFIG_NAME}}"
+    echo ""
+    
+    # Verify device and app
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Device not connected"
+        exit 1
+    fi
+    
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
+        echo "❌ App not installed. Run 'just install-android-app' first"
+        exit 1
+    fi
+    
+    # Initialize LogMonitor system
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    LOG_FILE="enhanced_monitor_${TIMESTAMP}.log"
+    TEMP_DIR="/tmp/enhanced_monitor_$$"
+    mkdir -p "$TEMP_DIR"
+    
+    # Initialize ProgressDisplay
+    progress_display_init "$TEMP_DIR"
+    
+    # Define log parsing patterns for Godot JSON logs
+    ACTION_START_PATTERN="Executing action.*\"action\":[[:space:]]*\"([^\"]+)\""
+    # Multiple success patterns to support different action types
+    ACTION_SUCCESS_PATTERN_DEBUG="DEBUG_TEST_SUCCESS.*\"action\":[[:space:]]*\"([^\"]+)\".*\"duration_ms\":[[:space:]]*([0-9]+)"
+    ACTION_SUCCESS_PATTERN_COMPLETED="Completed: ([^{]+)"
+    ACTION_SUCCESS_PATTERN_PASSED="test PASSED.*\"action\":[[:space:]]*\"([^\"]+)\""
+    ACTION_FAILURE_PATTERN="DEBUG_TEST_FAILURE.*\"action\":[[:space:]]*\"([^\"]+)\".*\"error\":[[:space:]]*\"([^\"]+)\""
+    
+    # Enhanced log monitor function with ProgressDisplay integration
+    monitor_logs() {
+        local log_file="$1"
+        local temp_dir="$2"
+        local action_count=0
+        local current_action=""
+        local start_time=""
+        
+        printf "${BOLD}${CYAN}📊 Starting enhanced log monitoring with action-level tracking...${RESET}\n"
+        printf "${CYAN}🔍 Watching for action patterns with live progress display...${RESET}\n"
+        echo ""
+        
+        # Start ADB logcat with enhanced filtering for Godot logs
+        adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot | \
+        while IFS= read -r line; do
+            echo "$line" >> "$log_file"
+            
+            # Action start detection
+            if echo "$line" | grep -qE "$ACTION_START_PATTERN"; then
+                action_name=$(echo "$line" | sed -n 's/.*"action":[[:space:]]*"\([^"]*\)".*/\1/p')
+                if [ -n "$action_name" ]; then
+                    ((action_count++))
+                    current_action="$action_name"
+                    start_time=$(date +%s.%N)
+                    
+                    # Update total actions count and display
+                    echo "$action_count" > "$temp_dir/total_actions"
+                    progress_display_update "$temp_dir" "$action_count" "$action_name" "START"
+                    echo "$action_count:$action_name:START:$start_time" > "$temp_dir/current_action"
+                fi
+            fi
+            
+            # Action success detection - check multiple patterns
+            action_name=""
+            duration=""
+            duration_sec="0.0"
+            
+            if echo "$line" | grep -qE "$ACTION_SUCCESS_PATTERN_DEBUG"; then
+                # Standard DEBUG_TEST_SUCCESS pattern with duration
+                action_name=$(echo "$line" | sed -n 's/.*"action":[[:space:]]*"\([^"]*\)".*/\1/p')
+                duration=$(echo "$line" | sed -n 's/.*"duration_ms":[[:space:]]*\([0-9]*\).*/\1/p')
+                if [ -n "$duration" ]; then
+                    duration_sec=$(echo "scale=2; $duration / 1000" | bc -l 2>/dev/null || echo "0.0")
+                fi
+            elif echo "$line" | grep -qE "$ACTION_SUCCESS_PATTERN_COMPLETED"; then
+                # "Completed: Action Name" pattern
+                action_name=$(echo "$line" | sed -n 's/.*Completed: \([^{]*\).*/\1/p' | sed 's/[[:space:]]*$//')
+                duration_sec="N/A"
+            elif echo "$line" | grep -qE "$ACTION_SUCCESS_PATTERN_PASSED"; then
+                # "test PASSED" pattern
+                action_name=$(echo "$line" | sed -n 's/.*"action":[[:space:]]*"\([^"]*\)".*/\1/p')
+                duration_sec="N/A"
+            fi
+            
+            if [ -n "$action_name" ]; then
+                progress_display_update "$temp_dir" "$action_count" "$action_name" "SUCCESS" "$duration_sec"
+                
+                # For single action configs, exit after the action completes successfully
+                if [ "$action_count" -eq 1 ]; then
+                    echo ""
+                    printf "${BOLD}${GREEN}🎯 Single action completed successfully!${RESET}\n"
+                    # Signal completion to stop all monitoring
+                    echo "COMPLETE" > "$temp_dir/monitor_status"
+                    break
+                fi
+            fi
+            
+            # Action failure detection  
+            if echo "$line" | grep -qE "$ACTION_FAILURE_PATTERN"; then
+                action_name=$(echo "$line" | sed -n 's/.*"action":[[:space:]]*"\([^"]*\)".*/\1/p')
+                error_msg=$(echo "$line" | sed -n 's/.*"error":[[:space:]]*"\([^"]*\)".*/\1/p')
+                if [ -n "$action_name" ]; then
+                    progress_display_update "$temp_dir" "$action_count" "$action_name" "FAILURE" "" "$error_msg"
+                    
+                    # For single action configs, exit after the action fails
+                    if [ "$action_count" -eq 1 ]; then
+                        echo ""
+                        printf "${BOLD}${RED}🎯 Single action failed!${RESET}\n"
+                        # Signal completion to stop all monitoring
+                        echo "COMPLETE" > "$temp_dir/monitor_status"
+                        break
+                    fi
+                fi
+            fi
+            
+            # Test completion detection - check for multiple completion patterns
+            if echo "$line" | grep -qE "(DEBUG_TEST_COMPLETE|Debug startup complete)"; then
+                echo ""
+                printf "${BOLD}${GREEN}🎯 Test sequence completed!${RESET}\n"
+                echo "COMPLETE" > "$temp_dir/monitor_status"
+                break
+            fi
+        done
+    }
+    
+    # Enhanced timeout management function with ProgressDisplay integration
+    timeout_monitor() {
+        local temp_dir="$1"
+        local timeout_seconds=60
+        local warning_30s_shown=false
+        local warning_45s_shown=false
+        
+        while [ -f "$temp_dir/monitoring" ]; do
+            if [ -f "$temp_dir/current_action" ]; then
+                read -r action_info < "$temp_dir/current_action" 2>/dev/null || continue
+                IFS=':' read -r count name status start_time <<< "$action_info"
+                
+                if [ "$status" = "START" ] && [ -n "$start_time" ]; then
+                    current_time=$(date +%s.%N)
+                    elapsed=$(echo "$current_time - $start_time" | bc -l 2>/dev/null || echo "0")
+                    elapsed_int=$(echo "$elapsed" | cut -d'.' -f1)
+                    # Handle case where elapsed is less than 1 second
+                    [ -z "$elapsed_int" ] && elapsed_int=0
+                    
+                    if [ "$elapsed_int" -gt 30 ] && [ "$elapsed_int" -lt 45 ] && [ "$warning_30s_shown" = false ]; then
+                        printf "\n${YELLOW}⚠️  Action '$name' running for ${elapsed_int}s (warning threshold)${RESET}\n"
+                        warning_30s_shown=true
+                    elif [ "$elapsed_int" -gt 45 ] && [ "$elapsed_int" -lt 60 ] && [ "$warning_45s_shown" = false ]; then
+                        printf "\n${RED}🔥 Action '$name' potentially hanging (${elapsed_int}s)${RESET}\n"
+                        warning_45s_shown=true
+                    elif [ "$elapsed_int" -gt "$timeout_seconds" ]; then
+                        printf "\n${BOLD}${RED}💥 Action '$name' timed out after ${elapsed_int}s - terminating${RESET}\n"
+                        progress_display_update "$temp_dir" "$count" "$name" "TIMEOUT" "$elapsed"
+                        rm -f "$temp_dir/current_action"
+                        break
+                    fi
+                fi
+            else
+                # Reset warning flags when no action is running
+                warning_30s_shown=false
+                warning_45s_shown=false
+            fi
+            sleep 5
+        done
+    }
+    
+    # Show current config
+    if [ "{{CONFIG_NAME}}" != "current" ]; then
+        echo "📄 Testing with config: {{CONFIG_NAME}}"
+        cat "project/debug_configs/{{CONFIG_NAME}}.json" | jq . 2>/dev/null || cat "project/debug_configs/{{CONFIG_NAME}}.json"
+    else
+        echo "📄 Current embedded config:"
+        if [ -f "project/debug_startup_actions.json" ]; then
+            cat project/debug_startup_actions.json | jq . 2>/dev/null || cat project/debug_startup_actions.json
+        else
+            echo "  (no config file found)"
+        fi
+    fi
+    echo ""
+    
+    # Create monitoring flag
+    touch "$TEMP_DIR/monitoring"
+    
+    # Start background timeout monitor
+    timeout_monitor "$TEMP_DIR" &
+    TIMEOUT_PID=$!
+    
+    # Note: Live timer disabled to prevent display flooding
+    # progress_display_live_timer "$TEMP_DIR" &
+    # TIMER_PID=$!
+    
+    # Clear old logs to ensure fresh monitoring session
+    printf "${BOLD}${CYAN}🧹 Clearing old logs for fresh monitoring...${RESET}\n"
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c
+    
+    # Start enhanced log monitoring in background
+    monitor_logs "$LOG_FILE" "$TEMP_DIR" &
+    MONITOR_PID=$!
+    
+    # Deploy config and restart app
+    printf "${BOLD}${CYAN}🔄 Restarting app with enhanced monitoring...${RESET}\n"
+    just config-push-android "{{CONFIG_NAME}}"
+    just restart-android-app
+    
+    # Wait for completion or timeout (max 120 seconds)
+    wait_time=0
+    max_wait=120
+    
+    while [ $wait_time -lt $max_wait ] && kill -0 $MONITOR_PID 2>/dev/null; do
+        # Check for completion signal
+        if [ -f "$TEMP_DIR/monitor_status" ]; then
+            status=$(cat "$TEMP_DIR/monitor_status" 2>/dev/null || echo "")
+            if [ "$status" = "COMPLETE" ]; then
+                echo ""
+                printf "${GREEN}✅ Monitoring completed successfully!${RESET}\n"
+                break
+            fi
+        fi
+        
+        sleep 1
+        ((wait_time++))
+        
+        # Update global session timer every 10 seconds (only if still running)
+        if [ $((wait_time % 10)) -eq 0 ]; then
+            printf "${CYAN}⏳ Session active... (${wait_time}s elapsed)${RESET}\n"
+        fi
+    done
+    
+    # Cleanup
+    rm -f "$TEMP_DIR/monitoring"
+    kill $MONITOR_PID 2>/dev/null || true
+    kill $TIMEOUT_PID 2>/dev/null || true
+    # kill $TIMER_PID 2>/dev/null || true  # Timer disabled
+    
+    echo ""
+    printf "${BOLD}${GREEN}📋 Enhanced monitoring complete!${RESET}\n"
+    printf "${WHITE}💾 Full log: ${CYAN}$LOG_FILE${RESET}\n"
+    
+    # Show enhanced summary with ProgressDisplay styling
+    if [ -f "$LOG_FILE" ]; then
+        echo ""
+        printf "${BOLD}${BLUE}📊 Final Summary${RESET}\n"
+        # Count success from multiple patterns
+        debug_success=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+        completed_success=$(grep -c "Completed:.*{.*\"action\"" "$LOG_FILE" 2>/dev/null || echo "0")
+        passed_success=$(grep -c "test PASSED.*\"action\"" "$LOG_FILE" 2>/dev/null || echo "0")
+        success_count=$((debug_success + completed_success + passed_success))
+        
+        failure_count=$(grep -c "DEBUG_TEST_FAILURE" "$LOG_FILE" 2>/dev/null || echo "0")
+        total_actions=$(grep -c "Executing action" "$LOG_FILE" 2>/dev/null || echo "0")
+        
+        # Ensure variables are valid integers (fix printf formatting issue)
+        success_count=${success_count:-0}
+        failure_count=${failure_count:-0}
+        total_actions=${total_actions:-0}
+        
+        # Calculate session time
+        session_start=$(cat "$TEMP_DIR/session_start" 2>/dev/null || echo "$(date +%s.%N)")
+        session_end=$(date +%s.%N)
+        total_session_time=$(echo "$session_end - $session_start" | bc -l 2>/dev/null || echo "0")
+        session_min=$(echo "scale=1; $total_session_time / 60" | bc -l 2>/dev/null || echo "0.0")
+        
+        # Calculate success rate
+        if [ "$total_actions" -gt 0 ]; then
+            success_rate=$(echo "scale=1; ($success_count) * 100 / $total_actions" | bc -l 2>/dev/null || echo "0.0")
+            printf "${WHITE}Actions executed: ${CYAN}%d total${RESET}\n" "$total_actions"
+            printf "${WHITE}Results: ${GREEN}%d successful${RESET} ${RED}%d failed${RESET} (${YELLOW}%.1f%% success rate${RESET})\n" "$success_count" "$failure_count" "$success_rate"
+        else
+            printf "${WHITE}Actions executed: ${YELLOW}0 (no actions detected)${RESET}\n"
+        fi
+        
+        printf "${WHITE}Session duration: ${MAGENTA}%.1f minutes${RESET}\n" "$session_min"
+        
+        if [ "$failure_count" -gt 0 ]; then
+            echo ""
+            printf "${BOLD}${RED}❌ Failed Actions:${RESET}\n"
+            grep "DEBUG_TEST_FAILURE" "$LOG_FILE" | sed 's/.*"action"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/  '"${RED}"'- \1'"${RESET}"'/' 2>/dev/null || printf "${RED}  (error parsing failures)${RESET}\n"
+        fi
+        
+        # Performance insights
+        if [ "$total_actions" -gt 0 ]; then
+            echo ""
+            printf "${BOLD}${BLUE}⚡ Performance Insights${RESET}\n"
+            avg_duration=$(grep "duration_ms" "$LOG_FILE" | sed 's/.*"duration_ms"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/' | awk '{sum+=$1; count++} END {if(count>0) print sum/count/1000; else print 0}')
+            printf "${WHITE}Average action duration: ${CYAN}%.2f seconds${RESET}\n" "$avg_duration"
+        fi
+    fi
+    
+    # Cleanup temp directory
+    rm -rf "$TEMP_DIR"
     
     # Clean up temporary config if it was auto-generated and not "current"
     if [ "{{CONFIG_NAME}}" != "current" ]; then
@@ -1026,8 +1475,10 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
     failure_count=0
     startup_count=0
     
-    # Start log capture
-    adb -s "$ANDROID_DEVICE_ID" logcat -v time > "$log_file" 2>/dev/null &
+    # Clear old logs and start log capture for Godot debug logs
+    echo "🧹 Clearing old logs for fresh test monitoring..."
+    adb -s "$ANDROID_DEVICE_ID" logcat -c
+    adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot > "$log_file" 2>/dev/null &
     LOGCAT_PID=$!
     
     # Monitor for completion
@@ -1629,8 +2080,8 @@ monitor-debug-logs DURATION="30":
     echo "Press Ctrl+C to stop early"
     echo ""
     
-    timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat -v time | \
-    grep -E "(debug|startup|DebugStartup|GameTwo.*INFO)" --line-buffered || true
+    timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot | \
+    grep -E "(debug|startup|DebugStartup|INFO)" --line-buffered || true
     
     echo ""
     echo "✅ Monitoring complete"
