@@ -17,7 +17,7 @@ func _init(firebase_db: Object) -> void:
 	_connect_signals()
 
 
-func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> DebugActionResult:
+func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> DebugAction.Result:
 	var request_id: int = RTDBDebugAction.generate_request_id()
 
 	var op_data: Dictionary = {
@@ -33,17 +33,17 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 	var executed: bool = _execute_operation(request_id, operation, args)
 	if not executed:
 		_pending_ops.erase(request_id)
-		return DebugActionResult.new_failure(
+		return DebugAction.Result.new_failure(
 			"Unknown operation: " + operation,
 			"UNKNOWN_OPERATION",
-			DebugActionResult.ErrorCategory.VALIDATION,
+			DebugAction.Result.ErrorCategory.VALIDATION,
 			null,
 			0,
 			operation
 		)
 
 	# Wait for completion
-	var result: DebugActionResult = await _wait_for_completion(request_id, timeout_sec)
+	var result: DebugAction.Result = await _wait_for_completion(request_id, timeout_sec)
 	_pending_ops.erase(request_id)
 
 	return result
@@ -64,7 +64,7 @@ func _execute_operation(request_id: int, operation: String, args: Array) -> bool
 			return false
 
 
-func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugActionResult:
+func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Result:
 	var deadline: int = TimeUtils.deadline_ms(timeout_sec)
 
 	while _pending_ops.has(request_id):
@@ -83,17 +83,13 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugActionRes
 			var start_time_variant: Variant = timeout_op_data.get("start_time")
 			var start_time_int: int = start_time_variant
 			var duration_ms: int = TimeUtils.elapsed_ms(start_time_int)
-			return DebugActionResult.new_timeout(
-				duration_ms,
-				operation_str,
-				"Operation timed out after %.1f seconds" % timeout_sec
+			return DebugAction.Result.new_timeout(
+				duration_ms, operation_str, "Operation timed out after %.1f seconds" % timeout_sec
 			)
 
 	if not _pending_ops.has(request_id):
-		return DebugActionResult.new_failure(
-			"Operation data lost",
-			"DATA_LOST",
-			DebugActionResult.ErrorCategory.SYSTEM
+		return DebugAction.Result.new_failure(
+			"Operation data lost", "DATA_LOST", DebugAction.Result.ErrorCategory.SYSTEM
 		)
 
 	var op_data: Dictionary = _pending_ops[request_id]
@@ -104,25 +100,21 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugActionRes
 	var start_time_variant: Variant = op_data.get("start_time")
 	var start_time_int: int = start_time_variant
 	var duration_ms: int = TimeUtils.elapsed_ms(start_time_int)
-	
+
 	if has_error:
 		var error_str: String = str(error_variant)
 		var result_variant: Variant = op_data.get("result")
-		return DebugActionResult.new_failure(
+		return DebugAction.Result.new_failure(
 			error_str,
 			"OPERATION_ERROR",
-			DebugActionResult.ErrorCategory.FIREBASE,
+			DebugAction.Result.ErrorCategory.FIREBASE,
 			result_variant,
 			duration_ms,
 			operation_str
 		)
 	else:
 		var result_variant: Variant = op_data.get("result")
-		return DebugActionResult.new_success(
-			result_variant,
-			duration_ms,
-			operation_str
-		)
+		return DebugAction.Result.new_success(result_variant, duration_ms, operation_str)
 
 
 func _connect_signals() -> void:

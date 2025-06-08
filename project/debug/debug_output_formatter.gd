@@ -41,8 +41,10 @@ func format_completion_report(action: DebugAction, success: bool, result: Varian
 	return _build_action_report(action, success, result)
 
 
-func format_completion_report_structured(action: DebugAction, action_result: DebugActionResult) -> String:
-	"""Enhanced formatting for DebugActionResult with richer error information"""
+func format_completion_report_structured(
+	action: DebugAction, action_result: DebugAction.Result
+) -> String:
+	"""Enhanced formatting for DebugAction.Result with richer error information"""
 	return _build_action_report_structured(action, action_result)
 
 
@@ -149,9 +151,11 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	return report
 
 
-# Enhanced action report for DebugActionResult with structured error information
-func _build_action_report_structured(action: DebugAction, action_result: DebugActionResult) -> String:
-	"""Generate enhanced report for DebugActionResult with richer error categorization"""
+# Enhanced action report for DebugAction.Result with structured error information
+func _build_action_report_structured(
+	action: DebugAction, action_result: DebugAction.Result
+) -> String:
+	"""Generate enhanced report for DebugAction.Result with richer error categorization"""
 	var report: String = ""
 
 	# Header with modern styling
@@ -201,24 +205,28 @@ func _build_action_report_structured(action: DebugAction, action_result: DebugAc
 		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n"
 		% [FONT_SIZE_XL, status_color, status_icon, status_text]
 	)
-	
+
 	# Performance information
 	var duration_ms: int = action_result.get_duration_ms()
 	var perf_category: String = action_result.get_performance_category()
-	var perf_color: String = UI_COLORS.success if perf_category == "FAST" else (UI_COLORS.warning if perf_category == "NORMAL" else UI_COLORS.danger)
-	
+	var perf_color: String = (
+		UI_COLORS.success
+		if perf_category == "FAST"
+		else (UI_COLORS.warning if perf_category == "NORMAL" else UI_COLORS.danger)
+	)
+
 	report += (
 		"[color=%s]Duration:[/color] [color=%s]%d ms (%s)[/color]\n"
 		% [UI_COLORS.text_secondary, perf_color, duration_ms, perf_category]
 	)
-	
+
 	# Operation information
 	if not action_result.get_operation().is_empty():
 		report += (
 			"[color=%s]Operation:[/color] [color=%s]%s[/color]\n"
 			% [UI_COLORS.text_secondary, UI_COLORS.accent, action_result.get_operation()]
 		)
-	
+
 	report += "\n"
 
 	# Result/error details with enhanced error information
@@ -243,27 +251,27 @@ func _build_action_report_structured(action: DebugAction, action_result: DebugAc
 			% [FONT_SIZE_XL, UI_COLORS.danger]
 		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-		
+
 		# Enhanced error information
 		report += (
 			"[color=%s]Message:[/color] [color=%s]%s[/color]\n"
 			% [UI_COLORS.text_secondary, UI_COLORS.danger, action_result.get_error_message()]
 		)
-		
+
 		if not action_result.get_error_code().is_empty():
 			report += (
 				"[color=%s]Code:[/color] [color=%s]%s[/color]\n"
 				% [UI_COLORS.text_secondary, UI_COLORS.warning, action_result.get_error_code()]
 			)
-		
-		var error_category: DebugActionResult.ErrorCategory = action_result.get_error_category()
-		if error_category != DebugActionResult.ErrorCategory.NONE:
-			var category_name: String = DebugActionResult.ErrorCategory.keys()[error_category]
+
+		var error_category: DebugAction.Result.ErrorCategory = action_result.get_error_category()
+		if error_category != DebugAction.Result.ErrorCategory.NONE:
+			var category_name: String = DebugAction.Result.ErrorCategory.keys()[error_category]
 			report += (
 				"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
 				% [UI_COLORS.text_secondary, UI_COLORS.warning, category_name]
 			)
-		
+
 		# Show payload if available (might contain additional error context)
 		var error_payload: Variant = action_result.get_payload()
 		if error_payload != null:

@@ -2,58 +2,68 @@
 class_name BackendRequestTrackingTestAction
 extends BackendFirebaseDebugAction
 
+
 func _init() -> void:
 	super._init()
 	action_name = "Backend Request Tracking Test"
 
+
 func execute_backend_action() -> bool:
 	_update_status("Testing Firebase Backend request tracking...")
-	
+
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
 		return false
-	
+
 	var tracking_tests = []
 	var successful_tests = 0
 	var total_tests = 0
-	
+
 	# Test 1: Sequential request tracking
 	_update_status("Testing sequential request tracking...")
 	total_tests += 1
 	var sequential_count = 3
 	var sequential_results = []
 	var sequential_success = 0
-	
+
 	for i in range(sequential_count):
 		var seq_path = ["backend_tests", "request_tracking", "sequential", str(i)]
 		var seq_key = "req_track_seq_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var seq_value = "Sequential request " + str(i)
-		
+
 		var seq_start = Time.get_ticks_msec()
-		var seq_result = await test_backend_async_pattern("set_data", seq_path, seq_key, seq_value, "Tracking: Seq " + str(i))
+		var seq_result = await test_backend_async_pattern(
+			"set_data", seq_path, seq_key, seq_value, "Tracking: Seq " + str(i)
+		)
 		var seq_duration = Time.get_ticks_msec() - seq_start
-		
-		sequential_results.append({
-			"request_index": i,
-			"success": seq_result,
-			"duration_ms": seq_duration,
-			"path": seq_path,
-			"key": seq_key
-		})
-		
-		if seq_result: sequential_success += 1
-	
+
+		sequential_results.append(
+			{
+				"request_index": i,
+				"success": seq_result,
+				"duration_ms": seq_duration,
+				"path": seq_path,
+				"key": seq_key
+			}
+		)
+
+		if seq_result:
+			sequential_success += 1
+
 	var sequential_test_success = sequential_success == sequential_count
-	if sequential_test_success: successful_tests += 1
-	
-	tracking_tests.append({
-		"test": "sequential_request_tracking",
-		"success": sequential_test_success,
-		"total_requests": sequential_count,
-		"successful_requests": sequential_success,
-		"request_details": sequential_results
-	})
-	
+	if sequential_test_success:
+		successful_tests += 1
+
+	tracking_tests.append(
+		{
+			"test": "sequential_request_tracking",
+			"success": sequential_test_success,
+			"total_requests": sequential_count,
+			"successful_requests": sequential_success,
+			"request_details": sequential_results
+		}
+	)
+
 	# Test 2: Concurrent-style request handling (rapid fire)
 	_update_status("Testing rapid request handling...")
 	total_tests += 1
@@ -61,92 +71,123 @@ func execute_backend_action() -> bool:
 	var rapid_tasks = []
 	var rapid_results = []
 	var rapid_success = 0
-	
+
 	# Execute all requests rapidly one after another
 	for i in range(rapid_count):
 		var rapid_path = ["backend_tests", "request_tracking", "rapid", str(i)]
 		var rapid_key = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var rapid_value = "Rapid request " + str(i)
-		
+
 		# Execute request directly for rapid testing
 		var rapid_start = Time.get_ticks_msec()
-		var rapid_result = await test_backend_async_pattern("set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i))
+		var rapid_result = await test_backend_async_pattern(
+			"set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i)
+		)
 		var rapid_duration = Time.get_ticks_msec() - rapid_start
-		
-		rapid_results.append({
-			"request_index": i,
-			"success": rapid_result,
-			"duration_ms": rapid_duration
-		})
-		
-		if rapid_result: rapid_success += 1
-		
+
+		rapid_results.append(
+			{"request_index": i, "success": rapid_result, "duration_ms": rapid_duration}
+		)
+
+		if rapid_result:
+			rapid_success += 1
+
 		# Very small delay to simulate rapid firing
 		await Engine.get_main_loop().process_frame
-	
-	
+
 	var rapid_test_success = rapid_success >= (rapid_count * 0.75)  # 75% success rate for rapid requests
-	if rapid_test_success: successful_tests += 1
-	
-	tracking_tests.append({
-		"test": "rapid_request_handling",
-		"success": rapid_test_success,
-		"total_requests": rapid_count,
-		"successful_requests": rapid_success,
-		"success_rate": float(rapid_success) / float(rapid_count),
-		"request_details": rapid_results
-	})
-	
+	if rapid_test_success:
+		successful_tests += 1
+
+	tracking_tests.append(
+		{
+			"test": "rapid_request_handling",
+			"success": rapid_test_success,
+			"total_requests": rapid_count,
+			"successful_requests": rapid_success,
+			"success_rate": float(rapid_success) / float(rapid_count),
+			"request_details": rapid_results
+		}
+	)
+
 	# Test 3: RequestSignalHelper pattern validation
 	_update_status("Testing RequestSignalHelper pattern...")
 	total_tests += 1
-	
+
 	# Test multiple operations of different types to stress RequestSignalHelper
 	# Use set-then-get pattern to ensure get_data has valid data to retrieve
 	var base_key = "pattern_test_" + str(Time.get_ticks_msec())
 	var pattern_operations = [
-		{"method": "set_data", "path": ["backend_tests", "request_tracking", "pattern", "set"], "key": base_key + "_set", "value": "Pattern set test"},
-		{"method": "set_data", "path": ["backend_tests", "request_tracking", "pattern", "get"], "key": base_key + "_get", "value": "Pattern get test data"},
-		{"method": "get_data", "path": ["backend_tests", "request_tracking", "pattern", "get"], "key": base_key + "_get", "value": null},
-		{"method": "set_data", "path": ["backend_tests", "request_tracking", "pattern", "set2"], "key": base_key + "_set2", "value": "Pattern set2 test"}
+		{
+			"method": "set_data",
+			"path": ["backend_tests", "request_tracking", "pattern", "set"],
+			"key": base_key + "_set",
+			"value": "Pattern set test"
+		},
+		{
+			"method": "set_data",
+			"path": ["backend_tests", "request_tracking", "pattern", "get"],
+			"key": base_key + "_get",
+			"value": "Pattern get test data"
+		},
+		{
+			"method": "get_data",
+			"path": ["backend_tests", "request_tracking", "pattern", "get"],
+			"key": base_key + "_get",
+			"value": null
+		},
+		{
+			"method": "set_data",
+			"path": ["backend_tests", "request_tracking", "pattern", "set2"],
+			"key": base_key + "_set2",
+			"value": "Pattern set2 test"
+		}
 	]
-	
+
 	var pattern_success = 0
 	var pattern_results = []
-	
+
 	for op in pattern_operations:
 		var pattern_start = Time.get_ticks_msec()
-		var pattern_result = await test_backend_async_pattern(op.method, op.path, op.key, op.value, "Pattern: " + op.method)
+		var pattern_result = await test_backend_async_pattern(
+			op.method, op.path, op.key, op.value, "Pattern: " + op.method
+		)
 		var pattern_duration = Time.get_ticks_msec() - pattern_start
-		
-		pattern_results.append({
-			"method": op.method,
-			"success": pattern_result,
-			"duration_ms": pattern_duration,
-			"path": op.path,
-			"key": op.key
-		})
-		
-		if pattern_result: pattern_success += 1
-		
+
+		pattern_results.append(
+			{
+				"method": op.method,
+				"success": pattern_result,
+				"duration_ms": pattern_duration,
+				"path": op.path,
+				"key": op.key
+			}
+		)
+
+		if pattern_result:
+			pattern_success += 1
+
 		# Small delay between pattern operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
-	
+
 	var pattern_test_success = pattern_success >= (pattern_operations.size() * 0.75)  # 75% success rate
-	if pattern_test_success: successful_tests += 1
-	
-	tracking_tests.append({
-		"test": "request_signal_helper_pattern",
-		"success": pattern_test_success,
-		"total_operations": pattern_operations.size(),
-		"successful_operations": pattern_success,
-		"pattern_details": pattern_results
-	})
-	
+	if pattern_test_success:
+		successful_tests += 1
+
+	tracking_tests.append(
+		{
+			"test": "request_signal_helper_pattern",
+			"success": pattern_test_success,
+			"total_operations": pattern_operations.size(),
+			"successful_operations": pattern_success,
+			"pattern_details": pattern_results
+		}
+	)
+
 	# Calculate overall success
 	var success_rate = float(successful_tests) / float(total_tests)
 	var overall_success = success_rate >= 0.8  # 80% of tracking tests should pass
-	
+
 	var test_results = {
 		"total_tests": total_tests,
 		"successful_tests": successful_tests,
@@ -155,12 +196,25 @@ func execute_backend_action() -> bool:
 		"request_tracking_validation": overall_success,
 		"backend_available": backend.is_available()
 	}
-	
+
 	if overall_success:
-		_update_status("Request Tracking test PASSED (" + str(successful_tests) + "/" + str(total_tests) + ")")
-		Log.info("Backend request tracking validation successful", test_results, ["debug", "backend_firebase"])
+		_update_status(
+			"Request Tracking test PASSED (" + str(successful_tests) + "/" + str(total_tests) + ")"
+		)
+		Log.info(
+			"Backend request tracking validation successful",
+			test_results,
+			["debug", "backend_firebase"]
+		)
 	else:
-		_update_status("Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true)
-		Log.error("Backend request tracking validation failed", test_results, ["debug", "backend_firebase", "error"])
-	
+		_update_status(
+			"Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")",
+			true
+		)
+		Log.error(
+			"Backend request tracking validation failed",
+			test_results,
+			["debug", "backend_firebase", "error"]
+		)
+
 	return overall_success

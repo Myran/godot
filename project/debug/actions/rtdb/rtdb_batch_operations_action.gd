@@ -108,7 +108,7 @@ func _execute_single_operation(
 
 	match operation_type:
 		"set":
-			var result: DebugActionResult = await op_manager.execute(
+			var result: DebugAction.Result = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
 			var success_bool: bool = result.is_success()
@@ -124,7 +124,7 @@ func _execute_single_operation(
 
 		"update":
 			# Use set for now as C++ module may not have update_value_async
-			var result: DebugActionResult = await op_manager.execute(
+			var result: DebugAction.Result = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
 			var success_bool: bool = result.is_success()
@@ -139,7 +139,9 @@ func _execute_single_operation(
 			}
 
 		"get":
-			var result: DebugActionResult = await op_manager.execute("get_value_async", [operation_path])
+			var result: DebugAction.Result = await op_manager.execute(
+				"get_value_async", [operation_path]
+			)
 			var success_bool: bool = result.is_success()
 			var data_received: Variant = result.get_payload() if result.is_success() else null
 			var error_message: String = result.get_error_message() if result.is_failure() else ""
