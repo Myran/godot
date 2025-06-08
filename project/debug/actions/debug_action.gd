@@ -12,7 +12,17 @@ class Result:
 	## Unified result class for debug action completion
 	## Provides type-safe, consistent handling of action results across all debug action categories
 
-	enum ErrorCategory {NONE, NETWORK, PERMISSION, TIMEOUT, VALIDATION, SYSTEM, FIREBASE, DATABASE}
+	enum ErrorCategory {
+		NONE, NETWORK, PERMISSION, TIMEOUT, VALIDATION, SYSTEM, FIREBASE, DATABASE,
+		# Enhanced categories for comprehensive error handling
+		AUTHENTICATION,     # Auth failures, permission denied  
+		CONFIGURATION,      # Setup/config errors, missing settings
+		CONCURRENT,         # Race conditions, concurrency issues
+		DATA_INTEGRITY,     # Data validation, corruption, format errors
+		LISTENER,           # Listener registration, callback issues
+		BATCH_OPERATION,    # Multi-operation failures, partial success
+		PERFORMANCE         # Performance threshold violations
+	}
 
 	# Core result data
 	var _success: bool
@@ -132,6 +142,132 @@ class Result:
 			operation,
 			metadata
 		)
+
+	## Specialized factory methods for common debug action patterns
+	
+	static func new_performance_result(
+		operation_metrics: Array,
+		overall_success: bool,
+		performance_thresholds: Dictionary = {},
+		operation: String = "performance_test",
+		duration_ms: int = 0,
+		metadata: Dictionary = {}
+	) -> DebugAction.Result:
+		var enhanced_metadata: Dictionary = metadata.duplicate()
+		enhanced_metadata["performance_metrics"] = operation_metrics
+		enhanced_metadata["performance_thresholds"] = performance_thresholds
+		enhanced_metadata["result_type"] = "performance"
+		
+		var payload: Dictionary = {
+			"overall_success": overall_success,
+			"metrics": operation_metrics,
+			"thresholds": performance_thresholds
+		}
+		
+		if overall_success:
+			return DebugAction.Result.new(
+				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
+			)
+		else:
+			return DebugAction.Result.new(
+				false, payload, "Performance thresholds not met", "PERFORMANCE_FAILURE", 
+				ErrorCategory.PERFORMANCE, duration_ms, operation, enhanced_metadata
+			)
+
+	static func new_batch_result(
+		individual_results: Array,
+		batch_success_rate: float,
+		operation: String = "batch_operations",
+		duration_ms: int = 0,
+		metadata: Dictionary = {}
+	) -> DebugAction.Result:
+		var enhanced_metadata: Dictionary = metadata.duplicate()
+		enhanced_metadata["batch_results"] = individual_results
+		enhanced_metadata["success_rate"] = batch_success_rate
+		enhanced_metadata["result_type"] = "batch"
+		
+		var total_operations: int = individual_results.size()
+		var successful_operations: int = 0
+		for result: Dictionary in individual_results:
+			if result.get("success", false):
+				successful_operations += 1
+		
+		var payload: Dictionary = {
+			"total_operations": total_operations,
+			"successful_operations": successful_operations,
+			"success_rate": batch_success_rate,
+			"individual_results": individual_results
+		}
+		
+		var batch_is_success: bool = batch_success_rate >= 0.5  # At least 50% success
+		var error_category: ErrorCategory = ErrorCategory.BATCH_OPERATION if not batch_is_success else ErrorCategory.NONE
+		var error_message: String = "" if batch_is_success else "Batch operation success rate below threshold"
+		var error_code: String = "" if batch_is_success else "BATCH_FAILURE"
+		
+		return DebugAction.Result.new(
+			batch_is_success, payload, error_message, error_code, error_category, duration_ms, operation, enhanced_metadata
+		)
+
+	static func new_listener_result(
+		callback_received: bool,
+		callback_data: Dictionary = {},
+		timeout_ms: int = 0,
+		operation: String = "listener_test",
+		duration_ms: int = 0,
+		metadata: Dictionary = {}
+	) -> DebugAction.Result:
+		var enhanced_metadata: Dictionary = metadata.duplicate()
+		enhanced_metadata["callback_data"] = callback_data
+		enhanced_metadata["timeout_ms"] = timeout_ms
+		enhanced_metadata["result_type"] = "listener"
+		
+		var payload: Dictionary = {
+			"callback_received": callback_received,
+			"callback_data": callback_data,
+			"timeout_ms": timeout_ms
+		}
+		
+		if callback_received:
+			return DebugAction.Result.new(
+				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
+			)
+		else:
+			var error_message: String = "Listener callback not received"
+			if timeout_ms > 0:
+				error_message += " within " + str(timeout_ms) + "ms timeout"
+			return DebugAction.Result.new(
+				false, payload, error_message, "LISTENER_TIMEOUT", 
+				ErrorCategory.LISTENER, duration_ms, operation, enhanced_metadata
+			)
+
+	static func new_concurrent_result(
+		operation_results: Array,
+		success_rates: Dictionary,
+		overall_success: bool,
+		operation: String = "concurrent_operations",
+		duration_ms: int = 0,
+		metadata: Dictionary = {}
+	) -> DebugAction.Result:
+		var enhanced_metadata: Dictionary = metadata.duplicate()
+		enhanced_metadata["operation_results"] = operation_results
+		enhanced_metadata["success_rates"] = success_rates
+		enhanced_metadata["result_type"] = "concurrent"
+		
+		var payload: Dictionary = {
+			"overall_success": overall_success,
+			"operation_results": operation_results,
+			"success_rates": success_rates
+		}
+		
+		if overall_success:
+			return DebugAction.Result.new(
+				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
+			)
+		else:
+			return DebugAction.Result.new(
+				false, payload, "Concurrent operations did not meet success criteria", 
+				"CONCURRENT_FAILURE", ErrorCategory.CONCURRENT, duration_ms, operation, enhanced_metadata
+			)
 
 	## Core query methods
 	func is_success() -> bool:
@@ -265,6 +401,124 @@ class Result:
 			return "NORMAL"
 		else:
 			return "SLOW"
+
+	## Enhanced analysis methods for specialized result types
+	
+	func get_performance_metrics() -> Dictionary:
+		"""Get performance metrics if this is a performance result"""
+		return _metadata.get("performance_metrics", {})
+	
+	func is_performance_acceptable(thresholds: Dictionary = {}) -> bool:
+		"""Check if performance metrics meet specified thresholds"""
+		if _metadata.get("result_type") != "performance":
+			return true  # Not a performance result, assume acceptable
+		
+		var metrics: Dictionary = get_performance_metrics()
+		if thresholds.is_empty():
+			thresholds = _metadata.get("performance_thresholds", {})
+		
+		# Check each threshold
+		for threshold_name: String in thresholds:
+			var threshold_value: Variant = thresholds[threshold_name]
+			var metric_value: Variant = metrics.get(threshold_name)
+			if metric_value != null and metric_value > threshold_value:
+				return false
+		
+		return _success
+	
+	func get_batch_success_rate() -> float:
+		"""Get success rate for batch operations"""
+		if _metadata.get("result_type") != "batch":
+			return 1.0 if _success else 0.0
+		
+		return _metadata.get("success_rate", 0.0)
+	
+	func get_failed_operations() -> Array:
+		"""Get list of failed operations from batch result"""
+		if _metadata.get("result_type") != "batch":
+			return []
+		
+		var failed_ops: Array = []
+		var batch_results: Array = _metadata.get("batch_results", [])
+		for result: Dictionary in batch_results:
+			if not result.get("success", false):
+				failed_ops.append(result)
+		
+		return failed_ops
+	
+	func get_batch_summary() -> Dictionary:
+		"""Get summary of batch operation results"""
+		if _metadata.get("result_type") != "batch":
+			return {"total": 1, "successful": 1 if _success else 0, "failed": 0 if _success else 1}
+		
+		var batch_results: Array = _metadata.get("batch_results", [])
+		var successful: int = 0
+		var failed: int = 0
+		
+		for result: Dictionary in batch_results:
+			if result.get("success", false):
+				successful += 1
+			else:
+				failed += 1
+		
+		return {
+			"total": batch_results.size(),
+			"successful": successful,
+			"failed": failed,
+			"success_rate": get_batch_success_rate()
+		}
+	
+	func get_listener_callback_data() -> Dictionary:
+		"""Get callback data for listener results"""
+		if _metadata.get("result_type") != "listener":
+			return {}
+		
+		return _metadata.get("callback_data", {})
+	
+	func was_callback_received() -> bool:
+		"""Check if listener callback was received"""
+		if _metadata.get("result_type") != "listener":
+			return _success
+		
+		var payload_dict: Dictionary = _payload if _payload is Dictionary else {}
+		return payload_dict.get("callback_received", false)
+	
+	func get_concurrent_success_rates() -> Dictionary:
+		"""Get success rates for concurrent operations"""
+		if _metadata.get("result_type") != "concurrent":
+			return {}
+		
+		return _metadata.get("success_rates", {})
+	
+	func get_concurrent_operation_results() -> Array:
+		"""Get individual operation results from concurrent test"""
+		if _metadata.get("result_type") != "concurrent":
+			return []
+		
+		return _metadata.get("operation_results", [])
+
+	## Enhanced error category helpers
+	
+	func is_authentication_error() -> bool:
+		return _error_category == ErrorCategory.AUTHENTICATION
+	
+	func is_configuration_error() -> bool:
+		return _error_category == ErrorCategory.CONFIGURATION
+	
+	func is_concurrent_error() -> bool:
+		return _error_category == ErrorCategory.CONCURRENT
+	
+	func is_data_integrity_error() -> bool:
+		return _error_category == ErrorCategory.DATA_INTEGRITY
+	
+	func is_listener_error() -> bool:
+		return _error_category == ErrorCategory.LISTENER
+	
+	func is_batch_operation_error() -> bool:
+		return _error_category == ErrorCategory.BATCH_OPERATION
+	
+	func is_performance_error() -> bool:
+		return _error_category == ErrorCategory.PERFORMANCE
 
 
 @export var action_name: String = "Unnamed Action"
