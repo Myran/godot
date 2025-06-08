@@ -47,7 +47,9 @@
       "mcp__mcp-shrimp-task-manager__process_thought",
       "mcp__wcgw__Initialize",
       "mcp__wcgw__ReadFiles",
-      "mcp__wcgw__BashCommand"
+      "mcp__wcgw__BashCommand",
+      "Bash(# Simulate the problematic conditions\nLOG_FILE=\"nonexistent.log\"\ndebug_success=$(grep -c \"DEBUG_TEST_SUCCESS\" \"$LOG_FILE\" 2>/dev/null || echo \"0\")\ncompleted_success=$(grep -c \"Completed:.*\\\"action\\\"\" \"$LOG_FILE\" 2>/dev/null || echo \"0\")\npassed_success=$(grep -c \"test PASSED.*\\\"action\\\"\" \"$LOG_FILE\" 2>/dev/null || echo \"0\")\n\necho \"debug_success: '$debug_success'\"\necho \"completed_success: '$completed_success'\"\necho \"passed_success: '$passed_success'\"\n\n# Test arithmetic\necho $((debug_success + completed_success + passed_success)))",
+      "Bash(# Test the arithmetic expressions that could cause issues\ndebug_success=5\ncompleted_success=3  \npassed_success=2\n\necho \"Testing arithmetic...\"\necho $((debug_success + completed_success + passed_success))\n\n# Test bc calculations\necho \"Testing bc calculations...\"\necho \"scale=1; 5 * 100 / 10\" | bc -l\necho \"scale=1; (5 - 2) * 100 / 10\" | bc -l)"
     ],
     "deny": []
   }
