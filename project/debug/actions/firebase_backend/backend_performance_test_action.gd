@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_performance_test_action.gd
-@tool
 class_name BackendPerformanceTestAction
 extends BackendFirebaseDebugAction
 

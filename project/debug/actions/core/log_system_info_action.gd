@@ -1,5 +1,4 @@
 # project/debug/actions/core/log_system_info_action.gd
-@tool
 class_name LogSystemInfoAction
 extends DebugAction
 

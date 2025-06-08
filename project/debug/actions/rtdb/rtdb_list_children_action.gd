@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_list_children_action.gd
-@tool
 class_name RTDBListChildrenAction
 extends RTDBDebugAction
 

@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_request_tracking_test_action.gd
-@tool
 class_name BackendRequestTrackingTestAction
 extends BackendFirebaseDebugAction
 

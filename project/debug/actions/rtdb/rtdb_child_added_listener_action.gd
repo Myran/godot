@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_child_added_listener_action.gd
-@tool
 class_name RTDBChildAddedListenerAction
 extends RTDBDebugAction
 

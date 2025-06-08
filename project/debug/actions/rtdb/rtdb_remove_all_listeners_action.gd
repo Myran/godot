@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_remove_all_listeners_action.gd
-@tool
 class_name RTDBRemoveAllListenersAction
 extends RTDBDebugAction
 

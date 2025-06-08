@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_debug_action.gd
-@tool
 class_name RTDBDebugAction
 extends DebugAction
 

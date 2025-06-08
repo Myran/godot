@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_push_item_action.gd
-@tool
 class_name RTDBPushItemAction
 extends RTDBDebugAction
 

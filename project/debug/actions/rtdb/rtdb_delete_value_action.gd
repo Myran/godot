@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_delete_value_action.gd
-@tool
 class_name RTDBDeleteValueAction
 extends RTDBDebugAction
 

@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_async_pattern_test_action.gd
-@tool
 class_name BackendAsyncPatternTestAction
 extends BackendFirebaseDebugAction
 

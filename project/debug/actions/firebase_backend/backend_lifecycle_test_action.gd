@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_lifecycle_test_action.gd
-@tool
 class_name BackendLifecycleTestAction
 extends BackendFirebaseDebugAction
 

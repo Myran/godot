@@ -1,4 +1,3 @@
-@tool
 class_name RTDBTestPaths
 extends RefCounted
 ## Centralized test path definitions for RTDB debug actions.

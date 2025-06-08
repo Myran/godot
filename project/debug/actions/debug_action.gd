@@ -1,5 +1,4 @@
 # project/debug/actions/debug_action.gd
-@tool
 class_name DebugAction
 extends Resource
 
@@ -184,23 +183,23 @@ func _evaluate_action_result(result: Variant) -> bool:
 	# Handle null/void results as failure
 	if result == null:
 		return false
-	
+
 	# Handle boolean results
 	if result is bool:
 		return result
-	
+
 	# Handle array pattern [success: bool, data: Variant]
 	if result is Array and result.size() >= 1:
 		return result[0] == true
-	
+
 	# Handle dictionary with error key
 	if result is Dictionary and result.has("error"):
 		return false
-	
+
 	# Handle dictionary with success key
 	if result is Dictionary and result.has("success"):
 		return result["success"] == true
-	
+
 	# Any other non-null result is considered success
 	return true
 
@@ -209,10 +208,10 @@ func _extract_error_message(result: Variant) -> String:
 	"""Extract error message from failed action result"""
 	if result == null:
 		return "Action returned null"
-	
+
 	if result == false:
 		return "Action returned false"
-	
+
 	# Handle array pattern [false, error_data]
 	if result is Array and result.size() >= 2:
 		var error_data = result[1]
@@ -222,11 +221,11 @@ func _extract_error_message(result: Variant) -> String:
 			return str(error_data["error"])
 		else:
 			return str(error_data)
-	
+
 	# Handle dictionary with error key
 	if result is Dictionary and result.has("error"):
 		return str(result["error"])
-	
+
 	# Fallback to string representation
 	return str(result)
 
@@ -245,5 +244,3 @@ func _update_status(text: String, is_error: bool = false) -> void:
 		{"category": category, "group": group, "action": action_name, "error": is_error},
 		["debug", "test"]
 	)
-
-

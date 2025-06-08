@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_timer_manager_test_action.gd
-@tool
 class_name BackendTimerManagerTestAction
 extends BackendFirebaseDebugAction
 

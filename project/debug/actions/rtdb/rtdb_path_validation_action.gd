@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_path_validation_action.gd
-@tool
 class_name RTDBPathValidationAction
 extends RTDBDebugAction
 

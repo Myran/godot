@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_cpp/cpp_signal_integrity_test_action.gd
-@tool
 class_name CPPSignalIntegrityTestAction
 extends CPPFirebaseDebugAction
 

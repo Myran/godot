@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_method_mapping_test_action.gd
-@tool
 class_name BackendMethodMappingTestAction
 extends BackendFirebaseDebugAction
 

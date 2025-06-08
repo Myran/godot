@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_transaction_test_action.gd
-@tool
 class_name RTDBTransactionTestAction
 extends RTDBDebugAction
 

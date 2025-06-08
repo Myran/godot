@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_firebase_debug_action.gd
-@tool
 class_name BackendFirebaseDebugAction
 extends DebugAction
 

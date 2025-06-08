@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_large_data_test_action.gd
-@tool
 class_name RTDBLargeDataTestAction
 extends RTDBDebugAction
 

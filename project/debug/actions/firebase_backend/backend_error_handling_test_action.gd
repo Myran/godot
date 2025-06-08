@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_backend/backend_error_handling_test_action.gd
-@tool
 class_name BackendErrorHandlingTestAction
 extends BackendFirebaseDebugAction
 

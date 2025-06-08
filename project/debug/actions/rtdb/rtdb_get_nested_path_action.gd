@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_get_nested_path_action.gd
-@tool
 class_name RTDBGetNestedPathAction
 extends RTDBDebugAction
 

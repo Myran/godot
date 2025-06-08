@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_get_simple_value_action.gd
-@tool
 class_name RTDBGetSimpleValueAction
 extends RTDBDebugAction
 

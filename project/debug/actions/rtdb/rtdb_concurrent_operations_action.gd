@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_concurrent_operations_action.gd
-@tool
 class_name RTDBConcurrentOperationsAction
 extends RTDBDebugAction
 

@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_update_value_action.gd
-@tool
 class_name RTDBUpdateValueAction
 extends RTDBDebugAction
 

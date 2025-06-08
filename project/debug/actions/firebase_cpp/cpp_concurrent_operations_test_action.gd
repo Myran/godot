@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd
-@tool
 class_name CPPConcurrentOperationsTestAction
 extends "res://debug/actions/firebase_cpp/cpp_firebase_debug_action.gd"
 

@@ -1,4 +1,3 @@
-@tool
 class_name ListenerTestHelper
 extends RefCounted
 ## Helper class for testing Firebase listeners with proper timeout and callback verification.

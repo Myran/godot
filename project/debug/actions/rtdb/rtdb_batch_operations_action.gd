@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_batch_operations_action.gd
-@tool
 class_name RTDBBatchOperationsAction
 extends RTDBDebugAction
 

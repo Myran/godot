@@ -1,4 +1,3 @@
-@tool
 class_name FirebaseOperationManager
 extends RefCounted
 ## Manages Firebase operations with proper signal handling and timeout management.

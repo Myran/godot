@@ -1,5 +1,4 @@
 # project/debug/actions/rtdb/rtdb_single_value_listener_action.gd
-@tool
 class_name RTDBSingleValueListenerAction
 extends RTDBDebugAction
 

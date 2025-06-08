@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_cpp/cpp_set_value_test_action.gd
-@tool
 class_name CPPSetValueTestAction  
 extends CPPFirebaseDebugAction
 

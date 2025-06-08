@@ -1,5 +1,4 @@
 # project/debug/actions/firebase_cpp/cpp_error_handling_test_action.gd
-@tool
 class_name CPPErrorHandlingTestAction
 extends "res://debug/actions/firebase_cpp/cpp_firebase_debug_action.gd"
 
@@ -21,7 +20,7 @@ func execute_cpp_action() -> bool:
 		[["cpp_tests", "invalid.path.test", "with$pecial@characters"]],
 		"Invalid Path Test"
 	)
-	
+
 	# For error handling test, we expect failures to be handled gracefully
 	var invalid_path_handled = (invalid_path_result == null or invalid_path_result == false)
 	error_tests.append({
@@ -39,7 +38,7 @@ func execute_cpp_action() -> bool:
 		[["cpp_tests", "error_handling", str(Time.get_ticks_msec())]],
 		"Valid Path Test"
 	)
-	
+
 	# Valid operations should work (return true)
 	var valid_path_handled = (valid_path_result == true)
 	error_tests.append({
@@ -54,13 +53,13 @@ func execute_cpp_action() -> bool:
 	_update_status("Testing set/get cycle...")
 	var test_path = ["cpp_tests", "error_handling", "cycle_test", str(Time.get_ticks_msec())]
 	var test_value = "Error handling test value"
-	
+
 	var set_result = await execute_cpp_operation(
 		"set_value_async",
 		[test_path, test_value],
 		"Set Value Test"
 	)
-	
+
 	var cycle_handled = (set_result == true)
 	error_tests.append({
 		"test": "Set/Get Cycle",
@@ -73,11 +72,11 @@ func execute_cpp_action() -> bool:
 	# Test 4: Confirm error scenarios are handled without crashing
 	_update_status("Testing error resilience...")
 	var resilience_result = await execute_cpp_operation(
-		"get_value_async", 
+		"get_value_async",
 		[["cpp_tests", "nonexistent", "path"]],
 		"Resilience Test"
 	)
-	
+
 	# We just want this to complete without crashing
 	var resilience_handled = true  # If we get here, it didn't crash
 	error_tests.append({
@@ -110,7 +109,7 @@ func execute_cpp_action() -> bool:
 func _is_error_properly_handled(result: Variant, test_name: String) -> bool:
 	# For the simplified approach, any non-crash result is considered properly handled
 	var properly_handled = true  # If we get here without crashing, it's handled
-	
+
 	Log.debug("Error handling evaluation", {
 		"test": test_name,
 		"properly_handled": properly_handled,
