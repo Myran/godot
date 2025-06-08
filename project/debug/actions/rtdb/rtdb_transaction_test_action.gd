@@ -29,11 +29,11 @@ func execute_rtdb_action() -> bool:
 	}
 
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
-	var setup_result: Dictionary = await op_manager.execute(
+	var setup_result: DebugActionResult = await op_manager.execute(
 		"set_value_async", [full_path, initial_data]
 	)
 
-	if not setup_result.success:
+	if not setup_result.is_success():
 		return false
 
 	# Perform multiple concurrent-like transactions
@@ -46,14 +46,14 @@ func execute_rtdb_action() -> bool:
 		transaction_results.append(transaction_result)
 
 	# Verify final state
-	var verify_result: Dictionary = await op_manager.execute("get_value_async", [full_path])
+	var verify_result: DebugActionResult = await op_manager.execute("get_value_async", [full_path])
 
 	var expected_final_count: int = 3
 	var actual_final_count: int = 0
 
-	if verify_result.success and verify_result.data is Dictionary:
+	if verify_result.is_success() and verify_result.get_payload() is Dictionary:
 		# Fail-fast: We expect Firebase to return a Dictionary when successful
-		var verified_data: Dictionary = verify_result.data
+		var verified_data: Dictionary = verify_result.get_payload()
 		actual_final_count = verified_data.get("counter", 0)
 
 	var all_transactions_successful: bool = true
@@ -101,8 +101,8 @@ func _perform_counter_transaction(
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
 	# 1. Read current value
-	var get_result: Dictionary = await op_manager.execute("get_value_async", [path])
-	if not get_result.success:
+	var get_result: DebugActionResult = await op_manager.execute("get_value_async", [path])
+	if not get_result.is_success():
 		return {
 			"transaction_number": transaction_number,
 			"success": false,
@@ -110,7 +110,7 @@ func _perform_counter_transaction(
 		}
 
 	# 2. Extract current counter
-	var current_data: Dictionary = get_result.get("data") if get_result.has("data") else {}
+	var current_data: Dictionary = get_result.get_payload() if get_result.get_payload() is Dictionary else {}
 	var current_counter: int = current_data.get("counter") if current_data.has("counter") else 0
 
 	# 3. Increment counter
@@ -123,12 +123,12 @@ func _perform_counter_transaction(
 	}
 
 	# 4. Write updated value (in real transaction, this would be atomic)
-	var set_result: Dictionary = await op_manager.execute("set_value_async", [path, updated_data])
+	var set_result: DebugActionResult = await op_manager.execute("set_value_async", [path, updated_data])
 
 	return {
 		"transaction_number": transaction_number,
 		"previous_value": current_counter,
 		"new_value": new_counter,
-		"success": set_result.success,
-		"error": set_result.get("error") if set_result.has("error") else ""
+		"success": set_result.is_success(),
+		"error": set_result.get_error_message() if set_result.is_failure() else ""
 	}

@@ -47,6 +47,22 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 		_formatter.output_formatted_text(report)
 
 
+static func output_action_result_structured(action: DebugAction, action_result: DebugActionResult) -> void:
+	"""Enhanced output method for DebugActionResult - provides richer information"""
+	if not _ensure_initialized():
+		return
+
+	var report: String = _formatter.format_completion_report_structured(action, action_result)
+	_log_to_system(action, report, action_result.is_failure())
+
+	# Try to send formatted report to debug menu UI if available
+	_send_to_debug_menu_if_available(report, action_result.is_failure())
+
+	# Also output to console if appropriate
+	if _should_output_to_console():
+		_formatter.output_formatted_text(report)
+
+
 static func format_completion_report(action: DebugAction, success: bool, result: Variant) -> String:
 	if not _ensure_initialized():
 		return "Error: DebugOutputService not initialized"

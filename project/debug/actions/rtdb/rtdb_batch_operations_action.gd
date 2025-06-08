@@ -108,13 +108,11 @@ func _execute_single_operation(
 
 	match operation_type:
 		"set":
-			var result: Dictionary = await op_manager.execute(
+			var result: DebugActionResult = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
-			var result_success: Variant = result.get("success")
-			var success_bool: bool = result_success
-			var has_error: bool = result.has("error")
-			var error_message: String = str(result.get("error")) if has_error else ""
+			var success_bool: bool = result.is_success()
+			var error_message: String = result.get_error_message() if result.is_failure() else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
@@ -126,13 +124,11 @@ func _execute_single_operation(
 
 		"update":
 			# Use set for now as C++ module may not have update_value_async
-			var result: Dictionary = await op_manager.execute(
+			var result: DebugActionResult = await op_manager.execute(
 				"set_value_async", [operation_path, operation_data]
 			)
-			var result_success: Variant = result.get("success")
-			var success_bool: bool = result_success
-			var has_error: bool = result.has("error")
-			var error_message: String = str(result.get("error")) if has_error else ""
+			var success_bool: bool = result.is_success()
+			var error_message: String = result.get_error_message() if result.is_failure() else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
@@ -143,13 +139,10 @@ func _execute_single_operation(
 			}
 
 		"get":
-			var result: Dictionary = await op_manager.execute("get_value_async", [operation_path])
-			var result_success: Variant = result.get("success")
-			var success_bool: bool = result_success
-			var has_data: bool = result.has("data")
-			var data_received: Variant = result.get("data") if has_data else null
-			var has_error: bool = result.has("error")
-			var error_message: String = str(result.get("error")) if has_error else ""
+			var result: DebugActionResult = await op_manager.execute("get_value_async", [operation_path])
+			var success_bool: bool = result.is_success()
+			var data_received: Variant = result.get_payload() if result.is_success() else null
+			var error_message: String = result.get_error_message() if result.is_failure() else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,

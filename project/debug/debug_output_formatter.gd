@@ -41,6 +41,11 @@ func format_completion_report(action: DebugAction, success: bool, result: Varian
 	return _build_action_report(action, success, result)
 
 
+func format_completion_report_structured(action: DebugAction, action_result: DebugActionResult) -> String:
+	"""Enhanced formatting for DebugActionResult with richer error information"""
+	return _build_action_report_structured(action, action_result)
+
+
 func output_formatted_text(formatted_text: String) -> void:
 	match OS.get_name():
 		"Android", "iOS":
@@ -134,6 +139,148 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 		var error_message: String = _format_error_message(payload)
 		report += error_message + "\n"
+
+	# Timestamp
+	report += (
+		"\n[color=%s]Completed at: %s[/color]"
+		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
+	)
+
+	return report
+
+
+# Enhanced action report for DebugActionResult with structured error information
+func _build_action_report_structured(action: DebugAction, action_result: DebugActionResult) -> String:
+	"""Generate enhanced report for DebugActionResult with richer error categorization"""
+	var report: String = ""
+
+	# Header with modern styling
+	report += "[font_size=%s][b]ACTION EXECUTION COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
+	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
+
+	# Action details section
+	report += (
+		"[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	report += (
+		"[color=%s]Name:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
+	)
+	report += (
+		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	)
+
+	if action.group != "":
+		report += (
+			"[color=%s]Group:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		)
+
+	if action.description != "":
+		report += (
+			"[color=%s]Description:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
+		)
+
+	report += "\n"
+
+	# Enhanced status section with performance info
+	var status_icon: String = "✓" if action_result.is_success() else "✗"
+	var status_color: String = UI_COLORS.success if action_result.is_success() else UI_COLORS.danger
+	var status_text: String = "SUCCESS" if action_result.is_success() else "FAILURE"
+
+	report += (
+		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	report += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n"
+		% [FONT_SIZE_XL, status_color, status_icon, status_text]
+	)
+	
+	# Performance information
+	var duration_ms: int = action_result.get_duration_ms()
+	var perf_category: String = action_result.get_performance_category()
+	var perf_color: String = UI_COLORS.success if perf_category == "FAST" else (UI_COLORS.warning if perf_category == "NORMAL" else UI_COLORS.danger)
+	
+	report += (
+		"[color=%s]Duration:[/color] [color=%s]%d ms (%s)[/color]\n"
+		% [UI_COLORS.text_secondary, perf_color, duration_ms, perf_category]
+	)
+	
+	# Operation information
+	if not action_result.get_operation().is_empty():
+		report += (
+			"[color=%s]Operation:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, action_result.get_operation()]
+		)
+	
+	report += "\n"
+
+	# Result/error details with enhanced error information
+	if action_result.is_success():
+		report += (
+			"[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.info]
+		)
+		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+		var payload: Variant = action_result.get_payload()
+		if payload != null:
+			var formatted_payload: String = _pretty_print_value_no_truncation(payload)
+			report += formatted_payload + "\n"
+		else:
+			report += (
+				"[color=%s]Action completed successfully with no return data[/color]\n"
+				% UI_COLORS.muted
+			)
+	else:
+		report += (
+			"[font_size=%s][color=%s]ERROR DETAILS[/color][/font_size]\n"
+			% [FONT_SIZE_XL, UI_COLORS.danger]
+		)
+		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+		
+		# Enhanced error information
+		report += (
+			"[color=%s]Message:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.danger, action_result.get_error_message()]
+		)
+		
+		if not action_result.get_error_code().is_empty():
+			report += (
+				"[color=%s]Code:[/color] [color=%s]%s[/color]\n"
+				% [UI_COLORS.text_secondary, UI_COLORS.warning, action_result.get_error_code()]
+			)
+		
+		var error_category: DebugActionResult.ErrorCategory = action_result.get_error_category()
+		if error_category != DebugActionResult.ErrorCategory.NONE:
+			var category_name: String = DebugActionResult.ErrorCategory.keys()[error_category]
+			report += (
+				"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
+				% [UI_COLORS.text_secondary, UI_COLORS.warning, category_name]
+			)
+		
+		# Show payload if available (might contain additional error context)
+		var error_payload: Variant = action_result.get_payload()
+		if error_payload != null:
+			report += (
+				"[color=%s]Additional Context:[/color]\n%s\n"
+				% [UI_COLORS.text_secondary, _pretty_print_value_no_truncation(error_payload)]
+			)
+
+	# Metadata information
+	var metadata: Dictionary = action_result.get_metadata()
+	if not metadata.is_empty():
+		report += (
+			"\n[font_size=%s][color=%s]METADATA[/color][/font_size]\n"
+			% [FONT_SIZE_L, UI_COLORS.info]
+		)
+		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
+		report += _pretty_print_value_no_truncation(metadata) + "\n"
 
 	# Timestamp
 	report += (

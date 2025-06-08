@@ -832,7 +832,7 @@ func set_data(p_path: Array[Variant], key: String, data_to_set: Variant) -> bool
 	)
 
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").to_bool()  # C++ signal for set_value_completed sends success (bool) as payload
+		return bool(result_dict.get("payload"))  # C++ signal for set_value_completed sends success (bool) as payload
 	Log.error(
 		"FB_Backend: set_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
