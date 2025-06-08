@@ -1502,10 +1502,10 @@ logs-errors-only TEST_ID:
     echo "🚨 Errors for test ID: {{TEST_ID}}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    grep "{{TEST_ID}}" "$LOG_FILE" | \
-    grep -i "error\|fail\|DEBUG_TEST_FAILURE" | \
-    sed 's/^.*I\/godot.*: //' | \
-    grep -v "BUFFER\|font_size"
+    # Show all errors from this test run (not just lines containing test ID)
+    grep -E "(E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE)" "$LOG_FILE" | \
+    sed 's/^[0-9-]* [0-9:]* [EI]\/godot *([0-9]*): //' | \
+    grep -v "BUFFER\|font_size\|=== BUFFER DUMP\|=== END BUFFER DUMP"
 
 # Show performance breakdown for a specific test ID
 logs-performance TEST_ID:
