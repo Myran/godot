@@ -2,7 +2,7 @@
   "name": "Firebase Focus",
   "description": "Firebase-focused testing for database and backend validation",
   "configs": [
-    "database-testing",
+    "firebase-comprehensive-all-layers",
     "cpp-firebase-comprehensive-test", 
     "backend-firebase-comprehensive-test"
   ]

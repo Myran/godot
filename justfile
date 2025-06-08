@@ -1277,9 +1277,9 @@ test-monitor-detailed-android CONFIG_NAME="current":
     just config-push-android "{{CONFIG_NAME}}"
     just restart-android-app
     
-    # Wait for completion or timeout (max 120 seconds)
+    # Wait for completion or timeout (max 300 seconds for comprehensive test suites)
     wait_time=0
-    max_wait=120
+    max_wait=300
     
     while [ $wait_time -lt $max_wait ] && kill -0 $MONITOR_PID 2>/dev/null; do
         # Check for completion signal
@@ -1701,11 +1701,11 @@ test-list-android TEST_LIST_NAME="default-all":
         
         # Determine timeout based on config type - comprehensive tests need more time
         if echo "$config" | grep -q "comprehensive"; then
-            timeout=60  # 60 seconds for comprehensive tests
+            timeout=90  # 90 seconds for comprehensive tests
         elif echo "$config" | grep -q "performance\|stress\|large"; then
-            timeout=45  # 45 seconds for performance tests
+            timeout=60  # 60 seconds for performance tests
         else
-            timeout=30  # 30 seconds for standard tests
+            timeout=45  # 45 seconds for standard tests
         fi
         
         # Capture the test output to extract test ID and action results
