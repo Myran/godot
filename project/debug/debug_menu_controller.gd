@@ -607,33 +607,106 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	# All actions are now handled uniformly through DebugRegistry
 
 
-func _on_navigator_item_selected(index: int) -> void:
-	if _is_executing_all:
-		Log.warning(
-			"Attempted item selection while 'Run All' is active. Ignored.", {}, ["debug_ui"]
-		)
+# Track current execution for abortion capability
+var _current_executing_action: DebugAction = null
+var _current_run_all_actions: Array[ActionExecutionResult] = []
+var _run_all_abort_requested: bool = false
+
+
+func _abort_current_execution_if_needed() -> void:
+	"""Abort current action execution or Run All operation"""
+	if not _is_executing_all:
 		return
+	
+	Log.info("Aborting current execution to start new action", {}, ["debug_ui", "abortion"])
+	
+	# Abort single action
+	if _current_executing_action != null:
+		_abort_single_action(_current_executing_action)
+	
+	# Abort Run All
+	if not _current_run_all_actions.is_empty():
+		_abort_run_all_execution()
+	
+	# Reset execution state
+	_reset_execution_state()
+
+
+func _abort_single_action(action: DebugAction) -> void:
+	"""Abort a single action execution"""
+	Log.debug("Aborting single action: %s" % action.action_name, {}, ["debug_ui", "abortion"])
+	
+	# Disconnect signals to prevent completion handlers from firing
+	if action.status_updated.is_connected(_on_action_status_updated):
+		action.status_updated.disconnect(_on_action_status_updated)
+	if action.execution_completed.is_connected(_on_action_execution_completed):
+		action.execution_completed.disconnect(_on_action_execution_completed)
+	
+	# Note: We cannot actually stop the action's internal logic (no built-in cancellation in Godot)
+	# But we prevent its completion from affecting the UI
+	_current_executing_action = null
+
+
+func _abort_run_all_execution() -> void:
+	"""Abort Run All execution"""
+	Log.debug("Aborting Run All execution with %d actions" % _current_run_all_actions.size(), {}, ["debug_ui", "abortion"])
+	
+	_run_all_abort_requested = true
+	
+	# Disconnect any pending action completion handlers
+	for action_result in _current_run_all_actions:
+		var action: DebugAction = action_result.action
+		if action.execution_completed.is_connected(_on_run_all_action_completed):
+			action.execution_completed.disconnect(_on_run_all_action_completed)
+	
+	# Clear the run all state
+	_current_run_all_actions.clear()
+
+
+func _reset_execution_state() -> void:
+	"""Reset all execution state variables"""
+	_is_executing_all = false
+	_current_executing_action = null
+	_current_run_all_actions.clear()
+	_run_all_abort_requested = false
+	
+	# Reset UI state
+	_set_ui_for_execution(false)
+	
+	# Clear any stored action data
+	_last_action_data.clear()
+	
+	Log.debug("Execution state reset - ready for new actions", {}, ["debug_ui", "abortion"])
+
+
+func _on_navigator_item_selected(index: int) -> void:
 	if index < 0 or index >= item_list_navigator.item_count:
 		return
 
 	var metadata: MenuListItemData = item_list_navigator.get_item_metadata(index)
+	
+	# Allow navigation at all times - abort current execution if needed
 	match metadata.type:
 		MenuListItemData.ItemType.CATEGORY:
+			_abort_current_execution_if_needed()
 			_populate_groups_view(metadata.category_name)
 		MenuListItemData.ItemType.ACTION:
+			_abort_current_execution_if_needed()
 			_execute_single_action(metadata.action_instance)
 		MenuListItemData.ItemType.GROUP:
+			_abort_current_execution_if_needed()
 			_populate_actions_view(_current_category_name, metadata.group_name)
 		MenuListItemData.ItemType.BACK_TO_MAIN:
+			_abort_current_execution_if_needed()
 			_populate_main_categories_view()
 		MenuListItemData.ItemType.BACK_TO_GROUPS:
+			_abort_current_execution_if_needed()
 			_populate_groups_view(_current_category_name)
 
 
 func _on_run_all_pressed() -> void:
-	if _is_executing_all:
-		Log.warning("Run All already in progress.", {}, ["debug_ui"])
-		return
+	# Abort current execution and start Run All
+	_abort_current_execution_if_needed()
 
 	# Access the registry via autoload (fast-failing)
 	if not DebugRegistry:
@@ -687,9 +760,8 @@ func _on_run_all_pressed() -> void:
 
 
 func _execute_single_action(action: DebugAction) -> void:
-	if _is_executing_all:
-		return  # Prevent single execution during "Run All"
-
+	# Track current action for abortion capability
+	_current_executing_action = action
 	_is_executing_all = true
 	_set_ui_for_execution(true)
 	_update_status_label_text("Executing: %s..." % action.action_name)
@@ -716,6 +788,11 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 	var action: DebugAction = _last_action_data.get("action", null)
 	if not action:
 		return
+	
+	# Check if this completion is for the current action (not aborted)
+	if action != _current_executing_action:
+		Log.debug("Ignoring completion for aborted action: %s" % action.action_name, {}, ["debug_ui", "abortion"])
+		return
 
 	# Disconnect signals
 	if action.status_updated.is_connected(_on_action_status_updated):
@@ -731,6 +808,8 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 	_update_status_label_text(report, not success)
 	_update_toggle_button_state()
 
+	# Clear current action and reset execution state
+	_current_executing_action = null
 	_set_ui_for_execution(false)
 	_is_executing_all = false
 
@@ -747,6 +826,9 @@ func _execute_multiple_actions(
 		_update_status_label_text("No actions to execute in %s." % scope_description)
 		return
 
+	# Track Run All actions for abortion capability
+	_current_run_all_actions = actions_to_run
+	_run_all_abort_requested = false
 	_is_executing_all = true
 	_set_ui_for_execution(true)
 
@@ -790,6 +872,13 @@ func _execute_next_action_in_sequence(
 	_run_all_results = results
 	_run_all_scope = scope_description
 
+	# Check for abort request
+	if _run_all_abort_requested:
+		Log.info("Run All execution aborted by user", {}, ["debug_ui", "run_all", "abortion"])
+		_reset_execution_state()
+		_update_status_label_text("Run All execution aborted.")
+		return
+
 	# Check if we've completed all actions
 	if current_index >= actions_to_run.size():
 		_complete_run_all_execution(results, scope_description)
@@ -819,6 +908,11 @@ func _execute_next_action_in_sequence(
 
 # Callback for Run All action completion
 func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
+	# Check for abort request before processing completion
+	if _run_all_abort_requested:
+		Log.debug("Ignoring completion for aborted Run All action", {}, ["debug_ui", "run_all", "abortion"])
+		return
+	
 	# Record the result
 	var result_data: Dictionary = {
 		"action_name": _run_all_actions[_run_all_current_index].action.action_name,
@@ -835,6 +929,9 @@ func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
 
 
 func _complete_run_all_execution(results: Array[Dictionary], scope_description: String) -> void:
+	# Clear Run All state
+	_current_run_all_actions.clear()
+	_run_all_abort_requested = false
 	_is_executing_all = false
 	_set_ui_for_execution(false)
 
