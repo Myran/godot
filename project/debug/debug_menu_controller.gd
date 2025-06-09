@@ -766,7 +766,9 @@ func _execute_single_action(action: DebugAction) -> void:
 	_current_executing_action = action
 	_is_executing_all = true
 	_set_ui_for_execution(true)
-	_update_status_label_text("Executing: %s..." % action.action_name)
+	
+	# Start tracking this action execution
+	DebugOutputServiceClass.start_action_execution(action)
 	Log.info("Executing single action: %s" % action.action_name, {}, ["debug", "test"])
 
 	# Connect to action's status signal
@@ -805,9 +807,8 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 	# Update stored data
 	_last_action_data = {"action": action, "success": success, "payload": payload}
 
-	# Show results
-	var report: String = _build_single_action_report(action, success, payload)
-	_update_status_label_text(report, not success)
+	# Show results using enhanced output service for consistency
+	DebugOutputServiceClass.output_action_result(action, success, payload)
 	_update_toggle_button_state()
 
 	# Clear current action and reset execution state
@@ -818,7 +819,9 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 
 # Handler for action status updates
 func _on_action_status_updated(text: String, is_error: bool) -> void:
-	_update_status_label_text(text, is_error)
+	# Status updates are already handled by DebugOutputService in DebugAction._update_status()
+	# No need to process them again here - this would create duplicates
+	pass
 
 
 func _execute_multiple_actions(
@@ -1115,10 +1118,42 @@ func show_menu_content() -> void:
 
 
 # Method called by DebugOutputService to display output from both manual and startup execution
+func clear_output_for_new_action(action: DebugAction) -> void:
+	"""Clear output display when a new action starts"""
+	if is_instance_valid(status_label):
+		status_label.text = ""
+		# Configure UI for fresh start
+		status_label.bbcode_enabled = true
+		status_label.scroll_following = true
+		status_label.fit_content = true
+
+
 func display_output_from_service(text: String, is_error: bool = false) -> void:
 	# This method allows the debug menu to show output from both manual button clicks
 	# and startup/test file execution, providing unified output display
-	_update_status_label_text(text, is_error)
+	
+	# Enhanced output from service - append to existing content for progressive updates
+	if is_instance_valid(status_label):
+		status_label.bbcode_enabled = true
+		status_label.scroll_following = true
+		status_label.fit_content = true
+		
+		# Check if this is a final report that should replace content
+		if text.contains("📱 DEVICE CONTEXT") or text.contains("🔄 ACTION EXECUTION"):
+			# This is a final report - replace content
+			status_label.text = text
+		else:
+			# This is a status update - append to existing content without extra newlines
+			var current_text: String = status_label.text
+			if current_text.is_empty():
+				status_label.text = text
+			else:
+				status_label.text = current_text + text
+		
+		# Ensure scrolling works properly
+		await get_tree().process_frame
+		if status_label.get_v_scroll_bar():
+			status_label.get_v_scroll_bar().value = status_label.get_v_scroll_bar().max_value
 
 	# If the debug menu is not currently visible, show it to display the results
 	if not visible:

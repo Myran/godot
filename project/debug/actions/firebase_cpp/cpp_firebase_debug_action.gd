@@ -54,7 +54,7 @@ func execute_cpp_operation(
 		return null
 
 	var op_name = operation_name if not operation_name.is_empty() else method_name
-	_update_status("Executing C++ " + op_name + "...")
+	_update_status("🚀 Starting: " + op_name + "...")
 
 	# Generate unique request ID
 	var request_id = Time.get_ticks_msec()
