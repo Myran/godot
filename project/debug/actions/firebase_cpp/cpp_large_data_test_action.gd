@@ -1,6 +1,6 @@
 # project/debug/actions/firebase_cpp/cpp_large_data_test_action.gd
 class_name CPPLargeDataTestAction
-extends "res://debug/actions/firebase_cpp/cpp_firebase_debug_action.gd"
+extends CPPFirebaseDebugAction
 
 
 func _init() -> void:
