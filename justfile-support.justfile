@@ -1,5 +1,23 @@
 # Supportive commands for Godot 4 Projects
 
+# Take screenshot from Android device for AI analysis
+screenshot-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📱 Taking screenshot from Android device..."
+    
+    # Take screenshot on device
+    adb shell screencap -p /sdcard/screenshot.png
+    
+    # Pull screenshot to temp directory
+    adb pull /sdcard/screenshot.png /tmp/screenshot.png
+    
+    # Clean up device storage
+    adb shell rm /sdcard/screenshot.png
+    
+    echo "✅ Screenshot saved to /tmp/screenshot.png"
+    echo "🤖 Screenshot ready for AI analysis via Read tool"
+
 # Validate environment variables
 update-clangd:
     cd godot && scons compiledb=yes compile_commands.json
