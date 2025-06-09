@@ -66,6 +66,7 @@ var _ui_hidden_by_test: bool = false  # Track if UI was hidden by test mode (not
 @onready var item_list_navigator: ItemList = %DebugItemList
 @onready var run_all_button: Button = %RunAllButton  # Add this button to your scene if not already present
 @onready var text_toggle_button: Button = %TextToggleButton
+@onready var exit_button : Button = %ExitButton
 # Navigation State & Constants (similar to original)
 
 
@@ -161,14 +162,14 @@ func _ready() -> void:
 	item_list_navigator.item_selected.connect(_on_navigator_item_selected)
 	run_all_button.pressed.connect(_on_run_all_pressed)
 	text_toggle_button.pressed.connect(_on_text_toggle_button_pressed)
-
+	exit_button.pressed.connect(_on_button_close_pressed)
 	DebugManager.debug_event.connect(_on_global_debug_event)
 
 	# Add to group so DebugOutputService can detect manual context
 	add_to_group("debug_menu")
 
 	_populate_main_categories_view()
-	%Panel.gui_input.connect(_on_panel_gui_input)
+	#%Panel.gui_input.connect(_on_panel_gui_input)
 
 	# Initialize toggle button state
 	_update_toggle_button_state()
@@ -201,9 +202,6 @@ func _configure_ui_elements() -> void:
 		text_toggle_button.flat = false
 
 
-func _on_panel_gui_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch and event.is_released():
-		_on_button_close_pressed()
 
 
 func _on_text_toggle_button_pressed() -> void:
@@ -616,17 +614,17 @@ func _abort_current_execution_if_needed() -> void:
 	"""Abort current action execution or Run All operation"""
 	if not _is_executing_all:
 		return
-	
+
 	Log.info("Aborting current execution to start new action", {}, ["debug_ui", "abortion"])
-	
+
 	# Abort single action
 	if _current_executing_action != null:
 		_abort_single_action(_current_executing_action)
-	
+
 	# Abort Run All
 	if not _run_all_actions.is_empty():
 		_abort_run_all_execution()
-	
+
 	# Reset execution state
 	_reset_execution_state()
 
@@ -634,13 +632,13 @@ func _abort_current_execution_if_needed() -> void:
 func _abort_single_action(action: DebugAction) -> void:
 	"""Abort a single action execution"""
 	Log.debug("Aborting single action: %s" % action.action_name, {}, ["debug_ui", "abortion"])
-	
+
 	# Disconnect signals to prevent completion handlers from firing
 	if action.status_updated.is_connected(_on_action_status_updated):
 		action.status_updated.disconnect(_on_action_status_updated)
 	if action.execution_completed.is_connected(_on_action_execution_completed):
 		action.execution_completed.disconnect(_on_action_execution_completed)
-	
+
 	# Note: We cannot actually stop the action's internal logic (no built-in cancellation in Godot)
 	# But we prevent its completion from affecting the UI
 	_current_executing_action = null
@@ -649,15 +647,15 @@ func _abort_single_action(action: DebugAction) -> void:
 func _abort_run_all_execution() -> void:
 	"""Abort Run All execution"""
 	Log.debug("Aborting Run All execution with %d actions" % _run_all_actions.size(), {}, ["debug_ui", "abortion"])
-	
+
 	_run_all_abort_requested = true
-	
+
 	# Disconnect any pending action completion handlers
 	for action_result in _run_all_actions:
 		var action: DebugAction = action_result.action
 		if action.execution_completed.is_connected(_on_run_all_action_completed):
 			action.execution_completed.disconnect(_on_run_all_action_completed)
-	
+
 	# Clear the run all state
 	_run_all_actions.clear()
 
@@ -671,13 +669,13 @@ func _reset_execution_state() -> void:
 	_run_all_results.clear()
 	_run_all_scope = ""
 	_run_all_abort_requested = false
-	
+
 	# Reset UI state
 	_set_ui_for_execution(false)
-	
+
 	# Clear any stored action data
 	_last_action_data.clear()
-	
+
 	Log.debug("Execution state reset - ready for new actions", {}, ["debug_ui", "abortion"])
 
 
@@ -686,7 +684,7 @@ func _on_navigator_item_selected(index: int) -> void:
 		return
 
 	var metadata: MenuListItemData = item_list_navigator.get_item_metadata(index)
-	
+
 	# Allow navigation at all times - abort current execution if needed
 	match metadata.type:
 		MenuListItemData.ItemType.CATEGORY:
@@ -766,7 +764,7 @@ func _execute_single_action(action: DebugAction) -> void:
 	_current_executing_action = action
 	_is_executing_all = true
 	_set_ui_for_execution(true)
-	
+
 	# Start tracking this action execution
 	DebugOutputServiceClass.start_action_execution(action)
 	Log.info("Executing single action: %s" % action.action_name, {}, ["debug", "test"])
@@ -792,7 +790,7 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 	var action: DebugAction = _last_action_data.get("action", null)
 	if not action:
 		return
-	
+
 	# Check if this completion is for the current action (not aborted)
 	if action != _current_executing_action:
 		Log.debug("Ignoring completion for aborted action: %s" % action.action_name, {}, ["debug_ui", "abortion"])
@@ -916,7 +914,7 @@ func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
 	if _run_all_abort_requested:
 		Log.debug("Ignoring completion for aborted Run All action", {}, ["debug_ui", "run_all", "abortion"])
 		return
-	
+
 	# Record the result
 	var result_data: Dictionary = {
 		"action_name": _run_all_actions[_run_all_current_index].action.action_name,
@@ -1131,13 +1129,13 @@ func clear_output_for_new_action(action: DebugAction) -> void:
 func display_output_from_service(text: String, is_error: bool = false) -> void:
 	# This method allows the debug menu to show output from both manual button clicks
 	# and startup/test file execution, providing unified output display
-	
+
 	# Enhanced output from service - append to existing content for progressive updates
 	if is_instance_valid(status_label):
 		status_label.bbcode_enabled = true
 		status_label.scroll_following = true
 		status_label.fit_content = true
-		
+
 		# Check if this is a final report that should replace content
 		if text.contains("📱 DEVICE CONTEXT") or text.contains("🔄 ACTION EXECUTION"):
 			# This is a final report - replace content
@@ -1149,7 +1147,7 @@ func display_output_from_service(text: String, is_error: bool = false) -> void:
 				status_label.text = text
 			else:
 				status_label.text = current_text + text
-		
+
 		# Ensure scrolling works properly
 		await get_tree().process_frame
 		if status_label.get_v_scroll_bar():

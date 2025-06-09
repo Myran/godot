@@ -43,29 +43,46 @@ size_flags_vertical = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Panel"]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 178.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
 
-[node name="TextToggleButton" type="Button" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="TextToggleButton" type="Button" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_override_font_sizes/font_size = 50
 disabled = true
 text = "Expand"
 
-[node name="DebugRichTextLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
+[node name="ExitButton" type="Button" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 2
+size_flags_horizontal = 8
+text = "  X  "
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="DebugRichTextLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/Panel/VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 mouse_filter = 1
 theme_override_styles/background = SubResource("StyleBoxFlat_fs1au")
 bbcode_enabled = true
 text = "Start text
 "
-fit_content = true
 context_menu_enabled = true
 
 [node name="RunAllButton" type="Button" parent="MarginContainer/VBoxContainer"]

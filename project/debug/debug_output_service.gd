@@ -25,10 +25,10 @@ static func start_action_execution(action: DebugAction) -> void:
 	"""Start tracking a new action execution"""
 	_current_action = action
 	_current_execution_log.clear()
-	
+
 	# Signal debug menu to clear previous output for new action
 	_signal_new_action_started(action)
-	
+
 	# Add initial execution start log
 	_add_execution_log_entry("Starting execution...", false)
 
@@ -71,7 +71,7 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 	# Also output to console if appropriate
 	if _should_output_to_console():
 		_formatter.output_formatted_text(report)
-	
+
 	# Clear execution log after completion
 	_current_execution_log.clear()
 	_current_action = null
