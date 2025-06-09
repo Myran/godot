@@ -609,7 +609,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 
 # Track current execution for abortion capability
 var _current_executing_action: DebugAction = null
-var _current_run_all_actions: Array[ActionExecutionResult] = []
 var _run_all_abort_requested: bool = false
 
 
@@ -625,7 +624,7 @@ func _abort_current_execution_if_needed() -> void:
 		_abort_single_action(_current_executing_action)
 	
 	# Abort Run All
-	if not _current_run_all_actions.is_empty():
+	if not _run_all_actions.is_empty():
 		_abort_run_all_execution()
 	
 	# Reset execution state
@@ -649,25 +648,28 @@ func _abort_single_action(action: DebugAction) -> void:
 
 func _abort_run_all_execution() -> void:
 	"""Abort Run All execution"""
-	Log.debug("Aborting Run All execution with %d actions" % _current_run_all_actions.size(), {}, ["debug_ui", "abortion"])
+	Log.debug("Aborting Run All execution with %d actions" % _run_all_actions.size(), {}, ["debug_ui", "abortion"])
 	
 	_run_all_abort_requested = true
 	
 	# Disconnect any pending action completion handlers
-	for action_result in _current_run_all_actions:
+	for action_result in _run_all_actions:
 		var action: DebugAction = action_result.action
 		if action.execution_completed.is_connected(_on_run_all_action_completed):
 			action.execution_completed.disconnect(_on_run_all_action_completed)
 	
 	# Clear the run all state
-	_current_run_all_actions.clear()
+	_run_all_actions.clear()
 
 
 func _reset_execution_state() -> void:
 	"""Reset all execution state variables"""
 	_is_executing_all = false
 	_current_executing_action = null
-	_current_run_all_actions.clear()
+	_run_all_actions.clear()
+	_run_all_current_index = 0
+	_run_all_results.clear()
+	_run_all_scope = ""
 	_run_all_abort_requested = false
 	
 	# Reset UI state
@@ -826,8 +828,7 @@ func _execute_multiple_actions(
 		_update_status_label_text("No actions to execute in %s." % scope_description)
 		return
 
-	# Track Run All actions for abortion capability
-	_current_run_all_actions = actions_to_run
+	# Reset abort flag and set execution state
 	_run_all_abort_requested = false
 	_is_executing_all = true
 	_set_ui_for_execution(true)
@@ -930,7 +931,7 @@ func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
 
 func _complete_run_all_execution(results: Array[Dictionary], scope_description: String) -> void:
 	# Clear Run All state
-	_current_run_all_actions.clear()
+	_run_all_actions.clear()
 	_run_all_abort_requested = false
 	_is_executing_all = false
 	_set_ui_for_execution(false)
