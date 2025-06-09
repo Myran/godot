@@ -8,12 +8,21 @@ func _init() -> void:
 	action_name = "Backend Error Handling Test"
 
 
-func execute_backend_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend error handling...")
 
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase backend not available for testing",
+			"BACKEND_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var error_tests = []
 	var successful_error_handling = 0
@@ -42,11 +51,11 @@ func execute_backend_action() -> bool:
 		"backend_tests", "error_handling", "timeout_test", str(Time.get_ticks_msec())
 	]
 
-	var start_time = Time.get_ticks_msec()
+	var timeout_start_time = Time.get_ticks_msec()
 	var timeout_result = await test_backend_async_pattern(
 		"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test"
 	)
-	var timeout_duration = Time.get_ticks_msec() - start_time
+	var timeout_duration = Time.get_ticks_msec() - timeout_start_time
 
 	# Backend should handle timeouts gracefully and return within reasonable time
 	var timeout_handled = timeout_duration < 30000  # Should not hang for more than 30 seconds
@@ -101,6 +110,7 @@ func execute_backend_action() -> bool:
 	# Calculate success rate
 	var error_success_rate = float(successful_error_handling) / float(total_error_tests)
 	var overall_success = error_success_rate >= 0.75  # 75% of error scenarios should be handled gracefully
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results = {
 		"total_error_tests": total_error_tests,
@@ -126,6 +136,19 @@ func execute_backend_action() -> bool:
 			test_results,
 			["debug", "backend_firebase"]
 		)
+
+		return DebugAction.Result.new_success(
+			"Backend error handling test completed successfully",
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_error_handling",
+				"error_scenarios": error_tests,
+				"success_rate": error_success_rate,
+				"total_tests": total_error_tests,
+				"successful_tests": successful_error_handling
+			}
+		)
 	else:
 		_update_status(
 			(
@@ -143,4 +166,25 @@ func execute_backend_action() -> bool:
 			["debug", "backend_firebase", "error"]
 		)
 
-	return overall_success
+		return DebugAction.Result.new_failure(
+			"Backend error handling test failed - insufficient error handling",
+			"ERROR_HANDLING_INSUFFICIENT",
+			DebugAction.Result.ErrorCategory.VALIDATION,
+			test_results,
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_error_handling",
+				"error_scenarios": error_tests,
+				"success_rate": error_success_rate,
+				"total_tests": total_error_tests,
+				"successful_tests": successful_error_handling,
+				"minimum_required_rate": 0.75
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_backend_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

@@ -10,23 +10,26 @@ func _init() -> void:
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
 
-func execute_rtdb_action() -> bool:
-	_update_status("Executing " + action_name + "...")
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase database not available",
+			"DATABASE_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.BATCH_OPS)
-
-	_update_status("Starting batch operations test at path '%s'..." % str(full_path))
-
 	var batch_operations: Array[Dictionary] = []
 	var base_timestamp: int = TimeUtils.now_ms()
 
-# Define multiple operations to perform in batch
+	# Define multiple operations to perform in batch
 	var operations_to_perform: Array[Dictionary] = [
 		{
 			"type": "set",
@@ -51,7 +54,7 @@ func execute_rtdb_action() -> bool:
 		{"type": "get", "path": full_path + ["batch_item_2"], "data": null}
 	]
 
-# Execute batch operations
+	# Execute batch operations
 	for i: int in range(operations_to_perform.size()):
 		var operation: Dictionary = operations_to_perform[i]
 		var operation_result: Dictionary = await _execute_single_operation(db, operation, i)
@@ -60,40 +63,36 @@ func execute_rtdb_action() -> bool:
 		# Brief delay between operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
-# Count successful operations
+	# Calculate success rate
 	var successful_operations: int = 0
-	var failed_operations: int = 0
-
 	for result: Dictionary in batch_operations:
-		var success_variant: Variant = result.get("success")
-		var success_bool: bool = success_variant
-		if success_bool:
+		if result.get("success", false):
 			successful_operations += 1
-		else:
-			failed_operations += 1
 
-	var batch_success: bool = failed_operations == 0
-	var status_msg: String = (
-		"Batch operations completed: %d successful, %d failed out of %d total"
-		% [successful_operations, failed_operations, batch_operations.size()]
+	var total_operations: int = batch_operations.size()
+	var success_rate: float = (
+		float(successful_operations) / float(total_operations) if total_operations > 0 else 0.0
 	)
-	_update_status(status_msg, not batch_success)
+	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	Log.debug(
-		"RTDBBatchOperationsAction executed",
+	# Use the new specialized factory method for batch results
+	return DebugAction.Result.new_batch_result(
+		batch_operations,
+		success_rate,
+		action_name,
+		duration_ms,
 		{
-			"path": full_path,
-			"operation": "batch_operations",
-			"success": batch_success,
-			"total_operations": batch_operations.size(),
-			"successful_operations": successful_operations,
-			"failed_operations": failed_operations,
-			"operations": batch_operations
-		},
-		["test", "rtdb", "advanced"]
+			"batch_type": "sequential_operations",
+			"test_path": full_path,
+			"base_timestamp": base_timestamp
+		}
 	)
 
-	return true
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_rtdb_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 
 func _execute_single_operation(

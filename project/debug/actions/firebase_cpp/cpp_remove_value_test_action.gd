@@ -8,36 +8,80 @@ func _init() -> void:
 	action_name = "C++ Remove Value Test"
 
 
-func execute_cpp_action() -> bool:
-	_update_status("Executing C++ direct remove value test...")
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 
 	# First set a value directly via C++
-	var test_path = ["cpp_tests", "direct", "remove_value", str(Time.get_ticks_msec())]
-	var test_value = "CPP Remove Test Value: " + str(Time.get_ticks_msec())
+	var test_path: Array = ["cpp_tests", "direct", "remove_value", str(Time.get_ticks_msec())]
+	var test_value: String = "CPP Remove Test Value: " + str(Time.get_ticks_msec())
 
-	_update_status("Setting test value via C++...")
-	var set_result = await execute_cpp_operation(
+	# Step 1: Set test value
+	var set_start: int = Time.get_ticks_msec()
+	var set_result: Variant = await execute_cpp_operation(
 		"set_value_async", [test_path, test_value], "C++ Set (for Remove test)"
 	)
+	var set_duration: int = Time.get_ticks_msec() - set_start
 
 	if not set_result:
-		return false
+		return DebugAction.Result.new_failure(
+			"Failed to set test value for C++ remove operation",
+			"SET_OPERATION_FAILED",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			{
+				"test_type": "cpp_remove_value",
+				"step": "setup",
+				"path": test_path,
+				"set_duration_ms": set_duration
+			}
+		)
 
-	# Now remove the value directly via C++
-	_update_status("Removing value via C++...")
-	var remove_result = await execute_cpp_operation(
+	# Step 2: Remove the value directly via C++
+	var remove_start: int = Time.get_ticks_msec()
+	var remove_result: Variant = await execute_cpp_operation(
 		"remove_value_async", [test_path], "C++ Remove Value"
 	)
+	var remove_duration: int = Time.get_ticks_msec() - remove_start
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var success = remove_result != null
+	var success: bool = remove_result != null
 
 	if success:
-		Log.info("C++ Remove test successful", {"test_path": test_path}, ["debug", "cpp_firebase"])
-		_update_status("C++ Remove Value test PASSED")
-	else:
-		Log.error(
-			"C++ Remove test failed", {"test_path": test_path}, ["debug", "cpp_firebase", "error"]
+		return DebugAction.Result.new_success(
+			"C++ remove value operation successful",
+			total_duration,
+			action_name,
+			{
+				"test_type": "cpp_remove_value",
+				"path": test_path,
+				"set_duration_ms": set_duration,
+				"remove_duration_ms": remove_duration,
+				"test_value": test_value,
+				"remove_result": str(remove_result)
+			}
 		)
-		_update_status("C++ Remove Value test FAILED", true)
+	else:
+		return DebugAction.Result.new_failure(
+			"C++ remove value operation failed",
+			"REMOVE_OPERATION_FAILED",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			total_duration,
+			action_name,
+			{
+				"test_type": "cpp_remove_value",
+				"path": test_path,
+				"set_duration_ms": set_duration,
+				"remove_duration_ms": remove_duration,
+				"test_value": test_value
+			}
+		)
 
-	return success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_cpp_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

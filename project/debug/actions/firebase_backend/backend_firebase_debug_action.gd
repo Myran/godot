@@ -110,8 +110,31 @@ func test_backend_async_pattern(
 	return success
 
 
-# Default implementation - subclasses override this
+# New DebugAction.Result pattern - subclasses should override this
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	# Default implementation for base class - subclasses should override
+	var error_message = "_execute_action_logic() not implemented in " + get_script().get_path()
+	push_error(error_message)
+	_update_status("ERROR: _execute_action_logic() not implemented", true)
+	
+	return DebugAction.Result.new_failure(
+		error_message,
+		"NOT_IMPLEMENTED",
+		DebugAction.Result.ErrorCategory.SYSTEM,
+		{"script_path": get_script().get_path()},
+		0,
+		action_name
+	)
+
+
+# Default implementation - subclasses override this (legacy compatibility)
 func execute_backend_action() -> bool:
-	push_error("execute_backend_action() not implemented in " + get_script().get_path())
-	_update_status("ERROR: execute_backend_action() not implemented", true)
-	return false
+	# Check if subclass implements new pattern
+	if has_method("_execute_action_logic"):
+		var result: DebugAction.Result = await _execute_action_logic({})
+		return result.is_success()
+	else:
+		# Fallback to error for classes that don't implement either pattern
+		push_error("execute_backend_action() not implemented in " + get_script().get_path())
+		_update_status("ERROR: execute_backend_action() not implemented", true)
+		return false

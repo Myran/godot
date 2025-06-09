@@ -8,7 +8,9 @@ func _init() -> void:
 	action_name = "Backend Lifecycle Test"
 
 
-func execute_backend_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend lifecycle...")
 
 	var lifecycle_tests = []
@@ -39,7 +41,15 @@ func execute_backend_action() -> bool:
 			"lifecycle_tests": lifecycle_tests,
 			"lifecycle_validation": false
 		}
-		return false
+		return DebugAction.Result.new_failure(
+			"Backend lifecycle test failed - backend not available",
+			"BACKEND_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			test_results,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			{"test_type": "backend_lifecycle", "failed_at": "backend_availability_check"}
+		)
 
 	# Test 2: Backend initialization state
 	_update_status("Testing backend initialization state...")
@@ -143,6 +153,7 @@ func execute_backend_action() -> bool:
 	# Calculate success rate
 	var success_rate = float(successful_tests) / float(total_tests)
 	var overall_success = success_rate >= 0.8  # 80% of lifecycle tests should pass
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results = {
 		"total_tests": total_tests,
@@ -164,6 +175,20 @@ func execute_backend_action() -> bool:
 		Log.info(
 			"Backend lifecycle validation successful", test_results, ["debug", "backend_firebase"]
 		)
+
+		return DebugAction.Result.new_success(
+			"Backend lifecycle test completed successfully",
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_lifecycle",
+				"lifecycle_tests": lifecycle_tests,
+				"success_rate": success_rate,
+				"total_tests": total_tests,
+				"successful_tests": successful_tests,
+				"backend_state": test_results["backend_final_state"]
+			}
+		)
 	else:
 		_update_status(
 			"Lifecycle test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true
@@ -174,4 +199,25 @@ func execute_backend_action() -> bool:
 			["debug", "backend_firebase", "error"]
 		)
 
-	return overall_success
+		return DebugAction.Result.new_failure(
+			"Backend lifecycle test failed - insufficient success rate",
+			"LIFECYCLE_INSUFFICIENT",
+			DebugAction.Result.ErrorCategory.VALIDATION,
+			test_results,
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_lifecycle",
+				"lifecycle_tests": lifecycle_tests,
+				"success_rate": success_rate,
+				"total_tests": total_tests,
+				"successful_tests": successful_tests,
+				"minimum_required_rate": 0.8
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_backend_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

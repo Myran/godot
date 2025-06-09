@@ -10,14 +10,12 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func execute_rtdb_action() -> bool:
-	_update_status("Executing " + action_name + "...")
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
-
-	_update_status("Starting concurrent operations test at path '%s'..." % str(full_path))
-
 	var base_timestamp: int = Time.get_ticks_msec()
 
 	# Define operations to test concurrency
@@ -42,17 +40,27 @@ func execute_rtdb_action() -> bool:
 		}
 	]
 
-	_update_status("Executing %d concurrent operations..." % operations.size())
-
+	var operation_results: Array[Dictionary] = []
 	var successful_operations: int = 0
 	var failed_operations: int = 0
-	var start_time: int = Time.get_ticks_msec()
 
 	# Execute operations sequentially (real Firebase operations)
 	for operation: Dictionary in operations:
+		var operation_start_time: int = Time.get_ticks_msec()
 		var success: bool = await execute_simple_operation(
 			operation.method, operation.path, operation.data, operation.name
 		)
+		var operation_duration: int = Time.get_ticks_msec() - operation_start_time
+
+		var operation_result: Dictionary = {
+			"name": operation.name,
+			"method": operation.method,
+			"path": operation.path,
+			"success": success,
+			"duration_ms": operation_duration,
+			"timestamp": Time.get_ticks_msec()
+		}
+		operation_results.append(operation_result)
 
 		if success:
 			successful_operations += 1
@@ -60,28 +68,32 @@ func execute_rtdb_action() -> bool:
 			failed_operations += 1
 
 	var total_duration: int = Time.get_ticks_msec() - start_time
-	var test_success: bool = failed_operations == 0
-
-	var status_msg: String = (
-		"Concurrent operations completed: %d successful, %d failed. Total duration: %dms"
-		% [successful_operations, failed_operations, total_duration]
+	var total_operations: int = operations.size()
+	var success_rate: float = (
+		float(successful_operations) / float(total_operations) if total_operations > 0 else 0.0
 	)
-	_update_status(status_msg, not test_success)
+	var overall_success: bool = failed_operations == 0
 
-	Log.debug(
-		"RTDBConcurrentOperationsAction executed",
+	# Calculate success rates by operation type
+	var success_rates: Dictionary = {"overall": success_rate, "set_operations": success_rate}  # All operations are sets in this test
+
+	# Use the new specialized factory method for concurrent results
+	return DebugAction.Result.new_concurrent_result(
+		operation_results,
+		success_rates,
+		overall_success,
+		action_name,
+		total_duration,
 		{
-			"path": full_path,
-			"operation": "concurrent_operations",
-			"success": test_success,
-			"total_operations": operations.size(),
-			"successful_operations": successful_operations,
-			"failed_operations": failed_operations,
-			"total_duration_ms": total_duration
-		},
-		["test", "rtdb", "advanced"]
+			"test_type": "concurrent_operations",
+			"test_path": full_path,
+			"base_timestamp": base_timestamp,
+			"operations_count": total_operations
+		}
 	)
 
-	# The execution_completed signal is handled inside execute_simple_operation
-	# For the final operation, just return the overall success status
-	return test_success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_rtdb_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

@@ -8,7 +8,9 @@ func _init() -> void:
 	action_name = "Backend Async Pattern Test"
 
 
-func execute_backend_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
 
 	var test_path = ["backend_tests", "async_pattern"]
@@ -21,7 +23,21 @@ func execute_backend_action() -> bool:
 	)
 
 	if not set_success:
-		return false
+		return DebugAction.Result.new_failure(
+			"Backend async pattern test failed during set operation",
+			"SET_OPERATION_FAILED",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			{
+				"test_type": "backend_async_pattern",
+				"failed_operation": "set_data",
+				"test_path": test_path,
+				"test_key": test_key,
+				"test_value": test_value
+			}
+		)
 
 	# Test get_data pattern
 	var get_success = await test_backend_async_pattern(
@@ -29,10 +45,45 @@ func execute_backend_action() -> bool:
 	)
 
 	var overall_success = set_success and get_success
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if overall_success:
 		_update_status("Backend async pattern test PASSED")
+		return DebugAction.Result.new_success(
+			"Backend async pattern test completed successfully",
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_async_pattern",
+				"operations_tested": ["set_data", "get_data"],
+				"test_path": test_path,
+				"test_key": test_key,
+				"test_value": test_value,
+				"set_success": set_success,
+				"get_success": get_success
+			}
+		)
 	else:
 		_update_status("Backend async pattern test FAILED", true)
+		return DebugAction.Result.new_failure(
+			"Backend async pattern test failed during get operation",
+			"GET_OPERATION_FAILED",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_async_pattern",
+				"failed_operation": "get_data",
+				"test_path": test_path,
+				"test_key": test_key,
+				"set_success": set_success,
+				"get_success": get_success
+			}
+		)
 
-	return overall_success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_backend_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

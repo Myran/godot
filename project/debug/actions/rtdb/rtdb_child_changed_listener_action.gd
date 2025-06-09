@@ -13,14 +13,21 @@ func _init() -> void:
 	description = "Sets up a listener for when children are changed at a specific RTDB path and verifies it works."
 
 
-func execute_rtdb_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase database not available",
+			"DATABASE_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
@@ -60,12 +67,48 @@ func execute_rtdb_action() -> bool:
 	_update_status("Waiting for listener callback...")
 	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
+	var total_duration: int = Time.get_ticks_msec() - start_time
+
 	if result.success:
 		_update_status("✅ Listener test PASSED")
-		return true
+		return DebugAction.Result.new_listener_result(
+			true,
+			result,
+			5000,
+			"child_changed_listener_test",
+			total_duration,
+			{
+				"test_type": "rtdb_child_changed_listener",
+				"path": _active_path,
+				"child_key": child_key,
+				"initial_data": initial_data,
+				"updated_data": updated_data,
+				"listener_result": result
+			}
+		)
 	else:
 		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
-		return false
+		return DebugAction.Result.new_listener_result(
+			false,
+			result,
+			5000,
+			"child_changed_listener_test",
+			total_duration,
+			{
+				"test_type": "rtdb_child_changed_listener",
+				"path": _active_path,
+				"child_key": child_key,
+				"attempted_initial_data": initial_data,
+				"attempted_updated_data": updated_data,
+				"error_details": result.get("error", "unknown error")
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_rtdb_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 
 func _on_child_changed(child_key: String, child_value: Variant) -> void:

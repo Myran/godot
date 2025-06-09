@@ -16,14 +16,21 @@ func _init() -> void:
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."
 
 
-func execute_rtdb_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase database not available",
+			"DATABASE_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var path_suffix: Array[Variant] = ["listener_test"]
 	var full_path: Array[Variant] = create_test_path(path_suffix)
@@ -82,7 +89,19 @@ func execute_rtdb_action() -> bool:
 				["test", "rtdb", "listeners", "failure"]
 			)
 
-			return false
+			return DebugAction.Result.new_listener_result(
+				false,
+				{},
+				timeout_ms,
+				"single_value_listener_test",
+				Time.get_ticks_msec() - start_time,
+				{
+					"test_type": "rtdb_single_value_listener",
+					"path": full_path,
+					"listener_id": active_listener_id,
+					"timeout_reason": "no_callback_received"
+				}
+			)
 
 	# SUCCESS - callback was received!
 	var success_msg: String = (
@@ -102,7 +121,26 @@ func execute_rtdb_action() -> bool:
 		["test", "rtdb", "listeners", "success"]
 	)
 
-	return true
+	return DebugAction.Result.new_listener_result(
+		true,
+		callback_data,
+		timeout_ms,
+		"single_value_listener_test",
+		Time.get_ticks_msec() - start_time,
+		{
+			"test_type": "rtdb_single_value_listener",
+			"path": full_path,
+			"listener_id": active_listener_id,
+			"total_duration_ms": Time.get_ticks_msec() - test_start_time,
+			"callback_timing": callback_data.get("received_at_ms", 0) - test_start_time
+		}
+	)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_rtdb_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 
 ## Signal handler for value changes (using child_changed from C++ Firebase module)

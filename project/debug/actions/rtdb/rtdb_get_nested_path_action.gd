@@ -10,34 +10,89 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-func execute_rtdb_action() -> bool:
-	_update_status("Executing " + action_name + "...")
-	# First ensure nested data exists
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
+
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase database not available",
+			"DATABASE_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var nested_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA)
-
-	# Set up nested test data first
 	var nested_data: Dictionary = _create_nested_test_data()
+
+	# Step 1: Set up nested test data
+	var setup_start: int = Time.get_ticks_msec()
 	var setup_success: bool = await execute_simple_operation(
 		"set_value_async", nested_path, nested_data, "Setup Nested Data"
 	)
+	var setup_duration: int = Time.get_ticks_msec() - setup_start
 
 	if not setup_success:
-		# execution_completed signal already handled by execute_simple_operation
-		return false
+		return DebugAction.Result.new_failure(
+			"Failed to set up nested test data",
+			"SETUP_FAILED",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			{
+				"test_type": "rtdb_get_nested_path",
+				"step": "setup",
+				"path": nested_path,
+				"setup_duration_ms": setup_duration
+			}
+		)
 
-	# Now get the nested data
-	var success: bool = await execute_simple_operation(
+	# Step 2: Get the nested data
+	var get_start: int = Time.get_ticks_msec()
+	var get_success: bool = await execute_simple_operation(
 		"get_value_async", nested_path, null, "Get Nested Data"
 	)
+	var get_duration: int = Time.get_ticks_msec() - get_start
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	# The execution_completed signal is handled inside execute_simple_operation
-	# Just return the success status for test tracking
-	return success
+	if get_success:
+		return DebugAction.Result.new_success(
+			"Successfully retrieved nested path data",
+			total_duration,
+			action_name,
+			{
+				"test_type": "rtdb_get_nested_path",
+				"path": nested_path,
+				"setup_duration_ms": setup_duration,
+				"get_duration_ms": get_duration,
+				"data_structure": nested_data.keys()
+			}
+		)
+	else:
+		return DebugAction.Result.new_failure(
+			"Failed to retrieve nested path data",
+			"GET_OPERATION_FAILED",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			total_duration,
+			action_name,
+			{
+				"test_type": "rtdb_get_nested_path",
+				"path": nested_path,
+				"setup_duration_ms": setup_duration,
+				"get_duration_ms": get_duration
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_rtdb_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 
 func _create_nested_test_data() -> Dictionary:

@@ -8,12 +8,21 @@ func _init() -> void:
 	action_name = "Backend Method Mapping Test"
 
 
-func execute_backend_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend method mappings...")
 
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase backend not available for testing",
+			"BACKEND_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var test_base_path = ["backend_tests", "method_mapping"]
 	var test_timestamp = str(Time.get_ticks_msec())
@@ -71,6 +80,7 @@ func execute_backend_action() -> bool:
 	# Calculate success rate
 	var success_rate = float(successful_methods) / float(total_methods)
 	var overall_success = success_rate >= 0.75  # 75% of methods must work
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results = {
 		"total_methods_tested": total_methods,
@@ -96,6 +106,20 @@ func execute_backend_action() -> bool:
 			test_results,
 			["debug", "backend_firebase"]
 		)
+
+		return DebugAction.Result.new_success(
+			"Backend method mapping test completed successfully",
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_method_mapping",
+				"methods_tested": ["set_data", "get_data", "push_data", "remove_data"],
+				"method_results": method_results,
+				"success_rate": success_rate,
+				"total_methods": total_methods,
+				"successful_methods": successful_methods
+			}
+		)
 	else:
 		_update_status(
 			(
@@ -113,4 +137,26 @@ func execute_backend_action() -> bool:
 			["debug", "backend_firebase", "error"]
 		)
 
-	return overall_success
+		return DebugAction.Result.new_failure(
+			"Backend method mapping test failed - insufficient success rate",
+			"METHOD_MAPPING_INSUFFICIENT",
+			DebugAction.Result.ErrorCategory.VALIDATION,
+			test_results,
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_method_mapping",
+				"methods_tested": ["set_data", "get_data", "push_data", "remove_data"],
+				"method_results": method_results,
+				"success_rate": success_rate,
+				"total_methods": total_methods,
+				"successful_methods": successful_methods,
+				"minimum_required_rate": 0.75
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_backend_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

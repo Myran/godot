@@ -8,12 +8,21 @@ func _init() -> void:
 	action_name = "Backend Request Tracking Test"
 
 
-func execute_backend_action() -> bool:
+# New DebugAction.Result pattern - this is the future
+func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend request tracking...")
 
 	var backend = get_firebase_backend_for_testing()
 	if not backend:
-		return false
+		return DebugAction.Result.new_failure(
+			"Firebase backend not available for testing",
+			"BACKEND_UNAVAILABLE",
+			DebugAction.Result.ErrorCategory.DATABASE,
+			null,
+			Time.get_ticks_msec() - start_time,
+			action_name
+		)
 
 	var tracking_tests = []
 	var successful_tests = 0
@@ -187,6 +196,7 @@ func execute_backend_action() -> bool:
 	# Calculate overall success
 	var success_rate = float(successful_tests) / float(total_tests)
 	var overall_success = success_rate >= 0.8  # 80% of tracking tests should pass
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results = {
 		"total_tests": total_tests,
@@ -206,6 +216,20 @@ func execute_backend_action() -> bool:
 			test_results,
 			["debug", "backend_firebase"]
 		)
+
+		return DebugAction.Result.new_success(
+			"Backend request tracking test completed successfully",
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_request_tracking",
+				"tracking_tests": tracking_tests,
+				"success_rate": success_rate,
+				"total_tests": total_tests,
+				"successful_tests": successful_tests,
+				"backend_state": {"available": backend.is_available()}
+			}
+		)
 	else:
 		_update_status(
 			"Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")",
@@ -217,4 +241,25 @@ func execute_backend_action() -> bool:
 			["debug", "backend_firebase", "error"]
 		)
 
-	return overall_success
+		return DebugAction.Result.new_failure(
+			"Backend request tracking test failed - insufficient success rate",
+			"REQUEST_TRACKING_INSUFFICIENT",
+			DebugAction.Result.ErrorCategory.VALIDATION,
+			test_results,
+			total_duration,
+			action_name,
+			{
+				"test_type": "backend_request_tracking",
+				"tracking_tests": tracking_tests,
+				"success_rate": success_rate,
+				"total_tests": total_tests,
+				"successful_tests": successful_tests,
+				"minimum_required_rate": 0.8
+			}
+		)
+
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_backend_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
