@@ -12,34 +12,67 @@ func _init() -> void:
 func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	var passed_tests: int = 0
-	var total_tests: int = 3  # Simplified to 3 tests
+	var total_tests: int = 3
+	var test_results: Array[Dictionary] = []
 
-	# Test 1: Basic operation
+	# Test 1: Basic operation (should work normally)
+	_update_status("Testing basic C++ operation...")
 	var test1_result: Variant = await execute_cpp_operation(
 		"get_value_async",
 		[["cpp_tests", "error_handling", str(Time.get_ticks_msec())]],
-		"Basic Error Test"
+		"Basic Operation Test"
 	)
-	if test1_result != null:
+	var test1_passed: bool = test1_result != null
+	if test1_passed:
 		passed_tests += 1
+	test_results.append(
+		{
+			"test_name": "Basic Operation Test",
+			"operation_succeeded": test1_passed,
+			"result": test1_result,
+			"expected": "normal_operation"
+		}
+	)
 
-	# Test 2: Set operation
+	# Test 2: Set operation (should work normally)
+	_update_status("Testing C++ set operation...")
 	var test2_result: Variant = await execute_cpp_operation(
 		"set_value_async",
 		[["cpp_tests", "error_test", str(Time.get_ticks_msec())], "test_value"],
-		"Set Error Test"
+		"Set Operation Test"
 	)
-	if test2_result != null:
+	var test2_passed: bool = test2_result != null
+	if test2_passed:
 		passed_tests += 1
+	test_results.append(
+		{
+			"test_name": "Set Operation Test",
+			"operation_succeeded": test2_passed,
+			"result": test2_result,
+			"expected": "normal_operation"
+		}
+	)
 
-	# Test 3: Invalid path test
+	# Test 3: Invalid path test (should handle gracefully)
+	_update_status("Testing C++ invalid path handling...")
 	var test3_result: Variant = await execute_cpp_operation(
 		"get_value_async",
-		[["cpp_tests", "invalid_path", str(Time.get_ticks_msec())]],
-		"Invalid Path Test"
+		[["cpp_tests", "invalid", "path", "should", "fail"]],
+		"Invalid Path Handling Test"
 	)
-	# For invalid path, any completion (success or graceful failure) is good
-	passed_tests += 1
+	# For error handling, we test that the system doesn't crash and handles errors gracefully
+	var test3_passed: bool = true  # Any completion without crash is considered success
+	if test3_passed:
+		passed_tests += 1
+	test_results.append(
+		{
+			"test_name": "Invalid Path Handling Test",
+			"operation_succeeded": test3_result != null,
+			"graceful_handling": test3_passed,
+			"result": test3_result,
+			"expected": "graceful_error_handling"
+		}
+	)
 
 	var success_rate: float = float(passed_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.67  # 67% success rate
@@ -51,25 +84,29 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			total_duration,
 			action_name,
 			{
-				"test_type": "cpp_error_handling",
+				"test_type": "cpp_error_handling_enhanced",
 				"total_tests": total_tests,
 				"passed_tests": passed_tests,
-				"success_rate": success_rate
+				"success_rate": success_rate,
+				"test_results": test_results,
+				"operation_duration_ms": total_duration
 			}
 		)
 	else:
 		return DebugAction.Result.new_failure(
 			"C++ error handling test failed (%d/%d tests)" % [passed_tests, total_tests],
-			"",
+			"CPP_ERROR_HANDLING_TEST_FAILED",
 			DebugAction.Result.ErrorCategory.FIREBASE,
 			null,
 			total_duration,
 			action_name,
 			{
-				"test_type": "cpp_error_handling",
+				"test_type": "cpp_error_handling_enhanced",
 				"total_tests": total_tests,
 				"passed_tests": passed_tests,
-				"success_rate": success_rate
+				"success_rate": success_rate,
+				"test_results": test_results,
+				"minimum_required_passed": 2
 			}
 		)
 

@@ -21,7 +21,7 @@ static func _register_gameplay_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Reset Match Level", _reset_match_level)
+			. create("game.match.reset_level", _reset_match_level)
 			. set_category("Gameplay")
 			. set_description("Reset the current match level")
 		)
@@ -33,7 +33,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 1", func() -> bool: return _load_match_level(1))
+			. create("game.match.load_level_1", func() -> bool: return _load_match_level(1))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 1")
@@ -42,7 +42,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 2", func() -> bool: return _load_match_level(2))
+			. create("game.match.load_level_2", func() -> bool: return _load_match_level(2))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 2")
@@ -51,7 +51,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 3", func() -> bool: return _load_match_level(3))
+			. create("game.match.load_level_3", func() -> bool: return _load_match_level(3))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 3")
@@ -60,7 +60,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 4", func() -> bool: return _load_match_level(4))
+			. create("game.match.load_level_4", func() -> bool: return _load_match_level(4))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 4")
@@ -69,7 +69,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("Load Match Level 5", func() -> bool: return _load_match_level(5))
+			. create("game.match.load_level_5", func() -> bool: return _load_match_level(5))
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 5")
@@ -82,7 +82,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Populate Enemy Lineup", _populate_enemy_lineup)
+			. create("game.lineup.populate_enemy", _populate_enemy_lineup)
 			. set_category("Gameplay")
 			. set_group("Preset Lineups")
 			. set_description("Add test cards to enemy lineup")
@@ -108,7 +108,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Clear Card Cache", _clear_card_cache)
+			. create("game.cache.clear_cards", _clear_card_cache)
 			. set_category("Database")
 			. set_group("Cache")
 			. set_description("Clear the card data cache")
@@ -118,7 +118,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Toggle Local Battle DB", _toggle_local_battle_db)
+			. create("game.database.toggle_local_battle", _toggle_local_battle_db)
 			. set_category("Database")
 			. set_description("Toggle between local and remote battle database")
 		)
@@ -130,7 +130,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Cycle Asset Variant", _cycle_asset_variant)
+			. create("game.debug.cycle_asset_variant", _cycle_asset_variant)
 			. set_category("Quick Actions")
 			. set_description("Cycle through asset variants (1-3)")
 		)
@@ -139,7 +139,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Print Debug Info", _print_debug_info)
+			. create("game.debug.print_info", _print_debug_info)
 			. set_category("Quick Actions")
 			. set_description("Print current debug settings")
 		)

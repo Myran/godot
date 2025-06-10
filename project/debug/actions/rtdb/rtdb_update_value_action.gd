@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Update Value"
+	action_name = "rtdb.database.update_value"
 
 
 # New DebugAction.Result pattern - this is the future

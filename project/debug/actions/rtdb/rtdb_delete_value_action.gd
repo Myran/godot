@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Delete Value"
+	action_name = "rtdb.database.remove_value"
 
 
 func execute_rtdb_action() -> bool:

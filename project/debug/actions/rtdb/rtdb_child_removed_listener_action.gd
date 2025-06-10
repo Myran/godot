@@ -8,7 +8,7 @@ var _active_path: Array[Variant] = []
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Child Removed Listener"
+	action_name = "rtdb.listeners.child_removed"
 	group = "Listeners"
 	description = "Sets up a listener for when children are removed from a specific RTDB path and verifies it works."
 
@@ -36,12 +36,12 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	_update_status("Setting up child removed listener...")
 
-	# Connect to child_removed signal
-	if not db.child_removed.is_connected(_on_child_removed):
-		db.child_removed.connect(_on_child_removed.bind())
+	# Connect to child_removed signal using the wrapper's method
+	if not db.db.is_signal_connected("child_removed", _on_child_removed):
+		db.db.connect_signal("child_removed", _on_child_removed)
 
-	# Add listener at path
-	db.add_listener_at_path(_active_path)
+	# Start listening at path
+	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
 	# Create test child then remove it
@@ -55,13 +55,17 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	# Set child data first
 	_update_status("Creating test child...")
-	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, child_data)
+	var set_success: bool = await execute_simple_operation(
+		"set_value_async", child_path, child_data, "Create Child for Removal Test"
+	)
 
 	# Wait briefly then remove to trigger listener
 	await Engine.get_main_loop().create_timer(0.5).timeout
 
 	_update_status("Removing child to trigger listener...")
-	db.remove_value_async(RTDBDebugAction.generate_request_id(), child_path)
+	var remove_success: bool = await execute_simple_operation(
+		"remove_value_async", child_path, null, "Remove Child to Trigger Listener"
+	)
 
 	# Wait for callback
 	_update_status("Waiting for listener callback...")

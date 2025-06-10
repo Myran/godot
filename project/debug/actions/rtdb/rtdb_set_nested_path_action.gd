@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Set Nested Path"
+	action_name = "rtdb.paths.set_nested"
 	group = "Paths"
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 

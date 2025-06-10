@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Remove All Listeners"
+	action_name = "rtdb.listeners.remove_all"
 	group = "Listeners"
 	description = "Removes active RTDB listeners to clean up test state."
 
@@ -32,9 +32,8 @@ func execute_rtdb_action() -> bool:
 
 	var removed_count: int = 0
 	for path: Array in test_paths:
-		# The C++ module's remove_listener_at_path() doesn't return a value
-		# It removes the listener if one exists at that path
-		db.remove_listener_at_path(path)
+		# Use the correct API: stop_listening()
+		db.stop_listening(path)
 		removed_count += 1
 
 		Log.debug(

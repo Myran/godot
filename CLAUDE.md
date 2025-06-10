@@ -27,16 +27,16 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine. The
 **Test any single debug action instantly - no JSON config files needed!**
 ```bash
 # 🚀 Quick iteration (5-second cycles)
-just config-restart-android 'C++ Error Handling Test'   # Instant action test + restart
-just config-restart-ios 'Firebase Status Check'         # iOS equivalent
+just config-restart-android 'cpp.firebase.error_handling'   # Instant action test + restart
+just config-restart-ios 'system.network.rtdb_status'        # iOS equivalent
 
 # 🔍 Debugging & Development  
-just test-config-android 'C++ Set Value Test'           # Full automated test with results
-just test-monitor-android 'Backend Performance Test'    # Real-time log monitoring
-just fastbuild-android                                  # Rebuild after code changes
+just test-config-android 'cpp.firebase.set_value'           # Full automated test with results
+just test-monitor-android 30                                # Pure log monitoring (no restarts)
+just fastbuild-android                                      # Rebuild after code changes
 
 # ⚙️ Configuration Management
-just config-set 'Print Debug Info'                      # Set single action as default config
+just config-set 'system.debug.print_info'                  # Set single action as default config
 ```
 
 ### Traditional Config Testing
@@ -54,12 +54,11 @@ just list-test-lists                      # Show available test lists
 just help                               # View all available commands
 ```
 
-### Test List Shortcuts
+### Essential Test Workflows
 ```bash
-just test-suite-firebase-android          # Firebase-focused tests only
-just test-suite-quick-android             # Quick validation tests
-just test-suite-performance-android       # Performance testing suite
-just test-suite-minimal-android           # Minimal smoke test
+just test-smoke-android                    # Quick smoke test (30 seconds)
+just test-development-android              # Daily development workflow
+just test-production-android               # Comprehensive release validation
 ```
 
 ### Engine Development
@@ -98,6 +97,39 @@ Located in `project/debug/actions/`, includes:
 - Performance testing
 - Network connectivity validation
 - Data integrity checks
+
+## 🚀 Config vs Test Commands - Key Differences
+
+### **Config Commands (`config-*`) - Fast Deployment**
+**Purpose**: Configuration management and quick iteration
+- ⚡ **Speed**: 2-5 seconds maximum 
+- 🎯 **Focus**: Deploy configs and restart apps
+- 🔧 **Use case**: Development iteration cycles
+
+```bash
+just config-push-android <config>        # Push config (2 sec, no restart)
+just config-restart-android <config>     # Push + restart (5 sec total)
+just config-set <pattern>                # Update embedded config
+just config-status-android               # Check current config
+```
+
+### **Test Commands (`test-*`) - Comprehensive Analysis**
+**Purpose**: Automated testing with detailed results
+- 📊 **Depth**: Full logs, pass/fail analysis, test IDs
+- ⏱️ **Duration**: 30+ seconds for thorough testing  
+- 🧪 **Use case**: Debugging, validation, CI/CD
+
+```bash
+just test-config-android <config>        # Full test with analysis (30+ sec)
+just test-monitor-android [duration]     # Pure log monitoring (no restarts)
+just test-all-android                    # Complete test suite
+```
+
+### **When to Use Each**
+- **Development**: Use `config-restart-android` for rapid 5-second iteration
+- **Debugging**: Use `test-config-android` when you need detailed logs and analysis
+- **Monitoring**: Use `test-monitor-android` to observe ongoing activity
+- **Validation**: Use `test-all-android` for comprehensive pre-commit checks
 
 ## Development Workflow
 0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
@@ -161,16 +193,16 @@ Task: "Refactor debug action execution flow"
 ### Core Commands
 ```bash
 # 🚀 Instant Testing (5-second iteration cycles)
-just config-restart-android 'C++ Error Handling Test'      # Single action
+just config-restart-android 'cpp.firebase.error_handling' # Single action
 just config-restart-android 'cpp.*'                       # All C++ layer tests
 just config-restart-android '*.firebase.set_value'        # All set_value operations
-just config-restart-ios 'Firebase Connection Test'
+just config-restart-ios 'system.network.rtdb_status'
 
 # 🔍 Advanced Testing & Monitoring  
-just test-config-android 'Large Data Performance Test'    # Single action with detailed results
+just test-config-android 'backend.firebase.performance'   # Single action with detailed results
 just test-config-android '*.*.error_handling'             # All error handling tests
-just test-monitor-android '*.firebase.*'                  # Monitor all Firebase operations
-just test-monitor-android 'system.debug.*'                # Monitor system debug actions
+just test-monitor-android 30                              # Pure log monitoring (30 seconds)
+just test-monitor-android 60                              # Extended monitoring (60 seconds)
 ```
 
 ### When to Use Each Method
@@ -189,17 +221,16 @@ All commands automatically:
 ### 💡 Pro Tips for Debugging
 ```bash
 # 1. Isolate problematic actions immediately (saves hours of debugging!)
-just test-config-android 'Failing Action Name'            # Single action
+just test-config-android 'cpp.firebase.error_handling'   # Single action
 just test-config-android 'cpp.*'                         # All C++ actions
 just test-config-android '*.firebase.*'                  # All Firebase actions
 
 # 2. Monitor logs in real-time during development
-just test-monitor-android 'New Feature Action'           # Single action monitoring
-just test-monitor-android '*.*.performance'              # All performance tests
-just test-monitor-android 'backend.*'                    # All backend operations
+just test-monitor-android 30                             # Monitor all activity (30 sec)
+just test-monitor-android 60                             # Extended monitoring (60 sec)
 
 # 3. Quick validation after code changes
-just fastbuild-android && just config-restart-android '*.basic.*'     # All basic operations
+just fastbuild-android && just config-restart-android 'system.*'      # All system operations
 just config-restart-android '*.*.error_handling'         # All error handling
 
 # 4. Set frequently used patterns as default
@@ -214,7 +245,7 @@ just config-set 'system.debug.*'                         # All debug utilities
 just config-restart-android cpp-firebase-comprehensive-test
 
 # ✅ Fast - targets exact problem in 5 seconds  
-just config-restart-android 'C++ Error Handling Test'
+just config-restart-android 'cpp.firebase.error_handling'
 ```
 
 **Why Individual Actions Are Better for Debugging:**
@@ -256,13 +287,13 @@ The project emphasizes rapid iteration with comprehensive validation:
 - Configurable test lists in `project/test-lists/` for flexible test organization
 - Retroactive log analysis enables thorough debugging
 
-### Test List System
-Test configurations are organized into reusable test lists:
+### Test List System (Focused & Streamlined)
+Test configurations are organized into essential test lists:
 - `default-all.json` - Complete test suite (used by `test-all-android`)
-- `firebase-only.json` - Firebase-focused testing
-- `quick-validation.json` - Essential tests for rapid development cycles
-- `performance-focus.json` - Performance and stress testing
-- `minimal-smoke.json` - Basic functionality verification
+- `development-workflow.json` - Daily development cycle testing
+- `pre-commit.json` - Pre-commit validation tests
+- `production-ready.json` - Release readiness validation
+- `wildcard-discovery.json` - Wildcard pattern demonstration
 
 Create custom test lists by adding JSON files to `project/test-lists/` with the format:
 ```json
@@ -432,34 +463,35 @@ The project now includes flexible test suite commands that leverage the full wil
 
 ### **Enhanced Test Suites**
 
-#### **Category-Based Test Suites**
+#### **Essential Test Workflows (Streamlined)**
 ```bash
-# Firebase testing with flexible patterns
-just test-suite-firebase-android                        # Uses firebase-basic (default)
-just test-suite-firebase-android firebase-comprehensive # Advanced Firebase tests
-just test-suite-firebase-android firebase-only          # Complete Firebase coverage
+# Core workflows - focused & maintainable
+just test-smoke-android                                 # Quick smoke test (30 seconds)
+just test-development-android                           # Daily development workflow
+just test-production-android                            # Comprehensive release validation
+just test-all-android                                  # Complete test suite
 
-# Performance testing
-just test-suite-performance-android                     # Uses performance-focus (default)
-just test-suite-performance-android advanced-operations-all # Advanced performance tests
-
-# Error handling testing
-just test-suite-error-android                          # Uses error-testing (default)
-
-# System testing
-just test-suite-system-android                         # Uses system-testing (default)
-just test-suite-system-android layer-testing           # Cross-layer system tests
-
-# Minimal/smoke testing
-just test-suite-minimal-android                        # Uses minimal-smoke (default)
+# Power user - any pattern or custom test list
+just test-suite-android wildcard-discovery             # Custom: demo of wildcard patterns
+just test-suite-android PATTERN                        # Custom: any test list name
 ```
 
-#### **Generic Wildcard Test Suite**
+#### **Instant Wildcard Testing (No Config Files Needed!)**
 ```bash
-# Run any test list or pattern
-just test-suite-android comprehensive-wildcard-demo     # Complex wildcard demo
-just test-suite-android development-workflow           # Development cycle tests
-just test-suite-android quick-validation               # Fast validation tests
+# Layer-specific testing (instant)
+just test-config-android 'cpp.*'                       # All C++ layer tests
+just test-config-android 'backend.*'                   # All Backend layer tests  
+just test-config-android 'rtdb.*'                      # All RTDB layer tests
+just test-config-android 'system.*'                    # All System layer tests
+
+# Cross-layer testing (instant)
+just test-config-android 'firebase.*'                  # All Firebase functionality
+just test-config-android '*.*.performance'             # All performance tests
+just test-config-android '*.*.error_handling'          # All error handling tests
+
+# Domain-specific testing (instant)
+just test-config-android '*.firebase.set_value'        # All set_value operations
+just test-config-android 'system.debug.*'              # All debug utilities
 ```
 
 ### **Test List Discovery Commands**
@@ -482,42 +514,43 @@ just list-test-lists                                   # Complete test list cata
 
 ### **Smart Test Suite Workflows**
 
-#### **Development Cycle Testing**
+#### **Streamlined Development Workflows**
 ```bash
-# Quick validation during development
-just test-suite-minimal-android                        # Fast smoke tests
-just test-suite-android quick-validation               # Essential validations
+# Daily development cycle
+just test-smoke-android                                 # 30-second essential validation
+just test-development-android                           # Full development cycle (core layers)
 
-# Feature-specific testing
-just test-suite-firebase-android firebase-basic        # Core Firebase functionality
-just test-suite-system-android layer-testing           # Cross-layer validation
+# Pre-commit validation  
+just test-config-android '*.basic.*'                   # Basic operations across all layers
+just test-config-android '*.*.error_handling'          # Error handling validation
 
-# Comprehensive testing before commits
-just test-suite-android development-workflow           # Full development cycle
+# Release preparation
+just test-production-android                            # Comprehensive release validation
 just test-all-android                                  # Complete test suite
 ```
 
-#### **Discovery-Driven Testing**
+#### **Power User: Instant Custom Testing**
 ```bash
-# Discover available test categories
-just list-test-lists-matching "*-testing"              # Find all testing categories
+# Create any test combination instantly (no config files!)
+just test-config-android 'firebase.*'                  # All Firebase tests
+just test-config-android '*.*.performance'             # All performance tests  
+just test-config-android 'cpp.* backend.*'             # Multiple patterns (future)
 
-# Run discovered categories
-just test-suite-android error-testing                  # Error handling tests
-just test-suite-android system-testing                 # System functionality tests
-just test-suite-android layer-testing                  # Architectural layer tests
+# Use custom test lists when needed
+just test-suite-android wildcard-discovery             # Wildcard pattern demo
+just test-suite-android CUSTOM_LIST                    # Any custom test list
 ```
 
 ### **Benefits of Enhanced Test Suites**
 
-#### **Flexibility & Customization**
-- ✅ **Default patterns** → Quick access to common test suites
-- ✅ **Custom patterns** → Override with any test list name
-- ✅ **Pattern discovery** → Find test lists by wildcard patterns
-- ✅ **Zero maintenance** → New test lists automatically work
+#### **Streamlined & Focused**
+- ✅ **Essential workflows only** → 3 core commands for 90% of use cases
+- ✅ **Instant wildcard testing** → No config file maintenance needed
+- ✅ **Clear overview** → Only 5 test lists, 8 debug configs total
+- ✅ **Zero maintenance** → Wildcard patterns handle edge cases automatically
 
-#### **Development Workflow Integration**
-- 🚀 **Fast iteration** → `test-suite-minimal-android` for quick validation
-- 🔍 **Focused testing** → `test-suite-firebase-android firebase-basic` for specific areas
-- 🧪 **Comprehensive validation** → `test-suite-android development-workflow` for full cycles
-- 📋 **Easy discovery** → `list-test-lists-matching "firebase-*"` to find related tests
+#### **Maximum Power with Minimum Clutter**
+- 🚀 **30-second smoke test** → `test-smoke-android` for instant validation
+- 🔧 **Development workflow** → `test-development-android` for daily cycle  
+- 🚀 **Production validation** → `test-production-android` for releases
+- ⚡ **Instant custom testing** → `'firebase.*'`, `'*.*.performance'` patterns

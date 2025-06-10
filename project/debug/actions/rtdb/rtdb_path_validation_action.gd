@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Path Validation"
+	action_name = "rtdb.testing.path_validation"
 	group = "Path Operations"
 	description = "Validates accessibility and structure of various RTDB paths."
 
@@ -51,8 +51,9 @@ func execute_rtdb_action() -> bool:
 				"path_name": test_case.name,
 				"validation_test": true
 			}
-			var request_id: int = Time.get_ticks_msec() % 1000000
-			db.set_value_async(request_id, test_case.path, test_data)
+			var result: bool = await execute_simple_operation(
+				"set_value_async", test_case.path, test_data, "Path Setup: " + str(test_case.name)
+			)
 
 	# Wait for setup to complete
 	await Engine.get_main_loop().create_timer(0.3).timeout
@@ -96,14 +97,17 @@ func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:
 	var path: Array[Variant] = test_case.path
 	var path_name: String = test_case.name
 	var should_exist: bool = test_case.should_exist
-	var request_id: int = Time.get_ticks_msec() % 1000000
-	db.get_value_async(request_id, path)
 
-# Simulate async response
+	# Use the working API to test path accessibility
+	var result: bool = await execute_simple_operation(
+		"get_value_async", path, null, "Path Validation: " + path_name
+	)
+
+	# Simulate async response
 	await Engine.get_main_loop().create_timer(0.2).timeout
 
-# Simulate response based on expectation
-	var path_accessible: bool = should_exist  # In real implementation, this would come from the actual response
+	# Check if path is accessible based on operation result
+	var path_accessible: bool = result
 	var validation_success: bool = path_accessible == should_exist
 
 	return {
@@ -111,6 +115,5 @@ func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:
 		"path": path,
 		"expected_to_exist": should_exist,
 		"actually_accessible": path_accessible,
-		"validation_success": validation_success,
-		"request_id": request_id
+		"validation_success": validation_success
 	}

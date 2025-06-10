@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Push Item"
+	action_name = "rtdb.children.push"
 
 
 func execute_rtdb_action() -> bool:

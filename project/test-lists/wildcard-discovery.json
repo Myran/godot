@@ -1,0 +1,12 @@
+{
+  "name": "Wildcard Discovery Demo",
+  "description": "Demonstrates powerful wildcard patterns - use as reference for creating custom tests",
+  "configs": [
+    "cpp-layer-all",
+    "backend-layer-all", 
+    "rtdb-layer-all",
+    "system-layer-all",
+    "performance-all",
+    "error-handling-all"
+  ]
+}

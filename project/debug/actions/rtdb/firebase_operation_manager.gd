@@ -30,7 +30,7 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 	_pending_ops[request_id] = op_data
 
 	# Execute operation
-	var executed: bool = _execute_operation(request_id, operation, args)
+	var executed: bool = await _execute_operation(request_id, operation, args)
 	if not executed:
 		_pending_ops.erase(request_id)
 		return DebugAction.Result.new_failure(
@@ -52,16 +52,54 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 func _execute_operation(request_id: int, operation: String, args: Array) -> bool:
 	match operation:
 		"get_value_async":
-			_db.get_value_async(request_id, args[0])
+			# Convert to current API: get_data(path_array, key)
+			var path: Array = args[0] if args.size() > 0 else []
+			var key: Variant = args[1] if args.size() > 1 else ""
+			var result = await _db.get_data(path, key)
+			# Simulate async completion
+			_simulate_async_completion.call_deferred(request_id, "get", result, "")
 			return true
 		"set_value_async":
-			_db.set_value_async(request_id, args[0], args[1])
+			# Convert to current API: set_data(path_array, key, data)
+			var path: Array = args[0] if args.size() > 0 else []
+			var key: Variant = args[1] if args.size() > 1 else ""
+			var data: Variant = args[2] if args.size() > 2 else null
+			var result = await _db.set_data(path, key, data)
+			# Simulate async completion
+			_simulate_async_completion.call_deferred(request_id, "set", result, "")
 			return true
 		"remove_value_async":
-			_db.remove_value_async(request_id, args[0])
+			# Convert to current API: remove_data(path_array, key)
+			var path: Array = args[0] if args.size() > 0 else []
+			var key: Variant = args[1] if args.size() > 1 else ""
+			var result = await _db.remove_data(path, key)
+			# Simulate async completion
+			_simulate_async_completion.call_deferred(request_id, "remove", result, "")
 			return true
 		_:
 			return false
+
+
+func _simulate_async_completion(
+	request_id: int, operation_type: String, result: Variant, error: String
+) -> void:
+	# Simulate async behavior by completing on next frame
+	await Engine.get_main_loop().process_frame
+
+	if error != null and error != "":
+		# Simulate error completion
+		match operation_type:
+			"get":
+				_on_get_error(request_id, "", "API_ERROR", error)
+			"set", "remove":
+				_on_set_completed(request_id, false, error)
+	else:
+		# Simulate successful completion
+		match operation_type:
+			"get":
+				_on_get_completed(request_id, "", result)
+			"set", "remove":
+				_on_set_completed(request_id, true, "")
 
 
 func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Result:

@@ -8,7 +8,7 @@ var _active_path: Array[Variant] = []
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Child Added Listener"
+	action_name = "rtdb.listeners.child_added"
 	group = "Listeners"
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
@@ -36,12 +36,12 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	_update_status("Setting up child added listener...")
 
-	# Connect to child_added signal
-	if not db.child_added.is_connected(_on_child_added):
-		db.child_added.connect(_on_child_added)
+	# Connect to child_added signal using the wrapper's method
+	if not db.db.is_signal_connected("child_added", _on_child_added):
+		db.db.connect_signal("child_added", _on_child_added)
 
-	# Add listener at path
-	db.add_listener_at_path(_active_path)
+	# Start listening at path
+	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
 	# Add test child to trigger listener
@@ -54,7 +54,9 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	}
 
 	_update_status("Adding test child to trigger listener...")
-	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, child_data)
+	var set_success: bool = await execute_simple_operation(
+		"set_value_async", child_path, child_data, "Add Child for Listener Test"
+	)
 
 	# Wait for callback
 	_update_status("Waiting for listener callback...")

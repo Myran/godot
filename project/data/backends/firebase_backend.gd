@@ -855,7 +855,7 @@ func push_data(p_path: Array[Variant], data_to_push: Variant) -> String:
 		"push_and_update_async", p_path, [data_to_push]
 	)
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").as_String()  # push_id
+		return str(result_dict.get("payload"))  # push_id
 	Log.error(
 		"FB_Backend: push_data (DirectAwait) failed.",
 		{"path": p_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -877,7 +877,7 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 		"remove_value_async", full_path
 	)
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").as_bool()  # true for success
+		return bool(result_dict.get("payload"))  # true for success
 	Log.error(
 		"FB_Backend: remove_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -933,7 +933,7 @@ func set_server_timestamp(p_path: Array[Variant]) -> bool:
 		"set_server_timestamp_async", p_path
 	)
 	if result_dict.get("status") == "ok":
-		return result_dict.get("payload").as_bool()  # C++ signal sends success (bool)
+		return bool(result_dict.get("payload"))  # C++ signal sends success (bool)
 	Log.error(
 		"FB_Backend: set_server_timestamp (DirectAwait) failed.",
 		{"path": p_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -964,7 +964,7 @@ func start_listening(path_array: Array[Variant]) -> void:
 		[Log.TAG_DB, Log.TAG_FIREBASE]
 	)
 	if is_instance_valid(db):
-		db.add_listener_at_path(path_array)
+		db.call_method("add_listener_at_path", [path_array])
 
 
 func stop_listening(path_array: Array[Variant]) -> void:
@@ -988,4 +988,10 @@ func stop_listening(path_array: Array[Variant]) -> void:
 		[Log.TAG_DB, Log.TAG_FIREBASE]
 	)
 	if is_instance_valid(db):
-		db.remove_listener_at_path(path_array)
+		# Note: Using the correct C++ API method name
+		# Check if the C++ module has the method by trying to call it
+		var result = db.call_method("remove_listener_at_path", [path_array])
+		if result == null:
+			Log.warning(
+				"Firebase C++ module doesn't support remove_listener_at_path", {"path": path_array}
+			)

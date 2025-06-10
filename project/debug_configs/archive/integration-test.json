@@ -3,7 +3,7 @@
   "actions": [
     "cpp.firebase.*",
     "backend.firebase.*",
-    "rtdb.database.*",
-    "system.network.*"
+    "rtdb.firebase.*",
+    "system.*.network*"
   ]
 }

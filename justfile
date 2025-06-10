@@ -851,88 +851,15 @@ config-list:
     done
     
     echo "💡 Usage:"
-    echo "  just restart-with-config <name>     # Quick testing (external config)"
-    echo "  just config-set <name>        # Update embedded config"
+    echo "  just config-restart-android <name>  # Quick testing (5 sec) ⚡"
+    echo "  just test-config-android <name>     # Full testing with results"
+    echo "  just config-set <name>              # Set as default config"
 
 # ================================
 # DEBUG TESTING & MONITORING
 # ================================
 
 # Monitor Android debug startup system with current configuration
-test-monitor-android CONFIG_NAME="current":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    # Validate config if not "current"
-    if [ "{{CONFIG_NAME}}" != "current" ]; then
-        just _validate-config-exists "{{CONFIG_NAME}}"
-    fi
-    
-    echo "=== Android Debug Startup Test ==="
-    echo "Device: {{ANDROID_DEVICE_ID}}"
-    echo "Package: {{ANDROID_PACKAGE_NAME}}"
-    echo "Config: {{CONFIG_NAME}}"
-    echo ""
-    
-    # Verify device and app
-    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
-        echo "❌ Device not connected"
-        exit 1
-    fi
-    
-    if ! adb -s {{ANDROID_DEVICE_ID}} shell pm list packages | grep -q "{{ANDROID_PACKAGE_NAME}}"; then
-        echo "❌ App not installed. Run 'just install-android-app' first"
-        exit 1
-    fi
-    
-    # Show current config
-    if [ "{{CONFIG_NAME}}" != "current" ]; then
-        echo "📄 Testing with config: {{CONFIG_NAME}}"
-        cat "project/debug_configs/{{CONFIG_NAME}}.json" | jq .
-    else
-        echo "📄 Current embedded config:"
-        if [ -f "project/debug_startup_actions.json" ]; then
-            cat project/debug_startup_actions.json | jq .
-        else
-            echo "  (no config file found)"
-        fi
-    fi
-    echo ""
-    
-    # Clear old logs and start monitoring
-    echo "🧹 Clearing old logs for fresh monitoring..."
-    adb -s {{ANDROID_DEVICE_ID}} logcat -c
-    echo "📊 Starting log monitoring..."
-    LOG_FILE="android_debug_{{timestamp}}.log"
-    adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot > "$LOG_FILE" &
-    LOGCAT_PID=$!
-    
-    # Restart app
-    echo "🔄 Restarting app..."
-    just restart-android-app
-    
-    # Wait and monitor
-    echo "⏳ Monitoring for 15 seconds..."
-    for i in {1..15}; do
-        echo -n "."
-        sleep 1
-    done
-    echo ""
-    
-    # Stop monitoring and show results
-    kill $LOGCAT_PID 2>/dev/null || true
-    
-    echo "📋 Debug startup execution:"
-    if [ -f "$LOG_FILE" ]; then
-        grep -E "(debug.*startup|Actions retrieved|Executing.*action)" "$LOG_FILE" | tail -10 || echo "  (no debug startup activity found)"
-        echo ""
-        echo "💾 Full log: $LOG_FILE"
-    fi
-    
-    # Clean up temporary config if it was auto-generated and not "current"
-    if [ "{{CONFIG_NAME}}" != "current" ]; then
-        just _cleanup-temp-config "{{CONFIG_NAME}}"
-    fi
 
 test-quick-android CONFIG_NAME:
     #!/usr/bin/env bash
@@ -941,6 +868,56 @@ test-quick-android CONFIG_NAME:
     just config-restart-android "{{CONFIG_NAME}}"
     sleep 2
     just test-monitor-android "{{CONFIG_NAME}}"
+
+# Pure monitoring without any app restarts or config changes
+test-monitor-android DURATION="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "👁️  Pure Log Monitoring (no app restarts or config changes)"
+    echo "Device: {{ANDROID_DEVICE_ID}}"
+    echo "Duration: {{DURATION}} seconds"
+    echo "Package: {{ANDROID_PACKAGE_NAME}}"
+    echo ""
+    
+    # Verify device connection
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Device not connected"
+        exit 1
+    fi
+    
+    # Check if app is running
+    if adb -s {{ANDROID_DEVICE_ID}} shell pidof "{{ANDROID_PACKAGE_NAME}}" >/dev/null 2>&1; then
+        echo "✅ App is running"
+    else
+        echo "⚠️  App is not running - launch it manually if needed"
+    fi
+    echo ""
+    
+    echo "🔍 Filtering for debug actions, test events, and errors..."
+    echo "⏹️  Press Ctrl+C to stop monitoring early"
+    echo ""
+    
+    # Create timestamped log file
+    LOG_FILE="monitor_logs_{{timestamp}}.log"
+    
+    # Start monitoring with comprehensive filtering
+    timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot | \
+    grep -E "(DEBUG_TEST_|debug.*action|Actions retrieved|Executing.*action|ERROR|FAIL|SUCCESS|\\[debug|\\[test)" | \
+    tee "$LOG_FILE" || true
+    
+    echo ""
+    echo "📊 Monitoring completed"
+    echo "💾 Full filtered log saved: $LOG_FILE"
+    
+    # Show summary if any debug activity was captured
+    if [ -s "$LOG_FILE" ]; then
+        echo ""
+        echo "📋 Recent debug activity summary:"
+        tail -5 "$LOG_FILE" | sed 's/^/  /'
+    else
+        echo "ℹ️  No debug activity detected during monitoring period"
+    fi
 
 # Automated test with pass/fail determination and unique test IDs for Android
 # Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
@@ -1045,9 +1022,16 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
     adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot > "$log_file" 2>/dev/null &
     LOGCAT_PID=$!
     
-    # Monitor for completion
-    for i in $(seq 1 $DURATION); do
+    # Monitor for completion with activity-based timeout
+    elapsed_time=0
+    time_since_last_activity=0
+    last_activity_count=0
+    max_idle_time=$DURATION  # Maximum time without activity before timeout
+    
+    while [ $time_since_last_activity -lt $max_idle_time ]; do
         sleep 1
+        elapsed_time=$((elapsed_time + 1))
+        time_since_last_activity=$((time_since_last_activity + 1))
         
         if [ -f "$log_file" ]; then
             # Check for test completion
@@ -1056,14 +1040,23 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
                 break
             fi
             
-            # Count interim results (clean output)
+            # Count interim results and check for new activity
             success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Check for any debug activity (action starts, completions, errors)
+            current_activity_count=$(grep -c "DEBUG_TEST_.*$TEST_ID\|Executing.*action\|completed.*ms\|Starting:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Reset timeout if new activity detected
+            if [ "$current_activity_count" -gt "$last_activity_count" ]; then
+                time_since_last_activity=0
+                last_activity_count=$current_activity_count
+            fi
         fi
         
-        # Progress indicator
-        if [ $((i % 5)) -eq 0 ]; then
-            echo "   Progress: $i/${DURATION}s (✅$success_count ❌$failure_count)"
+        # Progress indicator (show total elapsed time and idle time)
+        if [ $((elapsed_time % 5)) -eq 0 ]; then
+            echo "   Progress: ${elapsed_time}s elapsed, ${time_since_last_activity}s idle (timeout: ${max_idle_time}s) (✅$success_count ❌$failure_count)"
         fi
     done
     
@@ -1132,12 +1125,12 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
                 test_result=1
             fi
         else
-            echo "⏰ Test timed out"
+            echo "⏰ Test timed out (no activity for ${max_idle_time}s)"
             if [ "$failure_count" -gt 0 ]; then
                 echo "❌ OVERALL RESULT: FAIL (timeout + failures)"
                 test_result=1
             else
-                echo "⚠️  OVERALL RESULT: TIMEOUT"
+                echo "⚠️  OVERALL RESULT: TIMEOUT (idle timeout)"
                 test_result=1
             fi
         fi
@@ -1326,6 +1319,8 @@ test-list-android TEST_LIST_NAME="default-all":
             timeout=90  # 90 seconds for comprehensive tests
         elif echo "$config" | grep -q "performance\|stress\|large"; then
             timeout=60  # 60 seconds for performance tests
+        elif echo "$config" | grep -q "layer-all\|integration"; then
+            timeout=75  # 75 seconds for layer tests and integration tests (wildcard-based)
         else
             timeout=45  # 45 seconds for standard tests
         fi
@@ -1412,37 +1407,24 @@ test-list-android TEST_LIST_NAME="default-all":
 
 # 🚀 ENHANCED: Auto-discover and run ALL tests using wildcards
 test-all-android:
-    #!/usr/bin/env bash
-    echo "🚀 Running test-all-android with auto-discovery via wildcards..."
-    echo "💡 Auto-discovering all tests - no manual config maintenance needed!"
-    just config-restart-android auto-all-tests
-
-# Legacy: Run all standard test configurations using original method
-test-all-android-legacy:
+    echo "🚀 Complete Test Suite - Full system validation"
     just test-list-android default-all
 
-# Enhanced test suite commands with wildcard support
-test-suite-firebase-android PATTERN="firebase-basic":
-    echo "🔥 Firebase Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
 
-test-suite-minimal-android PATTERN="minimal-smoke":
-    echo "💨 Minimal Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
+# Essential test suite commands - focused workflows
+test-smoke-android:
+    echo "⚡ Quick Smoke Test - 30 seconds essential validation"
+    just test-config-android smoke-test
 
-test-suite-performance-android PATTERN="performance-focus":
-    echo "⚡ Performance Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
+test-development-android:
+    echo "🔧 Development Workflow - Daily development cycle"
+    just test-list-android development-workflow
 
-test-suite-error-android PATTERN="error-testing":
-    echo "🚨 Error Handling Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
+test-production-android:
+    echo "🚀 Production Ready - Comprehensive release validation"
+    just test-list-android production-ready
 
-test-suite-system-android PATTERN="system-testing":
-    echo "🔧 System Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
-
-# Generic wildcard-enabled test suite runner
+# Power user command - any pattern or test list
 test-suite-android PATTERN:
     echo "🎯 Custom Test Suite - Using: {{PATTERN}}"
     just test-list-android {{PATTERN}}
@@ -2089,22 +2071,81 @@ help-debug:
     echo "  # Individual testing"
     echo "  just test-config-android <config>    # RELIABLE: Restarts app, tests actual config"
     echo "  just test-config-android <config> 30 true # FAST: No restart, tests current state"
-    echo "  just test-monitor-android <config>   # Monitor logs without config changes"
+    echo "  just test-monitor-android [duration] # Pure monitoring only (no restarts)"
     echo "  just test-quick-android <config>     # Push config + restart + quick monitor"
     echo ""
-    echo "  # Test suites with flexible patterns"
-    echo "  just test-suite-firebase-android              # Firebase tests (uses firebase-basic)"
-    echo "  just test-suite-firebase-android firebase-comprehensive # Advanced Firebase tests"
-    echo "  just test-suite-performance-android           # Performance tests"
-    echo "  just test-suite-error-android                 # Error handling tests"
-    echo "  just test-suite-system-android                # System functionality tests"
-    echo "  just test-suite-android development-workflow  # Generic: any test list"
+    echo "  # Essential test workflows (streamlined & focused)"
+    echo "  just test-smoke-android                        # Quick smoke test (30 seconds)"
+    echo "  just test-development-android                  # Daily development workflow"
+    echo "  just test-production-android                   # Comprehensive release validation"
+    echo "  just test-all-android                          # Complete test suite"
     echo ""
-    echo "  # Test list discovery and management"
-    echo "  just list-test-lists                          # List all available test lists"
-    echo "  just list-test-lists-matching 'firebase-*'    # Find test lists by wildcard pattern"
-    echo "  just test-list-android comprehensive-wildcard-demo # Run complex wildcard demo"
-    echo "  just test-all-android                         # Complete test suite"
+    echo "  # Power user: instant wildcard testing"
+    echo "  just test-config-android 'firebase.*'          # All Firebase tests (no config files!)"
+    echo "  just test-config-android '*.*.performance'     # All performance tests (instant!)"
+    echo "  just test-suite-android wildcard-discovery     # Custom: any test list or pattern"
+    echo ""
+    echo "🏗️ WILDCARD PATTERN REFERENCE:"
+    echo "  # ✅ ALL 51 debug actions now use hierarchical naming: layer.domain.operation"
+    echo "  # 🚀 Zero config maintenance - wildcards auto-discover new actions!"
+    echo ""
+    echo "  📱 LAYERS (first part) - Complete coverage:"
+    echo "    cpp.*              # C++ Firebase SDK (8 actions)"
+    echo "    backend.*          # Backend Firebase (7 actions)"
+    echo "    rtdb.*             # RTDB GDScript API (19 actions)"
+    echo "    system.*           # System utilities (5 actions)"
+    echo "    game.*             # Game logic (12 actions)"
+    echo ""
+    echo "  🎯 DOMAINS (middle part):"
+    echo "    *.firebase.*       # Firebase operations (database, auth, analytics)"
+    echo "    *.database.*       # Database operations (set, get, update, remove)"
+    echo "    *.paths.*          # Path operations (nested structures, hierarchies)"
+    echo "    *.children.*       # Children operations (list, push, manage)"
+    echo "    *.listeners.*      # Real-time listeners (single_value, child events)"
+    echo "    *.advanced.*       # Advanced operations (transactions, batching)"
+    echo "    *.testing.*        # Testing utilities (validation, error handling)"
+    echo "    *.debug.*          # Debug utilities (logging, stats, info)"
+    echo "    *.match.*          # Game match functionality (levels, scoring)"
+    echo "    *.network.*        # Network operations (connectivity, sync)"
+    echo "    *.storage.*        # Data storage operations (save, load, cache)"
+    echo ""
+    echo "  ⚙️ OPERATIONS (last part):"
+    echo "    *.*.set_value      # Data writing operations"
+    echo "    *.*.get_value      # Data reading operations"
+    echo "    *.*.error_handling # Error handling and recovery"
+    echo "    *.*.performance    # Performance testing and optimization"
+    echo "    *.*.concurrent_ops # Concurrency and threading tests"
+    echo "    *.*.timeout_behavior # Timeout and reliability tests"
+    echo ""
+    echo "  🔥 POWERFUL COMBINATIONS:"
+    echo "    # Layer-specific testing:"
+    echo "    'cpp.firebase.*'   # All C++ Firebase operations (8 actions)"
+    echo "    'rtdb.database.*'  # All RTDB database operations (4 actions)"
+    echo "    'rtdb.listeners.*' # All RTDB real-time listeners (5 actions)"
+    echo "    'system.debug.*'   # All system debug utilities (2 actions)"
+    echo "    'game.match.*'     # All game match operations (6 actions)"
+    echo ""
+    echo "    # Cross-layer testing:"
+    echo "    '*.*.set_value'    # All write operations across layers"
+    echo "    '*.*.error_handling' # All error handling tests" 
+    echo "    '*.firebase.*'     # All Firebase operations (cpp + backend)"
+    echo "    '*.debug.*'        # All debug utilities (system + game)"
+    echo ""
+    echo "  💡 PRACTICAL EXAMPLES:"
+    echo "    # Single action testing (precise):"
+    echo "    just test-config-android 'system.debug.registry_stats'"
+    echo "    just test-config-android 'game.match.reset_level'"
+    echo "    just test-config-android 'rtdb.listeners.single_value'"
+    echo ""
+    echo "    # Feature-focused testing (grouped):"
+    echo "    just test-config-android 'rtdb.database.*'    # All basic DB ops"
+    echo "    just test-config-android 'game.match.*'       # All match mechanics"
+    echo "    just test-config-android 'system.network.*'   # All network checks"
+    echo ""
+    echo "    # Cross-system validation (powerful):"
+    echo "    just test-config-android '*.*.performance'    # Performance everywhere"
+    echo "    just test-config-android '*.database.*'       # All database layers"
+    echo "    just test-config-android '*.firebase.*'       # Full Firebase stack"
     echo ""
     echo "📊 COMPREHENSIVE LOG ANALYSIS:"
     echo ""

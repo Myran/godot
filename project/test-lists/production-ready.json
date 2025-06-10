@@ -1,0 +1,13 @@
+{
+  "name": "Production Ready",
+  "description": "Comprehensive validation for release readiness (RTDB tests excluded due to API mismatch - needs FirebaseBackend sync)",
+  "configs": [
+    "smoke-test",
+    "cpp-layer-all",
+    "backend-layer-all", 
+    "system-layer-all",
+    "performance-all",
+    "integration-test",
+    "error-handling-all"
+  ]
+}

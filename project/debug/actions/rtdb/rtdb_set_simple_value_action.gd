@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Set Simple Value"
+	action_name = "rtdb.database.set_value"
 
 
 # Override the new pattern instead of the legacy one

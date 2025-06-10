@@ -5,7 +5,7 @@ extends RTDBDebugAction
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Batch Operations"
+	action_name = "rtdb.advanced.batch_ops"
 	group = "Advanced"
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
@@ -103,47 +103,40 @@ func _execute_single_operation(
 	var operation_path_variant: Variant = operation.get("path")
 	var operation_path: Array[Variant] = operation_path_variant
 	var operation_data: Variant = operation.get("data")
-	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
-
 	match operation_type:
 		"set":
-			var result: DebugAction.Result = await op_manager.execute(
-				"set_value_async", [operation_path, operation_data]
+			var success_bool: bool = await execute_simple_operation(
+				"set_value_async", operation_path, operation_data, "Batch Set Operation"
 			)
-			var success_bool: bool = result.is_success()
-			var error_message: String = result.get_error_message() if result.is_failure() else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
 				"path": operation_path,
 				"success": success_bool,
 				"data_sent": operation_data,
-				"error": error_message
+				"error": "" if success_bool else "Set operation failed"
 			}
 
 		"update":
 			# Use set for now as C++ module may not have update_value_async
-			var result: DebugAction.Result = await op_manager.execute(
-				"set_value_async", [operation_path, operation_data]
+			var success_bool: bool = await execute_simple_operation(
+				"set_value_async", operation_path, operation_data, "Batch Update Operation"
 			)
-			var success_bool: bool = result.is_success()
-			var error_message: String = result.get_error_message() if result.is_failure() else ""
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,
 				"path": operation_path,
 				"success": success_bool,
 				"data_updated": operation_data,
-				"error": error_message
+				"error": "" if success_bool else "Update operation failed"
 			}
 
 		"get":
-			var result: DebugAction.Result = await op_manager.execute(
-				"get_value_async", [operation_path]
+			var success_bool: bool = await execute_simple_operation(
+				"get_value_async", operation_path, null, "Batch Get Operation"
 			)
-			var success_bool: bool = result.is_success()
-			var data_received: Variant = result.get_payload() if result.is_success() else null
-			var error_message: String = result.get_error_message() if result.is_failure() else ""
+			var data_received: Variant = null  # execute_simple_operation doesn't return data
+			var error_message: String = "" if success_bool else "Get operation failed"
 			return {
 				"operation_index": operation_index,
 				"type": operation_type,

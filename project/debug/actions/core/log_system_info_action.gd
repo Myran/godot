@@ -4,7 +4,7 @@ extends DebugAction
 
 
 func _init() -> void:
-	action_name = "Log System Information"
+	action_name = "system.diagnostics.log_info"
 	category = "System"
 	group = "Diagnostics"
 	description = "Logs basic system information and environment variables."

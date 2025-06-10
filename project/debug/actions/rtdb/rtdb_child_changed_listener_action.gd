@@ -8,7 +8,7 @@ var _active_path: Array[Variant] = []
 
 func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
-	action_name = "Child Changed Listener"
+	action_name = "rtdb.listeners.child_changed"
 	group = "Listeners"
 	description = "Sets up a listener for when children are changed at a specific RTDB path and verifies it works."
 
@@ -36,12 +36,12 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	_update_status("Setting up child changed listener...")
 
-	# Connect to child_changed signal
-	if not db.child_changed.is_connected(_on_child_changed):
-		db.child_changed.connect(_on_child_changed.bind())
+	# Connect to child_changed signal using the wrapper's method
+	if not db.db.is_signal_connected("child_changed", _on_child_changed):
+		db.db.connect_signal("child_changed", _on_child_changed)
 
-	# Add listener at path
-	db.add_listener_at_path(_active_path)
+	# Start listening at path
+	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
 	# Create test data
@@ -52,7 +52,9 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var initial_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Initial data", "version": 1
 	}
-	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, initial_data)
+	var set_success1: bool = await execute_simple_operation(
+		"set_value_async", child_path, initial_data, "Set Initial Data for Change Test"
+	)
 
 	# Wait briefly then update to trigger change listener
 	await Engine.get_main_loop().create_timer(0.5).timeout
@@ -61,7 +63,9 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var updated_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Updated data", "version": 2
 	}
-	db.set_value_async(RTDBDebugAction.generate_request_id(), child_path, updated_data)
+	var set_success2: bool = await execute_simple_operation(
+		"set_value_async", child_path, updated_data, "Update Data to Trigger Change Listener"
+	)
 
 	# Wait for callback
 	_update_status("Waiting for listener callback...")

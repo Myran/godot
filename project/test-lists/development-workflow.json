@@ -1,9 +1,9 @@
 {
-  "name": "Development Workflow Tests",
-  "description": "Essential tests for daily development cycle",
+  "name": "Development Workflow", 
+  "description": "Daily development cycle - fast iteration with essential validation",
   "configs": [
-    "@quick-validation",
-    "integration-test",
-    "regression-test"
+    "smoke-test",
+    "cpp-layer-all",
+    "backend-layer-all"
   ]
 }

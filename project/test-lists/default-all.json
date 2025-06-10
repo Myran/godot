@@ -1,12 +1,7 @@
 {
-  "name": "Complete Test Suite (Modernized)",
-  "description": "Comprehensive testing using advanced wildcard patterns - zero maintenance auto-discovery",
+  "name": "Complete Test Suite",
+  "description": "Comprehensive testing for full validation - uses production-ready workflow",
   "configs": [
-    "@*-validation",
-    "@firebase-*",
-    "@*-testing",
-    "performance-all",
-    "error-handling-all",
-    "integration-test"
+    "@production-ready"
   ]
 }

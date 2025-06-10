@@ -17,7 +17,7 @@ static func _register_memory_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("Force Low Memory Warning", _force_low_memory)
+			. create("system.memory.force_warning", _force_low_memory)
 			. set_category("System")
 			. set_group("Memory")
 			. set_description("Simulates low memory condition for testing memory management")
@@ -30,7 +30,9 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("Show Registry Stats", func() -> bool: return _show_registry_stats(registry))
+			. create(
+				"system.debug.registry_stats", func() -> bool: return _show_registry_stats(registry)
+			)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Display debug action registry statistics")
@@ -41,7 +43,7 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("Quit Application", func() -> bool: return _quit_application())
+			. create("system.debug.quit_application", func() -> bool: return _quit_application())
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Quit Application")
@@ -58,7 +60,7 @@ static func _register_connectivity_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("RTDB Status", _rtdb_status_check)
+			. create("system.network.rtdb_status", _rtdb_status_check)
 			. set_category("RTDB")
 			. set_group("Utilities")
 			. set_description("Check RTDB availability and connection status")

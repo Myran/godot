@@ -1,0 +1,9 @@
+{
+  "name": "Pre-Commit Validation",
+  "description": "Essential validation before committing code changes",
+  "configs": [
+    "smoke-test",
+    "error-handling-all",
+    "system-layer-all"
+  ]
+}
