@@ -1,0 +1,6 @@
+{
+  "description": "Game Layer Only - Game logic and match functionality",
+  "actions": [
+    "game.*"
+  ]
+}

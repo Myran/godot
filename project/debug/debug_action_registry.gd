@@ -168,3 +168,94 @@ func get_all_actions() -> Array[DebugAction]:
 
 func get_actions() -> Array[DebugAction]:
 	return get_all_actions()
+
+
+# Wildcard pattern matching for action names
+func find_actions_matching(pattern: String) -> Array[String]:
+	"""
+	Find all action names that match the given wildcard pattern.
+	Supports basic glob patterns with * for any characters.
+	
+	Examples:
+	- "cpp.*" -> matches "cpp.firebase.set_value", "cpp.firebase.get_value", etc.
+	- "*.firebase.*" -> matches any action with 'firebase' in the middle
+	- "*.*.error_handling" -> matches error handling actions across all layers
+	- "exact_name" -> exact match (no wildcards)
+	"""
+	var matching_names: Array[String] = []
+
+	# Convert glob pattern to regex
+	var regex_pattern: String = _glob_to_regex(pattern)
+	var regex: RegEx = RegEx.new()
+	var compile_result: Error = regex.compile(regex_pattern)
+
+	if compile_result != OK:
+		Log.warning(
+			"Invalid wildcard pattern",
+			{"pattern": pattern, "regex": regex_pattern, "error": compile_result},
+			["debug", "wildcard"]
+		)
+		return matching_names
+
+	# Test each action name against the pattern
+	for action in _flat_actions:
+		var action_name: String = action.action_name
+		if regex.search(action_name):
+			matching_names.append(action_name)
+
+	# Sort results for consistent ordering
+	matching_names.sort()
+
+	Log.debug(
+		"Wildcard pattern match completed",
+		{"pattern": pattern, "matches_found": matching_names.size(), "matches": matching_names},
+		["debug", "wildcard"]
+	)
+
+	return matching_names
+
+
+func find_action_by_name(action_name: String) -> DebugAction:
+	"""
+	Find a single action by exact name.
+	Returns null if not found.
+	"""
+	for action in _flat_actions:
+		if action.action_name == action_name:
+			return action
+
+	return null
+
+
+func _glob_to_regex(glob_pattern: String) -> String:
+	"""
+	Convert a simple glob pattern to a regex pattern.
+	Currently supports:
+	- * (asterisk) -> matches any characters (including none)
+	- Literal characters are escaped
+	"""
+	var regex_pattern: String = ""
+
+	# Escape special regex characters except *
+	var escaped: String = glob_pattern
+	escaped = escaped.replace("\\", "\\\\")  # Escape backslashes first
+	escaped = escaped.replace(".", "\\.")  # Escape dots
+	escaped = escaped.replace("+", "\\+")  # Escape plus
+	escaped = escaped.replace("?", "\\?")  # Escape question marks
+	escaped = escaped.replace("^", "\\^")  # Escape carets
+	escaped = escaped.replace("$", "\\$")  # Escape dollar signs
+	escaped = escaped.replace("(", "\\(")  # Escape parentheses
+	escaped = escaped.replace(")", "\\)")
+	escaped = escaped.replace("[", "\\[")  # Escape brackets
+	escaped = escaped.replace("]", "\\]")
+	escaped = escaped.replace("{", "\\{")  # Escape braces
+	escaped = escaped.replace("}", "\\}")
+	escaped = escaped.replace("|", "\\|")  # Escape pipes
+
+	# Convert * to regex equivalent (.*)
+	escaped = escaped.replace("*", ".*")
+
+	# Anchor the pattern to match the entire string
+	regex_pattern = "^" + escaped + "$"
+
+	return regex_pattern

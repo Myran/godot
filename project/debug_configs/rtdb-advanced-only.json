@@ -1,0 +1,9 @@
+{
+  "description": "RTDB Advanced Operations Only - Complex GDScript API features",
+  "actions": [
+    "rtdb.advanced.*",
+    "rtdb.*.concurrent_ops",
+    "rtdb.*.timeout_behavior",
+    "rtdb.*.stress_test"
+  ]
+}

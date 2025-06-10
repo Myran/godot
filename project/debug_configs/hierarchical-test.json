@@ -1,0 +1,8 @@
+{
+  "description": "Test new hierarchical action names with wildcards",
+  "actions": [
+    "cpp.firebase.*",
+    "backend.firebase.*",
+    "*.firebase.error_handling"
+  ]
+}

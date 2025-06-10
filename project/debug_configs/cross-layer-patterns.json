@@ -1,0 +1,9 @@
+{
+  "description": "Cross-layer wildcard patterns - Tests same operations across different layers",
+  "actions": [
+    "*.firebase.set_value",
+    "*.firebase.get_value", 
+    "*.*.performance",
+    "*.*.concurrent_ops"
+  ]
+}

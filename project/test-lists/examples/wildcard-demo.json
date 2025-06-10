@@ -1,0 +1,10 @@
+{
+  "name": "Wildcard Patterns Demo",
+  "description": "Demonstrates various wildcard patterns for test list matching",
+  "configs": [
+    "smoke-test",
+    "@*-validation",
+    "@firebase-*",
+    "system-only-test"
+  ]
+}

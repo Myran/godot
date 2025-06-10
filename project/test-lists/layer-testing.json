@@ -1,0 +1,11 @@
+{
+  "name": "Layer Testing Suite",
+  "description": "Tests functionality across all architectural layers",
+  "configs": [
+    "cpp.*",
+    "backend.*", 
+    "rtdb.*",
+    "system.*",
+    "game.*"
+  ]
+}

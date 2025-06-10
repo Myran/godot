@@ -5,7 +5,7 @@ extends CPPFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "C++ Large Data Test"
+	action_name = "cpp.firebase.large_data"
 
 
 func execute_cpp_action() -> bool:

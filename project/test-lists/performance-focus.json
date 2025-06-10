@@ -1,8 +1,8 @@
 {
-  "name": "Performance Testing",
-  "description": "Performance and stress testing suite",
+  "name": "Performance Testing Suite",
+  "description": "Performance and stress testing - auto-discovers all performance operations",
   "configs": [
-    "performance-testing",
-    "cpp-firebase-comprehensive-test"
+    "performance-all",
+    "advanced-operations-all"
   ]
 }

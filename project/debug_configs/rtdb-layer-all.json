@@ -1,0 +1,6 @@
+{
+  "description": "RTDB API layer - All real-time database GDScript API tests",
+  "actions": [
+    "rtdb.*"
+  ]
+}

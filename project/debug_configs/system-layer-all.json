@@ -1,0 +1,6 @@
+{
+  "description": "System layer - All system utilities, memory management, and debug tools",
+  "actions": [
+    "system.*"
+  ]
+}

@@ -102,7 +102,10 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-	report += "[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n" % [FONT_SIZE_XXL, status_icon]
+	report += (
+		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
+		% [FONT_SIZE_XXL, status_icon]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
 	# Enhanced result status with visual indicator
@@ -595,6 +598,7 @@ func _strip_bbcode_tags(text: String) -> String:
 
 # Enhanced helper methods for comprehensive test reporting
 
+
 func _get_device_context_header() -> String:
 	"""Generate device and environment context information"""
 	var platform: String = OS.get_name()
@@ -604,13 +608,28 @@ func _get_device_context_header() -> String:
 	var timestamp: String = Time.get_datetime_string_from_system()
 
 	var context: String = ""
-	context += "[font_size=%s][color=%s]🔬 TEST EXECUTION CONTEXT[/color][/font_size]\n" % [FONT_SIZE_L, UI_COLORS.info]
+	context += (
+		"[font_size=%s][color=%s]🔬 TEST EXECUTION CONTEXT[/color][/font_size]\n"
+		% [FONT_SIZE_L, UI_COLORS.info]
+	)
 	context += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
-	context += "[color=%s]Platform:[/color] [color=%s]%s %s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, platform, version]
+	context += (
+		"[color=%s]Platform:[/color] [color=%s]%s %s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.accent, platform, version]
+	)
 	if model != "Unknown":
-		context += "[color=%s]Device:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, model]
-	context += "[color=%s]Memory:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.number, memory]
-	context += "[color=%s]Timestamp:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.muted, timestamp]
+		context += (
+			"[color=%s]Device:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, model]
+		)
+	context += (
+		"[color=%s]Memory:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.number, memory]
+	)
+	context += (
+		"[color=%s]Timestamp:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.muted, timestamp]
+	)
 
 	return context
 
@@ -630,9 +649,15 @@ func _build_result_status_section(success: bool, payload: Variant) -> String:
 	var status_progress: String = _generate_progress_bar(1.0 if success else 0.0, success)
 
 	var section: String = ""
-	section += "[font_size=%s][color=%s]📊 EXECUTION RESULT[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	section += (
+		"[font_size=%s][color=%s]📊 EXECUTION RESULT[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	section += "[font_size=%s][color=%s]%s %s[/color][/font_size]\n" % [FONT_SIZE_L, status_color, status_icon, status_text]
+	section += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n"
+		% [FONT_SIZE_L, status_color, status_icon, status_text]
+	)
 	section += "%s\n\n" % status_progress
 
 	return section
@@ -641,16 +666,31 @@ func _build_result_status_section(success: bool, payload: Variant) -> String:
 func _build_action_details_section(action: DebugAction) -> String:
 	"""Build comprehensive action details section"""
 	var section: String = ""
-	section += "[font_size=%s][color=%s]🎯 ACTION DETAILS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	section += (
+		"[font_size=%s][color=%s]🎯 ACTION DETAILS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	section += "[color=%s]Name:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
-	section += "[color=%s]Category:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	section += (
+		"[color=%s]Name:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.action_name]
+	)
+	section += (
+		"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
+		% [UI_COLORS.text_secondary, UI_COLORS.accent, action.category]
+	)
 
 	if action.group != "":
-		section += "[color=%s]Group:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		section += (
+			"[color=%s]Group:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, action.group]
+		)
 
 	if action.description != "":
-		section += "[color=%s]Description:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
+		section += (
+			"[color=%s]Description:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.text_primary, action.description]
+		)
 
 	section += "\n"
 	return section
@@ -659,7 +699,10 @@ func _build_action_details_section(action: DebugAction) -> String:
 func _build_performance_metrics_section(payload: Variant) -> String:
 	"""Build performance metrics section with detailed timing analysis"""
 	var section: String = ""
-	section += "[font_size=%s][color=%s]⚡ PERFORMANCE METRICS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	section += (
+		"[font_size=%s][color=%s]⚡ PERFORMANCE METRICS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 
 	# Extract timing information from payload
@@ -671,17 +714,34 @@ func _build_performance_metrics_section(payload: Variant) -> String:
 		var perf_color: String = _get_performance_color(performance_category)
 		var perf_bar: String = _generate_performance_bar(duration)
 
-		section += "[color=%s]Duration:[/color] [color=%s]%d ms[/color] [color=%s](%s)[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.number, duration, perf_color, performance_category]
+		section += (
+			"[color=%s]Duration:[/color] [color=%s]%d ms[/color] [color=%s](%s)[/color]\n"
+			% [
+				UI_COLORS.text_secondary,
+				UI_COLORS.number,
+				duration,
+				perf_color,
+				performance_category
+			]
+		)
 		section += "%s\n" % perf_bar
 
 	# Add operation counts if available
 	if timing_info.has("operation_count"):
-		section += "[color=%s]Operations:[/color] [color=%s]%d[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.number, timing_info["operation_count"]]
+		section += (
+			"[color=%s]Operations:[/color] [color=%s]%d[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.number, timing_info["operation_count"]]
+		)
 
 	# Add throughput if calculable
 	if timing_info.has("duration_ms") and timing_info.has("operation_count"):
-		var throughput: float = float(timing_info["operation_count"]) / (float(timing_info["duration_ms"]) / 1000.0)
-		section += "[color=%s]Throughput:[/color] [color=%s]%.2f ops/sec[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.number, throughput]
+		var throughput: float = (
+			float(timing_info["operation_count"]) / (float(timing_info["duration_ms"]) / 1000.0)
+		)
+		section += (
+			"[color=%s]Throughput:[/color] [color=%s]%.2f ops/sec[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.number, throughput]
+		)
 
 	section += "\n"
 	return section
@@ -690,23 +750,39 @@ func _build_performance_metrics_section(payload: Variant) -> String:
 func _build_test_data_analysis_section(payload: Variant, success: bool) -> String:
 	"""Build comprehensive test data analysis section"""
 	var section: String = ""
-	section += "[font_size=%s][color=%s]📈 TEST DATA ANALYSIS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	section += (
+		"[font_size=%s][color=%s]📈 TEST DATA ANALYSIS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 
 	# Analyze payload for test-specific data
 	var analysis: Dictionary = _analyze_test_payload(payload, success)
 
 	if analysis.has("test_type"):
-		section += "[color=%s]Test Type:[/color] [color=%s]%s[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.accent, analysis["test_type"]]
+		section += (
+			"[color=%s]Test Type:[/color] [color=%s]%s[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.accent, analysis["test_type"]]
+		)
 
 	if analysis.has("data_points"):
-		section += "[color=%s]Data Points:[/color] [color=%s]%d[/color]\n" % [UI_COLORS.text_secondary, UI_COLORS.number, analysis["data_points"]]
+		section += (
+			"[color=%s]Data Points:[/color] [color=%s]%d[/color]\n"
+			% [UI_COLORS.text_secondary, UI_COLORS.number, analysis["data_points"]]
+		)
 
 	if analysis.has("success_rate"):
 		var rate: float = analysis["success_rate"]
-		var rate_color: String = UI_COLORS.success if rate >= 0.8 else (UI_COLORS.warning if rate >= 0.6 else UI_COLORS.danger)
+		var rate_color: String = (
+			UI_COLORS.success
+			if rate >= 0.8
+			else (UI_COLORS.warning if rate >= 0.6 else UI_COLORS.danger)
+		)
 		var rate_bar: String = _generate_progress_bar(rate, rate >= 0.8)
-		section += "[color=%s]Success Rate:[/color] [color=%s]%.1f%%[/color]\n" % [UI_COLORS.text_secondary, rate_color, rate * 100.0]
+		section += (
+			"[color=%s]Success Rate:[/color] [color=%s]%.1f%%[/color]\n"
+			% [UI_COLORS.text_secondary, rate_color, rate * 100.0]
+		)
 		section += "%s\n" % rate_bar
 
 	if analysis.has("key_insights") and analysis["key_insights"].size() > 0:
@@ -728,7 +804,10 @@ func _generate_progress_bar(progress: float, is_success: bool = true) -> String:
 	var filled_part: String = "█".repeat(filled_length)
 	var empty_part: String = "░".repeat(bar_length - filled_length)
 
-	return "[color=%s]%s[/color][color=%s]%s[/color] [color=%s]%.1f%%[/color]" % [bar_color, filled_part, empty_color, empty_part, UI_COLORS.number, progress * 100.0]
+	return (
+		"[color=%s]%s[/color][color=%s]%s[/color] [color=%s]%.1f%%[/color]"
+		% [bar_color, filled_part, empty_color, empty_part, UI_COLORS.number, progress * 100.0]
+	)
 
 
 func _generate_performance_bar(duration_ms: int) -> String:
@@ -740,7 +819,10 @@ func _generate_performance_bar(duration_ms: int) -> String:
 	var bar_length: int = min(20, max(1, duration_ms / 50))  # Scale based on duration
 	var bar: String = "▓".repeat(bar_length)
 
-	return "[color=%s]%s[/color] [color=%s]%s[/color]" % [color, bar, UI_COLORS.text_secondary, category]
+	return (
+		"[color=%s]%s[/color] [color=%s]%s[/color]"
+		% [color, bar, UI_COLORS.text_secondary, category]
+	)
 
 
 func _categorize_performance(duration_ms: int) -> String:
@@ -829,7 +911,9 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 		if dict_payload.has("success_rate"):
 			analysis["success_rate"] = float(dict_payload["success_rate"])
 		elif dict_payload.has("passed_tests") and dict_payload.has("total_tests"):
-			analysis["success_rate"] = float(dict_payload["passed_tests"]) / float(dict_payload["total_tests"])
+			analysis["success_rate"] = (
+				float(dict_payload["passed_tests"]) / float(dict_payload["total_tests"])
+			)
 		else:
 			analysis["success_rate"] = 1.0 if success else 0.0
 
@@ -870,32 +954,49 @@ func _build_action_report_with_execution_log(
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-	report += "[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n" % [FONT_SIZE_XXL, status_icon]
+	report += (
+		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
+		% [FONT_SIZE_XXL, status_icon]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
 	# EXECUTION STEPS SECTION - This is what the user wanted to see!
-	report += "[font_size=%s][color=%s]📋 EXECUTION STEPS[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
+	report += (
+		"[font_size=%s][color=%s]📋 EXECUTION STEPS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 
 	if execution_log.size() > 0:
 		for i in range(execution_log.size()):
 			var entry: Dictionary = execution_log[i]
 			var step_icon: String = "⚠️" if entry.get("is_error", false) else "🔄"
-			var step_color: String = UI_COLORS.danger if entry.get("is_error", false) else UI_COLORS.info
+			var step_color: String = (
+				UI_COLORS.danger if entry.get("is_error", false) else UI_COLORS.info
+			)
 			var timestamp: String = entry.get("timestamp", "")
 			var message: String = entry.get("message", "")
 
 			# Extract just the time from timestamp
 			var time_part: String = timestamp.split("T")[1] if "T" in timestamp else timestamp
 			if " " in time_part:
-				time_part = time_part.split(" ")[1] if time_part.split(" ").size() > 1 else time_part
+				time_part = (
+					time_part.split(" ")[1] if time_part.split(" ").size() > 1 else time_part
+				)
 
-			report += "[color=%s][%02d][/color] [color=%s]%s[/color] [color=%s]%s[/color] [color=%s]%s[/color]\n" % [
-				UI_COLORS.number, i + 1,
-				UI_COLORS.muted, time_part,
-				step_color, step_icon,
-				UI_COLORS.text_primary, message
-			]
+			report += (
+				"[color=%s][%02d][/color] [color=%s]%s[/color] [color=%s]%s[/color] [color=%s]%s[/color]\n"
+				% [
+					UI_COLORS.number,
+					i + 1,
+					UI_COLORS.muted,
+					time_part,
+					step_color,
+					step_icon,
+					UI_COLORS.text_primary,
+					message
+				]
+			)
 	else:
 		report += "[color=%s]No execution steps recorded[/color]\n" % UI_COLORS.muted
 
@@ -962,8 +1063,7 @@ func _build_action_report_with_execution_log(
 			report += error_details + "\n"
 		else:
 			report += (
-				"[color=%s]Action failed with no error details provided[/color]\n"
-				% UI_COLORS.muted
+				"[color=%s]Action failed with no error details provided[/color]\n" % UI_COLORS.muted
 			)
 
 	# Add timestamp at the end

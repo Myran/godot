@@ -5,7 +5,7 @@ extends CPPFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "C++ Timeout Behavior Test"
+	action_name = "cpp.firebase.timeout_behavior"
 
 
 func execute_cpp_action() -> bool:

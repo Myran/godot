@@ -62,7 +62,9 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 	var result_text: String = "Completed successfully" if success else "Failed with error"
 	_add_execution_log_entry(result_text, not success)
 
-	var report: String = _formatter.format_completion_report_with_execution_log(action, success, result, _current_execution_log)
+	var report: String = _formatter.format_completion_report_with_execution_log(
+		action, success, result, _current_execution_log
+	)
 	_log_to_system(action, report, not success)
 
 	# Try to send formatted report to debug menu UI if available

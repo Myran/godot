@@ -116,7 +116,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var error_message = "_execute_action_logic() not implemented in " + get_script().get_path()
 	push_error(error_message)
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
-	
+
 	return DebugAction.Result.new_failure(
 		error_message,
 		"NOT_IMPLEMENTED",

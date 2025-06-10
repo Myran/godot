@@ -66,7 +66,7 @@ var _ui_hidden_by_test: bool = false  # Track if UI was hidden by test mode (not
 @onready var item_list_navigator: ItemList = %DebugItemList
 @onready var run_all_button: Button = %RunAllButton  # Add this button to your scene if not already present
 @onready var text_toggle_button: Button = %TextToggleButton
-@onready var exit_button : Button = %ExitButton
+@onready var exit_button: Button = %ExitButton
 # Navigation State & Constants (similar to original)
 
 
@@ -200,8 +200,6 @@ func _configure_ui_elements() -> void:
 	if is_instance_valid(text_toggle_button):
 		# Style the toggle button
 		text_toggle_button.flat = false
-
-
 
 
 func _on_text_toggle_button_pressed() -> void:
@@ -646,7 +644,11 @@ func _abort_single_action(action: DebugAction) -> void:
 
 func _abort_run_all_execution() -> void:
 	"""Abort Run All execution"""
-	Log.debug("Aborting Run All execution with %d actions" % _run_all_actions.size(), {}, ["debug_ui", "abortion"])
+	Log.debug(
+		"Aborting Run All execution with %d actions" % _run_all_actions.size(),
+		{},
+		["debug_ui", "abortion"]
+	)
 
 	_run_all_abort_requested = true
 
@@ -793,7 +795,11 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 
 	# Check if this completion is for the current action (not aborted)
 	if action != _current_executing_action:
-		Log.debug("Ignoring completion for aborted action: %s" % action.action_name, {}, ["debug_ui", "abortion"])
+		Log.debug(
+			"Ignoring completion for aborted action: %s" % action.action_name,
+			{},
+			["debug_ui", "abortion"]
+		)
 		return
 
 	# Disconnect signals
@@ -912,7 +918,11 @@ func _execute_next_action_in_sequence(
 func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
 	# Check for abort request before processing completion
 	if _run_all_abort_requested:
-		Log.debug("Ignoring completion for aborted Run All action", {}, ["debug_ui", "run_all", "abortion"])
+		Log.debug(
+			"Ignoring completion for aborted Run All action",
+			{},
+			["debug_ui", "run_all", "abortion"]
+		)
 		return
 
 	# Record the result

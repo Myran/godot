@@ -1,0 +1,7 @@
+{
+  "name": "Hierarchical All Tests",
+  "description": "Complete test suite using powerful hierarchical wildcard patterns",
+  "configs": [
+    "comprehensive-hierarchical-all"
+  ]
+}

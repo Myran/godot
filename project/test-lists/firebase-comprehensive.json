@@ -1,0 +1,11 @@
+{
+  "name": "Firebase Comprehensive Testing",
+  "description": "Complete Firebase validation including edge cases and advanced patterns",
+  "configs": [
+    "@firebase-basic",
+    "firebase-all-layers",
+    "error-handling-all",
+    "network-connectivity-test",
+    "performance-all"
+  ]
+}

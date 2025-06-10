@@ -5,7 +5,7 @@ extends CPPFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "C++ Signal Integrity Test"
+	action_name = "cpp.firebase.signal_integrity"
 
 
 func execute_cpp_action() -> bool:

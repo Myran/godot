@@ -203,8 +203,23 @@ func _parse_config_file(path: String) -> Array[String]:
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
 		var actions: Array[String] = []
+		
+		# Expand wildcard patterns in actions
 		for action in raw_actions:
-			actions.append(str(action))
+			var action_str := str(action)
+			if action_str.contains("*"):
+				# This is a wildcard pattern - expand it
+				var expanded_actions := _expand_wildcard_pattern(action_str)
+				actions.append_array(expanded_actions)
+				Log.debug("Expanded wildcard pattern", {
+					"pattern": action_str,
+					"expanded_count": expanded_actions.size(),
+					"expanded_actions": expanded_actions
+				}, ["debug", "startup", "wildcard"])
+			else:
+				# Regular action name
+				actions.append(action_str)
+		
 		Log.debug("Parsed actions from config", {"actions": actions, "count": actions.size()}, ["debug", "startup"])
 		return actions
 
@@ -263,6 +278,31 @@ func _wait_for_data_source_ready() -> void:
 		Log.info("DataSource initialization complete", {}, ["debug", "startup"])
 	else:
 		Log.warning("DataSource doesn't have startup_completed signal, continuing without wait", {}, ["debug", "startup"])
+
+
+func _expand_wildcard_pattern(pattern: String) -> Array[String]:
+	"""
+	Expand a wildcard pattern to matching action names using the registry.
+	Returns empty array if registry is not available or pattern matches nothing.
+	"""
+	var expanded_actions: Array[String] = []
+	
+	# Get registry - it should be available since we wait for it in startDebugCoordinator
+	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
+	if not registry:
+		Log.warning("Registry not available for wildcard expansion", {"pattern": pattern}, ["debug", "startup", "wildcard"])
+		return expanded_actions
+	
+	# Use the registry's wildcard matching
+	expanded_actions = registry.find_actions_matching(pattern)
+	
+	Log.debug("Wildcard pattern expanded", {
+		"pattern": pattern,
+		"match_count": expanded_actions.size(),
+		"matches": expanded_actions
+	}, ["debug", "startup", "wildcard"])
+	
+	return expanded_actions
 
 
 func _cleanup_mobile_config() -> void:

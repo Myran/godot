@@ -1,0 +1,8 @@
+{
+  "description": "Advanced operations across ALL systems - Complex features and edge cases",
+  "actions": [
+    "*.advanced.*",
+    "*.*.concurrent_ops",
+    "*.*.timeout_behavior"
+  ]
+}

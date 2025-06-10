@@ -5,7 +5,7 @@ extends BackendFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Backend Error Handling Test"
+	action_name = "backend.firebase.error_handling"
 
 
 # New DebugAction.Result pattern - this is the future

@@ -1,0 +1,8 @@
+{
+  "description": "Performance testing across ALL systems - Load testing and optimization validation",
+  "actions": [
+    "*.*.performance",
+    "*.*.concurrent_ops", 
+    "*.*.large_data"
+  ]
+}

@@ -5,7 +5,7 @@ extends BackendFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Backend Timer Manager Test"
+	action_name = "backend.firebase.timer_manager"
 
 
 # New DebugAction.Result pattern - this is the future

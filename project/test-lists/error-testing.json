@@ -1,0 +1,9 @@
+{
+  "name": "Error Handling Testing",
+  "description": "Error handling and resilience testing - auto-discovers all error scenarios",
+  "configs": [
+    "*.*.error_handling",
+    "*.*.timeout_behavior",
+    "network-connectivity-test"
+  ]
+}

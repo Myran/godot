@@ -1,0 +1,12 @@
+{
+  "description": "Comprehensive test suite using hierarchical wildcards - covers all functionality",
+  "actions": [
+    "cpp.firebase.*",
+    "backend.firebase.*",
+    "rtdb.basic.*",
+    "rtdb.advanced.*",
+    "system.debug.*",
+    "game.match.*",
+    "game.data.*"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "description": "Pre-Commit Validation - Essential tests before code commits",
+  "actions": [
+    "*.basic.*",
+    "*.*.error_handling",
+    "system.debug.print_info",
+    "game.match.reset_level"
+  ]
+}

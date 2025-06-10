@@ -1,0 +1,11 @@
+{
+  "name": "Examples: Nested and Wildcards",
+  "description": "Comprehensive demonstration of nested lists and wildcard matching",
+  "configs": [
+    "@quick-validation",
+    "@firebase-*",
+    "wildcard-examples",
+    "cross-layer-patterns",
+    "@*-validation"
+  ]
+}

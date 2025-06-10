@@ -1,0 +1,6 @@
+{
+  "description": "System Layer Only - Core system functionality and debug utilities",
+  "actions": [
+    "system.*"
+  ]
+}

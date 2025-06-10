@@ -1,9 +1,8 @@
 {
-  "name": "Firebase Focus",
-  "description": "Firebase-focused testing for database and backend validation",
+  "name": "Firebase Complete Suite",
+  "description": "All Firebase testing with maximum coverage - auto-discovers all Firebase functionality",
   "configs": [
-    "firebase-comprehensive-all-layers",
-    "cpp-firebase-comprehensive-test", 
-    "backend-firebase-comprehensive-test"
+    "@firebase-*",
+    "firebase-all-layers"
   ]
 }

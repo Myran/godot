@@ -5,7 +5,7 @@ extends BackendFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Backend Async Pattern Test"
+	action_name = "backend.firebase.async_pattern"
 
 
 # New DebugAction.Result pattern - this is the future

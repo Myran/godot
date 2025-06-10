@@ -1,0 +1,11 @@
+{
+  "name": "Comprehensive Nested Test Suite",
+  "description": "Demonstrates nested list functionality - combines multiple sub-lists",
+  "configs": [
+    "@quick-validation",
+    "@firebase-basic",
+    "performance-all",
+    "@firebase-advanced",
+    "game-only-test"
+  ]
+}

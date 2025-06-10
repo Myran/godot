@@ -1,8 +1,9 @@
 {
-  "name": "Quick Validation",
-  "description": "Essential tests for rapid validation during development",
+  "name": "Quick Development Validation",
+  "description": "Fast essential tests - demonstrates wildcard action patterns in test lists",
   "configs": [
-    "system-testing",
-    "minimal-testing"
+    "*.basic.*",
+    "smoke-test",
+    "system.debug.*"
   ]
 }

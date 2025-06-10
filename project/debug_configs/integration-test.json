@@ -1,0 +1,9 @@
+{
+  "description": "Integration Test - Cross-layer coordination and data flow",
+  "actions": [
+    "cpp.firebase.*",
+    "backend.firebase.*",
+    "rtdb.firebase.*",
+    "system.*.network*"
+  ]
+}

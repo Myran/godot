@@ -1,11 +1,12 @@
 {
-  "name": "Default All Tests",
-  "description": "Complete test suite covering all major functionality areas",
+  "name": "Complete Test Suite (Modernized)",
+  "description": "Comprehensive testing using advanced wildcard patterns - zero maintenance auto-discovery",
   "configs": [
-    "system-testing",
-    "minimal-testing",
-    "performance-testing",
-    "cpp-firebase-comprehensive-test",
-    "backend-firebase-comprehensive-test"
+    "@*-validation",
+    "@firebase-*",
+    "@*-testing",
+    "performance-all",
+    "error-handling-all",
+    "integration-test"
   ]
 }

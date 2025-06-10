@@ -1,0 +1,9 @@
+{
+  "name": "Development Workflow Tests",
+  "description": "Essential tests for daily development cycle",
+  "configs": [
+    "@quick-validation",
+    "integration-test",
+    "regression-test"
+  ]
+}

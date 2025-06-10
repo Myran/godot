@@ -119,6 +119,18 @@ _validate-config-exists CONFIG:
     echo "🔍 Config file not found: $CONFIG_FILE"
     echo "🔍 Checking if '{{CONFIG}}' is an action name..."
     
+    # Check if it's a wildcard pattern
+    if [[ "{{CONFIG}}" == *'*'* ]]; then
+        echo "🔍 Detected wildcard pattern: {{CONFIG}}"
+        echo "🔧 Creating temporary config for wildcard pattern: {{CONFIG}}"
+        
+        PATTERN_NAME="{{CONFIG}}"
+        echo '{"description":"Temporary config for wildcard pattern: '"$PATTERN_NAME"'","actions":["'"$PATTERN_NAME"'"]}' > "$CONFIG_FILE"
+        echo "✅ Temporary wildcard config created: $CONFIG_FILE"
+        echo "💡 This temporary config will be cleaned up automatically"
+        exit 0
+    fi
+    
     # Look for the action in existing config files to see if it's a valid action name
     if grep -r "\"{{CONFIG}}\"" project/debug_configs/*.json >/dev/null 2>&1; then
         echo "✅ Found '{{CONFIG}}' as an action name"
@@ -1178,12 +1190,19 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
     exit $test_result
 
 
-# Helper function to load test configurations from a test list file
-_load_test_list TEST_LIST_NAME:
+# Helper function to recursively expand test configurations from a test list file
+_expand_test_list TEST_LIST_NAME VISITED_LISTS="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_LIST_FILE="project/test-lists/{{TEST_LIST_NAME}}.json"
+    
+    # Check for circular references
+    if echo "{{VISITED_LISTS}}" | grep -q "{{TEST_LIST_NAME}}"; then
+        echo "❌ Circular reference detected in test list: {{TEST_LIST_NAME}}"
+        echo "Visit chain: {{VISITED_LISTS}} -> {{TEST_LIST_NAME}}"
+        exit 1
+    fi
     
     if [ ! -f "$TEST_LIST_FILE" ]; then
         echo "❌ Test list file not found: $TEST_LIST_FILE"
@@ -1198,7 +1217,58 @@ _load_test_list TEST_LIST_NAME:
         exit 1
     fi
     
-    jq -r '.configs[]' "$TEST_LIST_FILE"
+    # Update visited lists for circular reference detection
+    if [ -z "{{VISITED_LISTS}}" ]; then
+        UPDATED_VISITED="{{TEST_LIST_NAME}}"
+    else
+        UPDATED_VISITED="{{VISITED_LISTS}},{{TEST_LIST_NAME}}"
+    fi
+    
+    # Process each config entry
+    jq -r '.configs[]' "$TEST_LIST_FILE" | while IFS= read -r config; do
+        if [[ "$config" == @* ]]; then
+            # This is a nested list reference - check if it contains wildcards
+            nested_list_pattern="${config#@}"
+            
+            if [[ "$nested_list_pattern" == *'*'* ]]; then
+                # This is a wildcard pattern - expand to matching test lists
+                for list_file in project/test-lists/*.json; do
+                    if [ -f "$list_file" ]; then
+                        list_name=$(basename "$list_file" .json)
+                        # Convert glob pattern to regex and test against list name
+                        regex_pattern=$(echo "$nested_list_pattern" | sed 's/\./\\./g; s/\*/[^.]*/g; s/\?/[^.]/g')
+                        if echo "$list_name" | grep -qE "^${regex_pattern}$"; then
+                            # Avoid recursing into the current list
+                            if [[ "$list_name" != "{{TEST_LIST_NAME}}" ]]; then
+                                just _expand_test_list "$list_name" "$UPDATED_VISITED"
+                            fi
+                        fi
+                    fi
+                done
+            else
+                # This is a direct list reference - recursively expand it
+                just _expand_test_list "$nested_list_pattern" "$UPDATED_VISITED"
+            fi
+        else
+            # This is a regular config or wildcard action pattern
+            if [[ "$config" == *'*'* ]]; then
+                # This is a wildcard action pattern - create temporary config and output it
+                temp_config_name="temp_wildcard_$(echo "$config" | sed 's/[^a-zA-Z0-9]/_/g')"
+                echo "$temp_config_name"
+                
+                # Create temporary config file with the wildcard pattern
+                temp_config_file="project/debug_configs/${temp_config_name}.json"
+                echo '{"description":"Temporary wildcard config for pattern: '"$config"'","actions":["'"$config"'"]}' > "$temp_config_file"
+            else
+                # This is a direct config file name - output it directly
+                echo "$config"
+            fi
+        fi
+    done
+
+# Helper function to load test configurations from a test list file (backward compatibility)
+_load_test_list TEST_LIST_NAME:
+    just _expand_test_list {{TEST_LIST_NAME}}
 
 # Run test configurations from a specified test list on Android
 test-list-android TEST_LIST_NAME="default-all":
@@ -1227,11 +1297,11 @@ test-list-android TEST_LIST_NAME="default-all":
     echo "📝 $TEST_DESC"
     echo ""
     
-    # Load configs into bash array (portable approach)
+    # Load configs into bash array using expanded list functionality (supports @listname)
     configs=()
     while IFS= read -r config; do
         configs+=("$config")
-    done < <(jq -r '.configs[]' "$TEST_LIST_FILE")
+    done < <(just _expand_test_list {{TEST_LIST_NAME}})
     
     if [ ${#configs[@]} -eq 0 ]; then
         echo "❌ No test configurations found in $TEST_LIST_FILE"
@@ -1340,16 +1410,43 @@ test-list-android TEST_LIST_NAME="default-all":
         exit 1
     fi
 
-# Run all standard test configurations on Android (uses default-all test list)
+# 🚀 ENHANCED: Auto-discover and run ALL tests using wildcards
 test-all-android:
+    #!/usr/bin/env bash
+    echo "🚀 Running test-all-android with auto-discovery via wildcards..."
+    echo "💡 Auto-discovering all tests - no manual config maintenance needed!"
+    just config-restart-android auto-all-tests
+
+# Legacy: Run all standard test configurations using original method
+test-all-android-legacy:
     just test-list-android default-all
 
-# Convenient shortcuts for common test lists
-test-suite-firebase-android:
-    just test-list-android firebase-only
+# Enhanced test suite commands with wildcard support
+test-suite-firebase-android PATTERN="firebase-basic":
+    echo "🔥 Firebase Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
 
-test-suite-minimal-android:
-    just test-list-android minimal-smoke
+test-suite-minimal-android PATTERN="minimal-smoke":
+    echo "💨 Minimal Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
+
+test-suite-performance-android PATTERN="performance-focus":
+    echo "⚡ Performance Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
+
+test-suite-error-android PATTERN="error-testing":
+    echo "🚨 Error Handling Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
+
+test-suite-system-android PATTERN="system-testing":
+    echo "🔧 System Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
+
+# Generic wildcard-enabled test suite runner
+test-suite-android PATTERN:
+    echo "🎯 Custom Test Suite - Using: {{PATTERN}}"
+    just test-list-android {{PATTERN}}
+
 
 # List available test lists
 list-test-lists:
@@ -1382,6 +1479,55 @@ list-test-lists:
             echo "   Usage: just test-list-android $filename"
         fi
     done
+
+# List test lists matching a wildcard pattern
+list-test-lists-matching PATTERN:
+    #!/usr/bin/env bash
+    echo "📋 Test lists matching pattern: {{PATTERN}}"
+    echo "======================================"
+    
+    if [ ! -d "project/test-lists" ]; then
+        echo "❌ No test-lists directory found"
+        exit 1
+    fi
+    
+    # Convert glob pattern to regex
+    regex_pattern=$(echo "{{PATTERN}}" | sed 's/\./\\./g; s/\*/[^.]*/g; s/\?/[^.]/g')
+    found_any=false
+    
+    for file in project/test-lists/*.json; do
+        if [ -f "$file" ]; then
+            filename=$(basename "$file" .json)
+            if echo "$filename" | grep -qE "^${regex_pattern}$"; then
+                if [ "$found_any" = false ]; then
+                    echo ""
+                    found_any=true
+                fi
+                
+                name=$(jq -r '.name' "$file" 2>/dev/null || echo "N/A")
+                description=$(jq -r '.description' "$file" 2>/dev/null || echo "N/A")
+                config_count=$(jq -r '.configs | length' "$file" 2>/dev/null || echo "N/A")
+                
+                echo "🏷️  $filename"
+                echo "   Name: $name"
+                echo "   Description: $description"
+                echo "   Configs: $config_count"
+                echo "   Usage: just test-list-android $filename"
+                echo ""
+            fi
+        fi
+    done
+    
+    if [ "$found_any" = false ]; then
+        echo ""
+        echo "❌ No test lists found matching pattern: {{PATTERN}}"
+        echo "💡 Available patterns you can try:"
+        echo "   firebase-*    # All Firebase test lists"
+        echo "   *-validation  # All validation test lists"
+        echo "   system-*      # All system test lists"
+        echo ""
+        echo "💡 Use 'just list-test-lists' to see all available lists"
+    fi
 
 # ================================
 # LOG FILTERING AND ANALYSIS HELPERS
@@ -1927,17 +2073,38 @@ help-debug:
     echo "  just config-push-android gameplay-testing # Push config to device (quick)"
     echo "  just config-clear-android            # Clear external config, use embedded"
     echo ""
-    echo "💡 ACTION NAME SHORTCUTS (No JSON files needed!):"
+    echo "💡 ACTION & WILDCARD SHORTCUTS (No JSON files needed!):"
+    echo "  # Single actions"
     echo "  just config-restart-android 'Show Registry Stats'    # Use any action directly"
     echo "  just test-quick-android 'Backend Performance Test'   # Test single action"
-    echo "  just test-config-android 'C++ Set Value Test'        # Automated test"
     echo "  just config-set 'Print Debug Info'                   # Set single action config"
     echo ""
+    echo "  # Wildcard patterns (auto-discover matching actions)"
+    echo "  just config-restart-android 'cpp.*'                  # All C++ layer tests"
+    echo "  just test-config-android '*.firebase.set_value'      # All set_value operations"
+    echo "  just test-monitor-android '*.*.error_handling'       # All error handling tests"
+    echo "  just config-restart-android 'system.debug.*'         # All system debug actions"
+    echo ""
     echo "🧪 TESTING BEHAVIOR:"
+    echo "  # Individual testing"
     echo "  just test-config-android <config>    # RELIABLE: Restarts app, tests actual config"
     echo "  just test-config-android <config> 30 true # FAST: No restart, tests current state"
     echo "  just test-monitor-android <config>   # Monitor logs without config changes"
     echo "  just test-quick-android <config>     # Push config + restart + quick monitor"
+    echo ""
+    echo "  # Test suites with flexible patterns"
+    echo "  just test-suite-firebase-android              # Firebase tests (uses firebase-basic)"
+    echo "  just test-suite-firebase-android firebase-comprehensive # Advanced Firebase tests"
+    echo "  just test-suite-performance-android           # Performance tests"
+    echo "  just test-suite-error-android                 # Error handling tests"
+    echo "  just test-suite-system-android                # System functionality tests"
+    echo "  just test-suite-android development-workflow  # Generic: any test list"
+    echo ""
+    echo "  # Test list discovery and management"
+    echo "  just list-test-lists                          # List all available test lists"
+    echo "  just list-test-lists-matching 'firebase-*'    # Find test lists by wildcard pattern"
+    echo "  just test-list-android comprehensive-wildcard-demo # Run complex wildcard demo"
+    echo "  just test-all-android                         # Complete test suite"
     echo ""
     echo "📊 COMPREHENSIVE LOG ANALYSIS:"
     echo ""
@@ -2348,7 +2515,7 @@ help-timing:
     echo "🔧 MEDIUM BUILDS (2-5 minutes):"
     echo "  just quick-build-android         # 2-3 min - APK + AAB export"
     echo "  just quick-build-ios             # 2-3 min - iOS project export"
-    echo "  just test-all-android            # 3-5 min - Full test suite"
+    echo "  just test-all-android            # 3-5 min - ENHANCED hierarchical test suite"
     echo ""
     echo "🏗️  FULL BUILDS (15+ minutes):"
     echo "  just build-all-android           # 20 min - Complete Android build"

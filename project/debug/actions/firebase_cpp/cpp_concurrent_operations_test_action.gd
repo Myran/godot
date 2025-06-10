@@ -4,7 +4,7 @@ extends CPPFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "C++ Concurrent Operations Test"
+	action_name = "cpp.firebase.concurrent_ops"
 
 # New DebugAction.Result pattern - this is the future
 func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:

@@ -1,0 +1,11 @@
+{
+  "description": "Comprehensive wildcard examples - Demonstrates all wildcard patterns and syntax",
+  "actions": [
+    "cpp.firebase.set_value",
+    "*.firebase.get_value",
+    "backend.*",
+    "*.*.error_handling",
+    "system.debug.*",
+    "game.match.reset_level"
+  ]
+}

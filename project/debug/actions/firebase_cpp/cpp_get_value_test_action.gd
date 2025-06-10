@@ -5,7 +5,7 @@ extends CPPFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "C++ Get Value Test"
+	action_name = "cpp.firebase.get_value"
 
 
 # New DebugAction.Result pattern - this is the future

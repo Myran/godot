@@ -5,7 +5,7 @@ extends BackendFirebaseDebugAction
 
 func _init() -> void:
 	super._init()
-	action_name = "Backend Performance Test"
+	action_name = "backend.firebase.performance"
 
 
 # New DebugAction.Result pattern - this is the future
@@ -27,7 +27,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var test_base_path: Array[String] = ["backend_tests", "performance"]
 	var test_timestamp: String = str(Time.get_ticks_msec())
 
-	# Performance Test 1: Single operation timing  
+	# Performance Test 1: Single operation timing
 	var single_path: Array = test_base_path + ["single", test_timestamp]
 	var single_key: String = "perf_single_" + test_timestamp
 	var single_value: String = "Performance test single operation"

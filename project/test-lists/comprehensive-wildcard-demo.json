@@ -1,0 +1,12 @@
+{
+  "name": "Comprehensive Wildcard Demo",
+  "description": "Demonstrates ALL wildcard capabilities: action patterns, nested lists, and wildcard list references",
+  "configs": [
+    "cpp.*",
+    "@firebase-*",
+    "*.*.error_handling",
+    "@quick-validation",
+    "smoke-test",
+    "*.firebase.set_value"
+  ]
+}

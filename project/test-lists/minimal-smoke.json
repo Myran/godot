@@ -1,7 +1,8 @@
 {
-  "name": "Minimal Smoke Test",
-  "description": "Minimal smoke test for basic functionality verification", 
+  "name": "Smoke Testing Suite",
+  "description": "Fast basic functionality verification - essential operations only",
   "configs": [
-    "minimal-testing"
+    "smoke-test",
+    "basic-operations-all"
   ]
 }

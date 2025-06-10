@@ -1,0 +1,10 @@
+{
+  "description": "Auto-discover ALL tests using wildcards - no manual maintenance needed",
+  "actions": [
+    "cpp.*",
+    "backend.*",
+    "rtdb.*",
+    "system.*",
+    "game.*"
+  ]
+}

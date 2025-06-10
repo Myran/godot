@@ -1,0 +1,8 @@
+{
+  "name": "System Testing Suite",
+  "description": "System-level functionality and utilities - auto-discovers all system operations",
+  "configs": [
+    "system-layer-all",
+    "game-layer-all"
+  ]
+}

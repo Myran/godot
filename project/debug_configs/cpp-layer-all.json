@@ -1,0 +1,6 @@
+{
+  "description": "C++ Firebase SDK layer - All engine-level integration tests",
+  "actions": [
+    "cpp.*"
+  ]
+}

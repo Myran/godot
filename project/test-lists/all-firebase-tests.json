@@ -1,0 +1,8 @@
+{
+  "name": "All Firebase Tests (Wildcard)",
+  "description": "Automatically includes all firebase-* test lists using wildcards",
+  "configs": [
+    "@firebase-*",
+    "performance-all"
+  ]
+}

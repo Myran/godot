@@ -161,12 +161,16 @@ Task: "Refactor debug action execution flow"
 ### Core Commands
 ```bash
 # 🚀 Instant Testing (5-second iteration cycles)
-just config-restart-android 'C++ Error Handling Test'
+just config-restart-android 'C++ Error Handling Test'      # Single action
+just config-restart-android 'cpp.*'                       # All C++ layer tests
+just config-restart-android '*.firebase.set_value'        # All set_value operations
 just config-restart-ios 'Firebase Connection Test'
 
 # 🔍 Advanced Testing & Monitoring  
-just test-config-android 'Large Data Performance Test'    # Full automated test with detailed results
-just test-monitor-android 'Concurrent Operations Test'    # Real-time log monitoring with filtering
+just test-config-android 'Large Data Performance Test'    # Single action with detailed results
+just test-config-android '*.*.error_handling'             # All error handling tests
+just test-monitor-android '*.firebase.*'                  # Monitor all Firebase operations
+just test-monitor-android 'system.debug.*'                # Monitor system debug actions
 ```
 
 ### When to Use Each Method
@@ -185,16 +189,22 @@ All commands automatically:
 ### 💡 Pro Tips for Debugging
 ```bash
 # 1. Isolate problematic actions immediately (saves hours of debugging!)
-just test-config-android 'Failing Action Name'
+just test-config-android 'Failing Action Name'            # Single action
+just test-config-android 'cpp.*'                         # All C++ actions
+just test-config-android '*.firebase.*'                  # All Firebase actions
 
 # 2. Monitor logs in real-time during development
-just test-monitor-android 'New Feature Action'
+just test-monitor-android 'New Feature Action'           # Single action monitoring
+just test-monitor-android '*.*.performance'              # All performance tests
+just test-monitor-android 'backend.*'                    # All backend operations
 
 # 3. Quick validation after code changes
-just fastbuild-android && just config-restart-android 'Test Action'
+just fastbuild-android && just config-restart-android '*.basic.*'     # All basic operations
+just config-restart-android '*.*.error_handling'         # All error handling
 
-# 4. Set frequently used action as default
-just config-set 'Daily Development Action'
+# 4. Set frequently used patterns as default
+just config-set '*.firebase.set_value'                   # All set_value operations
+just config-set 'system.debug.*'                         # All debug utilities
 ```
 
 ### ⚠️ Common Debugging Mistake: Don't Use Full Test Suites for Single Issues
@@ -262,3 +272,252 @@ Create custom test lists by adding JSON files to `project/test-lists/` with the 
   "configs": ["config1", "config2", "config3"]
 }
 ```
+
+## 🎯 Advanced Wildcard System
+
+The debug system features a comprehensive wildcard pattern matching system for both debug actions and test lists, enabling zero-maintenance auto-discovery and powerful pattern-based testing.
+
+### 🔥 Debug Action Wildcards
+
+#### Hierarchical Action Naming
+All debug actions follow the `layer.domain.operation` format:
+- **Layers**: `cpp`, `backend`, `rtdb`, `system`, `game`
+- **Domains**: `firebase`, `debug`, `match`, etc.
+- **Operations**: `set_value`, `get_value`, `error_handling`, `performance`, etc.
+
+#### Wildcard Patterns
+```bash
+# Layer-specific wildcards
+"cpp.*"                    # All C++ Firebase SDK tests
+"backend.*"                # All Backend Firebase tests  
+"rtdb.*"                   # All RTDB GDScript API tests
+"system.*"                 # All system utility tests
+"game.*"                   # All game logic tests
+
+# Domain-specific wildcards  
+"*.firebase.*"             # All Firebase tests across all layers
+"*.debug.*"                # All debug utilities across all layers
+"*.match.*"                # All match functionality tests
+
+# Operation-specific wildcards
+"*.*.set_value"            # All set_value operations across all layers
+"*.*.get_value"            # All get_value operations across all layers
+"*.*.error_handling"       # All error handling tests across all layers
+"*.*.performance"          # All performance tests across all layers
+
+# Cross-layer combinations
+"*.firebase.set_value"     # Set value operations across Firebase layers
+"cpp.firebase.*"           # All C++ Firebase operations
+"backend.*.performance"    # All Backend performance tests
+```
+
+#### Example Config Files
+```json
+{
+  "description": "Cross-layer Firebase testing",
+  "actions": [
+    "*.firebase.set_value",
+    "*.firebase.get_value", 
+    "*.*.error_handling"
+  ]
+}
+```
+
+### 📋 Test List Wildcards and Nesting
+
+#### Nested Test Lists (@listname syntax)
+Test lists can include other test lists using `@listname` syntax:
+```json
+{
+  "name": "Comprehensive Testing",
+  "description": "Combines multiple test suites",
+  "configs": [
+    "@quick-validation",      // Include entire quick-validation test list
+    "@firebase-basic",        // Include entire firebase-basic test list
+    "performance-all",        // Include specific config
+    "@firebase-advanced"      // Include entire firebase-advanced test list
+  ]
+}
+```
+
+#### Wildcard Test List Matching
+Reference multiple test lists using wildcard patterns:
+```json
+{
+  "name": "All Firebase Tests",
+  "description": "Auto-discovers all firebase-* test lists",
+  "configs": [
+    "@firebase-*",            // All test lists starting with 'firebase-'
+    "@*-validation",          // All test lists ending with '-validation'
+    "smoke-test"              // Plus specific configs
+  ]
+}
+```
+
+#### Advanced Examples
+```json
+{
+  "name": "Smart Auto-Discovery",
+  "description": "Combines nested lists and wildcards",
+  "configs": [
+    "@quick-*",               // All quick-* test lists
+    "@*-firebase-*",          // All *-firebase-* test lists  
+    "@development-*",         // All development-* test lists
+    "integration-test"        // Plus specific tests
+  ]
+}
+```
+
+### 🚀 Practical Usage Examples
+
+#### Development Workflow
+```bash
+# Quick iteration with wildcards
+just config-restart-android '*.firebase.set_value'    # Test all set_value operations
+just config-restart-android 'cpp.*'                   # Test entire C++ layer
+just config-restart-android '*.*.error_handling'      # Test all error handling
+
+# Smart test list usage
+just test-list-android development-workflow            # Uses nested @quick-validation
+just test-list-android all-firebase-tests             # Uses @firebase-* wildcards
+```
+
+#### Config Creation Strategy
+```bash
+# Layer-based configs - zero maintenance
+"cpp.*", "backend.*", "rtdb.*", "system.*", "game.*"
+
+# Domain-based configs - auto-discover new functionality  
+"*.firebase.*", "*.debug.*", "*.match.*"
+
+# Operation-based configs - cross-layer validation
+"*.*.set_value", "*.*.get_value", "*.*.performance"
+```
+
+### 🛡️ Safety Features
+
+#### Circular Reference Detection
+The system automatically detects and prevents circular references in nested test lists:
+```
+❌ Circular reference detected in test list: list-a
+Visit chain: list-a,list-b -> list-a
+```
+
+#### Self-Reference Prevention
+Test lists cannot reference themselves through wildcard patterns, preventing infinite recursion.
+
+### 📊 Benefits
+
+#### Zero-Maintenance Auto-Discovery
+- ✅ **Add new tests** → Automatically included via wildcards
+- ✅ **Rename tests** → Pattern matching continues to work
+- ✅ **Organize tests** → Hierarchical naming enables powerful filtering
+- ✅ **Scale testing** → No manual config file updates needed
+
+#### Powerful Pattern Matching
+- 🎯 **Cross-layer testing** → `*.firebase.*` tests all Firebase layers
+- 🔍 **Functionality focus** → `*.*.error_handling` tests all error handling
+- ⚡ **Layer isolation** → `cpp.*` tests only C++ layer
+- 🧪 **Operation validation** → `*.*.set_value` tests all set operations
+
+#### Smart Test Organization
+- 📋 **Nested composition** → Build complex suites from simple components
+- 🔄 **Reusable sublists** → Create once, use everywhere
+- 🎯 **Wildcard discovery** → Auto-include related test lists
+- 🏗️ **Hierarchical structure** → Organize by complexity and scope
+
+## 🎯 Enhanced Test Suite Commands
+
+The project now includes flexible test suite commands that leverage the full wildcard system capabilities.
+
+### **Enhanced Test Suites**
+
+#### **Category-Based Test Suites**
+```bash
+# Firebase testing with flexible patterns
+just test-suite-firebase-android                        # Uses firebase-basic (default)
+just test-suite-firebase-android firebase-comprehensive # Advanced Firebase tests
+just test-suite-firebase-android firebase-only          # Complete Firebase coverage
+
+# Performance testing
+just test-suite-performance-android                     # Uses performance-focus (default)
+just test-suite-performance-android advanced-operations-all # Advanced performance tests
+
+# Error handling testing
+just test-suite-error-android                          # Uses error-testing (default)
+
+# System testing
+just test-suite-system-android                         # Uses system-testing (default)
+just test-suite-system-android layer-testing           # Cross-layer system tests
+
+# Minimal/smoke testing
+just test-suite-minimal-android                        # Uses minimal-smoke (default)
+```
+
+#### **Generic Wildcard Test Suite**
+```bash
+# Run any test list or pattern
+just test-suite-android comprehensive-wildcard-demo     # Complex wildcard demo
+just test-suite-android development-workflow           # Development cycle tests
+just test-suite-android quick-validation               # Fast validation tests
+```
+
+### **Test List Discovery Commands**
+
+#### **Pattern-Based List Discovery**
+```bash
+# Find test lists by wildcard patterns
+just list-test-lists-matching "firebase-*"             # All Firebase test lists
+just list-test-lists-matching "*-testing"              # All testing suites
+just list-test-lists-matching "*-validation"           # All validation suites
+just list-test-lists-matching "system-*"               # All system-related lists
+just list-test-lists-matching "*-focus"                # All focused test suites
+```
+
+#### **Complete List Discovery**
+```bash
+# List all available test lists
+just list-test-lists                                   # Complete test list catalog
+```
+
+### **Smart Test Suite Workflows**
+
+#### **Development Cycle Testing**
+```bash
+# Quick validation during development
+just test-suite-minimal-android                        # Fast smoke tests
+just test-suite-android quick-validation               # Essential validations
+
+# Feature-specific testing
+just test-suite-firebase-android firebase-basic        # Core Firebase functionality
+just test-suite-system-android layer-testing           # Cross-layer validation
+
+# Comprehensive testing before commits
+just test-suite-android development-workflow           # Full development cycle
+just test-all-android                                  # Complete test suite
+```
+
+#### **Discovery-Driven Testing**
+```bash
+# Discover available test categories
+just list-test-lists-matching "*-testing"              # Find all testing categories
+
+# Run discovered categories
+just test-suite-android error-testing                  # Error handling tests
+just test-suite-android system-testing                 # System functionality tests
+just test-suite-android layer-testing                  # Architectural layer tests
+```
+
+### **Benefits of Enhanced Test Suites**
+
+#### **Flexibility & Customization**
+- ✅ **Default patterns** → Quick access to common test suites
+- ✅ **Custom patterns** → Override with any test list name
+- ✅ **Pattern discovery** → Find test lists by wildcard patterns
+- ✅ **Zero maintenance** → New test lists automatically work
+
+#### **Development Workflow Integration**
+- 🚀 **Fast iteration** → `test-suite-minimal-android` for quick validation
+- 🔍 **Focused testing** → `test-suite-firebase-android firebase-basic` for specific areas
+- 🧪 **Comprehensive validation** → `test-suite-android development-workflow` for full cycles
+- 📋 **Easy discovery** → `list-test-lists-matching "firebase-*"` to find related tests
