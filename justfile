@@ -861,7 +861,7 @@ config-list:
 
 # Monitor Android debug startup system with current configuration
 
-test-quick-android CONFIG_NAME:
+_test-quick-android CONFIG_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🚀 Quick test with config: {{CONFIG_NAME}}"
@@ -921,7 +921,7 @@ test-monitor-android DURATION="30":
 
 # Automated test with pass/fail determination and unique test IDs for Android
 # Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
-test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
+_test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1183,7 +1183,7 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
     exit $test_result
 
 # Enhanced test config with detailed error analysis and action-level reporting
-test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
+_test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1577,7 +1577,7 @@ _load_test_list TEST_LIST_NAME:
     just _expand_test_list {{TEST_LIST_NAME}}
 
 # Run test configurations from a specified test list on Android
-test-list-android TEST_LIST_NAME="default-all":
+_test-list-android TEST_LIST_NAME="default-all":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1639,7 +1639,7 @@ test-list-android TEST_LIST_NAME="default-all":
         fi
         
         # Capture the test output to extract test ID and action results
-        test_output=$(just test-config-android "$config" "$timeout" 2>&1)
+        test_output=$(just _test-config-android "$config" "$timeout" 2>&1)
         test_exit_code=$?
         
         if [ $test_exit_code -eq 0 ]; then
@@ -1719,28 +1719,101 @@ test-list-android TEST_LIST_NAME="default-all":
     fi
 
 # 🚀 ENHANCED: Auto-discover and run ALL tests using wildcards
+# Unified testing command with auto-detection of target type
+test-android TARGET DURATION="30" NO_RESTART="false":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TARGET="{{TARGET}}"
+    
+    # Auto-detect target type and route to appropriate implementation
+    if [[ "$TARGET" == *"*"* ]]; then
+        # Wildcard pattern detected - use config testing with temporary config
+        echo "🎯 Wildcard pattern detected: $TARGET"
+        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+    elif [ -f "project/debug_configs/$TARGET.json" ]; then
+        # Config file exists - use config testing
+        echo "📋 Config file detected: $TARGET"
+        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+    elif [ -f "project/test-lists/$TARGET.json" ]; then
+        # Test list exists - use list testing
+        echo "📝 Test list detected: $TARGET"
+        just _test-list-android "$TARGET"
+    else
+        echo "❌ Target not found: $TARGET"
+        echo "💡 Checking available options..."
+        echo ""
+        echo "📋 Available config files:"
+        ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+        echo ""
+        echo "📝 Available test lists:"  
+        ls project/test-lists/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+        echo ""
+        echo "🎯 Example wildcard patterns:"
+        echo "  backend.*             # All backend tests"
+        echo "  *.*.error_handling    # All error handling tests"
+        exit 1
+    fi
+
+# Enhanced unified testing command with auto-detection
+test-android-enhanced TARGET DURATION="30" NO_RESTART="false":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TARGET="{{TARGET}}"
+    
+    # Auto-detect target type and route to appropriate enhanced implementation
+    if [[ "$TARGET" == *"*"* ]]; then
+        # Wildcard pattern detected - use enhanced config testing
+        echo "🎯 Enhanced wildcard pattern testing: $TARGET"
+        just _test-config-android-enhanced "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+    elif [ -f "project/debug_configs/$TARGET.json" ]; then
+        # Config file exists - use enhanced config testing
+        echo "📋 Enhanced config testing: $TARGET"
+        just _test-config-android-enhanced "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+    elif [ -f "project/test-lists/$TARGET.json" ]; then
+        # Test list exists - enhanced testing not directly supported for lists
+        echo "📝 Test list detected: $TARGET"
+        echo "💡 Note: Enhanced analysis runs on individual configs within the list"
+        just _test-list-android "$TARGET"
+    else
+        echo "❌ Target not found: $TARGET"
+        echo "💡 Checking available options..."
+        echo ""
+        echo "📋 Available config files:"
+        ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+        echo ""
+        echo "📝 Available test lists:"  
+        ls project/test-lists/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+        echo ""
+        echo "🎯 Example wildcard patterns:"
+        echo "  backend.*             # All backend tests"
+        echo "  *.*.error_handling    # All error handling tests"
+        exit 1
+    fi
+
 test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
-    just test-list-android default-all
+    just _test-list-android default-all
 
 
 # Essential test suite commands - focused workflows
-test-smoke-android:
+_test-smoke-android:
     echo "⚡ Quick Smoke Test - 30 seconds essential validation"
-    just test-config-android smoke-test
+    just _test-config-android smoke-test
 
-test-development-android:
+_test-development-android:
     echo "🔧 Development Workflow - Daily development cycle"
-    just test-list-android development-workflow
+    just _test-list-android development-workflow
 
-test-production-android:
+_test-production-android:
     echo "🚀 Production Ready - Comprehensive release validation"
-    just test-list-android production-ready
+    just _test-list-android production-ready
 
 # Power user command - any pattern or test list
 test-suite-android PATTERN:
     echo "🎯 Custom Test Suite - Using: {{PATTERN}}"
-    just test-list-android {{PATTERN}}
+    just _test-list-android {{PATTERN}}
 
 
 # List available test lists
@@ -1829,11 +1902,10 @@ list-test-lists-matching PATTERN:
 # ================================
 
 # Show only logs for a specific test ID (saves tons of reading!)
-logs-test-id TEST_ID:
+_logs-test-id TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # Find the most recent test logs containing this test ID
     LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
     
     if [ -z "$LOG_FILE" ]; then
@@ -1851,27 +1923,41 @@ logs-test-id TEST_ID:
     sed 's/^.*I\/godot.*: //' | \
     grep -v "BUFFER\|font_size"
 
+# Show logs for a specific test ID
+logs-android TEST_ID:
+    just _logs-test-id "{{TEST_ID}}"
+
 # Show only test results (SUCCESS/FAILURE) for a specific test ID
-logs-results-only TEST_ID:
+_logs-results-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "📊 Test Results for: {{TEST_ID}}"
+    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No logs found for test ID: {{TEST_ID}}"
+        exit 1
+    fi
+    
+    echo "📊 Results for test ID: {{TEST_ID}}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    # Search all log files for the test ID and show results
-    find test_results -name "test_logs.log" -type f | \
-    xargs grep -l "{{TEST_ID}}" 2>/dev/null | \
-    head -1 | \
-    xargs grep "{{TEST_ID}}" 2>/dev/null | \
+    grep "{{TEST_ID}}" "$LOG_FILE" | \
     grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
-    sed 's/^.*I\/godot.*: //' | \
-    sed 's/.*DEBUG_TEST_\(SUCCESS\|FAILURE\).*"action": "\([^"]*\)".*"duration_ms": \([0-9]*\).*/[\1] \2: \3ms/' | \
-    sed 's/\[SUCCESS\]/✅ [SUCCESS]/' | \
-    sed 's/\[FAILURE\]/❌ [FAILURE]/'
+    sed 's/^.*DEBUG_TEST_SUCCESS.*/✅ SUCCESS/' | \
+    sed 's/^.*DEBUG_TEST_FAILURE.*/❌ FAILURE/' | \
+    paste - <(grep "{{TEST_ID}}" "$LOG_FILE" | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/') | \
+    paste - <(grep "{{TEST_ID}}" "$LOG_FILE" | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE" | \
+    grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1ms/') | \
+    column -t -s $'\t'
+
+# Show test results only for a specific test ID
+logs-android-results TEST_ID:
+    just _logs-results-only "{{TEST_ID}}"
 
 # Simple results filter (when you know the log file) - Clean output
-logs-results-simple TEST_ID LOG_DIR:
+_logs-results-simple TEST_ID LOG_DIR:
     #!/usr/bin/env bash
     echo "📊 Results for {{TEST_ID}} in {{LOG_DIR}}:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -1886,7 +1972,7 @@ logs-results-simple TEST_ID LOG_DIR:
     column -t -s $'\t'
 
 # Even simpler - just show action names and status  
-logs-quick TEST_ID LOG_DIR:
+_logs-quick TEST_ID LOG_DIR:
     #!/usr/bin/env bash
     echo "⚡ Quick Results for {{TEST_ID}}:"
     grep "{{TEST_ID}}" "{{LOG_DIR}}/test_logs.log" | \
@@ -1902,7 +1988,7 @@ logs-quick TEST_ID LOG_DIR:
     done
 
 # Show recent test directories and their IDs  
-logs-list-recent:
+_logs-list-recent:
     #!/usr/bin/env bash
     echo "📁 Recent Test Results:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -1923,13 +2009,17 @@ logs-list-recent:
             fi
             
             echo "$status_icon $test_id [$config] - $timestamp"
-            echo "   📄 just logs-test-id $test_id"
-            echo "   📊 just logs-results-only $test_id"
+            echo "   📄 just logs-android $test_id"
+            echo "   📊 just logs-android-results $test_id"
         fi
     done
 
+# Show recent test runs and their IDs
+logs-android-recent:
+    just _logs-list-recent
+
 # Show errors only for a specific test ID (perfect for debugging!)
-logs-errors-only TEST_ID:
+_logs-errors-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1948,8 +2038,12 @@ logs-errors-only TEST_ID:
     sed 's/^[0-9-]* [0-9:]* [EI]\/godot *([0-9]*): //' | \
     grep -v "BUFFER\|font_size\|=== BUFFER DUMP\|=== END BUFFER DUMP"
 
+# Show errors only for a specific test ID
+logs-android-errors TEST_ID:
+    just _logs-errors-only "{{TEST_ID}}"
+
 # Show performance breakdown for a specific test ID
-logs-performance TEST_ID:
+_logs-performance TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1970,8 +2064,12 @@ logs-performance TEST_ID:
     jq -r 'select(.duration_ms != null) | "[\(.action)]: \(.duration_ms)ms" + (if .duration_ms > 1000 then " ⚠️ SLOW" elif .duration_ms > 500 then " 🐌 SLOW-ISH" else " ✅ GOOD" end)' 2>/dev/null | \
     sort -t: -k2 -n || echo "No performance data found for test ID: {{TEST_ID}}"
 
+# Show performance breakdown for a specific test ID
+logs-android-performance TEST_ID:
+    just _logs-performance "{{TEST_ID}}"
+
 # Clean up old test logs (keeps most recent 10, removes the rest)
-logs-cleanup KEEP="10":
+_logs-cleanup KEEP="10":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -2008,8 +2106,12 @@ logs-cleanup KEEP="10":
         echo "❌ Cleanup cancelled"
     fi
 
+# Clean up old test logs
+logs-android-cleanup KEEP="10":
+    just _logs-cleanup "{{KEEP}}"
+
 # Force cleanup without confirmation (use carefully!)
-logs-cleanup-force KEEP="10":
+_logs-cleanup-force KEEP="10":
     #!/usr/bin/env bash
     set -euo pipefail
     
