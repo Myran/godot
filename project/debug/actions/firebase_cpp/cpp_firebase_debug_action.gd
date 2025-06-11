@@ -62,9 +62,22 @@ func execute_cpp_operation(
 
 	# Connect to completion signal for this request
 	var signal_name = method_name.replace("_async", "_completed")
-	var handler = func(recv_request_id: int, success: bool, data: Variant):
+	var handler = func(recv_request_id: int, param2: Variant, param3: Variant):
 		if recv_request_id == request_id:
 			var duration = Time.get_ticks_msec() - start_time
+			var success: bool = false
+			
+			# Handle different signal signatures based on parameter types
+			if param2 is bool:
+				# set_value_completed, remove_value_completed: (int, bool, String)
+				success = param2 as bool
+			elif param2 is String:
+				# get_value_completed: (int, String, Variant) - success if data exists
+				success = param3 != null
+			else:
+				# Unknown signature - assume success if param2 is not explicitly false
+				success = param2 != false
+			
 			if success:
 				Log.info(
 					"C++ operation completed",
@@ -73,9 +86,10 @@ func execute_cpp_operation(
 				)
 				_update_status(op_name + " completed (" + str(duration) + "ms)")
 			else:
+				var error_info = param3 if param2 is bool else param2
 				Log.error(
 					"C++ operation failed",
-					{"method": method_name, "error": data},
+					{"method": method_name, "error": error_info},
 					["debug", "cpp_firebase", "error"]
 				)
 				_update_status("ERROR: " + op_name + " failed", true)
