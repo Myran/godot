@@ -97,8 +97,8 @@ _cleanup-temp-config CONFIG:
     set -euo pipefail
     CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
     
-    # Check if this is a temporary config by looking for our specific description pattern
-    if [ -f "$CONFIG_FILE" ] && grep -q "Temporary config for single action:" "$CONFIG_FILE" 2>/dev/null; then
+    # Check if this is a temporary config by looking for our specific description patterns
+    if [ -f "$CONFIG_FILE" ] && (grep -q "Temporary config for single action:" "$CONFIG_FILE" 2>/dev/null || grep -q "Temporary.*config for.*pattern:" "$CONFIG_FILE" 2>/dev/null); then
         echo "🧹 Cleaning up temporary config: $CONFIG_FILE"
         rm "$CONFIG_FILE"
         echo "✅ Temporary config cleaned up"
@@ -124,6 +124,9 @@ _validate-config-exists CONFIG:
         echo "🔍 Detected wildcard pattern: {{CONFIG}}"
         echo "🔧 Creating temporary config for wildcard pattern: {{CONFIG}}"
         
+        # Set up cleanup trap for this specific config
+        trap 'rm -f "$CONFIG_FILE" 2>/dev/null || true' EXIT INT TERM
+        
         PATTERN_NAME="{{CONFIG}}"
         echo '{"description":"Temporary config for wildcard pattern: '"$PATTERN_NAME"'","actions":["'"$PATTERN_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary wildcard config created: $CONFIG_FILE"
@@ -135,6 +138,9 @@ _validate-config-exists CONFIG:
     if grep -r "\"{{CONFIG}}\"" project/debug_configs/*.json >/dev/null 2>&1; then
         echo "✅ Found '{{CONFIG}}' as an action name"
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
+        
+        # Set up cleanup trap for this specific config
+        trap 'rm -f "$CONFIG_FILE" 2>/dev/null || true' EXIT INT TERM
         
         ACTION_NAME="{{CONFIG}}"
         echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
@@ -860,6 +866,29 @@ config-list:
 # DEBUG TESTING & MONITORING
 # ================================
 
+# Clean up temporary wildcard config files
+cleanup-temp-configs VERBOSE="false":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    temp_files=(project/debug_configs/temp_wildcard_*.json)
+    if [[ -e "${temp_files[0]}" ]]; then
+        if [[ "{{VERBOSE}}" == "true" ]]; then
+            echo "🧹 Cleaning up temporary config files:"
+            for file in "${temp_files[@]}"; do
+                echo "  Removing: $file"
+            done
+        fi
+        rm -f "${temp_files[@]}"
+        if [[ "{{VERBOSE}}" == "true" ]]; then
+            echo "✅ Cleanup complete"
+        fi
+    else
+        if [[ "{{VERBOSE}}" == "true" ]]; then
+            echo "ℹ️  No temporary config files to clean up"
+        fi
+    fi
+
 # Monitor Android debug startup system with current configuration
 
 _test-quick-android CONFIG_NAME:
@@ -925,6 +954,9 @@ test-monitor-android DURATION="30":
 _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
+    
+    # Set up cleanup trap to ensure temp configs are cleaned up even if script is interrupted
+    trap 'just cleanup-temp-configs >/dev/null 2>&1 || true' EXIT INT TERM
     
     # Configuration
     CONFIG_NAME="{{CONFIG_NAME}}"
@@ -1187,6 +1219,9 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
 _test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
+    
+    # Set up cleanup trap to ensure temp configs are cleaned up even if script is interrupted
+    trap 'just cleanup-temp-configs >/dev/null 2>&1 || true' EXIT INT TERM
     
     # Configuration
     CONFIG_NAME="{{CONFIG_NAME}}"
@@ -2112,6 +2147,10 @@ _logs-cleanup KEEP="10":
 logs-android-cleanup KEEP="10":
     just _logs-cleanup "{{KEEP}}"
 
+# Clean up temporary config files (wildcard configs and single action configs)
+cleanup-temp-configs-verbose:
+    just cleanup-temp-configs "true"
+
 # Force cleanup without confirmation (use carefully!)
 _logs-cleanup-force KEEP="10":
     #!/usr/bin/env bash
@@ -2581,6 +2620,7 @@ help-debug:
     echo "  🧹 LOG MANAGEMENT:"
     echo "    just logs-cleanup KEEP_COUNT        # Interactive cleanup (asks confirmation)"
     echo "    just logs-cleanup-force KEEP_COUNT  # Force cleanup without confirmation"
+    echo "    just cleanup-temp-configs-verbose   # Clean up temporary config files"
     echo ""
     echo "🔄 DEBUG WORKFLOW PATTERNS:"
     echo ""
