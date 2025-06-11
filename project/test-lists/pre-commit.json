@@ -4,6 +4,6 @@
   "configs": [
     "smoke-test",
     "error-handling-all",
-    "system-layer-all"
+    "system-testing"
   ]
 }

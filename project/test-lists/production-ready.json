@@ -5,7 +5,7 @@
     "smoke-test",
     "cpp-layer-all",
     "backend-layer-all", 
-    "system-layer-all",
+    "system-testing",
     "performance-all",
     "integration-test",
     "error-handling-all"

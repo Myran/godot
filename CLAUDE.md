@@ -23,42 +23,51 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine. The
 
 ## Essential Development Commands
 
-### ⚡ Individual Action Testing (PREFERRED for debugging)
-**Test any single debug action instantly - no JSON config files needed!**
+### 🚀 Unified Testing Interface (NEW - PREFERRED)
+**Single commands handle any target type with auto-detection!**
 ```bash
-# 🚀 Quick iteration (5-second cycles)
+# 🎯 Unified Testing - Auto-detects patterns, configs, and test lists
+just test-android 'backend.*'                          # Wildcard pattern
+just test-android system-testing                       # Config file
+just test-android comprehensive-test-all               # Test list
+
+# 🔍 Enhanced Analysis - Detailed error categorization & performance tracking
+just test-android-enhanced 'cpp.*'                     # Enhanced wildcard analysis
+just test-android-enhanced performance-all             # Enhanced config analysis
+just test-android-enhanced pre-commit                  # Enhanced test list analysis
+
+# ⚡ Specialized Commands
+just test-monitor-android 30                           # Pure log monitoring (no restarts)
+just test-all-android                                  # Complete test suite
+```
+
+### 🔧 Quick Iteration Commands
+```bash
+# 🚀 Ultra-fast iteration (5-second cycles)
 just config-restart-android 'cpp.firebase.error_handling'   # Instant action test + restart
 just config-restart-ios 'system.network.rtdb_status'        # iOS equivalent
-
-# 🔍 Debugging & Development  
-just test-config-android 'cpp.firebase.set_value'           # Full automated test with results
-just test-monitor-android 30                                # Pure log monitoring (no restarts)
 just fastbuild-android                                      # Rebuild after code changes
 
 # ⚙️ Configuration Management
 just config-set 'system.debug.print_info'                  # Set single action as default config
 ```
 
-### Traditional Config Testing
+### 📊 Log Analysis (Aligned Interface)
+```bash
+# 📋 Unified Log Commands
+just logs-android TEST_ID                              # Show logs for test
+just logs-android-results TEST_ID                      # Show results only
+just logs-android-errors TEST_ID                       # Show errors only
+just logs-android-performance TEST_ID                  # Show performance breakdown
+just logs-android-recent                               # Show recent test runs
+just logs-android-cleanup 10                           # Clean up old logs
+```
+
+### 🎛️ Desktop & Discovery
 ```bash
 just run-desktop                           # Instant local testing
-just config-restart-android testing        # Push JSON config + restart on device
-just config-restart-ios testing           # iOS equivalent
-```
-
-### Full Testing
-```bash
-just test-all-android                     # Comprehensive Android testing (all configs)
-just test-list-android <test-list>        # Run specific test list
-just list-test-lists                      # Show available test lists
-just help                               # View all available commands
-```
-
-### Essential Test Workflows
-```bash
-just test-smoke-android                    # Quick smoke test (30 seconds)
-just test-development-android              # Daily development workflow
-just test-production-android               # Comprehensive release validation
+just list-test-lists                       # Show available test lists
+just help                                  # View all available commands
 ```
 
 ### Engine Development
@@ -98,12 +107,26 @@ Located in `project/debug/actions/`, includes:
 - Network connectivity validation
 - Data integrity checks
 
-## 🚀 Config vs Test Commands - Key Differences
+## 🚀 Unified vs Config Commands - Key Differences
+
+### **Unified Commands (`test-android*`) - Smart Auto-Detection**
+**Purpose**: Comprehensive testing with intelligent target detection
+- 🎯 **Auto-Detection**: Automatically identifies patterns, configs, and test lists
+- 📊 **Complete Analysis**: Full logs, pass/fail analysis, test IDs
+- ⏱️ **Duration**: 30+ seconds for thorough testing
+- 🧪 **Use case**: Primary testing interface for all scenarios
+
+```bash
+just test-android TARGET [DURATION]              # Unified testing with auto-detection
+just test-android-enhanced TARGET [DURATION]     # Enhanced analysis with error categorization
+just test-monitor-android [DURATION]             # Pure log monitoring (no restarts)
+just test-all-android                            # Complete test suite
+```
 
 ### **Config Commands (`config-*`) - Fast Deployment**
-**Purpose**: Configuration management and quick iteration
+**Purpose**: Configuration management and ultra-fast iteration
 - ⚡ **Speed**: 2-5 seconds maximum 
-- 🎯 **Focus**: Deploy configs and restart apps
+- 🎯 **Focus**: Deploy configs and restart apps instantly
 - 🔧 **Use case**: Development iteration cycles
 
 ```bash
@@ -113,32 +136,22 @@ just config-set <pattern>                # Update embedded config
 just config-status-android               # Check current config
 ```
 
-### **Test Commands (`test-*`) - Comprehensive Analysis**
-**Purpose**: Automated testing with detailed results
-- 📊 **Depth**: Full logs, pass/fail analysis, test IDs
-- ⏱️ **Duration**: 30+ seconds for thorough testing  
-- 🧪 **Use case**: Debugging, validation, CI/CD
-
-```bash
-just test-config-android <config>        # Full test with analysis (30+ sec)
-just test-monitor-android [duration]     # Pure log monitoring (no restarts)
-just test-all-android                    # Complete test suite
-```
-
 ### **When to Use Each**
-- **Development**: Use `config-restart-android` for rapid 5-second iteration
-- **Debugging**: Use `test-config-android` when you need detailed logs and analysis
+- **Primary Testing**: Use `test-android` for comprehensive testing with auto-detection
+- **Enhanced Debugging**: Use `test-android-enhanced` for detailed error analysis
+- **Quick Iteration**: Use `config-restart-android` for rapid 5-second deployment cycles
 - **Monitoring**: Use `test-monitor-android` to observe ongoing activity
 - **Validation**: Use `test-all-android` for comprehensive pre-commit checks
 
 ## Development Workflow
 0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
 1. **Local Development**: Use `just run-desktop` for rapid iteration and use Godot tools
-2. **🎯 Individual Action Testing**: Use action names directly: `just config-restart-android 'Action Name'` (FASTEST debugging method)
-3. **Device Testing**: Use `just config-restart-[platform] testing` for quick device validation of full test configs
-4. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
-5. **Full Validation**: Run `just test-all-[platform]` before commits
-6. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+2. **🎯 Unified Testing**: Use `just test-android TARGET` for comprehensive testing (auto-detects patterns/configs/lists)
+3. **Quick Iteration**: Use `just config-restart-android 'Action Name'` for ultra-fast 5-second cycles
+4. **Enhanced Debugging**: Use `just test-android-enhanced TARGET` for detailed error analysis and performance tracking
+5. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
+6. **Full Validation**: Run `just test-all-android` before commits
+7. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
 
 ## 🧠 Advanced Planning & Task Management
 
@@ -186,29 +199,38 @@ Task: "Refactor debug action execution flow"
 → TodoWrite first, then Shrimp if task grows complex
 ```
 
-## 🔧 Individual Action Testing (Debugging Superpower)
+## 🔧 Unified Testing Interface (Debugging Superpower)
 
-**Instead of creating JSON config files, test any debug action directly by name:**
+**Single commands handle any target type with intelligent auto-detection:**
 
-### Core Commands
+### Core Unified Commands
 ```bash
-# 🚀 Instant Testing (5-second iteration cycles)
-just config-restart-android 'cpp.firebase.error_handling' # Single action
-just config-restart-android 'cpp.*'                       # All C++ layer tests
-just config-restart-android '*.firebase.set_value'        # All set_value operations
-just config-restart-ios 'system.network.rtdb_status'
+# 🎯 Auto-Detection Testing (comprehensive analysis)
+just test-android 'cpp.firebase.error_handling'          # Single action with full analysis
+just test-android 'cpp.*'                                # All C++ layer tests
+just test-android '*.firebase.set_value'                 # All set_value operations
+just test-android system-testing                         # Config file
+just test-android pre-commit                             # Test list
 
-# 🔍 Advanced Testing & Monitoring  
-just test-config-android 'backend.firebase.performance'   # Single action with detailed results
-just test-config-android '*.*.error_handling'             # All error handling tests
+# 🔍 Enhanced Analysis (detailed error categorization)
+just test-android-enhanced 'backend.firebase.performance'  # Enhanced single action analysis
+just test-android-enhanced '*.*.error_handling'            # Enhanced cross-layer error analysis
+just test-android-enhanced performance-all                 # Enhanced config analysis
+
+# ⚡ Quick Iteration (5-second cycles)  
+just config-restart-android 'cpp.firebase.error_handling' # Ultra-fast single action testing
+just config-restart-android 'system.*'                    # Ultra-fast wildcard testing
+
+# 👁️ Pure Monitoring
 just test-monitor-android 30                              # Pure log monitoring (30 seconds)
 just test-monitor-android 60                              # Extended monitoring (60 seconds)
 ```
 
 ### When to Use Each Method
-- **Individual Actions**: 🎯 Debugging specific issues, developing new features, isolating problems
-- **Config Files**: 📋 Running test suites, comprehensive validation, CI/CD pipelines
-- **Full Test Lists**: 🧪 Pre-commit validation, integration testing, release verification
+- **Unified Testing**: 🎯 Primary interface for comprehensive testing with auto-detection
+- **Enhanced Analysis**: 🔍 Detailed debugging with error categorization and performance tracking
+- **Quick Iteration**: ⚡ Ultra-fast 5-second cycles for rapid development
+- **Pure Monitoring**: 👁️ Observe ongoing activity without disruption
 
 ### Smart Command Detection
 All commands automatically:
@@ -218,41 +240,56 @@ All commands automatically:
 - ✅ Handle action names with spaces when properly quoted
 - ✅ Provide immediate feedback on action availability
 
-### 💡 Pro Tips for Debugging
+### 💡 Pro Tips for Unified Testing
 ```bash
-# 1. Isolate problematic actions immediately (saves hours of debugging!)
-just test-config-android 'cpp.firebase.error_handling'   # Single action
-just test-config-android 'cpp.*'                         # All C++ actions
-just test-config-android '*.firebase.*'                  # All Firebase actions
+# 1. Use unified commands for comprehensive analysis (auto-detects target type!)
+just test-android 'cpp.firebase.error_handling'          # Single action with full analysis
+just test-android 'cpp.*'                                # All C++ actions
+just test-android '*.firebase.*'                         # All Firebase actions
+just test-android system-testing                         # Config file
+just test-android pre-commit                             # Test list
 
-# 2. Monitor logs in real-time during development
+# 2. Enhanced analysis for detailed debugging
+just test-android-enhanced 'cpp.*'                       # Enhanced C++ analysis with error categorization
+just test-android-enhanced '*.*.error_handling'          # Enhanced cross-layer error analysis
+just test-android-enhanced performance-all               # Enhanced performance analysis
+
+# 3. Quick iteration for rapid development
+just config-restart-android 'cpp.firebase.error_handling' # Ultra-fast 5-second cycles
+just fastbuild-android && just config-restart-android 'system.*'  # Build + quick test
+
+# 4. Monitor logs in real-time during development
 just test-monitor-android 30                             # Monitor all activity (30 sec)
 just test-monitor-android 60                             # Extended monitoring (60 sec)
 
-# 3. Quick validation after code changes
-just fastbuild-android && just config-restart-android 'system.*'      # All system operations
-just config-restart-android '*.*.error_handling'         # All error handling
-
-# 4. Set frequently used patterns as default
+# 5. Set frequently used patterns as default
 just config-set '*.firebase.set_value'                   # All set_value operations
 just config-set 'system.debug.*'                         # All debug utilities
 ```
 
-### ⚠️ Common Debugging Mistake: Don't Use Full Test Suites for Single Issues
-**AVOID**: Running full test configs when debugging specific problems
-```bash
-# ❌ Slow - runs 8 actions when only 1 is broken
-just config-restart-android cpp-firebase-comprehensive-test
+### ⚠️ Choose the Right Tool for the Job
+**Match your command to your debugging needs:**
 
-# ✅ Fast - targets exact problem in 5 seconds  
-just config-restart-android 'cpp.firebase.error_handling'
+```bash
+# ✅ For comprehensive analysis - use unified commands
+just test-android 'cpp.firebase.error_handling'          # Full analysis with auto-detection
+
+# ✅ For enhanced debugging - use enhanced commands  
+just test-android-enhanced 'cpp.*'                       # Error categorization + performance tracking
+
+# ✅ For rapid iteration - use config commands
+just config-restart-android 'cpp.firebase.error_handling' # Ultra-fast 5-second cycles
+
+# ❌ Avoid mismatched tools
+just test-android comprehensive-test-all                 # Overkill for single action debugging
+just config-restart-android comprehensive-test-all       # Can't restart with test lists
 ```
 
-**Why Individual Actions Are Better for Debugging:**
-- 🚀 **5x faster iteration** - no waiting for unrelated actions
-- 🎯 **Precise isolation** - pinpoint exact failure location  
-- 📝 **Cleaner logs** - easier to spot issues without noise
-- 🔄 **Rapid testing** - fix and verify in seconds, not minutes
+**Why Unified Commands Are Better for Most Debugging:**
+- 🎯 **Auto-detection** - handles any target type intelligently
+- 📊 **Complete analysis** - full logs, pass/fail analysis, test IDs
+- 🔍 **Enhanced options** - detailed error categorization available
+- 🧠 **Smart feedback** - shows available options when target not found
 
 ## Firebase Integration
 
