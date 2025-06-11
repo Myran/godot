@@ -1151,17 +1151,17 @@ func display_output_from_service(text: String, is_error: bool = false) -> void:
 			# This is a final report - replace content
 			status_label.text = text
 		else:
-			# This is a status update - append to existing content without extra newlines
+			# This is a status update - prepend to existing content to show new output on top
 			var current_text: String = status_label.text
 			if current_text.is_empty():
 				status_label.text = text
 			else:
-				status_label.text = current_text + text
+				status_label.text = text + current_text
 
-		# Ensure scrolling works properly
+		# Ensure scrolling works properly - scroll to top to show new content
 		await get_tree().process_frame
 		if status_label.get_v_scroll_bar():
-			status_label.get_v_scroll_bar().value = status_label.get_v_scroll_bar().max_value
+			status_label.get_v_scroll_bar().value = 0
 
 	# If the debug menu is not currently visible, show it to display the results
 	if not visible:
