@@ -139,10 +139,29 @@ _validate-config-exists CONFIG:
         echo "✅ Found '{{CONFIG}}' as an action name"
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
         
-        # Set up cleanup trap for this specific config
-        trap 'rm -f "$CONFIG_FILE" 2>/dev/null || true' EXIT INT TERM
-        
         ACTION_NAME="{{CONFIG}}"
+        echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
+        echo "✅ Temporary config created: $CONFIG_FILE"
+        echo "💡 This temporary config will be cleaned up automatically"
+        exit 0
+    fi
+    
+    # Check if action would match any existing wildcard patterns
+    ACTION_NAME="{{CONFIG}}"
+    MATCHED_PATTERN=""
+    while IFS= read -r pattern; do
+        # Convert wildcard pattern to regex and test
+        regex_pattern=$(echo "$pattern" | sed 's/\./\\./g; s/\*/[^.]*/g; s/\?/[^.]/g')
+        if echo "$ACTION_NAME" | grep -qE "^${regex_pattern}$"; then
+            MATCHED_PATTERN="$pattern"
+            break
+        fi
+    done < <(grep -rh '"[^"]*\*[^"]*"' project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | sort -u)
+    
+    if [ -n "$MATCHED_PATTERN" ]; then
+        echo "✅ Action '{{CONFIG}}' matches wildcard pattern: $MATCHED_PATTERN"
+        echo "🔧 Creating temporary config for single action: {{CONFIG}}"
+        
         echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary config created: $CONFIG_FILE"
         echo "💡 This temporary config will be cleaned up automatically"
@@ -1777,19 +1796,26 @@ test-android TARGET DURATION="30" NO_RESTART="false":
         echo "📝 Test list detected: $TARGET"
         just _test-list-android "$TARGET"
     else
-        echo "❌ Target not found: $TARGET"
-        echo "💡 Checking available options..."
-        echo ""
-        echo "📋 Available config files:"
-        ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
-        echo ""
-        echo "📝 Available test lists:"  
-        ls project/test-lists/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
-        echo ""
-        echo "🎯 Example wildcard patterns:"
-        echo "  backend.*             # All backend tests"
-        echo "  *.*.error_handling    # All error handling tests"
-        exit 1
+        # Try validation to see if it's a valid action name or wildcard pattern
+        if just _validate-config-exists "$TARGET" >/dev/null 2>&1; then
+            # Validation succeeded - it's a valid action or matches a pattern
+            echo "🎯 Action detected: $TARGET"
+            just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+        else
+            echo "❌ Target not found: $TARGET"
+            echo "💡 Checking available options..."
+            echo ""
+            echo "📋 Available config files:"
+            ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+            echo ""
+            echo "📝 Available test lists:"  
+            ls project/test-lists/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -5 || echo "  (none found)"
+            echo ""
+            echo "🎯 Example wildcard patterns:"
+            echo "  backend.*             # All backend tests"
+            echo "  *.*.error_handling    # All error handling tests"
+            exit 1
+        fi
     fi
 
 # Enhanced unified testing command with auto-detection
