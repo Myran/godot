@@ -1182,6 +1182,319 @@ test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-con
     
     exit $test_result
 
+# Enhanced test config with detailed error analysis and action-level reporting
+test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Configuration
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    DURATION="{{DURATION}}"
+    NO_RESTART="{{NO_RESTART}}"
+    ANDROID_DEVICE_ID="${ANDROID_DEVICE_ID:-{{ANDROID_DEVICE_ID}}}"
+    ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME:-{{ANDROID_PACKAGE_NAME}}}"
+    
+    # Generate unique test ID
+    TEST_ID="test_$(date +%Y%m%d_%H%M%S)_$(head -c 4 /dev/urandom | xxd -p)"
+    
+    echo "🧪 Enhanced Smart Test: $CONFIG_NAME"
+    echo "🆔 Test ID: $TEST_ID"
+    echo "⏱️  Duration: $DURATION seconds"
+    echo "🔍 Enhanced Analysis: Action-level error detection & categorization"
+    echo ""
+    
+    # Check prerequisites
+    if ! adb -s "$ANDROID_DEVICE_ID" shell echo "Connected" >/dev/null 2>&1; then
+        echo "❌ Device not connected"
+        exit 1
+    fi
+    
+    if ! adb -s "$ANDROID_DEVICE_ID" shell pm list packages | grep -q "$ANDROID_PACKAGE_NAME"; then
+        echo "❌ App not installed"
+        exit 1
+    fi
+    
+    if [ ! -f "project/debug_configs/$CONFIG_NAME.json" ]; then
+        echo "❌ Config file not found: project/debug_configs/$CONFIG_NAME.json"
+        exit 1
+    fi
+    
+    echo "✅ Prerequisites satisfied"
+    echo ""
+    
+    # Create results directory
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    test_dir="test_results/enhanced_${CONFIG_NAME}_$timestamp"
+    mkdir -p "$test_dir"
+    
+    # Apply config with test ID (same as regular test-config-android)
+    echo "🔄 Applying config with test ID..."
+    
+    # Create enhanced config with test ID metadata
+    enhanced_config=$(mktemp)
+    jq --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg timestamp "$timestamp" \
+        '. + {"test_metadata": {"test_id": $test_id, "config": $config_name, "timestamp": $timestamp}}' \
+        "project/debug_configs/$CONFIG_NAME.json" > "$enhanced_config"
+    
+    # Push config to device using proper permissions approach
+    TEMP_CONFIG="/sdcard/temp_debug_config_$TEST_ID.json"
+    
+    # Push to temporary location first
+    adb -s "$ANDROID_DEVICE_ID" push "$enhanced_config" "$TEMP_CONFIG"
+    
+    # Copy to app private directory using run-as
+    if adb -s "$ANDROID_DEVICE_ID" shell "run-as $ANDROID_PACKAGE_NAME cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
+        echo "✅ Config applied successfully"
+    else
+        echo "❌ Failed to apply config to app directory"
+        adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
+        rm "$enhanced_config"
+        exit 1
+    fi
+    
+    # Cleanup temp files
+    adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
+    rm "$enhanced_config"
+
+    # Force restart app to ensure config is loaded (unless explicitly disabled)
+    if [ "$NO_RESTART" != "true" ]; then
+        echo "🔄 Restarting app to ensure config is loaded..."
+        adb -s "$ANDROID_DEVICE_ID" shell am force-stop "$ANDROID_PACKAGE_NAME" 2>/dev/null || true
+        sleep 1
+        echo "🚀 Starting test with fresh app instance..."
+        adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+    else
+        echo "⚡ Starting test without restart (using current app state)..."
+        adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+    fi
+    
+    # Enhanced monitoring and analysis
+    echo "📊 Enhanced Test Monitoring & Analysis..."
+    echo "   Looking for test ID: $TEST_ID"
+    echo "   🔍 Real-time error categorization enabled"
+    echo "   📈 Action-level performance tracking enabled"
+    
+    log_file="$test_dir/test_logs.log"
+    enhanced_log="$test_dir/enhanced_analysis.log" 
+    test_result=1
+    test_complete=false
+    success_count=0
+    failure_count=0
+    startup_count=0
+    timeout_count=0
+    firebase_error_count=0
+    network_error_count=0
+    validation_error_count=0
+    
+    # Clear old logs and start log capture
+    echo "🧹 Clearing old logs for fresh test monitoring..."
+    adb -s "$ANDROID_DEVICE_ID" logcat -c
+    adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot > "$log_file" 2>/dev/null &
+    LOGCAT_PID=$!
+    
+    # Enhanced monitoring with real-time analysis
+    elapsed_time=0
+    time_since_last_activity=0
+    last_activity_count=0
+    max_idle_time=$DURATION
+    
+    while [ $time_since_last_activity -lt $max_idle_time ]; do
+        sleep 1
+        elapsed_time=$((elapsed_time + 1))
+        time_since_last_activity=$((time_since_last_activity + 1))
+        
+        if [ -f "$log_file" ]; then
+            # Check for test completion
+            if grep -q "DEBUG_TEST_COMPLETE.*$TEST_ID" "$log_file" 2>/dev/null; then
+                test_complete=true
+                break
+            fi
+            
+            # Enhanced real-time analysis
+            success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Error categorization in real-time
+            firebase_error_count=$(grep -c "firebase.*error\|auth.*failed\|database.*error\|Firebase.*Exception" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            network_error_count=$(grep -c "network.*error\|connection.*failed\|timeout.*error" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            validation_error_count=$(grep -c "assertion.*failed\|validation.*error\|Expected.*but.*got" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Check for any debug activity
+            current_activity_count=$(grep -c "DEBUG_TEST_.*$TEST_ID\|Executing.*action\|completed.*ms\|Starting:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Reset timeout if new activity detected
+            if [ "$current_activity_count" -gt "$last_activity_count" ]; then
+                time_since_last_activity=0
+                last_activity_count=$current_activity_count
+            fi
+        fi
+        
+        # Enhanced progress indicator with error categorization
+        if [ $((elapsed_time % 5)) -eq 0 ]; then
+            echo "   Progress: ${elapsed_time}s elapsed, ${time_since_last_activity}s idle (✅$success_count ❌$failure_count 🔥$firebase_error_count 🌐$network_error_count 📋$validation_error_count)"
+        fi
+    done
+    
+    # Stop log capture
+    kill $LOGCAT_PID 2>/dev/null || true
+    wait $LOGCAT_PID 2>/dev/null || true
+    
+    echo ""
+    echo "📋 Enhanced Test Results Analysis"
+    echo "================================="
+    
+    # Parse final results with enhanced analysis
+    if [ -f "$log_file" ]; then
+        # Parse final results
+        success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        startup_count=$(grep -c "debug.*startup.*$TEST_ID\|DEBUG_TEST_START.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        
+        # Enhanced error categorization
+        firebase_error_count=$(grep -c "firebase.*error\|auth.*failed\|database.*error\|Firebase.*Exception" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        network_error_count=$(grep -c "network.*error\|connection.*failed\|timeout.*error" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        validation_error_count=$(grep -c "assertion.*failed\|validation.*error\|Expected.*but.*got" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        
+        # Ensure variables are integers
+        success_count=$(echo "$success_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        failure_count=$(echo "$failure_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        startup_count=$(echo "$startup_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        firebase_error_count=$(echo "$firebase_error_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        network_error_count=$(echo "$network_error_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        validation_error_count=$(echo "$validation_error_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
+        
+        echo "🆔 Test ID: $TEST_ID"
+        echo "📊 Startup events: $startup_count"
+        echo "📊 Successful actions: $success_count"
+        echo "📊 Failed actions: $failure_count"
+        echo ""
+        echo "🔍 Error Category Analysis:"
+        echo "   🔥 Firebase errors: $firebase_error_count"
+        echo "   🌐 Network errors: $network_error_count"
+        echo "   📋 Validation errors: $validation_error_count"
+        echo ""
+        
+        # Enhanced individual action results with timing and error analysis
+        echo "📋 Detailed Action Results:"
+        if [ "$success_count" -gt 0 ] || [ "$failure_count" -gt 0 ]; then
+            action_lines=$(grep "$TEST_ID" "$log_file" 2>/dev/null | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE")
+            if [ -n "$action_lines" ]; then
+                echo "$action_lines" | while read -r line; do
+                    if echo "$line" | grep -q "DEBUG_TEST_SUCCESS"; then
+                        status="✅"
+                        category=""
+                    else
+                        status="❌"
+                        # Analyze failure category
+                        if echo "$line" | grep -qi "firebase\|auth\|database"; then
+                            category=" [FIREBASE]"
+                        elif echo "$line" | grep -qi "network\|connection\|timeout"; then
+                            category=" [NETWORK]"
+                        elif echo "$line" | grep -qi "assertion\|validation\|expected"; then
+                            category=" [VALIDATION]"
+                        else
+                            category=" [SYSTEM]"
+                        fi
+                    fi
+                    action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
+                    duration=$(echo "$line" | grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1/')
+                    
+                    # Performance analysis
+                    if [ -n "$duration" ] && [ "$duration" -gt 0 ]; then
+                        if [ "$duration" -gt 10000 ]; then
+                            perf_note=" ⚠️ SLOW"
+                        elif [ "$duration" -gt 5000 ]; then
+                            perf_note=" ⏰ MEDIUM"
+                        else
+                            perf_note=""
+                        fi
+                        echo "  $status $action (${duration}ms$perf_note)$category"
+                    else
+                        echo "  $status $action (no timing)$category"
+                    fi
+                done | sort
+            else
+                echo "  (no detailed action results found)"
+            fi
+        else
+            echo "  (no actions executed)"
+        fi
+        echo ""
+        
+        # Enhanced debugging recommendations
+        echo "💡 Debugging Recommendations:"
+        if [ "$failure_count" -gt 0 ]; then
+            if [ "$firebase_error_count" -gt 0 ]; then
+                echo "   🔥 Firebase Issues Detected:"
+                echo "      - Check Firebase configuration in firebase/ directory"
+                echo "      - Verify network connectivity and auth status"
+                echo "      - Run: just config-restart-android 'Firebase Connection Test'"
+            fi
+            if [ "$network_error_count" -gt 0 ]; then
+                echo "   🌐 Network Issues Detected:"
+                echo "      - Check device internet connectivity"
+                echo "      - Verify VPN/firewall settings"
+                echo "      - Run: just config-restart-android 'Network Connectivity Test'"
+            fi
+            if [ "$validation_error_count" -gt 0 ]; then
+                echo "   📋 Validation Issues Detected:"
+                echo "      - Check test data integrity"
+                echo "      - Verify expected vs actual results in logs"
+                echo "      - Run individual failing actions for detailed analysis"
+            fi
+            echo "   🔧 Quick Retest Commands:"
+            echo "      - Retry same test: just test-config-android-enhanced '$CONFIG_NAME'"
+            echo "      - Detailed logs: just test-monitor-android '$CONFIG_NAME'"
+            echo "      - Single action test: just config-restart-android '<Action Name>'"
+        fi
+        echo ""
+        
+        # Determine overall result with enhanced logic
+        if [ "$test_complete" = true ]; then
+            echo "✅ Test completed normally"
+            
+            if [ "$failure_count" -eq 0 ] && [ "$success_count" -gt 0 ]; then
+                echo "🎉 OVERALL RESULT: PASS"
+                test_result=0
+            elif [ "$failure_count" -gt 0 ]; then
+                echo "❌ OVERALL RESULT: FAIL"
+                echo "   Primary failure categories: Firebase($firebase_error_count) Network($network_error_count) Validation($validation_error_count)"
+                test_result=1
+            else
+                echo "⚠️  OVERALL RESULT: INCONCLUSIVE (no actions executed)"
+                test_result=1
+            fi
+        else
+            echo "⏰ Test timed out (no activity for ${max_idle_time}s)"
+            if [ "$failure_count" -gt 0 ]; then
+                echo "❌ OVERALL RESULT: FAIL (timeout + failures)"
+                test_result=1
+            else
+                echo "⚠️  OVERALL RESULT: TIMEOUT (idle timeout)"
+                test_result=1
+            fi
+        fi
+    else
+        echo "❌ No log file found"
+        test_result=1
+    fi
+    
+    # Save enhanced results with additional metadata
+    overall_result_value=$([ $test_result -eq 0 ] && echo "PASS" || echo "FAIL")
+    printf '{\n    "test_id": "%s",\n    "config": "%s",\n    "timestamp": "%s",\n    "duration": %d,\n    "test_complete": %s,\n    "successful_actions": %d,\n    "failed_actions": %d,\n    "startup_events": %d,\n    "error_categories": {\n        "firebase_errors": %d,\n        "network_errors": %d,\n        "validation_errors": %d\n    },\n    "overall_result": "%s",\n    "enhanced_analysis": true\n}\n' \
+        "$TEST_ID" "$CONFIG_NAME" "$timestamp" "$elapsed_time" "$test_complete" \
+        "$success_count" "$failure_count" "$startup_count" \
+        "$firebase_error_count" "$network_error_count" "$validation_error_count" \
+        "$overall_result_value" > "$test_dir/enhanced_results.json"
+    
+    echo "📁 Enhanced results saved to: $test_dir/enhanced_results.json"
+    echo "📁 Full logs available at: $test_dir/test_logs.log"
+    
+    # Clean up temporary config if it was auto-generated
+    just _cleanup-temp-config "{{CONFIG_NAME}}"
+    
+    exit $test_result
+
 
 # Helper function to recursively expand test configurations from a test list file
 _expand_test_list TEST_LIST_NAME VISITED_LISTS="":

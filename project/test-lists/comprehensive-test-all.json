@@ -1,0 +1,14 @@
+{
+  "name": "Comprehensive Test Infrastructure Suite",
+  "description": "Complete testing infrastructure - cpp, backend, rtdb layers plus safe system utilities",
+  "configs": [
+    "smoke-test",
+    "cpp-layer-all",
+    "backend-layer-all",
+    "rtdb-layer-all",
+    "system-testing",
+    "performance-all",
+    "error-handling-all",
+    "integration-test"
+  ]
+}
