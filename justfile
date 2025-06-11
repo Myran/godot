@@ -1833,6 +1833,10 @@ test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
     just _test-list-android default-all
 
+test-all-android-enhanced:
+    echo "🚀 Complete Test Suite - Full system validation with enhanced analysis"
+    just test-android-enhanced default-all
+
 
 # Essential test suite commands - focused workflows
 _test-smoke-android:
