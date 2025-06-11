@@ -203,7 +203,7 @@ func _parse_config_file(path: String) -> Array[String]:
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
 		var actions: Array[String] = []
-		
+
 		# Expand wildcard patterns in actions
 		for action in raw_actions:
 			var action_str := str(action)
@@ -219,7 +219,7 @@ func _parse_config_file(path: String) -> Array[String]:
 			else:
 				# Regular action name
 				actions.append(action_str)
-		
+
 		Log.debug("Parsed actions from config", {"actions": actions, "count": actions.size()}, ["debug", "startup"])
 		return actions
 
@@ -286,22 +286,22 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 	Returns empty array if registry is not available or pattern matches nothing.
 	"""
 	var expanded_actions: Array[String] = []
-	
+
 	# Get registry - it should be available since we wait for it in startDebugCoordinator
 	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
 	if not registry:
 		Log.warning("Registry not available for wildcard expansion", {"pattern": pattern}, ["debug", "startup", "wildcard"])
 		return expanded_actions
-	
+
 	# Use the registry's wildcard matching
 	expanded_actions = registry.find_actions_matching(pattern)
-	
+
 	Log.debug("Wildcard pattern expanded", {
 		"pattern": pattern,
 		"match_count": expanded_actions.size(),
 		"matches": expanded_actions
 	}, ["debug", "startup", "wildcard"])
-	
+
 	return expanded_actions
 
 

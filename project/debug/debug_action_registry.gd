@@ -175,7 +175,7 @@ func find_actions_matching(pattern: String) -> Array[String]:
 	"""
 	Find all action names that match the given wildcard pattern.
 	Supports basic glob patterns with * for any characters.
-	
+
 	Examples:
 	- "cpp.*" -> matches "cpp.firebase.set_value", "cpp.firebase.get_value", etc.
 	- "*.firebase.*" -> matches any action with 'firebase' in the middle
