@@ -42,9 +42,9 @@ func get_cpp_firebase_database() -> Object:
 	return cpp_db
 
 
-# Simplified C++ operation - follow RTDB pattern
+# Type-safe C++ operation with specific signal handlers
 func execute_cpp_operation(
-	method_name: String, args: Array, operation_name: String = ""
+	method_name: String, args: Array, operation_name: String = "", operation_type: String = ""
 ) -> Variant:
 	var start_time = Time.get_ticks_msec()
 	var db = get_cpp_firebase_database()
@@ -60,39 +60,11 @@ func execute_cpp_operation(
 	var request_id = Time.get_ticks_msec()
 	var full_args = [request_id] + args
 
-	# Connect to completion signal for this request
+	# Connect to completion signal with type-safe handler
 	var signal_name = method_name.replace("_async", "_completed")
-	var handler = func(recv_request_id: int, param2: Variant, param3: Variant):
-		if recv_request_id == request_id:
-			var duration = Time.get_ticks_msec() - start_time
-			var success: bool = false
-			
-			# Handle different signal signatures based on parameter types
-			if param2 is bool:
-				# set_value_completed, remove_value_completed: (int, bool, String)
-				success = param2 as bool
-			elif param2 is String:
-				# get_value_completed: (int, String, Variant) - success if data exists
-				success = param3 != null
-			else:
-				# Unknown signature - assume success if param2 is not explicitly false
-				success = param2 != false
-			
-			if success:
-				Log.info(
-					"C++ operation completed",
-					{"method": method_name, "duration_ms": duration},
-					["debug", "cpp_firebase"]
-				)
-				_update_status(op_name + " completed (" + str(duration) + "ms)")
-			else:
-				var error_info = param3 if param2 is bool else param2
-				Log.error(
-					"C++ operation failed",
-					{"method": method_name, "error": error_info},
-					["debug", "cpp_firebase", "error"]
-				)
-				_update_status("ERROR: " + op_name + " failed", true)
+	var handler = _create_handler_for_operation(
+		operation_type, request_id, start_time, op_name, method_name
+	)
 
 	# Connect signal temporarily
 	if db.has_signal(signal_name):
@@ -111,6 +83,74 @@ func execute_cpp_operation(
 
 
 # Removed problematic execute_cpp_operation_with_timeout method - use execute_cpp_operation instead
+
+
+# Create type-safe signal handler based on operation type
+func _create_handler_for_operation(
+	operation_type: String, request_id: int, start_time: int, op_name: String, method_name: String
+) -> Callable:
+	match operation_type:
+		"get_value":
+			return _create_get_value_handler(request_id, start_time, op_name, method_name)
+		"set_value", "remove_value":
+			return _create_set_value_handler(request_id, start_time, op_name, method_name)
+		_:
+			push_error("Unknown operation type: " + operation_type)
+			return func(): pass
+
+
+# Handler for get_value_completed(int request_id, String key, Variant data)
+func _create_get_value_handler(
+	request_id: int, start_time: int, op_name: String, method_name: String
+) -> Callable:
+	return func(recv_request_id: int, rtdb_key: String, value: Variant):
+		if recv_request_id == request_id:
+			var duration = Time.get_ticks_msec() - start_time
+			var success = value != null
+
+			if success:
+				Log.info(
+					"C++ get_value operation completed",
+					{
+						"method": method_name,
+						"duration_ms": duration,
+						"rtdb_key": rtdb_key,
+						"value_type": typeof(value)
+					},
+					["debug", "cpp_firebase"]
+				)
+				_update_status(op_name + " completed (" + str(duration) + "ms)")
+			else:
+				Log.error(
+					"C++ get_value operation returned null",
+					{"method": method_name, "duration_ms": duration, "rtdb_key": rtdb_key},
+					["debug", "cpp_firebase", "error"]
+				)
+				_update_status("ERROR: " + op_name + " returned null", true)
+
+
+# Handler for set_value_completed/remove_value_completed(int request_id, bool success, String error_message)
+func _create_set_value_handler(
+	request_id: int, start_time: int, op_name: String, method_name: String
+) -> Callable:
+	return func(recv_request_id: int, success: bool, error_message: String):
+		if recv_request_id == request_id:
+			var duration = Time.get_ticks_msec() - start_time
+
+			if success:
+				Log.info(
+					"C++ set/remove operation completed",
+					{"method": method_name, "duration_ms": duration},
+					["debug", "cpp_firebase"]
+				)
+				_update_status(op_name + " completed (" + str(duration) + "ms)")
+			else:
+				Log.error(
+					"C++ set/remove operation failed",
+					{"method": method_name, "duration_ms": duration, "error": error_message},
+					["debug", "cpp_firebase", "error"]
+				)
+				_update_status("ERROR: " + op_name + " failed: " + error_message, true)
 
 
 # Default implementation - subclasses override this

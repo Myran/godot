@@ -20,7 +20,8 @@ func execute_cpp_action() -> bool:
 	var set_result = await execute_cpp_operation(
 		"set_value_async",
 		[["cpp_tests", "basic", "set_test", str(Time.get_ticks_msec())], "Basic set test"],
-		"Basic Set Test"
+		"Basic Set Test",
+		"set_value"
 	)
 
 	var set_worked = set_result != null
@@ -36,7 +37,8 @@ func execute_cpp_action() -> bool:
 	var get_result = await execute_cpp_operation(
 		"get_value_async",
 		[["cpp_tests", "basic", "get_test", str(Time.get_ticks_msec())]],
-		"Basic Get Test"
+		"Basic Get Test",
+		"get_value"
 	)
 
 	var get_worked = get_result != null
@@ -57,7 +59,8 @@ func execute_cpp_action() -> bool:
 				["cpp_tests", "basic", "sequential", str(i), str(Time.get_ticks_msec())],
 				"Sequential test " + str(i)
 			],
-			"Sequential Test " + str(i)
+			"Sequential Test " + str(i),
+			"set_value"
 		)
 		if seq_result == null:
 			sequential_success = false

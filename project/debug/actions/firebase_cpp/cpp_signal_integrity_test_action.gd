@@ -23,7 +23,7 @@ func execute_cpp_action() -> bool:
 
 		var start_time = Time.get_ticks_msec()
 		var result = await execute_cpp_operation(
-			"set_value_async", [test_path, test_value], "Signal Integrity " + str(i)
+			"set_value_async", [test_path, test_value], "Signal Integrity " + str(i), "set_value"
 		)
 		var duration = Time.get_ticks_msec() - start_time
 

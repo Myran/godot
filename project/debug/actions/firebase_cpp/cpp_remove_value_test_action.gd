@@ -19,7 +19,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Step 1: Set test value
 	var set_start: int = Time.get_ticks_msec()
 	var set_result: Variant = await execute_cpp_operation(
-		"set_value_async", [test_path, test_value], "C++ Set (for Remove test)"
+		"set_value_async", [test_path, test_value], "C++ Set (for Remove test)", "set_value"
 	)
 	var set_duration: int = Time.get_ticks_msec() - set_start
 
@@ -42,7 +42,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Step 2: Remove the value directly via C++
 	var remove_start: int = Time.get_ticks_msec()
 	var remove_result: Variant = await execute_cpp_operation(
-		"remove_value_async", [test_path], "C++ Remove Value"
+		"remove_value_async", [test_path], "C++ Remove Value", "remove_value"
 	)
 	var remove_duration: int = Time.get_ticks_msec() - remove_start
 	var total_duration: int = Time.get_ticks_msec() - start_time

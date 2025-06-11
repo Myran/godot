@@ -20,7 +20,8 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var test1_result: Variant = await execute_cpp_operation(
 		"get_value_async",
 		[["cpp_tests", "error_handling", str(Time.get_ticks_msec())]],
-		"Basic Operation Test"
+		"Basic Operation Test",
+		"get_value"
 	)
 	var test1_passed: bool = test1_result != null
 	if test1_passed:
@@ -39,7 +40,8 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var test2_result: Variant = await execute_cpp_operation(
 		"set_value_async",
 		[["cpp_tests", "error_test", str(Time.get_ticks_msec())], "test_value"],
-		"Set Operation Test"
+		"Set Operation Test",
+		"set_value"
 	)
 	var test2_passed: bool = test2_result != null
 	if test2_passed:
@@ -58,7 +60,8 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var test3_result: Variant = await execute_cpp_operation(
 		"get_value_async",
 		[["cpp_tests", "invalid", "path", "should", "fail"]],
-		"Invalid Path Handling Test"
+		"Invalid Path Handling Test",
+		"get_value"
 	)
 	# For error handling, we test that the system doesn't crash and handles errors gracefully
 	var test3_passed: bool = true  # Any completion without crash is considered success

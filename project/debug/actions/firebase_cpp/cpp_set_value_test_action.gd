@@ -17,7 +17,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	var operation_start: int = Time.get_ticks_msec()
 	var result: Variant = await execute_cpp_operation(
-		"set_value_async", [test_path, test_value], "C++ Set Value"
+		"set_value_async", [test_path, test_value], "C++ Set Value", "set_value"
 	)
 	var operation_duration: int = Time.get_ticks_msec() - operation_start
 	var total_duration: int = Time.get_ticks_msec() - start_time

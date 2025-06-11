@@ -28,7 +28,8 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		var result: Variant = await execute_cpp_operation(
 			"set_value_async",
 			[data.path, data.value],
-			"Concurrent Set " + str(data.operation_id)
+			"Concurrent Set " + str(data.operation_id),
+			"set_value"
 		)
 		var operation_duration: int = Time.get_ticks_msec() - operation_start
 
@@ -50,7 +51,8 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		var result: Variant = await execute_cpp_operation(
 			"get_value_async",
 			[data.path],
-			"Concurrent Get " + str(data.operation_id)
+			"Concurrent Get " + str(data.operation_id),
+			"get_value"
 		)
 		var operation_duration: int = Time.get_ticks_msec() - operation_start
 		var value_matches: bool = result != null  # Simplified validation

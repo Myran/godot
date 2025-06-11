@@ -35,7 +35,10 @@ func execute_cpp_action() -> bool:
 		_update_status("Setting " + size_config.description + " via C++...")
 		var set_start_time = Time.get_ticks_msec()
 		var set_result = await execute_cpp_operation(
-			"set_value_async", [test_path, large_data], "Large Data Set (" + size_config.name + ")"
+			"set_value_async",
+			[test_path, large_data],
+			"Large Data Set (" + size_config.name + ")",
+			"set_value"
 		)
 		var set_duration = Time.get_ticks_msec() - set_start_time
 
@@ -50,7 +53,10 @@ func execute_cpp_action() -> bool:
 			_update_status("Getting " + size_config.description + " via C++...")
 			var get_start_time = Time.get_ticks_msec()
 			var get_result = await execute_cpp_operation(
-				"get_value_async", [test_path], "Large Data Get (" + size_config.name + ")"
+				"get_value_async",
+				[test_path],
+				"Large Data Get (" + size_config.name + ")",
+				"get_value"
 			)
 			get_duration = Time.get_ticks_msec() - get_start_time
 
