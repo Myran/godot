@@ -349,59 +349,54 @@ check OUTPUT="console":
     
     if [[ "{{OUTPUT}}" == "log" ]]; then
         echo "Validating GDScript code and saving errors to log file..."
-        # Remove previous log file to avoid confusion with old errors
         rm -f validation_errors.log
-        LOG_REDIRECT="> validation_errors.log 2>&1"
     else
         echo "Validating GDScript code..."
-        LOG_REDIRECT=""
     fi
     
-    # Start the Godot process and save its PID
-    if [[ "{{OUTPUT}}" == "log" ]]; then
-        ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --close --check-only --debug --verbose > validation_errors.log 2>&1 &
-    else
-        ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --verbose --debug &
-    fi
-    VALIDATION_PID=$!
+    cd {{PROJECT_PATH}}
     
-    echo "Started validation process with PID: $VALIDATION_PID"
+    # Find all .gd files excluding addons
+    gdscript_files=$(find . -name "*.gd" -type f -not -path "./addons/*")
+    total_files=$(echo "$gdscript_files" | wc -l)
     
-    # Wait for up to 90 seconds for the process to complete naturally
-    TIMEOUT=90
-    for ((i=1; i<=TIMEOUT; i++)); do
-        if ! ps -p $VALIDATION_PID > /dev/null 2>&1; then
-            echo "Validation process completed after $i seconds"
-            if [[ "{{OUTPUT}}" == "log" ]]; then
-                echo "Validation complete. Errors saved to validation_errors.log"
-            else
-                echo "Validation complete. Any errors will be shown above."
+    echo "Checking $total_files GDScript files..."
+    
+    error_count=0
+    current_file=0
+    
+    for file in $gdscript_files; do
+        current_file=$((current_file + 1))
+        
+        if [[ "{{OUTPUT}}" == "log" ]]; then
+            if ! gdparse "$file" >> validation_errors.log 2>&1; then
+                echo "ERROR in $file" >> validation_errors.log
+                error_count=$((error_count + 1))
             fi
-            exit 0
+        else
+            if ! gdparse "$file" 2>/dev/null; then
+                echo "❌ $file"
+                error_count=$((error_count + 1))
+            fi
         fi
         
-        # Print a progress message every 15 seconds
-        if [ $((i % 15)) -eq 0 ]; then
-            echo "Validation still running after $i seconds..."
+        # Show progress every 25 files
+        if [[ "{{OUTPUT}}" != "log" && $((current_file % 25)) -eq 0 ]]; then
+            echo "Progress: $current_file/$total_files files checked..."
         fi
-        
-        sleep 1
     done
     
-    # If we get here, the process is still running after the timeout
-    if ps -p $VALIDATION_PID > /dev/null 2>&1; then
-        echo "Validation process (PID: $VALIDATION_PID) timed out after $TIMEOUT seconds. Terminating..."
-        kill $VALIDATION_PID 2>/dev/null || true
-        
-        # Give it a moment to terminate gracefully
-        sleep 2
-        
-        # Force kill if still running
-        if ps -p $VALIDATION_PID > /dev/null 2>&1; then
-            echo "Process didn't terminate gracefully. Forcing termination..."
-            kill -9 $VALIDATION_PID 2>/dev/null || true
+    if [[ $error_count -eq 0 ]]; then
+        echo "✅ All $total_files GDScript files passed validation"
+        if [[ "{{OUTPUT}}" == "log" ]]; then
+            echo "No errors found" > validation_errors.log
         fi
-        echo "Validation process terminated due to timeout."
+        exit 0
+    else
+        echo "❌ Found $error_count files with syntax errors"
+        if [[ "{{OUTPUT}}" == "log" ]]; then
+            echo "Validation complete. Errors saved to validation_errors.log"
+        fi
         exit 1
     fi
 
