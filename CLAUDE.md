@@ -70,6 +70,24 @@ just list-test-lists                       # Show available test lists
 just help                                  # View all available commands
 ```
 
+### ✅ Code Validation & Quality Assurance
+```bash
+# 🚀 Fast Syntax Validation (3 seconds)
+just validate                              # Fast gdparse-based syntax checking
+just format                                # Format all GDScript files
+
+# 🔍 Runtime Validation (10-15 seconds)
+just validate-godot                        # Runtime validation - errors only (default)
+just validate-godot all                    # Runtime validation - full output  
+just validate-godot "INFO.*debug"          # Custom filter patterns
+just validate-godot "WARN"                 # Show warnings only
+
+# 💡 Use Cases:
+# - validate: Quick syntax check during development
+# - validate-godot: Full runtime validation with game initialization
+# - Custom filters: Focus on specific log types or components
+```
+
 ### Engine Development
 ```bash
 just godot-build-editor                   # Build custom Godot editor
@@ -146,12 +164,13 @@ just config-status-android               # Check current config
 ## Development Workflow
 0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
 1. **Local Development**: Use `just run-desktop` for rapid iteration and use Godot tools
-2. **🎯 Unified Testing**: Use `just test-android TARGET` for comprehensive testing (auto-detects patterns/configs/lists)
-3. **Quick Iteration**: Use `just config-restart-android 'Action Name'` for ultra-fast 5-second cycles
-4. **Enhanced Debugging**: Use `just test-android-enhanced TARGET` for detailed error analysis and performance tracking
-5. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
-6. **Full Validation**: Run `just test-all-android` before commits
-7. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+2. **Code Validation**: Use `just validate` for fast syntax checking during development
+3. **🎯 Unified Testing**: Use `just test-android TARGET` for comprehensive testing (auto-detects patterns/configs/lists)
+4. **Quick Iteration**: Use `just config-restart-android 'Action Name'` for ultra-fast 5-second cycles
+5. **Enhanced Debugging**: Use `just test-android-enhanced TARGET` for detailed error analysis and performance tracking
+6. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
+7. **Pre-Commit Validation**: Run `just validate-godot` for runtime validation and `just test-all-android` before commits
+8. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
 
 ## 💪 Strong Typing & Code Quality
 
@@ -387,13 +406,20 @@ The validation system provides detailed feedback:
 
 **During Development:**
 1. Write code with explicit types from the start
-2. Use `just validate` to catch type issues early
+2. Use `just validate` to catch syntax and type issues early (3 seconds)
 3. Run `just format` before commits to maintain consistency
 
 **Before Commits:**
-1. Ensure all validation passes without type warnings
-2. Run full test suite to verify type safety doesn't break functionality
-3. Address any "has no static type" warnings in validation output
+1. Run `just validate-godot` for comprehensive runtime validation (10-15 seconds)
+2. Ensure all validation passes without type warnings
+3. Run full test suite to verify type safety doesn't break functionality
+4. Address any "has no static type" warnings in validation output
+
+**Validation Command Summary:**
+- `just validate`: Fast syntax checking during development
+- `just validate-godot`: Runtime validation with game initialization
+- `just validate-godot "ERROR:"`: Focus on typing errors (default)
+- `just validate-godot all`: Full diagnostic output when needed
 
 This strong typing approach creates a more robust, maintainable codebase that fails fast during development rather than at runtime in production.
 

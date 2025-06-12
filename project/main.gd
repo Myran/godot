@@ -39,6 +39,9 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 			%PopupDebug.show()
 		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()
+		DebugManager.DebugEventType.EVENT_QUIT:
+			Log.info("Quit event received, exiting application", {}, ["debug", "system"])
+			get_tree().quit()
 
 
 func _input(event: InputEvent) -> void:

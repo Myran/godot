@@ -403,6 +403,43 @@ check OUTPUT="console":
 # Alias for check command (mentioned in project docs)
 validate OUTPUT="console": (check OUTPUT)
 
+# Runtime validation using Godot headless with quit action
+validate-godot FILTER="ERROR:":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🚀 Running Godot headless runtime validation..."
+    
+    # Set the embedded config to use the quit action
+    echo "📋 Setting embedded config to system-quit-only..."
+    just config-set system-quit-only
+    
+    # Determine filter settings
+    if [[ "{{FILTER}}" == "all" ]]; then
+        echo "🎮 Starting Godot headless with debug system (showing all output)..."
+        FILTER_CMD="cat"
+    else
+        echo "🎮 Starting Godot headless with debug system (filtering for '{{FILTER}}')..."
+        FILTER_CMD="grep --line-buffered '{{FILTER}}'"
+    fi
+    
+    # Start Godot headless process with filtering
+    timeout 30s ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --debug --verbose 2>&1 | eval "$FILTER_CMD" || {
+        exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            echo "❌ Godot headless validation timed out after 30 seconds"
+            exit 1
+        elif [ $exit_code -eq 0 ]; then
+            echo "✅ Godot headless validation completed successfully"
+            exit 0
+        else
+            echo "❌ Godot headless validation failed with exit code $exit_code"
+            exit $exit_code
+        fi
+    }
+    
+    echo "✅ Runtime validation completed successfully"
+
 # Pre-build hook
 pre-build:
     @echo "Running pre-build tasks..."
