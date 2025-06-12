@@ -983,23 +983,87 @@ test-monitor-android DURATION="30":
     # Create timestamped log file
     LOG_FILE="monitor_logs_{{timestamp}}.log"
     
-    # Start monitoring with comprehensive filtering
-    timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot | \
-    grep -E "(DEBUG_TEST_|debug.*action|Actions retrieved|Executing.*action|ERROR|FAIL|SUCCESS|\\[debug|\\[test)" | \
-    tee "$LOG_FILE" || true
+    # Clear old logs for fresh monitoring
+    echo "🧹 Clearing old logs for fresh monitoring..."
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c
     
-    echo ""
-    echo "📊 Monitoring completed"
-    echo "💾 Full filtered log saved: $LOG_FILE"
+    # Use activity-based timeout monitoring
+    completion_status=$(just _monitor-with-activity-timeout "" "$LOG_FILE" "{{DURATION}}")
     
-    # Show summary if any debug activity was captured
-    if [ -s "$LOG_FILE" ]; then
+    # Apply filtering and display results
+    if [ -f "$LOG_FILE" ]; then
         echo ""
-        echo "📋 Recent debug activity summary:"
-        tail -5 "$LOG_FILE" | sed 's/^/  /'
+        echo "📊 Monitoring completed"
+        echo "💾 Filtering and displaying results..."
+        
+        # Filter and display the log with the same pattern
+        grep -E "(DEBUG_TEST_|debug.*action|Actions retrieved|Executing.*action|ERROR|FAIL|SUCCESS|\\[debug|\\[test)" "$LOG_FILE" || true
+        
+        echo ""
+        echo "💾 Full filtered log saved: $LOG_FILE"
+        
+        # Show summary if any debug activity was captured
+        if [ -s "$LOG_FILE" ]; then
+            echo ""
+            echo "📋 Recent debug activity summary:"
+            tail -5 "$LOG_FILE" | sed 's/^/  /'
+        else
+            echo "ℹ️  No debug activity detected during monitoring period"
+        fi
     else
-        echo "ℹ️  No debug activity detected during monitoring period"
+        echo "❌ No log file generated"
     fi
+
+# Reusable activity-based timeout monitoring function
+_monitor-with-activity-timeout TEST_ID LOG_FILE DURATION GREP_PATTERN="DEBUG_TEST_|debug.*action|Actions retrieved|Executing.*action|ERROR|FAIL|SUCCESS|\\[debug|\\[test":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Start log capture in background
+    adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot > "{{LOG_FILE}}" 2>/dev/null &
+    LOGCAT_PID=$!
+    
+    # Activity-based timeout monitoring
+    elapsed_time=0
+    time_since_last_activity=0
+    last_activity_count=0
+    max_idle_time={{DURATION}}
+    test_complete=false
+    
+    while [ $time_since_last_activity -lt $max_idle_time ] && [ "$test_complete" = false ]; do
+        sleep 1
+        elapsed_time=$((elapsed_time + 1))
+        time_since_last_activity=$((time_since_last_activity + 1))
+        
+        if [ -f "{{LOG_FILE}}" ]; then
+            # Check for test completion if TEST_ID provided
+            if [ -n "{{TEST_ID}}" ] && grep -q "DEBUG_TEST_COMPLETE.*{{TEST_ID}}" "{{LOG_FILE}}" 2>/dev/null; then
+                test_complete=true
+                break
+            fi
+            
+            # Check for any activity matching the pattern
+            current_activity_count=$(grep -cE "{{GREP_PATTERN}}" "{{LOG_FILE}}" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Reset timeout if new activity detected
+            if [ "$current_activity_count" -gt "$last_activity_count" ]; then
+                time_since_last_activity=0
+                last_activity_count=$current_activity_count
+            fi
+        fi
+        
+        # Progress indicator
+        if [ $((elapsed_time % 5)) -eq 0 ]; then
+            echo "   Progress: ${elapsed_time}s elapsed, ${time_since_last_activity}s idle (timeout: ${max_idle_time}s)"
+        fi
+    done
+    
+    # Stop log capture
+    kill $LOGCAT_PID 2>/dev/null || true
+    wait $LOGCAT_PID 2>/dev/null || true
+    
+    # Return completion status
+    echo "$test_complete"
 
 # Automated test with pass/fail determination and unique test IDs for Android
 # Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
@@ -2265,16 +2329,38 @@ build-ios-executable:
     cd ..
     echo "✅ iOS executable build complete"
 
-# Monitor Android debug logs in real-time
+# Monitor Android debug logs in real-time with activity-based timeout
 monitor-debug-logs DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📱 Monitoring debug logs for {{DURATION}} seconds..."
+    echo "🔄 Timeout resets after each debug activity"
     echo "Press Ctrl+C to stop early"
     echo ""
     
-    timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat -v time -s godot | \
-    grep -E "(debug|startup|DebugStartup|INFO)" --line-buffered || true
+    # Create timestamped log file
+    LOG_FILE="debug_monitor_{{timestamp}}.log"
+    
+    # Clear old logs for fresh monitoring
+    echo "🧹 Clearing old logs for fresh monitoring..."
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c
+    
+    # Use activity-based timeout monitoring with debug-specific pattern
+    completion_status=$(just _monitor-with-activity-timeout "" "$LOG_FILE" "{{DURATION}}" "(debug|startup|DebugStartup|INFO)")
+    
+    # Apply filtering and display results
+    if [ -f "$LOG_FILE" ]; then
+        echo ""
+        echo "📊 Filtering and displaying debug logs..."
+        
+        # Filter and display the log with the same pattern
+        grep -E "(debug|startup|DebugStartup|INFO)" "$LOG_FILE" || true
+        
+        echo ""
+        echo "💾 Full log saved: $LOG_FILE"
+    else
+        echo "❌ No log file generated"
+    fi
     
     echo ""
     echo "✅ Monitoring complete"
