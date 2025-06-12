@@ -9,16 +9,16 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
 
-	var test_path = ["backend_tests", "async_pattern"]
-	var test_key = "test_" + str(Time.get_ticks_msec())
-	var test_value = "Backend Async Test: " + str(Time.get_ticks_msec())
+	var test_path: Array = ["backend_tests", "async_pattern"]
+	var test_key: String = "test_" + str(Time.get_ticks_msec())
+	var test_value: String = "Backend Async Test: " + str(Time.get_ticks_msec())
 
 	# Test set_data pattern
-	var set_success = await test_backend_async_pattern(
+	var set_success: bool = await test_backend_async_pattern(
 		"set_data", test_path, test_key, test_value, "Backend Set Data"
 	)
 
@@ -40,11 +40,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 	# Test get_data pattern
-	var get_success = await test_backend_async_pattern(
+	var get_success: bool = await test_backend_async_pattern(
 		"get_data", test_path, test_key, null, "Backend Get Data"
 	)
 
-	var overall_success = set_success and get_success
+	var overall_success: bool = set_success and get_success
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if overall_success:

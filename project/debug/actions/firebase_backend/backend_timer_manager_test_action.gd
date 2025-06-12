@@ -9,11 +9,11 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend timer management...")
 
-	var backend = get_firebase_backend_for_testing()
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
 		return DebugAction.Result.new_failure(
 			"Firebase backend not available for testing",
@@ -26,9 +26,9 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	# Test 1: Normal operation within timeout
 	_update_status("Testing normal timeout handling...")
-	var test_path = ["backend_tests", "timer_manager", "normal"]
-	var test_key = "timer_test_" + str(Time.get_ticks_msec())
-	var test_value = "Timer Test: " + str(Time.get_ticks_msec())
+	var test_path: Array = ["backend_tests", "timer_manager", "normal"]
+	var test_key: String = "timer_test_" + str(Time.get_ticks_msec())
+	var test_value: String = "Timer Test: " + str(Time.get_ticks_msec())
 
 	var timer_start: int = Time.get_ticks_msec()
 	var normal_result: bool = await test_backend_async_pattern(
@@ -38,20 +38,20 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	# Test 2: Multiple rapid requests (stress test RequestSignalHelper)
 	_update_status("Testing rapid request handling...")
-	var rapid_requests = 3
-	var rapid_success = 0
-	var total_rapid_duration = 0
+	var rapid_requests: int = 3
+	var rapid_success: int = 0
+	var total_rapid_duration: int = 0
 
-	for i in range(rapid_requests):
-		var rapid_path = ["backend_tests", "timer_manager", "rapid", str(i)]
-		var rapid_key = "rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var rapid_value = "Rapid Test " + str(i)
+	for i: int in range(rapid_requests):
+		var rapid_path: Array = ["backend_tests", "timer_manager", "rapid", str(i)]
+		var rapid_key: String = "rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
+		var rapid_value: String = "Rapid Test " + str(i)
 
 		timer_start = Time.get_ticks_msec()
-		var rapid_result = await test_backend_async_pattern(
+		var rapid_result: bool = await test_backend_async_pattern(
 			"set_data", rapid_path, rapid_key, rapid_value, "Rapid " + str(i)
 		)
-		var rapid_duration = Time.get_ticks_msec() - timer_start
+		var rapid_duration: int = Time.get_ticks_msec() - timer_start
 
 		if rapid_result:
 			rapid_success += 1
@@ -60,16 +60,16 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		# Small delay between requests
 		await Engine.get_main_loop().create_timer(0.05).timeout
 
-	var rapid_success_rate = float(rapid_success) / float(rapid_requests)
-	var avg_rapid_duration = total_rapid_duration / rapid_requests
+	var rapid_success_rate: float = float(rapid_success) / float(rapid_requests)
+	var avg_rapid_duration: int = total_rapid_duration / rapid_requests
 
 	# Evaluate results
-	var normal_ok = normal_result and normal_duration < 5000  # Under 5 seconds
-	var rapid_ok = rapid_success_rate >= 0.8  # 80% success rate
-	var overall_success = normal_ok and rapid_ok
+	var normal_ok: bool = normal_result and normal_duration < 5000  # Under 5 seconds
+	var rapid_ok: bool = rapid_success_rate >= 0.8  # 80% success rate
+	var overall_success: bool = normal_ok and rapid_ok
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"normal_test":
 		{"success": normal_result, "duration_ms": normal_duration, "within_timeout": normal_ok},
 		"rapid_test":

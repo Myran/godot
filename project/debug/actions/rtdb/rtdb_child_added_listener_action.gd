@@ -13,7 +13,6 @@ func _init() -> void:
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
 
-
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")

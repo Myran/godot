@@ -613,9 +613,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	# All actions are now handled uniformly through DebugRegistry
 
 
-
-
-
 func _abort_current_execution_if_needed() -> void:
 	"""Abort current action execution or Run All operation"""
 	if not _is_executing_all:
@@ -868,9 +865,6 @@ func _execute_multiple_actions(
 	)
 
 
-
-
-
 # Sequential action execution for Run All functionality
 func _execute_next_action_in_sequence(
 	actions_to_run: Array[ActionExecutionResult],
@@ -1110,11 +1104,13 @@ func _set_ui_for_execution(is_executing: bool) -> void:
 func _on_button_close_pressed() -> void:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 
+
 func _on_global_debug_event(
 	event_type: DebugManager.DebugEventType, _args: Array[Variant] = []
 ) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST:
 		_toggle_result_expansion()
+
 
 func show_menu_content() -> void:
 	show()
@@ -1133,7 +1129,6 @@ func clear_output_for_new_action(_action: DebugAction) -> void:
 
 
 func display_output_from_service(text: String, _is_error: bool = false) -> void:
-
 	if is_instance_valid(status_label):
 		status_label.bbcode_enabled = true
 		status_label.scroll_following = true
