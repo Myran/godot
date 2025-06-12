@@ -33,9 +33,9 @@ func get_firebase_backend_for_testing() -> FirebaseBackend:
 		)
 		return null
 
-	var backend: Variant = data_source._backend
-	if backend and backend is FirebaseBackend:
-		firebase_backend = backend as FirebaseBackend
+	var backend_instance: FirebaseBackend = data_source._backend
+	if backend_instance and is_instance_valid(backend_instance):
+		firebase_backend = backend_instance
 		Log.debug(
 			"Firebase backend acquired for testing",
 			{"backend_type": firebase_backend.get_script().get_path()},
@@ -45,7 +45,7 @@ func get_firebase_backend_for_testing() -> FirebaseBackend:
 	else:
 		Log.error(
 			"Backend is not Firebase type or is null",
-			{"backend_type": backend.get_class() if backend else "null"},
+			{"backend_type": backend_instance.get_class() if backend_instance else "null"},
 			["debug", "backend_firebase", "error"]
 		)
 		return null
@@ -113,7 +113,9 @@ func test_backend_async_pattern(
 # New DebugAction.Result pattern - subclasses should override this
 func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Default implementation for base class - subclasses should override
-	var error_message = "_execute_action_logic() not implemented in " + get_script().get_path()
+	var error_message: String = (
+		"_execute_action_logic() not implemented in " + get_script().get_path()
+	)
 	push_error(error_message)
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
 

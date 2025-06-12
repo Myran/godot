@@ -728,6 +728,9 @@ func execute() -> void:
 				["debug", "test", "failure"]
 			)
 
+	# Emit execution completed signal that UI components are waiting for
+	execution_completed.emit(success, result)
+
 
 # Type-safe result evaluation methods
 func _evaluate_action_result(result: Variant) -> bool:

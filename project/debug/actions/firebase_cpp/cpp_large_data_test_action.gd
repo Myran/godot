@@ -11,48 +11,48 @@ func _init() -> void:
 func execute_cpp_action() -> bool:
 	_update_status("Testing C++ with large data payloads...")
 
-	var test_results = []
-	var data_sizes = [
+	var test_results: Array[Dictionary] = []
+	var data_sizes: Array[Dictionary] = [
 		{"name": "Small", "size": 1024, "description": "1KB data"},  # 1KB
 		{"name": "Medium", "size": 10240, "description": "10KB data"},  # 10KB
 		{"name": "Large", "size": 51200, "description": "50KB data"},  # 50KB
 		{"name": "XLarge", "size": 102400, "description": "100KB data"}  # 100KB
 	]
 
-	var successful_tests = 0
-	var total_tests = data_sizes.size()
+	var successful_tests: int = 0
+	var total_tests: int = data_sizes.size()
 
-	for size_config in data_sizes:
+	for size_config: Dictionary in data_sizes:
 		_update_status("Testing " + size_config.description + "...")
 
 		# Generate test data of specified size
-		var large_data = _generate_test_data(size_config.size)
-		var test_path = [
+		var large_data: String = _generate_test_data(size_config.size)
+		var test_path: Array[String] = [
 			"cpp_tests", "large_data", size_config.name.to_lower(), str(Time.get_ticks_msec())
 		]
 
 		# Test set operation with large data
 		_update_status("Setting " + size_config.description + " via C++...")
-		var set_start_time = Time.get_ticks_msec()
-		var set_result = await execute_cpp_operation(
+		var set_start_time: int = Time.get_ticks_msec()
+		var set_result: Variant = await execute_cpp_operation(
 			"set_value_async",
 			[test_path, large_data],
 			"Large Data Set (" + size_config.name + ")",
 			"set_value"
 		)
-		var set_duration = Time.get_ticks_msec() - set_start_time
+		var set_duration: int = Time.get_ticks_msec() - set_start_time
 
-		var set_success = set_result != null
+		var set_success: bool = set_result != null
 
 		# Test get operation if set was successful
-		var get_success = false
-		var get_duration = 0
-		var data_matches = false
+		var get_success: bool = false
+		var get_duration: int = 0
+		var data_matches: bool = false
 
 		if set_success:
 			_update_status("Getting " + size_config.description + " via C++...")
-			var get_start_time = Time.get_ticks_msec()
-			var get_result = await execute_cpp_operation(
+			var get_start_time: int = Time.get_ticks_msec()
+			var get_result: Variant = await execute_cpp_operation(
 				"get_value_async",
 				[test_path],
 				"Large Data Get (" + size_config.name + ")",
@@ -71,7 +71,7 @@ func execute_cpp_action() -> bool:
 					["debug", "cpp_firebase"]
 				)
 
-		var test_success = set_success and get_success and data_matches
+		var test_success: bool = set_success and get_success and data_matches
 		if test_success:
 			successful_tests += 1
 
@@ -93,10 +93,10 @@ func execute_cpp_action() -> bool:
 		# Small delay between tests
 		await Engine.get_main_loop().create_timer(0.5).timeout
 
-	var success_rate = float(successful_tests) / float(total_tests)
-	var overall_success = success_rate >= 0.75  # 75% of large data tests should pass
+	var success_rate: float = float(successful_tests) / float(total_tests)
+	var overall_success: bool = success_rate >= 0.75  # 75% of large data tests should pass
 
-	var final_result = {
+	var _final_result: Dictionary = {
 		"successful_tests": successful_tests,
 		"total_tests": total_tests,
 		"success_rate": success_rate,
@@ -131,16 +131,16 @@ func execute_cpp_action() -> bool:
 
 # Generate test data of specified size
 func _generate_test_data(target_size: int) -> String:
-	var data = "Large Data Test - "
-	var base_content = "This is test data for Firebase C++ layer performance validation. "
+	var data: String = "Large Data Test - "
+	var base_content: String = "This is test data for Firebase C++ layer performance validation. "
 
 	# Calculate how many repetitions we need
-	var header_size = data.length()
-	var remaining_size = target_size - header_size
-	var repetitions = max(1, remaining_size / base_content.length())
+	var header_size: int = data.length()
+	var remaining_size: int = target_size - header_size
+	var repetitions: int = max(1, remaining_size / base_content.length())
 
 	# Build the large data string
-	for i in range(repetitions):
+	for i: int in range(repetitions):
 		data += base_content
 
 	# Add timestamp and size info
@@ -152,7 +152,7 @@ func _generate_test_data(target_size: int) -> String:
 	if data.length() > target_size:
 		data = data.substr(0, target_size)
 	elif data.length() < target_size:
-		var padding_needed = target_size - data.length()
+		var padding_needed: int = target_size - data.length()
 		data += "X".repeat(padding_needed)
 
 	return data

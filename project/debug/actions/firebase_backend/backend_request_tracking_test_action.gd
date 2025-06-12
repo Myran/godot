@@ -9,11 +9,11 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend request tracking...")
 
-	var backend = get_firebase_backend_for_testing()
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
 		return DebugAction.Result.new_failure(
 			"Firebase backend not available for testing",
@@ -24,27 +24,27 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	var tracking_tests = []
-	var successful_tests = 0
-	var total_tests = 0
+	var tracking_tests: Array[Dictionary] = []
+	var successful_tests: int = 0
+	var total_tests: int = 0
 
 	# Test 1: Sequential request tracking
 	_update_status("Testing sequential request tracking...")
 	total_tests += 1
-	var sequential_count = 3
-	var sequential_results = []
-	var sequential_success = 0
+	var sequential_count: int = 3
+	var sequential_results: Array[Dictionary] = []
+	var sequential_success: int = 0
 
-	for i in range(sequential_count):
-		var seq_path = ["backend_tests", "request_tracking", "sequential", str(i)]
-		var seq_key = "req_track_seq_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var seq_value = "Sequential request " + str(i)
+	for i: int in range(sequential_count):
+		var seq_path: Array[String] = ["backend_tests", "request_tracking", "sequential", str(i)]
+		var seq_key: String = "req_track_seq_" + str(i) + "_" + str(Time.get_ticks_msec())
+		var seq_value: String = "Sequential request " + str(i)
 
-		var seq_start = Time.get_ticks_msec()
-		var seq_result = await test_backend_async_pattern(
+		var seq_start: int = Time.get_ticks_msec()
+		var seq_result: bool = await test_backend_async_pattern(
 			"set_data", seq_path, seq_key, seq_value, "Tracking: Seq " + str(i)
 		)
-		var seq_duration = Time.get_ticks_msec() - seq_start
+		var seq_duration: int = Time.get_ticks_msec() - seq_start
 
 		sequential_results.append(
 			{

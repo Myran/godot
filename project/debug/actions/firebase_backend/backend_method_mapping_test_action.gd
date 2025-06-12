@@ -9,11 +9,11 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend method mappings...")
 
-	var backend = get_firebase_backend_for_testing()
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
 		return DebugAction.Result.new_failure(
 			"Firebase backend not available for testing",
@@ -24,20 +24,21 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	var test_base_path = ["backend_tests", "method_mapping"]
-	var test_timestamp = str(Time.get_ticks_msec())
-	var method_results = {}
-	var total_methods = 0
-	var successful_methods = 0
+	var test_base_path: Array[String] = ["backend_tests", "method_mapping"]
+	var test_timestamp: String = str(Time.get_ticks_msec())
+	var method_results: Dictionary = {}
+	var total_methods: int = 0
+	var successful_methods: int = 0
 
 	# Test 1: set_data method
 	_update_status("Testing set_data method mapping...")
 	total_methods += 1
-	var set_path = test_base_path + ["set_test"]
-	var set_key = "set_" + test_timestamp
-	var set_value = "Set method test value"
+	var set_path: Array[String] = []
+	set_path.assign(test_base_path + ["set_test"])
+	var set_key: String = "set_" + test_timestamp
+	var set_value: String = "Set method test value"
 
-	var set_success = await test_backend_async_pattern(
+	var set_success: bool = await test_backend_async_pattern(
 		"set_data", set_path, set_key, set_value, "Method: set_data"
 	)
 	method_results["set_data"] = {"success": set_success, "tested": true}
@@ -47,7 +48,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 2: get_data method (using the value we just set)
 	_update_status("Testing get_data method mapping...")
 	total_methods += 1
-	var get_success = await test_backend_async_pattern(
+	var get_success: bool = await test_backend_async_pattern(
 		"get_data", set_path, set_key, null, "Method: get_data"
 	)
 	method_results["get_data"] = {"success": get_success, "tested": true}
@@ -57,10 +58,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 3: push_data method
 	_update_status("Testing push_data method mapping...")
 	total_methods += 1
-	var push_path = test_base_path + ["push_test"]
-	var push_value = {"message": "Push method test", "timestamp": test_timestamp}
+	var push_path: Array[String] = []
+	push_path.assign(test_base_path + ["push_test"])
+	var push_value: Dictionary = {"message": "Push method test", "timestamp": test_timestamp}
 
-	var push_success = await test_backend_async_pattern(
+	var push_success: bool = await test_backend_async_pattern(
 		"push_data", push_path, "", push_value, "Method: push_data"
 	)
 	method_results["push_data"] = {"success": push_success, "tested": true}
@@ -70,7 +72,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 4: remove_data method (remove the set value)
 	_update_status("Testing remove_data method mapping...")
 	total_methods += 1
-	var remove_success = await test_backend_async_pattern(
+	var remove_success: bool = await test_backend_async_pattern(
 		"remove_data", set_path, set_key, null, "Method: remove_data"
 	)
 	method_results["remove_data"] = {"success": remove_success, "tested": true}
@@ -78,11 +80,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		successful_methods += 1
 
 	# Calculate success rate
-	var success_rate = float(successful_methods) / float(total_methods)
-	var overall_success = success_rate >= 0.75  # 75% of methods must work
+	var success_rate: float = float(successful_methods) / float(total_methods)
+	var overall_success: bool = success_rate >= 0.75  # 75% of methods must work
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"total_methods_tested": total_methods,
 		"successful_methods": successful_methods,
 		"success_rate": success_rate,

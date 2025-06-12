@@ -12,7 +12,7 @@ func _init() -> void:
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
-	var test_path: Array = ["cpp_tests", "direct", "set_value", str(Time.get_ticks_msec())]
+	var test_path: Array[String] = ["cpp_tests", "direct", "set_value", str(Time.get_ticks_msec())]
 	var test_value: String = "CPP Direct Value: " + str(Time.get_ticks_msec())
 
 	var operation_start: int = Time.get_ticks_msec()
