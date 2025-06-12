@@ -11,21 +11,21 @@ func _init() -> void:
 func execute_cpp_action() -> bool:
 	_update_status("Testing C++ signal integrity...")
 
-	var operations_count = 3
-	var successful_operations = 0
-	var total_duration = 0
+	var operations_count: int = 3
+	var successful_operations: int = 0
+	var total_duration: int = 0
 
-	for i in range(operations_count):
+	for i: int in range(operations_count):
 		_update_status("C++ Signal test " + str(i + 1) + "/" + str(operations_count) + "...")
 
-		var test_path = ["cpp_tests", "signal_integrity", str(i), str(Time.get_ticks_msec())]
-		var test_value = "Signal Test " + str(i) + ": " + str(Time.get_ticks_msec())
+		var test_path: Array = ["cpp_tests", "signal_integrity", str(i), str(Time.get_ticks_msec())]
+		var test_value: String = "Signal Test " + str(i) + ": " + str(Time.get_ticks_msec())
 
-		var start_time = Time.get_ticks_msec()
-		var result = await execute_cpp_operation(
+		var start_time: int = Time.get_ticks_msec()
+		var result: Variant = await execute_cpp_operation(
 			"set_value_async", [test_path, test_value], "Signal Integrity " + str(i), "set_value"
 		)
-		var duration = Time.get_ticks_msec() - start_time
+		var duration: int = Time.get_ticks_msec() - start_time
 
 		if result:
 			successful_operations += 1
@@ -45,8 +45,8 @@ func execute_cpp_action() -> bool:
 		# Small delay between operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
-	var success_rate = float(successful_operations) / float(operations_count)
-	var avg_duration = total_duration / operations_count if operations_count > 0 else 0
+	var success_rate: float = float(successful_operations) / float(operations_count)
+	var avg_duration: int = total_duration / operations_count if operations_count > 0 else 0
 
 	var success = success_rate >= 0.8  # 80% success rate required
 

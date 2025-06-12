@@ -59,8 +59,8 @@ func test_backend_async_pattern(
 	value: Variant = null,
 	operation_name: String = ""
 ) -> bool:
-	var start_time = Time.get_ticks_msec()
-	var backend = get_firebase_backend_for_testing()
+	var start_time: int = Time.get_ticks_msec()
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 
 	if not backend:
 		_update_status("ERROR: Backend not available", true)
@@ -70,7 +70,7 @@ func test_backend_async_pattern(
 		_update_status("ERROR: Backend not initialized", true)
 		return false
 
-	var op_name = operation_name if not operation_name.is_empty() else method_name
+	var op_name: String = operation_name if not operation_name.is_empty() else method_name
 	_update_status("Testing backend " + op_name + "...")
 
 	var result: Variant
@@ -89,8 +89,8 @@ func test_backend_async_pattern(
 			_update_status("ERROR: Unsupported backend method: " + method_name, true)
 			return false
 
-	var duration_ms = Time.get_ticks_msec() - start_time
-	var success = result != null
+	var duration_ms: int = Time.get_ticks_msec() - start_time
+	var success: bool = result != null
 
 	if success:
 		Log.info(

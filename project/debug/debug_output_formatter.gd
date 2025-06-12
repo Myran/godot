@@ -101,7 +101,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
-	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	report += (
 		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
 		% [FONT_SIZE_XXL, status_icon]
@@ -641,7 +640,7 @@ func _format_memory_info() -> String:
 	return "%.1f MB" % memory_mb
 
 
-func _build_result_status_section(success: bool, payload: Variant) -> String:
+func _build_result_status_section(success: bool, _payload: Variant) -> String:
 	"""Build enhanced result status section with visual indicators"""
 	var status_text: String = "SUCCESS" if success else "FAILURE"
 	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
@@ -735,13 +734,16 @@ func _build_performance_metrics_section(payload: Variant) -> String:
 
 	# Add throughput if calculable
 	if timing_info.has("duration_ms") and timing_info.has("operation_count"):
-		var throughput: float = (
-			float(timing_info["operation_count"]) / (float(timing_info["duration_ms"]) / 1000.0)
-		)
-		section += (
-			"[color=%s]Throughput:[/color] [color=%s]%.2f ops/sec[/color]\n"
-			% [UI_COLORS.text_secondary, UI_COLORS.number, throughput]
-		)
+		var operation_count_var: Variant = timing_info["operation_count"]
+		var duration_ms_var: Variant = timing_info["duration_ms"]
+		if operation_count_var is int and duration_ms_var is int:
+			var operation_count: int = operation_count_var
+			var duration_ms: int = duration_ms_var
+			var throughput: float = float(operation_count) / (float(duration_ms) / 1000.0)
+			section += (
+				"[color=%s]Throughput:[/color] [color=%s]%.2f ops/sec[/color]\n"
+				% [UI_COLORS.text_secondary, UI_COLORS.number, throughput]
+			)
 
 	section += "\n"
 	return section
@@ -787,7 +789,7 @@ func _build_test_data_analysis_section(payload: Variant, success: bool) -> Strin
 
 	if analysis.has("key_insights") and analysis["key_insights"].size() > 0:
 		section += "[color=%s]Key Insights:[/color]\n" % UI_COLORS.text_secondary
-		for insight in analysis["key_insights"]:
+		for insight: Variant in analysis["key_insights"]:
 			section += "  • [color=%s]%s[/color]\n" % [UI_COLORS.text_primary, insight]
 
 	section += "\n"
@@ -816,7 +818,7 @@ func _generate_performance_bar(duration_ms: int) -> String:
 	var color: String = _get_performance_color(category)
 
 	# Create a visual representation based on duration
-	var bar_length: int = min(20, max(1, duration_ms / 50))  # Scale based on duration
+	var bar_length: int = min(20, max(1, int(duration_ms / 50.0)))  # Scale based on duration
 	var bar: String = "▓".repeat(bar_length)
 
 	return (
@@ -909,11 +911,39 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 
 		# Calculate success rate
 		if dict_payload.has("success_rate"):
-			analysis["success_rate"] = float(dict_payload["success_rate"])
+			var success_rate_var: Variant = dict_payload["success_rate"]
+			if success_rate_var is float:
+				analysis["success_rate"] = success_rate_var
+			elif success_rate_var is int:
+				var success_rate_int: int = success_rate_var
+				analysis["success_rate"] = float(success_rate_int)
+			else:
+				analysis["success_rate"] = 1.0 if success else 0.0
 		elif dict_payload.has("passed_tests") and dict_payload.has("total_tests"):
-			analysis["success_rate"] = (
-				float(dict_payload["passed_tests"]) / float(dict_payload["total_tests"])
-			)
+			var passed_tests_var: Variant = dict_payload["passed_tests"]
+			var total_tests_var: Variant = dict_payload["total_tests"]
+			if (
+				(passed_tests_var is int or passed_tests_var is float)
+				and (total_tests_var is int or total_tests_var is float)
+			):
+				var passed_val: float
+				var total_val: float
+
+				if passed_tests_var is float:
+					passed_val = passed_tests_var
+				else:
+					var passed_int: int = passed_tests_var
+					passed_val = float(passed_int)
+
+				if total_tests_var is float:
+					total_val = total_tests_var
+				else:
+					var total_int: int = total_tests_var
+					total_val = float(total_int)
+
+				analysis["success_rate"] = passed_val / total_val
+			else:
+				analysis["success_rate"] = 1.0 if success else 0.0
 		else:
 			analysis["success_rate"] = 1.0 if success else 0.0
 
@@ -953,7 +983,6 @@ func _build_action_report_with_execution_log(
 
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
-	var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	report += (
 		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
 		% [FONT_SIZE_XXL, status_icon]
@@ -968,7 +997,7 @@ func _build_action_report_with_execution_log(
 	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
 
 	if execution_log.size() > 0:
-		for i in range(execution_log.size()):
+		for i: int in range(execution_log.size()):
 			var entry: Dictionary = execution_log[i]
 			var step_icon: String = "⚠️" if entry.get("is_error", false) else "🔄"
 			var step_color: String = (

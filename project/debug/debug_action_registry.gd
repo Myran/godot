@@ -198,7 +198,7 @@ func find_actions_matching(pattern: String) -> Array[String]:
 		return matching_names
 
 	# Test each action name against the pattern
-	for action in _flat_actions:
+	for action: DebugAction in _flat_actions:
 		var action_name: String = action.action_name
 		if regex.search(action_name):
 			matching_names.append(action_name)
@@ -220,7 +220,7 @@ func find_action_by_name(action_name: String) -> DebugAction:
 	Find a single action by exact name.
 	Returns null if not found.
 	"""
-	for action in _flat_actions:
+	for action: DebugAction in _flat_actions:
 		if action.action_name == action_name:
 			return action
 

@@ -55,7 +55,7 @@ func _execute_operation(request_id: int, operation: String, args: Array) -> bool
 			# Convert to current API: get_data(path_array, key)
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
-			var result = await _db.get_data(path, key)
+			var result: Variant = await _db.get_data(path, key)
 			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "get", result, "")
 			return true
@@ -64,7 +64,7 @@ func _execute_operation(request_id: int, operation: String, args: Array) -> bool
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var data: Variant = args[2] if args.size() > 2 else null
-			var result = await _db.set_data(path, key, data)
+			var result: Variant = await _db.set_data(path, key, data)
 			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "set", result, "")
 			return true
@@ -72,7 +72,7 @@ func _execute_operation(request_id: int, operation: String, args: Array) -> bool
 			# Convert to current API: remove_data(path_array, key)
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
-			var result = await _db.remove_data(path, key)
+			var result: Variant = await _db.remove_data(path, key)
 			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "remove", result, "")
 			return true

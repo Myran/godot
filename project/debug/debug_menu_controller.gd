@@ -56,6 +56,16 @@ var _current_category_name: String = ""
 var _current_group_name: String = ""
 var _is_executing_all: bool = false
 
+# Track current execution for abortion capability
+var _current_executing_action: DebugAction = null
+var _run_all_abort_requested: bool = false
+
+# State variables for Run All execution
+var _run_all_actions: Array[ActionExecutionResult] = []
+var _run_all_current_index: int = 0
+var _run_all_results: Array[Dictionary] = []
+var _run_all_scope: String = ""
+
 # Navigation list toggle state
 var _last_action_data: Dictionary = {}
 var _is_list_hidden: bool = false  # Track if navigation list is hidden
@@ -603,9 +613,7 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	# All actions are now handled uniformly through DebugRegistry
 
 
-# Track current execution for abortion capability
-var _current_executing_action: DebugAction = null
-var _run_all_abort_requested: bool = false
+
 
 
 func _abort_current_execution_if_needed() -> void:
@@ -653,7 +661,7 @@ func _abort_run_all_execution() -> void:
 	_run_all_abort_requested = true
 
 	# Disconnect any pending action completion handlers
-	for action_result in _run_all_actions:
+	for action_result: ActionExecutionResult in _run_all_actions:
 		var action: DebugAction = action_result.action
 		if action.execution_completed.is_connected(_on_run_all_action_completed):
 			action.execution_completed.disconnect(_on_run_all_action_completed)
@@ -822,7 +830,7 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 
 
 # Handler for action status updates
-func _on_action_status_updated(text: String, is_error: bool) -> void:
+func _on_action_status_updated(_text: String, _is_error: bool) -> void:
 	# Status updates are already handled by DebugOutputService in DebugAction._update_status()
 	# No need to process them again here - this would create duplicates
 	pass
@@ -860,11 +868,7 @@ func _execute_multiple_actions(
 	)
 
 
-# State variables for Run All execution
-var _run_all_actions: Array[ActionExecutionResult] = []
-var _run_all_current_index: int = 0
-var _run_all_results: Array[Dictionary] = []
-var _run_all_scope: String = ""
+
 
 
 # Sequential action execution for Run All functionality
@@ -1106,29 +1110,19 @@ func _set_ui_for_execution(is_executing: bool) -> void:
 func _on_button_close_pressed() -> void:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 
-
-# Handle global debug events if needed
 func _on_global_debug_event(
 	event_type: DebugManager.DebugEventType, _args: Array[Variant] = []
 ) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST:
 		_toggle_result_expansion()
-	#if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
-	#show()
-	#Log.debug("Debug menu opened via global event.", {}, ["debug", "ui"])
-	#elif event_type == DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
-	#hide()
-	#Log.debug("Debug menu closed via global event.", {}, ["debug", "ui"])
 
-
-# For showing the menu programmatically
 func show_menu_content() -> void:
 	show()
 	Log.debug("Debug menu shown via direct call.", {}, ["debug", "ui"])
 
 
 # Method called by DebugOutputService to display output from both manual and startup execution
-func clear_output_for_new_action(action: DebugAction) -> void:
+func clear_output_for_new_action(_action: DebugAction) -> void:
 	"""Clear output display when a new action starts"""
 	if is_instance_valid(status_label):
 		status_label.text = ""
@@ -1138,11 +1132,8 @@ func clear_output_for_new_action(action: DebugAction) -> void:
 		status_label.fit_content = true
 
 
-func display_output_from_service(text: String, is_error: bool = false) -> void:
-	# This method allows the debug menu to show output from both manual button clicks
-	# and startup/test file execution, providing unified output display
+func display_output_from_service(text: String, _is_error: bool = false) -> void:
 
-	# Enhanced output from service - append to existing content for progressive updates
 	if is_instance_valid(status_label):
 		status_label.bbcode_enabled = true
 		status_label.scroll_following = true
@@ -1171,7 +1162,6 @@ func display_output_from_service(text: String, is_error: bool = false) -> void:
 		Log.debug("Debug menu opened to display execution results", {}, ["debug", "ui"])
 
 
-# Validation helper for navigation state
 func _validate_navigation_state(context: String) -> bool:
 	"""Validate that DebugRegistry is available and functional"""
 	if not DebugRegistry:
@@ -1183,7 +1173,6 @@ func _validate_navigation_state(context: String) -> bool:
 	return true
 
 
-# Add category item to the navigation list with proper visual indicators
 func _add_category_item_to_list(category_name: String, index: int) -> void:
 	# Add a category item with proper visual indicators
 	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
@@ -1207,14 +1196,10 @@ func _build_single_action_report(action: DebugAction, success: bool, payload: Va
 	return DebugOutputService.format_completion_report(action, success, payload)
 
 
-# SOLID Principle: Single Responsibility - Helper methods for specific tasks
-
-
-# Test Mode Management - Auto-hide UI during automated tests
 func _start_test_mode_monitoring() -> void:
 	"""Start monitoring for test mode changes to auto-hide UI during tests"""
 	# Check for test mode every 0.5 seconds
-	var timer := Timer.new()
+	var timer: Timer = Timer.new()
 	timer.wait_time = 0.5
 	timer.timeout.connect(_check_test_mode_status)
 	timer.autostart = true
@@ -1255,8 +1240,3 @@ func _exit_test_mode() -> void:
 		_toggle_result_expansion()
 
 		Log.debug("Exited test mode - UI restored automatically", {}, ["debug", "ui", "test"])
-
-# All formatting methods have been moved to DebugOutputFormatter for DRY principle
-# Methods removed: _pretty_print_value_no_truncation, _format_dictionary_no_truncation,
-# _format_array_no_truncation, _format_payload_summary, _format_error_message
-# These are now handled by DebugOutputService which uses DebugOutputFormatter

@@ -11,7 +11,7 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		return true
 
 	Log.info("Starting internet status check", {"timeout_sec": timeout_sec}, [Log.TAG_NETWORK])
-	var check_start_time = Time.get_ticks_msec()
+	var check_start_time: int = Time.get_ticks_msec()
 	internet_status.get_status()
 
 	var connection_status: Dictionary = {"available": false, "completed": false}
@@ -60,12 +60,12 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		return false
 	timeout_timer.start()
 
-	var frame_count = 0
+	var frame_count: int = 0
 	while not connection_status.completed:
 		await Engine.get_main_loop().process_frame
 		frame_count += 1
 		if frame_count % 60 == 0:  # Log every second (assuming 60 fps)
-			var elapsed = (Time.get_ticks_msec() - check_start_time) / 1000.0
+			var elapsed: float = (Time.get_ticks_msec() - check_start_time) / 1000.0
 			Log.debug(
 				"Still waiting for internet check",
 				{"elapsed_sec": elapsed, "timeout_sec": timeout_sec},
@@ -79,7 +79,7 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 		internet_status.no_internet.disconnect(no_internet_callable)
 	timeout_timer.queue_free()
 
-	var check_duration = (Time.get_ticks_msec() - check_start_time) / 1000.0
+	var check_duration: float = (Time.get_ticks_msec() - check_start_time) / 1000.0
 	var internet_available: bool = connection_status.available
 	if internet_available:
 		Log.info(
@@ -99,8 +99,8 @@ static func create_backend() -> DataBackend:
 	var selected_backend_type: BackendSelection = BackendSelection.NONE
 
 	# Log all decision factors
-	var is_editor = OS.has_feature("editor")
-	var force_local = ProjectSettings.get_setting("game/debug/force_local_data", false)
+	var is_editor: bool = OS.has_feature("editor")
+	var force_local: bool = ProjectSettings.get_setting("game/debug/force_local_data", false)
 
 	Log.info(
 		"Backend selection starting",
@@ -116,9 +116,9 @@ static func create_backend() -> DataBackend:
 		selected_backend_type = BackendSelection.LOCAL
 	else:
 		Log.info("Checking internet for Firebase backend selection", {}, [Log.TAG_DB])
-		var internet_check_start = Time.get_ticks_msec()
+		var internet_check_start: int = Time.get_ticks_msec()
 		var internet_is_available: bool = await _check_internet_availability()
-		var internet_check_duration = (Time.get_ticks_msec() - internet_check_start) / 1000.0
+		var internet_check_duration: float = (Time.get_ticks_msec() - internet_check_start) / 1000.0
 
 		if internet_is_available:
 			Log.info(

@@ -13,8 +13,8 @@ func _init() -> void:
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
 
-# New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
@@ -29,7 +29,6 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
 	_listener_helper = ListenerTestHelper.new()
 	_listener_helper.reset()

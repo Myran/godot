@@ -46,29 +46,30 @@ func get_cpp_firebase_database() -> Object:
 func execute_cpp_operation(
 	method_name: String, args: Array, operation_name: String = "", operation_type: String = ""
 ) -> Variant:
-	var start_time = Time.get_ticks_msec()
-	var db = get_cpp_firebase_database()
+	var start_time: int = Time.get_ticks_msec()
+	var db: Object = get_cpp_firebase_database()
 
 	if not is_instance_valid(db):
 		_update_status("ERROR: C++ Firebase instance not available", true)
 		return null
 
-	var op_name = operation_name if not operation_name.is_empty() else method_name
+	var op_name: String = operation_name if not operation_name.is_empty() else method_name
 	_update_status("🚀 Starting: " + op_name + "...")
 
 	# Generate unique request ID
-	var request_id = Time.get_ticks_msec()
-	var full_args = [request_id] + args
+	var request_id: int = Time.get_ticks_msec()
+	var full_args: Array = [request_id] + args
 
 	# Connect to completion signal with type-safe handler
-	var signal_name = method_name.replace("_async", "_completed")
-	var handler = _create_handler_for_operation(
+	var signal_name: String = method_name.replace("_async", "_completed")
+	var handler: Callable = _create_handler_for_operation(
 		operation_type, request_id, start_time, op_name, method_name
 	)
 
 	# Connect signal temporarily
-	if db.has_signal(signal_name):
-		db.connect(signal_name, handler, CONNECT_ONE_SHOT)
+	var signal_string_name: StringName = StringName(signal_name)
+	if db.has_signal(signal_string_name):
+		db.connect(signal_string_name, handler, Object.CONNECT_ONE_SHOT)
 
 	# Call C++ method
 	db.callv(method_name, full_args)
@@ -77,7 +78,7 @@ func execute_cpp_operation(
 	await Engine.get_main_loop().process_frame
 	await Engine.get_main_loop().create_timer(1.0).timeout
 
-	var duration = Time.get_ticks_msec() - start_time
+	var duration: int = Time.get_ticks_msec() - start_time
 	_update_status(op_name + " completed (" + str(duration) + "ms)")
 	return true
 
@@ -96,17 +97,17 @@ func _create_handler_for_operation(
 			return _create_set_value_handler(request_id, start_time, op_name, method_name)
 		_:
 			push_error("Unknown operation type: " + operation_type)
-			return func(): pass
+			return func() -> void: pass
 
 
 # Handler for get_value_completed(int request_id, String key, Variant data)
 func _create_get_value_handler(
 	request_id: int, start_time: int, op_name: String, method_name: String
 ) -> Callable:
-	return func(recv_request_id: int, rtdb_key: String, value: Variant):
+	return func(recv_request_id: int, rtdb_key: String, value: Variant) -> void:
 		if recv_request_id == request_id:
-			var duration = Time.get_ticks_msec() - start_time
-			var success = value != null
+			var duration: int = Time.get_ticks_msec() - start_time
+			var success: bool = value != null
 
 			if success:
 				Log.info(
@@ -133,9 +134,9 @@ func _create_get_value_handler(
 func _create_set_value_handler(
 	request_id: int, start_time: int, op_name: String, method_name: String
 ) -> Callable:
-	return func(recv_request_id: int, success: bool, error_message: String):
+	return func(recv_request_id: int, success: bool, error_message: String) -> void:
 		if recv_request_id == request_id:
-			var duration = Time.get_ticks_msec() - start_time
+			var duration: int = Time.get_ticks_msec() - start_time
 
 			if success:
 				Log.info(

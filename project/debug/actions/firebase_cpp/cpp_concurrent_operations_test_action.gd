@@ -9,10 +9,10 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
-	var concurrent_count: int = params.get("concurrent_count", 4)
+	var concurrent_count: int = _params.get("concurrent_count", 4)
 	var test_data: Array[Dictionary] = []
 
 	# Prepare test data

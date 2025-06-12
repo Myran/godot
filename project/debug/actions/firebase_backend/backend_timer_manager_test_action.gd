@@ -30,11 +30,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var test_key = "timer_test_" + str(Time.get_ticks_msec())
 	var test_value = "Timer Test: " + str(Time.get_ticks_msec())
 
-	var timer_start = Time.get_ticks_msec()
-	var normal_result = await test_backend_async_pattern(
+	var timer_start: int = Time.get_ticks_msec()
+	var normal_result: bool = await test_backend_async_pattern(
 		"set_data", test_path, test_key, test_value, "Timer Normal"
 	)
-	var normal_duration = Time.get_ticks_msec() - timer_start
+	var normal_duration: int = Time.get_ticks_msec() - timer_start
 
 	# Test 2: Multiple rapid requests (stress test RequestSignalHelper)
 	_update_status("Testing rapid request handling...")

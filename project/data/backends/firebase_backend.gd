@@ -60,7 +60,9 @@ class TimerManager:
 			_timer.wait_time = wait_time
 			_timer.one_shot = one_shot
 
-	func connect_timeout(callable: Callable, flags: int = CONNECT_DEFERRED) -> Error:
+	func connect_timeout(
+		callable: Callable, flags: Object.ConnectFlags = Object.CONNECT_DEFERRED
+	) -> Error:
 		if not is_valid():
 			return ERR_INVALID_DATA
 		return _timer.timeout.connect(callable, flags)
@@ -314,7 +316,7 @@ func _connect_signals() -> void:
 			)
 			continue
 
-		var err: Error = db.connect_signal(signal_name, handler_callable, CONNECT_DEFERRED)
+		var err: Error = db.connect_signal(signal_name, handler_callable, Object.CONNECT_DEFERRED)
 		if err != OK:
 			var err_msg: String = (
 				"Failed to connect RTDB signal '%s': %s" % [signal_name, error_string(err)]
@@ -444,7 +446,9 @@ func _execute_rtdb_operation_and_await(
 		if is_instance_valid(req_tracker.signal_helper):
 			req_tracker.signal_helper.completed.emit(timeout_result)
 
-	var connect_err: Error = timer_manager.connect_timeout(timeout_callable, CONNECT_DEFERRED)
+	var connect_err: Error = timer_manager.connect_timeout(
+		timeout_callable, Object.CONNECT_DEFERRED
+	)
 	if connect_err != OK:
 		Log.error(
 			"Failed to connect timeout timer signal",
@@ -832,7 +836,17 @@ func set_data(p_path: Array[Variant], key: String, data_to_set: Variant) -> bool
 	)
 
 	if result_dict.get("status") == "ok":
-		return bool(result_dict.get("payload"))  # C++ signal for set_value_completed sends success (bool) as payload
+		var payload: Variant = result_dict.get("payload")
+		if payload is bool:
+			return payload
+		elif payload is int:
+			var payload_int: int = payload
+			return bool(payload_int)
+		elif payload is float:
+			var payload_float: float = payload
+			return bool(payload_float)
+		else:
+			return false
 	Log.error(
 		"FB_Backend: set_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -877,7 +891,17 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 		"remove_value_async", full_path
 	)
 	if result_dict.get("status") == "ok":
-		return bool(result_dict.get("payload"))  # true for success
+		var payload: Variant = result_dict.get("payload")
+		if payload is bool:
+			return payload
+		elif payload is int:
+			var payload_int: int = payload
+			return bool(payload_int)
+		elif payload is float:
+			var payload_float: float = payload
+			return bool(payload_float)
+		else:
+			return false
 	Log.error(
 		"FB_Backend: remove_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -933,7 +957,17 @@ func set_server_timestamp(p_path: Array[Variant]) -> bool:
 		"set_server_timestamp_async", p_path
 	)
 	if result_dict.get("status") == "ok":
-		return bool(result_dict.get("payload"))  # C++ signal sends success (bool)
+		var payload: Variant = result_dict.get("payload")
+		if payload is bool:
+			return payload
+		elif payload is int:
+			var payload_int: int = payload
+			return bool(payload_int)
+		elif payload is float:
+			var payload_float: float = payload
+			return bool(payload_float)
+		else:
+			return false
 	Log.error(
 		"FB_Backend: set_server_timestamp (DirectAwait) failed.",
 		{"path": p_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -990,7 +1024,7 @@ func stop_listening(path_array: Array[Variant]) -> void:
 	if is_instance_valid(db):
 		# Note: Using the correct C++ API method name
 		# Check if the C++ module has the method by trying to call it
-		var result = db.call_method("remove_listener_at_path", [path_array])
+		var result: Variant = db.call_method("remove_listener_at_path", [path_array])
 		if result == null:
 			Log.warning(
 				"Firebase C++ module doesn't support remove_listener_at_path", {"path": path_array}
