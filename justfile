@@ -419,8 +419,9 @@ validate-godot FILTER="ERROR:":
         echo "🎮 Starting Godot headless with debug system (showing all output)..."
         FILTER_CMD="cat"
     else
-        echo "🎮 Starting Godot headless with debug system (filtering for '{{FILTER}}')..."
-        FILTER_CMD="grep --line-buffered '{{FILTER}}'"
+        echo "🎮 Starting Godot headless with debug system (filtering for '{{FILTER}}' with file context)..."
+        # Enhanced filter to show file context with ERROR messages  
+        FILTER_CMD="awk '/Loading resource:.*\.gd$/ {file=\$0} /{{FILTER}}/ {if(file) {print file; file=\"\"} print}'"
     fi
     
     # Start Godot headless process with filtering
