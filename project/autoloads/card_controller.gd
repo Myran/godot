@@ -4,7 +4,7 @@ const CARD_IMAGE_PREFIX: String = "card_image_"
 @export_file("*.tscn") var card_scene_name: String
 @export_dir var card_image_folder: String
 var current_level: int = 1
-var _rules: Dictionary
+var _rules: Dictionary = {}
 
 
 func get_card_image_name(card_id: String) -> String:
@@ -26,9 +26,9 @@ func setup() -> void:
 	await data_source.activate_card_cache()
 
 
-func get_card_from_pool() -> Node:  # Returns the card scene instance
+func get_card_from_pool() -> Card:  # Returns the card scene instance
 	var new_card_id: String = await get_random_id_from_pool(current_level)
-	var ret_unit: Node = await create_unit_from_id(new_card_id)
+	var ret_unit: Card = await create_unit_from_id(new_card_id)
 	return ret_unit
 
 
@@ -41,15 +41,15 @@ func get_random_id_from_pool(_level: int) -> String:
 func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
 	var card_scene: PackedScene = load(card_scene_name)
-	var card_instanced: Node = card_scene.instantiate()
+	var card_instanced: Card = card_scene.instantiate() as Card
 	card_instanced.init_card(card_info, unit_level)
 	return card_instanced
 
 
 func select_id_from_level(lvl: int) -> String:
 	var sel_lvl: int = select_recruited_unit_level(lvl)
-	var all_cards: Array = await data_source.cards.get_all(true)
-	var cards_with_level: Array = []
+	var all_cards: Array[Dictionary] = await data_source.cards.get_all(true)
+	var cards_with_level: Array[Dictionary] = []
 
 	for card: Dictionary in all_cards:
 		if card.has("upgrade_level"):

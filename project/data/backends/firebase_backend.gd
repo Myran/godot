@@ -63,7 +63,7 @@ class TimerManager:
 	func connect_timeout(callable: Callable, flags: int = CONNECT_DEFERRED) -> Error:
 		if not is_valid():
 			return ERR_INVALID_DATA
-		return _timer.timeout.connect(callable, flags) as Error
+		return _timer.timeout.connect(callable, flags)
 
 	func start() -> void:
 		if is_valid():

@@ -153,6 +153,250 @@ just config-status-android               # Check current config
 6. **Full Validation**: Run `just test-all-android` before commits
 7. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
 
+## 💪 Strong Typing & Code Quality
+
+### Philosophy: Fail-Fast with Strong Typing
+
+The codebase emphasizes **strong typing** and **fail-fast principles** to catch errors at compile time rather than runtime. This approach significantly improves code reliability, maintainability, and debugging efficiency.
+
+### Core Typing Principles
+
+#### ✅ **Always Specify Types**
+```gdscript
+# ✅ Good - Explicit typing
+var player_data: Dictionary = {}
+var card_list: Array[Card] = []
+var success_rate: float = 0.8
+
+# ❌ Avoid - Untyped variables
+var player_data = {}
+var card_list = []
+var success_rate = 0.8
+```
+
+#### ✅ **Use Typed Arrays**
+```gdscript
+# ✅ Good - Specific element types
+var cards: Array[Card] = []
+var player_names: Array[String] = []
+var debug_results: Array[Dictionary] = []
+var event_args: Array[Variant] = []  # When mixed types needed
+
+# ❌ Avoid - Untyped arrays
+var cards: Array = []
+var player_names: Array = []
+```
+
+#### ✅ **Strong Function Signatures**
+```gdscript
+# ✅ Good - Complete type annotations
+func create_card_from_id(id: String, level: int = 1) -> Card:
+    var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
+    var card_scene: PackedScene = load(card_scene_name)
+    var card_instance: Card = card_scene.instantiate() as Card
+    card_instance.init_card(card_info, level)
+    return card_instance
+
+# ❌ Avoid - Missing return types or parameter types
+func create_card_from_id(id, level = 1):
+    # Implementation...
+```
+
+#### 🚫 **CRITICAL: Avoid 'as' and 'is' Constructs**
+
+**Philosophy: Use strongly typed variables to catch problems at compile time, not runtime.**
+
+```gdscript
+# ✅ BEST - Strongly typed variables catch type errors immediately
+func get_firebase_backend() -> FirebaseBackend:
+    return _backend  # Will fail at compile time if wrong type
+
+func process_backend() -> void:
+    var firebase_backend: FirebaseBackend = get_firebase_backend()
+    var available: bool = firebase_backend.is_available()
+
+# ✅ Good - Direct assignment with strong typing (will crash fast if wrong)
+var firebase_backend: FirebaseBackend = _backend
+var available: bool = firebase_backend.is_available()
+
+# ❌ BAD - Runtime type checking hides problems until runtime
+if _backend is FirebaseBackend:
+    var firebase_backend: FirebaseBackend = _backend as FirebaseBackend
+    available = firebase_backend.is_available()
+
+# ❌ BAD - Type casting masks design problems
+var firebase_backend: FirebaseBackend = _backend as FirebaseBackend
+```
+
+**Why avoid 'as' and 'is'?**
+- **'as' casting** hides type mismatches until runtime - problems should be caught at compile time
+- **'is' checking** indicates weak type design - use proper type hierarchies instead
+- **Runtime checks** delay problem discovery - fail fast at compile time instead
+- **Type casting** suggests architectural issues - fix the design, don't mask it
+
+#### ✅ **Prefer Specific Types over Variant**
+```gdscript
+# ✅ Good - Use specific types when possible
+func process_card_data(card_info: Dictionary) -> bool:
+    var card_id: String = card_info.get("id", "")
+    var card_level: int = card_info.get("level", 1)
+    return card_id != "" and card_level > 0
+
+# ⚠️ Use Variant only when truly dynamic
+func handle_debug_result(result: Variant) -> bool:
+    # Acceptable when handling truly dynamic data
+    if result is DebugAction.Result:
+        return result.is_success()
+    elif result is bool:
+        return result
+    return false
+```
+
+### Type Safety Patterns
+
+#### **Collection Initialization**
+```gdscript
+# ✅ Initialize with proper types
+var _rules: Dictionary = {}
+var _cache: Dictionary = {}
+var _actions: Array[DebugAction] = []
+```
+
+#### **Event Handler Parameters**
+```gdscript
+# ✅ Properly typed event handlers
+func _on_debug_event(event_type: DebugManager.DebugEventType, args: Array[Variant] = []) -> void:
+    match event_type:
+        DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
+            show_debug_menu()
+```
+
+#### **Factory Methods**
+```gdscript
+# ✅ Strong typing in factory patterns
+static func new_success(
+    payload: Variant = null,
+    duration_ms: int = 0,
+    operation: String = "",
+    metadata: Dictionary = {}
+) -> DebugAction.Result:
+    return DebugAction.Result.new(
+        true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, metadata
+    )
+```
+
+### Validation & Quality Assurance
+
+#### **Format & Validate Commands**
+```bash
+# Run these commands regularly to maintain code quality
+just format        # Format all GDScript files
+just validate       # Run type checking and validation
+```
+
+#### **Common Type Issues to Watch For (Priority Order)**
+
+🚨 **CRITICAL - Fix Immediately:**
+1. **'as' type casting** - Replace with strongly typed variables that fail fast
+2. **'is' type checking** - Replace with proper type design and strong typing
+3. **Untyped variables** - Always add explicit type annotations
+
+⚠️ **HIGH PRIORITY:**
+4. **Generic Arrays** - Specify element types: `Array[String]`, `Array[Dictionary]`
+5. **Missing return types** - Add `-> Type` to all function declarations
+6. **Variant overuse** - Use specific types when the data structure is known
+
+#### **Anti-Patterns to Eliminate**
+```gdscript
+# 🚨 ELIMINATE - These patterns hide problems
+if node is Button:
+    var button: Button = node as Button
+    button.pressed.connect(callback)
+
+if result is Dictionary:
+    var data: Dictionary = result as Dictionary
+    process_data(data)
+
+# ✅ REPLACE WITH - Strong typing that fails fast
+var button: Button = get_button_node()  # Fails immediately if wrong type
+button.pressed.connect(callback)
+
+var data: Dictionary = get_result_data()  # Clear, typed interface
+process_data(data)
+```
+
+#### **Architectural Patterns to Replace 'as'/'is'**
+
+**Instead of runtime type checking, use proper design:**
+
+```gdscript
+# ❌ BAD - Runtime type checking pattern
+func handle_node(node: Node) -> void:
+    if node is Button:
+        var button: Button = node as Button
+        button.text = "Clicked"
+    elif node is Label:
+        var label: Label = node as Label
+        label.text = "Updated"
+
+# ✅ GOOD - Polymorphic design with strong typing
+func handle_button(button: Button) -> void:
+    button.text = "Clicked"
+
+func handle_label(label: Label) -> void:
+    label.text = "Updated"
+
+# ✅ BETTER - Factory pattern with strong typing
+func create_ui_element(type: UIElementType) -> Control:
+    match type:
+        UIElementType.BUTTON:
+            return create_button()  # Returns Button
+        UIElementType.LABEL:
+            return create_label()   # Returns Label
+        _:
+            assert(false, "Unknown UI element type")
+            return Control.new()
+
+# ✅ BEST - Interface-based design
+class_name Clickable
+extends RefCounted
+# Define interface that both Button and custom controls implement
+
+func handle_clickable(clickable: Clickable) -> void:
+    clickable.on_click()  # No casting needed, interface guarantees method exists
+```
+
+**Key principle: If you need 'as' or 'is', redesign the architecture to use proper types.**
+
+#### **Error Messages as Guidance**
+The validation system provides detailed feedback:
+- `Variable "name" has no static type` → Add type annotation
+- `Array argument mismatch` → Use typed arrays
+- `Casting "Variant" to "Type" is unsafe` → Strengthen type system
+
+### Benefits Achieved
+
+✅ **Compile-time error detection** - Issues caught before runtime  
+✅ **Better IDE support** - Improved autocomplete and error highlighting  
+✅ **Self-documenting code** - Types serve as inline documentation  
+✅ **Refactoring safety** - Type system catches breaking changes  
+✅ **Performance improvements** - Godot can optimize typed code better  
+✅ **Debugging efficiency** - Clear error messages with specific type information  
+
+### Integration with Development Workflow
+
+**During Development:**
+1. Write code with explicit types from the start
+2. Use `just validate` to catch type issues early
+3. Run `just format` before commits to maintain consistency
+
+**Before Commits:**
+1. Ensure all validation passes without type warnings
+2. Run full test suite to verify type safety doesn't break functionality
+3. Address any "has no static type" warnings in validation output
+
+This strong typing approach creates a more robust, maintainable codebase that fails fast during development rather than at runtime in production.
+
 ## 🧠 Advanced Planning & Task Management
 
 ### When to Use Shrimp Task Manager MCP
@@ -591,3 +835,30 @@ just test-suite-android CUSTOM_LIST                    # Any custom test list
 - 🔧 **Development workflow** → `test-development-android` for daily cycle  
 - 🚀 **Production validation** → `test-production-android` for releases
 - ⚡ **Instant custom testing** → `'firebase.*'`, `'*.*.performance'` patterns
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## Strong Typing Requirements
+ALWAYS enforce strong typing in GDScript code with FAIL-FAST approach:
+
+### 🚨 CRITICAL - NEVER use these constructs:
+- NEVER use `as` for type casting - use strongly typed variables instead
+- NEVER use `is` for type checking - design proper type hierarchies instead
+- These patterns hide problems until runtime - we want compile-time failures
+
+### ✅ ALWAYS do this instead:
+- Create strongly typed variables that fail immediately: `var typed_var: SpecificType = source`
+- Use explicit type annotations: `var name: String = ""`
+- Use typed arrays: `Array[Type]` instead of `Array`
+- Add return type annotations: `func name() -> Type:`
+- Prefer specific types over `Variant` when possible
+
+### 🔧 Quality Assurance:
+- Run `just format` and `just validate` after making changes
+- Address ALL "has no static type" warnings in validation output
+- Replace any `as` or `is` usage with proper type design
+- Make the code fail fast at compile time, not hide problems until runtime

@@ -208,7 +208,7 @@ func is_firebase_available() -> bool:
 	# No null check - will crash if _backend is null (fail fast)
 	var available: bool = false
 	if _backend is FirebaseBackend:
-		var firebase_backend: FirebaseBackend = _backend as FirebaseBackend
+		var firebase_backend: FirebaseBackend = _backend
 		available = firebase_backend.is_available()
 
 	Log.debug(

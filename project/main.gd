@@ -33,7 +33,7 @@ func _ready() -> void:
 	DebugStartupCoordinator.startDebugCoordinator()
 
 
-func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
+func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Variant] = []) -> void:
 	match event_type:
 		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			%PopupDebug.show()

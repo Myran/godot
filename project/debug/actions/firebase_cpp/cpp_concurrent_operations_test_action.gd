@@ -2,9 +2,11 @@
 class_name CPPConcurrentOperationsTestAction
 extends CPPFirebaseDebugAction
 
+
 func _init() -> void:
 	super._init()
 	action_name = "cpp.firebase.concurrent_ops"
+
 
 # New DebugAction.Result pattern - this is the future
 func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
@@ -15,11 +17,13 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	# Prepare test data
 	for i in range(concurrent_count):
-		test_data.append({
-			"path": ["cpp_tests", "concurrent", str(i), str(Time.get_ticks_msec())],
-			"value": "Concurrent Test " + str(i) + ": " + str(Time.get_ticks_msec()),
-			"operation_id": i
-		})
+		test_data.append(
+			{
+				"path": ["cpp_tests", "concurrent", str(i), str(Time.get_ticks_msec())],
+				"value": "Concurrent Test " + str(i) + ": " + str(Time.get_ticks_msec()),
+				"operation_id": i
+			}
+		)
 
 	# Execute set operations
 	var set_results: Array[Dictionary] = []
@@ -33,42 +37,45 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		)
 		var operation_duration: int = Time.get_ticks_msec() - operation_start
 
-		set_results.append({
-			"operation_id": data.operation_id,
-			"operation_type": "set",
-			"path": data.path,
-			"value": data.value,
-			"result": result,
-			"success": result != null,
-			"duration_ms": operation_duration,
-			"timestamp": Time.get_ticks_msec()
-		})
+		set_results.append(
+			{
+				"operation_id": data.operation_id,
+				"operation_type": "set",
+				"path": data.path,
+				"value": data.value,
+				"result": result,
+				"success": result != null,
+				"duration_ms": operation_duration,
+				"timestamp": Time.get_ticks_msec()
+			}
+		)
 
 	# Execute get operations
 	var get_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
 		var operation_start: int = Time.get_ticks_msec()
 		var result: Variant = await execute_cpp_operation(
-			"get_value_async",
-			[data.path],
-			"Concurrent Get " + str(data.operation_id),
-			"get_value"
+			"get_value_async", [data.path], "Concurrent Get " + str(data.operation_id), "get_value"
 		)
 		var operation_duration: int = Time.get_ticks_msec() - operation_start
 		var value_matches: bool = result != null  # Simplified validation
-
-		get_results.append({
-			"operation_id": data.operation_id,
-			"operation_type": "get",
-			"path": data.path,
-			"expected_value": data.value,
-			"retrieved_value": "Retrieved" if result != null else null,
-			"result": result,
-			"success": result != null,
-			"value_matches": value_matches,
-			"duration_ms": operation_duration,
-			"timestamp": Time.get_ticks_msec()
-		})
+		var retr_val: Variant = null
+		if result != null:
+			retr_val = "Retrieved"
+		get_results.append(
+			{
+				"operation_id": data.operation_id,
+				"operation_type": "get",
+				"path": data.path,
+				"expected_value": data.value,
+				"retrieved_value": retr_val,
+				"result": result,
+				"success": result != null,
+				"value_matches": value_matches,
+				"duration_ms": operation_duration,
+				"timestamp": Time.get_ticks_msec()
+			}
+		)
 
 	# Calculate metrics
 	var successful_sets: int = 0
@@ -90,13 +97,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var value_accuracy: float = float(matching_values) / float(concurrent_count)
 
 	var overall_success: bool = (
-		set_success_rate >= 0.8 and  # 80% of sets should succeed
-		get_success_rate >= 0.8 and  # 80% of gets should succeed
-		value_accuracy >= 0.8        # 80% of values should match
+		set_success_rate >= 0.8 and get_success_rate >= 0.8 and value_accuracy >= 0.8
 	)
 
 	# Combine all operation results
-	var all_operation_results: Array = []
+	var all_operation_results: Array[Dictionary] = []
 	all_operation_results.append_array(set_results)
 	all_operation_results.append_array(get_results)
 
@@ -126,6 +131,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			"thresholds": {"success_rate_threshold": 0.8, "value_accuracy_threshold": 0.8}
 		}
 	)
+
 
 # Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:

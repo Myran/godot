@@ -1108,7 +1108,9 @@ func _on_button_close_pressed() -> void:
 
 
 # Handle global debug events if needed
-func _on_global_debug_event(event_type: DebugManager.DebugEventType, _args: Array = []) -> void:
+func _on_global_debug_event(
+	event_type: DebugManager.DebugEventType, _args: Array[Variant] = []
+) -> void:
 	if event_type == DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST:
 		_toggle_result_expansion()
 	#if event_type == DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
