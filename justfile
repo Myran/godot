@@ -104,14 +104,28 @@ _cleanup-temp-config CONFIG:
         echo "✅ Temporary config cleaned up"
     fi
 
+# Helper function to get safe config filename
+_get-safe-config-file CONFIG:
+    #!/usr/bin/env bash
+    SAFE_CONFIG_NAME=$(echo "{{CONFIG}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    echo "project/debug_configs/${SAFE_CONFIG_NAME}.json"
+
 # Validate config file exists or create temporary config for single action
 _validate-config-exists CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
-    CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    # Generate safe filename for config (replace unsafe characters)
+    SAFE_CONFIG_NAME=$(echo "{{CONFIG}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    CONFIG_FILE="project/debug_configs/${SAFE_CONFIG_NAME}.json"
     
-    # Check if config file exists
+    # Check if safe config file exists (including temporary ones)
     if [ -f "$CONFIG_FILE" ]; then
+        exit 0
+    fi
+    
+    # Also check if original unsafe filename exists (for backward compatibility)
+    ORIGINAL_CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    if [ -f "$ORIGINAL_CONFIG_FILE" ]; then
         exit 0
     fi
     
@@ -124,9 +138,8 @@ _validate-config-exists CONFIG:
         echo "🔍 Detected wildcard pattern: {{CONFIG}}"
         echo "🔧 Creating temporary config for wildcard pattern: {{CONFIG}}"
         
-        # Set up cleanup trap for this specific config
-        trap 'rm -f "$CONFIG_FILE" 2>/dev/null || true' EXIT INT TERM
-        
+        # Create temporary config with safe filename - NO TRAP HERE
+        # Cleanup will be handled by the calling test function
         PATTERN_NAME="{{CONFIG}}"
         echo '{"description":"Temporary config for wildcard pattern: '"$PATTERN_NAME"'","actions":["'"$PATTERN_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary wildcard config created: $CONFIG_FILE"
@@ -139,6 +152,8 @@ _validate-config-exists CONFIG:
         echo "✅ Found '{{CONFIG}}' as an action name"
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
         
+        # Create temporary config with safe filename - NO TRAP HERE
+        # Cleanup will be handled by the calling test function
         ACTION_NAME="{{CONFIG}}"
         echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary config created: $CONFIG_FILE"
@@ -162,6 +177,8 @@ _validate-config-exists CONFIG:
         echo "✅ Action '{{CONFIG}}' matches wildcard pattern: $MATCHED_PATTERN"
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
         
+        # Create temporary config with safe filename - NO TRAP HERE
+        # Cleanup will be handled by the calling test function
         echo '{"description":"Temporary config for single action: '"$ACTION_NAME"'","actions":["'"$ACTION_NAME"'"]}' > "$CONFIG_FILE"
         echo "✅ Temporary config created: $CONFIG_FILE"
         echo "💡 This temporary config will be cleaned up automatically"
@@ -696,7 +713,7 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     
     echo "📱 Pushing config to Android device..."
     
-    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+    CONFIG_FILE=$(just _get-safe-config-file "{{CONFIG_NAME}}")
     
     echo "📄 Config content to push:"
     cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
@@ -854,7 +871,7 @@ config-set CONFIG_NAME: (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
-    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+    CONFIG_FILE=$(just _get-safe-config-file "{{CONFIG_NAME}}")
     TARGET_FILE="project/debug_startup_actions.json"
     
     echo "📝 Setting debug config to: {{CONFIG_NAME}}"
@@ -923,17 +940,40 @@ cleanup-temp-configs VERBOSE="false":
     #!/usr/bin/env bash
     set -euo pipefail
     
+    # Clean up legacy temporary files
     temp_files=(project/debug_configs/temp_wildcard_*.json)
+    files_cleaned=0
+    
     if [[ -e "${temp_files[0]}" ]]; then
         if [[ "{{VERBOSE}}" == "true" ]]; then
-            echo "🧹 Cleaning up temporary config files:"
+            echo "🧹 Cleaning up legacy temporary config files:"
             for file in "${temp_files[@]}"; do
                 echo "  Removing: $file"
             done
         fi
         rm -f "${temp_files[@]}"
+        files_cleaned=$((files_cleaned + ${#temp_files[@]}))
+    fi
+    
+    # Clean up new safe filename temporary files (those created from wildcards/actions)
+    # Look for files with patterns like rtdb_*.json, backend_*.json, etc.
+    # These are temporary files created for testing that don't match standard config names
+    for pattern_file in project/debug_configs/*_*.json; do
+        if [[ -f "$pattern_file" ]]; then
+            # Check if this looks like a temporary file by seeing if it contains wildcards in the description
+            if grep -q "Temporary config for" "$pattern_file" 2>/dev/null; then
+                if [[ "{{VERBOSE}}" == "true" ]]; then
+                    echo "  Removing temporary config: $pattern_file"
+                fi
+                rm -f "$pattern_file"
+                files_cleaned=$((files_cleaned + 1))
+            fi
+        fi
+    done
+    
+    if [[ $files_cleaned -gt 0 ]]; then
         if [[ "{{VERBOSE}}" == "true" ]]; then
-            echo "✅ Cleanup complete"
+            echo "✅ Cleanup complete ($files_cleaned files removed)"
         fi
     else
         if [[ "{{VERBOSE}}" == "true" ]]; then
@@ -1100,8 +1140,11 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
         exit 1
     fi
     
-    if [ ! -f "project/debug_configs/$CONFIG_NAME.json" ]; then
-        echo "❌ Config file not found: project/debug_configs/$CONFIG_NAME.json"
+    # Get the safe config filename
+    SAFE_CONFIG_FILE=$(just _get-safe-config-file "$CONFIG_NAME")
+    
+    if [ ! -f "$SAFE_CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $SAFE_CONFIG_FILE"
         exit 1
     fi
     
@@ -1120,7 +1163,7 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
     enhanced_config=$(mktemp)
     jq --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg timestamp "$timestamp" \
         '. + {"test_metadata": {"test_id": $test_id, "config": $config_name, "timestamp": $timestamp}}' \
-        "project/debug_configs/$CONFIG_NAME.json" > "$enhanced_config"
+        "$SAFE_CONFIG_FILE" > "$enhanced_config"
     
     # Push config to device using proper permissions approach
     TEMP_CONFIG="/sdcard/temp_debug_config_$TEST_ID.json"
@@ -1193,8 +1236,8 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
             success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             
-            # Check for any debug activity (action starts, completions, errors)
-            current_activity_count=$(grep -c "DEBUG_TEST_.*$TEST_ID\|Executing.*action\|completed.*ms\|Starting:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            # Check for action completions (SUCCESS/FAILURE) to reset timer on each action completion
+            current_activity_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID\|DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             
             # Reset timeout if new activity detected
             if [ "$current_activity_count" -gt "$last_activity_count" ]; then
@@ -1366,8 +1409,11 @@ _test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_va
         exit 1
     fi
     
-    if [ ! -f "project/debug_configs/$CONFIG_NAME.json" ]; then
-        echo "❌ Config file not found: project/debug_configs/$CONFIG_NAME.json"
+    # Get the safe config filename
+    SAFE_CONFIG_FILE=$(just _get-safe-config-file "$CONFIG_NAME")
+    
+    if [ ! -f "$SAFE_CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $SAFE_CONFIG_FILE"
         exit 1
     fi
     
@@ -1386,7 +1432,7 @@ _test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_va
     enhanced_config=$(mktemp)
     jq --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg timestamp "$timestamp" \
         '. + {"test_metadata": {"test_id": $test_id, "config": $config_name, "timestamp": $timestamp}}' \
-        "project/debug_configs/$CONFIG_NAME.json" > "$enhanced_config"
+        "$SAFE_CONFIG_FILE" > "$enhanced_config"
     
     # Push config to device using proper permissions approach
     TEMP_CONFIG="/sdcard/temp_debug_config_$TEST_ID.json"
@@ -1472,7 +1518,8 @@ _test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_va
             validation_error_count=$(grep -c "assertion.*failed\|validation.*error\|Expected.*but.*got" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             
             # Check for any debug activity
-            current_activity_count=$(grep -c "DEBUG_TEST_.*$TEST_ID\|Executing.*action\|completed.*ms\|Starting:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            # Check for action completions (SUCCESS/FAILURE) to reset timer on each action completion
+            current_activity_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID\|DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
             
             # Reset timeout if new activity detected
             if [ "$current_activity_count" -gt "$last_activity_count" ]; then
@@ -1974,10 +2021,6 @@ _test-production-android:
     echo "🚀 Production Ready - Comprehensive release validation"
     just _test-list-android production-ready
 
-# Power user command - any pattern or test list
-test-suite-android PATTERN:
-    echo "🎯 Custom Test Suite - Using: {{PATTERN}}"
-    just _test-list-android {{PATTERN}}
 
 
 # List available test lists
