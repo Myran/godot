@@ -1,0 +1,8 @@
+{
+  "description": "Battle action testing with modular actions",
+  "actions": [
+    "game.debug.hide_debug_menu",
+    "game.lineup.populate_enemy",
+    "game.battle.start"
+  ]
+}

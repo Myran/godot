@@ -9,6 +9,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_gameplay_actions(registry)
 	_register_match_level_actions(registry)
 	_register_lineup_actions(registry)
+	_register_battle_actions(registry)
 	#_register_card_actions(registry)
 	_register_database_actions(registry)
 	_register_quick_actions(registry)
@@ -90,6 +91,29 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	)
 
 
+static func _register_battle_actions(registry: DebugActionRegistry) -> void:
+	# Battle actions using GameStateMonitor
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.start", _start_battle)
+			. set_category("Gameplay")
+			. set_group("Battle")
+			. set_description("Start battle and wait for completion")
+		)
+	)
+	
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.populate_enemy_and_start", _populate_enemy_and_start_battle)
+			. set_category("Gameplay")
+			. set_group("Battle")
+			. set_description("Populate enemy lineup then start battle")
+		)
+	)
+
+
 #static func _register_card_actions(registry: DebugActionRegistry) -> void:
 ## Player Card Actions
 #registry.register_action(
@@ -145,6 +169,15 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.debug.hide_debug_menu", _hide_debug_menu)
+			. set_category("Quick Actions")
+			. set_description("Hide the debug menu interface")
+		)
+	)
+
 
 # Game action implementations
 static func _reset_match_level() -> bool:
@@ -197,6 +230,9 @@ static func _populate_enemy_lineup() -> bool:
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
+	# Wait a frame to ensure all lineup events are processed
+	await Engine.get_main_loop().process_frame
+	
 	Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
 	return true
 
@@ -272,3 +308,146 @@ static func _print_debug_info() -> bool:
 		Log.warning("DebugManager not available", {}, ["debug", "quick"])
 		Log.info("==================", {}, ["debug", "quick"])
 		return false
+
+
+static func _hide_debug_menu() -> bool:
+	# Hide the debug menu interface
+	if DebugManager:
+		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
+		Log.info("Debug menu hidden", {}, ["debug", "ui"])
+		return true
+	else:
+		Log.warning("DebugManager not available", {}, ["debug", "ui"])
+		return false
+
+
+# Helper function to wait for game systems to be ready
+static func _wait_for_game_systems_ready() -> bool:
+	Log.info("Waiting for game systems to be ready...", {}, ["debug", "battle", "initialization"])
+	
+	# Try to find the game node in the scene tree
+	var game_node: Node = null
+	var root: Node = Engine.get_main_loop().current_scene
+	
+	# Search for Game node (could be child of main or direct scene)
+	if root and root.has_method("find_child"):
+		game_node = root.find_child("Game", true, false)
+	
+	if not game_node:
+		Log.warning("Game node not found in scene tree", {}, ["debug", "battle", "initialization"])
+		return false
+	
+	# Check if the game has a clicker that's properly initialized
+	var clicker_node: Node = null
+	if game_node.has_method("get") and game_node.get("clicker"):
+		clicker_node = game_node.get("clicker")
+		
+		# Check if clicker has a level (indicating it's been set up)
+		if clicker_node.has_method("get") and clicker_node.get("level"):
+			Log.info("Game systems ready - clicker initialized", {}, ["debug", "battle", "initialization"])
+			return true
+	
+	# If not ready yet, wait a few frames and check again
+	Log.info("Game systems not ready yet, waiting...", {}, ["debug", "battle", "initialization"])
+	
+	# Wait up to 5 seconds for systems to be ready
+	var max_attempts: int = 50  # 50 attempts * 100ms = 5 seconds
+	var attempts: int = 0
+	
+	while attempts < max_attempts:
+		await Engine.get_main_loop().process_frame
+		await Engine.get_main_loop().create_timer(0.1).timeout  # Wait 100ms between checks
+		
+		# Re-check clicker initialization
+		if clicker_node and clicker_node.has_method("get") and clicker_node.get("level"):
+			Log.info("Game systems ready after waiting", {"attempts": attempts}, ["debug", "battle", "initialization"])
+			return true
+		
+		attempts += 1
+	
+	Log.error("Game systems failed to initialize within timeout", {"max_attempts": max_attempts}, ["debug", "battle", "initialization"])
+	return false
+
+
+# Battle action implementations using GameStateMonitor
+static func _start_battle() -> DebugAction.Result:
+	# Start battle and wait for system to return to idle state
+	if not is_instance_valid(ui) or not is_instance_valid(GameStateMonitor):
+		return DebugAction.Result.new_failure("Required systems not available")
+	
+	# Ensure game systems are fully initialized before proceeding
+	if not await _wait_for_game_systems_ready():
+		return DebugAction.Result.new_failure("Game systems not ready for battle")
+	
+	var start_time: int = Time.get_ticks_msec()
+	
+	Log.info("Starting battle", {}, ["debug", "battle"])
+	
+	# Trigger battle start
+	ui.action(ui.StartBattleEvent.new())
+	
+	# Wait for system to return to idle state
+	await GameStateMonitor.await_system_idle()
+	
+	var duration: int = Time.get_ticks_msec() - start_time
+	
+	Log.info("Battle completed", {"duration_ms": duration}, ["debug", "battle"])
+	
+	return DebugAction.Result.new_success(
+		{"battle_duration_ms": duration},
+		duration,
+		"battle_complete"
+	)
+
+
+static func _populate_enemy_and_start_battle() -> DebugAction.Result:
+	# Chain: populate enemy lineup then start battle
+	if not is_instance_valid(GameStateMonitor):
+		return DebugAction.Result.new_failure("GameStateMonitor not available")
+	
+	# Ensure game systems are fully initialized before proceeding
+	if not await _wait_for_game_systems_ready():
+		return DebugAction.Result.new_failure("Game systems not ready for battle chain")
+	
+	var start_time: int = Time.get_ticks_msec()
+	
+	Log.info("Starting battle chain: populate enemy + battle", {}, ["debug", "battle", "chain"])
+	
+	# Step 1: Populate enemy lineup
+	var populate_result: bool = await _populate_enemy_lineup()
+	if not populate_result:
+		return DebugAction.Result.new_failure("Failed to populate enemy lineup")
+	
+	# Wait for system to be ready after population
+	await GameStateMonitor.await_system_idle()
+	
+	# Step 2: Start battle  
+	var battle_result: DebugAction.Result = await _start_battle()
+	
+	var total_duration: int = Time.get_ticks_msec() - start_time
+	
+	if battle_result.is_success():
+		Log.info(
+			"Battle chain completed successfully", 
+			{"total_duration_ms": total_duration}, 
+			["debug", "battle", "chain"]
+		)
+		return DebugAction.Result.new_success(
+			{
+				"chain_completed": true,
+				"total_duration_ms": total_duration,
+				"battle_duration_ms": battle_result.get_payload().get("battle_duration_ms", 0)
+			},
+			total_duration,
+			"battle_chain_complete"
+		)
+	else:
+		Log.error(
+			"Battle chain failed at battle start", 
+			{"error": battle_result.get_error_message()}, 
+			["debug", "battle", "chain"]
+		)
+		return DebugAction.Result.new_failure(
+			"Battle chain failed: " + battle_result.get_error_message(),
+			"BATTLE_CHAIN_FAILED"
+		)
