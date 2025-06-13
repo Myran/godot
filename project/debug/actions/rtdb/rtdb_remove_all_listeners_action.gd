@@ -16,7 +16,7 @@ func execute_rtdb_action() -> bool:
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
+		var _error_result: Array = get_last_error_result()
 		return false
 
 	_update_status("Removing RTDB listeners...")

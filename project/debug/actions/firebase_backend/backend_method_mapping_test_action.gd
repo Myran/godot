@@ -33,13 +33,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	# Test 1: set_data method
 	_update_status("Testing set_data method mapping...")
 	total_methods += 1
-	var set_path: Array[String] = []
-	set_path.assign(test_base_path + ["set_test"])
+	var set_test_path: Array[String] = []
+	set_test_path.assign(test_base_path + ["set_test"])
 	var set_key: String = "set_" + test_timestamp
 	var set_value: String = "Set method test value"
 
 	var set_success: bool = await test_backend_async_pattern(
-		"set_data", set_path, set_key, set_value, "Method: set_data"
+		"set_data", set_test_path, set_key, set_value, "Method: set_data"
 	)
 	method_results["set_data"] = {"success": set_success, "tested": true}
 	if set_success:
@@ -49,7 +49,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	_update_status("Testing get_data method mapping...")
 	total_methods += 1
 	var get_success: bool = await test_backend_async_pattern(
-		"get_data", set_path, set_key, null, "Method: get_data"
+		"get_data", set_test_path, set_key, null, "Method: get_data"
 	)
 	method_results["get_data"] = {"success": get_success, "tested": true}
 	if get_success:
@@ -73,7 +73,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	_update_status("Testing remove_data method mapping...")
 	total_methods += 1
 	var remove_success: bool = await test_backend_async_pattern(
-		"remove_data", set_path, set_key, null, "Method: remove_data"
+		"remove_data", set_test_path, set_key, null, "Method: remove_data"
 	)
 	method_results["remove_data"] = {"success": remove_success, "tested": true}
 	if remove_success:

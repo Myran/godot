@@ -16,7 +16,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var test_data: Array[Dictionary] = []
 
 	# Prepare test data
-	for i in range(concurrent_count):
+	for i: int in range(concurrent_count):
 		test_data.append(
 			{
 				"path": ["cpp_tests", "concurrent", str(i), str(Time.get_ticks_msec())],

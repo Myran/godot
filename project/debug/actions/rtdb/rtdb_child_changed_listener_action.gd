@@ -14,7 +14,7 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
@@ -52,7 +52,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var initial_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Initial data", "version": 1
 	}
-	var set_success1: bool = await execute_simple_operation(
+	var _set_success1: bool = await execute_simple_operation(
 		"set_value_async", child_path, initial_data, "Set Initial Data for Change Test"
 	)
 
@@ -63,7 +63,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var updated_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Updated data", "version": 2
 	}
-	var set_success2: bool = await execute_simple_operation(
+	var _set_success2: bool = await execute_simple_operation(
 		"set_value_async", child_path, updated_data, "Update Data to Trigger Change Listener"
 	)
 

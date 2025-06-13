@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
 	var db: Object = get_firebase_database()
@@ -96,12 +96,12 @@ func execute_rtdb_action() -> bool:
 
 
 func _execute_single_operation(
-	db: Object, operation: Dictionary, operation_index: int
+	_db: Object, operation: Dictionary, operation_index: int
 ) -> Dictionary:
 	var operation_type_variant: Variant = operation.get("type")
 	var operation_type: String = str(operation_type_variant)
 	var operation_path_variant: Variant = operation.get("path")
-	var operation_path: Array[Variant] = operation_path_variant
+	var operation_path: Array = operation_path_variant
 	var operation_data: Variant = operation.get("data")
 	match operation_type:
 		"set":

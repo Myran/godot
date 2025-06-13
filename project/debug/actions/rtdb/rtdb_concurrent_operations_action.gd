@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
@@ -47,15 +47,19 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Execute operations sequentially (real Firebase operations)
 	for operation: Dictionary in operations:
 		var operation_start_time: int = Time.get_ticks_msec()
+		var method_str: String = operation["method"]
+		var path_array: Array = operation["path"]
+		var data_variant: Variant = operation["data"]
+		var name_str: String = operation["name"]
 		var success: bool = await execute_simple_operation(
-			operation.method, operation.path, operation.data, operation.name
+			method_str, path_array, data_variant, name_str
 		)
 		var operation_duration: int = Time.get_ticks_msec() - operation_start_time
 
 		var operation_result: Dictionary = {
-			"name": operation.name,
-			"method": operation.method,
-			"path": operation.path,
+			"name": name_str,
+			"method": method_str,
+			"path": path_array,
 			"success": success,
 			"duration_ms": operation_duration,
 			"timestamp": Time.get_ticks_msec()

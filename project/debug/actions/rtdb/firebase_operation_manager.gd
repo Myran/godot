@@ -105,6 +105,12 @@ func _simulate_async_completion(
 func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Result:
 	var deadline: int = TimeUtils.deadline_ms(timeout_sec)
 
+	# Declare variables at function scope to avoid redeclaration
+	var operation_str: String = ""
+	var start_time_variant: Variant = null
+	var start_time_int: int = 0
+	var duration_ms: int = 0
+
 	while _pending_ops.has(request_id):
 		var op_data_check: Dictionary = _pending_ops[request_id]
 		var completed_variant: Variant = op_data_check.get("completed")
@@ -117,10 +123,10 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Re
 		if TimeUtils.is_past_deadline(deadline):
 			var timeout_op_data: Dictionary = _pending_ops[request_id]
 			var operation_variant: Variant = timeout_op_data.get("operation")
-			var operation_str: String = str(operation_variant)
-			var start_time_variant: Variant = timeout_op_data.get("start_time")
-			var start_time_int: int = start_time_variant
-			var duration_ms: int = TimeUtils.elapsed_ms(start_time_int)
+			operation_str = str(operation_variant)
+			start_time_variant = timeout_op_data.get("start_time")
+			start_time_int = start_time_variant
+			duration_ms = TimeUtils.elapsed_ms(start_time_int)
 			return DebugAction.Result.new_timeout(
 				duration_ms, operation_str, "Operation timed out after %.1f seconds" % timeout_sec
 			)
@@ -134,10 +140,10 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Re
 	var error_variant: Variant = op_data.get("error")
 	var has_error: bool = error_variant != null
 
-	var operation_str: String = str(op_data.get("operation", "Unknown"))
-	var start_time_variant: Variant = op_data.get("start_time")
-	var start_time_int: int = start_time_variant
-	var duration_ms: int = TimeUtils.elapsed_ms(start_time_int)
+	operation_str = str(op_data.get("operation", "Unknown"))
+	start_time_variant = op_data.get("start_time")
+	start_time_int = start_time_variant
+	duration_ms = TimeUtils.elapsed_ms(start_time_int)
 
 	if has_error:
 		var error_str: String = str(error_variant)

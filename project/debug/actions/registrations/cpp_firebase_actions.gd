@@ -3,28 +3,28 @@ class_name CPPFirebaseActions
 extends RefCounted
 
 # Preload the action classes
-const CPPSetValueTestAction = preload(
+const CPPSetValueTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_set_value_test_action.gd"
 )
-const CPPGetValueTestAction = preload(
+const CPPGetValueTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_get_value_test_action.gd"
 )
-const CPPRemoveValueTestAction = preload(
+const CPPRemoveValueTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_remove_value_test_action.gd"
 )
-const CPPSignalIntegrityTestAction = preload(
+const CPPSignalIntegrityTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_signal_integrity_test_action.gd"
 )
-const CPPErrorHandlingTestAction = preload(
+const CPPErrorHandlingTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_error_handling_test_action.gd"
 )
-const CPPConcurrentOperationsTestAction = preload(
+const CPPConcurrentOperationsTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd"
 )
-const CPPLargeDataTestAction = preload(
+const CPPLargeDataTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_large_data_test_action.gd"
 )
-const CPPTimeoutBehaviorTestAction = preload(
+const CPPTimeoutBehaviorTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_timeout_behavior_test_action.gd"
 )
 
@@ -37,28 +37,34 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	var counters: Array[int] = [0, 0]  # [registered, failed]
 
 	# Core C++ Firebase operations
-	_register_with_count(registry, CPPSetValueTestAction.new(), "CPPSetValueTestAction", counters)
-	_register_with_count(registry, CPPGetValueTestAction.new(), "CPPGetValueTestAction", counters)
 	_register_with_count(
-		registry, CPPRemoveValueTestAction.new(), "CPPRemoveValueTestAction", counters
+		registry, CPPSetValueTestActionClass.new(), "CPPSetValueTestAction", counters
 	)
 	_register_with_count(
-		registry, CPPSignalIntegrityTestAction.new(), "CPPSignalIntegrityTestAction", counters
+		registry, CPPGetValueTestActionClass.new(), "CPPGetValueTestAction", counters
+	)
+	_register_with_count(
+		registry, CPPRemoveValueTestActionClass.new(), "CPPRemoveValueTestAction", counters
+	)
+	_register_with_count(
+		registry, CPPSignalIntegrityTestActionClass.new(), "CPPSignalIntegrityTestAction", counters
 	)
 
 	# Advanced C++ Firebase operations
 	_register_with_count(
-		registry, CPPErrorHandlingTestAction.new(), "CPPErrorHandlingTestAction", counters
+		registry, CPPErrorHandlingTestActionClass.new(), "CPPErrorHandlingTestAction", counters
 	)
 	_register_with_count(
 		registry,
-		CPPConcurrentOperationsTestAction.new(),
+		CPPConcurrentOperationsTestActionClass.new(),
 		"CPPConcurrentOperationsTestAction",
 		counters
 	)
-	_register_with_count(registry, CPPLargeDataTestAction.new(), "CPPLargeDataTestAction", counters)
 	_register_with_count(
-		registry, CPPTimeoutBehaviorTestAction.new(), "CPPTimeoutBehaviorTestAction", counters
+		registry, CPPLargeDataTestActionClass.new(), "CPPLargeDataTestAction", counters
+	)
+	_register_with_count(
+		registry, CPPTimeoutBehaviorTestActionClass.new(), "CPPTimeoutBehaviorTestAction", counters
 	)
 
 	Log.info(

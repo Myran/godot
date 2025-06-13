@@ -3,25 +3,25 @@ class_name BackendFirebaseActions
 extends RefCounted
 
 # Preload the action classes
-const BackendAsyncPatternTestAction = preload(
+const BackendAsyncPatternTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_async_pattern_test_action.gd"
 )
-const BackendTimerManagerTestAction = preload(
+const BackendTimerManagerTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_timer_manager_test_action.gd"
 )
-const BackendMethodMappingTestAction = preload(
+const BackendMethodMappingTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_method_mapping_test_action.gd"
 )
-const BackendErrorHandlingTestAction = preload(
+const BackendErrorHandlingTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_error_handling_test_action.gd"
 )
-const BackendPerformanceTestAction = preload(
+const BackendPerformanceTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_performance_test_action.gd"
 )
-const BackendLifecycleTestAction = preload(
+const BackendLifecycleTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_lifecycle_test_action.gd"
 )
-const BackendRequestTrackingTestAction = preload(
+const BackendRequestTrackingTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_request_tracking_test_action.gd"
 )
 
@@ -37,28 +37,40 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 	# Core Backend Firebase operations
 	_register_with_count(
-		registry, BackendAsyncPatternTestAction.new(), "BackendAsyncPatternTestAction", counters
+		registry,
+		BackendAsyncPatternTestActionClass.new(),
+		"BackendAsyncPatternTestAction",
+		counters
 	)
 	_register_with_count(
-		registry, BackendTimerManagerTestAction.new(), "BackendTimerManagerTestAction", counters
+		registry,
+		BackendTimerManagerTestActionClass.new(),
+		"BackendTimerManagerTestAction",
+		counters
 	)
 	_register_with_count(
-		registry, BackendMethodMappingTestAction.new(), "BackendMethodMappingTestAction", counters
+		registry,
+		BackendMethodMappingTestActionClass.new(),
+		"BackendMethodMappingTestAction",
+		counters
 	)
 	_register_with_count(
-		registry, BackendLifecycleTestAction.new(), "BackendLifecycleTestAction", counters
+		registry, BackendLifecycleTestActionClass.new(), "BackendLifecycleTestAction", counters
 	)
 
 	# Advanced Backend Firebase operations
 	_register_with_count(
-		registry, BackendErrorHandlingTestAction.new(), "BackendErrorHandlingTestAction", counters
+		registry,
+		BackendErrorHandlingTestActionClass.new(),
+		"BackendErrorHandlingTestAction",
+		counters
 	)
 	_register_with_count(
-		registry, BackendPerformanceTestAction.new(), "BackendPerformanceTestAction", counters
+		registry, BackendPerformanceTestActionClass.new(), "BackendPerformanceTestAction", counters
 	)
 	_register_with_count(
 		registry,
-		BackendRequestTrackingTestAction.new(),
+		BackendRequestTrackingTestActionClass.new(),
 		"BackendRequestTrackingTestAction",
 		counters
 	)

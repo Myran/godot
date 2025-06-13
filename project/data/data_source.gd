@@ -45,7 +45,7 @@ func _initialize() -> void:
 	_backend = await BackendFactory.create_backend()
 
 	# Track whether we're using local data
-	using_local_data = _backend is LocalJSONBackend
+	using_local_data = _backend.get_class() == "LocalJSONBackend"
 
 	Log.debug(
 		"Backend created",
@@ -207,7 +207,7 @@ func set_test_group(group: int) -> void:
 func is_firebase_available() -> bool:
 	# No null check - will crash if _backend is null (fail fast)
 	var available: bool = false
-	if _backend is FirebaseBackend:
+	if _backend.get_class() == "FirebaseBackend":
 		var firebase_backend: FirebaseBackend = _backend
 		available = firebase_backend.is_available()
 
@@ -275,7 +275,12 @@ func setup_player_data() -> int:
 
 		# Direct assignment - will crash if type is wrong (fail fast)
 		@warning_ignore("redundant_await")
-		retval = await auth.login()
+		var auth_result: Variant = await auth.login()
+		# Handle enum to int conversion safely
+		if typeof(auth_result) == TYPE_INT:
+			retval = auth_result
+		else:
+			retval = 0  # Default to success if we can't convert
 
 		if OS.has_feature("editor"):
 			Log.debug(

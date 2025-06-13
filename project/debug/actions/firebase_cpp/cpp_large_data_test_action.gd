@@ -23,21 +23,24 @@ func execute_cpp_action() -> bool:
 	var total_tests: int = data_sizes.size()
 
 	for size_config: Dictionary in data_sizes:
-		_update_status("Testing " + size_config.description + "...")
+		var size_description: String = size_config.description
+		var config_name: String = size_config.name
+		_update_status("Testing " + size_description + "...")
 
 		# Generate test data of specified size
-		var large_data: String = _generate_test_data(size_config.size)
+		var size_bytes: int = size_config.size
+		var large_data: String = _generate_test_data(size_bytes)
 		var test_path: Array[String] = [
-			"cpp_tests", "large_data", size_config.name.to_lower(), str(Time.get_ticks_msec())
+			"cpp_tests", "large_data", config_name.to_lower(), str(Time.get_ticks_msec())
 		]
 
 		# Test set operation with large data
-		_update_status("Setting " + size_config.description + " via C++...")
+		_update_status("Setting " + size_description + " via C++...")
 		var set_start_time: int = Time.get_ticks_msec()
 		var set_result: Variant = await execute_cpp_operation(
 			"set_value_async",
 			[test_path, large_data],
-			"Large Data Set (" + size_config.name + ")",
+			"Large Data Set (" + config_name + ")",
 			"set_value"
 		)
 		var set_duration: int = Time.get_ticks_msec() - set_start_time
@@ -50,13 +53,10 @@ func execute_cpp_action() -> bool:
 		var data_matches: bool = false
 
 		if set_success:
-			_update_status("Getting " + size_config.description + " via C++...")
+			_update_status("Getting " + size_description + " via C++...")
 			var get_start_time: int = Time.get_ticks_msec()
 			var get_result: Variant = await execute_cpp_operation(
-				"get_value_async",
-				[test_path],
-				"Large Data Get (" + size_config.name + ")",
-				"get_value"
+				"get_value_async", [test_path], "Large Data Get (" + config_name + ")", "get_value"
 			)
 			get_duration = Time.get_ticks_msec() - get_start_time
 
@@ -67,7 +67,7 @@ func execute_cpp_action() -> bool:
 
 				Log.info(
 					"Large data operation completed",
-					{"size": size_config.name, "data_length": large_data.length()},
+					{"size": config_name, "data_length": large_data.length()},
 					["debug", "cpp_firebase"]
 				)
 
@@ -77,9 +77,9 @@ func execute_cpp_action() -> bool:
 
 		test_results.append(
 			{
-				"size_name": size_config.name,
-				"size_bytes": size_config.size,
-				"description": size_config.description,
+				"size_name": config_name,
+				"size_bytes": size_bytes,
+				"description": size_description,
 				"data_length": large_data.length(),
 				"set_success": set_success,
 				"set_duration_ms": set_duration,
@@ -105,26 +105,23 @@ func execute_cpp_action() -> bool:
 	}
 
 	if overall_success:
-		_update_status(
-			(
-				"Large data test PASSED ("
-				+ str(successful_tests)
-				+ "/"
-				+ str(total_tests)
-				+ " data sizes handled)"
-			)
+		var success_message: String = (
+			"Large data test PASSED ("
+			+ str(successful_tests)
+			+ "/"
+			+ str(total_tests)
+			+ " data sizes handled)"
 		)
+		_update_status(success_message)
 	else:
-		_update_status(
-			(
-				"Large data test FAILED ("
-				+ str(successful_tests)
-				+ "/"
-				+ str(total_tests)
-				+ " succeeded)"
-			),
-			true
+		var failure_message: String = (
+			"Large data test FAILED ("
+			+ str(successful_tests)
+			+ "/"
+			+ str(total_tests)
+			+ " succeeded)"
 		)
+		_update_status(failure_message, true)
 
 	return overall_success
 
@@ -137,7 +134,7 @@ func _generate_test_data(target_size: int) -> String:
 	# Calculate how many repetitions we need
 	var header_size: int = data.length()
 	var remaining_size: int = target_size - header_size
-	var repetitions: int = max(1, remaining_size / base_content.length())
+	var repetitions: int = max(1, int(float(remaining_size) / float(base_content.length())))
 
 	# Build the large data string
 	for i: int in range(repetitions):

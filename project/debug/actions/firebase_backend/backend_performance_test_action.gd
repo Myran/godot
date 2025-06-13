@@ -9,10 +9,10 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
-	var backend = get_firebase_backend_for_testing()
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
 		return DebugAction.Result.new_failure(
 			"Failed to get Firebase backend for testing",
@@ -52,7 +52,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var sequential_durations: Array[int] = []
 	var sequential_successes: int = 0
 
-	for i in range(sequential_operations):
+	for i: int in range(sequential_operations):
 		var seq_path: Array = test_base_path + ["sequential", str(i), test_timestamp]
 		var seq_key: String = "perf_seq_" + str(i) + "_" + test_timestamp
 		var seq_value: String = "Sequential operation " + str(i)
@@ -74,7 +74,9 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	for duration: int in sequential_durations:
 		avg_sequential_duration += duration
 	avg_sequential_duration = (
-		avg_sequential_duration / sequential_operations if sequential_operations > 0 else 0
+		int(float(avg_sequential_duration) / float(sequential_operations))
+		if sequential_operations > 0
+		else 0
 	)
 
 	performance_tests.append(
@@ -90,7 +92,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Performance Test 3: RequestSignalHelper overhead measurement
 	var overhead_path: Array = test_base_path + ["overhead", test_timestamp]
 	var overhead_key: String = "perf_overhead_" + test_timestamp
-	var overhead_value: String = "RequestSignalHelper overhead test"
+	var _overhead_value: String = "RequestSignalHelper overhead test"
 
 	var overhead_start: int = Time.get_ticks_msec()
 	var overhead_result: Variant = await test_backend_async_pattern(
@@ -132,7 +134,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 		"avg_sequential_ms": avg_sequential_duration,
 		"overhead_test_ms": overhead_duration,
 		"p95_latency_ms":
-		_calculate_p95_latency(sequential_durations + [single_duration, overhead_duration]),
+		_calculate_p95_latency(_combine_duration_arrays(sequential_durations, single_duration, overhead_duration)),
 		"total_operations": total_operations,
 		"successful_operations": successful_operations,
 		"success_rate": success_rate
@@ -170,11 +172,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 
 # Helper method to calculate 95th percentile latency
-func _calculate_p95_latency(durations: Array) -> int:
+func _calculate_p95_latency(durations: Array[int]) -> int:
 	if durations.is_empty():
 		return 0
 
-	var sorted_durations: Array = durations.duplicate()
+	var sorted_durations: Array[int] = durations.duplicate()
 	sorted_durations.sort()
 
 	var p95_index: int = int(float(sorted_durations.size()) * 0.95)
@@ -182,6 +184,14 @@ func _calculate_p95_latency(durations: Array) -> int:
 		p95_index = sorted_durations.size() - 1
 
 	return sorted_durations[p95_index]
+
+
+# Helper function to combine duration arrays with proper typing
+func _combine_duration_arrays(base_durations: Array[int], single_duration: int, overhead_duration: int) -> Array[int]:
+	var combined_durations: Array[int] = base_durations.duplicate()
+	combined_durations.append(single_duration)
+	combined_durations.append(overhead_duration)
+	return combined_durations
 
 
 # Legacy method for compatibility - delegates to new pattern

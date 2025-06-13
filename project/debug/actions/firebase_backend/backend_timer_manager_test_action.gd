@@ -61,7 +61,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		await Engine.get_main_loop().create_timer(0.05).timeout
 
 	var rapid_success_rate: float = float(rapid_success) / float(rapid_requests)
-	var avg_rapid_duration: int = total_rapid_duration / rapid_requests
+	var avg_rapid_duration: int = int(float(total_rapid_duration) / float(rapid_requests))
 
 	# Evaluate results
 	var normal_ok: bool = normal_result and normal_duration < 5000  # Under 5 seconds

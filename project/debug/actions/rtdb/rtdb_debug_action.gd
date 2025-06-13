@@ -83,14 +83,21 @@ func execute_simple_operation(
 	)
 
 	var firebase_backend: Object = get_firebase_database()
+
+	# Declare variables at function scope to avoid redeclaration
+	var error_msg: String = ""
+	var key: String = ""
+	var path: Array = []
+	var duration_ms: int = 0
+
 	if not firebase_backend:
-		var error_msg: String = "Firebase backend not available for " + operation_name
+		error_msg = "Firebase backend not available for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 		return false
 
 	if not firebase_backend.is_available():
-		var error_msg: String = "Firebase backend not initialized for " + operation_name
+		error_msg = "Firebase backend not initialized for " + operation_name
 		Log.error(error_msg, {}, ["debug", "rtdb", "error"])
 		_update_status("ERROR: " + error_msg, true)
 		return false
@@ -102,20 +109,20 @@ func execute_simple_operation(
 	match method:
 		"get_value_async":
 			# Convert path to proper format
-			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
-			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			key = path_variants[-1] if path_variants.size() > 0 else ""
+			path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.get_data(path, key)
 
 		"set_value_async":
 			# Convert path to proper format
-			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
-			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			key = path_variants[-1] if path_variants.size() > 0 else ""
+			path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.set_data(path, key, value)
 
 		"remove_value_async":
 			# Convert path to proper format
-			var key: String = path_variants[-1] if path_variants.size() > 0 else ""
-			var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+			key = path_variants[-1] if path_variants.size() > 0 else ""
+			path = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 			result = await firebase_backend.remove_data(path, key)
 
 		"push_value_async":
@@ -123,8 +130,8 @@ func execute_simple_operation(
 			result = await firebase_backend.push_data(path_variants, value)
 
 		_:
-			var duration_ms: int = Time.get_ticks_msec() - start_time_ms
-			var error_msg: String = "Unsupported RTDB method: " + method
+			duration_ms = Time.get_ticks_msec() - start_time_ms
+			error_msg = "Unsupported RTDB method: " + method
 			Log.error(
 				error_msg,
 				{
@@ -139,7 +146,7 @@ func execute_simple_operation(
 			return false
 
 	# Handle result with performance tracking
-	var duration_ms: int = Time.get_ticks_msec() - start_time_ms
+	duration_ms = Time.get_ticks_msec() - start_time_ms
 
 	if result != null:
 		Log.info(

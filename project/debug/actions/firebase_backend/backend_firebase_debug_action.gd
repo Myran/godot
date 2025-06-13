@@ -78,12 +78,16 @@ func test_backend_async_pattern(
 	# Call backend method based on method name
 	match method_name:
 		"get_data":
+			@warning_ignore("redundant_await")
 			result = await backend.get_data(path, key)
 		"set_data":
+			@warning_ignore("redundant_await")
 			result = await backend.set_data(path, key, value)
 		"remove_data":
+			@warning_ignore("redundant_await")
 			result = await backend.remove_data(path, key)
 		"push_data":
+			@warning_ignore("redundant_await")
 			result = await backend.push_data(path, value)
 		_:
 			_update_status("ERROR: Unsupported backend method: " + method_name, true)
@@ -111,7 +115,7 @@ func test_backend_async_pattern(
 
 
 # New DebugAction.Result pattern - subclasses should override this
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	# Default implementation for base class - subclasses should override
 	var error_message: String = (
 		"_execute_action_logic() not implemented in " + get_script().get_path()

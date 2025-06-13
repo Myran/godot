@@ -16,7 +16,7 @@ func execute_rtdb_action() -> bool:
 	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
+		var _error_result: Array = get_last_error_result()
 		return false
 
 	_update_status("Validating various RTDB paths...")
@@ -45,14 +45,15 @@ func execute_rtdb_action() -> bool:
 
 # Set up test data for valid paths
 	for test_case: Dictionary in test_paths:
-		if test_case.should_exist:
+		var test_path: Array = test_case["path"]
+		var test_name: String = test_case["name"]
+		var should_exist: bool = test_case["should_exist"]
+		if should_exist:
 			var test_data: Dictionary = {
-				"timestamp": Time.get_ticks_msec(),
-				"path_name": test_case.name,
-				"validation_test": true
+				"timestamp": Time.get_ticks_msec(), "path_name": test_name, "validation_test": true
 			}
-			var result: bool = await execute_simple_operation(
-				"set_value_async", test_case.path, test_data, "Path Setup: " + str(test_case.name)
+			var _result: bool = await execute_simple_operation(
+				"set_value_async", test_path, test_data, "Path Setup: " + test_name
 			)
 
 	# Wait for setup to complete
@@ -93,7 +94,7 @@ func execute_rtdb_action() -> bool:
 	return true
 
 
-func _validate_single_path(db: Variant, test_case: Dictionary) -> Dictionary:
+func _validate_single_path(_db: Variant, test_case: Dictionary) -> Dictionary:
 	var path: Array[Variant] = test_case.path
 	var path_name: String = test_case.name
 	var should_exist: bool = test_case.should_exist

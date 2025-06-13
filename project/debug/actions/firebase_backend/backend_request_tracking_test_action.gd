@@ -59,7 +59,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		if seq_result:
 			sequential_success += 1
 
-	var sequential_test_success = sequential_success == sequential_count
+	var sequential_test_success: bool = sequential_success == sequential_count
 	if sequential_test_success:
 		successful_tests += 1
 
@@ -76,23 +76,23 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	# Test 2: Concurrent-style request handling (rapid fire)
 	_update_status("Testing rapid request handling...")
 	total_tests += 1
-	var rapid_count = 4
-	var rapid_tasks = []
-	var rapid_results = []
-	var rapid_success = 0
+	var rapid_count: int = 4
+	var __rapid_tasks: Array[Variant] = []
+	var rapid_results: Array[Dictionary] = []
+	var rapid_success: int = 0
 
 	# Execute all requests rapidly one after another
-	for i in range(rapid_count):
-		var rapid_path = ["backend_tests", "request_tracking", "rapid", str(i)]
-		var rapid_key = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var rapid_value = "Rapid request " + str(i)
+	for i: int in range(rapid_count):
+		var rapid_path: Array[String] = ["backend_tests", "request_tracking", "rapid", str(i)]
+		var rapid_key: String = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
+		var rapid_value: String = "Rapid request " + str(i)
 
 		# Execute request directly for rapid testing
-		var rapid_start = Time.get_ticks_msec()
-		var rapid_result = await test_backend_async_pattern(
+		var rapid_start: int = Time.get_ticks_msec()
+		var rapid_result: bool = await test_backend_async_pattern(
 			"set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i)
 		)
-		var rapid_duration = Time.get_ticks_msec() - rapid_start
+		var rapid_duration: int = Time.get_ticks_msec() - rapid_start
 
 		rapid_results.append(
 			{"request_index": i, "success": rapid_result, "duration_ms": rapid_duration}
@@ -104,7 +104,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		# Very small delay to simulate rapid firing
 		await Engine.get_main_loop().process_frame
 
-	var rapid_test_success = rapid_success >= (rapid_count * 0.75)  # 75% success rate for rapid requests
+	var rapid_test_success: bool = rapid_success >= (rapid_count * 0.75)  # 75% success rate for rapid requests
 	if rapid_test_success:
 		successful_tests += 1
 
@@ -125,8 +125,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	# Test multiple operations of different types to stress RequestSignalHelper
 	# Use set-then-get pattern to ensure get_data has valid data to retrieve
-	var base_key = "pattern_test_" + str(Time.get_ticks_msec())
-	var pattern_operations = [
+	var base_key: String = "pattern_test_" + str(Time.get_ticks_msec())
+	var pattern_operations: Array[Dictionary] = [
 		{
 			"method": "set_data",
 			"path": ["backend_tests", "request_tracking", "pattern", "set"],
@@ -153,23 +153,27 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	]
 
-	var pattern_success = 0
-	var pattern_results = []
+	var pattern_success: int = 0
+	var pattern_results: Array[Dictionary] = []
 
-	for op in pattern_operations:
-		var pattern_start = Time.get_ticks_msec()
-		var pattern_result = await test_backend_async_pattern(
-			op.method, op.path, op.key, op.value, "Pattern: " + op.method
+	for op: Dictionary in pattern_operations:
+		var pattern_start: int = Time.get_ticks_msec()
+		var method_str: String = op["method"]
+		var path_array: Array = op["path"]
+		var key_str: String = op["key"]
+		var value_variant: Variant = op["value"]
+		var pattern_result: bool = await test_backend_async_pattern(
+			method_str, path_array, key_str, value_variant, "Pattern: " + method_str
 		)
-		var pattern_duration = Time.get_ticks_msec() - pattern_start
+		var pattern_duration: int = Time.get_ticks_msec() - pattern_start
 
 		pattern_results.append(
 			{
-				"method": op.method,
+				"method": method_str,
 				"success": pattern_result,
 				"duration_ms": pattern_duration,
-				"path": op.path,
-				"key": op.key
+				"path": path_array,
+				"key": key_str
 			}
 		)
 
@@ -179,7 +183,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		# Small delay between pattern operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
-	var pattern_test_success = pattern_success >= (pattern_operations.size() * 0.75)  # 75% success rate
+	var pattern_test_success: bool = pattern_success >= (pattern_operations.size() * 0.75)  # 75% success rate
 	if pattern_test_success:
 		successful_tests += 1
 
@@ -194,11 +198,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 	# Calculate overall success
-	var success_rate = float(successful_tests) / float(total_tests)
-	var overall_success = success_rate >= 0.8  # 80% of tracking tests should pass
+	var success_rate: float = float(successful_tests) / float(total_tests)
+	var overall_success: bool = success_rate >= 0.8  # 80% of tracking tests should pass
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"total_tests": total_tests,
 		"successful_tests": successful_tests,
 		"success_rate": success_rate,

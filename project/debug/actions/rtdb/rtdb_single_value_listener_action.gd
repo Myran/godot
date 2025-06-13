@@ -17,7 +17,7 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
@@ -58,7 +58,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	var initial_value: String = "Listener Test: " + str(Time.get_ticks_msec())
 
 	_update_status("Creating initial test data...")
-	var set_success1: bool = await execute_simple_operation(
+	var _set_success1: bool = await execute_simple_operation(
 		"set_value_async", test_child_path, initial_value, "Create Initial Test Data"
 	)
 
@@ -66,7 +66,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	await Engine.get_main_loop().create_timer(0.5).timeout
 	_update_status("Modifying data to trigger listener...")
 	var updated_value: String = "Updated Listener Test: " + str(Time.get_ticks_msec())
-	var set_success2: bool = await execute_simple_operation(
+	var _set_success2: bool = await execute_simple_operation(
 		"set_value_async", test_child_path, updated_value, "Update Data to Trigger Listener"
 	)
 

@@ -9,19 +9,19 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend lifecycle...")
 
-	var lifecycle_tests = []
-	var successful_tests = 0
-	var total_tests = 0
+	var lifecycle_tests: Array[Dictionary] = []
+	var successful_tests: int = 0
+	var total_tests: int = 0
 
 	# Test 1: Backend availability check
 	_update_status("Testing backend availability...")
 	total_tests += 1
-	var backend = get_firebase_backend_for_testing()
-	var availability_success = backend != null and is_instance_valid(backend)
+	var backend: FirebaseBackend = get_firebase_backend_for_testing()
+	var availability_success: bool = backend != null and is_instance_valid(backend)
 
 	if availability_success:
 		successful_tests += 1
@@ -35,7 +35,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 	if not backend:
-		var test_results = {
+		var failure_results: Dictionary = {
 			"total_tests": total_tests,
 			"successful_tests": successful_tests,
 			"lifecycle_tests": lifecycle_tests,
@@ -45,7 +45,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 			"Backend lifecycle test failed - backend not available",
 			"BACKEND_UNAVAILABLE",
 			DebugAction.Result.ErrorCategory.DATABASE,
-			test_results,
+			failure_results,
 			Time.get_ticks_msec() - start_time,
 			action_name,
 			{"test_type": "backend_lifecycle", "failed_at": "backend_availability_check"}
@@ -54,7 +54,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 2: Backend initialization state
 	_update_status("Testing backend initialization state...")
 	total_tests += 1
-	var initialization_success = backend.is_available()
+	var initialization_success: bool = backend.is_available()
 
 	if initialization_success:
 		successful_tests += 1
@@ -69,7 +69,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 3: DataSource integration
 	_update_status("Testing DataSource integration...")
 	total_tests += 1
-	var datasource_integration = data_source != null and data_source.is_initialized()
+	var datasource_integration: bool = data_source != null and data_source.is_initialized()
 
 	if datasource_integration:
 		successful_tests += 1
@@ -85,7 +85,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 4: Backend method accessibility
 	_update_status("Testing backend method accessibility...")
 	total_tests += 1
-	var methods_accessible = (
+	var methods_accessible: bool = (
 		backend.has_method("get_data")
 		and backend.has_method("set_data")
 		and backend.has_method("remove_data")
@@ -110,11 +110,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 5: Basic operation functionality (lightweight test)
 	_update_status("Testing basic operation functionality...")
 	total_tests += 1
-	var test_path = ["backend_tests", "lifecycle", "basic_op"]
-	var test_key = "lifecycle_" + str(Time.get_ticks_msec())
-	var test_value = "Lifecycle test value"
+	var test_path: Array[String] = ["backend_tests", "lifecycle", "basic_op"]
+	var test_key: String = "lifecycle_" + str(Time.get_ticks_msec())
+	var test_value: String = "Lifecycle test value"
 
-	var basic_op_success = await test_backend_async_pattern(
+	var basic_op_success: bool = await test_backend_async_pattern(
 		"set_data", test_path, test_key, test_value, "Lifecycle: Basic Op"
 	)
 
@@ -133,7 +133,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	# Test 6: Backend state consistency
 	_update_status("Testing backend state consistency...")
 	total_tests += 1
-	var state_consistent = (
+	var state_consistent: bool = (
 		backend.is_available() == initialization_success  # State should be consistent
 		and datasource_integration == (data_source != null and data_source.is_initialized())
 	)  # Integration should be stable
@@ -151,11 +151,11 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 	# Calculate success rate
-	var success_rate = float(successful_tests) / float(total_tests)
-	var overall_success = success_rate >= 0.8  # 80% of lifecycle tests should pass
+	var success_rate: float = float(successful_tests) / float(total_tests)
+	var overall_success: bool = success_rate >= 0.8  # 80% of lifecycle tests should pass
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"total_tests": total_tests,
 		"successful_tests": successful_tests,
 		"success_rate": success_rate,

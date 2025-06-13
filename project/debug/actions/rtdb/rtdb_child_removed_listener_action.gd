@@ -14,7 +14,7 @@ func _init() -> void:
 
 
 # New DebugAction.Result pattern - this is the future
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
@@ -55,7 +55,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 
 	# Set child data first
 	_update_status("Creating test child...")
-	var set_success: bool = await execute_simple_operation(
+	var _set_success: bool = await execute_simple_operation(
 		"set_value_async", child_path, child_data, "Create Child for Removal Test"
 	)
 
@@ -63,7 +63,7 @@ func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
 	await Engine.get_main_loop().create_timer(0.5).timeout
 
 	_update_status("Removing child to trigger listener...")
-	var remove_success: bool = await execute_simple_operation(
+	var _remove_success: bool = await execute_simple_operation(
 		"remove_value_async", child_path, null, "Remove Child to Trigger Listener"
 	)
 

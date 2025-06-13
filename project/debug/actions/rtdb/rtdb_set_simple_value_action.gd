@@ -9,9 +9,9 @@ func _init() -> void:
 
 
 # Override the new pattern instead of the legacy one
-func _execute_action_logic(params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
-	var test_value: String = params.get("value_to_set", "Test Value: " + str(TimeUtils.now_ms()))
+	var test_value: String = _params.get("value_to_set", "Test Value: " + str(TimeUtils.now_ms()))
 
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
