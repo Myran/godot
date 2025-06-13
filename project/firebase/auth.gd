@@ -1,5 +1,7 @@
 extends Node
 
+# Firebase auth error enum is available globally via class_name FirebaseAuthError
+
 signal fb_respons(res: Dictionary)
 signal apple_auth_respons(res: Dictionary)
 
@@ -113,7 +115,7 @@ func sign_in_apple() -> int:
 			{},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "apple", "validation"]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	godot_apple_auth.sign_in()
 	@warning_ignore("redundant_await")
@@ -124,12 +126,12 @@ func sign_in_apple() -> int:
 			{"error": result.has("error")},
 			[Log.TAG_FIREBASE, "auth", "apple"]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	firebase_auth.sign_in_apple(result.token, result.nonce)
 	@warning_ignore("redundant_await")
-	var auth_res: int = await firebase_auth.logged_in
-	return auth_res
+	var auth_error_code: int = await firebase_auth.logged_in
+	return auth_error_code
 
 
 func sign_in_facebook() -> int:
@@ -140,7 +142,7 @@ func sign_in_facebook() -> int:
 			{},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR, "auth", "facebook", "validation"]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	var login_resp: bool = facebook.login()
 	if !login_resp:
@@ -149,7 +151,7 @@ func sign_in_facebook() -> int:
 			{},
 			[Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	@warning_ignore("redundant_await")
 	var res: Dictionary = await self.fb_respons
@@ -159,12 +161,12 @@ func sign_in_facebook() -> int:
 			{"response": res},
 			[Log.TAG_FIREBASE, "auth", "facebook"]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	firebase_auth.sign_in_facebook(res.arg)
 	@warning_ignore("redundant_await")
-	var auth_res: int = await firebase_auth.logged_in
-	return auth_res
+	var auth_error_code: int = await firebase_auth.logged_in
+	return auth_error_code
 
 
 func log_out_facebook() -> bool:
@@ -199,7 +201,7 @@ func link_facebook() -> int:
 			{},
 			[Log.TAG_FIREBASE, "auth", "facebook", Log.TAG_NETWORK]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	@warning_ignore("redundant_await")
 	var res: Dictionary = await self.fb_respons
@@ -209,12 +211,12 @@ func link_facebook() -> int:
 			{"response": res},
 			[Log.TAG_FIREBASE, "auth", "facebook"]
 		)
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	firebase_auth.link_to_facebook(res.arg)
 	@warning_ignore("redundant_await")
-	var link_res: int = await firebase_auth.account_linked
-	return link_res
+	var link_error_code: int = await firebase_auth.account_linked
+	return link_error_code
 
 
 func log_out_apple() -> void:
@@ -228,18 +230,18 @@ func log_out_apple() -> void:
 func link_apple() -> int:
 	Log.info("Starting Apple account linking", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if !godot_apple_auth:
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	godot_apple_auth.sign_in()
 	@warning_ignore("redundant_await")
 	var result: Dictionary = await self.apple_auth_respons
 	if result.has("error"):
-		return -1
+		return int(FirebaseAuthError.Code.OPERATION_NOT_ALLOWED)
 
 	firebase_auth.link_to_apple(result.token, result.nonce)
 	@warning_ignore("redundant_await")
-	var res: int = await firebase_auth.account_linked
-	return res
+	var link_error_code: int = await firebase_auth.account_linked
+	return link_error_code
 
 
 func unlink_apple() -> void:
@@ -284,11 +286,12 @@ func login() -> int:
 		Log.warning(
 			"Firebase Auth module not available", {}, [Log.TAG_FIREBASE, "auth", "validation"]
 		)
-		return 1
+		return 5  # OPERATION_NOT_ALLOWED value
 
 	if !firebase_auth.is_logged_in():
 		firebase_auth.sign_in_anonymously()
 		@warning_ignore("redundant_await")
-		retval = await firebase_auth.logged_in
+		var auth_error_code: int = await firebase_auth.logged_in
+		retval = auth_error_code
 
 	return retval

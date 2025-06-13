@@ -137,6 +137,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 func execute_backend_action() -> bool:
 	# Check if subclass implements new pattern
 	if has_method("_execute_action_logic"):
+		@warning_ignore("redundant_await")
 		var result: DebugAction.Result = await _execute_action_logic({})
 		return result.is_success()
 	else:

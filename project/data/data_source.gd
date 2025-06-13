@@ -1,5 +1,8 @@
 class_name DataSource
 extends Node
+
+# Firebase auth error enum is available globally via class_name FirebaseAuthError
+
 ## Emitted when data source initialization is complete
 signal startup_completed
 const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
@@ -251,8 +254,8 @@ func activate_card_cache() -> void:
 
 
 ## Set up player data from server or create new data
-## @return Result code (0 for success)
-func setup_player_data() -> int:
+## @return true if successful, false otherwise
+func setup_player_data() -> bool:
 	Log.info("Setting up player data", {"instance_id": get_instance_id()}, [Log.TAG_DB])
 
 	if players == null:
@@ -261,10 +264,10 @@ func setup_player_data() -> int:
 			{"instance_id": get_instance_id()},
 			[Log.TAG_DB, Log.TAG_ERROR]
 		)
-		return -1
+		return false
 
 	var auth: Object = Engine.get_singleton("Auth")
-	var retval: int = 0
+	var auth_success: bool = true
 
 	if auth != null and auth.is_available():
 		Log.debug(
@@ -273,14 +276,12 @@ func setup_player_data() -> int:
 			[Log.TAG_DB]
 		)
 
-		# Direct assignment - will crash if type is wrong (fail fast)
+		# Firebase auth returns integer error code - 0 means success
 		@warning_ignore("redundant_await")
-		var auth_result: Variant = await auth.login()
-		# Handle enum to int conversion safely
-		if typeof(auth_result) == TYPE_INT:
-			retval = auth_result
-		else:
-			retval = 0  # Default to success if we can't convert
+		var auth_result: int = await auth.login()
+		# Use explicit integer constant to avoid enum comparison warnings
+		var success_code: int = 0  # FirebaseAuthError.Code.NONE value
+		auth_success = (auth_result == success_code)
 
 		if OS.has_feature("editor"):
 			Log.debug(
@@ -288,15 +289,15 @@ func setup_player_data() -> int:
 				{"instance_id": get_instance_id()},
 				[Log.TAG_DB]
 			)
-			retval = 0
+			auth_success = true
 
-		if retval != 0:
+		if not auth_success:
 			Log.warning(
 				"Login failed during player data setup",
-				{"error_code": retval, "instance_id": get_instance_id()},
+				{"error_code": auth_result, "instance_id": get_instance_id()},
 				[Log.TAG_DB, Log.TAG_ERROR]
 			)
-			return retval
+			return false
 	else:
 		Log.warning(
 			"Auth singleton not available",
@@ -321,14 +322,14 @@ func setup_player_data() -> int:
 			{"instance_id": get_instance_id()},
 			[Log.TAG_DB, Log.TAG_ERROR]
 		)
-		return -2
+		return false
 
 	Log.info(
 		"Player data setup complete",
 		{"success": save_success, "instance_id": get_instance_id()},
 		[Log.TAG_DB]
 	)
-	return retval
+	return true
 
 
 #------------------------------------------------------------------

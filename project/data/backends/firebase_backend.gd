@@ -65,7 +65,7 @@ class TimerManager:
 	) -> Error:
 		if not is_valid():
 			return ERR_INVALID_DATA
-		return _timer.timeout.connect(callable, flags)
+		return _timer.timeout.connect(callable, flags) as Error
 
 	func start() -> void:
 		if is_valid():

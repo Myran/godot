@@ -194,7 +194,3 @@ func _combine_duration_arrays(base_durations: Array[int], single_duration: int, 
 	return combined_durations
 
 
-# Legacy method for compatibility - delegates to new pattern
-func execute_backend_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
-	return result.is_success()

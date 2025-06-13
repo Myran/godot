@@ -156,9 +156,3 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"minimum_required_rate": 0.75
 			}
 		)
-
-
-# Legacy method for compatibility - delegates to new pattern
-func execute_backend_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
-	return result.is_success()
