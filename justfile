@@ -929,6 +929,7 @@ config-list:
     echo "  just config-restart-android <name>  # Quick testing (5 sec) ⚡"
     echo "  just test-android <name>            # Full testing with auto-detection"
     echo "  just test-android-enhanced <name>   # Enhanced analysis with error categorization"
+    echo "  just test-android-trace <name>      # Debug mode: shows validation/config steps"
     echo "  just config-set <name>              # Set as default config"
 
 # ================================
@@ -1107,7 +1108,7 @@ _monitor-with-activity-timeout TEST_ID LOG_FILE DURATION GREP_PATTERN="DEBUG_TES
 
 # Automated test with pass/fail determination and unique test IDs for Android
 # Forces app restart by default to ensure config is loaded (use NO_RESTART="true" to skip)
-_test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-config-exists CONFIG_NAME)
+_test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false": (_validate-config-exists CONFIG_NAME)
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1118,11 +1119,18 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
     CONFIG_NAME="{{CONFIG_NAME}}"
     DURATION="{{DURATION}}"
     NO_RESTART="{{NO_RESTART}}"
+    TRACE_MODE="{{TRACE}}"
     ANDROID_DEVICE_ID="${ANDROID_DEVICE_ID:-{{ANDROID_DEVICE_ID}}}"
     ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME:-{{ANDROID_PACKAGE_NAME}}}"
     
     # Generate unique test ID
     TEST_ID="test_$(date +%Y%m%d_%H%M%S)_$(head -c 4 /dev/urandom | xxd -p)"
+    
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "🔧 CONFIG EXECUTION TRACE"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    fi
     
     echo "🧪 Smart Test: $CONFIG_NAME"
     echo "🆔 Test ID: $TEST_ID"
@@ -1130,22 +1138,57 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false": (_validate-co
     echo ""
     
     # Check prerequisites
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "🔍 Step 1: Checking prerequisites..."
+        echo "   Device ID: $ANDROID_DEVICE_ID"
+        echo "   Package: $ANDROID_PACKAGE_NAME"
+    fi
+    
     if ! adb -s "$ANDROID_DEVICE_ID" shell echo "Connected" >/dev/null 2>&1; then
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Device connection failed"
+        fi
         echo "❌ Device not connected"
         exit 1
     fi
     
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "   ✅ Device connected"
+    fi
+    
     if ! adb -s "$ANDROID_DEVICE_ID" shell pm list packages | grep -q "$ANDROID_PACKAGE_NAME"; then
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ App package not found"
+        fi
         echo "❌ App not installed"
         exit 1
+    fi
+    
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "   ✅ App package found"
+        echo "🔍 Step 2: Resolving config file..."
+        echo "   Input config: $CONFIG_NAME"
     fi
     
     # Get the safe config filename
     SAFE_CONFIG_FILE=$(just _get-safe-config-file "$CONFIG_NAME")
     
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "   Safe filename: $SAFE_CONFIG_FILE"
+    fi
+    
     if [ ! -f "$SAFE_CONFIG_FILE" ]; then
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Config file not found"
+        fi
         echo "❌ Config file not found: $SAFE_CONFIG_FILE"
         exit 1
+    fi
+    
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "   ✅ Config file exists"
+        echo "   Contents preview:"
+        head -3 "$SAFE_CONFIG_FILE" | sed 's/^/     /'
     fi
     
     echo "✅ Prerequisites satisfied"
@@ -1918,34 +1961,128 @@ _test-list-android TEST_LIST_NAME="default-all":
         exit 1
     fi
 
+# 🔍 TRACE MODE: Shows detailed validation/config steps for debugging
+# Perfect for understanding how the testing system processes different input types
+test-android-trace TARGET DURATION="30":
+    just test-android "{{TARGET}}" "{{DURATION}}" "false" "true"
+
+
 # 🚀 ENHANCED: Auto-discover and run ALL tests using wildcards
 # Unified testing command with auto-detection of target type
-test-android TARGET DURATION="30" NO_RESTART="false":
+test-android TARGET DURATION="30" NO_RESTART="false" TRACE="false":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TARGET="{{TARGET}}"
+    TRACE_MODE="{{TRACE}}"
+    
+    # Enable step-by-step tracing if requested
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "🔍 TRACE MODE: Showing validation/config steps"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "🎯 Target: $TARGET"
+        echo "⏱️  Duration: {{DURATION}}s"
+        echo "🔄 Restart: {{NO_RESTART}}"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    fi
     
     # Auto-detect target type and route to appropriate implementation
-    if [[ "$TARGET" == *"*"* ]]; then
+    if [ "$TRACE_MODE" = "true" ]; then
+        echo "🔍 Step 1: Analyzing target pattern..."
+        echo "   Input: '$TARGET'"
+        echo "   Checking for: Test list wildcard (@pattern)"
+    fi
+    
+    if [[ "$TARGET" == "@"*"*"* ]]; then
+        # Test list wildcard pattern detected - use test list expansion
+        PATTERN="${TARGET#@}"  # Remove @ prefix
+        echo "🎯 Test list wildcard detected: $TARGET"
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ✅ Match: Test list wildcard pattern"
+            echo "   Extracted pattern: '$PATTERN'"
+        fi
+        echo "🔍 Finding test lists matching pattern: $PATTERN"
+        
+        # Find matching test lists
+        MATCHING_LISTS=$(just list-test-lists-matching "$PATTERN" 2>/dev/null | grep "🏷️" | awk '{print $2}' || true)
+        
+        if [ -n "$MATCHING_LISTS" ]; then
+            echo "📋 Found matching test lists:"
+            echo "$MATCHING_LISTS" | sed 's/^/  - /'
+            echo ""
+            
+            # Execute each matching test list
+            echo "$MATCHING_LISTS" | while read -r list_name; do
+                if [ -n "$list_name" ]; then
+                    echo "🧪 Executing test list: $list_name"
+                    just _test-list-android "$list_name"
+                    echo ""
+                fi
+            done
+        else
+            echo "❌ No test lists found matching pattern: $PATTERN"
+            echo "💡 Available patterns:"
+            echo "   @pre-*        # All pre-* test lists"
+            echo "   @*-validation # All *-validation test lists"
+            echo "   @firebase-*   # All firebase-* test lists"
+            echo ""
+            echo "💡 Use 'just list-test-lists' to see all available lists"
+            exit 1
+        fi
+        exit 0
+    elif [[ "$TARGET" == *"*"* ]]; then
         # Wildcard pattern detected - use config testing with temporary config
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Not test list wildcard"
+            echo "🔍 Step 2: Checking for action wildcard pattern..."
+            echo "   ✅ Match: Contains '*' character"
+            echo "   Route: _test-config-android (wildcard mode)"
+        fi
         echo "🎯 Wildcard pattern detected: $TARGET"
-        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}" "$TRACE_MODE"
     elif [ -f "project/debug_configs/$TARGET.json" ]; then
         # Config file exists - use config testing
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Not action wildcard pattern"
+            echo "🔍 Step 3: Checking for existing config file..."
+            echo "   File: project/debug_configs/$TARGET.json"
+            echo "   ✅ Match: Config file exists"
+            echo "   Route: _test-config-android (config mode)"
+        fi
         echo "📋 Config file detected: $TARGET"
-        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}" "$TRACE_MODE"
     elif [ -f "project/test-lists/$TARGET.json" ]; then
         # Test list exists - use list testing
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Config file not found"
+            echo "🔍 Step 4: Checking for test list file..."
+            echo "   File: project/test-lists/$TARGET.json"
+            echo "   ✅ Match: Test list file exists"
+            echo "   Route: _test-list-android"
+        fi
         echo "📝 Test list detected: $TARGET"
         just _test-list-android "$TARGET"
     else
         # Try validation to see if it's a valid action name or wildcard pattern
+        if [ "$TRACE_MODE" = "true" ]; then
+            echo "   ❌ Test list file not found"
+            echo "🔍 Step 5: Validating as action name..."
+            echo "   Testing: _validate-config-exists '$TARGET'"
+        fi
         if just _validate-config-exists "$TARGET" >/dev/null 2>&1; then
             # Validation succeeded - it's a valid action or matches a pattern
+            if [ "$TRACE_MODE" = "true" ]; then
+                echo "   ✅ Match: Valid action name"
+                echo "   Route: _test-config-android (action mode)"
+            fi
             echo "🎯 Action detected: $TARGET"
-            just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
+            just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}" "$TRACE_MODE"
         else
+            if [ "$TRACE_MODE" = "true" ]; then
+                echo "   ❌ Validation failed: Not a valid action name"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "🚫 TRACE COMPLETE: No matches found"
+            fi
             echo "❌ Target not found: $TARGET"
             echo "💡 Checking available options..."
             echo ""
@@ -1970,7 +2107,41 @@ test-android-enhanced TARGET DURATION="30" NO_RESTART="false":
     TARGET="{{TARGET}}"
     
     # Auto-detect target type and route to appropriate enhanced implementation
-    if [[ "$TARGET" == *"*"* ]]; then
+    if [[ "$TARGET" == "@"*"*"* ]]; then
+        # Test list wildcard pattern detected - enhanced testing not directly supported
+        PATTERN="${TARGET#@}"  # Remove @ prefix
+        echo "🎯 Test list wildcard detected: $TARGET"
+        echo "💡 Note: Enhanced analysis will run on individual configs within matching lists"
+        echo "🔍 Finding test lists matching pattern: $PATTERN"
+        
+        # Find matching test lists
+        MATCHING_LISTS=$(just list-test-lists-matching "$PATTERN" 2>/dev/null | grep "🏷️" | awk '{print $2}' || true)
+        
+        if [ -n "$MATCHING_LISTS" ]; then
+            echo "📋 Found matching test lists:"
+            echo "$MATCHING_LISTS" | sed 's/^/  - /'
+            echo ""
+            
+            # Execute each matching test list (will use standard execution, not enhanced)
+            echo "$MATCHING_LISTS" | while read -r list_name; do
+                if [ -n "$list_name" ]; then
+                    echo "🧪 Executing test list: $list_name"
+                    just _test-list-android "$list_name"
+                    echo ""
+                fi
+            done
+        else
+            echo "❌ No test lists found matching pattern: $PATTERN"
+            echo "💡 Available patterns:"
+            echo "   @pre-*        # All pre-* test lists"
+            echo "   @*-validation # All *-validation test lists"
+            echo "   @firebase-*   # All firebase-* test lists"
+            echo ""
+            echo "💡 Use 'just list-test-lists' to see all available lists"
+            exit 1
+        fi
+        exit 0
+    elif [[ "$TARGET" == *"*"* ]]; then
         # Wildcard pattern detected - use enhanced config testing
         echo "🎯 Enhanced wildcard pattern testing: $TARGET"
         just _test-config-android-enhanced "$TARGET" "{{DURATION}}" "{{NO_RESTART}}"
@@ -2733,6 +2904,7 @@ help-debug:
     echo "  just test-android '*.*.performance'            # All performance tests (auto-detects wildcard!)"
     echo "  just test-android wildcard-discovery           # Custom test list (auto-detects list!)"
     echo "  just test-android-enhanced 'cpp.*'             # Enhanced analysis with error categorization"
+    echo "  just test-android-trace 'cpp.*'                # Debug mode: shows validation/config steps"
     echo ""
     echo "🏗️ WILDCARD PATTERN REFERENCE:"
     echo "  # ✅ ALL 51 debug actions now use hierarchical naming: layer.domain.operation"

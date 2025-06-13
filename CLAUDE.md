@@ -137,6 +137,7 @@ Located in `project/debug/actions/`, includes:
 ```bash
 just test-android TARGET [DURATION]              # Unified testing with auto-detection
 just test-android-enhanced TARGET [DURATION]     # Enhanced analysis with error categorization
+just test-android-trace TARGET [DURATION]        # Shows detailed validation/config steps (debugging)
 just test-monitor-android [DURATION]             # Pure log monitoring (no restarts)
 just test-all-android                            # Complete test suite
 ```
@@ -160,6 +161,51 @@ just config-status-android               # Check current config
 - **Quick Iteration**: Use `config-restart-android` for rapid 5-second deployment cycles
 - **Monitoring**: Use `test-monitor-android` to observe ongoing activity
 - **Validation**: Use `test-all-android` for comprehensive pre-commit checks
+
+### **🔄 Smart Timer Reset Logic**
+**Enhanced timeout behavior ensures reliable testing across multiple actions:**
+
+- ⏱️ **Per-Action Reset**: Timer resets after each individual action completes (`DEBUG_TEST_SUCCESS`/`DEBUG_TEST_FAILURE`)
+- 🔄 **No Cumulative Timeout**: Multiple actions can run sequentially without cumulative timeout issues
+- ⚡ **Individual Action Window**: Each action gets the full timeout duration (e.g., 30 seconds)
+- 🛡️ **Fail-Fast**: Only individual actions that exceed the timeout will fail
+
+**Examples:**
+```bash
+# These run reliably regardless of action count:
+just test-android 'cpp.*' 30                    # 9 actions, each gets 30s window
+just test-android '*.firebase.*' 60             # 15+ actions, each gets 60s window  
+just test-android comprehensive-test-all 30     # 40+ actions, timer resets per action
+```
+
+**Before vs After:**
+- ❌ **Before**: Timer ran cumulatively → Tests with many actions would timeout
+- ✅ **After**: Timer resets per action → Only slow individual actions timeout
+
+### **🔍 Debug Trace Mode**
+**Detailed visibility into how the testing system processes different input types:**
+
+```bash
+# Trace mode shows step-by-step validation and routing
+just test-android-trace 'system.debug.registry_stats'    # Action detection steps
+just test-android-trace 'system.*'                       # Wildcard pattern steps  
+just test-android-trace 'system-testing'                 # Config file detection steps
+just test-android-trace '@pre-*'                         # Test list wildcard steps
+just test-android-trace 'invalid.name'                   # Error detection steps
+```
+
+**What trace mode shows:**
+- 🔍 **Step-by-step validation**: Each detection path attempted
+- ✅ **Match confirmation**: Which validation succeeded and why
+- 📁 **File resolution**: Config file paths and contents preview
+- 🔧 **Route selection**: Which execution path was chosen
+- ❌ **Failure points**: Exactly where validation failed
+
+**When to use trace mode:**
+- 🐛 **Debugging issues**: Understanding why a test target isn't found
+- 📚 **Learning the system**: See how auto-detection works internally
+- 🔧 **Development**: Verify new patterns work as expected
+- 🚨 **Troubleshooting**: Diagnose config or validation problems
 
 ## Development Workflow
 0. **Planning**: Think through implementation and assess ways to improve quality and simplicity. Use planning tools and basic-memory. Assess if we should build tests in advance for Test driven Development
@@ -715,10 +761,35 @@ just config-restart-android '*.firebase.set_value'    # Test all set_value opera
 just config-restart-android 'cpp.*'                   # Test entire C++ layer
 just config-restart-android '*.*.error_handling'      # Test all error handling
 
-# Smart test list usage
-just test-list-android development-workflow            # Uses nested @quick-validation
-just test-list-android all-firebase-tests             # Uses @firebase-* wildcards
+# Smart test list usage (unified interface)
+just test-android development-workflow                 # Direct test list execution
+just test-android '@pre-*'                            # Wildcard test list patterns
+just test-android '@*-workflow'                       # All workflow test lists
 ```
+
+#### ✨ **NEW: Direct Wildcard Test List Execution**
+**Test list wildcards are now fully integrated into the unified testing interface!**
+
+```bash
+# 🎯 Wildcard Test List Patterns (direct execution)
+just test-android '@pre-*'                            # All test lists starting with 'pre-'
+just test-android '@*-workflow'                       # All test lists ending with '-workflow'  
+just test-android '@*-validation'                     # All test lists ending with '-validation'
+just test-android '@*-all'                            # All test lists ending with '-all'
+
+# 🔍 Enhanced analysis works with wildcard test lists too
+just test-android-enhanced '@pre-*'                   # Enhanced analysis on wildcard test lists
+
+# 💡 Discovery and validation
+just list-test-lists-matching "pre-*"                 # Find matching test lists
+just list-test-lists-matching "*-workflow"            # Discover workflow test lists
+```
+
+**How it works:**
+- ✅ **Auto-Detection**: `test-android` recognizes `@pattern` syntax
+- ✅ **Multiple Execution**: Finds all matching test lists and runs them sequentially  
+- ✅ **Error Handling**: Clear messages when no matches found
+- ✅ **Enhanced Support**: Works with `test-android-enhanced` for detailed analysis
 
 #### Config Creation Strategy
 ```bash
@@ -778,9 +849,9 @@ just test-development-android                           # Daily development work
 just test-production-android                            # Comprehensive release validation
 just test-all-android                                  # Complete test suite
 
-# Power user - any pattern or custom test list
-just test-suite-android wildcard-discovery             # Custom: demo of wildcard patterns
-just test-suite-android PATTERN                        # Custom: any test list name
+# Power user - any pattern, config, or test list (unified interface)
+just test-android wildcard-discovery                   # Test list execution
+just test-android '@*-all'                             # Wildcard test list patterns
 ```
 
 #### **Instant Wildcard Testing (No Config Files Needed!)**
@@ -843,9 +914,10 @@ just test-config-android 'firebase.*'                  # All Firebase tests
 just test-config-android '*.*.performance'             # All performance tests  
 just test-config-android 'cpp.* backend.*'             # Multiple patterns (future)
 
-# Use custom test lists when needed
-just test-suite-android wildcard-discovery             # Wildcard pattern demo
-just test-suite-android CUSTOM_LIST                    # Any custom test list
+# Use custom test lists and wildcard test list patterns
+just test-android wildcard-discovery                   # Test list execution
+just test-android '@wildcard-*'                        # Wildcard test list patterns
+just test-android '@*-validation'                      # All validation test lists
 ```
 
 ### **Benefits of Enhanced Test Suites**
@@ -861,6 +933,36 @@ just test-suite-android CUSTOM_LIST                    # Any custom test list
 - 🔧 **Development workflow** → `test-development-android` for daily cycle  
 - 🚀 **Production validation** → `test-production-android` for releases
 - ⚡ **Instant custom testing** → `'firebase.*'`, `'*.*.performance'` patterns
+
+## 🎯 **Complete Testing Interface Summary**
+
+**The unified `test-android` command now supports ALL testing variants with smart auto-detection:**
+
+| **Test Type** | **Syntax** | **Example** | **Description** |
+|---------------|------------|-------------|-----------------|
+| **🎯 Direct Actions** | `'action.name'` | `'system.debug.registry_stats'` | Single action execution |
+| **🔀 Layer Wildcards** | `'layer.*'` | `'cpp.*'`, `'backend.*'`, `'system.*'` | All actions in layer |
+| **🔀 Domain Wildcards** | `'*.domain.*'` | `'*.firebase.*'`, `'*.debug.*'` | Cross-layer domain testing |
+| **🔀 Operation Wildcards** | `'*.*.operation'` | `'*.*.set_value'`, `'*.*.error_handling'` | Cross-layer operation testing |
+| **📋 Config Files** | `config-name` | `system-testing`, `smoke-test` | Pre-defined configurations |
+| **📝 Test Lists** | `list-name` | `pre-commit`, `development-workflow` | Multi-config test suites |
+| **🆕 Wildcard Test Lists** | `'@pattern'` | `'@pre-*'`, `'@*-workflow'`, `'@*-all'` | Pattern-based test list execution |
+
+**Enhanced Analysis** (all variants above work with `test-android-enhanced`):
+- 🔍 **Error Categorization**: Firebase, Network, Validation errors
+- 📈 **Performance Tracking**: Action-level timing analysis  
+- 💡 **Debugging Recommendations**: Actionable insights
+
+**Timer Behavior**:
+- ⏱️ **Per-Action Reset**: Timer resets after each action completion
+- 🔄 **No Cumulative Timeout**: Multiple actions run reliably
+- 🛡️ **Fail-Fast**: Only slow individual actions timeout
+
+**Key Benefits**:
+- ✅ **Zero-Maintenance**: Wildcard patterns auto-discover new actions
+- ✅ **Smart Auto-Detection**: One command handles all input types
+- ✅ **Complete Coverage**: From single actions to comprehensive test suites
+- ✅ **Enhanced Analysis**: Detailed debugging for any test variant
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
