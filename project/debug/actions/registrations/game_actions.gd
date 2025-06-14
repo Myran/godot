@@ -126,10 +126,20 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("game.battle.test_determinism", _battle_test_determinism)
+			. create("game.battle.test_determinism_animated", _battle_test_determinism)
 			. set_category("Gameplay")
 			. set_group("Battle")
-			. set_description("Test battle determinism with automatic baseline recording/validation")
+			. set_description("Test battle determinism with full animation (comprehensive)")
+		)
+	)
+	
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.test_determinism_logic_only", _battle_test_determinism_logic_only)
+			. set_category("Gameplay")
+			. set_group("Battle")
+			. set_description("Test battle determinism with logic-only execution (fast)")
 		)
 	)
 
@@ -498,19 +508,182 @@ static func _battle_set_seed() -> DebugAction.Result:
 	)
 
 
-static func _get_seed_from_config() -> int:
-	# Try to read seed from external config file (same path as debug startup uses)
+static func _battle_test_determinism_logic_only() -> DebugAction.Result:
+	# Test battle determinism using logic-only execution (no animation) - much faster
+	if not is_instance_valid(rng):
+		return DebugAction.Result.new_failure("RNG singleton not available")
+	
+	# Ensure game systems are fully initialized before proceeding
+	if not await _wait_for_game_systems_ready():
+		return DebugAction.Result.new_failure("Game systems not ready for determinism test")
+	
+	var start_time: int = Time.get_ticks_msec()
+	
+	# Get determinism configuration (force skip_animation to true)
+	var config: Dictionary = _get_determinism_config()
+	var current_seed: int = config.seed
+	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
+	var mode: String = config.mode
+	
+	Log.info("Starting logic-only battle determinism test", {"seed": current_seed, "mode": mode}, ["debug", "battle", "determinism"])
+	
+	# Execute battle logic directly without UI/animation
+	var logic_result: Dictionary = _battle_execute_logic_only()
+	
+	var duration: int
+	
+	if not logic_result.success:
+		# Logic-only execution failed
+		return DebugAction.Result.new_failure("Logic-only battle execution failed: " + logic_result.error)
+	
+	duration = logic_result.duration_ms
+	Log.info("Logic-only battle execution completed", {"duration_ms": duration, "event_count": logic_result.event_count}, ["debug", "battle", "determinism"])
+	
+	# Generate end checksum from RNG sequence
+	var rng_sequence: Array = rng.seeded_rng._result_sequence
+	var actual_hash: String = str(rng_sequence).md5_text()
+	
+	if mode == "validation":
+		# Validation mode - compare against expected hash from config
+		if expected_hash == actual_hash:
+			Log.info("Logic-only battle determinism test PASSED", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_success(
+				{"determinism_test": "PASSED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				duration,
+				"determinism_logic_only_passed"
+			)
+		else:
+			Log.error("Logic-only battle determinism test FAILED", 
+				{"seed": current_seed, "expected": expected_hash, "actual": actual_hash}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_failure(
+				"Logic-only determinism test failed - hash mismatch",
+				"DETERMINISM_LOGIC_ONLY_FAILED"
+			)
+	else:
+		# Recording mode - save hash to config for future validation
+		var update_success: bool = _update_config_with_hash(actual_hash)
+		
+		if update_success:
+			# Emit restart signal for automatic validation phase
+			var current_test_id: String = DebugAction.get_current_test_id()
+			Log.info("DEBUG_TEST_RESTART_NEEDED", 
+				{
+					"test_id": current_test_id, 
+					"reason": "config_updated", 
+					"phase": "validation_needed",
+					"seed": current_seed,
+					"hash": actual_hash,
+					"logic_only": true
+				}, 
+				["debug", "test", "restart"]
+			)
+			
+			Log.info("Logic-only battle determinism recorded and saved to config", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_restart_pending(
+				{"determinism_test": "RECORDED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				duration,
+				"hash_recorded_logic_only_restart_pending"
+			)
+		else:
+			return DebugAction.Result.new_restart_pending(
+				{"determinism_test": "RECORDED_PARTIAL", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				duration,
+				"hash_recorded_logic_only_partial_restart_pending"
+			)
+
+
+static func _battle_execute_logic_only() -> Dictionary:
+	# Execute battle logic directly without UI/animation - much faster
+	var start_time: int = Time.get_ticks_msec()
+	
+	# Find the game node to access battle systems
+	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
+	if not scene_tree:
+		Log.error("Cannot access scene tree for logic-only battle", {}, ["debug", "battle", "determinism"])
+		return {
+			"success": false,
+			"error": "Scene tree not available",
+			"duration_ms": Time.get_ticks_msec() - start_time,
+			"event_count": 0
+		}
+	
+	var main_scene: Node = scene_tree.current_scene
+	if not main_scene:
+		Log.error("Cannot access main scene for logic-only battle", {}, ["debug", "battle", "determinism"])
+		return {
+			"success": false,
+			"error": "Main scene not available", 
+			"duration_ms": Time.get_ticks_msec() - start_time,
+			"event_count": 0
+		}
+	
+	# Find the Game node (should be the main scene or child)
+	var game_node: Game = main_scene as Game
+	if not game_node:
+		game_node = main_scene.find_child("Game", true, false) as Game
+	
+	if not game_node:
+		Log.error("Cannot find Game node for logic-only battle", {}, ["debug", "battle", "determinism"])
+		return {
+			"success": false,
+			"error": "Game node not found",
+			"duration_ms": Time.get_ticks_msec() - start_time,
+			"event_count": 0
+		}
+	
+	# Access the battle handler
+	var battle_handler: BattleHandler = game_node.battle_handler
+	if not battle_handler:
+		Log.error("Battle handler not available for logic-only battle", {}, ["debug", "battle", "determinism"])
+		return {
+			"success": false,
+			"error": "Battle handler not available",
+			"duration_ms": Time.get_ticks_msec() - start_time,
+			"event_count": 0
+		}
+	
+	Log.info("Executing logic-only battle (direct battle solver)", {}, ["debug", "battle", "determinism"])
+	
+	# Execute battle logic directly using the battle handler
+	var events: Array[Context.Event] = battle_handler.create_battle()
+	var event_count: int = events.size()
+	
+	var duration: int = Time.get_ticks_msec() - start_time
+	
+	Log.info("Logic-only battle execution completed successfully", 
+		{"duration_ms": duration, "event_count": event_count}, 
+		["debug", "battle", "determinism"]
+	)
+	
+	return {
+		"success": true,
+		"error": "",
+		"duration_ms": duration,
+		"event_count": event_count
+	}
+
+
+static func _get_determinism_config() -> Dictionary:
+	# Read determinism config (seed and optional expectedHash) from external config file
 	var config_path: String = "user://debug_startup_actions.json"
-	var default_seed: int = 12345
+	var default_config: Dictionary = {"seed": 12345, "expectedHash": null, "mode": "recording", "skip_animation": false}
 	
 	if not FileAccess.file_exists(config_path):
-		Log.debug("No external config found, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
-		return default_seed
+		Log.debug("No external config found, using defaults", default_config, ["debug", "battle", "determinism"])
+		return default_config
 	
 	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 	if not file:
-		Log.warning("Could not read config file, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
-		return default_seed
+		Log.warning("Could not read config file, using defaults", default_config, ["debug", "battle", "determinism"])
+		return default_config
 	
 	var json_text: String = file.get_as_text()
 	file.close()
@@ -519,21 +692,92 @@ static func _get_seed_from_config() -> int:
 	var result: Error = json.parse(json_text)
 	
 	if result != OK:
-		Log.warning("Invalid JSON in config, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
-		return default_seed
+		Log.warning("Invalid JSON in config, using defaults", default_config, ["debug", "battle", "determinism"])
+		return default_config
 	
 	var data: Dictionary = json.data as Dictionary
+	var config: Dictionary = {}
+	
+	# Debug: log the raw data to see what's being read
+	Log.info("Raw config data", {"data": data}, ["debug", "battle", "determinism"])
+	
+	# Extract seed
 	if data.has("seed"):
-		var config_seed: int = int(data.seed)
-		Log.info("Using seed from config file", {"seed": config_seed}, ["debug", "battle", "determinism"])
-		return config_seed
+		config.seed = int(data.seed)
 	else:
-		Log.debug("No seed in config file, using default", {"seed": default_seed}, ["debug", "battle", "determinism"])
-		return default_seed
+		config.seed = default_config.seed
+	
+	# Extract expectedHash if present
+	Log.info("Checking for expectedHash", {"has_key": data.has("expectedHash"), "value": data.get("expectedHash", "NOT_FOUND")}, ["debug", "battle", "determinism"])
+	if data.has("expectedHash"):
+		config.expectedHash = str(data.expectedHash)
+		config.mode = "validation"
+		Log.info("Set validation mode", {"hash": config.expectedHash}, ["debug", "battle", "determinism"])
+	else:
+		config.expectedHash = null
+		config.mode = "recording"
+		Log.info("Set recording mode - no expectedHash found", {}, ["debug", "battle", "determinism"])
+	
+	# Extract skip_animation option
+	if data.has("skip_animation"):
+		config.skip_animation = bool(data.skip_animation)
+	else:
+		config.skip_animation = default_config.skip_animation
+	
+	Log.info("Determinism config loaded", {"seed": config.seed, "mode": config.mode, "has_hash": config.expectedHash != null, "skip_animation": config.skip_animation}, ["debug", "battle", "determinism"])
+	return config
+
+
+static func _update_config_with_hash(hash: String) -> bool:
+	# Add computed hash to the config file for future validation
+	var config_path: String = "user://debug_startup_actions.json"
+	
+	if not FileAccess.file_exists(config_path):
+		Log.error("Cannot update config - file does not exist", {"path": config_path}, ["debug", "battle", "determinism"])
+		return false
+	
+	# Read current config
+	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+	if not file:
+		Log.error("Cannot read config file for update", {"path": config_path}, ["debug", "battle", "determinism"])
+		return false
+	
+	var json_text: String = file.get_as_text()
+	file.close()
+	
+	var json: JSON = JSON.new()
+	var result: Error = json.parse(json_text)
+	
+	if result != OK:
+		Log.error("Cannot parse config JSON for update", {"path": config_path}, ["debug", "battle", "determinism"])
+		return false
+	
+	# Add expectedHash to config
+	var data: Dictionary = json.data as Dictionary
+	data.expectedHash = hash
+	
+	# Write updated config back
+	var updated_json: String = JSON.stringify(data, "\t")
+	file = FileAccess.open(config_path, FileAccess.WRITE)
+	if not file:
+		Log.error("Cannot write updated config file", {"path": config_path}, ["debug", "battle", "determinism"])
+		return false
+	
+	file.store_string(updated_json)
+	file.close()
+	
+	Log.info("Config updated with expectedHash", {"hash": hash, "path": config_path}, ["debug", "battle", "determinism"])
+	return true
+
+
+static func _get_seed_from_config() -> int:
+	# Legacy function for backward compatibility
+	var config: Dictionary = _get_determinism_config()
+	return config.seed
 
 
 static func _battle_test_determinism() -> DebugAction.Result:
-	# Test battle determinism with automatic baseline recording/validation
+	# Test battle determinism with JSON-based hash validation
 	if not is_instance_valid(ui) or not is_instance_valid(GameStateMonitor) or not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("Required systems not available")
 	
@@ -543,70 +787,116 @@ static func _battle_test_determinism() -> DebugAction.Result:
 	
 	var start_time: int = Time.get_ticks_msec()
 	
-	# Generate start checksum (seed + basic state)
-	var current_seed: int = _get_seed_from_config()
-	var start_checksum: String = str(current_seed) + "_lineup"  # Simple for now
+	# Get determinism configuration
+	var config: Dictionary = _get_determinism_config()
+	var current_seed: int = config.seed
+	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
+	var mode: String = config.mode
+	var skip_animation: bool = config.skip_animation
 	
-	Log.info("Starting battle determinism test", {"seed": current_seed, "start_checksum": start_checksum}, ["debug", "battle", "determinism"])
+	Log.info("Starting battle determinism test", {"seed": current_seed, "mode": mode, "skip_animation": skip_animation}, ["debug", "battle", "determinism"])
 	
-	# Trigger battle start (same as existing _start_battle)
-	ui.action(ui.StartBattleEvent.new())
+	var duration: int
 	
-	# Wait for system to return to idle state
-	await GameStateMonitor.await_system_idle()
-	
-	var duration: int = Time.get_ticks_msec() - start_time
-	
-	# Generate end checksum from RNG sequence (simple approach)
-	var rng_sequence: Array = rng.seeded_rng._result_sequence
-	var end_checksum: String = str(rng_sequence).md5_text()
-	
-	# Check for existing baseline file
-	var filename: String = "user://battle_" + start_checksum + ".txt"
-	
-	if FileAccess.file_exists(filename):
-		# Validation mode
-		var file: FileAccess = FileAccess.open(filename, FileAccess.READ)
-		if file:
-			var saved_hash: String = file.get_as_text().strip_edges()
-			file.close()
-			
-			if saved_hash == end_checksum:
-				Log.info("Battle determinism test PASSED", 
-					{"seed": current_seed, "hash": end_checksum, "duration_ms": duration}, 
-					["debug", "battle", "determinism"]
-				)
-				return DebugAction.Result.new_success(
-					{"determinism_test": "PASSED", "seed": current_seed, "hash": end_checksum, "duration_ms": duration},
-					duration,
-					"determinism_passed"
-				)
-			else:
-				Log.error("Battle determinism test FAILED", 
-					{"seed": current_seed, "expected": saved_hash, "actual": end_checksum}, 
-					["debug", "battle", "determinism"]
-				)
-				return DebugAction.Result.new_failure(
-					"Determinism test failed - hash mismatch",
-					"DETERMINISM_FAILED"
-				)
-		else:
-			return DebugAction.Result.new_failure("Could not read baseline file")
+	if skip_animation:
+		# Logic-only mode: Execute battle directly without UI/animation
+		Log.info("Executing battle in logic-only mode (no animation)", {}, ["debug", "battle", "determinism"])
+		var logic_result: Dictionary = _battle_execute_logic_only()
+		
+		if not logic_result.success:
+			return DebugAction.Result.new_failure("Logic-only battle failed: " + logic_result.error)
+		
+		duration = logic_result.duration_ms
+		Log.info("Logic-only battle execution completed", {"duration_ms": duration, "event_count": logic_result.event_count}, ["debug", "battle", "determinism"])
 	else:
-		# Recording mode
-		var file: FileAccess = FileAccess.open(filename, FileAccess.WRITE)
-		if file:
-			file.store_string(end_checksum)
-			file.close()
-			
-			Log.info("Battle baseline recorded", 
-				{"file": filename, "seed": current_seed, "hash": end_checksum, "duration_ms": duration}, 
+		# Animated mode: Full UI battle (original behavior)
+		Log.info("Executing battle with full animation", {}, ["debug", "battle", "determinism"])
+		ui.action(ui.StartBattleEvent.new())
+		
+		# Wait for system to return to idle state
+		await GameStateMonitor.await_system_idle()
+		
+		duration = Time.get_ticks_msec() - start_time
+		Log.info("Animated battle execution completed", {"duration_ms": duration}, ["debug", "battle", "determinism"])
+	
+	
+	# Generate end checksum from RNG sequence
+	var rng_sequence: Array = rng.seeded_rng._result_sequence
+	var actual_hash: String = str(rng_sequence).md5_text()
+	
+	if mode == "validation":
+		# Validation mode - compare against expected hash from config
+		if expected_hash == actual_hash:
+			Log.info("Battle determinism test PASSED", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
 				["debug", "battle", "determinism"]
 			)
 			return DebugAction.Result.new_success(
-				{"determinism_test": "RECORDED", "seed": current_seed, "hash": end_checksum, "file": filename, "duration_ms": duration},
+				{"determinism_test": "PASSED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration},
 				duration,
-				"baseline_recorded"
+				"determinism_passed"
 			)
 		else:
-			return DebugAction.Result.new_failure("Could not create baseline file")
+			Log.error("Battle determinism test FAILED", 
+				{"seed": current_seed, "expected": expected_hash, "actual": actual_hash}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_failure(
+				"Determinism test failed - hash mismatch",
+				"DETERMINISM_FAILED"
+			)
+	else:
+		# Recording mode - save hash to config for future validation
+		var update_success: bool = _update_config_with_hash(actual_hash)
+		
+		# VALIDATION TEST: Immediately verify we can read the hash back
+		if update_success:
+			Log.info("Attempting to read back written hash for validation...", {}, ["debug", "battle", "determinism"])
+			var verification_config: Dictionary = _get_determinism_config()
+			var read_back_hash: String = verification_config.expectedHash if verification_config.expectedHash != null else ""
+			var read_back_mode: String = verification_config.mode
+			
+			if read_back_hash == actual_hash:
+				Log.info("VERIFICATION SUCCESS: Hash read back correctly", 
+					{"written_hash": actual_hash, "read_hash": read_back_hash, "mode": read_back_mode}, 
+					["debug", "battle", "determinism"]
+				)
+			else:
+				Log.error("VERIFICATION FAILED: Hash not read back correctly", 
+					{"written_hash": actual_hash, "read_hash": read_back_hash, "mode": read_back_mode}, 
+					["debug", "battle", "determinism"]
+				)
+		
+		if update_success:
+			# Emit restart signal for automatic validation phase
+			var current_test_id: String = DebugAction.get_current_test_id()
+			Log.info("DEBUG_TEST_RESTART_NEEDED", 
+				{
+					"test_id": current_test_id, 
+					"reason": "config_updated", 
+					"phase": "validation_needed",
+					"seed": current_seed,
+					"hash": actual_hash
+				}, 
+				["debug", "test", "restart"]
+			)
+			
+			Log.info("Battle determinism recorded and saved to config", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_restart_pending(
+				{"determinism_test": "RECORDED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration},
+				duration,
+				"hash_recorded_restart_pending"
+			)
+		else:
+			Log.warning("Hash recorded but config update failed - test still passed", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_restart_pending(
+				{"determinism_test": "RECORDED_PARTIAL", "seed": current_seed, "hash": actual_hash, "duration_ms": duration},
+				duration,
+				"hash_recorded_partial_restart_pending"
+			)

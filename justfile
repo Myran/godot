@@ -1262,6 +1262,7 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
     time_since_last_activity=0
     last_activity_count=0
     max_idle_time=$DURATION  # Maximum time without activity before timeout
+    restart_processed=false  # Track if restart signal has been processed
     
     while [ $time_since_last_activity -lt $max_idle_time ]; do
         sleep 1
@@ -1269,7 +1270,35 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
         time_since_last_activity=$((time_since_last_activity + 1))
         
         if [ -f "$log_file" ]; then
-            # Check for test completion
+            # Check for restart signal and handle automatic restart (check BEFORE test completion)
+            if [ "$restart_processed" = "false" ] && grep -q "DEBUG_TEST_RESTART_NEEDED.*$TEST_ID" "$log_file" 2>/dev/null; then
+                restart_processed=true  # Mark as processed to prevent infinite loop
+                echo ""
+                echo "🔄 Auto-restart signal detected - triggering validation phase..."
+                
+                # Stop current logcat
+                kill $LOGCAT_PID 2>/dev/null || true
+                wait $LOGCAT_PID 2>/dev/null || true
+                
+                # Restart app (preserves config with expectedHash)
+                echo "🚀 Force stopping app for clean restart..."
+                adb -s "$ANDROID_DEVICE_ID" shell am force-stop "$ANDROID_PACKAGE_NAME"
+                echo "⏱️  Waiting for app to fully terminate..."
+                sleep 2
+                echo "🚀 Starting fresh app instance..."
+                adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
+                
+                # Resume log capture for validation phase
+                echo "📊 Resuming monitoring for validation phase..."
+                adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot >> "$log_file" 2>/dev/null &
+                LOGCAT_PID=$!
+                
+                # Reset activity timer for validation phase
+                time_since_last_activity=0
+                continue
+            fi
+            
+            # Check for test completion (after restart signal check)
             if grep -q "DEBUG_TEST_COMPLETE.*$TEST_ID" "$log_file" 2>/dev/null; then
                 test_complete=true
                 break
