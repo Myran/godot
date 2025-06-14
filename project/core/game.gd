@@ -202,6 +202,14 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		Log.debug("Draft reached steady state - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
 
+	elif event is core.LineupOperationStartEvent:
+		Log.info("Lineup operation started - locking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+		ui_state = core.UIState.LOCKED
+
+	elif event is core.LineupOperationCompleteEvent:
+		Log.info("Lineup operation completed - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+		ui_state = core.UIState.WAITING
+
 	clicker.on_core_event(event, current_context)
 
 

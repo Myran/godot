@@ -166,6 +166,14 @@ class DraftSteadyEvent:
 	extends CoreEvent
 
 
+class LineupOperationStartEvent:
+	extends CoreEvent
+
+
+class LineupOperationCompleteEvent:
+	extends CoreEvent
+
+
 class RemoveBlockFromDraft:
 	extends CoreEvent
 	var block: Block

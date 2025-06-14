@@ -112,6 +112,26 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			. set_description("Populate enemy lineup then start battle")
 		)
 	)
+	
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.set_seed", _battle_set_seed)
+			. set_category("Gameplay")
+			. set_group("Battle")
+			. set_description("Set RNG seed for deterministic testing")
+		)
+	)
+	
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.test_determinism", _battle_test_determinism)
+			. set_category("Gameplay")
+			. set_group("Battle")
+			. set_description("Test battle determinism with automatic baseline recording/validation")
+		)
+	)
 
 
 #static func _register_card_actions(registry: DebugActionRegistry) -> void:
@@ -212,6 +232,13 @@ static func _populate_enemy_lineup() -> bool:
 		)
 		return false
 
+	# Ensure game systems are ready before starting operation
+	if not await _wait_for_game_systems_ready():
+		return false
+
+	# Signal operation start (locks UI like clicker does)
+	core.action(core.LineupOperationStartEvent.new())
+	
 	Log.info("Populating enemy lineup with test cards", {}, ["debug", "gameplay"])
 
 	# Create enemy cards
@@ -230,8 +257,8 @@ static func _populate_enemy_lineup() -> bool:
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
-	# Wait a frame to ensure all lineup events are processed
-	await Engine.get_main_loop().process_frame
+	# Signal operation complete (unlocks UI like DraftSteadyEvent does)
+	core.action(core.LineupOperationCompleteEvent.new())
 	
 	Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
 	return true
@@ -451,3 +478,135 @@ static func _populate_enemy_and_start_battle() -> DebugAction.Result:
 			"Battle chain failed: " + battle_result.get_error_message(),
 			"BATTLE_CHAIN_FAILED"
 		)
+
+
+static func _battle_set_seed() -> DebugAction.Result:
+	# Set RNG seed for deterministic testing
+	if not is_instance_valid(rng):
+		return DebugAction.Result.new_failure("RNG singleton not available")
+	
+	# Try to read seed from config file, fallback to default
+	var test_seed: int = _get_seed_from_config()
+	rng.seeded_rng.reset(test_seed)
+	
+	Log.info("RNG seed set for deterministic testing", {"seed": test_seed}, ["debug", "battle", "determinism"])
+	
+	return DebugAction.Result.new_success(
+		{"seed": test_seed},
+		0,
+		"seed_set"
+	)
+
+
+static func _get_seed_from_config() -> int:
+	# Try to read seed from external config file (same path as debug startup uses)
+	var config_path: String = "user://debug_startup_actions.json"
+	var default_seed: int = 12345
+	
+	if not FileAccess.file_exists(config_path):
+		Log.debug("No external config found, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
+		return default_seed
+	
+	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+	if not file:
+		Log.warning("Could not read config file, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
+		return default_seed
+	
+	var json_text: String = file.get_as_text()
+	file.close()
+	
+	var json: JSON = JSON.new()
+	var result: Error = json.parse(json_text)
+	
+	if result != OK:
+		Log.warning("Invalid JSON in config, using default seed", {"seed": default_seed}, ["debug", "battle", "determinism"])
+		return default_seed
+	
+	var data: Dictionary = json.data as Dictionary
+	if data.has("seed"):
+		var config_seed: int = int(data.seed)
+		Log.info("Using seed from config file", {"seed": config_seed}, ["debug", "battle", "determinism"])
+		return config_seed
+	else:
+		Log.debug("No seed in config file, using default", {"seed": default_seed}, ["debug", "battle", "determinism"])
+		return default_seed
+
+
+static func _battle_test_determinism() -> DebugAction.Result:
+	# Test battle determinism with automatic baseline recording/validation
+	if not is_instance_valid(ui) or not is_instance_valid(GameStateMonitor) or not is_instance_valid(rng):
+		return DebugAction.Result.new_failure("Required systems not available")
+	
+	# Ensure game systems are fully initialized before proceeding
+	if not await _wait_for_game_systems_ready():
+		return DebugAction.Result.new_failure("Game systems not ready for determinism test")
+	
+	var start_time: int = Time.get_ticks_msec()
+	
+	# Generate start checksum (seed + basic state)
+	var current_seed: int = _get_seed_from_config()
+	var start_checksum: String = str(current_seed) + "_lineup"  # Simple for now
+	
+	Log.info("Starting battle determinism test", {"seed": current_seed, "start_checksum": start_checksum}, ["debug", "battle", "determinism"])
+	
+	# Trigger battle start (same as existing _start_battle)
+	ui.action(ui.StartBattleEvent.new())
+	
+	# Wait for system to return to idle state
+	await GameStateMonitor.await_system_idle()
+	
+	var duration: int = Time.get_ticks_msec() - start_time
+	
+	# Generate end checksum from RNG sequence (simple approach)
+	var rng_sequence: Array = rng.seeded_rng._result_sequence
+	var end_checksum: String = str(rng_sequence).md5_text()
+	
+	# Check for existing baseline file
+	var filename: String = "user://battle_" + start_checksum + ".txt"
+	
+	if FileAccess.file_exists(filename):
+		# Validation mode
+		var file: FileAccess = FileAccess.open(filename, FileAccess.READ)
+		if file:
+			var saved_hash: String = file.get_as_text().strip_edges()
+			file.close()
+			
+			if saved_hash == end_checksum:
+				Log.info("Battle determinism test PASSED", 
+					{"seed": current_seed, "hash": end_checksum, "duration_ms": duration}, 
+					["debug", "battle", "determinism"]
+				)
+				return DebugAction.Result.new_success(
+					{"determinism_test": "PASSED", "seed": current_seed, "hash": end_checksum, "duration_ms": duration},
+					duration,
+					"determinism_passed"
+				)
+			else:
+				Log.error("Battle determinism test FAILED", 
+					{"seed": current_seed, "expected": saved_hash, "actual": end_checksum}, 
+					["debug", "battle", "determinism"]
+				)
+				return DebugAction.Result.new_failure(
+					"Determinism test failed - hash mismatch",
+					"DETERMINISM_FAILED"
+				)
+		else:
+			return DebugAction.Result.new_failure("Could not read baseline file")
+	else:
+		# Recording mode
+		var file: FileAccess = FileAccess.open(filename, FileAccess.WRITE)
+		if file:
+			file.store_string(end_checksum)
+			file.close()
+			
+			Log.info("Battle baseline recorded", 
+				{"file": filename, "seed": current_seed, "hash": end_checksum, "duration_ms": duration}, 
+				["debug", "battle", "determinism"]
+			)
+			return DebugAction.Result.new_success(
+				{"determinism_test": "RECORDED", "seed": current_seed, "hash": end_checksum, "file": filename, "duration_ms": duration},
+				duration,
+				"baseline_recorded"
+			)
+		else:
+			return DebugAction.Result.new_failure("Could not create baseline file")
