@@ -42,8 +42,8 @@ debug-quick TEST_ID:
     echo "📊 Stats: $total_lines lines, $pids PIDs, $success_count successes, $restart_count restarts"
     
     # Enhanced stats with sequence analysis  
-    unique_successes=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" | grep -o '"sequence": [0-9]*' | sort -u | wc -l 2>/dev/null || echo "0")
-    if [ "$success_count" -gt "$unique_successes" ] && [ "$unique_successes" -gt 0 ]; then
+    unique_successes=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" | grep -o '"sequence": [0-9]*' | sort -u | wc -l 2>/dev/null | tr -d '\n\r' || echo "0")
+    if [ -n "$unique_successes" ] && [ "$unique_successes" -gt 0 ] && [ "$success_count" -gt "$unique_successes" ]; then
         echo "   📊 Actual unique successes: $unique_successes (duplicates detected)"
     fi
     
