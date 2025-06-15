@@ -626,7 +626,13 @@ static func set_test_context(test_id: String) -> void:
 	test_action_count = 0
 	test_success_count = 0
 	test_failure_count = 0
-	Log.info("DEBUG_TEST_START", {"test_id": test_id}, ["debug", "test", "start"])
+	Log.info("DEBUG_TEST_START", {
+		"test_id": test_id,
+		"pid": OS.get_process_id(),
+		"timestamp": Time.get_datetime_string_from_system(),
+		"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
+		"platform": OS.get_name()
+	}, ["debug", "test", "start", "pid"])
 
 
 static func clear_test_context() -> void:
@@ -638,9 +644,13 @@ static func clear_test_context() -> void:
 				"test_id": current_test_id,
 				"total_actions": test_action_count,
 				"successful_actions": test_success_count,
-				"failed_actions": test_failure_count
+				"failed_actions": test_failure_count,
+				"pid": OS.get_process_id(),
+				"timestamp": Time.get_datetime_string_from_system(),
+				"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
+				"duration_since_start": Time.get_datetime_string_from_system()
 			},
-			["debug", "test", "complete"]
+			["debug", "test", "complete", "pid"]
 		)
 		current_test_id = ""
 
@@ -710,6 +720,7 @@ func execute() -> void:
 
 	# Emit test tracking signals if in test context
 	if current_test_id != "":
+		var process_id: int = OS.get_process_id()
 		if success:
 			test_success_count += 1
 			Log.info(
@@ -719,9 +730,13 @@ func execute() -> void:
 					"action": action_name,
 					"category": category,
 					"group": group,
-					"duration_ms": duration_ms
+					"duration_ms": duration_ms,
+					"pid": process_id,
+					"sequence": test_success_count,
+					"timestamp": Time.get_datetime_string_from_system(),
+					"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024
 				},
-				["debug", "test", "success"]
+				["debug", "test", "success", "pid", "sequence"]
 			)
 		else:
 			test_failure_count += 1
@@ -733,9 +748,14 @@ func execute() -> void:
 					"category": category,
 					"group": group,
 					"error": error_message,
-					"duration_ms": duration_ms
+					"duration_ms": duration_ms,
+					"pid": process_id,
+					"sequence": test_failure_count,
+					"timestamp": Time.get_datetime_string_from_system(),
+					"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
+					"success_count_before_failure": test_success_count
 				},
-				["debug", "test", "failure"]
+				["debug", "test", "failure", "pid", "sequence"]
 			)
 
 	# Emit execution completed signal that UI components are waiting for

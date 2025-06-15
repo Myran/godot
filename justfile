@@ -6,6 +6,10 @@ import "justfile-help.justfile"
 import "justfile-run.justfile"
 import "justfile-cicd.justfile"
 import "justfile-support.justfile"
+import "enhanced_log_analysis.justfile"
+import "debug_commands.justfile"
+import "log_filter_commands.justfile"
+import "universal_log_tags.justfile"
 #import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
@@ -1251,9 +1255,12 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
     failure_count=0
     startup_count=0
     
-    # Clear old logs and start log capture for Godot debug logs
+    # Enhanced single log capture with clear markers
     echo "🧹 Clearing old logs for fresh test monitoring..."
     adb -s "$ANDROID_DEVICE_ID" logcat -c
+    
+    # Start single log capture with enhanced formatting
+    echo "📊 Starting enhanced log capture..."
     adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot > "$log_file" 2>/dev/null &
     LOGCAT_PID=$!
     
@@ -1276,20 +1283,38 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
                 echo ""
                 echo "🔄 Auto-restart signal detected - triggering validation phase..."
                 
-                # Stop current logcat
+                # Check if this is a determinism test that has saved a hash
+                restart_line=$(grep "DEBUG_TEST_RESTART_NEEDED.*$TEST_ID" "$log_file" | tail -1)
+                if echo "$restart_line" | grep -q '"reason": "config_updated"'; then
+                    echo "🔐 Determinism test detected - preserving modified config with saved hash"
+                    echo "⚠️  NOT pushing original config to avoid overwriting expectedHash"
+                else
+                    echo "🔄 Standard restart - config will be preserved"
+                fi
+                
+                # Stop current logcat temporarily for clean restart
+                echo "📊 Stopping log capture for restart..."
                 kill $LOGCAT_PID 2>/dev/null || true
                 wait $LOGCAT_PID 2>/dev/null || true
+                
+                # Add clear restart boundary marker
+                echo "$(date '+%m-%d %H:%M:%S.%3N') I/justfile (RESTART): ===== APP RESTART FOR VALIDATION PHASE =====" >> "$log_file"
                 
                 # Restart app (preserves config with expectedHash)
                 echo "🚀 Force stopping app for clean restart..."
                 adb -s "$ANDROID_DEVICE_ID" shell am force-stop "$ANDROID_PACKAGE_NAME"
                 echo "⏱️  Waiting for app to fully terminate..."
-                sleep 2
-                echo "🚀 Starting fresh app instance..."
+                sleep 3
+                
+                echo "🚀 Starting fresh app instance for validation phase..."
                 adb -s "$ANDROID_DEVICE_ID" shell am start -a android.intent.action.MAIN -n "$ANDROID_PACKAGE_NAME"/com.godot.game.GodotApp
                 
-                # Resume log capture for validation phase
-                echo "📊 Resuming monitoring for validation phase..."
+                # Resume log capture with validation marker
+                echo "📊 Resuming log capture for validation phase..."
+                sleep 1  # Brief pause to ensure app starts
+                echo "$(date '+%m-%d %H:%M:%S.%3N') I/justfile (VALIDATION): ===== VALIDATION PHASE STARTED =====" >> "$log_file"
+                
+                # Resume single log capture
                 adb -s "$ANDROID_DEVICE_ID" logcat -v time -s godot >> "$log_file" 2>/dev/null &
                 LOGCAT_PID=$!
                 
@@ -1325,8 +1350,12 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
     done
     
     # Stop log capture
+    echo "📊 Finalizing log capture..."
     kill $LOGCAT_PID 2>/dev/null || true
     wait $LOGCAT_PID 2>/dev/null || true
+    
+    # Add final completion marker
+    echo "$(date '+%m-%d %H:%M:%S.%3N') I/justfile (COMPLETE): ===== TEST EXECUTION COMPLETE =====" >> "$log_file"
     
     echo ""
     echo "📋 Test Results Analysis"
@@ -1433,6 +1462,22 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
     if [ $test_result -eq 0 ]; then
         echo "   🧹 just logs-cleanup-force 5"
     fi
+    echo ""
+    echo "📊 Enhanced Debug Commands:"
+    echo "   🔍 just debug-test-flow $TEST_ID"
+    echo "   📊 just debug-pids $TEST_ID"
+    echo "   🔄 just debug-restarts $TEST_ID"
+    echo "   ⚡ just debug-quick $TEST_ID"
+    echo ""
+    echo "🏷️  Universal Tag-Filtered Log Commands:"
+    echo "   📋 just logs $TEST_ID                          # Full logs"
+    echo "   📋 just logs $TEST_ID debug test               # Only debug+test logs"
+    echo "   🚨 just logs-errors-tagged $TEST_ID            # All errors"
+    echo "   🚨 just logs-errors-tagged $TEST_ID firebase   # Firebase errors only"
+    echo "   ⚡ just logs-performance-tagged $TEST_ID        # All performance data"
+    echo "   ⚡ just logs-performance-tagged $TEST_ID battle # Battle performance only"
+    echo "   🔄 just logs-lifecycle-tagged $TEST_ID          # All test events"
+    echo "   🔄 just logs-lifecycle-tagged $TEST_ID startup  # Startup events only"
     echo ""
     
     if [ $test_result -eq 0 ]; then

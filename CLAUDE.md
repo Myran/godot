@@ -214,9 +214,173 @@ just test-android-trace 'invalid.name'                   # Error detection steps
 3. **🎯 Unified Testing**: Use `just test-android TARGET` for comprehensive testing (auto-detects patterns/configs/lists)
 4. **Quick Iteration**: Use `just config-restart-android 'Action Name'` for ultra-fast 5-second cycles
 5. **Enhanced Debugging**: Use `just test-android-enhanced TARGET` for detailed error analysis and performance tracking
-6. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
-7. **Pre-Commit Validation**: Run `just validate-godot` for runtime validation and `just test-all-android` before commits
-8. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+6. **🏷️ Token-Efficient Log Analysis**: Use tag-filtered commands to save 90-98% of tokens when debugging
+7. **Build Updates**: Use `just fastbuild-android` to rebuild and transfer changes to Android device
+8. **Pre-Commit Validation**: Run `just validate-godot` for runtime validation and `just test-all-android` before commits
+9. **Engine Changes**: Rebuild with `just godot-build-*` commands when modifying Godot source
+
+## 🏷️ Token-Efficient Log Debugging with Tags
+
+### **Philosophy: Filter First, Read Less**
+Instead of reading 400+ line log files (800+ tokens), use tag-based filtering to see only relevant information (20-100 tokens = 87-98% savings).
+
+### **Universal Tag-Filtered Commands**
+**Every log command now accepts optional tag filtering:**
+
+```bash
+# Universal log display with optional filtering
+just logs TEST_ID                           # Full logs (high token cost)
+just logs TEST_ID debug test                # Only debug+test logs (90% savings)
+just logs TEST_ID battle determinism        # Battle determinism only (95% savings)
+
+# Error debugging with optional tag filtering
+just logs-errors-tagged TEST_ID             # All errors
+just logs-errors-tagged TEST_ID firebase    # Firebase errors only (98% savings)
+just logs-errors-tagged TEST_ID battle      # Battle errors only
+
+# Performance analysis with optional tag filtering  
+just logs-performance-tagged TEST_ID        # All performance data
+just logs-performance-tagged TEST_ID battle # Battle performance only
+just logs-performance-tagged TEST_ID firebase # Firebase performance only
+
+# Lifecycle tracking with optional tag filtering
+just logs-lifecycle-tagged TEST_ID          # All test events
+just logs-lifecycle-tagged TEST_ID startup  # Startup events only
+just logs-lifecycle-tagged TEST_ID test     # Test lifecycle only
+```
+
+### **Common Tag Categories**
+
+#### **System & Core Tags**
+- `debug` - Debug system operations
+- `system` - System initialization and core operations  
+- `startup` - App startup and initialization
+- `ui` - User interface events
+- `initialization` - Component initialization
+
+#### **Testing & Lifecycle Tags**
+- `test` - Test execution events
+- `success` - Successful operations
+- `failure` - Failed operations  
+- `complete` - Completion events
+- `pid` - Process ID tracking
+- `sequence` - Sequence/order tracking
+
+#### **Game Component Tags**
+- `battle` - Battle system operations
+- `determinism` - Determinism testing
+- `gameplay` - General gameplay events
+- `game` - Game-specific operations
+
+#### **Firebase & Backend Tags**
+- `firebase` - Firebase operations
+- `backend` - Backend Firebase operations
+- `rtdb` - Real-time database operations
+- `cpp_firebase` - C++ Firebase SDK operations
+- `backend_firebase` - Backend Firebase wrapper operations
+
+### **Token Savings Examples**
+
+**Massive efficiency gains with precise filtering:**
+
+| **Command** | **Lines** | **Tokens** | **Savings** | **Use Case** |
+|-------------|-----------|------------|-------------|--------------|
+| Full logs | 400+ | ~800 | 0% | Last resort only |
+| `logs TEST_ID battle` | ~50 | ~100 | 87% | Battle debugging |
+| `logs TEST_ID debug test` | ~30 | ~60 | 92% | Test debugging |
+| `logs-errors-tagged TEST_ID` | ~5 | ~10 | 98% | Error detection |
+| `logs TEST_ID firebase rtdb` | ~40 | ~80 | 90% | Database debugging |
+
+### **Efficient Debugging Workflow**
+
+#### **Step 1: Quick Error Check (98% token savings)**
+```bash
+just logs-errors-tagged TEST_ID
+# Output: "✅ No errors found" or specific error lines
+```
+
+#### **Step 2: Component-Specific Analysis (90% token savings)**
+```bash
+# Focus on the relevant component
+just logs TEST_ID battle                    # Battle issues
+just logs TEST_ID firebase                  # Firebase issues  
+just logs TEST_ID system startup            # Startup issues
+```
+
+#### **Step 3: Drill Down Further (95% token savings)**
+```bash
+# Combine tags for precision
+just logs TEST_ID battle determinism        # Battle determinism only
+just logs TEST_ID firebase error            # Firebase errors only
+just logs TEST_ID debug test success        # Successful debug tests only
+```
+
+#### **Step 4: Performance Analysis (92% token savings)**
+```bash
+just logs-performance-tagged TEST_ID battle # Battle timing only
+just logs-performance-tagged TEST_ID firebase # Firebase timing only
+```
+
+### **Copy-Paste Ready Workflow**
+
+**Every test output now includes tag-filtered commands:**
+```bash
+🏷️  Universal Tag-Filtered Log Commands:
+   📋 just logs test_20250615_143212_2f4a64ff                          # Full logs
+   📋 just logs test_20250615_143212_2f4a64ff debug test               # Only debug+test logs
+   🚨 just logs-errors-tagged test_20250615_143212_2f4a64ff            # All errors
+   🚨 just logs-errors-tagged test_20250615_143212_2f4a64ff firebase   # Firebase errors only
+   ⚡ just logs-performance-tagged test_20250615_143212_2f4a64ff        # All performance data
+   ⚡ just logs-performance-tagged test_20250615_143212_2f4a64ff battle # Battle performance only
+   🔄 just logs-lifecycle-tagged test_20250615_143212_2f4a64ff          # All test events
+   🔄 just logs-lifecycle-tagged test_20250615_143212_2f4a64ff startup  # Startup events only
+```
+
+**Simply copy, paste, and modify the tags for your specific debugging needs.**
+
+### **Pro Tips for Maximum Efficiency**
+
+1. **Start Specific**: Use `logs-errors-tagged TEST_ID` first - often tells you everything you need
+2. **Combine Tags**: Use `debug battle`, `firebase rtdb`, `system startup` for precision  
+3. **Layer Your Analysis**: Start with errors → component-specific → performance if needed
+4. **Use Performance Commands**: `logs-performance-tagged TEST_ID battle` for timing analysis
+5. **Remember Common Patterns**: `test success`, `firebase error`, `battle determinism`
+
+### **When to Use Each Approach**
+
+- **🚨 Quick Issue Detection**: `logs-errors-tagged TEST_ID` (98% savings)
+- **🎯 Component Debugging**: `logs TEST_ID [component]` (87-92% savings)  
+- **⚡ Performance Analysis**: `logs-performance-tagged TEST_ID [component]` (92% savings)
+- **🔄 Test Flow Analysis**: `logs-lifecycle-tagged TEST_ID` (95% savings)
+- **📋 Full Context** (last resort): `logs TEST_ID` (0% savings, high token cost)
+
+**The goal: Get the insights you need while using 90-98% fewer tokens through intelligent filtering.**
+
+### **Quick Reference: Most Common Debug Patterns**
+
+```bash
+# 🚨 FIRST: Always check for errors (98% token savings)
+just logs-errors-tagged TEST_ID
+
+# 🎯 COMPONENT-SPECIFIC (90%+ token savings)
+just logs TEST_ID battle                # Battle system issues
+just logs TEST_ID firebase              # Firebase/database issues  
+just logs TEST_ID system startup        # App startup issues
+just logs TEST_ID debug test            # Test execution issues
+
+# 🔬 PRECISION DEBUGGING (95%+ token savings)
+just logs TEST_ID battle determinism    # Determinism testing
+just logs TEST_ID firebase error        # Firebase errors only
+just logs TEST_ID test success          # Successful test operations
+just logs TEST_ID system initialization # System init process
+
+# ⚡ PERFORMANCE ANALYSIS (92%+ token savings)
+just logs-performance-tagged TEST_ID battle    # Battle timing issues
+just logs-performance-tagged TEST_ID firebase  # Database performance
+just logs-lifecycle-tagged TEST_ID startup     # Startup sequence timing
+```
+
+**Remember: Start with `logs-errors-tagged TEST_ID` - it often contains everything you need to know in under 10 tokens.**
 
 ## 💪 Strong Typing & Code Quality
 

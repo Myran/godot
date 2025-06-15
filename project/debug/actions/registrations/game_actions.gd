@@ -518,6 +518,15 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		return DebugAction.Result.new_failure("Game systems not ready for determinism test")
 	
 	var start_time: int = Time.get_ticks_msec()
+	var process_id: int = OS.get_process_id()
+	var current_test_id: String = DebugAction.get_current_test_id()
+	
+	Log.info("=== DETERMINISM TEST ENTRY ===", {
+		"pid": process_id, 
+		"test_id": current_test_id,
+		"timestamp": Time.get_datetime_string_from_system(),
+		"phase": "unknown"
+	}, ["debug", "battle", "determinism", "pid", "phase"])
 	
 	# Get determinism configuration (force skip_animation to true)
 	var config: Dictionary = _get_determinism_config()
@@ -525,7 +534,13 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
 	var mode: String = config.mode
 	
-	Log.info("Starting logic-only battle determinism test", {"seed": current_seed, "mode": mode}, ["debug", "battle", "determinism"])
+	Log.info("Starting logic-only battle determinism test", {
+		"seed": current_seed, 
+		"mode": mode, 
+		"pid": process_id,
+		"test_id": current_test_id,
+		"has_expected_hash": expected_hash != ""
+	}, ["debug", "battle", "determinism", "pid"])
 	
 	# Execute battle logic directly without UI/animation
 	var logic_result: Dictionary = _battle_execute_logic_only()
@@ -545,20 +560,29 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 	
 	if mode == "validation":
 		# Validation mode - compare against expected hash from config
+		Log.info("=== VALIDATION MODE ===", {
+			"pid": process_id,
+			"test_id": current_test_id, 
+			"expected_hash": expected_hash,
+			"actual_hash": actual_hash,
+			"match": expected_hash == actual_hash,
+			"phase": "validation"
+		}, ["debug", "battle", "determinism", "pid", "phase"])
+		
 		if expected_hash == actual_hash:
 			Log.info("Logic-only battle determinism test PASSED", 
-				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
-				["debug", "battle", "determinism"]
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration, "pid": process_id, "test_id": current_test_id}, 
+				["debug", "battle", "determinism", "pid"]
 			)
 			return DebugAction.Result.new_success(
-				{"determinism_test": "PASSED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				{"determinism_test": "PASSED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true, "pid": process_id},
 				duration,
 				"determinism_logic_only_passed"
 			)
 		else:
 			Log.error("Logic-only battle determinism test FAILED", 
-				{"seed": current_seed, "expected": expected_hash, "actual": actual_hash}, 
-				["debug", "battle", "determinism"]
+				{"seed": current_seed, "expected": expected_hash, "actual": actual_hash, "pid": process_id, "test_id": current_test_id}, 
+				["debug", "battle", "determinism", "pid"]
 			)
 			return DebugAction.Result.new_failure(
 				"Logic-only determinism test failed - hash mismatch",
@@ -566,11 +590,18 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 			)
 	else:
 		# Recording mode - save hash to config for future validation
+		Log.info("=== RECORDING MODE ===", {
+			"pid": process_id,
+			"test_id": current_test_id, 
+			"generated_hash": actual_hash,
+			"seed": current_seed,
+			"phase": "recording"
+		}, ["debug", "battle", "determinism", "pid", "phase"])
+		
 		var update_success: bool = _update_config_with_hash(actual_hash)
 		
 		if update_success:
 			# Emit restart signal for automatic validation phase
-			var current_test_id: String = DebugAction.get_current_test_id()
 			Log.info("DEBUG_TEST_RESTART_NEEDED", 
 				{
 					"test_id": current_test_id, 
@@ -578,23 +609,28 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 					"phase": "validation_needed",
 					"seed": current_seed,
 					"hash": actual_hash,
-					"logic_only": true
+					"logic_only": true,
+					"pid": process_id
 				}, 
-				["debug", "test", "restart"]
+				["debug", "test", "restart", "pid"]
 			)
 			
 			Log.info("Logic-only battle determinism recorded and saved to config", 
-				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration}, 
-				["debug", "battle", "determinism"]
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration, "pid": process_id, "test_id": current_test_id}, 
+				["debug", "battle", "determinism", "pid"]
 			)
 			return DebugAction.Result.new_restart_pending(
-				{"determinism_test": "RECORDED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				{"determinism_test": "RECORDED", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true, "pid": process_id},
 				duration,
 				"hash_recorded_logic_only_restart_pending"
 			)
 		else:
+			Log.info("Hash recording had issues but continuing with restart", 
+				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration, "pid": process_id, "test_id": current_test_id}, 
+				["debug", "battle", "determinism", "pid"]
+			)
 			return DebugAction.Result.new_restart_pending(
-				{"determinism_test": "RECORDED_PARTIAL", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true},
+				{"determinism_test": "RECORDED_PARTIAL", "seed": current_seed, "hash": actual_hash, "duration_ms": duration, "logic_only": true, "pid": process_id},
 				duration,
 				"hash_recorded_logic_only_partial_restart_pending"
 			)
@@ -675,14 +711,33 @@ static func _get_determinism_config() -> Dictionary:
 	# Read determinism config (seed and optional expectedHash) from external config file
 	var config_path: String = "user://debug_startup_actions.json"
 	var default_config: Dictionary = {"seed": 12345, "expectedHash": null, "mode": "recording", "skip_animation": false}
+	var process_id: int = OS.get_process_id()
+	var current_test_id: String = DebugAction.get_current_test_id()
+	
+	# Enhanced file system debugging with PID
+	Log.info("=== CONFIG LOAD ===", {
+		"pid": process_id,
+		"test_id": current_test_id,
+		"path": config_path, 
+		"exists": FileAccess.file_exists(config_path),
+		"timestamp": Time.get_datetime_string_from_system()
+	}, ["debug", "battle", "determinism", "filesystem", "pid"])
 	
 	if not FileAccess.file_exists(config_path):
-		Log.debug("No external config found, using defaults", default_config, ["debug", "battle", "determinism"])
+		Log.warning("No external config found, using defaults", {
+			"default_config": default_config,
+			"pid": process_id,
+			"test_id": current_test_id
+		}, ["debug", "battle", "determinism", "filesystem", "pid"])
 		return default_config
 	
 	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 	if not file:
-		Log.warning("Could not read config file, using defaults", default_config, ["debug", "battle", "determinism"])
+		Log.warning("Could not read config file, using defaults", {
+			"default_config": default_config,
+			"pid": process_id,
+			"test_id": current_test_id
+		}, ["debug", "battle", "determinism", "pid"])
 		return default_config
 	
 	var json_text: String = file.get_as_text()
@@ -692,14 +747,24 @@ static func _get_determinism_config() -> Dictionary:
 	var result: Error = json.parse(json_text)
 	
 	if result != OK:
-		Log.warning("Invalid JSON in config, using defaults", default_config, ["debug", "battle", "determinism"])
+		Log.warning("Invalid JSON in config, using defaults", {
+			"default_config": default_config,
+			"parse_error": result,
+			"pid": process_id,
+			"test_id": current_test_id
+		}, ["debug", "battle", "determinism", "pid"])
 		return default_config
 	
 	var data: Dictionary = json.data as Dictionary
 	var config: Dictionary = {}
 	
 	# Debug: log the raw data to see what's being read
-	Log.info("Raw config data", {"data": data}, ["debug", "battle", "determinism"])
+	Log.info("Raw config data", {
+		"data": data,
+		"pid": process_id,
+		"test_id": current_test_id,
+		"file_size": json_text.length()
+	}, ["debug", "battle", "determinism", "pid"])
 	
 	# Extract seed
 	if data.has("seed"):
@@ -708,15 +773,28 @@ static func _get_determinism_config() -> Dictionary:
 		config.seed = default_config.seed
 	
 	# Extract expectedHash if present
-	Log.info("Checking for expectedHash", {"has_key": data.has("expectedHash"), "value": data.get("expectedHash", "NOT_FOUND")}, ["debug", "battle", "determinism"])
+	Log.info("Checking for expectedHash", {
+		"has_key": data.has("expectedHash"), 
+		"value": data.get("expectedHash", "NOT_FOUND"),
+		"pid": process_id,
+		"test_id": current_test_id
+	}, ["debug", "battle", "determinism", "pid"])
+	
 	if data.has("expectedHash"):
 		config.expectedHash = str(data.expectedHash)
 		config.mode = "validation"
-		Log.info("Set validation mode", {"hash": config.expectedHash}, ["debug", "battle", "determinism"])
+		Log.info("Set validation mode", {
+			"hash": config.expectedHash,
+			"pid": process_id,
+			"test_id": current_test_id
+		}, ["debug", "battle", "determinism", "pid"])
 	else:
 		config.expectedHash = null
 		config.mode = "recording"
-		Log.info("Set recording mode - no expectedHash found", {}, ["debug", "battle", "determinism"])
+		Log.info("Set recording mode - no expectedHash found", {
+			"pid": process_id,
+			"test_id": current_test_id
+		}, ["debug", "battle", "determinism", "pid"])
 	
 	# Extract skip_animation option
 	if data.has("skip_animation"):
@@ -731,9 +809,21 @@ static func _get_determinism_config() -> Dictionary:
 static func _update_config_with_hash(hash: String) -> bool:
 	# Add computed hash to the config file for future validation
 	var config_path: String = "user://debug_startup_actions.json"
+	var process_id: int = OS.get_process_id()
+	var current_test_id: String = DebugAction.get_current_test_id()
+	
+	# Enhanced file system debugging with PID
+	Log.info("=== CONFIG UPDATE ===", {
+		"pid": process_id,
+		"test_id": current_test_id,
+		"path": config_path, 
+		"hash": hash, 
+		"exists_before": FileAccess.file_exists(config_path),
+		"timestamp": Time.get_datetime_string_from_system()
+	}, ["debug", "battle", "determinism", "filesystem", "pid"])
 	
 	if not FileAccess.file_exists(config_path):
-		Log.error("Cannot update config - file does not exist", {"path": config_path}, ["debug", "battle", "determinism"])
+		Log.error("Cannot update config - file does not exist", {"path": config_path}, ["debug", "battle", "determinism", "filesystem"])
 		return false
 	
 	# Read current config
@@ -766,7 +856,26 @@ static func _update_config_with_hash(hash: String) -> bool:
 	file.store_string(updated_json)
 	file.close()
 	
-	Log.info("Config updated with expectedHash", {"hash": hash, "path": config_path}, ["debug", "battle", "determinism"])
+	# Verify file was written successfully
+	var exists_after: bool = FileAccess.file_exists(config_path)
+	Log.info("Config updated with expectedHash", {
+		"hash": hash, 
+		"path": config_path, 
+		"exists_after": exists_after,
+		"pid": process_id,
+		"test_id": current_test_id
+	}, ["debug", "battle", "determinism", "filesystem", "pid"])
+	
+	# Double-check by trying to read back the hash
+	if exists_after:
+		var verification_file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+		if verification_file:
+			var verification_content: String = verification_file.get_as_text()
+			verification_file.close()
+			Log.info("Config verification read", {"content_preview": verification_content.substr(0, 200)}, ["debug", "battle", "determinism", "filesystem"])
+		else:
+			Log.warning("Could not verify written config", {"path": config_path}, ["debug", "battle", "determinism", "filesystem"])
+	
 	return true
 
 
