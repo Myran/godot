@@ -55,6 +55,8 @@ const TAG_CLICKER: String = "clicker"
 const TAG_AUTH: String = "auth"
 const TAG_FACEBOOK: String = "facebook"
 const TAG_APPLE: String = "apple"
+const TAG_RECONCILIATION : String = 'recoinciliation'
+const TAG_ABILITY : String = 'ability'
 
 # Level tag constants
 const TAG_LEVEL_PREFIX: String = "level:"
