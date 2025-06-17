@@ -11,10 +11,14 @@ func _init(layer: Node, allies: HolderContainer, enemies: HolderContainer) -> vo
 	enemy_holder = enemies
 
 
-func enact(battle_events: Array[Context.Event]) -> void:
+func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResult = null) -> void:
 	Log.info(
 		"Starting battle animation sequence",
-		{"event_count": battle_events.size()},
+		{
+			"event_count": battle_events.size(),
+			"battle_result_provided": battle_result != null,
+			"battle_result_type": str(type_string(typeof(battle_result)))
+		},
 		[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_INITIALIZATION]
 	)
 	Log.debug(
@@ -22,8 +26,9 @@ func enact(battle_events: Array[Context.Event]) -> void:
 	)
 
 	var return_tween: Tween
-	var allied_units: Dictionary = allied_holder.get_current_lineup(true, battle_layer)
-	var enemy_units: Dictionary = enemy_holder.get_current_lineup(true, battle_layer)
+	var allied_units: Dictionary[int, Card] = allied_holder.get_current_lineup(true, battle_layer)
+	var enemy_units: Dictionary[int, Card] = enemy_holder.get_current_lineup(true, battle_layer)
+
 	allied_holder.hide_lineup()
 	enemy_holder.hide_lineup()
 
@@ -63,16 +68,17 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				},
 				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION]
 			)
-			var attacker: Node2D = (
-				allied_units[event.attacker_position]
-				if event.is_allied_attack
-				else enemy_units[event.attacker_position]
-			)
-			var defender: Node2D = (
-				enemy_units[event.defender_position]
-				if event.is_allied_attack
-				else allied_units[event.defender_position]
-			)
+			var attacker: Card
+			if event.is_allied_attack:
+				attacker = allied_units[event.attacker_position]
+			else:
+				attacker = enemy_units[event.attacker_position]
+
+			var defender: Card
+			if event.is_allied_attack:
+				defender = enemy_units[event.defender_position]
+			else:
+				defender = allied_units[event.defender_position]
 			# Prepare names with explicit variables instead of ternary operators
 			var attacker_name: String = "unknown"
 			var defender_name: String = "unknown"
@@ -186,11 +192,11 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				},
 				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION]
 			)
-			var target: Node2D = (
-				allied_units[event.target_position]
-				if event.is_allied_side
-				else enemy_units[event.target_position]
-			)
+			var target: Card
+			if event.is_allied_side:
+				target = allied_units[event.target_position]
+			else:
+				target = enemy_units[event.target_position]
 			# Get target name explicitly
 			var target_name: String = "unknown"
 			if target != null:
@@ -212,11 +218,11 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				},
 				[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_ANIMATION]
 			)
-			var target: Node2D = (
-				allied_units[event.target_position]
-				if event.is_allied_side
-				else enemy_units[event.target_position]
-			)
+			var target: Card
+			if event.is_allied_side:
+				target = allied_units[event.target_position]
+			else:
+				target = enemy_units[event.target_position]
 			if event.shield_active:
 				target.show_shield()
 			else:
@@ -243,16 +249,21 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				},
 				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STAT, Log.TAG_COMBAT]
 			)
-			var unit_side: Dictionary = allied_units if event.is_allied_side else enemy_units
+			var unit_side: Dictionary[int, Card]
+			if event.is_allied_side:
+				unit_side = allied_units
+			else:
+				unit_side = enemy_units
 			if !unit_side.has(event.target_position):
 				continue
 			if event.new_stat_value == 0:
 				continue
 
-			var target: Node2D = unit_side[event.target_position]
+			var target: Card = unit_side[event.target_position]
 			match event.stat_name:
 				Battle.UNIT_HEALTH:
-					target.base.set_card_health(event.new_stat_value)
+					var health_value: int = event.new_stat_value
+					target.base.set_card_health(health_value)
 
 		elif event is BattleContext.DeathEvent:
 			Log.debug(
@@ -260,10 +271,15 @@ func enact(battle_events: Array[Context.Event]) -> void:
 				{"unit_position": event.unit_position, "allied_side": event.is_allied_side},
 				[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_COMBAT]
 			)
-			var side: Dictionary = allied_units if event.is_allied_side else enemy_units
-			var target: Node2D = side[event.unit_position]
+			var side: Dictionary[int, Card]
+			if event.is_allied_side:
+				side = allied_units
+			else:
+				side = enemy_units
+			var target: Card = side[event.unit_position]
 			side.erase(event.unit_position)
-			target.shake(event.is_allied_side)
+			var is_allied: bool = event.is_allied_side
+			target.shake(is_allied)
 
 		elif event is BattleContext.StartOfTurnEvent:
 			await get_tree().create_timer(0.1).timeout
@@ -283,7 +299,7 @@ func enact(battle_events: Array[Context.Event]) -> void:
 
 	# Cleanup phase
 	await get_tree().create_timer(1.25).timeout
-	for side: Dictionary in [allied_units, enemy_units]:
+	for side: Dictionary[int, Card] in [allied_units, enemy_units]:
 		for pos: int in side.keys():
-			var unit: Node2D = side[pos]
+			var unit: Card = side[pos]
 			unit.queue_free()
