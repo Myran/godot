@@ -55,7 +55,7 @@ const TAG_CLICKER: String = "clicker"
 const TAG_AUTH: String = "auth"
 const TAG_FACEBOOK: String = "facebook"
 const TAG_APPLE: String = "apple"
-const TAG_RECONCILIATION : String = 'recoinciliation'
+const TAG_RECONCILIATION : String = 'reconciliation'
 const TAG_ABILITY : String = 'ability'
 const TAG_EFFECT : String = 'effect'
 
