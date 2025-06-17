@@ -1,19 +1,14 @@
 extends Node
 
+@export var use_actions_in_editor : bool = false
+
 
 func _ready() -> void:
 	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
 
 	var _args: PackedStringArray = OS.get_cmdline_user_args()
-	# Check if a specific flag exists
 
-	# Log which data source implementation is being used
-	#Log.info("Using updated DataSource implementation", {}, ["system", "initialization"])
-	#await data_source.activate_card_cache()
-	#var scene = preload("res://cardtest/battle_3.tscn")
-	#add_child(scene.instantiate())
-	# Connect to the new DebugManager instead of the legacy debug system
 
 	DebugManager.debug_event.connect(_on_debug_event)
 	match OS.get_name():
@@ -29,7 +24,8 @@ func _ready() -> void:
 			Log.info("Running on iOS platform", {}, ["system", "initialization"])
 		"Web":
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
-
+	if not use_actions_in_editor and OS.has_feature('editor'):
+		return
 	DebugStartupCoordinator.startDebugCoordinator()
 
 
