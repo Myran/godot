@@ -462,6 +462,72 @@ validate-godot FILTER="ERROR:":
     
     echo "✅ Runtime validation completed successfully"
 
+# Detailed Godot validation with line numbers and full error context
+validate-godot-detailed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔍 Running detailed Godot validation with full error context..."
+    
+    # Set the embedded config to use the quit action
+    echo "📋 Setting embedded config to system-quit-only..."
+    just config-set system-quit-only
+    
+    echo "🎮 Starting Godot headless with detailed error reporting..."
+    
+    # Create temporary file for full output
+    TEMP_LOG=$(mktemp)
+    
+    # Run Godot and capture all output
+    timeout 30s ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --check-only --quit 2>&1 | tee "$TEMP_LOG" || {
+        exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            echo "❌ Godot validation timed out after 30 seconds"
+            rm -f "$TEMP_LOG"
+            exit 1
+        fi
+    }
+    
+    # Parse and display detailed error information
+    echo ""
+    echo "📊 Detailed Error Analysis:"
+    echo "=========================="
+    
+    # Count different types of issues (strip ANSI color codes first)
+    error_count=$(sed 's/\x1b\[[0-9;]*m//g' "$TEMP_LOG" | grep "ERROR:" | wc -l | tr -d ' \n')
+    warning_count=$(sed 's/\x1b\[[0-9;]*m//g' "$TEMP_LOG" | grep "WARNING:" | wc -l | tr -d ' \n')
+    
+    echo "🔴 Errors found: $error_count"
+    echo "🟡 Warnings found: $warning_count"
+    
+    if [ "$error_count" -gt 0 ]; then
+        echo ""
+        echo "🔴 ERROR DETAILS:"
+        echo "=================="
+        # Show errors with file context and line numbers
+        grep -n -A 2 -B 2 "ERROR:" "$TEMP_LOG" || true
+    fi
+    
+    if [ "$warning_count" -gt 0 ]; then
+        echo ""
+        echo "🟡 WARNING DETAILS:"
+        echo "==================="
+        # Show warnings with context
+        grep -n -A 1 -B 1 "WARNING:" "$TEMP_LOG" || true
+    fi
+    
+    # Cleanup
+    rm -f "$TEMP_LOG"
+    
+    echo ""
+    if [ "$error_count" -eq 0 ]; then
+        echo "✅ No errors found - validation passed"
+        exit 0
+    else
+        echo "❌ Found $error_count errors - validation failed"
+        exit 1
+    fi
+
 # Pre-build hook
 pre-build:
     @echo "Running pre-build tasks..."
