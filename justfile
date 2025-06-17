@@ -1062,6 +1062,138 @@ config-clear-android:
     echo "✅ External config removed - app will use embedded config"
     echo "💡 Run 'just restart-android-app' to apply changes"
 
+# ================================
+# LOGGER CONFIG MANAGEMENT
+# ================================
+
+# Quick tag filtering for focused debugging sessions
+config-android-tags ACTIVE_TAGS IGNORED_TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🏷️  Updating Android logger tags..."
+    echo "   Active tags: {{ACTIVE_TAGS}}"
+    echo "   Ignored tags: {{IGNORED_TAGS}}"
+    
+    # Parse comma-separated tags
+    IFS=',' read -ra ACTIVE_ARRAY <<< "{{ACTIVE_TAGS}}"
+    IFS=',' read -ra IGNORED_ARRAY <<< "{{IGNORED_TAGS}}"
+    
+    # Create temporary config file
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Build active tags array string
+    ACTIVE_FORMATTED=""
+    for tag in "${ACTIVE_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$ACTIVE_FORMATTED" ]; then
+                ACTIVE_FORMATTED="$ACTIVE_FORMATTED, "
+            fi
+            ACTIVE_FORMATTED="$ACTIVE_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Build ignored tags array string
+    IGNORED_FORMATTED=""
+    for tag in "${IGNORED_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$IGNORED_FORMATTED" ]; then
+                IGNORED_FORMATTED="$IGNORED_FORMATTED, "
+            fi
+            IGNORED_FORMATTED="$IGNORED_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Update active tags in config
+    sed -i '' "s/active_tags=Array\[String\](\[.*\])/active_tags=Array[String]([$ACTIVE_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Update ignored tags in config
+    sed -i '' "s/ignored_tags=Array\[String\](\[.*\])/ignored_tags=Array[String]([$IGNORED_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Push to device
+    echo "📱 Pushing logger config to Android device..."
+    adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Logger tags updated!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Set Android logger level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+config-android-level LEVEL:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Convert level name to number
+    case "{{LEVEL}}" in
+        DEBUG|debug)
+            LEVEL_NUM=0
+            LEVEL_NAME="DEBUG"
+            ;;
+        INFO|info)
+            LEVEL_NUM=1
+            LEVEL_NAME="INFO"
+            ;;
+        WARNING|warning|WARN|warn)
+            LEVEL_NUM=2
+            LEVEL_NAME="WARNING"
+            ;;
+        ERROR|error)
+            LEVEL_NUM=3
+            LEVEL_NAME="ERROR"
+            ;;
+        CRITICAL|critical)
+            LEVEL_NUM=4
+            LEVEL_NAME="CRITICAL"
+            ;;
+        *)
+            echo "❌ Invalid log level: {{LEVEL}}"
+            echo "💡 Valid levels: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+            exit 1
+            ;;
+    esac
+    
+    echo "📊 Setting Android logger level to $LEVEL_NAME ($LEVEL_NUM)..."
+    
+    # Create temporary config file with current settings
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Update log level in config
+    sed -i '' "s/log_level=[0-9]/log_level=$LEVEL_NUM/g" "$TEMP_CONFIG"
+    
+    # Push to device
+    echo "📱 Pushing logger config to Android device..."
+    adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Logger level set to $LEVEL_NAME!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Reset Android logger config to project defaults
+config-android-reset:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔄 Resetting Android logger config to project defaults..."
+    
+    # Remove custom logger config from device
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -f /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg" 2>/dev/null || true
+    
+    echo "✅ Logger config reset!"
+    echo "💡 App will use project defaults (DEBUG level) on next start"
+    echo "💡 Restart app to apply: just restart-android-app"
+
 # List available debug configurations
 config-list:
     #!/usr/bin/env bash
@@ -3102,6 +3234,19 @@ help-debug:
     echo "  just config-set performance-testing  # Set embedded debug config"
     echo "  just config-push-android gameplay-testing # Push config to device (quick)"
     echo "  just config-clear-android            # Clear external config, use embedded"
+    echo ""
+    echo "📱 ANDROID LOGGER CONFIGURATION (Runtime Changes):"
+    echo "  # Real-time logger control without rebuilding - changes apply after app restart"
+    echo "  just config-android-tags \"firebase,battle\" \"cache\"    # Focus on specific tags"
+    echo "  just config-android-level DEBUG                         # Set log verbosity" 
+    echo "  just config-android-reset                               # Reset to project defaults"
+    echo "  just restart-android-app                                # Apply configuration changes"
+    echo ""
+    echo "  # Logger workflow example:"
+    echo "  just config-android-tags \"firebase,error\" \"cache,debug\"  # Focus Firebase errors"
+    echo "  just restart-android-app                                    # Apply settings"
+    echo "  just test-android '*.firebase.*'                            # Test with focused logs"
+    echo "  just logs-errors-tagged TEST_ID firebase                    # Analyze Firebase errors only"
     echo ""
     echo "💡 ACTION & WILDCARD SHORTCUTS (No JSON files needed!):"
     echo "  # Single actions"

@@ -123,6 +123,11 @@ just config-set 'PATTERN'                  # Set as default embedded config
 just config-status-android                 # Check current config
 just config-clear-android                  # Clear external config
 just config-list                           # List available configs
+
+# Android logger configuration (runtime changes)
+just config-android-tags "active" "ignored" # Set active/ignored tags
+just config-android-level LEVEL            # Set log level (DEBUG/INFO/WARNING/ERROR/CRITICAL)
+just config-android-reset                  # Reset to project defaults
 ```
 
 ### **📋 Log Commands - Token-Efficient Analysis**
@@ -280,6 +285,45 @@ just config-restart-android '*.firebase.set_value'         # 5 seconds
 just test-android 'system.*'                               # 30+ seconds with logs
 just logs-errors-tagged TEST_ID                            # Quick error check
 just logs TEST_ID system debug                             # Focused analysis
+```
+
+## 📱 Android Logger Configuration
+
+### **Real-Time Logger Control**
+Configure Android logger settings without rebuilding. Changes take effect after app restart.
+
+```bash
+# Focus on specific components, filter noise
+just config-android-tags "firebase,battle" "cache,animation"
+
+# Adjust log verbosity  
+just config-android-level INFO                           # Reduce debug noise
+just config-android-level DEBUG                          # Full debugging
+
+# Reset to project defaults
+just config-android-reset                                # Use project/addons/advanced_logger/settings.cfg
+
+# Apply changes
+just restart-android-app                                 # Restart to apply config
+```
+
+### **Logger Configuration Workflow**
+```bash
+# 1. Set focused debugging during development
+just config-android-tags "firebase,error" "cache,debug" # Focus on Firebase errors
+just config-android-level DEBUG                          # Enable all log levels
+just restart-android-app                                 # Apply settings
+
+# 2. Run tests with focused logging
+just config-restart-android '*.firebase.*'              # Test Firebase layer
+just logs-errors-tagged TEST_ID firebase                 # Check Firebase errors only
+
+# 3. Adjust filtering as needed
+just config-android-tags "firebase,rtdb" "cache"        # Expand to RTDB logs
+just restart-android-app
+
+# 4. Clean up when done
+just config-android-reset                                # Reset to defaults
 ```
 
 ### **🎯 Command Integration Examples**
