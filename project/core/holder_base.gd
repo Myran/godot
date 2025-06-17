@@ -23,6 +23,20 @@ func get_current_lineup(
 	return retval
 
 
+func get_reenactment_lineup(new_layer: Node = null) -> Dictionary[int, Card]:
+	var retval: Dictionary[int, Card] = {}
+	for pos: Holder in $grid_container.get_children():
+		var card: Card = pos.get_card()
+		if card:
+			var reenactment_card: Card = card.duplicate()
+			reenactment_card.init_battle_reenactment(card)
+			if new_layer != null:
+				new_layer.add_child(reenactment_card)
+				reenactment_card.global_position = card.global_position
+			retval[pos.get_index()] = reenactment_card
+	return retval
+
+
 func get_card_position(card: Card) -> int:
 	for pos: Holder in $grid_container.get_children():
 		if pos.get_card() == card:

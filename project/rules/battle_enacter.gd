@@ -26,8 +26,8 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 	)
 
 	var return_tween: Tween
-	var allied_units: Dictionary[int, Card] = allied_holder.get_current_lineup(true, battle_layer)
-	var enemy_units: Dictionary[int, Card] = enemy_holder.get_current_lineup(true, battle_layer)
+	var allied_units: Dictionary[int, Card] = allied_holder.get_reenactment_lineup(battle_layer)
+	var enemy_units: Dictionary[int, Card] = enemy_holder.get_reenactment_lineup(battle_layer)
 
 	allied_holder.hide_lineup()
 	enemy_holder.hide_lineup()
@@ -84,9 +84,9 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			var defender_name: String = "unknown"
 
 			if attacker != null:
-				attacker_name = attacker.get_name()
+				attacker_name = attacker.get_card_name()
 			if defender != null:
-				defender_name = defender.get_name()
+				defender_name = defender.get_card_name()
 
 			Log.debug(
 				"Combat participants",
@@ -200,7 +200,7 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			# Get target name explicitly
 			var target_name: String = "unknown"
 			if target != null:
-				target_name = target.get_name()
+				target_name = target.get_card_name()
 
 			Log.debug(
 				"Applying damage to target",
@@ -230,7 +230,7 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			# Get target name explicitly
 			var target_name: String = "unknown"
 			if target != null:
-				target_name = target.get_name()
+				target_name = target.get_card_name()
 
 			Log.debug(
 				"Shield status changed",
@@ -264,6 +264,9 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 				Battle.UNIT_HEALTH:
 					var health_value: int = event.new_stat_value
 					target.base.set_card_health(health_value)
+				Battle.UNIT_ATTACK:
+					var attack_value: int = event.new_stat_value
+					target.base.set_card_attack(attack_value)
 
 		elif event is BattleContext.DeathEvent:
 			Log.debug(

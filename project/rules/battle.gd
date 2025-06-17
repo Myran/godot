@@ -3,6 +3,7 @@ class_name Battle extends Node
 enum BattleAction { ATTACK_REGULAR }
 
 const UNIT_HEALTH: String = "current_health"
+const UNIT_ATTACK: String = "current_attack"
 const NO_UNIT_FOUND: int = -1
 
 
