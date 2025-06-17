@@ -168,22 +168,31 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 func _load_settings() -> void:
 	# In test mode or no config available, use defaults
 	if _config == null:
+		print("[ALogger] No config manager available, using defaults")
 		return
+
+	print("[ALogger] Loading settings from ConfigManager")
 
 	# General settings
 	_current_level = _config.get_log_level()
+	print("[ALogger] Loaded log level: %d (%s)" % [_current_level, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][_current_level]])
+
 	_buffer_size = _config.get_buffer_size()
 	_enable_buffer_dump = _config.get_enable_buffer_dump()
 
 	# Tags
 	_active_tags = _config.get_active_tags()
 	_ignored_tags = _config.get_ignored_tags()
+	print("[ALogger] Loaded active tags: " + str(_active_tags))
+	print("[ALogger] Loaded ignored tags: " + str(_ignored_tags))
 
 	# Format settings
 	_show_timestamp = _config.get_show_timestamp()
 	_show_tags = _config.get_show_tags()
 	_use_colors = _config.get_use_colors()
 	_show_source = _config.get_show_source()
+
+	print("[ALogger] Settings loaded - Level: %s, Colors: %s, Timestamp: %s" % [["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][_current_level], _use_colors, _show_timestamp])
 
 
 # Core logging methods

@@ -118,49 +118,155 @@ func _load_config() -> Error:
 	var config_path = _get_platform_config_path()
 	var result = Error.FAILED
 
+	print("[ConfigManager] Attempting to load config from: %s" % config_path)
+	print("[ConfigManager] File exists: %s" % FileAccess.file_exists(config_path))
+
 	# First try the standard load
 	result = _config.load(config_path)
+	print("[ConfigManager] Standard load result: %s (%d)" % [error_string(result), result])
 
 	# If that fails on mobile platforms, try using FileAccess
 	if result != OK and _is_mobile_platform():
+		print("[ConfigManager] Standard load failed on mobile, trying FileAccess method")
 		if FileAccess.file_exists(config_path):
+			print("[ConfigManager] Config file exists, reading with FileAccess")
 			var file = FileAccess.open(config_path, FileAccess.READ)
 			if file:
 				var content = file.get_as_text()
+				print("[ConfigManager] File content length: %d chars" % content.length())
 				result = _config.parse(content)
+				print("[ConfigManager] Parse result: %s (%d)" % [error_string(result), result])
 				file.close()
+			else:
+				print("[ConfigManager] Failed to open file with FileAccess")
 		else:
-			# On mobile platforms, create default config if file doesn't exist
+			print("[ConfigManager] Config file doesn't exist, creating and copying from project config")
+			# On mobile platforms, copy project config to user:// if it doesn't exist
 			_create_default_config()
 			result = OK
 
 	_config_loaded = result == OK or result == ERR_FILE_NOT_FOUND
+	print("[ConfigManager] Config loaded successfully: %s" % _config_loaded)
 
 	# Handle configuration version upgrades
 	if result == OK:
+		print("[ConfigManager] Config loaded OK, checking for upgrades")
 		_upgrade_config_if_needed()
+	else:
+		print("[ConfigManager] Config load failed, final result: %s" % error_string(result))
+
+	# Print the actual log level that was loaded
+	if _config_loaded:
+		var loaded_log_level = get_log_level()
+		print("[ConfigManager] Loaded log level: %d (%s)" % [loaded_log_level, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][loaded_log_level]])
 
 	return result
 
-## Creates a default configuration in memory for Android
+## Creates a default configuration in memory for mobile platforms
+## First attempts to migrate from res:// config, then falls back to hardcoded defaults
 func _create_default_config() -> void:
-	# Set default logger settings
-	_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
-	_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
-	_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
-	_config.set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
-	_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
-	_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+	# Try to migrate from res:// config first
+	if not _migrate_from_res_config():
+		print("[ConfigManager] No res:// config found, using hardcoded defaults")
 
-	# Set default format settings
-	_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
-	_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
-	_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
-	_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
-	_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
+		# Set default logger settings
+		_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+		_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
+		_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+
+		# Set default format settings
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
+		_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
 
 	# Set version marker
 	_config.set_value("meta", "version", 1)
+
+	# Save the migrated/default config to user:// on mobile platforms
+	if _is_mobile_platform():
+		var save_result = save()
+		if save_result == OK:
+			print("[ConfigManager] Successfully saved migrated config to user:// storage")
+		else:
+			print("[ConfigManager] Failed to save migrated config: %s" % error_string(save_result))
+
+## Attempts to migrate configuration from res:// to current config
+## Returns true if migration was successful, false otherwise
+func _migrate_from_res_config() -> bool:
+	# Create a temporary ConfigFile to load the res:// config
+	var res_config = ConfigFile.new()
+	print("[ConfigManager] Attempting to migrate config from res:// path: %s" % CONFIG_PATH)
+	print("[ConfigManager] res:// config file exists: %s" % FileAccess.file_exists(CONFIG_PATH))
+
+	var result = res_config.load(CONFIG_PATH)
+
+	if result != OK:
+		print("[ConfigManager] Failed to load res:// config for migration: %s" % error_string(result))
+		return false
+
+	print("[ConfigManager] Successfully loaded res:// config, migrating settings to mobile platform")
+
+	# Migrate logger settings
+	if res_config.has_section(SECTION_LOGGER):
+		var log_level = res_config.get_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+		_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, log_level)
+		print("[ConfigManager] Migrated log_level: %d" % log_level)
+
+		var active_tags = res_config.get_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, active_tags)
+
+		var ignored_tags = res_config.get_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, ignored_tags)
+
+		var available_tags = res_config.get_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
+		_config.set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, available_tags)
+
+		var buffer_size = res_config.get_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
+		_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, buffer_size)
+
+		var enable_buffer_dump = res_config.get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+		_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, enable_buffer_dump)
+
+	# Migrate format settings
+	if res_config.has_section(SECTION_FORMAT):
+		var show_timestamp = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, show_timestamp)
+
+		var show_tags = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, show_tags)
+
+		var use_colors = res_config.get_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
+		_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, use_colors)
+
+		var show_source = res_config.get_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, show_source)
+
+		var show_editor_debug = res_config.get_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
+		_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, show_editor_debug)
+
+	# Migrate tag setups if they exist (both new and legacy sections)
+	if res_config.has_section(SECTION_SETUPS):
+		print("[ConfigManager] Migrating tag_setups section")
+		var setup_keys = res_config.get_section_keys(SECTION_SETUPS)
+		for key in setup_keys:
+			var value = res_config.get_value(SECTION_SETUPS, key)
+			_config.set_value(SECTION_SETUPS, key, value)
+
+	# Also migrate legacy "setups" section if it exists
+	if res_config.has_section("setups"):
+		print("[ConfigManager] Migrating legacy setups section")
+		var legacy_keys = res_config.get_section_keys("setups")
+		for key in legacy_keys:
+			var value = res_config.get_value("setups", key)
+			_config.set_value(SECTION_SETUPS, key, value)
+
+	print("[ConfigManager] Successfully migrated configuration from res:// to mobile platform")
+	return true
 
 ## Upgrades configuration format if needed
 ## This ensures backward compatibility with older config formats
@@ -242,22 +348,32 @@ func set_value(section: String, key: String, value: Variant) -> void:
 func _get_platform_config_path() -> String:
 	# Check if platform-specific helpers are available
 	var platform = OS.get_name()
+	print("[ConfigManager] Platform detected: %s" % platform)
 
 	# Try to use Android helper if on Android
 	if platform == "Android":
 		var android_helper: Script = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
 		if android_helper:
-			return AndroidLoggerHelper.get_config_path()
-		return "user://advanced_logger_settings.cfg"
+			var config_path = android_helper.get_config_path()
+			print("[ConfigManager] Android helper loaded, config path: %s" % config_path)
+			return config_path
+		else:
+			print("[ConfigManager] Android helper failed to load, using fallback path")
+			return "user://advanced_logger_settings.cfg"
 
 	# Try to use iOS helper if on iOS
 	elif platform == "iOS":
 		var ios_helper: Script = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 		if ios_helper:
-			return IosLoggerHelper.get_config_path()
-		return "user://advanced_logger_settings.cfg"
+			var config_path = ios_helper.get_config_path()
+			print("[ConfigManager] iOS helper loaded, config path: %s" % config_path)
+			return config_path
+		else:
+			print("[ConfigManager] iOS helper failed to load, using fallback path")
+			return "user://advanced_logger_settings.cfg"
 
 	# Default path for desktop platforms
+	print("[ConfigManager] Desktop platform, using res:// config path: %s" % CONFIG_PATH)
 	return CONFIG_PATH
 
 ## Check if running on a mobile platform
