@@ -58,6 +58,7 @@ const TAG_APPLE: String = "apple"
 const TAG_RECONCILIATION : String = 'reconciliation'
 const TAG_ABILITY : String = 'ability'
 const TAG_EFFECT : String = 'effect'
+const TAG_DEEP_COPY : String = 'deep_copy'
 
 # Level tag constants
 const TAG_LEVEL_PREFIX: String = "level:"
