@@ -69,6 +69,16 @@ static func _initialize_battle(
 		{"allied_count": allied_lineup.size(), "enemy_count": enemies_lineup.size()},
 		[Log.TAG_BATTLE, Log.TAG_INITIALIZATION]
 	)
+
+	# Validate deterministic iteration for battle consistency
+	if not DictUtils.validate_deterministic_keys(allied_lineup):
+		Log.error(
+			"Allied lineup has non-deterministic keys", {}, [Log.TAG_BATTLE, Log.TAG_VALIDATION]
+		)
+	if not DictUtils.validate_deterministic_keys(enemies_lineup):
+		Log.error(
+			"Enemy lineup has non-deterministic keys", {}, [Log.TAG_BATTLE, Log.TAG_VALIDATION]
+		)
 	var dup_allies: Dictionary[int, UnitData] = duplicate_lineup_with_references(allied_lineup)
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, dup_allies
@@ -252,7 +262,9 @@ static func find_next_unactive_on_side(side: Side) -> int:
 		{"side_units": side.lineup.size()},
 		[Log.TAG_BATTLE, Log.TAG_COMBAT]
 	)
-	for pos: int in side.lineup:
+	# Use deterministic iteration for battle consistency
+	var positions: Array[int] = DictUtils.get_battle_positions(side.lineup)
+	for pos: int in positions:
 		var unit: UnitData = side.lineup[pos]
 		if !side.has_unit(unit):
 			return pos
@@ -312,7 +324,9 @@ static func solve_death_test(context: BattleContext) -> void:
 	Log.debug("Testing for unit deaths", {}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_RULES])
 	for is_allied: bool in [true, false]:
 		var side: Side = context.get_side(is_allied)
-		for pos: int in side.lineup:
+		# Use deterministic iteration for battle consistency
+		var positions: Array[int] = DictUtils.get_battle_positions(side.lineup)
+		for pos: int in positions:
 			var unit: UnitData = side.lineup[pos]
 			if unit.current_health <= 0:
 				var event: BattleContext.DeathEvent = BattleContext.DeathEvent.new(is_allied, pos)
@@ -368,7 +382,9 @@ static func duplicate_lineup_with_references(
 ) -> Dictionary[int, UnitData]:
 	var duplicated_lineup: Dictionary[int, UnitData] = {}
 
-	for position: int in lineup.keys():
+	# Use deterministic iteration for battle consistency
+	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
+	for position: int in positions:
 		var original_unit: UnitData = lineup[position]
 		var battle_copy: UnitData = duplicate_resource(original_unit)
 
@@ -405,13 +421,17 @@ static func duplicate_lineup_with_references(
 
 
 static func find_combat_target(lineup: Dictionary[int, UnitData]) -> UnitData:
-	for pos: int in lineup:
-		return lineup[pos]
+	# Use deterministic iteration for battle consistency
+	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
+	if positions.size() > 0:
+		return lineup[positions[0]]
 	return null
 
 
 static func get_pos_for_unit(lineup: Dictionary[int, UnitData], unit: UnitData) -> int:
-	for pos: int in lineup:
+	# Use deterministic iteration for battle consistency
+	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
+	for pos: int in positions:
 		if lineup[pos] == unit:
 			return pos
 	return NO_UNIT_FOUND
@@ -423,7 +443,9 @@ static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary[int, Un
 
 static func abstract_lineup(lineup: Dictionary) -> Dictionary[int, UnitData]:
 	var abs_lineup: Dictionary[int, UnitData] = {}
-	for pos: int in lineup.keys():
+	# Use deterministic iteration for battle consistency
+	var positions: Array = DictUtils.keys_sorted(lineup)
+	for pos: int in positions:
 		var card: Card = lineup[pos]
 		var unit_data: UnitData = card.unit_info
 

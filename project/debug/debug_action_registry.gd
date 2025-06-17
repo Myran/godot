@@ -118,12 +118,8 @@ func register_action(action: DebugAction) -> bool:
 
 # Public API methods for accessing registered actions
 func get_categories() -> Array[String]:
-	# Get all registered categories, sorted alphabetically
-	var categories: Array[String] = []
-	var keys_array: Array = _actions.keys()
-	categories.assign(keys_array)
-	categories.sort()
-	return categories
+	# Get all registered categories, sorted alphabetically using DictUtils
+	return DictUtils.keys_typed_sorted(_actions, TYPE_STRING)
 
 
 func get_groups_for_category(category_name: String) -> Array[String]:
@@ -132,11 +128,9 @@ func get_groups_for_category(category_name: String) -> Array[String]:
 		var empty_array: Array[String] = []
 		return empty_array
 
-	var groups: Array[String] = []
-	var keys_array: Array = _actions[category_name].keys()
-	groups.assign(keys_array)
+	# Use DictUtils for consistent sorting
+	var groups: Array[String] = DictUtils.keys_typed_sorted(_actions[category_name], TYPE_STRING)
 	groups.erase("_ungrouped")
-	groups.sort()
 	return groups
 
 

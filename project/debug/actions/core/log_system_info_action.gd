@@ -27,7 +27,7 @@ func log_system_info() -> bool:
 	}
 
 	var formatted_info: String = ""
-	for key: String in info.keys():
+	for key: String in DictUtils.keys_sorted(info):
 		formatted_info += key + ": " + str(info[key]) + "\n"
 
 	Log.info("System info collected by debug action", info, ["debug", "system"])

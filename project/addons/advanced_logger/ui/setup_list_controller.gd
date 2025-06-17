@@ -188,7 +188,7 @@ func load_setup(setup_name: String) -> Dictionary:
 		var all_setups = _setup_manager.get_all_setups()
 		var found_alternate = false
 
-		for existing_name in all_setups.keys():
+		for existing_name in DictUtils.keys_sorted(all_setups):
 			if existing_name.to_lower() == setup_name.to_lower():
 				if _setup_manager._config.get_show_editor_debug():
 					print_rich("[color=#%s]RECOVERY: Found case-insensitive match '%s' for '%s'[/color]" %

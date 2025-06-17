@@ -303,6 +303,8 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 	# Cleanup phase
 	await get_tree().create_timer(1.25).timeout
 	for side: Dictionary[int, Card] in [allied_units, enemy_units]:
-		for pos: int in side.keys():
+		# Use deterministic iteration for consistent cleanup order
+		var positions: Array[int] = DictUtils.keys_typed_sorted(side, TYPE_INT)
+		for pos: int in positions:
 			var unit: Card = side[pos]
 			unit.queue_free()

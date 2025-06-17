@@ -52,7 +52,7 @@ func stop_server() -> void:
 		tcp_server.stop()
 		
 		# Close all client connections
-		for client_id in peers.keys():
+		for client_id in DictUtils.keys_sorted(peers):
 			peers[client_id].close()
 		peers.clear()
 		pending_peers.clear()

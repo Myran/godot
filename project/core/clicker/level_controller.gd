@@ -121,7 +121,7 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 
 
 func get_grid_pos(block: Block) -> Vector2i:
-	for grid_pos: Vector2i in block_grid.keys():
+	for grid_pos: Vector2i in DictUtils.keys_sorted(block_grid):
 		if block_grid[grid_pos] == block:
 			return grid_pos
 	return Clicker.NO_POS
