@@ -8,7 +8,6 @@ extends RefCounted
 enum Code {
 	# Success case
 	NONE = 0,  # kAuthErrorNone - operation succeeded
-	
 	# Common auth errors (based on Firebase C++ SDK)
 	INVALID_CUSTOM_TOKEN = 1,
 	CUSTOM_TOKEN_MISMATCH = 2,
@@ -34,9 +33,11 @@ enum Code {
 	APP_NOT_AUTHORIZED = 22
 }
 
+
 ## Check if the error code represents success
 static func is_success(error_code: Code) -> bool:
 	return error_code == Code.NONE
+
 
 ## Get human-readable error message
 static func get_error_message(error_code: Code) -> String:
