@@ -6,15 +6,37 @@ const UNIT_HEALTH: String = "current_health"
 const NO_UNIT_FOUND: int = -1
 
 
+# Data class to hold battle results
+class BattleResult:
+	var events: Array[Context.Event]
+	var final_allied_units: Dictionary[int, UnitData]
+	var final_enemy_units: Dictionary[int, UnitData]
+	var final_dead_allied_units: Dictionary[int, UnitData]
+	var final_dead_enemy_units: Dictionary[int, UnitData]
+
+	func _init(
+		_events: Array[Context.Event],
+		_allied: Dictionary[int, UnitData],
+		_enemy: Dictionary[int, UnitData],
+		_dead_allied: Dictionary[int, UnitData] = {},
+		_dead_enemy: Dictionary[int, UnitData] = {}
+	) -> void:
+		events = _events
+		final_allied_units = _allied
+		final_enemy_units = _enemy
+		final_dead_allied_units = _dead_allied
+		final_dead_enemy_units = _dead_enemy
+
+
 func battle_start(
 	allies_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
-) -> Array[Context.Event]:
+) -> BattleResult:
 	return battle_solver(allies_lineup, enemies_lineup)
 
 
 func battle_solver(
 	allied_lineup: Dictionary[int, UnitData], enemies_lineup: Dictionary[int, UnitData]
-) -> Array[Context.Event]:
+) -> BattleResult:
 	var context: BattleContext = BattleContext.new(self)
 	_initialize_battle(context, allied_lineup, enemies_lineup)
 
@@ -23,7 +45,17 @@ func battle_solver(
 		if context.is_battle_ongoing():
 			process_turn(context)
 
-	return context.event_list
+	# Return both events and final unit states for reconciliation
+	# Note: Temporary abilities are preserved in final state so reconciliation
+	# can see what abilities influenced the battle outcome
+	# Include dead units so permanent effects on dead units are not lost
+	return BattleResult.new(
+		context.event_list,
+		context.allied_side.lineup,
+		context.enemy_side.lineup,
+		context.allied_side.dead_units,
+		context.enemy_side.dead_units
+	)
 
 
 static func _initialize_battle(
@@ -36,11 +68,11 @@ static func _initialize_battle(
 		{"allied_count": allied_lineup.size(), "enemy_count": enemies_lineup.size()},
 		[Log.TAG_BATTLE, Log.TAG_INITIALIZATION]
 	)
-	var dup_allies: Dictionary[int, UnitData] = duplicate_resource(allied_lineup)
+	var dup_allies: Dictionary[int, UnitData] = duplicate_lineup_with_references(allied_lineup)
 	var allies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		true, dup_allies
 	)
-	var dup_enemies: Dictionary[int, UnitData] = duplicate_resource(enemies_lineup)
+	var dup_enemies: Dictionary[int, UnitData] = duplicate_lineup_with_references(enemies_lineup)
 	var enemies_event: BattleContext.AddLineupEvent = BattleContext.AddLineupEvent.new(
 		false, dup_enemies
 	)
@@ -106,7 +138,10 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		context.mark_unit_activated(sel_unit)
 		Log.debug(
 			"Unit activated",
-			{"unit": sel_unit.card_info.id, "position": data.selected_unit_position},
+			{
+				"unit": sel_unit.card_info.get("id", "unknown"),
+				"position": data.selected_unit_position
+			},
 			[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
 		)
 		context.active_unit = sel_unit
@@ -227,7 +262,7 @@ static func find_next_unactive_on_side(side: Side) -> int:
 static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
 	Log.debug(
 		"Creating combat event",
-		{"attacker": attacker_unit.card_info.id},
+		{"attacker": attacker_unit.card_info.get("id", "unknown")},
 		[Log.TAG_BATTLE, Log.TAG_COMBAT]
 	)
 	var target_lineup: Dictionary[int, UnitData] = context.get_inactive_side().lineup
@@ -318,7 +353,52 @@ static func solve_win_conditions(context: BattleContext) -> void:
 
 # Utility functions
 static func duplicate_resource(res: Variant) -> Variant:
-	return str_to_var(var_to_str(res))
+	if res is Resource:
+		# Use Godot's proper deep copy for Resources
+		return res.duplicate(true)  # true = deep copy
+	else:
+		# Fallback for non-Resource types
+		return str_to_var(var_to_str(res))
+
+
+# Duplicate lineup while setting original references on battle copies
+static func duplicate_lineup_with_references(
+	lineup: Dictionary[int, UnitData]
+) -> Dictionary[int, UnitData]:
+	var duplicated_lineup: Dictionary[int, UnitData] = {}
+
+	for position: int in lineup.keys():
+		var original_unit: UnitData = lineup[position]
+		var battle_copy: UnitData = duplicate_resource(original_unit)
+
+		# Set the reference to the original unit
+		battle_copy.battle_original_reference = original_unit
+
+		# Manually copy effects_perm reference and current stats
+		battle_copy.effects_perm = original_unit.effects_perm
+		battle_copy.current_attack = original_unit.current_attack
+		battle_copy.current_health = original_unit.current_health
+
+		duplicated_lineup[position] = battle_copy
+
+		# Simple logging that won't crash the battle system
+		if OS.is_debug_build():
+			print(
+				"Battle copy: pos=",
+				position,
+				" orig=",
+				original_unit.current_attack,
+				"/",
+				original_unit.current_health,
+				" copy=",
+				battle_copy.current_attack,
+				"/",
+				battle_copy.current_health,
+				" effects=",
+				battle_copy.effects_perm.size()
+			)
+
+	return duplicated_lineup
 
 
 static func find_combat_target(lineup: Dictionary[int, UnitData]) -> UnitData:
@@ -341,5 +421,32 @@ static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary[int, Un
 static func abstract_lineup(lineup: Dictionary) -> Dictionary[int, UnitData]:
 	var abs_lineup: Dictionary[int, UnitData] = {}
 	for pos: int in lineup.keys():
-		abs_lineup[pos] = lineup[pos].unit_info
+		var card: Card = lineup[pos]
+		var unit_data: UnitData = card.unit_info
+
+		# Ensure UnitData has the current display stats from the card
+		# This is critical for enhanced/modified cards to show correct stats in battle
+		if card.base != null:
+			# Read the actual displayed values from the UI labels
+			var attack_label: Label = card.base.get_node("%label_attack")
+			var health_label: Label = card.base.get_node("%label_health")
+
+			if attack_label != null and attack_label.text != "":
+				unit_data.current_attack = int(attack_label.text)
+			if health_label != null and health_label.text != "":
+				unit_data.current_health = int(health_label.text)
+
+		# Log the sync for debugging
+		Log.debug(
+			"Battle copy sync",
+			{
+				"position": pos,
+				"original_stats":
+				str(unit_data.current_attack) + "/" + str(unit_data.current_health),
+				"display_synced": "true"
+			},
+			[Log.TAG_BATTLE, Log.TAG_INITIALIZATION, Log.TAG_CARD]
+		)
+
+		abs_lineup[pos] = unit_data
 	return abs_lineup

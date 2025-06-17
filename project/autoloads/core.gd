@@ -26,6 +26,21 @@ class CoreEvent:
 	extends Context.Event
 
 
+class StatEffectEvent:
+	extends CoreEvent
+
+	var target_card: Card
+	var health_bonus: int
+	var attack_bonus: int
+	var source: String
+
+	func _init(card: Card, health: int, attack: int, src: String) -> void:
+		target_card = card
+		health_bonus = health
+		attack_bonus = attack
+		source = src
+
+
 class RerollDraftEvent:
 	extends CoreEvent
 
@@ -153,9 +168,13 @@ class LineupMergeEvent:
 class BattleEvent:
 	extends CoreEvent
 	var battle_events: Array[Context.Event]
+	var battle_result: Battle.BattleResult = null
 
-	func _init(m_battle_events: Array[Context.Event]) -> void:
+	func _init(
+		m_battle_events: Array[Context.Event], m_battle_result: Battle.BattleResult = null
+	) -> void:
 		self.battle_events = m_battle_events
+		self.battle_result = m_battle_result
 
 
 class ResetUnitsEvent:
