@@ -187,6 +187,29 @@ func check_draft_abilities(
 		_ability.handle_draft_event(tempus, pos, u, context, event)
 
 
+# --- DEEP COPY HELPERS ---
+
+
+# Create a deep copy of the abilities array with proper state isolation
+func deep_duplicate_abilities() -> Array[Ability]:
+	var duplicated_abilities: Array[Ability] = []
+	for ability: Ability in abilities:
+		duplicated_abilities.append(ability.deep_duplicate())
+	return duplicated_abilities
+
+
+# Create a deep copy of the effects_perm array with proper state isolation
+func deep_duplicate_effects_perm() -> Array[Variant]:
+	var duplicated_effects: Array[Variant] = []
+	for effect: Variant in effects_perm:
+		if effect is StatEffect:
+			duplicated_effects.append(effect.deep_duplicate())
+		else:
+			# For non-StatEffect types, use standard duplication
+			duplicated_effects.append(effect.duplicate(true) if effect is Resource else effect)
+	return duplicated_effects
+
+
 # --- PERMANENT EFFECTS APPLICATION ---
 
 

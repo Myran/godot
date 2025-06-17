@@ -26,6 +26,15 @@ func handle_draft_event(
 	pass
 
 
+## Create a deep copy of this ability with proper state isolation
+## Override in subclasses that have mutable state requiring deep copying
+func deep_duplicate() -> Ability:
+	# Base implementation uses Godot's duplicate with deep copy
+	var copy: Ability = self.duplicate(true)
+	copy.persistence_type = self.persistence_type
+	return copy
+
+
 ## Debug method to trigger this ability's effect for testing purposes
 ## @param target_card: The card that should receive the ability's effect
 func debug_trigger_effect(_target_card: Card) -> bool:

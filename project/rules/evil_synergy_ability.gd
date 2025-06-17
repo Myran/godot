@@ -9,6 +9,13 @@ func _init(health_bonus: int = 1, attack_bonus: int = 1) -> void:
 	attack_per_evil = attack_bonus
 
 
+## Override deep_duplicate to ensure per-evil bonuses are properly copied
+func deep_duplicate() -> Ability:
+	var copy: EvilSynergyAbility = EvilSynergyAbility.new(health_per_evil, attack_per_evil)
+	copy.persistence_type = self.persistence_type
+	return copy
+
+
 func handle_battle_event(
 	_phase: core.Tempus,
 	_unit_position: int,

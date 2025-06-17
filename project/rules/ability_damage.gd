@@ -7,6 +7,13 @@ func _init(type: String) -> void:
 	damage_type = type
 
 
+## Override deep_duplicate to ensure damage type is properly copied
+func deep_duplicate() -> Ability:
+	var copy: AbilityDamage = AbilityDamage.new(damage_type)
+	copy.persistence_type = self.persistence_type
+	return copy
+
+
 func handle_battle_event(
 	_phase: core.Tempus,
 	_unit_pos: int,

@@ -375,29 +375,31 @@ static func duplicate_lineup_with_references(
 		# Set the reference to the original unit
 		battle_copy.battle_original_reference = original_unit
 
-		# Manually copy effects_perm reference and current stats
-		battle_copy.effects_perm = original_unit.effects_perm
+		# Perform deep copy of complex arrays to ensure proper state isolation
+		battle_copy.abilities = original_unit.deep_duplicate_abilities()
+		battle_copy.effects_perm = original_unit.deep_duplicate_effects_perm()
+
+		# Copy current stats (these are simple values)
 		battle_copy.current_attack = original_unit.current_attack
 		battle_copy.current_health = original_unit.current_health
 
 		duplicated_lineup[position] = battle_copy
 
-		# Simple logging that won't crash the battle system
-		if OS.is_debug_build():
-			print(
-				"Battle copy: pos=",
-				position,
-				" orig=",
-				original_unit.current_attack,
-				"/",
-				original_unit.current_health,
-				" copy=",
-				battle_copy.current_attack,
-				"/",
-				battle_copy.current_health,
-				" effects=",
-				battle_copy.effects_perm.size()
-			)
+		# Enhanced logging to track deep copy operations
+		Log.debug(
+			"Battle unit deep copy created",
+			{
+				"position": position,
+				"original_stats":
+				str(original_unit.current_attack) + "/" + str(original_unit.current_health),
+				"copy_stats":
+				str(battle_copy.current_attack) + "/" + str(battle_copy.current_health),
+				"abilities_copied": battle_copy.abilities.size(),
+				"effects_perm_copied": battle_copy.effects_perm.size(),
+				"deep_copy_isolation": "true"
+			},
+			[Log.TAG_BATTLE, Log.TAG_INITIALIZATION, Log.TAG_DEEP_COPY]
+		)
 
 	return duplicated_lineup
 

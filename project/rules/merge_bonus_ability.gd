@@ -9,6 +9,13 @@ func _init(bonus_health: int = 1, bonus_attack: int = 1) -> void:
 	attack_bonus = bonus_attack
 
 
+## Override deep_duplicate to ensure stat bonuses are properly copied
+func deep_duplicate() -> Ability:
+	var copy: MergeBonusAbility = MergeBonusAbility.new(health_bonus, attack_bonus)
+	copy.persistence_type = self.persistence_type
+	return copy
+
+
 func handle_battle_event(
 	_phase: core.Tempus,
 	_unit_position: int,
