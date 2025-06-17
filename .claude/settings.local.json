@@ -54,7 +54,9 @@
       "Bash(true)",
       "mcp__gemini-collab__server_info",
       "Bash(/Users/mattiasmyhrman/.local/bin/gdformat ./debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd)",
-      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --diff ./debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd)"
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --diff ./debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
