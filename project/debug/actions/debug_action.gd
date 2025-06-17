@@ -78,7 +78,14 @@ class Result:
 		metadata: Dictionary = {}
 	) -> DebugAction.Result:
 		return DebugAction.Result.new(
-			false, payload, "RESTART_PENDING", "RESTART_NEEDED", ErrorCategory.NONE, duration_ms, operation, metadata
+			false,
+			payload,
+			"RESTART_PENDING",
+			"RESTART_NEEDED",
+			ErrorCategory.NONE,
+			duration_ms,
+			operation,
+			metadata
 		)
 
 	static func new_failure(
@@ -626,13 +633,16 @@ static func set_test_context(test_id: String) -> void:
 	test_action_count = 0
 	test_success_count = 0
 	test_failure_count = 0
-	Log.info("DEBUG_TEST_START", {
-		"test_id": test_id,
-		"pid": OS.get_process_id(),
-		"timestamp": Time.get_datetime_string_from_system(),
-		"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
-		"platform": OS.get_name()
-	}, ["debug", "test", "start", "pid"])
+	Log.info(
+		"DEBUG_TEST_START",
+		{
+			"test_id": test_id,
+			"pid": OS.get_process_id(),
+			"timestamp": Time.get_datetime_string_from_system(),
+			"platform": OS.get_name()
+		},
+		["debug", "test", "start", "pid"]
+	)
 
 
 static func clear_test_context() -> void:
@@ -647,7 +657,6 @@ static func clear_test_context() -> void:
 				"failed_actions": test_failure_count,
 				"pid": OS.get_process_id(),
 				"timestamp": Time.get_datetime_string_from_system(),
-				"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
 				"duration_since_start": Time.get_datetime_string_from_system()
 			},
 			["debug", "test", "complete", "pid"]
@@ -723,20 +732,22 @@ func execute() -> void:
 		var process_id: int = OS.get_process_id()
 		if success:
 			test_success_count += 1
-			Log.info(
-				"DEBUG_TEST_SUCCESS",
-				{
-					"test_id": current_test_id,
-					"action": action_name,
-					"category": category,
-					"group": group,
-					"duration_ms": duration_ms,
-					"pid": process_id,
-					"sequence": test_success_count,
-					"timestamp": Time.get_datetime_string_from_system(),
-					"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024
-				},
-				["debug", "test", "success", "pid", "sequence"]
+			(
+				Log
+				. info(
+					"DEBUG_TEST_SUCCESS",
+					{
+						"test_id": current_test_id,
+						"action": action_name,
+						"category": category,
+						"group": group,
+						"duration_ms": duration_ms,
+						"pid": process_id,
+						"sequence": test_success_count,
+						"timestamp": Time.get_datetime_string_from_system(),
+					},
+					["debug", "test", "success", "pid", "sequence"]
+				)
 			)
 		else:
 			test_failure_count += 1
@@ -752,7 +763,6 @@ func execute() -> void:
 					"pid": process_id,
 					"sequence": test_failure_count,
 					"timestamp": Time.get_datetime_string_from_system(),
-					"memory_mb": OS.get_static_memory_usage_bytes() / 1024 / 1024,
 					"success_count_before_failure": test_success_count
 				},
 				["debug", "test", "failure", "pid", "sequence"]

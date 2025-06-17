@@ -1,3 +1,6 @@
 {
-  "actions": []
+  "description": "Minimal config for headless validation - launches and quits immediately",
+  "actions": [
+    "system.debug.quit_application"
+  ]
 }
