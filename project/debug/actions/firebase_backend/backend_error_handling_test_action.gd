@@ -182,5 +182,3 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"minimum_required_rate": 0.75
 			}
 		)
-
-

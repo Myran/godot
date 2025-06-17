@@ -125,5 +125,3 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"rapid_ok": rapid_ok
 			}
 		)
-
-

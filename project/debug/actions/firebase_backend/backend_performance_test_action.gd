@@ -134,7 +134,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"avg_sequential_ms": avg_sequential_duration,
 		"overhead_test_ms": overhead_duration,
 		"p95_latency_ms":
-		_calculate_p95_latency(_combine_duration_arrays(sequential_durations, single_duration, overhead_duration)),
+		_calculate_p95_latency(
+			_combine_duration_arrays(sequential_durations, single_duration, overhead_duration)
+		),
 		"total_operations": total_operations,
 		"successful_operations": successful_operations,
 		"success_rate": success_rate
@@ -187,10 +189,10 @@ func _calculate_p95_latency(durations: Array[int]) -> int:
 
 
 # Helper function to combine duration arrays with proper typing
-func _combine_duration_arrays(base_durations: Array[int], single_duration: int, overhead_duration: int) -> Array[int]:
+func _combine_duration_arrays(
+	base_durations: Array[int], single_duration: int, overhead_duration: int
+) -> Array[int]:
 	var combined_durations: Array[int] = base_durations.duplicate()
 	combined_durations.append(single_duration)
 	combined_durations.append(overhead_duration)
 	return combined_durations
-
-
