@@ -1194,6 +1194,147 @@ config-android-reset:
     echo "💡 App will use project defaults (DEBUG level) on next start"
     echo "💡 Restart app to apply: just restart-android-app"
 
+# Runtime app log control (advanced_logger) - Filter what gets written during app execution
+runtime-filter-tags ACTIVE_TAGS IGNORED_TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🏷️  Updating advanced_logger runtime tag filtering..."
+    echo "   Active tags: {{ACTIVE_TAGS}}"
+    echo "   Ignored tags: {{IGNORED_TAGS}}"
+    
+    # Parse comma-separated tags
+    IFS=',' read -ra ACTIVE_ARRAY <<< "{{ACTIVE_TAGS}}"
+    IFS=',' read -ra IGNORED_ARRAY <<< "{{IGNORED_TAGS}}"
+    
+    # Create temporary config file
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Build active tags array string
+    ACTIVE_FORMATTED=""
+    for tag in "${ACTIVE_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$ACTIVE_FORMATTED" ]; then
+                ACTIVE_FORMATTED="$ACTIVE_FORMATTED, "
+            fi
+            ACTIVE_FORMATTED="$ACTIVE_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Build ignored tags array string
+    IGNORED_FORMATTED=""
+    for tag in "${IGNORED_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$IGNORED_FORMATTED" ]; then
+                IGNORED_FORMATTED="$IGNORED_FORMATTED, "
+            fi
+            IGNORED_FORMATTED="$IGNORED_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Update active tags in config
+    sed -i '' "s/active_tags=Array\[String\](\[.*\])/active_tags=Array[String]([$ACTIVE_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Update ignored tags in config
+    sed -i '' "s/ignored_tags=Array\[String\](\[.*\])/ignored_tags=Array[String]([$IGNORED_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Auto-detect platform and push to device
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Pushing advanced_logger config to Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    else
+        echo "📱 Android device not found, config saved locally"
+    fi
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Advanced_logger runtime tag filtering updated!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Runtime app log level control (advanced_logger) - Set log level during app execution
+runtime-filter-level LEVEL:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Convert level name to number
+    case "{{LEVEL}}" in
+        DEBUG|debug)
+            LEVEL_NUM=0
+            LEVEL_NAME="DEBUG"
+            ;;
+        INFO|info)
+            LEVEL_NUM=1
+            LEVEL_NAME="INFO"
+            ;;
+        WARNING|warning|WARN|warn)
+            LEVEL_NUM=2
+            LEVEL_NAME="WARNING"
+            ;;
+        ERROR|error)
+            LEVEL_NUM=3
+            LEVEL_NAME="ERROR"
+            ;;
+        CRITICAL|critical)
+            LEVEL_NUM=4
+            LEVEL_NAME="CRITICAL"
+            ;;
+        *)
+            echo "❌ Invalid log level: {{LEVEL}}"
+            echo "💡 Valid levels: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+            exit 1
+            ;;
+    esac
+    
+    echo "📊 Setting advanced_logger runtime level to $LEVEL_NAME ($LEVEL_NUM)..."
+    
+    # Create temporary config file
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Update log level in config
+    sed -i '' "s/log_level=[0-9]/log_level=$LEVEL_NUM/g" "$TEMP_CONFIG"
+    
+    # Auto-detect platform and push to device
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Pushing advanced_logger config to Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    else
+        echo "📱 Android device not found, config saved locally"
+    fi
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Advanced_logger runtime level set to $LEVEL_NAME!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Runtime app log reset (advanced_logger) - Reset to project defaults
+runtime-filter-reset:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔄 Resetting advanced_logger runtime filtering to project defaults..."
+    
+    # Auto-detect platform and remove custom config
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Removing custom advanced_logger config from Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "rm -f /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg" 2>/dev/null || true
+    else
+        echo "📱 Android device not found, local config reset"
+    fi
+    
+    echo "✅ Advanced_logger runtime filtering reset!"
+    echo "💡 App will use project defaults (DEBUG level, all tags) on next start"
+    echo "💡 Restart app to apply: just restart-android-app"
+
 # List available debug configurations
 config-list:
     #!/usr/bin/env bash
@@ -2998,6 +3139,41 @@ build-ios-executable:
     echo "✅ iOS executable build complete"
 
 # Monitor Android debug logs in real-time with activity-based timeout
+# Platform log monitoring - Monitor live system/platform logs in real-time
+platform-logs-monitor DURATION="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📱 Monitoring live platform logs for {{DURATION}} seconds..."
+    echo "🔄 Timeout resets after each activity"
+    echo "Press Ctrl+C to stop early"
+    echo ""
+    
+    # Create timestamped log file
+    LOG_FILE="platform_monitor_{{timestamp}}.log"
+    
+    # Clear old logs for fresh monitoring
+    echo "🧹 Clearing old platform logs for fresh monitoring..."
+    
+    # Auto-detect platform and monitor accordingly
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Monitoring Android platform logs..."
+        adb -s {{ANDROID_DEVICE_ID}} logcat -c
+        # Use activity-based timeout monitoring
+        completion_status=$(just _monitor-with-activity-timeout "" "$LOG_FILE" "{{DURATION}}" "(debug|startup|DebugStartup|INFO)")
+    else
+        echo "📱 No Android device found for platform monitoring"
+        echo "💡 Connect Android device or implement iOS monitoring"
+        exit 1
+    fi
+    
+    # Apply filtering and display results
+    if [ -f "$LOG_FILE" ]; then
+        echo "📊 Platform log monitoring complete"
+        echo "📁 Logs saved to: $LOG_FILE"
+    else
+        echo "⚠️ No platform logs captured"
+    fi
+
 monitor-debug-logs DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -4209,3 +4385,266 @@ insert-firebase-dependencies:
     rm temp_dependencies.txt temp_plugin.txt temp_buildscript.txt   
 
     @echo "Firebase dependencies inserted successfully."
+
+# Wildcard patterns and development cycles guide
+help-wildcards:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🎯 Wildcard Patterns & Development Cycles Guide"
+    echo "=============================================="
+    echo ""
+    echo "🏗️ HIERARCHICAL ACTION NAMING"
+    echo "All 51+ debug actions use consistent naming: layer.domain.operation"
+    echo ""
+    echo "📱 LAYERS (First Part - Architecture)"
+    echo "  cpp.*              # C++ Firebase SDK (8 actions)"
+    echo "  backend.*          # Backend Firebase (7 actions)"
+    echo "  rtdb.*             # RTDB GDScript API (19 actions)"
+    echo "  system.*           # System utilities (5 actions)"
+    echo "  game.*             # Game logic (12 actions)"
+    echo ""
+    echo "🎯 DOMAINS (Middle Part - Functionality)"
+    echo "  *.firebase.*       # Firebase operations (database, auth, analytics)"
+    echo "  *.database.*       # Database operations (set, get, update, remove)"
+    echo "  *.paths.*          # Path operations (nested structures, hierarchies)"
+    echo "  *.children.*       # Children operations (list, push, manage)"
+    echo "  *.listeners.*      # Real-time listeners (single_value, child events)"
+    echo "  *.advanced.*       # Advanced operations (transactions, batching)"
+    echo "  *.testing.*        # Testing utilities (validation, error handling)"
+    echo "  *.debug.*          # Debug utilities (logging, stats, info)"
+    echo "  *.match.*          # Game match functionality (levels, scoring)"
+    echo "  *.network.*        # Network operations (connectivity, sync)"
+    echo "  *.storage.*        # Data storage operations (save, load, cache)"
+    echo ""
+    echo "⚙️ OPERATIONS (Last Part - Specific Actions)"
+    echo "  *.*.set_value      # Data writing operations"
+    echo "  *.*.get_value      # Data reading operations"
+    echo "  *.*.error_handling # Error handling and recovery"
+    echo "  *.*.performance    # Performance testing and optimization"
+    echo "  *.*.concurrent_ops # Concurrency and threading tests"
+    echo "  *.*.timeout_behavior # Timeout and reliability tests"
+    echo ""
+    echo "⚡ DEVELOPMENT CYCLES"
+    echo ""
+    echo "🚀 5-Second Iteration (Config Commands)"
+    echo "  just config-restart-android 'system.debug.registry_stats'"
+    echo "  just config-restart-android 'cpp.*'"
+    echo "  just config-restart-android '*.firebase.set_value'"
+    echo "  → Deploy config + restart app + test (5 seconds total)"
+    echo ""
+    echo "🔄 60-Second Validation (Build Commands)"
+    echo "  just fastbuild-android"
+    echo "  just test-android 'cpp.*'"
+    echo "  → Rebuild + deploy + test with full analysis (60 seconds)"
+    echo ""
+    echo "🎯 Progressive Testing Strategy"
+    echo "  1. Layer-focused: 'cpp.*', 'backend.*', 'rtdb.*'"
+    echo "  2. Domain-focused: '*.firebase.*', '*.debug.*'"
+    echo "  3. Operation-focused: '*.*.performance', '*.*.error_handling'"
+    echo ""
+    echo "💡 PRACTICAL EXAMPLES"
+    echo ""
+    echo "  # Test Firebase functionality across all layers"
+    echo "  just test-android '*.firebase.*'"
+    echo "  just logs TEST_ID firebase"
+    echo ""
+    echo "  # Debug error handling implementations"
+    echo "  just test-android '*.*.error_handling'"
+    echo "  just logs-errors-tagged TEST_ID"
+    echo ""
+    echo "  # Performance optimization workflow"
+    echo "  just config-restart-android '*.*.performance'"
+    echo "  just logs-performance-tagged TEST_ID"
+
+# Log analysis and token efficiency guide
+help-logs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📊 Log Analysis & Token Efficiency Guide"
+    echo "======================================="
+    echo ""
+    echo "🎯 TOKEN EFFICIENCY DECISION TREE"
+    echo ""
+    echo "🚨 Step 1: Quick Error Scan (5 sec, <10 tokens)"
+    echo "  just logs-errors-tagged TEST_ID"
+    echo "  → 98% token savings, instant error detection"
+    echo "  → If errors found: follow error patterns below"
+    echo "  → If no errors: proceed to Step 2"
+    echo ""
+    echo "🔍 Step 2: Component Analysis (15 sec, <100 tokens)"
+    echo "  just logs TEST_ID [component]"
+    echo "  → 87-95% token savings vs full logs"
+    echo "  → Focus on specific system components"
+    echo ""
+    echo "🔬 Step 3: Precision Analysis (<200 tokens)"
+    echo "  just logs TEST_ID [component] [operation] [status]"
+    echo "  → Multi-tag filtering for surgical analysis"
+    echo ""
+    echo "📋 AVAILABLE LOG COMMANDS"
+    echo ""
+    echo "🏷️ Tag-Filtered Commands (Recommended)"
+    echo "  just logs TEST_ID [tags...]                   # Universal filtering"
+    echo "  just logs-errors-tagged TEST_ID [tags...]     # Error-focused (98% savings)"
+    echo "  just logs-performance-tagged TEST_ID [tags...] # Performance analysis"
+    echo "  just logs-lifecycle-tagged TEST_ID [tags...]  # App lifecycle events"
+    echo ""
+    echo "📊 Traditional Commands (High Token Cost)"
+    echo "  just logs TEST_ID                            # Full logs (use sparingly)"
+    echo "  just logs-android-results TEST_ID            # Results summary only"
+    echo "  just logs-android-recent                     # Recent test runs"
+    echo ""
+    echo "🎯 COMMON DEBUGGING PATTERNS"
+    echo ""
+    echo "🔥 Firebase Issues"
+    echo "  Symptoms: 'Firebase timeout', 'Connection refused', 'Auth failed'"
+    echo "  Debug: just logs-errors-tagged TEST_ID firebase"
+    echo "  Analyze: just logs TEST_ID firebase error"
+    echo ""
+    echo "⚔️ Battle Determinism"
+    echo "  Symptoms: 'expectedHash mismatch', 'VALIDATION MODE failed'"
+    echo "  Debug: just logs TEST_ID battle determinism"
+    echo "  Analyze: just logs TEST_ID battle validation"
+    echo ""
+    echo "⚡ Performance Issues"
+    echo "  Symptoms: Slow execution, timeouts"
+    echo "  Debug: just logs-performance-tagged TEST_ID"
+    echo "  Analyze: just logs-performance-tagged TEST_ID [component]"
+    echo ""
+    echo "🔄 System Startup"
+    echo "  Symptoms: Initialization failures, registry errors"
+    echo "  Debug: just logs TEST_ID system startup"
+    echo "  Analyze: just logs TEST_ID system debug initialization"
+    echo ""
+    echo "💡 TOKEN EFFICIENCY EXAMPLES"
+    echo ""
+    echo "  # Get recent test IDs first:"
+    echo "  just logs-android-recent                           # List available test IDs"
+    echo ""
+    echo "  # 98% token savings - error-first debugging"
+    echo "  just logs-errors-tagged test_20250618_132337_a36253d9                    # <10 tokens"
+    echo "  just logs-errors-tagged test_20250618_132337_a36253d9 Firebase           # <10 tokens"
+    echo ""
+    echo "  # 87-95% token savings - component-focused"
+    echo "  just logs test_20250618_132337_a36253d9 firebase                         # ~100 tokens"
+    echo "  just logs test_20250618_132337_a36253d9 backend                          # ~100 tokens"
+    echo "  just logs test_20250618_132337_a36253d9 debug test                       # ~50 tokens"
+    echo ""
+    echo "  # Precision analysis - multiple tags"
+    echo "  just logs test_20250618_132337_a36253d9 firebase rtdb                    # ~50 tokens"
+    echo "  just logs-performance-tagged test_20250618_132337_a36253d9 backend       # ~100 tokens"
+    echo ""
+    echo "  # Compare to traditional approach"
+    echo "  just logs test_20250618_132337_a36253d9                                  # 2000+ tokens"
+
+# Config management workflow guide
+help-config:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Config Management Workflow Guide"
+    echo "==================================="
+    echo ""
+    echo "🎯 CONFIG TYPES & AUTO-DETECTION"
+    echo ""
+    echo "📄 Config Files (*.json in configs/)"
+    echo "  just config-restart-android minimal-testing    # Uses configs/minimal-testing.json"
+    echo "  just config-push-android system-testing        # Push system-testing.json (2 sec)"
+    echo "  just config-set performance-testing             # Set as embedded default"
+    echo ""
+    echo "🎬 Single Actions (Direct Action Names)"
+    echo "  just config-restart-android 'Show Registry Stats'     # Single action"
+    echo "  just config-restart-android 'Backend Performance Test' # Single action"
+    echo "  → System creates temporary config automatically"
+    echo ""
+    echo "🎯 Wildcard Patterns (Auto-Discovery)"
+    echo "  just config-restart-android 'cpp.*'                   # All C++ actions"
+    echo "  just config-restart-android '*.firebase.*'            # All Firebase operations"
+    echo "  just config-restart-android '*.*.performance'         # All performance tests"
+    echo "  → System discovers matching actions and creates temporary config"
+    echo ""
+    echo "📋 Test Lists (Predefined Workflows)"
+    echo "  just config-restart-android development-workflow       # Uses test-lists/development-workflow.json"
+    echo "  just config-restart-android pre-commit                 # Uses test-lists/pre-commit.json"
+    echo ""
+    echo "⚡ ULTRA-FAST ITERATION CYCLES"
+    echo ""
+    echo "🚀 5-Second Config Cycles (No Rebuild)"
+    echo "  just config-restart-android TARGET"
+    echo "  → Push config (1 sec) + restart app (1 sec) + ready to test (3 sec buffer)"
+    echo "  → Perfect for rapid iteration during development"
+    echo ""
+    echo "⚙️ 2-Second Config Push (No Restart)"
+    echo "  just config-push-android TARGET"
+    echo "  → Deploy config only, manual restart needed"
+    echo "  → Use when you want to queue multiple configs"
+    echo ""
+    echo "🔄 60-Second Full Rebuild Cycle"
+    echo "  just fastbuild-android"
+    echo "  → Full rebuild + deploy + install (when code changes)"
+    echo ""
+    echo "📱 ANDROID LOGGER CONFIGURATION"
+    echo ""
+    echo "🏷️ Runtime Tag Control (No Rebuild Required)"
+    echo "  just config-android-tags \"firebase,battle\" \"cache,animation\""
+    echo "  → Focus on specific components, filter noise"
+    echo "  → Changes apply after app restart"
+    echo ""
+    echo "📊 Log Level Control"
+    echo "  just config-android-level DEBUG         # Full debugging"
+    echo "  just config-android-level INFO          # Reduce debug noise"
+    echo "  just config-android-level ERROR         # Errors only"
+    echo ""
+    echo "🔄 Apply Logger Changes"
+    echo "  just restart-android-app                # Apply new logger settings"
+    echo "  just config-android-reset               # Reset to project defaults"
+    echo ""
+    echo "💡 WORKFLOW EXAMPLES"
+    echo ""
+    echo "🔥 Firebase Development Workflow"
+    echo "  # 1. Focus logger on Firebase components"
+    echo "  just config-android-tags \"firebase,error\" \"cache,debug\""
+    echo "  just restart-android-app"
+    echo ""
+    echo "  # 2. Rapid Firebase testing (5-second cycles)"
+    echo "  just config-restart-android '*.firebase.set_value'"
+    echo "  just config-restart-android '*.firebase.get_value'"
+    echo "  just config-restart-android 'backend.firebase.*'"
+    echo ""
+    echo "  # 3. Efficient debugging"
+    echo "  just logs-errors-tagged TEST_ID firebase"
+    echo "  just logs TEST_ID firebase rtdb"
+    echo ""
+    echo "⚔️ Battle System Development"
+    echo "  # 1. Focus on battle determinism"
+    echo "  just config-android-tags \"battle,validation\" \"cache\""
+    echo "  just restart-android-app"
+    echo ""
+    echo "  # 2. Test battle mechanics (5-second cycles)"
+    echo "  just config-restart-android 'game.match.*'"
+    echo "  just config-restart-android '*.*.determinism'"
+    echo ""
+    echo "  # 3. Debug battle issues"
+    echo "  just logs TEST_ID battle determinism"
+    echo "  just logs-performance-tagged TEST_ID battle"
+    echo ""
+    echo "🎯 CONFIGURATION MANAGEMENT"
+    echo ""
+    echo "📋 List & Status Commands"
+    echo "  just config-list                    # List available configs"
+    echo "  just config-status-android          # Check current config status"
+    echo "  just config-setup                   # Create sample debug configurations"
+    echo ""
+    echo "🔄 Config State Management"
+    echo "  just config-set TARGET              # Set as embedded default"
+    echo "  just config-clear-android           # Clear external config, use embedded"
+    echo ""
+    echo "💡 DECISION MATRIX"
+    echo ""
+    echo "  Use config-restart-android when:"
+    echo "  ✅ Testing specific functionality (5-second cycles)"
+    echo "  ✅ No code changes, only testing different scenarios"
+    echo "  ✅ Want immediate feedback without rebuild"
+    echo ""
+    echo "  Use fastbuild-android when:"
+    echo "  ✅ Made code changes that need compilation"
+    echo "  ✅ Need full validation with fresh build"
+    echo "  ✅ Deploying for comprehensive testing"

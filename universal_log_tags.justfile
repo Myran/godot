@@ -89,11 +89,11 @@ logs-errors-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by errors
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "ERROR\|FAILURE\|error\|failure\|RESTART_NEEDED" || echo "✅ No errors in filtered logs"
+        grep "$tag_pattern" "$LOG_FILE" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
     else
         echo "📊 All error types:"
         echo ""
-        grep -E "ERROR\|FAILURE\|error\|failure\|RESTART_NEEDED" "$LOG_FILE" || echo "✅ No errors found"
+        grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" "$LOG_FILE" | head -20 || echo "✅ No errors found"
     fi
 
 # Performance with optional tag filtering  
@@ -136,11 +136,11 @@ logs-performance-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by performance data
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "duration_ms\|memory_mb\|performance" | head -20
+        grep "$tag_pattern" "$LOG_FILE" | grep -E "duration_ms|memory_mb|performance" | head -20 || echo "No performance data found with specified tags"
     else
         echo "📊 All performance data:"
         echo ""
-        grep -E "duration_ms\|memory_mb\|performance" "$LOG_FILE" | head -20
+        grep -E "duration_ms|memory_mb|performance" "$LOG_FILE" | head -20 || echo "No performance data found"
     fi
 
 # Lifecycle with optional tag filtering
@@ -183,9 +183,25 @@ logs-lifecycle-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by lifecycle events
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "DEBUG_TEST_START\|DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE\|DEBUG_TEST_COMPLETE\|DEBUG_TEST_RESTART" || echo "⚠️ No lifecycle events in filtered logs"
+        grep "$tag_pattern" "$LOG_FILE" | grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" | head -20 || echo "⚠️ No lifecycle events in filtered logs"
     else
         echo "📊 All lifecycle events:"
         echo ""
-        grep -E "DEBUG_TEST_START\|DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE\|DEBUG_TEST_COMPLETE\|DEBUG_TEST_RESTART" "$LOG_FILE" || echo "⚠️ No lifecycle events found"
+        grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" "$LOG_FILE" | head -20 || echo "⚠️ No lifecycle events found"
     fi
+
+# ================================
+# TEST LOG ANALYSIS COMMANDS - Clear naming for saved test log analysis
+# ================================
+
+# Test log analysis - Universal filtering of saved test logs  
+test-logs TEST_ID *TAGS: (logs TEST_ID TAGS)
+
+# Test log error analysis - Error-focused analysis of saved test logs
+test-logs-errors TEST_ID *TAGS: (logs-errors-tagged TEST_ID TAGS)
+
+# Test log performance analysis - Performance analysis of saved test logs
+test-logs-performance TEST_ID *TAGS: (logs-performance-tagged TEST_ID TAGS)
+
+# Test log lifecycle analysis - Lifecycle analysis of saved test logs
+test-logs-lifecycle TEST_ID *TAGS: (logs-lifecycle-tagged TEST_ID TAGS)
