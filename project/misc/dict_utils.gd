@@ -62,7 +62,7 @@ static func get_sorted_items(dict: Dictionary) -> Array[Dictionary]:
 	keys.sort()
 
 	var items: Array[Dictionary] = []
-	for key in keys:
+	for key: Variant in keys:
 		items.append({"key": key, "value": dict[key]})
 
 	return items
@@ -109,7 +109,7 @@ static func values_sorted(dict: Dictionary) -> Array:
 	var sorted_keys: Array = keys_sorted(dict)
 	var values_array: Array = []
 
-	for key in sorted_keys:
+	for key: Variant in sorted_keys:
 		values_array.append(dict[key])
 
 	return values_array
@@ -123,17 +123,17 @@ static func values_typed_sorted(dict: Dictionary, type: Variant.Type) -> Array:
 	match type:
 		TYPE_INT:
 			var typed_values: Array[int] = []
-			for key in sorted_keys:
+			for key: Variant in sorted_keys:
 				typed_values.append(dict[key])
 			return typed_values
 		TYPE_STRING:
 			var typed_values: Array[String] = []
-			for key in sorted_keys:
+			for key: Variant in sorted_keys:
 				typed_values.append(dict[key])
 			return typed_values
 		TYPE_OBJECT:
 			var typed_values: Array[RefCounted] = []
-			for key in sorted_keys:
+			for key: Variant in sorted_keys:
 				typed_values.append(dict[key])
 			return typed_values
 		_:
@@ -154,10 +154,10 @@ static func transform_dict(
 	var result: Dictionary = {}
 	var sorted_keys: Array = keys_sorted(dict)
 
-	for key in sorted_keys:
-		var value = dict[key]
-		var new_key = key_func.call(key) if key_func.is_valid() else key
-		var new_value = value_func.call(key, value) if value_func.is_valid() else value
+	for key: Variant in sorted_keys:
+		var value: Variant = dict[key]
+		var new_key: Variant = key_func.call(key) if key_func.is_valid() else key
+		var new_value: Variant = value_func.call(key, value) if value_func.is_valid() else value
 		result[new_key] = new_value
 
 	return result
@@ -169,8 +169,8 @@ static func filter_dict(dict: Dictionary, predicate: Callable) -> Dictionary:
 	var result: Dictionary = {}
 	var sorted_keys: Array = keys_sorted(dict)
 
-	for key in sorted_keys:
-		var value = dict[key]
+	for key: Variant in sorted_keys:
+		var value: Variant = dict[key]
 		if predicate.call(key, value):
 			result[key] = value
 
@@ -183,8 +183,8 @@ static func deterministic_hash(dict: Dictionary) -> String:
 	var sorted_keys: Array = keys_sorted(dict)
 	var hash_parts: Array[String] = []
 
-	for key in sorted_keys:
-		var value = dict[key]
+	for key: Variant in sorted_keys:
+		var value: Variant = dict[key]
 		var key_str: String = str(key)
 		var value_str: String = str(value)
 		hash_parts.append("%s:%s" % [key_str, value_str])
@@ -203,7 +203,7 @@ static func validate_deterministic_keys(dict: Dictionary) -> bool:
 		return true
 
 	var first_key_type: int = typeof(keys_array[0])
-	for key in keys_array:
+	for key: Variant in keys_array:
 		if typeof(key) != first_key_type:
 			Log.warning(
 				"DictUtils: Mixed key types detected - iteration may not be deterministic",
@@ -221,7 +221,7 @@ static func make_deterministic(dict: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
 	var sorted_keys: Array = keys_sorted(dict)
 
-	for key in sorted_keys:
+	for key: Variant in sorted_keys:
 		result[key] = dict[key]
 
 	return result
@@ -236,7 +236,7 @@ static func debug_print_sorted(dict: Dictionary, label: String = "Dictionary") -
 	)
 
 	var sorted_keys: Array = keys_sorted(dict)
-	for key in sorted_keys:
+	for key: Variant in sorted_keys:
 		Log.debug("  [%s] -> %s" % [str(key), str(dict[key])], {}, [Log.TAG_DEBUG])
 
 
@@ -246,9 +246,9 @@ static func merge_dicts_deterministic(dicts: Array[Dictionary]) -> Dictionary:
 	var result: Dictionary = {}
 
 	# Process dictionaries in order
-	for dict in dicts:
+	for dict: Dictionary in dicts:
 		var sorted_keys: Array = keys_sorted(dict)
-		for key in sorted_keys:
+		for key: Variant in sorted_keys:
 			result[key] = dict[key]
 
 	return result
@@ -276,7 +276,7 @@ static func get_battle_lineup_pairs(lineup: Dictionary) -> Array:
 	var pairs: Array = []
 	var sorted_positions: Array[int] = get_battle_positions(lineup)
 
-	for pos in sorted_positions:
+	for pos: int in sorted_positions:
 		pairs.append([pos, lineup[pos]])
 
 	return pairs

@@ -1218,8 +1218,8 @@ config-list:
     
     echo "💡 Usage:"
     echo "  just config-restart-android <name>  # Quick testing (5 sec) ⚡"
-    echo "  just test-android <name>            # Full testing with auto-detection"
-    echo "  just test-android-enhanced <name>   # Enhanced analysis with error categorization"
+    echo "  just test-android                   # Interactive test chooser (fzf)"
+    echo "  just test-android-target <name>     # Full testing with auto-detection"
     echo "  just test-android-trace <name>      # Debug mode: shows validation/config steps"
     echo "  just config-set <name>              # Set as default config"
 
@@ -1610,18 +1610,36 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
                 continue
             fi
             
+            # Count interim results and check for new activity
+            # Primary method: Look for DEBUG_TEST_SUCCESS/FAILURE with test ID
+            success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            
+            # Fallback method: If no test ID matches found, count completion messages (for when test context isn't set)
+            if [ "$success_count" -eq 0 ] && [ "$failure_count" -eq 0 ]; then
+                success_count=$(grep -c "🔄  Completed:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+                failure_count=$(grep -c "🔄  ERROR:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            fi
+            
+            # Check for action completions (SUCCESS/FAILURE) to reset timer on each action completion
+            if [ "$success_count" -gt 0 ] || [ "$failure_count" -gt 0 ]; then
+                current_activity_count=$((success_count + failure_count))
+            else
+                current_activity_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID\|DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            fi
+            
             # Check for test completion (after restart signal check)
             if grep -q "DEBUG_TEST_COMPLETE.*$TEST_ID" "$log_file" 2>/dev/null; then
                 test_complete=true
                 break
             fi
             
-            # Count interim results and check for new activity
-            success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
-            failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
-            
-            # Check for action completions (SUCCESS/FAILURE) to reset timer on each action completion
-            current_activity_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID\|DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            # Fallback completion detection: if we have some completed actions and no activity for a few seconds
+            if [ "$current_activity_count" -gt 0 ] && [ "$time_since_last_activity" -ge 5 ]; then
+                test_complete=true
+                echo "   ✅ Actions completed with no activity for 5s, finishing test"
+                break
+            fi
             
             # Reset timeout if new activity detected
             if [ "$current_activity_count" -gt "$last_activity_count" ]; then
@@ -1651,9 +1669,17 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
     # Parse final results
     if [ -f "$log_file" ]; then
         # Parse final results (clean output)
+        # Primary method: Look for DEBUG_TEST_SUCCESS/FAILURE with test ID
         success_count=$(grep -c "DEBUG_TEST_SUCCESS.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
         failure_count=$(grep -c "DEBUG_TEST_FAILURE.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
         startup_count=$(grep -c "debug.*startup.*$TEST_ID\|DEBUG_TEST_START.*$TEST_ID" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        
+        # Fallback method: If no test ID matches found, count completion messages (for when test context isn't set)
+        if [ "$success_count" -eq 0 ] && [ "$failure_count" -eq 0 ]; then
+            success_count=$(grep -c "🔄  Completed:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            failure_count=$(grep -c "🔄  ERROR:" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+            startup_count=$(grep -c "🔄  Executing" "$log_file" 2>/dev/null | head -1 | tr -d '\n\r' || echo "0")
+        fi
         
         # Ensure variables are integers (strip any whitespace/newlines and validate)
         success_count=$(echo "$success_count" | tr -d ' \t\n\r' | grep -E '^[0-9]+$' || echo "0")
@@ -1668,25 +1694,9 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
         
         # Show individual action results
         echo "📋 Individual Action Results:"
-        if [ "$success_count" -gt 0 ] || [ "$failure_count" -gt 0 ]; then
-            # Extract and display individual action results
-            action_lines=$(grep "$TEST_ID" "$log_file" 2>/dev/null | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE")
-            if [ -n "$action_lines" ]; then
-                echo "$action_lines" | while read -r line; do
-                    if echo "$line" | grep -q "DEBUG_TEST_SUCCESS"; then
-                        status="✅"
-                    else
-                        status="❌"
-                    fi
-                    action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
-                    duration=$(echo "$line" | grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1/')
-                    echo "  $status $action (${duration}ms)"
-                done | sort
-            else
-                echo "  (no detailed action results found)"
-            fi
-        else
-            echo "  (no actions executed)"
+        echo "  ✅ $success_count actions completed successfully"
+        if [ "$failure_count" -gt 0 ]; then
+            echo "  ❌ $failure_count actions failed"
         fi
         echo ""
         
@@ -1999,8 +2009,8 @@ _test-config-android-enhanced CONFIG_NAME DURATION="30" NO_RESTART="false": (_va
                             category=" [SYSTEM]"
                         fi
                     fi
-                    action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
-                    duration=$(echo "$line" | grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1/')
+                    action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/' || echo "unknown")
+                    duration=$(echo "$line" | grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1/' || echo "0")
                     
                     # Performance analysis
                     if [ -n "$duration" ] && [ "$duration" -gt 0 ]; then
@@ -2325,12 +2335,12 @@ _test-list-android TEST_LIST_NAME="default-all":
 # 🔍 TRACE MODE: Shows detailed validation/config steps for debugging
 # Perfect for understanding how the testing system processes different input types
 test-android-trace TARGET DURATION="30":
-    just test-android "{{TARGET}}" "{{DURATION}}" "false" "true"
+    just test-android-target "{{TARGET}}" "{{DURATION}}" "false" "true"
 
 
 # 🚀 ENHANCED: Auto-discover and run ALL tests using wildcards
 # Unified testing command with auto-detection of target type
-test-android TARGET DURATION="30" NO_RESTART="false" TRACE="false":
+test-android-target TARGET DURATION="30" NO_RESTART="false" TRACE="false":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -2535,10 +2545,93 @@ test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
     just _test-list-android default-all
 
-test-all-android-enhanced:
-    echo "🚀 Complete Test Suite - Full system validation with enhanced analysis"
-    just test-android-enhanced default-all
+# Interactive test chooser using fzf (like just --choose)
+# Shows all debug configs and test lists with descriptions for easy selection
+test-android:
+    #!/usr/bin/env bash
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "❌ 'fzf' command not found. Install with: brew install fzf"
+        echo "💡 Using fallback: just test-android-manual"
+        just test-android-manual
+        exit $?
+    fi
+    
+    # Build options with category prefixes and descriptions
+    options=()
+    
+    # Add debug configs with 🔧 prefix
+    for file in project/debug_configs/*.json; do
+        name=$(basename "$file" .json)
+        desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+        options+=("🔧 $name - $desc")
+    done
+    
+    # Add test lists with 📝 prefix  
+    for file in project/test-lists/*.json; do
+        name=$(basename "$file" .json)
+        desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
+        options+=("📝 $name - $desc")
+    done
+    
+    # Use fzf to select with nice formatting
+    selected_line=$(printf '%s\n' "${options[@]}" | fzf \
+        --prompt="Select test: " \
+        --height=~80% \
+        --layout=reverse \
+        --border \
+        --preview-window=hidden \
+        --header="🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter")
+    
+    if [ -n "$selected_line" ]; then
+        # Extract the name (between prefix and description)
+        selected=$(echo "$selected_line" | sed -E 's/^[📝🔧] ([^ ]+) - .*/\1/')
+        echo "Running: just test-android-target '$selected'"
+        just test-android-target "$selected"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
 
+test-android-manual:
+    #!/usr/bin/env bash
+    echo "📋 Select a test to run:"
+    echo ""
+    
+    # Build arrays of files and descriptions
+    configs=()
+    descriptions=()
+    
+    # Add debug configs
+    echo "🔧 Debug Configurations:"
+    for file in project/debug_configs/*.json; do
+        name=$(basename "$file" .json)
+        desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+        configs+=("$name")
+        descriptions+=("$desc")
+        printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
+    done
+    
+    echo ""
+    echo "📝 Test Lists:"
+    for file in project/test-lists/*.json; do
+        name=$(basename "$file" .json)
+        desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
+        configs+=("$name")
+        descriptions+=("$desc")
+        printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
+    done
+    
+    echo ""
+    read -p "Enter number (1-${#configs[@]}): " choice
+    
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#configs[@]}" ]; then
+        selected="${configs[$((choice-1))]}"
+        echo "Running: just test-android-target '$selected'"
+        just test-android-target "$selected"
+    else
+        echo "❌ Invalid selection"
+        exit 1
+    fi
 
 # Essential test suite commands - focused workflows
 _test-smoke-android:

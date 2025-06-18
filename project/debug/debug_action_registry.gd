@@ -129,7 +129,8 @@ func get_groups_for_category(category_name: String) -> Array[String]:
 		return empty_array
 
 	# Use DictUtils for consistent sorting
-	var groups: Array[String] = DictUtils.keys_typed_sorted(_actions[category_name], TYPE_STRING)
+	var category_dict: Dictionary = _actions[category_name]
+	var groups: Array[String] = DictUtils.keys_typed_sorted(category_dict, TYPE_STRING)
 	groups.erase("_ungrouped")
 	return groups
 

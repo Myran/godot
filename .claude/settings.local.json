@@ -58,7 +58,19 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "mcp__Context7__resolve-library-id",
-      "mcp__Context7__get-library-docs"
+      "mcp__Context7__get-library-docs",
+      "Bash(__NEW_LINE__ echo \"1️⃣ Testing config-android-tags command:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n2️⃣ Testing config-android-level command:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n3️⃣ Testing config-android-reset command:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n✅ All logger configuration commands tested successfully!\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n1️⃣ Testing basic just commands:\")",
+      "Bash(/dev/null)",
+      "Bash(__NEW_LINE__ echo -e \"\\n2️⃣ Testing help commands:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n3️⃣ Testing config commands:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n1️⃣ Testing config commands that might have issues:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n2️⃣ Testing build status command:\")",
+      "Bash(__NEW_LINE__ echo -e \"\\n3️⃣ Testing validation commands:\")",
+      "Bash(command -v:*)"
     ],
     "deny": []
   }
