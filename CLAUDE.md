@@ -13,6 +13,7 @@ just format                                # Format GDScript files
 # 2. Test Changes (choose appropriate level)
 just run-desktop                           # Instant local testing (0 sec)
 just test-android 'system.*'              # Test system layer (30 sec)
+just test-android-target lineup-checksum-test # Validate game state consistency (30 sec)
 just test-android development-workflow     # Full development validation
 
 # 3. Quick Debug (if issues)
@@ -46,6 +47,7 @@ Issue Detected?
 │       ├── Firebase issues → just logs TEST_ID firebase
 │       ├── Battle/Game issues → just logs TEST_ID battle  
 │       ├── System issues → just logs TEST_ID system
+│       ├── State validation → just logs TEST_ID checksum
 │       └── Debug framework → just logs TEST_ID debug test
 │
 └── 🔬 Step 3: Precision Analysis (if needed, <200 tokens)
@@ -73,6 +75,11 @@ Issue Detected?
 **Symptoms:** Initialization failures, registry errors  
 **Debug:** `just logs TEST_ID system startup`  
 **Fix:** `just test-android 'system.debug.*'`
+
+### **🧪 State Validation**
+**Symptoms:** `CHECKSUM_MISMATCH`, game state inconsistencies  
+**Debug:** `just logs TEST_ID checksum`  
+**Fix:** Validate changes or update baseline in config JSON
 
 ## 🏷️ Token-Efficient Log Commands
 
@@ -425,6 +432,55 @@ just validate-godot "INFO.*debug"        # Custom filter patterns
 - **Issue → Fix:** < 10 minutes (decision tree + patterns)
 - **Syntax Check:** < 5 seconds (`validate`)
 
+## 🧪 Checksum Snapshot Testing
+
+### **Automated State Validation**
+**Validate game state consistency using MD5 checksums for regression testing:**
+
+```bash
+# Test lineup state consistency
+just test-android-target lineup-checksum-test    # Verify lineup state hasn't changed
+
+# First run: Auto-saves baseline checksum to config file
+# Subsequent runs: Validates current state against saved baseline  
+# Logs: CHECKSUM_VALID (pass) or CHECKSUM_MISMATCH (fail)
+```
+
+### **How It Works**
+1. **Populate Enemy**: Creates deterministic test data with `game.lineup.populate_enemy`
+2. **Capture State**: Extracts lineup data and generates MD5 checksum with `game.lineup.capture_state`
+3. **Validate**: Compares against saved baseline with `system.checksum.validate`
+
+### **Key Features**
+- **Auto-baseline**: First run saves checksum to JSON config automatically
+- **Deterministic**: Uses existing `DictUtils.deterministic_hash()` for consistent results
+- **Extensible**: Base class `CaptureActionBase` supports other game states (board, inventory, etc.)
+- **Log Integration**: Uses structured logging with tags for token-efficient debugging
+
+### **Debugging Checksum Issues**
+```bash
+# Quick checksum validation check
+just logs-errors-tagged TEST_ID checksum          # Check for checksum failures (98% savings)
+just logs TEST_ID checksum                         # Detailed checksum analysis
+
+# Force update baseline when features legitimately change
+# Edit: project/debug_configs/lineup-checksum-test.json
+# Remove: "expected_checksum" field → Next run will save new baseline
+```
+
+### **Creating New Capture Actions**
+```gdscript
+# Extend CaptureActionBase for new game states
+class_name BoardCaptureAction extends CaptureActionBase
+
+func capture_data() -> Dictionary:
+    # Extract relevant game state (board, inventory, etc.)
+    return {"board": extract_board_data()}
+
+func get_state_type() -> String:
+    return "board_state"
+```
+
 ## 🧠 Advanced Planning
 
 ### **When to Use Shrimp Task Manager**
@@ -480,6 +536,9 @@ just help-production              # Complete deployment guide
 - `firebase/` - Firebase config and integration  
 - `export/` - Platform export configurations
 - `project/debug/actions/` - Debug actions by layer (cpp, backend, rtdb, system, game)
+- `project/debug/actions/capture_action_base.gd` - Base class for checksum capture actions
+- `project/debug/actions/lineup_capture_action.gd` - Lineup state capture implementation
+- `project/debug_configs/` - Individual test configurations with checksum baselines
 - `project/test-lists/` - Test configurations for different workflows
 
 ### **Data Backend Architecture**

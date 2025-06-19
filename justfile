@@ -1889,6 +1889,28 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
         fi
         echo ""
         
+        # Handle checksum results if present
+        if grep -q "CHECKSUM_FIRST_RUN\|CHECKSUM_VALID\|CHECKSUM_MISMATCH" "$log_file" 2>/dev/null; then
+            echo "🔍 Processing checksum results..."
+            
+            if grep -q "CHECKSUM_FIRST_RUN" "$log_file"; then
+                # Extract and save checksum to config
+                CHECKSUM=$(grep "CHECKSUM_FIRST_RUN" "$log_file" | tail -1 | grep -o '"checksum": "[^"]*"' | cut -d'"' -f4)
+                if [ -n "$CHECKSUM" ] && [ -f "$SAFE_CONFIG_FILE" ]; then
+                    echo "📝 First run detected - saving baseline checksum: $CHECKSUM"
+                    jq --arg checksum "$CHECKSUM" '.checksum_config.expected_checksum = $checksum' "$SAFE_CONFIG_FILE" > "$SAFE_CONFIG_FILE.tmp" && mv "$SAFE_CONFIG_FILE.tmp" "$SAFE_CONFIG_FILE"
+                    echo "✅ Baseline checksum saved to $SAFE_CONFIG_FILE"
+                fi
+            elif grep -q "CHECKSUM_VALID" "$log_file"; then
+                echo "✅ Checksum validation PASSED"
+            elif grep -q "CHECKSUM_MISMATCH" "$log_file"; then
+                echo "❌ Checksum validation FAILED"
+                echo "💡 Run 'just test-android-update $CONFIG_NAME' to update baseline"
+                test_result=1
+            fi
+            echo ""
+        fi
+        
         # Determine overall result
         if [ "$test_complete" = true ]; then
             echo "✅ Test completed normally"

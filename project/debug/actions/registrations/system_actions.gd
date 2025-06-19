@@ -8,6 +8,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_memory_actions(registry)
 	_register_debug_system_actions(registry)
 	_register_connectivity_actions(registry)
+	_register_checksum_actions(registry)
 
 	Log.info("System debug actions registered", {}, ["debug", "system"])
 
@@ -68,6 +69,19 @@ static func _register_connectivity_actions(registry: DebugActionRegistry) -> voi
 	)
 
 
+static func _register_checksum_actions(registry: DebugActionRegistry) -> void:
+	# Checksum validation for state testing
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.checksum.validate", _validate_checksum)
+			. set_category("System")
+			. set_group("Validation")
+			. set_description("Validate captured state against expected checksum")
+		)
+	)
+
+
 # System action implementations
 static func _force_low_memory() -> bool:
 	# Simulate low memory condition
@@ -124,3 +138,54 @@ static func _rtdb_status_check() -> bool:
 
 	Log.info("RTDB Status Check", status, ["debug", "rtdb", "status"])
 	return true
+
+
+static func _validate_checksum() -> DebugAction.Result:
+	# Load config to get expected checksum
+	var config_path = "user://debug_startup_actions.json"
+	
+	if not FileAccess.file_exists(config_path):
+		return DebugAction.Result.new_failure("No config file found for checksum validation")
+	
+	var file = FileAccess.open(config_path, FileAccess.READ)
+	if not file:
+		return DebugAction.Result.new_failure("Could not read config file")
+	
+	var json_text = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	var result = json.parse(json_text)
+	if result != OK:
+		return DebugAction.Result.new_failure("Invalid JSON in config file")
+	
+	var config = json.data
+	var checksum_config = config.get("checksum_config", {})
+	var expected = checksum_config.get("expected_checksum", "")
+	var state_type = checksum_config.get("state_type", "unknown")
+	
+	# Get current checksum from capture action
+	var current = CaptureActionBase.get_last_checksum(state_type)
+	
+	if expected.is_empty():
+		# First run - signal for auto-save
+		Log.info("CHECKSUM_FIRST_RUN", {
+			"checksum": current,
+			"state_type": state_type
+		}, ["checksum", "first_run", state_type])
+		return DebugAction.Result.new_success({"action": "first_run_saved"})
+	
+	# Validate against expected checksum
+	if current == expected:
+		Log.info("CHECKSUM_VALID", {
+			"checksum": current,
+			"state_type": state_type
+		}, ["checksum", "valid", state_type])
+		return DebugAction.Result.new_success({"action": "validated"})
+	else:
+		Log.error("CHECKSUM_MISMATCH", {
+			"expected": expected,
+			"actual": current,
+			"state_type": state_type
+		}, ["checksum", "mismatch", state_type])
+		return DebugAction.Result.new_failure("Checksum validation failed")

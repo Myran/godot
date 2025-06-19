@@ -89,6 +89,17 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_description("Add test cards to enemy lineup")
 		)
 	)
+	
+	# Lineup state capture for checksum testing
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.lineup.capture_state", _capture_lineup_state)
+			. set_category("Gameplay")
+			. set_group("Preset Lineups")
+			. set_description("Capture lineup state for checksum validation")
+		)
+	)
 
 
 static func _register_battle_actions(registry: DebugActionRegistry) -> void:
@@ -1221,3 +1232,8 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				duration,
 				"hash_recorded_partial_restart_pending"
 			)
+
+
+static func _capture_lineup_state() -> DebugAction.Result:
+	var capturer = LineupCaptureAction.new()
+	return capturer.execute()

@@ -1,0 +1,12 @@
+{
+  "description": "Lineup Checksum Test - Validate lineup state consistency using checksums",
+  "actions": [
+    "game.lineup.populate_enemy",
+    "game.lineup.capture_state",
+    "system.checksum.validate"
+  ],
+  "checksum_config": {
+    "state_type": "lineup_state",
+    "expected_checksum": "afacddf2e1db6f910b6d534d5acbc90febc7caf1b4bd3ed4d31ef98534412bf1"
+  }
+}
