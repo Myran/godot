@@ -22,6 +22,7 @@ class_name Game extends Control
 @export var battle_handler: BattleHandler
 
 var ui_state: core.UIState = core.UIState.WAITING
+var _deferred_idle_actions: Array[Callable] = []
 
 
 func _input(event: InputEvent) -> void:
@@ -236,6 +237,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.DraftSteadyEvent:
 		Log.debug("Draft reached steady state - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
+		_execute_deferred_idle_action()
 
 	elif event is core.LineupOperationStartEvent:
 		Log.info("Lineup operation started - locking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
@@ -244,6 +246,15 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupOperationCompleteEvent:
 		Log.info("Lineup operation completed - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
+		_execute_deferred_idle_action()
+
+	elif event is core.SystemIdleActionEvent:
+		if ui_state == core.UIState.WAITING:
+			# System is idle, execute immediately
+			event.action_callable.call()
+		else:
+			# System busy, defer until idle
+			_deferred_idle_actions.append(event.action_callable)
 
 	clicker.on_core_event(event, current_context)
 
@@ -305,6 +316,12 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		if update_draft:
 			ui_state = core.UIState.LOCKED
 			core.action(core.UpdateDraftAreaEvent.new())
+
+
+func _execute_deferred_idle_action() -> void:
+	if not _deferred_idle_actions.is_empty():
+		var action: Callable = _deferred_idle_actions.pop_front()
+		action.call()
 
 
 func start_game() -> void:
@@ -483,6 +500,7 @@ func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
 func mode_post_battle() -> void:
 	Log.debug("Switching to post-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 	ui_state = core.UIState.WAITING
+	_execute_deferred_idle_action()
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))

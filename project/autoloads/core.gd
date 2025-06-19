@@ -193,6 +193,14 @@ class LineupOperationCompleteEvent:
 	extends CoreEvent
 
 
+class SystemIdleActionEvent:
+	extends CoreEvent
+	var action_callable: Callable
+
+	func _init(callable: Callable) -> void:
+		action_callable = callable
+
+
 class RemoveBlockFromDraft:
 	extends CoreEvent
 	var block: Block

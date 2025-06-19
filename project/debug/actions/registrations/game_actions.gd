@@ -396,6 +396,15 @@ static func _hide_debug_menu() -> bool:
 		return false
 
 
+# Helper function to get game node
+static func _get_game_node() -> Game:
+	var root: Node = Engine.get_main_loop().current_scene
+	if root and root.has_method("find_child"):
+		var game_node: Game = root.find_child("Game", true, false) as Game
+		return game_node
+	return null
+
+
 # Helper function to wait for game systems to be ready
 static func _wait_for_game_systems_ready() -> bool:
 	Log.info("Waiting for game systems to be ready...", {}, ["debug", "battle", "initialization"])
@@ -456,85 +465,42 @@ static func _wait_for_game_systems_ready() -> bool:
 	return false
 
 
-# Battle action implementations using GameStateMonitor
+# Battle action implementations using new idle action system
 static func _start_battle() -> DebugAction.Result:
-	# Start battle and wait for system to return to idle state
-	if not is_instance_valid(ui) or not is_instance_valid(GameStateMonitor):
-		return DebugAction.Result.new_failure("Required systems not available")
+	var game: Game = _get_game_node()
+	if not game:
+		return DebugAction.Result.new_failure("Game node not available")
 
-	# Ensure game systems are fully initialized before proceeding
-	if not await _wait_for_game_systems_ready():
-		return DebugAction.Result.new_failure("Game systems not ready for battle")
+	# Use the new idle action system
+	core.action(core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_start_battle")))
 
-	var start_time: int = Time.get_ticks_msec()
+	return DebugAction.Result.new_success({"battle_queued": true})
 
-	Log.info("Starting battle", {}, ["debug", "battle"])
 
-	# Trigger battle start
+static func _trigger_start_battle() -> void:
+	Log.info("Starting battle via idle action", {}, ["debug", "battle"])
 	ui.action(ui.StartBattleEvent.new())
-
-	# Wait for system to return to idle state
-	await GameStateMonitor.await_system_idle()
-
-	var duration: int = Time.get_ticks_msec() - start_time
-
-	Log.info("Battle completed", {"duration_ms": duration}, ["debug", "battle"])
-
-	return DebugAction.Result.new_success(
-		{"battle_duration_ms": duration}, duration, "battle_complete"
-	)
 
 
 static func _populate_enemy_and_start_battle() -> DebugAction.Result:
-	# Chain: populate enemy lineup then start battle
-	if not is_instance_valid(GameStateMonitor):
-		return DebugAction.Result.new_failure("GameStateMonitor not available")
+	var game: Game = _get_game_node()
+	if not game:
+		return DebugAction.Result.new_failure("Game node not available")
 
-	# Ensure game systems are fully initialized before proceeding
-	if not await _wait_for_game_systems_ready():
-		return DebugAction.Result.new_failure("Game systems not ready for battle chain")
+	# Queue both actions - they will run in order when idle
+	core.action(
+		core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_populate_enemy_lineup"))
+	)
+	core.action(core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_start_battle")))
 
-	var start_time: int = Time.get_ticks_msec()
+	return DebugAction.Result.new_success({"populate_and_battle_queued": true})
 
-	Log.info("Starting battle chain: populate enemy + battle", {}, ["debug", "battle", "chain"])
 
-	# Step 1: Populate enemy lineup
-	var populate_result: bool = await _populate_enemy_lineup()
-	if not populate_result:
-		return DebugAction.Result.new_failure("Failed to populate enemy lineup")
-
-	# Wait for system to be ready after population
-	await GameStateMonitor.await_system_idle()
-
-	# Step 2: Start battle
-	var battle_result: DebugAction.Result = await _start_battle()
-
-	var total_duration: int = Time.get_ticks_msec() - start_time
-
-	if battle_result.is_success():
-		Log.info(
-			"Battle chain completed successfully",
-			{"total_duration_ms": total_duration},
-			["debug", "battle", "chain"]
-		)
-		return DebugAction.Result.new_success(
-			{
-				"chain_completed": true,
-				"total_duration_ms": total_duration,
-				"battle_duration_ms": battle_result.get_payload().get("battle_duration_ms", 0)
-			},
-			total_duration,
-			"battle_chain_complete"
-		)
-	else:
-		Log.error(
-			"Battle chain failed at battle start",
-			{"error": battle_result.get_error_message()},
-			["debug", "battle", "chain"]
-		)
-		return DebugAction.Result.new_failure(
-			"Battle chain failed: " + battle_result.get_error_message(), "BATTLE_CHAIN_FAILED"
-		)
+static func _trigger_populate_enemy_lineup() -> void:
+	Log.info("Populating enemy lineup via idle action", {}, ["debug", "battle"])
+	# Call the populate function but don't await - it will handle its own state transitions
+	var populate_task: Callable = func() -> void: await _populate_enemy_lineup()
+	populate_task.call()
 
 
 static func _battle_set_seed() -> DebugAction.Result:
@@ -559,10 +525,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 	# Test battle determinism using logic-only execution (no animation) - much faster
 	if not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("RNG singleton not available")
-
-	# Ensure game systems are fully initialized before proceeding
-	if not await _wait_for_game_systems_ready():
-		return DebugAction.Result.new_failure("Game systems not ready for determinism test")
 
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
@@ -1076,16 +1038,8 @@ static func _get_seed_from_config() -> int:
 
 static func _battle_test_determinism() -> DebugAction.Result:
 	# Test battle determinism with JSON-based hash validation
-	if (
-		not is_instance_valid(ui)
-		or not is_instance_valid(GameStateMonitor)
-		or not is_instance_valid(rng)
-	):
+	if not is_instance_valid(ui) or not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("Required systems not available")
-
-	# Ensure game systems are fully initialized before proceeding
-	if not await _wait_for_game_systems_ready():
-		return DebugAction.Result.new_failure("Game systems not ready for determinism test")
 
 	# Get determinism configuration
 	var config: Dictionary = _get_determinism_config()
@@ -1125,10 +1079,25 @@ static func _battle_test_determinism() -> DebugAction.Result:
 		# Animated mode: Full UI battle (original behavior)
 		var start_time: int = Time.get_ticks_msec()
 		Log.info("Executing battle with full animation", {}, ["debug", "battle", "determinism"])
-		ui.action(ui.StartBattleEvent.new())
 
-		# Wait for system to return to idle state
-		await GameStateMonitor.await_system_idle()
+		# Use new idle action system for battle execution
+		var game: Game = _get_game_node()
+		if not game:
+			return DebugAction.Result.new_failure("Game node not available")
+
+		# Queue the battle start and wait for completion using game state transitions
+		var initial_state: core.GameState = game.game_handler.current_gamestate
+		core.action(
+			core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_start_battle"))
+		)
+
+		# Wait for battle to start (state will change from current state)
+		while game.game_handler.current_gamestate == initial_state:
+			await Engine.get_main_loop().process_frame
+
+		# Wait for battle to complete (state becomes POSTBATTLE)
+		while game.game_handler.current_gamestate != core.GameState.POSTBATTLE:
+			await Engine.get_main_loop().process_frame
 
 		duration = Time.get_ticks_msec() - start_time
 		Log.info(

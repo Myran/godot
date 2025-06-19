@@ -23,7 +23,11 @@ func _ready() -> void:
 			Log.info("Running on iOS platform", {}, ["system", "initialization"])
 		"Web":
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
-	if not use_actions_in_editor and OS.has_feature("editor") and not DisplayServer.get_name() == 'headless':
+	if (
+		not use_actions_in_editor
+		and OS.has_feature("editor")
+		and not DisplayServer.get_name() == "headless"
+	):
 		return
 
 	DebugStartupCoordinator.startDebugCoordinator()

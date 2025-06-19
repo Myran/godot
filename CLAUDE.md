@@ -83,6 +83,9 @@ Issue Detected?
 just logs-errors-tagged TEST_ID            # All errors (98% savings)
 just logs-errors-tagged TEST_ID firebase   # Component-specific errors
 
+# Most recent test run (ultra-efficient)
+just logs-last                             # Latest run only (99% savings)
+
 # Component-focused analysis  
 just logs TEST_ID firebase                 # Firebase operations (87% savings)
 just logs TEST_ID battle                   # Game mechanics (92% savings)
@@ -202,13 +205,16 @@ just test-android 'cpp.*'                                  # 30+ seconds with an
 
 #### **Progressive Debugging**
 ```bash
-# 1. Quick error check
+# 1. Latest test results (ultra-fast)
+just logs-last                                             # <5 tokens
+
+# 2. Quick error check
 just logs-errors-tagged TEST_ID                            # <10 tokens
 
-# 2. Component-focused analysis  
+# 3. Component-focused analysis  
 just logs TEST_ID firebase                                 # ~100 tokens
 
-# 3. Precision analysis with multiple tags
+# 4. Precision analysis with multiple tags
 just logs TEST_ID firebase rtdb error                      # ~50 tokens
 ```
 

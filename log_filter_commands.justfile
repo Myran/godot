@@ -97,6 +97,12 @@ logs-lifecycle TEST_ID:
     # Show key test events in order
     grep -E "DEBUG_TEST_START\|DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE\|DEBUG_TEST_COMPLETE\|DEBUG_TEST_RESTART" "$LOG_FILE" || echo "⚠️ No lifecycle events found"
 
+# Show logs from most recent test run only
+logs-last:
+    #!/usr/bin/env bash
+    LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
+    [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent runs"
+
 # Show only performance/timing info
 logs-performance TEST_ID:
     #!/usr/bin/env bash
