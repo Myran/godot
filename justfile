@@ -2779,11 +2779,73 @@ test-android-enhanced TARGET DURATION="30" NO_RESTART="false":
     fi
 
 # Force update checksum baseline for a config
-test-android-update CONFIG_NAME:
+test-android-update CONFIG_NAME="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_NAME="{{CONFIG_NAME}}"
+    
+    # If no config provided, show fzf selector for checksum configs only
+    if [ -z "$CONFIG_NAME" ]; then
+        if ! command -v fzf >/dev/null 2>&1; then
+            echo "❌ 'fzf' command not found. Install with: brew install fzf"
+            echo "💡 Available checksum configs:"
+            just test-android-list-checksum
+            exit 1
+        fi
+        
+        echo "📸 Select checksum config to UPDATE baseline:"
+        echo ""
+        
+        # Build options with only checksum-enabled configs
+        options=()
+        for file in project/debug_configs/*.json; do
+            if [ -f "$file" ]; then
+                name=$(basename "$file" .json)
+                
+                # Only include checksum-enabled configs
+                if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
+                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
+                    
+                    if [ -n "$expected_checksum" ]; then
+                        status="✅ BASELINE SET"
+                    else
+                        status="🔄 NEEDS BASELINE"
+                    fi
+                    
+                    options+=("📸 $name ($state_type) $status - $desc")
+                fi
+            fi
+        done
+        
+        if [ ${#options[@]} -eq 0 ]; then
+            echo "❌ No checksum-enabled configs found"
+            echo "💡 Use 'just test-android-list-checksum' to see all configs"
+            exit 1
+        fi
+        
+        # Use fzf to select
+        selected_line=$(printf '%s\n' "${options[@]}" | fzf \
+            --prompt="Select checksum config to UPDATE: " \
+            --height=~80% \
+            --layout=reverse \
+            --border \
+            --preview-window=hidden \
+            --header="📸 Checksum Configs Only | Will force update baseline")
+        
+        if [ -n "$selected_line" ]; then
+            # Extract the name (between prefix and state_type)
+            CONFIG_NAME=$(echo "$selected_line" | sed -E 's/^📸 ([^ ]+) \([^)]+\) .*/\1/')
+            echo "Selected: $CONFIG_NAME"
+            echo ""
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    fi
+    
     echo "📸 Force updating checksum baseline for: $CONFIG_NAME"
     echo ""
     
@@ -2814,11 +2876,73 @@ test-android-update CONFIG_NAME:
     just test-android-target "$CONFIG_NAME"
 
 # Reset checksum baseline (remove expected checksum from config)
-test-android-reset CONFIG_NAME:
+test-android-reset CONFIG_NAME="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_NAME="{{CONFIG_NAME}}"
+    
+    # If no config provided, show fzf selector for checksum configs only
+    if [ -z "$CONFIG_NAME" ]; then
+        if ! command -v fzf >/dev/null 2>&1; then
+            echo "❌ 'fzf' command not found. Install with: brew install fzf"
+            echo "💡 Available checksum configs:"
+            just test-android-list-checksum
+            exit 1
+        fi
+        
+        echo "🗑️  Select checksum config to RESET baseline:"
+        echo ""
+        
+        # Build options with only checksum-enabled configs
+        options=()
+        for file in project/debug_configs/*.json; do
+            if [ -f "$file" ]; then
+                name=$(basename "$file" .json)
+                
+                # Only include checksum-enabled configs
+                if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
+                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
+                    
+                    if [ -n "$expected_checksum" ]; then
+                        status="✅ BASELINE SET"
+                    else
+                        status="🔄 NEEDS BASELINE"
+                    fi
+                    
+                    options+=("🗑️ $name ($state_type) $status - $desc")
+                fi
+            fi
+        done
+        
+        if [ ${#options[@]} -eq 0 ]; then
+            echo "❌ No checksum-enabled configs found"
+            echo "💡 Use 'just test-android-list-checksum' to see all configs"
+            exit 1
+        fi
+        
+        # Use fzf to select
+        selected_line=$(printf '%s\n' "${options[@]}" | fzf \
+            --prompt="Select checksum config to RESET: " \
+            --height=~80% \
+            --layout=reverse \
+            --border \
+            --preview-window=hidden \
+            --header="🗑️ Checksum Configs Only | Will remove baseline (start fresh)")
+        
+        if [ -n "$selected_line" ]; then
+            # Extract the name (between prefix and state_type)
+            CONFIG_NAME=$(echo "$selected_line" | sed -E 's/^🗑️ ([^ ]+) \([^)]+\) .*/\1/')
+            echo "Selected: $CONFIG_NAME"
+            echo ""
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    fi
+    
     echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME"
     echo ""
     
@@ -3801,8 +3925,8 @@ help-debug:
     echo "🧪 CHECKSUM SNAPSHOT TESTING:"
     echo "  # Automated state validation using MD5 checksums for regression testing"
     echo "  just test-android-target lineup-checksum-test  # Run checksum test (auto-creates baseline)"
-    echo "  just test-android-update lineup-checksum-test  # Force update baseline (legitimate changes)"
-    echo "  just test-android-reset lineup-checksum-test   # Remove baseline (start fresh)"
+    echo "  just test-android-update [config]              # Force update baseline (fzf if no config)"
+    echo "  just test-android-reset [config]               # Remove baseline (fzf if no config)"
     echo "  just test-android-list-checksum                # List all checksum-enabled configs"
     echo ""
     echo "  # First run: Automatically saves baseline checksum to JSON config"
@@ -3810,6 +3934,7 @@ help-debug:
     echo "  # Logs: CHECKSUM_VALID (pass) or CHECKSUM_MISMATCH (fail)"
     echo "  # Naming: *-checksum-test.json or *-snapshot-test.json for checksum configs"
     echo '  # Description: Include "checksum" keyword for fzf searchability'
+    echo "  # fzf: Shows only checksum configs with baseline status indicators"
     echo ""
     echo "🏗️ WILDCARD PATTERN REFERENCE:"
     echo "  # ✅ ALL 51 debug actions now use hierarchical naming: layer.domain.operation"

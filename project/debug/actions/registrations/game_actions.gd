@@ -89,7 +89,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_description("Add test cards to enemy lineup")
 		)
 	)
-	
+
 	# Lineup state capture for checksum testing
 	registry.register_action(
 		(
@@ -1235,5 +1235,5 @@ static func _battle_test_determinism() -> DebugAction.Result:
 
 
 static func _capture_lineup_state() -> DebugAction.Result:
-	var capturer = LineupCaptureAction.new()
+	var capturer: LineupCaptureAction = LineupCaptureAction.new()
 	return capturer.execute()

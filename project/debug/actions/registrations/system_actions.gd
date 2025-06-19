@@ -143,7 +143,7 @@ static func _rtdb_status_check() -> bool:
 static func _validate_checksum() -> DebugAction.Result:
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
-	
+
 	Log.info(
 		"=== CHECKSUM VALIDATION ENTRY ===",
 		{
@@ -154,23 +154,21 @@ static func _validate_checksum() -> DebugAction.Result:
 		},
 		["debug", "checksum", "validation", "pid", "phase"]
 	)
-	
+
 	# Load config to get expected checksum
-	var config_path = "user://debug_startup_actions.json"
-	
+	var config_path: String = "user://debug_startup_actions.json"
+
 	if not FileAccess.file_exists(config_path):
 		Log.error(
 			"Config file not found for checksum validation",
-			{
-				"config_path": config_path,
-				"pid": process_id,
-				"test_id": current_test_id
-			},
+			{"config_path": config_path, "pid": process_id, "test_id": current_test_id},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
-		return DebugAction.Result.new_failure("No config file found for checksum validation", "CONFIG_NOT_FOUND")
-	
-	var file = FileAccess.open(config_path, FileAccess.READ)
+		return DebugAction.Result.new_failure(
+			"No config file found for checksum validation", "CONFIG_NOT_FOUND"
+		)
+
+	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 	if not file:
 		Log.error(
 			"Could not open config file for reading",
@@ -183,12 +181,12 @@ static func _validate_checksum() -> DebugAction.Result:
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure("Could not read config file", "CONFIG_READ_ERROR")
-	
-	var json_text = file.get_as_text()
+
+	var json_text: String = file.get_as_text()
 	file.close()
-	
-	var json = JSON.new()
-	var result = json.parse(json_text)
+
+	var json: JSON = JSON.new()
+	var result: Error = json.parse(json_text)
 	if result != OK:
 		Log.error(
 			"Invalid JSON in config file",
@@ -203,35 +201,37 @@ static func _validate_checksum() -> DebugAction.Result:
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure("Invalid JSON in config file", "JSON_PARSE_ERROR")
-	
-	var config = json.data
-	var checksum_config = config.get("checksum_config", {})
-	var expected = checksum_config.get("expected_checksum", "")
-	var state_type = checksum_config.get("state_type", "unknown")
-	
+
+	var config: Dictionary = json.data
+	var checksum_config: Dictionary = config.get("checksum_config", {})
+	var expected: String = checksum_config.get("expected_checksum", "")
+	var state_type: String = checksum_config.get("state_type", "unknown")
+
 	# Get current checksum from capture action
-	var current = CaptureActionBase.get_last_checksum(state_type)
-	
+	var current: String = CaptureActionBase.get_last_checksum(state_type)
+
 	if current.is_empty():
 		Log.error(
 			"No current checksum available for validation",
+			{"state_type": state_type, "pid": process_id, "test_id": current_test_id},
+			["debug", "checksum", "validation", "error", "pid"]
+		)
+		return DebugAction.Result.new_failure(
+			"No current checksum available - capture action may not have run", "NO_CURRENT_CHECKSUM"
+		)
+
+	if expected.is_empty():
+		# First run - signal for auto-save
+		Log.info(
+			"CHECKSUM_FIRST_RUN",
 			{
+				"checksum": current,
 				"state_type": state_type,
 				"pid": process_id,
 				"test_id": current_test_id
 			},
-			["debug", "checksum", "validation", "error", "pid"]
+			["checksum", "first_run", state_type, "pid"]
 		)
-		return DebugAction.Result.new_failure("No current checksum available - capture action may not have run", "NO_CURRENT_CHECKSUM")
-	
-	if expected.is_empty():
-		# First run - signal for auto-save
-		Log.info("CHECKSUM_FIRST_RUN", {
-			"checksum": current,
-			"state_type": state_type,
-			"pid": process_id,
-			"test_id": current_test_id
-		}, ["checksum", "first_run", state_type, "pid"])
 		return DebugAction.Result.new_success(
 			{
 				"action": "first_run_saved",
@@ -242,15 +242,19 @@ static func _validate_checksum() -> DebugAction.Result:
 			0,
 			"checksum_first_run"
 		)
-	
+
 	# Validate against expected checksum
 	if current == expected:
-		Log.info("CHECKSUM_VALID", {
-			"checksum": current,
-			"state_type": state_type,
-			"pid": process_id,
-			"test_id": current_test_id
-		}, ["checksum", "valid", state_type, "pid"])
+		Log.info(
+			"CHECKSUM_VALID",
+			{
+				"checksum": current,
+				"state_type": state_type,
+				"pid": process_id,
+				"test_id": current_test_id
+			},
+			["checksum", "valid", state_type, "pid"]
+		)
 		return DebugAction.Result.new_success(
 			{
 				"action": "validated",
@@ -262,11 +266,15 @@ static func _validate_checksum() -> DebugAction.Result:
 			"checksum_validated"
 		)
 	else:
-		Log.error("CHECKSUM_MISMATCH", {
-			"expected": expected,
-			"actual": current,
-			"state_type": state_type,
-			"pid": process_id,
-			"test_id": current_test_id
-		}, ["checksum", "mismatch", state_type, "pid"])
+		Log.error(
+			"CHECKSUM_MISMATCH",
+			{
+				"expected": expected,
+				"actual": current,
+				"state_type": state_type,
+				"pid": process_id,
+				"test_id": current_test_id
+			},
+			["checksum", "mismatch", state_type, "pid"]
+		)
 		return DebugAction.Result.new_failure("Checksum validation failed", "CHECKSUM_MISMATCH")

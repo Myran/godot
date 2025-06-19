@@ -441,9 +441,9 @@ just validate-godot "INFO.*debug"        # Custom filter patterns
 # Core Testing
 just test-android-target lineup-checksum-test    # Run checksum test (auto-creates baseline on first run)
 
-# Baseline Management
-just test-android-update lineup-checksum-test    # Force update baseline (clear + regenerate)
-just test-android-reset lineup-checksum-test     # Remove baseline (start fresh)
+# Baseline Management (with fzf selectors)
+just test-android-update [config]                # Force update baseline (shows fzf checksum selector if no config)
+just test-android-reset [config]                 # Remove baseline (shows fzf checksum selector if no config)
 just test-android-list-checksum                  # List all checksum-enabled configs
 ```
 
@@ -478,8 +478,11 @@ just test-android                                # Interactive fzf selector (sea
 ### **Workflow Examples**
 ```bash
 # 1. Discovery & Selection
-just test-android                                 # Interactive fzf selector
+just test-android                                 # Interactive fzf selector (all configs)
 # Type "checksum" to filter → Shows: "Lineup Checksum Test - Validate lineup state..."
+
+just test-android-update                          # Interactive fzf selector (checksum configs only)
+# Shows: "📸 lineup-checksum-test (lineup_state) ✅ BASELINE SET - Lineup Checksum Test..."
 
 # 2. First Time Setup
 just test-android-target lineup-checksum-test    # Creates initial baseline automatically
@@ -487,11 +490,13 @@ just test-android-target lineup-checksum-test    # Creates initial baseline auto
 # 3. Regular Validation
 just test-android-target lineup-checksum-test    # Validates against baseline (PASS/FAIL)
 
-# 4. When Features Change Legitimately
-just test-android-update lineup-checksum-test    # Updates baseline automatically
+# 4. When Features Change Legitimately (fzf or direct)
+just test-android-update                          # Shows checksum-only fzf selector
+just test-android-update lineup-checksum-test    # Direct update (same result)
 
-# 5. Start Completely Fresh
-just test-android-reset lineup-checksum-test     # Clears baseline only
+# 5. Start Completely Fresh (fzf or direct)
+just test-android-reset                           # Shows checksum-only fzf selector
+just test-android-reset lineup-checksum-test     # Direct reset
 just test-android-target lineup-checksum-test    # Creates new baseline
 ```
 
