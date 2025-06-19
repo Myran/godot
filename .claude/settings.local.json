@@ -70,7 +70,8 @@
       "Bash(__NEW_LINE__ echo -e \"\\n1️⃣ Testing config commands that might have issues:\")",
       "Bash(__NEW_LINE__ echo -e \"\\n2️⃣ Testing build status command:\")",
       "Bash(__NEW_LINE__ echo -e \"\\n3️⃣ Testing validation commands:\")",
-      "Bash(command -v:*)"
+      "Bash(command -v:*)",
+      "mcp__zen__chat"
     ],
     "deny": []
   }
