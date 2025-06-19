@@ -2854,6 +2854,83 @@ test-android-reset CONFIG_NAME:
     echo ""
     echo "💡 Next run of 'just test-android-target $CONFIG_NAME' will create a new baseline"
 
+# List checksum-enabled configs (configs with checksum_config section)
+test-android-list-checksum:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📸 Checksum-Enabled Test Configurations"
+    echo "======================================="
+    echo ""
+    
+    checksum_configs=()
+    regular_configs=()
+    
+    # Scan all config files
+    for config_file in project/debug_configs/*.json; do
+        if [ -f "$config_file" ]; then
+            config_name=$(basename "$config_file" .json)
+            
+            # Check if it has checksum_config section
+            if jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                # Get checksum status
+                expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$config_file")
+                state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                
+                if [ -n "$expected_checksum" ]; then
+                    checksum_configs+=("✅ $config_name ($state_type) - BASELINE SET")
+                else
+                    checksum_configs+=("🔄 $config_name ($state_type) - NEEDS BASELINE")
+                fi
+            else
+                regular_configs+=("   $config_name")
+            fi
+        fi
+    done
+    
+    # Display results
+    checksum_count=${#checksum_configs[@]}
+    regular_count=${#regular_configs[@]}
+    
+    if [ $checksum_count -gt 0 ]; then
+        echo "🧪 CHECKSUM-ENABLED CONFIGS ($checksum_count):"
+        printf '%s\n' "${checksum_configs[@]}"
+        echo ""
+        echo "📋 USAGE:"
+        echo "  just test-android-target <config>     # Run checksum test"
+        echo "  just test-android-update <config>     # Force update baseline"
+        echo "  just test-android-reset <config>      # Remove baseline"
+        echo ""
+    else
+        echo "❌ No checksum-enabled configs found"
+        echo ""
+    fi
+    
+    echo "🔧 REGULAR CONFIGS ($regular_count):"
+    if [ $regular_count -gt 0 ]; then
+        printf '%s\n' "${regular_configs[@]}"
+        echo ""
+        echo "💡 To enable checksum testing on a regular config, add:"
+        echo '   "checksum_config": {'
+        echo '     "state_type": "your_state_type",'
+        echo '     "expected_checksum": ""'
+        echo '   }'
+        echo ""
+        echo "📝 For new checksum configs, ensure:"
+        echo '   "description": "Feature CHECKSUM Test - Description"  # Include "checksum" keyword'
+        echo '   Filename: *-checksum-test.json or *-snapshot-test.json'
+    else
+        echo "   (none found)"
+    fi
+    echo ""
+    echo "📜 NAMING CONVENTION:"
+    echo "  *-checksum-test.json    # Recommended for checksum configs"
+    echo "  *-snapshot-test.json    # Alternative naming"
+    echo "  regular-config.json     # Standard test configs"
+    echo ""
+    echo "📝 DESCRIPTION REQUIREMENT:"
+    echo '  "description": "Feature CHECKSUM Test - ..."  # Include "checksum" for fzf search'
+
 test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
     just _test-list-android default-all
@@ -3720,6 +3797,19 @@ help-debug:
     echo "  just test-android wildcard-discovery           # Custom test list (auto-detects list!)"
     echo "  just test-android-enhanced 'cpp.*'             # Enhanced analysis with error categorization"
     echo "  just test-android-trace 'cpp.*'                # Debug mode: shows validation/config steps"
+    echo ""
+    echo "🧪 CHECKSUM SNAPSHOT TESTING:"
+    echo "  # Automated state validation using MD5 checksums for regression testing"
+    echo "  just test-android-target lineup-checksum-test  # Run checksum test (auto-creates baseline)"
+    echo "  just test-android-update lineup-checksum-test  # Force update baseline (legitimate changes)"
+    echo "  just test-android-reset lineup-checksum-test   # Remove baseline (start fresh)"
+    echo "  just test-android-list-checksum                # List all checksum-enabled configs"
+    echo ""
+    echo "  # First run: Automatically saves baseline checksum to JSON config"
+    echo "  # Subsequent runs: Validates current state against saved baseline"
+    echo "  # Logs: CHECKSUM_VALID (pass) or CHECKSUM_MISMATCH (fail)"
+    echo "  # Naming: *-checksum-test.json or *-snapshot-test.json for checksum configs"
+    echo '  # Description: Include "checksum" keyword for fzf searchability'
     echo ""
     echo "🏗️ WILDCARD PATTERN REFERENCE:"
     echo "  # ✅ ALL 51 debug actions now use hierarchical naming: layer.domain.operation"

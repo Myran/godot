@@ -78,8 +78,8 @@ Issue Detected?
 
 ### **🧪 State Validation**
 **Symptoms:** `CHECKSUM_MISMATCH`, game state inconsistencies  
-**Debug:** `just logs TEST_ID checksum`  
-**Fix:** Validate changes or update baseline in config JSON
+**Debug:** `just logs-errors-tagged TEST_ID checksum`  
+**Fix:** `just test-android-update lineup-checksum-test` (legitimate changes) or investigate regression
 
 ## 🏷️ Token-Efficient Log Commands
 
@@ -438,34 +438,89 @@ just validate-godot "INFO.*debug"        # Custom filter patterns
 **Validate game state consistency using MD5 checksums for regression testing:**
 
 ```bash
-# Test lineup state consistency
-just test-android-target lineup-checksum-test    # Verify lineup state hasn't changed
+# Core Testing
+just test-android-target lineup-checksum-test    # Run checksum test (auto-creates baseline on first run)
 
-# First run: Auto-saves baseline checksum to config file
-# Subsequent runs: Validates current state against saved baseline  
-# Logs: CHECKSUM_VALID (pass) or CHECKSUM_MISMATCH (fail)
+# Baseline Management
+just test-android-update lineup-checksum-test    # Force update baseline (clear + regenerate)
+just test-android-reset lineup-checksum-test     # Remove baseline (start fresh)
+just test-android-list-checksum                  # List all checksum-enabled configs
 ```
 
 ### **How It Works**
 1. **Populate Enemy**: Creates deterministic test data with `game.lineup.populate_enemy`
 2. **Capture State**: Extracts lineup data and generates MD5 checksum with `game.lineup.capture_state`
-3. **Validate**: Compares against saved baseline with `system.checksum.validate`
+3. **Auto-Restart**: System automatically restarts to validate after saving baseline
+4. **Validate**: Compares against saved baseline with `system.checksum.validate`
 
 ### **Key Features**
 - **Auto-baseline**: First run saves checksum to JSON config automatically
+- **Auto-restart**: Automatic validation after baseline creation
 - **Deterministic**: Uses existing `DictUtils.deterministic_hash()` for consistent results
 - **Extensible**: Base class `CaptureActionBase` supports other game states (board, inventory, etc.)
 - **Log Integration**: Uses structured logging with tags for token-efficient debugging
+
+### **Naming Convention & Discovery**
+```bash
+# Recommended naming for checksum configs
+*-checksum-test.json     # Primary pattern (e.g., lineup-checksum-test.json)
+*-snapshot-test.json     # Alternative pattern (e.g., board-snapshot-test.json)
+
+# IMPORTANT: Include "checksum" in description for fzf searchability
+"description": "Your Feature CHECKSUM Test - Description with checksum keyword"
+
+# Discovery commands
+just test-android-list-checksum                  # List all checksum vs regular configs
+just config-list                                 # List all available configs (checksum + regular)
+just test-android                                # Interactive fzf selector (search "checksum")
+```
+
+### **Workflow Examples**
+```bash
+# 1. Discovery & Selection
+just test-android                                 # Interactive fzf selector
+# Type "checksum" to filter → Shows: "Lineup Checksum Test - Validate lineup state..."
+
+# 2. First Time Setup
+just test-android-target lineup-checksum-test    # Creates initial baseline automatically
+
+# 3. Regular Validation
+just test-android-target lineup-checksum-test    # Validates against baseline (PASS/FAIL)
+
+# 4. When Features Change Legitimately
+just test-android-update lineup-checksum-test    # Updates baseline automatically
+
+# 5. Start Completely Fresh
+just test-android-reset lineup-checksum-test     # Clears baseline only
+just test-android-target lineup-checksum-test    # Creates new baseline
+```
 
 ### **Debugging Checksum Issues**
 ```bash
 # Quick checksum validation check
 just logs-errors-tagged TEST_ID checksum          # Check for checksum failures (98% savings)
 just logs TEST_ID checksum                         # Detailed checksum analysis
+just logs TEST_ID checksum capture                # Focus on capture phase
+just logs TEST_ID checksum validation             # Focus on validation phase
 
-# Force update baseline when features legitimately change
-# Edit: project/debug_configs/lineup-checksum-test.json
-# Remove: "expected_checksum" field → Next run will save new baseline
+# Performance analysis
+just logs-performance-tagged TEST_ID checksum     # Checksum performance data
+```
+
+### **Creating New Checksum Configs**
+```json
+{
+  "description": "Board CHECKSUM Test - Validate board state consistency using checksums",
+  "actions": [
+    "game.board.setup_initial_state",
+    "game.board.capture_state",
+    "system.checksum.validate"
+  ],
+  "checksum_config": {
+    "state_type": "board_state",
+    "expected_checksum": ""
+  }
+}
 ```
 
 ### **Creating New Capture Actions**
