@@ -15,23 +15,85 @@ func get_state_type() -> String:
 
 # Main execution method - used by DebugAction callable
 func execute() -> DebugAction.Result:
-	var state_data = capture_data()
+	var process_id: int = OS.get_process_id()
+	var current_test_id: String = DebugAction.get_current_test_id()
 	var state_type = get_state_type()
 	
+	Log.info(
+		"=== CHECKSUM CAPTURE ENTRY ===",
+		{
+			"pid": process_id,
+			"test_id": current_test_id,
+			"state_type": state_type,
+			"timestamp": Time.get_datetime_string_from_system(),
+			"phase": "capture"
+		},
+		["debug", "checksum", "capture", "pid", "phase"]
+	)
+	
+	var state_data = capture_data()
+	
 	if state_data.is_empty():
-		return DebugAction.Result.new_failure("Failed to capture " + state_type)
+		Log.error(
+			"Failed to capture state data",
+			{
+				"state_type": state_type,
+				"pid": process_id,
+				"test_id": current_test_id
+			},
+			["debug", "checksum", "capture", "error", "pid"]
+		)
+		return DebugAction.Result.new_failure("Failed to capture " + state_type, "CAPTURE_FAILED")
 	
 	# Generate checksum using existing DictUtils and store
 	var checksum = generate_checksum(state_data)
 	_last_checksums[state_type] = checksum
 	
-	# Log for justfile to capture
+	# Rich logging with PID tracking like battle determinism
 	Log.info("CHECKSUM_CAPTURED", {
 		"checksum": checksum,
-		"state_type": state_type
-	}, ["checksum", "capture", state_type])
+		"state_type": state_type,
+		"pid": process_id,
+		"test_id": current_test_id,
+		"data_size": JSON.stringify(state_data).length()
+	}, ["checksum", "capture", state_type, "pid"])
 	
-	return DebugAction.Result.new_success({"checksum": checksum})
+	# Check if this should trigger restart for validation
+	if _should_trigger_restart():
+		_emit_restart_signal(checksum, state_type, process_id, current_test_id)
+	
+	return DebugAction.Result.new_success(
+		{
+			"checksum": checksum,
+			"state_type": state_type,
+			"action": "captured",
+			"pid": process_id
+		},
+		0,  # No duration tracking for capture
+		"checksum_captured"
+	)
+
+# Helper method to determine if restart should be triggered
+func _should_trigger_restart() -> bool:
+	# For checksum system, we want to restart to validate after capture
+	# This allows the justfile to detect the signal and re-execute for validation
+	return true
+
+# Helper method to emit restart signal that justfile can detect
+func _emit_restart_signal(checksum: String, state_type: String, process_id: int, test_id: String) -> void:
+	Log.info(
+		"DEBUG_TEST_RESTART_NEEDED",
+		{
+			"reason": "checksum_baseline_saved",
+			"checksum": checksum,
+			"state_type": state_type,
+			"pid": process_id,
+			"test_id": test_id,
+			"restart_type": "full",
+			"timestamp": Time.get_datetime_string_from_system()
+		},
+		["debug", "restart", "checksum", "signal", "pid"]
+	)
 
 static func generate_checksum(data: Dictionary) -> String:
 	# Use existing project functionality for deterministic hashing

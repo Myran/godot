@@ -55,6 +55,8 @@ help:
     echo "  just test-android '*.firebase.*'               # All Firebase operations"
     echo "  just test-android 'system.debug.registry_stats'        # Single action test"
     echo "  just test-android-target lineup-checksum-test  # Validate game state consistency with checksums ✅"
+    echo "  just test-android-update lineup-checksum-test  # Force update checksum baseline ⚡"
+    echo "  just test-android-reset lineup-checksum-test   # Remove checksum baseline (start fresh) 🗑️"
     echo "  just test-monitor-android [duration]           # Pure log monitoring (no restarts)"
     echo "  just test-android <config>                     # Quick test with monitoring"
     echo ""

@@ -1764,6 +1764,32 @@ _test-config-android CONFIG_NAME DURATION="30" NO_RESTART="false" TRACE="false":
                 if echo "$restart_line" | grep -q '"reason": "config_updated"'; then
                     echo "🔐 Determinism test detected - preserving modified config with saved hash"
                     echo "⚠️  NOT pushing original config to avoid overwriting expectedHash"
+                elif echo "$restart_line" | grep -q '"reason": "checksum_baseline_saved"'; then
+                    echo "📸 Checksum test detected - updating baseline and validating..."
+                    
+                    # Extract checksum from restart signal
+                    CHECKSUM=$(echo "$restart_line" | grep -o '"checksum": "[^"]*"' | cut -d'"' -f4)
+                    if [ -n "$CHECKSUM" ] && [ -f "$SAFE_CONFIG_FILE" ]; then
+                        echo "📝 Saving baseline checksum: $CHECKSUM"
+                        jq --arg checksum "$CHECKSUM" '.checksum_config.expected_checksum = $checksum' "$SAFE_CONFIG_FILE" > "$SAFE_CONFIG_FILE.tmp" && mv "$SAFE_CONFIG_FILE.tmp" "$SAFE_CONFIG_FILE"
+                        echo "✅ Baseline checksum saved to $SAFE_CONFIG_FILE"
+                        
+                        # Push updated config for validation
+                        echo "🔄 Pushing updated config with baseline checksum..."
+                        enhanced_config=$(mktemp)
+                        jq --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg timestamp "$timestamp" \
+                            '. + {"test_metadata": {"test_id": $test_id, "config": $config_name, "timestamp": $timestamp}}' \
+                            "$SAFE_CONFIG_FILE" > "$enhanced_config"
+                        
+                        TEMP_CONFIG="/sdcard/temp_debug_config_validation_$TEST_ID.json"
+                        adb -s "$ANDROID_DEVICE_ID" push "$enhanced_config" "$TEMP_CONFIG"
+                        adb -s "$ANDROID_DEVICE_ID" shell "run-as $ANDROID_PACKAGE_NAME cp $TEMP_CONFIG files/debug_startup_actions.json"
+                        adb -s "$ANDROID_DEVICE_ID" shell "rm $TEMP_CONFIG" 2>/dev/null || true
+                        rm "$enhanced_config"
+                        echo "✅ Updated config pushed to device for validation"
+                    else
+                        echo "⚠️  Failed to extract checksum or config file not found"
+                    fi
                 else
                     echo "🔄 Standard restart - config will be preserved"
                 fi
@@ -2751,6 +2777,82 @@ test-android-enhanced TARGET DURATION="30" NO_RESTART="false":
         echo "  *.*.error_handling    # All error handling tests"
         exit 1
     fi
+
+# Force update checksum baseline for a config
+test-android-update CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    echo "📸 Force updating checksum baseline for: $CONFIG_NAME"
+    echo ""
+    
+    # Check if config file exists
+    CONFIG_FILE="project/debug_configs/$CONFIG_NAME.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -10 || echo "  (none found)"
+        exit 1
+    fi
+    
+    # Check if it's a checksum config
+    if ! jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
+        echo "❌ Config file does not contain checksum configuration"
+        echo "💡 This command only works with checksum-enabled configs"
+        exit 1
+    fi
+    
+    # Clear the expected checksum to force regeneration
+    echo "🔄 Clearing existing baseline to force regeneration..."
+    jq '.checksum_config.expected_checksum = ""' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    echo "✅ Baseline cleared"
+    echo ""
+    
+    # Run the test to generate new baseline
+    echo "🧪 Running test to generate new baseline..."
+    just test-android-target "$CONFIG_NAME"
+
+# Reset checksum baseline (remove expected checksum from config)
+test-android-reset CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME"
+    echo ""
+    
+    # Check if config file exists
+    CONFIG_FILE="project/debug_configs/$CONFIG_NAME.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | sed 's/.*\//  /' | sed 's/\.json$//' | head -10 || echo "  (none found)"
+        exit 1
+    fi
+    
+    # Check if it's a checksum config
+    if ! jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
+        echo "❌ Config file does not contain checksum configuration"
+        echo "💡 This command only works with checksum-enabled configs"
+        exit 1
+    fi
+    
+    # Show current checksum if it exists
+    CURRENT_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_FILE")
+    if [ -n "$CURRENT_CHECKSUM" ]; then
+        echo "📋 Current baseline checksum: $CURRENT_CHECKSUM"
+    else
+        echo "📋 No baseline checksum currently set"
+    fi
+    echo ""
+    
+    # Clear the expected checksum
+    echo "🔄 Removing baseline checksum..."
+    jq '.checksum_config.expected_checksum = ""' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    echo "✅ Baseline checksum removed"
+    echo ""
+    echo "💡 Next run of 'just test-android-target $CONFIG_NAME' will create a new baseline"
 
 test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
