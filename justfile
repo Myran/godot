@@ -71,6 +71,54 @@ jobs := `sysctl -n hw.logicalcpu`
     
 default:
     @just help
+
+# Pre-commit validation - format, syntax check, and runtime validation  
+pre-commit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🚀 Running pre-commit validation..."
+    echo ""
+    
+    # Step 1: Check if code needs formatting (without modifying)
+    echo "1️⃣ Checking code formatting..."
+    format_needed=false
+    
+    # Check if any .gd files need formatting using gdformat --check
+    cd {{PROJECT_PATH}}
+    if ! find . -name "*.gd" -type f -not -path "./addons/*" -exec /Users/mattiasmyhrman/.local/bin/gdformat --check {} + 2>/dev/null; then
+        format_needed=true
+    fi
+    cd - > /dev/null  # Return to original directory
+    
+    if [ "$format_needed" = true ]; then
+        echo "❌ Code formatting required. Please run 'just format' and commit the changes."
+        echo "📝 To see which files need formatting, run: just format"
+        exit 1
+    fi
+    echo "✅ Code formatting validated"
+    echo ""
+    
+    # Step 2: Syntax validation
+    echo "2️⃣ Running syntax validation..."
+    if ! just validate; then
+        echo "❌ Syntax validation failed"
+        exit 1
+    fi
+    echo "✅ Syntax validation passed"
+    echo ""
+    
+    # Step 3: Runtime validation
+    echo "3️⃣ Running Godot runtime validation..."
+    if ! just validate-godot; then
+        echo "❌ Godot runtime validation failed"
+        exit 1
+    fi
+    echo "✅ Godot runtime validation passed"
+    echo ""
+    
+    echo "🎉 All pre-commit checks passed!"
+
 c:
     @just --choose
 l:

@@ -25,7 +25,7 @@ just fastbuild-android                     # Rebuild & deploy (60 sec)
 
 ### **Pre-Commit Workflow**
 ```bash
-just validate-godot                        # Full runtime validation (15 sec)
+just pre-commit                            # Complete pre-commit validation (format + syntax + runtime)
 just test-android pre-commit               # Pre-commit test suite
 just test-all-android                      # Complete validation (if needed)
 ```
@@ -391,9 +391,16 @@ var items = []                           # ❌ Generic array
 
 ### **Quality Validation**
 ```bash
+just pre-commit                          # Complete validation pipeline (format + syntax + runtime)
 just validate                            # Syntax check (3 sec)
 just validate-godot                      # Runtime validation (15 sec)
 just format                              # Code formatting
+
+# Pre-commit validation pipeline
+# - Checks if formatting is needed (fails if code requires formatting)
+# - Runs syntax validation with full error reporting  
+# - Runs runtime validation to catch type/compilation issues
+# - Perfect for CI/CD and git pre-commit hooks (non-destructive)
 
 # Custom validation patterns
 just validate-godot "ERROR:"             # Focus on errors only
