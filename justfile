@@ -10,6 +10,7 @@ import "enhanced_log_analysis.justfile"
 import "debug_commands.justfile"
 import "log_filter_commands.justfile"
 import "universal_log_tags.justfile"
+import "action_recording_commands.justfile"
 #import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
@@ -3059,10 +3060,20 @@ test-all-android:
     echo "🚀 Complete Test Suite - Full system validation"
     just _test-list-android default-all
 
-# Interactive test chooser using fzf (like just --choose)
-# Shows all debug configs and test lists with descriptions for easy selection
-test-android:
+# Universal test command - Interactive chooser (no args) or direct execution (with TARGET)
+# No args: Shows all debug configs and test lists with descriptions for easy selection
+# With args: Direct execution like test-android-target (configs, wildcards, actions, test lists)
+test-android TARGET="" DURATION="30" NO_RESTART="false":
     #!/usr/bin/env bash
+    
+    # If arguments provided, use direct execution mode
+    if [ -n "{{TARGET}}" ]; then
+        echo "🎯 Direct execution mode: {{TARGET}}"
+        just test-android-target "{{TARGET}}" "{{DURATION}}" "{{NO_RESTART}}"
+        exit $?
+    fi
+    
+    # Interactive mode (no arguments provided)
     if ! command -v fzf >/dev/null 2>&1; then
         echo "❌ 'fzf' command not found. Install with: brew install fzf"
         echo "💡 Using fallback: just test-android-manual"
@@ -3100,7 +3111,7 @@ test-android:
         # Extract the name (between prefix and description)
         selected=$(echo "$selected_line" | sed -E 's/^[📝🔧] ([^ ]+) - .*/\1/')
         echo "Running: just test-android-target '$selected'"
-        just test-android-target "$selected"
+        just test-android-target "$selected" "{{DURATION}}" "{{NO_RESTART}}"
     else
         echo "❌ No selection made"
         exit 1
@@ -5033,5 +5044,3 @@ help-config:
     echo ""
     echo "  Use fastbuild-android when:"
     echo "  ✅ Made code changes that need compilation"
-    echo "  ✅ Need full validation with fresh build"
-    echo "  ✅ Deploying for comprehensive testing"
