@@ -2491,8 +2491,11 @@ _test-list-android TEST_LIST_NAME="default-all":
         fi
         
         # Capture the test output to extract test ID and action results
+        # Temporarily disable exit on error to properly capture test results
+        set +e
         test_output=$(just _test-config-android "$config" "$timeout" 2>&1)
         test_exit_code=$?
+        set -e
         
         if [ $test_exit_code -eq 0 ]; then
             echo "✅ $config PASSED"
@@ -2503,38 +2506,8 @@ _test-list-android TEST_LIST_NAME="default-all":
             config_status="FAILED"
         fi
         
-        # Extract test ID from output for detailed results
-        test_id=$(echo "$test_output" | grep "🆔 Test ID:" | sed 's/.*Test ID: //' | head -1)
-        
-        # Extract action results if available
-        if [ -n "$test_id" ]; then
-            # Find the most recent log file containing this test ID
-            log_file=$(find test_results -name "test_logs.log" -exec grep -l "$test_id" {} \; 2>/dev/null | head -1)
-            
-            if [ -n "$log_file" ] && [ -f "$log_file" ]; then
-                # Extract individual action results
-                action_lines=$(grep "$test_id" "$log_file" 2>/dev/null | grep "DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE")
-                if [ -n "$action_lines" ]; then
-                    action_results=$(echo "$action_lines" | while read -r line; do
-                        if echo "$line" | grep -q "DEBUG_TEST_SUCCESS"; then
-                            status="✅"
-                        else
-                            status="❌"
-                        fi
-                        action=$(echo "$line" | grep -o '"action": "[^"]*"' | sed 's/"action": "\([^"]*\)"/\1/')
-                        echo "$status $action"
-                    done | sort | tr '\n' '; ' | sed 's/; $//')
-                else
-                    action_results=""
-                fi
-                
-                echo "$config|$config_status|$action_results" >> "$temp_results"
-            else
-                echo "$config|$config_status|" >> "$temp_results"
-            fi
-        else
-            echo "$config|$config_status|" >> "$temp_results"
-        fi
+        # Store basic result in temp file (detailed action processing removed for stability)
+        echo "$config|$config_status|" >> "$temp_results"
         
         echo ""
     done
@@ -2542,7 +2515,18 @@ _test-list-android TEST_LIST_NAME="default-all":
     echo "📋 Final Results for: $TEST_NAME"
     echo "=================="
     for config in "${configs[@]}"; do
-        if [ ${#failed_configs[@]} -gt 0 ] && [[ " ${failed_configs[*]} " =~ " $config " ]]; then
+        # Check if config is in failed_configs array using portable method
+        is_failed=false
+        if [ ${#failed_configs[@]} -gt 0 ]; then
+            for failed_config in "${failed_configs[@]}"; do
+                if [ "$failed_config" = "$config" ]; then
+                    is_failed=true
+                    break
+                fi
+            done
+        fi
+        
+        if [ "$is_failed" = "true" ]; then
             echo "❌ $config: FAILED"
         else
             echo "✅ $config: PASSED"  
