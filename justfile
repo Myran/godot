@@ -10,7 +10,8 @@ import "enhanced_log_analysis.justfile"
 import "debug_commands.justfile"
 import "log_filter_commands.justfile"
 import "universal_log_tags.justfile"
-import "action_recording_commands.justfile"
+#import "action_recording_commands.justfile"
+
 #import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
@@ -573,30 +574,41 @@ validate-godot FILTER="ERROR:":
     echo "📋 Setting embedded config to system-quit-only..."
     just config-set system-quit-only
     
-    # Determine filter settings
+    # Create temporary file for capturing output
+    TEMP_OUTPUT=$(mktemp)
+    trap "rm -f $TEMP_OUTPUT" EXIT
+    
+    # Determine filter settings and run validation
     if [[ "{{FILTER}}" == "all" ]]; then
         echo "🎮 Starting Godot headless with debug system (showing all output)..."
-        FILTER_CMD="cat"
+        # Run and capture all output
+        timeout 30s ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --debug --verbose > "$TEMP_OUTPUT" 2>&1
+        exit_code=$?
+        cat "$TEMP_OUTPUT"
     else
         echo "🎮 Starting Godot headless with debug system (filtering for '{{FILTER}}' with file context)..."
-        # Enhanced filter to show file context with ERROR messages  
-        FILTER_CMD="awk '/Loading resource:.*\.gd$/ {file=\$0} /{{FILTER}}/ {if(file) {print file; file=\"\"} print}'"
+        # Run and capture output, then filter
+        timeout 30s ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --debug --verbose > "$TEMP_OUTPUT" 2>&1
+        exit_code=$?
+        
+        # Enhanced filter to show file context with ERROR messages
+        awk '/Loading resource:.*\.gd$/ {file=$0} /{{FILTER}}/ {if(file) {print file; file=""} print}' "$TEMP_OUTPUT"
     fi
     
-    # Start Godot headless process with filtering
-    timeout 30s ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --debug --verbose 2>&1 | eval "$FILTER_CMD" || {
-        exit_code=$?
-        if [ $exit_code -eq 124 ]; then
-            echo "❌ Godot headless validation timed out after 30 seconds"
-            exit 1
-        elif [ $exit_code -eq 0 ]; then
-            echo "✅ Godot headless validation completed successfully"
-            exit 0
-        else
-            echo "❌ Godot headless validation failed with exit code $exit_code"
-            exit $exit_code
-        fi
-    }
+    # Check exit codes and error presence
+    if [ $exit_code -eq 124 ]; then
+        echo "❌ Godot headless validation timed out after 30 seconds"
+        exit 1
+    elif [ $exit_code -ne 0 ]; then
+        echo "❌ Godot headless validation failed with exit code $exit_code"
+        exit $exit_code
+    fi
+    
+    # Check for errors in output (fail if any errors found)
+    if grep -q "{{FILTER}}" "$TEMP_OUTPUT"; then
+        echo "❌ Godot validation failed: errors detected in output"
+        exit 1
+    fi
     
     echo "✅ Runtime validation completed successfully"
 
