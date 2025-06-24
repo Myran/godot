@@ -183,13 +183,45 @@ _validate-config-exists CONFIG:
         exit 0
     fi
     
-    # Config file doesn't exist - check if CONFIG is an action name
+    # Config file doesn't exist - check if CONFIG is a config pattern or action name
     echo "🔍 Config file not found: $CONFIG_FILE"
-    echo "🔍 Checking if '{{CONFIG}}' is an action name..."
     
     # Check if it's a wildcard pattern
     if [[ "{{CONFIG}}" == *'*'* ]]; then
         echo "🔍 Detected wildcard pattern: {{CONFIG}}"
+        
+        # First, try to match config file names
+        echo "🔍 Checking for matching config files..."
+        CONFIG_PATTERN="{{CONFIG}}"
+        MATCHING_CONFIGS=$(ls project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20)
+        
+        if [ -n "$MATCHING_CONFIGS" ]; then
+            echo "✅ Found matching config files:"
+            echo "$MATCHING_CONFIGS" | sed 's/^/  /'
+            echo "🔧 Creating temporary test list for config pattern: {{CONFIG}}"
+            
+            # Create temporary test list file 
+            TEMP_LIST_FILE="project/test-lists/temp_pattern_${SAFE_CONFIG_NAME}.json"
+            CONFIG_LIST=$(echo "$MATCHING_CONFIGS" | sed 's/^/    "/' | sed 's/$/",/' | sed '$s/,$//')
+            {
+                echo '{'
+                echo '  "name": "Config Pattern: '"$CONFIG_PATTERN"'",'
+                echo '  "description": "Auto-generated test list for config pattern: '"$CONFIG_PATTERN"'",'
+                echo '  "configs": ['
+                echo "$CONFIG_LIST"
+                echo '  ]'
+                echo '}'
+            } > "$TEMP_LIST_FILE"
+            
+            # Run the temporary test list 
+            echo "✅ Temporary test list created: $TEMP_LIST_FILE"
+            echo "🚀 Executing config pattern as test list..."
+            
+            # Execute via test list system and exit with its result
+            exec just _test-list-android "temp_pattern_${SAFE_CONFIG_NAME}"
+        fi
+        
+        echo "🔍 No matching config files, checking for action pattern..."
         echo "🔧 Creating temporary config for wildcard pattern: {{CONFIG}}"
         
         # Create temporary config with safe filename - NO TRAP HERE
