@@ -36,3 +36,11 @@ var __getstate__: Callable = Callable()
 ## [br]
 ## func __setstate__(obj: Object, state: Dictionary) -> void
 var __setstate__: Callable = Callable()
+
+## Property signature for inner class identification.
+## Used to identify inner class instances at runtime when global_name is empty.
+## Contains Array of property names and types for fingerprinting.
+var property_signature: Array[String] = []
+
+## Whether this class is an inner class (requires property-based identification)
+var is_inner_class: bool = false

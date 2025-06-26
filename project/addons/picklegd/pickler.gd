@@ -112,6 +112,9 @@ const NEWARGS_KEY := &"__NEW"
 ## registry of classes that are allowed to be pickled.
 var class_registry: Dictionary[StringName, PicklableClass] = {}
 
+## Registry for inner class property signatures (for runtime identification)
+var inner_class_signatures: Dictionary[String, StringName] = {}
+
 ## Serialize default values of Objects. Set to false to strip default values from objects.
 var serialize_defaults := true
 
@@ -122,18 +125,24 @@ var compression_mode: FileAccess.CompressionMode = FileAccess.COMPRESSION_DEFLAT
 ## Get a name for this object's class.
 ## Returns the obj's class name,
 ## or null if there's no class name for this object.
-## Enhanced to support inner classes with fallback detection.
+## Enhanced to support inner classes with property-based fingerprinting.
 func get_object_class_name(obj: Object) -> StringName:
 	var scr: Script = obj.get_script()
 	var clsname = &""
 	if scr != null:
 		clsname = scr.get_global_name()
 		if clsname.is_empty():
-			# Fallback for inner classes - use script path + inner class detection
-			var script_path = scr.resource_path
-			var inner_class_name = _detect_inner_class_name(obj, scr)
-			if not inner_class_name.is_empty():
-				clsname = StringName(script_path + "::" + inner_class_name)
+			# Property-based fingerprinting for inner classes
+			var signature = _generate_property_signature(obj)
+			var signature_key = _array_to_signature_string(signature)
+			if signature_key in inner_class_signatures:
+				clsname = inner_class_signatures[signature_key]
+			else:
+				# Fallback for legacy detection - use script path + basic detection
+				var script_path = scr.resource_path
+				var inner_class_name = _detect_inner_class_name(obj, scr)
+				if not inner_class_name.is_empty():
+					clsname = StringName(script_path + "::" + inner_class_name)
 	else:
 		clsname = obj.get_class()
 	return clsname
@@ -267,6 +276,64 @@ func has_custom_class(scr: Script) -> bool:
 	if clsname.is_empty():
 		return false
 	return clsname in class_registry
+
+
+## Register an inner class using property-based fingerprinting.
+## This enables serialization of inner classes that don't have global names.
+## inner_class_name: The name to use for this inner class (e.g. "Context.Event")
+## constructor: A callable that creates a new instance of this inner class
+## Returns the PicklableClass object for this inner class.
+func register_inner_class(inner_class_name: StringName, constructor: Callable) -> PicklableClass:
+	# Create sample instance to generate property signature
+	var sample_instance = constructor.call()
+	if sample_instance == null:
+		push_error("Inner class constructor failed to create instance: " + str(inner_class_name))
+		return null
+	
+	var pc := PicklableClass.new()
+	pc.constructor = constructor
+	pc.is_inner_class = true
+	
+	# Generate property signature for runtime identification
+	pc.property_signature = _generate_property_signature(sample_instance)
+	var signature_key = _array_to_signature_string(pc.property_signature)
+	
+	# Store in both registries
+	class_registry[inner_class_name] = pc
+	inner_class_signatures[signature_key] = inner_class_name
+	
+	# Set up allowed properties (same logic as regular classes)
+	var proplist = sample_instance.get_property_list()
+	for prop in proplist:
+		if prop.usage & PROP_WHITELIST and not prop.usage & PROP_BLACKLIST:
+			pc.allowed_properties[prop.name] = true
+	
+	# Clean up sample instance
+	if sample_instance.has_method("queue_free"):
+		sample_instance.queue_free()
+	
+	return pc
+
+
+## Generate property signature for inner class identification.
+## Returns an Array of property names and types for fingerprinting.
+func _generate_property_signature(obj: Object) -> Array[String]:
+	var signature: Array[String] = []
+	var proplist = obj.get_property_list()
+	
+	for prop in proplist:
+		# Only include user-defined script properties for signature
+		if prop.usage & PROP_WHITELIST and not prop.usage & PROP_BLACKLIST:
+			# Create signature: "property_name:type_id"
+			signature.append(prop.name + ":" + str(prop.type))
+	
+	signature.sort()  # Ensure consistent ordering
+	return signature
+
+
+## Convert property signature array to string key for dictionary lookup
+func _array_to_signature_string(signature: Array[String]) -> String:
+	return "|".join(signature)
 
 
 ## Returns true if this native class has been registered, otherwise false.
