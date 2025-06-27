@@ -71,7 +71,17 @@
       "Bash(__NEW_LINE__ echo -e \"\\n2️⃣ Testing build status command:\")",
       "Bash(__NEW_LINE__ echo -e \"\\n3️⃣ Testing validation commands:\")",
       "Bash(command -v:*)",
-      "mcp__zen__chat"
+      "mcp__zen__chat",
+      "mcp__mcp-shrimp-task-manager__update_task",
+      "mcp__basic-memory__build_context",
+      "mcp__basic-memory__read_note",
+      "mcp__mcp-shrimp-task-manager__get_task_detail",
+      "mcp__serena__read_file",
+      "mcp__serena__write_memory",
+      "mcp__basic-memory__search",
+      "mcp__serena__read_memory",
+      "mcp__basic-memory__recent_activity",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
