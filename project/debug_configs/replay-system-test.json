@@ -1,0 +1,7 @@
+{
+  "description": "Replay System Test - Comprehensive validation of recording and replay functionality",
+  "actions": [
+    "system.test.replay_system",
+    "system.debug.quit_application"
+  ]
+}

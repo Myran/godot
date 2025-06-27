@@ -1,0 +1,8 @@
+{
+  "description": "Replay Manual Test - Test manual replay actions for user validation",
+  "actions": [
+    "system.recording.list_recordings",
+    "system.recording.replay",
+    "system.debug.quit_application"
+  ]
+}

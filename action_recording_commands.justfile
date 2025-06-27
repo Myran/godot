@@ -10,11 +10,10 @@ record-and-create RECORDING_NAME: (_record-actions RECORDING_NAME) (_create-test
     @echo "🚀 Run your new test with:"
     @echo "   just test-android-target {{RECORDING_NAME}}-recording-test"
 
-# Future: Full record-replay-validate workflow (requires replay implementation)
-record-and-validate RECORDING_NAME:
-    @echo "🚧 Full record-replay-validate workflow requires replay system implementation"
-    @echo "📋 Using record-and-create workflow instead..."
-    just record-and-create {{RECORDING_NAME}}
+# Full record-replay-validate workflow (now implemented!)
+record-and-validate RECORDING_NAME: (_record-actions RECORDING_NAME) (_replay-and-validate RECORDING_NAME)
+    @echo "🎉 Complete record-replay-validate workflow completed for: {{RECORDING_NAME}}"
+    @echo "✅ Recording saved and replay validation passed"
 
 # Record player actions with game setup
 _record-actions RECORDING_NAME:
@@ -120,10 +119,58 @@ record RECORDING_NAME: (_record-actions RECORDING_NAME)
 create-test RECORDING_NAME: (_create-test-config RECORDING_NAME)
     @echo "🧪 Test config created: {{RECORDING_NAME}}-recording-test"
 
-# List available recordings
+# Replay and validate a recording
+_replay-and-validate RECORDING_NAME:
+    @echo "🔄 Starting replay validation for: {{RECORDING_NAME}}"
+    just _create-replay-config {{RECORDING_NAME}}
+    just _run-replay-validation {{RECORDING_NAME}}
+
+# Create replay configuration with checksum validation
+_create-replay-config RECORDING_NAME:
+    #!/usr/bin/env bash
+    echo "🔧 Creating replay configuration for: {{RECORDING_NAME}}"
+    
+    # Create replay config with checksum validation
+    SAFE_NAME=$(echo "{{RECORDING_NAME}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    CONFIG_FILE="project/debug_configs/_temp_replay-${SAFE_NAME}.json"
+    
+    cat > "$CONFIG_FILE" << 'EOF'
+    {
+      "description": "Replay Validation for {{RECORDING_NAME}} - Load and replay recording with checksum validation",
+      "actions": [
+        "system.recording.list_recordings",
+        "system.recording.reset_and_replay",
+        "system.debug.quit_application"
+      ],
+      "checksum_config": {
+        "state_type": "recording_state",
+        "expected_checksum": ""
+      }
+    }
+    EOF
+    
+    echo "✅ Replay config created: $CONFIG_FILE"
+
+# Run replay validation
+_run-replay-validation RECORDING_NAME:
+    #!/usr/bin/env bash
+    echo "🎮 Running replay validation for: {{RECORDING_NAME}}"
+    
+    SAFE_NAME=$(echo "{{RECORDING_NAME}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
+    CONFIG_NAME="_temp_replay-${SAFE_NAME}"
+    just config-restart-android "$CONFIG_NAME"
+    echo "✅ Replay validation completed"
+
+# Replay a specific recording (standalone)
+replay-recording RECORDING_NAME:
+    @echo "🔄 Replaying recording: {{RECORDING_NAME}}"
+    just _create-replay-config {{RECORDING_NAME}}
+    just _run-replay-validation {{RECORDING_NAME}}
+
+# List available recordings using debug action
 list-recordings:
     @echo "📁 Available recordings:"
-    @ls -la recordings/*.json 2>/dev/null | grep "_recording.json" || echo "   No recordings found"
+    just config-restart-android 'system.recording.list_recordings'
 
 # Clean up temporary files
 clean-recording-temp:
@@ -139,9 +186,12 @@ help-recording:
     @echo ""
     @echo "📋 Main Workflows:"
     @echo "  just record-and-create NAME      Record actions and create test config"
-    @echo "  just record-and-validate NAME    🚧 Future: Complete record→replay→validate workflow"
+    @echo "  just record-and-validate NAME    ✅ Complete record→replay→validate workflow"
     @echo "  just record NAME                 Record player actions only"
     @echo "  just create-test NAME            Create test config only"
+    @echo ""
+    @echo "🔄 Replay Operations:"
+    @echo "  just replay-recording NAME       Replay a specific recording with validation"
     @echo ""
     @echo "📁 Management:"
     @echo "  just list-recordings             Show available recordings"
@@ -152,5 +202,7 @@ help-recording:
     @echo "  just test-android-update NAME-recording-test    Update test baseline"
     @echo ""
     @echo "📖 Example Usage:"
-    @echo "  just record-and-create battle-scenario-1"
-    @echo "  just test-android-target battle-scenario-1-recording-test"
+    @echo "  just record-and-create battle-scenario-1        # Record and create test"
+    @echo "  just record-and-validate my-game-session        # Full record→replay→validate"
+    @echo "  just replay-recording battle-scenario-1         # Replay existing recording"
+    @echo "  just test-android-target battle-scenario-1-recording-test  # Run test"

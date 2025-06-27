@@ -672,19 +672,25 @@ func _test_draft_column_state_event() -> bool:
 	]
 
 	for case: Dictionary in test_cases:
+		var case_description: String = case.get("description", "")
+		var column: int = case.get("column", 0)
+		var is_locked: bool = case.get("is_locked", false)
+		var test_message: String = "Testing DraftColumnStateEvent " + case_description
+
 		Log.info(
-			"Testing DraftColumnStateEvent " + case.description,
-			{"column": case.column, "is_locked": case.is_locked},
+			test_message,
+			{"column": column, "is_locked": is_locked},
 			["debug", "test", "picklegd", "recording"]
 		)
 
 		# Create original event
 		var original_event: core.DraftColumnStateEvent = core.DraftColumnStateEvent.new(
-			case.column, case.is_locked
+			column, is_locked
 		)
 
 		# Test RecordedAction serialization
-		var recorded: RecordedAction = RecordedAction.new(original_event, case.column + 10)
+		var timestamp: int = column + 10
+		var recorded: RecordedAction = RecordedAction.new(original_event, timestamp)
 
 		if recorded.event_class.is_empty():
 			Log.error(
@@ -716,15 +722,14 @@ func _test_draft_column_state_event() -> bool:
 		if not deserialized_event is core.DraftColumnStateEvent:
 			Log.error(
 				"core.DraftColumnStateEvent deserialization type mismatch",
-				{
-					"test_case": case.description,
-					"actual_type": deserialized_event.get_class()
-				},
+				{"test_case": case.description, "actual_type": deserialized_event.get_class()},
 				["debug", "test", "error"]
 			)
 			return false
 
-		var state_event: core.DraftColumnStateEvent = deserialized_event as core.DraftColumnStateEvent
+		var state_event: core.DraftColumnStateEvent = (
+			deserialized_event as core.DraftColumnStateEvent
+		)
 
 		# Verify all properties match
 		if (
@@ -767,7 +772,6 @@ func _test_draft_column_state_event() -> bool:
 	)
 
 	return true
-
 
 
 func _test_lineup_add_card_event() -> bool:

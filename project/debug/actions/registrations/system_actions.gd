@@ -341,6 +341,36 @@ static func _register_recording_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.replay", _replay_recording)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Replay a recording file with automatic validation")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.reset_and_replay", _reset_and_replay_recording)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Reset game state and replay a recording file")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.list_recordings", _list_recordings)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("List all available recording files")
+		)
+	)
+
 
 # Recording action implementations
 static func _start_recording() -> bool:
@@ -397,6 +427,100 @@ static func _show_recording_stats() -> bool:
 	return true
 
 
+static func _replay_recording() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	# Get list of available recordings
+	var recordings: Array[String] = ActionRecorder.list_recordings()
+	if recordings.is_empty():
+		Log.warning("No recordings available for replay", {}, ["debug", "recording", "replay"])
+		return false
+
+	# For now, replay the most recent recording
+	# TODO: Add fzf selector integration
+	var latest_recording: String = recordings[recordings.size() - 1]  # Last (most recent) recording
+	var filepath: String = ActionRecorder.RECORDINGS_DIR + latest_recording
+
+	var log_message: String = "Replaying recording"
+	var log_metadata: Dictionary = {"file": latest_recording, "filepath": filepath}
+	var log_tags: Array[String] = ["debug", "recording", "replay"]
+	Log.info(log_message, log_metadata, log_tags)
+
+	# Get expected checksum from config if available
+	var config: Dictionary = _get_replay_config()
+
+	var success: bool = ActionRecorder.replay_recording(filepath, config)
+	return success
+
+
+static func _reset_and_replay_recording() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	# Get list of available recordings
+	var recordings: Array[String] = ActionRecorder.list_recordings()
+	if recordings.is_empty():
+		Log.warning("No recordings available for replay", {}, ["debug", "recording", "replay"])
+		return false
+
+	# For now, replay the most recent recording with game reset
+	var latest_recording: String = recordings[recordings.size() - 1]
+	var filepath: String = ActionRecorder.RECORDINGS_DIR + latest_recording
+
+	var log_message: String = "Resetting and replaying recording"
+	var log_metadata: Dictionary = {"file": latest_recording, "filepath": filepath}
+	var log_tags: Array[String] = ["debug", "recording", "replay"]
+	Log.info(log_message, log_metadata, log_tags)
+
+	# Force game reset and get config
+	var config: Dictionary = _get_replay_config()
+	config["reset_game"] = true
+
+	var success: bool = ActionRecorder.replay_recording(filepath, config)
+	return success
+
+
+static func _list_recordings() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	var recordings: Array[String] = ActionRecorder.list_recordings()
+
+	Log.info(
+		"Available Recordings",
+		{"count": recordings.size(), "recordings": recordings},
+		["debug", "recording", "list"]
+	)
+
+	return true
+
+
+static func _get_replay_config() -> Dictionary:
+	# Try to get replay configuration from current test config
+	var config_path: String = "user://debug_startup_actions.json"
+	var config: Dictionary = {}
+
+	if FileAccess.file_exists(config_path):
+		var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
+		if file:
+			var json_text: String = file.get_as_text()
+			file.close()
+
+			var json: JSON = JSON.new()
+			if json.parse(json_text) == OK and json.data is Dictionary:
+				var data: Dictionary = json.data
+				if data.has("checksum_config"):
+					var checksum_config: Dictionary = data.checksum_config
+					config["expected_checksum"] = checksum_config.get("expected_checksum", "")
+					config["state_type"] = checksum_config.get("state_type", "")
+
+	return config
+
+
 static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	# Test actions for validating Phase 1 implementation
 	Log.info("Registering test actions", {}, ["debug", "test", "registration"])
@@ -422,6 +546,11 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	var picklegd_recording_test: TestPickledGdRecordingSystem = TestPickledGdRecordingSystem.new()
 	registry.register_action(picklegd_recording_test)
 
+	# Register replay system comprehensive test using preload to avoid class resolution issues
+	var replay_system_test_script: GDScript = preload("res://debug/actions/test_replay_system.gd")
+	var replay_system_test: DebugAction = replay_system_test_script.new()
+	registry.register_action(replay_system_test)
+
 
 static func _generate_simple_player_events() -> bool:
 	Log.info(
@@ -430,33 +559,43 @@ static func _generate_simple_player_events() -> bool:
 
 	# Queue event generation to execute when system is ready (using SystemIdleActionEvent)
 	var generate_callable: Callable = func() -> void:
-		Log.info(
-			"Executing queued player event generation", {}, ["debug", "test", "var2str", "idle"]
-		)
+		var message: String = "Executing queued player event generation"
+		var metadata: Dictionary = {}
+		var tags: Array[String] = ["debug", "test", "var2str", "idle"]
+		Log.info(message, metadata, tags)
 
 		# Generate RerollDraftEvent (PLAYER source)
 		var reroll_event: core.RerollDraftEvent = core.RerollDraftEvent.new()
+		var event_type: String = "RerollDraftEvent"
+		var source: String = "PLAYER"
 		Log.info(
 			"Generated RerollDraftEvent",
-			{"event_type": "RerollDraftEvent", "source": "PLAYER"},
+			{"event_type": event_type, "source": source},
 			["debug", "test", "event_generation"]
 		)
 		core.action(reroll_event)
 
 		# Generate UpgradeEvent (PLAYER source)
-		var upgrade_event: core.UpgradeEvent = core.UpgradeEvent.new(2)
+		var upgrade_level: int = 2
+		var upgrade_event: core.UpgradeEvent = core.UpgradeEvent.new(upgrade_level)
+		var upgrade_event_type: String = "UpgradeEvent"
+		var upgrade_source: String = "PLAYER"
 		Log.info(
 			"Generated UpgradeEvent",
-			{"event_type": "UpgradeEvent", "new_level": 2, "source": "PLAYER"},
+			{
+				"event_type": upgrade_event_type,
+				"new_level": upgrade_level,
+				"source": upgrade_source
+			},
 			["debug", "test", "event_generation"]
 		)
 		core.action(upgrade_event)
 
-		Log.info(
-			"Simple PLAYER events generated successfully",
-			{"events_generated": 2},
-			["debug", "test", "completion"]
-		)
+		var events_count: int = 2
+		var completion_message: String = "Simple PLAYER events generated successfully"
+		var completion_metadata: Dictionary = {"events_generated": events_count}
+		var completion_tags: Array[String] = ["debug", "test", "completion"]
+		Log.info(completion_message, completion_metadata, completion_tags)
 
 	# Queue via SystemIdleActionEvent - will execute when system is ready
 	core.action(core.SystemIdleActionEvent.new(generate_callable))

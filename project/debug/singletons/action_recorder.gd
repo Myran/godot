@@ -14,6 +14,12 @@ var initial_seed: int = -1
 var is_recording: bool = false
 var is_replaying: bool = false
 
+# Replay state
+var replay_actions: Array[RecordedAction] = []
+var replay_index: int = 0
+var replay_initial_checksum: String = ""
+var replay_config: Dictionary = {}
+
 
 func _ready() -> void:
 	Log.info(
@@ -265,6 +271,10 @@ func start_replay_mode() -> void:
 
 func stop_replay_mode() -> void:
 	is_replaying = false
+	replay_actions.clear()
+	replay_index = 0
+	replay_initial_checksum = ""
+	replay_config.clear()
 	Log.info("Replay mode ended", {}, ["debug", "action_recorder", "replay"])
 
 
@@ -306,6 +316,257 @@ func _capture_initial_seed() -> void:
 			{"seed": initial_seed},
 			["debug", "action_recorder", "seed", "warning"]
 		)
+
+
+func replay_recording(filepath: String, config: Dictionary = {}) -> bool:
+	if is_recording:
+		Log.error(
+			"Cannot replay while recording", {}, ["debug", "action_recorder", "replay", "error"]
+		)
+		return false
+
+	if is_replaying:
+		Log.warning(
+			"Replay already in progress, stopping current replay",
+			{},
+			["debug", "action_recorder", "replay"]
+		)
+		stop_replay_mode()
+
+	# Load recording data
+	var recording_data: Dictionary = load_recording(filepath)
+	if recording_data.is_empty():
+		Log.error(
+			"Failed to load recording for replay",
+			{"filepath": filepath},
+			["debug", "action_recorder", "replay", "error"]
+		)
+		return false
+
+	# Parse actions from recording
+	replay_actions.clear()
+	var actions_data: Array = recording_data.get("actions", [])
+	for action_dict: Dictionary in actions_data:
+		var recorded_action: RecordedAction = RecordedAction.from_dictionary(action_dict)
+		if recorded_action:
+			replay_actions.append(recorded_action)
+		else:
+			Log.error(
+				"Failed to parse recorded action",
+				{"action_dict": action_dict},
+				["debug", "action_recorder", "replay", "error"]
+			)
+			return false
+
+	# Setup replay state
+	replay_index = 0
+	replay_config = config
+	replay_initial_checksum = config.get("expected_checksum", "")
+	start_replay_mode()
+
+	# Set seed for deterministic replay
+	var replay_seed: int = recording_data.get("initial_seed", -1)
+	if replay_seed != -1:
+		set_seed_for_replay(replay_seed)
+
+	# Reset game state if requested
+	if config.get("reset_game", true):
+		_reset_game_state()
+
+	Log.info(
+		"Replay started",
+		{
+			"filepath": filepath,
+			"total_actions": replay_actions.size(),
+			"replay_seed": replay_seed,
+			"reset_game": config.get("reset_game", true),
+			"expected_checksum": replay_initial_checksum
+		},
+		["debug", "action_recorder", "replay"]
+	)
+
+	# Start replay execution using SystemIdleActionEvent pattern
+	_queue_next_replay_action()
+	return true
+
+
+func _queue_next_replay_action() -> void:
+	if not is_replaying or replay_index >= replay_actions.size():
+		# Replay completed - validate checksum
+		_complete_replay_with_validation()
+		return
+
+	# Get next action to replay
+	var recorded_action: RecordedAction = replay_actions[replay_index]
+	replay_index += 1
+
+	# Create callable that will deserialize and emit the event
+	var replay_callable: Callable = func() -> void: _execute_replay_action(recorded_action)
+
+	# Queue using SystemIdleActionEvent (proven pattern)
+	core.action(core.SystemIdleActionEvent.new(replay_callable))
+
+
+func _execute_replay_action(recorded_action: RecordedAction) -> void:
+	# Deserialize and emit the event
+	var event: core.CoreEvent = recorded_action.from_serialized_data()
+	if not event:
+		Log.error(
+			"Failed to deserialize recorded action",
+			{"sequence": recorded_action.sequence_number, "class": recorded_action.event_class},
+			["debug", "action_recorder", "replay", "error"]
+		)
+		# Continue with next action even if this one fails
+		_queue_next_replay_action()
+		return
+
+	Log.debug(
+		"Replaying action",
+		{
+			"sequence": recorded_action.sequence_number,
+			"event_type": recorded_action.event_class,
+			"progress": str(replay_index) + "/" + str(replay_actions.size())
+		},
+		["debug", "action_recorder", "replay", "action"]
+	)
+
+	# Emit the event and queue next action
+	core.action(event)
+	_queue_next_replay_action()
+
+
+func _complete_replay_with_validation() -> void:
+	Log.info(
+		"Replay completed, starting validation",
+		{"total_actions_replayed": replay_index},
+		["debug", "action_recorder", "replay", "complete"]
+	)
+
+	# Capture final game state for validation
+	var validate_callable: Callable = func() -> void: _validate_replay_checksum()
+
+	# Queue validation using SystemIdleActionEvent
+	core.action(core.SystemIdleActionEvent.new(validate_callable))
+
+
+func _validate_replay_checksum() -> void:
+	# Create capture action to get current game state checksum
+	var capture_action: RecordingCaptureAction = RecordingCaptureAction.new()
+	var capture_result: DebugAction.Result = capture_action.execute()
+
+	if not capture_result.success:
+		Log.error(
+			"Failed to capture game state for replay validation",
+			{"error": capture_result.error_message},
+			["debug", "action_recorder", "replay", "validation", "error"]
+		)
+		stop_replay_mode()
+		return
+
+	# Get the checksum from capture result
+	var current_checksum: String = capture_result.data.get("checksum", "")
+
+	if current_checksum.is_empty():
+		Log.error(
+			"No checksum found in capture result",
+			{"capture_data": capture_result.data},
+			["debug", "action_recorder", "replay", "validation", "error"]
+		)
+		stop_replay_mode()
+		return
+
+	# Compare checksums
+	if replay_initial_checksum.is_empty():
+		Log.warning(
+			"No expected checksum for validation - replay completed without validation",
+			{"final_checksum": current_checksum},
+			["debug", "action_recorder", "replay", "validation", "warning"]
+		)
+	else:
+		var validation_success: bool = current_checksum == replay_initial_checksum
+
+		if validation_success:
+			Log.info(
+				"✅ REPLAY VALIDATION PASSED - Checksums match",
+				{
+					"expected_checksum": replay_initial_checksum,
+					"actual_checksum": current_checksum,
+					"actions_replayed": replay_index
+				},
+				["debug", "action_recorder", "replay", "validation", "success"]
+			)
+		else:
+			Log.error(
+				"❌ REPLAY VALIDATION FAILED - Checksum mismatch",
+				{
+					"expected_checksum": replay_initial_checksum,
+					"actual_checksum": current_checksum,
+					"actions_replayed": replay_index
+				},
+				["debug", "action_recorder", "replay", "validation", "error"]
+			)
+
+	stop_replay_mode()
+
+
+func _reset_game_state() -> void:
+	# Reset game state for deterministic replay
+	var game: Game = _get_game_node()
+	if game:
+		# Clear lineups
+		if game.holder_allies:
+			game.holder_allies.clear_lineup()
+		if game.holder_enemy:
+			game.holder_enemy.clear_lineup()
+
+		# Reset clicker state if available
+		if game.clicker and game.clicker.has_method("reset_state"):
+			game.clicker.reset_state()
+
+		Log.info("Game state reset for replay", {}, ["debug", "action_recorder", "replay", "reset"])
+	else:
+		Log.warning(
+			"Could not find game node for state reset",
+			{},
+			["debug", "action_recorder", "replay", "reset", "warning"]
+		)
+
+
+func _get_game_node() -> Game:
+	var root: Node = Engine.get_main_loop().current_scene
+	if not root:
+		return null
+
+	var game_node: Node = root.find_child("Game", true, false)
+	if not game_node or not game_node is Game:
+		return null
+
+	return game_node
+
+
+func list_recordings() -> Array[String]:
+	# List available recording files
+	var recordings: Array[String] = []
+
+	if not DirAccess.dir_exists_absolute(RECORDINGS_DIR):
+		return recordings
+
+	var dir: DirAccess = DirAccess.open(RECORDINGS_DIR)
+	if not dir:
+		return recordings
+
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+
+	while file_name != "":
+		if file_name.ends_with(".json") and not dir.current_is_dir():
+			recordings.append(file_name)
+		file_name = dir.get_next()
+
+	dir.list_dir_end()
+	recordings.sort()
+
+	return recordings
 
 
 func _ensure_recordings_directory() -> void:
