@@ -1,0 +1,46 @@
+{
+  "description": "PickledGD Test Suite - Organized testing workflow for PickledGD functionality validation",
+  "test_configs": [
+    {
+      "name": "picklegd-recording-test",
+      "description": "Core PickledGD recording system functionality",
+      "priority": "high",
+      "estimated_duration": "30s",
+      "category": "functionality"
+    },
+    {
+      "name": "picklegd-edge-cases-test", 
+      "description": "Edge cases and error handling validation",
+      "priority": "high",
+      "estimated_duration": "45s",
+      "category": "resilience"
+    },
+    {
+      "name": "picklegd-performance-test",
+      "description": "Performance benchmarking and optimization",
+      "priority": "medium",
+      "estimated_duration": "60s", 
+      "category": "performance"
+    },
+    {
+      "name": "picklegd-comprehensive-test",
+      "description": "Complete comprehensive test coverage",
+      "priority": "medium",
+      "estimated_duration": "90s",
+      "category": "comprehensive"
+    },
+    {
+      "name": "picklegd-full-test-suite",
+      "description": "All PickledGD tests in sequence",
+      "priority": "low",
+      "estimated_duration": "180s",
+      "category": "full_suite"
+    }
+  ],
+  "recommended_workflows": {
+    "quick_validation": ["picklegd-recording-test"],
+    "development_testing": ["picklegd-recording-test", "picklegd-edge-cases-test"],
+    "pre_commit": ["picklegd-recording-test", "picklegd-edge-cases-test", "picklegd-performance-test"],
+    "complete_validation": ["picklegd-full-test-suite"]
+  }
+}

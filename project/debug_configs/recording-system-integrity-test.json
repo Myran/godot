@@ -1,0 +1,7 @@
+{
+  "description": "Recording System Integrity Test - Validate ActionRecorder and RecordedAction foundation",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.quit_application"
+  ]
+}

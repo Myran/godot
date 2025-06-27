@@ -1,0 +1,24 @@
+{
+  "description": "Board Checksum Test - Validate board state consistency with deterministic seed reset",
+  "actions": [
+    "game.battle.set_seed",
+    "game.board.reset_state",
+    "game.board.capture_state",
+    "system.checksum.validate",
+    "system.debug.quit_application"
+  ],
+  "checksum_config": {
+    "state_type": "board_state",
+    "expected_checksum": "cf91e96280dded8ed39e4b5e59609a13c50d2821f25a8d3c0a466a70902ffa3f"
+  },
+  "recording_config": {
+    "test_mode": true,
+    "capture_board": true,
+    "capture_lineup": false,
+    "capture_clicker": false,
+    "capture_recording_meta": false,
+    "capture_rng": false,
+    "auto_baseline": true,
+    "validation_enabled": true
+  }
+}

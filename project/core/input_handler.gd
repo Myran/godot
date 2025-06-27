@@ -114,8 +114,18 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 							match dragging_card.block_context:
 								Cards.CONTEXT.LINEUP:
 									var prev_holder: Holder = dragging_card.holder
+									var from_pos: int = prev_holder.get_index()
+									var to_pos: int = interacted_holder.get_index()
+
+									# Only emit event if the move is actually valid
 									if interacted_holder.set_card(dragging_card):
 										prev_holder.remove_card()
+										current_context.add_event(
+											core.LineupCardMoveEvent.new(
+												dragging_card, from_pos, to_pos
+											)
+										)
+										current_context.solve_events()
 										release_handled = true
 
 								Cards.CONTEXT.DRAFT:

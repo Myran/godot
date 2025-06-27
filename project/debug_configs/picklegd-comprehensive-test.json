@@ -1,0 +1,6 @@
+{
+  "description": "PickledGD Comprehensive Test Suite - Complete test coverage including edge cases, error handling, performance, and integration tests",
+  "actions": [
+    "test.picklegd.comprehensive"
+  ]
+}

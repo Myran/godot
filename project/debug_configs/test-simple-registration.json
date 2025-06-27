@@ -1,0 +1,6 @@
+{
+  "description": "Test Simple Registration - Validate that new test actions can be registered and found",
+  "actions": [
+    "game.test.simple_player_events"
+  ]
+}

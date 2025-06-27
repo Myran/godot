@@ -1,0 +1,13 @@
+{
+  "description": "Recording Capture Test - Validate RecordingCaptureAction comprehensive state capture",
+  "actions": [
+    "system.recording.stats",
+    "system.recording.start",
+    "system.recording.stats",
+    "game.lineup.populate_enemy",
+    "system.recording.capture_state",
+    "system.recording.stop",
+    "system.recording.stats",
+    "system.debug.quit_application"
+  ]
+}

@@ -10,7 +10,7 @@ import "enhanced_log_analysis.justfile"
 import "debug_commands.justfile"
 import "log_filter_commands.justfile"
 import "universal_log_tags.justfile"
-#import "action_recording_commands.justfile"
+import "action_recording_commands.justfile"
 
 #import "justfile-test.justfile"
 # Set default shell

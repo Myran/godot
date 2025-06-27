@@ -90,6 +90,28 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+	# Simple test action for Phase 1 - validate registration works
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.test.simple_player_events", _test_simple_player_events)
+			. set_category("Gameplay")
+			. set_group("Test")
+			. set_description("Simple test to validate action registration")
+		)
+	)
+
+	# Test action for Phase 1 - populate lineup with fake PLAYER events
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.lineup.populate_enemy_as_player", _populate_enemy_lineup_as_player)
+			. set_category("Gameplay")
+			. set_group("Test")
+			. set_description("Populate enemy lineup using fake PLAYER events to test recording")
+		)
+	)
+
 	# Lineup state capture for checksum testing
 	registry.register_action(
 		(
@@ -98,6 +120,28 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_category("Gameplay")
 			. set_group("Preset Lineups")
 			. set_description("Capture lineup state for checksum validation")
+		)
+	)
+
+	# Board state capture for checksum testing
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.board.capture_state", _capture_board_state)
+			. set_category("Gameplay")
+			. set_group("Board State")
+			. set_description("Capture board state for checksum validation")
+		)
+	)
+
+	# Board reset for deterministic testing
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.board.reset_state", _reset_board_state)
+			. set_category("Gameplay")
+			. set_group("Board State")
+			. set_description("Reset board to initial state for deterministic testing")
 		)
 	)
 
@@ -394,6 +438,118 @@ static func _print_debug_info() -> bool:
 		Log.warning("DebugManager not available", {}, ["debug", "quick"])
 		Log.info("==================", {}, ["debug", "quick"])
 		return false
+
+
+static func _test_simple_player_events() -> bool:
+	# Simple test function to validate registration is working
+	Log.info("Simple test function executed successfully", {}, ["debug", "test"])
+	return true
+
+
+static func _populate_enemy_lineup_as_player() -> bool:
+	# Same as _populate_enemy_lineup but generates PLAYER events instead of DEBUG_SETUP
+	# This tests the Phase 1 recording system by creating recordable events
+
+	Log.info(
+		"Populating enemy lineup with fake PLAYER events for testing",
+		{},
+		["debug", "test", "event_categorization"]
+	)
+
+	if not is_instance_valid(card_controller):
+		Log.error("card_controller not available", {}, ["debug", "error"])
+		return false
+
+	if not is_instance_valid(core):
+		Log.error("core not available", {}, ["debug", "error"])
+		return false
+
+	# Ensure game systems are ready before starting operation (COPY FROM WORKING FUNCTION)
+	if not await _wait_for_game_systems_ready():
+		return false
+
+	# Signal operation start (locks UI like clicker does) (COPY FROM WORKING FUNCTION)
+	core.action(core.LineupOperationStartEvent.new())
+
+	Log.info("Creating cards for enemy lineup (like working function)", {}, ["debug", "test"])
+
+	# FIRST: Create and add cards to enemy lineup (like working function does)
+	# This ensures the game has actual content before generating fake player events
+	for n: int in 3:
+		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
+		if new_card and is_instance_valid(new_card):
+			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			typed_card.block_context = Cards.CONTEXT.LINEUP
+			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
+			Log.info(
+				"Added card to enemy lineup", {"card_id": str(n), "position": n}, ["debug", "test"]
+			)
+
+	# Create the dwarf card (ID 4) for enhanced testing
+	var dwarf_card: Variant = await card_controller.create_unit_from_id(str(4), 1)
+	if not dwarf_card:
+		Log.error("Failed to create dwarf card", {}, ["debug", "error"])
+		return false
+
+	var typed_dwarf: Card = dwarf_card
+	typed_dwarf.block_context = Cards.CONTEXT.LINEUP  # COPY FROM WORKING FUNCTION
+
+	# Add dwarf to debug lineup to ensure it's available for events
+	core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
+	Log.info(
+		"Added dwarf to debug lineup for event testing",
+		{"card_id": typed_dwarf.id},
+		["debug", "test"]
+	)
+
+	# NOW: Generate FAKE PLAYER EVENTS with actual game content available
+	# These should be recorded by ActionRecorder since they have EventSource.PLAYER
+
+	# 1. Fake LineupAddCardEvent (simulates player adding card to lineup)
+	var fake_player_event1: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_dwarf)
+	core.action(fake_player_event1)
+	Log.info(
+		"Generated fake PLAYER event: LineupAddCardEvent",
+		{"source": fake_player_event1.source},
+		["debug", "test", "event_categorization"]
+	)
+
+	# 2. Fake RerollDraftEvent (simulates player rerolling)
+	var fake_player_event2: core.RerollDraftEvent = core.RerollDraftEvent.new()
+	core.action(fake_player_event2)
+	Log.info(
+		"Generated fake PLAYER event: RerollDraftEvent",
+		{"source": fake_player_event2.source},
+		["debug", "test", "event_categorization"]
+	)
+
+	# 3. Fake UpgradeEvent (simulates player upgrading)
+	var fake_player_event3: core.UpgradeEvent = core.UpgradeEvent.new(2)
+	core.action(fake_player_event3)
+	Log.info(
+		"Generated fake PLAYER event: UpgradeEvent",
+		{"source": fake_player_event3.source, "level": 2},
+		["debug", "test", "event_categorization"]
+	)
+
+	# Also add one real debug event to show the difference
+	var debug_event: core.DebugLineupAddCardEvent = core.DebugLineupAddCardEvent.new(typed_dwarf, 0)
+	core.action(debug_event)
+	Log.info(
+		"Generated real DEBUG_SETUP event for comparison",
+		{"source": debug_event.source},
+		["debug", "test", "event_categorization"]
+	)
+
+	Log.info(
+		"FAKE_PLAYER_EVENTS_GENERATED",
+		{"player_events": 3, "debug_events": 1, "enemy_cards": 3, "debug_cards": 1},
+		["test", "event_categorization", "success"]
+	)
+
+	# Signal operation complete (unlocks UI like DraftSteadyEvent does) (COPY FROM WORKING FUNCTION)
+	core.action(core.LineupOperationCompleteEvent.new())
+	return true
 
 
 static func _hide_debug_menu() -> bool:
@@ -810,7 +966,7 @@ static func _get_determinism_config() -> Dictionary:
 	# Read determinism config (seed and optional expectedHash) from external config file
 	var config_path: String = "user://debug_startup_actions.json"
 	var default_config: Dictionary = {
-		"seed": 12345, "expectedHash": null, "mode": "recording", "skip_animation": false
+		"seed": 55555, "expectedHash": null, "mode": "recording", "skip_animation": false
 	}
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
@@ -1237,3 +1393,71 @@ static func _battle_test_determinism() -> DebugAction.Result:
 static func _capture_lineup_state() -> DebugAction.Result:
 	var capturer: LineupCaptureAction = LineupCaptureAction.new()
 	return capturer.execute()
+
+
+static func _capture_board_state() -> DebugAction.Result:
+	var capturer: BoardCaptureAction = BoardCaptureAction.new()
+	return capturer.execute()
+
+
+static func _reset_board_state() -> bool:
+	# Reset battle state to initial state for deterministic testing
+	# In this game, "board state" refers to the battle lineup and game state
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not found - cannot reset battle state", {}, ["debug", "board", "error"]
+		)
+		return false
+
+	# Reset RNG to ensure deterministic behavior
+	if rng and rng.seeded_rng:
+		# Use the same seed from config if available
+		var test_seed: int = _get_seed_from_config()
+		rng.seeded_rng.reset(test_seed)
+		Log.info(
+			"RNG reset for battle state reset", {"seed": test_seed}, ["debug", "board", "reset"]
+		)
+
+	# Clear lineups if they exist
+	var reset_successful: bool = true
+
+	if game.holder_allies:
+		if game.holder_allies.has_method("clear_lineup"):
+			game.holder_allies.clear_lineup()
+		elif game.holder_allies.has_method("reset"):
+			game.holder_allies.reset()
+		elif game.holder_allies.has_method("clear"):
+			game.holder_allies.clear()
+		Log.info("Allied lineup reset", {}, ["debug", "board", "reset"])
+	else:
+		Log.warning("Allied lineup not found for reset", {}, ["debug", "board", "reset"])
+		reset_successful = false
+
+	if game.holder_enemy:
+		if game.holder_enemy.has_method("clear_lineup"):
+			game.holder_enemy.clear_lineup()
+		elif game.holder_enemy.has_method("reset"):
+			game.holder_enemy.reset()
+		elif game.holder_enemy.has_method("clear"):
+			game.holder_enemy.clear()
+		Log.info("Enemy lineup reset", {}, ["debug", "board", "reset"])
+	else:
+		Log.warning("Enemy lineup not found for reset", {}, ["debug", "board", "reset"])
+		reset_successful = false
+
+	# Reset game state to a clean state
+	if game.game_handler:
+		game.game_handler.set_gamestate(core.GameState.PREPARE)
+		Log.info("Game state reset to PREPARE", {}, ["debug", "board", "reset"])
+
+	# Reset UI state
+	game.ui_state = core.UIState.WAITING
+	Log.info("UI state reset to WAITING", {}, ["debug", "board", "reset"])
+
+	if reset_successful:
+		Log.info("Battle state reset completed successfully", {}, ["debug", "board", "reset"])
+	else:
+		Log.warning("Battle state reset completed with warnings", {}, ["debug", "board", "reset"])
+
+	return reset_successful

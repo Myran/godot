@@ -1,0 +1,21 @@
+{
+  "name": "Config Pattern: *-test",
+  "description": "Auto-generated test list for config pattern: *-test",
+  "configs": [
+    "battle-test",
+    "board-checksum-test",
+    "board-simple-test",
+    "clicker-checksum-test",
+    "combined-state-checksum-test",
+    "general-battle-test",
+    "integration-test",
+    "lineup-checksum-test",
+    "recording-capture-test",
+    "recording-comprehensive-test",
+    "recording-performance-test",
+    "recording-system-integrity-test",
+    "recording-test",
+    "recording-workflow-test",
+    "smoke-test"
+  ]
+}

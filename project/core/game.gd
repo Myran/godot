@@ -1,5 +1,7 @@
 class_name Game extends Control
 
+signal initialization_complete
+
 @export_group("UI Elements")
 @export var card_pop: CardPop
 @export var holder_draft: Node
@@ -21,8 +23,9 @@ class_name Game extends Control
 @export var lineup_handler: LineupHandler
 @export var battle_handler: BattleHandler
 
-var ui_state: core.UIState = core.UIState.WAITING
-var _deferred_idle_actions: Array[Callable] = []
+var ui_state: core.UIState = core.UIState.INITIALIZING
+var _idle_action_queue: Array[Callable] = []
+var _processing_idle_action: bool = false
 
 
 func _input(event: InputEvent) -> void:
@@ -62,6 +65,21 @@ func intitialize_game() -> void:
 	await data_source.activate_card_cache()
 	rng.start_with_base_seed()
 	game_handler.set_gamestate(core.GameState.START)
+
+	# Game systems are now fully initialized - transition to WAITING state
+	Log.info(
+		"Game initialization complete - transitioning to WAITING state",
+		{},
+		[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, Log.TAG_UI]
+	)
+	ui_state = core.UIState.WAITING
+	_process_idle_action_queue()
+
+	# Emit signal to indicate system is fully ready for external operations
+	Log.info(
+		"Emitting initialization_complete signal", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
+	)
+	initialization_complete.emit()
 
 
 func new_event(event: core.CoreEvent) -> void:
@@ -119,8 +137,10 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var stat_effect_event: core.StatEffectEvent = event
 
 		# 1. Add permanent effect to card's effects_perm
+		# Convert EventSource enum to human-readable string for StatEffect
+		var source_description: String = core.EventSource.keys()[stat_effect_event.effect_source]
 		var permanent_effect: StatEffect = StatEffect.new(
-			stat_effect_event.health_bonus, stat_effect_event.attack_bonus, stat_effect_event.source
+			stat_effect_event.health_bonus, stat_effect_event.attack_bonus, source_description
 		)
 		stat_effect_event.target_card.unit_info.effects_perm.append(permanent_effect)
 
@@ -203,6 +223,20 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.add_event(core.LineupAddCardEvent.new(new_card))
 		current_context.solve_events()
 
+	elif event is core.LineupCardMoveEvent:
+		var card: Card = event.card
+		var from_pos: int = event.from_position
+		var to_pos: int = event.to_position
+
+		Log.info(
+			"Card moved in lineup",
+			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+			[Log.TAG_CARD, Log.TAG_LINEUP]
+		)
+
+		# Event is logged for recording - movement already handled by input handler
+		# This ensures proper event tracking without duplicate movement logic
+
 	elif event is core.BattleEvent:
 		Log.info(
 			"Starting battle event sequence",
@@ -237,7 +271,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.DraftSteadyEvent:
 		Log.debug("Draft reached steady state - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
-		_execute_deferred_idle_action()
+		_process_idle_action_queue()
 
 	elif event is core.LineupOperationStartEvent:
 		Log.info("Lineup operation started - locking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
@@ -246,15 +280,23 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupOperationCompleteEvent:
 		Log.info("Lineup operation completed - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
-		_execute_deferred_idle_action()
+		_process_idle_action_queue()
 
 	elif event is core.SystemIdleActionEvent:
-		if ui_state == core.UIState.WAITING:
-			# System is idle, execute immediately
-			event.action_callable.call()
-		else:
-			# System busy, defer until idle
-			_deferred_idle_actions.append(event.action_callable)
+		# Always add to queue and process systematically
+		var state_name: String = ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
+		Log.info(
+			"=== SYSTEM IDLE ACTION EVENT RECEIVED ===",
+			{
+				"ui_state": state_name,
+				"queue_size_before": _idle_action_queue.size(),
+				"queue_size_after": _idle_action_queue.size() + 1,
+				"processing_idle_action": _processing_idle_action
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received"]
+		)
+		_idle_action_queue.append(event.action_callable)
+		_process_idle_action_queue()
 
 	clicker.on_core_event(event, current_context)
 
@@ -318,10 +360,68 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 			core.action(core.UpdateDraftAreaEvent.new())
 
 
-func _execute_deferred_idle_action() -> void:
-	if not _deferred_idle_actions.is_empty():
-		var action: Callable = _deferred_idle_actions.pop_front()
-		action.call()
+func _process_idle_action_queue() -> void:
+	# Log entry to queue processing
+	Log.info(
+		"=== IDLE ACTION QUEUE PROCESSING ENTRY ===",
+		{
+			"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
+			"processing_idle_action": _processing_idle_action,
+			"queue_size": _idle_action_queue.size(),
+			"queue_empty": _idle_action_queue.is_empty()
+		},
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_processing"]
+	)
+
+	# Only process if system is ready and not already processing
+	if ui_state != core.UIState.WAITING or _processing_idle_action or _idle_action_queue.is_empty():
+		Log.info(
+			"Idle action queue processing skipped",
+			{
+				"reason":
+				(
+					"ui_state_not_waiting"
+					if ui_state != core.UIState.WAITING
+					else "already_processing" if _processing_idle_action else "queue_empty"
+				),
+				"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
+				"processing_idle_action": _processing_idle_action,
+				"queue_empty": _idle_action_queue.is_empty()
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_skip"]
+		)
+		return
+
+	# Process one action at a time, then wait for system to become idle again
+	_processing_idle_action = true
+	var action: Callable = _idle_action_queue.pop_front()
+
+	Log.info(
+		"=== PROCESSING IDLE ACTION FROM QUEUE ===",
+		{"remaining_queue_size": _idle_action_queue.size()},
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start"]
+	)
+
+	# Execute the action
+	action.call()
+
+	# Mark as not processing - the next action will be processed when system becomes idle again
+	_processing_idle_action = false
+
+	Log.info(
+		"=== IDLE ACTION PROCESSING COMPLETE ===",
+		{"remaining_queue_size": _idle_action_queue.size()},
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_complete"]
+	)
+
+	# Defer processing next action to next frame to ensure system has chance to handle any state changes
+	if not _idle_action_queue.is_empty():
+		Log.info(
+			"Deferring next idle action processing",
+			{"remaining_queue_size": _idle_action_queue.size()},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "defer_next"]
+		)
+		call_deferred("_process_idle_action_queue")
 
 
 func start_game() -> void:
@@ -500,7 +600,7 @@ func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
 func mode_post_battle() -> void:
 	Log.debug("Switching to post-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 	ui_state = core.UIState.WAITING
-	_execute_deferred_idle_action()
+	_process_idle_action_queue()
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))

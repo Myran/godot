@@ -1,0 +1,26 @@
+{
+  "description": "Recording Test - Complete recording system validation with checksum baseline",
+  "actions": [
+    "game.battle.set_seed",
+    "system.recording.stats",
+    "game.lineup.populate_enemy",
+    "system.recording.start",
+    "system.recording.capture_state",
+    "system.recording.stop",
+    "system.checksum.validate",
+    "system.debug.quit_application"
+  ],
+  "checksum_config": {
+    "state_type": "recording_state",
+    "expected_checksum": "165af8b0392b3cdfe963e17f36131caf44b3a1c90cde55b20d96e97712eddd01"
+  },
+  "recording_config": {
+    "test_mode": true,
+    "capture_lineup": true,
+    "capture_clicker": false,
+    "capture_recording_meta": false,
+    "capture_rng": false,
+    "auto_baseline": true,
+    "validation_enabled": true
+  }
+}

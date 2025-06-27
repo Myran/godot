@@ -57,7 +57,11 @@ func setup_level(level_name: String = "default") -> void:
 
 
 func create_blocks_from_level() -> void:
-	Log.debug("Creating blocks from level layout", {}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION])
+	Log.debug(
+		"Creating blocks from level layout",
+		{"tile_count": current_level.get_used_cells().size()},
+		[Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
+	)
 	for tile_pos: Vector2i in current_level.get_used_cells():
 		var block: Block
 		match current_level.get_cell_source_id(tile_pos):

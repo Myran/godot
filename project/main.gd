@@ -30,7 +30,29 @@ func _ready() -> void:
 	):
 		return
 
+	# Wait for game to fully initialize before starting debug coordinator
+	await _wait_for_game_initialization()
 	DebugStartupCoordinator.startDebugCoordinator()
+
+
+func _wait_for_game_initialization() -> void:
+	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
+
+	# Get the Game node from the scene
+	var game_node: Game = get_node("Game")
+	if game_node == null:
+		Log.error("Game node not found in main scene", {}, ["system", "initialization", "error"])
+		return
+
+	# Wait for the game's initialization_complete signal
+	# This is emitted when ui_state transitions to WAITING and all systems are ready
+	await game_node.initialization_complete
+
+	Log.info(
+		"Game initialization complete (signal received), starting debug coordinator",
+		{},
+		["system", "initialization"]
+	)
 
 
 func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Variant] = []) -> void:

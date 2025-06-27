@@ -1,0 +1,9 @@
+{
+  "name": "deterministic-workflow-test",
+  "description": "Complete deterministic testing workflow - baseline creation, seed change validation, and baseline update",
+  "configs": [
+    "deterministic-phase1-baseline",
+    "deterministic-phase2-seed-change", 
+    "deterministic-phase3-force-update"
+  ]
+}

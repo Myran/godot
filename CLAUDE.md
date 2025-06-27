@@ -541,6 +541,65 @@ func get_state_type() -> String:
     return "board_state"
 ```
 
+## 🎬 Action Recording System
+
+### **PickledGD-Based Recording & Replay**
+**Advanced action recording system using enhanced PickledGD for deterministic event capture and replay.**
+
+```bash
+# Core recording workflows
+just record-and-create battle-scenario-1          # Record actions and create test config
+just test-android-target battle-scenario-1-recording-test   # Run generated test
+
+# Individual operations  
+just record player-actions-demo                   # Record player actions only
+just create-test existing-recording                # Create test config from existing recording
+just list-recordings                               # Show available recordings
+just clean-recording-temp                          # Clean temporary files
+```
+
+### **How It Works**
+1. **Initialize**: Sets up game state with `game.lineup.populate_enemy`
+2. **Record**: Captures player actions using PickledGD serialization  
+3. **Generate**: Creates test config with checksum validation
+4. **Validate**: Runs deterministic replay with state verification
+
+### **Key Features**
+- **PickledGD Serialization**: Robust inner class support with property-based fingerprinting
+- **Automatic Test Generation**: Creates ready-to-run test configs with checksum baselines
+- **Deterministic Replay**: Consistent results for regression testing
+- **Integration**: Works seamlessly with existing checksum validation system
+- **Clean Workflows**: Temporary files auto-managed, clear command structure
+
+### **Generated Test Structure**
+```json
+{
+  "description": "battle-scenario-1 Recording Test - Validate recording system state capture and checksum",
+  "actions": [
+    "system.recording.stats",
+    "game.lineup.populate_enemy", 
+    "system.recording.capture_state",
+    "system.checksum.validate",
+    "system.debug.quit_application"
+  ],
+  "checksum_config": {
+    "state_type": "recording_state",
+    "expected_checksum": "165af8b0392b3cdfe963e17f36131caf44b3a1c90cde55b20d96e97712eddd01"
+  }
+}
+```
+
+### **Debugging Recording Issues**
+```bash
+# Quick error scan for recording problems
+just logs-errors-tagged TEST_ID recording          # Recording-specific errors
+just logs TEST_ID recording picklegd               # PickledGD serialization analysis
+just logs-performance-tagged TEST_ID recording     # Recording performance data
+
+# Recording system validation
+just test-android-target picklegd-recording-test   # Test core PickledGD functionality
+```
+
 ## 🧠 Advanced Planning
 
 ### **When to Use Shrimp Task Manager**

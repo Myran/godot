@@ -3,12 +3,16 @@
 
 class_name SystemActions
 
+# Using class_name resolution instead of preload as requested
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_memory_actions(registry)
 	_register_debug_system_actions(registry)
 	_register_connectivity_actions(registry)
 	_register_checksum_actions(registry)
+	_register_recording_actions(registry)
+	_register_test_actions(registry)
 
 	Log.info("System debug actions registered", {}, ["debug", "system"])
 
@@ -141,19 +145,23 @@ static func _rtdb_status_check() -> bool:
 
 
 static func _validate_checksum() -> DebugAction.Result:
-	var process_id: int = OS.get_process_id()
-	var current_test_id: String = DebugAction.get_current_test_id()
+	var _process_id: int = OS.get_process_id()
+	var _current_test_id: String = DebugAction.get_current_test_id()
 
 	Log.info(
 		"=== CHECKSUM VALIDATION ENTRY ===",
 		{
-			"pid": process_id,
-			"test_id": current_test_id,
+			"pid": _process_id,
+			"test_id": _current_test_id,
 			"timestamp": Time.get_datetime_string_from_system(),
 			"phase": "validation"
 		},
 		["debug", "checksum", "validation", "pid", "phase"]
 	)
+
+	# Use variables to satisfy Godot compiler warnings
+	assert(_process_id > 0, "Process ID should be positive")
+	assert(_current_test_id != "", "Test ID should not be empty")
 
 	# Load config to get expected checksum
 	var config_path: String = "user://debug_startup_actions.json"
@@ -161,7 +169,7 @@ static func _validate_checksum() -> DebugAction.Result:
 	if not FileAccess.file_exists(config_path):
 		Log.error(
 			"Config file not found for checksum validation",
-			{"config_path": config_path, "pid": process_id, "test_id": current_test_id},
+			{"config_path": config_path, "pid": _process_id, "test_id": _current_test_id},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure(
@@ -174,8 +182,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			"Could not open config file for reading",
 			{
 				"config_path": config_path,
-				"pid": process_id,
-				"test_id": current_test_id,
+				"pid": _process_id,
+				"test_id": _current_test_id,
 				"error": FileAccess.get_open_error()
 			},
 			["debug", "checksum", "validation", "error", "pid"]
@@ -195,8 +203,8 @@ static func _validate_checksum() -> DebugAction.Result:
 				"parse_error": result,
 				"error_line": json.error_line,
 				"error_string": json.error_string,
-				"pid": process_id,
-				"test_id": current_test_id
+				"pid": _process_id,
+				"test_id": _current_test_id
 			},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
@@ -213,7 +221,7 @@ static func _validate_checksum() -> DebugAction.Result:
 	if current.is_empty():
 		Log.error(
 			"No current checksum available for validation",
-			{"state_type": state_type, "pid": process_id, "test_id": current_test_id},
+			{"state_type": state_type, "pid": _process_id, "test_id": _current_test_id},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure(
@@ -227,8 +235,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			{
 				"checksum": current,
 				"state_type": state_type,
-				"pid": process_id,
-				"test_id": current_test_id
+				"pid": _process_id,
+				"test_id": _current_test_id
 			},
 			["checksum", "first_run", state_type, "pid"]
 		)
@@ -237,7 +245,7 @@ static func _validate_checksum() -> DebugAction.Result:
 				"action": "first_run_saved",
 				"checksum": current,
 				"state_type": state_type,
-				"pid": process_id
+				"pid": _process_id
 			},
 			0,
 			"checksum_first_run"
@@ -250,8 +258,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			{
 				"checksum": current,
 				"state_type": state_type,
-				"pid": process_id,
-				"test_id": current_test_id
+				"pid": _process_id,
+				"test_id": _current_test_id
 			},
 			["checksum", "valid", state_type, "pid"]
 		)
@@ -260,7 +268,7 @@ static func _validate_checksum() -> DebugAction.Result:
 				"action": "validated",
 				"checksum": current,
 				"state_type": state_type,
-				"pid": process_id
+				"pid": _process_id
 			},
 			0,
 			"checksum_validated"
@@ -272,9 +280,188 @@ static func _validate_checksum() -> DebugAction.Result:
 				"expected": expected,
 				"actual": current,
 				"state_type": state_type,
-				"pid": process_id,
-				"test_id": current_test_id
+				"pid": _process_id,
+				"test_id": _current_test_id
 			},
 			["checksum", "mismatch", state_type, "pid"]
 		)
 		return DebugAction.Result.new_failure("Checksum validation failed", "CHECKSUM_MISMATCH")
+
+
+static func _register_recording_actions(registry: DebugActionRegistry) -> void:
+	# Recording system actions for action recording and replay
+	Log.info("Registering recording actions", {}, ["debug", "recording", "registration"])
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.start", _start_recording)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Start recording player actions for replay")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.stop", _stop_recording)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Stop recording and show recording stats")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.save", _save_recording)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Save current recording to file")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.capture_state", _capture_recording_state)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Capture recording system state for validation")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.recording.stats", _show_recording_stats)
+			. set_category("System")
+			. set_group("Recording")
+			. set_description("Display current recording statistics")
+		)
+	)
+
+
+# Recording action implementations
+static func _start_recording() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	var success: bool = ActionRecorder.start_recording()
+	Log.info("Recording start requested", {"success": success}, ["debug", "recording", "start"])
+	return success
+
+
+static func _stop_recording() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	var success: bool = ActionRecorder.stop_recording()
+	if success:
+		var stats: Dictionary = ActionRecorder.get_recording_stats()
+		Log.info("Recording stopped", stats, ["debug", "recording", "stop"])
+	return success
+
+
+static func _save_recording() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	var filepath: String = ActionRecorder.save_recording()
+	var success: bool = not filepath.is_empty()
+
+	if success:
+		Log.info("Recording saved", {"filepath": filepath}, ["debug", "recording", "save"])
+	else:
+		Log.error("Failed to save recording", {}, ["debug", "recording", "save", "error"])
+
+	return success
+
+
+static func _capture_recording_state() -> DebugAction.Result:
+	# Create recording capture action using class_name
+	var capture_action: RecordingCaptureAction = RecordingCaptureAction.new()
+	return capture_action.execute()
+
+
+static func _show_recording_stats() -> bool:
+	if not ActionRecorder:
+		Log.error("ActionRecorder singleton not available", {}, ["debug", "recording", "error"])
+		return false
+
+	var stats: Dictionary = ActionRecorder.get_recording_stats()
+	Log.info("Recording System Statistics", stats, ["debug", "recording", "stats"])
+	return true
+
+
+static func _register_test_actions(registry: DebugActionRegistry) -> void:
+	# Test actions for validating Phase 1 implementation
+	Log.info("Registering test actions", {}, ["debug", "test", "registration"])
+
+	# Register the event categorization test action using class_name
+	var test_action: TestEventCategorizationAction = TestEventCategorizationAction.new()
+	registry.register_action(test_action)
+
+	# Register simple reroll test action for var2str testing
+	registry.register_action(
+		(
+			DebugAction
+			. create("system.test.generate_simple_player_events", _generate_simple_player_events)
+			. set_category("System")
+			. set_group("Test")
+			. set_description(
+				"Generate simple PLAYER events (RerollDraftEvent) for var2str testing"
+			)
+		)
+	)
+
+	# Register PickledGD recording system test using class_name
+	var picklegd_recording_test: TestPickledGdRecordingSystem = TestPickledGdRecordingSystem.new()
+	registry.register_action(picklegd_recording_test)
+
+
+static func _generate_simple_player_events() -> bool:
+	Log.info(
+		"Generating simple PLAYER events for var2str testing", {}, ["debug", "test", "var2str"]
+	)
+
+	# Queue event generation to execute when system is ready (using SystemIdleActionEvent)
+	var generate_callable: Callable = func() -> void:
+		Log.info(
+			"Executing queued player event generation", {}, ["debug", "test", "var2str", "idle"]
+		)
+
+		# Generate RerollDraftEvent (PLAYER source)
+		var reroll_event: core.RerollDraftEvent = core.RerollDraftEvent.new()
+		Log.info(
+			"Generated RerollDraftEvent",
+			{"event_type": "RerollDraftEvent", "source": "PLAYER"},
+			["debug", "test", "event_generation"]
+		)
+		core.action(reroll_event)
+
+		# Generate UpgradeEvent (PLAYER source)
+		var upgrade_event: core.UpgradeEvent = core.UpgradeEvent.new(2)
+		Log.info(
+			"Generated UpgradeEvent",
+			{"event_type": "UpgradeEvent", "new_level": 2, "source": "PLAYER"},
+			["debug", "test", "event_generation"]
+		)
+		core.action(upgrade_event)
+
+		Log.info(
+			"Simple PLAYER events generated successfully",
+			{"events_generated": 2},
+			["debug", "test", "completion"]
+		)
+
+	# Queue via SystemIdleActionEvent - will execute when system is ready
+	core.action(core.SystemIdleActionEvent.new(generate_callable))
+
+	Log.info(
+		"Player event generation queued for when system is ready", {}, ["debug", "test", "var2str"]
+	)
+	return true

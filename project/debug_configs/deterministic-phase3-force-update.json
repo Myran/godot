@@ -1,0 +1,16 @@
+{
+  "description": "Phase 3: Deterministic UPDATE Test - Force update baseline and validate new checksum",
+  "seed": 54321,
+  "actions": [
+    "game.battle.set_seed",
+    "game.lineup.populate_enemy",
+    "game.battle.test_determinism_logic_only",
+    "game.lineup.capture_state",
+    "system.checksum.validate",
+    "system.debug.quit_application"
+  ],
+  "checksum_config": {
+    "state_type": "lineup_state",
+    "expected_checksum": "afacddf2e1db6f910b6d534d5acbc90febc7caf1b4bd3ed4d31ef98534412bf1"
+  }
+}

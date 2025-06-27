@@ -46,7 +46,7 @@ func handle_draft_event(
 
 	# Create StatEffectEvent and add to context - this will handle the proper flow
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
-		card, health_bonus, attack_bonus, "MergeBonusAbility"
+		card, health_bonus, attack_bonus, core.EventSource.SYSTEM_CASCADE
 	)
 	draft_context.add_event(stat_effect_event)
 
@@ -54,7 +54,7 @@ func handle_draft_event(
 func debug_trigger_effect(target_card: Card) -> bool:
 	# Create StatEffectEvent and process directly via core.action
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
-		target_card, health_bonus, attack_bonus, "MergeBonusAbility (Debug)"
+		target_card, health_bonus, attack_bonus, core.EventSource.DEBUG_SETUP
 	)
 	core.action(stat_effect_event)
 	return true

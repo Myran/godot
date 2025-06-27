@@ -2,7 +2,7 @@ extends Node
 
 signal event(event_data: CoreEvent)
 
-enum UIState { WAITING, HOLDING, LOCKED }
+enum UIState { INITIALIZING, WAITING, HOLDING, LOCKED }
 enum Tempus { PRE, POST }
 enum TapState { IDLE, PRESSING, UNPRESSING, HOLDING }
 enum GameState { START, DRAFT, PREPARE, PREBATTLE, BATTLE, POSTBATTLE }
@@ -19,6 +19,8 @@ enum ObjectType {
 	BLOCK_ITEM
 }
 
+enum EventSource { PLAYER, PLAYER_DIRECT, DEBUG_SETUP, SYSTEM_CASCADE, UI_INPUT }  # Legacy - maps to PLAYER_DIRECT  # Direct player decisions (record these)  # Debug actions that setup game state (record these)  # System-generated consequences (don't record)  # Raw UI interactions (don't record)
+
 const CARD_MERGE_AMOUNT: int = 3
 
 
@@ -32,17 +34,21 @@ class StatEffectEvent:
 	var target_card: Card
 	var health_bonus: int
 	var attack_bonus: int
-	var source: String
+	var effect_source: EventSource
 
-	func _init(card: Card, health: int, attack: int, src: String) -> void:
+	func _init(card: Card, health: int, attack: int, src: EventSource) -> void:
 		target_card = card
 		health_bonus = health
 		attack_bonus = attack
-		source = src
+		effect_source = src
+		source = EventSource.SYSTEM_CASCADE
 
 
 class RerollDraftEvent:
 	extends CoreEvent
+
+	func _init() -> void:
+		source = EventSource.PLAYER
 
 
 class UpgradeEvent:
@@ -51,6 +57,12 @@ class UpgradeEvent:
 
 	func _init(m_level: int) -> void:
 		self.new_level = m_level
+		source = EventSource.PLAYER
+
+	func get_recording_data() -> Dictionary:
+		var data: Dictionary = super.get_recording_data()
+		data["new_level"] = new_level
+		return data
 
 
 class DraftMergeEvent:
@@ -59,6 +71,7 @@ class DraftMergeEvent:
 
 	func _init(m_matches: Array[Card]) -> void:
 		self.matches = m_matches
+		source = EventSource.SYSTEM_CASCADE
 
 
 class DraftAddBlockEvent:
@@ -71,6 +84,7 @@ class DraftAddBlockEvent:
 		self.block = m_block
 		self.pos = m_pos
 		self.refill_count = m_refill_count
+		source = EventSource.SYSTEM_CASCADE
 
 
 class BlockEntersPlay:
@@ -83,20 +97,15 @@ class BlockEntersPlay:
 		self.pos = m_pos
 
 
-class DraftColumnLocked:
+class DraftColumnStateEvent:
 	extends CoreEvent
 	var col: int
+	var is_locked: bool
 
-	func _init(m_col: int) -> void:
-		self.col = m_col
-
-
-class DraftColumnUnlocked:
-	extends CoreEvent
-	var col: int
-
-	func _init(m_col: int) -> void:
-		self.col = m_col
+	func _init(column: int, locked_state: bool) -> void:
+		self.col = column
+		self.is_locked = locked_state
+		source = EventSource.PLAYER
 
 
 class UpdateDraftAreaEvent:
@@ -131,6 +140,7 @@ class EnemyLineupAddCardEvent:
 	func _init(m_card: Card, m_pos: int) -> void:
 		self.card = m_card
 		self.pos = m_pos
+		source = EventSource.DEBUG_SETUP
 
 
 class DebugLineupAddCardEvent:
@@ -141,6 +151,7 @@ class DebugLineupAddCardEvent:
 	func _init(m_card: Card, m_pos: int) -> void:
 		self.card = m_card
 		self.pos = m_pos
+		source = EventSource.DEBUG_SETUP
 
 
 class LineupAddCardEvent:
@@ -149,6 +160,7 @@ class LineupAddCardEvent:
 
 	func _init(m_card: Card) -> void:
 		self.card = m_card
+		source = EventSource.PLAYER
 
 
 class TrippleTestEvent:
@@ -163,6 +175,20 @@ class LineupMergeEvent:
 	func _init(m_card: Card, m_tripples: Array[Card]) -> void:
 		self.card = m_card
 		self.tripples = m_tripples
+		source = EventSource.SYSTEM_CASCADE
+
+
+class LineupCardMoveEvent:
+	extends CoreEvent
+	var card: Card
+	var from_position: int
+	var to_position: int
+
+	func _init(moved_card: Card, from_pos: int, to_pos: int) -> void:
+		self.card = moved_card
+		self.from_position = from_pos
+		self.to_position = to_pos
+		source = EventSource.PLAYER
 
 
 class BattleEvent:
@@ -209,6 +235,7 @@ class RemoveBlockFromDraft:
 	func _init(m_block: Block, m_destroy_block: bool = false) -> void:
 		self.block = m_block
 		self.destroy_block = m_destroy_block
+		source = EventSource.PLAYER
 
 
 func action(_event: CoreEvent) -> void:

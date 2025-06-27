@@ -8,10 +8,7 @@ func _ready() -> void:
 
 
 func hold_toggle(col: int, new_state: bool) -> void:
-	if new_state:
-		core.action(core.DraftColumnLocked.new(col))
-	else:
-		core.action(core.DraftColumnUnlocked.new(col))
+	core.action(core.DraftColumnStateEvent.new(col, new_state))
 
 
 func reroll() -> void:

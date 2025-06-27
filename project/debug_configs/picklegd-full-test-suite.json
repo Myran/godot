@@ -1,0 +1,9 @@
+{
+  "description": "PickledGD Full Test Suite - Complete test coverage including functionality, edge cases, performance, and integration",
+  "actions": [
+    "test.picklegd.recording_system",
+    "test.picklegd.comprehensive", 
+    "test.picklegd.edge_cases",
+    "test.picklegd.performance"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Config Pattern: deterministic-*",
+  "description": "Auto-generated test list for config pattern: deterministic-*",
+  "configs": [
+    "deterministic-phase1-baseline",
+    "deterministic-phase2-seed-change",
+    "deterministic-phase3-force-update"
+  ]
+}

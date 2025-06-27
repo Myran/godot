@@ -1,7 +1,7 @@
 extends Node
 
 # Enable verbose debug logging for troubleshooting
-const VERBOSE_LOGGING := false
+const VERBOSE_LOGGING := true
 
 func _init() -> void:
 	pass  # Logging not available in _init - Log autoload not ready yet
@@ -14,7 +14,9 @@ func _ready() -> void:
 func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String] = []) -> void:
 	"""Helper method for verbose logging that can be toggled on/off"""
 	if VERBOSE_LOGGING:
-		Log.debug(message, metadata, tags + ["verbose"])
+		var verbose_tags: Array[String] = tags.duplicate()
+		verbose_tags.append("verbose")
+		Log.debug(message, metadata, verbose_tags)
 
 func startDebugCoordinator() -> void:
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
@@ -50,43 +52,21 @@ func startDebugCoordinator() -> void:
 	_log_verbose("Waiting for DataSource initialization...", {}, ["debug", "startup"])
 	await _wait_for_data_source_ready()
 
-	Log.info("Executing debug startup actions", {"count": actions.size()}, ["debug", "startup"])
-
-	# Execute actions with proper error handling
-	var successful_actions := 0
-	var failed_actions := 0
-
+	# All actions are now queued in the game's idle action system.
+	# The coordinator's job is to simply dispatch them.
 	for action_name in actions:
-		_log_verbose("Searching for action", {"action": action_name}, ["debug", "startup"])
 		var action := _get_action_by_name(registry, action_name)
 		if action:
-			Log.info("Executing action", {
-				"action": action_name,
-				"class_path": action.get_script().get_path()
-			}, ["debug", "startup"])
-
-			# Execute with error handling
-			var execution_success := await _execute_action_safely(action, action_name)
-			if execution_success:
-				successful_actions += 1
-				_log_verbose("Action completed", {"action": action_name}, ["debug", "startup"])
-			else:
-				failed_actions += 1
+			Log.info("Dispatching action to idle queue", {"action": action_name}, ["debug", "startup"])
+			var callable := Callable(action, "execute")
+			core.action(core.SystemIdleActionEvent.new(callable))
 		else:
-			Log.error("Action not found", {"action": action_name, "available_actions": _get_available_action_names(registry)}, ["debug", "startup", "error"])
-			failed_actions += 1
+			Log.error("Action not found, cannot dispatch", {"action": action_name}, ["debug", "startup", "error"])
 
-	Log.info("Debug startup complete", {
-		"total_actions": actions.size(),
-		"successful": successful_actions,
-		"failed": failed_actions
-	}, ["debug", "startup"])
+	Log.info("All debug startup actions have been dispatched to the idle queue.", {"count": actions.size()}, ["debug", "startup"])
 
-	# Clear test context if it was set - this emits DEBUG_TEST_COMPLETE signal
-	if DebugAction.is_test_active():
-		DebugAction.clear_test_context()
-
-	# _cleanup_mobile_config()  # Disabled: Keep external config persistent for reuse
+	# The coordinator's primary job is now complete.
+	# The idle action queue in game.gd will handle execution when the system is ready.
 
 
 func _get_action_names() -> Array[String]:
@@ -113,9 +93,8 @@ func _get_action_names() -> Array[String]:
 		)
 
 
-func _execute_action_safely(action: DebugAction, action_name: String) -> bool:
-	"""Execute an action with proper error handling and return success status"""
-	# GDScript doesn't have try/catch, but we can check for signals or return values
+func _queue_action_for_idle_execution(action: DebugAction, action_name: String) -> bool:
+	"""Queue an action for idle execution using SystemIdleActionEvent and wait for completion"""
 	if not action:
 		Log.error("Action is null", {"action": action_name}, ["debug", "startup", "error"])
 		return false
@@ -124,11 +103,51 @@ func _execute_action_safely(action: DebugAction, action_name: String) -> bool:
 		Log.error("Action missing execute method", {"action": action_name}, ["debug", "startup", "error"])
 		return false
 
-	# Execute the action - let it handle its own errors
-	await action.execute()
+	# Create a signal to wait for action completion
+	var action_completed := false
+	var action_success := false
 
-	# Assume success if no exception was thrown
-	return true
+	Log.info("Creating idle action callable", {"action": action_name}, ["debug", "startup", "idle", "callable"])
+
+	# Create a callable that wraps the action execution
+	var action_callable := func():
+		Log.info("=== IDLE ACTION EXECUTION START ===", {"action": action_name}, ["debug", "startup", "idle", "execution"])
+		# Execute the action and handle any potential errors
+		await action.execute()
+		action_success = true
+		action_completed = true
+		Log.info("=== IDLE ACTION EXECUTION COMPLETE ===", {"action": action_name, "success": action_success}, ["debug", "startup", "idle", "execution"])
+
+	# Queue the action using SystemIdleActionEvent
+	Log.info("Creating SystemIdleActionEvent", {"action": action_name}, ["debug", "startup", "idle", "event"])
+	var idle_event := core.SystemIdleActionEvent.new(action_callable)
+
+	Log.info("Dispatching SystemIdleActionEvent", {"action": action_name}, ["debug", "startup", "idle", "dispatch"])
+	core.action(idle_event)
+
+	Log.info("SystemIdleActionEvent dispatched, waiting for completion", {"action": action_name}, ["debug", "startup", "idle", "wait"])
+
+	# Wait for action completion with detailed logging
+	var wait_cycles := 0
+	while not action_completed:
+		wait_cycles += 1
+		if wait_cycles % 60 == 0:  # Log every 60 frames (roughly 1 second)
+			Log.debug("Still waiting for action completion", {
+				"action": action_name,
+				"wait_cycles": wait_cycles,
+				"action_completed": action_completed,
+				"action_success": action_success
+			}, ["debug", "startup", "idle", "wait"])
+		await get_tree().process_frame
+
+	Log.info("Action wait loop completed", {
+		"action": action_name,
+		"success": action_success,
+		"wait_cycles": wait_cycles
+	}, ["debug", "startup", "idle", "completion"])
+	return action_success
+
+
 
 
 func _get_available_action_names(registry: DebugActionRegistry) -> Array[String]:
@@ -207,6 +226,7 @@ func _parse_config_file(path: String) -> Array[String]:
 		# Expand wildcard patterns in actions
 		for action in raw_actions:
 			var action_str := str(action)
+			_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
 			if action_str.contains("*"):
 				# This is a wildcard pattern - expand it
 				var expanded_actions := _expand_wildcard_pattern(action_str)
@@ -228,13 +248,11 @@ func _parse_config_file(path: String) -> Array[String]:
 
 
 func _wait_for_game_ready() -> void:
-	Log.info("Waiting for tree ready...", {}, ["debug", "startup"])
-	await get_tree().get_root().ready
+	Log.info("Checking tree ready state...", {}, ["debug", "startup"])
 
-	# Wait a few frames to ensure autoloads are initialized
-	for i in range(3):
-		await get_tree().process_frame
-
+	# Since DebugStartupCoordinator now starts AFTER game initialization_complete signal,
+	# the game is guaranteed to be ready. No need to wait for frames.
+	Log.debug("Tree root is ready", {}, ["debug", "startup"])
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
 
 
