@@ -303,7 +303,7 @@ layout_mode = 2
 [node name="holder_draft" type="NinePatchRect" parent="CanvasLayer_game/main_area/ally_container/holder_allies"]
 self_modulate = Color(1, 1, 1, 0)
 custom_minimum_size = Vector2(1080, 1130)
-layout_mode = 2
+layout_mode = 0
 offset_left = -7.0
 offset_top = 430.0
 offset_right = 1073.0

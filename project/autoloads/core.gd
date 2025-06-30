@@ -19,7 +19,10 @@ enum ObjectType {
 	BLOCK_ITEM
 }
 
-enum EventSource { PLAYER, PLAYER_DIRECT, DEBUG_SETUP, SYSTEM_CASCADE, UI_INPUT }  # Legacy - maps to PLAYER_DIRECT  # Direct player decisions (record these)  # Debug actions that setup game state (record these)  # System-generated consequences (don't record)  # Raw UI interactions (don't record)
+enum EventSource { PLAYER, DEBUG_SETUP, SYSTEM_CASCADE }
+# PLAYER: Direct player decisions (record these)
+# DEBUG_SETUP: Debug actions that setup game state (record these)
+# SYSTEM_CASCADE: System-generated consequences (don't record)
 
 const CARD_MERGE_AMOUNT: int = 3
 

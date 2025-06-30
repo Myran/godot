@@ -538,7 +538,7 @@ func _test_performance_multiple_events() -> bool:
 				event = core.DraftColumnStateEvent.new(i % 3, (i % 2) == 0)
 			_:
 				event = core.CoreEvent.new()
-				event.source = core.EventSource.PLAYER_DIRECT
+				event.source = core.EventSource.PLAYER
 
 		# Test serialization/deserialization
 		var recorded: RecordedAction = RecordedAction.new(event, i)
