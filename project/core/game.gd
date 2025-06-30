@@ -99,7 +99,8 @@ func update_context_units(_context: DraftContext) -> DraftContext:
 func solve_event(event: core.CoreEvent, _context: DraftContext) -> DraftContext:
 	var ret_context: DraftContext = _context
 	if event is ui.UIEvent:
-		resolve_ui_event(event as ui.UIEvent, _context)
+		var ui_event: ui.UIEvent = event as ui.UIEvent
+		resolve_ui_event(ui_event, _context)
 	elif event is core.CoreEvent:
 		resolve_core_event(event, _context)
 	return ret_context
@@ -223,19 +224,60 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.add_event(core.LineupAddCardEvent.new(new_card))
 		current_context.solve_events()
 
-	elif event is core.LineupCardMoveEvent:
+	elif event is core.MoveLineupCardEvent:
 		var card: Card = event.card
 		var from_pos: int = event.from_position
 		var to_pos: int = event.to_position
 
 		Log.info(
-			"Card moved in lineup",
+			"Processing lineup card move action",
 			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 
-		# Event is logged for recording - movement already handled by input handler
-		# This ensures proper event tracking without duplicate movement logic
+		# Perform the actual move in the game logic
+		var from_holder: Holder = lineup_handler.holder_container.get_holder(from_pos)
+		var to_holder: Holder = lineup_handler.holder_container.get_holder(to_pos)
+
+		if from_holder and to_holder and from_holder.get_card() == card:
+			# Try to perform the move
+			if to_holder.set_card(card):
+				from_holder.remove_card()
+
+				# Now emit the system event to notify other systems
+				# Use the same MoveLineupCardEvent but with SYSTEM_CASCADE source
+				var system_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(
+					card, from_pos, to_pos
+				)
+				system_event.source = core.EventSource.SYSTEM_CASCADE
+				current_context.add_event(system_event)
+				current_context.solve_events()
+			else:
+				Log.warning(
+					"Cannot move card - destination occupied",
+					{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+					[Log.TAG_CARD, Log.TAG_LINEUP]
+				)
+		else:
+			Log.warning(
+				"Invalid lineup card move action - card not at expected position",
+				{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+				[Log.TAG_CARD, Log.TAG_LINEUP]
+			)
+
+	elif event is core.MoveLineupCardEvent and event.source == core.EventSource.SYSTEM_CASCADE:
+		var card: Card = event.card
+		var from_pos: int = event.from_position
+		var to_pos: int = event.to_position
+
+		Log.info(
+			"Lineup card move event (system cascade)",
+			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+			[Log.TAG_CARD, Log.TAG_LINEUP]
+		)
+
+		# This is a system cascade event - just log it for other systems that need to know
+		# The actual move was already performed and the action was already recorded
 
 	elif event is core.BattleEvent:
 		Log.info(
@@ -378,12 +420,7 @@ func _process_idle_action_queue() -> void:
 		Log.info(
 			"Idle action queue processing skipped",
 			{
-				"reason":
-				(
-					"ui_state_not_waiting"
-					if ui_state != core.UIState.WAITING
-					else "already_processing" if _processing_idle_action else "queue_empty"
-				),
+				"reason": _get_queue_skip_reason(),
 				"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 				"processing_idle_action": _processing_idle_action,
 				"queue_empty": _idle_action_queue.is_empty()
@@ -604,3 +641,12 @@ func mode_post_battle() -> void:
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
+
+
+func _get_queue_skip_reason() -> String:
+	if ui_state != core.UIState.WAITING:
+		return "ui_state_not_waiting"
+	elif _processing_idle_action:
+		return "already_processing"
+	else:
+		return "queue_empty"

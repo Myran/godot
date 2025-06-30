@@ -117,15 +117,14 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 									var from_pos: int = prev_holder.get_index()
 									var to_pos: int = interacted_holder.get_index()
 
-									# Only emit event if the move is actually valid
-									if interacted_holder.set_card(dragging_card):
-										prev_holder.remove_card()
-										current_context.add_event(
-											core.LineupCardMoveEvent.new(
+									# Only emit action if the move would be valid (destination empty)
+									if interacted_holder.get_card() == null:
+										# Emit semantic action - game logic will perform the actual move
+										core.action(
+											core.MoveLineupCardEvent.new(
 												dragging_card, from_pos, to_pos
 											)
 										)
-										current_context.solve_events()
 										release_handled = true
 
 								Cards.CONTEXT.DRAFT:

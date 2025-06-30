@@ -37,8 +37,8 @@ func _execute_recording_test() -> DebugAction.Result:
 	# Test 5: core.StatEffectEvent (system action)
 	success = success and _test_stat_effect_event()
 
-	# Test 6: core.LineupCardMoveEvent (player action)
-	success = success and _test_lineup_card_move_event()
+	# Test 6: core.MoveLineupCardEvent (player action)
+	success = success and _test_move_lineup_card_action()
 
 	# Test 7: core.DraftColumnStateEvent (player action) - Both locked and unlocked states
 	success = success and _test_draft_column_state_event()
@@ -72,7 +72,7 @@ func _execute_recording_test() -> DebugAction.Result:
 					"core.UpgradeEvent",
 					"core.RerollDraftEvent",
 					"core.StatEffectEvent",
-					"core.LineupCardMoveEvent",
+					"core.MoveLineupCardEvent",
 					"core.DraftColumnStateEvent",
 					"core.LineupAddCardEvent",
 					"core.RemoveBlockFromDraft"
@@ -583,74 +583,74 @@ func _test_performance_multiple_events() -> bool:
 	return success_rate >= 0.98  # 98% success rate required
 
 
-func _test_lineup_card_move_event() -> bool:
+func _test_move_lineup_card_action() -> bool:
 	Log.info(
-		"Testing core.LineupCardMoveEvent serialization...",
+		"Testing core.MoveLineupCardEvent serialization...",
 		{},
 		["debug", "test", "picklegd", "recording"]
 	)
 
 	# Create a mock card for testing (using null since we only test serialization)
-	var original_event: core.LineupCardMoveEvent = core.LineupCardMoveEvent.new(null, 2, 5)
+	var original_action: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(null, 2, 5)
 
 	# Test RecordedAction serialization
-	var recorded: RecordedAction = RecordedAction.new(original_event, 6)
+	var recorded: RecordedAction = RecordedAction.new(original_action, 6)
 
 	if recorded.event_class.is_empty():
 		Log.error(
-			"core.LineupCardMoveEvent serialization failed - empty event_class",
+			"core.MoveLineupCardEvent serialization failed - empty event_class",
 			{},
 			["debug", "test", "error"]
 		)
 		return false
 
 	# Test deserialization
-	var deserialized_event: Context.Event = recorded.deserialize_event()
+	var deserialized_action: Context.Event = recorded.deserialize_event()
 
-	if not deserialized_event:
+	if not deserialized_action:
 		Log.error(
-			"core.LineupCardMoveEvent deserialization failed - null result",
+			"core.MoveLineupCardEvent deserialization failed - null result",
 			{},
 			["debug", "test", "error"]
 		)
 		return false
 
-	if not deserialized_event is core.LineupCardMoveEvent:
+	if not deserialized_action is core.MoveLineupCardEvent:
 		Log.error(
-			"core.LineupCardMoveEvent deserialization type mismatch",
-			{"actual_type": deserialized_event.get_class()},
+			"core.MoveLineupCardEvent deserialization type mismatch",
+			{"actual_type": deserialized_action.get_class()},
 			["debug", "test", "error"]
 		)
 		return false
 
-	var move_event: core.LineupCardMoveEvent = deserialized_event as core.LineupCardMoveEvent
+	var move_action: core.MoveLineupCardEvent = deserialized_action as core.MoveLineupCardEvent
 	if (
-		move_event.source != original_event.source
-		or move_event.from_position != original_event.from_position
-		or move_event.to_position != original_event.to_position
+		move_action.source != original_action.source
+		or move_action.from_position != original_action.from_position
+		or move_action.to_position != original_action.to_position
 	):
 		Log.error(
-			"core.LineupCardMoveEvent round-trip failed - data mismatch",
+			"core.MoveLineupCardEvent round-trip failed - data mismatch",
 			{
-				"original_source": core.EventSource.keys()[original_event.source],
-				"deserialized_source": core.EventSource.keys()[move_event.source],
-				"original_from": original_event.from_position,
-				"deserialized_from": move_event.from_position,
-				"original_to": original_event.to_position,
-				"deserialized_to": move_event.to_position
+				"original_source": core.EventSource.keys()[original_action.source],
+				"deserialized_source": core.EventSource.keys()[move_action.source],
+				"original_from": original_action.from_position,
+				"deserialized_from": move_action.from_position,
+				"original_to": original_action.to_position,
+				"deserialized_to": move_action.to_position
 			},
 			["debug", "test", "error"]
 		)
 		return false
 
 	Log.info(
-		"core.LineupCardMoveEvent test passed",
+		"core.MoveLineupCardEvent test passed",
 		{
 			"event_class": recorded.event_class,
 			"serialized_length": recorded.event_serialized.length(),
-			"from_position": move_event.from_position,
-			"to_position": move_event.to_position,
-			"source": core.EventSource.keys()[move_event.source]
+			"from_position": move_action.from_position,
+			"to_position": move_action.to_position,
+			"source": core.EventSource.keys()[move_action.source]
 		},
 		["debug", "test", "picklegd", "recording"]
 	)

@@ -178,7 +178,7 @@ class LineupMergeEvent:
 		source = EventSource.SYSTEM_CASCADE
 
 
-class LineupCardMoveEvent:
+class MoveLineupCardEvent:
 	extends CoreEvent
 	var card: Card
 	var from_position: int

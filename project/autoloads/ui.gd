@@ -51,6 +51,7 @@ class TransitionEvent:
 
 	func _init(_new_state: core.GameState) -> void:
 		new_state = _new_state
+		source = core.EventSource.PLAYER
 
 
 class StartBattleEvent:
@@ -60,6 +61,9 @@ class StartBattleEvent:
 class RerollEvent:
 	extends UIEvent
 
+	func _init() -> void:
+		source = core.EventSource.PLAYER
+
 
 class HideCardEvent:
 	extends UIEvent
@@ -67,6 +71,9 @@ class HideCardEvent:
 
 class UpgradeEvent:
 	extends UIEvent
+
+	func _init() -> void:
+		source = core.EventSource.PLAYER
 
 
 func action(_event: UIEvent) -> void:
