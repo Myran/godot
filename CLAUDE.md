@@ -339,6 +339,36 @@ just restart-android-app
 just config-android-reset                                # Reset to defaults
 ```
 
+## 📱 Android Device Control
+
+### **Screenshot Commands**
+**Essential commands for AI-assisted debugging and analysis:**
+
+```bash
+# Take screenshots for AI analysis
+just screenshot                          # Quick screenshot (saved as /tmp/screenshot.png)
+just screenshot-android my-debug-screen  # Named screenshot (saved as /tmp/my-debug-screen.png)
+
+# Workflow: Screenshot → Analyze
+just screenshot                          # 1. Capture current state
+# 2. Use Read tool with /tmp/screenshot.png for AI analysis
+```
+
+### **Screenshot Analysis Workflow**
+```bash
+# 1. Take screenshot during debugging
+just screenshot-android error-state      # Capture problematic state
+
+# 2. AI analyzes the screenshot
+# Use Read tool: /tmp/error-state.png
+
+# 3. Take corrective action based on analysis
+just test-android 'system.*'             # Re-run tests
+
+# 4. Verify fix with new screenshot
+just screenshot-android fixed-state      # Capture fixed state
+```
+
 ### **🎯 Command Integration Examples**
 
 #### **Complete Feature Development Workflow**
