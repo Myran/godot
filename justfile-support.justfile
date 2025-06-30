@@ -1,22 +1,76 @@
 # Supportive commands for Godot 4 Projects
 
 # Take screenshot from Android device for AI analysis
-screenshot-android:
+screenshot-android name="screenshot":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📱 Taking screenshot from Android device..."
     
     # Take screenshot on device
-    adb shell screencap -p /sdcard/screenshot.png
+    adb shell screencap -p /sdcard/{{name}}.png
     
     # Pull screenshot to temp directory
-    adb pull /sdcard/screenshot.png /tmp/screenshot.png
+    adb pull /sdcard/{{name}}.png /tmp/{{name}}.png
     
     # Clean up device storage
-    adb shell rm /sdcard/screenshot.png
+    adb shell rm /sdcard/{{name}}.png
     
-    echo "✅ Screenshot saved to /tmp/screenshot.png"
+    echo "✅ Screenshot saved to /tmp/{{name}}.png"
     echo "🤖 Screenshot ready for AI analysis via Read tool"
+    echo ""
+    echo "💡 Use: Read tool with /tmp/{{name}}.png"
+
+# Quick screenshot for debugging (uses default name)
+screenshot:
+    just screenshot-android screenshot
+
+# Close debug menu by tapping X button (top-right corner)
+close-debug-menu:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🎯 Closing debug menu..."
+    
+    # Get screen size (expecting 1080x2220 override size)
+    SCREEN_SIZE=$(adb shell wm size | grep "Override size" | cut -d: -f2 | tr -d ' ')
+    if [[ -z "$SCREEN_SIZE" ]]; then
+        SCREEN_SIZE=$(adb shell wm size | grep "Physical size" | cut -d: -f2 | tr -d ' ')
+    fi
+    
+    WIDTH=$(echo $SCREEN_SIZE | cut -dx -f1)
+    HEIGHT=$(echo $SCREEN_SIZE | cut -dx -f2)
+    
+    # Calculate X button position (approximately 95% from left, 3% from top)
+    X_POS=$((WIDTH * 95 / 100))
+    Y_POS=$((HEIGHT * 3 / 100))
+    
+    echo "📱 Screen size: ${WIDTH}x${HEIGHT}"
+    echo "🎯 Tapping X button at: ${X_POS},${Y_POS}"
+    
+    adb shell input tap $X_POS $Y_POS
+    
+    echo "✅ Debug menu close attempted"
+
+# Tap anywhere on screen to dismiss overlays
+tap-to-dismiss:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "👆 Tapping to dismiss overlays..."
+    
+    # Get screen size
+    SCREEN_SIZE=$(adb shell wm size | grep "Override size" | cut -d: -f2 | tr -d ' ')
+    if [[ -z "$SCREEN_SIZE" ]]; then
+        SCREEN_SIZE=$(adb shell wm size | grep "Physical size" | cut -d: -f2 | tr -d ' ')
+    fi
+    
+    WIDTH=$(echo $SCREEN_SIZE | cut -dx -f1)
+    HEIGHT=$(echo $SCREEN_SIZE | cut -dx -f2)
+    
+    # Tap center of screen
+    X_POS=$((WIDTH / 2))
+    Y_POS=$((HEIGHT / 2))
+    
+    echo "🎯 Tapping center at: ${X_POS},${Y_POS}"
+    adb shell input tap $X_POS $Y_POS
 
 # Validate environment variables
 update-clangd:
