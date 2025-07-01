@@ -145,14 +145,14 @@ static func _rtdb_status_check() -> bool:
 
 
 static func _validate_checksum() -> DebugAction.Result:
-	var _process_id: int = OS.get_process_id()
-	var _current_test_id: String = DebugAction.get_current_test_id()
+	var process_id: int = OS.get_process_id()
+	var current_test_id: String = DebugAction.get_current_test_id()
 
 	Log.info(
 		"=== CHECKSUM VALIDATION ENTRY ===",
 		{
-			"pid": _process_id,
-			"test_id": _current_test_id,
+			"pid": process_id,
+			"test_id": current_test_id,
 			"timestamp": Time.get_datetime_string_from_system(),
 			"phase": "validation"
 		},
@@ -160,8 +160,8 @@ static func _validate_checksum() -> DebugAction.Result:
 	)
 
 	# Use variables to satisfy Godot compiler warnings
-	assert(_process_id > 0, "Process ID should be positive")
-	assert(_current_test_id != "", "Test ID should not be empty")
+	assert(process_id > 0, "Process ID should be positive")
+	assert(current_test_id != "", "Test ID should not be empty")
 
 	# Load config to get expected checksum
 	var config_path: String = "user://debug_startup_actions.json"
@@ -169,7 +169,7 @@ static func _validate_checksum() -> DebugAction.Result:
 	if not FileAccess.file_exists(config_path):
 		Log.error(
 			"Config file not found for checksum validation",
-			{"config_path": config_path, "pid": _process_id, "test_id": _current_test_id},
+			{"config_path": config_path, "pid": process_id, "test_id": current_test_id},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure(
@@ -182,8 +182,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			"Could not open config file for reading",
 			{
 				"config_path": config_path,
-				"pid": _process_id,
-				"test_id": _current_test_id,
+				"pid": process_id,
+				"test_id": current_test_id,
 				"error": FileAccess.get_open_error()
 			},
 			["debug", "checksum", "validation", "error", "pid"]
@@ -203,8 +203,8 @@ static func _validate_checksum() -> DebugAction.Result:
 				"parse_error": result,
 				"error_line": json.error_line,
 				"error_string": json.error_string,
-				"pid": _process_id,
-				"test_id": _current_test_id
+				"pid": process_id,
+				"test_id": current_test_id
 			},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
@@ -221,7 +221,7 @@ static func _validate_checksum() -> DebugAction.Result:
 	if current.is_empty():
 		Log.error(
 			"No current checksum available for validation",
-			{"state_type": state_type, "pid": _process_id, "test_id": _current_test_id},
+			{"state_type": state_type, "pid": process_id, "test_id": current_test_id},
 			["debug", "checksum", "validation", "error", "pid"]
 		)
 		return DebugAction.Result.new_failure(
@@ -235,8 +235,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			{
 				"checksum": current,
 				"state_type": state_type,
-				"pid": _process_id,
-				"test_id": _current_test_id
+				"pid": process_id,
+				"test_id": current_test_id
 			},
 			["checksum", "first_run", state_type, "pid"]
 		)
@@ -245,7 +245,7 @@ static func _validate_checksum() -> DebugAction.Result:
 				"action": "first_run_saved",
 				"checksum": current,
 				"state_type": state_type,
-				"pid": _process_id
+				"pid": process_id
 			},
 			0,
 			"checksum_first_run"
@@ -258,8 +258,8 @@ static func _validate_checksum() -> DebugAction.Result:
 			{
 				"checksum": current,
 				"state_type": state_type,
-				"pid": _process_id,
-				"test_id": _current_test_id
+				"pid": process_id,
+				"test_id": current_test_id
 			},
 			["checksum", "valid", state_type, "pid"]
 		)
@@ -268,7 +268,7 @@ static func _validate_checksum() -> DebugAction.Result:
 				"action": "validated",
 				"checksum": current,
 				"state_type": state_type,
-				"pid": _process_id
+				"pid": process_id
 			},
 			0,
 			"checksum_validated"
@@ -280,8 +280,8 @@ static func _validate_checksum() -> DebugAction.Result:
 				"expected": expected,
 				"actual": current,
 				"state_type": state_type,
-				"pid": _process_id,
-				"test_id": _current_test_id
+				"pid": process_id,
+				"test_id": current_test_id
 			},
 			["checksum", "mismatch", state_type, "pid"]
 		)
@@ -542,14 +542,32 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Register PickledGD recording system test using class_name
-	var picklegd_recording_test: TestPickledGdRecordingSystem = TestPickledGdRecordingSystem.new()
-	registry.register_action(picklegd_recording_test)
+	# Register Action Recording system test using class_name
+	var action_recording_test: TestActionRecordingSystem = TestActionRecordingSystem.new()
+	registry.register_action(action_recording_test)
+
+	# Register basic Action Serialization test for debugging
+	var basic_action_serialization_test: TestBasicActionSerialization = (
+		TestBasicActionSerialization.new()
+	)
+	registry.register_action(basic_action_serialization_test)
+
+	# Register phase transition recording test
+	var phase_transition_test: TestPhaseTransitionRecording = TestPhaseTransitionRecording.new()
+	registry.register_action(phase_transition_test)
 
 	# Register replay system comprehensive test using preload to avoid class resolution issues
 	var replay_system_test_script: GDScript = preload("res://debug/actions/test_replay_system.gd")
 	var replay_system_test: DebugAction = replay_system_test_script.new()
 	registry.register_action(replay_system_test)
+
+	# Register debug menu visibility test using class_name
+	var debug_menu_visibility_test: TestDebugMenuVisibility = TestDebugMenuVisibility.new()
+	registry.register_action(debug_menu_visibility_test)
+
+	# Register simple combination events test using class_name
+	var combination_events_test: TestCombinationEvents = TestCombinationEvents.new()
+	registry.register_action(combination_events_test)
 
 
 static func _generate_simple_player_events() -> bool:

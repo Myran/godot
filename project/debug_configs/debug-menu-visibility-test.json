@@ -1,0 +1,7 @@
+{
+  "description": "Debug Menu Visibility Test - Test debug menu hiding during replay mode",
+  "actions": [
+    "test.ui.debug_menu_visibility",
+    "system.debug.quit_application"
+  ]
+}

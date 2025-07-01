@@ -1,6 +1,0 @@
-{
-  "description": "PickledGD Recording System Test - Comprehensive test of Event serialization and recording",
-  "actions": [
-    "test.picklegd.recording_system"
-  ]
-}

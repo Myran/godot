@@ -1,6 +1,0 @@
-{
-  "description": "PickledGD Edge Cases Test - Specialized testing for boundary conditions, error handling, and resilience",
-  "actions": [
-    "test.picklegd.edge_cases"
-  ]
-}

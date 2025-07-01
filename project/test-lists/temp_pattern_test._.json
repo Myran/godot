@@ -1,0 +1,10 @@
+{
+  "name": "Config Pattern: test.*",
+  "description": "Auto-generated test list for config pattern: test.*",
+  "configs": [
+    "test-basic-picklegd",
+    "test-player-actions-only",
+    "test-simple-registration",
+    "test-unique-method-actions"
+  ]
+}

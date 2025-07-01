@@ -1,0 +1,7 @@
+{
+  "description": "Action Recording System Test - RefSerializer-based event recording and replay validation",
+  "actions": [
+    "test.action_recording.system",
+    "system.debug.quit_application"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Test Player Actions with Unique Methods - Validate serialization for actions that have distinguishing methods",
+  "actions": [
+    "test.basic.action_serialization",
+    "system.debug.quit_application"
+  ]
+}

@@ -336,20 +336,19 @@ func _test_list_recordings() -> DebugAction.Result:
 func _generate_test_events() -> void:
 	# Generate actual player action events for recording testing
 	# This tests the essential player interactions: drafting units and moving lineup positions
+	# CRITICAL: Actions must be executed in the correct game state where they are available
+	# NOTE: Game starts in PREPARE state by default, need to transition to DRAFT for most actions
 	Log.info(
 		"Generating actual player action events for recording",
 		{},
 		["debug", "test", "replay", "events"]
 	)
 
-	# State Transition Events (manual navigation between DRAFT and PREPARE)
+	# 1. Transition from PREPARE (default) to DRAFT state (where most actions are available)
 	var transition_to_draft: ui.TransitionEvent = ui.TransitionEvent.new(core.GameState.DRAFT)
 	ui.action(transition_to_draft)
 
-	var transition_to_prepare: ui.TransitionEvent = ui.TransitionEvent.new(core.GameState.PREPARE)
-	ui.action(transition_to_prepare)
-
-	# Core Player Action Events (actual player interactions)
+	# 2. Execute all DRAFT-only actions while in DRAFT state
 	var reroll_event: core.RerollDraftEvent = core.RerollDraftEvent.new()
 	core.action(reroll_event)
 
@@ -359,7 +358,7 @@ func _generate_test_events() -> void:
 	var column_state_event: core.DraftColumnStateEvent = core.DraftColumnStateEvent.new(0, true)
 	core.action(column_state_event)
 
-	# Essential Player Lineup Actions - these are the missing player actions identified by user
+	# 3. Execute lineup actions (available in both DRAFT and PREPARE)
 	# Create mock card for lineup operations (using null for minimal testing approach)
 	var mock_card: Card = null
 
@@ -374,39 +373,41 @@ func _generate_test_events() -> void:
 	var lineup_add_event: core.LineupAddCardEvent = core.LineupAddCardEvent.new(mock_card)
 	core.action(lineup_add_event)
 
-	# Player moves unit location within lineup
+	# 4. Transition back to PREPARE state (testing state transitions and cross-state actions)
+	var transition_to_prepare: ui.TransitionEvent = ui.TransitionEvent.new(core.GameState.PREPARE)
+	ui.action(transition_to_prepare)
+
+	# 5. Execute lineup move in PREPARE state (testing cross-state availability)
 	var lineup_move_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(mock_card, 0, 1)
 	core.action(lineup_move_event)
 
-	# These events represent the actual player interactions:
-	# - State Transitions: Manual navigation between DRAFT and PREPARE
-	# - Reroll: Player rerolls draft
-	# - Upgrade: Player upgrades shop level
-	# - Column State: Player locks/unlocks draft columns
-	# - Remove from Draft: Player removes unit from clicker/draft
-	# - Lineup Add: Player adds unit to lineup
-	# - Lineup Move: Player moves unit location within the lineup
+	# These events represent the actual player interactions in correct state order:
+	# - Game starts in PREPARE (default), transition to DRAFT for most actions
+	# - DRAFT State: Reroll, Upgrade, Column State, Remove from Draft, Lineup Add
+	# - State Transition: DRAFT → PREPARE (back to default)
+	# - PREPARE State: Lineup Move (testing cross-state availability)
 
 	var events_generated: int = 8
 	(
 		Log
 		. info(
-			"Generated actual player action events for recording",
+			"Generated actual player action events for recording with proper state management",
 			{
 				"events_generated": events_generated,
-				"event_types":
+				"event_types_in_order":
 				[
-					"ui.TransitionEvent",
-					"ui.TransitionEvent",
+					"ui.TransitionEvent (PREPARE→DRAFT)",
 					"core.RerollDraftEvent",
 					"core.UpgradeEvent",
 					"core.DraftColumnStateEvent",
 					"core.RemoveBlockFromDraft",
 					"core.LineupAddCardEvent",
+					"ui.TransitionEvent (DRAFT→PREPARE)",
 					"core.MoveLineupCardEvent"
 				],
+				"state_flow": "PREPARE (default) → DRAFT (most actions) → PREPARE (lineup move)",
 				"coverage":
-				"Actual player interactions including state transitions (DRAFT/PREPARE), complete drafting workflow (remove + add) and lineup positioning"
+				"State-aware player interactions: draft actions require DRAFT view, lineup moves work in both views"
 			},
 			["debug", "test", "replay", "events"]
 		)

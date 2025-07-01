@@ -30,6 +30,10 @@ const CARD_MERGE_AMOUNT: int = 3
 class CoreEvent:
 	extends Context.Event
 
+	# Polymorphic method for type identification - override in serializable events
+	func get_serialization_type_name() -> StringName:
+		return &""  # Default: not serializable
+
 
 class StatEffectEvent:
 	extends CoreEvent
@@ -53,12 +57,15 @@ class RerollDraftEvent:
 	func _init() -> void:
 		source = EventSource.PLAYER
 
+	func get_serialization_type_name() -> StringName:
+		return &"core.RerollDraftEvent"
+
 
 class UpgradeEvent:
 	extends CoreEvent
 	var new_level: int
 
-	func _init(m_level: int) -> void:
+	func _init(m_level: int = 1) -> void:
 		self.new_level = m_level
 		source = EventSource.PLAYER
 
@@ -66,6 +73,9 @@ class UpgradeEvent:
 		var data: Dictionary = super.get_recording_data()
 		data["new_level"] = new_level
 		return data
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.UpgradeEvent"
 
 
 class DraftMergeEvent:
@@ -105,10 +115,13 @@ class DraftColumnStateEvent:
 	var col: int
 	var is_locked: bool
 
-	func _init(column: int, locked_state: bool) -> void:
+	func _init(column: int = -1, locked_state: bool = false) -> void:
 		self.col = column
 		self.is_locked = locked_state
 		source = EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.DraftColumnStateEvent"
 
 
 class UpdateDraftAreaEvent:
@@ -161,9 +174,12 @@ class LineupAddCardEvent:
 	extends CoreEvent
 	var card: Card
 
-	func _init(m_card: Card) -> void:
+	func _init(m_card: Card = null) -> void:
 		self.card = m_card
 		source = EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.LineupAddCardEvent"
 
 
 class TrippleTestEvent:
@@ -187,11 +203,14 @@ class MoveLineupCardEvent:
 	var from_position: int
 	var to_position: int
 
-	func _init(moved_card: Card, from_pos: int, to_pos: int) -> void:
+	func _init(moved_card: Card = null, from_pos: int = -1, to_pos: int = -1) -> void:
 		self.card = moved_card
 		self.from_position = from_pos
 		self.to_position = to_pos
 		source = EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.MoveLineupCardEvent"
 
 
 class BattleEvent:
@@ -235,10 +254,13 @@ class RemoveBlockFromDraft:
 	var block: Block
 	var destroy_block: bool
 
-	func _init(m_block: Block, m_destroy_block: bool = false) -> void:
+	func _init(m_block: Block = null, m_destroy_block: bool = false) -> void:
 		self.block = m_block
 		self.destroy_block = m_destroy_block
 		source = EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.RemoveBlockFromDraft"
 
 
 func action(_event: CoreEvent) -> void:

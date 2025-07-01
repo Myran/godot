@@ -1,77 +1,65 @@
 extends DebugAction
 
-class_name TestPickledGdRecordingSystem
+class_name TestActionRecordingSystem
 
-# Comprehensive test for PickledGD-based recording system
+# Comprehensive test for action recording system
 # Tests serialization/deserialization of various Event types used in recording
 
 
 func _init() -> void:
-	super("test.picklegd.recording_system", _execute_recording_test)
+	super("test.action_recording.system", _execute_recording_test)
 	set_category("Test")
-	set_group("PickledGD")
-	set_description("Comprehensive test of PickledGD Event serialization and recording")
+	set_group("Action Recording")
+	set_description("Comprehensive test of action recording and event serialization")
 
 
 func _execute_recording_test() -> DebugAction.Result:
 	Log.info(
-		"=== PickledGD Recording System Test Started ===",
+		"=== Action Recording System Test Started ===",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	var success: bool = true
 
-	# Test 1: Context.Event base class
-	success = success and _test_context_event()
-
-	# Test 2: core.CoreEvent base class
-	success = success and _test_core_event()
-
-	# Test 3: core.UpgradeEvent (player action)
+	# Test 1: core.UpgradeEvent (player action)
 	success = success and _test_upgrade_event()
 
-	# Test 4: core.RerollDraftEvent (player action)
+	# Test 2: core.RerollDraftEvent (player action)
 	success = success and _test_reroll_draft_event()
 
-	# Test 5: core.StatEffectEvent (system action)
-	success = success and _test_stat_effect_event()
-
-	# Test 6: core.MoveLineupCardEvent (player action)
+	# Test 3: core.MoveLineupCardEvent (player action)
 	success = success and _test_move_lineup_card_action()
 
-	# Test 7: core.DraftColumnStateEvent (player action) - Both locked and unlocked states
+	# Test 4: core.DraftColumnStateEvent (player action) - Both locked and unlocked states
 	success = success and _test_draft_column_state_event()
 
-	# Test 8: core.LineupAddCardEvent (player action)
+	# Test 5: core.LineupAddCardEvent (player action)
 	success = success and _test_lineup_add_card_event()
 
-	# Test 9: core.RemoveBlockFromDraft (player action)
+	# Test 6: core.RemoveBlockFromDraft (player action)
 	success = success and _test_remove_block_from_draft_event()
 
-	# Test 10: Round-trip test with ActionRecorder integration
+	# Test 8: Round-trip test with ActionRecorder integration
 	success = success and _test_action_recorder_integration()
 
-	# Test 11: Performance test with multiple events
+	# Test 9: Performance test with multiple events
 	success = success and _test_performance_multiple_events()
 
 	Log.info(
-		"=== PickledGD Recording System Test Complete ===",
+		"=== Action Recording System Test Complete ===",
 		{"overall_success": success},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	if success:
 		return DebugAction.Result.new_success(
 			{
-				"comprehensive_test": "All PickledGD recording tests passed",
+				"comprehensive_test": "All action recording tests passed",
 				"events_tested":
 				[
-					"Context.Event",
-					"core.CoreEvent",
 					"core.UpgradeEvent",
 					"core.RerollDraftEvent",
-					"core.StatEffectEvent",
 					"core.MoveLineupCardEvent",
 					"core.DraftColumnStateEvent",
 					"core.LineupAddCardEvent",
@@ -81,17 +69,19 @@ func _execute_recording_test() -> DebugAction.Result:
 				["serialization", "deserialization", "ActionRecorder_integration", "performance"]
 			},
 			0,
-			"picklegd_recording_test_complete"
+			"action_recording_test_complete"
 		)
 	else:
 		return DebugAction.Result.new_failure(
-			"Some PickledGD recording tests failed", "PICKLEGD_TEST_FAILED"
+			"Some action recording tests failed", "ACTION_RECORDING_TEST_FAILED"
 		)
 
 
 func _test_context_event() -> bool:
 	Log.info(
-		"Testing Context.Event serialization...", {}, ["debug", "test", "picklegd", "recording"]
+		"Testing Context.Event serialization...",
+		{},
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create original event
@@ -107,7 +97,7 @@ func _test_context_event() -> bool:
 		)
 		return false
 
-	if recorded.event_serialized.is_empty():
+	if recorded.event_data.is_empty():
 		Log.error(
 			"Context.Event serialization failed - empty serialized data",
 			{},
@@ -139,72 +129,10 @@ func _test_context_event() -> bool:
 		"Context.Event test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"source_preserved": deserialized_event.source == original_event.source
 		},
-		["debug", "test", "picklegd", "recording"]
-	)
-
-	return true
-
-
-func _test_core_event() -> bool:
-	Log.info(
-		"Testing core.CoreEvent serialization...", {}, ["debug", "test", "picklegd", "recording"]
-	)
-
-	# Create original event
-	var original_event: core.CoreEvent = core.CoreEvent.new()
-	original_event.source = core.EventSource.DEBUG_SETUP
-
-	# Test RecordedAction serialization
-	var recorded: RecordedAction = RecordedAction.new(original_event, 2)
-
-	if recorded.event_class.is_empty():
-		Log.error(
-			"core.CoreEvent serialization failed - empty event_class",
-			{},
-			["debug", "test", "error"]
-		)
-		return false
-
-	# Test deserialization
-	var deserialized_event: Context.Event = recorded.deserialize_event()
-
-	if not deserialized_event:
-		Log.error(
-			"core.CoreEvent deserialization failed - null result", {}, ["debug", "test", "error"]
-		)
-		return false
-
-	if not deserialized_event is core.CoreEvent:
-		Log.error(
-			"core.CoreEvent deserialization type mismatch",
-			{"actual_type": deserialized_event.get_class()},
-			["debug", "test", "error"]
-		)
-		return false
-
-	var core_event: core.CoreEvent = deserialized_event as core.CoreEvent
-	if core_event.source != original_event.source:
-		Log.error(
-			"core.CoreEvent round-trip failed - source mismatch",
-			{
-				"original_source": core.EventSource.keys()[original_event.source],
-				"deserialized_source": core.EventSource.keys()[core_event.source]
-			},
-			["debug", "test", "error"]
-		)
-		return false
-
-	Log.info(
-		"core.CoreEvent test passed",
-		{
-			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
-			"source_preserved": core_event.source == original_event.source
-		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -212,7 +140,9 @@ func _test_core_event() -> bool:
 
 func _test_upgrade_event() -> bool:
 	Log.info(
-		"Testing core.UpgradeEvent serialization...", {}, ["debug", "test", "picklegd", "recording"]
+		"Testing core.UpgradeEvent serialization...",
+		{},
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create original event with data
@@ -273,11 +203,11 @@ func _test_upgrade_event() -> bool:
 		"core.UpgradeEvent test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"new_level_preserved": upgrade_event.new_level == original_event.new_level,
 			"source_preserved": upgrade_event.source == original_event.source
 		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -287,7 +217,7 @@ func _test_reroll_draft_event() -> bool:
 	Log.info(
 		"Testing core.RerollDraftEvent serialization...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create original event
@@ -339,97 +269,10 @@ func _test_reroll_draft_event() -> bool:
 		"core.RerollDraftEvent test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"source_preserved": reroll_event.source == original_event.source
 		},
-		["debug", "test", "picklegd", "recording"]
-	)
-
-	return true
-
-
-func _test_stat_effect_event() -> bool:
-	Log.info(
-		"Testing core.StatEffectEvent serialization...",
-		{},
-		["debug", "test", "picklegd", "recording"]
-	)
-
-	# Create original event with null card (testing edge case)
-	var original_event: core.StatEffectEvent = core.StatEffectEvent.new(
-		null, 10, 5, core.EventSource.SYSTEM_CASCADE
-	)
-
-	# Test RecordedAction serialization
-	var recorded: RecordedAction = RecordedAction.new(original_event, 5)
-
-	if recorded.event_class.is_empty():
-		Log.error(
-			"core.StatEffectEvent serialization failed - empty event_class",
-			{},
-			["debug", "test", "error"]
-		)
-		return false
-
-	# Test deserialization
-	var deserialized_event: Context.Event = recorded.deserialize_event()
-
-	if not deserialized_event:
-		Log.error(
-			"core.StatEffectEvent deserialization failed - null result",
-			{},
-			["debug", "test", "error"]
-		)
-		return false
-
-	if not deserialized_event is core.StatEffectEvent:
-		Log.error(
-			"core.StatEffectEvent deserialization type mismatch",
-			{"actual_type": deserialized_event.get_class()},
-			["debug", "test", "error"]
-		)
-		return false
-
-	var stat_event: core.StatEffectEvent = deserialized_event as core.StatEffectEvent
-
-	# Check all properties
-	if stat_event.health_bonus != original_event.health_bonus:
-		Log.error(
-			"core.StatEffectEvent health_bonus mismatch",
-			{"original": original_event.health_bonus, "deserialized": stat_event.health_bonus},
-			["debug", "test", "error"]
-		)
-		return false
-
-	if stat_event.attack_bonus != original_event.attack_bonus:
-		Log.error(
-			"core.StatEffectEvent attack_bonus mismatch",
-			{"original": original_event.attack_bonus, "deserialized": stat_event.attack_bonus},
-			["debug", "test", "error"]
-		)
-		return false
-
-	if stat_event.effect_source != original_event.effect_source:
-		Log.error(
-			"core.StatEffectEvent effect_source mismatch",
-			{
-				"original": core.EventSource.keys()[original_event.effect_source],
-				"deserialized": core.EventSource.keys()[stat_event.effect_source]
-			},
-			["debug", "test", "error"]
-		)
-		return false
-
-	Log.info(
-		"core.StatEffectEvent test passed",
-		{
-			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
-			"health_bonus_preserved": stat_event.health_bonus == original_event.health_bonus,
-			"attack_bonus_preserved": stat_event.attack_bonus == original_event.attack_bonus,
-			"effect_source_preserved": stat_event.effect_source == original_event.effect_source
-		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -437,7 +280,9 @@ func _test_stat_effect_event() -> bool:
 
 func _test_action_recorder_integration() -> bool:
 	Log.info(
-		"Testing ActionRecorder integration...", {}, ["debug", "test", "picklegd", "recording"]
+		"Testing ActionRecorder integration...",
+		{},
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Test direct event recording with ActionRecorder singleton
@@ -504,7 +349,7 @@ func _test_action_recorder_integration() -> bool:
 			"event_preserved": loaded_upgrade.new_level == upgrade_event.new_level,
 			"recorder_class": last_recording.event_class
 		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -514,7 +359,7 @@ func _test_performance_multiple_events() -> bool:
 	Log.info(
 		"Testing performance with multiple events...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	var start_time: int = Time.get_ticks_msec()
@@ -531,19 +376,16 @@ func _test_performance_multiple_events() -> bool:
 			1:
 				event = core.RerollDraftEvent.new()
 			2:
-				event = core.StatEffectEvent.new(
-					null, i % 5, i % 3, core.EventSource.SYSTEM_CASCADE
-				)
+				event = core.MoveLineupCardEvent.new(null, i % 5, i % 3)
 			3:
 				event = core.DraftColumnStateEvent.new(i % 3, (i % 2) == 0)
 			_:
-				event = core.CoreEvent.new()
-				event.source = core.EventSource.PLAYER
+				event = core.LineupAddCardEvent.new(null)
 
 		# Test serialization/deserialization
 		var recorded: RecordedAction = RecordedAction.new(event, i)
 
-		if recorded.event_serialized.is_empty():
+		if recorded.event_data.is_empty():
 			Log.error(
 				"Performance test failed - serialization failed",
 				{"event_index": i, "event_type": event.get_class()},
@@ -577,7 +419,7 @@ func _test_performance_multiple_events() -> bool:
 			"total_time_ms": total_time,
 			"avg_time_per_event_ms": float(total_time) / float(events_count)
 		},
-		["debug", "test", "picklegd", "recording", "performance"]
+		["debug", "test", "action_recording", "recording", "performance"]
 	)
 
 	return success_rate >= 0.98  # 98% success rate required
@@ -587,7 +429,7 @@ func _test_move_lineup_card_action() -> bool:
 	Log.info(
 		"Testing core.MoveLineupCardEvent serialization...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create a mock card for testing (using null since we only test serialization)
@@ -647,12 +489,12 @@ func _test_move_lineup_card_action() -> bool:
 		"core.MoveLineupCardEvent test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"from_position": move_action.from_position,
 			"to_position": move_action.to_position,
 			"source": core.EventSource.keys()[move_action.source]
 		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -662,7 +504,7 @@ func _test_draft_column_state_event() -> bool:
 	Log.info(
 		"Testing core.DraftColumnStateEvent serialization...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Test both locked and unlocked states
@@ -680,7 +522,7 @@ func _test_draft_column_state_event() -> bool:
 		Log.info(
 			test_message,
 			{"column": column, "is_locked": is_locked},
-			["debug", "test", "picklegd", "recording"]
+			["debug", "test", "action_recording", "recording"]
 		)
 
 		# Create original event
@@ -700,7 +542,7 @@ func _test_draft_column_state_event() -> bool:
 			)
 			return false
 
-		if recorded.event_serialized.is_empty():
+		if recorded.event_data.is_empty():
 			Log.error(
 				"core.DraftColumnStateEvent serialization failed - empty serialized data",
 				{"test_case": case.description},
@@ -757,18 +599,18 @@ func _test_draft_column_state_event() -> bool:
 			{
 				"test_case": case.description,
 				"event_class": recorded.event_class,
-				"serialized_length": recorded.event_serialized.length(),
+				"serialized_length": str(recorded.event_data).length(),
 				"column": state_event.col,
 				"is_locked": state_event.is_locked,
 				"source": core.EventSource.keys()[state_event.source]
 			},
-			["debug", "test", "picklegd", "recording"]
+			["debug", "test", "action_recording", "recording"]
 		)
 
 	Log.info(
 		"core.DraftColumnStateEvent test completed - both states verified",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -778,7 +620,7 @@ func _test_lineup_add_card_event() -> bool:
 	Log.info(
 		"Testing core.LineupAddCardEvent serialization...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create a mock card for testing (using null since we only test serialization)
@@ -830,10 +672,10 @@ func _test_lineup_add_card_event() -> bool:
 		"core.LineupAddCardEvent test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"source": core.EventSource.keys()[lineup_event.source]
 		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true
@@ -843,7 +685,7 @@ func _test_remove_block_from_draft_event() -> bool:
 	Log.info(
 		"Testing core.RemoveBlockFromDraft serialization...",
 		{},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	# Create event with null block and destroy_block = true for testing
@@ -900,11 +742,11 @@ func _test_remove_block_from_draft_event() -> bool:
 		"core.RemoveBlockFromDraft test passed",
 		{
 			"event_class": recorded.event_class,
-			"serialized_length": recorded.event_serialized.length(),
+			"serialized_length": str(recorded.event_data).length(),
 			"destroy_block": remove_event.destroy_block,
 			"source": core.EventSource.keys()[remove_event.source]
 		},
-		["debug", "test", "picklegd", "recording"]
+		["debug", "test", "action_recording", "recording"]
 	)
 
 	return true

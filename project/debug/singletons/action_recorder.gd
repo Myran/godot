@@ -43,6 +43,19 @@ func _ready() -> void:
 			["debug", "action_recorder", "init", "error"]
 		)
 
+	# Connect to UI event system to record UI state transitions
+	if ui and ui.event:
+		ui.event.connect(_on_ui_event)
+		Log.info(
+			"Connected to UI event system", {}, ["debug", "action_recorder", "init", "connection"]
+		)
+	else:
+		Log.error(
+			"Failed to connect to UI event system",
+			{},
+			["debug", "action_recorder", "init", "error"]
+		)
+
 
 func start_recording() -> bool:
 	if is_recording:
@@ -103,8 +116,20 @@ func record_action(event: core.CoreEvent) -> bool:
 		stop_recording()
 		return false
 
-	# Create recorded action with strong typing
+	# Create recorded action with strong typing and error handling
 	var recorded: RecordedAction = RecordedAction.new(event, current_sequence)
+	if (
+		not recorded
+		or recorded.event_class == "NullEvent"
+		or recorded.event_class == "UnknownEvent"
+	):
+		Log.error(
+			"Failed to create valid recorded action",
+			{"event_type": event.get_class(), "sequence": current_sequence},
+			["debug", "action_recorder", "record", "error"]
+		)
+		return false
+
 	recorded_actions.append(recorded)
 	current_sequence += 1
 
@@ -266,6 +291,7 @@ func set_seed_for_replay(replay_seed: int) -> bool:
 
 func start_replay_mode() -> void:
 	is_replaying = true
+	_hide_debug_menu_during_replay()
 	Log.info("Replay mode started", {}, ["debug", "action_recorder", "replay"])
 
 
@@ -275,6 +301,7 @@ func stop_replay_mode() -> void:
 	replay_index = 0
 	replay_initial_checksum = ""
 	replay_config.clear()
+	_show_debug_menu_after_replay()
 	Log.info("Replay mode ended", {}, ["debug", "action_recorder", "replay"])
 
 
@@ -291,6 +318,12 @@ func get_recording_stats() -> Dictionary:
 
 func _on_core_event(event: core.CoreEvent) -> void:
 	# Forward events to record_action for filtering and recording
+	record_action(event)
+
+
+func _on_ui_event(event: ui.UIEvent) -> void:
+	# Forward UI events to record_action for filtering and recording
+	# UI events extend core.CoreEvent, so they can be handled by the same function
 	record_action(event)
 
 
@@ -319,6 +352,13 @@ func _capture_initial_seed() -> void:
 
 
 func replay_recording(filepath: String, config: Dictionary = {}) -> bool:
+	# Validate input parameters
+	if filepath.is_empty():
+		Log.error(
+			"Cannot replay with empty filepath", {}, ["debug", "action_recorder", "replay", "error"]
+		)
+		return false
+
 	if is_recording:
 		Log.error(
 			"Cannot replay while recording", {}, ["debug", "action_recorder", "replay", "error"]
@@ -430,9 +470,30 @@ func _execute_replay_action(recorded_action: RecordedAction) -> void:
 		["debug", "action_recorder", "replay", "action"]
 	)
 
-	# Emit the event and queue next action
-	core.action(event)
-	_queue_next_replay_action()
+	# Create a callable that will emit the event and then queue the next action
+	# This ensures each event is fully processed and cascaded before the next one
+	var emit_and_queue_next: Callable = func() -> void:
+		# Emit the event to the correct system based on type
+		if recorded_action.event_class.begins_with("ui."):
+			# UI events go to ui.action() - cast to UIEvent for type safety
+			var ui_event: ui.UIEvent = event as ui.UIEvent
+			if ui_event:
+				ui.action(ui_event)
+			else:
+				Log.error(
+					"Failed to cast event to UIEvent",
+					{"event_class": recorded_action.event_class},
+					["debug", "action_recorder", "replay", "error"]
+				)
+		else:
+			# Core events go to core.action()
+			core.action(event)
+
+		# Queue the next action AFTER this event has been emitted and processed
+		_queue_next_replay_action()
+
+	# Use SystemIdleActionEvent to ensure this event completes before next one
+	core.action(core.SystemIdleActionEvent.new(emit_and_queue_next))
 
 
 func _complete_replay_with_validation() -> void:
@@ -576,4 +637,40 @@ func _ensure_recordings_directory() -> void:
 			"Created recordings directory",
 			{"path": RECORDINGS_DIR},
 			["debug", "action_recorder", "init"]
+		)
+
+
+func _hide_debug_menu_during_replay() -> void:
+	# Hide debug menu to prevent user interaction during replay
+	# Use the existing debug menu action through DebugManager
+	if DebugManager:
+		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
+		Log.info(
+			"Debug menu hidden during replay using DebugManager",
+			{},
+			["debug", "action_recorder", "replay", "ui"]
+		)
+	else:
+		Log.warning(
+			"DebugManager not available to hide debug menu",
+			{},
+			["debug", "action_recorder", "replay", "ui", "warning"]
+		)
+
+
+func _show_debug_menu_after_replay() -> void:
+	# Show debug menu after replay completes
+	# Use the existing debug menu action through DebugManager
+	if DebugManager:
+		DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
+		Log.info(
+			"Debug menu shown after replay completion using DebugManager",
+			{},
+			["debug", "action_recorder", "replay", "ui"]
+		)
+	else:
+		Log.warning(
+			"DebugManager not available to show debug menu",
+			{},
+			["debug", "action_recorder", "replay", "ui", "warning"]
 		)

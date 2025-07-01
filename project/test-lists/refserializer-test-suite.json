@@ -1,0 +1,8 @@
+{
+  "description": "RefSerializer Test Suite - Comprehensive testing workflow for RefSerializer-based action recording system",
+  "configs": [
+    "action-recording-system-test",
+    "phase-transition-test",
+    "recording-comprehensive-test"
+  ]
+}

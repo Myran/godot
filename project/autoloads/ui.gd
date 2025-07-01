@@ -49,9 +49,12 @@ class TransitionEvent:
 	extends UIEvent
 	var new_state: core.GameState
 
-	func _init(_new_state: core.GameState) -> void:
+	func _init(_new_state: core.GameState = core.GameState.START) -> void:
 		new_state = _new_state
 		source = core.EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"ui.TransitionEvent"
 
 
 class StartBattleEvent:
@@ -64,6 +67,9 @@ class RerollEvent:
 	func _init() -> void:
 		source = core.EventSource.PLAYER
 
+	func get_serialization_type_name() -> StringName:
+		return &"ui.RerollEvent"
+
 
 class HideCardEvent:
 	extends UIEvent
@@ -74,6 +80,9 @@ class UpgradeEvent:
 
 	func _init() -> void:
 		source = core.EventSource.PLAYER
+
+	func get_serialization_type_name() -> StringName:
+		return &"ui.UpgradeEvent"
 
 
 func action(_event: UIEvent) -> void:

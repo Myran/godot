@@ -1,8 +1,0 @@
-{
-  "name": "Config Pattern: board-*",
-  "description": "Auto-generated test list for config pattern: board-*",
-  "configs": [
-    "board-checksum-test",
-    "board-simple-test"
-  ]
-}

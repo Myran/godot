@@ -1,6 +1,0 @@
-{
-  "description": "PickledGD Performance Test - Comprehensive performance benchmarking and optimization analysis",
-  "actions": [
-    "test.picklegd.performance"
-  ]
-}

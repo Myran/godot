@@ -1,9 +1,0 @@
-{
-  "name": "Config Pattern: system.*",
-  "description": "Auto-generated test list for config pattern: system.*",
-  "configs": [
-    "system-layer-all",
-    "system-quit-only",
-    "system-testing"
-  ]
-}

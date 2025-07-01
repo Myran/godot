@@ -81,7 +81,11 @@
       "mcp__basic-memory__search",
       "mcp__serena__read_memory",
       "mcp__basic-memory__recent_activity",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(../editor/godot.macos.editor.arm64:*)",
+      "Bash(./editor/godot.macos.editor.arm64 --path /Users/mattiasmyhrman/repos/gametwo/project --headless --check-only)",
+      "mcp__godot__list_projects",
+      "mcp__godot__get_project_info"
     ],
     "deny": []
   }

@@ -1,8 +1,0 @@
-{
-  "description": "Comprehensive Enhanced PickledGD Analysis - Test inner class detection and serialization patterns",
-  "actions": [
-    "system.test.generate_simple_player_events",
-    "system.recording.capture_state",
-    "test.picklegd.inner_class_support"
-  ]
-}
