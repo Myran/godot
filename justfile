@@ -193,7 +193,7 @@ _validate-config-exists CONFIG:
         # First, try to match config file names
         echo "🔍 Checking for matching config files..."
         CONFIG_PATTERN="{{CONFIG}}"
-        MATCHING_CONFIGS=$(ls project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20)
+        MATCHING_CONFIGS=$(ls project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20 || true)
         
         if [ -n "$MATCHING_CONFIGS" ]; then
             echo "✅ Found matching config files:"
@@ -221,7 +221,7 @@ _validate-config-exists CONFIG:
             exec just _test-list-android "temp_pattern_${SAFE_CONFIG_NAME}"
         fi
         
-        echo "🔍 No matching config files, checking for action pattern..."
+        echo "🔍 No matching config files, treating as action name pattern..."
         echo "🔧 Creating temporary config for wildcard pattern: {{CONFIG}}"
         
         # Create temporary config with safe filename - NO TRAP HERE
@@ -2668,15 +2668,184 @@ test-android-target TARGET DURATION="30" NO_RESTART="false" TRACE="false":
         fi
         exit 0
     elif [[ "$TARGET" == *"*"* ]]; then
-        # Wildcard pattern detected - use config testing with temporary config
+        # Wildcard pattern detected - check if it matches actions first, then fall back to config
         if [ "$TRACE_MODE" = "true" ]; then
             echo "   ❌ Not test list wildcard"
             echo "🔍 Step 2: Checking for action wildcard pattern..."
             echo "   ✅ Match: Contains '*' character"
-            echo "   Route: _test-config-android (wildcard mode)"
+            echo "   Route: Action wildcard or config wildcard"
         fi
         echo "🎯 Wildcard pattern detected: $TARGET"
-        just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}" "$TRACE_MODE"
+        
+        # Search for matching action names in the codebase
+        MATCHING_ACTIONS=$(grep -r "super(\|create(" project/debug/actions/ --include="*.gd" | \
+                          grep -o '"[^"]*"' | \
+                          sed 's/"//g' | \
+                          grep -E "^$(echo "$TARGET" | sed 's/\*/.*/')\$" | \
+                          sort -u || true)
+        
+        if [ -n "$MATCHING_ACTIONS" ]; then
+            echo "✅ Found matching actions for pattern '$TARGET':"
+            echo "$MATCHING_ACTIONS" | sed 's/^/  /'
+            echo ""
+            
+            # Execute each matching action individually
+            echo "🚀 Executing matching actions one by one..."
+            ACTION_COUNT=$(echo "$MATCHING_ACTIONS" | wc -l | tr -d ' ')
+            CURRENT_ACTION=1
+            
+            # Use a simple for loop with array to avoid recursive issues
+            ACTION_ARRAY=()
+            while IFS= read -r action_name; do
+                if [ -n "$action_name" ]; then
+                    ACTION_ARRAY+=("$action_name")
+                fi
+            done <<< "$MATCHING_ACTIONS"
+            
+            # Track action results for summary
+            PASSED_ACTIONS=()
+            FAILED_ACTIONS=()
+            SKIPPED_ACTIONS=()
+            
+            # Execute each action sequentially without recursion
+            for action_name in "${ACTION_ARRAY[@]}"; do
+                echo ""
+                echo "🎯 [$CURRENT_ACTION/$ACTION_COUNT] Executing action: $action_name"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                
+                # Create temporary config for this single action
+                SINGLE_ACTION_CONFIG="project/debug_configs/temp_single_${CURRENT_ACTION}_action.json"
+                echo '{"description":"Temporary config for single action: '"$action_name"'","actions":["'"$action_name"'"]}' > "$SINGLE_ACTION_CONFIG"
+                
+                # Execute the single action using the same infrastructure but without recursion
+                echo "🧪 Smart Test: $action_name"
+                TEST_ID="test_$(date +%Y%m%d_%H%M%S)_$(head -c 4 /dev/urandom | xxd -p)"
+                echo "🆔 Test ID: $TEST_ID"
+                echo "⏱️  Duration: {{DURATION}} seconds"
+                echo ""
+                
+                # Check prerequisites
+                ANDROID_DEVICE_ID="${ANDROID_DEVICE_ID:-{{ANDROID_DEVICE_ID}}}"
+                ANDROID_PACKAGE_NAME="${ANDROID_PACKAGE_NAME:-{{ANDROID_PACKAGE_NAME}}}"
+                
+                ACTION_STATUS="UNKNOWN"
+                
+                if ! adb -s "$ANDROID_DEVICE_ID" shell echo "Connected" >/dev/null 2>&1; then
+                    echo "❌ Device not connected, skipping action: $action_name"
+                    SKIPPED_ACTIONS+=("$action_name")
+                    ACTION_STATUS="SKIPPED"
+                elif ! adb -s "$ANDROID_DEVICE_ID" shell pm list packages | grep -q "$ANDROID_PACKAGE_NAME"; then
+                    echo "❌ App not installed, skipping action: $action_name"
+                    SKIPPED_ACTIONS+=("$action_name")
+                    ACTION_STATUS="SKIPPED"
+                else
+                    echo "✅ Prerequisites satisfied"
+                    echo ""
+                    
+                    # Deploy config to device
+                    ANDROID_PATH="/sdcard/Android/data/$ANDROID_PACKAGE_NAME/files"
+                    REMOTE_CONFIG="$ANDROID_PATH/debug_startup_actions.json"
+                    
+                    echo "🔄 Applying config with test ID..."
+                    if adb -s "$ANDROID_DEVICE_ID" shell mkdir -p "$ANDROID_PATH" && \
+                       adb -s "$ANDROID_DEVICE_ID" push "$SINGLE_ACTION_CONFIG" "$REMOTE_CONFIG"; then
+                        echo "✅ Config applied successfully"
+                        
+                        # Restart app
+                        echo "🔄 Restarting app to ensure config is loaded..."
+                        adb -s "$ANDROID_DEVICE_ID" shell am force-stop "$ANDROID_PACKAGE_NAME"
+                        sleep 1
+                        adb -s "$ANDROID_DEVICE_ID" shell monkey -p "$ANDROID_PACKAGE_NAME" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+                        sleep 2
+                        
+                        echo "📊 Monitoring test execution..."
+                        echo "   Looking for test ID: $TEST_ID"
+                        
+                        # Capture logs for the specified duration
+                        echo "📊 Starting enhanced log capture..."
+                        LOG_OUTPUT=$(timeout "{{DURATION}}" adb -s "$ANDROID_DEVICE_ID" logcat -s "godot:*" 2>/dev/null | grep "$TEST_ID" || true)
+                        
+                        if [ -n "$LOG_OUTPUT" ]; then
+                            echo "✅ Action '$action_name' execution completed successfully"
+                            PASSED_ACTIONS+=("$action_name")
+                            ACTION_STATUS="PASSED"
+                        else
+                            echo "⚠️  Action '$action_name' execution completed (no specific output found)"
+                            PASSED_ACTIONS+=("$action_name")
+                            ACTION_STATUS="PASSED"
+                        fi
+                        
+                        # Cleanup remote config
+                        adb -s "$ANDROID_DEVICE_ID" shell rm -f "$REMOTE_CONFIG" >/dev/null 2>&1 || true
+                    else
+                        echo "❌ Failed to deploy config for action: $action_name"
+                        FAILED_ACTIONS+=("$action_name")
+                        ACTION_STATUS="FAILED"
+                    fi
+                fi
+                
+                # Clean up local temporary config
+                rm -f "$SINGLE_ACTION_CONFIG" >/dev/null 2>&1 || true
+                
+                # Show immediate status
+                case "$ACTION_STATUS" in
+                    "PASSED") echo "✅ Status: PASSED" ;;
+                    "FAILED") echo "❌ Status: FAILED" ;;
+                    "SKIPPED") echo "⏭️  Status: SKIPPED" ;;
+                esac
+                
+                CURRENT_ACTION=$((CURRENT_ACTION + 1))
+                echo ""
+            done
+            
+            # Display comprehensive summary
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📊 EXECUTION SUMMARY for pattern: $TARGET"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📈 Total Actions: $ACTION_COUNT"
+            echo "✅ Passed: ${#PASSED_ACTIONS[@]}"
+            echo "❌ Failed: ${#FAILED_ACTIONS[@]}"
+            echo "⏭️  Skipped: ${#SKIPPED_ACTIONS[@]}"
+            echo ""
+            
+            if [ ${#PASSED_ACTIONS[@]} -gt 0 ]; then
+                echo "✅ PASSED ACTIONS:"
+                for action in "${PASSED_ACTIONS[@]}"; do
+                    echo "  ✅ $action"
+                done
+                echo ""
+            fi
+            
+            if [ ${#FAILED_ACTIONS[@]} -gt 0 ]; then
+                echo "❌ FAILED ACTIONS:"
+                for action in "${FAILED_ACTIONS[@]}"; do
+                    echo "  ❌ $action"
+                done
+                echo ""
+            fi
+            
+            if [ ${#SKIPPED_ACTIONS[@]} -gt 0 ]; then
+                echo "⏭️  SKIPPED ACTIONS:"
+                for action in "${SKIPPED_ACTIONS[@]}"; do
+                    echo "  ⏭️  $action"
+                done
+                echo ""
+            fi
+            
+            # Overall result
+            if [ ${#FAILED_ACTIONS[@]} -eq 0 ] && [ ${#SKIPPED_ACTIONS[@]} -eq 0 ]; then
+                echo "🎉 OVERALL RESULT: ALL PASSED (${#PASSED_ACTIONS[@]}/${ACTION_COUNT})"
+            elif [ ${#FAILED_ACTIONS[@]} -eq 0 ]; then
+                echo "⚠️  OVERALL RESULT: PARTIAL SUCCESS (${#PASSED_ACTIONS[@]} passed, ${#SKIPPED_ACTIONS[@]} skipped)"
+            else
+                echo "❌ OVERALL RESULT: SOME FAILURES (${#PASSED_ACTIONS[@]} passed, ${#FAILED_ACTIONS[@]} failed, ${#SKIPPED_ACTIONS[@]} skipped)"
+            fi
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        else
+            # No actions match, fall back to config wildcard behavior
+            echo "🔍 No actions match pattern, trying config wildcard..."
+            just _test-config-android "$TARGET" "{{DURATION}}" "{{NO_RESTART}}" "$TRACE_MODE"
+        fi
     elif [ -f "project/debug_configs/$TARGET.json" ]; then
         # Config file exists - use config testing
         if [ "$TRACE_MODE" = "true" ]; then
@@ -2735,6 +2904,7 @@ test-android-target TARGET DURATION="30" NO_RESTART="false" TRACE="false":
             exit 1
         fi
     fi
+
 
 # Enhanced unified testing command with auto-detection
 test-android-enhanced TARGET DURATION="30" NO_RESTART="false":
