@@ -9,6 +9,7 @@
     "system-testing",
     "performance-all",
     "error-handling-all",
-    "integration-test"
+    "integration-test",
+    "@recording-system-integrity"
   ]
 }
