@@ -237,7 +237,9 @@ func _load_config_file(file_path: String) -> Dictionary:
 	"""Load and parse a JSON config file"""
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
-		AdvancedLogger.warning("Cannot open config file: %s" % file_path, ["debug", "replay", "validation"])
+		AdvancedLogger.warning(
+			"Cannot open config file: %s" % file_path, ["debug", "replay", "validation"]
+		)
 		return {}
 
 	var json_text = file.get_as_text()
