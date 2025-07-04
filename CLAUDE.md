@@ -102,6 +102,11 @@ just logs TEST_ID system startup          # System initialization (95% savings)
 just logs-performance-tagged TEST_ID       # All performance data
 just logs-performance-tagged TEST_ID battle # Component performance
 
+# Replay & interactive debugging
+just logs TEST_ID replay complete interactive # Manual verification replay logs
+just logs TEST_ID debug ui menu               # Debug interface hide/show events
+just logs-errors-tagged TEST_ID replay        # Replay-specific errors
+
 # Traditional commands (use sparingly)
 just logs TEST_ID                          # Full logs (high token cost)
 ```
@@ -571,21 +576,95 @@ func get_state_type() -> String:
     return "board_state"
 ```
 
-## 🎬 Recording & Replay System with Integrity Testing
+## 🎬 Interactive Recording & Replay System
 
-### **Comprehensive Development Tool for Action Recording and Replay**
-**Complete workflow for capturing semantic player actions, generating test configs, and maintaining system integrity with comprehensive regression protection.**
+### **Two-Mode Replay System for Different Use Cases**
+**Complete workflow for capturing semantic player actions with intelligent mode selection for automated testing vs manual verification.**
 
+### **🎭 Replay Modes**
+
+#### **🤖 Automated Mode (CI/Testing)**
 ```bash
-# 1. Core Workflow - Record & Generate
-just replay-capture-and-generate my-battle-scenario    # Capture logs and generate config
-just test-android-target my-battle-scenario            # Run the generated replay config
+# Generate automated replay (includes quit action)
+just replay-capture-and-generate my-ci-test            # Complete: capture → generate → auto-quit
+just replay-generate SESSION_ID my-automated-test      # Generate from specific session
 
-# 2. System Integrity Validation (Recommended)
-just recording-integrity-test                          # Validate entire recording/replay system
-just recording-health-check                            # Quick system health validation
-just recording-regression-check                        # Detect missing components & regressions
+# Behavior: App quits automatically after replay completion
+# Use for: CI/CD pipelines, automated testing, regression tests
 ```
+
+#### **👁️ Manual Mode (Verification & Screenshots)**
+```bash
+# Generate manual verification replay (no quit action)
+just replay-capture-and-generate-manual my-manual-test # Complete: capture → generate → no quit
+just replay-generate-manual SESSION_ID my-manual-test  # Generate from specific session
+
+# Behavior: App stays open with hidden debug interface for clean verification
+# Use for: Manual testing, screenshots, user verification, demonstrations
+```
+
+### **🔧 Core Workflow Examples**
+
+#### **Manual Verification Workflow (Recommended for Development)**
+```bash
+# 1. Generate manual verification replay
+just replay-capture-and-generate-manual player-battle-demo development-workflow
+
+# 2. Run replay without auto-quit  
+just test-android-target player-battle-demo
+
+# 3. Take screenshot of clean game interface
+just screenshot
+
+# 4. Manually verify results and close when ready
+# App shows clean game interface without debug clutter
+```
+
+#### **Automated Testing Workflow (CI/CD)**
+```bash
+# 1. Generate automated replay
+just replay-capture-and-generate ci-regression-test development-workflow
+
+# 2. Run replay with auto-quit
+just test-android-target ci-regression-test
+
+# 3. App quits automatically - perfect for automation
+```
+
+### **🎯 Key Technical Features**
+
+#### **Smart Debug Interface Management**
+- **Complete Interface Hiding**: Uses `EVENT_CLOSE_DEBUG_MENU` to hide entire debug interface
+- **Clean Game View**: Shows actual game interface without debug console clutter  
+- **Automatic Restoration**: Manual mode keeps interface hidden for clean verification
+- **Professional Presentation**: Perfect for screenshots, demonstrations, and user testing
+
+#### **Intelligent Mode Selection**
+- **Automated Mode**: Includes `system.debug.quit_application` for CI/automated testing
+- **Manual Mode**: Includes `system.debug.replay_complete` for manual verification
+- **Semantic Integration**: Both modes log completion events for recording system consistency
+- **Metadata Tracking**: Replay configs include mode information for easy identification
+
+#### **Developer Experience**
+```bash
+# Any manually run test stays open for verification - perfect for development
+just test-android-target my-replay-config        # Stays open (manual verification)
+just screenshot                                   # Take screenshots of clean interface
+
+# Background automation includes quit for unattended operation  
+# (Used internally by CI/CD systems)
+```
+
+### **🎯 Key Developer Benefit**
+**Manual test runs via `just` commands automatically stay open without quitting**, allowing developers to:
+- Take screenshots of clean game interface (no debug UI clutter)
+- Manually verify game state and functionality
+- Interact with the game after replay completion
+- Close the app when ready, not when the system decides
+
+This solves the core problem: **"When I run a test manually, I want to see and verify the results, not have the app quit immediately."**
+
+### **🎯 System Integrity Validation (Critical for Production)**
 
 ### **🔧 Integrity Testing Commands**
 ```bash

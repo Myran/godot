@@ -7,7 +7,7 @@
 # SEMANTIC LOG CAPTURE & REPLAY
 # ================================
 
-# Generate replay test configuration from semantic logs
+# Generate replay test configuration from semantic logs (automated mode - includes quit)
 replay-generate session_id config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -95,6 +95,105 @@ replay-generate session_id config_name="":
     echo ""
     echo "🎉 Replay generation complete!"
 
+# Generate replay test configuration from semantic logs (manual mode - no quit for verification)
+replay-generate-manual session_id config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    
+    # Use session ID as config name if not provided
+    if [ -z "$CONFIG_NAME" ]; then
+        CONFIG_NAME="replay-manual-${SESSION_ID}"
+    fi
+    
+    # Clean config name for filename
+    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    
+    echo "🎬 Generating manual verification replay configuration..."
+    echo "   Session ID: ${SESSION_ID}"
+    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo "   Mode: Manual verification (no auto-quit)"
+    echo ""
+    
+    # Check if semantic logs exist for this session
+    LOG_FILES=$(find logs -name "*.log" -type f 2>/dev/null | head -10 || echo "")
+    if [ -z "$LOG_FILES" ]; then
+        echo "⚠️  No log files found in logs/ directory"
+        echo "   Make sure semantic actions have been logged with session ID: ${SESSION_ID}"
+        echo ""
+        echo "💡 To capture semantic logs:"
+        echo "   1. Run: just test-android development-workflow"
+        echo "   2. Look for SESSION_START logs to find session IDs"
+        echo "   3. Use the session ID to generate replay config"
+        exit 1
+    fi
+    
+    echo "📋 Searching for semantic actions in logs..."
+    
+    # Extract semantic actions from logs for the specified session
+    SEMANTIC_ACTIONS=$(grep -h "SEMANTIC_ACTION" $LOG_FILES 2>/dev/null | grep "\"session_id\":\"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Available session IDs in recent logs:"
+        grep -h "SESSION_START\|session_id" $LOG_FILES 2>/dev/null | grep -o '"session_id":"[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
+        exit 1
+    fi
+    
+    # Count actions
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
+    
+    # Create a manual verification replay configuration
+    GENERATION_TIMESTAMP=$(date -Iseconds)
+    
+    # Create JSON config for manual verification mode
+    printf '{\n' > "${OUTPUT_CONFIG}"
+    printf '  "description": "Manual verification replay from semantic session: %s (no auto-quit)",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
+    printf '  "session_id": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
+    printf '  "generation_timestamp": "%s",\n' "$GENERATION_TIMESTAMP" >> "${OUTPUT_CONFIG}"
+    printf '  "semantic_action_count": %s,\n' "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
+    printf '  "actions": [\n' >> "${OUTPUT_CONFIG}"
+    printf '    "system.debug.hide_menu",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "system.debug.registry_stats",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "game.lineup.populate_enemy",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "game.draft.reroll_player",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "game.draft.upgrade_player",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "game.state.transition_player",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "system.debug.replay_complete"\n' >> "${OUTPUT_CONFIG}"
+    printf '  ],\n' >> "${OUTPUT_CONFIG}"
+    printf '  "metadata": {\n' >> "${OUTPUT_CONFIG}"
+    printf '    "source_session": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
+    printf '    "generation_method": "justfile_replay_generate_manual",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "config_name": "%s",\n' "$CLEAN_CONFIG_NAME" >> "${OUTPUT_CONFIG}"
+    printf '    "capture_timestamp": "%s",\n' "$TIMESTAMP" >> "${OUTPUT_CONFIG}"
+    printf '    "replay_mode": "manual",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "auto_quit": false,\n' >> "${OUTPUT_CONFIG}"
+    printf '    "manual_verification": true\n' >> "${OUTPUT_CONFIG}"
+    printf '  }\n' >> "${OUTPUT_CONFIG}"
+    printf '}\n' >> "${OUTPUT_CONFIG}"
+    
+    echo ""
+    echo "✅ Manual verification replay configuration generated: ${OUTPUT_CONFIG}"
+    echo "📊 Actions: ${ACTION_COUNT} semantic → 7 debug (manual mode)"
+    echo ""
+    echo "🎮 To test the replay (manual verification):"
+    echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
+    echo ""
+    echo "✨ Manual verification mode:"
+    echo "   • Debug interface will be hidden for clean view"
+    echo "   • App will NOT quit automatically after replay"
+    echo "   • Take screenshots and verify results manually"
+    echo "   • Close app manually when done"
+    echo ""
+    echo "🎉 Manual replay generation complete!"
+
 # Capture semantic logs from a test run and generate replay config
 replay-capture-and-generate config_name test_target="development-workflow":
     #!/usr/bin/env bash
@@ -143,6 +242,55 @@ replay-capture-and-generate config_name test_target="development-workflow":
     echo "3️⃣ Generating replay configuration..."
     just replay-generate "${SESSION_ID}" "${CONFIG_NAME}"
 
+# Capture semantic logs from a test run and generate manual verification replay config (no auto-quit)
+replay-capture-and-generate-manual config_name test_target="development-workflow":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    TEST_TARGET="{{test_target}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    
+    echo "🎬 Capturing semantic logs and generating manual verification replay config..."
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo "   Test Target: ${TEST_TARGET}"
+    echo "   Mode: Manual verification (no auto-quit)"
+    echo ""
+    
+    echo "1️⃣ Running test to capture semantic actions..."
+    
+    # Run the test and capture output
+    TEST_OUTPUT=$(just test-android ${TEST_TARGET} 2>&1)
+    TEST_ID=$(echo "$TEST_OUTPUT" | grep -o 'TEST_ID=[^[:space:]]*' | cut -d= -f2 | tail -1 || echo "")
+    
+    if [ -z "$TEST_ID" ]; then
+        echo "❌ Could not capture TEST_ID from test run"
+        echo "💡 Try running: just test-android ${TEST_TARGET}"
+        echo "   Then manually extract session ID from logs"
+        exit 1
+    fi
+    
+    echo "✅ Test completed with ID: ${TEST_ID}"
+    echo ""
+    
+    echo "2️⃣ Extracting session ID from test logs..."
+    SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ Could not find session ID in test logs"
+        echo "💡 Check logs manually: just logs-last"
+        echo ""
+        echo "🔍 Available session references in logs:"
+        just logs-last | grep -i session | head -3 || echo "   No session references found"
+        exit 1
+    fi
+    
+    echo "✅ Found session ID: ${SESSION_ID}"
+    echo ""
+    
+    echo "3️⃣ Generating manual verification replay configuration..."
+    just replay-generate-manual "${SESSION_ID}" "${CONFIG_NAME}"
+
 # List available replay configurations
 replay-list:
     #!/usr/bin/env bash
@@ -184,6 +332,10 @@ replay-list:
     
     echo ""
     echo "🎮 To run a replay: just test-android-target <config-name>"
+    echo ""
+    echo "📋 Replay Modes:"
+    echo "   🤖 Automated: Includes quit action for CI/automated testing"
+    echo "   👁️  Manual: No quit action for manual verification and screenshots"
 
 # Validate replay configuration format
 replay-validate config_name:

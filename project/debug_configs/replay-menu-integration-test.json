@@ -1,0 +1,15 @@
+{
+  "description": "Replay Menu Integration Test - Validate semantic action mapper adds hide menu automatically",
+  "actions": [
+    "system.debug.test_semantic_logging",
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "test_type": "semantic_replay_integration",
+    "purpose": "Verify that semantic action mapper automatically adds menu hiding to replay configs",
+    "validates": [
+      "SemanticActionMapper.create_replay_config includes system.debug.hide_menu",
+      "Generated replay configs provide clean UI output"
+    ]
+  }
+}

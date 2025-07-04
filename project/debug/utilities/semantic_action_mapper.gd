@@ -34,30 +34,67 @@ static func generate_debug_action_sequence(semantic_actions: Array) -> Array[Dic
 
 
 static func create_replay_config(
-	session_id: String, debug_sequence: Array[Dictionary], metadata: Dictionary = {}
+	session_id: String,
+	debug_sequence: Array[Dictionary],
+	metadata: Dictionary = {},
+	mode: String = "automated"
 ) -> Dictionary:
-	"""Create a complete replay configuration from debug action sequence"""
+	"""Create a complete replay configuration from debug action sequence with automatic menu hiding
+	
+	Args:
+		session_id: Unique identifier for the semantic session
+		debug_sequence: Array of debug actions to include
+		metadata: Additional metadata to include in config
+		mode: "automated" (includes quit action) or "manual" (no quit action for manual verification)
+	"""
 	var config: Dictionary = {
-		"description": "Generated replay from semantic session: %s" % session_id,
+		"description": _generate_description(session_id, mode),
 		"session_id": session_id,
 		"actions": [],
-		"metadata":
-		{
-			"source_session": session_id,
-			"generation_timestamp": Time.get_datetime_string_from_system(),
-			"semantic_action_count": debug_sequence.size()
-		}
+		"metadata": _generate_metadata(session_id, debug_sequence, mode)
 	}
 
 	# Add any provided metadata
 	for key: String in metadata:
 		config.metadata[key] = metadata[key]
 
+	# Add hide menu action as first action for clean replay output
+	config.actions.append("system.debug.hide_menu")
+
 	# Extract action names for the config
 	for debug_action: Dictionary in debug_sequence:
 		config.actions.append(debug_action.get("action_name", "unknown"))
 
+	# Add completion action based on mode
+	if mode == "automated":
+		config.actions.append("system.debug.quit_application")
+	else:  # manual mode
+		config.actions.append("system.debug.replay_complete")
+
 	return config
+
+
+static func _generate_description(session_id: String, mode: String) -> String:
+	"""Generate appropriate description based on replay mode"""
+	var base_desc: String = "Generated replay from semantic session: %s" % session_id
+	if mode == "manual":
+		return base_desc + " (Manual verification - no auto-quit)"
+	else:
+		return base_desc + " (Automated testing - auto-quit)"
+
+
+static func _generate_metadata(
+	session_id: String, debug_sequence: Array[Dictionary], mode: String
+) -> Dictionary:
+	"""Generate metadata with mode information"""
+	return {
+		"source_session": session_id,
+		"generation_timestamp": Time.get_datetime_string_from_system(),
+		"semantic_action_count": debug_sequence.size(),
+		"replay_mode": mode,
+		"auto_quit": mode == "automated",
+		"manual_verification": mode == "manual"
+	}
 
 
 static func validate_debug_action_mapping(semantic_type: String) -> bool:

@@ -1,7 +1,15 @@
 {
-  "description": "Debug Menu Visibility Test - Test debug menu hiding during replay mode",
+  "description": "Debug Menu Visibility Test - Validate menu hide/show functionality for clean replay output",
   "actions": [
-    "test.ui.debug_menu_visibility",
+    "system.debug.registry_stats",
+    "system.debug.hide_menu",
+    "game.lineup.populate_enemy",
+    "system.debug.show_menu",
+    "system.debug.registry_stats",
     "system.debug.quit_application"
-  ]
+  ],
+  "metadata": {
+    "test_type": "ui_visibility_validation",
+    "purpose": "Verify debug menu hiding provides clean replay output"
+  }
 }

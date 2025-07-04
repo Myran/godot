@@ -4,6 +4,7 @@
   "configs": [
     "smoke-test",
     "cpp-layer-all",
-    "backend-layer-all"
+    "backend-layer-all",
+    "debug-menu-visibility-test"
   ]
 }

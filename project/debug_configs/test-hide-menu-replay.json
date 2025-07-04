@@ -1,0 +1,19 @@
+{
+  "description": "Test replay with automatic debug menu hiding",
+  "session_id": "test-hide-menu-validation",
+  "generation_timestamp": "2025-07-04T14:45:00Z",
+  "semantic_action_count": 3,
+  "actions": [
+    "system.debug.hide_menu",
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "system.debug.show_menu",
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "source_session": "manual-test",
+    "generation_method": "manual_creation",
+    "config_name": "test-hide-menu-replay",
+    "test_type": "replay_menu_hiding_validation"
+  }
+}

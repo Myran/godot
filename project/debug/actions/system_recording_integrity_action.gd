@@ -57,7 +57,9 @@ func _validate_core_components() -> Dictionary:
 	}
 
 	# Check SemanticActionMapper
-	var mapper_test: String = SemanticActionMapper.map_semantic_action_to_debug_action("draft.reroll")
+	var mapper_test: String = SemanticActionMapper.map_semantic_action_to_debug_action(
+		"draft.reroll"
+	)
 	components.semantic_action_mapper = (mapper_test == "game.draft.reroll_player")
 	Log.debug(
 		"SemanticActionMapper validation: %s" % components.semantic_action_mapper,
@@ -104,7 +106,9 @@ func _validate_component_integration() -> Dictionary:
 		{"type": "draft.upgrade", "session_id": "test_session", "count": 2}
 	]
 
-	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(test_semantic_actions)
+	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(
+		test_semantic_actions
+	)
 	integration.mapper_to_actions = (debug_sequence.size() == 2)
 	Log.debug(
 		"Mapper to actions integration: %s" % integration.mapper_to_actions,
@@ -113,7 +117,9 @@ func _validate_component_integration() -> Dictionary:
 	)
 
 	# Test replay config generation
-	var config: Dictionary = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
+	var config: Dictionary = SemanticActionMapper.create_replay_config(
+		"test_session", debug_sequence
+	)
 	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 2)
 	Log.debug(
 		"Parsing to config integration: %s" % integration.parsing_to_config,
@@ -122,7 +128,9 @@ func _validate_component_integration() -> Dictionary:
 	)
 
 	# Test mapping coverage
-	var coverage: Dictionary = SemanticActionMapper.get_mapping_coverage_report(test_semantic_actions)
+	var coverage: Dictionary = SemanticActionMapper.get_mapping_coverage_report(
+		test_semantic_actions
+	)
 	var full_coverage: bool = coverage.unmapped_actions == 0
 	Log.debug(
 		(

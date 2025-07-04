@@ -210,8 +210,12 @@ func _test_generation_workflow() -> bool:
 		{"type": "draft.upgrade", "session_id": "test_session", "count": 2}
 	]
 
-	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(mock_actions)
-	var config: Dictionary = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
+	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(
+		mock_actions
+	)
+	var config: Dictionary = SemanticActionMapper.create_replay_config(
+		"test_session", debug_sequence
+	)
 
 	var valid_config: bool = (
 		config.has("description") and config.has("actions") and config.actions.size() > 0
@@ -293,7 +297,9 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 			failures += 1
 
 	# Check regression risk
-	var regression_risk: String = validation_results.regression_detection.get("regression_risk", "LOW")
+	var regression_risk: String = validation_results.regression_detection.get(
+		"regression_risk", "LOW"
+	)
 	if regression_risk == "HIGH":
 		failures += 2
 	elif regression_risk == "MEDIUM":

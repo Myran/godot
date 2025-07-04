@@ -1,0 +1,16 @@
+{
+  "description": "Interactive Replay: Full workflow with manual verification",
+  "actions": [
+    "system.debug.hide_menu",
+    "game.draft.reroll_player", 
+    "game.lineup.populate_enemy",
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "test_type": "interactive_replay",
+    "phase": "production", 
+    "expected_behavior": "App remains open after replay completion with hidden menu for clean verification",
+    "manual_verification": true,
+    "note": "NO QUIT ACTION - menu stays hidden for clean result view"
+  }
+}

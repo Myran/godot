@@ -56,7 +56,6 @@ text_editor/completion/code_complete_delay = 0.01
 text_editor/completion/add_string_name_literals = true
 text_editor/completion/add_node_path_literals = true
 editors/3d_gizmos/gizmo_settings/bone_axis_length = 0.1
-editors/animation/default_animation_step = 0.0333333
 run/window_placement/screen = -3
 run/bottom_panel/action_on_play = 0
 network/connection/network_mode = 1
