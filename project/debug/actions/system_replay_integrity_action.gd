@@ -19,7 +19,7 @@ func get_description() -> String:
 
 func execute() -> void:
 	Log.info(
-		"🎬 Starting replay system integrity validation...", ["debug", "replay", "integrity"]
+		"🎬 Starting replay system integrity validation...", {}, ["debug", "replay", "integrity"]
 	)
 
 	var validation_results: Dictionary = {
@@ -82,6 +82,7 @@ func _validate_config_structures() -> Dictionary:
 						config_validation.action_sequences
 					]
 				),
+				{},
 				["debug", "replay", "validation"]
 			)
 
@@ -105,7 +106,7 @@ func _validate_replay_commands() -> Dictionary:
 	command_validation.cleanup_commands = true  # Placeholder - would test `just replay-clean`
 
 	Log.debug(
-		"Replay commands validation: %s" % command_validation, ["debug", "replay", "validation"]
+		"Replay commands validation: %s" % command_validation, {}, ["debug", "replay", "validation"]
 	)
 
 	return command_validation
@@ -156,7 +157,7 @@ func _detect_regression_patterns() -> Dictionary:
 		if not FileAccess.file_exists(component):
 			regression_detection.missing_components.append(component)
 			Log.warning(
-				"Missing critical component: %s" % component, ["debug", "replay", "regression"]
+				"Missing critical component: %s" % component, {}, ["debug", "replay", "regression"]
 			)
 
 	# Check for broken semantic action mappings
@@ -181,6 +182,7 @@ func _detect_regression_patterns() -> Dictionary:
 			"Regression detection - Missing: %d, Broken: %d, Risk: %s"
 			% [missing_count, broken_count, regression_detection.regression_risk]
 		),
+		{},
 		["debug", "replay", "regression"]
 	)
 
@@ -193,7 +195,9 @@ func _test_capture_workflow() -> bool:
 	# For now, validate that the mapper can handle test data
 	var test_session = "integrity_test_%d" % Time.get_unix_time_from_system()
 	Log.debug(
-		"Testing capture workflow with session: %s" % test_session, ["debug", "replay", "workflow"]
+		"Testing capture workflow with session: %s" % test_session,
+		{},
+		["debug", "replay", "workflow"]
 	)
 	return true
 
@@ -212,9 +216,7 @@ func _test_generation_workflow() -> bool:
 	var valid_config = (
 		config.has("description") and config.has("actions") and config.actions.size() > 0
 	)
-	Log.debug(
-		"Generation workflow test: %s" % valid_config, ["debug", "replay", "workflow"]
-	)
+	Log.debug("Generation workflow test: %s" % valid_config, {}, ["debug", "replay", "workflow"])
 	return valid_config
 
 
@@ -238,7 +240,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
 		Log.warning(
-			"Cannot open config file: %s" % file_path, ["debug", "replay", "validation"]
+			"Cannot open config file: %s" % file_path, {}, ["debug", "replay", "validation"]
 		)
 		return {}
 
@@ -249,7 +251,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	var parse_result = json.parse(json_text)
 	if parse_result != OK:
 		Log.warning(
-			"JSON parse error in config: %s" % file_path, ["debug", "replay", "validation"]
+			"JSON parse error in config: %s" % file_path, {}, ["debug", "replay", "validation"]
 		)
 		return {}
 
@@ -308,33 +310,32 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 func _log_validation_summary(results: Dictionary) -> void:
 	"""Log comprehensive validation summary"""
-	Log.info(
-		"🎬 Replay System Integrity Validation Complete", ["debug", "replay", "integrity"]
-	)
-	Log.info(
-		"📊 Overall Status: %s" % results.overall_status, ["debug", "replay", "integrity"]
-	)
+	Log.info("🎬 Replay System Integrity Validation Complete", {}, ["debug", "replay", "integrity"])
+	Log.info("📊 Overall Status: %s" % results.overall_status, {}, ["debug", "replay", "integrity"])
 
 	# Log regression detection results
 	var regression = results.regression_detection
 	Log.info(
-		"🔍 Regression Risk: %s" % regression.regression_risk, ["debug", "replay", "integrity"]
+		"🔍 Regression Risk: %s" % regression.regression_risk, {}, ["debug", "replay", "integrity"]
 	)
 
 	if regression.missing_components.size() > 0:
 		Log.warning(
 			"❌ Missing Components: %s" % regression.missing_components,
+			{},
 			["debug", "replay", "integrity"]
 		)
 
 	if regression.broken_integrations.size() > 0:
 		Log.warning(
 			"🔗 Broken Integrations: %s" % regression.broken_integrations,
+			{},
 			["debug", "replay", "integrity"]
 		)
 
 	if results.overall_status != "PASS":
 		Log.warning(
 			"⚠️ Replay system integrity issues detected - check validation details",
+			{},
 			["debug", "replay", "integrity"]
 		)

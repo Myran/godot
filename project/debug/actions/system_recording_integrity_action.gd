@@ -19,7 +19,9 @@ func get_description() -> String:
 
 func execute() -> void:
 	Log.info(
-		"🔍 Starting recording system integrity validation...", {}, ["debug", "recording", "integrity"]
+		"🔍 Starting recording system integrity validation...",
+		{},
+		["debug", "recording", "integrity"]
 	)
 
 	var validation_results: Dictionary = {
@@ -55,24 +57,26 @@ func _validate_core_components() -> Dictionary:
 	}
 
 	# Check SemanticActionMapper
-	var mapper_test = SemanticActionMapper.map_semantic_action_to_debug_action("draft.reroll")
+	var mapper_test: String = SemanticActionMapper.map_semantic_action_to_debug_action("draft.reroll")
 	components.semantic_action_mapper = (mapper_test == "game.draft.reroll_player")
 	Log.debug(
 		"SemanticActionMapper validation: %s" % components.semantic_action_mapper,
+		{},
 		["debug", "recording", "validation"]
 	)
 
 	# Check semantic types coverage
-	var supported_types = SemanticActionMapper.get_supported_semantic_types()
+	var supported_types: Array = SemanticActionMapper.get_supported_semantic_types()
 	Log.debug(
 		"Supported semantic types: %d" % supported_types.size(),
+		{},
 		["debug", "recording", "validation"]
 	)
 
 	# Test action mapping validation
-	var mapping_valid = SemanticActionMapper.validate_debug_action_mapping("draft.reroll")
+	var mapping_valid: bool = SemanticActionMapper.validate_debug_action_mapping("draft.reroll")
 	Log.debug(
-		"Action mapping validation: %s" % mapping_valid, ["debug", "recording", "validation"]
+		"Action mapping validation: %s" % mapping_valid, {}, ["debug", "recording", "validation"]
 	)
 
 	# Additional component checks would go here
@@ -104,6 +108,7 @@ func _validate_component_integration() -> Dictionary:
 	integration.mapper_to_actions = (debug_sequence.size() == 2)
 	Log.debug(
 		"Mapper to actions integration: %s" % integration.mapper_to_actions,
+		{},
 		["debug", "recording", "validation"]
 	)
 
@@ -112,6 +117,7 @@ func _validate_component_integration() -> Dictionary:
 	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 2)
 	Log.debug(
 		"Parsing to config integration: %s" % integration.parsing_to_config,
+		{},
 		["debug", "recording", "validation"]
 	)
 
@@ -123,6 +129,7 @@ func _validate_component_integration() -> Dictionary:
 			"Mapping coverage: %d/%d actions mapped"
 			% [coverage.mapped_actions, coverage.total_actions]
 		),
+		{},
 		["debug", "recording", "validation"]
 	)
 
@@ -156,6 +163,7 @@ func _validate_workflow_capabilities() -> Dictionary:
 	workflow.generate_capability = generated_config.has("description")
 	Log.debug(
 		"Generate capability: %s" % workflow.generate_capability,
+		{},
 		["debug", "recording", "validation"]
 	)
 
@@ -198,10 +206,10 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 func _log_validation_summary(results: Dictionary) -> void:
 	"""Log comprehensive validation summary"""
 	Log.info(
-		"🎯 Recording System Integrity Validation Complete", ["debug", "recording", "integrity"]
+		"🎯 Recording System Integrity Validation Complete", {}, ["debug", "recording", "integrity"]
 	)
 	Log.info(
-		"📊 Overall Status: %s" % results.overall_status, ["debug", "recording", "integrity"]
+		"📊 Overall Status: %s" % results.overall_status, {}, ["debug", "recording", "integrity"]
 	)
 
 	# Log component validation summary
@@ -212,6 +220,7 @@ func _log_validation_summary(results: Dictionary) -> void:
 			component_passed += 1
 	Log.info(
 		"🔧 Components: %d/%d passed" % [component_passed, component_total],
+		{},
 		["debug", "recording", "integrity"]
 	)
 
@@ -223,6 +232,7 @@ func _log_validation_summary(results: Dictionary) -> void:
 			integration_passed += 1
 	Log.info(
 		"🔗 Integration: %d/%d passed" % [integration_passed, integration_total],
+		{},
 		["debug", "recording", "integrity"]
 	)
 
@@ -234,11 +244,13 @@ func _log_validation_summary(results: Dictionary) -> void:
 			workflow_passed += 1
 	Log.info(
 		"🔄 Workflow: %d/%d passed" % [workflow_passed, workflow_total],
+		{},
 		["debug", "recording", "integrity"]
 	)
 
 	if results.overall_status != "PASS":
 		Log.warning(
 			"⚠️ Recording system has integrity issues - check component and integration failures",
+			{},
 			["debug", "recording", "integrity"]
 		)
