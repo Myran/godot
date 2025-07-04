@@ -3,7 +3,7 @@
   "actions": [
     "game.battle.set_seed",
     "game.match.reset_level",
-    "system.recording.capture_state",
+    "game.clicker.capture_state",
     "system.checksum.validate",
     "system.debug.quit_application"
   ],

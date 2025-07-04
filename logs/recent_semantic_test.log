@@ -1,0 +1,488 @@
+--------- beginning of main
+--------- beginning of system
+07-03 23:31:13.384 I/godot   (20116): Godot Engine v4.5.dev.custom_build.4a0ce10a5 (2025-05-12 06:44:00 UTC) - https://godotengine.org
+07-03 23:31:13.465 I/godot   (20116): OpenGL API OpenGL ES 3.2 v1.r19p0-01rel0.###other-sha0123456789ABCDEF0### - Compatibility - Using Device: ARM - Mali-G72
+07-03 23:31:13.472 I/godot   (20116): 
+07-03 23:31:14.279 I/godot   (20116): [ConfigManager] Platform detected: Android
+07-03 23:31:14.285 I/godot   (20116): [ConfigManager] Android helper loaded, config path: user://advanced_logger_settings.cfg
+07-03 23:31:14.285 I/godot   (20116): [ConfigManager] Attempting to load config from: user://advanced_logger_settings.cfg
+07-03 23:31:14.285 I/godot   (20116): [ConfigManager] File exists: true
+07-03 23:31:14.286 I/godot   (20116): [ConfigManager] Standard load result: OK (0)
+07-03 23:31:14.286 I/godot   (20116): [ConfigManager] Config loaded successfully: true
+07-03 23:31:14.286 I/godot   (20116): [ConfigManager] Config loaded OK, checking for upgrades
+07-03 23:31:14.286 I/godot   (20116): [ConfigManager] Loaded log level: 0 (DEBUG)
+07-03 23:31:14.286 I/godot   (20116): [ALogger] Loading settings from ConfigManager
+07-03 23:31:14.286 I/godot   (20116): [ALogger] Loaded log level: 0 (DEBUG)
+07-03 23:31:14.286 I/godot   (20116): [ALogger] Loaded active tags: []
+07-03 23:31:14.286 I/godot   (20116): [ALogger] Loaded ignored tags: []
+07-03 23:31:14.286 I/godot   (20116): [ALogger] Settings loaded - Level: DEBUG, Colors: true, Timestamp: true
+07-03 23:31:14.286 I/godot   (20116): [Advanced Logger] Android configuration applied
+07-03 23:31:15.144 I/godot   (20116): [INFO] [debug, system] DebugManager (Global Event Bus) initialized.
+07-03 23:31:15.144 I/godot   (20116): 
+07-03 23:31:15.144 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.144 I/godot   (20116): === BUFFER DUMP (23:31:15) - Last 2 entries ===
+07-03 23:31:15.144 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.144 I/godot   (20116): [BUFFER] DebugManager (Global Event Bus) initialized. [debug, system]
+07-03 23:31:15.144 I/godot   (20116): [BUFFER] Android logger helper missing! 
+07-03 23:31:15.144 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.144 I/godot   (20116): === END BUFFER DUMP ===
+07-03 23:31:15.144 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.144 I/godot   (20116): 
+07-03 23:31:15.145 I/godot   (20116): [ERROR] Android logger helper missing!
+07-03 23:31:15.145 I/godot   (20116): [INFO] [debug, system] Initializing debug action registry...
+07-03 23:31:15.174 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "system.memory.force_warning", "category": "System", "group": "Memory", "total_actions": 1 }
+07-03 23:31:15.175 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "system.debug.registry_stats", "category": "System", "group": "Debug", "total_actions": 2 }
+07-03 23:31:15.175 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "system.debug.quit_application", "category": "System", "group": "Debug", "total_actions": 3 }
+07-03 23:31:15.175 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "system.network.rtdb_status", "category": "RTDB", "group": "Utilities", "total_actions": 4 }
+07-03 23:31:15.176 I/godot   (20116): [INFO] [debug, test, registration] Registering test actions
+07-03 23:31:15.176 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "system.debug.test_semantic_logging", "category": "System", "group": "Debug", "total_actions": 5 }
+07-03 23:31:15.176 I/godot   (20116): [INFO] [debug, system] System debug actions registered
+07-03 23:31:15.216 I/godot   (20116): [INFO] [debug, cpp_firebase, registration] Registering C++ Firebase debug actions...
+07-03 23:31:15.216 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.set_value", "category": "C++ Firebase", "group": "none", "total_actions": 6 }
+07-03 23:31:15.217 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.get_value", "category": "C++ Firebase", "group": "none", "total_actions": 7 }
+07-03 23:31:15.217 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.remove_value", "category": "C++ Firebase", "group": "none", "total_actions": 8 }
+07-03 23:31:15.217 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.signal_integrity", "category": "C++ Firebase", "group": "none", "total_actions": 9 }
+07-03 23:31:15.217 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.error_handling", "category": "C++ Firebase", "group": "none", "total_actions": 10 }
+07-03 23:31:15.218 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.concurrent_ops", "category": "C++ Firebase", "group": "none", "total_actions": 11 }
+07-03 23:31:15.218 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.large_data", "category": "C++ Firebase", "group": "none", "total_actions": 12 }
+07-03 23:31:15.218 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "cpp.firebase.timeout_behavior", "category": "C++ Firebase", "group": "none", "total_actions": 13 }
+07-03 23:31:15.219 I/godot   (20116): [INFO] [debug, cpp_firebase, registration] C++ Firebase debug actions registration completed { "total_actions": 8, "failed_actions": 0 }
+07-03 23:31:15.278 I/godot   (20116): [INFO] [debug, backend_firebase, registration] Registering Backend Firebase debug actions...
+07-03 23:31:15.278 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.async_pattern", "category": "Firebase Backend", "group": "none", "total_actions": 14 }
+07-03 23:31:15.279 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.timer_manager", "category": "Firebase Backend", "group": "none", "total_actions": 15 }
+07-03 23:31:15.279 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.method_mapping", "category": "Firebase Backend", "group": "none", "total_actions": 16 }
+07-03 23:31:15.279 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.lifecycle", "category": "Firebase Backend", "group": "none", "total_actions": 17 }
+07-03 23:31:15.280 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.error_handling", "category": "Firebase Backend", "group": "none", "total_actions": 18 }
+07-03 23:31:15.280 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.performance", "category": "Firebase Backend", "group": "none", "total_actions": 19 }
+07-03 23:31:15.280 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "backend.firebase.request_tracking", "category": "Firebase Backend", "group": "none", "total_actions": 20 }
+07-03 23:31:15.280 I/godot   (20116): [INFO] [debug, backend_firebase, registration] Backend Firebase debug actions registration completed { "total_actions": 7, "failed_actions": 0 }
+07-03 23:31:15.398 I/godot   (20116): [INFO] [debug, rtdb, registration] Registering RTDB debug actions...
+07-03 23:31:15.399 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.database.get_value", "category": "RTDB", "group": "none", "total_actions": 21 }
+07-03 23:31:15.399 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.database.set_value", "category": "RTDB", "group": "none", "total_actions": 22 }
+07-03 23:31:15.399 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.database.remove_value", "category": "RTDB", "group": "none", "total_actions": 23 }
+07-03 23:31:15.399 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.database.update_value", "category": "RTDB", "group": "none", "total_actions": 24 }
+07-03 23:31:15.400 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.paths.get_nested", "category": "RTDB", "group": "Paths", "total_actions": 25 }
+07-03 23:31:15.400 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.paths.set_nested", "category": "RTDB", "group": "Paths", "total_actions": 26 }
+07-03 23:31:15.400 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.children.list", "category": "RTDB", "group": "Path Operations", "total_actions": 27 }
+07-03 23:31:15.401 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.children.push", "category": "RTDB", "group": "none", "total_actions": 28 }
+07-03 23:31:15.401 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.listeners.single_value", "category": "RTDB", "group": "Listeners", "total_actions": 29 }
+07-03 23:31:15.401 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.listeners.child_added", "category": "RTDB", "group": "Listeners", "total_actions": 30 }
+07-03 23:31:15.402 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.listeners.child_changed", "category": "RTDB", "group": "Listeners", "total_actions": 31 }
+07-03 23:31:15.402 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.listeners.child_removed", "category": "RTDB", "group": "Listeners", "total_actions": 32 }
+07-03 23:31:15.402 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.listeners.remove_all", "category": "RTDB", "group": "Listeners", "total_actions": 33 }
+07-03 23:31:15.402 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.advanced.transaction", "category": "RTDB", "group": "Advanced", "total_actions": 34 }
+07-03 23:31:15.403 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.advanced.concurrent_ops", "category": "RTDB", "group": "Advanced", "total_actions": 35 }
+07-03 23:31:15.403 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.advanced.batch_ops", "category": "RTDB", "group": "Advanced", "total_actions": 36 }
+07-03 23:31:15.403 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.testing.path_validation", "category": "RTDB", "group": "Path Operations", "total_actions": 37 }
+07-03 23:31:15.404 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.testing.error_handling", "category": "RTDB", "group": "Advanced", "total_actions": 38 }
+07-03 23:31:15.404 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "rtdb.testing.large_data", "category": "RTDB", "group": "Advanced", "total_actions": 39 }
+07-03 23:31:15.404 I/godot   (20116): [INFO] [debug, rtdb, registration] RTDB debug actions registration completed { "total_actions": 19, "failed_actions": 0 }
+07-03 23:31:15.487 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.reset_level", "category": "Gameplay", "group": "none", "total_actions": 40 }
+07-03 23:31:15.487 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.load_level_1", "category": "Gameplay", "group": "Match Levels", "total_actions": 41 }
+07-03 23:31:15.488 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.load_level_2", "category": "Gameplay", "group": "Match Levels", "total_actions": 42 }
+07-03 23:31:15.488 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.load_level_3", "category": "Gameplay", "group": "Match Levels", "total_actions": 43 }
+07-03 23:31:15.488 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.load_level_4", "category": "Gameplay", "group": "Match Levels", "total_actions": 44 }
+07-03 23:31:15.489 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.match.load_level_5", "category": "Gameplay", "group": "Match Levels", "total_actions": 45 }
+07-03 23:31:15.489 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.lineup.populate_enemy", "category": "Gameplay", "group": "Preset Lineups", "total_actions": 46 }
+07-03 23:31:15.489 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.test.simple_player_events", "category": "Gameplay", "group": "Test", "total_actions": 47 }
+07-03 23:31:15.489 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.lineup.populate_enemy_as_player", "category": "Gameplay", "group": "Test", "total_actions": 48 }
+07-03 23:31:15.490 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.board.reset_state", "category": "Gameplay", "group": "Board State", "total_actions": 49 }
+07-03 23:31:15.490 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.draft.reroll_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 50 }
+07-03 23:31:15.490 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.draft.upgrade_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 51 }
+07-03 23:31:15.491 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.draft.toggle_column_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 52 }
+07-03 23:31:15.491 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.draft.remove_block_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 53 }
+07-03 23:31:15.491 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.lineup.move_card_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 54 }
+07-03 23:31:15.492 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.lineup.add_card_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 55 }
+07-03 23:31:15.492 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.lineup.remove_card_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 56 }
+07-03 23:31:15.492 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.state.transition_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 57 }
+07-03 23:31:15.493 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.start_player", "category": "Gameplay", "group": "Player Actions", "total_actions": 58 }
+07-03 23:31:15.493 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.start", "category": "Gameplay", "group": "Battle", "total_actions": 59 }
+07-03 23:31:15.493 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.populate_enemy_and_start", "category": "Gameplay", "group": "Battle", "total_actions": 60 }
+07-03 23:31:15.493 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.set_seed", "category": "Gameplay", "group": "Battle", "total_actions": 61 }
+07-03 23:31:15.494 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.test_determinism_animated", "category": "Gameplay", "group": "Battle", "total_actions": 62 }
+07-03 23:31:15.494 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.battle.test_determinism_logic_only", "category": "Gameplay", "group": "Battle", "total_actions": 63 }
+07-03 23:31:15.494 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.cache.clear_cards", "category": "Database", "group": "Cache", "total_actions": 64 }
+07-03 23:31:15.495 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.database.toggle_local_battle", "category": "Database", "group": "none", "total_actions": 65 }
+07-03 23:31:15.495 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.debug.cycle_asset_variant", "category": "Quick Actions", "group": "none", "total_actions": 66 }
+07-03 23:31:15.495 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.debug.print_info", "category": "Quick Actions", "group": "none", "total_actions": 67 }
+07-03 23:31:15.495 I/godot   (20116): [DEBUG] [debug, registration] Debug action registered successfully { "name": "game.debug.hide_debug_menu", "category": "Quick Actions", "group": "none", "total_actions": 68 }
+07-03 23:31:15.496 I/godot   (20116): [INFO] [debug, game] Game debug actions registered
+07-03 23:31:15.496 I/godot   (20116): [INFO] [debug, init] Debug action registry initialized { "total_actions": 68, "categories": 7, "init_time_ms": 350 }
+07-03 23:31:15.496 I/godot   (20116): [INFO] Internet status checker (HTTPRequest) initialized
+07-03 23:31:15.496 I/godot   (20116): [INFO] [firebase, initialization, auth] Firebase Auth module available
+07-03 23:31:15.496 I/godot   (20116): [Auth] started
+07-03 23:31:15.496 I/godot   (20116): [Auth] Creating firebase app
+07-03 23:31:15.496 I/godot   (20116): [Firebase] Creating app
+07-03 23:31:15.503 I/godot   (20116): [Firebase] Success creating app
+07-03 23:31:15.503 I/godot   (20116): [Auth] firebase app created successfully
+07-03 23:31:15.503 I/godot   (20116): [Auth] Creating singleton
+07-03 23:31:15.518 I/godot   (20116): [DEBUG] [firebase, initialization, auth] Firebase Auth instance created
+07-03 23:31:15.518 I/godot   (20116): Facebook plugin not found!
+07-03 23:31:15.518 I/godot   (20116): [INFO] DataSource initializing { "instance_id": 63401100574 }
+07-03 23:31:15.518 I/godot   (20116): [INFO] [ui, system] UI autoload initialized
+07-03 23:31:15.519 I/godot   (20116): [INFO] Core autoload initialized
+07-03 23:31:15.519 I/godot   (20116): [DEBUG] [debug, startup, lifecycle] DebugStartupCoordinator ready
+07-03 23:31:15.521 I/godot   (20116): [INFO] [debug, ui, initialization] DebugMenuController ready.
+07-03 23:31:15.521 I/godot   (20116): [DEBUG] [debug_ui] Populating main categories view
+07-03 23:31:15.521 I/godot   (20116): [DEBUG] [debug_ui] Retrieved categories from DebugRegistry { "categories": ["C++ Firebase", "Database", "Firebase Backend", "Gameplay", "Quick Actions", "RTDB", "System"], "count": 7 }
+07-03 23:31:15.522 I/godot   (20116): [INFO] [debug_ui] Main categories populated { "total_categories": 7, "direct_actions": 6, "submenus": 1 }
+07-03 23:31:15.523 I/godot   (20116): [DEBUG] [initialization, level] Level controller initializing
+07-03 23:31:15.525 I/godot   (20116): [DEBUG] [initialization, system] Game initializing
+07-03 23:31:15.525 I/godot   (20116): [INFO] [system, initialization] Main scene initialized
+07-03 23:31:15.526 I/godot   (20116): ============================================
+07-03 23:31:15.526 I/godot   (20116): [38;2;125;174;163mAdvanced Logger debug filter logging DISABLED[39m[0m
+07-03 23:31:15.526 I/godot   (20116): ============================================
+07-03 23:31:15.526 I/godot   (20116): [INFO] [system, initialization] Running on Android platform
+07-03 23:31:15.526 I/godot   (20116): [INFO] [system, initialization] Waiting for game initialization to complete
+07-03 23:31:15.540 I/godot   (20116): [DEBUG] Starting DataSource initialization { "instance_id": 63401100574 }
+07-03 23:31:15.540 I/godot   (20116): [INFO] Backend selection starting { "is_editor": false, "force_local_data": false, "platform": "Android" }
+07-03 23:31:15.541 I/godot   (20116): [INFO] Checking internet for Firebase backend selection
+07-03 23:31:15.541 I/godot   (20116): [INFO] Starting internet status check { "timeout_sec": 7.0 }
+07-03 23:31:15.562 I/godot   (20116): [WARNING] [network, error] Internet check failed { "result": 3, "response_code": 0 }
+07-03 23:31:15.571 I/godot   (20116): [WARNING] Internet connection unavailable or timed out { "duration_sec": 0.029, "was_timeout": false }
+07-03 23:31:15.571 I/godot   (20116): [WARNING] [database, firebase] Internet unavailable, falling back to local data source { "check_duration_sec": 0.031 }
+07-03 23:31:15.571 I/godot   (20116): [DEBUG] [database, local_data] Creating LocalJSONBackend instance { "custom_file_path": false }
+07-03 23:31:15.572 I/godot   (20116): [INFO] [database, local_data] LocalJSONBackend initializing { "backend_id": -9223371844638209839 }
+07-03 23:31:15.572 I/godot   (20116): [DEBUG] [database, local_data] LocalJSONBackend file paths { "battle_db_file": "res://resources/gameone-577cb-export.json", "current_file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371844638209839 }
+07-03 23:31:15.572 I/godot   (20116): [INFO] [database, local_data] LocalJSONBackend created successfully { "instance_id": -9223371844638209839 }
+07-03 23:31:15.572 I/godot   (20116): [DEBUG] Initializing backend { "instance_id": -9223371844638209839 }
+07-03 23:31:15.573 I/godot   (20116): [DEBUG] [local_data] Using battle database file { "file": "res://resources/gameone-577cb-export.json" }
+07-03 23:31:15.573 I/godot   (20116): [INFO] [local_data, database] Loading local data file { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371844638209839 }
+07-03 23:31:15.573 I/godot   (20116): [DEBUG] [local_data] File opened successfully, reading content { "file": "res://resources/gameone-577cb-export.json", "backend_id": -9223371844638209839 }
+07-03 23:31:15.575 I/godot   (20116): [DEBUG] [local_data] File read complete { "file": "res://resources/gameone-577cb-export.json", "size_bytes": 417498, "backend_id": -9223371844638209839 }
+07-03 23:31:15.589 I/godot   (20116): [INFO] [local_data, database] Local data file loaded successfully { "file": "res://resources/gameone-577cb-export.json", "top_level_keys": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY", "events", "players", "zen", "zen_players"], "key_count": 5, "backend_id": -9223371844638209839 }
+07-03 23:31:15.589 I/godot   (20116): [DEBUG] [local_data, database] Data structure details { "structure": { "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY": { "type": "Dictionary", "size": 12, "keys": ["cards_0", "event_data_0", "items_0", "levels_0", "rules_0"] }, "events": { "type": "Dictionary", "size": 2, "keys": ["event_1", "event_2"] }, "players": { "type": "Dictionary", "size": 14, "keys": ["0IFVa4UfguWtMqKt9vaG0Ejhcm43", "3ejbxJpfzggt53MMoSmaLZk0KZt1", "BSsTupQkUjSZrm6RrbfSrCWDRnk1", "FLhqBCvW6MYlB0YbBRITU3m77ST2", "MM8J6PopV5ffHXFMI3H4pfSSES12"] }, "zen": { "type": "Dictionary", "size": 1, "keys": ["levels"] }, "zen_players": { "type": "Dictionary", "size": 20, "keys": ["0XW0aF3mgWQUr6k9ugrUlgvIss92", "2lVS33FUs3OcHdbxL61iP4wG1sj2", "6RVtUgcHwBZdA1PQ4jn26OIhkfN2", "7E7oaVZIOkWjPXzLt8UZgfcd6Iq2", "90PmPtA0Czcla470z2XP6PzNgXj1"] } }, "backend_id": -9223371844638209839 }
+07-03 23:31:15.589 I/godot   (20116): [INFO] Backend initialized successfully { "instance_id": -9223371844638209839 }
+07-03 23:31:15.590 I/godot   (20116): [DEBUG] Backend created { "backend_type": "RefCounted", "using_local_data": false, "instance_id": 63401100574 }
+07-03 23:31:15.590 I/godot   (20116): [DEBUG] Initializing collections { "test_group": 0, "instance_id": 63401100574 }
+07-03 23:31:15.590 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "cards", "instance_id": 63401100574 }
+07-03 23:31:15.590 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "cards", "instance_id": 63401100574 }
+07-03 23:31:15.591 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "cards", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] }
+07-03 23:31:15.591 I/godot   (20116): [INFO] CardCollection initialized { "test_group": 0 }
+07-03 23:31:15.591 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "cards", "instance_id": 63401100574 }
+07-03 23:31:15.591 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "levels", "instance_id": 63401100574 }
+07-03 23:31:15.592 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "levels", "instance_id": 63401100574 }
+07-03 23:31:15.592 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "Levels", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] }
+07-03 23:31:15.592 I/godot   (20116): [INFO] LevelCollection initialized { "test_group": 0 }
+07-03 23:31:15.592 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "levels", "instance_id": 63401100574 }
+07-03 23:31:15.593 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "items", "instance_id": 63401100574 }
+07-03 23:31:15.593 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "items", "instance_id": 63401100574 }
+07-03 23:31:15.593 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "items", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] }
+07-03 23:31:15.594 I/godot   (20116): [INFO] ItemCollection initialized { "test_group": 0 }
+07-03 23:31:15.594 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "items", "instance_id": 63401100574 }
+07-03 23:31:15.594 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "players", "instance_id": 63401100574 }
+07-03 23:31:15.594 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "players", "instance_id": 63401100574 }
+07-03 23:31:15.595 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "players", "base_path": ["players"] }
+07-03 23:31:15.595 I/godot   (20116): [INFO] PlayerCollection initialized
+07-03 23:31:15.595 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "players", "instance_id": 63401100574 }
+07-03 23:31:15.595 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "events", "instance_id": 63401100574 }
+07-03 23:31:15.596 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "events", "instance_id": 63401100574 }
+07-03 23:31:15.596 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "events", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] }
+07-03 23:31:15.596 I/godot   (20116): [INFO] EventCollection initialized { "test_group": 0 }
+07-03 23:31:15.596 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "events", "instance_id": 63401100574 }
+07-03 23:31:15.597 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "rules", "instance_id": 63401100574 }
+07-03 23:31:15.597 I/godot   (20116): [DEBUG] Initializing collection { "collection_name": "rules", "instance_id": 63401100574 }
+07-03 23:31:15.597 I/godot   (20116): [DEBUG] BaseCollection initialized { "collection_name": "rules", "base_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"] }
+07-03 23:31:15.598 I/godot   (20116): [INFO] RulesCollection initialized { "test_group": 0 }
+07-03 23:31:15.598 I/godot   (20116): [DEBUG] Successfully initialized collection { "collection_name": "rules", "instance_id": 63401100574 }
+07-03 23:31:15.598 I/godot   (20116): [DEBUG] DataSource collections initialized successfully { "instance_id": 63401100574 }
+07-03 23:31:15.599 I/godot   (20116): [DEBUG] Waiting for backend startup { "instance_id": 63401100574 }
+07-03 23:31:15.599 I/godot   (20116): [DEBUG] Firebase availability check { "available": false, "backend_type": "RefCounted" }
+07-03 23:31:15.599 I/godot   (20116): [INFO] DataSource initialization complete { "firebase_available": false, "instance_id": 63401100574 }
+07-03 23:31:15.600 I/godot   (20116): [DEBUG] [initialization, system] Setting up game systems
+07-03 23:31:15.600 I/godot   (20116): [INFO] Getting rules data { "collection_name": "rules", "collection_key": "rules_0", "collection_id": -9223371840930445098, "stack_trace": [{ "function": "_get_stack_trace", "file": "rules_collection.gd", "line": 84 }, { "function": "get_rules", "file": "rules_collection.gd", "line": 19 }] }
+07-03 23:31:15.600 I/godot   (20116): [DEBUG] [database, local_data] Getting local data { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "rules_0", "call_stack": [{ "function": "get_rules", "file": "rules_collection.gd", "line": 30 }, { "function": "setup", "file": "card_controller.gd", "line": 25 }, { "function": "setup", "file": "clicker.gd", "line": 15 }], "backend_id": -9223371844638209839 }
+07-03 23:31:15.601 I/godot   (20116): [DEBUG] [database, local_data] Navigating path with JSONPathNavigator { "original_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "navigation_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "backend_id": -9223371844638209839 }
+07-03 23:31:15.601 I/godot   (20116): [INFO] [database, local_data] Successfully navigated to data { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "rules_0", "value_info": { "type": 28, "size": 1, "is_array": true }, "backend_id": -9223371844638209839 }
+07-03 23:31:15.601 I/godot   (20116): [DEBUG] Rules data request completed { "duration_ms": 1, "result_null": false, "result_empty": false, "collection_name": "rules", "collection_id": -9223371840930445098 }
+07-03 23:31:15.602 I/godot   (20116): [DEBUG] Validating rules data structure { "result_keys": ["battle_reward_loss", "battle_reward_win", "chance_lvl_2_star_1", "chance_lvl_2_star_2", "chance_lvl_3_star_1", "chance_lvl_3_star_2", "chance_lvl_3_star_3", "id", "notch_devices", "start_energy", "upgrade_cost_lvl_2", "upgrade_cost_lvl_3", "upgrade_slots_lvl_1", "upgrade_slots_lvl_2", "upgrade_slots_lvl_3", "value_recruit_unit", "value_roll", "value_sell_item", "value_sell_unit", "value_upgrade"], "collection_name": "rules", "collection_id": -9223371840930445098 }
+07-03 23:31:15.602 I/godot   (20116): [INFO] [cache, database] Activating card cache { "instance_id": 63401100574 }
+07-03 23:31:15.602 I/godot   (20116): [INFO] Getting all cards { "use_cache": true, "cache_initialized": false, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184, "stack_trace": [{ "function": "_get_stack_trace", "file": "card_collection.gd", "line": 248 }, { "function": "get_all", "file": "card_collection.gd", "line": 40 }] }
+07-03 23:31:15.603 I/godot   (20116): [DEBUG] [database, local_data] Getting local data { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "cards_0", "call_stack": [{ "function": "get_all", "file": "card_collection.gd", "line": 56 }, { "function": "activate_card_cache", "file": "data_source.gd", "line": 241 }, { "function": "setup", "file": "card_controller.gd", "line": 26 }], "backend_id": -9223371844638209839 }
+07-03 23:31:15.603 I/godot   (20116): [DEBUG] [database, local_data] Navigating path with JSONPathNavigator { "original_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "navigation_path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "backend_id": -9223371844638209839 }
+07-03 23:31:15.603 I/godot   (20116): [INFO] [database, local_data] Successfully navigated to data { "path": ["1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"], "key": "cards_0", "value_info": { "type": 28, "size": 19, "is_array": true }, "backend_id": -9223371844638209839 }
+07-03 23:31:15.603 I/godot   (20116): [DEBUG] Retrieved card data array directly { "duration_ms": 1, "count": 19, "collection_name": "cards", "collection_id": -9223371843111483184 }
+07-03 23:31:15.604 I/godot   (20116): [DEBUG] Backend get_data call completed { "duration_ms": 1, "collection_name": "cards", "collection_key": "cards_0", "result_null": false, "collection_id": -9223371843111483184 }
+07-03 23:31:15.604 I/godot   (20116): [DEBUG] Processing card data result { "result_type": 28, "is_array": true, "result_size": 19, "collection_name": "cards", "collection_id": -9223371843111483184 }
+07-03 23:31:15.604 I/godot   (20116): [INFO] Retrieved all cards { "count": 19, "collection_name": "cards", "collection_key": "cards_0", "empty_result": false, "duration_ms": 1, "collection_id": -9223371843111483184 }
+07-03 23:31:15.605 I/godot   (20116): [DEBUG] Validating card data structure { "sample_card_keys": ["abilities", "attack", "card_name", "description", "health", "id", "name", "tags", "tribe", "upgrade_level"], "required_keys": ["id", "name", "abilities", "health"], "collection_name": "cards", "collection_id": -9223371843111483184 }
+07-03 23:31:15.605 I/godot   (20116): [DEBUG] Card data validation successful { "collection_name": "cards", "collection_id": -9223371843111483184 }
+07-03 23:31:15.605 I/godot   (20116): [DEBUG] Firebase availability check { "available": false, "backend_type": "RefCounted" }
+07-03 23:31:15.605 I/godot   (20116): [INFO] [cache, database] Card cache activated { "count": 19, "duration_ms": 3, "data_source": "local", "instance_id": 63401100574 }
+07-03 23:31:15.606 I/godot   (20116): [INFO] [level, initialization] Setting up level { "level_name": "default" }
+07-03 23:31:15.606 I/godot   (20116): [DEBUG] [clicker, game_state] RefillDistance set for level { "distance": (0.0, 225.0), "level": "default" }
+07-03 23:31:15.606 I/godot   (20116): [DEBUG] [level, initialization] Creating blocks from level layout { "tile_count": 20 }
+07-03 23:31:15.607 I/godot   (20116): [DEBUG] [level, card] Creating random block
+07-03 23:31:15.607 I/godot   (20116): [DEBUG] [level, card] Getting card from pool
+07-03 23:31:15.607 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.608 I/godot   (20116): [INFO] Getting card info { "card_id": "4", "use_cache": true }
+07-03 23:31:15.608 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.608 I/godot   (20116): [DEBUG] Card found { "card_id": "4" }
+07-03 23:31:15.713 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.714 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (0, 0), "block_type": 1, "refill": 0 }
+07-03 23:31:15.717 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.717 I/godot   (20116): [DEBUG] [level, card] Creating random block
+07-03 23:31:15.718 I/godot   (20116): [DEBUG] [level, item] Created item block
+07-03 23:31:15.718 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.719 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (1, 0), "block_type": 9, "refill": 0 }
+07-03 23:31:15.719 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.719 I/godot   (20116): [DEBUG] [level, card] Creating random block
+07-03 23:31:15.720 I/godot   (20116): [DEBUG] [level, card] Getting card from pool
+07-03 23:31:15.720 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.720 I/godot   (20116): [INFO] Getting card info { "card_id": "10", "use_cache": true }
+07-03 23:31:15.721 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.721 I/godot   (20116): [DEBUG] Card found { "card_id": "10" }
+07-03 23:31:15.735 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.735 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (2, 0), "block_type": 1, "refill": 0 }
+07-03 23:31:15.738 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.738 I/godot   (20116): [DEBUG] [level, card] Creating random block
+07-03 23:31:15.739 I/godot   (20116): [DEBUG] [level, card] Getting card from pool
+07-03 23:31:15.739 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.740 I/godot   (20116): [INFO] Getting card info { "card_id": "10", "use_cache": true }
+07-03 23:31:15.740 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.740 I/godot   (20116): [DEBUG] Card found { "card_id": "10" }
+07-03 23:31:15.745 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.745 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (3, 0), "block_type": 1, "refill": 0 }
+07-03 23:31:15.747 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.748 I/godot   (20116): [DEBUG] [level, card] Creating random block
+07-03 23:31:15.748 I/godot   (20116): [DEBUG] [level, card] Getting card from pool
+07-03 23:31:15.748 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.749 I/godot   (20116): [INFO] Getting card info { "card_id": "1", "use_cache": true }
+07-03 23:31:15.749 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.749 I/godot   (20116): [DEBUG] Card found { "card_id": "1" }
+07-03 23:31:15.762 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.763 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (4, 0), "block_type": 1, "refill": 0 }
+07-03 23:31:15.765 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.766 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.766 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (0, 1), "block_type": 4, "refill": 0 }
+07-03 23:31:15.766 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.767 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.767 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (0, 2), "block_type": 4, "refill": 0 }
+07-03 23:31:15.768 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.768 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.769 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (0, 3), "block_type": 4, "refill": 0 }
+07-03 23:31:15.769 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.770 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.770 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (4, 1), "block_type": 4, "refill": 0 }
+07-03 23:31:15.771 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.771 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.772 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (4, 2), "block_type": 4, "refill": 0 }
+07-03 23:31:15.772 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.773 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.773 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (4, 3), "block_type": 4, "refill": 0 }
+07-03 23:31:15.774 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.774 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.775 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (1, 1), "block_type": 5, "refill": 0 }
+07-03 23:31:15.775 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.776 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.776 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (2, 1), "block_type": 5, "refill": 0 }
+07-03 23:31:15.777 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.777 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.778 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (3, 1), "block_type": 5, "refill": 0 }
+07-03 23:31:15.778 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.779 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.779 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (1, 2), "block_type": 5, "refill": 0 }
+07-03 23:31:15.779 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.780 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.780 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (2, 2), "block_type": 5, "refill": 0 }
+07-03 23:31:15.781 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.782 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.782 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (3, 2), "block_type": 5, "refill": 0 }
+07-03 23:31:15.791 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.791 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.792 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (1, 3), "block_type": 5, "refill": 0 }
+07-03 23:31:15.792 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.793 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.793 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (2, 3), "block_type": 5, "refill": 0 }
+07-03 23:31:15.794 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.794 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.795 I/godot   (20116): [DEBUG] [level, grid] Adding block to grid { "grid_pos": (3, 3), "block_type": 5, "refill": 0 }
+07-03 23:31:15.795 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.795 I/godot   (20116): [INFO] [initialization, system] Initializing game
+07-03 23:31:15.796 I/godot   (20116): [INFO] [cache, database] Activating card cache { "instance_id": 63401100574 }
+07-03 23:31:15.796 I/godot   (20116): [DEBUG] [database, cache] Using card cache { "cache_size": 19, "collection_name": "cards", "collection_key": "cards_0", "collection_id": -9223371843111483184 }
+07-03 23:31:15.796 I/godot   (20116): [DEBUG] Firebase availability check { "available": false, "backend_type": "RefCounted" }
+07-03 23:31:15.796 I/godot   (20116): [INFO] [cache, database] Card cache activated { "count": 19, "duration_ms": 1, "data_source": "local", "instance_id": 63401100574 }
+07-03 23:31:15.797 I/godot   (20116): [INFO] [game_state, state_transition] Game state changing { "from": "START", "to": "START" }
+07-03 23:31:15.797 I/godot   (20116): [INFO] [initialization, system, ui] Game initialization complete - transitioning to WAITING state
+07-03 23:31:15.797 I/godot   (20116): [INFO] [system, event, idle_action, queue_processing, diagnostic] === IDLE ACTION QUEUE PROCESSING ENTRY === { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 0, "queue_empty": true, "timestamp": 1751578275.79746, "test_id": "", "system_frame": 3 }
+07-03 23:31:15.798 I/godot   (20116): [INFO] [system, event, idle_action, queue_skip, diagnostic] Idle action queue processing skipped { "reason": "queue_empty", "ui_state": "WAITING", "processing_idle_action": false, "queue_empty": true, "timestamp": 1751578275.79746, "test_id": "", "system_frame": 3, "skip_analysis": { "ui_not_waiting": false, "already_processing": false, "queue_empty": true } }
+07-03 23:31:15.798 I/godot   (20116): [INFO] [initialization, system] Emitting initialization_complete signal
+07-03 23:31:15.798 I/godot   (20116): [INFO] [system, initialization] Game initialization complete (signal received), starting debug coordinator
+07-03 23:31:15.798 I/godot   (20116): [INFO] [debug, startup] DebugStartupCoordinator initializing...
+07-03 23:31:15.807 I/godot   (20116): [DEBUG] [debug, startup, verbose] DebugRegistry found, getting actions...
+07-03 23:31:15.807 I/godot   (20116): [DEBUG] [debug, startup] Getting action names { "platform": "mobile" }
+07-03 23:31:15.807 I/godot   (20116): [INFO] [debug, startup] Using external config { "path": "user://debug_startup_actions.json" }
+07-03 23:31:15.808 I/godot   (20116): [DEBUG] [debug, startup] Parsing config file { "path": "user://debug_startup_actions.json" }
+07-03 23:31:15.808 I/godot   (20116): [INFO] [debug, test, start, pid] DEBUG_TEST_START { "test_id": "test_20250703_233112_5b715ea7", "pid": 20116, "timestamp": "2025-07-03T23:31:15", "platform": "Android" }
+07-03 23:31:15.808 I/godot   (20116): [INFO] [debug, startup, test] Test context set { "test_id": "test_20250703_233112_5b715ea7" }
+07-03 23:31:15.809 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.test_semantic_logging", "type": 4, "type_name": "String" }
+07-03 23:31:15.809 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.809 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.test_semantic_integration", "type": 4, "type_name": "String" }
+07-03 23:31:15.809 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.test_semantic_integration" }
+07-03 23:31:15.810 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.test_semantic_coverage", "type": 4, "type_name": "String" }
+07-03 23:31:15.810 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.test_semantic_coverage" }
+07-03 23:31:15.810 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.test_semantic_comprehensive", "type": 4, "type_name": "String" }
+07-03 23:31:15.811 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.test_semantic_comprehensive" }
+07-03 23:31:15.811 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.test_semantic_player_events", "type": 4, "type_name": "String" }
+07-03 23:31:15.811 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.test_semantic_player_events" }
+07-03 23:31:15.811 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing raw action { "action": "system.debug.quit_application", "type": 4, "type_name": "String" }
+07-03 23:31:15.812 I/godot   (20116): [DEBUG] [startup, parser, verbose] Processing action string { "action": "system.debug.quit_application" }
+07-03 23:31:15.812 I/godot   (20116): [DEBUG] [debug, startup] Parsed actions from config { "actions": [{ "action": "system.debug.test_semantic_logging", "params": {  } }, { "action": "system.debug.test_semantic_integration", "params": {  } }, { "action": "system.debug.test_semantic_coverage", "params": {  } }, { "action": "system.debug.test_semantic_comprehensive", "params": {  } }, { "action": "system.debug.test_semantic_player_events", "params": {  } }, { "action": "system.debug.quit_application", "params": {  } }], "count": 6 }
+07-03 23:31:15.812 I/godot   (20116): [INFO] [debug, startup] Actions retrieved { "count": 6, "actions": [{ "action": "system.debug.test_semantic_logging", "params": {  } }, { "action": "system.debug.test_semantic_integration", "params": {  } }, { "action": "system.debug.test_semantic_coverage", "params": {  } }, { "action": "system.debug.test_semantic_comprehensive", "params": {  } }, { "action": "system.debug.test_semantic_player_events", "params": {  } }, { "action": "system.debug.quit_application", "params": {  } }] }
+07-03 23:31:15.828 I/godot   (20116): [DEBUG] [debug, startup, verbose] Waiting for game ready...
+07-03 23:31:15.829 I/godot   (20116): [INFO] [debug, startup] Checking tree ready state...
+07-03 23:31:15.829 I/godot   (20116): [DEBUG] [debug, startup] Tree root is ready
+07-03 23:31:15.829 I/godot   (20116): [INFO] [debug, startup] Game ready for debug actions
+07-03 23:31:15.829 I/godot   (20116): [DEBUG] [debug, startup, verbose] Waiting for action registry initialization...
+07-03 23:31:15.830 I/godot   (20116): [INFO] [debug, startup] Action registry already ready { "action_count": 68 }
+07-03 23:31:15.830 I/godot   (20116): [DEBUG] [debug, startup, verbose] Waiting for DataSource initialization...
+07-03 23:31:15.830 I/godot   (20116): [INFO] [debug, startup] DataSource already initialized
+07-03 23:31:15.839 I/godot   (20116): [INFO] [debug, startup, batch_dispatch, diagnostic] === BATCH DISPATCH START === { "total_actions": 6, "dispatch_start_time": 1751578275.83073, "dispatch_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7" }
+07-03 23:31:15.839 I/godot   (20116): [INFO] [debug, startup, dispatch, diagnostic] Dispatching action to idle queue { "action": "system.debug.test_semantic_logging", "params": {  }, "action_index": 1, "total_actions": 6, "dispatch_timestamp": 1751578275.83912 }
+07-03 23:31:15.839 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.840 I/godot   (20116): [INFO] [system, event, idle_action, event_received, diagnostic] === SYSTEM IDLE ACTION EVENT RECEIVED === { "ui_state": "WAITING", "queue_size_before": 0, "queue_size_after": 1, "processing_idle_action": false, "test_id": "test_20250703_233112_5b715ea7", "event_timestamp": 1751578275.83993, "event_frame": 3, "can_process_immediately": true }
+07-03 23:31:15.840 I/godot   (20116): [INFO] [system, event, idle_action, queue_processing, diagnostic] === IDLE ACTION QUEUE PROCESSING ENTRY === { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 1, "queue_empty": false, "timestamp": 1751578275.84031, "test_id": "test_20250703_233112_5b715ea7", "system_frame": 3 }
+07-03 23:31:15.840 I/godot   (20116): [INFO] [system, event, idle_action, action_start, diagnostic] === PROCESSING IDLE ACTION FROM QUEUE === { "remaining_queue_size": 0, "action_start_time": 1751578275.84068, "action_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7", "ui_state_before_action": "WAITING" }
+07-03 23:31:15.841 I/godot   (20116): [INFO] [debug, test] [font_size=24]2025-07-03T23:31:15 🔄  Executing system.debug.test_semantic_logging with params...[/font_size]
+07-03 23:31:15.841 I/godot   (20116):  { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.841 I/godot   (20116): 2025-07-03T23:31:15 🔄  Executing system.debug.test_semantic_logging with params...
+07-03 23:31:15.841 I/godot   (20116): 
+07-03 23:31:15.841 I/godot   (20116): [INFO] [debug, test] Executing system.debug.test_semantic_logging with params... { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.842 I/godot   (20116): [INFO] [semantic_action, test] Started semantic logging test session { "session_id": "test_session_123" }
+07-03 23:31:15.842 I/godot   (20116): [INFO] [semantic, action, player] SEMANTIC_ACTION { "type": "test.manual_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.18, "sequence": 1, "session_elapsed_ms": 0.291015625, "data": { "test_parameter": "test_value", "number_parameter": 42 } }
+07-03 23:31:15.842 I/godot   (20116): [INFO] [semantic, action, player] SEMANTIC_ACTION { "type": "test.another_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.54, "sequence": 2, "session_elapsed_ms": 0.654052734375, "data": { "action_type": "verification" } }
+07-03 23:31:15.843 I/godot   (20116): [INFO] [semantic_action, test] Semantic logging test completed { "session_info": { "session_id": "test_session_123", "action_count": 2, "is_active": true }, "actions_logged": 2 }
+07-03 23:31:15.843 I/godot   (20116): [INFO] [session, end, semantic] SESSION_END { "session_id": "test_session_123", "reason": "legacy_end", "duration_ms": 1.369140625, "action_count": 2, "context": {  } }
+07-03 23:31:15.843 I/godot   (20116): [INFO] [debug, test] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.test_semantic_logging[/font_size]
+07-03 23:31:15.843 I/godot   (20116):  { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.844 I/godot   (20116): 2025-07-03T23:31:15 🔄  Completed: system.debug.test_semantic_logging
+07-03 23:31:15.844 I/godot   (20116): 
+07-03 23:31:15.844 I/godot   (20116): [INFO] [debug, test] Completed: system.debug.test_semantic_logging { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.844 I/godot   (20116): 
+07-03 23:31:15.844 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.844 I/godot   (20116): === BUFFER DUMP (23:31:15) - Last 20 entries ===
+07-03 23:31:15.844 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.844 I/godot   (20116): [BUFFER] Waiting for action registry initialization... [debug, startup, verbose]
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] Action registry already ready [debug, startup] { "action_count": 68 }
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] Waiting for DataSource initialization... [debug, startup, verbose]
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] DataSource already initialized [debug, startup]
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] === BATCH DISPATCH START === [debug, startup, batch_dispatch, diagnostic] { "total_actions": 6, "dispatch_start_time": 1751578275.83073, "dispatch_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7" }
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] Dispatching action to idle queue [debug, startup, dispatch, diagnostic] { "action": "system.debug.test_semantic_logging", "params": {  }, "action_index": 1, "total_actions": 6, "dispatch_timestamp": 1751578275.83912 }
+07-03 23:31:15.845 I/godot   (20116): [BUFFER] Resolving core event [game_state, event] { "event_type": "Resource" }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] === SYSTEM IDLE ACTION EVENT RECEIVED === [system, event, idle_action, event_received, diagnostic] { "ui_state": "WAITING", "queue_size_before": 0, "queue_size_after": 1, "processing_idle_action": false, "test_id": "test_20250703_233112_5b715ea7", "event_timestamp": 1751578275.83993, "event_frame": 3, "can_process_immediately": true }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] === IDLE ACTION QUEUE PROCESSING ENTRY === [system, event, idle_action, queue_processing, diagnostic] { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 1, "queue_empty": false, "timestamp": 1751578275.84031, "test_id": "test_20250703_233112_5b715ea7", "system_frame": 3 }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] === PROCESSING IDLE ACTION FROM QUEUE === [system, event, idle_action, action_start, diagnostic] { "remaining_queue_size": 0, "action_start_time": 1751578275.84068, "action_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7", "ui_state_before_action": "WAITING" }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Executing system.debug.test_semantic_logging with params...[/font_size]
+07-03 23:31:15.846 I/godot   (20116):  [debug, test] { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] Executing system.debug.test_semantic_logging with params... [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.846 I/godot   (20116): [BUFFER] Started semantic logging test session [semantic_action, test] { "session_id": "test_session_123" }
+07-03 23:31:15.852 I/godot   (20116): [BUFFER] SEMANTIC_ACTION [semantic, action, player] { "type": "test.manual_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.18, "sequence": 1, "session_elapsed_ms": 0.291015625, "data": { "test_parameter": "test_value", "number_parameter": 42 } }
+07-03 23:31:15.852 I/godot   (20116): [BUFFER] SEMANTIC_ACTION [semantic, action, player] { "type": "test.another_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.54, "sequence": 2, "session_elapsed_ms": 0.654052734375, "data": { "action_type": "verification" } }
+07-03 23:31:15.852 I/godot   (20116): [BUFFER] Semantic logging test completed [semantic_action, test] { "session_info": { "session_id": "test_session_123", "action_count": 2, "is_active": true }, "actions_logged": 2 }
+07-03 23:31:15.852 I/godot   (20116): [BUFFER] SESSION_END [session, end, semantic] { "session_id": "test_session_123", "reason": "legacy_end", "duration_ms": 1.369140625, "action_count": 2, "context": {  } }
+07-03 23:31:15.853 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.test_semantic_logging[/font_size]
+07-03 23:31:15.853 I/godot   (20116):  [debug, test] { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.853 I/godot   (20116): [BUFFER] Completed: system.debug.test_semantic_logging [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.853 I/godot   (20116): [BUFFER] DEBUG_TEST_SUCCESS [debug, test, success, pid, sequence] { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.test_semantic_logging", "category": "System", "group": "Debug", "duration_ms": 4, "params": {  }, "pid": 20116, "sequence": 1, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.853 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.853 I/godot   (20116): === END BUFFER DUMP ===
+07-03 23:31:15.853 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.853 I/godot   (20116): 
+07-03 23:31:15.854 I/godot   (20116): [ERROR] [debug, test, success, pid, sequence] DEBUG_TEST_SUCCESS { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.test_semantic_logging", "category": "System", "group": "Debug", "duration_ms": 4, "params": {  }, "pid": 20116, "sequence": 1, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.854 I/godot   (20116): [INFO] [system, event, idle_action, action_complete, diagnostic] === IDLE ACTION PROCESSING COMPLETE === { "remaining_queue_size": 0, "execution_time_ms": 13.4589672088623, "frames_elapsed": 0, "test_id": "test_20250703_233112_5b715ea7", "ui_state_after_action": "WAITING", "action_end_time": 1751578275.85414, "action_end_frame": 3 }
+07-03 23:31:15.854 I/godot   (20116): 
+07-03 23:31:15.854 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.854 I/godot   (20116): === BUFFER DUMP (23:31:15) - Last 20 entries ===
+07-03 23:31:15.854 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.855 I/godot   (20116): [BUFFER] Waiting for DataSource initialization... [debug, startup, verbose]
+07-03 23:31:15.855 I/godot   (20116): [BUFFER] DataSource already initialized [debug, startup]
+07-03 23:31:15.855 I/godot   (20116): [BUFFER] === BATCH DISPATCH START === [debug, startup, batch_dispatch, diagnostic] { "total_actions": 6, "dispatch_start_time": 1751578275.83073, "dispatch_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7" }
+07-03 23:31:15.855 I/godot   (20116): [BUFFER] Dispatching action to idle queue [debug, startup, dispatch, diagnostic] { "action": "system.debug.test_semantic_logging", "params": {  }, "action_index": 1, "total_actions": 6, "dispatch_timestamp": 1751578275.83912 }
+07-03 23:31:15.855 I/godot   (20116): [BUFFER] Resolving core event [game_state, event] { "event_type": "Resource" }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] === SYSTEM IDLE ACTION EVENT RECEIVED === [system, event, idle_action, event_received, diagnostic] { "ui_state": "WAITING", "queue_size_before": 0, "queue_size_after": 1, "processing_idle_action": false, "test_id": "test_20250703_233112_5b715ea7", "event_timestamp": 1751578275.83993, "event_frame": 3, "can_process_immediately": true }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] === IDLE ACTION QUEUE PROCESSING ENTRY === [system, event, idle_action, queue_processing, diagnostic] { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 1, "queue_empty": false, "timestamp": 1751578275.84031, "test_id": "test_20250703_233112_5b715ea7", "system_frame": 3 }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] === PROCESSING IDLE ACTION FROM QUEUE === [system, event, idle_action, action_start, diagnostic] { "remaining_queue_size": 0, "action_start_time": 1751578275.84068, "action_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7", "ui_state_before_action": "WAITING" }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Executing system.debug.test_semantic_logging with params...[/font_size]
+07-03 23:31:15.856 I/godot   (20116):  [debug, test] { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] Executing system.debug.test_semantic_logging with params... [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.856 I/godot   (20116): [BUFFER] Started semantic logging test session [semantic_action, test] { "session_id": "test_session_123" }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] SEMANTIC_ACTION [semantic, action, player] { "type": "test.manual_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.18, "sequence": 1, "session_elapsed_ms": 0.291015625, "data": { "test_parameter": "test_value", "number_parameter": 42 } }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] SEMANTIC_ACTION [semantic, action, player] { "type": "test.another_action", "session_id": "test_session_123", "timestamp_ms": 1751578275842.54, "sequence": 2, "session_elapsed_ms": 0.654052734375, "data": { "action_type": "verification" } }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] Semantic logging test completed [semantic_action, test] { "session_info": { "session_id": "test_session_123", "action_count": 2, "is_active": true }, "actions_logged": 2 }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] SESSION_END [session, end, semantic] { "session_id": "test_session_123", "reason": "legacy_end", "duration_ms": 1.369140625, "action_count": 2, "context": {  } }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.test_semantic_logging[/font_size]
+07-03 23:31:15.857 I/godot   (20116):  [debug, test] { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.857 I/godot   (20116): [BUFFER] Completed: system.debug.test_semantic_logging [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.858 I/godot   (20116): [BUFFER] DEBUG_TEST_SUCCESS [debug, test, success, pid, sequence] { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.test_semantic_logging", "category": "System", "group": "Debug", "duration_ms": 4, "params": {  }, "pid": 20116, "sequence": 1, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.858 I/godot   (20116): [BUFFER] === IDLE ACTION PROCESSING COMPLETE === [system, event, idle_action, action_complete, diagnostic] { "remaining_queue_size": 0, "execution_time_ms": 13.4589672088623, "frames_elapsed": 0, "test_id": "test_20250703_233112_5b715ea7", "ui_state_after_action": "WAITING", "action_end_time": 1751578275.85414, "action_end_frame": 3 }
+07-03 23:31:15.858 I/godot   (20116): [BUFFER] Action not found, cannot dispatch [debug, startup, error] { "action": "system.debug.test_semantic_integration", "action_index": 2, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.858 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.858 I/godot   (20116): === END BUFFER DUMP ===
+07-03 23:31:15.858 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.858 I/godot   (20116): 
+07-03 23:31:15.858 I/godot   (20116): [ERROR] [debug, startup, error] Action not found, cannot dispatch { "action": "system.debug.test_semantic_integration", "action_index": 2, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.859 I/godot   (20116): [ERROR] [debug, startup, error] Action not found, cannot dispatch { "action": "system.debug.test_semantic_coverage", "action_index": 3, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.860 I/godot   (20116): [ERROR] [debug, startup, error] Action not found, cannot dispatch { "action": "system.debug.test_semantic_comprehensive", "action_index": 4, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.860 I/godot   (20116): [ERROR] [debug, startup, error] Action not found, cannot dispatch { "action": "system.debug.test_semantic_player_events", "action_index": 5, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.861 I/godot   (20116): [INFO] [debug, startup, dispatch, diagnostic] Dispatching action to idle queue { "action": "system.debug.quit_application", "params": {  }, "action_index": 6, "total_actions": 6, "dispatch_timestamp": 1751578275.86074 }
+07-03 23:31:15.861 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.864 I/godot   (20116): [INFO] [system, event, idle_action, event_received, diagnostic] === SYSTEM IDLE ACTION EVENT RECEIVED === { "ui_state": "WAITING", "queue_size_before": 0, "queue_size_after": 1, "processing_idle_action": false, "test_id": "test_20250703_233112_5b715ea7", "event_timestamp": 1751578275.86205, "event_frame": 3, "can_process_immediately": true }
+07-03 23:31:15.865 I/godot   (20116): [INFO] [system, event, idle_action, queue_processing, diagnostic] === IDLE ACTION QUEUE PROCESSING ENTRY === { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 1, "queue_empty": false, "timestamp": 1751578275.86472, "test_id": "test_20250703_233112_5b715ea7", "system_frame": 3 }
+07-03 23:31:15.865 I/godot   (20116): [INFO] [system, event, idle_action, action_start, diagnostic] === PROCESSING IDLE ACTION FROM QUEUE === { "remaining_queue_size": 0, "action_start_time": 1751578275.86516, "action_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7", "ui_state_before_action": "WAITING" }
+07-03 23:31:15.866 I/godot   (20116): [INFO] [debug, test] [font_size=24]2025-07-03T23:31:15 🔄  Executing system.debug.quit_application with params...[/font_size]
+07-03 23:31:15.866 I/godot   (20116):  { "action": "system.debug.quit_application" }
+07-03 23:31:15.866 I/godot   (20116): 2025-07-03T23:31:15 🔄  Executing system.debug.quit_application with params...
+07-03 23:31:15.866 I/godot   (20116): 
+07-03 23:31:15.866 I/godot   (20116): [INFO] [debug, test] Executing system.debug.quit_application with params... { "category": "System", "group": "Debug", "action": "system.debug.quit_application", "error": false }
+07-03 23:31:15.867 I/godot   (20116): [INFO] [debug, system] Quit event received, exiting application
+07-03 23:31:15.867 I/godot   (20116): [INFO] [debug, test] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.quit_application[/font_size]
+07-03 23:31:15.867 I/godot   (20116):  { "action": "system.debug.quit_application" }
+07-03 23:31:15.867 I/godot   (20116): 2025-07-03T23:31:15 🔄  Completed: system.debug.quit_application
+07-03 23:31:15.867 I/godot   (20116): 
+07-03 23:31:15.868 I/godot   (20116): [INFO] [debug, test] Completed: system.debug.quit_application { "category": "System", "group": "Debug", "action": "system.debug.quit_application", "error": false }
+07-03 23:31:15.868 I/godot   (20116): 
+07-03 23:31:15.868 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.868 I/godot   (20116): === BUFFER DUMP (23:31:15) - Last 20 entries ===
+07-03 23:31:15.868 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.868 I/godot   (20116): [BUFFER] SESSION_END [session, end, semantic] { "session_id": "test_session_123", "reason": "legacy_end", "duration_ms": 1.369140625, "action_count": 2, "context": {  } }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.test_semantic_logging[/font_size]
+07-03 23:31:15.869 I/godot   (20116):  [debug, test] { "action": "system.debug.test_semantic_logging" }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] Completed: system.debug.test_semantic_logging [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.test_semantic_logging", "error": false }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] DEBUG_TEST_SUCCESS [debug, test, success, pid, sequence] { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.test_semantic_logging", "category": "System", "group": "Debug", "duration_ms": 4, "params": {  }, "pid": 20116, "sequence": 1, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] === IDLE ACTION PROCESSING COMPLETE === [system, event, idle_action, action_complete, diagnostic] { "remaining_queue_size": 0, "execution_time_ms": 13.4589672088623, "frames_elapsed": 0, "test_id": "test_20250703_233112_5b715ea7", "ui_state_after_action": "WAITING", "action_end_time": 1751578275.85414, "action_end_frame": 3 }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] Action not found, cannot dispatch [debug, startup, error] { "action": "system.debug.test_semantic_integration", "action_index": 2, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.869 I/godot   (20116): [BUFFER] Action not found, cannot dispatch [debug, startup, error] { "action": "system.debug.test_semantic_coverage", "action_index": 3, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.870 I/godot   (20116): [BUFFER] Action not found, cannot dispatch [debug, startup, error] { "action": "system.debug.test_semantic_comprehensive", "action_index": 4, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.870 I/godot   (20116): [BUFFER] Action not found, cannot dispatch [debug, startup, error] { "action": "system.debug.test_semantic_player_events", "action_index": 5, "available_actions": ["system.memory.force_warning", "system.debug.registry_stats", "system.debug.quit_application", "system.network.rtdb_status", "system.debug.test_semantic_logging", "cpp.firebase.set_value", "cpp.firebase.get_value", "cpp.firebase.remove_value", "cpp.firebase.signal_integrity", "cpp.firebase.error_handling"] }
+07-03 23:31:15.870 I/godot   (20116): [BUFFER] Dispatching action to idle queue [debug, startup, dispatch, diagnostic] { "action": "system.debug.quit_application", "params": {  }, "action_index": 6, "total_actions": 6, "dispatch_timestamp": 1751578275.86074 }
+07-03 23:31:15.870 I/godot   (20116): [BUFFER] Resolving core event [game_state, event] { "event_type": "Resource" }
+07-03 23:31:15.870 I/godot   (20116): [BUFFER] === SYSTEM IDLE ACTION EVENT RECEIVED === [system, event, idle_action, event_received, diagnostic] { "ui_state": "WAITING", "queue_size_before": 0, "queue_size_after": 1, "processing_idle_action": false, "test_id": "test_20250703_233112_5b715ea7", "event_timestamp": 1751578275.86205, "event_frame": 3, "can_process_immediately": true }
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] === IDLE ACTION QUEUE PROCESSING ENTRY === [system, event, idle_action, queue_processing, diagnostic] { "ui_state": "WAITING", "processing_idle_action": false, "queue_size": 1, "queue_empty": false, "timestamp": 1751578275.86472, "test_id": "test_20250703_233112_5b715ea7", "system_frame": 3 }
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] === PROCESSING IDLE ACTION FROM QUEUE === [system, event, idle_action, action_start, diagnostic] { "remaining_queue_size": 0, "action_start_time": 1751578275.86516, "action_start_frame": 3, "test_id": "test_20250703_233112_5b715ea7", "ui_state_before_action": "WAITING" }
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Executing system.debug.quit_application with params...[/font_size]
+07-03 23:31:15.871 I/godot   (20116):  [debug, test] { "action": "system.debug.quit_application" }
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] Executing system.debug.quit_application with params... [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.quit_application", "error": false }
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] Quit event received, exiting application [debug, system]
+07-03 23:31:15.871 I/godot   (20116): [BUFFER] [font_size=24]2025-07-03T23:31:15 🔄  Completed: system.debug.quit_application[/font_size]
+07-03 23:31:15.871 I/godot   (20116):  [debug, test] { "action": "system.debug.quit_application" }
+07-03 23:31:15.872 I/godot   (20116): [BUFFER] Completed: system.debug.quit_application [debug, test] { "category": "System", "group": "Debug", "action": "system.debug.quit_application", "error": false }
+07-03 23:31:15.872 I/godot   (20116): [BUFFER] DEBUG_TEST_SUCCESS [debug, test, success, pid, sequence] { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.quit_application", "category": "System", "group": "Debug", "duration_ms": 3, "params": {  }, "pid": 20116, "sequence": 2, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.872 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.872 I/godot   (20116): === END BUFFER DUMP ===
+07-03 23:31:15.872 I/godot   (20116): ════════════════════════════════════════════════════════════════════════════════
+07-03 23:31:15.872 I/godot   (20116): 
+07-03 23:31:15.872 I/godot   (20116): [ERROR] [debug, test, success, pid, sequence] DEBUG_TEST_SUCCESS { "test_id": "test_20250703_233112_5b715ea7", "action": "system.debug.quit_application", "category": "System", "group": "Debug", "duration_ms": 3, "params": {  }, "pid": 20116, "sequence": 2, "timestamp": "2025-07-03T23:31:15" }
+07-03 23:31:15.873 I/godot   (20116): [INFO] [system, event, idle_action, action_complete, diagnostic] === IDLE ACTION PROCESSING COMPLETE === { "remaining_queue_size": 0, "execution_time_ms": 7.48801231384277, "frames_elapsed": 0, "test_id": "test_20250703_233112_5b715ea7", "ui_state_after_action": "WAITING", "action_end_time": 1751578275.87265, "action_end_frame": 3 }
+07-03 23:31:15.873 I/godot   (20116): [INFO] [debug, startup, batch_dispatch, diagnostic] === BATCH DISPATCH COMPLETE === { "count": 6, "dispatch_duration_ms": 42.7160263061523, "dispatch_end_time": 1751578275.87345, "test_id": "test_20250703_233112_5b715ea7", "idle_queue_execution_starts_now": true }
+07-03 23:31:15.874 I/godot   (20116): [DEBUG] Active collections { "collections": { "cards": true, "levels": true, "items": true, "players": true, "events": true, "rules": true }, "active_count": 6, "backend_type": "RefCounted", "instance_id": 63401100574 }
+07-03 23:31:15.885 I/godot   (20116): [INFO] [game_state] Game starting
+07-03 23:31:15.885 I/godot   (20116): [DEBUG] [game_state, event] Resolving core event { "event_type": "Resource" }
+07-03 23:31:15.886 I/godot   (20116): [INFO] [game_state, state_transition] Game state transition { "from": "START", "to": "PREPARE" }
+07-03 23:31:15.886 I/godot   (20116): [INFO] [game_state, state_transition] Game state changing { "from": "START", "to": "PREPARE" }
+07-03 23:31:15.983 I/godot   (20116): [DEBUG] [game_state, ui] Switching to preparation mode
+07-03 23:31:15.994 I/godot   (20116): Singleton cleanup completed
+07-03 23:31:16.005 I/godot   (20116): Singleton cleanup completed
+07-03 23:31:16.042 E/godot   (20116): WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+07-03 23:31:16.042 E/godot   (20116):    at: cleanup (core/object/object.cpp:2489)
+07-03 23:31:22.3N I/justfile (COMPLETE): ===== TEST EXECUTION COMPLETE =====

@@ -98,7 +98,7 @@ func _get_undo_redo():
 	return plugin.get_undo_redo()
 
 # Helper function to parse property values from string to proper Godot types
-func _parse_property_value(value):
+func _parse_property_value(value: Variant) -> Variant:
 	# Only try to parse strings that look like they could be Godot types
 	if typeof(value) == TYPE_STRING and (
 		value.begins_with("Vector") or 

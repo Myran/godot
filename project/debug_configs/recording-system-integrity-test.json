@@ -1,7 +1,34 @@
 {
-  "description": "Recording System Integrity Test - Validate ActionRecorder and RecordedAction foundation",
+  "description": "Recording System Integrity Test - Validates core recording/replay components and workflows",
   "actions": [
     "system.debug.registry_stats",
+    "system.debug.test_semantic_logging",
+    "game.test.simple_player_events",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "game.state.transition_player",
     "system.debug.quit_application"
-  ]
+  ],
+  "integrity_validation": {
+    "test_type": "recording_system_integrity",
+    "components": [
+      "semantic_action_logger",
+      "semantic_action_mapper", 
+      "semantic_log_parser",
+      "session_manager",
+      "semantic_logger"
+    ],
+    "expected_semantic_actions": [
+      "draft.reroll",
+      "draft.upgrade", 
+      "transition.change_state"
+    ],
+    "validation_criteria": {
+      "semantic_actions_logged": "min_count:3",
+      "session_tracking": "session_start_and_end_present",
+      "action_mapping": "all_actions_mappable",
+      "replay_generation": "config_creatable_from_session"
+    }
+  }
 }

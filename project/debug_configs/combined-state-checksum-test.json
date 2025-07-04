@@ -3,9 +3,7 @@
   "actions": [
     "game.battle.set_seed",
     "game.lineup.populate_enemy",
-    "system.recording.start",
-    "system.recording.capture_state",
-    "system.recording.stop",
+    "game.lineup.capture_state",
     "system.checksum.validate",
     "system.debug.quit_application"
   ],

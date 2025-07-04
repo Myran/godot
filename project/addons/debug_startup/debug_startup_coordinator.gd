@@ -52,24 +52,65 @@ func startDebugCoordinator() -> void:
 	_log_verbose("Waiting for DataSource initialization...", {}, ["debug", "startup"])
 	await _wait_for_data_source_ready()
 
-	# All actions are now queued in the game's idle action system.
-	# The coordinator's job is to simply dispatch them.
-	for action_name in actions:
+	# All actions are dispatched at once to the idle queue.
+	# The idle queue system handles one-at-a-time execution with proper cascade settling.
+	var dispatch_start_time := Time.get_unix_time_from_system()
+	var dispatch_start_frame := Engine.get_process_frames()
+
+	Log.info("=== BATCH DISPATCH START ===", {
+		"total_actions": actions.size(),
+		"dispatch_start_time": dispatch_start_time,
+		"dispatch_start_frame": dispatch_start_frame,
+		"test_id": DebugAction.get_current_test_id()
+	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
+
+	for i in range(actions.size()):
+		var action_item = actions[i]
+		var action_name: String
+		var params: Dictionary = {}
+
+		if action_item is Dictionary:
+			# New format with parameters
+			action_name = action_item.action
+			params = action_item.get("params", {})
+		else:
+			# Legacy format: assume it's a string
+			action_name = str(action_item)
+
 		var action := _get_action_by_name(registry, action_name)
 		if action:
-			Log.info("Dispatching action to idle queue", {"action": action_name}, ["debug", "startup"])
-			var callable := Callable(action, "execute")
+			Log.info("Dispatching action to idle queue", {
+				"action": action_name,
+				"params": params,
+				"action_index": i + 1,
+				"total_actions": actions.size(),
+				"dispatch_timestamp": Time.get_unix_time_from_system()
+			}, ["debug", "startup", "dispatch", "diagnostic"])
+			var callable := Callable(action, "execute_with_params").bind(params)
 			core.action(core.SystemIdleActionEvent.new(callable))
 		else:
-			Log.error("Action not found, cannot dispatch", {"action": action_name}, ["debug", "startup", "error"])
+			Log.error("Action not found, cannot dispatch", {
+				"action": action_name,
+				"action_index": i + 1,
+				"available_actions": _get_available_action_names(registry).slice(0, 10)
+			}, ["debug", "startup", "error"])
 
-	Log.info("All debug startup actions have been dispatched to the idle queue.", {"count": actions.size()}, ["debug", "startup"])
+	var dispatch_end_time := Time.get_unix_time_from_system()
+	var dispatch_duration_ms := (dispatch_end_time - dispatch_start_time) * 1000.0
+
+	Log.info("=== BATCH DISPATCH COMPLETE ===", {
+		"count": actions.size(),
+		"dispatch_duration_ms": dispatch_duration_ms,
+		"dispatch_end_time": dispatch_end_time,
+		"test_id": DebugAction.get_current_test_id(),
+		"idle_queue_execution_starts_now": true
+	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
 	# The coordinator's primary job is now complete.
 	# The idle action queue in game.gd will handle execution when the system is ready.
 
 
-func _get_action_names() -> Array[String]:
+func _get_action_names() -> Array:
 	Log.debug("Getting action names", {"platform": "mobile" if OS.has_feature("mobile") else "desktop"}, ["debug", "startup"])
 	# Inline platform differences - no abstraction needed for 2 conditions
 	if OS.has_feature("mobile"):
@@ -93,59 +134,8 @@ func _get_action_names() -> Array[String]:
 		)
 
 
-func _queue_action_for_idle_execution(action: DebugAction, action_name: String) -> bool:
-	"""Queue an action for idle execution using SystemIdleActionEvent and wait for completion"""
-	if not action:
-		Log.error("Action is null", {"action": action_name}, ["debug", "startup", "error"])
-		return false
-
-	if not action.has_method("execute"):
-		Log.error("Action missing execute method", {"action": action_name}, ["debug", "startup", "error"])
-		return false
-
-	# Create a signal to wait for action completion
-	var action_completed := false
-	var action_success := false
-
-	Log.info("Creating idle action callable", {"action": action_name}, ["debug", "startup", "idle", "callable"])
-
-	# Create a callable that wraps the action execution
-	var action_callable := func():
-		Log.info("=== IDLE ACTION EXECUTION START ===", {"action": action_name}, ["debug", "startup", "idle", "execution"])
-		# Execute the action and handle any potential errors
-		await action.execute()
-		action_success = true
-		action_completed = true
-		Log.info("=== IDLE ACTION EXECUTION COMPLETE ===", {"action": action_name, "success": action_success}, ["debug", "startup", "idle", "execution"])
-
-	# Queue the action using SystemIdleActionEvent
-	Log.info("Creating SystemIdleActionEvent", {"action": action_name}, ["debug", "startup", "idle", "event"])
-	var idle_event := core.SystemIdleActionEvent.new(action_callable)
-
-	Log.info("Dispatching SystemIdleActionEvent", {"action": action_name}, ["debug", "startup", "idle", "dispatch"])
-	core.action(idle_event)
-
-	Log.info("SystemIdleActionEvent dispatched, waiting for completion", {"action": action_name}, ["debug", "startup", "idle", "wait"])
-
-	# Wait for action completion with detailed logging
-	var wait_cycles := 0
-	while not action_completed:
-		wait_cycles += 1
-		if wait_cycles % 60 == 0:  # Log every 60 frames (roughly 1 second)
-			Log.debug("Still waiting for action completion", {
-				"action": action_name,
-				"wait_cycles": wait_cycles,
-				"action_completed": action_completed,
-				"action_success": action_success
-			}, ["debug", "startup", "idle", "wait"])
-		await get_tree().process_frame
-
-	Log.info("Action wait loop completed", {
-		"action": action_name,
-		"success": action_success,
-		"wait_cycles": wait_cycles
-	}, ["debug", "startup", "idle", "completion"])
-	return action_success
+# Legacy method removed - we now dispatch all actions at once to idle queue
+# The idle queue system in game.gd handles sequential execution with proper cascade settling
 
 
 
@@ -185,7 +175,7 @@ func _parse_command_line() -> Array[String]:
 	return actions
 
 
-func _parse_config_file(path: String) -> Array[String]:
+func _parse_config_file(path: String) -> Array:
 	Log.debug("Parsing config file", {"path": path}, ["debug", "startup"])
 
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -221,24 +211,62 @@ func _parse_config_file(path: String) -> Array[String]:
 
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
-		var actions: Array[String] = []
+		var actions: Array = []
 
-		# Expand wildcard patterns in actions
+		# Process actions - support both strings and objects with parameters
 		for action in raw_actions:
-			var action_str := str(action)
-			_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
-			if action_str.contains("*"):
-				# This is a wildcard pattern - expand it
-				var expanded_actions := _expand_wildcard_pattern(action_str)
-				actions.append_array(expanded_actions)
-				Log.debug("Expanded wildcard pattern", {
-					"pattern": action_str,
-					"expanded_count": expanded_actions.size(),
-					"expanded_actions": expanded_actions
-				}, ["debug", "startup", "wildcard"])
+			var action_type = typeof(action)
+			var type_name = ""
+			match action_type:
+				TYPE_STRING: type_name = "String"
+				TYPE_DICTIONARY: type_name = "Dictionary"
+				TYPE_ARRAY: type_name = "Array"
+				_: type_name = "Other(" + str(action_type) + ")"
+
+			_log_verbose("Processing raw action", {"action": action, "type": action_type, "type_name": type_name}, ["startup", "parser"])
+
+			if action_type == TYPE_STRING:
+				# Legacy format: simple string
+				var action_str := str(action)
+				_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
+				if action_str.contains("*"):
+					# This is a wildcard pattern - expand it
+					var expanded_actions := _expand_wildcard_pattern(action_str)
+					for expanded_action in expanded_actions:
+						actions.append({"action": expanded_action, "params": {}})
+					Log.debug("Expanded wildcard pattern", {
+						"pattern": action_str,
+						"expanded_count": expanded_actions.size(),
+						"expanded_actions": expanded_actions
+					}, ["debug", "startup", "wildcard"])
+				else:
+					# Regular action name - convert to object format
+					actions.append({"action": action_str, "params": {}})
+			elif action_type == TYPE_DICTIONARY:
+				# New format: object with action and params
+				var action_dict := action as Dictionary
+				if action_dict.has("action"):
+					var action_name := str(action_dict.action)
+					var params := action_dict.get("params", {}) as Dictionary
+					_log_verbose("Processing parameterized action", {"action": action_name, "params": params}, ["startup", "parser"])
+
+					if action_name.contains("*"):
+						# Wildcard pattern with params
+						var expanded_actions := _expand_wildcard_pattern(action_name)
+						for expanded_action in expanded_actions:
+							actions.append({"action": expanded_action, "params": params})
+						Log.debug("Expanded parameterized wildcard", {
+							"pattern": action_name,
+							"params": params,
+							"expanded_count": expanded_actions.size()
+						}, ["debug", "startup", "wildcard"])
+					else:
+						# Regular parameterized action
+						actions.append({"action": action_name, "params": params})
+				else:
+					Log.warning("Invalid action object missing 'action' key", {"action_object": action_dict}, ["debug", "startup"])
 			else:
-				# Regular action name
-				actions.append(action_str)
+				Log.warning("Invalid action type, must be String or Dictionary", {"action": action, "type": typeof(action)}, ["debug", "startup"])
 
 		Log.debug("Parsed actions from config", {"actions": actions, "count": actions.size()}, ["debug", "startup"])
 		return actions
