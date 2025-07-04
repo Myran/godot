@@ -1,0 +1,48 @@
+class_name TestSemanticLoggingAction
+extends DebugAction
+
+
+func _init() -> void:
+	super("system.debug.test_semantic_logging", _execute_semantic_logging_test)
+	set_category("System")
+	set_group("Debug")
+	set_description(
+		"Test the semantic action logging system by starting a session and logging sample actions"
+	)
+
+
+func _execute_semantic_logging_test() -> DebugAction.Result:
+	# Test session management
+	var session_id: String = SemanticActionLogger.start_session("test_session_123")
+
+	Log.info(
+		"Started semantic logging test session",
+		{"session_id": session_id},
+		["semantic_action", "test"]
+	)
+
+	# Test manual semantic action logging
+	SemanticActionLogger.log_action(
+		"test.manual_action", {"test_parameter": "test_value", "number_parameter": 42}
+	)
+
+	SemanticActionLogger.log_action("test.another_action", {"action_type": "verification"})
+
+	# Check session info
+	var session_info: Dictionary = SemanticActionLogger.get_session_info()
+
+	Log.info(
+		"Semantic logging test completed",
+		{"session_info": session_info, "actions_logged": session_info.action_count},
+		["semantic_action", "test"]
+	)
+
+	# End the session
+	SemanticActionLogger.end_session()
+
+	return DebugAction.Result.new_success(
+		(
+			"Semantic logging test completed successfully. Session ID: %s, Actions logged: %d"
+			% [session_id, session_info.action_count]
+		)
+	)
