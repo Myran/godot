@@ -18,7 +18,7 @@ func get_description() -> String:
 
 
 func execute() -> void:
-	AdvancedLogger.info(
+	Log.info(
 		"🎬 Starting replay system integrity validation...", ["debug", "replay", "integrity"]
 	)
 
@@ -61,7 +61,7 @@ func _validate_config_structures() -> Dictionary:
 	var config_dir = "res://debug_configs"
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(config_dir)):
 		config_validation.replay_configs_exist = true
-		AdvancedLogger.debug("Replay config directory exists", ["debug", "replay", "validation"])
+		Log.debug("Replay config directory exists", {}, ["debug", "replay", "validation"])
 
 	# Test known replay configuration
 	var test_config_path = "res://debug_configs/my-battle-scenario.json"
@@ -73,7 +73,7 @@ func _validate_config_structures() -> Dictionary:
 			config_validation.action_sequences = (
 				config_content.has("actions") and config_content.actions.size() > 0
 			)
-			AdvancedLogger.debug(
+			Log.debug(
 				(
 					"Config validation - Schema: %s, Metadata: %s, Actions: %s"
 					% [
@@ -104,7 +104,7 @@ func _validate_replay_commands() -> Dictionary:
 	command_validation.config_validation = true  # Placeholder - would test `just replay-validate`
 	command_validation.cleanup_commands = true  # Placeholder - would test `just replay-clean`
 
-	AdvancedLogger.debug(
+	Log.debug(
 		"Replay commands validation: %s" % command_validation, ["debug", "replay", "validation"]
 	)
 
@@ -155,7 +155,7 @@ func _detect_regression_patterns() -> Dictionary:
 	for component: String in critical_components:
 		if not FileAccess.file_exists(component):
 			regression_detection.missing_components.append(component)
-			AdvancedLogger.warning(
+			Log.warning(
 				"Missing critical component: %s" % component, ["debug", "replay", "regression"]
 			)
 
@@ -176,7 +176,7 @@ func _detect_regression_patterns() -> Dictionary:
 	else:
 		regression_detection.regression_risk = "LOW"
 
-	AdvancedLogger.debug(
+	Log.debug(
 		(
 			"Regression detection - Missing: %d, Broken: %d, Risk: %s"
 			% [missing_count, broken_count, regression_detection.regression_risk]
@@ -192,7 +192,7 @@ func _test_capture_workflow() -> bool:
 	# Would test actual semantic logging and session capture
 	# For now, validate that the mapper can handle test data
 	var test_session = "integrity_test_%d" % Time.get_unix_time_from_system()
-	AdvancedLogger.debug(
+	Log.debug(
 		"Testing capture workflow with session: %s" % test_session, ["debug", "replay", "workflow"]
 	)
 	return true
@@ -212,7 +212,7 @@ func _test_generation_workflow() -> bool:
 	var valid_config = (
 		config.has("description") and config.has("actions") and config.actions.size() > 0
 	)
-	AdvancedLogger.debug(
+	Log.debug(
 		"Generation workflow test: %s" % valid_config, ["debug", "replay", "workflow"]
 	)
 	return valid_config
@@ -222,14 +222,14 @@ func _test_execution_workflow() -> bool:
 	"""Test replay config execution workflow"""
 	# Would test actual config execution
 	# For now, validate that configs are in executable format
-	AdvancedLogger.debug("Testing execution workflow", ["debug", "replay", "workflow"])
+	Log.debug("Testing execution workflow", {}, ["debug", "replay", "workflow"])
 	return true
 
 
 func _test_validation_workflow() -> bool:
 	"""Test replay validation workflow"""
 	# Would test replay validation and results checking
-	AdvancedLogger.debug("Testing validation workflow", ["debug", "replay", "workflow"])
+	Log.debug("Testing validation workflow", {}, ["debug", "replay", "workflow"])
 	return true
 
 
@@ -237,7 +237,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	"""Load and parse a JSON config file"""
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
-		AdvancedLogger.warning(
+		Log.warning(
 			"Cannot open config file: %s" % file_path, ["debug", "replay", "validation"]
 		)
 		return {}
@@ -248,7 +248,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	var json = JSON.new()
 	var parse_result = json.parse(json_text)
 	if parse_result != OK:
-		AdvancedLogger.warning(
+		Log.warning(
 			"JSON parse error in config: %s" % file_path, ["debug", "replay", "validation"]
 		)
 		return {}
@@ -308,33 +308,33 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 func _log_validation_summary(results: Dictionary) -> void:
 	"""Log comprehensive validation summary"""
-	AdvancedLogger.info(
+	Log.info(
 		"🎬 Replay System Integrity Validation Complete", ["debug", "replay", "integrity"]
 	)
-	AdvancedLogger.info(
+	Log.info(
 		"📊 Overall Status: %s" % results.overall_status, ["debug", "replay", "integrity"]
 	)
 
 	# Log regression detection results
 	var regression = results.regression_detection
-	AdvancedLogger.info(
+	Log.info(
 		"🔍 Regression Risk: %s" % regression.regression_risk, ["debug", "replay", "integrity"]
 	)
 
 	if regression.missing_components.size() > 0:
-		AdvancedLogger.warning(
+		Log.warning(
 			"❌ Missing Components: %s" % regression.missing_components,
 			["debug", "replay", "integrity"]
 		)
 
 	if regression.broken_integrations.size() > 0:
-		AdvancedLogger.warning(
+		Log.warning(
 			"🔗 Broken Integrations: %s" % regression.broken_integrations,
 			["debug", "replay", "integrity"]
 		)
 
 	if results.overall_status != "PASS":
-		AdvancedLogger.warning(
+		Log.warning(
 			"⚠️ Replay system integrity issues detected - check validation details",
 			["debug", "replay", "integrity"]
 		)
