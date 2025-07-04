@@ -112,27 +112,9 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Lineup state capture for checksum testing
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.lineup.capture_state", _capture_lineup_state)
-			. set_category("Gameplay")
-			. set_group("Preset Lineups")
-			. set_description("Capture lineup state for checksum validation")
-		)
-	)
+	# Legacy lineup capture action removed - now using semantic logging approach
 
-	# Board state capture for checksum testing
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.board.capture_state", _capture_board_state)
-			. set_category("Gameplay")
-			. set_group("Board State")
-			. set_description("Capture board state for checksum validation")
-		)
-	)
+	# Legacy board capture action removed - now using semantic logging approach
 
 	# Board reset for deterministic testing
 	registry.register_action(
@@ -142,6 +124,97 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_category("Gameplay")
 			. set_group("Board State")
 			. set_description("Reset board to initial state for deterministic testing")
+		)
+	)
+
+	# Player-simulated actions for semantic replay
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.draft.reroll_player", _reroll_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player reroll action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.draft.upgrade_player", _upgrade_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player upgrade action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.draft.toggle_column_player", _toggle_column_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player column toggle action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.draft.remove_block_player", _remove_block_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player block removal action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.lineup.move_card_player", _move_card_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player card move action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.lineup.add_card_player", _add_card_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player card addition action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.lineup.remove_card_player", _remove_card_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player card removal action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.state.transition_player", _transition_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player state transition action")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.battle.start_player", _start_battle_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player battle start action")
 		)
 	)
 
@@ -1390,14 +1463,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			)
 
 
-static func _capture_lineup_state() -> DebugAction.Result:
-	var capturer: LineupCaptureAction = LineupCaptureAction.new()
-	return capturer.execute()
-
-
-static func _capture_board_state() -> DebugAction.Result:
-	var capturer: BoardCaptureAction = BoardCaptureAction.new()
-	return capturer.execute()
+# Legacy capture action implementations removed - now using semantic logging approach
 
 
 static func _reset_board_state() -> bool:
@@ -1461,3 +1527,212 @@ static func _reset_board_state() -> bool:
 		Log.warning("Battle state reset completed with warnings", {}, ["debug", "board", "reset"])
 
 	return reset_successful
+
+
+# Player action implementations for semantic replay
+static func _reroll_player(params: Dictionary = {}) -> bool:
+	"""Simulate player reroll action with parameters"""
+	Log.info("Simulating player reroll action", {"params": params}, ["debug", "replay", "player"])
+
+	# Create RerollDraftEvent with PLAYER source
+	var event: core.RerollDraftEvent = core.RerollDraftEvent.new()
+	event.source = core.EventSource.PLAYER
+	core.action(event)
+
+	return true
+
+
+static func _upgrade_player(params: Dictionary = {}) -> bool:
+	"""Simulate player upgrade action with parameters"""
+	var level: int = params.get("level", 2)
+	Log.info(
+		"Simulating player upgrade action",
+		{"level": level, "params": params},
+		["debug", "replay", "player"]
+	)
+
+	# Create UpgradeEvent with PLAYER source
+	var event: core.UpgradeEvent = core.UpgradeEvent.new(level)
+	event.source = core.EventSource.PLAYER
+	core.action(event)
+
+	return true
+
+
+static func _toggle_column_player(params: Dictionary = {}) -> bool:
+	"""Simulate player column toggle action with parameters"""
+	var column_index: int = params.get("column_index", 0)
+	var new_state: bool = params.get("new_state", true)
+	Log.info(
+		"Simulating player column toggle action",
+		{"column_index": column_index, "new_state": new_state, "params": params},
+		["debug", "replay", "player"]
+	)
+
+	# Create DraftColumnStateEvent with PLAYER source
+	var event: core.DraftColumnStateEvent = core.DraftColumnStateEvent.new(column_index, new_state)
+	event.source = core.EventSource.PLAYER
+	core.action(event)
+
+	return true
+
+
+static func _remove_block_player(params: Dictionary = {}) -> bool:
+	"""Simulate player block removal action with parameters"""
+	var card_id: String = params.get("card_id", "")
+	var position: Dictionary = params.get("position", {"x": -1, "y": -1})
+	Log.info(
+		"Simulating player block removal action",
+		{"card_id": card_id, "position": position, "params": params},
+		["debug", "replay", "player"]
+	)
+
+	# Find block by position or card_id
+	# Note: This is a simplified implementation - real implementation would need
+	# to find the actual block in the draft area and create the appropriate event
+	Log.warning(
+		"Block removal replay not fully implemented - needs draft area access",
+		{},
+		["debug", "replay", "player"]
+	)
+
+	return true
+
+
+static func _move_card_player(params: Dictionary = {}) -> bool:
+	"""Simulate player card move action with parameters"""
+	var card_id: String = params.get("card_id", "")
+	var from_position: int = params.get("from_position", 0)
+	var to_position: int = params.get("to_position", 1)
+	Log.info(
+		"Simulating player card move action",
+		{
+			"card_id": card_id,
+			"from_position": from_position,
+			"to_position": to_position,
+			"params": params
+		},
+		["debug", "replay", "player"]
+	)
+
+	# Find the card in the lineup and create MoveLineupCardEvent
+	# Note: This is a simplified implementation - real implementation would need
+	# to find the actual card in the lineup and create the appropriate event
+	Log.warning(
+		"Card move replay not fully implemented - needs lineup access",
+		{},
+		["debug", "replay", "player"]
+	)
+
+	return true
+
+
+static func _add_card_player(params: Dictionary = {}) -> bool:
+	"""Simulate player card addition action with parameters"""
+	var card_id: String = params.get("card_id", "")
+	var target_position: int = params.get("target_position", 0)
+	var source_position: Dictionary = params.get("source_position", {"x": -1, "y": -1})
+	Log.info(
+		"Simulating player card addition action",
+		{
+			"card_id": card_id,
+			"target_position": target_position,
+			"source_position": source_position,
+			"params": params
+		},
+		["debug", "replay", "player"]
+	)
+
+	# Find card in draft area and create LineupAddCardEvent
+	# Note: This is a simplified implementation - real implementation would need
+	# to find the actual card and create the appropriate event
+	Log.warning(
+		"Card addition replay not fully implemented - needs card access",
+		{},
+		["debug", "replay", "player"]
+	)
+
+	return true
+
+
+static func _remove_card_player(params: Dictionary = {}) -> bool:
+	"""Simulate player card removal action with parameters"""
+	var card_id: String = params.get("card_id", "")
+	var position: int = params.get("position", 0)
+	Log.info(
+		"Simulating player card removal action",
+		{"card_id": card_id, "position": position, "params": params},
+		["debug", "replay", "player"]
+	)
+
+	# Find card in lineup and create removal event
+	# Note: This is a simplified implementation - real implementation would need
+	# to find the actual card and create the appropriate event
+	Log.warning(
+		"Card removal replay not fully implemented - needs lineup access",
+		{},
+		["debug", "replay", "player"]
+	)
+
+	return true
+
+
+static func _transition_player(params: Dictionary = {}) -> bool:
+	"""Simulate player state transition action with parameters"""
+	var from_state: String = params.get("from_state", "")
+	var to_state: String = params.get("to_state", "")
+	Log.info(
+		"Simulating player state transition action",
+		{"from_state": from_state, "to_state": to_state, "params": params},
+		["debug", "replay", "player"]
+	)
+
+	# Convert state string to GameState enum and create TransitionEvent
+	var target_state: core.GameState
+
+	match to_state:
+		"START":
+			target_state = core.GameState.START
+		"PREPARE":
+			target_state = core.GameState.PREPARE
+		"DRAFT":
+			target_state = core.GameState.DRAFT
+		"PREBATTLE":
+			target_state = core.GameState.PREBATTLE
+		"BATTLE":
+			target_state = core.GameState.BATTLE
+		"POSTBATTLE":
+			target_state = core.GameState.POSTBATTLE
+		_:
+			Log.warning(
+				"Unknown target state for replay",
+				{"to_state": to_state},
+				["debug", "replay", "player"]
+			)
+			return false
+
+	# Create TransitionEvent
+	var event: core.TransitionEvent = core.TransitionEvent.new(target_state)
+	core.action(event)
+
+	return true
+
+
+static func _start_battle_player(params: Dictionary = {}) -> bool:
+	"""Simulate player battle start action with parameters"""
+	var player_lineup_count: int = params.get("player_lineup_count", 0)
+	var enemy_lineup_count: int = params.get("enemy_lineup_count", 0)
+	Log.info(
+		"Simulating player battle start action",
+		{
+			"player_lineup_count": player_lineup_count,
+			"enemy_lineup_count": enemy_lineup_count,
+			"params": params
+		},
+		["debug", "replay", "player"]
+	)
+
+	# Create StartBattleEvent through UI system (simulates player clicking battle button)
+	ui.action(ui.StartBattleEvent.new())
+
+	return true

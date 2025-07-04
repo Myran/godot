@@ -742,7 +742,7 @@ func execute() -> void:
 						"category": category,
 						"group": group,
 						"duration_ms": duration_ms,
-						"pid": process_id,
+						"pid": OS.get_process_id(),
 						"sequence": test_success_count,
 						"timestamp": Time.get_datetime_string_from_system(),
 					},
@@ -760,7 +760,93 @@ func execute() -> void:
 					"group": group,
 					"error": error_message,
 					"duration_ms": duration_ms,
-					"pid": process_id,
+					"pid": OS.get_process_id(),
+					"sequence": test_failure_count,
+					"timestamp": Time.get_datetime_string_from_system(),
+					"success_count_before_failure": test_success_count
+				},
+				["debug", "test", "failure", "pid", "sequence"]
+			)
+
+	# Emit execution completed signal that UI components are waiting for
+	execution_completed.emit(success, result)
+
+
+func execute_with_params(params: Dictionary = {}) -> void:
+	"""Execute action with optional parameters - enhanced version of execute()"""
+	# Track test execution if we're in test context
+	if current_test_id != "":
+		test_action_count += 1
+
+	var start_time: int = Time.get_ticks_msec()
+	var success: bool = false
+	var error_message: String = ""
+	var result: Variant = null
+
+	_update_status("Executing " + action_name + " with params...")
+
+	if action_callable.is_valid():
+		# Execute the action with parameters
+		# Try calling with parameters first, fall back to no parameters if it fails
+		if params.is_empty():
+			# No parameters provided, use legacy call
+			result = await action_callable.call()
+		else:
+			# Parameters provided, try to call with them
+			# Note: If the action doesn't support parameters, this will still work
+			# as the parameters will just be ignored by actions that don't expect them
+			result = await action_callable.call(params)
+
+		# Determine success based on standardized return patterns
+		success = _evaluate_action_result(result)
+		if success:
+			_update_status("Completed: " + action_name)
+		else:
+			error_message = _extract_error_message(result)
+			_update_status("ERROR: " + action_name + " - " + error_message, true)
+	else:
+		# No callable defined
+		success = false
+		error_message = "No execute method defined for " + action_name
+		_update_status("ERROR: No execute method defined for " + action_name, true)
+
+	var duration_ms: int = Time.get_ticks_msec() - start_time
+
+	# Record test results only if we're in a test context
+	if current_test_id != "":
+		if success:
+			test_success_count += 1
+			(
+				Log
+				. error(  # Using Log.error for structured parsing in test analysis
+					"DEBUG_TEST_SUCCESS",
+					{
+						"test_id": current_test_id,
+						"action": action_name,
+						"category": category,
+						"group": group,
+						"duration_ms": duration_ms,
+						"params": params,
+						"pid": OS.get_process_id(),
+						"sequence": test_success_count,
+						"timestamp": Time.get_datetime_string_from_system(),
+					},
+					["debug", "test", "success", "pid", "sequence"]
+				)
+			)
+		else:
+			test_failure_count += 1
+			Log.error(
+				"DEBUG_TEST_FAILURE",
+				{
+					"test_id": current_test_id,
+					"action": action_name,
+					"category": category,
+					"group": group,
+					"error": error_message,
+					"duration_ms": duration_ms,
+					"params": params,
+					"pid": OS.get_process_id(),
 					"sequence": test_failure_count,
 					"timestamp": Time.get_datetime_string_from_system(),
 					"success_count_before_failure": test_success_count

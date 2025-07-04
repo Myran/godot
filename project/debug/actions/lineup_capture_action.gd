@@ -24,7 +24,7 @@ func extract_lineup_data(lineup: Dictionary) -> Dictionary:
 	var lineup_data: Dictionary = {}
 
 	# Use existing DictUtils for deterministic iteration
-	for item: Dictionary in DictUtils.get_sorted_items(lineup as Dictionary):
+	for item: Dictionary in DictUtils.get_sorted_items(lineup):
 		var position: int = item.key
 		var card: Card = item.value
 
