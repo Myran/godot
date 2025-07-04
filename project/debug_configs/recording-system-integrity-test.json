@@ -7,7 +7,10 @@
     "game.lineup.populate_enemy",
     "game.draft.reroll_player",
     "game.draft.upgrade_player",
-    "game.state.transition_player",
+    {
+      "action": "game.state.transition_player",
+      "params": {"to_state": "DRAFT"}
+    },
     "system.debug.quit_application"
   ],
   "integrity_validation": {
