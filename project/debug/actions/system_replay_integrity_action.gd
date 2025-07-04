@@ -58,15 +58,15 @@ func _validate_config_structures() -> Dictionary:
 	}
 
 	# Check if replay configurations exist
-	var config_dir = "res://debug_configs"
+	var config_dir: String = "res://debug_configs"
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(config_dir)):
 		config_validation.replay_configs_exist = true
 		Log.debug("Replay config directory exists", {}, ["debug", "replay", "validation"])
 
 	# Test known replay configuration
-	var test_config_path = "res://debug_configs/my-battle-scenario.json"
+	var test_config_path: String = "res://debug_configs/my-battle-scenario.json"
 	if FileAccess.file_exists(test_config_path):
-		var config_content = _load_config_file(test_config_path)
+		var config_content: Dictionary = _load_config_file(test_config_path)
 		if config_content != null:
 			config_validation.schema_compliance = _validate_config_schema(config_content)
 			config_validation.semantic_metadata = config_content.has("session_id")
@@ -146,7 +146,7 @@ func _detect_regression_patterns() -> Dictionary:
 	}
 
 	# Check for missing critical components (like action_recorder.gd issue)
-	var critical_components = [
+	var critical_components: Array[String] = [
 		"res://debug/utilities/semantic_action_mapper.gd",
 		"res://debug/utilities/semantic_log_parser.gd",
 		"res://debug/utilities/session_manager.gd",
@@ -161,14 +161,14 @@ func _detect_regression_patterns() -> Dictionary:
 			)
 
 	# Check for broken semantic action mappings
-	var test_mappings = ["draft.reroll", "draft.upgrade", "transition.change_state"]
+	var test_mappings: Array[String] = ["draft.reroll", "draft.upgrade", "transition.change_state"]
 	for mapping: String in test_mappings:
 		if not SemanticActionMapper.validate_debug_action_mapping(mapping):
 			regression_detection.broken_integrations.append("semantic_mapping: %s" % mapping)
 
 	# Determine regression risk level
-	var missing_count = regression_detection.missing_components.size()
-	var broken_count = regression_detection.broken_integrations.size()
+	var missing_count: int = regression_detection.missing_components.size()
+	var broken_count: int = regression_detection.broken_integrations.size()
 
 	if missing_count > 0 or broken_count > 2:
 		regression_detection.regression_risk = "HIGH"
@@ -193,7 +193,7 @@ func _test_capture_workflow() -> bool:
 	"""Test semantic action capture workflow"""
 	# Would test actual semantic logging and session capture
 	# For now, validate that the mapper can handle test data
-	var test_session = "integrity_test_%d" % Time.get_unix_time_from_system()
+	var test_session: String = "integrity_test_%d" % Time.get_unix_time_from_system()
 	Log.debug(
 		"Testing capture workflow with session: %s" % test_session,
 		{},
@@ -210,10 +210,10 @@ func _test_generation_workflow() -> bool:
 		{"type": "draft.upgrade", "session_id": "test_session", "count": 2}
 	]
 
-	var debug_sequence = SemanticActionMapper.generate_debug_action_sequence(mock_actions)
-	var config = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
+	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(mock_actions)
+	var config: Dictionary = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
 
-	var valid_config = (
+	var valid_config: bool = (
 		config.has("description") and config.has("actions") and config.actions.size() > 0
 	)
 	Log.debug("Generation workflow test: %s" % valid_config, {}, ["debug", "replay", "workflow"])
@@ -237,18 +237,18 @@ func _test_validation_workflow() -> bool:
 
 func _load_config_file(file_path: String) -> Dictionary:
 	"""Load and parse a JSON config file"""
-	var file = FileAccess.open(file_path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
 		Log.warning(
 			"Cannot open config file: %s" % file_path, {}, ["debug", "replay", "validation"]
 		)
 		return {}
 
-	var json_text = file.get_as_text()
+	var json_text: String = file.get_as_text()
 	file.close()
 
-	var json = JSON.new()
-	var parse_result = json.parse(json_text)
+	var json: JSON = JSON.new()
+	var parse_result: Error = json.parse(json_text)
 	if parse_result != OK:
 		Log.warning(
 			"JSON parse error in config: %s" % file_path, {}, ["debug", "replay", "validation"]
@@ -260,7 +260,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 
 func _validate_config_schema(config: Dictionary) -> bool:
 	"""Validate that config follows expected schema"""
-	var required_fields = ["description", "actions"]
+	var required_fields: Array[String] = ["description", "actions"]
 	for field: String in required_fields:
 		if not config.has(field):
 			return false
@@ -274,8 +274,8 @@ func _validate_config_schema(config: Dictionary) -> bool:
 
 func _determine_overall_status(validation_results: Dictionary) -> String:
 	"""Determine overall validation status"""
-	var failures = 0
-	var warnings = 0
+	var failures: int = 0
+	var warnings: int = 0
 
 	# Check config validation
 	for key: String in validation_results.config_validation:
@@ -293,7 +293,7 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 			failures += 1
 
 	# Check regression risk
-	var regression_risk = validation_results.regression_detection.get("regression_risk", "LOW")
+	var regression_risk: String = validation_results.regression_detection.get("regression_risk", "LOW")
 	if regression_risk == "HIGH":
 		failures += 2
 	elif regression_risk == "MEDIUM":
@@ -314,7 +314,7 @@ func _log_validation_summary(results: Dictionary) -> void:
 	Log.info("📊 Overall Status: %s" % results.overall_status, {}, ["debug", "replay", "integrity"])
 
 	# Log regression detection results
-	var regression = results.regression_detection
+	var regression: Dictionary = results.regression_detection
 	Log.info(
 		"🔍 Regression Risk: %s" % regression.regression_risk, {}, ["debug", "replay", "integrity"]
 	)

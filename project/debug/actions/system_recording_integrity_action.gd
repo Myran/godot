@@ -104,7 +104,7 @@ func _validate_component_integration() -> Dictionary:
 		{"type": "draft.upgrade", "session_id": "test_session", "count": 2}
 	]
 
-	var debug_sequence = SemanticActionMapper.generate_debug_action_sequence(test_semantic_actions)
+	var debug_sequence: Array[Dictionary] = SemanticActionMapper.generate_debug_action_sequence(test_semantic_actions)
 	integration.mapper_to_actions = (debug_sequence.size() == 2)
 	Log.debug(
 		"Mapper to actions integration: %s" % integration.mapper_to_actions,
@@ -113,7 +113,7 @@ func _validate_component_integration() -> Dictionary:
 	)
 
 	# Test replay config generation
-	var config = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
+	var config: Dictionary = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
 	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 2)
 	Log.debug(
 		"Parsing to config integration: %s" % integration.parsing_to_config,
@@ -122,8 +122,8 @@ func _validate_component_integration() -> Dictionary:
 	)
 
 	# Test mapping coverage
-	var coverage = SemanticActionMapper.get_mapping_coverage_report(test_semantic_actions)
-	var full_coverage = coverage.unmapped_actions == 0
+	var coverage: Dictionary = SemanticActionMapper.get_mapping_coverage_report(test_semantic_actions)
+	var full_coverage: bool = coverage.unmapped_actions == 0
 	Log.debug(
 		(
 			"Mapping coverage: %d/%d actions mapped"
@@ -157,7 +157,7 @@ func _validate_workflow_capabilities() -> Dictionary:
 
 	# Test generate capability (config generation from semantic actions)
 	var test_actions: Array = [{"type": "draft.reroll", "session_id": "workflow_test"}]
-	var generated_config = SemanticActionMapper.create_replay_config(
+	var generated_config: Dictionary = SemanticActionMapper.create_replay_config(
 		"workflow_test", SemanticActionMapper.generate_debug_action_sequence(test_actions)
 	)
 	workflow.generate_capability = generated_config.has("description")
@@ -175,9 +175,9 @@ func _validate_workflow_capabilities() -> Dictionary:
 
 func _determine_overall_status(validation_results: Dictionary) -> String:
 	"""Determine overall validation status based on component results"""
-	var component_failures = 0
-	var integration_failures = 0
-	var workflow_failures = 0
+	var component_failures: int = 0
+	var integration_failures: int = 0
+	var workflow_failures: int = 0
 
 	# Count component failures
 	for component: String in validation_results.component_validation:
@@ -213,8 +213,8 @@ func _log_validation_summary(results: Dictionary) -> void:
 	)
 
 	# Log component validation summary
-	var component_passed = 0
-	var component_total = results.component_validation.size()
+	var component_passed: int = 0
+	var component_total: int = results.component_validation.size()
 	for component: String in results.component_validation:
 		if results.component_validation[component]:
 			component_passed += 1
@@ -225,8 +225,8 @@ func _log_validation_summary(results: Dictionary) -> void:
 	)
 
 	# Log integration validation summary
-	var integration_passed = 0
-	var integration_total = results.integration_validation.size()
+	var integration_passed: int = 0
+	var integration_total: int = results.integration_validation.size()
 	for integration: String in results.integration_validation:
 		if results.integration_validation[integration]:
 			integration_passed += 1
@@ -237,8 +237,8 @@ func _log_validation_summary(results: Dictionary) -> void:
 	)
 
 	# Log workflow validation summary
-	var workflow_passed = 0
-	var workflow_total = results.workflow_validation.size()
+	var workflow_passed: int = 0
+	var workflow_total: int = results.workflow_validation.size()
 	for workflow: String in results.workflow_validation:
 		if results.workflow_validation[workflow]:
 			workflow_passed += 1
