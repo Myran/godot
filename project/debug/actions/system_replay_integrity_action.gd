@@ -17,8 +17,8 @@ func get_description() -> String:
 	return "Validates replay system integrity and end-to-end workflow capabilities"
 
 
-func execute(context: DebugActionContext) -> Dictionary:
-	Logger.info(
+func execute() -> void:
+	AdvancedLogger.info(
 		"🎬 Starting replay system integrity validation...", ["debug", "replay", "integrity"]
 	)
 
@@ -63,7 +63,7 @@ func _validate_config_structures() -> Dictionary:
 	var config_dir = "res://debug_configs"
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(config_dir)):
 		config_validation.replay_configs_exist = true
-		Logger.debug("Replay config directory exists", ["debug", "replay", "validation"])
+		AdvancedLogger.debug("Replay config directory exists", ["debug", "replay", "validation"])
 
 	# Test known replay configuration
 	var test_config_path = "res://debug_configs/my-battle-scenario.json"
@@ -75,7 +75,7 @@ func _validate_config_structures() -> Dictionary:
 			config_validation.action_sequences = (
 				config_content.has("actions") and config_content.actions.size() > 0
 			)
-			Logger.debug(
+			AdvancedLogger.debug(
 				(
 					"Config validation - Schema: %s, Metadata: %s, Actions: %s"
 					% [
@@ -106,7 +106,7 @@ func _validate_replay_commands() -> Dictionary:
 	command_validation.config_validation = true  # Placeholder - would test `just replay-validate`
 	command_validation.cleanup_commands = true  # Placeholder - would test `just replay-clean`
 
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Replay commands validation: %s" % command_validation, ["debug", "replay", "validation"]
 	)
 
@@ -178,7 +178,7 @@ func _detect_regression_patterns() -> Dictionary:
 	else:
 		regression_detection.regression_risk = "LOW"
 
-	Logger.debug(
+	AdvancedLogger.debug(
 		(
 			"Regression detection - Missing: %d, Broken: %d, Risk: %s"
 			% [missing_count, broken_count, regression_detection.regression_risk]
@@ -194,7 +194,7 @@ func _test_capture_workflow() -> bool:
 	# Would test actual semantic logging and session capture
 	# For now, validate that the mapper can handle test data
 	var test_session = "integrity_test_%d" % Time.get_unix_time_from_system()
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Testing capture workflow with session: %s" % test_session, ["debug", "replay", "workflow"]
 	)
 	return true
@@ -214,7 +214,9 @@ func _test_generation_workflow() -> bool:
 	var valid_config = (
 		config.has("description") and config.has("actions") and config.actions.size() > 0
 	)
-	Logger.debug("Generation workflow test: %s" % valid_config, ["debug", "replay", "workflow"])
+	AdvancedLogger.debug(
+		"Generation workflow test: %s" % valid_config, ["debug", "replay", "workflow"]
+	)
 	return valid_config
 
 
@@ -222,14 +224,14 @@ func _test_execution_workflow() -> bool:
 	"""Test replay config execution workflow"""
 	# Would test actual config execution
 	# For now, validate that configs are in executable format
-	Logger.debug("Testing execution workflow", ["debug", "replay", "workflow"])
+	AdvancedLogger.debug("Testing execution workflow", ["debug", "replay", "workflow"])
 	return true
 
 
 func _test_validation_workflow() -> bool:
 	"""Test replay validation workflow"""
 	# Would test replay validation and results checking
-	Logger.debug("Testing validation workflow", ["debug", "replay", "workflow"])
+	AdvancedLogger.debug("Testing validation workflow", ["debug", "replay", "workflow"])
 	return true
 
 
@@ -306,12 +308,16 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 func _log_validation_summary(results: Dictionary) -> void:
 	"""Log comprehensive validation summary"""
-	Logger.info("🎬 Replay System Integrity Validation Complete", ["debug", "replay", "integrity"])
-	Logger.info("📊 Overall Status: %s" % results.overall_status, ["debug", "replay", "integrity"])
+	AdvancedLogger.info(
+		"🎬 Replay System Integrity Validation Complete", ["debug", "replay", "integrity"]
+	)
+	AdvancedLogger.info(
+		"📊 Overall Status: %s" % results.overall_status, ["debug", "replay", "integrity"]
+	)
 
 	# Log regression detection results
 	var regression = results.regression_detection
-	Logger.info(
+	AdvancedLogger.info(
 		"🔍 Regression Risk: %s" % regression.regression_risk, ["debug", "replay", "integrity"]
 	)
 
