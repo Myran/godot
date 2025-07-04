@@ -1,0 +1,24 @@
+{
+  "description": "CRITICAL: Stress Test Recording System - Validates system under load and edge conditions",
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.test.simple_player_events",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "game.draft.reroll_player", 
+    "game.draft.upgrade_player",
+    "game.state.transition_player",
+    "game.state.transition_player",
+    "game.state.transition_player",
+    "system.debug.quit_application"
+  ],
+  "stress_testing": {
+    "test_type": "stress_load_validation",
+    "expected_load": "12_rapid_sequential_actions",
+    "failure_tolerance": "zero_data_corruption",
+    "performance_criteria": "under_5_seconds_total"
+  }
+}

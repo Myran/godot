@@ -1,0 +1,9 @@
+{
+  "name": "Recording System Integrity",
+  "description": "Recording System Integrity Test Suite - Comprehensive validation for recording/replay functionality",
+  "configs": [
+    "recording-system-integrity-test",
+    "test-generation-integrity-test", 
+    "replay-system-e2e-test"
+  ]
+}

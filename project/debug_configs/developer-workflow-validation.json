@@ -1,0 +1,21 @@
+{
+  "description": "Developer Workflow Validation - Tests common dev scenarios and edge cases",
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.test.simple_player_events",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "system.debug.test_semantic_logging",
+    "system.debug.quit_application"
+  ],
+  "dev_workflow_testing": {
+    "scenarios": [
+      "typical_debug_session",
+      "rapid_action_sequences", 
+      "semantic_action_capture",
+      "replay_config_generation"
+    ],
+    "focus": "developer_productivity_and_reliability"
+  }
+}

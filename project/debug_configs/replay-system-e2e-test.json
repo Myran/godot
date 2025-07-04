@@ -1,0 +1,20 @@
+{
+  "description": "End-to-End Replay System Test - Tests semantic logging, action mapping, and replay generation workflow",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.test_semantic_logging",
+    "game.lineup.populate_enemy",
+    "game.test.simple_player_events",
+    "system.debug.quit_application"
+  ],
+  "test_metadata": {
+    "test_type": "replay_system_e2e",
+    "validates": [
+      "semantic_action_mapper_functionality",
+      "semantic_logging_system",
+      "replay_config_generation_capability", 
+      "action_registry_integrity"
+    ],
+    "regression_protection": true
+  }
+}

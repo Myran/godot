@@ -1,0 +1,26 @@
+{
+  "description": "Recording Workflow Integrity Test - Validates recording/replay workflow using existing components",
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.test.simple_player_events", 
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "game.state.transition_player",
+    "system.debug.quit_application"
+  ],
+  "workflow_validation": {
+    "test_type": "recording_workflow_integrity",
+    "expected_semantic_actions": [
+      "draft.reroll",
+      "draft.upgrade",
+      "transition.change_state"
+    ],
+    "validation_criteria": {
+      "semantic_logging_active": true,
+      "player_actions_executed": true,
+      "session_tracking_present": true,
+      "mappable_actions_generated": true
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Test Clean Action System - No Legacy Actions",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.game_state",
+    "system.debug.runtime_info"
+  ],
+  "test_metadata": {
+    "test_id": "20250703193600",
+    "purpose": "Verify all legacy actions removed and system clean"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "description": "PROOF: Sequential Action Execution with Timing Analysis",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.game_state", 
+    "system.debug.runtime_info",
+    "system.memory.force_warning"
+  ],
+  "test_metadata": {
+    "test_id": "20250703185400",
+    "purpose": "Definitively prove idle action system executes sequentially with proper cascade settling between each action"
+  }
+}

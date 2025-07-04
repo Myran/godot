@@ -1,0 +1,10 @@
+{
+  "description": "Test Parameter Support - Verify new parameterized action format works",
+  "actions": [
+    "system.debug.registry_stats",
+    {
+      "action": "system.debug.registry_stats",
+      "params": {"test_param": "test_value"}
+    }
+  ]
+}
