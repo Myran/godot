@@ -17,8 +17,8 @@ func get_description() -> String:
 	return "Validates core recording system components and their integration"
 
 
-func execute(context: DebugActionContext) -> Dictionary:
-	Logger.info(
+func execute() -> void:
+	AdvancedLogger.info(
 		"🔍 Starting recording system integrity validation...", ["debug", "recording", "integrity"]
 	)
 
@@ -43,8 +43,6 @@ func execute(context: DebugActionContext) -> Dictionary:
 
 	_log_validation_summary(validation_results)
 
-	return validation_results
-
 
 func _validate_core_components() -> Dictionary:
 	"""Validate that all core recording system components exist and are accessible"""
@@ -59,21 +57,21 @@ func _validate_core_components() -> Dictionary:
 	# Check SemanticActionMapper
 	var mapper_test = SemanticActionMapper.map_semantic_action_to_debug_action("draft.reroll")
 	components.semantic_action_mapper = (mapper_test == "game.draft.reroll_player")
-	Logger.debug(
+	AdvancedLogger.debug(
 		"SemanticActionMapper validation: %s" % components.semantic_action_mapper,
 		["debug", "recording", "validation"]
 	)
 
 	# Check semantic types coverage
 	var supported_types = SemanticActionMapper.get_supported_semantic_types()
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Supported semantic types: %d" % supported_types.size(),
 		["debug", "recording", "validation"]
 	)
 
 	# Test action mapping validation
 	var mapping_valid = SemanticActionMapper.validate_debug_action_mapping("draft.reroll")
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Action mapping validation: %s" % mapping_valid, ["debug", "recording", "validation"]
 	)
 
@@ -104,7 +102,7 @@ func _validate_component_integration() -> Dictionary:
 
 	var debug_sequence = SemanticActionMapper.generate_debug_action_sequence(test_semantic_actions)
 	integration.mapper_to_actions = (debug_sequence.size() == 2)
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Mapper to actions integration: %s" % integration.mapper_to_actions,
 		["debug", "recording", "validation"]
 	)
@@ -112,7 +110,7 @@ func _validate_component_integration() -> Dictionary:
 	# Test replay config generation
 	var config = SemanticActionMapper.create_replay_config("test_session", debug_sequence)
 	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 2)
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Parsing to config integration: %s" % integration.parsing_to_config,
 		["debug", "recording", "validation"]
 	)
@@ -120,7 +118,7 @@ func _validate_component_integration() -> Dictionary:
 	# Test mapping coverage
 	var coverage = SemanticActionMapper.get_mapping_coverage_report(test_semantic_actions)
 	var full_coverage = coverage.unmapped_actions == 0
-	Logger.debug(
+	AdvancedLogger.debug(
 		(
 			"Mapping coverage: %d/%d actions mapped"
 			% [coverage.mapped_actions, coverage.total_actions]
@@ -156,7 +154,7 @@ func _validate_workflow_capabilities() -> Dictionary:
 		"workflow_test", SemanticActionMapper.generate_debug_action_sequence(test_actions)
 	)
 	workflow.generate_capability = generated_config.has("description")
-	Logger.debug(
+	AdvancedLogger.debug(
 		"Generate capability: %s" % workflow.generate_capability,
 		["debug", "recording", "validation"]
 	)
@@ -199,10 +197,10 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 func _log_validation_summary(results: Dictionary) -> void:
 	"""Log comprehensive validation summary"""
-	Logger.info(
+	AdvancedLogger.info(
 		"🎯 Recording System Integrity Validation Complete", ["debug", "recording", "integrity"]
 	)
-	Logger.info(
+	AdvancedLogger.info(
 		"📊 Overall Status: %s" % results.overall_status, ["debug", "recording", "integrity"]
 	)
 
@@ -212,7 +210,7 @@ func _log_validation_summary(results: Dictionary) -> void:
 	for component: String in results.component_validation:
 		if results.component_validation[component]:
 			component_passed += 1
-	Logger.info(
+	AdvancedLogger.info(
 		"🔧 Components: %d/%d passed" % [component_passed, component_total],
 		["debug", "recording", "integrity"]
 	)
@@ -223,7 +221,7 @@ func _log_validation_summary(results: Dictionary) -> void:
 	for integration: String in results.integration_validation:
 		if results.integration_validation[integration]:
 			integration_passed += 1
-	Logger.info(
+	AdvancedLogger.info(
 		"🔗 Integration: %d/%d passed" % [integration_passed, integration_total],
 		["debug", "recording", "integrity"]
 	)
@@ -234,13 +232,13 @@ func _log_validation_summary(results: Dictionary) -> void:
 	for workflow: String in results.workflow_validation:
 		if results.workflow_validation[workflow]:
 			workflow_passed += 1
-	Logger.info(
+	AdvancedLogger.info(
 		"🔄 Workflow: %d/%d passed" % [workflow_passed, workflow_total],
 		["debug", "recording", "integrity"]
 	)
 
 	if results.overall_status != "PASS":
-		Logger.warning(
+		AdvancedLogger.warning(
 			"⚠️ Recording system has integrity issues - check component and integration failures",
 			["debug", "recording", "integrity"]
 		)

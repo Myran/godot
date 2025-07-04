@@ -47,8 +47,6 @@ func execute() -> void:
 
 	_log_validation_summary(validation_results)
 
-	return validation_results
-
 
 func _validate_config_structures() -> Dictionary:
 	"""Validate replay configuration file structures and schemas"""
@@ -157,7 +155,7 @@ func _detect_regression_patterns() -> Dictionary:
 	for component: String in critical_components:
 		if not FileAccess.file_exists(component):
 			regression_detection.missing_components.append(component)
-			Logger.warning(
+			AdvancedLogger.warning(
 				"Missing critical component: %s" % component, ["debug", "replay", "regression"]
 			)
 
@@ -239,7 +237,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	"""Load and parse a JSON config file"""
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
-		Logger.warning("Cannot open config file: %s" % file_path, ["debug", "replay", "validation"])
+		AdvancedLogger.warning("Cannot open config file: %s" % file_path, ["debug", "replay", "validation"])
 		return {}
 
 	var json_text = file.get_as_text()
@@ -248,7 +246,7 @@ func _load_config_file(file_path: String) -> Dictionary:
 	var json = JSON.new()
 	var parse_result = json.parse(json_text)
 	if parse_result != OK:
-		Logger.warning(
+		AdvancedLogger.warning(
 			"JSON parse error in config: %s" % file_path, ["debug", "replay", "validation"]
 		)
 		return {}
@@ -322,19 +320,19 @@ func _log_validation_summary(results: Dictionary) -> void:
 	)
 
 	if regression.missing_components.size() > 0:
-		Logger.warning(
+		AdvancedLogger.warning(
 			"❌ Missing Components: %s" % regression.missing_components,
 			["debug", "replay", "integrity"]
 		)
 
 	if regression.broken_integrations.size() > 0:
-		Logger.warning(
+		AdvancedLogger.warning(
 			"🔗 Broken Integrations: %s" % regression.broken_integrations,
 			["debug", "replay", "integrity"]
 		)
 
 	if results.overall_status != "PASS":
-		Logger.warning(
+		AdvancedLogger.warning(
 			"⚠️ Replay system integrity issues detected - check validation details",
 			["debug", "replay", "integrity"]
 		)
