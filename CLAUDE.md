@@ -571,63 +571,157 @@ func get_state_type() -> String:
     return "board_state"
 ```
 
-## 🎬 Action Recording System
+## 🎬 Recording & Replay System with Integrity Testing
 
-### **PickledGD-Based Recording & Replay**
-**Advanced action recording system using enhanced PickledGD for deterministic event capture and replay.**
+### **Comprehensive Development Tool for Action Recording and Replay**
+**Complete workflow for capturing semantic player actions, generating test configs, and maintaining system integrity with comprehensive regression protection.**
 
 ```bash
-# Core recording workflows
-just record-and-create battle-scenario-1          # Record actions and create test config
-just test-android-target battle-scenario-1-recording-test   # Run generated test
+# 1. Core Workflow - Record & Generate
+just replay-capture-and-generate my-battle-scenario    # Capture logs and generate config
+just test-android-target my-battle-scenario            # Run the generated replay config
 
-# Individual operations  
-just record player-actions-demo                   # Record player actions only
-just create-test existing-recording                # Create test config from existing recording
-just list-recordings                               # Show available recordings
-just clean-recording-temp                          # Clean temporary files
+# 2. System Integrity Validation (Recommended)
+just recording-integrity-test                          # Validate entire recording/replay system
+just recording-health-check                            # Quick system health validation
+just recording-regression-check                        # Detect missing components & regressions
 ```
 
-### **How It Works**
-1. **Initialize**: Sets up game state with `game.lineup.populate_enemy`
-2. **Record**: Captures player actions using PickledGD serialization  
-3. **Generate**: Creates test config with checksum validation
-4. **Validate**: Runs deterministic replay with state verification
+### **🔧 Integrity Testing Commands**
+```bash
+# System integrity validation (prevents missing component issues)
+just recording-integrity-test                          # Complete system validation with full reporting
+just recording-health-check                            # Quick health check (30 sec)
+just recording-regression-check                        # Detect missing components like action_recorder.gd
 
-### **Key Features**
-- **PickledGD Serialization**: Robust inner class support with property-based fingerprinting
-- **Automatic Test Generation**: Creates ready-to-run test configs with checksum baselines
-- **Deterministic Replay**: Consistent results for regression testing
-- **Integration**: Works seamlessly with existing checksum validation system
-- **Clean Workflows**: Temporary files auto-managed, clear command structure
+# Component-specific validation
+just validate-semantic-mapping                         # Validate semantic action mapping system
+just validate-replay-generation                        # Validate config generation workflow
+
+# Pre-commit integration
+just recording-pre-commit                              # Pre-commit validation for recording system
+
+# Performance & debugging
+just recording-performance-analysis TEST_ID            # Analyze recording system performance
+just debug-recording-system TEST_ID                    # Debug recording system issues
+just list-recording-integrity-results                  # List recent integrity test results
+```
+
+### **Core Recording/Replay Commands**
+```bash
+# Main Workflows
+just replay-capture-and-generate CONFIG_NAME           # Complete: capture → generate → ready for testing
+just replay-generate SESSION_ID [CONFIG_NAME]          # Generate from specific semantic session
+just replay-list                                       # List available replay configs with metadata
+just replay-validate CONFIG_NAME                       # Validate config format and actions
+just replay-clean [DAYS]                               # Clean old configs (default: 7 days)
+
+# End-to-end testing
+just replay-test-e2e                                  # End-to-end validation of complete workflow
+```
+
+### **System Architecture & Components**
+- **SemanticActionMapper**: Maps semantic actions (draft.reroll) to debug actions (game.draft.reroll_player)
+- **Session Management**: Tracks player sessions and action sequences with unique session IDs
+- **Config Generation**: Creates executable test configurations from captured semantic logs
+- **Integrity Validation**: Comprehensive testing of all recording/replay components
+- **Regression Detection**: Prevents missing component issues from reaching production
+
+### **How the System Works**
+1. **Record**: Player actions automatically logged as semantic actions with session tracking
+2. **Parse**: System extracts semantic actions from logs using session IDs  
+3. **Generate**: Creates replay config mapping semantic actions to debug actions via SemanticActionMapper
+4. **Validate**: Runs replay config with automatic checksum validation
+5. **Integrity Check**: Validates all components work correctly together and detects regressions
 
 ### **Generated Test Structure**
 ```json
 {
-  "description": "battle-scenario-1 Recording Test - Validate recording system state capture and checksum",
+  "description": "Generated replay from semantic session: test_session_123",
+  "session_id": "test_session_123", 
   "actions": [
-    "system.recording.stats",
-    "game.lineup.populate_enemy", 
-    "system.recording.capture_state",
-    "system.checksum.validate",
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
     "system.debug.quit_application"
   ],
-  "checksum_config": {
-    "state_type": "recording_state",
-    "expected_checksum": "165af8b0392b3cdfe963e17f36131caf44b3a1c90cde55b20d96e97712eddd01"
+  "test_metadata": {
+    "created_by": "semantic_replay_system",
+    "source_session": "test_session_123"
   }
 }
 ```
 
-### **Debugging Recording Issues**
+### **Integrity Testing Configurations**
 ```bash
-# Quick error scan for recording problems
-just logs-errors-tagged TEST_ID recording          # Recording-specific errors
-just logs TEST_ID recording picklegd               # PickledGD serialization analysis
-just logs-performance-tagged TEST_ID recording     # Recording performance data
+# Available integrity test configs
+just test-android-target replay-system-e2e-test        # End-to-end system validation
+just test-android-target semantic-logging-complete-test # Semantic logging validation
+just test-android-target developer-workflow-validation  # Common dev scenarios validation
+```
 
-# Recording system validation
-just test-android-target picklegd-recording-test   # Test core PickledGD functionality
+### **Integration with Test System**
+```bash
+# Replay configs work with all test commands
+just test-android my-replay                            # Standard test execution
+just test-android-enhanced my-replay                   # Enhanced error analysis
+just config-restart-android my-replay                  # Quick 5-second iteration
+
+# Checksum validation for regression testing
+just test-android-target my-replay                     # Auto-creates baseline on first run
+just test-android-update my-replay                     # Update baseline for legitimate changes
+```
+
+### **Token-Efficient Debugging with Integrity Context**
+```bash
+# Recording/replay system specific debugging (90-98% token savings)
+just logs-errors-tagged TEST_ID recording replay       # Recording/replay specific errors
+just logs TEST_ID integrity                            # System integrity validation logs
+just logs-performance-tagged TEST_ID recording         # Recording system performance data
+
+# Component-specific debugging
+just logs TEST_ID semantic                             # Semantic action logging
+just logs TEST_ID replay generation                    # Config generation process
+```
+
+### **Regression Protection Features**
+The integrity testing system prevents issues like missing components from reaching production by:
+- **Component Validation**: Checks all critical recording system files exist
+- **Integration Testing**: Validates SemanticActionMapper and workflow components work together
+- **Workflow Testing**: Tests complete record → generate → replay cycle  
+- **Regression Detection**: Identifies broken integrations and missing dependencies
+
+### **Best Practices for Development**
+- **Integrity First**: Run `just recording-health-check` when troubleshooting recording/replay issues
+- **Regular Validation**: Include `just recording-regression-check` in development workflow
+- **Component Testing**: Use integrity tests to validate changes to recording system components
+- **Performance Monitoring**: Track recording system performance with dedicated analysis commands
+- **Pre-commit Safety**: Use `just recording-pre-commit` to catch issues before they reach main branch
+
+### **Complete Development Workflow**
+```bash
+# 1. Validate system health before starting
+just recording-health-check                            # Quick system validation
+
+# 2. Create replay test from gameplay session
+just replay-capture-and-generate player-battle-scenario development-workflow
+# → Captures semantic actions, generates player-battle-scenario.json
+
+# 3. Test the generated replay with integrity validation
+just test-android-target player-battle-scenario        # Test replay config
+just recording-integrity-test                          # Validate system after any changes
+
+# 4. Add to regression test suite
+just test-android-update player-battle-scenario        # Config now validates consistency
+
+# 5. Use in development workflow
+just config-restart-android player-battle-scenario    # Quick iteration (5 seconds)
+just test-android player-battle-scenario               # Full validation with analysis
+
+# 6. Debug if issues arise (comprehensive tools)
+just logs-errors-tagged TEST_ID recording replay       # Quick error scan
+just debug-recording-system TEST_ID                    # Comprehensive debugging
 ```
 
 ## 🧠 Advanced Planning
