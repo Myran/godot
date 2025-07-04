@@ -1,7 +1,0 @@
-{
-  "description": "Phase Transition Recording Test - Verify draft→prepare transition is properly recordable",
-  "actions": [
-    "test.phase.transition_recording",
-    "system.debug.quit_application"
-  ]
-}
