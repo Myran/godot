@@ -162,12 +162,16 @@ _cleanup-temp-config CONFIG:
 # Helper function to get safe config filename
 _get-safe-config-file CONFIG:
     #!/usr/bin/env bash
-    # Check if CONFIG is JSON with action+params (shell removes quotes)
-    if [[ "{{CONFIG}}" == *"action:"* ]] && [[ "{{CONFIG}}" == *"params:"* ]]; then
+    # Check if CONFIG is JSON with action field (shell removes quotes)
+    if [[ "{{CONFIG}}" == *"action:"* ]]; then
         # Extract action name from JSON for filename
         ACTION_NAME=$(echo '{{CONFIG}}' | grep -o 'action:[[:space:]]*[^,}]*' | sed 's/action:[[:space:]]*//')
         SAFE_ACTION_NAME=$(echo "$ACTION_NAME" | sed 's/[^a-zA-Z0-9._-]/_/g')
-        echo "project/debug_configs/temp_${SAFE_ACTION_NAME}_with_params.json"
+        if [[ "{{CONFIG}}" == *"params:"* ]]; then
+            echo "project/debug_configs/temp_${SAFE_ACTION_NAME}_with_params.json"
+        else
+            echo "project/debug_configs/temp_${SAFE_ACTION_NAME}_json_action.json"
+        fi
     else
         SAFE_CONFIG_NAME=$(echo "{{CONFIG}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
         echo "project/debug_configs/${SAFE_CONFIG_NAME}.json"
@@ -187,16 +191,22 @@ _handle-json-action-params CONFIG:
     
     # Create safe filename based on action name
     SAFE_ACTION_NAME=$(echo "$ACTION_NAME" | sed 's/[^a-zA-Z0-9._-]/_/g')
-    CONFIG_FILE="project/debug_configs/temp_${SAFE_ACTION_NAME}_with_params.json"
+    if [[ "{{CONFIG}}" == *"params:"* ]]; then
+        CONFIG_FILE="project/debug_configs/temp_${SAFE_ACTION_NAME}_with_params.json"
+        CONFIG_DESC="Temporary config for action with parameters: $ACTION_NAME"
+        echo "🔧 Creating temporary config for action with params: $ACTION_NAME"
+    else
+        CONFIG_FILE="project/debug_configs/temp_${SAFE_ACTION_NAME}_json_action.json"
+        CONFIG_DESC="Temporary config for JSON action: $ACTION_NAME"
+        echo "🔧 Creating temporary config for JSON action: $ACTION_NAME"
+    fi
     
-    echo "🔧 Creating temporary config for action with params: $ACTION_NAME"
-    
-    # Create temporary config file with the JSON action+params structure
+    # Create temporary config file with the JSON action structure
     # Convert shell-processed JSON back to proper JSON format
     PROPER_JSON=$(echo '{{CONFIG}}' | sed 's/\([a-zA-Z_][a-zA-Z0-9_]*\):/"\1":/g' | sed 's/: \([^",{}][^",{}]*\)/: "\1"/g')
     
     echo "{" > "$CONFIG_FILE"
-    echo "  \"description\": \"Temporary config for action with parameters: $ACTION_NAME\"," >> "$CONFIG_FILE"
+    echo "  \"description\": \"$CONFIG_DESC\"," >> "$CONFIG_FILE"
     echo "  \"actions\": [" >> "$CONFIG_FILE"
     echo "    $PROPER_JSON" >> "$CONFIG_FILE"
     echo "  ]" >> "$CONFIG_FILE"
@@ -208,9 +218,13 @@ _validate-config-exists CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # Check if CONFIG is JSON with action+params first (shell removes quotes)
-    if [[ "{{CONFIG}}" == *"action:"* ]] && [[ "{{CONFIG}}" == *"params:"* ]]; then
-        echo "🔍 Detected action with parameters JSON format"
+    # Check if CONFIG is JSON with action field first (shell removes quotes)
+    if [[ "{{CONFIG}}" == *"action:"* ]]; then
+        if [[ "{{CONFIG}}" == *"params:"* ]]; then
+            echo "🔍 Detected action with parameters JSON format"
+        else
+            echo "🔍 Detected action JSON format (no params)"
+        fi
         just _handle-json-action-params "{{CONFIG}}"
         exit 0
     fi
