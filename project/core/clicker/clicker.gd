@@ -38,6 +38,12 @@ func remove_rerollables() -> void:
 
 func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 	if event is core.DraftColumnStateEvent:
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			var column: int = event.col
+			var locked_state: bool = event.is_locked
+			SemanticLogger.log_draft_toggle_line(column, locked_state)
+
 		if event.is_locked:
 			Log.debug(
 				"Draft column locked", {"column": event.col}, [Log.TAG_DRAFT, Log.TAG_CLICKER]
@@ -50,6 +56,16 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			columns_locked.erase(event.col)
 
 	if event is core.RerollDraftEvent:
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			# Capture current cards before reroll
+			var current_cards: Array = []
+			for block: Block in level.all_blocks():
+				if block.object_type == core.ObjectType.CARD:
+					var card_id: String = block.card_info.id
+					current_cards.append(card_id)
+			SemanticLogger.log_draft_reroll(0, current_cards, rng.seeded_rng._initial_seed)
+
 		remove_rerollables()
 		update_blocks()
 
@@ -62,6 +78,11 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 	if event is core.UpgradeEvent:
 		var new_level: int = event.new_level
+
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			SemanticLogger.log_draft_upgrade(new_level)
+
 		remove_upgrade_blocks(new_level)
 		update_blocks()
 
@@ -71,6 +92,14 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 	if event is core.RemoveBlockFromDraft:
 		var block: Block = event.block
 		var is_destroy: bool = event.destroy_block
+
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			var grid_pos: Vector2i = level.get_grid_pos(block)
+			if block.object_type == core.ObjectType.CARD:
+				var card_id: String = block.card_info.id
+				SemanticLogger.log_draft_remove_card(card_id, grid_pos)
+
 		if level.get_grid_pos(block) != Clicker.NO_POS:
 			level.remove_from_grid(block, is_destroy)
 

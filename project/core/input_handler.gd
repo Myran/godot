@@ -93,6 +93,13 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					update_draft = true
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:
 					var m_block: Block = interacted_object
+
+					# Enhanced semantic logging for locked block removal
+					var block_pos: Vector2i = clicker.level.get_grid_pos(m_block)
+					if m_block.object_type == core.ObjectType.CARD:
+						var card_id: String = m_block.card_info.id
+						SemanticLogger.log_draft_remove_card(card_id, block_pos)
+
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 					update_draft = true
 
@@ -119,6 +126,12 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 
 									# Only emit action if the move would be valid (destination empty)
 									if interacted_holder.get_card() == null:
+										# Enhanced semantic logging for player lineup move action
+										var card_id: String = dragging_card.card_info.id
+										SemanticLogger.log_lineup_move_card(
+											card_id, from_pos, to_pos
+										)
+
 										# Emit semantic action - game logic will perform the actual move
 										core.action(
 											core.MoveLineupCardEvent.new(
@@ -134,6 +147,21 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 												dragging_card
 											)
 											if release_handled:
+												# Enhanced semantic logging for draft to lineup move
+												var draft_pos: Vector2i = (
+													clicker.level.get_grid_pos(dragging_card)
+												)
+												var card_id: String = dragging_card.card_info.id
+												var holder_index: int = (
+													interacted_holder.get_index()
+												)
+												SemanticLogger.log_draft_remove_card(
+													card_id, draft_pos
+												)
+												SemanticLogger.log_lineup_add_card(
+													card_id, holder_index, draft_pos
+												)
+
 												current_context.add_event(
 													core.RemoveBlockFromDraft.new(dragging_card)
 												)

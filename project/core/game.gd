@@ -193,6 +193,19 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.solve_events()
 	elif event is core.LineupAddCardEvent:
 		var block: Block = event.card
+
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			# Find target position from lineup handler
+			var target_pos: int = -1
+			var lineup: Dictionary[int, Card] = lineup_handler.holder_container.get_current_lineup()
+			for pos: int in lineup.keys():
+				if lineup[pos] == block:
+					target_pos = pos
+					break
+			var card_id: String = block.card_info.id
+			SemanticLogger.log_lineup_add_card(card_id, target_pos)
+
 		core.action(core.BlockEntersPlay.new(block))
 		# detta är inte snyggt med -1,-1. antagligen behövs den inte
 		current_context.add_event(core.TrippleTestEvent.new())
@@ -234,6 +247,11 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
+
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			var card_id: String = card.card_info.id
+			SemanticLogger.log_lineup_move_card(card_id, from_pos, to_pos)
 
 		# Perform the actual move in the game logic
 		var from_holder: Holder = lineup_handler.holder_container.get_holder(from_pos)
@@ -327,15 +345,23 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.SystemIdleActionEvent:
 		# Always add to queue and process systematically
 		var state_name: String = ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
+		var current_test_id: String = DebugAction.get_current_test_id()
+		var event_timestamp: float = Time.get_unix_time_from_system()
+
 		Log.info(
 			"=== SYSTEM IDLE ACTION EVENT RECEIVED ===",
 			{
 				"ui_state": state_name,
 				"queue_size_before": _idle_action_queue.size(),
 				"queue_size_after": _idle_action_queue.size() + 1,
-				"processing_idle_action": _processing_idle_action
+				"processing_idle_action": _processing_idle_action,
+				"test_id": current_test_id,
+				"event_timestamp": event_timestamp,
+				"event_frame": Engine.get_process_frames(),
+				"can_process_immediately":
+				ui_state == core.UIState.WAITING and not _processing_idle_action
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received", "diagnostic"]
 		)
 		_idle_action_queue.append(event.action_callable)
 		_process_idle_action_queue()
@@ -369,15 +395,34 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 	elif _event is ui.TransitionEvent:
 		var new_state: core.GameState = _event.new_state
+
+		# SEMANTIC ACTION LOGGING - UI TransitionEvent is PLAYER event
+		var from_state: String = core.GameState.keys()[game_handler.current_gamestate]
+		var to_state: String = core.GameState.keys()[new_state]
+		SemanticLogger.log_state_transition(from_state, to_state)
+
 		core.action(core.TransitionEvent.new(new_state))
 	elif _event is ui.StartBattleEvent:
 		Log.info("Battle started by user", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
+
+		# SEMANTIC ACTION LOGGING - StartBattleEvent is PLAYER event
+		var current_lineup: Array = []
+		var lineup_dict: Dictionary = holder_allies.get_current_lineup()
+		for card: Card in lineup_dict.values():
+			if card:
+				current_lineup.append(card)
+		SemanticLogger.log_battle_start(current_lineup, [])
+
 		var battle_result: Battle.BattleResult = battle_handler.create_battle()
 		# Pass both events and result through the event system for reconciliation
 		core.action(core.BattleEvent.new(battle_result.events, battle_result))
 		ui.action(ui.TransitionEvent.new(core.GameState.PREBATTLE))
 	elif _event is ui.RerollEvent:
 		Log.info("Rerolling draft cards", {}, [Log.TAG_UI, Log.TAG_DRAFT])
+
+		# SEMANTIC ACTION LOGGING - RerollEvent is PLAYER event
+		# UI reroll triggers core.RerollDraftEvent which has enhanced logging
+
 		ui_state = core.UIState.LOCKED
 		draft_handler.reroll()
 
@@ -386,6 +431,10 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 	elif _event is ui.UpgradeEvent:
 		Log.info("Upgrading cards", {}, [Log.TAG_UI, Log.TAG_DRAFT, Log.TAG_CARD])
+
+		# SEMANTIC ACTION LOGGING - UpgradeEvent is PLAYER event
+		# UI upgrade triggers core.UpgradeEvent which has enhanced logging
+
 		#check cost here
 		ui_state = core.UIState.LOCKED
 		draft_handler.upgrade()
@@ -403,16 +452,22 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 
 func _process_idle_action_queue() -> void:
-	# Log entry to queue processing
+	# Enhanced diagnostic logging for idle action system
+	var timestamp: float = Time.get_unix_time_from_system()
+	var current_test_id: String = DebugAction.get_current_test_id()
+
 	Log.info(
 		"=== IDLE ACTION QUEUE PROCESSING ENTRY ===",
 		{
 			"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 			"processing_idle_action": _processing_idle_action,
 			"queue_size": _idle_action_queue.size(),
-			"queue_empty": _idle_action_queue.is_empty()
+			"queue_empty": _idle_action_queue.is_empty(),
+			"timestamp": timestamp,
+			"test_id": current_test_id,
+			"system_frame": Engine.get_process_frames()
 		},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_processing"]
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_processing", "diagnostic"]
 	)
 
 	# Only process if system is ready and not already processing
@@ -423,40 +478,76 @@ func _process_idle_action_queue() -> void:
 				"reason": _get_queue_skip_reason(),
 				"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 				"processing_idle_action": _processing_idle_action,
-				"queue_empty": _idle_action_queue.is_empty()
+				"queue_empty": _idle_action_queue.is_empty(),
+				"timestamp": timestamp,
+				"test_id": current_test_id,
+				"system_frame": Engine.get_process_frames(),
+				"skip_analysis":
+				{
+					"ui_not_waiting": ui_state != core.UIState.WAITING,
+					"already_processing": _processing_idle_action,
+					"queue_empty": _idle_action_queue.is_empty()
+				}
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_skip"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_skip", "diagnostic"]
 		)
 		return
 
 	# Process one action at a time, then wait for system to become idle again
 	_processing_idle_action = true
 	var action: Callable = _idle_action_queue.pop_front()
+	var action_start_time: float = Time.get_unix_time_from_system()
+	var action_start_frame: int = Engine.get_process_frames()
 
 	Log.info(
 		"=== PROCESSING IDLE ACTION FROM QUEUE ===",
-		{"remaining_queue_size": _idle_action_queue.size()},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start"]
+		{
+			"remaining_queue_size": _idle_action_queue.size(),
+			"action_start_time": action_start_time,
+			"action_start_frame": action_start_frame,
+			"test_id": current_test_id,
+			"ui_state_before_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
+		},
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start", "diagnostic"]
 	)
 
 	# Execute the action
 	action.call()
+
+	var action_end_time: float = Time.get_unix_time_from_system()
+	var action_end_frame: int = Engine.get_process_frames()
+	var execution_time_ms: float = (action_end_time - action_start_time) * 1000.0
 
 	# Mark as not processing - the next action will be processed when system becomes idle again
 	_processing_idle_action = false
 
 	Log.info(
 		"=== IDLE ACTION PROCESSING COMPLETE ===",
-		{"remaining_queue_size": _idle_action_queue.size()},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_complete"]
+		{
+			"remaining_queue_size": _idle_action_queue.size(),
+			"execution_time_ms": execution_time_ms,
+			"frames_elapsed": action_end_frame - action_start_frame,
+			"test_id": current_test_id,
+			"ui_state_after_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
+			"action_end_time": action_end_time,
+			"action_end_frame": action_end_frame
+		},
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_complete", "diagnostic"]
 	)
 
 	# Defer processing next action to next frame to ensure system has chance to handle any state changes
 	if not _idle_action_queue.is_empty():
 		Log.info(
 			"Deferring next idle action processing",
-			{"remaining_queue_size": _idle_action_queue.size()},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "defer_next"]
+			{
+				"remaining_queue_size": _idle_action_queue.size(),
+				"defer_timestamp": Time.get_unix_time_from_system(),
+				"defer_frame": Engine.get_process_frames(),
+				"test_id": current_test_id,
+				"current_ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
+				"cascade_settling_expected": true
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "defer_next", "diagnostic"]
 		)
 		call_deferred("_process_idle_action_queue")
 
@@ -650,3 +741,21 @@ func _get_queue_skip_reason() -> String:
 		return "already_processing"
 	else:
 		return "queue_empty"
+
+
+# Helper function for semantic logging
+func _capture_lineup_state() -> Dictionary:
+	var lineup: Dictionary = holder_allies.get_current_lineup()
+	var lineup_data: Dictionary = {}
+
+	for lineup_position: int in lineup.keys():
+		var card: Card = lineup[lineup_position]
+		if card:
+			lineup_data[str(lineup_position)] = {
+				"card_id": card.card_info.id,
+				"level": card.unit_info.level,
+				"health": card.unit_info.health,
+				"attack": card.unit_info.attack
+			}
+
+	return lineup_data
