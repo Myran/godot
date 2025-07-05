@@ -3045,65 +3045,15 @@ test-android-update CONFIG_NAME="":
     
     CONFIG_NAME="{{CONFIG_NAME}}"
     
-    # If no config provided, show fzf selector for checksum configs only
+    # If no config provided, use shared fzf selector for checksum configs only
     if [ -z "$CONFIG_NAME" ]; then
-        if ! command -v fzf >/dev/null 2>&1; then
-            echo "❌ 'fzf' command not found. Install with: brew install fzf"
-            echo "💡 Available checksum configs:"
-            just test-android-list-checksum
-            exit 1
-        fi
-        
-        echo "📸 Select checksum config to UPDATE baseline:"
-        echo ""
-        
-        # Build options with only checksum-enabled configs
-        options=()
-        for file in project/debug_configs/*.json; do
-            if [ -f "$file" ]; then
-                name=$(basename "$file" .json)
-                
-                # Only include checksum-enabled configs
-                if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
-                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
-                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
-                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
-                    
-                    if [ -n "$expected_checksum" ]; then
-                        status="✅ BASELINE SET"
-                    else
-                        status="🔄 NEEDS BASELINE"
-                    fi
-                    
-                    options+=("📸 $name ($state_type) $status - $desc")
-                fi
-            fi
-        done
-        
-        if [ ${#options[@]} -eq 0 ]; then
-            echo "❌ No checksum-enabled configs found"
-            echo "💡 Use 'just test-android-list-checksum' to see all configs"
-            exit 1
-        fi
-        
-        # Use fzf to select
-        selected_line=$(printf '%s\n' "${options[@]}" | fzf \
-            --prompt="Select checksum config to UPDATE: " \
-            --height=~80% \
-            --layout=reverse \
-            --border \
-            --preview-window=hidden \
-            --header="📸 Checksum Configs Only | Will force update baseline")
-        
-        if [ -n "$selected_line" ]; then
-            # Extract the name (between prefix and state_type)
-            CONFIG_NAME=$(echo "$selected_line" | sed -E 's/^📸 ([^ ]+) \([^)]+\) .*/\1/')
-            echo "Selected: $CONFIG_NAME"
-            echo ""
-        else
+        CONFIG_NAME=$(just _fzf-select-config "checksum" "checksum")
+        if [ "$?" -ne 0 ] || [ -z "$CONFIG_NAME" ]; then
             echo "❌ No selection made"
             exit 1
         fi
+        echo "Selected: $CONFIG_NAME"
+        echo ""
     fi
     
     echo "📸 Force updating checksum baseline for: $CONFIG_NAME"
@@ -3142,65 +3092,15 @@ test-android-reset CONFIG_NAME="":
     
     CONFIG_NAME="{{CONFIG_NAME}}"
     
-    # If no config provided, show fzf selector for checksum configs only
+    # If no config provided, use shared fzf selector for checksum configs only  
     if [ -z "$CONFIG_NAME" ]; then
-        if ! command -v fzf >/dev/null 2>&1; then
-            echo "❌ 'fzf' command not found. Install with: brew install fzf"
-            echo "💡 Available checksum configs:"
-            just test-android-list-checksum
-            exit 1
-        fi
-        
-        echo "🗑️  Select checksum config to RESET baseline:"
-        echo ""
-        
-        # Build options with only checksum-enabled configs
-        options=()
-        for file in project/debug_configs/*.json; do
-            if [ -f "$file" ]; then
-                name=$(basename "$file" .json)
-                
-                # Only include checksum-enabled configs
-                if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
-                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
-                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
-                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
-                    
-                    if [ -n "$expected_checksum" ]; then
-                        status="✅ BASELINE SET"
-                    else
-                        status="🔄 NEEDS BASELINE"
-                    fi
-                    
-                    options+=("🗑️ $name ($state_type) $status - $desc")
-                fi
-            fi
-        done
-        
-        if [ ${#options[@]} -eq 0 ]; then
-            echo "❌ No checksum-enabled configs found"
-            echo "💡 Use 'just test-android-list-checksum' to see all configs"
-            exit 1
-        fi
-        
-        # Use fzf to select
-        selected_line=$(printf '%s\n' "${options[@]}" | fzf \
-            --prompt="Select checksum config to RESET: " \
-            --height=~80% \
-            --layout=reverse \
-            --border \
-            --preview-window=hidden \
-            --header="🗑️ Checksum Configs Only | Will remove baseline (start fresh)")
-        
-        if [ -n "$selected_line" ]; then
-            # Extract the name (between prefix and state_type)
-            CONFIG_NAME=$(echo "$selected_line" | sed -E 's/^🗑️ ([^ ]+) \([^)]+\) .*/\1/')
-            echo "Selected: $CONFIG_NAME"
-            echo ""
-        else
+        CONFIG_NAME=$(just _fzf-select-config "checksum" "checksum")
+        if [ "$?" -ne 0 ] || [ -z "$CONFIG_NAME" ]; then
             echo "❌ No selection made"
             exit 1
         fi
+        echo "Selected: $CONFIG_NAME"
+        echo ""
     fi
     
     echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME"
@@ -3332,43 +3232,9 @@ test-android TARGET="" DURATION="30" NO_RESTART="false":
         exit $?
     fi
     
-    # Interactive mode (no arguments provided)
-    if ! command -v fzf >/dev/null 2>&1; then
-        echo "❌ 'fzf' command not found. Install with: brew install fzf"
-        echo "💡 Using fallback: just test-android-manual"
-        just test-android-manual
-        exit $?
-    fi
-    
-    # Build options with category prefixes and descriptions
-    options=()
-    
-    # Add debug configs with 🔧 prefix
-    for file in project/debug_configs/*.json; do
-        name=$(basename "$file" .json)
-        desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
-        options+=("🔧 $name - $desc")
-    done
-    
-    # Add test lists with 📝 prefix  
-    for file in project/test-lists/*.json; do
-        name=$(basename "$file" .json)
-        desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
-        options+=("📝 $name - $desc")
-    done
-    
-    # Use fzf to select with nice formatting
-    selected_line=$(printf '%s\n' "${options[@]}" | fzf \
-        --prompt="Select test: " \
-        --height=~80% \
-        --layout=reverse \
-        --border \
-        --preview-window=hidden \
-        --header="🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter")
-    
-    if [ -n "$selected_line" ]; then
-        # Extract the name (between prefix and description)
-        selected=$(echo "$selected_line" | sed -E 's/^[📝🔧] ([^ ]+) - .*/\1/')
+    # Use shared fzf selection for all configs
+    selected=$(just _fzf-select-config "android" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
         echo "Running: just test-android-target '$selected'"
         just test-android-target "$selected" "{{DURATION}}" "{{NO_RESTART}}"
     else
@@ -5509,3 +5375,341 @@ help-replay:
     echo ""
     echo "🎉 Ready to create deterministic, regression-tested gameplay scenarios!"
     echo "   Start with: just replay-capture-and-generate my-first-test"
+
+# Test-Driven Development (TDD) methodology and workflow guide
+help-tdd:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧪 Test-Driven Development (TDD) Workflow Guide"
+    echo "===============================================" 
+    echo ""
+    echo "📋 TDD METHODOLOGY:"
+    echo "RED → GREEN → REFACTOR cycle for systematic feature development"
+    echo ""
+    echo "🔴 RED PHASE - Write Failing Tests First:"
+    echo "  1. Write test that captures desired functionality"
+    echo "  2. Run test to confirm it fails (RED)"
+    echo "  3. Implement minimal code to make test pass"
+    echo ""
+    echo "🟢 GREEN PHASE - Make Tests Pass:"
+    echo "  1. Implement just enough functionality to pass tests"
+    echo "  2. Run tests to confirm they pass (GREEN)"
+    echo "  3. Don't optimize yet - just make it work"
+    echo ""
+    echo "🔵 REFACTOR PHASE - Improve Implementation:"
+    echo "  1. Clean up code while maintaining GREEN tests"
+    echo "  2. Optimize performance and structure"
+    echo "  3. Run tests to ensure they still pass"
+    echo ""
+    echo "🎯 TDD DEBUG ACTIONS:"
+    echo "  system.debug.test_desktop_functionality      # TDD validation for desktop features"
+    echo "  system.debug.test_desktop_log_access        # TDD desktop log access validation"
+    echo "  system.debug.test_platform_agnostic_replay  # TDD platform-agnostic testing"
+    echo ""
+    echo "📁 TDD TEST CONFIGURATIONS:"
+    echo "  tdd-desktop-test-execution-test.json        # Desktop test execution validation"
+    echo "  tdd-desktop-log-access-test.json           # Desktop log access validation"
+    echo "  tdd-platform-agnostic-replay-test.json     # Platform-agnostic replay validation"
+    echo ""
+    echo "🚀 TDD WORKFLOW EXAMPLES:"
+    echo ""
+    echo "🖥️  Example 1: Desktop Replay Feature Development"
+    echo "  # RED Phase - Write failing test"
+    echo "  just test-desktop tdd-desktop-test-execution-test  # Should FAIL initially"
+    echo "  echo '❌ Test fails as expected - no desktop functionality yet'"
+    echo ""
+    echo "  # Implement desktop test execution functionality"
+    echo "  echo '⚒️  Implementing desktop test execution...'"
+    echo "  echo '   - Add test-desktop command'"
+    echo "  echo '   - Add desktop log access'" 
+    echo "  echo '   - Add desktop config loading'"
+    echo ""
+    echo "  # GREEN Phase - Test should now pass"
+    echo "  just test-desktop tdd-desktop-test-execution-test  # Should PASS after implementation"
+    echo "  echo '✅ Test passes - desktop functionality implemented'"
+    echo ""
+    echo "  # REFACTOR Phase - Improve and optimize"
+    echo "  echo '🔧 Refactoring while maintaining GREEN tests...'"
+    echo "  just test-desktop tdd-desktop-test-execution-test  # Verify still passes"
+    echo ""
+    echo "📊 Example 2: Platform-Agnostic Replay System"
+    echo "  # RED Phase"
+    echo "  just test-desktop tdd-platform-agnostic-replay-test  # Should FAIL"
+    echo ""
+    echo "  # Implement replay system for both desktop and Android"
+    echo "  echo '⚒️  Implementing platform-agnostic replay...'"
+    echo "  echo '   - Add replay-capture-and-generate with platform parameter'"
+    echo "  echo '   - Add desktop platform support'"
+    echo "  echo '   - Add error handling for invalid platforms'"
+    echo ""
+    echo "  # GREEN Phase"
+    echo "  just test-desktop tdd-platform-agnostic-replay-test  # Should PASS"
+    echo ""
+    echo "🔍 Example 3: Sequential Action Execution Validation"
+    echo "  # Create test for cascading action behavior"
+    echo "  just test-desktop sequential-execution-proof  # Test multiple rerolls after upgrades"
+    echo ""
+    echo "  # Analyze sequential execution logs"
+    echo "  just logs-desktop-last | grep 'IDLE ACTION'"
+    echo "  # Look for: EVENT RECEIVED → PROCESSING → COMPLETE → next action"
+    echo ""
+    echo "🎯 TDD VALIDATION COMMANDS:"
+    echo "  # Desktop testing commands"
+    echo "  just test-desktop CONFIG_NAME               # Execute desktop test with config"
+    echo "  just logs-desktop-last                      # Access desktop test logs"
+    echo ""
+    echo "  # Replay system validation"
+    echo "  just replay-capture-and-generate CONFIG TEST desktop  # Desktop replay capture"
+    echo "  just replay-list                                     # List replay configurations"
+    echo "  just replay-validate CONFIG_NAME                     # Validate config format"
+    echo ""
+    echo "  # Sequential execution testing"
+    echo "  just test-desktop sequential-execution-proof        # Test cascading actions"
+    echo "  just test-desktop stress-test-recording-system      # Multiple rapid actions"
+    echo ""
+    echo "📋 TDD BEST PRACTICES:"
+    echo ""
+    echo "✅ RED Phase Guidelines:"
+    echo "  • Write the simplest test that captures desired behavior"
+    echo "  • Test should fail for the right reason (missing functionality, not syntax error)"
+    echo "  • Run test to confirm it fails before implementing"
+    echo ""
+    echo "✅ GREEN Phase Guidelines:"
+    echo "  • Implement just enough code to make test pass"
+    echo "  • Don't over-engineer - focus on making it work"
+    echo "  • Use hardcoded values if needed - refactor later"
+    echo ""
+    echo "✅ REFACTOR Phase Guidelines:"
+    echo "  • Clean up code while keeping tests GREEN"
+    echo "  • Extract duplicated code into functions"
+    echo "  • Optimize performance and readability"
+    echo "  • Run tests frequently to ensure they still pass"
+    echo ""
+    echo "🔧 TDD DEBUGGING WITH TOKEN EFFICIENCY:"
+    echo "  # Use token-efficient commands for rapid feedback"
+    echo "  just logs-errors-tagged TEST_ID tdd desktop     # TDD-specific errors only"
+    echo "  just logs TEST_ID desktop functionality         # Desktop functionality logs"
+    echo "  just logs TEST_ID sequential execution          # Sequential execution analysis"
+    echo ""
+    echo "🎭 TDD WITH REPLAY SYSTEM:"
+    echo "  # Capture TDD workflow as replay configs"
+    echo "  just replay-capture-and-generate-manual tdd-demo development-workflow"
+    echo "  just test-desktop tdd-demo                       # Test captured TDD workflow"
+    echo "  just screenshot                                  # Document GREEN phase results"
+    echo ""
+    echo "📊 TDD INTEGRATION WITH EXISTING WORKFLOW:"
+    echo "  # TDD configs work with all existing commands"
+    echo "  just test-android tdd-desktop-test-execution-test  # Cross-platform validation"
+    echo "  just config-restart-android tdd-platform-test      # Quick iteration"
+    echo "  just test-android-update tdd-desktop-test          # Add checksum validation"
+    echo ""
+    echo "💡 TDD SUCCESS INDICATORS:"
+    echo "  🔴 RED: Test fails with clear error message"
+    echo "  🟢 GREEN: Test passes after minimal implementation"  
+    echo "  🔵 REFACTOR: Code improved, tests still pass"
+    echo "  📊 INTEGRATION: Feature works with existing system"
+    echo ""
+    echo "🚀 TDD DEVELOPMENT CYCLE:"
+    echo "  1. Write failing test (RED) → Implement feature → Test passes (GREEN)"
+    echo "  2. Clean up code (REFACTOR) → Tests still pass → Ready for integration"
+    echo "  3. Add to test suite → Document behavior → Continue to next feature"
+    echo ""
+    echo "🎯 Ready to implement features with confidence using TDD!"
+    echo "   Start with: just test-desktop tdd-desktop-test-execution-test"
+
+# Desktop Development Workflow Guide  
+help-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🖥️  Desktop Development Workflow Guide"
+    echo "====================================="
+    echo ""
+    echo "📋 OVERVIEW:"
+    echo "Desktop platform provides instant testing and development with full parity to Android functionality"
+    echo "Perfect for rapid iteration, debugging, and development without device deployment overhead"
+    echo ""
+    echo "🚀 DESKTOP COMMANDS:"
+    echo ""
+    echo "🏃 EXECUTION COMMANDS:"
+    echo "  just run-desktop                     # Launch in Godot editor (instant, 0 sec) 🚀"
+    echo "  just run-desktop-debug               # Launch in Godot editor with debug (instant)"
+    echo "  just test-desktop CONFIG_NAME        # Execute desktop test with config (5-10 sec)"
+    echo ""
+    echo "📊 LOG ACCESS:"
+    echo "  just logs-desktop-last               # Access latest desktop test logs (equivalent to logs-last)"
+    echo "  → Logs saved to: ~/Library/Application Support/Godot/app_userdata/gametwo/logs/"
+    echo ""
+    echo "🎬 REPLAY SYSTEM INTEGRATION:"
+    echo "  just replay-capture-and-generate CONFIG_NAME TEST_TARGET desktop"
+    echo "  → Platform-agnostic replay capture with desktop support"
+    echo "  → Full parity with Android replay functionality"
+    echo ""
+    echo "⚡ DESKTOP DEVELOPMENT ADVANTAGES:"
+    echo ""
+    echo "🚀 SPEED BENEFITS:"
+    echo "  • Instant execution (0 sec vs 30+ sec Android)"
+    echo "  • No device deployment overhead"
+    echo "  • Direct Godot editor integration"
+    echo "  • Immediate log access"
+    echo "  • Fast iteration cycles"
+    echo ""
+    echo "🔧 DEVELOPMENT BENEFITS:"
+    echo "  • Same debug actions as Android"
+    echo "  • Full config system support"
+    echo "  • Wildcard pattern support"
+    echo "  • Checksum validation support"
+    echo "  • Replay system integration"
+    echo ""
+    echo "📱 PLATFORM PARITY:"
+    echo "  ✅ All 77 debug actions work identically"
+    echo "  ✅ Same config loading mechanism"
+    echo "  ✅ Same wildcard pattern expansion"
+    echo "  ✅ Same log analysis commands"
+    echo "  ✅ Same replay capture/generation"
+    echo "  ✅ Same sequential action execution"
+    echo ""
+    echo "🎯 DESKTOP WORKFLOW EXAMPLES:"
+    echo ""
+    echo "🔥 RAPID DEVELOPMENT CYCLE:"
+    echo "  # 1. Test instantly on desktop"
+    echo "  just test-desktop system-testing                 # 5-10 sec"
+    echo "  just logs-desktop-last                           # Instant log access"
+    echo ""
+    echo "  # 2. Validate on Android when ready"
+    echo "  just test-android system-testing                 # 30+ sec with deployment"
+    echo ""
+    echo "⚔️ GAME MECHANICS TESTING:"
+    echo "  # Test game logic without device overhead"
+    echo "  just test-desktop sequential-execution-proof     # Test cascading actions"
+    echo "  just test-desktop stress-test-recording-system   # Test multiple rapid actions"
+    echo "  just logs-desktop-last | grep 'IDLE ACTION'      # Analyze action sequencing"
+    echo ""
+    echo "🎬 REPLAY DEVELOPMENT:"
+    echo "  # Capture and test replays on desktop"
+    echo "  just replay-capture-and-generate my-test development-workflow desktop"
+    echo "  just test-desktop my-test                        # Test generated replay"
+    echo "  just logs-desktop-last                           # Review replay execution"
+    echo ""
+    echo "🧪 TDD DEVELOPMENT:"
+    echo "  # Perfect for TDD RED → GREEN → REFACTOR cycles"
+    echo "  just test-desktop tdd-desktop-test-execution-test  # RED/GREEN validation"
+    echo "  just test-desktop tdd-desktop-log-access-test      # Log access validation"
+    echo "  just test-desktop tdd-platform-agnostic-replay-test # Platform validation"
+    echo ""
+    echo "🔍 CROSS-PLATFORM VALIDATION:"
+    echo "  # Develop on desktop, validate cross-platform"
+    echo "  just test-desktop my-config                      # Desktop validation (instant)"
+    echo "  just test-android my-config                      # Android validation (30+ sec)"
+    echo "  → Same config, same results, different execution speed"
+    echo ""
+    echo "📋 DESKTOP-SPECIFIC CONFIGS:"
+    echo ""
+    echo "🧪 TDD CONFIGS:"
+    echo "  tdd-desktop-test-execution-test.json        # Desktop test execution validation"
+    echo "  tdd-desktop-log-access-test.json           # Desktop log access validation"
+    echo "  tdd-platform-agnostic-replay-test.json     # Platform-agnostic testing"
+    echo ""
+    echo "🔍 VALIDATION CONFIGS:"
+    echo "  sequential-execution-proof.json            # Sequential action execution testing"
+    echo "  desktop-e2e-validation.json                # End-to-end desktop validation"
+    echo "  desktop-semantic-test.json                 # Desktop semantic logging"
+    echo ""
+    echo "⚡ PERFORMANCE COMPARISON:"
+    echo ""
+    echo "📊 TIMING COMPARISON:"
+    echo "  Desktop vs Android Execution Times:"
+    echo "  • Launch: 0 sec vs 5-10 sec"
+    echo "  • Config Test: 5-10 sec vs 30+ sec"
+    echo "  • Log Access: instant vs 5+ sec"
+    echo "  • Iteration: instant vs 1+ min"
+    echo ""
+    echo "🔧 DESKTOP TECHNICAL DETAILS:"
+    echo ""
+    echo "📁 LOG LOCATION:"
+    echo "  ~/Library/Application Support/Godot/app_userdata/gametwo/logs/"
+    echo "  → Same log format as Android"
+    echo "  → Full advanced_logger integration"
+    echo "  → All log analysis commands work"
+    echo ""
+    echo "⚙️ CONFIG MECHANISM:"
+    echo "  → Uses debug_startup_actions.json (same as Android)"
+    echo "  → Config copying mechanism for test execution"
+    echo "  → Full wildcard expansion support"
+    echo "  → Same action registry (77 actions)"
+    echo ""
+    echo "🎯 SEQUENTIAL EXECUTION:"
+    echo "  → Same idle action queue system"
+    echo "  → UI state management (WAITING/LOCKED)"
+    echo "  → Proper cascade settling between actions"
+    echo "  → Frame-level timing analysis"
+    echo ""
+    echo "🔍 DEBUGGING ADVANTAGES:"
+    echo ""
+    echo "💡 DESKTOP DEBUGGING BENEFITS:"
+    echo "  • Direct Godot editor integration"
+    echo "  • Immediate breakpoint access"
+    echo "  • Real-time variable inspection"
+    echo "  • Instant log output"
+    echo "  • No device connection issues"
+    echo ""
+    echo "🏷️ TOKEN-EFFICIENT DEBUGGING:"
+    echo "  # Same token-efficient commands work on desktop"
+    echo "  just logs-desktop-last | grep 'ERROR'        # Quick error scan"
+    echo "  just logs TEST_ID desktop                     # Component-focused analysis"
+    echo "  just logs TEST_ID sequential execution        # Sequential execution logs"
+    echo "  just logs TEST_ID tdd functionality           # TDD-specific logs"
+    echo ""
+    echo "🎭 INTEGRATION WITH EXISTING WORKFLOW:"
+    echo ""
+    echo "📋 WORKS WITH ALL EXISTING COMMANDS:"
+    echo "  # Config management"
+    echo "  just config-list                             # Same configs work on desktop"
+    echo "  just config-setup                            # Same config system"
+    echo ""
+    echo "  # Replay system"
+    echo "  just replay-list                             # Same replay configs"
+    echo "  just replay-validate CONFIG_NAME             # Same validation"
+    echo ""
+    echo "  # Analysis commands"
+    echo "  just logs-errors-tagged TEST_ID              # Same log analysis (98% token savings)"
+    echo "  just logs-performance-tagged TEST_ID         # Same performance analysis"
+    echo ""
+    echo "💡 BEST PRACTICES:"
+    echo ""
+    echo "✅ DESKTOP DEVELOPMENT WORKFLOW:"
+    echo "  • Use desktop for rapid iteration and development"
+    echo "  • Validate game logic and debug actions instantly"
+    echo "  • Test replay configs and sequential execution"
+    echo "  • Move to Android for device-specific validation"
+    echo ""
+    echo "✅ CROSS-PLATFORM VALIDATION:"
+    echo "  • Develop and debug on desktop (speed)"
+    echo "  • Validate on Android (device accuracy)"
+    echo "  • Use same configs for consistency"
+    echo "  • Compare logs to ensure parity"
+    echo ""
+    echo "✅ TDD WITH DESKTOP:"
+    echo "  • Write failing tests on desktop (instant feedback)"
+    echo "  • Implement features with immediate validation"
+    echo "  • Refactor with confidence using rapid testing"
+    echo "  • Cross-validate on Android when complete"
+    echo ""
+    echo "🚀 DESKTOP DEVELOPMENT DECISION MATRIX:"
+    echo ""
+    echo "  Use Desktop When:"
+    echo "  ✅ Rapid iteration needed"
+    echo "  ✅ Debugging game logic"
+    echo "  ✅ TDD development"
+    echo "  ✅ Sequential execution testing"
+    echo "  ✅ Replay config development"
+    echo "  ✅ Initial feature development"
+    echo ""
+    echo "  Use Android When:"
+    echo "  ✅ Device-specific testing needed"
+    echo "  ✅ Performance on actual hardware"
+    echo "  ✅ Platform-specific validation"
+    echo "  ✅ Final integration testing"
+    echo "  ✅ Production validation"
+    echo ""
+    echo "🎯 Ready for lightning-fast desktop development!"
+    echo "   Start with: just test-desktop system-testing"
