@@ -4,6 +4,133 @@
 # Commands for capturing semantic logs and generating replay test configurations
 
 # ================================
+# SHARED FZF SELECTION UTILITIES
+# ================================
+
+# Shared fzf config selection function with filtering support
+_fzf-select-config CONTEXT="generic" FILTER="all":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONTEXT="{{CONTEXT}}"
+    FILTER="{{FILTER}}"
+    
+    # Check if fzf is available
+    if ! command -v fzf >/dev/null 2>&1; then
+        echo "❌ 'fzf' command not found. Install with: brew install fzf" >&2
+        exit 1
+    fi
+    
+    # Build options with category prefixes and descriptions
+    options=()
+    
+    # Apply filtering based on FILTER parameter
+    case "$FILTER" in
+        "checksum")
+            # Only checksum-enabled configs
+            for file in project/debug_configs/*.json; do
+                if [ -f "$file" ] && jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
+                    name=$(basename "$file" .json)
+                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
+                    
+                    if [ -n "$expected_checksum" ]; then
+                        status="✅ BASELINE SET"
+                    else
+                        status="🔄 NEEDS BASELINE"
+                    fi
+                    
+                    options+=("📸 $name ($state_type) $status - $desc")
+                fi
+            done
+            ;;
+        "replay")
+            # Only replay configs (those with session_id or replay metadata)
+            for file in project/debug_configs/*.json; do
+                if [ -f "$file" ]; then
+                    if jq -e '.session_id // .metadata.source_session' "$file" >/dev/null 2>&1; then
+                        name=$(basename "$file" .json)
+                        desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                        session_id=$(jq -r '.session_id // .metadata.source_session // "unknown"' "$file" 2>/dev/null)
+                        action_count=$(jq -r '.actions | length' "$file" 2>/dev/null || echo "?")
+                        
+                        options+=("🎬 $name ($action_count actions, session: $session_id) - $desc")
+                    fi
+                fi
+            done
+            ;;
+        "all"|*)
+            # All configs (debug configs + test lists)
+            for file in project/debug_configs/*.json; do
+                if [ -f "$file" ]; then
+                    name=$(basename "$file" .json)
+                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                    options+=("🔧 $name - $desc")
+                fi
+            done
+            
+            # Add test lists with 📝 prefix  
+            for file in project/test-lists/*.json; do
+                if [ -f "$file" ]; then
+                    name=$(basename "$file" .json)
+                    desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
+                    options+=("📝 $name - $desc")
+                fi
+            done
+            ;;
+    esac
+    
+    # Check if we have any options
+    if [ ${#options[@]} -eq 0 ]; then
+        echo "❌ No configurations found for filter: $FILTER" >&2
+        exit 1
+    fi
+    
+    # Set context-specific prompt and header
+    case "$CONTEXT" in
+        "desktop")
+            prompt="Select desktop test: "
+            header="🖥️  Desktop Testing | 🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            ;;
+        "android") 
+            prompt="Select Android test: "
+            header="📱 Android Testing | 🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            ;;
+        "checksum")
+            prompt="Select checksum config to UPDATE: "
+            header="📸 Checksum Configs | Filter by typing"
+            ;;
+        "replay")
+            prompt="Select replay config: "
+            header="🎬 Replay Configs | Filter by typing" 
+            ;;
+        *)
+            prompt="Select configuration: "
+            header="🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            ;;
+    esac
+    
+    # Use fzf to select with nice formatting
+    selected_line=$(printf '%s\n' "${options[@]}" | fzf \
+        --prompt="$prompt" \
+        --height=~80% \
+        --layout=reverse \
+        --border \
+        --preview-window=hidden \
+        --header="$header")
+    
+    if [ -n "$selected_line" ]; then
+        # Extract the name (between prefix and description) 
+        # Handle different prefixes: 🔧 📝 📸 🎬
+        selected=$(echo "$selected_line" | sed -E 's/^[📝🔧📸🎬] ([^ ]+)( \([^)]*\))? - .*/\1/')
+        echo "$selected"
+        exit 0
+    else
+        exit 1
+    fi
+
+# ================================
 # SEMANTIC LOG CAPTURE & REPLAY
 # ================================
 
@@ -194,51 +321,77 @@ replay-generate-manual session_id config_name="":
     echo ""
     echo "🎉 Manual replay generation complete!"
 
-# Capture semantic logs from a test run and generate replay config
-replay-capture-and-generate config_name test_target="development-workflow":
+# Capture semantic logs from a test run and generate replay config (platform-agnostic)
+replay-capture-and-generate config_name test_target="development-workflow" platform="android":
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
     TEST_TARGET="{{test_target}}"
+    PLATFORM="{{platform}}"
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     
     echo "🎬 Capturing semantic logs and generating replay config..."
     echo "   Config Name: ${CONFIG_NAME}"
     echo "   Test Target: ${TEST_TARGET}"
+    echo "   Platform: ${PLATFORM}"
     echo ""
     
-    echo "1️⃣ Running test to capture semantic actions..."
-    
-    # Run the test and capture output
-    TEST_OUTPUT=$(just test-android ${TEST_TARGET} 2>&1)
-    TEST_ID=$(echo "$TEST_OUTPUT" | grep -o 'TEST_ID=[^[:space:]]*' | cut -d= -f2 | tail -1 || echo "")
-    
-    if [ -z "$TEST_ID" ]; then
-        echo "❌ Could not capture TEST_ID from test run"
-        echo "💡 Try running: just test-android ${TEST_TARGET}"
-        echo "   Then manually extract session ID from logs"
-        exit 1
-    fi
-    
-    echo "✅ Test completed with ID: ${TEST_ID}"
-    echo ""
-    
-    echo "2️⃣ Extracting session ID from test logs..."
-    SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ Could not find session ID in test logs"
-        echo "💡 Check logs manually: just logs-last"
+    if [ "$PLATFORM" = "desktop" ]; then
+        echo "🖥️  Capturing desktop semantic logs..."
+        
+        echo "1️⃣ Running desktop test to capture semantic actions..."
+        just test-desktop "${TEST_TARGET}"
+        
         echo ""
-        echo "🔍 Available session references in logs:"
-        just logs-last | grep -i session | head -3 || echo "   No session references found"
-        exit 1
+        echo "2️⃣ Extracting session ID from desktop logs..."
+        SESSION_ID=$(just logs-desktop-last | grep "SESSION_START" | \
+                    grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+        
+        if [ -z "$SESSION_ID" ]; then
+            echo "❌ Could not find desktop session ID"
+            echo "💡 Desktop logs preview:"
+            just logs-desktop-last | tail -10
+            exit 1
+        fi
+        
+        echo "✅ Found desktop session ID: $SESSION_ID"
+        
+    else
+        echo "📱 Capturing Android semantic logs..."
+        
+        echo "1️⃣ Running Android test to capture semantic actions..."
+        
+        # Run the test and capture output
+        TEST_OUTPUT=$(just test-android ${TEST_TARGET} 2>&1)
+        TEST_ID=$(echo "$TEST_OUTPUT" | grep -o 'TEST_ID=[^[:space:]]*' | cut -d= -f2 | tail -1 || echo "")
+        
+        if [ -z "$TEST_ID" ]; then
+            echo "❌ Could not capture TEST_ID from test run"
+            echo "💡 Try running: just test-android ${TEST_TARGET}"
+            echo "   Then manually extract session ID from logs"
+            exit 1
+        fi
+        
+        echo "✅ Test completed with ID: ${TEST_ID}"
+        echo ""
+        
+        echo "2️⃣ Extracting session ID from Android logs..."
+        SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+        
+        if [ -z "$SESSION_ID" ]; then
+            echo "❌ Could not find session ID in test logs"
+            echo "💡 Check logs manually: just logs-last"
+            echo ""
+            echo "🔍 Available session references in logs:"
+            just logs-last | grep -i session | head -3 || echo "   No session references found"
+            exit 1
+        fi
+        
+        echo "✅ Found session ID: ${SESSION_ID}"
     fi
     
-    echo "✅ Found session ID: ${SESSION_ID}"
     echo ""
-    
     echo "3️⃣ Generating replay configuration..."
     just replay-generate "${SESSION_ID}" "${CONFIG_NAME}"
 
@@ -290,6 +443,42 @@ replay-capture-and-generate-manual config_name test_target="development-workflow
     
     echo "3️⃣ Generating manual verification replay configuration..."
     just replay-generate-manual "${SESSION_ID}" "${CONFIG_NAME}"
+
+# Interactive replay config selection using fzf
+replay-select:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    selected=$(just _fzf-select-config "replay" "replay")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        echo "Selected replay config: $selected"
+        echo ""
+        echo "🎮 Available actions:"
+        echo "   just test-android-target $selected      # Run on Android"
+        echo "   just test-desktop-target $selected      # Run on Desktop"
+        echo "   just replay-validate $selected          # Validate config"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
+
+# Interactive checksum config selection using fzf  
+checksum-select:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    selected=$(just _fzf-select-config "checksum" "checksum")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        echo "Selected checksum config: $selected"
+        echo ""
+        echo "📸 Available actions:"
+        echo "   just test-android-target $selected      # Run checksum test"
+        echo "   just test-android-update $selected      # Update baseline"
+        echo "   just test-android-reset $selected       # Reset baseline"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
 
 # List available replay configurations
 replay-list:
@@ -573,4 +762,189 @@ replay-test-e2e:
         echo ""
         echo "🔍 Check logs for debugging:"
         echo "   just logs-last"
+    fi
+
+# ================================
+# DESKTOP REPLAY SUPPORT (TDD GREEN Phase)
+# ================================
+
+# Desktop test execution - equivalent of test-android for desktop platform (windowed by default) with fzf selection
+test-desktop TARGET="" DURATION="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # If arguments provided, use direct execution mode
+    if [ -n "{{TARGET}}" ]; then
+        echo "🎯 Direct execution mode: {{TARGET}}"
+        just test-desktop-target "{{TARGET}}" "{{DURATION}}"
+        exit $?
+    fi
+    
+    # Use shared fzf selection for all configs
+    selected=$(just _fzf-select-config "desktop" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        echo "Running: just test-desktop-target '$selected'"
+        just test-desktop-target "$selected" "{{DURATION}}"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
+
+# Desktop test execution with fallback manual selection
+test-desktop-manual:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📋 Select a desktop test to run:"
+    echo ""
+    
+    # Build arrays of files and descriptions
+    configs=()
+    descriptions=()
+    
+    # Add debug configs
+    echo "🔧 Debug Configurations:"
+    for file in project/debug_configs/*.json; do
+        if [ -f "$file" ]; then
+            name=$(basename "$file" .json)
+            desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+            configs+=("$name")
+            descriptions+=("$desc")
+            printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
+        fi
+    done
+    
+    echo ""
+    echo "📝 Test Lists:"
+    for file in project/test-lists/*.json; do
+        if [ -f "$file" ]; then
+            name=$(basename "$file" .json)
+            desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
+            configs+=("$name")
+            descriptions+=("$desc")
+            printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
+        fi
+    done
+    
+    echo ""
+    read -p "Enter number (1-${#configs[@]}): " choice
+    
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#configs[@]}" ]; then
+        selected="${configs[$((choice-1))]}"
+        echo "Running: just test-desktop-target '$selected'"
+        just test-desktop-target "$selected"
+    else
+        echo "❌ Invalid selection"
+        exit 1
+    fi
+
+# Desktop test execution target - direct execution with config name
+test-desktop-target CONFIG_NAME DURATION="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (windowed)"
+    echo "   Config: $CONFIG_FILE"
+    echo ""
+    
+    # Ensure logs directory exists for desktop
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+    
+    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
+    
+    # Copy config to the expected location for desktop startup
+    STARTUP_CONFIG="{{PROJECT_PATH}}/debug_startup_actions.json"
+    echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
+    cp "$CONFIG_FILE" "$STARTUP_CONFIG"
+    
+    # Run desktop Godot with debug actions (windowed)
+    echo "🚀 Starting desktop test with game window..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
+        && echo "✅ Desktop test completed successfully" \
+        || echo "⚠️  Desktop test completed with exit code $?"
+    
+    echo ""
+    echo "🎉 Desktop test execution complete!"
+    echo "💡 Check logs with: just logs-desktop-last"
+
+# Desktop test execution - headless mode for CI/CD and automated testing
+test-desktop-headless CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (headless)"
+    echo "   Config: $CONFIG_FILE"
+    echo ""
+    
+    # Ensure logs directory exists for desktop
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+    
+    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
+    
+    # Copy config to the expected location for desktop startup
+    STARTUP_CONFIG="{{PROJECT_PATH}}/debug_startup_actions.json"
+    echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
+    cp "$CONFIG_FILE" "$STARTUP_CONFIG"
+    
+    # Run desktop Godot with debug actions (headless)
+    echo "🚀 Starting desktop test headless..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless \
+        && echo "✅ Desktop test completed successfully" \
+        || echo "⚠️  Desktop test completed with exit code $?"
+    
+    echo ""
+    echo "🎉 Desktop test execution complete!"
+    echo "💡 Check logs with: just logs-desktop-last"
+
+# Desktop log access - equivalent of logs-last for desktop platform
+logs-desktop-last:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Find desktop logs in Godot user data directory
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    
+    echo "🖥️  Accessing desktop logs..."
+    echo "   Directory: $LOGS_DIR"
+    echo ""
+    
+    if [ -d "$LOGS_DIR" ]; then
+        # Get latest log file
+        LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
+        if [ -n "$LATEST_LOG" ]; then
+            echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            cat "$LATEST_LOG"
+        else
+            echo "❌ No desktop log files found in $LOGS_DIR"
+            echo ""
+            echo "💡 To generate desktop logs:"
+            echo "   just test-desktop system-quit-only"
+        fi
+    else
+        echo "❌ Desktop logs directory not found: $LOGS_DIR"
+        echo ""
+        echo "💡 Directory will be created on first desktop test run"
+        echo "   Try: just test-desktop system-quit-only"
     fi
