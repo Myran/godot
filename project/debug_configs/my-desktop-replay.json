@@ -1,0 +1,19 @@
+{
+  "description": "Generated desktop replay from semantic session: session_20250705_105152_80b3574f",
+  "session_id": "session_20250705_105152_80b3574f",
+  "generation_timestamp": "2025-07-05T10:53:00.000Z",
+  "semantic_action_count": 1,
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "source_session": "session_20250705_105152_80b3574f",
+    "generation_method": "manual_desktop_replay",
+    "config_name": "my-desktop-replay",
+    "platform": "desktop",
+    "capture_timestamp": "2025-07-05T10:53:00.000Z"
+  }
+}

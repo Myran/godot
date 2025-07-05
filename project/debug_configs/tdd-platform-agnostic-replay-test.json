@@ -1,0 +1,12 @@
+{
+  "description": "TDD RED Phase: Test platform-agnostic replay capture (should FAIL until implemented)",
+  "actions": [
+    "system.debug.test_platform_agnostic_replay",
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "test_type": "tdd_red_phase",
+    "expected_behavior": "FAIL - platform parameter support does not exist yet",
+    "test_purpose": "Validate that replay-capture-and-generate needs platform parameter support"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "description": "Development workflow test for desktop replay capture",
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "system.debug.quit_application"
+  ]
+}
