@@ -86,7 +86,15 @@
       "Bash(./editor/godot.macos.editor.arm64 --path /Users/mattiasmyhrman/repos/gametwo/project --headless --check-only)",
       "mcp__godot__list_projects",
       "mcp__godot__get_project_info",
-      "Bash(./editor/godot.macos.editor.arm64 --headless --check-only project/ 2 >& 1)"
+      "Bash(./editor/godot.macos.editor.arm64 --headless --check-only project/ 2 >& 1)",
+      "Bash(./godot.macos.editor.arm64 --path ../project)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(macos-screen-mcp:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "mcp__peekaboo__list",
+      "mcp__peekaboo__image",
+      "Bash(echo:*)"
     ],
     "deny": []
   }
