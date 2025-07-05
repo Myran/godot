@@ -1,23 +1,14 @@
 class_name SystemRecordingIntegrityAction extends DebugAction
 
 
-func get_action_name() -> String:
-	return "system.recording.integrity_validation"
+func _init() -> void:
+	super("system.recording.integrity_validation", _execute_integrity_validation)
+	set_category("System")
+	set_group("Recording System")
+	set_description("Validates core recording system components and their integration")
 
 
-func get_category() -> String:
-	return "System"
-
-
-func get_group() -> String:
-	return "Recording System"
-
-
-func get_description() -> String:
-	return "Validates core recording system components and their integration"
-
-
-func execute() -> void:
+func _execute_integrity_validation() -> DebugAction.Result:
 	Log.info(
 		"🔍 Starting recording system integrity validation...",
 		{},
@@ -44,6 +35,14 @@ func execute() -> void:
 	validation_results.overall_status = _determine_overall_status(validation_results)
 
 	_log_validation_summary(validation_results)
+	
+	# Return success result with validation data
+	return DebugAction.Result.new_success(
+		validation_results,
+		0,
+		"recording_integrity_validation",
+		{"validation_type": "recording_system"}
+	)
 
 
 func _validate_core_components() -> Dictionary:

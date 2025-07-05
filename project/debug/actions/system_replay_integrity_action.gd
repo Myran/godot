@@ -1,23 +1,14 @@
 class_name SystemReplayIntegrityAction extends DebugAction
 
 
-func get_action_name() -> String:
-	return "system.replay.integrity_validation"
+func _init() -> void:
+	super("system.replay.integrity_validation", _execute_integrity_validation)
+	set_category("System")
+	set_group("Replay System")
+	set_description("Validates replay system integrity and end-to-end workflow capabilities")
 
 
-func get_category() -> String:
-	return "System"
-
-
-func get_group() -> String:
-	return "Replay System"
-
-
-func get_description() -> String:
-	return "Validates replay system integrity and end-to-end workflow capabilities"
-
-
-func execute() -> void:
+func _execute_integrity_validation() -> DebugAction.Result:
 	Log.info(
 		"🎬 Starting replay system integrity validation...", {}, ["debug", "replay", "integrity"]
 	)
@@ -46,6 +37,14 @@ func execute() -> void:
 	validation_results.overall_status = _determine_overall_status(validation_results)
 
 	_log_validation_summary(validation_results)
+	
+	# Return success result with validation data
+	return DebugAction.Result.new_success(
+		validation_results,
+		0,
+		"replay_integrity_validation",
+		{"validation_type": "replay_system"}
+	)
 
 
 func _validate_config_structures() -> Dictionary:
