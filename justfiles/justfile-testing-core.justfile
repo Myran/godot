@@ -2,14 +2,8 @@
 # Platform-agnostic testing commands and validation infrastructure
 # Provides core testing functionality used across all platforms
 
-# Import dependencies
-import "justfile-validation.justfile"
-import "justfile-support.justfile"
-import "enhanced_log_analysis.justfile"
-import "log_filter_commands.justfile"
-import "universal_log_tags.justfile"
-
-# Note: Variables inherited from main justfile
+# Note: Variables and dependencies inherited from main justfile
+# This module does not import other modules to avoid circular dependencies
 
 # Validate all project files
 validate-all:
