@@ -216,7 +216,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.test_desktop_functionality", func() -> bool: return _test_desktop_functionality())
+			. create(
+				"system.debug.test_desktop_functionality",
+				func() -> bool: return _test_desktop_functionality()
+			)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("TDD RED: Test desktop functionality (should FAIL)")
@@ -226,7 +229,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.test_desktop_log_access", func() -> bool: return _test_desktop_log_access())
+			. create(
+				"system.debug.test_desktop_log_access",
+				func() -> bool: return _test_desktop_log_access()
+			)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("TDD RED: Test desktop log access (should FAIL)")
@@ -236,7 +242,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.test_platform_agnostic_replay", func() -> bool: return _test_platform_agnostic_replay())
+			. create(
+				"system.debug.test_platform_agnostic_replay",
+				func() -> bool: return _test_platform_agnostic_replay()
+			)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("TDD RED: Test platform-agnostic replay (should FAIL)")
@@ -350,7 +359,8 @@ static func _test_platform_agnostic_replay() -> bool:
 	Log.info(
 		"TDD GREEN: Platform-agnostic replay working correctly",
 		{
-			"implemented_functionality": "platform parameter support in replay-capture-and-generate",
+			"implemented_functionality":
+			"platform parameter support in replay-capture-and-generate",
 			"required_for": "unified desktop and Android replay capture",
 			"test_phase": "green_phase_success",
 			"verification": "replay-capture-and-generate supports desktop and android platforms"

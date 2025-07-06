@@ -35,7 +35,7 @@ func _execute_integrity_validation() -> DebugAction.Result:
 	validation_results.overall_status = _determine_overall_status(validation_results)
 
 	_log_validation_summary(validation_results)
-	
+
 	# Return success result with validation data
 	return DebugAction.Result.new_success(
 		validation_results,
