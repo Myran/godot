@@ -94,7 +94,13 @@
       "WebFetch(domain:github.com)",
       "mcp__peekaboo__list",
       "mcp__peekaboo__image",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:just.systems)",
+      "Bash(__NEW_LINE__ sed -i '' 's/^config-android-tags/# REMOVED: config-android-tags\\\n_removed_config_android_tags/' justfile)",
+      "Bash(__NEW_LINE__ sed -i '' 's/^config-android-level/# REMOVED: config-android-level\\\n_removed_config_android_level/' justfile)",
+      "Bash(__NEW_LINE__ sed -i '' 's/^config-android-reset/# REMOVED: config-android-reset\\\n_removed_config_android_reset/' justfile)"
     ],
     "deny": []
   }

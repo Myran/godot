@@ -131,10 +131,7 @@ install-ios-deps:
 lint:
     @echo "Linting GDScript files..."
     cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" | grep -v -f .gdlintignore | xargs gdlint
-# Format GDScript files
-format:
-    @echo "Formatting GDScript files..."
-    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" -exec /Users/mattiasmyhrman/.local/bin/gdformat {} +
+# REMOVED: format - moved to justfile-dev-tools.justfile
 
 format-test:
     @echo "TEST Formatting GDScript files..."
@@ -151,21 +148,9 @@ update-version:
     sed -i '' "s/^version\/code=.*/version\/code=$(date +'%Y%m%d%H%M%S')/" {{PROJECT_PATH}}/export_presets.cfg
     sed -i '' "s/^version\/name=.*/version\/name=\"1.0.$(date +'%Y%m%d%H%M%S')\"/" {{PROJECT_PATH}}/export_presets.cfg
 
-# Update export presets
-update-export-presets:
-    @echo "Updating export presets..."
-#    sed -i '' 's#keystore/path=".*"#keystore/path="{{KEYSTORE_PATH}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#keystore/password=".*"#keystore/password="{{KEYSTORE_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#keystore/alias=".*"#keystore/alias="{{GAME_NAME}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#keystore/alias_password=".*"#keystore/alias_password="{{KEY_PASSWORD}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#application/identifier=".*"#application/identifier="{{IOS_BUNDLE_IDENTIFIER}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#application/signature=".*"#application/signature="{{APPLE_TEAM_ID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
-#    sed -i '' 's#provisioning_profile/uuid=".*"#provisioning_profile/uuid="{{IOS_PROVISIONING_PROFILE_UUID}}"#g' {{PROJECT_PATH}}/export_presets.cfg
+# REMOVED: update-export-presets - moved to justfile-dev-tools.justfile
 
-# Update project settings
-update-project-settings:
-    @echo "Updating project settings..."
-    # Add any project-specific settings updates here
+# REMOVED: update-project-settings - moved to justfile-dev-tools.justfile
 
 # Clean build artifacts
 clean:

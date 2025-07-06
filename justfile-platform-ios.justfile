@@ -1,0 +1,129 @@
+# iOS Platform Development Commands
+# Complete iOS build, deploy, test, and device management workflow
+# Handles iOS-specific development tasks and workflows
+
+# Note: Variables and build functions inherited from imported modules
+
+# Build iOS executable with optimized settings
+build-ios-executable:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔨 Building iOS executable..."
+    
+    cd {{GODOT_SUBMODULE_PATH}}
+    echo "📦 Building iOS template for arm64..."
+    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes
+    
+    # Move to export directory
+    echo "📁 Moving executable to export directory..."
+    cp bin/libgodot.ios.template_release.arm64.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
+    
+    echo "✅ iOS executable built successfully"
+
+# iOS help information
+help-ios:
+    #!/usr/bin/env bash
+    echo "🍎 iOS Development Commands"
+    echo "=========================="
+    echo ""
+    echo "Build Commands:"
+    echo "  just build-ios-executable       # Build iOS executable"
+    echo "  just ios-build                  # iOS build pipeline"
+    echo "  just build-install-ios          # Full iOS rebuild & install"
+    echo "  just build-all-ios              # Build all iOS components"
+    echo ""
+    echo "Export & Deploy:"
+    echo "  just ios-export-pck              # Export iOS PCK file"
+    echo "  just ios-update-pck              # Update iOS PCK file"
+    echo ""
+    echo "Device Management:"
+    echo "  just ios-launch-help             # iOS launch help"
+    echo "  just ios-restart-help            # iOS restart help"
+    echo ""
+    echo "Quick Commands:"
+    echo "  just quick-build-ios             # Quick iOS build"
+
+# Export iOS PCK file
+ios-export-pck: pre-build
+    @echo "📦 Exporting iOS PCK file..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "iOS" ../export/ios/{{GAME_NAME}}.pck --headless
+
+# iOS build pipeline
+ios-build: pre-build
+    @echo "🍎 iOS build pipeline..."
+    just ios-export-pck
+
+# iOS launch help
+ios-launch-help:
+    #!/usr/bin/env bash
+    echo "🚀 iOS Launch Instructions"
+    echo "========================="
+    echo ""
+    echo "To launch on iOS device/simulator:"
+    echo "1. Open Xcode project in export/ios/"
+    echo "2. Select target device/simulator"
+    echo "3. Build and run (Cmd+R)"
+    echo ""
+    echo "For command line deployment:"
+    echo "- ios-deploy --bundle export/ios/{{GAME_NAME}}.app"
+
+# iOS restart help
+ios-restart-help:
+    #!/usr/bin/env bash
+    echo "🔄 iOS Restart Instructions"
+    echo "=========================="
+    echo ""
+    echo "To restart iOS app:"
+    echo "1. Background the app (home button/gesture)"
+    echo "2. Open app switcher"
+    echo "3. Swipe up on app to close"
+    echo "4. Relaunch from home screen"
+    echo ""
+    echo "For development:"
+    echo "- Xcode: Stop and restart debug session"
+
+# Update iOS PCK file
+ios-update-pck: pre-build
+    @echo "🔄 Updating iOS PCK file..."
+    just ios-export-pck
+    @echo "✅ iOS PCK updated"
+
+# Full iOS rebuild & install (2-5 min, complete project rebuild)
+build-install-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔨 Full iOS rebuild & install..."
+    
+    # Clean previous builds
+    echo "🧹 Cleaning previous builds..."
+    rm -rf export/ios/{{GAME_NAME}}.pck
+    
+    # Build executable
+    echo "⚙️ Building iOS executable..."
+    just build-ios-executable
+    
+    # Export PCK
+    echo "📦 Exporting iOS PCK..."
+    just ios-export-pck
+    
+    echo "✅ iOS build & install complete"
+    echo "💡 Open Xcode project in export/ios/ to deploy"
+
+# Build all iOS components
+build-all-ios: validate-env
+    @echo "🍎 Building all iOS components..."
+    just build-ios-executable
+    just ios-export-pck
+    @echo "✅ All iOS builds complete"
+
+# Quick iOS build for development iteration
+quick-build-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "⚡ Quick iOS build..."
+    
+    # Only export PCK for faster iteration
+    just ios-export-pck
+    
+    echo "✅ Quick iOS build complete"
+    echo "💡 Use build-ios-executable for full rebuild"
