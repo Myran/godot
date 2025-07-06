@@ -100,7 +100,15 @@
       "WebFetch(domain:just.systems)",
       "Bash(__NEW_LINE__ sed -i '' 's/^config-android-tags/# REMOVED: config-android-tags\\\n_removed_config_android_tags/' justfile)",
       "Bash(__NEW_LINE__ sed -i '' 's/^config-android-level/# REMOVED: config-android-level\\\n_removed_config_android_level/' justfile)",
-      "Bash(__NEW_LINE__ sed -i '' 's/^config-android-reset/# REMOVED: config-android-reset\\\n_removed_config_android_reset/' justfile)"
+      "Bash(__NEW_LINE__ sed -i '' 's/^config-android-reset/# REMOVED: config-android-reset\\\n_removed_config_android_reset/' justfile)",
+      "Bash(for cmd in build-all-android config-android-level config-android-reset config-android-tags help-android help-wildcards quick-build-android)",
+      "Bash(do echo -n \"$cmd: \")",
+      "Bash(if grep -q \"    $cmd\" /tmp/restored_commands.txt)",
+      "Bash(then echo \"✅ FOUND\")",
+      "Bash(else echo \"❌ MISSING\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(tree:*)"
     ],
     "deny": []
   }

@@ -7,6 +7,26 @@
 
 # Note: _validate-android-workflow is inherited from justfile-validation.justfile
 
+# Quick Android build - Export APK and AAB files (2-3 minutes)
+quick-build-android:
+    @echo "⚡ Quick Android build (2-3 min)..."
+    just insert-firebase-dependencies
+    just export-apk-android
+    just export-aab-android
+    @echo "✅ Quick Android build complete!"
+
+# Complete Android build with templates and all dependencies (20 minutes)
+build-all-android: validate-env
+    @echo "🤖 FULL BUILD - ANDROID ONLY"
+    @echo "============================"
+    @echo "⏱️  Estimated time: 20-25 minutes"
+    @echo ""
+    
+    just _build-common
+    just _build-android-full
+    
+    @echo "✅ Android full build complete!"
+
 # Config workflow validation for Android
 _validate-android-config-workflow CONFIG:
     @echo "✅ Android config workflow validated for {{CONFIG}}"

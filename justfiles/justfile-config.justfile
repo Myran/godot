@@ -334,4 +334,129 @@ runtime-filter-level LEVEL:
     echo "✅ Advanced_logger runtime level set to $LEVEL_NAME!"
     echo "💡 Restart app to apply: just restart-android-app"
 
+# Quick tag filtering for focused debugging sessions
+config-android-tags ACTIVE_TAGS IGNORED_TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🏷️  Updating Android logger tags..."
+    echo "   Active tags: {{ACTIVE_TAGS}}"
+    echo "   Ignored tags: {{IGNORED_TAGS}}"
+    
+    # Parse comma-separated tags
+    IFS=',' read -ra ACTIVE_ARRAY <<< "{{ACTIVE_TAGS}}"
+    IFS=',' read -ra IGNORED_ARRAY <<< "{{IGNORED_TAGS}}"
+    
+    # Create temporary config file
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Build active tags array string
+    ACTIVE_FORMATTED=""
+    for tag in "${ACTIVE_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$ACTIVE_FORMATTED" ]; then
+                ACTIVE_FORMATTED="$ACTIVE_FORMATTED, "
+            fi
+            ACTIVE_FORMATTED="$ACTIVE_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Build ignored tags array string
+    IGNORED_FORMATTED=""
+    for tag in "${IGNORED_ARRAY[@]}"; do
+        tag=$(echo "$tag" | xargs) # trim whitespace
+        if [ -n "$tag" ]; then
+            if [ -n "$IGNORED_FORMATTED" ]; then
+                IGNORED_FORMATTED="$IGNORED_FORMATTED, "
+            fi
+            IGNORED_FORMATTED="$IGNORED_FORMATTED\"$tag\""
+        fi
+    done
+    
+    # Update active tags in config
+    sed -i '' "s/active_tags=Array\[String\](\[.*\])/active_tags=Array[String]([$ACTIVE_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Update ignored tags in config
+    sed -i '' "s/ignored_tags=Array\[String\](\[.*\])/ignored_tags=Array[String]([$IGNORED_FORMATTED])/g" "$TEMP_CONFIG"
+    
+    # Auto-detect platform and push to device
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Pushing advanced_logger config to Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    else
+        echo "📱 Android device not found, config saved locally"
+    fi
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Advanced_logger runtime tag filtering updated!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Set Android logger level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+config-android-level LEVEL:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    LEVEL_NAME="{{LEVEL}}"
+    echo "📊 Setting Android logger level to: $LEVEL_NAME"
+    
+    # Validate level
+    case "$LEVEL_NAME" in
+        DEBUG|INFO|WARNING|ERROR|CRITICAL)
+            echo "✅ Valid log level: $LEVEL_NAME"
+            ;;
+        *)
+            echo "❌ Invalid log level: $LEVEL_NAME"
+            echo "Valid levels: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+            exit 1
+            ;;
+    esac
+    
+    # Create temporary config file
+    TEMP_CONFIG=$(mktemp)
+    
+    # Create base config template
+    cp "project/addons/advanced_logger/settings.cfg" "$TEMP_CONFIG"
+    
+    # Update log level in config
+    sed -i '' "s/log_level=[0-9]*/log_level=$LEVEL_CODE/g" "$TEMP_CONFIG"
+    
+    # Auto-detect platform and push to device
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Pushing advanced_logger config to Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} push "$TEMP_CONFIG" "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg"
+    else
+        echo "📱 Android device not found, config saved locally"
+    fi
+    
+    # Clean up
+    rm "$TEMP_CONFIG"
+    
+    echo "✅ Advanced_logger runtime level set to $LEVEL_NAME!"
+    echo "💡 Restart app to apply: just restart-android-app"
+
+# Reset Android logger config to project defaults
+config-android-reset:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔄 Resetting advanced_logger runtime filtering to project defaults..."
+    
+    # Auto-detect platform and remove custom config
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q device; then
+        echo "📱 Removing custom advanced_logger config from Android device..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "rm -f /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/advanced_logger_settings.cfg" 2>/dev/null || true
+    else
+        echo "📱 Android device not found, local config reset"
+    fi
+    
+    echo "✅ Advanced_logger runtime filtering reset!"
+    echo "💡 App will use project defaults (DEBUG level, all tags) on next start"
+    echo "💡 Restart app to apply: just restart-android-app"
+
 # Runtime app log reset (advanced_logger) - Reset to project defaults
