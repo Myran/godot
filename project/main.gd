@@ -7,7 +7,15 @@ func _ready() -> void:
 	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
 
-	var _args: PackedStringArray = OS.get_cmdline_user_args()
+	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
+	var cmdline_user_args: PackedStringArray = OS.get_cmdline_user_args()
+	
+	Log.info("Command line arguments debug", {
+		"cmdline_args": cmdline_args,
+		"cmdline_user_args": cmdline_user_args,
+		"cmdline_args_size": cmdline_args.size(),
+		"cmdline_user_args_size": cmdline_user_args.size()
+	}, ["system", "initialization", "cmdline"])
 
 	DebugManager.debug_event.connect(_on_debug_event)
 	match OS.get_name():
@@ -23,11 +31,44 @@ func _ready() -> void:
 			Log.info("Running on iOS platform", {}, ["system", "initialization"])
 		"Web":
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
+	
+	# Check for test mode (platform-specific)
+	var is_test_mode = false
+	if OS.has_feature("android"):
+		# Android: Always allow debug actions (uses exported APK, not editor)
+		is_test_mode = true
+		Log.info("Android test mode detection", {
+			"is_test_mode": is_test_mode
+		}, ["system", "initialization", "test_mode"])
+	elif OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
+		# Desktop platforms: Check for --test-mode command line flag
+		is_test_mode = "--test-mode" in cmdline_args
+		Log.info("Desktop test mode detection", {
+			"is_test_mode": is_test_mode,
+			"cmdline_args": cmdline_args,
+			"platform_name": OS.get_name()
+		}, ["system", "initialization", "test_mode"])
+	else:
+		Log.info("Unknown platform test mode detection", {
+			"is_test_mode": is_test_mode,
+			"platform_name": OS.get_name(),
+			"has_android": OS.has_feature("android"),
+			"has_desktop": OS.has_feature("desktop"),
+			"has_editor": OS.has_feature("editor")
+		}, ["system", "initialization", "test_mode"])
+	
 	if (
 		not use_actions_in_editor
 		and OS.has_feature("editor")
 		and not DisplayServer.get_name() == "headless"
+		and not is_test_mode
 	):
+		Log.info("Skipping debug coordinator - editor mode without test flag", {
+			"use_actions_in_editor": use_actions_in_editor,
+			"is_editor": OS.has_feature("editor"),
+			"is_headless": DisplayServer.get_name() == "headless",
+			"is_test_mode": is_test_mode
+		}, ["system", "initialization"])
 		return
 
 	# Wait for game to fully initialize before starting debug coordinator

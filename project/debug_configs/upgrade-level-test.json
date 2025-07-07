@@ -1,0 +1,8 @@
+{
+  "description": "Test upgrade action with default level 1",
+  "actions": [
+    "system.debug.hide_menu",
+    "game.draft.upgrade_player",
+    "system.debug.replay_complete"
+  ]
+}

@@ -124,7 +124,10 @@
       "Bash(# Check if any modules still have old import references\necho \"🔍 Checking for remaining import issues...\"\n\ngrep -r \"enhanced_log_analysis\\|debug_commands\\|log_filter_commands\\|universal_log_tags\\|semantic_replay_commands\\|recording_integrity_commands\" justfiles/ 2>/dev/null || echo \"✅ No old import references found\")",
       "Bash(# Test debug-recent command with more detail\necho \"🔍 Debugging debug-recent command:\"\njust debug-recent 2>&1 | head -10)",
       "Bash(# Test recording-health-check command\necho \"🔍 Testing recording-health-check command:\"\njust recording-health-check 2>&1 | head -10)",
-      "WebFetch(domain:wezfurlong.org)"
+      "WebFetch(domain:wezfurlong.org)",
+      "Bash(tail:*)",
+      "Bash(./editor/godot.macos.editor.arm64 --version)",
+      "Bash(./editor/godot.macos.editor.arm64:*)"
     ],
     "deny": []
   }

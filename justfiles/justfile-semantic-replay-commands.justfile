@@ -279,6 +279,39 @@ create-demo-from-last-session demo_name:
     # Store action parameters for actions that need them
     ACTION_PARAMS_JSON=""
     
+    # Track action counts for indexing (using simple variables)
+    # We'll use variables like ACTION_COUNT_game_draft_remove_block_player
+    
+    # Helper function to add parameters with proper indexing
+    add_action_params() {
+        local action_name="$1"
+        local params="$2"
+        
+        # Create a safe variable name (replace dots with underscores)
+        local var_name=$(echo "$action_name" | sed 's/\./_/g')
+        local count_var="ACTION_COUNT_$var_name"
+        
+        # Get current count or default to 0
+        local count=$(eval "echo \${$count_var:-0}")
+        count=$((count + 1))
+        
+        # Update the count
+        eval "$count_var=$count"
+        
+        # Create indexed action name if count > 1
+        local indexed_name="$action_name"
+        if [ $count -gt 1 ]; then
+            indexed_name="${action_name}_${count}"
+        fi
+        
+        # Add to action_params JSON
+        if [ -z "$ACTION_PARAMS_JSON" ]; then
+            ACTION_PARAMS_JSON="\"$indexed_name\": $params"
+        else
+            ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"$indexed_name\": $params"
+        fi
+    }
+    
     # Parse each semantic action and map to corresponding debug action
     while IFS= read -r action_line; do
         if [ -z "$action_line" ]; then continue; fi
@@ -344,11 +377,7 @@ create-demo-from-last-session demo_name:
                 POSITION_X=$(echo "$action_line" | grep -o '"position": *{[^}]*"x": *[0-9-]*' | grep -o '"x": *[0-9-]*' | sed 's/"x": *//')
                 POSITION_Y=$(echo "$action_line" | grep -o '"position": *{[^}]*"y": *[0-9-]*' | grep -o '"y": *[0-9-]*' | sed 's/"y": *//')
                 if [ -n "$CARD_ID" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.draft.remove_block_player\": {\"card_id\":\"$CARD_ID\",\"position\":{\"x\":${POSITION_X:-"-1"},\"y\":${POSITION_Y:-"-1"}}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.draft.remove_block_player\": {\"card_id\":\"$CARD_ID\",\"position\":{\"x\":${POSITION_X:-"-1"},\"y\":${POSITION_Y:-"-1"}}}"
-                    fi
+                    add_action_params "game.draft.remove_block_player" "{\"card_id\":\"$CARD_ID\",\"position\":{\"x\":${POSITION_X:-"-1"},\"y\":${POSITION_Y:-"-1"}}}"
                 fi
                 ;;
             "lineup.add_card")
@@ -359,11 +388,7 @@ create-demo-from-last-session demo_name:
                 SOURCE_X=$(echo "$action_line" | grep -o '"source_position": *{[^}]*"x": *[0-9-]*' | grep -o '"x": *[0-9-]*' | sed 's/"x": *//')
                 SOURCE_Y=$(echo "$action_line" | grep -o '"source_position": *{[^}]*"y": *[0-9-]*' | grep -o '"y": *[0-9-]*' | sed 's/"y": *//')
                 if [ -n "$CARD_ID" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.lineup.add_card_player\": {\"card_id\":\"$CARD_ID\",\"target_position\":${TARGET_POS:-"0"},\"source_position\":{\"x\":${SOURCE_X:-"-1"},\"y\":${SOURCE_Y:-"-1"}}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.lineup.add_card_player\": {\"card_id\":\"$CARD_ID\",\"target_position\":${TARGET_POS:-"0"},\"source_position\":{\"x\":${SOURCE_X:-"-1"},\"y\":${SOURCE_Y:-"-1"}}}"
-                    fi
+                    add_action_params "game.lineup.add_card_player" "{\"card_id\":\"$CARD_ID\",\"target_position\":${TARGET_POS:-"0"},\"source_position\":{\"x\":${SOURCE_X:-"-1"},\"y\":${SOURCE_Y:-"-1"}}}"
                 fi
                 ;;
             "lineup.move_card")

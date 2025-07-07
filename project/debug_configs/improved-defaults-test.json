@@ -1,0 +1,16 @@
+{
+  "description": "Test improved parameter defaults for all player actions",
+  "actions": [
+    "system.debug.hide_menu",
+    "game.draft.upgrade_player",
+    "game.draft.reroll_player", 
+    "game.draft.toggle_column_player",
+    "game.draft.remove_block_player",
+    "game.lineup.add_card_player",
+    "game.lineup.move_card_player",
+    "game.lineup.remove_card_player",
+    "game.state.transition_player",
+    "game.battle.start_player",
+    "system.debug.replay_complete"
+  ]
+}

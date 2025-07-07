@@ -1,0 +1,27 @@
+{
+  "description": "Demo from gameplay session: session_20250707_090655_dc99ed8c (4 semantic actions)",
+  "type": "demo",
+  "session_id": "session_20250707_090655_dc99ed8c",
+  "generation_timestamp": "2025-07-07T09:08:59+02:00",
+  "semantic_action_count": 4,
+  "actions": [
+    "system.debug.hide_menu",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.reroll_player",
+    "system.debug.replay_complete"
+  ],
+  "action_params": {
+    "game.draft.upgrade_player": {"level":2},"game.draft.upgrade_player": {"level":2},"game.draft.upgrade_player": {"level":2},"game.draft.reroll_player": {"cost":0}
+  },
+  "metadata": {
+    "source_session": "session_20250707_090655_dc99ed8c",
+    "generation_method": "semantic_action_mapping",
+    "demo_name": "comprehensive-parameter-test",
+    "creation_timestamp": "20250707_090859",
+    "replay_mode": "demo",
+    "auto_quit": false,
+    "can_convert_to_test": true
+  }
+}

@@ -273,22 +273,42 @@ func _parse_config_file(path: String) -> Array:
 			var action_params := data.action_params as Dictionary
 			Log.debug("Found action_params section", {"param_actions": action_params.keys()}, ["debug", "startup"])
 			
+			# Track action counts for indexed parameter matching
+			var action_counts: Dictionary = {}
+			
 			# Merge action_params into actions
 			for i in range(actions.size()):
 				var action_item := actions[i] as Dictionary
 				var action_name: String = action_item.get("action", "")
 				
-				if action_params.has(action_name):
-					var extra_params := action_params[action_name] as Dictionary
+				# Track how many times we've seen this action
+				action_counts[action_name] = action_counts.get(action_name, 0) + 1
+				var count: int = action_counts[action_name]
+				
+				# Try both the base action name and indexed name
+				var param_key: String = action_name
+				var indexed_key: String = action_name + "_" + str(count)
+				
+				var extra_params: Dictionary = {}
+				if action_params.has(param_key) and count == 1:
+					# First instance uses base name
+					extra_params = action_params[param_key] as Dictionary
+				elif action_params.has(indexed_key):
+					# Subsequent instances use indexed names
+					extra_params = action_params[indexed_key] as Dictionary
+				
+				if not extra_params.is_empty():
 					var current_params := action_item.get("params", {}) as Dictionary
 					
 					# Merge parameters (action_params override existing params)
-					for param_key in extra_params:
-						current_params[param_key] = extra_params[param_key]
+					for param_key_inner in extra_params:
+						current_params[param_key_inner] = extra_params[param_key_inner]
 					
 					action_item["params"] = current_params
 					Log.debug("Merged action_params", {
 						"action": action_name,
+						"instance": count,
+						"param_source": indexed_key if action_params.has(indexed_key) else param_key,
 						"merged_params": current_params
 					}, ["debug", "startup"])
 

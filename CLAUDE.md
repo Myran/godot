@@ -576,7 +576,102 @@ func get_state_type() -> String:
     return "board_state"
 ```
 
-## 🎬 Interactive Recording & Replay System
+## 🎬 Demo Recording & Cross-Platform Testing
+
+### **Unified Demo System - Play Once, Test Everywhere**
+**Seamless workflow: Play normally → Extract demo → Test on both platforms → Convert to permanent regression tests.**
+
+### **📝 Demo Creation Workflow**
+
+#### **🎮 Step 1: Play the Game (No Special Mode Needed)**
+```bash
+# Just play normally - semantic actions are automatically recorded
+just run-desktop                    # Play on desktop
+# OR
+just run-android-debug             # Play on Android
+
+# Semantic actions (draft.reroll, lineup.move_card, etc.) are logged automatically
+```
+
+#### **🎬 Step 2: Create Demo from Gameplay Session**
+```bash
+# Extract demo from what you just played
+just create-demo-from-last-session my-battle-demo
+
+# Alternative: Browse and select from recent sessions
+just create-demo-interactive
+
+# Alternative: Create from specific session ID
+just create-demo-from-session SESSION_123 my-demo-name
+```
+
+#### **🎮 Step 3: Test Demo on Both Platforms**
+```bash
+# Test demo using existing test-android system (already works!)
+just test-android my-battle-demo        # Test on Android
+just test-desktop-target my-battle-demo # Test on Desktop
+
+# Cross-platform validation
+just demo-test-cross-platform my-battle-demo  # Test on both, compare results
+```
+
+#### **🧪 Step 4: Convert Demo to Regression Test (Optional)**
+```bash
+# Convert demo to permanent regression test with checksum validation
+just demo-to-test my-battle-demo
+
+# Now you have:
+# - my-battle-demo.json (original demo for manual verification)
+# - my-battle-demo-test.json (automated regression test with checksum)
+
+# Test the regression test
+just test-android-target my-battle-demo-test    # Creates baseline on first run
+just test-desktop-target my-battle-demo-test    # Validates on desktop
+```
+
+### **🛠️ Demo Management Commands**
+```bash
+# Browse and select demos
+just demo-select                    # Interactive fzf selection
+just list-demos                     # List all available demos
+
+# Demo testing
+just test-android DEMO_NAME         # Test demo (uses existing test-android!)
+just demo-test-cross-platform DEMO_NAME  # Cross-platform validation
+just demo-validate-determinism DEMO_NAME # Multiple runs for consistency
+
+# Demo conversion
+just demo-to-test DEMO_NAME         # Convert to regression test
+just demo-to-test-custom DEMO_NAME lineup  # Custom state capture (lineup, board)
+```
+
+### **🌐 Cross-Platform Benefits**
+- ✅ **Platform-agnostic demos**: Same demo config works on desktop and Android
+- ✅ **Unified log access**: `just logs-last` works on both platforms
+- ✅ **Zero-friction recording**: No special "recording mode" - just play normally
+- ✅ **Retroactive demos**: "That session I played 10 minutes ago was perfect - make it a demo"
+- ✅ **Demo → Test pipeline**: Easy conversion to permanent regression tests
+- ✅ **Deterministic validation**: Ensure identical behavior across platforms
+
+### **📁 Demo File Structure**
+```json
+{
+  "type": "demo",
+  "description": "Demo from gameplay session: session_123 (5 actions)",
+  "session_id": "session_123",
+  "actions": [
+    "system.debug.hide_menu",
+    "game.draft.reroll_player", 
+    "game.draft.upgrade_player",
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "can_convert_to_test": true,
+    "replay_mode": "demo",
+    "auto_quit": false
+  }
+}
+```
 
 ### **Two-Mode Replay System for Different Use Cases**
 **Complete workflow for capturing semantic player actions with intelligent mode selection for automated testing vs manual verification.**

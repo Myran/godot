@@ -1,0 +1,34 @@
+{
+  "description": "Regression test from demo: test01",
+  "type": "test",
+  "session_id": "session_20250706_203218_70849825",
+  "generation_timestamp": "2025-07-06T20:35:14+02:00",
+  "semantic_action_count": 8,
+  "actions": [
+    "system.debug.hide_menu",
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "game.draft.upgrade_player",
+    "game.state.transition_player",
+    "game.lineup.capture_state",
+    "system.checksum.validate"
+  ],
+  "metadata": {
+    "source_session": "session_20250706_203218_70849825",
+    "generation_method": "demo_to_test_conversion",
+    "demo_name": "test01",
+    "creation_timestamp": "20250706_203514",
+    "replay_mode": "demo",
+    "auto_quit": false,
+    "can_convert_to_test": true,
+    "converted_from": "test01",
+    "test_type": "regression",
+    "auto_baseline": true
+  },
+  "source_demo": "test01",
+  "checksum_config": {
+    "state_type": "lineup_state",
+    "expected_checksum": ""
+  }
+}
