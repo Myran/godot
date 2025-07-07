@@ -66,14 +66,9 @@ static func log_state_transition(from_state: String, to_state: String) -> void:
 	"""Log game state transition with parameters"""
 	var data: Dictionary = {"from_state": from_state, "to_state": to_state}
 
-	# Check if this transition should end current session
-	if SessionManager.should_end_session_on_state_change(from_state, to_state):
-		SessionManager.end_current_session("state_transition")
-		# Start new session with transition context
-		var context: Dictionary = {
-			"triggered_by": "state_transition", "from": from_state, "to": to_state
-		}
-		SessionManager.start_new_session("state_transition", context)
+	# Update session context with current state info
+	SessionManager.update_session_context("current_state", to_state)
+	SessionManager.update_session_context("last_transition", from_state + "_to_" + to_state)
 
 	SessionManager.log_semantic_action("transition.change_state", data)
 
@@ -111,35 +106,21 @@ static func _extract_card_ids(lineup: Array) -> Array[String]:
 	return card_ids
 
 
-# Session control methods
-static func start_draft_session(level: int = 1) -> String:
-	"""Start a new session for draft phase"""
-	var context: Dictionary = SessionManager.create_draft_context(level)
-	return SessionManager.start_new_session("draft_start", context)
+# Full gameplay session control methods
+static func start_gameplay_session() -> String:
+	"""Start a new full gameplay session"""
+	return SessionManager.start_gameplay_session()
 
 
-static func start_battle_session(player_lineup: Array = [], enemy_lineup: Array = []) -> String:
-	"""Start a new session for battle phase"""
-	var context: Dictionary = SessionManager.create_battle_context(player_lineup, enemy_lineup)
-	return SessionManager.start_new_session("battle_start", context)
+static func end_gameplay_session() -> void:
+	"""End current gameplay session"""
+	SessionManager.end_gameplay_session()
 
 
-static func end_current_session(reason: String = "manual") -> void:
-	"""End current session"""
-	SessionManager.end_current_session(reason)
-
-
-# Integration helpers for existing game systems
-static func log_action_with_automatic_session_management(
-	action_type: String, data: Dictionary = {}
-) -> void:
-	"""Log semantic action with automatic session management"""
-	# Check if action should start new session
-	if SessionManager.should_start_new_session_on_action(action_type):
-		var context: Dictionary = {"triggered_by": action_type}
-		SessionManager.start_new_session("action_trigger", context)
-
-	# Log the action
+# Simple action logging without automatic session management
+static func log_action(action_type: String, data: Dictionary = {}) -> void:
+	"""Log semantic action to current session"""
+	# Simply log the action to the current session
 	SessionManager.log_semantic_action(action_type, data)
 
 
@@ -156,8 +137,5 @@ static func get_current_session_info() -> Dictionary:
 
 
 static func validate_session_active() -> bool:
-	"""Validate that session is active and not expired"""
-	return (
-		not SessionManager.current_session_id.is_empty()
-		and not SessionManager._is_session_expired()
-	)
+	"""Validate that session is active"""
+	return not SessionManager.current_session_id.is_empty()

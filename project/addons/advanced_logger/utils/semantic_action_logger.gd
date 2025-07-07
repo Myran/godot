@@ -107,12 +107,12 @@ static func log_battle_action(action_type: String, data: Dictionary = {}) -> voi
 
 # Enhanced session control with context
 static func start_draft_session(level: int = 1) -> String:
-	"""Start a draft session with context"""
-	return SemanticLogger.start_draft_session(level)
+	"""Start a full gameplay session (compatibility method)"""
+	return SemanticLogger.start_gameplay_session()
 
 static func start_battle_session(player_lineup: Array = [], enemy_lineup: Array = []) -> String:
-	"""Start a battle session with context"""
-	return SemanticLogger.start_battle_session(player_lineup, enemy_lineup)
+	"""Start a full gameplay session (compatibility method)"""
+	return SemanticLogger.start_gameplay_session()
 
 # Compatibility methods for existing code
 static func _ensure_session_active() -> void:

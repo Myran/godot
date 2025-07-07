@@ -12,6 +12,7 @@
     "game.draft.remove_block_player",
     "game.lineup.add_card_player",
     "game.lineup.add_card_player",
+    "system.debug.finalize_replay_validation",
     "system.debug.replay_complete"
   ],
   "action_params": {

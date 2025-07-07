@@ -4,11 +4,8 @@ extends RefCounted
 # Unified log source provider - abstracts platform-specific log access
 # Provides consistent interface for accessing logs on Android (adb logcat) and Desktop (file system)
 
-enum Platform {
-	ANDROID,
-	DESKTOP,
-	UNKNOWN
-}
+enum Platform { ANDROID, DESKTOP, UNKNOWN }
+
 
 # Platform detection
 static func get_platform() -> Platform:
@@ -30,7 +27,11 @@ static func get_latest_logs() -> String:
 		Platform.DESKTOP:
 			return _get_desktop_latest_logs()
 		_:
-			Log.error("Unsupported platform for log access", {"platform": get_platform()}, ["log_source", "error"])
+			Log.error(
+				"Unsupported platform for log access",
+				{"platform": get_platform()},
+				["log_source", "error"]
+			)
 			return ""
 
 
@@ -42,7 +43,11 @@ static func find_logs_containing(search_term: String) -> String:
 		Platform.DESKTOP:
 			return _find_desktop_logs_containing(search_term)
 		_:
-			Log.error("Unsupported platform for log search", {"platform": get_platform(), "search_term": search_term}, ["log_source", "error"])
+			Log.error(
+				"Unsupported platform for log search",
+				{"platform": get_platform(), "search_term": search_term},
+				["log_source", "error"]
+			)
 			return ""
 
 
@@ -54,7 +59,11 @@ static func get_logs_since_timestamp(timestamp: String) -> String:
 		Platform.DESKTOP:
 			return _get_desktop_logs_since(timestamp)
 		_:
-			Log.error("Unsupported platform for timestamp log access", {"platform": get_platform(), "timestamp": timestamp}, ["log_source", "error"])
+			Log.error(
+				"Unsupported platform for timestamp log access",
+				{"platform": get_platform(), "timestamp": timestamp},
+				["log_source", "error"]
+			)
 			return ""
 
 
@@ -63,22 +72,30 @@ static func _get_android_latest_logs() -> String:
 	"""Get latest Android logs using adb logcat - equivalent to logs-last command"""
 	var output: Array = []
 	var exit_code: int = OS.execute("adb", ["logcat", "-d"], output)
-	
+
 	if exit_code != 0:
-		Log.error("Failed to get Android logs via adb", {"exit_code": exit_code}, ["log_source", "android", "error"])
+		Log.error(
+			"Failed to get Android logs via adb",
+			{"exit_code": exit_code},
+			["log_source", "android", "error"]
+		)
 		return ""
-	
+
 	var full_logs: String = "\n".join(output)
-	
+
 	# Find the most recent app start (equivalent to logs-last logic)
 	var lines: PackedStringArray = full_logs.split("\n")
 	var last_start_line: int = -1
-	
+
 	for i in range(lines.size() - 1, -1, -1):
-		if lines[i].contains("ActivityManager") and lines[i].contains("Start proc") and lines[i].contains("gametwo"):
+		if (
+			lines[i].contains("ActivityManager")
+			and lines[i].contains("Start proc")
+			and lines[i].contains("gametwo")
+		):
 			last_start_line = i
 			break
-	
+
 	if last_start_line >= 0:
 		var recent_lines: PackedStringArray = lines.slice(last_start_line)
 		return "\n".join(recent_lines)
@@ -92,17 +109,17 @@ static func _find_android_logs_containing(search_term: String) -> String:
 	"""Find Android logs containing specific term"""
 	var output: Array = []
 	var exit_code: int = OS.execute("adb", ["logcat", "-d"], output)
-	
+
 	if exit_code != 0:
 		return ""
-	
+
 	var full_logs: String = "\n".join(output)
 	var matching_lines: PackedStringArray = []
-	
+
 	for line: String in full_logs.split("\n"):
 		if line.contains(search_term):
 			matching_lines.append(line)
-	
+
 	return "\n".join(matching_lines)
 
 
@@ -116,77 +133,91 @@ static func _get_android_logs_since(timestamp: String) -> String:
 static func _get_desktop_latest_logs() -> String:
 	"""Get latest Desktop logs from Godot user data directory"""
 	var logs_dir: String = _get_desktop_logs_directory()
-	
+
 	if not DirAccess.dir_exists_absolute(logs_dir):
-		Log.warning("Desktop logs directory not found", {"logs_dir": logs_dir}, ["log_source", "desktop"])
+		Log.warning(
+			"Desktop logs directory not found", {"logs_dir": logs_dir}, ["log_source", "desktop"]
+		)
 		return ""
-	
+
 	# Find the most recent log file
 	var dir: DirAccess = DirAccess.open(logs_dir)
 	if dir == null:
-		Log.error("Cannot access desktop logs directory", {"logs_dir": logs_dir}, ["log_source", "desktop", "error"])
+		Log.error(
+			"Cannot access desktop logs directory",
+			{"logs_dir": logs_dir},
+			["log_source", "desktop", "error"]
+		)
 		return ""
-	
+
 	var log_files: Array[String] = []
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
-	
+
 	while file_name != "":
 		if file_name.ends_with(".log"):
 			log_files.append(logs_dir + "/" + file_name)
 		file_name = dir.get_next()
-	
+
 	if log_files.is_empty():
-		Log.warning("No log files found in desktop logs directory", {"logs_dir": logs_dir}, ["log_source", "desktop"])
+		Log.warning(
+			"No log files found in desktop logs directory",
+			{"logs_dir": logs_dir},
+			["log_source", "desktop"]
+		)
 		return ""
-	
+
 	# Sort by modification time (most recent first)
 	log_files.sort_custom(_compare_file_modification_time)
-	
+
 	# Read the most recent log file
 	var latest_log_file: String = log_files[0]
 	var file: FileAccess = FileAccess.open(latest_log_file, FileAccess.READ)
-	
+
 	if file == null:
-		Log.error("Cannot read desktop log file", {"file": latest_log_file}, ["log_source", "desktop", "error"])
+		Log.error(
+			"Cannot read desktop log file",
+			{"file": latest_log_file},
+			["log_source", "desktop", "error"]
+		)
 		return ""
-	
+
 	var content: String = file.get_as_text()
 	file.close()
-	
+
 	return content
 
 
 static func _find_desktop_logs_containing(search_term: String) -> String:
 	"""Find Desktop logs containing specific term"""
 	var logs_dir: String = _get_desktop_logs_directory()
-	
+
 	if not DirAccess.dir_exists_absolute(logs_dir):
 		return ""
-	
+
 	var dir: DirAccess = DirAccess.open(logs_dir)
 	if dir == null:
 		return ""
-	
+
 	var matching_lines: PackedStringArray = []
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
-	
+
 	while file_name != "":
 		if file_name.ends_with(".log"):
 			var file_path: String = logs_dir + "/" + file_name
 			var file: FileAccess = FileAccess.open(file_path, FileAccess.READ)
-			
+
 			if file != null:
 				var content: String = file.get_as_text()
 				file.close()
-				
+
 				for line: String in content.split("\n"):
 					if line.contains(search_term):
 						matching_lines.append(line)
-		
+
 		file_name = dir.get_next()
-	
+
 	return "\n".join(matching_lines)
 
 
@@ -200,12 +231,12 @@ static func _get_desktop_logs_since(timestamp: String) -> String:
 static func _get_desktop_logs_directory() -> String:
 	"""Get the desktop logs directory path (handles self-contained mode)"""
 	var user_data_dir: String = OS.get_user_data_dir()
-	
+
 	# In self-contained mode, user data dir is relative to executable
 	# Check if we're in self-contained mode by looking for logs in project directory
 	var project_logs_dir: String = ProjectSettings.globalize_path("res://logs")
 	var user_logs_dir: String = user_data_dir + "/logs"
-	
+
 	# Check which logs directory exists and has files
 	if DirAccess.dir_exists_absolute(project_logs_dir):
 		var dir: DirAccess = DirAccess.open(project_logs_dir)
@@ -214,10 +245,14 @@ static func _get_desktop_logs_directory() -> String:
 			var file_name: String = dir.get_next()
 			while file_name != "":
 				if file_name.ends_with(".log"):
-					Log.info("Using self-contained logs directory", {"path": project_logs_dir}, ["log_source", "desktop"])
+					Log.info(
+						"Using self-contained logs directory",
+						{"path": project_logs_dir},
+						["log_source", "desktop"]
+					)
 					return project_logs_dir
 				file_name = dir.get_next()
-	
+
 	# Fallback to user data directory
 	Log.info("Using user data logs directory", {"path": user_logs_dir}, ["log_source", "desktop"])
 	return user_logs_dir
@@ -227,16 +262,16 @@ static func _compare_file_modification_time(a: String, b: String) -> bool:
 	"""Compare file modification times for sorting (most recent first)"""
 	var file_a: FileAccess = FileAccess.open(a, FileAccess.READ)
 	var file_b: FileAccess = FileAccess.open(b, FileAccess.READ)
-	
+
 	if file_a == null or file_b == null:
 		return false
-	
+
 	var time_a: int = file_a.get_modified_time()
 	var time_b: int = file_b.get_modified_time()
-	
+
 	file_a.close()
 	file_b.close()
-	
+
 	return time_a > time_b
 
 
@@ -278,7 +313,7 @@ static func get_logs_location_info() -> Dictionary:
 			}
 		Platform.DESKTOP:
 			return {
-				"platform": "Desktop", 
+				"platform": "Desktop",
 				"source": "File system",
 				"access_method": "Direct file access",
 				"location": _get_desktop_logs_directory()

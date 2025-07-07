@@ -80,6 +80,9 @@ func intitialize_game() -> void:
 		"Emitting initialization_complete signal", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
 	)
 	initialization_complete.emit()
+	
+	# Start gameplay session for semantic logging
+	SessionManager.start_gameplay_session()
 
 
 func new_event(event: core.CoreEvent) -> void:

@@ -1,8 +1,8 @@
 class_name SessionManager
 extends RefCounted
 
-# Session management for semantic action logging with context tracking
-# Provides session ID generation, boundary detection, and context preservation
+# Session management for full gameplay semantic action logging
+# Provides single session per gameplay session from start to quit
 
 static var current_session_id: String = ""
 static var session_start_time: float = 0.0
@@ -10,8 +10,8 @@ static var session_action_count: int = 0
 static var session_context: Dictionary = {}
 
 # Session configuration
-const SESSION_TIMEOUT_MS: int = 30000  # 30 seconds of inactivity
 const SESSION_ID_PREFIX: String = "session_"
+# Note: No timeout - sessions last for entire gameplay duration
 
 
 static func start_new_session(trigger: String = "manual", context: Dictionary = {}) -> String:
@@ -42,8 +42,8 @@ static func start_new_session(trigger: String = "manual", context: Dictionary = 
 
 static func get_current_session_id() -> String:
 	"""Get current session ID, creating new session if none exists"""
-	if current_session_id.is_empty() or _is_session_expired():
-		start_new_session("auto_create")
+	if current_session_id.is_empty():
+		start_new_session("gameplay_start")
 
 	return current_session_id
 
@@ -89,15 +89,7 @@ static func get_session_context() -> Dictionary:
 	return session_context.duplicate()
 
 
-static func _is_session_expired() -> bool:
-	"""Check if current session has expired due to inactivity"""
-	if session_start_time == 0.0:
-		return true
-
-	var current_time: float = Time.get_unix_time_from_system() * 1000.0
-	var session_age: float = current_time - session_start_time
-
-	return session_age > SESSION_TIMEOUT_MS
+# Session expiration removed - sessions persist for entire gameplay
 
 
 static func log_semantic_action(action_type: String, data: Dictionary = {}) -> void:
@@ -123,51 +115,15 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 	# a simpler approach focused on critical game state validation
 
 
-# Session boundary detection helpers
-static func should_end_session_on_state_change(from_state: String, to_state: String) -> bool:
-	"""Determine if state transition should trigger session end"""
-	# End session on major state transitions
-	var major_transitions: Array[String] = [
-		"draft_to_prepare", "prepare_to_battle", "battle_to_draft", "any_to_menu"
-	]
-
-	var transition: String = from_state + "_to_" + to_state
-	return major_transitions.has(transition) or to_state == "menu"
+# Application lifecycle management for full gameplay sessions
+static func start_gameplay_session() -> String:
+	"""Start a new full gameplay session"""
+	return start_new_session("gameplay_start", {"session_type": "full_gameplay"})
 
 
-static func should_start_new_session_on_action(action_type: String) -> bool:
-	"""Determine if action should trigger new session start"""
-	# Start new session on game reset or major initialization actions
-	var session_triggers: Array[String] = [
-		"game.match.reset_level", "game.lineup.populate_enemy", "debug.session.start"
-	]
-
-	return session_triggers.has(action_type)
-
-
-# Context helpers for common game states
-static func create_draft_context(level: int = 1) -> Dictionary:
-	"""Create context for draft phase"""
-	return {
-		"game_phase": "draft", "level": level, "timestamp": Time.get_datetime_string_from_system()
-	}
-
-
-static func create_battle_context(
-	player_lineup: Array = [], enemy_lineup: Array = []
-) -> Dictionary:
-	"""Create context for battle phase"""
-	return {
-		"game_phase": "battle",
-		"player_lineup_count": player_lineup.size(),
-		"enemy_lineup_count": enemy_lineup.size(),
-		"timestamp": Time.get_datetime_string_from_system()
-	}
-
-
-static func create_preparation_context() -> Dictionary:
-	"""Create context for preparation phase"""
-	return {"game_phase": "preparation", "timestamp": Time.get_datetime_string_from_system()}
+static func end_gameplay_session() -> void:
+	"""End the current gameplay session"""
+	end_current_session("gameplay_end")
 
 
 # === GAMESTATE CHECKSUM INTEGRATION ===

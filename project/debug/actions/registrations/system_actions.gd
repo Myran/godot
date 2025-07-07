@@ -134,6 +134,8 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 
 
 static func _quit_application() -> bool:
+	# End gameplay session before quitting
+	SessionManager.end_gameplay_session()
 	# Quit the application
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
 	return true

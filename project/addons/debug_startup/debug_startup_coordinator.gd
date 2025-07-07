@@ -208,6 +208,15 @@ func _parse_config_file(path: String) -> Array:
 			var test_id := str(test_metadata.test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
+	
+	# Setup replay validation if this is a demo/replay config
+	if data.has("type") and data.type == "demo":
+		Log.info("Demo config detected, setting up replay validation", {"config_path": path}, ["debug", "startup", "replay"])
+		var validation_setup_success: bool = SessionManager.setup_replay_validation(path)
+		if validation_setup_success:
+			Log.info("Replay validation setup successful", {}, ["debug", "startup", "replay"])
+		else:
+			Log.warning("Replay validation setup failed", {}, ["debug", "startup", "replay"])
 
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
