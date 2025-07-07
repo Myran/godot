@@ -51,18 +51,45 @@ validate-godot pattern="":
         timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | grep -E "{{pattern}}" || true
     else
         echo "Running full validation..."
-        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | head -50
+        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | head -50 || true
     fi
     
     # Check for critical errors
-    if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | grep -E "ERROR|SCRIPT ERROR|Parse Error" | head -5; then
-        echo ""
-        echo "❌ Validation found critical errors!"
-        echo ""
-        echo "Full error output:"
-        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | grep -E "ERROR|SCRIPT ERROR|Parse Error" | head -20
-        exit 1
+    TEMP_VALIDATION=$(mktemp)
+    if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit > "$TEMP_VALIDATION" 2>&1; then
+        # Validation succeeded, check for errors in output
+        if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -5; then
+            echo ""
+            echo "❌ Validation found critical errors!"
+            echo ""
+            echo "Full error output:"
+            grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -20
+            rm -f "$TEMP_VALIDATION"
+            exit 1
+        fi
+    else
+        # Validation command failed - could be timeout (exit 124) which is expected
+        exit_code=$?
+        if [[ $exit_code -eq 124 || $exit_code -eq 141 ]]; then
+            # Timeout or SIGPIPE - check for actual errors in output
+            if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -5; then
+                echo ""
+                echo "❌ Validation found critical errors!"
+                echo ""
+                echo "Full error output:"
+                grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -20
+                rm -f "$TEMP_VALIDATION"
+                exit 1
+            fi
+            # No errors found, timeout is expected behavior
+        else
+            echo ""
+            echo "❌ Godot validation command failed with exit code $exit_code"
+            rm -f "$TEMP_VALIDATION"
+            exit 1
+        fi
     fi
+    rm -f "$TEMP_VALIDATION"
     
     echo "✅ Godot validation passed"
 

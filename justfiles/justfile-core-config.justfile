@@ -10,7 +10,7 @@
 # ================================
 GAME_NAME := env_var_or_default("CI_PROJECT_NAME", "gametwo")
 PROJECT_PATH := justfile_directory() + "/project"
-GODOT_EXECUTABLE := "godot.macos.editor.arm64"  # For Apple Silicon Macs
+GODOT_EXECUTABLE := "../editor/godot.macos.editor.arm64"  # For Apple Silicon Macs
 GODOT_VERSION := "4.0"
 GODOT_BUILD_VERSION := "4.3.rc"
 
