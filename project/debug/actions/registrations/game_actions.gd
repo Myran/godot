@@ -1544,7 +1544,7 @@ static func _reroll_player(params: Dictionary = {}) -> bool:
 
 static func _upgrade_player(params: Dictionary = {}) -> bool:
 	"""Simulate player upgrade action with parameters"""
-	var level: int = params.get("level", 2)
+	var level: int = params.get("level", 1)
 	Log.info(
 		"Simulating player upgrade action",
 		{"level": level, "params": params},

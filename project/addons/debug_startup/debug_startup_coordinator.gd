@@ -268,6 +268,30 @@ func _parse_config_file(path: String) -> Array:
 			else:
 				Log.warning("Invalid action type, must be String or Dictionary", {"action": action, "type": typeof(action)}, ["debug", "startup"])
 
+		# Check for action_params section and merge parameters
+		if data.has("action_params"):
+			var action_params := data.action_params as Dictionary
+			Log.debug("Found action_params section", {"param_actions": action_params.keys()}, ["debug", "startup"])
+			
+			# Merge action_params into actions
+			for i in range(actions.size()):
+				var action_item := actions[i] as Dictionary
+				var action_name: String = action_item.get("action", "")
+				
+				if action_params.has(action_name):
+					var extra_params := action_params[action_name] as Dictionary
+					var current_params := action_item.get("params", {}) as Dictionary
+					
+					# Merge parameters (action_params override existing params)
+					for param_key in extra_params:
+						current_params[param_key] = extra_params[param_key]
+					
+					action_item["params"] = current_params
+					Log.debug("Merged action_params", {
+						"action": action_name,
+						"merged_params": current_params
+					}, ["debug", "startup"])
+
 		Log.debug("Parsed actions from config", {"actions": actions, "count": actions.size()}, ["debug", "startup"])
 		return actions
 
