@@ -14,7 +14,7 @@ func _exit_tree() -> void:
 func _cleanup_singletons() -> void:
 	# End session if still active before cleanup
 	SessionManager.end_gameplay_session()
-	
+
 	# Clean up the advanced logger ConfigManager
 	if ResourceLoader.exists("res://addons/advanced_logger/utils/config_manager.gd"):
 		var _ConfigManager: GDScript = load("res://addons/advanced_logger/utils/config_manager.gd")
