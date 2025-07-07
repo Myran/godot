@@ -212,6 +212,19 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"system.debug.finalize_replay_validation",
+				func() -> bool: return _finalize_replay_validation()
+			)
+			. set_category("System")
+			. set_group("Debug")
+			. set_description("Finalize replay validation and output checksum summary")
+		)
+	)
+
 	# TDD RED Phase - These actions test desktop functionality that doesn't exist yet
 	registry.register_action(
 		(
@@ -321,6 +334,53 @@ static func _replay_complete() -> bool:
 	)
 
 	return true
+
+
+static func _finalize_replay_validation() -> bool:
+	"""Finalize replay validation and output comprehensive checksum summary"""
+	Log.info("Finalizing replay validation...", {}, ["debug", "replay", "validation", "finalize"])
+
+	# Get comprehensive validation summary
+	var validation_summary: Dictionary = SessionManager.finalize_replay_validation()
+
+	# Create detailed report
+	var replay_determinism_report: Dictionary = {
+		"validation_summary": validation_summary,
+		"determinism_status": "PASSED" if validation_summary.replay_deterministic else "FAILED",
+		"total_actions_validated": validation_summary.total_validations,
+		"checksum_matches": validation_summary.matches,
+		"checksum_mismatches": validation_summary.mismatches,
+		"missing_original_checksums": validation_summary.missing_originals,
+		"success_rate_percent": validation_summary.success_rate * 100.0,
+		"finalization_timestamp": Time.get_datetime_string_from_system()
+	}
+
+	# Log the comprehensive report
+	Log.info(
+		"REPLAY_DETERMINISM_VALIDATION_REPORT",
+		replay_determinism_report,
+		["replay", "validation", "determinism", "report"]
+	)
+
+	# Log result for easy parsing by CI/CD
+	if validation_summary.replay_deterministic:
+		Log.info(
+			"REPLAY_VALIDATION_SUCCESS: All gamestate checksums matched original session",
+			{"matches": validation_summary.matches, "total": validation_summary.total_validations},
+			["replay", "validation", "success"]
+		)
+	else:
+		Log.error(
+			"REPLAY_VALIDATION_FAILURE: Gamestate checksum mismatches detected",
+			{
+				"mismatches": validation_summary.mismatches,
+				"missing": validation_summary.missing_originals,
+				"total": validation_summary.total_validations
+			},
+			["replay", "validation", "failure"]
+		)
+
+	return validation_summary.replay_deterministic
 
 
 # TDD GREEN Phase - Desktop functionality test implementations (now PASS)
