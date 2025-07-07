@@ -1532,7 +1532,13 @@ static func _reset_board_state() -> bool:
 # Player action implementations for semantic replay
 static func _reroll_player(params: Dictionary = {}) -> bool:
 	"""Simulate player reroll action with parameters"""
-	Log.info("Simulating player reroll action", {"params": params}, ["debug", "replay", "player"])
+	# Note: cost parameter exists in semantic logging but game doesn't implement reroll costs
+	var cost: int = params.get("cost", 0)  # Always 0 in this game
+	Log.info(
+		"Simulating player reroll action", 
+		{"cost": cost, "params": params}, 
+		["debug", "replay", "player"]
+	)
 
 	# Create RerollDraftEvent with PLAYER source
 	var event: core.RerollDraftEvent = core.RerollDraftEvent.new()
@@ -1561,7 +1567,7 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 
 static func _toggle_column_player(params: Dictionary = {}) -> bool:
 	"""Simulate player column toggle action with parameters"""
-	var column_index: int = params.get("column_index", 0)
+	var column_index: int = params.get("column_index", 1)  # Middle column is more realistic default
 	var new_state: bool = params.get("new_state", true)
 	Log.info(
 		"Simulating player column toggle action",
@@ -1579,8 +1585,8 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 
 static func _remove_block_player(params: Dictionary = {}) -> bool:
 	"""Simulate player block removal action with parameters"""
-	var card_id: String = params.get("card_id", "")
-	var position: Dictionary = params.get("position", {"x": -1, "y": -1})
+	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
+	var position: Dictionary = params.get("position", {"x": 1, "y": 1})  # Draft center position
 	Log.info(
 		"Simulating player block removal action",
 		{"card_id": card_id, "position": position, "params": params},
@@ -1601,9 +1607,9 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 
 static func _move_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card move action with parameters"""
-	var card_id: String = params.get("card_id", "")
-	var from_position: int = params.get("from_position", 0)
-	var to_position: int = params.get("to_position", 1)
+	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
+	var from_position: int = params.get("from_position", 1)  # Move from second position
+	var to_position: int = params.get("to_position", 3)  # Move to fourth position
 	Log.info(
 		"Simulating player card move action",
 		{
@@ -1629,9 +1635,9 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 
 static func _add_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card addition action with parameters"""
-	var card_id: String = params.get("card_id", "")
-	var target_position: int = params.get("target_position", 0)
-	var source_position: Dictionary = params.get("source_position", {"x": -1, "y": -1})
+	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
+	var target_position: int = params.get("target_position", 2)  # Middle lineup position
+	var source_position: Dictionary = params.get("source_position", {"x": 1, "y": 1})  # Draft center
 	Log.info(
 		"Simulating player card addition action",
 		{
@@ -1657,8 +1663,8 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 
 static func _remove_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card removal action with parameters"""
-	var card_id: String = params.get("card_id", "")
-	var position: int = params.get("position", 0)
+	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
+	var position: int = params.get("position", 2)  # Middle lineup position
 	Log.info(
 		"Simulating player card removal action",
 		{"card_id": card_id, "position": position, "params": params},
@@ -1679,8 +1685,8 @@ static func _remove_card_player(params: Dictionary = {}) -> bool:
 
 static func _transition_player(params: Dictionary = {}) -> bool:
 	"""Simulate player state transition action with parameters"""
-	var from_state: String = params.get("from_state", "")
-	var to_state: String = params.get("to_state", "")
+	var from_state: String = params.get("from_state", "DRAFT")  # Common starting state
+	var to_state: String = params.get("to_state", "PREPARE")  # Common next state
 	Log.info(
 		"Simulating player state transition action",
 		{"from_state": from_state, "to_state": to_state, "params": params},
@@ -1720,8 +1726,8 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 
 static func _start_battle_player(params: Dictionary = {}) -> bool:
 	"""Simulate player battle start action with parameters"""
-	var player_lineup_count: int = params.get("player_lineup_count", 0)
-	var enemy_lineup_count: int = params.get("enemy_lineup_count", 0)
+	var player_lineup_count: int = params.get("player_lineup_count", 3)  # Typical lineup size
+	var enemy_lineup_count: int = params.get("enemy_lineup_count", 3)  # Typical enemy size
 	Log.info(
 		"Simulating player battle start action",
 		{
