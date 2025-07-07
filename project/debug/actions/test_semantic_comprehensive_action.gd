@@ -90,7 +90,7 @@ func _test_basic_api() -> Dictionary:
 		suite_success = false
 
 	# Test 2: Method availability - check if methods are callable
-	var methods: Array[String] = ["start_session", "end_session", "log_action", "get_session_info"]
+	var methods: Array[String] = ["log_action", "get_session_info"]
 	for method_name: String in methods:
 		# For static classes, we assume methods exist if we can call them without error
 		var has_method: bool = true  # We'll verify by attempting to use them
@@ -104,21 +104,20 @@ func _test_basic_api() -> Dictionary:
 		if not has_method:
 			suite_success = false
 
-	# Test 3: Basic session creation
-	var session_id: String = SemanticActionLogger.start_session("api_test")
-	var session_created: bool = not session_id.is_empty()
+	# Test 3: Session availability
+	var session_id: String = SessionManager.get_current_session_id()
+	var session_available: bool = not session_id.is_empty()
 	tests.append(
 		{
-			"name": "Basic session creation",
-			"success": session_created,
+			"name": "Session availability",
+			"success": session_available,
 			"details": "Session ID: %s" % session_id
 		}
 	)
-	if not session_created:
+	if not session_available:
 		suite_success = false
 
-	# Clean up
-	SemanticActionLogger.end_session()
+	# Session continues for full gameplay
 
 	return {
 		"suite_name": "Basic API Functionality",
@@ -138,20 +137,19 @@ func _test_session_management() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	# Test 1: Session creation with custom ID
-	var custom_id: String = "session_mgmt_test_%d" % Time.get_ticks_msec()
-	var session_id: String = SemanticActionLogger.start_session(custom_id)
+	# Test 1: Session availability and info
+	var session_id: String = SessionManager.get_current_session_id()
 	var session_info: Dictionary = SemanticActionLogger.get_session_info()
 
-	var session_id_correct: bool = session_info.session_id.begins_with(custom_id)
+	var session_id_valid: bool = not session_info.session_id.is_empty()
 	tests.append(
 		{
-			"name": "Session creation with custom ID",
-			"success": session_id_correct,
-			"details": "Expected prefix: %s, Got: %s" % [custom_id, session_info.session_id]
+			"name": "Session availability and valid ID",
+			"success": session_id_valid,
+			"details": "Session ID: %s" % session_info.session_id
 		}
 	)
-	if not session_id_correct:
+	if not session_id_valid:
 		suite_success = false
 
 	# Test 2: Session info structure
@@ -199,19 +197,18 @@ func _test_session_management() -> Dictionary:
 	if not count_increased:
 		suite_success = false
 
-	# Test 4: Session ending
-	SemanticActionLogger.end_session()
-	var ended_info: Dictionary = SemanticActionLogger.get_session_info()
-	var session_ended: bool = not ended_info.is_active
+	# Test 4: Session persistence (full gameplay session)
+	var persistent_info: Dictionary = SemanticActionLogger.get_session_info()
+	var session_persistent: bool = persistent_info.is_active
 
 	tests.append(
 		{
-			"name": "Session ending",
-			"success": session_ended,
-			"details": "Session active after end: %s" % str(ended_info.is_active)
+			"name": "Session persistence (full gameplay)",
+			"success": session_persistent,
+			"details": "Session remains active: %s" % str(persistent_info.is_active)
 		}
 	)
-	if not session_ended:
+	if not session_persistent:
 		suite_success = false
 
 	return {
@@ -249,7 +246,8 @@ func _test_player_event_integration() -> Dictionary:
 		"pause.toggle"
 	]
 
-	var session_id: String = SemanticActionLogger.start_session("integration_test")
+	# Ensure session exists
+	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
 	# Test each action type by manual logging (simulating the integration points)
@@ -285,7 +283,7 @@ func _test_player_event_integration() -> Dictionary:
 		}
 	)
 
-	SemanticActionLogger.end_session()
+	# Session continues for full gameplay
 
 	return {
 		"suite_name": "Player Event Integration",
@@ -309,7 +307,8 @@ func _test_log_format_validation() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	var session_id: String = SemanticActionLogger.start_session("format_test")
+	# Ensure session exists
+	var session_id: String = SessionManager.get_current_session_id()
 
 	# Test 1: Log action with complex data
 	var test_data: Dictionary = {
@@ -360,7 +359,7 @@ func _test_log_format_validation() -> Dictionary:
 		}
 	)
 
-	SemanticActionLogger.end_session()
+	# Session continues for full gameplay
 
 	return {
 		"suite_name": "Log Format Validation",
@@ -381,7 +380,8 @@ func _test_performance_reliability() -> Dictionary:
 	var suite_success: bool = true
 
 	# Test 1: High volume logging
-	var session_id: String = SemanticActionLogger.start_session("performance_test")
+	# Ensure session exists
+	var session_id: String = SessionManager.get_current_session_id()
 	var start_time: int = Time.get_ticks_msec()
 	var action_count: int = 100
 
@@ -435,7 +435,7 @@ func _test_performance_reliability() -> Dictionary:
 	if not session_stable:
 		suite_success = false
 
-	SemanticActionLogger.end_session()
+	# Session continues for full gameplay
 
 	return {
 		"suite_name": "Performance & Reliability",

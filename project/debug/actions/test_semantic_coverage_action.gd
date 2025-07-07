@@ -26,7 +26,8 @@ func _execute_semantic_coverage_test() -> DebugAction.Result:
 		"draft.upgrade_ui"
 	]
 
-	var session_id: String = SemanticActionLogger.start_session("coverage_test_session")
+	# Ensure session exists (will create one if needed)
+	var session_id: String = SessionManager.get_current_session_id()
 
 	Log.info(
 		"Starting semantic logging coverage test",
@@ -76,14 +77,13 @@ func _execute_semantic_coverage_test() -> DebugAction.Result:
 	else:
 		test_results.append("❌ Session ID format incorrect: %s" % session_info.session_id)
 
-	# Test 5: Test session management
-	SemanticActionLogger.end_session()
-	var ended_session_info: Dictionary = SemanticActionLogger.get_session_info()
+	# Test 5: Session remains active for full gameplay
+	var current_session_info: Dictionary = SemanticActionLogger.get_session_info()
 
-	if not ended_session_info.is_active:
-		test_results.append("✅ Session properly ended")
+	if current_session_info.is_active:
+		test_results.append("✅ Session remains active (full gameplay session)")
 	else:
-		test_results.append("❌ Session still active after end")
+		test_results.append("❌ Session unexpectedly inactive")
 
 	# Generate summary
 	var success_count: int = 0

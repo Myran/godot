@@ -19,7 +19,8 @@ func _execute_player_events_test() -> DebugAction.Result:
 	)
 
 	var test_results: Array[Dictionary] = []
-	var session_id: String = SemanticActionLogger.start_session("player_events_test")
+	# Ensure session exists (will create one if needed)
+	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
 	# Test 1: Generate actual RerollDraftEvent (PLAYER source)
@@ -66,7 +67,7 @@ func _execute_player_events_test() -> DebugAction.Result:
 	}
 	test_results.append(count_test)
 
-	SemanticActionLogger.end_session()
+	# Session continues for full gameplay - no need to end manually
 
 	# Generate report
 	var passed_tests: int = (

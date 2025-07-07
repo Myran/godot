@@ -9,23 +9,9 @@ static func log_action(action_type: String, data: Dictionary = {}) -> void:
 	"""Log a semantic player action with session context (compatibility wrapper)"""
 	SessionManager.log_semantic_action(action_type, data)
 
-# Session management - delegates to SessionManager
-static func start_session(session_id: String = "") -> String:
-	"""Start a new session (compatibility wrapper)"""
-	if session_id.is_empty():
-		return SessionManager.start_new_session("legacy_start")
-	else:
-		SessionManager.current_session_id = session_id
-		SessionManager.session_start_time = Time.get_unix_time_from_system() * 1000.0
-		SessionManager.session_action_count = 0
-		return session_id
-
-static func end_session() -> void:
-	"""End current session (compatibility wrapper)"""
-	SessionManager.end_current_session("legacy_end")
-
+# Session info (read-only) - delegates to SessionManager
 static func get_session_info() -> Dictionary:
-	"""Get current session info (compatibility wrapper)"""
+	"""Get current session info (read-only compatibility wrapper)"""
 	return {
 		"session_id": SessionManager.get_current_session_id(),
 		"action_count": SessionManager.session_action_count,
@@ -105,25 +91,16 @@ static func log_battle_action(action_type: String, data: Dictionary = {}) -> voi
 			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)
 
-# Enhanced session control with context
-static func start_draft_session(level: int = 1) -> String:
-	"""Start a full gameplay session (compatibility method)"""
-	return SemanticLogger.start_gameplay_session()
-
-static func start_battle_session(player_lineup: Array = [], enemy_lineup: Array = []) -> String:
-	"""Start a full gameplay session (compatibility method)"""
-	return SemanticLogger.start_gameplay_session()
-
-# Compatibility methods for existing code
+# Compatibility methods for existing code (deprecated - use SessionManager directly)
 static func _ensure_session_active() -> void:
-	"""Ensure session is active (compatibility)"""
+	"""Ensure session is active (compatibility - now just ensures gameplay session exists)"""
 	SessionManager.get_current_session_id()  # This will create one if needed
 
 static func _generate_session_id() -> String:
-	"""Generate session ID (compatibility)"""
+	"""Generate session ID (compatibility - deprecated)"""
 	var timestamp: String = Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_")
 	return "session_%s_%d" % [timestamp, randi() % 10000]
 
 static func _get_debug_session_id() -> String:
-	"""Get debug session ID (compatibility)"""
+	"""Get debug session ID (compatibility - deprecated)"""
 	return "game_session_%d" % Time.get_ticks_msec()

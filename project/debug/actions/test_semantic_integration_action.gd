@@ -12,8 +12,8 @@ func _init() -> void:
 
 
 func _execute_semantic_integration_test() -> DebugAction.Result:
-	# Start a test session
-	var session_id: String = SemanticActionLogger.start_session("integration_test_session")
+	# Ensure session exists (will create one if needed)
+	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
 	Log.info(
@@ -51,14 +51,13 @@ func _execute_semantic_integration_test() -> DebugAction.Result:
 	else:
 		test_results.append("❌ Session ID changed during test")
 
-	# Test 5: Test session end
-	SemanticActionLogger.end_session()
-	var ended_session_info: Dictionary = SemanticActionLogger.get_session_info()
+	# Test 5: Session continues for full gameplay (always active)
+	var current_session_info: Dictionary = SemanticActionLogger.get_session_info()
 
-	if not ended_session_info.is_active:
-		test_results.append("✅ Session properly ended")
+	if current_session_info.is_active:
+		test_results.append("✅ Session remains active (full gameplay session)")
 	else:
-		test_results.append("❌ Session still active after end")
+		test_results.append("❌ Session unexpectedly inactive")
 
 	# Generate test summary
 	var success_count: int = 0

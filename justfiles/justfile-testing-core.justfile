@@ -572,21 +572,21 @@ _expand_test_list test_list:
         exit 1
     fi
     
-    # Extract configurations
-    if ! jq -e '.configurations' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
-        echo "❌ Test list missing required 'configurations' field"
+    # Extract configs
+    if ! jq -e '.configs' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
+        echo "❌ Test list missing required 'configs' field"
         exit 1
     fi
     
-    # Validate configurations is an array
-    if ! jq -e '.configurations | type == "array"' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
-        echo "❌ Test list 'configurations' field must be an array"
+    # Validate configs is an array
+    if ! jq -e '.configs | type == "array"' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
+        echo "❌ Test list 'configs' field must be an array"
         exit 1
     fi
     
     # Extract configuration names
     echo "📋 Test list configurations:"
-    jq -r '.configurations[]' "$TEST_LIST_DIR/${TEST_LIST}.json" | while read -r config; do
+    jq -r '.configs[]' "$TEST_LIST_DIR/${TEST_LIST}.json" | while read -r config; do
         echo "  • $config"
     done
     
@@ -621,14 +621,14 @@ _test-list-android test_list:
         exit 1
     fi
     
-    # Extract configurations
-    if ! jq -e '.configurations' "$TEST_LIST_PATH" >/dev/null 2>&1; then
-        echo "❌ Test list missing required 'configurations' field"
+    # Extract configs
+    if ! jq -e '.configs' "$TEST_LIST_PATH" >/dev/null 2>&1; then
+        echo "❌ Test list missing required 'configs' field"
         exit 1
     fi
     
-    # Get configurations array
-    CONFIGS=$(jq -r '.configurations[]' "$TEST_LIST_PATH")
+    # Get configs array
+    CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
     
     if [[ -z "$CONFIGS" ]]; then
         echo "❌ No configurations found in test list"
@@ -1510,7 +1510,7 @@ list-test-lists:
             echo "   Configurations:"
             
             # Show configurations
-            jq -r '.configurations[]' "$list_file" 2>/dev/null | while read -r config; do
+            jq -r '.configs[]' "$list_file" 2>/dev/null | while read -r config; do
                 echo "     • $config"
             done
             
@@ -1560,7 +1560,7 @@ list-test-lists-matching pattern:
                 echo "   Configurations:"
                 
                 # Show configurations
-                jq -r '.configurations[]' "$list_file" 2>/dev/null | while read -r config; do
+                jq -r '.configs[]' "$list_file" 2>/dev/null | while read -r config; do
                     echo "     • $config"
                 done
                 
