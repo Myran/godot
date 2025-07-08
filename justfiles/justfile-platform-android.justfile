@@ -97,6 +97,21 @@ clean-android-templates:
     rm -f {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/build/outputs/apk/release/android_release.apk
     echo "✅ Android templates cleaned"
 
+# Install Android template from android_source.zip
+install-android-template:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Installing Android gradle for custom builds"
+    rm -rf project/android
+    mkdir project/android
+    unzip -o templates/android_source.zip -d project/android/build
+    chmod +x project/android
+    md5=$(md5sum templates/android_source.zip | awk NF=1)
+    rp=$(realpath templates/android_source.zip)
+    echo "$rp [$md5]"  >> project/android/.build_version
+    touch project/android/.gdignore
+    echo "Done installing Android template"
+
 # Android development environment setup
 setup-android:
     #!/usr/bin/env bash
