@@ -60,6 +60,9 @@ fastbuild-android: _validate-android-workflow _validate-godot-editor
     @echo "⚡ Fast Android build (60 seconds)..."
     @echo "📋 Building optimized debug APK for rapid iteration..."
     
+    # Insert Firebase dependencies first
+    just insert-firebase-dependencies
+    
     # Build and install in one step
     just _gradle-build-install-android
     echo "✅ Fast build complete!"
@@ -81,14 +84,17 @@ build-android-templates minimal="no":
     fi
     
     echo "📁 Copying templates to templates/ directory..."
-    cp bin/android_*.apk ../templates/
+    cp platform/android/java/app/build/outputs/apk/debug/android_debug.apk ../templates/
+    cp platform/android/java/app/build/outputs/apk/release/android_release.apk ../templates/
     echo "✅ Android templates built successfully"
 
 # Clean Android template artifacts
 clean-android-templates:
     @echo "🧹 Cleaning Android template artifacts..."
-    rm -f templates/android_*.apk
-    rm -f {{GODOT_SUBMODULE_PATH}}/bin/android_*.apk
+    rm -f templates/android_debug.apk
+    rm -f templates/android_release.apk
+    rm -f {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/build/outputs/apk/debug/android_debug.apk
+    rm -f {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/build/outputs/apk/release/android_release.apk
     echo "✅ Android templates cleaned"
 
 # Android development environment setup
@@ -183,13 +189,13 @@ _gradle-build-install-android:
     # Navigate to build directory
     cd {{ANDROID_GRADLE_DIR}}
     
-    # Build debug APK
+    # Build debug APK with correct package name
     echo "📦 Building debug APK with Gradle..."
-    ./gradlew assembleDebug
+    ./gradlew assembleDebug -Pexport_package_name={{ANDROID_PACKAGE_NAME}} -Pperform_signing=true
     
     # Install on device
     echo "📱 Installing APK on device {{ANDROID_DEVICE_ID}}..."
-    adb -s {{ANDROID_DEVICE_ID}} install -r app/build/outputs/apk/debug/app-debug.apk
+    adb -s {{ANDROID_DEVICE_ID}} install -r build/outputs/apk/standard/debug/android_debug.apk
     
     echo "✅ Android APK built and installed successfully"
 
