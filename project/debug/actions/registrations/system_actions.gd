@@ -8,6 +8,18 @@ class_name SystemActions
 const TestStateExtractorRedPhaseAction = preload(
 	"res://debug/actions/test_state_extractor_red_phase_action.gd"
 )
+const TestPreActionIntegrationRedPhaseAction = preload(
+	"res://debug/actions/test_pre_action_integration_red_phase_action.gd"
+)
+const TestReplayValidationRedPhaseAction = preload(
+	"res://debug/actions/test_replay_validation_red_phase_action.gd"
+)
+const TestPerformanceRequirementsRedPhaseAction = preload(
+	"res://debug/actions/test_performance_requirements_red_phase_action.gd"
+)
+const TestEdgeCasesRedPhaseAction = preload(
+	"res://debug/actions/test_edge_cases_red_phase_action.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -197,6 +209,28 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		TestStateExtractorRedPhaseAction.new()
 	)
 	registry.register_action(state_extractor_test)
+
+	# TDD RED PHASE - Pre-Action Integration tests (SHOULD FAIL)
+	var pre_action_integration_test: TestPreActionIntegrationRedPhaseAction = (
+		TestPreActionIntegrationRedPhaseAction.new()
+	)
+	registry.register_action(pre_action_integration_test)
+
+	# TDD RED PHASE - Replay Validation Integration tests (SHOULD FAIL)
+	var replay_validation_test: TestReplayValidationRedPhaseAction = (
+		TestReplayValidationRedPhaseAction.new()
+	)
+	registry.register_action(replay_validation_test)
+
+	# TDD RED PHASE - Performance Requirements tests (SHOULD FAIL)
+	var performance_requirements_test: TestPerformanceRequirementsRedPhaseAction = (
+		TestPerformanceRequirementsRedPhaseAction.new()
+	)
+	registry.register_action(performance_requirements_test)
+
+	# TDD RED PHASE - Edge Cases Handling tests (SHOULD FAIL)
+	var edge_cases_test: TestEdgeCasesRedPhaseAction = TestEdgeCasesRedPhaseAction.new()
+	registry.register_action(edge_cases_test)
 
 	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 
