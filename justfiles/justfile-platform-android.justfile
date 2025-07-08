@@ -27,6 +27,20 @@ build-all-android: validate-env
     
     @echo "✅ Android full build complete!"
 
+# Android full build steps
+_build-android-full:
+    @echo ""
+    @echo "🤖 ANDROID BUILD STEPS"
+    @echo "===================="
+    @echo "📦 [1/4] Building Android templates..."
+    just templates-android
+    @echo "🔥 [2/4] Setting up Firebase..."
+    just insert-firebase-dependencies
+    @echo "📱 [3/4] Exporting Android APK..."
+    just export-apk-android
+    @echo "📦 [4/4] Exporting Android AAB..."
+    just export-aab-android
+
 # Config workflow validation for Android
 _validate-android-config-workflow CONFIG:
     @echo "✅ Android config workflow validated for {{CONFIG}}"
