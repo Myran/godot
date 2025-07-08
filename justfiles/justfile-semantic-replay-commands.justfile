@@ -4,6 +4,15 @@
 # Commands for capturing semantic logs and generating replay test configurations
 
 # ================================
+# GLOBAL LOG PATH CONFIGURATION
+# ================================
+
+# Desktop log paths for self-contained and system installations
+PROJECT_LOGS_DIR := "./logs"
+USER_DATA_DIR := "$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+STANDARD_LOGS_DIR := USER_DATA_DIR + "/logs"
+
+# ================================
 # SHARED FZF SELECTION UTILITIES
 # ================================
 
@@ -183,28 +192,49 @@ create-demo-from-last-session demo_name:
     else
         echo "🖥️  Detected Desktop - using desktop logs"
         # Check for self-contained mode first (logs in project directory)
-        PROJECT_LOGS_DIR="{{PROJECT_PATH}}/logs"
-        USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-        STANDARD_LOGS_DIR="$USER_DATA_DIR/logs"
+        PROJECT_LOGS_DIR="{{PROJECT_LOGS_DIR}}"
+        USER_DATA_DIR="{{USER_DATA_DIR}}"
+        STANDARD_LOGS_DIR="{{STANDARD_LOGS_DIR}}"
         
         RECENT_LOGS=""
+        LATEST_LOG=""
         
-        # Try self-contained logs first
+        # Find the most recent log file from both locations
+        PROJECT_LATEST=""
+        STANDARD_LATEST=""
+        
+        # Check self-contained logs
         if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        fi
+        
+        # Check standard user data logs
+        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        fi
+        
+        # Choose the most recent log file between the two locations
+        if [ -n "$PROJECT_LATEST" ] && [ -n "$STANDARD_LATEST" ]; then
+            # Compare modification times and use the more recent one
+            if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
+                LATEST_LOG="$PROJECT_LATEST"
+                echo "📁 Using self-contained logs (most recent): $PROJECT_LOGS_DIR"
+            else
+                LATEST_LOG="$STANDARD_LATEST"
+                echo "📁 Using standard logs (most recent): $STANDARD_LOGS_DIR"
+            fi
+        elif [ -n "$PROJECT_LATEST" ]; then
+            LATEST_LOG="$PROJECT_LATEST"
             echo "📁 Using self-contained logs: $PROJECT_LOGS_DIR"
-            LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-                RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-            fi
-        # Fallback to standard user data directory
-        elif [ -d "$STANDARD_LOGS_DIR" ]; then
+        elif [ -n "$STANDARD_LATEST" ]; then
+            LATEST_LOG="$STANDARD_LATEST"
             echo "📁 Using standard logs: $STANDARD_LOGS_DIR"
-            LATEST_LOG=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-                RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-            fi
+        fi
+        
+        # Read the most recent log file
+        if [ -n "$LATEST_LOG" ]; then
+            echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
+            RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
         fi
     fi
     
@@ -218,8 +248,8 @@ create-demo-from-last-session demo_name:
         echo "   4. Then try: just create-demo-from-last-session DEMO_NAME"
         echo ""
         echo "📂 Desktop logs locations checked:"
-        echo "   Self-contained: {{PROJECT_PATH}}/logs"
-        echo "   Standard: $HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}/logs"
+        echo "   Self-contained: {{PROJECT_LOGS_DIR}}"
+        echo "   Standard: {{STANDARD_LOGS_DIR}}"
         echo ""
         echo "🔍 Available demos (you can test these):"
         just list-demos 2>/dev/null || echo "   No demos available yet"
@@ -504,6 +534,195 @@ create-demo-from-last-session demo_name:
     echo ""
     echo "🎉 Demo creation complete!"
 
+# Create demo from the most recent Android session
+create-demo-from-last-session-android demo_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    DEMO_NAME="{{demo_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
+    
+    echo "🎬 Creating demo from most recent Android session..."
+    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo ""
+    
+    # Force Android log extraction
+    echo "📋 Extracting session from Android logs..."
+    
+    if ! command -v adb >/dev/null 2>&1; then
+        echo "❌ adb command not found. Install Android SDK or platform tools"
+        exit 1
+    fi
+    
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device connected"
+        echo ""
+        echo "💡 Connect Android device and enable USB debugging"
+        exit 1
+    fi
+    
+    echo "🤖 Using Android adb logcat"
+    RECENT_LOGS=$(just logs-last 2>/dev/null | grep -v "Getting latest" || echo "")
+    
+    if [ -z "$RECENT_LOGS" ]; then
+        echo "❌ No recent Android logs found"
+        echo ""
+        echo "💡 To create a demo, you need to generate logs first:"
+        echo "   1. Run the game: just test-android development-workflow"
+        echo "   2. Play through a sequence (draft, lineup, battle, etc.)"
+        echo "   3. Close the game to save logs"
+        echo "   4. Then try: just create-demo-from-last-session-android DEMO_NAME"
+        exit 1
+    fi
+    
+    # Extract session ID from logs (look for most recent SESSION_START)
+    SESSION_ID=$(echo "$RECENT_LOGS" | grep "SESSION_START" | tail -1 | grep -o '"session_id": *"[^"]*"' | cut -d'"' -f4 || echo "")
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ No session ID found in recent Android logs"
+        echo ""
+        echo "💡 Make sure the game created a session:"
+        echo "   1. Run: just test-android development-workflow"
+        echo "   2. Look for SESSION_START logs"
+        echo "   3. Then try: just create-demo-from-last-session-android DEMO_NAME"
+        exit 1
+    fi
+    
+    echo "✅ Found Android session ID: $SESSION_ID"
+    
+    # Extract semantic actions for this session
+    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for Android session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Make sure you performed actions during gameplay (draft, lineup, etc.)"
+        exit 1
+    fi
+    
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions from Android"
+    
+    # Use the shared demo creation logic
+    just create-demo-from-session "$SESSION_ID" "$DEMO_NAME"
+
+# Create demo from the most recent Desktop session  
+create-demo-from-last-session-desktop demo_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    DEMO_NAME="{{demo_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
+    
+    echo "🎬 Creating demo from most recent Desktop session..."
+    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo ""
+    
+    # Force Desktop log extraction
+    echo "📋 Extracting session from Desktop logs..."
+    echo "🖥️  Using Desktop logs"
+    
+    # Check for self-contained mode first (logs in project directory)
+    PROJECT_LOGS_DIR="{{PROJECT_LOGS_DIR}}"
+    USER_DATA_DIR="{{USER_DATA_DIR}}"
+    STANDARD_LOGS_DIR="{{STANDARD_LOGS_DIR}}"
+    
+    RECENT_LOGS=""
+    LATEST_LOG=""
+    
+    # Find the most recent log file from both locations
+    PROJECT_LATEST=""
+    STANDARD_LATEST=""
+    
+    # Check self-contained logs
+    if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+    fi
+    
+    # Check standard user data logs
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+    fi
+    
+    # Choose the most recent log file between the two locations
+    if [ -n "$PROJECT_LATEST" ] && [ -n "$STANDARD_LATEST" ]; then
+        # Compare modification times and use the more recent one
+        if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
+            LATEST_LOG="$PROJECT_LATEST"
+            echo "📁 Using self-contained logs (most recent): $PROJECT_LOGS_DIR"
+        else
+            LATEST_LOG="$STANDARD_LATEST"
+            echo "📁 Using standard logs (most recent): $STANDARD_LOGS_DIR"
+        fi
+    elif [ -n "$PROJECT_LATEST" ]; then
+        LATEST_LOG="$PROJECT_LATEST"
+        echo "📁 Using self-contained logs: $PROJECT_LOGS_DIR"
+    elif [ -n "$STANDARD_LATEST" ]; then
+        LATEST_LOG="$STANDARD_LATEST"
+        echo "📁 Using standard logs: $STANDARD_LOGS_DIR"
+    fi
+    
+    # Read the most recent log file
+    if [ -n "$LATEST_LOG" ]; then
+        echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
+        RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
+    fi
+    
+    if [ -z "$RECENT_LOGS" ]; then
+        echo "❌ No recent Desktop logs found"
+        echo ""
+        echo "💡 To create a demo, you need to generate logs first:"
+        echo "   1. Run the game: just run-desktop"
+        echo "   2. Play through a sequence (draft, lineup, battle, etc.)"
+        echo "   3. Close the game to save logs"
+        echo "   4. Then try: just create-demo-from-last-session-desktop DEMO_NAME"
+        echo ""
+        echo "📂 Desktop logs locations checked:"
+        echo "   Self-contained: {{PROJECT_LOGS_DIR}}"
+        echo "   Standard: {{STANDARD_LOGS_DIR}}"
+        exit 1
+    fi
+    
+    # Extract session ID from logs (look for most recent SESSION_START)
+    SESSION_ID=$(echo "$RECENT_LOGS" | grep "SESSION_START" | tail -1 | grep -o '"session_id": *"[^"]*"' | cut -d'"' -f4 || echo "")
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ No session ID found in recent Desktop logs"
+        echo ""
+        echo "💡 Make sure the game created a session:"
+        echo "   1. Run: just run-desktop"
+        echo "   2. Play through a sequence and look for SESSION_START logs"
+        echo "   3. Then try: just create-demo-from-last-session-desktop DEMO_NAME"
+        echo ""
+        echo "🔍 Recent log sample (last 5 lines):"
+        echo "$RECENT_LOGS" | tail -5
+        exit 1
+    fi
+    
+    echo "✅ Found Desktop session ID: $SESSION_ID"
+    
+    # Extract semantic actions for this session
+    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for Desktop session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Make sure you performed actions during gameplay (draft, lineup, etc.)"
+        exit 1
+    fi
+    
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions from Desktop"
+    
+    # Use the shared demo creation logic
+    just create-demo-from-session "$SESSION_ID" "$DEMO_NAME"
+
 # Create demo from specific session ID
 create-demo-from-session session_id demo_name:
     #!/usr/bin/env bash
@@ -568,28 +787,49 @@ create-demo-interactive:
     else
         echo "🖥️  Searching Desktop logs..."
         # Check for self-contained mode first (logs in project directory)
-        PROJECT_LOGS_DIR="{{PROJECT_PATH}}/logs"
-        USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-        STANDARD_LOGS_DIR="$USER_DATA_DIR/logs"
+        PROJECT_LOGS_DIR="{{PROJECT_LOGS_DIR}}"
+        USER_DATA_DIR="{{USER_DATA_DIR}}"
+        STANDARD_LOGS_DIR="{{STANDARD_LOGS_DIR}}"
         
         RECENT_LOGS=""
+        LATEST_LOG=""
         
-        # Try self-contained logs first
+        # Find the most recent log file from both locations
+        PROJECT_LATEST=""
+        STANDARD_LATEST=""
+        
+        # Check self-contained logs
         if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        fi
+        
+        # Check standard user data logs
+        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        fi
+        
+        # Choose the most recent log file between the two locations
+        if [ -n "$PROJECT_LATEST" ] && [ -n "$STANDARD_LATEST" ]; then
+            # Compare modification times and use the more recent one
+            if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
+                LATEST_LOG="$PROJECT_LATEST"
+                echo "📁 Using self-contained logs (most recent): $PROJECT_LOGS_DIR"
+            else
+                LATEST_LOG="$STANDARD_LATEST"
+                echo "📁 Using standard logs (most recent): $STANDARD_LOGS_DIR"
+            fi
+        elif [ -n "$PROJECT_LATEST" ]; then
+            LATEST_LOG="$PROJECT_LATEST"
             echo "📁 Using self-contained logs: $PROJECT_LOGS_DIR"
-            LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-                RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-            fi
-        # Fallback to standard user data directory
-        elif [ -d "$STANDARD_LOGS_DIR" ]; then
+        elif [ -n "$STANDARD_LATEST" ]; then
+            LATEST_LOG="$STANDARD_LATEST"
             echo "📁 Using standard logs: $STANDARD_LOGS_DIR"
-            LATEST_LOG=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-                RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-            fi
+        fi
+        
+        # Read the most recent log file
+        if [ -n "$LATEST_LOG" ]; then
+            echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
+            RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
         fi
     fi
     
@@ -1093,29 +1333,50 @@ replay-generate session_id config_name="":
     echo "   Output: ${OUTPUT_CONFIG}"
     echo ""
     
-    # Check if semantic logs exist for this session
-    LOG_FILES=$(find logs -name "*.log" -type f 2>/dev/null | head -10 || echo "")
-    if [ -z "$LOG_FILES" ]; then
-        echo "⚠️  No log files found in logs/ directory"
+    # Cross-platform log detection - find the directory that contains the target session
+    PROJECT_LOGS_DIR="./logs"
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    
+    # Check which directory contains the target session
+    LOG_DIR=""
+    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (session found): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (session found): $LOG_DIR"
+    elif [ -d "$STANDARD_LOGS_DIR" ] && [ "$(find "$STANDARD_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (fallback): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ "$(find "$PROJECT_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (fallback): $LOG_DIR"
+    fi
+    
+    if [ -z "$LOG_DIR" ]; then
+        echo "⚠️  No log files found in log directories"
+        echo "   Checked: $PROJECT_LOGS_DIR"
+        echo "   Checked: $STANDARD_LOGS_DIR"
         echo "   Make sure semantic actions have been logged with session ID: ${SESSION_ID}"
         echo ""
         echo "💡 To capture semantic logs:"
-        echo "   1. Run: just test-android development-workflow"
-        echo "   2. Look for SESSION_START logs to find session IDs"
-        echo "   3. Use the session ID to generate replay config"
+        echo "   1. Run: just test-android development-workflow (for Android logs)"
+        echo "   2. Run: just run-desktop (for desktop logs)"
+        echo "   3. Look for SESSION_START logs to find session IDs"
+        echo "   4. Use the session ID to generate replay config"
         exit 1
     fi
     
     echo "📋 Searching for semantic actions in logs..."
     
     # Extract semantic actions from logs for the specified session
-    SEMANTIC_ACTIONS=$(grep -h "SEMANTIC_ACTION" $LOG_FILES 2>/dev/null | grep "\"session_id\":\"${SESSION_ID}\"" || echo "")
+    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     
     if [ -z "$SEMANTIC_ACTIONS" ]; then
         echo "❌ No semantic actions found for session: ${SESSION_ID}"
         echo ""
         echo "💡 Available session IDs in recent logs:"
-        grep -h "SESSION_START\|session_id" $LOG_FILES 2>/dev/null | grep -o '"session_id":"[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
+        find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START\|session_id" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
         exit 1
     fi
     
@@ -1182,29 +1443,50 @@ replay-generate-manual session_id config_name="":
     echo "   Mode: Manual verification (no auto-quit)"
     echo ""
     
-    # Check if semantic logs exist for this session
-    LOG_FILES=$(find logs -name "*.log" -type f 2>/dev/null | head -10 || echo "")
-    if [ -z "$LOG_FILES" ]; then
-        echo "⚠️  No log files found in logs/ directory"
+    # Cross-platform log detection - find the directory that contains the target session
+    PROJECT_LOGS_DIR="./logs"
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    
+    # Check which directory contains the target session
+    LOG_DIR=""
+    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (session found): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (session found): $LOG_DIR"
+    elif [ -d "$STANDARD_LOGS_DIR" ] && [ "$(find "$STANDARD_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (fallback): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ "$(find "$PROJECT_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (fallback): $LOG_DIR"
+    fi
+    
+    if [ -z "$LOG_DIR" ]; then
+        echo "⚠️  No log files found in log directories"
+        echo "   Checked: $PROJECT_LOGS_DIR"
+        echo "   Checked: $STANDARD_LOGS_DIR"
         echo "   Make sure semantic actions have been logged with session ID: ${SESSION_ID}"
         echo ""
         echo "💡 To capture semantic logs:"
-        echo "   1. Run: just test-android development-workflow"
-        echo "   2. Look for SESSION_START logs to find session IDs"
-        echo "   3. Use the session ID to generate replay config"
+        echo "   1. Run: just test-android development-workflow (for Android logs)"
+        echo "   2. Run: just run-desktop (for desktop logs)"
+        echo "   3. Look for SESSION_START logs to find session IDs"
+        echo "   4. Use the session ID to generate replay config"
         exit 1
     fi
     
     echo "📋 Searching for semantic actions in logs..."
     
     # Extract semantic actions from logs for the specified session
-    SEMANTIC_ACTIONS=$(grep -h "SEMANTIC_ACTION" $LOG_FILES 2>/dev/null | grep "\"session_id\":\"${SESSION_ID}\"" || echo "")
+    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     
     if [ -z "$SEMANTIC_ACTIONS" ]; then
         echo "❌ No semantic actions found for session: ${SESSION_ID}"
         echo ""
         echo "💡 Available session IDs in recent logs:"
-        grep -h "SESSION_START\|session_id" $LOG_FILES 2>/dev/null | grep -o '"session_id":"[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
+        find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START\|session_id" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
         exit 1
     fi
     
@@ -1810,8 +2092,8 @@ test-desktop-target CONFIG_NAME DURATION="30":
     echo ""
     
     # Ensure logs directory exists for desktop
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-    LOGS_DIR="$USER_DATA_DIR/logs"
+    USER_DATA_DIR="{{USER_DATA_DIR}}"
+    LOGS_DIR="{{STANDARD_LOGS_DIR}}"
     mkdir -p "$LOGS_DIR"
     
     echo "📂 Desktop logs will be saved to: $LOGS_DIR"
@@ -1849,8 +2131,8 @@ test-desktop-headless CONFIG_NAME:
     echo ""
     
     # Ensure logs directory exists for desktop
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-    LOGS_DIR="$USER_DATA_DIR/logs"
+    USER_DATA_DIR="{{USER_DATA_DIR}}"
+    LOGS_DIR="{{STANDARD_LOGS_DIR}}"
     mkdir -p "$LOGS_DIR"
     
     echo "📂 Desktop logs will be saved to: $LOGS_DIR"
@@ -1876,8 +2158,8 @@ logs-desktop-last:
     set -euo pipefail
     
     # Find desktop logs in Godot user data directory
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-    LOGS_DIR="$USER_DATA_DIR/logs"
+    USER_DATA_DIR="{{USER_DATA_DIR}}"
+    LOGS_DIR="{{STANDARD_LOGS_DIR}}"
     
     echo "🖥️  Accessing desktop logs..."
     echo "   Directory: $LOGS_DIR"

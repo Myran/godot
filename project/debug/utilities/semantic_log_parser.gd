@@ -23,9 +23,12 @@ static func extract_sessions_from_log(log_data: String) -> Dictionary:
 	var lines: PackedStringArray = log_data.split("\n")
 
 	for line: String in lines:
-		# Parse session start events
-		if line.contains("SEMANTIC_SESSION_START"):
-			var start_data: Dictionary = _parse_session_event_line(line, "SEMANTIC_SESSION_START")
+		# Parse session start events (both old and new formats)
+		if line.contains("SESSION_START") or line.contains("SEMANTIC_SESSION_START"):
+			var event_type: String = (
+				"SESSION_START" if line.contains("SESSION_START") else "SEMANTIC_SESSION_START"
+			)
+			var start_data: Dictionary = _parse_session_event_line(line, event_type)
 			if not start_data.is_empty():
 				var session_id: String = start_data.get("session_id", "unknown")
 				if not sessions.has(session_id):
@@ -35,9 +38,12 @@ static func extract_sessions_from_log(log_data: String) -> Dictionary:
 				else:
 					sessions[session_id]["start_event"] = start_data
 
-		# Parse session end events
-		elif line.contains("SEMANTIC_SESSION_END"):
-			var end_data: Dictionary = _parse_session_event_line(line, "SEMANTIC_SESSION_END")
+		# Parse session end events (both old and new formats)
+		elif line.contains("SESSION_END") or line.contains("SEMANTIC_SESSION_END"):
+			var event_type: String = (
+				"SESSION_END" if line.contains("SESSION_END") else "SEMANTIC_SESSION_END"
+			)
+			var end_data: Dictionary = _parse_session_event_line(line, event_type)
 			if not end_data.is_empty():
 				var session_id: String = end_data.get("session_id", "unknown")
 				if not sessions.has(session_id):
@@ -87,9 +93,10 @@ static func get_session_sequence(log_data: String, session_id: String) -> Array:
 	"""Get ordered sequence of actions for a session"""
 	var session_actions: Array = parse_session_actions(log_data, session_id)
 
-	# Sort by count (action sequence number within session)
+	# Sort by sequence (action sequence number within session)
 	session_actions.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool: return a.get("count", 0) < b.get("count", 0)
+		func(a: Dictionary, b: Dictionary) -> bool:
+			return a.get("sequence", 0) < b.get("sequence", 0)
 	)
 
 	return session_actions

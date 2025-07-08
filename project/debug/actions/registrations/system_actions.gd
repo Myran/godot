@@ -4,6 +4,10 @@
 class_name SystemActions
 
 # Using class_name resolution instead of preload as requested
+# Preload test actions that aren't found automatically
+const TestStateExtractorRedPhaseAction = preload(
+	"res://debug/actions/test_state_extractor_red_phase_action.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -187,6 +191,12 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	# Register semantic logging test using class_name
 	var semantic_logging_test: TestSemanticLoggingAction = TestSemanticLoggingAction.new()
 	registry.register_action(semantic_logging_test)
+
+	# TDD RED PHASE - StateExtractor implementation tests (SHOULD FAIL)
+	var state_extractor_test: TestStateExtractorRedPhaseAction = (
+		TestStateExtractorRedPhaseAction.new()
+	)
+	registry.register_action(state_extractor_test)
 
 	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 

@@ -208,7 +208,7 @@ func _parse_config_file(path: String) -> Array:
 			var test_id := str(test_metadata.test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
-	
+
 	# Setup replay validation if this is a demo/replay config
 	if data.has("type") and data.type == "demo":
 		Log.info("Demo config detected, setting up replay validation", {"config_path": path}, ["debug", "startup", "replay"])
@@ -281,23 +281,23 @@ func _parse_config_file(path: String) -> Array:
 		if data.has("action_params"):
 			var action_params := data.action_params as Dictionary
 			Log.debug("Found action_params section", {"param_actions": action_params.keys()}, ["debug", "startup"])
-			
+
 			# Track action counts for indexed parameter matching
 			var action_counts: Dictionary = {}
-			
+
 			# Merge action_params into actions
 			for i in range(actions.size()):
 				var action_item := actions[i] as Dictionary
 				var action_name: String = action_item.get("action", "")
-				
+
 				# Track how many times we've seen this action
 				action_counts[action_name] = action_counts.get(action_name, 0) + 1
 				var count: int = action_counts[action_name]
-				
+
 				# Try both the base action name and indexed name
 				var param_key: String = action_name
 				var indexed_key: String = action_name + "_" + str(count)
-				
+
 				var extra_params: Dictionary = {}
 				if action_params.has(param_key) and count == 1:
 					# First instance uses base name
@@ -305,14 +305,14 @@ func _parse_config_file(path: String) -> Array:
 				elif action_params.has(indexed_key):
 					# Subsequent instances use indexed names
 					extra_params = action_params[indexed_key] as Dictionary
-				
+
 				if not extra_params.is_empty():
 					var current_params := action_item.get("params", {}) as Dictionary
-					
+
 					# Merge parameters (action_params override existing params)
 					for param_key_inner in extra_params:
 						current_params[param_key_inner] = extra_params[param_key_inner]
-					
+
 					action_item["params"] = current_params
 					Log.debug("Merged action_params", {
 						"action": action_name,

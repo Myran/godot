@@ -1,0 +1,29 @@
+{
+  "description": "Generated desktop replay from session: session_20250707_190230_ba6c0166 - Player interactions: state transition, upgrades, card management",
+  "session_id": "session_20250707_190230_ba6c0166",
+  "actions": [
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy", 
+    "game.state.transition_player",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player", 
+    "game.draft.upgrade_player",
+    "game.draft.remove_block_player",
+    "game.lineup.add_card_player",
+    "system.debug.quit_application"
+  ],
+  "test_metadata": {
+    "created_by": "manual_desktop_session_capture",
+    "source_session": "session_20250707_190230_ba6c0166",
+    "created_time": "2025-07-07T19:12:00",
+    "platform": "desktop",
+    "semantic_actions": [
+      "transition.change_state: PREPARE -> DRAFT", 
+      "draft.upgrade: level 1->2",
+      "draft.upgrade: level 2->3", 
+      "draft.upgrade: level 3->4",
+      "draft.remove_card: position (3,1)",
+      "lineup.add_card: card 1 to position 8"
+    ]
+  }
+}

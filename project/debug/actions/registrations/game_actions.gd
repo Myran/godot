@@ -13,7 +13,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	#_register_card_actions(registry)
 	_register_database_actions(registry)
 	_register_quick_actions(registry)
-	_register_checksum_actions(registry)
 
 	Log.info("Game debug actions registered", {}, ["debug", "game"])
 
@@ -1743,14 +1742,3 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 	ui.action(ui.StartBattleEvent.new())
 
 	return true
-
-
-static func _register_checksum_actions(registry: DebugActionRegistry) -> void:
-	# Comprehensive Gamestate Checksum Actions
-	# Legacy comprehensive gamestate capture action removed
-	# This was part of the old capture-based checksum system that has been deprecated
-	Log.debug(
-		"Checksum actions registration completed (legacy actions removed)",
-		{},
-		["debug", "registration"]
-	)

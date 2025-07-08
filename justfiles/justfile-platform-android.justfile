@@ -198,33 +198,45 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
     echo ""
     
-    # Android user:// directory maps to app's private files directory
+    # Try app private directory first, fall back to public storage
     USER_DIR="/data/data/{{ANDROID_PACKAGE_NAME}}/files"
-    REMOTE_CONFIG="$USER_DIR/debug_startup_actions.json"
+    PRIVATE_CONFIG="$USER_DIR/debug_startup_actions.json"
+    PUBLIC_CONFIG="/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json"
     
-    echo "🔧 Pushing to user:// directory (app private storage)..."
-    echo "📁 Target: $REMOTE_CONFIG"
+    echo "🔧 Pushing to device storage..."
     
-    # Use temporary location on external storage first
-    TEMP_CONFIG="/sdcard/temp_debug_config.json"
-    
-    echo "📱 Uploading config to temporary location..."
-    if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
-        echo "✅ Config uploaded to temp location"
+    # First try to push directly to app private directory
+    if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/debug_startup_actions.json" 2>/dev/null; then
+        echo "📁 App private directory accessible - using user:// path"
+        # Use temporary location first, then copy
+        TEMP_CONFIG="/sdcard/temp_debug_config.json"
         
-        # Copy from temp to app private directory using run-as
-        echo "📁 Copying to app private directory (user://)..."
-        if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
-            echo "✅ Config copied to user:// directory"
-            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
-            echo "✅ Config push complete"
+        if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
+            if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
+                echo "✅ Config copied to app private directory"
+                adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
+                echo "✅ Config push complete"
+            else
+                echo "❌ Failed to copy to app private directory"
+                exit 1
+            fi
         else
-            echo "❌ Failed to copy config to app private directory"
+            echo "❌ Failed to upload config to temp location"
             exit 1
         fi
     else
-        echo "❌ Failed to upload config to temp location"
-        exit 1
+        echo "📁 App private directory not accessible - using public storage"
+        # Create public directory and push there
+        adb -s {{ANDROID_DEVICE_ID}} shell "mkdir -p /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/" 2>/dev/null || true
+        
+        if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$PUBLIC_CONFIG"; then
+            echo "✅ Config uploaded to public storage"
+            echo "💡 App will read from public storage location"
+            echo "✅ Config push complete"
+        else
+            echo "❌ Failed to upload config to public storage"
+            exit 1
+        fi
     fi
 
 # Deploy config and restart Android app (5-second iteration)
@@ -276,5 +288,42 @@ config-clear-android:
     else
         echo "⚠️  No external config found on device (or removal failed)"
     fi
+
+# Clear Android test cache to eliminate stale test state
+clear-android-test-cache:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing Android test cache..."
+    
+    # Check if device is connected
+    if ! adb devices | grep -q "{{ANDROID_DEVICE_ID}}.*device"; then
+        echo "❌ Android device not connected: {{ANDROID_DEVICE_ID}}"
+        exit 1
+    fi
+    
+    # Stop the application first
+    echo "⏹️  Stopping application..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+    
+    # Clear application data (includes cached configs and test state)
+    echo "🗑️  Clearing application data..."
+    if adb -s {{ANDROID_DEVICE_ID}} shell "pm clear {{ANDROID_PACKAGE_NAME}}" 2>/dev/null; then
+        echo "✅ Application data cleared"
+    else
+        echo "⚠️  Could not clear application data (app may not be installed)"
+    fi
+    
+    # Clear any test config files on device storage
+    echo "📁 Clearing test config files..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -rf /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/test_configs/" 2>/dev/null || true
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -rf /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json" 2>/dev/null || true
+    
+    # Clear any test preferences
+    echo "⚙️  Clearing test preferences..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -rf /data/data/{{ANDROID_PACKAGE_NAME}}/shared_prefs/test_*" 2>/dev/null || true
+    adb -s {{ANDROID_DEVICE_ID}} shell "rm -rf /data/data/{{ANDROID_PACKAGE_NAME}}/shared_prefs/debug_*" 2>/dev/null || true
+    
+    echo "✅ Android test cache cleared"
+    echo "💡 Run test commands to apply fresh configuration"
     
     echo "💡 App will use embedded config on next restart"

@@ -34,7 +34,7 @@ IOS_BUNDLE_IDENTIFIER := env_var_or_default("IOS_BUNDLE_IDENTIFIER", "com.primar
 # ================================
 # BUILD PATHS & TOOLS
 # ================================
-ANDROID_SDK_PATH := env_var_or_default("ANDROID_SDK_PATH", "~/Library/Android/sdk")
+ANDROID_SDK_PATH := env_var_or_default("ANDROID_SDK_PATH", env_var("HOME") + "/Library/Android/sdk")
 ANDROID_NDK_PATH := env_var_or_default("ANDROID_NDK_PATH", ANDROID_SDK_PATH + "/ndk/25.1.8937393")
 ANDROID_GRADLE_DIR := "build/gradle"
 KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")

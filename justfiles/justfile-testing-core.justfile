@@ -213,6 +213,11 @@ _test-config-android config_name:
     echo "🧪 Testing configuration: $CONFIG_NAME"
     echo "=================================="
     
+    # Clear Android test cache first to prevent stale state contamination
+    echo "🧹 Clearing Android test cache to ensure fresh state..."
+    just clear-android-test-cache
+    echo ""
+    
     # Validate configuration exists and is properly formatted
     just _validate-config-exists "$CONFIG_NAME"
     
@@ -250,10 +255,10 @@ _test-config-android config_name:
     echo "🚀 Starting test execution..."
     echo "============================="
     
-    # Start app with test configuration
-    adb shell am start -n "{{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" \
-        --es "test_id" "$TEST_ID" \
-        --es "config_name" "$CONFIG_NAME"
+    # Use config-restart to properly deploy config and start app
+    echo "📱 Deploying configuration and starting app..."
+    just config-restart-android "$CONFIG_NAME"
+    echo ""
     
     # Wait for app to start
     sleep 2
@@ -349,6 +354,11 @@ _test-config-android-enhanced config_name:
     
     echo "🔬 Enhanced Testing: $CONFIG_NAME"
     echo "================================="
+    
+    # Clear Android test cache first to prevent stale state contamination
+    echo "🧹 Clearing Android test cache to ensure fresh state..."
+    just clear-android-test-cache
+    echo ""
     
     # Validate configuration
     just _validate-config-exists "$CONFIG_NAME"
@@ -714,6 +724,11 @@ test-android-target config_name:
     echo "🎯 Testing target: $CONFIG_NAME"
     echo "==============================="
     
+    # Clear Android test cache first to prevent stale state contamination
+    echo "🧹 Clearing Android test cache to ensure fresh state..."
+    just clear-android-test-cache
+    echo ""
+    
     # Validate configuration exists
     just _validate-config-exists "$CONFIG_NAME"
     
@@ -773,10 +788,10 @@ test-android-target config_name:
     echo "🚀 Starting test execution..."
     echo "============================="
     
-    # Start app with test configuration
-    adb shell am start -n "{{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" \
-        --es "test_id" "$TEST_ID" \
-        --es "config_name" "$CONFIG_NAME"
+    # Use config-restart to properly deploy config and start app
+    echo "📱 Deploying configuration and starting app..."
+    just config-restart-android "$CONFIG_NAME"
+    echo ""
     
     # Wait for app initialization
     sleep 3
