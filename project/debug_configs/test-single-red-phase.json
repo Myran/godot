@@ -1,0 +1,8 @@
+{
+  "description": "Test Single RED Phase - StateExtractor test",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.test_state_extractor_red_phase",
+    "system.debug.quit_application"
+  ]
+}
