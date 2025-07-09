@@ -72,11 +72,38 @@ package-ios-template:
 
 # Note: build-ios-executable is provided by justfile-platform-ios.justfile
 
-# Full build and deploy process for all platforms
-build-all: validate-env
-    @echo "🚀 Building all platforms..."
+# ================================
+# THREE-TIER BUILD SYSTEM
+# ================================
+
+# Tier 1: Build Toolchain (Foundation) - Editor + Templates
+build-toolchain: validate-env
+    @echo "🔧 Building toolchain (editor + templates)..."
     just build-editor
     just templates-all
-    @echo "✅ All builds complete"
+    @echo "✅ Toolchain complete"
 
-# Note: build-all-ios is provided by justfile-platform-ios.justfile
+# Tier 2: Build Artifacts (Deployable Files) - All distribution files
+build-artifacts: validate-env
+    @echo "📦 Building artifacts (all deployable files)..."
+    just build-toolchain
+    just install-android-template
+    just quick-build-android
+    just build-pipeline-ios
+    @echo "✅ All artifacts complete"
+
+# Tier 3: Complete Pipeline (Zero to Device Deployment)
+build-pipeline: validate-env
+    @echo "🚀 Complete pipeline - source to device deployment..."
+    just build-artifacts
+    just install-apk-android
+    @echo "✅ Complete pipeline finished!"
+    @echo "📱 Android: Deployed to device"
+    @echo "🍎 iOS: Ready for device deployment"
+    @echo "💡 Use 'just launch-ios-iphone' to deploy iOS to iPhone"
+    @echo "💡 Use 'just launch-ios-ipad' to deploy iOS to iPad"
+
+# Legacy: Original build-all (now alias for build-toolchain)
+build-all: build-toolchain
+
+# Note: Platform-specific commands provided by platform justfiles

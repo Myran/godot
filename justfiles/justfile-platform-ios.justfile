@@ -43,6 +43,9 @@ help-ios:
     echo ""
     echo "Build Commands:"
     echo "  just build-ios-executable       # Build iOS executable"
+    echo "  just build-ios-app              # Build iOS .app with Xcode"
+    echo "  just save-ios-to-app            # Save PCK file to .app"
+    echo "  just build-pipeline-ios         # Complete pipeline: source to device ready"
     echo "  just ios-build                  # iOS build pipeline"
     echo "  just build-install-ios          # Full iOS rebuild & install (smart rebuild)"
     echo "  just build-all-ios              # Build all iOS components (smart rebuild)"
@@ -63,6 +66,20 @@ help-ios:
 ios-export-pck: pre-build
     @echo "📦 Exporting iOS PCK file..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "ios" ../export/ios/{{GAME_NAME}}.pck --headless
+
+# Build iOS app with Xcode (creates .app file)
+build-ios-app: pre-build
+    @echo "🔨 Building iOS app with Xcode..."
+    cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace \
+                                -scheme {{GAME_NAME}} \
+                                -configuration Debug \
+                                -destination "generic/platform=iOS" \
+                                -allowProvisioningUpdates
+
+# Save iOS PCK file directly to app
+save-ios-to-app: pre-build
+    @echo "💾 Saving iOS PCK file directly to app..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
 # iOS build pipeline
 ios-build: pre-build
@@ -148,3 +165,13 @@ rebuild-all-ios:
     @echo "🔥 Force rebuilding all iOS components..."
     just build-all-ios force=yes
     @echo "✅ All iOS rebuilds complete"
+
+# Complete iOS pipeline - from source to device deployment
+build-pipeline-ios:
+    @echo "🚀 Complete iOS pipeline - source to device..."
+    just _check-or-build-ios-executable
+    just build-ios-app
+    just save-ios-to-app
+    @echo "✅ iOS pipeline complete - ready for device deployment"
+    @echo "💡 Use 'just launch-ios-iphone' to deploy to iPhone"
+    @echo "💡 Use 'just launch-ios-ipad' to deploy to iPad"
