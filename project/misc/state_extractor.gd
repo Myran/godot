@@ -111,11 +111,28 @@ static func normalize_data(data: Dictionary) -> Dictionary:
 static func extract_lineup_state() -> Dictionary:
 	var lineup_state: Dictionary = {}
 
-	# Check if Core autoload exists and has lineup data
-	if Core and Core.has_method("get_lineup_data"):
-		var lineup_data: Dictionary = Core.get_lineup_data()
-		if lineup_data and not lineup_data.is_empty():
-			lineup_state = DictUtils.make_deterministic(lineup_data)
+	# Get the actual Game instance from the main scene
+	var game: Game = _get_game_instance()
+	if game:
+		lineup_state["game_available"] = true
+
+		# Extract real ally lineup data
+		var allies_lineup: Dictionary[int, Card] = game.holder_allies.get_current_lineup()
+		lineup_state["allies"] = _extract_lineup_data(allies_lineup)
+
+		# Extract real enemy lineup data
+		var enemy_lineup: Dictionary[int, Card] = game.holder_enemy.get_current_lineup()
+		lineup_state["enemies"] = _extract_lineup_data(enemy_lineup)
+
+		# Extract game state information
+		lineup_state["current_game_state"] = core.GameState.keys()[
+			game.game_handler.current_gamestate
+		]
+		lineup_state["ui_state"] = core.UIState.keys()[game.ui_state]
+	else:
+		lineup_state["game_available"] = false
+		lineup_state["allies"] = {}
+		lineup_state["enemies"] = {}
 
 	# Add lineup metadata
 	lineup_state["extracted_at"] = Time.get_unix_time_from_system()
@@ -129,11 +146,50 @@ static func extract_lineup_state() -> Dictionary:
 static func extract_board_state() -> Dictionary:
 	var board_state: Dictionary = {}
 
-	# Check if Core autoload exists and has board data
-	if Core and Core.has_method("get_board_data"):
-		var board_data: Dictionary = Core.get_board_data()
-		if board_data and not board_data.is_empty():
-			board_state = DictUtils.make_deterministic(board_data)
+	# Get the actual Game instance from the main scene
+	var game: Game = _get_game_instance()
+	if game:
+		board_state["game_available"] = true
+
+		# Extract clicker/draft area state - filter for actual cards only
+		var draft_cards: Array[Card] = []
+		if game.clicker and game.clicker.has_method("get_all_cards"):
+			var all_blocks: Array[Block] = game.clicker.get_all_cards()
+			for block: Block in all_blocks:
+				if block and block.object_type == core.ObjectType.CARD:
+					var card: Card = block  # Safe assignment since we checked object_type
+					draft_cards.append(card)
+		board_state["draft_area"] = _extract_draft_data(draft_cards)
+
+		# Extract level information
+		board_state["current_level"] = (
+			game.level_controller.get_current_level()
+			if game.level_controller and game.level_controller.has_method("get_current_level")
+			else 0
+		)
+
+		# Extract battle state if available
+		if game.battle_handler:
+			board_state["battle_active"] = (
+				game.battle_handler.is_battle_active()
+				if game.battle_handler.has_method("is_battle_active")
+				else false
+			)
+		else:
+			board_state["battle_active"] = false
+
+		# Extract input state
+		board_state["input_locked"] = (
+			game.input_handler.is_locked()
+			if game.input_handler and game.input_handler.has_method("is_locked")
+			else false
+		)
+	else:
+		board_state["game_available"] = false
+		board_state["draft_area"] = []
+		board_state["current_level"] = 0
+		board_state["battle_active"] = false
+		board_state["input_locked"] = false
 
 	# Add board metadata
 	board_state["extracted_at"] = Time.get_unix_time_from_system()
@@ -242,3 +298,58 @@ static func _has_circular_references(data: Dictionary, visited: Array = []) -> b
 				return true
 
 	return false
+
+
+## Private helper: Get the Game instance from the main scene
+static func _get_game_instance() -> Game:
+	# Access the main scene and find the Game node
+	var main_loop: SceneTree = Engine.get_main_loop()
+	if not main_loop:
+		return null
+
+	var current_scene: Node = main_loop.current_scene
+	if not current_scene:
+		return null
+
+	# Find the Game node with strong typing - fail fast if wrong type
+	var game_node: Game = current_scene.get_node("Game")
+	return game_node
+
+
+## Private helper: Extract card data from lineup dictionary
+static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
+	var lineup_data: Dictionary = {}
+
+	# Use DictUtils for deterministic iteration
+	for item: Dictionary in DictUtils.get_sorted_items(lineup):
+		var position: int = item.key
+		var card: Card = item.value
+
+		if card:
+			lineup_data[position] = {
+				"card_id": card.card_info.id if card.card_info else "",
+				"level": card.level,
+				"health": card.unit_info.current_health if card.unit_info else 0,
+				"attack": card.unit_info.current_attack if card.unit_info else 0,
+				"position": position
+			}
+
+	return lineup_data
+
+
+## Private helper: Extract draft area card data
+static func _extract_draft_data(draft_cards: Array[Card]) -> Array:
+	var draft_data: Array = []
+
+	for i: int in range(draft_cards.size()):
+		var card: Card = draft_cards[i]
+		if card:
+			draft_data.append(
+				{
+					"card_id": card.card_info.id if card.card_info else "",
+					"level": card.level,
+					"draft_position": i
+				}
+			)
+
+	return draft_data

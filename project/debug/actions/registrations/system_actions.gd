@@ -8,6 +8,9 @@ class_name SystemActions
 const TestStateExtractorRedPhaseAction = preload(
 	"res://debug/actions/test_state_extractor_red_phase_action.gd"
 )
+const TestStateExtractorGreenPhaseAction = preload(
+	"res://debug/actions/test_state_extractor_green_phase_action.gd"
+)
 const TestPreActionIntegrationRedPhaseAction = preload(
 	"res://debug/actions/test_pre_action_integration_red_phase_action.gd"
 )
@@ -209,6 +212,12 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		TestStateExtractorRedPhaseAction.new()
 	)
 	registry.register_action(state_extractor_test)
+
+	# TDD GREEN PHASE - StateExtractor implementation validation (SHOULD PASS)
+	var state_extractor_green_test: TestStateExtractorGreenPhaseAction = (
+		TestStateExtractorGreenPhaseAction.new()
+	)
+	registry.register_action(state_extractor_green_test)
 
 	# TDD RED PHASE - Pre-Action Integration tests (SHOULD FAIL)
 	var pre_action_integration_test: TestPreActionIntegrationRedPhaseAction = (

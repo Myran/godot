@@ -110,9 +110,8 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 
 	Log.info("SEMANTIC_ACTION", semantic_log, ["semantic", "action", "player"])
 
-	# TODO: Implement simplified gamestate checksum capture system
-	# The comprehensive capture system has been removed, will be replaced with
-	# a simpler approach focused on critical game state validation
+	# Capture pre-action state for replay validation
+	_capture_pre_action_state(action_type, session_id, sequence)
 
 
 # Application lifecycle management for full gameplay sessions
@@ -128,8 +127,99 @@ static func end_gameplay_session() -> void:
 
 # === GAMESTATE CHECKSUM INTEGRATION ===
 
-# === SIMPLIFIED GAMESTATE VALIDATION ===
-# Legacy comprehensive capture system removed - replaced with targeted validation
+# Storage for pre-action state checksums (session-based)
+static var _pre_action_checksums: Dictionary = {}
+
+
+## Store pre-action state for replay validation
+## Called automatically before each semantic action
+static func store_pre_action_state(checksum: String, state_data: Dictionary) -> void:
+	"""Store pre-action state checksum and data for replay validation"""
+	var session_id: String = get_current_session_id()
+	var sequence: int = session_action_count + 1  # Next action sequence
+
+	# Create state entry
+	var state_entry: Dictionary = {
+		"checksum": checksum,
+		"state_data": state_data,
+		"session_id": session_id,
+		"sequence": sequence,
+		"timestamp_ms": Time.get_unix_time_from_system() * 1000.0
+	}
+
+	# Store in session-based storage
+	var session_key: String = "%s_%d" % [session_id, sequence]
+	_pre_action_checksums[session_key] = state_entry
+
+	Log.debug(
+		"Pre-action state stored",
+		{
+			"session_id": session_id,
+			"sequence": sequence,
+			"checksum": checksum,
+			"state_size": state_data.size()
+		},
+		["session", "state_capture", "checksum"]
+	)
+
+
+## Internal helper: Capture pre-action state using StateExtractor
+static func _capture_pre_action_state(
+	action_type: String, session_id: String, sequence: int
+) -> void:
+	"""Capture game state before semantic action execution"""
+	# Extract current game state
+	var game_state: Dictionary = StateExtractor.extract_game_state()
+
+	# Generate checksum for state validation
+	var checksum: String = StateExtractor.generate_checksum(game_state)
+
+	# Store for replay validation
+	store_pre_action_state(checksum, game_state)
+
+	# Log state capture for debugging
+	Log.debug(
+		"Pre-action state captured",
+		{
+			"action_type": action_type,
+			"session_id": session_id,
+			"sequence": sequence,
+			"checksum": checksum,
+			"game_available": game_state.get("lineup", {}).get("game_available", false)
+		},
+		["session", "state_capture", "pre_action"]
+	)
+
+
+## Get stored pre-action state for replay validation
+static func get_pre_action_state(session_id: String, sequence: int) -> Dictionary:
+	"""Retrieve stored pre-action state for replay validation"""
+	var session_key: String = "%s_%d" % [session_id, sequence]
+	return _pre_action_checksums.get(session_key, {})
+
+
+## Clear pre-action state storage (for memory management)
+static func clear_pre_action_states(session_id: String = "") -> void:
+	"""Clear pre-action state storage for memory management"""
+	if session_id.is_empty():
+		# Clear all stored states
+		_pre_action_checksums.clear()
+		Log.info("All pre-action states cleared", {}, ["session", "state_capture", "cleanup"])
+	else:
+		# Clear states for specific session
+		var keys_to_remove: Array[String] = []
+		for key: String in _pre_action_checksums.keys():
+			if key.begins_with(session_id + "_"):
+				keys_to_remove.append(key)
+
+		for key: String in keys_to_remove:
+			_pre_action_checksums.erase(key)
+
+		Log.info(
+			"Pre-action states cleared for session",
+			{"session_id": session_id, "cleared_count": keys_to_remove.size()},
+			["session", "state_capture", "cleanup"]
+		)
 
 
 static func _log_simple_gamestate_marker(

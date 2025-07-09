@@ -1,0 +1,11 @@
+{
+  "description": "TDD GREEN Phase - StateExtractor implementation validation (SHOULD PASS)",
+  "actions": [
+    "system.debug.test_state_extractor_green_phase"
+  ],
+  "test_metadata": {
+    "created_by": "tdd_development",
+    "phase": "green",
+    "component": "StateExtractor"
+  }
+}
