@@ -57,15 +57,15 @@ pre-build:
 
 # Fast Android development iteration (60 seconds - most used command)
 fastbuild-android: _validate-android-workflow _validate-godot-editor
-    @echo "⚡ Fast Android build (60 seconds)..."
-    @echo "📋 Building optimized debug APK for rapid iteration..."
-    
-    # Insert Firebase dependencies first
-    just insert-firebase-dependencies
-    
-    # Build and install in one step
+    @echo "⚡ Fast Android rebuild with hybrid approach (30-60 sec)..."
+    @echo "   🔄 Step 1: Processing GDScript changes with Godot export..."
+    @echo "   🔨 Step 2: Fast gradle build with custom parameters..."
+    @echo "   ⚠️  Android limitation: Full reinstall required (no hot reload like iOS)"
+    # First: Process GDScript changes via Godot export (creates/updates android build files)
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android apk" /tmp/temp_android_export.apk
+    # Second: Use direct gradle for fast, customized build and install
     just _gradle-build-install-android
-    echo "✅ Fast build complete!"
+    just launch-android
 
 # Android template building
 build-android-templates minimal="no":
@@ -97,6 +97,32 @@ clean-android-templates:
     rm -f {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/build/outputs/apk/release/android_release.apk
     echo "✅ Android templates cleaned"
 
+# Rebuild android_source.zip from current Godot source
+rebuild-android-source-zip:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Rebuilding android_source.zip from current Godot source..."
+    
+    # Remove old template
+    rm -f templates/android_source.zip
+    
+    # Copy gradlew files to app directory temporarily
+    echo "📦 Copying gradlew wrapper files..."
+    cp {{GODOT_SUBMODULE_PATH}}/platform/android/java/gradlew {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/
+    cp {{GODOT_SUBMODULE_PATH}}/platform/android/java/gradlew.bat {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/
+    cp -r {{GODOT_SUBMODULE_PATH}}/platform/android/java/gradle {{GODOT_SUBMODULE_PATH}}/platform/android/java/app/
+    
+    # Create new template zip from Godot source
+    echo "📦 Creating android_source.zip with updated minSdk and gradlew wrapper..."
+    cd {{GODOT_SUBMODULE_PATH}}/platform/android/java/app
+    zip -r ../../../../../templates/android_source.zip . -x "build/*" ".gradle/*" "*.tmp"
+    
+    # Clean up temporary files
+    rm -f gradlew gradlew.bat
+    rm -rf gradle
+    
+    echo "✅ android_source.zip rebuilt with current Godot source (minSdk 23) and gradlew wrapper"
+
 # Install Android template from android_source.zip
 install-android-template:
     #!/usr/bin/env bash
@@ -111,6 +137,53 @@ install-android-template:
     echo "$rp [$md5]"  >> project/android/.build_version
     touch project/android/.gdignore
     echo "Done installing Android template"
+
+# Check Android template health and auto-fix issues
+check-android-template:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔍 Checking Android template health..."
+    
+    ISSUES_FOUND=0
+    
+    # Check if template directory exists
+    if [ ! -d "{{ANDROID_GRADLE_DIR}}" ]; then
+        echo "❌ Template directory missing: {{ANDROID_GRADLE_DIR}}"
+        ISSUES_FOUND=1
+    fi
+    
+    # Check if gradlew exists and is executable
+    if [ ! -x "{{ANDROID_GRADLE_DIR}}/gradlew" ]; then
+        echo "❌ gradlew missing or not executable"
+        ISSUES_FOUND=1
+    fi
+    
+    # Check if config.gradle has correct minSdk
+    if [ -f "{{ANDROID_GRADLE_DIR}}/config.gradle" ]; then
+        if ! grep -q "minSdk.*: 23" "{{ANDROID_GRADLE_DIR}}/config.gradle"; then
+            echo "❌ config.gradle has wrong minSdk (should be 23 for Firebase compatibility)"
+            ISSUES_FOUND=1
+        fi
+    else
+        echo "❌ config.gradle missing"
+        ISSUES_FOUND=1
+    fi
+    
+    # Check if Firebase integration is ready (google-services.json and build.gradle has Firebase)
+    if [ ! -f "{{ANDROID_GRADLE_DIR}}/google-services.json" ]; then
+        echo "❌ google-services.json missing (Firebase config)"
+        ISSUES_FOUND=1
+    elif [ -f "{{ANDROID_GRADLE_DIR}}/build.gradle" ] && ! grep -q "firebase-bom" "{{ANDROID_GRADLE_DIR}}/build.gradle"; then
+        echo "❌ Firebase dependencies not injected in build.gradle"
+        ISSUES_FOUND=1
+    fi
+    
+    if [ $ISSUES_FOUND -eq 1 ]; then
+        echo "🔧 Issues found. Run 'just rebuild-android-source-zip && just install-android-template' to fix"
+        exit 1
+    else
+        echo "✅ Android template is healthy"
+    fi
 
 # Android development environment setup
 setup-android:
@@ -194,25 +267,59 @@ restart-android-app: _validate-android-workflow
     adb -s {{ANDROID_DEVICE_ID}} shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ Android app restarted"
 
-# Gradle build and install helper
+# Internal helper: Gradle build + install (no launch)
 _gradle-build-install-android:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🔧 Building and installing Android APK..."
+    # First insert Firebase dependencies
+    just insert-firebase-dependencies
     
-    # Navigate to build directory
-    cd {{ANDROID_GRADLE_DIR}}
+    echo "🔨 Building Android APK with Gradle..."
     
-    # Build debug APK with correct package name
-    echo "📦 Building debug APK with Gradle..."
-    ./gradlew assembleDebug -Pexport_package_name={{ANDROID_PACKAGE_NAME}} -Pperform_signing=true
+    # Create timestamp for unique filename
+    TIMESTAMP=$(date +%s)
+    TEMP_DIR="/tmp/android_deploy"
+    mkdir -p "$TEMP_DIR"
     
-    # Install on device
-    echo "📱 Installing APK on device {{ANDROID_DEVICE_ID}}..."
-    adb -s {{ANDROID_DEVICE_ID}} install -r build/outputs/apk/standard/debug/android_debug.apk
+    # Run Gradle build
+    cd {{PROJECT_PATH}}/android/build && \
+    ./gradlew validateJavaVersion clean assembleStandardDebug \
+      -Paddons_directory={{PROJECT_PATH}}/addons \
+      -Pexport_package_name={{ANDROID_PACKAGE_NAME}} \
+      -Pexport_version_code=$(date +%Y%m%d%H%M%S) \
+      -Pexport_version_name=1.0.$(date +%Y%m%d%H%M%S) \
+      -Pexport_version_min_sdk=24 \
+      -Pexport_version_target_sdk=34 \
+      -Pexport_enabled_abis=arm64-v8a \
+      -Pplugins_local_binaries= \
+      -Pplugins_remote_binaries= \
+      -Pplugins_maven_repos= \
+      -Pperform_zipalign=true \
+      -Pperform_signing=true \
+      -Pcompress_native_libraries=false
     
-    echo "✅ Android APK built and installed successfully"
+    # Copy and rename binary
+    echo "📱 Building APK..."
+    EXPORT_FILENAME="gametwo_debug_$TIMESTAMP.apk"
+    cd {{PROJECT_PATH}}/android/build && \
+    ./gradlew copyAndRenameBinary \
+      -Pexport_edition=standard \
+      -Pexport_build_type=debug \
+      -Pexport_format=apk \
+      -Pexport_path=file:$TEMP_DIR \
+      -Pexport_filename=$EXPORT_FILENAME
+    
+    # Uninstall existing package
+    echo "🗑️  Uninstalling existing package..."
+    adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "Package not installed"
+    
+    # Install new APK
+    echo "📲 Installing APK to device..."
+    adb -s {{ANDROID_DEVICE_ID}} install "$TEMP_DIR/$EXPORT_FILENAME"
+    
+    echo "✅ APK installed successfully!"
+    echo "💾 APK saved at: $TEMP_DIR/$EXPORT_FILENAME"
 
 # Android development iteration workflow
 iterate-android CONFIG="current":
