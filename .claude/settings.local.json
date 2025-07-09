@@ -127,7 +127,10 @@
       "WebFetch(domain:wezfurlong.org)",
       "Bash(tail:*)",
       "Bash(./editor/godot.macos.editor.arm64 --version)",
-      "Bash(./editor/godot.macos.editor.arm64:*)"
+      "Bash(./editor/godot.macos.editor.arm64:*)",
+      "WebFetch(domain:docs.godotengine.org)",
+      "Bash(./gradlew:*)",
+      "mcp__markdown-downloader__download_markdown"
     ],
     "deny": []
   }

@@ -96,6 +96,7 @@ help:
     echo "💡 Click any 'just' command below to execute it! (Auto-detected in WezTerm)"
     echo ""
     echo "🏗️  THREE-TIER BUILD SYSTEM"
+    echo "  just build                       # Complete: source to device deployment (46 min) ⭐"
     echo "  just build-toolchain             # Foundation: editor + templates (40 min)"
     echo "  just build-artifacts             # Deployable files for all platforms (45 min)"
     echo "  just build-pipeline              # Complete: source to device deployment (46 min)"

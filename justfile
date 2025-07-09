@@ -36,6 +36,9 @@ set shell := ["bash", "-c"]
 default:
     @just help
 
+# Main build command - complete pipeline from source to device deployment
+build: build-pipeline
+
 # Pre-commit validation - format, syntax check, and runtime validation  
 pre-commit:
     #!/usr/bin/env bash

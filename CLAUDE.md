@@ -921,19 +921,37 @@ Commands: logs-errors-tagged TEST_ID firebase
 
 ## 🏗️ Build & Engine Development
 
+### **Three-Tier Build System - Complete Source-to-Device Pipeline**
+**Intelligent build system with three distinct tiers for different use cases:**
+
+```bash
+# ⭐ MAIN BUILD COMMAND - Complete Pipeline
+just build                        # Complete: source to device deployment (46 min)
+
+# Three-tier system for flexibility
+just build-toolchain               # Tier 1: Foundation (editor + templates, 40 min)
+just build-artifacts               # Tier 2: Deployable files (all platforms, 45 min)
+just build-pipeline                # Tier 3: Complete pipeline (source to device, 46 min)
+
+# Platform-specific pipelines
+just build-pipeline-ios            # iOS: source to ready for device
+just build-all-android             # Android smart rebuild (3-5 min)
+just build-all-ios                 # iOS smart rebuild (3-5 min)
+```
+
 ### **Smart Rebuild System - Optimized for Maximum Efficiency**
 **Intelligent build system that automatically detects changes and rebuilds only what's necessary:**
 
 ```bash
 # Smart rebuild commands (auto-detects changes)
 just fastbuild-android            # Smart Android rebuild (15-60 sec depending on changes)
-just fastbuild-ios                # Smart iOS rebuild (15-60 sec depending on changes)
+just build-install-ios            # Smart iOS rebuild (15-60 sec depending on changes)
 just fastbuild-all                # Smart rebuild for both platforms
 
 # Build optimization modes
-just fastbuild-android-force      # Force full rebuild (ignores change detection)
-just fastbuild-ios-force          # Force full iOS rebuild (ignores change detection)
-just fastbuild-check              # Check what would be rebuilt (dry run)
+just rebuild-all-android          # Force full rebuild (ignores change detection)
+just rebuild-all-ios              # Force full iOS rebuild (ignores change detection)
+just build-status                 # Check what would be rebuilt (dry run)
 ```
 
 ### **Build Performance Optimization**
@@ -945,12 +963,18 @@ just fastbuild-check              # Check what would be rebuilt (dry run)
 
 ### **Build Time Expectations**
 ```bash
-# Typical build times with smart rebuilds
+# Three-tier build system timing
+just build                        # 46 min (complete source to device)
+just build-toolchain               # 40 min (foundation: editor + templates)
+just build-artifacts               # 45 min (deployable files for all platforms)
+just build-pipeline                # 46 min (complete pipeline)
+
+# Smart rebuild timing (75% faster than full builds)
 just fastbuild-android            # 15-20 sec (code changes only)
                                   # 30-45 sec (assets + code changes)
                                   # 60 sec (full rebuild needed)
 
-just fastbuild-ios                # 15-20 sec (code changes only)
+just build-install-ios            # 15-20 sec (code changes only)
                                   # 30-45 sec (assets + code changes)
                                   # 60 sec (full rebuild needed)
 ```
@@ -958,13 +982,13 @@ just fastbuild-ios                # 15-20 sec (code changes only)
 ### **Legacy Build Commands (Full Rebuilds)**
 ```bash
 # Full platform builds (when smart rebuild isn't sufficient)
-just build-all-android            # Full Android build (20 min)
-just build-all-ios                # Full iOS build (20 min)
-just build-all                    # Full rebuild for both platforms
+just build-all-android            # Android smart rebuild (3-5 min)
+just build-all-ios                # iOS smart rebuild (3-5 min)
+just build-all                    # Legacy alias for build-toolchain
 
 # Custom engine builds (when modifying Godot source)
-just godot-build-editor           # Build custom Godot editor
-just godot-build-templates        # Build export templates
+just build-editor                 # Build custom Godot editor
+just templates-all                # Build export templates
 ```
 
 ### **Build Debugging & Analysis**
