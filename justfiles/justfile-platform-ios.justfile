@@ -4,6 +4,21 @@
 
 # Note: Variables and build functions inherited from imported modules
 
+# Check if iOS executable exists or build it
+_check-or-build-ios-executable force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding iOS executable..."
+        just build-ios-executable
+    elif [ -f "export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a" ]; then
+        echo "✅ iOS executable already built: export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a"
+        echo "⏭️  Skipping iOS executable rebuild (saves 20+ minutes)"
+    else
+        echo "❌ iOS executable not found, building..."
+        just build-ios-executable
+    fi
+
 # Build iOS executable with optimized settings
 build-ios-executable:
     #!/usr/bin/env bash
@@ -29,8 +44,9 @@ help-ios:
     echo "Build Commands:"
     echo "  just build-ios-executable       # Build iOS executable"
     echo "  just ios-build                  # iOS build pipeline"
-    echo "  just build-install-ios          # Full iOS rebuild & install"
-    echo "  just build-all-ios              # Build all iOS components"
+    echo "  just build-install-ios          # Full iOS rebuild & install (smart rebuild)"
+    echo "  just build-all-ios              # Build all iOS components (smart rebuild)"
+    echo "  just rebuild-all-ios            # Force rebuild all iOS components"
     echo ""
     echo "Export & Deploy:"
     echo "  just ios-export-pck              # Export iOS PCK file"
@@ -46,7 +62,7 @@ help-ios:
 # Export iOS PCK file
 ios-export-pck: pre-build
     @echo "📦 Exporting iOS PCK file..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "iOS" ../export/ios/{{GAME_NAME}}.pck --headless
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "ios" ../export/ios/{{GAME_NAME}}.pck --headless
 
 # iOS build pipeline
 ios-build: pre-build
@@ -98,9 +114,8 @@ build-install-ios:
     echo "🧹 Cleaning previous builds..."
     rm -rf export/ios/{{GAME_NAME}}.pck
     
-    # Build executable
-    echo "⚙️ Building iOS executable..."
-    just build-ios-executable
+    # Smart check for iOS executable
+    just _check-or-build-ios-executable
     
     # Export PCK
     echo "📦 Exporting iOS PCK..."
@@ -110,9 +125,9 @@ build-install-ios:
     echo "💡 Open Xcode project in export/ios/ to deploy"
 
 # Build all iOS components
-build-all-ios: validate-env
+build-all-ios force="no": validate-env
     @echo "🍎 Building all iOS components..."
-    just build-ios-executable
+    just _check-or-build-ios-executable {{force}}
     just ios-export-pck
     @echo "✅ All iOS builds complete"
 
@@ -127,3 +142,9 @@ quick-build-ios:
     
     echo "✅ Quick iOS build complete"
     echo "💡 Use build-ios-executable for full rebuild"
+
+# Force rebuild all iOS components (ignores existing builds)
+rebuild-all-ios:
+    @echo "🔥 Force rebuilding all iOS components..."
+    just build-all-ios force=yes
+    @echo "✅ All iOS rebuilds complete"
