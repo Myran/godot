@@ -45,6 +45,7 @@ KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".k
 # Only sensitive data remains as exports for security
 export KEYSTORE_PASSWORD := env_var_or_default("KEYSTORE_PASSWORD", "lovegametwo")
 export KEY_PASSWORD := env_var_or_default("KEY_PASSWORD", "lovegametwo")
+export ANDROID_KEYSTORE := env_var_or_default("ANDROID_KEYSTORE", "")
 export APPLE_TEAM_ID := env_var_or_default("APPLE_TEAM_ID", "123")
 export APPLE_ID := env_var_or_default("APPLE_ID", "123")
 export APP_STORE_CONNECT_API_KEY_PATH := env_var_or_default("APP_STORE_CONNECT_API_KEY_PATH", "123")

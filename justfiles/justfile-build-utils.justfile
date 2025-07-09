@@ -57,13 +57,28 @@ build-status:
 # ================================
 
 # Common build steps
-_build-common:
+_build-common force="no":
     @echo "📦 [1/3] Installing dependencies..."
     just install-deps
-    @echo "🔨 [2/3] Building Godot editor..."
-    just build-editor
+    @echo "🔨 [2/3] Checking Godot editor..."
+    just _check-or-build-editor {{force}}
     @echo "📝 [3/3] Updating version..."
     just update-version
+
+# Smart editor check - only build if not already built
+_check-or-build-editor force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding Godot editor..."
+        just build-editor
+    elif [ -f "editor/{{GODOT_EXECUTABLE}}" ]; then
+        echo "✅ Godot editor already built: editor/{{GODOT_EXECUTABLE}}"
+        echo "⏭️  Skipping editor rebuild (saves 20+ minutes)"
+    else
+        echo "🔨 Building Godot editor (this will take 20+ minutes)..."
+        just build-editor
+    fi
 
 # Android full build steps
 # REMOVED: _build-android-full - moved to justfile-platform-android.justfile

@@ -921,16 +921,71 @@ Commands: logs-errors-tagged TEST_ID firebase
 
 ## 🏗️ Build & Engine Development
 
-### **Essential Build Commands**
+### **Smart Rebuild System - Optimized for Maximum Efficiency**
+**Intelligent build system that automatically detects changes and rebuilds only what's necessary:**
+
 ```bash
+# Smart rebuild commands (auto-detects changes)
+just fastbuild-android            # Smart Android rebuild (15-60 sec depending on changes)
+just fastbuild-ios                # Smart iOS rebuild (15-60 sec depending on changes)
+just fastbuild-all                # Smart rebuild for both platforms
+
+# Build optimization modes
+just fastbuild-android-force      # Force full rebuild (ignores change detection)
+just fastbuild-ios-force          # Force full iOS rebuild (ignores change detection)
+just fastbuild-check              # Check what would be rebuilt (dry run)
+```
+
+### **Build Performance Optimization**
+**The smart rebuild system optimizes build times by:**
+- **Change Detection**: Only rebuilds modified components (GDScript, assets, configs)
+- **Incremental Builds**: Preserves build artifacts when possible
+- **Platform Caching**: Maintains separate build caches for Android and iOS
+- **Dependency Analysis**: Rebuilds only affected modules and dependencies
+
+### **Build Time Expectations**
+```bash
+# Typical build times with smart rebuilds
+just fastbuild-android            # 15-20 sec (code changes only)
+                                  # 30-45 sec (assets + code changes)
+                                  # 60 sec (full rebuild needed)
+
+just fastbuild-ios                # 15-20 sec (code changes only)
+                                  # 30-45 sec (assets + code changes)
+                                  # 60 sec (full rebuild needed)
+```
+
+### **Legacy Build Commands (Full Rebuilds)**
+```bash
+# Full platform builds (when smart rebuild isn't sufficient)
+just build-all-android            # Full Android build (20 min)
+just build-all-ios                # Full iOS build (20 min)
+just build-all                    # Full rebuild for both platforms
+
 # Custom engine builds (when modifying Godot source)
 just godot-build-editor           # Build custom Godot editor
 just godot-build-templates        # Build export templates
-just build-all-android            # Full Android build (20 min)
-just build-all-ios                # Full iOS build (20 min)
+```
 
-# Quick development builds
-just fastbuild-android            # Fast rebuild & deploy (60 sec)
+### **Build Debugging & Analysis**
+```bash
+# Build system debugging
+just build-status                 # Check build system health
+just build-clean                  # Clean build artifacts (forces full rebuild)
+just build-analyze                # Analyze build performance and bottlenecks
+just build-logs                   # View recent build logs and errors
+```
+
+### **Development Workflow Integration**
+```bash
+# Integrated development workflow
+just validate                     # Syntax check (3 sec)
+just fastbuild-android            # Smart rebuild & deploy (15-60 sec)
+just test-android development-workflow # Test on device
+
+# Pre-commit workflow with smart builds
+just pre-commit                   # Format + validate + smart rebuild + test
+just fastbuild-check              # Preview what will be rebuilt
 ```
 
 ### **Production Deployment**

@@ -7,6 +7,10 @@
 
 # Note: _validate-android-workflow is inherited from justfile-validation.justfile
 
+# ================================
+# ANDROID BUILD COMMANDS
+# ================================
+
 # Quick Android build - Export APK and AAB files (2-3 minutes)
 quick-build-android:
     @echo "⚡ Quick Android build (2-3 min)..."
@@ -16,30 +20,70 @@ quick-build-android:
     @echo "✅ Quick Android build complete!"
 
 # Complete Android build with templates and all dependencies (20 minutes)
-build-all-android: validate-env
+build-all-android force="no": validate-env
     @echo "🤖 FULL BUILD - ANDROID ONLY"
     @echo "============================"
-    @echo "⏱️  Estimated time: 20-25 minutes"
+    @if [ "{{force}}" = "yes" ]; then \
+        echo "⏱️  Estimated time: 30-40 minutes (FORCE REBUILD)"; \
+        echo "🔥 Force rebuild enabled - will rebuild everything from scratch"; \
+    else \
+        echo "⏱️  Estimated time: 3-25 minutes (smart rebuild)"; \
+        echo "💡 Use 'just build-all-android force=yes' to force rebuild everything"; \
+    fi
     @echo ""
     
-    just _build-common
-    just _build-android-full
+    just _build-common {{force}}
+    just _build-android-full {{force}}
     
     @echo "✅ Android full build complete!"
 
+# Force rebuild everything from scratch (30-40 minutes)
+rebuild-all-android: validate-env
+    @echo "🔥 FORCE REBUILD - ANDROID ONLY"
+    @echo "==============================="
+    @echo "⏱️  Estimated time: 30-40 minutes"
+    @echo "🗑️  Cleaning existing artifacts..."
+    @echo ""
+    
+    # Clean existing artifacts
+    rm -f editor/{{GODOT_EXECUTABLE}}
+    rm -f templates/android_debug.apk templates/android_release.apk
+    
+    just _build-common yes
+    just _build-android-full yes
+    
+    @echo "✅ Android force rebuild complete!"
+
 # Android full build steps
-_build-android-full:
+_build-android-full force="no":
     @echo ""
     @echo "🤖 ANDROID BUILD STEPS"
     @echo "===================="
-    @echo "📦 [1/4] Building Android templates..."
-    just templates-android
+    @echo "📦 [1/4] Checking Android templates..."
+    just _check-or-build-android-templates {{force}}
     @echo "🔥 [2/4] Setting up Firebase..."
     just insert-firebase-dependencies
     @echo "📱 [3/4] Exporting Android APK..."
     just export-apk-android
     @echo "📦 [4/4] Exporting Android AAB..."
     just export-aab-android
+
+# Smart template check - only build if not already built
+_check-or-build-android-templates force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding Android templates..."
+        just templates-android
+    elif [ -f "templates/android_debug.apk" ] && [ -f "templates/android_release.apk" ]; then
+        echo "✅ Android templates already built:"
+        echo "   📱 templates/android_debug.apk"
+        echo "   📱 templates/android_release.apk"
+        echo "⏭️  Skipping template rebuild (saves 10+ minutes)"
+    else
+        echo "🔧 Building Android templates (this will take 10+ minutes)..."
+        just templates-android
+    fi
 
 # Config workflow validation for Android
 _validate-android-config-workflow CONFIG:
@@ -209,7 +253,21 @@ export-aab-android: pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android AAB files (debug + release)..."
-    echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    
+    # Use existing keystore files if available, fallback to ANDROID_KEYSTORE variable
+    if [ -f "gametwo-release.keystore" ]; then
+        echo "✅ Using existing release keystore: gametwo-release.keystore"
+        cp gametwo-release.keystore android.keystore
+    elif [ -f "gametwo-debug.keystore" ]; then
+        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
+        cp gametwo-debug.keystore android.keystore
+    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
+        echo "🔑 Using ANDROID_KEYSTORE environment variable"
+        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    else
+        echo "⚠️  No keystore found - using unsigned build"
+        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure keystore files exist"
+    fi
     
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
@@ -237,7 +295,18 @@ export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/and
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
-    echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    
+    # Use existing keystore files if available, fallback to ANDROID_KEYSTORE variable
+    if [ -f "gametwo-debug.keystore" ]; then
+        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
+        cp gametwo-debug.keystore android.keystore
+    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
+        echo "🔑 Using ANDROID_KEYSTORE environment variable"
+        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    else
+        echo "⚠️  No keystore found - using unsigned build"
+        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure gametwo-debug.keystore exists"
+    fi
     
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
