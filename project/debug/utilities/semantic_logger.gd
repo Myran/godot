@@ -76,11 +76,18 @@ static func log_state_transition(from_state: String, to_state: String) -> void:
 # Battle action logging
 static func log_battle_start(player_lineup: Array = [], enemy_lineup: Array = []) -> void:
 	"""Log battle start action with parameters"""
+
+	# Convert generic arrays to typed Card arrays using assign()
+	var player_cards_typed: Array[Card] = []
+	player_cards_typed.assign(player_lineup)
+	var enemy_cards_typed: Array[Card] = []
+	enemy_cards_typed.assign(enemy_lineup)
+
 	var data: Dictionary = {
 		"player_lineup_count": player_lineup.size(),
 		"enemy_lineup_count": enemy_lineup.size(),
-		"player_cards": _extract_card_ids(player_lineup),
-		"enemy_cards": _extract_card_ids(enemy_lineup)
+		"player_cards": _extract_card_ids(player_cards_typed),
+		"enemy_cards": _extract_card_ids(enemy_cards_typed)
 	}
 
 	# Update session context for battle phase

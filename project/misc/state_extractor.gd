@@ -135,7 +135,6 @@ static func extract_lineup_state() -> Dictionary:
 		lineup_state["enemies"] = {}
 
 	# Add lineup metadata
-	lineup_state["extracted_at"] = Time.get_unix_time_from_system()
 	lineup_state["extraction_type"] = "lineup_state"
 
 	return lineup_state
@@ -192,7 +191,6 @@ static func extract_board_state() -> Dictionary:
 		board_state["input_locked"] = false
 
 	# Add board metadata
-	board_state["extracted_at"] = Time.get_unix_time_from_system()
 	board_state["extraction_type"] = "board_state"
 
 	return board_state
@@ -235,10 +233,7 @@ static func is_state_valid(data: Dictionary) -> bool:
 static func _extract_metadata() -> Dictionary:
 	var metadata: Dictionary = {}
 
-	metadata["timestamp"] = Time.get_unix_time_from_system()
-	metadata["platform"] = OS.get_name()
 	metadata["extractor_version"] = "1.0.0"
-	metadata["godot_version"] = Engine.get_version_info()
 
 	return metadata
 
@@ -252,12 +247,16 @@ static func _normalize_value(value: Variant) -> Variant:
 	match typeof(value):
 		TYPE_FLOAT:
 			# Normalize floats to 6 decimal places for consistency
-			var normalized_float: float = snappedf(value, 0.000001)
+			# Type is guaranteed to be float by the match check
+			var float_val: float = value
+			var normalized_float: float = snappedf(float_val, 0.000001)
 			return normalized_float
 
 		TYPE_DICTIONARY:
 			# Recursively normalize nested dictionaries
-			return normalize_data(value)
+			# Type is guaranteed to be Dictionary by the match check
+			var dict_val: Dictionary = value
+			return normalize_data(dict_val)
 
 		TYPE_ARRAY:
 			# Normalize arrays by processing each element

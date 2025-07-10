@@ -1,4 +1,4 @@
-class_name TestReplayStateValidationRedPhaseAction extends DebugAction
+class_name ReplayStateValidationRedPhaseAction extends DebugAction
 
 # TDD RED Phase test action for replay state validation system
 # Creates failing tests that define requirements and expected behavior
@@ -325,7 +325,7 @@ func _measure_current_state_performance() -> Dictionary:
 
 	# Measure state extraction performance (50 iterations for stable average)
 	var extraction_times: Array[float] = []
-	for i in range(50):
+	for i: int in range(50):
 		var start_time: int = Time.get_ticks_msec()
 		var state_data: Dictionary = StateExtractor.extract_game_state()
 		var extraction_time: float = Time.get_ticks_msec() - start_time
@@ -334,7 +334,7 @@ func _measure_current_state_performance() -> Dictionary:
 	# Measure checksum generation performance
 	var checksum_times: Array[float] = []
 	var test_state: Dictionary = StateExtractor.extract_game_state()
-	for i in range(50):
+	for i: int in range(50):
 		var start_time: int = Time.get_ticks_msec()
 		var checksum: String = StateExtractor.generate_checksum(test_state)
 		var checksum_time: float = Time.get_ticks_msec() - start_time
@@ -500,7 +500,7 @@ func _test_state_determinism() -> Dictionary:
 	var identical_count: int = 0
 	var checksum_matches: int = 0
 
-	for i in range(determinism_test.test_iterations):
+	for i: int in range(determinism_test.test_iterations):
 		var test_state: Dictionary = StateExtractor.extract_game_state()
 		var test_checksum: String = StateExtractor.generate_checksum(test_state)
 
