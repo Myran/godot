@@ -1,0 +1,66 @@
+{
+  "name": "Replay State Validation Suite",
+  "description": "Comprehensive test suite for replay state validation system - validates SessionManager post-action capture, ReplayStateValidator, performance monitoring, and end-to-end workflows",
+  "configs": [
+    "test-replay-state-validation-red-phase",
+    "end-to-end-replay-validation-test",
+    "test-state-extractor-green-phase", 
+    "tdd-red-phase-complete-test",
+    "semantic-replay-validation",
+    "replay-system-e2e-test",
+    "recording-system-integrity-test",
+    "semantic-logging-complete-test",
+    "developer-workflow-validation"
+  ],
+  "test_metadata": {
+    "component": "replay_state_validation",
+    "feature_coverage": [
+      "SessionManager post-action state capture",
+      "ReplayStateValidator component validation", 
+      "Performance monitoring (<10ms overhead)",
+      "Cross-platform state consistency",
+      "End-to-end capture-validate workflow",
+      "Integration with semantic logging",
+      "Recording/replay system integrity"
+    ],
+    "test_phases": [
+      "RED Phase validation (should now PASS)",
+      "GREEN Phase implementation tests",
+      "End-to-end workflow validation",
+      "Performance and regression testing",
+      "Integration testing with existing systems"
+    ],
+    "expected_outcomes": {
+      "red_phase_tests": "Should PASS (components implemented)",
+      "green_phase_tests": "Should PASS (validate functionality)", 
+      "e2e_tests": "Should complete successfully",
+      "performance_tests": "Should meet <10ms overhead targets"
+    },
+    "priority_tests": {
+      "core_validation": [
+        "test-replay-state-validation-red-phase",
+        "end-to-end-replay-validation-test"
+      ],
+      "integration_validation": [
+        "semantic-replay-validation",
+        "replay-system-e2e-test"
+      ],
+      "system_validation": [
+        "recording-system-integrity-test",
+        "developer-workflow-validation"
+      ]
+    },
+    "implementation_status": {
+      "SessionManager": "✅ IMPLEMENTED - post-action capture with timer-based delayed execution",
+      "ReplayStateValidator": "✅ IMPLEMENTED - 570+ lines with comprehensive validation logic",
+      "Performance Monitoring": "✅ IMPLEMENTED - built into ReplayStateValidator with metrics tracking",
+      "TDD Framework": "✅ IMPLEMENTED - comprehensive RED phase tests with dynamic detection"
+    },
+    "remaining_work": [
+      "Integration with debug action framework",
+      "Enhancement of SemanticActionMapper",
+      "GREEN phase test implementation",
+      "Production-ready integration and polish"
+    ]
+  }
+}
