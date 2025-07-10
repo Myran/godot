@@ -87,15 +87,34 @@ func action(type: DebugEventType, args: Array = []) -> void:
 # Keep legacy helper functions until fully migrated
 func _verify_logger_export() -> void:
 	if OS.get_name() == "iOS":
-		if Engine.has_singleton("IosLoggerHelper"):
+		if _verify_mobile_helper("res://addons/advanced_logger/utils/ios_logger_helper.gd"):
 			Log.info("iOS logger helper found", {}, [Log.TAG_DEBUG])
 		else:
 			Log.error("iOS logger helper missing!", {}, [Log.TAG_DEBUG])
 	if OS.get_name() == "Android":
-		if Engine.has_singleton("AndroidLoggerHelper"):
+		if _verify_mobile_helper("res://addons/advanced_logger/utils/android_logger_helper.gd"):
 			Log.info("Android logger helper found", {}, [Log.TAG_DEBUG])
 		else:
 			Log.error("Android logger helper missing!", {}, [Log.TAG_DEBUG])
+
+## Verifies that a mobile helper class can be loaded and is valid
+## This matches the actual loading pattern used in the logger system
+func _verify_mobile_helper(helper_path: String) -> bool:
+	# Try to load the helper class
+	var helper_class = load(helper_path)
+	if helper_class == null:
+		Log.debug("Failed to load helper class", {"path": helper_path}, [Log.TAG_DEBUG])
+		return false
+	
+	# Verify the helper has expected static methods
+	# For AndroidLoggerHelper, we expect: configure_for_android, process_log_message
+	# For IosLoggerHelper, we expect: configure_for_ios, process_log_message  
+	if not helper_class.has_method("process_log_message"):
+		Log.debug("Helper class missing required methods", {"path": helper_path}, [Log.TAG_DEBUG])
+		return false
+	
+	Log.debug("Mobile helper verification successful", {"path": helper_path}, [Log.TAG_DEBUG])
+	return true
 
 # Updated debug button handler - simplified since manual actions are now in DebugRegistry
 #func debug_button_pressed(button_name: String) -> void:
