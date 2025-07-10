@@ -91,16 +91,13 @@ static func log_battle_start(player_lineup: Array = [], enemy_lineup: Array = []
 
 
 # Helper methods
-static func _extract_card_ids(lineup: Array) -> Array[String]:
+static func _extract_card_ids(lineup: Array[Card]) -> Array[String]:
 	"""Extract card IDs from lineup for logging"""
 	var card_ids: Array[String] = []
-	for card: Variant in lineup:
-		if card and card.has_method("get_id"):
-			var card_id_method: String = card.get_id()
-			card_ids.append(card_id_method)
-		elif card and card.has("id"):
-			var card_id_prop: String = str(card.id)
-			card_ids.append(card_id_prop)
+	for card: Card in lineup:
+		if card and card.card_info:
+			var card_id: String = card.card_info.id
+			card_ids.append(card_id if card_id != "" else "unknown_card")
 		else:
 			card_ids.append("unknown_card")
 	return card_ids

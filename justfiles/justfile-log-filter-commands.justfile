@@ -109,24 +109,27 @@ logs-last:
         [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
     else
         echo "🖥️  Getting latest Desktop logs..."
-        # Desktop logs from Godot user data directory
-        USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}"
-        LOGS_DIR="$USER_DATA_DIR/logs"
         
-        if [ -d "$LOGS_DIR" ]; then
-            # Get the most recent log file
-            LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
-                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                cat "$LATEST_LOG"
-            else
-                echo "❌ No desktop log files found in $LOGS_DIR"
+        # Try configured desktop log locations
+        LATEST_LOG=""
+        for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
+            if [ -d "$log_dir" ]; then
+                LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
+                if [ -n "$LATEST_LOG" ]; then
+                    echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+                    echo "📁 Location: $log_dir"
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    cat "$LATEST_LOG"
+                    exit 0
+                fi
             fi
-        else
-            echo "❌ Desktop logs directory not found: $LOGS_DIR"
-            echo "💡 Run desktop game first: just run-desktop"
-        fi
+        done
+        
+        echo "❌ No desktop log files found in any configured location"
+        echo "📁 Checked:"
+        echo "   {{DESKTOP_LOG_DIR}}"
+        echo "   {{DESKTOP_LOG_DIR_ALT}}"
+        echo "💡 Run desktop game first: just run-desktop"
     fi
 
 # Show only performance/timing info

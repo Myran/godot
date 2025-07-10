@@ -37,7 +37,7 @@ func _ready() -> void:
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 	# Check for test mode (platform-specific)
-	var is_test_mode = false
+	var is_test_mode: bool = false
 	if OS.has_feature("android"):
 		# Android: Always allow debug actions (uses exported APK, not editor)
 		is_test_mode = true

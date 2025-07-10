@@ -191,6 +191,170 @@ logs-lifecycle-tagged TEST_ID *TAGS:
     fi
 
 # ================================
+# DESKTOP LOG ANALYSIS COMMANDS - Direct Godot desktop log analysis
+# ================================
+
+# Desktop log analysis with tag filtering
+logs-desktop *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TAGS="{{TAGS}}"
+    
+    echo "🖥️  Analyzing latest Desktop logs..."
+    
+    # Find the most recent log file from configured locations
+    LATEST_LOG=""
+    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
+        if [ -d "$log_dir" ]; then
+            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
+            if [ -n "$LATEST_LOG" ]; then
+                break
+            fi
+        fi
+    done
+    
+    if [ -z "$LATEST_LOG" ]; then
+        echo "❌ No desktop log files found"
+        echo "📁 Checked:"
+        echo "   {{DESKTOP_LOG_DIR}}"
+        echo "   {{DESKTOP_LOG_DIR_ALT}}"
+        echo "💡 Run desktop game first: just run-desktop"
+        exit 1
+    fi
+    
+    echo "📄 Desktop log: $(basename "$LATEST_LOG")"
+    echo "📁 Location: $(dirname "$LATEST_LOG")"
+    
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtering by tags: $TAGS"
+        echo ""
+        
+        # Convert space-separated tags to grep pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+        
+        # Filter logs by tags
+        grep "$tag_pattern" "$LATEST_LOG" | head -100
+    else
+        echo "📊 Full logs (first 50 lines):"
+        echo ""
+        head -50 "$LATEST_LOG"
+    fi
+
+# Desktop log error analysis
+logs-desktop-errors *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TAGS="{{TAGS}}"
+    
+    echo "🖥️  🚨 Desktop Log Errors:"
+    echo "========================="
+    
+    # Find the most recent log file from configured locations
+    LATEST_LOG=""
+    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
+        if [ -d "$log_dir" ]; then
+            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
+            if [ -n "$LATEST_LOG" ]; then
+                break
+            fi
+        fi
+    done
+    
+    if [ -z "$LATEST_LOG" ]; then
+        echo "❌ No desktop log files found"
+        echo "📁 Checked:"
+        echo "   {{DESKTOP_LOG_DIR}}"
+        echo "   {{DESKTOP_LOG_DIR_ALT}}"
+        exit 1
+    fi
+    
+    echo "📄 Analyzing: $(basename "$LATEST_LOG")"
+    
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtered by tags: $TAGS"
+        echo ""
+        
+        # Convert tags to pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+        
+        # Filter by tags first, then by errors
+        grep "$tag_pattern" "$LATEST_LOG" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌" | head -20 || echo "✅ No errors in filtered logs"
+    else
+        echo "📊 All error types:"
+        echo ""
+        grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌" "$LATEST_LOG" | head -20 || echo "✅ No errors found"
+    fi
+
+# Desktop log performance analysis
+logs-desktop-performance *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TAGS="{{TAGS}}"
+    
+    echo "🖥️  ⚡ Desktop Log Performance:"
+    echo "============================="
+    
+    # Find the most recent log file from configured locations
+    LATEST_LOG=""
+    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
+        if [ -d "$log_dir" ]; then
+            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
+            if [ -n "$LATEST_LOG" ]; then
+                break
+            fi
+        fi
+    done
+    
+    if [ -z "$LATEST_LOG" ]; then
+        echo "❌ No desktop log files found"
+        echo "📁 Checked:"
+        echo "   {{DESKTOP_LOG_DIR}}"
+        echo "   {{DESKTOP_LOG_DIR_ALT}}"
+        exit 1
+    fi
+    
+    echo "📄 Analyzing: $(basename "$LATEST_LOG")"
+    
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtered by tags: $TAGS"
+        echo ""
+        
+        # Convert tags to pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+        
+        # Filter by tags first, then by performance data
+        grep "$tag_pattern" "$LATEST_LOG" | grep -E "execution_time_ms|duration_ms|memory_mb|performance" | head -20 || echo "No performance data found with specified tags"
+    else
+        echo "📊 All performance data:"
+        echo ""
+        grep -E "execution_time_ms|duration_ms|memory_mb|performance" "$LATEST_LOG" | head -20 || echo "No performance data found"
+    fi
+
+# ================================
 # TEST LOG ANALYSIS COMMANDS - Clear naming for saved test log analysis
 # ================================
 

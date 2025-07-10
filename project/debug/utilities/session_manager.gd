@@ -113,6 +113,9 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 	# Capture pre-action state for replay validation
 	_capture_pre_action_state(action_type, session_id, sequence)
 
+	# Schedule post-action state capture after current frame processing
+	_schedule_post_action_capture(action_type, session_id, sequence)
+
 
 # Application lifecycle management for full gameplay sessions
 static func start_gameplay_session() -> String:
@@ -129,6 +132,9 @@ static func end_gameplay_session() -> void:
 
 # Storage for pre-action state checksums (session-based)
 static var _pre_action_checksums: Dictionary = {}
+
+# Storage for post-action state checksums (session-based)
+static var _post_action_checksums: Dictionary = {}
 
 
 ## Store pre-action state for replay validation
@@ -163,6 +169,37 @@ static func store_pre_action_state(checksum: String, state_data: Dictionary) -> 
 	)
 
 
+## Store post-action state for replay validation
+## Called automatically after each semantic action
+static func store_post_action_state(
+	checksum: String, state_data: Dictionary, session_id: String, sequence: int
+) -> void:
+	"""Store post-action state checksum and data for replay validation"""
+	# Create state entry
+	var state_entry: Dictionary = {
+		"checksum": checksum,
+		"state_data": state_data,
+		"session_id": session_id,
+		"sequence": sequence,
+		"timestamp_ms": Time.get_unix_time_from_system() * 1000.0
+	}
+
+	# Store in session-based storage
+	var session_key: String = "%s_%d" % [session_id, sequence]
+	_post_action_checksums[session_key] = state_entry
+
+	Log.debug(
+		"Post-action state stored",
+		{
+			"session_id": session_id,
+			"sequence": sequence,
+			"checksum": checksum,
+			"state_size": state_data.size()
+		},
+		["session", "state_capture", "post_action", "checksum"]
+	)
+
+
 ## Internal helper: Capture pre-action state using StateExtractor
 static func _capture_pre_action_state(
 	action_type: String, session_id: String, sequence: int
@@ -191,11 +228,133 @@ static func _capture_pre_action_state(
 	)
 
 
+## Schedule post-action state capture with proper timing
+static func _schedule_post_action_capture(
+	action_type: String, session_id: String, sequence: int
+) -> void:
+	"""Schedule post-action state capture to occur after semantic action effects"""
+	# Create a timer for delayed execution
+	var timer: Timer = Timer.new()
+	timer.wait_time = 0.1  # 100ms delay to ensure action effects are processed
+	timer.one_shot = true
+
+	# Connect timeout signal to capture function
+	timer.timeout.connect(
+		_on_post_action_timer_timeout.bind(action_type, session_id, sequence, timer)
+	)
+
+	# Add timer to scene tree and start it
+	var scene_tree: SceneTree = Engine.get_main_loop()
+	if scene_tree and scene_tree.current_scene:
+		scene_tree.current_scene.add_child(timer)
+		timer.start()
+
+		Log.debug(
+			"Post-action capture timer started",
+			{
+				"action_type": action_type,
+				"session_id": session_id,
+				"sequence": sequence,
+				"timer_delay_ms": timer.wait_time * 1000
+			},
+			["session", "state_capture", "post_action", "timer"]
+		)
+	else:
+		# Fallback: immediate capture if no scene tree available
+		Log.warning(
+			"No scene tree available, performing immediate post-action capture",
+			{"action_type": action_type, "session_id": session_id, "sequence": sequence},
+			["session", "state_capture", "post_action", "fallback"]
+		)
+		_capture_post_action_state(action_type, session_id, sequence)
+
+
+## Timer timeout callback for post-action state capture
+static func _on_post_action_timer_timeout(
+	action_type: String, session_id: String, sequence: int, timer: Timer
+) -> void:
+	"""Timer callback to capture post-action state after delay"""
+	# Perform the actual capture
+	_capture_post_action_state(action_type, session_id, sequence)
+
+	# Clean up timer
+	if timer and is_instance_valid(timer):
+		timer.queue_free()
+
+
+## Internal helper: Capture post-action state using StateExtractor
+static func _capture_post_action_state(
+	action_type: String, session_id: String, sequence: int
+) -> void:
+	"""Capture game state after semantic action execution"""
+	# Validate StateExtractor availability
+	if not StateExtractor:
+		Log.error(
+			"StateExtractor not available for post-action capture",
+			{"action_type": action_type, "session_id": session_id, "sequence": sequence},
+			["session", "state_capture", "post_action", "error"]
+		)
+		return
+
+	# Extract current game state after action
+	var game_state: Dictionary = StateExtractor.extract_game_state()
+
+	# Validate that state was extracted successfully
+	if game_state.is_empty():
+		Log.warning(
+			"Post-action state extraction returned empty state",
+			{"action_type": action_type, "session_id": session_id, "sequence": sequence},
+			["session", "state_capture", "post_action", "warning"]
+		)
+		return
+
+	# Generate checksum for state validation
+	var checksum: String = StateExtractor.generate_checksum(game_state)
+
+	# Validate checksum generation
+	if checksum.is_empty():
+		Log.error(
+			"Post-action checksum generation failed",
+			{
+				"action_type": action_type,
+				"session_id": session_id,
+				"sequence": sequence,
+				"state_size": game_state.size()
+			},
+			["session", "state_capture", "post_action", "error"]
+		)
+		return
+
+	# Store for replay validation
+	store_post_action_state(checksum, game_state, session_id, sequence)
+
+	# Log state capture for debugging
+	Log.debug(
+		"Post-action state captured successfully",
+		{
+			"action_type": action_type,
+			"session_id": session_id,
+			"sequence": sequence,
+			"checksum": checksum,
+			"game_available": game_state.get("lineup", {}).get("game_available", false),
+			"state_size": game_state.size()
+		},
+		["session", "state_capture", "post_action", "success"]
+	)
+
+
 ## Get stored pre-action state for replay validation
 static func get_pre_action_state(session_id: String, sequence: int) -> Dictionary:
 	"""Retrieve stored pre-action state for replay validation"""
 	var session_key: String = "%s_%d" % [session_id, sequence]
 	return _pre_action_checksums.get(session_key, {})
+
+
+## Get stored post-action state for replay validation
+static func get_post_action_state(session_id: String, sequence: int) -> Dictionary:
+	"""Retrieve stored post-action state for replay validation"""
+	var session_key: String = "%s_%d" % [session_id, sequence]
+	return _post_action_checksums.get(session_key, {})
 
 
 ## Clear pre-action state storage (for memory management)
@@ -220,6 +379,37 @@ static func clear_pre_action_states(session_id: String = "") -> void:
 			{"session_id": session_id, "cleared_count": keys_to_remove.size()},
 			["session", "state_capture", "cleanup"]
 		)
+
+
+## Clear post-action state storage (for memory management)
+static func clear_post_action_states(session_id: String = "") -> void:
+	"""Clear post-action state storage for memory management"""
+	if session_id.is_empty():
+		# Clear all stored states
+		_post_action_checksums.clear()
+		Log.info("All post-action states cleared", {}, ["session", "state_capture", "cleanup"])
+	else:
+		# Clear states for specific session
+		var keys_to_remove: Array[String] = []
+		for key: String in _post_action_checksums.keys():
+			if key.begins_with(session_id + "_"):
+				keys_to_remove.append(key)
+
+		for key: String in keys_to_remove:
+			_post_action_checksums.erase(key)
+
+		Log.info(
+			"Post-action states cleared for session",
+			{"session_id": session_id, "cleared_count": keys_to_remove.size()},
+			["session", "state_capture", "cleanup"]
+		)
+
+
+## Clear all state storage (both pre and post action)
+static func clear_all_state_storage(session_id: String = "") -> void:
+	"""Clear all state storage for memory management"""
+	clear_pre_action_states(session_id)
+	clear_post_action_states(session_id)
 
 
 static func _log_simple_gamestate_marker(

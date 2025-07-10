@@ -102,6 +102,11 @@ just logs TEST_ID system startup          # System initialization (95% savings)
 just logs-performance-tagged TEST_ID       # All performance data
 just logs-performance-tagged TEST_ID battle # Component performance
 
+# Desktop log analysis (for desktop sessions)
+just logs-desktop semantic state_extractor # Desktop semantic & state logs
+just logs-desktop-errors                   # Desktop errors only
+just logs-desktop-performance              # Desktop performance analysis
+
 # Replay & interactive debugging
 just logs TEST_ID replay complete interactive # Manual verification replay logs
 just logs TEST_ID debug ui menu               # Debug interface hide/show events

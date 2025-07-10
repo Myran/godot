@@ -287,14 +287,15 @@ static func _has_circular_references(data: Dictionary, visited: Array = []) -> b
 		var value: Variant = data[key]
 
 		# Check if we've seen this exact dictionary before
-		if value is Dictionary:
-			if value in visited:
+		if typeof(value) == TYPE_DICTIONARY:
+			var dict_value: Dictionary = value
+			if dict_value in visited:
 				return true
 
 			var new_visited: Array = visited.duplicate()
-			new_visited.append(value)
+			new_visited.append(dict_value)
 
-			if _has_circular_references(value, new_visited):
+			if _has_circular_references(dict_value, new_visited):
 				return true
 
 	return false

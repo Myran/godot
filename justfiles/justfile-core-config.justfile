@@ -40,6 +40,13 @@ ANDROID_GRADLE_DIR := "project/android/build"
 KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")
 
 # ================================
+# LOG PATHS
+# ================================
+# Desktop Godot logs (macOS)
+DESKTOP_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_userdata/" + GAME_NAME + "/logs"
+DESKTOP_LOG_DIR_ALT := justfile_directory() + "/project/Godot/app_userdata/" + GAME_NAME + "/logs"
+
+# ================================
 # CREDENTIALS (Environment-based)
 # ================================
 # Only sensitive data remains as exports for security

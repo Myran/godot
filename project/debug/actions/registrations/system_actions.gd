@@ -5,23 +5,26 @@ class_name SystemActions
 
 # Using class_name resolution instead of preload as requested
 # Preload test actions that aren't found automatically
-const TestStateExtractorRedPhaseAction = preload(
+const StateExtractorRedPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_red_phase_action.gd"
 )
-const TestStateExtractorGreenPhaseAction = preload(
+const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
-const TestPreActionIntegrationRedPhaseAction = preload(
+const PreActionIntegrationRedPhaseScript = preload(
 	"res://debug/actions/test_pre_action_integration_red_phase_action.gd"
 )
-const TestReplayValidationRedPhaseAction = preload(
+const ReplayValidationRedPhaseScript = preload(
 	"res://debug/actions/test_replay_validation_red_phase_action.gd"
 )
-const TestPerformanceRequirementsRedPhaseAction = preload(
+const PerformanceRequirementsRedPhaseScript = preload(
 	"res://debug/actions/test_performance_requirements_red_phase_action.gd"
 )
-const TestEdgeCasesRedPhaseAction = preload(
+const EdgeCasesRedPhaseScript = preload(
 	"res://debug/actions/test_edge_cases_red_phase_action.gd"
+)
+const ReplayStateValidationRedPhaseScript = preload(
+	"res://debug/actions/test_replay_state_validation_red_phase_action.gd"
 )
 
 
@@ -208,38 +211,44 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(semantic_logging_test)
 
 	# TDD RED PHASE - StateExtractor implementation tests (SHOULD FAIL)
-	var state_extractor_test: TestStateExtractorRedPhaseAction = (
-		TestStateExtractorRedPhaseAction.new()
+	var state_extractor_test: StateExtractorRedPhaseScript = (
+		StateExtractorRedPhaseScript.new()
 	)
 	registry.register_action(state_extractor_test)
 
 	# TDD GREEN PHASE - StateExtractor implementation validation (SHOULD PASS)
-	var state_extractor_green_test: TestStateExtractorGreenPhaseAction = (
-		TestStateExtractorGreenPhaseAction.new()
+	var state_extractor_green_test: StateExtractorGreenPhaseScript = (
+		StateExtractorGreenPhaseScript.new()
 	)
 	registry.register_action(state_extractor_green_test)
 
 	# TDD RED PHASE - Pre-Action Integration tests (SHOULD FAIL)
-	var pre_action_integration_test: TestPreActionIntegrationRedPhaseAction = (
-		TestPreActionIntegrationRedPhaseAction.new()
+	var pre_action_integration_test: PreActionIntegrationRedPhaseScript = (
+		PreActionIntegrationRedPhaseScript.new()
 	)
 	registry.register_action(pre_action_integration_test)
 
 	# TDD RED PHASE - Replay Validation Integration tests (SHOULD FAIL)
-	var replay_validation_test: TestReplayValidationRedPhaseAction = (
-		TestReplayValidationRedPhaseAction.new()
+	var replay_validation_test: ReplayValidationRedPhaseScript = (
+		ReplayValidationRedPhaseScript.new()
 	)
 	registry.register_action(replay_validation_test)
 
 	# TDD RED PHASE - Performance Requirements tests (SHOULD FAIL)
-	var performance_requirements_test: TestPerformanceRequirementsRedPhaseAction = (
-		TestPerformanceRequirementsRedPhaseAction.new()
+	var performance_requirements_test: PerformanceRequirementsRedPhaseScript = (
+		PerformanceRequirementsRedPhaseScript.new()
 	)
 	registry.register_action(performance_requirements_test)
 
 	# TDD RED PHASE - Edge Cases Handling tests (SHOULD FAIL)
-	var edge_cases_test: TestEdgeCasesRedPhaseAction = TestEdgeCasesRedPhaseAction.new()
+	var edge_cases_test: EdgeCasesRedPhaseScript = EdgeCasesRedPhaseScript.new()
 	registry.register_action(edge_cases_test)
+
+	# TDD RED PHASE - Replay State Validation tests (SHOULD FAIL)
+	var replay_state_validation_test: ReplayStateValidationRedPhaseScript = (
+		ReplayStateValidationRedPhaseScript.new()
+	)
+	registry.register_action(replay_state_validation_test)
 
 	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 
