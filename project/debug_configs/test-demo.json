@@ -1,0 +1,31 @@
+{
+  "description": "Demo from gameplay session: session_20250711_094820_ba3ffdeb (8 semantic actions)",
+  "type": "demo",
+  "session_id": "session_20250711_094820_ba3ffdeb",
+  "generation_timestamp": "2025-07-11T09:49:09+02:00",
+  "semantic_action_count": 8,
+  "actions": [
+    "system.debug.hide_menu",
+    "game.state.transition_player",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.remove_block_player",
+    "game.lineup.add_card_player",
+    "game.draft.remove_block_player",
+    "game.lineup.add_card_player",
+    "system.debug.replay_complete"
+  ],
+  "action_params": {
+    "game.state.transition_player": {"from_state":"PREPARE","to_state":"DRAFT"},"game.draft.upgrade_player": {"level":1},"game.draft.upgrade_player": {"level":2},"game.draft.upgrade_player": {"level":3},"game.draft.remove_block_player": {"card_id":"4","position":{"x":1,"y":0}},"game.lineup.add_card_player": {"card_id":"4","target_position":6,"source_position":{"x":1,"y":0}},"game.draft.remove_block_player_2": {"card_id":"4","position":{"x":1,"y":0}},"game.lineup.add_card_player_2": {"card_id":"4","target_position":6,"source_position":{"x":-1,"y":-1}}
+  },
+  "metadata": {
+    "source_session": "session_20250711_094820_ba3ffdeb",
+    "generation_method": "semantic_action_mapping",
+    "demo_name": "test-demo",
+    "creation_timestamp": "20250711_094909",
+    "replay_mode": "demo",
+    "auto_quit": false,
+    "can_convert_to_test": true
+  }
+}

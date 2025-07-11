@@ -1,0 +1,18 @@
+{
+  "description": "CRITICAL: Complete state validation integration test - Company survival depends on this",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.test_state_validation_integration",
+    "system.debug.test_debug_action_with_validation",
+    "system.debug.test_semantic_mapper_integration", 
+    "system.debug.test_replay_state_validator_integration",
+    "system.debug.quit_application"
+  ],
+  "test_metadata": {
+    "test_type": "integration",
+    "component": "StateValidation", 
+    "phase": "production_validation",
+    "company_critical": true,
+    "validation_required": true
+  }
+}

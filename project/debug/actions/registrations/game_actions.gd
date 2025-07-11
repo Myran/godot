@@ -1271,9 +1271,23 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 
 
 static func _get_seed_from_config() -> int:
-	# Legacy function for backward compatibility
+	# Enhanced function for checksum validation - checks for checksum_config.initial_seed
 	var config: Dictionary = _get_determinism_config()
-	return config.seed
+
+	# Check for checksum_config.initial_seed (new checksum validation system)
+	if config.has("checksum_config"):
+		var checksum_config: Dictionary = config.checksum_config
+		if checksum_config.has("initial_seed"):
+			var seed: int = checksum_config.initial_seed
+			Log.info(
+				"Using seed from checksum_config for replay validation",
+				{"seed": seed},
+				["debug", "checksum", "seed"]
+			)
+			return seed
+
+	# Fallback to legacy seed field for backward compatibility
+	return config.get("seed", 12345)
 
 
 static func _battle_test_determinism() -> DebugAction.Result:
@@ -1685,8 +1699,37 @@ static func _remove_card_player(params: Dictionary = {}) -> bool:
 
 static func _transition_player(params: Dictionary = {}) -> bool:
 	"""Simulate player state transition action with parameters"""
-	var from_state: String = params.get("from_state", "DRAFT")  # Common starting state
-	var to_state: String = params.get("to_state", "PREPARE")  # Common next state
+	var from_state: String = params.get("from_state", "")  # Expected starting state (empty = skip validation)
+	var to_state: String = params.get("to_state", "PREPARE")  # Target state
+
+	# Validate current state matches expected from_state (if provided)
+	if not from_state.is_empty():
+		var game: Game = _get_game_node()
+		if not game:
+			Log.warning(
+				"Cannot validate state transition - game node not available",
+				{"expected_from_state": from_state, "target_state": to_state},
+				["debug", "replay", "validation", "error"]
+			)
+			return false
+
+		var current_state_name: String = core.GameState.keys()[game.game_handler.current_gamestate]
+		if current_state_name != from_state:
+			(
+				Log
+				. warning(
+					"State transition validation failed - current state doesn't match expected from_state",
+					{
+						"expected_from_state": from_state,
+						"actual_current_state": current_state_name,
+						"target_state": to_state,
+						"params": params
+					},
+					["debug", "replay", "validation", "error"]
+				)
+			)
+			return false
+
 	Log.info(
 		"Simulating player state transition action",
 		{"from_state": from_state, "to_state": to_state, "params": params},

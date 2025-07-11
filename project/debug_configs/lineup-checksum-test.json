@@ -1,13 +1,17 @@
 {
   "description": "Lineup CHECKSUM Test - Validate lineup state consistency using checksums",
   "actions": [
-    "system.debug.hide_menu",
+    "game.battle.set_seed",
+    "system.debug.hide_menu", 
     "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
+    "game.lineup.move_card_player",
     "system.debug.replay_complete"
   ],
   "checksum_config": {
     "state_type": "lineup_state",
-    "expected_checksum": ""
+    "initial_seed": 12345,
+    "expected_checksums": []
   },
   "metadata": {
     "test_type": "checksum_validation",

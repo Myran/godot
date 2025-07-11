@@ -555,7 +555,9 @@ func _process_idle_action_queue() -> void:
 
 
 func start_game() -> void:
-	Log.info("Game starting - locking UI during state transition", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+	Log.info(
+		"Game starting - locking UI during state transition", {}, [Log.TAG_GAME_STATE, Log.TAG_UI]
+	)
 	ui_state = core.UIState.LOCKED
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
 

@@ -144,8 +144,9 @@ static func validate_replay_state(
 		var expected_state: Dictionary = expected_states[i]
 		var sequence: int = i + 1
 
-		# Get stored post-action state for this sequence
-		var stored_state: Dictionary = SessionManager.get_post_action_state(session_id, sequence)
+		# Note: Post-action state capture was removed during checksum validation simplification
+		# This validation method is part of the old system and needs to be updated
+		var stored_state: Dictionary = {}
 
 		if stored_state.is_empty():
 			validation_result.missing_states += 1
@@ -376,24 +377,17 @@ static func _verify_post_action_states_exist(session_id: String, expected_count:
 	"""Verify how many post-action states are available for the session"""
 	var available_count: int = 0
 
-	# Check each sequence number for post-action state availability
-	for sequence in range(1, expected_count + 1):
-		var post_action_state: Dictionary = SessionManager.get_post_action_state(
-			session_id, sequence
-		)
-		if not post_action_state.is_empty() and post_action_state.has("state_data"):
-			available_count += 1
-		else:
-			Log.debug(
-				"Missing post-action state for sequence",
-				{
-					"session_id": session_id,
-					"sequence": sequence,
-					"state_empty": post_action_state.is_empty(),
-					"has_state_data": post_action_state.has("state_data")
-				},
-				["replay", "validation", "missing_state"]
-			)
+	# Note: Post-action state capture was removed during checksum validation simplification
+	# This method is part of the old system - no post-action states are available
+	Log.info(
+		"Post-action state verification skipped - simplified system uses checksum logging",
+		{
+			"session_id": session_id,
+			"expected_count": expected_count,
+			"note": "Post-action capture removed, using semantic logging checksums"
+		},
+		["replay", "validation", "simplified_system"]
+	)
 
 	Log.info(
 		"Post-action state verification completed",
@@ -570,3 +564,289 @@ static func _arrays_equal(array1: Array, array2: Array, options: Dictionary) -> 
 			return false
 
 	return true
+
+
+## Validate action states by comparing pre/post action states using checksums
+## This is the primary validation method for semantic action consistency
+static func validate_action_states(
+	pre_action_state: Dictionary, post_action_state: Dictionary, action_type: String = ""
+) -> Dictionary:
+	"""Validate action states by comparing pre and post action checksums and data"""
+	var start_time: int = Time.get_ticks_msec()
+
+	var validation_result: Dictionary = {
+		"action_valid": false,
+		"checksum_match": false,
+		"state_consistent": false,
+		"action_type": action_type,
+		"differences": [],
+		"error_message": "",
+		"validation_time_ms": 0.0
+	}
+
+	# Validate input states
+	if pre_action_state.is_empty() or post_action_state.is_empty():
+		validation_result.error_message = "Missing pre-action or post-action state data"
+		Log.error(
+			"Action state validation failed: missing state data",
+			{
+				"action_type": action_type,
+				"pre_empty": pre_action_state.is_empty(),
+				"post_empty": post_action_state.is_empty()
+			},
+			["replay", "validation", "error"]
+		)
+		return validation_result
+
+	# Extract checksums for comparison
+	var pre_checksum: String = pre_action_state.get("checksum", "")
+	var post_checksum: String = post_action_state.get("checksum", "")
+
+	if pre_checksum.is_empty() or post_checksum.is_empty():
+		validation_result.error_message = "Missing checksum data in state entries"
+		Log.error(
+			"Action state validation failed: missing checksums",
+			{
+				"action_type": action_type,
+				"pre_checksum_empty": pre_checksum.is_empty(),
+				"post_checksum_empty": post_checksum.is_empty()
+			},
+			["replay", "validation", "error"]
+		)
+		return validation_result
+
+	# Compare checksums for quick validation
+	validation_result.checksum_match = (pre_checksum == post_checksum)
+
+	# Perform detailed state comparison if checksums differ
+	if not validation_result.checksum_match:
+		var state_diff: Dictionary = generate_state_diff_report(
+			pre_action_state.get("state_data", {}), post_action_state.get("state_data", {})
+		)
+		validation_result.differences = state_diff.get("differences", [])
+		validation_result.state_consistent = state_diff.get("states_similar", false)
+	else:
+		validation_result.state_consistent = true
+
+	# Determine overall action validity
+	validation_result.action_valid = (
+		validation_result.checksum_match or validation_result.state_consistent
+	)
+
+	# Record performance metrics
+	var validation_time: float = Time.get_ticks_msec() - start_time
+	validation_result.validation_time_ms = validation_time
+	_performance_metrics.comparison_times.append(validation_time)
+	_performance_metrics.last_comparison_ms = validation_time
+	_performance_metrics.total_comparisons += 1
+
+	Log.debug(
+		"Action state validation completed",
+		{
+			"action_type": action_type,
+			"action_valid": validation_result.action_valid,
+			"checksum_match": validation_result.checksum_match,
+			"state_consistent": validation_result.state_consistent,
+			"differences_count": validation_result.differences.size(),
+			"validation_time_ms": validation_time
+		},
+		["replay", "validation", "action_states"]
+	)
+
+	return validation_result
+
+
+## Generate detailed state difference report for mismatch analysis
+## Provides comprehensive analysis of state differences for debugging
+static func generate_state_diff_report(state1: Dictionary, state2: Dictionary) -> Dictionary:
+	"""Generate detailed diff report between two game states"""
+	var start_time: int = Time.get_ticks_msec()
+
+	var diff_report: Dictionary = {
+		"states_identical": false,
+		"states_similar": false,
+		"similarity_score": 0.0,
+		"differences": [],
+		"added_keys": [],
+		"removed_keys": [],
+		"modified_keys": [],
+		"analysis_time_ms": 0.0
+	}
+
+	# Normalize states for comparison
+	var norm_state1: Dictionary = _normalize_platform_data(state1)
+	var norm_state2: Dictionary = _normalize_platform_data(state2)
+
+	# Check for exact match first
+	if norm_state1.hash() == norm_state2.hash():
+		diff_report.states_identical = true
+		diff_report.states_similar = true
+		diff_report.similarity_score = 1.0
+		Log.debug("States are identical after normalization", {}, ["replay", "validation", "diff"])
+		return diff_report
+
+	# Analyze key differences
+	var all_keys: Array = []
+	for key in norm_state1.keys():
+		if key not in all_keys:
+			all_keys.append(key)
+	for key in norm_state2.keys():
+		if key not in all_keys:
+			all_keys.append(key)
+
+	var matching_keys: int = 0
+	var total_keys: int = all_keys.size()
+
+	for key in all_keys:
+		if norm_state1.has(key) and norm_state2.has(key):
+			# Both states have this key - check if values match
+			if _values_equal(norm_state1[key], norm_state2[key], {}):
+				matching_keys += 1
+			else:
+				diff_report.modified_keys.append(key)
+				diff_report.differences.append(
+					{
+						"key": key,
+						"type": "modified",
+						"state1_value": norm_state1[key],
+						"state2_value": norm_state2[key]
+					}
+				)
+		elif norm_state1.has(key):
+			# Key only in state1
+			diff_report.removed_keys.append(key)
+			diff_report.differences.append(
+				{
+					"key": key,
+					"type": "removed",
+					"state1_value": norm_state1[key],
+					"state2_value": null
+				}
+			)
+		else:
+			# Key only in state2
+			diff_report.added_keys.append(key)
+			diff_report.differences.append(
+				{
+					"key": key,
+					"type": "added",
+					"state1_value": null,
+					"state2_value": norm_state2[key]
+				}
+			)
+
+	# Calculate similarity score
+	if total_keys > 0:
+		diff_report.similarity_score = float(matching_keys) / float(total_keys)
+		diff_report.states_similar = diff_report.similarity_score >= 0.8  # 80% similarity threshold
+
+	# Record analysis time
+	var analysis_time: float = Time.get_ticks_msec() - start_time
+	diff_report.analysis_time_ms = analysis_time
+
+	Log.debug(
+		"State diff analysis completed",
+		{
+			"states_identical": diff_report.states_identical,
+			"states_similar": diff_report.states_similar,
+			"similarity_score": diff_report.similarity_score,
+			"differences_count": diff_report.differences.size(),
+			"added_keys": diff_report.added_keys.size(),
+			"removed_keys": diff_report.removed_keys.size(),
+			"modified_keys": diff_report.modified_keys.size(),
+			"analysis_time_ms": analysis_time
+		},
+		["replay", "validation", "diff_analysis"]
+	)
+
+	return diff_report
+
+
+## Check cross-platform consistency for replay validation
+## Ensures game states are consistent across different platforms
+static func check_cross_platform_consistency(
+	states: Array, platform_info: Dictionary = {}
+) -> Dictionary:
+	"""Check consistency of game states across multiple platforms"""
+	var start_time: int = Time.get_ticks_msec()
+
+	var consistency_result: Dictionary = {
+		"platform_consistent": false,
+		"consistency_score": 0.0,
+		"platform_differences": [],
+		"normalized_states": [],
+		"analysis_platforms": [],
+		"check_time_ms": 0.0
+	}
+
+	if states.size() < 2:
+		consistency_result.platform_consistent = true
+		consistency_result.consistency_score = 1.0
+		Log.debug(
+			"Single or no states provided, marking as consistent",
+			{},
+			["replay", "validation", "cross_platform"]
+		)
+		return consistency_result
+
+	# Normalize all states for cross-platform comparison
+	var normalized_states: Array = []
+	for state in states:
+		if state is Dictionary:
+			normalized_states.append(_normalize_platform_data(state))
+		else:
+			Log.warning(
+				"Non-dictionary state found in cross-platform check",
+				{"state_type": typeof(state)},
+				["replay", "validation", "cross_platform"]
+			)
+
+	consistency_result.normalized_states = normalized_states
+
+	# Compare all states with the first one as baseline
+	var baseline_state: Dictionary = normalized_states[0] if normalized_states.size() > 0 else {}
+	var consistent_comparisons: int = 0
+	var total_comparisons: int = normalized_states.size() - 1
+
+	for i in range(1, normalized_states.size()):
+		var comparison: Dictionary = compare_states(baseline_state, normalized_states[i])
+		if comparison.get("states_identical", false):
+			consistent_comparisons += 1
+		else:
+			# Record platform difference
+			consistency_result.platform_differences.append(
+				{
+					"baseline_index": 0,
+					"comparison_index": i,
+					"differences": comparison.get("differences", []),
+					"similarity_score": comparison.get("similarity_score", 0.0)
+				}
+			)
+
+	# Calculate overall consistency score
+	if total_comparisons > 0:
+		consistency_result.consistency_score = (
+			float(consistent_comparisons) / float(total_comparisons)
+		)
+		consistency_result.platform_consistent = consistency_result.consistency_score >= 0.95  # 95% consistency threshold
+	else:
+		consistency_result.platform_consistent = true
+		consistency_result.consistency_score = 1.0
+
+	# Record check time
+	var check_time: float = Time.get_ticks_msec() - start_time
+	consistency_result.check_time_ms = check_time
+
+	Log.info(
+		"Cross-platform consistency check completed",
+		{
+			"platform_consistent": consistency_result.platform_consistent,
+			"consistency_score": consistency_result.consistency_score,
+			"states_checked": states.size(),
+			"platform_differences": consistency_result.platform_differences.size(),
+			"check_time_ms": check_time
+		},
+		["replay", "validation", "cross_platform"]
+	)
+
+	return consistency_result

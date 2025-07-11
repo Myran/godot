@@ -268,7 +268,9 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. create("system.debug.replay_complete", func() -> bool: return _replay_complete())
 			. set_category("System")
 			. set_group("Debug")
-			. set_description("Context-aware replay completion - manual mode stays open, automated mode quits")
+			. set_description(
+				"Context-aware replay completion - manual mode stays open, automated mode quits"
+			)
 		)
 	)
 
@@ -427,7 +429,7 @@ static func _test_replay_generation_no_quit() -> bool:
 static func _replay_complete() -> bool:
 	"""Context-aware replay completion - auto-detects manual vs automated execution"""
 	var execution_context: Dictionary = _detect_execution_context()
-	
+
 	Log.info(
 		"Replay completion with context detection",
 		{
@@ -438,7 +440,7 @@ static func _replay_complete() -> bool:
 		},
 		["debug", "replay", "complete", "context"]
 	)
-	
+
 	if execution_context.mode == "automated":
 		Log.info(
 			"Automated mode detected - quitting application for CI/automated testing",
@@ -462,7 +464,7 @@ static func _replay_complete() -> bool:
 			},
 			["debug", "replay", "manual", "interactive"]
 		)
-		
+
 		# Log semantic action for recording system integration
 		Log.info(
 			"SEMANTIC_ACTION",
@@ -474,24 +476,26 @@ static func _replay_complete() -> bool:
 			},
 			["semantic", "replay", "complete"]
 		)
-		
+
 		return true
 
 
 static func _detect_execution_context() -> Dictionary:
 	"""Detect execution context to determine if running in automated or manual mode"""
 	var context: Dictionary = {
-		"mode": "manual",  # Default to manual mode
-		"platform": OS.get_name(),
-		"command_source": "unknown"
+		"mode": "manual", "platform": OS.get_name(), "command_source": "unknown"  # Default to manual mode
 	}
-	
+
 	# Method 1: Check for CI environment variables
-	if OS.has_environment("CI") or OS.has_environment("GITHUB_ACTIONS") or OS.has_environment("CONTINUOUS_INTEGRATION"):
+	if (
+		OS.has_environment("CI")
+		or OS.has_environment("GITHUB_ACTIONS")
+		or OS.has_environment("CONTINUOUS_INTEGRATION")
+	):
 		context.mode = "automated"
 		context.command_source = "ci_environment"
 		return context
-	
+
 	# Method 2: Check command line arguments for automation flags
 	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
 	for arg in cmdline_args:
@@ -499,7 +503,7 @@ static func _detect_execution_context() -> Dictionary:
 			context.mode = "automated"
 			context.command_source = "cmdline_flag"
 			return context
-	
+
 	# Method 3: Check for test environment variables set by just commands
 	if OS.has_environment("GAMETWO_TEST_MODE"):
 		var test_mode: String = OS.get_environment("GAMETWO_TEST_MODE")
@@ -510,14 +514,14 @@ static func _detect_execution_context() -> Dictionary:
 			context.mode = "manual"
 			context.command_source = "environment_variable"
 		return context
-	
+
 	# Method 4: Check for headless mode (fallback for existing systems)
 	for arg in cmdline_args:
 		if arg == "--headless":
 			context.mode = "automated"
 			context.command_source = "headless_flag"
 			return context
-	
+
 	# Default: manual mode for interactive development
 	context.command_source = "default_manual"
 	return context
@@ -631,16 +635,20 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 	var test_session_id: String = "integration_test_" + str(Time.get_unix_time_from_system())
 	var test_sequence: int = 1
 
-	# Test 1: SessionManager integration
-	Log.info("Testing SessionManager state capture...", {}, ["debug", "test", "integration"])
-	SessionManager.store_pre_action_state("test_checksum_pre", {"test": "pre_data"})
-	SessionManager.store_post_action_state(
-		"test_checksum_post", {"test": "post_data"}, test_session_id, test_sequence
+	# Test 1: SessionManager integration (updated for simplified system)
+	Log.info(
+		"Testing SessionManager simplified checksum system...", {}, ["debug", "test", "integration"]
 	)
 
-	var pre_state: Dictionary = SessionManager.get_pre_action_state(test_session_id, test_sequence)
-	var post_state: Dictionary = SessionManager.get_post_action_state(
-		test_session_id, test_sequence
+	# Note: State storage/retrieval methods were removed during simplification
+	# The system now uses semantic logging with automatic checksum capture
+	SessionManager.log_semantic_action("test.integration", {"test": "integration_data"})
+
+	# Simplified system doesn't store/retrieve separate pre/post states
+	Log.info(
+		"SessionManager integration updated for simplified checksum system",
+		{"note": "State storage methods removed, using semantic logging checksums"},
+		["debug", "test", "integration"]
 	)
 
 	# Test 2: ReplayStateValidator integration
