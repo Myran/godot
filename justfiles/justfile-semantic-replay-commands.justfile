@@ -1680,6 +1680,61 @@ _extract-checksums-to-config session_id config_name:
         exit 1
     fi
 
+# Generate replay config with checksum validation (combined workflow)
+replay-generate-with-checksums session_id config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    
+    # Use session ID as config name if not provided
+    if [ -z "$CONFIG_NAME" ]; then
+        CONFIG_NAME="replay-checksum-${SESSION_ID}"
+    fi
+    
+    # Clean config name for filename
+    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    
+    echo "🚀 Creating replay config with automated checksum validation..."
+    echo "   Session ID: ${SESSION_ID}"
+    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo ""
+    
+    echo "1️⃣ Generating base replay configuration..."
+    just replay-generate "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "2️⃣ Adding automated checksum validation..."
+        just _extract-checksums-to-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
+        
+        if [ $? -eq 0 ]; then
+            echo ""
+            echo "🎉 Complete replay test configuration created!"
+            echo "📄 Config file: ${OUTPUT_CONFIG}"
+            echo ""
+            echo "🎮 Ready to test with automatic checksum validation:"
+            echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
+            echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
+            echo ""
+            echo "🔧 Management commands:"
+            echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
+            echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
+            echo ""
+        else
+            echo "❌ Failed to add checksum validation"
+            echo "💡 Base config created successfully, you can add checksums manually"
+            exit 1
+        fi
+    else
+        echo "❌ Failed to generate base replay configuration"
+        exit 1
+    fi
+
 # Capture semantic logs from a test run and generate replay config (platform-agnostic)
 replay-capture-and-generate config_name test_target="development-workflow" platform="android":
     #!/usr/bin/env bash

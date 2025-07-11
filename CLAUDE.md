@@ -11,10 +11,14 @@ just validate                              # Fast syntax check (3 sec)
 just format                                # Format GDScript files
 
 # 2. Test Changes (choose appropriate level)
-just run-desktop                           # Instant local testing (0 sec)
+just run-desktop                           # Instant local testing (shows session ID)
 just test-android 'system.*'              # Test system layer (30 sec)
-just test-android-target lineup-checksum-test # Validate game state consistency (30 sec)
+just test-android-target my-checksum-test # Validate game state consistency (30 sec)
 just test-android development-workflow     # Full development validation
+
+# 2b. Create Tests from Gameplay (new simplified workflow)
+# After run-desktop shows session ID:
+just replay-generate-with-checksums SESSION_ID my-test  # One command creates complete test
 
 # 3. Quick Debug (if issues)
 just logs-errors-tagged TEST_ID            # Check for errors (98% token savings)
@@ -581,205 +585,134 @@ func get_state_type() -> String:
     return "board_state"
 ```
 
-## 🎬 Demo Recording & Cross-Platform Testing
+## 🎬 Semantic Action Replay & Automated Testing
 
-### **Unified Demo System - Play Once, Test Everywhere**
-**Seamless workflow: Play normally → Extract demo → Test on both platforms → Convert to permanent regression tests.**
+### **Simplified Workflow - Play → Generate → Test**
+**Ultra-streamlined workflow: Play normally → One command creates test → Automatic validation.**
 
-### **📝 Demo Creation Workflow**
+### **🚀 Complete Test Creation Workflow**
 
-#### **🎮 Step 1: Play the Game (No Special Mode Needed)**
+#### **🎮 Step 1: Play the Game (Automatic Session Tracking)**
 ```bash
-# Just play normally - semantic actions are automatically recorded
-just run-desktop                    # Play on desktop
-# OR
-just run-android-debug             # Play on Android
+# Play normally - semantic actions automatically captured with session ID
+just run-desktop                    # Shows session ID when you finish playing
+# OR  
+just run-android-debug             # Shows session ID when you finish playing
 
-# Semantic actions (draft.reroll, lineup.move_card, etc.) are logged automatically
+# Output example:
+# 🎮 Session ID: session_20250712_011306_4d9353a8
+# 💡 To create a test from this session:
+#    just replay-generate-with-checksums session_20250712_011306_4d9353a8 my-test-name
 ```
 
-#### **🎬 Step 2: Create Demo from Gameplay Session**
+#### **🤖 Step 2: Generate Test with Automatic Validation (One Command!)**
 ```bash
-# Extract demo from what you just played
-just create-demo-from-last-session my-battle-demo
+# Single command creates complete test with checksum validation
+just replay-generate-with-checksums SESSION_ID my-test-name
 
-# Alternative: Browse and select from recent sessions
-just create-demo-interactive
-
-# Alternative: Create from specific session ID
-just create-demo-from-session SESSION_123 my-demo-name
+# This automatically:
+# 1️⃣ Generates base replay configuration
+# 2️⃣ Extracts checksums from your gameplay session  
+# 3️⃣ Adds automated validation to the test
+# 4️⃣ Sets up proper seed management for deterministic replays
 ```
 
-#### **🎮 Step 3: Test Demo on Both Platforms**
+#### **🎯 Step 3: Test with Automatic Validation**
 ```bash
-# Cross-platform testing with unified replay completion system
-just test-android my-battle-demo        # Manual mode - stays open for verification
-just test-android-target my-battle-demo # Automated mode - quits automatically
-just test-desktop my-battle-demo        # Manual mode - stays open for verification  
-just test-desktop-target my-battle-demo # Automated mode - quits automatically
+# Cross-platform testing with automatic checksum validation
+just test-desktop-target my-test-name       # Automated: validates checksums, quits automatically
+just test-android-target my-test-name       # Automated: validates checksums, quits automatically
 
-# Cross-platform validation
-just demo-test-cross-platform my-battle-demo  # Test on both, compare results
+# Manual verification mode (stays open for inspection)
+just test-desktop my-test-name              # Manual: validates checksums, stays open
+just test-android my-test-name              # Manual: validates checksums, stays open
 ```
 
-#### **🧪 Step 4: Convert Demo to Regression Test (Optional)**
+### **🔧 Advanced Workflow (Manual Steps)**
 ```bash
-# Convert demo to permanent regression test with checksum validation
-just demo-to-test my-battle-demo
+# For advanced users who want granular control
+just replay-generate SESSION_ID my-test-name           # Generate base config only
+just _extract-checksums-to-config SESSION_ID my-test-name  # Add checksums separately
 
-# Now you have:
-# - my-battle-demo.json (original demo for manual verification)
-# - my-battle-demo-test.json (automated regression test with checksum)
-
-# Test the regression test with unified command structure
-just test-android-target my-battle-demo-test    # Automated: creates baseline, quits automatically
-just test-android my-battle-demo-test           # Manual: for verification, stays open
-just test-desktop-target my-battle-demo-test    # Automated: validates on desktop, quits automatically  
-just test-desktop my-battle-demo-test           # Manual: validates on desktop, stays open
+# Alternative manual creation from recent session
+just replay-capture-and-generate my-test-name          # Capture from latest session
+just _extract-checksums-to-config SESSION_ID my-test-name  # Add checksums
 ```
 
-### **🛠️ Demo Management Commands**
-```bash
-# Browse and select demos
-just demo-select                    # Interactive fzf selection
-just list-demos                     # List all available demos
-
-# Demo testing with unified command structure
-just test-android DEMO_NAME         # Manual mode - stays open for verification
-just test-android-target DEMO_NAME  # Automated mode - quits automatically  
-just test-desktop DEMO_NAME         # Manual mode - stays open for verification
-just test-desktop-target DEMO_NAME  # Automated mode - quits automatically
-just demo-test-cross-platform DEMO_NAME  # Cross-platform validation
-just demo-validate-determinism DEMO_NAME # Multiple runs for consistency
-
-# Demo conversion
-just demo-to-test DEMO_NAME         # Convert to regression test
-just demo-to-test-custom DEMO_NAME lineup  # Custom state capture (lineup, board)
-```
-
-### **🌐 Cross-Platform Benefits**
-- ✅ **Platform-agnostic demos**: Same demo config works on desktop and Android
-- ✅ **Unified log access**: `just logs-last` works on both platforms
+### **⚡ Key Benefits**
 - ✅ **Zero-friction recording**: No special "recording mode" - just play normally
-- ✅ **Retroactive demos**: "That session I played 10 minutes ago was perfect - make it a demo"
-- ✅ **Demo → Test pipeline**: Easy conversion to permanent regression tests
-- ✅ **Deterministic validation**: Ensure identical behavior across platforms
+- ✅ **Automatic session tracking**: Session IDs displayed automatically after gameplay
+- ✅ **One-command test creation**: Generate complete test with validation in one step
+- ✅ **Cross-platform compatibility**: Same test works on desktop and Android
+- ✅ **Deterministic validation**: Checksum-based validation ensures game state consistency
+- ✅ **Retroactive test creation**: Create tests from any previous gameplay session
 
-### **📁 Demo File Structure**
+### **📁 Generated Test Configuration Structure**
 ```json
 {
-  "type": "demo",
-  "description": "Demo from gameplay session: session_123 (5 actions)",
-  "session_id": "session_123",
+  "description": "Generated replay from semantic session: session_20250712_011306_4d9353a8",
+  "session_id": "session_20250712_011306_4d9353a8",
   "actions": [
-    "system.debug.hide_menu",
-    "game.draft.reroll_player", 
+    "game.battle.set_seed",
+    "system.debug.registry_stats",
+    "game.lineup.populate_enemy",
+    "game.draft.reroll_player",
     "game.draft.upgrade_player",
-    "system.debug.replay_complete"
+    "game.state.transition_player",
+    "system.debug.quit_application"
   ],
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "625a12d2b631b97c736e45b340410ec9a1eaf34b28b411320807ff5be34c18ce"
+      }
+    ]
+  },
   "metadata": {
-    "can_convert_to_test": true,
-    "replay_mode": "demo",
-    "auto_quit": false
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
   }
 }
 ```
 
-### **Two-Mode Replay System for Different Use Cases**
-**Complete workflow for capturing semantic player actions with intelligent mode selection for automated testing vs manual verification.**
+### **🎯 Unified Test Execution System**
 
-### **🎭 Replay Modes**
+#### **Intelligent Execution Modes**
+The test system automatically chooses the right execution mode based on the command used:
 
-#### **🤖 Automated Mode (CI/Testing)**
 ```bash
-# Generate automated replay (includes quit action)
-just replay-capture-and-generate my-ci-test            # Complete: capture → generate → auto-quit
-just replay-generate SESSION_ID my-automated-test      # Generate from specific session
+# Manual Mode - Perfect for Development & Verification
+just test-desktop my-test-name                  # Stays open for inspection
+just test-android my-test-name                  # Stays open for inspection
 
-# Behavior: App quits automatically after replay completion
-# Use for: CI/CD pipelines, automated testing, regression tests
+# Automated Mode - Perfect for CI/CD & Regression Testing  
+just test-desktop-target my-test-name           # Quits automatically after validation
+just test-android-target my-test-name           # Quits automatically after validation
 ```
 
-#### **👁️ Manual Mode (Verification & Screenshots)**
-```bash
-# Generate manual verification replay (no quit action)
-just replay-capture-and-generate-manual my-manual-test # Complete: capture → generate → no quit
-just replay-generate-manual SESSION_ID my-manual-test  # Generate from specific session
+#### **🔧 Key Technical Features**
+- **Context-Aware Execution**: Same test configs work in both manual and automated modes
+- **Checksum Validation**: Automatic validation of game state consistency during replay
+- **Cross-Platform Consistency**: Identical behavior on desktop and Android
+- **Clean Interface**: Debug UI automatically hidden during test execution
+- **Screenshot-Ready**: Manual mode perfect for taking clean screenshots of game state
 
-# Behavior: App stays open with hidden debug interface for clean verification
-# Use for: Manual testing, screenshots, user verification, demonstrations
-```
+#### **Developer Experience Benefits**
+**Manual Mode** - When you want to verify and inspect:
+- ✅ Stay open after completion for manual verification
+- ✅ Take screenshots of clean game interface  
+- ✅ Manually close when satisfied with results
+- ✅ Perfect for debugging and development
 
-### **🔧 Core Workflow Examples**
-
-#### **Manual Verification Workflow (Recommended for Development)**
-```bash
-# 1. Generate manual verification replay
-just replay-capture-and-generate-manual player-battle-demo development-workflow
-
-# 2. Run replay without auto-quit  
-just test-android-target player-battle-demo
-
-# 3. Take screenshot of clean game interface
-just screenshot
-
-# 4. Manually verify results and close when ready
-# App shows clean game interface without debug clutter
-```
-
-#### **Automated Testing Workflow (CI/CD)**
-```bash
-# 1. Generate automated replay
-just replay-capture-and-generate ci-regression-test development-workflow
-
-# 2. Run replay with auto-quit
-just test-android-target ci-regression-test
-
-# 3. App quits automatically - perfect for automation
-```
-
-### **🎯 Key Technical Features**
-
-#### **Smart Debug Interface Management**
-- **Complete Interface Hiding**: Uses `EVENT_CLOSE_DEBUG_MENU` to hide entire debug interface
-- **Clean Game View**: Shows actual game interface without debug console clutter  
-- **Automatic Restoration**: Manual mode keeps interface hidden for clean verification
-- **Professional Presentation**: Perfect for screenshots, demonstrations, and user testing
-
-#### **Unified Replay Completion System**
-- **Context-Aware Detection**: Single `system.debug.replay_complete` action automatically detects execution context
-- **Manual Mode**: `test-android` and `test-desktop` commands stay open for verification and screenshots
-- **Automated Mode**: `test-android-target` and `test-desktop-target` commands quit automatically for CI/CD
-- **Environment Detection**: Uses `GAMETWO_TEST_MODE`, CI environment variables, and command line flags
-- **Cross-Platform Consistency**: Same behavior on both Android and Desktop platforms
-
-#### **Developer Experience**
-```bash
-# Manual mode - stays open for verification (default behavior)
-just test-android my-replay-config              # Manual mode - stays open
-just test-desktop my-replay-config              # Manual mode - stays open  
-just screenshot                                 # Take screenshots of clean interface
-
-# Automated mode - quits automatically for CI/CD
-just test-android-target my-replay-config       # Automated mode - quits automatically
-just test-desktop-target my-replay-config       # Automated mode - quits automatically
-```
-
-### **🎯 Key Developer Benefit**
-**The unified replay completion system provides optimal workflows for both manual testing and automation:**
-
-**Manual Mode (Default)** - `test-android` and `test-desktop` commands:
-- Stay open for verification and screenshots
-- Clean game interface (no debug UI clutter) 
-- Allow manual interaction after replay completion
-- Close when developer is ready, not automatically
-
-**Automated Mode** - `test-android-target` and `test-desktop-target` commands:
-- Quit automatically for unattended CI/CD pipelines
-- Perfect for regression testing and automation
-- Same test configs work in both modes
-
-This solves the core problem: **"When I run a test manually, I want to see and verify the results, but when running in CI/CD, I want automatic termination."**
+**Automated Mode** - When you want hands-off testing:
+- ✅ Automatic termination after completion
+- ✅ Perfect for CI/CD pipelines and regression testing
+- ✅ Checksum validation with detailed error reporting
+- ✅ Zero interaction required
 
 ### **🎯 System Integrity Validation (Critical for Production)**
 
