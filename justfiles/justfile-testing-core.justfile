@@ -713,7 +713,7 @@ test-android-trace target:
     @echo "🔍 Test trace mode for: {{target}}"
     @just _test-config-android "{{target}}"
 
-# Test specific configuration on Android
+# Test specific configuration on Android - automated mode (quits automatically)
 test-android-target config_name:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -927,6 +927,82 @@ test-android-target config_name:
     echo ""
     echo "✅ Test execution completed"
     echo "Use 'just logs $TEST_ID' for detailed analysis"
+
+# Internal helper: Test Android configuration in manual mode (stays open)
+_test-android-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "🎯 Testing target (manual mode - stays open): $CONFIG_NAME"
+    echo "=================================================="
+    
+    # Clear Android test cache first to prevent stale state contamination
+    echo "🧹 Clearing Android test cache to ensure fresh state..."
+    just clear-android-test-cache
+    echo ""
+    
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+    
+    # Check device connectivity
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device connected"
+        echo "Please connect a device and enable USB debugging"
+        exit 1
+    fi
+    
+    # Generate unique test ID
+    TEST_ID="${CONFIG_NAME}_manual_$(date +%s)"
+    export TEST_ID
+    
+    echo ""
+    echo "🔍 Test ID: $TEST_ID"
+    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
+    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    echo "👁️  Mode: Manual (stays open for verification)"
+    
+    # Clear logcat buffer
+    adb logcat -c
+    
+    echo ""
+    echo "🚀 Starting manual test..."
+    echo "========================="
+    
+    # Use config-restart to properly deploy config and start app
+    echo "📱 Deploying configuration and starting app..."
+    just config-restart-android "$CONFIG_NAME"
+    
+    echo ""
+    echo "👁️  Manual Test Running"
+    echo "======================="
+    echo "The app is now running in manual test mode."
+    echo "The debug interface is hidden for clean verification."
+    echo ""
+    echo "You can:"
+    echo "• Take screenshots: just screenshot"
+    echo "• Monitor logs: just logs $TEST_ID"
+    echo "• Close the app manually when done"
+    echo ""
+    echo "✅ Manual test started successfully"
+    echo "Test ID: $TEST_ID"
+
+# Internal helper: Test Android test list in manual mode (stays open)
+_test-list-android-manual list_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    LIST_NAME="{{list_name}}"
+    echo "📋 Testing list (manual mode - stays open): $LIST_NAME"
+    echo "============================================="
+    
+    # For now, just run the first config in manual mode
+    # This is a simplified implementation - full test list support would require more work
+    FIRST_CONFIG=$(jq -r '.configurations[0].name // "development-workflow"' "./project/test-lists/${LIST_NAME}.json" 2>/dev/null || echo "development-workflow")
+    echo "Running first config in manual mode: $FIRST_CONFIG"
+    just _test-android-manual "$FIRST_CONFIG"
 
 # Enhanced test with comprehensive analysis
 test-android-enhanced target:
@@ -1308,7 +1384,7 @@ test-all-android:
     @echo "🧪 Running all Android tests..."
     @just test-android "development-workflow"
 
-# Primary Android testing interface with auto-detection
+# Primary Android testing interface - manual mode (stays open for verification)
 test-android target="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1317,7 +1393,7 @@ test-android target="":
     
     # If no target provided, show interactive selector
     if [[ -z "$TARGET" ]]; then
-        echo "🔍 Select test target..."
+        echo "🔍 Select test target (manual mode - stays open)..."
         
         # Build list of all available targets
         TARGETS=""
@@ -1369,7 +1445,7 @@ test-android target="":
         
         # Use fzf for selection if available
         if command -v fzf >/dev/null 2>&1; then
-            SELECTED=$(echo -e "$TARGETS" | fzf --prompt="Select test target: " --height=15 --layout=reverse)
+            SELECTED=$(echo -e "$TARGETS" | fzf --prompt="Select test target (manual mode): " --height=15 --layout=reverse)
             if [[ -z "$SELECTED" ]]; then
                 echo "❌ No target selected"
                 exit 1
@@ -1386,16 +1462,16 @@ test-android target="":
         fi
     fi
     
-    echo "🎯 Testing: $TARGET"
-    echo "=================="
+    echo "🎯 Testing (manual mode): $TARGET"
+    echo "================================="
     
-    # Auto-detect target type and execute appropriate test
+    # Auto-detect target type and execute appropriate test in manual mode
     if [[ -f "./project/test-lists/${TARGET}.json" ]]; then
         echo "📋 Detected test list: $TARGET"
-        just _test-list-android "$TARGET"
+        just _test-list-android-manual "$TARGET"
     elif [[ -f "./project/debug_configs/${TARGET}.json" ]]; then
         echo "📄 Detected configuration: $TARGET"
-        just test-android-target "$TARGET"
+        just _test-android-manual "$TARGET"
     else
         echo "❌ Target not found: $TARGET"
         echo ""
@@ -1424,64 +1500,6 @@ test-android target="":
         exit 1
     fi
 
-# Manual testing mode (no auto-quit)
-test-android-manual target:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    TARGET="{{target}}"
-    
-    echo "👁️  Manual Testing Mode: $TARGET"
-    echo "================================="
-    echo "ℹ️  This test will NOT auto-quit - perfect for manual verification"
-    echo ""
-    
-    # Check if target exists
-    if [[ ! -f "./project/debug_configs/${TARGET}.json" ]]; then
-        echo "❌ Configuration not found: $TARGET"
-        exit 1
-    fi
-    
-    # Generate unique test ID
-    TEST_ID="${TARGET}_manual_$(date +%s)"
-    export TEST_ID
-    
-    echo "🔍 Test ID: $TEST_ID"
-    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1 || echo 'None')"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
-    
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        exit 1
-    fi
-    
-    # Clear logcat
-    adb logcat -c
-    
-    echo ""
-    echo "🚀 Starting manual test..."
-    echo "========================="
-    
-    # Start app with manual test flag
-    adb shell am start -n "{{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" \
-        --es "test_id" "$TEST_ID" \
-        --es "config_name" "$TARGET" \
-        --ez "manual_test" "true"
-    
-    echo ""
-    echo "👁️  Manual Test Running"
-    echo "======================="
-    echo "The app is now running in manual test mode."
-    echo "The debug interface is hidden for clean verification."
-    echo ""
-    echo "You can:"
-    echo "• Take screenshots: just screenshot"
-    echo "• Monitor logs: just logs $TEST_ID"
-    echo "• Close the app manually when done"
-    echo ""
-    echo "✅ Manual test started successfully"
-    echo "Test ID: $TEST_ID"
 
 # Smoke test
 _test-smoke-android:

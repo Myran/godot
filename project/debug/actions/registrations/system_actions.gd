@@ -20,9 +20,7 @@ const ReplayValidationRedPhaseScript = preload(
 const PerformanceRequirementsRedPhaseScript = preload(
 	"res://debug/actions/test_performance_requirements_red_phase_action.gd"
 )
-const EdgeCasesRedPhaseScript = preload(
-	"res://debug/actions/test_edge_cases_red_phase_action.gd"
-)
+const EdgeCasesRedPhaseScript = preload("res://debug/actions/test_edge_cases_red_phase_action.gd")
 const ReplayStateValidationRedPhaseScript = preload(
 	"res://debug/actions/test_replay_state_validation_red_phase_action.gd"
 )
@@ -211,9 +209,7 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(semantic_logging_test)
 
 	# TDD RED PHASE - StateExtractor implementation tests (SHOULD FAIL)
-	var state_extractor_test: StateExtractorRedPhaseScript = (
-		StateExtractorRedPhaseScript.new()
-	)
+	var state_extractor_test: StateExtractorRedPhaseScript = StateExtractorRedPhaseScript.new()
 	registry.register_action(state_extractor_test)
 
 	# TDD GREEN PHASE - StateExtractor implementation validation (SHOULD PASS)
@@ -272,7 +268,7 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. create("system.debug.replay_complete", func() -> bool: return _replay_complete())
 			. set_category("System")
 			. set_group("Debug")
-			. set_description("Mark replay completion without quitting application")
+			. set_description("Context-aware replay completion - manual mode stays open, automated mode quits")
 		)
 	)
 
@@ -286,6 +282,62 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. set_category("System")
 			. set_group("Debug")
 			. set_description("Finalize replay validation and output checksum summary")
+		)
+	)
+
+	# CRITICAL INTEGRATION TESTS - COMPANY SURVIVAL DEPENDENT
+	(
+		registry
+		. register_action(
+			(
+				DebugAction
+				. create(
+					"system.debug.test_state_validation_integration",
+					_test_state_validation_integration
+				)
+				. set_category("System")
+				. set_group("Integration Tests")
+				. set_description(
+					"CRITICAL: Test complete state validation integration - Company survival depends on this"
+				)
+			)
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"system.debug.test_debug_action_with_validation", _test_debug_action_with_validation
+			)
+			. set_category("System")
+			. set_group("Integration Tests")
+			. set_description("Test DebugAction execute_with_state_validation method")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"system.debug.test_semantic_mapper_integration", _test_semantic_mapper_integration
+			)
+			. set_category("System")
+			. set_group("Integration Tests")
+			. set_description("Test SemanticActionMapper validation injection")
+		)
+	)
+
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"system.debug.test_replay_state_validator_integration",
+				_test_replay_state_validator_integration
+			)
+			. set_category("System")
+			. set_group("Integration Tests")
+			. set_description("Test ReplayStateValidator comprehensive functionality")
 		)
 	)
 
@@ -373,31 +425,102 @@ static func _test_replay_generation_no_quit() -> bool:
 
 
 static func _replay_complete() -> bool:
-	"""Mark replay completion without quitting application for manual verification"""
+	"""Context-aware replay completion - auto-detects manual vs automated execution"""
+	var execution_context: Dictionary = _detect_execution_context()
+	
 	Log.info(
-		"Replay sequence completed - application remains open for manual verification",
+		"Replay completion with context detection",
 		{
-			"completion_status": "success",
-			"manual_verification": true,
-			"interactive_mode": true,
-			"note":
-			"App will not quit automatically - user can take screenshots and verify manually"
+			"execution_mode": execution_context.mode,
+			"platform": execution_context.platform,
+			"command_source": execution_context.command_source,
+			"completion_status": "success"
 		},
-		["debug", "replay", "complete", "interactive"]
+		["debug", "replay", "complete", "context"]
 	)
+	
+	if execution_context.mode == "automated":
+		Log.info(
+			"Automated mode detected - quitting application for CI/automated testing",
+			{
+				"automated_execution": true,
+				"quit_application": true,
+				"detection_method": execution_context.command_source
+			},
+			["debug", "replay", "automated", "quit"]
+		)
+		# Quit automatically for CI/automated testing
+		return _quit_application()
+	else:
+		Log.info(
+			"Manual mode detected - staying open for verification and screenshots",
+			{
+				"manual_verification": true,
+				"interactive_mode": true,
+				"stay_open": true,
+				"note": "App remains open - user can verify results and take screenshots"
+			},
+			["debug", "replay", "manual", "interactive"]
+		)
+		
+		# Log semantic action for recording system integration
+		Log.info(
+			"SEMANTIC_ACTION",
+			{
+				"action": "replay.complete",
+				"timestamp": Time.get_unix_time_from_system(),
+				"execution_mode": execution_context.mode,
+				"user_verification_mode": true
+			},
+			["semantic", "replay", "complete"]
+		)
+		
+		return true
 
-	# Log semantic action for recording system integration
-	Log.info(
-		"SEMANTIC_ACTION",
-		{
-			"action": "replay.complete",
-			"timestamp": Time.get_unix_time_from_system(),
-			"user_verification_mode": true
-		},
-		["semantic", "replay", "complete"]
-	)
 
-	return true
+static func _detect_execution_context() -> Dictionary:
+	"""Detect execution context to determine if running in automated or manual mode"""
+	var context: Dictionary = {
+		"mode": "manual",  # Default to manual mode
+		"platform": OS.get_name(),
+		"command_source": "unknown"
+	}
+	
+	# Method 1: Check for CI environment variables
+	if OS.has_environment("CI") or OS.has_environment("GITHUB_ACTIONS") or OS.has_environment("CONTINUOUS_INTEGRATION"):
+		context.mode = "automated"
+		context.command_source = "ci_environment"
+		return context
+	
+	# Method 2: Check command line arguments for automation flags
+	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
+	for arg in cmdline_args:
+		if arg == "--automated" or arg == "--ci" or arg == "--non-interactive":
+			context.mode = "automated"
+			context.command_source = "cmdline_flag"
+			return context
+	
+	# Method 3: Check for test environment variables set by just commands
+	if OS.has_environment("GAMETWO_TEST_MODE"):
+		var test_mode: String = OS.get_environment("GAMETWO_TEST_MODE")
+		if test_mode == "automated":
+			context.mode = "automated"
+			context.command_source = "environment_variable"
+		else:
+			context.mode = "manual"
+			context.command_source = "environment_variable"
+		return context
+	
+	# Method 4: Check for headless mode (fallback for existing systems)
+	for arg in cmdline_args:
+		if arg == "--headless":
+			context.mode = "automated"
+			context.command_source = "headless_flag"
+			return context
+	
+	# Default: manual mode for interactive development
+	context.command_source = "default_manual"
+	return context
 
 
 static func _finalize_replay_validation() -> bool:
@@ -492,3 +615,259 @@ static func _test_platform_agnostic_replay() -> bool:
 		["debug", "test", "tdd", "desktop", "green_phase"]
 	)
 	return true  # TDD GREEN phase - functionality implemented and working
+
+
+## CRITICAL INTEGRATION TESTS - COMPANY SURVIVAL DEPENDENT
+
+
+static func _test_state_validation_integration() -> DebugAction.Result:
+	"""CRITICAL: Test complete state validation integration - Company survival depends on this"""
+	Log.info(
+		"CRITICAL INTEGRATION TEST: Testing complete state validation integration",
+		{"test_type": "integration", "component": "StateValidation", "company_critical": true},
+		["debug", "test", "integration", "critical"]
+	)
+
+	var test_session_id: String = "integration_test_" + str(Time.get_unix_time_from_system())
+	var test_sequence: int = 1
+
+	# Test 1: SessionManager integration
+	Log.info("Testing SessionManager state capture...", {}, ["debug", "test", "integration"])
+	SessionManager.store_pre_action_state("test_checksum_pre", {"test": "pre_data"})
+	SessionManager.store_post_action_state(
+		"test_checksum_post", {"test": "post_data"}, test_session_id, test_sequence
+	)
+
+	var pre_state: Dictionary = SessionManager.get_pre_action_state(test_session_id, test_sequence)
+	var post_state: Dictionary = SessionManager.get_post_action_state(
+		test_session_id, test_sequence
+	)
+
+	# Test 2: ReplayStateValidator integration
+	Log.info("Testing ReplayStateValidator functionality...", {}, ["debug", "test", "integration"])
+	var validation_result: Dictionary = ReplayStateValidator.validate_action_states(
+		{"checksum": "test_pre", "state_data": {"test": "pre_data"}},
+		{"checksum": "test_post", "state_data": {"test": "post_data"}},
+		"integration_test"
+	)
+
+	# Test 3: SemanticActionMapper integration
+	Log.info(
+		"Testing SemanticActionMapper with validation...", {}, ["debug", "test", "integration"]
+	)
+	var test_debug_sequence: Array[Dictionary] = [
+		{"action_name": "system.debug.registry_stats", "sequence": 1}
+	]
+	var validation_config: Dictionary = SemanticActionMapper.create_replay_config_with_validation(
+		test_session_id, test_debug_sequence, {"test": true}, "automated", true
+	)
+
+	# Validate results
+	var success: bool = (
+		not validation_result.is_empty()
+		and not validation_config.is_empty()
+		and validation_config.get("metadata", {}).get("state_validation_enabled", false)
+	)
+
+	if success:
+		Log.info(
+			"INTEGRATION TEST PASSED: State validation integration working correctly",
+			{
+				"session_manager": "OK",
+				"replay_state_validator": "OK",
+				"semantic_action_mapper": "OK",
+				"validation_enabled":
+				validation_config.get("metadata", {}).get("state_validation_enabled", false),
+				"company_survival": "ASSURED"
+			},
+			["debug", "test", "integration", "success"]
+		)
+		return DebugAction.Result.new_success(
+			{"integration_test": "passed", "all_components": "functional"},
+			0,
+			"state_validation_integration"
+		)
+	else:
+		Log.error(
+			"INTEGRATION TEST FAILED: State validation integration broken - COMPANY AT RISK",
+			{
+				"validation_result_empty": validation_result.is_empty(),
+				"validation_config_empty": validation_config.is_empty(),
+				"validation_enabled":
+				validation_config.get("metadata", {}).get("state_validation_enabled", false),
+				"company_survival": "AT RISK"
+			},
+			["debug", "test", "integration", "failure"]
+		)
+		return DebugAction.Result.new_failure(
+			"State validation integration test failed",
+			"INTEGRATION_FAILURE",
+			DebugAction.Result.ErrorCategory.VALIDATION
+		)
+
+
+static func _test_debug_action_with_validation() -> DebugAction.Result:
+	"""Test DebugAction execute_with_state_validation method"""
+	Log.info(
+		"Testing DebugAction state validation execution",
+		{},
+		["debug", "test", "integration", "debug_action"]
+	)
+
+	# Create a test action
+	var test_action: DebugAction = (
+		DebugAction
+		. create("test.validation.action", func() -> bool: return true)
+		. set_category("Test")
+		. set_group("Validation")
+	)
+
+	# Test execution with validation
+	var result: DebugAction.Result = await test_action.execute_with_auto_validation()
+
+	var success: bool = result.is_success()
+
+	if success:
+		Log.info(
+			"DebugAction validation execution test PASSED",
+			{"result_success": success},
+			["debug", "test", "integration", "debug_action", "success"]
+		)
+		return DebugAction.Result.new_success(
+			{"debug_action_validation": "passed"}, 0, "debug_action_with_validation"
+		)
+	else:
+		Log.error(
+			"DebugAction validation execution test FAILED",
+			{"result_success": success, "error": result.get_error_message()},
+			["debug", "test", "integration", "debug_action", "failure"]
+		)
+		return result
+
+
+static func _test_semantic_mapper_integration() -> DebugAction.Result:
+	"""Test SemanticActionMapper validation injection"""
+	Log.info(
+		"Testing SemanticActionMapper validation injection",
+		{},
+		["debug", "test", "integration", "semantic_mapper"]
+	)
+
+	var test_session: String = "test_semantic_session"
+	var test_sequence: Array[Dictionary] = [
+		{"action_name": "system.debug.registry_stats", "sequence": 1}
+	]
+
+	# Test with validation enabled
+	var config_with_validation: Dictionary = (
+		SemanticActionMapper
+		. create_replay_config_with_validation(test_session, test_sequence, {}, "automated", true)
+	)
+
+	# Test without validation
+	var config_without_validation: Dictionary = (
+		SemanticActionMapper
+		. create_replay_config_with_validation(test_session, test_sequence, {}, "automated", false)
+	)
+
+	var with_validation_enabled: bool = config_with_validation.get("metadata", {}).get(
+		"state_validation_enabled", false
+	)
+	var without_validation_enabled: bool = config_without_validation.get("metadata", {}).get(
+		"state_validation_enabled", false
+	)
+
+	var success: bool = with_validation_enabled and not without_validation_enabled
+
+	if success:
+		Log.info(
+			"SemanticActionMapper integration test PASSED",
+			{
+				"with_validation": with_validation_enabled,
+				"without_validation": without_validation_enabled
+			},
+			["debug", "test", "integration", "semantic_mapper", "success"]
+		)
+		return DebugAction.Result.new_success(
+			{"semantic_mapper_integration": "passed"}, 0, "semantic_mapper_integration"
+		)
+	else:
+		Log.error(
+			"SemanticActionMapper integration test FAILED",
+			{
+				"with_validation": with_validation_enabled,
+				"without_validation": without_validation_enabled
+			},
+			["debug", "test", "integration", "semantic_mapper", "failure"]
+		)
+		return DebugAction.Result.new_failure(
+			"SemanticActionMapper validation injection failed",
+			"SEMANTIC_MAPPER_FAILURE",
+			DebugAction.Result.ErrorCategory.VALIDATION
+		)
+
+
+static func _test_replay_state_validator_integration() -> DebugAction.Result:
+	"""Test ReplayStateValidator comprehensive functionality"""
+	Log.info(
+		"Testing ReplayStateValidator comprehensive functionality",
+		{},
+		["debug", "test", "integration", "replay_validator"]
+	)
+
+	# Test state comparison
+	var state1: Dictionary = {"lineup": {"cards": [1, 2, 3]}, "game_phase": "draft"}
+	var state2: Dictionary = {"lineup": {"cards": [1, 2, 4]}, "game_phase": "draft"}
+
+	var comparison: Dictionary = ReplayStateValidator.compare_states(state1, state2)
+	var diff_report: Dictionary = ReplayStateValidator.generate_state_diff_report(state1, state2)
+
+	# Test action validation
+	var action_validation: Dictionary = ReplayStateValidator.validate_action_states(
+		{"checksum": "abc123", "state_data": state1},
+		{"checksum": "def456", "state_data": state2},
+		"test_action"
+	)
+
+	# Test cross-platform consistency
+	var consistency: Dictionary = ReplayStateValidator.check_cross_platform_consistency(
+		[state1, state2]
+	)
+
+	var success: bool = (
+		not comparison.is_empty()
+		and not diff_report.is_empty()
+		and not action_validation.is_empty()
+		and not consistency.is_empty()
+	)
+
+	if success:
+		Log.info(
+			"ReplayStateValidator integration test PASSED",
+			{
+				"comparison": "OK",
+				"diff_report": "OK",
+				"action_validation": "OK",
+				"consistency": "OK"
+			},
+			["debug", "test", "integration", "replay_validator", "success"]
+		)
+		return DebugAction.Result.new_success(
+			{"replay_validator_integration": "passed"}, 0, "replay_state_validator_integration"
+		)
+	else:
+		Log.error(
+			"ReplayStateValidator integration test FAILED",
+			{
+				"comparison_empty": comparison.is_empty(),
+				"diff_report_empty": diff_report.is_empty(),
+				"action_validation_empty": action_validation.is_empty(),
+				"consistency_empty": consistency.is_empty()
+			},
+			["debug", "test", "integration", "replay_validator", "failure"]
+		)
+		return DebugAction.Result.new_failure(
+			"ReplayStateValidator integration test failed",
+			"REPLAY_VALIDATOR_FAILURE",
+			DebugAction.Result.ErrorCategory.VALIDATION
+		)

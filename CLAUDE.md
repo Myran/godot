@@ -612,9 +612,11 @@ just create-demo-from-session SESSION_123 my-demo-name
 
 #### **🎮 Step 3: Test Demo on Both Platforms**
 ```bash
-# Test demo using existing test-android system (already works!)
-just test-android my-battle-demo        # Test on Android
-just test-desktop-target my-battle-demo # Test on Desktop
+# Cross-platform testing with unified replay completion system
+just test-android my-battle-demo        # Manual mode - stays open for verification
+just test-android-target my-battle-demo # Automated mode - quits automatically
+just test-desktop my-battle-demo        # Manual mode - stays open for verification  
+just test-desktop-target my-battle-demo # Automated mode - quits automatically
 
 # Cross-platform validation
 just demo-test-cross-platform my-battle-demo  # Test on both, compare results
@@ -629,9 +631,11 @@ just demo-to-test my-battle-demo
 # - my-battle-demo.json (original demo for manual verification)
 # - my-battle-demo-test.json (automated regression test with checksum)
 
-# Test the regression test
-just test-android-target my-battle-demo-test    # Creates baseline on first run
-just test-desktop-target my-battle-demo-test    # Validates on desktop
+# Test the regression test with unified command structure
+just test-android-target my-battle-demo-test    # Automated: creates baseline, quits automatically
+just test-android my-battle-demo-test           # Manual: for verification, stays open
+just test-desktop-target my-battle-demo-test    # Automated: validates on desktop, quits automatically  
+just test-desktop my-battle-demo-test           # Manual: validates on desktop, stays open
 ```
 
 ### **🛠️ Demo Management Commands**
@@ -640,8 +644,11 @@ just test-desktop-target my-battle-demo-test    # Validates on desktop
 just demo-select                    # Interactive fzf selection
 just list-demos                     # List all available demos
 
-# Demo testing
-just test-android DEMO_NAME         # Test demo (uses existing test-android!)
+# Demo testing with unified command structure
+just test-android DEMO_NAME         # Manual mode - stays open for verification
+just test-android-target DEMO_NAME  # Automated mode - quits automatically  
+just test-desktop DEMO_NAME         # Manual mode - stays open for verification
+just test-desktop-target DEMO_NAME  # Automated mode - quits automatically
 just demo-test-cross-platform DEMO_NAME  # Cross-platform validation
 just demo-validate-determinism DEMO_NAME # Multiple runs for consistency
 
@@ -739,30 +746,40 @@ just test-android-target ci-regression-test
 - **Automatic Restoration**: Manual mode keeps interface hidden for clean verification
 - **Professional Presentation**: Perfect for screenshots, demonstrations, and user testing
 
-#### **Intelligent Mode Selection**
-- **Automated Mode**: Includes `system.debug.quit_application` for CI/automated testing
-- **Manual Mode**: Includes `system.debug.replay_complete` for manual verification
-- **Semantic Integration**: Both modes log completion events for recording system consistency
-- **Metadata Tracking**: Replay configs include mode information for easy identification
+#### **Unified Replay Completion System**
+- **Context-Aware Detection**: Single `system.debug.replay_complete` action automatically detects execution context
+- **Manual Mode**: `test-android` and `test-desktop` commands stay open for verification and screenshots
+- **Automated Mode**: `test-android-target` and `test-desktop-target` commands quit automatically for CI/CD
+- **Environment Detection**: Uses `GAMETWO_TEST_MODE`, CI environment variables, and command line flags
+- **Cross-Platform Consistency**: Same behavior on both Android and Desktop platforms
 
 #### **Developer Experience**
 ```bash
-# Any manually run test stays open for verification - perfect for development
-just test-android-target my-replay-config        # Stays open (manual verification)
-just screenshot                                   # Take screenshots of clean interface
+# Manual mode - stays open for verification (default behavior)
+just test-android my-replay-config              # Manual mode - stays open
+just test-desktop my-replay-config              # Manual mode - stays open  
+just screenshot                                 # Take screenshots of clean interface
 
-# Background automation includes quit for unattended operation  
-# (Used internally by CI/CD systems)
+# Automated mode - quits automatically for CI/CD
+just test-android-target my-replay-config       # Automated mode - quits automatically
+just test-desktop-target my-replay-config       # Automated mode - quits automatically
 ```
 
 ### **🎯 Key Developer Benefit**
-**Manual test runs via `just` commands automatically stay open without quitting**, allowing developers to:
-- Take screenshots of clean game interface (no debug UI clutter)
-- Manually verify game state and functionality
-- Interact with the game after replay completion
-- Close the app when ready, not when the system decides
+**The unified replay completion system provides optimal workflows for both manual testing and automation:**
 
-This solves the core problem: **"When I run a test manually, I want to see and verify the results, not have the app quit immediately."**
+**Manual Mode (Default)** - `test-android` and `test-desktop` commands:
+- Stay open for verification and screenshots
+- Clean game interface (no debug UI clutter) 
+- Allow manual interaction after replay completion
+- Close when developer is ready, not automatically
+
+**Automated Mode** - `test-android-target` and `test-desktop-target` commands:
+- Quit automatically for unattended CI/CD pipelines
+- Perfect for regression testing and automation
+- Same test configs work in both modes
+
+This solves the core problem: **"When I run a test manually, I want to see and verify the results, but when running in CI/CD, I want automatic termination."**
 
 ### **🎯 System Integrity Validation (Critical for Production)**
 

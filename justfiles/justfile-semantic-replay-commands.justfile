@@ -2009,72 +2009,25 @@ test-desktop TARGET="" DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # If arguments provided, use direct execution mode
+    # If arguments provided, use direct execution mode (manual mode - stays open)
     if [ -n "{{TARGET}}" ]; then
-        echo "🎯 Direct execution mode: {{TARGET}}"
-        just test-desktop-target "{{TARGET}}" "{{DURATION}}"
+        echo "🎯 Manual mode execution: {{TARGET}}"
+        just _test-desktop-manual "{{TARGET}}" "{{DURATION}}"
         exit $?
     fi
     
-    # Use shared fzf selection for all configs
+    # Use shared fzf selection for all configs (manual mode)
     selected=$(just _fzf-select-config "desktop" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
-        echo "Running: just test-desktop-target '$selected'"
-        just test-desktop-target "$selected" "{{DURATION}}"
+        echo "Running manual mode: just _test-desktop-manual '$selected'"
+        just _test-desktop-manual "$selected" "{{DURATION}}"
     else
         echo "❌ No selection made"
         exit 1
     fi
 
-# Desktop test execution with fallback manual selection
-test-desktop-manual:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    echo "📋 Select a desktop test to run:"
-    echo ""
-    
-    # Build arrays of files and descriptions
-    configs=()
-    descriptions=()
-    
-    # Add debug configs
-    echo "🔧 Debug Configurations:"
-    for file in project/debug_configs/*.json; do
-        if [ -f "$file" ]; then
-            name=$(basename "$file" .json)
-            desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
-            configs+=("$name")
-            descriptions+=("$desc")
-            printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
-        fi
-    done
-    
-    echo ""
-    echo "📝 Test Lists:"
-    for file in project/test-lists/*.json; do
-        if [ -f "$file" ]; then
-            name=$(basename "$file" .json)
-            desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
-            configs+=("$name")
-            descriptions+=("$desc")
-            printf "%2d. %-20s - %s\n" ${#configs[@]} "$name" "$desc"
-        fi
-    done
-    
-    echo ""
-    read -p "Enter number (1-${#configs[@]}): " choice
-    
-    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#configs[@]}" ]; then
-        selected="${configs[$((choice-1))]}"
-        echo "Running: just test-desktop-target '$selected'"
-        just test-desktop-target "$selected"
-    else
-        echo "❌ Invalid selection"
-        exit 1
-    fi
 
-# Desktop test execution target - direct execution with config name
+# Desktop test execution target - automated mode (quits automatically)
 test-desktop-target CONFIG_NAME DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -2087,7 +2040,7 @@ test-desktop-target CONFIG_NAME DURATION="30":
         exit 1
     fi
     
-    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (windowed)"
+    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (automated mode - quits automatically)"
     echo "   Config: $CONFIG_FILE"
     echo ""
     
@@ -2103,9 +2056,9 @@ test-desktop-target CONFIG_NAME DURATION="30":
     echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
     cp "$CONFIG_FILE" "$STARTUP_CONFIG"
     
-    # Run desktop Godot with debug actions (windowed)
-    echo "🚀 Starting desktop test with game window..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+    # Run desktop Godot with debug actions (automated mode with quit)
+    echo "🚀 Starting desktop test in automated mode..."
+    GAMETWO_TEST_MODE=automated ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
         && echo "✅ Desktop test completed successfully" \
         || echo "⚠️  Desktop test completed with exit code $?"
     
@@ -2113,8 +2066,8 @@ test-desktop-target CONFIG_NAME DURATION="30":
     echo "🎉 Desktop test execution complete!"
     echo "💡 Check logs with: just logs-desktop-last"
 
-# Desktop test execution - headless mode for CI/CD and automated testing
-test-desktop-headless CONFIG_NAME:
+# Internal helper: Desktop test execution - manual mode (stays open for verification)
+_test-desktop-manual CONFIG_NAME DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -2126,7 +2079,7 @@ test-desktop-headless CONFIG_NAME:
         exit 1
     fi
     
-    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (headless)"
+    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (manual mode - stays open)"
     echo "   Config: $CONFIG_FILE"
     echo ""
     
@@ -2142,15 +2095,16 @@ test-desktop-headless CONFIG_NAME:
     echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
     cp "$CONFIG_FILE" "$STARTUP_CONFIG"
     
-    # Run desktop Godot with debug actions (headless)
-    echo "🚀 Starting desktop test headless..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --test-mode \
+    # Run desktop Godot with debug actions (manual mode - stays open)
+    echo "🚀 Starting desktop test in manual mode..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
         && echo "✅ Desktop test completed successfully" \
         || echo "⚠️  Desktop test completed with exit code $?"
     
     echo ""
     echo "🎉 Desktop test execution complete!"
     echo "💡 Check logs with: just logs-desktop-last"
+
 
 # Desktop log access - equivalent of logs-last for desktop platform
 logs-desktop-last:
