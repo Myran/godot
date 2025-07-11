@@ -66,14 +66,13 @@ func intitialize_game() -> void:
 	rng.start_with_base_seed()
 	game_handler.set_gamestate(core.GameState.START)
 
-	# Game systems are now fully initialized - transition to WAITING state
+	# Game systems are now fully initialized - UI remains LOCKED until proper state transition
 	Log.info(
-		"Game initialization complete - transitioning to WAITING state",
+		"Game initialization complete - UI remains LOCKED until state transition",
 		{},
 		[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, Log.TAG_UI]
 	)
-	ui_state = core.UIState.WAITING
-	_process_idle_action_queue()
+	# UI will be unlocked in mode_prepare() when state transition completes
 
 	# Emit signal to indicate system is fully ready for external operations
 	Log.info(
@@ -556,8 +555,8 @@ func _process_idle_action_queue() -> void:
 
 
 func start_game() -> void:
-	Log.info("Game starting", {}, [Log.TAG_GAME_STATE])
-	ui_state = core.UIState.WAITING
+	Log.info("Game starting - locking UI during state transition", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+	ui_state = core.UIState.LOCKED
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
 
 
@@ -579,6 +578,15 @@ func mode_prepare() -> void:
 
 	holder_enemy.visible = true
 	holder_draft.visible = false
+
+	# State transition is complete - unlock UI and process any queued idle actions
+	Log.info(
+		"PREPARE mode active - unlocking UI and processing idle actions",
+		{},
+		[Log.TAG_GAME_STATE, Log.TAG_UI, "state_transition_complete"]
+	)
+	ui_state = core.UIState.WAITING
+	_process_idle_action_queue()
 
 
 func mode_pre_battle() -> void:
