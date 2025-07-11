@@ -1416,6 +1416,9 @@ replay-generate session_id config_name="":
     echo "🎮 To test the replay:"
     echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
     echo ""
+    echo "📸 To add checksum validation:"
+    echo "   just _extract-checksums-to-config ${SESSION_ID} ${CLEAN_CONFIG_NAME}"
+    echo ""
     echo "🎉 Replay generation complete!"
 
 # Generate replay test configuration from semantic logs (manual mode - no quit for verification)
@@ -1537,6 +1540,145 @@ replay-generate-manual session_id config_name="":
     echo "   • Close app manually when done"
     echo ""
     echo "🎉 Manual replay generation complete!"
+
+# Extract checksums from semantic logs and add to existing replay config for validation
+_extract-checksums-to-config session_id config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "📸 Extracting checksums for session: ${SESSION_ID}"
+    echo "   Config: ${CONFIG_NAME}"
+    echo "   File: ${CONFIG_FILE}"
+    echo ""
+    
+    # Verify config exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo ""
+        echo "💡 Generate the base config first:"
+        echo "   just replay-generate ${SESSION_ID} ${CONFIG_NAME}"
+        exit 1
+    fi
+    
+    # Cross-platform log detection - find the directory that contains the target session
+    PROJECT_LOGS_DIR="./logs"
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    
+    # Check which directory contains the target session
+    LOG_DIR=""
+    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (session found): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (session found): $LOG_DIR"
+    fi
+    
+    if [ -z "$LOG_DIR" ]; then
+        echo "❌ No logs found for session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Available session IDs:"
+        find "." -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5
+        exit 1
+    fi
+    
+    echo "🔍 Searching for semantic actions with checksums..."
+    
+    # Extract semantic actions with checksums for the specified session
+    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Extract initial seed from session start
+    INITIAL_SEED=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
+    
+    if [ -z "$INITIAL_SEED" ]; then
+        INITIAL_SEED="12345"
+        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+    else
+        echo "✅ Found initial seed: ${INITIAL_SEED}"
+    fi
+    
+    # Count actions and extract checksums
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
+    
+    # Create temporary file for the enhanced config
+    TEMP_CONFIG="${CONFIG_FILE}.tmp"
+    
+    # Parse existing config and add checksum_config section
+    echo "🔧 Adding checksum validation to config..."
+    
+    # Use jq to add checksum_config section, but fall back to manual if jq not available
+    if command -v jq >/dev/null 2>&1; then
+        # Build expected_checksums array from semantic actions (avoid subshell issue)
+        TEMP_ACTIONS_FILE=$(mktemp)
+        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+        
+        CHECKSUMS_JSON="["
+        FIRST=true
+        
+        while IFS= read -r line; do
+            if [ -n "$line" ]; then
+                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
+                
+                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
+                    if [ "$FIRST" = true ]; then
+                        FIRST=false
+                    else
+                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
+                    fi
+                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
+                fi
+            fi
+        done < "$TEMP_ACTIONS_FILE"
+        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
+        
+        # Clean up temp file
+        rm -f "$TEMP_ACTIONS_FILE"
+        
+        # Add checksum_config and ensure game.battle.set_seed is first action
+        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
+            .checksum_config = {
+                "state_type": "player_actions",
+                "initial_seed": $initial_seed,
+                "expected_checksums": $checksums
+            } |
+            .actions = (["game.battle.set_seed"] + (.actions | map(select(. != "game.battle.set_seed")))) |
+            .metadata.test_type = "checksum_validation" |
+            .metadata.validation_mode = "semantic_action_checksums"
+        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
+        
+        # Replace original with enhanced version
+        mv "$TEMP_CONFIG" "$CONFIG_FILE"
+        
+        echo "✅ Checksum validation added successfully!"
+        echo ""
+        echo "📊 Checksum validation summary:"
+        echo "   Initial seed: ${INITIAL_SEED}"
+        echo "   Expected checksums: ${ACTION_COUNT}"
+        echo "   Validation mode: semantic_action_checksums"
+        echo ""
+        echo "🎮 To test with checksum validation:"
+        echo "   just test-desktop-target ${CONFIG_NAME}"
+        echo ""
+        echo "🔍 Checksums will be validated automatically during replay"
+        
+    else
+        echo "❌ jq not available - cannot automatically add checksums"
+        echo "💡 Install jq with: brew install jq"
+        echo "💡 Or manually add checksum_config section to: $CONFIG_FILE"
+        exit 1
+    fi
 
 # Capture semantic logs from a test run and generate replay config (platform-agnostic)
 replay-capture-and-generate config_name test_target="development-workflow" platform="android":
@@ -2063,6 +2205,16 @@ test-desktop-target CONFIG_NAME DURATION="30":
         || echo "⚠️  Desktop test completed with exit code $?"
     
     echo ""
+    
+    # Check for checksum validation if config has checksum_config
+    if jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
+        echo "🔍 Checksum validation enabled - validating replay..."
+        just _validate-checksums-from-logs "$CONFIG_FILE" "$LOGS_DIR/godot.log" \
+            && echo "✅ Checksum validation passed!" \
+            || echo "❌ Checksum validation failed!"
+        echo ""
+    fi
+    
     echo "🎉 Desktop test execution complete!"
     echo "💡 Check logs with: just logs-desktop-last"
 
@@ -2137,4 +2289,113 @@ logs-desktop-last:
         echo ""
         echo "💡 Directory will be created on first desktop test run"
         echo "   Try: just test-desktop system-quit-only"
+    fi
+
+# ================================
+# CHECKSUM VALIDATION SYSTEM
+# ================================
+
+# Internal helper: Validate checksums from logs against config expectations
+_validate-checksums-from-logs CONFIG_FILE LOG_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="{{CONFIG_FILE}}"
+    LOG_FILE="{{LOG_FILE}}"
+    
+    echo "🔍 Validating checksums..."
+    echo "📄 Config file: $CONFIG_FILE"
+    echo "📄 Log file: $LOG_FILE"
+    
+    # Check that both files exist
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        return 1
+    fi
+    
+    if [ ! -f "$LOG_FILE" ]; then
+        echo "❌ Log file not found: $LOG_FILE"
+        return 1
+    fi
+    
+    # Check that seed was set correctly (optional verification)
+    EXPECTED_SEED=$(jq -r '.checksum_config.initial_seed // null' "$CONFIG_FILE")
+    if [[ "$EXPECTED_SEED" != "null" ]]; then
+        if grep -q "RNG seed set.*$EXPECTED_SEED" "$LOG_FILE"; then
+            echo "✅ Seed set correctly: $EXPECTED_SEED"
+        else
+            echo "⚠️  Could not verify seed was set to: $EXPECTED_SEED"
+        fi
+    fi
+    echo ""
+    
+    # Extract expected checksums with metadata from JSON config
+    EXPECTED_DATA=$(jq -c '.checksum_config.expected_checksums[]?' "$CONFIG_FILE" 2>/dev/null || echo "")
+    
+    if [ -z "$EXPECTED_DATA" ]; then
+        echo "⚠️  No expected checksums found in config - skipping validation"
+        return 0
+    fi
+    
+    # Extract actual checksums from replay logs (skip game.battle.set_seed action)
+    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | grep -v '"action_name":"game.battle.set_seed"' | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
+    
+    if [ -z "$ACTUAL_DATA" ]; then
+        echo "❌ No SEMANTIC_ACTION logs found in replay"
+        echo "   This indicates the replay system is not working correctly"
+        return 1
+    fi
+    
+    # Compare sequence by sequence
+    local sequence=1
+    local validation_passed=true
+    
+    while IFS= read -r expected_line && IFS= read -r actual_line <&3; do
+        if [ -z "$expected_line" ] || [ -z "$actual_line" ]; then
+            break
+        fi
+        
+        EXPECTED_CHECKSUM=$(echo "$expected_line" | jq -r '.checksum' 2>/dev/null || echo "")
+        EXPECTED_ACTION=$(echo "$expected_line" | jq -r '.action' 2>/dev/null || echo "")
+        
+        ACTUAL_CHECKSUM=$(echo "$actual_line" | jq -r '.checksum' 2>/dev/null || echo "")
+        ACTUAL_ACTION=$(echo "$actual_line" | jq -r '.action' 2>/dev/null || echo "")
+        
+        echo "🔄 Sequence $sequence: $EXPECTED_ACTION"
+        
+        if [[ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]]; then
+            echo "❌ CHECKSUM MISMATCH at sequence $sequence"
+            echo "   Action: $EXPECTED_ACTION"
+            echo "   Expected: $EXPECTED_CHECKSUM"
+            echo "   Actual:   $ACTUAL_CHECKSUM"
+            echo ""
+            echo "🛠️  Debugging Info:"
+            echo "   Config file: $CONFIG_FILE"
+            echo "   Log file: $LOG_FILE"
+            echo "   Failed at action: $EXPECTED_ACTION"
+            echo "   Seed: $EXPECTED_SEED"
+            validation_passed=false
+            break
+        fi
+        
+        if [[ "$EXPECTED_ACTION" != "$ACTUAL_ACTION" ]]; then
+            echo "❌ ACTION MISMATCH at sequence $sequence"
+            echo "   Expected: $EXPECTED_ACTION"
+            echo "   Actual: $ACTUAL_ACTION"
+            validation_passed=false
+            break
+        fi
+        
+        echo "   ✅ Checksum match: ${EXPECTED_CHECKSUM:0:12}..."
+        ((sequence++))
+    done <<< "$EXPECTED_DATA" 3<<< "$ACTUAL_DATA"
+    
+    echo ""
+    if [ "$validation_passed" = true ]; then
+        echo "✅ All checksums validated successfully!"
+        echo "📊 Total validated: $((sequence-1)) actions"
+        return 0
+    else
+        echo "❌ Checksum validation failed!"
+        return 1
     fi

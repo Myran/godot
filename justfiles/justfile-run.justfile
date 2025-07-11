@@ -94,8 +94,42 @@ _ios-hotreload DEVICE_TYPE:
 
 # LEVEL 1: Launch in Godot editor (1-2 sec, no build needed)
 run-desktop: _validate-godot-editor
-    @echo "Running project on desktop..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "Running project on desktop..."
+    
+    # Start the Godot process in background to capture session ID
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} &
+    GODOT_PID=$!
+    
+    # Wait a moment for the session to start, then extract session ID
+    sleep 3
+    
+    # Extract the most recent session ID from logs
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+    
+    # Check both log locations for the most recent session
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        LATEST_LOG=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": "[^"]*"' | cut -d'"' -f4 || echo "")
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": "[^"]*"' | cut -d'"' -f4 || echo "")
+    fi
+    
+    if [ -n "$SESSION_ID" ]; then
+        echo ""
+        echo "🎮 Session ID: $SESSION_ID"
+        echo "💡 To create a test from this session:"
+        echo "   1. just replay-generate $SESSION_ID my-test-name"
+        echo "   2. just _extract-checksums-to-config $SESSION_ID my-test-name"
+        echo ""
+    fi
+    
+    # Wait for the Godot process to complete
+    wait $GODOT_PID
 
 # LEVEL 1: Launch in Godot editor with debug (1-2 sec, no build needed)
 run-desktop-debug:
@@ -143,9 +177,42 @@ launch-ios-ipad-debug: (_ios-launch-app "ipad" "true")
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
 run-android-debug:
-    @echo "🐛 Launching existing Android app in debug mode..."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🐛 Launching existing Android app in debug mode..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
-    @echo "✅ App launched in debug mode!"
+    echo "✅ App launched in debug mode!"
+    
+    # Wait for the session to start and capture session ID
+    echo "⏳ Waiting for session to start..."
+    sleep 5
+    
+    # Check for new session ID in Android logs
+    # Note: Android logs come through adb logcat, but for semantic sessions we need the desktop logs
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+    
+    # Check both log locations for the most recent session
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        LATEST_LOG=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": "[^"]*"' | cut -d'"' -f4 || echo "")
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+        LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": "[^"]*"' | cut -d'"' -f4 || echo "")
+    fi
+    
+    if [ -n "$SESSION_ID" ]; then
+        echo ""
+        echo "🎮 Session ID: $SESSION_ID"
+        echo "💡 To create a test from this session:"
+        echo "   1. just replay-generate $SESSION_ID my-test-name"
+        echo "   2. just _extract-checksums-to-config $SESSION_ID my-test-name"
+        echo ""
+    else
+        echo "⚠️  Session ID not found in logs yet. Check again after playing the game."
+        echo "💡 Use: just logs-last | grep SESSION_START | tail -1"
+    fi
 
 # ================================
 # ANDROID COMMANDS (Using Generic Functions)
