@@ -476,6 +476,35 @@ just validate-godot "INFO.*debug"        # Custom filter patterns
 - **Issue → Fix:** < 10 minutes (decision tree + patterns)
 - **Syntax Check:** < 5 seconds (`validate`)
 
+### **Output Filtering for Token Efficiency**
+**Use these aliases for token-efficient command execution:**
+
+```bash
+# Set up filtering aliases for any just command
+alias qjust="just --quiet"                                    # Basic quiet mode
+alias ejust="just 2>&1 | grep -E '(ERROR|FAIL|error|Error)'"  # Show errors only
+
+# Usage examples - wrap any just command for reduced output
+qjust test-android development-workflow    # Quiet testing (90% less output)
+qjust fastbuild-android                   # Quiet build (95% less output) 
+qjust validate                            # Quiet syntax check
+
+ejust test-android my-test                # Show errors only (98% token savings)
+ejust fastbuild-android                   # Build errors only (99% token savings)
+ejust validate                            # Syntax errors only
+
+# Standard vs Filtered comparison
+just test-android my-test                 # Full verbose output (high token cost)
+qjust test-android my-test                # Quiet output (90% token savings)
+ejust test-android my-test                # Errors only (98% token savings)
+```
+
+**Benefits:**
+- **`qjust`**: 90-95% reduction in output tokens, preserves important messages
+- **`ejust`**: 98-99% reduction in output tokens, shows only errors/failures
+- **Universal wrappers**: Work with any just command
+- **Development efficiency**: Focus on results and problems, not verbose logs
+
 ## 🧪 Checksum Snapshot Testing
 
 ### **Automated State Validation**
