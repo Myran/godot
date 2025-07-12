@@ -3,7 +3,6 @@
   "actions": [
     "game.battle.set_seed",
     "system.debug.hide_menu",
-    "game.state.transition_player",
     "game.battle.start_player",
     "system.debug.replay_complete"
   ],

@@ -3,7 +3,13 @@
   "actions": [
     "game.battle.set_seed",
     "system.debug.hide_menu",
-    "game.state.transition_player",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
     "game.lineup.remove_card_player",
     "system.debug.replay_complete"
   ],
