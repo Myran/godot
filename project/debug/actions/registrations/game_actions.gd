@@ -1760,8 +1760,9 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 			)
 			return false
 
-	# Create TransitionEvent
+	# Create TransitionEvent with PLAYER source
 	var event: core.TransitionEvent = core.TransitionEvent.new(target_state)
+	event.source = core.EventSource.PLAYER
 	core.action(event)
 
 	return true

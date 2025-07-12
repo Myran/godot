@@ -1,0 +1,21 @@
+{
+  "description": "Battle Start Player Action CHECKSUM Test - Validate single action deterministic behavior",
+  "actions": [
+    "game.battle.set_seed",
+    "system.debug.hide_menu",
+    "game.state.transition_player",
+    "game.battle.start_player",
+    "system.debug.replay_complete"
+  ],
+  "checksum_config": {
+    "state_type": "battle_start_player_state",
+    "initial_seed": 12345,
+    "expected_checksums": []
+  },
+  "metadata": {
+    "test_type": "checksum_validation",
+    "creation_method": "single_action_isolation",
+    "auto_quit": false,
+    "isolated_action": "game.battle.start_player"
+  }
+}
