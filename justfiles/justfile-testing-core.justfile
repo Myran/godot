@@ -714,220 +714,221 @@ test-android-trace target:
     @just _test-config-android "{{target}}"
 
 # Test specific configuration on Android - automated mode (quits automatically)
-test-android-target config_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
-    
-    echo "🎯 Testing target: $CONFIG_NAME"
-    echo "==============================="
-    
-    # Clear Android test cache first to prevent stale state contamination
-    echo "🧹 Clearing Android test cache to ensure fresh state..."
-    just clear-android-test-cache
-    echo ""
-    
-    # Validate configuration exists
-    just _validate-config-exists "$CONFIG_NAME"
-    
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo "Please connect a device and enable USB debugging"
-        exit 1
-    fi
-    
-    # Check if configuration has checksum validation
-    HAS_CHECKSUM=false
-    if [[ -f "$CONFIG_PATH" ]] && jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
-        HAS_CHECKSUM=true
-        
-        # Get checksum configuration
-        STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
-        EXPECTED_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_PATH")
-        
-        echo "📸 Checksum Test Detected"
-        echo "State Type: $STATE_TYPE"
-        echo "Expected Checksum: $EXPECTED_CHECKSUM"
-        
-        # Check if baseline is set
-        if [[ -z "$EXPECTED_CHECKSUM" ]]; then
-            echo ""
-            echo "ℹ️  No baseline checksum set - this will be the first run"
-            echo "   A baseline will be automatically created and saved"
-            echo "   The test will automatically restart to validate the baseline"
-        else
-            echo ""
-            echo "✅ Baseline checksum found - will validate against it"
-        fi
-    fi
-    
-    # Generate unique test ID
-    TEST_ID="${CONFIG_NAME}_$(date +%s)"
-    export TEST_ID
-    
-    echo ""
-    echo "🔍 Test ID: $TEST_ID"
-    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
-    
-    # Clear logcat buffer
-    adb logcat -c
-    
-    # Get current app state
-    APP_PID=$(adb shell pidof "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
-    if [[ -n "$APP_PID" ]]; then
-        echo "🔍 App running (PID: $APP_PID)"
-    else
-        echo "⚠️  App not running - will start"
-    fi
-    
-    echo ""
-    echo "🚀 Starting test execution..."
-    echo "============================="
-    
-    # Use config-restart to properly deploy config and start app
-    echo "📱 Deploying configuration and starting app..."
-    just config-restart-android "$CONFIG_NAME"
-    echo ""
-    
-    # Wait for app initialization
-    sleep 3
-    
-    # Monitor test execution
-    echo ""
-    echo "🔍 Monitoring test execution..."
-    echo "==============================="
-    
-    # Start log monitoring
-    LOGCAT_PID=""
-    (
-        adb logcat | grep -E "(TEST_|ERROR|CRITICAL|CHECKSUM)" | while read -r line; do
-            echo "$line"
-            # Check for test completion
-            if echo "$line" | grep -q "TEST_COMPLETE.*$TEST_ID"; then
-                echo "✅ Test execution completed"
-            fi
-            # Check for checksum events
-            if echo "$line" | grep -q "CHECKSUM"; then
-                echo "📸 Checksum event detected"
-            fi
-        done
-    ) &
-    LOGCAT_PID=$!
-    
-    # Wait for test completion
-    TIMEOUT=180  # Extended timeout for checksum tests
-    ELAPSED=0
-    TEST_COMPLETED=false
-    CHECKSUM_SAVED=false
-    
-    while [[ $ELAPSED -lt $TIMEOUT ]]; do
-        # Check for test completion
-        if adb logcat -d | grep -q "TEST_COMPLETE.*$TEST_ID"; then
-            TEST_COMPLETED=true
-            break
-        fi
-        
-        # Check for checksum save event (first run scenario)
-        if [[ $HAS_CHECKSUM == true ]] && adb logcat -d | grep -q "CHECKSUM_SAVED.*$TEST_ID"; then
-            CHECKSUM_SAVED=true
-            echo ""
-            echo "📸 Checksum baseline saved - test will restart automatically"
-        fi
-        
-        # Check for errors
-        if adb logcat -d | grep -q "TEST_ERROR.*$TEST_ID"; then
-            echo ""
-            echo "❌ Test failed with error"
-            break
-        fi
-        
-        # Check app status
-        CURRENT_PID=$(adb shell pidof "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
-        if [[ -z "$CURRENT_PID" ]]; then
-            echo ""
-            echo "⚠️  App stopped"
-            break
-        fi
-        
-        sleep 2
-        ELAPSED=$((ELAPSED + 2))
-        
-        # Progress indicator
-        if [[ $((ELAPSED % 20)) -eq 0 ]]; then
-            echo "⏳ Test running... (${ELAPSED}s / ${TIMEOUT}s)"
-        fi
-    done
-    
-    # Stop monitoring
-    if [[ -n "$LOGCAT_PID" ]]; then
-        kill $LOGCAT_PID 2>/dev/null || true
-    fi
-    
-    echo ""
-    echo "📊 Test Results"
-    echo "==============="
-    echo "Test ID: $TEST_ID"
-    echo "Configuration: $CONFIG_NAME"
-    echo "Duration: ${ELAPSED}s"
-    
-    # Determine test result
-    if [[ $TEST_COMPLETED == true ]]; then
-        echo "Status: ✅ COMPLETED"
-        
-        # Check for checksum validation results
-        if [[ $HAS_CHECKSUM == true ]]; then
-            echo ""
-            echo "📸 Checksum Validation:"
-            echo "======================"
-            
-            if adb logcat -d | grep -q "CHECKSUM_MATCH.*$TEST_ID"; then
-                echo "✅ Checksum validation PASSED"
-            elif adb logcat -d | grep -q "CHECKSUM_MISMATCH.*$TEST_ID"; then
-                echo "❌ Checksum validation FAILED"
-                echo ""
-                echo "Expected vs Actual checksum mismatch detected"
-                echo "This could indicate:"
-                echo "  • Legitimate changes requiring baseline update"
-                echo "  • Regression in game state consistency"
-                echo "  • Non-deterministic behavior in game logic"
-                echo ""
-                echo "Use 'just test-android-update $CONFIG_NAME' to update baseline if changes are legitimate"
-            elif [[ $CHECKSUM_SAVED == true ]]; then
-                echo "📸 Baseline checksum created - test restarted automatically"
-                echo "✅ Baseline validation completed"
-            else
-                echo "⚠️  No checksum validation events found"
-            fi
-        fi
-    else
-        echo "Status: ❌ FAILED/TIMEOUT"
-    fi
-    
-    # Show relevant logs
-    echo ""
-    echo "📋 Test Logs:"
-    echo "============="
-    adb logcat -d | grep "$TEST_ID" | tail -10 || echo "No test-specific logs found"
-    
-    echo ""
-    echo "🔍 Error Summary:"
-    echo "================="
-    ERROR_COUNT=$(adb logcat -d | grep -E "(ERROR|CRITICAL)" | grep -v "GL_INVALID" | wc -l)
-    if [[ $ERROR_COUNT -gt 0 ]]; then
-        echo "Found $ERROR_COUNT errors:"
-        adb logcat -d | grep -E "(ERROR|CRITICAL)" | grep -v "GL_INVALID" | tail -5
-    else
-        echo "No errors found"
-    fi
-    
-    echo ""
-    echo "✅ Test execution completed"
-    echo "Use 'just logs $TEST_ID' for detailed analysis"
-
+# NOTE: This command is now provided by justfile-validation-enhanced-testing.justfile
+# # test-android-target config_name:
+#     #!/usr/bin/env bash
+#     set -euo pipefail
+#     
+#     CONFIG_NAME="{{config_name}}"
+#     CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+#     
+#     echo "🎯 Testing target: $CONFIG_NAME"
+#     echo "==============================="
+#     
+#     # Clear Android test cache first to prevent stale state contamination
+#     echo "🧹 Clearing Android test cache to ensure fresh state..."
+#     just clear-android-test-cache
+#     echo ""
+#     
+#     # Validate configuration exists
+#     just _validate-config-exists "$CONFIG_NAME"
+#     
+#     # Check device connectivity
+#     if ! adb devices | grep -q "device$"; then
+#         echo "❌ No Android device connected"
+#         echo "Please connect a device and enable USB debugging"
+#         exit 1
+#     fi
+#     
+#     # Check if configuration has checksum validation
+#     HAS_CHECKSUM=false
+#     if [[ -f "$CONFIG_PATH" ]] && jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+#         HAS_CHECKSUM=true
+#         
+#         # Get checksum configuration
+#         STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+#         EXPECTED_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_PATH")
+#         
+#         echo "📸 Checksum Test Detected"
+#         echo "State Type: $STATE_TYPE"
+#         echo "Expected Checksum: $EXPECTED_CHECKSUM"
+#         
+#         # Check if baseline is set
+#         if [[ -z "$EXPECTED_CHECKSUM" ]]; then
+#             echo ""
+#             echo "ℹ️  No baseline checksum set - this will be the first run"
+#             echo "   A baseline will be automatically created and saved"
+#             echo "   The test will automatically restart to validate the baseline"
+#         else
+#             echo ""
+#             echo "✅ Baseline checksum found - will validate against it"
+#         fi
+#     fi
+#     
+#     # Generate unique test ID
+#     TEST_ID="${CONFIG_NAME}_$(date +%s)"
+#     export TEST_ID
+#     
+#     echo ""
+#     echo "🔍 Test ID: $TEST_ID"
+#     echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
+#     echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+#     
+#     # Clear logcat buffer
+#     adb logcat -c
+#     
+#     # Get current app state
+#     APP_PID=$(adb shell pidof "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+#     if [[ -n "$APP_PID" ]]; then
+#         echo "🔍 App running (PID: $APP_PID)"
+#     else
+#         echo "⚠️  App not running - will start"
+#     fi
+#     
+#     echo ""
+#     echo "🚀 Starting test execution..."
+#     echo "============================="
+#     
+#     # Use config-restart to properly deploy config and start app
+#     echo "📱 Deploying configuration and starting app..."
+#     just config-restart-android "$CONFIG_NAME"
+#     echo ""
+#     
+#     # Wait for app initialization
+#     sleep 3
+#     
+#     # Monitor test execution
+#     echo ""
+#     echo "🔍 Monitoring test execution..."
+#     echo "==============================="
+#     
+#     # Start log monitoring
+#     LOGCAT_PID=""
+#     (
+#         adb logcat | grep -E "(TEST_|ERROR|CRITICAL|CHECKSUM)" | while read -r line; do
+#             echo "$line"
+#             # Check for test completion
+#             if echo "$line" | grep -q "TEST_COMPLETE.*$TEST_ID"; then
+#                 echo "✅ Test execution completed"
+#             fi
+#             # Check for checksum events
+#             if echo "$line" | grep -q "CHECKSUM"; then
+#                 echo "📸 Checksum event detected"
+#             fi
+#         done
+#     ) &
+#     LOGCAT_PID=$!
+#     
+#     # Wait for test completion
+#     TIMEOUT=180  # Extended timeout for checksum tests
+#     ELAPSED=0
+#     TEST_COMPLETED=false
+#     CHECKSUM_SAVED=false
+#     
+#     while [[ $ELAPSED -lt $TIMEOUT ]]; do
+#         # Check for test completion
+#         if adb logcat -d | grep -q "TEST_COMPLETE.*$TEST_ID"; then
+#             TEST_COMPLETED=true
+#             break
+#         fi
+#         
+#         # Check for checksum save event (first run scenario)
+#         if [[ $HAS_CHECKSUM == true ]] && adb logcat -d | grep -q "CHECKSUM_SAVED.*$TEST_ID"; then
+#             CHECKSUM_SAVED=true
+#             echo ""
+#             echo "📸 Checksum baseline saved - test will restart automatically"
+#         fi
+#         
+#         # Check for errors
+#         if adb logcat -d | grep -q "TEST_ERROR.*$TEST_ID"; then
+#             echo ""
+#             echo "❌ Test failed with error"
+#             break
+#         fi
+#         
+#         # Check app status
+#         CURRENT_PID=$(adb shell pidof "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+#         if [[ -z "$CURRENT_PID" ]]; then
+#             echo ""
+#             echo "⚠️  App stopped"
+#             break
+#         fi
+#         
+#         sleep 2
+#         ELAPSED=$((ELAPSED + 2))
+#         
+#         # Progress indicator
+#         if [[ $((ELAPSED % 20)) -eq 0 ]]; then
+#             echo "⏳ Test running... (${ELAPSED}s / ${TIMEOUT}s)"
+#         fi
+#     done
+#     
+#     # Stop monitoring
+#     if [[ -n "$LOGCAT_PID" ]]; then
+#         kill $LOGCAT_PID 2>/dev/null || true
+#     fi
+#     
+#     echo ""
+#     echo "📊 Test Results"
+#     echo "==============="
+#     echo "Test ID: $TEST_ID"
+#     echo "Configuration: $CONFIG_NAME"
+#     echo "Duration: ${ELAPSED}s"
+#     
+#     # Determine test result
+#     if [[ $TEST_COMPLETED == true ]]; then
+#         echo "Status: ✅ COMPLETED"
+#         
+#         # Check for checksum validation results
+#         if [[ $HAS_CHECKSUM == true ]]; then
+#             echo ""
+#             echo "📸 Checksum Validation:"
+#             echo "======================"
+#             
+#             if adb logcat -d | grep -q "CHECKSUM_MATCH.*$TEST_ID"; then
+#                 echo "✅ Checksum validation PASSED"
+#             elif adb logcat -d | grep -q "CHECKSUM_MISMATCH.*$TEST_ID"; then
+#                 echo "❌ Checksum validation FAILED"
+#                 echo ""
+#                 echo "Expected vs Actual checksum mismatch detected"
+#                 echo "This could indicate:"
+#                 echo "  • Legitimate changes requiring baseline update"
+#                 echo "  • Regression in game state consistency"
+#                 echo "  • Non-deterministic behavior in game logic"
+#                 echo ""
+#                 echo "Use 'just test-android-update $CONFIG_NAME' to update baseline if changes are legitimate"
+#             elif [[ $CHECKSUM_SAVED == true ]]; then
+#                 echo "📸 Baseline checksum created - test restarted automatically"
+#                 echo "✅ Baseline validation completed"
+#             else
+#                 echo "⚠️  No checksum validation events found"
+#             fi
+#         fi
+#     else
+#         echo "Status: ❌ FAILED/TIMEOUT"
+#     fi
+#     
+#     # Show relevant logs
+#     echo ""
+#     echo "📋 Test Logs:"
+#     echo "============="
+#     adb logcat -d | grep "$TEST_ID" | tail -10 || echo "No test-specific logs found"
+#     
+#     echo ""
+#     echo "🔍 Error Summary:"
+#     echo "================="
+#     ERROR_COUNT=$(adb logcat -d | grep -E "(ERROR|CRITICAL)" | grep -v "GL_INVALID" | wc -l)
+#     if [[ $ERROR_COUNT -gt 0 ]]; then
+#         echo "Found $ERROR_COUNT errors:"
+#         adb logcat -d | grep -E "(ERROR|CRITICAL)" | grep -v "GL_INVALID" | tail -5
+#     else
+#         echo "No errors found"
+#     fi
+#     
+#     echo ""
+#     echo "✅ Test execution completed"
+#     echo "Use 'just logs $TEST_ID' for detailed analysis"
+# 
 # Internal helper: Test Android configuration in manual mode (stays open)
 _test-android-manual config_name:
     #!/usr/bin/env bash

@@ -1546,15 +1546,46 @@ static func _reset_board_state() -> bool:
 # Player action implementations for semantic replay
 static func _reroll_player(params: Dictionary = {}) -> bool:
 	"""Simulate player reroll action with parameters"""
-	# Note: cost parameter exists in semantic logging but game doesn't implement reroll costs
-	var cost: int = params.get("cost", 0)  # Always 0 in this game
+
+	# Step 1: Validate parameters
+	var cost: int = params.get("cost", 0)
+	if cost < 0:
+		Log.error("Invalid cost parameter", {"cost": cost}, ["debug", "replay", "player", "error"])
+		assert(false, "reroll_player: cost cannot be negative")
+		return false
+
+	# Step 2: Validate game state (rerolls only work in DRAFT state)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error("Game node not available for reroll", {}, ["debug", "replay", "player", "error"])
+		assert(false, "reroll_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT":
+		Log.error(
+			"Cannot reroll outside DRAFT state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "reroll_player: can only reroll in DRAFT state, current: " + current_state)
+		return false
+
+	# Step 3: Validate preconditions (draft must exist and be rerollable)
+	if not game.clicker or not game.clicker.level:
+		Log.error(
+			"Draft system not available for reroll", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "reroll_player: draft system not available")
+		return false
+
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player reroll action",
 		{"cost": cost, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# Create RerollDraftEvent with PLAYER source
 	var event: core.RerollDraftEvent = core.RerollDraftEvent.new()
 	event.source = core.EventSource.PLAYER
 	core.action(event)
@@ -1564,14 +1595,51 @@ static func _reroll_player(params: Dictionary = {}) -> bool:
 
 static func _upgrade_player(params: Dictionary = {}) -> bool:
 	"""Simulate player upgrade action with parameters"""
+
+	# Step 1: Validate parameters
 	var level: int = params.get("level", 1)
+	var level_error: String = _validate_range(level, 1, 5, "level")
+	if not level_error.is_empty():
+		Log.error(
+			"Invalid level parameter",
+			{"level": level, "error": level_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "upgrade_player: " + level_error)
+		return false
+
+	# Step 2: Validate game state (upgrades only work in DRAFT state)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error("Game node not available for upgrade", {}, ["debug", "replay", "player", "error"])
+		assert(false, "upgrade_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT":
+		Log.error(
+			"Cannot upgrade outside DRAFT state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "upgrade_player: can only upgrade in DRAFT state, current: " + current_state)
+		return false
+
+	# Step 3: Validate preconditions (draft must exist and be upgradeable)
+	if not game.clicker or not game.clicker.level:
+		Log.error(
+			"Draft system not available for upgrade", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "upgrade_player: draft system not available")
+		return false
+
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player upgrade action",
 		{"level": level, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# Create UpgradeEvent with PLAYER source
 	var event: core.UpgradeEvent = core.UpgradeEvent.new(level)
 	event.source = core.EventSource.PLAYER
 	core.action(event)
@@ -1581,15 +1649,70 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 
 static func _toggle_column_player(params: Dictionary = {}) -> bool:
 	"""Simulate player column toggle action with parameters"""
-	var column_index: int = params.get("column_index", 1)  # Middle column is more realistic default
-	var new_state: bool = params.get("new_state", true)
+
+	# Step 1: Validate parameters
+	var required_params: Array[String] = ["column_index", "new_state"]
+	var param_error: String = _validate_required_params(params, required_params)
+	if not param_error.is_empty():
+		Log.error(
+			"Missing required parameters",
+			{"error": param_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "toggle_column_player: " + param_error)
+		return false
+
+	var column_index: int = params.get("column_index", -1)
+	var new_state: bool = params.get("new_state", false)
+
+	var column_error: String = _validate_range(column_index, 0, 4, "column_index")
+	if not column_error.is_empty():
+		Log.error(
+			"Invalid column_index parameter",
+			{"column_index": column_index, "error": column_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "toggle_column_player: " + column_error)
+		return false
+
+	# Step 2: Validate game state (column toggle only works in DRAFT state)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for column toggle", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "toggle_column_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT":
+		Log.error(
+			"Cannot toggle column outside DRAFT state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false, "toggle_column_player: can only toggle in DRAFT state, current: " + current_state
+		)
+		return false
+
+	# Step 3: Validate preconditions (draft must exist and have columns)
+	if not game.clicker or not game.clicker.level:
+		Log.error(
+			"Draft system not available for column toggle",
+			{},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "toggle_column_player: draft system not available")
+		return false
+
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player column toggle action",
 		{"column_index": column_index, "new_state": new_state, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# Create DraftColumnStateEvent with PLAYER source
 	var event: core.DraftColumnStateEvent = core.DraftColumnStateEvent.new(column_index, new_state)
 	event.source = core.EventSource.PLAYER
 	core.action(event)
@@ -1599,17 +1722,72 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 
 static func _remove_block_player(params: Dictionary = {}) -> bool:
 	"""Simulate player block removal action with parameters"""
-	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
-	var position: Dictionary = params.get("position", {"x": 1, "y": 1})  # Draft center position
+
+	# Step 1: Validate parameters
+	var required_params: Array[String] = ["card_id", "position"]
+	var param_error: String = _validate_required_params(params, required_params)
+	if not param_error.is_empty():
+		Log.error(
+			"Missing required parameters",
+			{"error": param_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: " + param_error)
+		return false
+
+	var card_id: String = params.get("card_id", "")
+	var position: Dictionary = params.get("position", {})
+
+	var validation_error: String = _can_remove_block(card_id, position)
+	if not validation_error.is_empty():
+		Log.error(
+			"Invalid parameters for block removal",
+			{"error": validation_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: " + validation_error)
+		return false
+
+	# Step 2: Validate game state (block removal only works in DRAFT state)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for block removal", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT":
+		Log.error(
+			"Cannot remove blocks outside DRAFT state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false,
+			"remove_block_player: can only remove blocks in DRAFT state, current: " + current_state
+		)
+		return false
+
+	# Step 3: Validate preconditions (draft must exist and have blocks)
+	if not game.clicker or not game.clicker.level:
+		Log.error(
+			"Draft system not available for block removal",
+			{},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: draft system not available")
+		return false
+
+	# Step 4: Execute action (placeholder until full implementation)
 	Log.info(
 		"Simulating player block removal action",
 		{"card_id": card_id, "position": position, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# Find block by position or card_id
-	# Note: This is a simplified implementation - real implementation would need
-	# to find the actual block in the draft area and create the appropriate event
+	# TODO: Implement actual block removal when draft area access is available
 	Log.warning(
 		"Block removal replay not fully implemented - needs draft area access",
 		{},
@@ -1621,9 +1799,83 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 
 static func _move_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card move action with parameters"""
-	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
-	var from_position: int = params.get("from_position", 1)  # Move from second position
-	var to_position: int = params.get("to_position", 3)  # Move to fourth position
+
+	# Step 1: Validate parameters
+	var required_params: Array[String] = ["card_id", "from_position", "to_position"]
+	var param_error: String = _validate_required_params(params, required_params)
+	if not param_error.is_empty():
+		Log.error(
+			"Missing required parameters",
+			{"error": param_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "move_card_player: " + param_error)
+		return false
+
+	var card_id: String = params.get("card_id", "")
+	var from_position: int = params.get("from_position", -1)
+	var to_position: int = params.get("to_position", -1)
+
+	var from_error: String = _validate_range(from_position, 0, 9, "from_position")
+	if not from_error.is_empty():
+		Log.error(
+			"Invalid from_position parameter",
+			{"error": from_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "move_card_player: " + from_error)
+		return false
+
+	var to_error: String = _validate_range(to_position, 0, 9, "to_position")
+	if not to_error.is_empty():
+		Log.error(
+			"Invalid to_position parameter",
+			{"error": to_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "move_card_player: " + to_error)
+		return false
+
+	var move_error: String = _can_move_card(card_id, from_position)
+	if not move_error.is_empty():
+		Log.error("Cannot move card", {"error": move_error}, ["debug", "replay", "player", "error"])
+		assert(false, "move_card_player: " + move_error)
+		return false
+
+	# Step 2: Validate game state (card moves can happen in DRAFT or PREPARE states)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for card move", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "move_card_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT" and current_state != "PREPARE":
+		Log.error(
+			"Cannot move cards in current state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false,
+			(
+				"move_card_player: can only move cards in DRAFT or PREPARE state, current: "
+				+ current_state
+			)
+		)
+		return false
+
+	# Step 3: Validate preconditions (must have lineup with cards)
+	if not core:
+		Log.error(
+			"Core system not available for card move", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "move_card_player: core system not available")
+		return false
+
+	# Step 4: Execute action (placeholder until full implementation)
 	Log.info(
 		"Simulating player card move action",
 		{
@@ -1635,9 +1887,7 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Find the card in the lineup and create MoveLineupCardEvent
-	# Note: This is a simplified implementation - real implementation would need
-	# to find the actual card in the lineup and create the appropriate event
+	# TODO: Implement actual card movement when lineup access is available
 	Log.warning(
 		"Card move replay not fully implemented - needs lineup access",
 		{},
@@ -1649,9 +1899,85 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 
 static func _add_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card addition action with parameters"""
-	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
-	var target_position: int = params.get("target_position", 2)  # Middle lineup position
-	var source_position: Dictionary = params.get("source_position", {"x": 1, "y": 1})  # Draft center
+
+	# Step 1: Validate parameters
+	var required_params: Array[String] = ["card_id", "target_position", "source_position"]
+	var param_error: String = _validate_required_params(params, required_params)
+	if not param_error.is_empty():
+		Log.error(
+			"Missing required parameters",
+			{"error": param_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "add_card_player: " + param_error)
+		return false
+
+	var card_id: String = params.get("card_id", "")
+	var target_position: int = params.get("target_position", -1)
+	var source_position: Dictionary = params.get("source_position", {})
+
+	var add_error: String = _can_add_card(card_id)
+	if not add_error.is_empty():
+		Log.error("Cannot add card", {"error": add_error}, ["debug", "replay", "player", "error"])
+		assert(false, "add_card_player: " + add_error)
+		return false
+
+	var position_error: String = _validate_range(target_position, 0, 9, "target_position")
+	if not position_error.is_empty():
+		Log.error(
+			"Invalid target_position parameter",
+			{"error": position_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "add_card_player: " + position_error)
+		return false
+
+	var source_error: String = _validate_position_dict(source_position, "source_position")
+	if not source_error.is_empty():
+		Log.error(
+			"Invalid source_position parameter",
+			{"error": source_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "add_card_player: " + source_error)
+		return false
+
+	# Step 2: Validate game state (card addition can happen in DRAFT or PREPARE states)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for card addition", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "add_card_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT" and current_state != "PREPARE":
+		Log.error(
+			"Cannot add cards in current state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false,
+			(
+				"add_card_player: can only add cards in DRAFT or PREPARE state, current: "
+				+ current_state
+			)
+		)
+		return false
+
+	# Step 3: Validate preconditions (must have draft system and available cards)
+	if not game.clicker or not game.clicker.level:
+		Log.error(
+			"Draft system not available for card addition",
+			{},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "add_card_player: draft system not available")
+		return false
+
+	# Step 4: Execute action (placeholder until full implementation)
 	Log.info(
 		"Simulating player card addition action",
 		{
@@ -1663,9 +1989,7 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Find card in draft area and create LineupAddCardEvent
-	# Note: This is a simplified implementation - real implementation would need
-	# to find the actual card and create the appropriate event
+	# TODO: Implement actual card addition when card access is available
 	Log.warning(
 		"Card addition replay not fully implemented - needs card access",
 		{},
@@ -1677,17 +2001,71 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 
 static func _remove_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card removal action with parameters"""
-	var card_id: String = params.get("card_id", "1")  # Use card "1" as realistic default
-	var position: int = params.get("position", 2)  # Middle lineup position
+
+	# Step 1: Validate parameters
+	var required_params: Array[String] = ["card_id", "position"]
+	var param_error: String = _validate_required_params(params, required_params)
+	if not param_error.is_empty():
+		Log.error(
+			"Missing required parameters",
+			{"error": param_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_card_player: " + param_error)
+		return false
+
+	var card_id: String = params.get("card_id", "")
+	var position: int = params.get("position", -1)
+
+	var removal_error: String = _can_remove_card(card_id, position)
+	if not removal_error.is_empty():
+		Log.error(
+			"Cannot remove card", {"error": removal_error}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_card_player: " + removal_error)
+		return false
+
+	# Step 2: Validate game state (card removal can happen in DRAFT or PREPARE states)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for card removal", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_card_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "DRAFT" and current_state != "PREPARE":
+		Log.error(
+			"Cannot remove cards in current state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false,
+			(
+				"remove_card_player: can only remove cards in DRAFT or PREPARE state, current: "
+				+ current_state
+			)
+		)
+		return false
+
+	# Step 3: Validate preconditions (must have lineup with cards)
+	if not core:
+		Log.error(
+			"Core system not available for card removal", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_card_player: core system not available")
+		return false
+
+	# Step 4: Execute action (placeholder until full implementation)
 	Log.info(
 		"Simulating player card removal action",
 		{"card_id": card_id, "position": position, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# Find card in lineup and create removal event
-	# Note: This is a simplified implementation - real implementation would need
-	# to find the actual card and create the appropriate event
+	# TODO: Implement actual card removal when lineup access is available
 	Log.warning(
 		"Card removal replay not fully implemented - needs lineup access",
 		{},
@@ -1702,22 +2080,33 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 	var from_state: String = params.get("from_state", "")  # Expected starting state (empty = skip validation)
 	var to_state: String = params.get("to_state", "PREPARE")  # Target state
 
-	# Validate current state matches expected from_state (if provided)
+	# Step 1: Validate parameters (to_state is required)
+	if to_state.is_empty():
+		Log.error(
+			"to_state parameter is required",
+			{"params": params},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "transition_player: to_state parameter is required")
+		return false
+
+	# Step 2 & 3: Validate current state matches expected from_state (if provided)
 	if not from_state.is_empty():
 		var game: Game = _get_game_node()
 		if not game:
-			Log.warning(
+			Log.error(
 				"Cannot validate state transition - game node not available",
 				{"expected_from_state": from_state, "target_state": to_state},
-				["debug", "replay", "validation", "error"]
+				["debug", "replay", "player", "error"]
 			)
+			assert(false, "transition_player: game node not available")
 			return false
 
 		var current_state_name: String = core.GameState.keys()[game.game_handler.current_gamestate]
 		if current_state_name != from_state:
 			(
 				Log
-				. warning(
+				. error(
 					"State transition validation failed - current state doesn't match expected from_state",
 					{
 						"expected_from_state": from_state,
@@ -1725,7 +2114,16 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 						"target_state": to_state,
 						"params": params
 					},
-					["debug", "replay", "validation", "error"]
+					["debug", "replay", "player", "error"]
+				)
+			)
+			assert(
+				false,
+				(
+					"transition_player: expected state "
+					+ from_state
+					+ " but current is "
+					+ current_state_name
 				)
 			)
 			return false
@@ -1753,11 +2151,12 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 		"POSTBATTLE":
 			target_state = core.GameState.POSTBATTLE
 		_:
-			Log.warning(
+			Log.error(
 				"Unknown target state for replay",
 				{"to_state": to_state},
-				["debug", "replay", "player"]
+				["debug", "replay", "player", "error"]
 			)
+			assert(false, "transition_player: unknown target state: " + to_state)
 			return false
 
 	# Create TransitionEvent with PLAYER source
@@ -1770,8 +2169,65 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 
 static func _start_battle_player(params: Dictionary = {}) -> bool:
 	"""Simulate player battle start action with parameters"""
-	var player_lineup_count: int = params.get("player_lineup_count", 3)  # Typical lineup size
-	var enemy_lineup_count: int = params.get("enemy_lineup_count", 3)  # Typical enemy size
+
+	# Step 1: Validate parameters
+	var player_lineup_count: int = params.get("player_lineup_count", 3)
+	var enemy_lineup_count: int = params.get("enemy_lineup_count", 3)
+
+	var player_error: String = _validate_range(player_lineup_count, 1, 10, "player_lineup_count")
+	if not player_error.is_empty():
+		Log.error(
+			"Invalid player_lineup_count parameter",
+			{"error": player_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "start_battle_player: " + player_error)
+		return false
+
+	var enemy_error: String = _validate_range(enemy_lineup_count, 1, 10, "enemy_lineup_count")
+	if not enemy_error.is_empty():
+		Log.error(
+			"Invalid enemy_lineup_count parameter",
+			{"error": enemy_error},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "start_battle_player: " + enemy_error)
+		return false
+
+	# Step 2: Validate game state (battle can only start from PREPARE state)
+	var game: Game = _get_game_node()
+	if not game:
+		Log.error(
+			"Game node not available for battle start", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "start_battle_player: game node not available")
+		return false
+
+	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
+	if current_state != "PREPARE":
+		Log.error(
+			"Cannot start battle from current state",
+			{"current_state": current_state},
+			["debug", "replay", "player", "error"]
+		)
+		assert(
+			false,
+			(
+				"start_battle_player: can only start battle from PREPARE state, current: "
+				+ current_state
+			)
+		)
+		return false
+
+	# Step 3: Validate preconditions (must have ui system)
+	if not ui:
+		Log.error(
+			"UI system not available for battle start", {}, ["debug", "replay", "player", "error"]
+		)
+		assert(false, "start_battle_player: UI system not available")
+		return false
+
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player battle start action",
 		{
@@ -1782,7 +2238,106 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Create StartBattleEvent through UI system (simulates player clicking battle button)
 	ui.action(ui.StartBattleEvent.new())
 
 	return true
+
+
+# ================================================================
+# VALIDATION HELPERS - Simple and Robust Parameter Validation
+# ================================================================
+
+
+static func _validate_required_params(params: Dictionary, required_keys: Array[String]) -> String:
+	"""Validate that all required parameters are present. Returns empty string if valid, error message if invalid."""
+	for key: String in required_keys:
+		if not params.has(key):
+			return "Missing required parameter: " + key
+		var value: Variant = params[key]
+		if value == null:
+			return "Parameter '" + key + "' cannot be null"
+	return ""
+
+
+static func _validate_range(value: int, min_val: int, max_val: int, param_name: String) -> String:
+	"""Validate integer is within range. Returns empty string if valid, error message if invalid."""
+	if value < min_val or value > max_val:
+		return (
+			param_name
+			+ " must be between "
+			+ str(min_val)
+			+ " and "
+			+ str(max_val)
+			+ " (got "
+			+ str(value)
+			+ ")"
+		)
+	return ""
+
+
+static func _validate_position_dict(position: Dictionary, param_name: String) -> String:
+	"""Validate position dictionary has x,y coordinates within clicker bounds. Returns empty string if valid."""
+	if not position.has("x") or not position.has("y"):
+		return param_name + " must have 'x' and 'y' coordinates"
+
+	var x: int = position.get("x", -1)
+	var y: int = position.get("y", -1)
+
+	var x_error: String = _validate_range(x, 0, 4, param_name + ".x")
+	if not x_error.is_empty():
+		return x_error
+
+	var y_error: String = _validate_range(y, 0, 3, param_name + ".y")
+	if not y_error.is_empty():
+		return y_error
+
+	return ""
+
+
+static func _can_move_card(card_id: String, from_position: int) -> String:
+	"""Check if card can be moved from position. Returns empty string if valid."""
+	var range_error: String = _validate_range(from_position, 0, 9, "from_position")
+	if not range_error.is_empty():
+		return range_error
+
+	# TODO: Add actual lineup checking when game state access is available
+	# For now, just validate the position range
+	return ""
+
+
+static func _can_add_card(card_id: String) -> String:
+	"""Check if card can be added to lineup. Returns empty string if valid."""
+	if card_id.is_empty():
+		return "card_id cannot be empty"
+
+	# TODO: Add actual card availability checking when game state access is available
+	# For now, just validate the card_id is not empty
+	return ""
+
+
+static func _can_remove_card(card_id: String, position: int) -> String:
+	"""Check if card can be removed from position. Returns empty string if valid."""
+	var range_error: String = _validate_range(position, 0, 9, "position")
+	if not range_error.is_empty():
+		return range_error
+
+	if card_id.is_empty():
+		return "card_id cannot be empty"
+
+	# TODO: Add actual lineup checking when game state access is available
+	# For now, just validate basic parameters
+	return ""
+
+
+static func _can_remove_block(card_id: String, position: Dictionary) -> String:
+	"""Check if block can be removed from card at position. Returns empty string if valid."""
+	if card_id.is_empty():
+		return "card_id cannot be empty"
+
+	var pos_error: String = _validate_position_dict(position, "position")
+	if not pos_error.is_empty():
+		return pos_error
+
+	# TODO: Add actual block checking when game state access is available
+	# For now, just validate basic parameters
+	return ""

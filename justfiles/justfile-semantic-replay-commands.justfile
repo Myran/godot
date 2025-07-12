@@ -2225,55 +2225,55 @@ test-desktop TARGET="" DURATION="30":
 
 
 # Desktop test execution target - automated mode (quits automatically)
-test-desktop-target CONFIG_NAME DURATION="30":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config not found: $CONFIG_FILE"
-        echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
-        exit 1
-    fi
-    
-    echo "🖥️  Running desktop test: {{CONFIG_NAME}} (automated mode - quits automatically)"
-    echo "   Config: $CONFIG_FILE"
-    echo ""
-    
-    # Ensure logs directory exists for desktop
-    USER_DATA_DIR="{{USER_DATA_DIR}}"
-    LOGS_DIR="{{STANDARD_LOGS_DIR}}"
-    mkdir -p "$LOGS_DIR"
-    
-    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
-    
-    # Copy config to the expected location for desktop startup
-    STARTUP_CONFIG="{{PROJECT_PATH}}/debug_startup_actions.json"
-    echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
-    cp "$CONFIG_FILE" "$STARTUP_CONFIG"
-    
-    # Run desktop Godot with debug actions (automated mode with quit)
-    echo "🚀 Starting desktop test in automated mode..."
-    GAMETWO_TEST_MODE=automated ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
-        && echo "✅ Desktop test completed successfully" \
-        || echo "⚠️  Desktop test completed with exit code $?"
-    
-    echo ""
-    
-    # Check for checksum validation if config has checksum_config
-    if jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
-        echo "🔍 Checksum validation enabled - validating replay..."
-        just _validate-checksums-from-logs "$CONFIG_FILE" "$LOGS_DIR/godot.log" \
-            && echo "✅ Checksum validation passed!" \
-            || echo "❌ Checksum validation failed!"
-        echo ""
-    fi
-    
-    echo "🎉 Desktop test execution complete!"
-    echo "💡 Check logs with: just logs-desktop-last"
-
-# Internal helper: Desktop test execution - manual mode (stays open for verification)
+# test-desktop-target CONFIG_NAME DURATION="30":
+#     #!/usr/bin/env bash
+#     set -euo pipefail
+#     
+#     CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+#     if [ ! -f "$CONFIG_FILE" ]; then
+#         echo "❌ Config not found: $CONFIG_FILE"
+#         echo "💡 Available configs:"
+#         ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+#         exit 1
+#     fi
+#     
+#     echo "🖥️  Running desktop test: {{CONFIG_NAME}} (automated mode - quits automatically)"
+#     echo "   Config: $CONFIG_FILE"
+#     echo ""
+#     
+#     # Ensure logs directory exists for desktop
+#     USER_DATA_DIR="{{USER_DATA_DIR}}"
+#     LOGS_DIR="{{STANDARD_LOGS_DIR}}"
+#     mkdir -p "$LOGS_DIR"
+#     
+#     echo "📂 Desktop logs will be saved to: $LOGS_DIR"
+#     
+#     # Copy config to the expected location for desktop startup
+#     STARTUP_CONFIG="{{PROJECT_PATH}}/debug_startup_actions.json"
+#     echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
+#     cp "$CONFIG_FILE" "$STARTUP_CONFIG"
+#     
+#     # Run desktop Godot with debug actions (automated mode with quit)
+#     echo "🚀 Starting desktop test in automated mode..."
+#     GAMETWO_TEST_MODE=automated ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+#         && echo "✅ Desktop test completed successfully" \
+#         || echo "⚠️  Desktop test completed with exit code $?"
+#     
+#     echo ""
+#     
+#     # Check for checksum validation if config has checksum_config
+#     if jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
+#         echo "🔍 Checksum validation enabled - validating replay..."
+#         just _validate-checksums-from-logs "$CONFIG_FILE" "$LOGS_DIR/godot.log" \
+#             && echo "✅ Checksum validation passed!" \
+#             || echo "❌ Checksum validation failed!"
+#         echo ""
+#     fi
+#     
+#     echo "🎉 Desktop test execution complete!"
+#     echo "💡 Check logs with: just logs-desktop-last"
+# 
+# # Internal helper: Desktop test execution - manual mode (stays open for verification)
 _test-desktop-manual CONFIG_NAME DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail

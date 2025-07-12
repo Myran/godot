@@ -27,6 +27,9 @@ import "justfiles/justfile-logs.justfile"
 import "justfiles/justfile-build-utils.justfile"
 import "justfiles/justfile-help-extended.justfile"
 
+# Import validation-enhanced-testing LAST to override existing test commands
+import "justfiles/justfile-validation-enhanced-testing.justfile"
+
 #import "justfile-test.justfile"
 # Set default shell
 set shell := ["bash", "-c"]
