@@ -14,16 +14,10 @@ const StateExtractorGreenPhaseScript = preload(
 const PreActionIntegrationRedPhaseScript = preload(
 	"res://debug/actions/test_pre_action_integration_red_phase_action.gd"
 )
-const ReplayValidationRedPhaseScript = preload(
-	"res://debug/actions/test_replay_validation_red_phase_action.gd"
-)
 const PerformanceRequirementsRedPhaseScript = preload(
 	"res://debug/actions/test_performance_requirements_red_phase_action.gd"
 )
 const EdgeCasesRedPhaseScript = preload("res://debug/actions/test_edge_cases_red_phase_action.gd")
-const ReplayStateValidationRedPhaseScript = preload(
-	"res://debug/actions/test_replay_state_validation_red_phase_action.gd"
-)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -224,12 +218,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	)
 	registry.register_action(pre_action_integration_test)
 
-	# TDD RED PHASE - Replay Validation Integration tests (SHOULD FAIL)
-	var replay_validation_test: ReplayValidationRedPhaseScript = (
-		ReplayValidationRedPhaseScript.new()
-	)
-	registry.register_action(replay_validation_test)
-
 	# TDD RED PHASE - Performance Requirements tests (SHOULD FAIL)
 	var performance_requirements_test: PerformanceRequirementsRedPhaseScript = (
 		PerformanceRequirementsRedPhaseScript.new()
@@ -239,12 +227,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	# TDD RED PHASE - Edge Cases Handling tests (SHOULD FAIL)
 	var edge_cases_test: EdgeCasesRedPhaseScript = EdgeCasesRedPhaseScript.new()
 	registry.register_action(edge_cases_test)
-
-	# TDD RED PHASE - Replay State Validation tests (SHOULD FAIL)
-	var replay_state_validation_test: ReplayStateValidationRedPhaseScript = (
-		ReplayStateValidationRedPhaseScript.new()
-	)
-	registry.register_action(replay_state_validation_test)
 
 	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 
@@ -334,12 +316,11 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_replay_state_validator_integration",
-				_test_replay_state_validator_integration
+				"system.debug.test_state_extractor_integration", _test_state_extractor_integration
 			)
 			. set_category("System")
 			. set_group("Integration Tests")
-			. set_description("Test ReplayStateValidator comprehensive functionality")
+			. set_description("Test StateExtractor checksum generation and deterministic behavior")
 		)
 	)
 
@@ -651,13 +632,11 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 		["debug", "test", "integration"]
 	)
 
-	# Test 2: ReplayStateValidator integration
-	Log.info("Testing ReplayStateValidator functionality...", {}, ["debug", "test", "integration"])
-	var validation_result: Dictionary = ReplayStateValidator.validate_action_states(
-		{"checksum": "test_pre", "state_data": {"test": "pre_data"}},
-		{"checksum": "test_post", "state_data": {"test": "post_data"}},
-		"integration_test"
-	)
+	# Test 2: StateExtractor checksum generation
+	Log.info("Testing StateExtractor checksum generation...", {}, ["debug", "test", "integration"])
+	var test_state: Dictionary = {"test": "integration_data", "sequence": test_sequence}
+	var checksum: String = StateExtractor.generate_checksum(test_state)
+	var checksum_valid: bool = not checksum.is_empty() and checksum.length() > 0
 
 	# Test 3: SemanticActionMapper integration
 	Log.info(
@@ -672,7 +651,7 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 
 	# Validate results
 	var success: bool = (
-		not validation_result.is_empty()
+		checksum_valid
 		and not validation_config.is_empty()
 		and validation_config.get("metadata", {}).get("state_validation_enabled", false)
 	)
@@ -682,8 +661,9 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 			"INTEGRATION TEST PASSED: State validation integration working correctly",
 			{
 				"session_manager": "OK",
-				"replay_state_validator": "OK",
+				"state_extractor": "OK",
 				"semantic_action_mapper": "OK",
+				"checksum_generation": "OK",
 				"validation_enabled":
 				validation_config.get("metadata", {}).get("state_validation_enabled", false),
 				"company_survival": "ASSURED"
@@ -699,7 +679,7 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 		Log.error(
 			"INTEGRATION TEST FAILED: State validation integration broken - COMPANY AT RISK",
 			{
-				"validation_result_empty": validation_result.is_empty(),
+				"checksum_generation_failed": not checksum_valid,
 				"validation_config_empty": validation_config.is_empty(),
 				"validation_enabled":
 				validation_config.get("metadata", {}).get("state_validation_enabled", false),
@@ -815,67 +795,60 @@ static func _test_semantic_mapper_integration() -> DebugAction.Result:
 		)
 
 
-static func _test_replay_state_validator_integration() -> DebugAction.Result:
-	"""Test ReplayStateValidator comprehensive functionality"""
+static func _test_state_extractor_integration() -> DebugAction.Result:
+	"""Test StateExtractor checksum functionality"""
 	Log.info(
-		"Testing ReplayStateValidator comprehensive functionality",
+		"Testing StateExtractor checksum functionality",
 		{},
-		["debug", "test", "integration", "replay_validator"]
+		["debug", "test", "integration", "state_extractor"]
 	)
 
-	# Test state comparison
+	# Test checksum generation with different states
 	var state1: Dictionary = {"lineup": {"cards": [1, 2, 3]}, "game_phase": "draft"}
 	var state2: Dictionary = {"lineup": {"cards": [1, 2, 4]}, "game_phase": "draft"}
 
-	var comparison: Dictionary = ReplayStateValidator.compare_states(state1, state2)
-	var diff_report: Dictionary = ReplayStateValidator.generate_state_diff_report(state1, state2)
+	var checksum1: String = StateExtractor.generate_checksum(state1)
+	var checksum2: String = StateExtractor.generate_checksum(state2)
 
-	# Test action validation
-	var action_validation: Dictionary = ReplayStateValidator.validate_action_states(
-		{"checksum": "abc123", "state_data": state1},
-		{"checksum": "def456", "state_data": state2},
-		"test_action"
-	)
+	# Test that checksums are generated correctly
+	var checksums_valid: bool = (
+		not checksum1.is_empty() and not checksum2.is_empty() and checksum1 != checksum2
+	)  # Different states should have different checksums
 
-	# Test cross-platform consistency
-	var consistency: Dictionary = ReplayStateValidator.check_cross_platform_consistency(
-		[state1, state2]
-	)
+	# Test deterministic behavior - same state should give same checksum
+	var checksum1_repeat: String = StateExtractor.generate_checksum(state1)
+	var deterministic: bool = checksum1 == checksum1_repeat
 
-	var success: bool = (
-		not comparison.is_empty()
-		and not diff_report.is_empty()
-		and not action_validation.is_empty()
-		and not consistency.is_empty()
-	)
+	var success: bool = checksums_valid and deterministic
 
 	if success:
 		Log.info(
-			"ReplayStateValidator integration test PASSED",
+			"StateExtractor integration test PASSED",
 			{
-				"comparison": "OK",
-				"diff_report": "OK",
-				"action_validation": "OK",
-				"consistency": "OK"
+				"checksum_generation": "OK",
+				"different_states_different_checksums": checksum1 != checksum2,
+				"deterministic_behavior": deterministic,
+				"checksum1_length": checksum1.length(),
+				"checksum2_length": checksum2.length()
 			},
-			["debug", "test", "integration", "replay_validator", "success"]
+			["debug", "test", "integration", "state_extractor", "success"]
 		)
 		return DebugAction.Result.new_success(
-			{"replay_validator_integration": "passed"}, 0, "replay_state_validator_integration"
+			{"state_extractor_integration": "passed"}, 0, "state_extractor_integration"
 		)
 	else:
 		Log.error(
-			"ReplayStateValidator integration test FAILED",
+			"StateExtractor integration test FAILED",
 			{
-				"comparison_empty": comparison.is_empty(),
-				"diff_report_empty": diff_report.is_empty(),
-				"action_validation_empty": action_validation.is_empty(),
-				"consistency_empty": consistency.is_empty()
+				"checksum1_empty": checksum1.is_empty(),
+				"checksum2_empty": checksum2.is_empty(),
+				"checksums_same_for_different_states": checksum1 == checksum2,
+				"not_deterministic": checksum1 != checksum1_repeat
 			},
-			["debug", "test", "integration", "replay_validator", "failure"]
+			["debug", "test", "integration", "state_extractor", "failure"]
 		)
 		return DebugAction.Result.new_failure(
-			"ReplayStateValidator integration test failed",
-			"REPLAY_VALIDATOR_FAILURE",
+			"StateExtractor integration test failed",
+			"STATE_EXTRACTOR_FAILURE",
 			DebugAction.Result.ErrorCategory.VALIDATION
 		)

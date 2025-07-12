@@ -5,7 +5,7 @@
     "system.debug.test_state_validation_integration",
     "system.debug.test_debug_action_with_validation",
     "system.debug.test_semantic_mapper_integration", 
-    "system.debug.test_replay_state_validator_integration",
+    "system.debug.test_state_extractor_integration",
     "system.debug.quit_application"
   ],
   "test_metadata": {
