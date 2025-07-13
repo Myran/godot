@@ -42,12 +42,12 @@ default:
 # Main build command - complete pipeline from source to device deployment
 build: build-pipeline
 
-# Pre-commit validation - format, syntax check, and runtime validation  
-pre-commit:
+# Complete validation - format, syntax check, and runtime validation  
+validate:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🚀 Running pre-commit validation..."
+    echo "🚀 Running complete validation..."
     echo ""
 
     # Step 1: Check if code needs formatting (without modifying)
@@ -71,7 +71,7 @@ pre-commit:
 
     # Step 2: Syntax validation
     echo "2️⃣ Running syntax validation..."
-    if ! just validate; then
+    if ! just validate-gdscript; then
         echo "❌ Syntax validation failed"
         exit 1
     fi
@@ -87,7 +87,10 @@ pre-commit:
     echo "✅ Godot runtime validation passed"
     echo ""
 
-    echo "🎉 All pre-commit checks passed!"
+    echo "🎉 All validation checks passed!"
+
+# Alias for backward compatibility
+pre-commit: validate
 
 # ================================
 # VALIDATION FUNCTIONS

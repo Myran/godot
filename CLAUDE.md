@@ -7,7 +7,8 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine feat
 ### **Daily Development Cycle**
 ```bash
 # 1. Code & Validate
-just validate                              # Fast syntax check (3 sec)
+just validate                             # Complete validation (format + syntax + runtime)
+just validate-gdscript                    # Fast syntax check (3 sec)
 just format                                # Format GDScript files
 
 # 2. Test Changes (choose appropriate level)
@@ -30,7 +31,7 @@ just fastbuild-android                     # Rebuild & deploy (60 sec)
 
 ### **Pre-Commit Workflow**
 ```bash
-just pre-commit                            # Complete pre-commit validation (format + syntax + runtime)
+just validate                               # Complete validation (format + syntax + runtime)
 just test-android pre-commit               # Pre-commit test suite
 just test-all-android                      # Complete validation (if needed)
 ```
@@ -131,7 +132,7 @@ just test-android-trace TARGET             # Debug validation steps (troubleshoo
 
 # Essential test workflows
 just test-android development-workflow     # Daily development test suite
-just test-android pre-commit               # Pre-commit validation
+just test-android pre-commit               # Pre-commit test suite
 just test-android production-ready         # Release validation
 just test-all-android                      # Complete test suite
 ```
@@ -442,8 +443,8 @@ var items = []                           # ❌ Generic array
 
 ### **Quality Validation**
 ```bash
-just pre-commit                          # Complete validation pipeline (format + syntax + runtime)
-just validate                            # Syntax check (3 sec)
+just validate                             # Complete validation pipeline (format + syntax + runtime)
+just validate-gdscript                  # Fast syntax check (3 sec)
 just validate-godot                      # Runtime validation (15 sec)
 just format                              # Code formatting
 
@@ -474,7 +475,8 @@ just validate-godot "INFO.*debug"        # Custom filter patterns
 ### **Development Velocity**
 - **Code → Test:** < 60 seconds (`fastbuild-android`)
 - **Issue → Fix:** < 10 minutes (decision tree + patterns)
-- **Syntax Check:** < 5 seconds (`validate`)
+- **Syntax Check:** < 5 seconds (`validate-gdscript`)
+- **Complete Validation:** < 30 seconds (`validate`)
 
 ### **Output Filtering for Token Efficiency**
 **Use these aliases for token-efficient command execution:**
@@ -487,11 +489,13 @@ alias ejust="just 2>&1 | grep -E '(ERROR|FAIL|error|Error)'"  # Show errors only
 # Usage examples - wrap any just command for reduced output
 qjust test-android development-workflow    # Quiet testing (90% less output)
 qjust fastbuild-android                   # Quiet build (95% less output) 
-qjust validate                            # Quiet syntax check
+qjust validate                           # Quiet complete validation
+qjust validate-gdscript                  # Quiet syntax check
 
 ejust test-android my-test                # Show errors only (98% token savings)
 ejust fastbuild-android                   # Build errors only (99% token savings)
-ejust validate                            # Syntax errors only
+ejust validate                           # Validation errors only
+ejust validate-gdscript                  # Syntax errors only
 
 # Standard vs Filtered comparison
 just test-android my-test                 # Full verbose output (high token cost)
@@ -987,12 +991,12 @@ just build-logs                   # View recent build logs and errors
 ### **Development Workflow Integration**
 ```bash
 # Integrated development workflow
-just validate                     # Syntax check (3 sec)
+just validate                     # Complete validation (format + syntax + runtime)
 just fastbuild-android            # Smart rebuild & deploy (15-60 sec)
 just test-android development-workflow # Test on device
 
 # Pre-commit workflow with smart builds
-just pre-commit                   # Format + validate + smart rebuild + test
+just validate                      # Format + validate + smart rebuild + test
 just fastbuild-check              # Preview what will be rebuilt
 ```
 

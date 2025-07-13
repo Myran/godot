@@ -177,7 +177,7 @@ check OUTPUT="console":
     fi
 
 # Validate GDScript code by checking for syntax errors
-validate OUTPUT="console": (check OUTPUT)
+validate-gdscript OUTPUT="console": (check OUTPUT)
 
 # Check Android debug connection and app status
 check-android-debug-status:
