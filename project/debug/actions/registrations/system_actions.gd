@@ -540,7 +540,7 @@ static func _detect_execution_context() -> Dictionary:
 
 	# Method 2: Check command line arguments for automation flags
 	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
-	for arg in cmdline_args:
+	for arg: String in cmdline_args:
 		if arg == "--automated" or arg == "--ci" or arg == "--non-interactive":
 			context.mode = "automated"
 			context.command_source = "cmdline_flag"
@@ -558,7 +558,7 @@ static func _detect_execution_context() -> Dictionary:
 		return context
 
 	# Method 4: Check for headless mode (fallback for existing systems)
-	for arg in cmdline_args:
+	for arg: String in cmdline_args:
 		if arg == "--headless":
 			context.mode = "automated"
 			context.command_source = "headless_flag"

@@ -102,7 +102,7 @@ func _verify_logger_export() -> void:
 ## This matches the actual loading pattern used in the logger system
 func _verify_mobile_helper(helper_path: String) -> bool:
 	# Try to load the helper class
-	var helper_class = load(helper_path)
+	var helper_class: Resource = load(helper_path)
 	if helper_class == null:
 		Log.debug("Failed to load helper class", {"path": helper_path}, [Log.TAG_DEBUG])
 		return false
