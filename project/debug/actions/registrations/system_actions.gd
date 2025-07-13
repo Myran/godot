@@ -148,11 +148,72 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 
 
 static func _quit_application() -> bool:
+	# Capture final state before quitting for replay validation
+	_capture_final_state()
+
 	# End gameplay session before quitting
 	SessionManager.end_gameplay_session()
 	# Quit the application
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
 	return true
+
+
+static func _capture_final_state() -> void:
+	"""Capture final game state before quitting for replay validation"""
+	# Extract final game state using existing StateExtractor infrastructure
+	var final_state: Dictionary = StateExtractor.extract_game_state()
+
+	if final_state.is_empty():
+		Log.warning(
+			"Could not capture final state before quit - StateExtractor returned empty state",
+			{
+				"session_id": SessionManager.get_current_session_id(),
+				"quit_timestamp": Time.get_unix_time_from_system()
+			},
+			["final_state", "warning", "quit"]
+		)
+		return
+
+	# Generate deterministic checksum for final state validation
+	var final_checksum: String = StateExtractor.generate_checksum(final_state)
+
+	if final_checksum.is_empty():
+		Log.warning(
+			"Could not generate final state checksum before quit",
+			{
+				"session_id": SessionManager.get_current_session_id(),
+				"state_size": final_state.size(),
+				"quit_timestamp": Time.get_unix_time_from_system()
+			},
+			["final_state", "warning", "checksum", "quit"]
+		)
+		return
+
+	# Log final state capture for replay validation
+	Log.info(
+		"FINAL_STATE_CAPTURED",
+		{
+			"final_checksum": final_checksum,
+			"session_id": SessionManager.get_current_session_id(),
+			"state_type": "complete_game_state",
+			"lineup_available": final_state.get("lineup", {}).get("game_available", false),
+			"board_available": final_state.get("board", {}).get("game_available", false),
+			"metadata_version": final_state.get("metadata", {}).get("extractor_version", "unknown"),
+			"extraction_timestamp": Time.get_unix_time_from_system(),
+			"state_components": final_state.keys()
+		},
+		["final_state", "checksum", "session", "quit"]
+	)
+
+	Log.debug(
+		"Final state capture completed successfully",
+		{
+			"checksum_length": final_checksum.length(),
+			"state_size_bytes": var_to_bytes(final_state).size(),
+			"session_id": SessionManager.get_current_session_id()
+		},
+		["final_state", "debug", "quit"]
+	)
 
 
 static func _rtdb_status_check() -> bool:

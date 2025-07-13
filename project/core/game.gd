@@ -168,20 +168,17 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var new_state: core.GameState = event.new_state
 		var from_state: String = core.GameState.keys()[game_handler.current_gamestate]
 		var to_state: String = core.GameState.keys()[new_state]
-		
+
 		Log.info(
 			"Game state transition",
-			{
-				"from": from_state,
-				"to": to_state
-			},
+			{"from": from_state, "to": to_state},
 			[Log.TAG_GAME_STATE, Log.TAG_STATE_TRANSITION]
 		)
-		
+
 		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			SemanticLogger.log_state_transition(from_state, to_state)
-		
+
 		game_handler.set_gamestate(new_state)
 
 	elif event is core.EnemyLineupAddCardEvent:
