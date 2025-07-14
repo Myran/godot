@@ -1,21 +1,6 @@
 {
-  "description": "Lineup CHECKSUM Test - Validate lineup state consistency using checksums",
+  "description": "Minimal config for headless validation - launches and quits immediately",
   "actions": [
-    "game.battle.set_seed",
-    "system.debug.hide_menu", 
-    "game.lineup.populate_enemy",
-    "game.draft.reroll_player",
-    "game.lineup.move_card_player",
-    "system.debug.replay_complete"
-  ],
-  "checksum_config": {
-    "state_type": "lineup_state",
-    "initial_seed": 12345,
-    "expected_checksums": []
-  },
-  "metadata": {
-    "test_type": "checksum_validation",
-    "creation_method": "manual_for_state_validation_demo",
-    "auto_quit": false
-  }
+    "system.debug.quit_application"
+  ]
 }

@@ -20,7 +20,7 @@ recording-integrity-test:
     
     echo ""
     echo "2️⃣ Checking for integrity issues..."
-    TEST_ID=$(just logs-android-recent | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
+    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
     
     # Check for integrity failures
     INTEGRITY_FAILURES=$(just logs-errors-tagged $TEST_ID integrity 2>/dev/null | wc -l | tr -d ' ')
@@ -77,7 +77,7 @@ recording-health-check:
     
     echo ""
     echo "3️⃣ Checking recent test results..."
-    TEST_ID=$(just logs-android-recent | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
+    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
     
     # Check for any failures
     ERROR_COUNT=$(just logs-errors-tagged $TEST_ID 2>/dev/null | wc -l | tr -d ' ')
@@ -134,7 +134,7 @@ recording-regression-check:
     
     echo ""
     echo "3️⃣ Checking for functionality regressions..."
-    TEST_ID=$(just logs-android-recent | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
+    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
     
     # Look for regression indicators
     REGRESSION_INDICATORS=$(just logs $TEST_ID | grep -i "missing\|broken\|failed\|error" | wc -l | tr -d ' ')
@@ -163,7 +163,7 @@ validate-semantic-mapping:
     # Test semantic action mapper through integrity validation
     just config-restart-android 'system.recording.integrity_validation'
     
-    TEST_ID=$(just logs-android-recent | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
+    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
     
     # Check mapping validation results
     MAPPING_RESULTS=$(just logs $TEST_ID | grep -i "mapping\|semantic.*action" | wc -l | tr -d ' ')
@@ -190,7 +190,7 @@ validate-replay-generation:
     # Test replay system through integrity validation
     just config-restart-android 'system.replay.integrity_validation'
     
-    TEST_ID=$(just logs-android-recent | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
+    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
     
     # Check replay validation results
     REPLAY_RESULTS=$(just logs $TEST_ID | grep -i "replay\|generation\|workflow" | wc -l | tr -d ' ')
@@ -299,7 +299,7 @@ list-recording-integrity-results:
     echo ""
     
     echo "Recent test runs with integrity validation:"
-    just logs-android-recent | head -10 | while read test_id timestamp config; do
+    just logs-last | head -10 | while read test_id timestamp config; do
         if [[ "$config" == *"integrity"* ]] || [[ "$config" == *"recording"* ]]; then
             ERROR_COUNT=$(just logs-errors-tagged $test_id 2>/dev/null | wc -l | tr -d ' ')
             STATUS="✅ PASS"

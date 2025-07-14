@@ -23,9 +23,6 @@ _logs-test-id TEST_ID:
     sed 's/^.*I\/godot.*: //' | \
     grep -v "BUFFER\|font_size"
 
-# Show logs for a specific test ID
-logs-android TEST_ID:
-    just _logs-test-id "{{TEST_ID}}"
 
 # Show only test results (SUCCESS/FAILURE) for a specific test ID
 _logs-results-only TEST_ID:
@@ -52,9 +49,6 @@ _logs-results-only TEST_ID:
     grep -o '"duration_ms": [0-9]*' | sed 's/"duration_ms": \([0-9]*\)/\1ms/') | \
     column -t -s $'\t'
 
-# Show test results only for a specific test ID
-logs-android-results TEST_ID:
-    just _logs-results-only "{{TEST_ID}}"
 
 # Simple results filter (when you know the log file) - Clean output
 _logs-results-simple TEST_ID LOG_DIR:
@@ -109,14 +103,11 @@ _logs-list-recent:
             fi
             
             echo "$status_icon $test_id [$config] - $timestamp"
-            echo "   📄 just logs-android $test_id"
-            echo "   📊 just logs-android-results $test_id"
+            echo "   📄 just logs $test_id"
+            echo "   📊 just logs-results-only $test_id"
         fi
     done
 
-# Show recent test runs and their IDs
-logs-android-recent:
-    just _logs-list-recent
 
 # Show errors only for a specific test ID (perfect for debugging!)
 _logs-errors-only TEST_ID:
@@ -138,9 +129,6 @@ _logs-errors-only TEST_ID:
     sed 's/^[0-9-]* [0-9:]* [EI]\/godot *([0-9]*): //' | \
     grep -v "BUFFER\|font_size\|=== BUFFER DUMP\|=== END BUFFER DUMP"
 
-# Show errors only for a specific test ID
-logs-android-errors TEST_ID:
-    just _logs-errors-only "{{TEST_ID}}"
 
 # Show performance breakdown for a specific test ID
 _logs-performance TEST_ID:
@@ -164,9 +152,6 @@ _logs-performance TEST_ID:
     jq -r 'select(.duration_ms != null) | "[\(.action)]: \(.duration_ms)ms" + (if .duration_ms > 1000 then " ⚠️ SLOW" elif .duration_ms > 500 then " 🐌 SLOW-ISH" else " ✅ GOOD" end)' 2>/dev/null | \
     sort -t: -k2 -n || echo "No performance data found for test ID: {{TEST_ID}}"
 
-# Show performance breakdown for a specific test ID
-logs-android-performance TEST_ID:
-    just _logs-performance "{{TEST_ID}}"
 
 # Clean up old test logs (keeps most recent 10, removes the rest)
 _logs-cleanup KEEP="10":
@@ -206,13 +191,7 @@ _logs-cleanup KEEP="10":
         echo "❌ Cleanup cancelled"
     fi
 
-# Clean up old test logs
-logs-android-cleanup KEEP="10":
-    just _logs-cleanup "{{KEEP}}"
 
-# Clean up temporary config files (wildcard configs and single action configs)
-cleanup-temp-configs-verbose:
-    just cleanup-temp-configs "true"
 
 # Force cleanup without confirmation (use carefully!)
 _logs-cleanup-force KEEP="10":

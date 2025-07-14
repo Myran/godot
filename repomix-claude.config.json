@@ -1,0 +1,41 @@
+{
+  "output": {
+    "filePath": "claude-project-context.xml",
+    "style": "xml",
+    "removeComments": true,
+    "removeEmptyLines": true,
+    "showLineNumbers": false,
+    "headerText": "GameTwo Project Context for Claude AI - Optimized for development assistance"
+  },
+  "include": [
+    "CLAUDE.md",
+    "justfile",
+    "project/**/*.gd",
+    "project/debug_configs/**/*.json",
+    "project/test-lists/**/*.json",
+    "project/docs/**/*.md",
+    "godot/modules/firebase/*.h",
+    "godot/modules/firebase/*.cpp",
+    "export/**/*.cfg",
+    "firebase/**/*.json",
+    "project.godot"
+  ],
+  "ignore": {
+    "customPatterns": [
+      "**/*.tmp",
+      "**/*.log",
+      "**/build/**",
+      "**/export/**/*.apk",
+      "**/export/**/*.aab", 
+      "**/export/**/*.ipa",
+      "**/.godot/**",
+      "project/addons/**/plugin.cfg",
+      "project/addons/**/README.md",
+      "**/test_results/**",
+      "**/logs/**",
+      "**/*_backup*",
+      "project/**/*test*.gd",
+      "project/**/*debug*.gd"
+    ]
+  }
+}

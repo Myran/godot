@@ -354,18 +354,3 @@ logs-desktop-performance *TAGS:
         grep -E "execution_time_ms|duration_ms|memory_mb|performance" "$LATEST_LOG" | head -20 || echo "No performance data found"
     fi
 
-# ================================
-# TEST LOG ANALYSIS COMMANDS - Clear naming for saved test log analysis
-# ================================
-
-# Test log analysis - Universal filtering of saved test logs  
-test-logs TEST_ID *TAGS: (logs TEST_ID TAGS)
-
-# Test log error analysis - Error-focused analysis of saved test logs
-test-logs-errors TEST_ID *TAGS: (logs-errors-tagged TEST_ID TAGS)
-
-# Test log performance analysis - Performance analysis of saved test logs
-test-logs-performance TEST_ID *TAGS: (logs-performance-tagged TEST_ID TAGS)
-
-# Test log lifecycle analysis - Lifecycle analysis of saved test logs
-test-logs-lifecycle TEST_ID *TAGS: (logs-lifecycle-tagged TEST_ID TAGS)

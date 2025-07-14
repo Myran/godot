@@ -20,9 +20,6 @@ screenshot-android name="screenshot":
     echo ""
     echo "💡 Use: Read tool with /tmp/{{name}}.png"
 
-# Quick screenshot for debugging (uses default name)
-screenshot:
-    just screenshot-android screenshot
 
 # Close debug menu by tapping X button (top-right corner)
 close-debug-menu:
@@ -82,6 +79,10 @@ clean-xcode:
 # Generate a repofile with repomix
 generate-repofile:
     repomix --include 'project/**/*.gd','project/docs/*.md','godot/modules/firebase/*.mm','godot/modules/firebase/*.cpp','godot/modules/firebase/*.h'
+
+# Generate Claude Code-optimized project context
+generate-claude-context:
+    repomix -c repomix-claude.config.json --compress --remove-comments --remove-empty-lines
 
 validate-env:
     #!/usr/bin/env bash

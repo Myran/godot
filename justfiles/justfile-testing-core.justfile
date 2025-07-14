@@ -983,7 +983,7 @@ _test-android-manual config_name:
     echo "The debug interface is hidden for clean verification."
     echo ""
     echo "You can:"
-    echo "• Take screenshots: just screenshot"
+    echo "• Take screenshots: just screenshot-android"
     echo "• Monitor logs: just logs $TEST_ID"
     echo "• Close the app manually when done"
     echo ""
@@ -1380,10 +1380,6 @@ test-android-list-checksum:
         echo '}'
     fi
 
-# Run all Android tests
-test-all-android:
-    @echo "🧪 Running all Android tests..."
-    @just test-android "development-workflow"
 
 # Primary Android testing interface - manual mode (stays open for verification)
 test-android target="":

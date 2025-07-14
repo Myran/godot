@@ -160,26 +160,8 @@ logs-performance TEST_ID:
     # Extract timing information
     grep -E "duration_ms\|memory_mb\|performance" "$LOG_FILE" | head -20
 
-# Show battle-specific logs  
-logs-battle TEST_ID:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    just logs-tags "{{TEST_ID}}" battle determinism
 
-# Show firebase-specific logs
-logs-firebase TEST_ID:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    just logs-tags "{{TEST_ID}}" firebase rtdb backend
 
-# Show system-level logs
-logs-system TEST_ID:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    just logs-tags "{{TEST_ID}}" system startup initialization
 
 # Smart summary - key facts only
 logs-summary TEST_ID:

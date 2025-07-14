@@ -130,7 +130,13 @@
       "Bash(./editor/godot.macos.editor.arm64:*)",
       "WebFetch(domain:docs.godotengine.org)",
       "Bash(./gradlew:*)",
-      "mcp__markdown-downloader__download_markdown"
+      "mcp__markdown-downloader__download_markdown",
+      "Bash(alias qjust=\"just --quiet\")",
+      "Bash(alias:*)",
+      "Bash(qjust:*)",
+      "Bash(ejust:*)",
+      "Bash(repomix:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }
