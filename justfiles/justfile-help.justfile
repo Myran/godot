@@ -182,6 +182,7 @@ help:
     echo "  just help-debug                  # Debug & testing guide"
     echo "  just help-logs                   # Log analysis & token efficiency"
     echo "  just help-workflows              # Common workflow patterns"
+    echo "  just help-debug-modes            # 🚨 CRITICAL: run-* vs test-* for debug actions"
     echo ""
     echo "🖱️  TERMINAL FEATURES"
     echo "  just help-wezterm-config         # Setup guide for universal clickable commands"

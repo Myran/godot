@@ -452,7 +452,8 @@ _test-desktop-target-original config_name duration="30":
     cp "$CONFIG_FILE" "$STARTUP_CONFIG"
     
     # Run desktop Godot with debug actions (automated mode with quit)
-    echo "🚀 Starting desktop test in automated mode..."
+    # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
+    echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
     GAMETWO_TEST_MODE=automated ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
         && echo "✅ Desktop test completed successfully" \
         || echo "⚠️  Desktop test completed with exit code $?"

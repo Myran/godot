@@ -260,6 +260,31 @@ just logs-errors-tagged TEST_ID            # Check for errors
 - **Test Lists**: `development-workflow` → Executes test suite
 - **Wildcard Test Lists**: `'@pre-*'` → Pattern-matches test lists
 
+### **🚨 CRITICAL: Debug Action Execution Modes**
+
+**ALWAYS use `test-*` commands for debug actions - `run-*` commands skip debug coordinator:**
+
+```bash
+# ✅ CORRECT - Debug actions execute properly
+just test-desktop system-quit-only              # --test-mode flag enables debug coordinator
+just test-android system-quit-only              # Debug actions like quit_application work
+
+# ❌ WRONG - Debug actions are skipped  
+just run-desktop                                 # Editor mode, debug coordinator disabled
+just run-android-debug                          # Debug actions won't execute
+
+# ✅ CORRECT - For testing final state capture, checksum validation, etc.
+just test-desktop my-config                     # Enables StateExtractor, SessionManager
+just test-android-target my-config              # Full debug action pipeline active
+
+# ❌ WRONG - Final state capture won't trigger
+just run-desktop                                 # Missing --test-mode flag
+```
+
+**Root Cause**: Desktop runs in editor mode by default. The debug coordinator (which executes debug actions like `system.debug.quit_application`) is **automatically skipped** in editor mode without the `--test-mode` flag.
+
+**Impact**: Features like final state capture, checksum validation, and semantic action logging require debug actions to function properly.
+
 ### **🔥 Advanced Wildcard Workflow Patterns**
 
 #### **Development by Layer (Recommended)**
