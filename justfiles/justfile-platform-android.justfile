@@ -416,38 +416,40 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     
     echo "🔧 Pushing to device storage..."
     
-    # First try to push directly to app private directory
-    if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/debug_startup_actions.json" 2>/dev/null; then
-        echo "📁 App private directory accessible - using user:// path"
-        # Use temporary location first, then copy
-        TEMP_CONFIG="/sdcard/temp_debug_config.json"
-        
-        if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
-            if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
-                echo "✅ Config copied to app private directory"
-                adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
-                echo "✅ Config push complete"
-            else
-                echo "❌ Failed to copy to app private directory"
-                exit 1
-            fi
+    # Ensure app is running so private directory is accessible
+    APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+    if [[ -z "$APP_RUNNING" ]]; then
+        echo "🚀 App not running - starting app to create private directory..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
+        sleep 2
+    fi
+    
+    # Test if private directory is accessible
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/debug_startup_actions.json" 2>/dev/null; then
+        echo "❌ App private directory not accessible"
+        echo "💡 Make sure app is installed and has been run at least once"
+        echo "💡 Try: adb shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp"
+        exit 1
+    fi
+    
+    echo "📁 App private directory accessible - pushing config..."
+    
+    # Use temporary location first, then copy to private directory
+    TEMP_CONFIG="/sdcard/temp_debug_config.json"
+    
+    if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
+        if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
+            echo "✅ Config copied to app private directory"
+            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
+            echo "✅ Config push complete"
         else
-            echo "❌ Failed to upload config to temp location"
+            echo "❌ Failed to copy to app private directory"
+            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
             exit 1
         fi
     else
-        echo "📁 App private directory not accessible - using public storage"
-        # Create public directory and push there
-        adb -s {{ANDROID_DEVICE_ID}} shell "mkdir -p /sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/" 2>/dev/null || true
-        
-        if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$PUBLIC_CONFIG"; then
-            echo "✅ Config uploaded to public storage"
-            echo "💡 App will read from public storage location"
-            echo "✅ Config push complete"
-        else
-            echo "❌ Failed to upload config to public storage"
-            exit 1
-        fi
+        echo "❌ Failed to upload config to temp location"
+        exit 1
     fi
 
 # Deploy config and restart Android app (5-second iteration)
