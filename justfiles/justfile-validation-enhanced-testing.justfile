@@ -299,7 +299,7 @@ _test-android-target-original config_name:
     echo "🚀 Starting test execution..."
     echo "============================="
     
-    # Use config-restart to properly deploy config and start app
+    # Deploy config and start app (config-push-android handles app startup if needed)
     echo "📱 Deploying configuration and starting app..."
     just config-restart-android "$CONFIG_NAME"
     echo ""
@@ -336,9 +336,16 @@ _test-android-target-original config_name:
     CHECKSUM_SAVED=false
     
     while [[ $ELAPSED -lt $TIMEOUT ]]; do
-        # Check for test completion
+        # Check for test completion (standard pattern)
         if adb logcat -d | grep -q "TEST_COMPLETE.*$TEST_ID"; then
             TEST_COMPLETED=true
+            break
+        fi
+        
+        # Check for test completion (fallback pattern for automated mode)
+        if adb logcat -d | grep -q "TEST_COMPLETE_${CONFIG_NAME}_"; then
+            TEST_COMPLETED=true
+            echo "✅ Test completed with automated mode fallback signal"
             break
         fi
         

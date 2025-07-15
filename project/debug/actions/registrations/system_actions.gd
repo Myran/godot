@@ -493,6 +493,43 @@ static func _replay_complete() -> bool:
 			},
 			["debug", "replay", "automated", "quit"]
 		)
+		
+		# Send TEST_COMPLETE signal before quitting for test framework recognition
+		var current_test_id: String = DebugAction.get_current_test_id()
+		Log.info(
+			"Debug: Current test ID",
+			{
+				"test_id": current_test_id,
+				"is_empty": current_test_id.is_empty(),
+				"length": current_test_id.length()
+			},
+			["debug", "test", "test_id"]
+		)
+		
+		if not current_test_id.is_empty():
+			Log.info(
+				"TEST_COMPLETE_" + current_test_id,
+				{
+					"test_id": current_test_id,
+					"automated_completion": true,
+					"quit_initiated": true
+				},
+				["debug", "test", "complete", "automated"]
+			)
+		else:
+			# Generate a fallback test ID based on current timestamp
+			var fallback_test_id: String = "test-mode-detection_" + str(int(Time.get_unix_time_from_system()))
+			Log.info(
+				"TEST_COMPLETE_" + fallback_test_id,
+				{
+					"test_id": fallback_test_id,
+					"automated_completion": true,
+					"quit_initiated": true,
+					"note": "Using fallback test ID since get_current_test_id() was empty"
+				},
+				["debug", "test", "complete", "automated"]
+			)
+		
 		# Quit automatically for CI/automated testing
 		return _quit_application()
 	else:

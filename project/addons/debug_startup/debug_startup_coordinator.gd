@@ -116,13 +116,16 @@ func _get_action_names() -> Array:
 	if OS.has_feature("mobile"):
 		# Check user:// first (external config), then fallback to res:// (embedded config)
 		var external_config_path := "user://debug_startup_actions.json"
+		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
 			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
 			var external_actions := _parse_config_file(external_config_path)
+			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
 			return external_actions
 
 		Log.info("Using embedded config", {"reason": "no_external_config"}, ["debug", "startup"])
 		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
+		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
 		return embedded_actions
 	else:
 		# Desktop: try command line first, fallback to config
@@ -201,6 +204,9 @@ func _parse_config_file(path: String) -> Array:
 
 	var data := json.data as Dictionary
 
+	# Debug: Show what we parsed from JSON
+	Log.info("JSON parsing result", {"data_keys": data.keys(), "data_size": data.size()}, ["debug", "startup", "json"])
+	
 	# Check for test metadata and set test context if present
 	if data.has("test_metadata"):
 		var test_metadata := data.test_metadata as Dictionary
@@ -208,6 +214,19 @@ func _parse_config_file(path: String) -> Array:
 			var test_id := str(test_metadata.test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
+	
+	# Check for automated mode in config metadata
+	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
+	if data.has("metadata"):
+		var metadata := data.metadata as Dictionary
+		Log.info("Config metadata found", {"metadata": metadata}, ["debug", "startup", "metadata"])
+		if metadata.has("auto_quit") and metadata.auto_quit == true:
+			OS.set_environment("GAMETWO_TEST_MODE", "automated")
+			Log.info("Automated mode detected from config metadata", {"auto_quit": true}, ["debug", "startup", "automated"])
+		else:
+			Log.info("No auto_quit or auto_quit is false", {"auto_quit": metadata.get("auto_quit", "not_found")}, ["debug", "startup", "metadata"])
+	else:
+		Log.info("No metadata found in config", {"config_keys": data.keys()}, ["debug", "startup", "metadata"])
 
 	# Setup replay validation if this is a demo/replay config
 	if data.has("type") and data.type == "demo":

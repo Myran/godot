@@ -1,0 +1,12 @@
+{
+  "description": "Test Mode Detection - Simple test to verify mode file detection works",
+  "actions": [
+    "system.debug.hide_menu",
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "test_type": "mode_detection_test",
+    "purpose": "Verify Android mode file detection system works correctly",
+    "auto_quit": true
+  }
+}
