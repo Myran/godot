@@ -518,14 +518,20 @@ static func _replay_complete() -> bool:
 			)
 		else:
 			# Generate a fallback test ID based on current timestamp
-			var fallback_test_id: String = "test-mode-detection_" + str(int(Time.get_unix_time_from_system()))
+			# Try to get config name from environment or use generic fallback
+			var config_name: String = "unknown-config"
+			if OS.has_environment("CURRENT_CONFIG_NAME"):
+				config_name = OS.get_environment("CURRENT_CONFIG_NAME")
+			
+			var fallback_test_id: String = config_name + "_" + str(int(Time.get_unix_time_from_system()))
 			Log.info(
 				"TEST_COMPLETE_" + fallback_test_id,
 				{
 					"test_id": fallback_test_id,
 					"automated_completion": true,
 					"quit_initiated": true,
-					"note": "Using fallback test ID since get_current_test_id() was empty"
+					"note": "Using fallback test ID since get_current_test_id() was empty",
+					"config_name": config_name
 				},
 				["debug", "test", "complete", "automated"]
 			)

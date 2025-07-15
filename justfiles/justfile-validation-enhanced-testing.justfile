@@ -3,6 +3,119 @@
 # Makes validation part of ordinary testing without new commands
 
 # ================================
+# CHECKSUM VALIDATION FUNCTIONS
+# ================================
+
+# Extract checksums from Android logcat output
+_extract-checksums-from-logcat test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{test_id}}"
+    
+    # Get the full logcat output
+    LOGCAT_OUTPUT=$(adb logcat -d 2>/dev/null || echo "")
+    
+    if [[ -z "$LOGCAT_OUTPUT" ]]; then
+        echo "No logcat output available" >&2
+        return 0
+    fi
+    
+    # Extract checksums from the actual log format
+    # Look for StateExtractor checksum generation
+    CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "StateExtractor.*checksum.*generated" | \
+               sed -n 's/.*"checksum": *"\([^"]*\)".*/\1/p' | \
+               grep -v "^$" | sort | uniq || echo "")
+    
+    if [[ -z "$CHECKSUMS" ]]; then
+        # Fallback 1: look for final state checksums
+        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "FINAL_STATE_CAPTURED.*final_checksum" | \
+                   sed -n 's/.*"final_checksum": *"\([^"]*\)".*/\1/p' | \
+                   grep -v "^$" | sort | uniq || echo "")
+    fi
+    
+    if [[ -z "$CHECKSUMS" ]]; then
+        # Fallback 2: look for pre-action checksums from SessionManager
+        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "pre_action_checksum" | \
+                   sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                   grep -v "^$" | sort | uniq || echo "")
+    fi
+    
+    if [[ -z "$CHECKSUMS" ]]; then
+        # Fallback 3: look for any checksum patterns in the logs
+        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "checksum.*[a-f0-9]{32,}" | \
+                   sed -n 's/.*checksum[^a-f0-9]*\([a-f0-9]\{32,\}\).*/\1/p' | \
+                   sort | uniq || echo "")
+    fi
+    
+    # Debug: show what we found in the logs
+    if [[ -z "$CHECKSUMS" ]]; then
+        echo "🔍 Debug: Searching for checksum patterns in logs..." >&2
+        CHECKSUM_LINES=$(echo "$LOGCAT_OUTPUT" | grep -i checksum | head -5 || echo "")
+        if [[ -n "$CHECKSUM_LINES" ]]; then
+            echo "Found checksum-related lines:" >&2
+            echo "$CHECKSUM_LINES" | sed 's/^/  /' >&2
+        else
+            echo "No checksum-related lines found in logcat output" >&2
+        fi
+    fi
+    
+    echo "$CHECKSUMS"
+
+# Save checksums to configuration file
+_save-checksums-to-config config_path checksums:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    CHECKSUMS="{{checksums}}"
+    
+    # Create backup
+    cp "$CONFIG_PATH" "${CONFIG_PATH}.backup.$(date +%s)"
+    
+    # Convert checksums to JSON array
+    CHECKSUMS_JSON=$(echo "$CHECKSUMS" | jq -R -s 'split("\n") | map(select(length > 0))')
+    
+    # Update the config file
+    jq --argjson checksums "$CHECKSUMS_JSON" \
+       '.checksum_config.expected_checksums = $checksums' \
+       "$CONFIG_PATH" > "${CONFIG_PATH}.tmp"
+    
+    # Validate the JSON and replace original
+    if jq -e . "${CONFIG_PATH}.tmp" >/dev/null 2>&1; then
+        mv "${CONFIG_PATH}.tmp" "$CONFIG_PATH"
+        echo "✅ Checksums saved to $CONFIG_PATH"
+    else
+        echo "❌ Failed to update JSON file"
+        rm -f "${CONFIG_PATH}.tmp"
+        exit 1
+    fi
+
+# Compare extracted checksums with expected ones
+_compare-checksums extracted_checksums expected_checksums:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    EXTRACTED="{{extracted_checksums}}"
+    EXPECTED="{{expected_checksums}}"
+    
+    # Sort both sets for comparison
+    EXTRACTED_SORTED=$(echo "$EXTRACTED" | sort)
+    EXPECTED_SORTED=$(echo "$EXPECTED" | sort)
+    
+    if [[ "$EXTRACTED_SORTED" == "$EXPECTED_SORTED" ]]; then
+        echo "MATCH"
+    else
+        echo "MISMATCH"
+        echo "Expected:"
+        echo "$EXPECTED_SORTED" | sed 's/^/  /'
+        echo "Actual:"
+        echo "$EXTRACTED_SORTED" | sed 's/^/  /'
+        echo "Differences:"
+        diff <(echo "$EXPECTED_SORTED") <(echo "$EXTRACTED_SORTED") | sed 's/^/  /' || true
+    fi
+
+# ================================
 # SHARED ERROR ANALYSIS LOGIC
 # ================================
 
@@ -160,6 +273,7 @@ test-android-target config_name:
     # Generate test ID for tracking
     TEST_ID="${CONFIG_NAME}_$(date +%s)"
     export TEST_ID
+    export CURRENT_CONFIG_NAME="$CONFIG_NAME"
     
     echo "🔍 Test ID: $TEST_ID"
     echo ""
@@ -257,21 +371,22 @@ _test-android-target-original config_name:
         
         # Get checksum configuration
         STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
-        EXPECTED_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_PATH")
+        EXPECTED_CHECKSUMS=$(jq -r '.checksum_config.expected_checksums // []' "$CONFIG_PATH")
+        EXPECTED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
         
         echo "📸 Checksum Test Detected"
         echo "State Type: $STATE_TYPE"
-        echo "Expected Checksum: $EXPECTED_CHECKSUM"
+        echo "Expected Checksums: $EXPECTED_CHECKSUMS_COUNT checksums"
         
         # Check if baseline is set
-        if [[ -z "$EXPECTED_CHECKSUM" ]]; then
+        if [[ "$EXPECTED_CHECKSUMS_COUNT" -eq 0 ]]; then
             echo ""
-            echo "ℹ️  No baseline checksum set - this will be the first run"
+            echo "ℹ️  No baseline checksums set - this will be the first run"
             echo "   A baseline will be automatically created and saved"
             echo "   The test will automatically restart to validate the baseline"
         else
             echo ""
-            echo "✅ Baseline checksum found - will validate against it"
+            echo "✅ Baseline checksums found - will validate against them"
         fi
     fi
     
@@ -349,6 +464,13 @@ _test-android-target-original config_name:
             break
         fi
         
+        # Check for any TEST_COMPLETE signal (broader fallback)
+        if adb logcat -d | grep -q "TEST_COMPLETE_.*automated_completion.*true"; then
+            TEST_COMPLETED=true
+            echo "✅ Test completed with generic automated mode signal"
+            break
+        fi
+        
         # Check for checksum save event (first run scenario)
         if [[ $HAS_CHECKSUM == true ]] && adb logcat -d | grep -q "CHECKSUM_SAVED.*$TEST_ID"; then
             CHECKSUM_SAVED=true
@@ -402,23 +524,58 @@ _test-android-target-original config_name:
             echo "📸 Checksum Validation:"
             echo "======================"
             
-            if adb logcat -d | grep -q "CHECKSUM_MATCH.*$TEST_ID"; then
-                echo "✅ Checksum validation PASSED"
-            elif adb logcat -d | grep -q "CHECKSUM_MISMATCH.*$TEST_ID"; then
-                echo "❌ Checksum validation FAILED"
-                echo ""
-                echo "Expected vs Actual checksum mismatch detected"
-                echo "This could indicate:"
-                echo "  • Legitimate changes requiring baseline update"
-                echo "  • Regression in game state consistency"
-                echo "  • Non-deterministic behavior in game logic"
-                echo ""
-                echo "Use 'just test-android-update $CONFIG_NAME' to update baseline if changes are legitimate"
-            elif [[ $CHECKSUM_SAVED == true ]]; then
-                echo "📸 Baseline checksum created - test restarted automatically"
-                echo "✅ Baseline validation completed"
+            # Extract actual checksums from logcat
+            EXTRACTED_CHECKSUMS=""
+            if just _extract-checksums-from-logcat "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
             else
-                echo "⚠️  No checksum validation events found"
+                echo "⚠️  Checksum extraction failed:"
+                cat /tmp/checksum_extraction.log | sed 's/^/  /'
+            fi
+            
+            if [[ -z "$EXTRACTED_CHECKSUMS" ]]; then
+                echo "⚠️  No checksums found in test logs"
+                echo "This could indicate:"
+                echo "  • Test completed too quickly for checksum capture"
+                echo "  • SessionManager not logging checksums properly"
+                echo "  • Debug actions not being executed"
+                echo ""
+                echo "💡 Try running the test manually to debug:"
+                echo "   just test-android $CONFIG_NAME"
+            else
+                echo "📸 Extracted $(echo "$EXTRACTED_CHECKSUMS" | wc -l) checksums from logs"
+                
+                # Check if this is first run (no baseline)
+                if [[ "$EXPECTED_CHECKSUMS_COUNT" -eq 0 ]]; then
+                    echo ""
+                    echo "📝 Creating baseline checksums..."
+                    just _save-checksums-to-config "$CONFIG_PATH" "$EXTRACTED_CHECKSUMS"
+                    echo "✅ Baseline checksums created and saved"
+                    echo ""
+                    echo "Next run will validate against this baseline"
+                else
+                    # Compare with expected checksums
+                    EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[]' "$CONFIG_PATH")
+                    COMPARISON_RESULT=$(just _compare-checksums "$EXTRACTED_CHECKSUMS" "$EXPECTED_CHECKSUMS_LIST")
+                    
+                    if [[ "$COMPARISON_RESULT" == "MATCH" ]]; then
+                        echo "✅ Checksum validation PASSED"
+                        echo "All checksums match expected baseline"
+                    else
+                        echo "❌ Checksum validation FAILED"
+                        echo ""
+                        echo "$COMPARISON_RESULT"
+                        echo ""
+                        echo "This could indicate:"
+                        echo "  • Legitimate changes requiring baseline update"
+                        echo "  • Regression in game state consistency"
+                        echo "  • Non-deterministic behavior in game logic"
+                        echo ""
+                        echo "Use 'just test-android-target-update $CONFIG_NAME' to update baseline if changes are legitimate"
+                        # Set a flag to indicate checksum validation failure
+                        export CHECKSUM_VALIDATION_FAILED=1
+                    fi
+                fi
             fi
         fi
     else
@@ -428,6 +585,12 @@ _test-android-target-original config_name:
     
     echo ""
     echo "✅ Test execution completed"
+    
+    # Check if checksum validation failed
+    if [[ "${CHECKSUM_VALIDATION_FAILED:-0}" == "1" ]]; then
+        exit 1
+    fi
+
 
 # Preserved original Desktop test command (renamed to avoid recursion)
 _test-desktop-target-original config_name duration="30":

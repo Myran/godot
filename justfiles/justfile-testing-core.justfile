@@ -1070,11 +1070,12 @@ test-android-update config_name="":
                 if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
                     basename=$(basename "$config_file" .json)
                     state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
-                    expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$config_file")
+                    expected_checksums=$(jq -r '.checksum_config.expected_checksums // []' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
                     description=$(jq -r '.description // "No description"' "$config_file")
                     
                     # Determine status
-                    if [[ -z "$expected_checksum" ]]; then
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
                         status="❌ NO BASELINE SET"
                     else
                         status="✅ BASELINE SET"
@@ -1143,17 +1144,18 @@ test-android-update config_name="":
     
     # Get current checksum configuration
     STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
-    CURRENT_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_PATH")
+    CURRENT_CHECKSUMS=$(jq -r '.checksum_config.expected_checksums // []' "$CONFIG_PATH")
+    CURRENT_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
     
     echo "📸 Checksum Configuration:"
     echo "State Type: $STATE_TYPE"
-    echo "Current Checksum: $CURRENT_CHECKSUM"
+    echo "Current Checksums: $CURRENT_CHECKSUMS_COUNT checksums"
     
-    # Clear expected checksum to force baseline creation
+    # Clear expected checksums to force baseline creation
     echo ""
     echo "🔄 Clearing current baseline..."
     TEMP_CONFIG=$(mktemp)
-    jq '.checksum_config.expected_checksum = ""' "$CONFIG_PATH" > "$TEMP_CONFIG"
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_CONFIG"
     mv "$TEMP_CONFIG" "$CONFIG_PATH"
     
     echo "✅ Baseline cleared - running test to generate new baseline..."
@@ -1163,20 +1165,21 @@ test-android-update config_name="":
     echo "🚀 Generating new baseline..."
     echo "============================="
     
-    # Execute test which will create new baseline
-    just test-android-target "$CONFIG_NAME"
+    # Execute test which will create new baseline (ignore validation failure exit code)
+    just test-android-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
     
     # Check if baseline was created
-    UPDATED_CHECKSUM=$(jq -r '.checksum_config.expected_checksum // ""' "$CONFIG_PATH")
+    UPDATED_CHECKSUMS=$(jq -r '.checksum_config.expected_checksums // []' "$CONFIG_PATH")
+    UPDATED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
     
-    if [[ -n "$UPDATED_CHECKSUM" && "$UPDATED_CHECKSUM" != "$CURRENT_CHECKSUM" ]]; then
+    if [[ "$UPDATED_CHECKSUMS_COUNT" -gt 0 ]]; then
         echo ""
         echo "✅ Baseline update completed successfully!"
         echo "========================================"
         echo "Configuration: $CONFIG_NAME"
         echo "State Type: $STATE_TYPE"
-        echo "Previous Checksum: $CURRENT_CHECKSUM"
-        echo "New Checksum: $UPDATED_CHECKSUM"
+        echo "Previous Checksums: $CURRENT_CHECKSUMS_COUNT checksums"
+        echo "New Checksums: $UPDATED_CHECKSUMS_COUNT checksums"
         echo ""
         echo "The new baseline has been saved and will be used for future validations."
     else

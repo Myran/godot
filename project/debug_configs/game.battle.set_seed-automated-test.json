@@ -1,0 +1,22 @@
+{
+  "description": "Set Seed Action Automated Test - Validate seed setting with automated quit and state capture",
+  "actions": [
+    "game.battle.set_seed",
+    "system.debug.hide_menu",
+    "system.debug.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "seed_validation",
+    "expected_checksums": [
+      "93932e3502359ba08dc55245971589e842419ca9bd64c7c2588f5195f21144a5"
+    ]
+  },
+  "metadata": {
+    "test_type": "automated_mode_validation",
+    "purpose": "Test set_seed action with automated mode detection and state capture",
+    "auto_quit": true,
+    "target_action": "game.battle.set_seed",
+    "expected_behavior": "Sets RNG seed to 12345 and quits automatically in automated mode"
+  }
+}
