@@ -63,7 +63,7 @@ func setup_systems() -> void:
 func intitialize_game() -> void:
 	Log.info("Initializing game", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
 	await data_source.activate_card_cache()
-	rng.start_with_base_seed()
+	# RNG is now auto-initialized during autoload _ready() phase
 	game_handler.set_gamestate(core.GameState.START)
 
 	# Game systems are now fully initialized - UI remains LOCKED until proper state transition

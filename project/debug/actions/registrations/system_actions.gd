@@ -317,6 +317,7 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+
 	registry.register_action(
 		(
 			DebugAction
@@ -610,6 +611,43 @@ static func _detect_execution_context() -> Dictionary:
 	# Default: manual mode for interactive development
 	context.command_source = "default_manual"
 	return context
+
+
+static func _capture_rng_state() -> bool:
+	"""Capture RNG sequence state for seed validation testing"""
+	if not is_instance_valid(rng) or not rng.seeded_rng:
+		Log.error("RNG system not available for state capture", {}, ["debug", "rng", "error"])
+		return false
+	
+	# Generate checksum from RNG sequence (same method as determinism tests)
+	var rng_sequence: Array = rng.seeded_rng._result_sequence
+	var rng_checksum: String = str(rng_sequence).md5_text()
+	
+	# Log RNG state capture for test framework recognition
+	Log.info(
+		"FINAL_STATE_CAPTURED",
+		{
+			"final_checksum": rng_checksum,
+			"session_id": SessionManager.get_current_session_id(),
+			"state_type": "rng_sequence_validation",
+			"sequence_length": rng_sequence.size(),
+			"initial_seed": rng.seeded_rng._initial_seed,
+			"extraction_timestamp": Time.get_unix_time_from_system()
+		},
+		["final_state", "checksum", "rng", "seed_validation"]
+	)
+	
+	Log.debug(
+		"RNG state capture completed",
+		{
+			"checksum": rng_checksum,
+			"sequence_size": rng_sequence.size(),
+			"seed_source": rng._seed_source if rng.has_method("_seed_source") else "unknown"
+		},
+		["debug", "rng", "state"]
+	)
+	
+	return true
 
 
 static func _finalize_replay_validation() -> bool:

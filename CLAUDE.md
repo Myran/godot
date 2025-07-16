@@ -224,6 +224,8 @@ just test-android-update CONFIG                 # Update baseline (legitimate ch
 just logs-errors-tagged TEST_ID checksum        # Debug checksum failures
 ```
 
+**🎲 RNG Determinism**: The RNG system autonomously initializes seeds from debug configs during autoload phase, ensuring cross-platform deterministic behavior without explicit seed actions.
+
 ## 🏗️ Build System
 
 **Smart three-tier build system:**

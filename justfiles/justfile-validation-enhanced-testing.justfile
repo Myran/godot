@@ -641,8 +641,10 @@ _test-desktop-target-original config_name duration="30":
     
     echo "📂 Desktop logs will be saved to: $LOGS_DIR"
     
-    # Copy config to the expected location for desktop startup
-    STARTUP_CONFIG="{{PROJECT_PATH}}/debug_startup_actions.json"
+    # Copy config to the expected location for desktop startup (user directory)
+    USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
+    mkdir -p "$USER_DIR"
+    STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
     echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
     cp "$CONFIG_FILE" "$STARTUP_CONFIG"
     

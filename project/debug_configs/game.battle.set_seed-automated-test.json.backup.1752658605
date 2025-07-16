@@ -7,9 +7,7 @@
   "checksum_config": {
     "initial_seed": 12345,
     "state_type": "seed_validation",
-    "expected_checksums": [
-      "117034a84e40fb9985427d668d3de5c8724c97df9c9757e02eb0d1da16be5f49"
-    ]
+    "expected_checksums": []
   },
   "metadata": {
     "test_type": "automated_mode_validation",
