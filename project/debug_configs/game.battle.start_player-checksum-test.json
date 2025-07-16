@@ -1,8 +1,8 @@
 {
   "description": "Battle Start Player Action CHECKSUM Test - Validate single action deterministic behavior",
   "actions": [
-    "game.battle.set_seed",
     "system.debug.hide_menu",
+    "game.lineup.populate_enemy",
     "game.battle.start_player",
     "system.debug.replay_complete"
   ],

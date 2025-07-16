@@ -241,15 +241,6 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.battle.set_seed", _battle_set_seed)
-			. set_category("Gameplay")
-			. set_group("Battle")
-			. set_description("Set RNG seed for deterministic testing")
-		)
-	)
 
 	registry.register_action(
 		(
@@ -743,22 +734,9 @@ static func _trigger_populate_enemy_lineup() -> void:
 	populate_task.call()
 
 
-static func _battle_set_seed() -> DebugAction.Result:
-	# Set RNG seed for deterministic testing
-	if not is_instance_valid(rng):
-		return DebugAction.Result.new_failure("RNG singleton not available")
-
-	# Try to read seed from config file, fallback to default
-	var test_seed: int = _get_seed_from_config()
-	rng.seeded_rng.reset(test_seed)
-
-	Log.info(
-		"RNG seed set for deterministic testing",
-		{"seed": test_seed},
-		["debug", "battle", "determinism"]
-	)
-
-	return DebugAction.Result.new_success({"seed": test_seed}, 0, "seed_set")
+# _battle_set_seed function removed - obsolete due to autonomous RNG initialization
+# Seeds are now automatically applied during autoload phase via DebugConfigReader
+# Use checksum_config.initial_seed in JSON configs instead of explicit actions
 
 
 static func _battle_test_determinism_logic_only() -> DebugAction.Result:
@@ -1270,24 +1248,9 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 	return true
 
 
-static func _get_seed_from_config() -> int:
-	# Enhanced function for checksum validation - checks for checksum_config.initial_seed
-	var config: Dictionary = _get_determinism_config()
-
-	# Check for checksum_config.initial_seed (new checksum validation system)
-	if config.has("checksum_config"):
-		var checksum_config: Dictionary = config.checksum_config
-		if checksum_config.has("initial_seed"):
-			var seed: int = checksum_config.initial_seed
-			Log.info(
-				"Using seed from checksum_config for replay validation",
-				{"seed": seed},
-				["debug", "checksum", "seed"]
-			)
-			return seed
-
-	# Fallback to legacy seed field for backward compatibility
-	return config.get("seed", 12345)
+# _get_seed_from_config function removed - obsolete due to autonomous RNG initialization
+# Seeds are now handled by DebugConfigReader during autoload phase
+# Use DebugConfigReader.get_debug_seed() if manual seed access is needed
 
 
 static func _battle_test_determinism() -> DebugAction.Result:
@@ -1490,14 +1453,14 @@ static func _reset_board_state() -> bool:
 		)
 		return false
 
-	# Reset RNG to ensure deterministic behavior
-	if rng and rng.seeded_rng:
-		# Use the same seed from config if available
-		var test_seed: int = _get_seed_from_config()
-		rng.seeded_rng.reset(test_seed)
-		Log.info(
-			"RNG reset for battle state reset", {"seed": test_seed}, ["debug", "board", "reset"]
-		)
+	# NOTE: RNG reset removed - autonomous initialization ensures deterministic behavior
+	# The RNG is already properly seeded during autoload phase via DebugConfigReader
+	# No manual resetting needed for board state reset
+	Log.debug(
+		"Board state reset - RNG already deterministically initialized", 
+		{"rng_available": rng != null and rng.seeded_rng != null}, 
+		["debug", "board", "reset"]
+	)
 
 	# Clear lineups if they exist
 	var reset_successful: bool = true

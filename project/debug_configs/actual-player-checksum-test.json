@@ -4,7 +4,6 @@
   "generation_timestamp": "2025-07-12T01:14:24+02:00",
   "semantic_action_count": 13,
   "actions": [
-    "game.battle.set_seed",
     "system.debug.registry_stats",
     "game.lineup.populate_enemy",
     "game.draft.reroll_player",

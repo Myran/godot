@@ -1,0 +1,20 @@
+{
+  "description": "Simple upgrade test - Setup game state then upgrade",
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    "system.debug.quit_application"
+  ]
+}

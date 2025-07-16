@@ -1,7 +1,6 @@
 {
   "description": "Upgrade Player Action CHECKSUM Test - Validate single action deterministic behavior",
   "actions": [
-    "game.battle.set_seed",
     "system.debug.hide_menu",
     {
       "action": "game.state.transition_player",

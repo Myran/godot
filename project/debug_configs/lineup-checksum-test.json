@@ -1,7 +1,6 @@
 {
   "description": "Lineup CHECKSUM Test - Validate lineup state consistency using checksums",
   "actions": [
-    "game.battle.set_seed",
     "system.debug.hide_menu", 
     "game.lineup.populate_enemy",
     "game.draft.reroll_player",

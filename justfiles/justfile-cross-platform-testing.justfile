@@ -16,13 +16,13 @@ test-cross-platform-config-generation SESSION CONFIG:
     
     # Generate configs for both platforms from same session
     echo "🖥️  Generating desktop config..."
-    if ! just replay-generate-manual "$SESSION_ID" "${CONFIG_NAME}_desktop"; then
+    if ! just replay-generate "$SESSION_ID" "${CONFIG_NAME}_desktop"; then
         echo "❌ Failed to generate desktop config"
         exit 1
     fi
     
     echo "📱 Generating Android config..."  
-    if ! just replay-generate-manual "$SESSION_ID" "${CONFIG_NAME}_android"; then
+    if ! just replay-generate "$SESSION_ID" "${CONFIG_NAME}_android"; then
         echo "❌ Failed to generate Android config"
         exit 1
     fi

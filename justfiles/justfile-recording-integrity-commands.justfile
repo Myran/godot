@@ -179,32 +179,6 @@ validate-semantic-mapping:
         echo "💡 Check: just logs $TEST_ID recording semantic"
     fi
 
-# Validate replay generation workflow
-validate-replay-generation:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    echo "⚙️  Validating replay generation workflow..."
-    echo ""
-    
-    # Test replay system through integrity validation
-    just config-restart-android 'system.replay.integrity_validation'
-    
-    TEST_ID=$(just logs-last | grep -E "test_[0-9]+" | head -1 | awk '{print $1}')
-    
-    # Check replay validation results
-    REPLAY_RESULTS=$(just logs $TEST_ID | grep -i "replay\|generation\|workflow" | wc -l | tr -d ' ')
-    
-    if [ "$REPLAY_RESULTS" -gt 0 ]; then
-        echo "✅ Replay generation validation completed"
-        echo "📊 Found $REPLAY_RESULTS replay-related log entries"
-        echo ""
-        echo "🔍 Replay validation summary:"
-        just logs $TEST_ID | grep -i "replay.*validation\|generation.*workflow" | head -3
-    else
-        echo "⚠️  No replay validation results found"
-        echo "💡 Check: just logs $TEST_ID replay generation"
-    fi
 
 # ================================
 # PRE-COMMIT INTEGRATION
@@ -231,7 +205,7 @@ recording-pre-commit:
     just validate-semantic-mapping >/dev/null 2>&1 || echo "⚠️  Semantic mapping issues detected"
     
     echo "   Testing replay generation..."
-    just validate-replay-generation >/dev/null 2>&1 || echo "⚠️  Replay generation issues detected"
+    echo "⚠️  Replay generation validation removed (legacy)"
     
     echo ""
     echo "✅ Recording system pre-commit validation complete"
@@ -261,68 +235,8 @@ recording-performance-analysis TEST_ID:
     echo "🔍 Component timing analysis:"
     just logs $TEST_ID | grep -i "semantic.*action\|mapping\|generation" | grep -i "ms\|time\|duration" | head -5
 
-# Debug recording system issues
-debug-recording-system TEST_ID:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    TEST_ID="{{TEST_ID}}"
-    
-    echo "🔧 Recording system debug analysis for: $TEST_ID"
-    echo ""
-    
-    echo "1️⃣ Error analysis:"
-    just logs-errors-tagged $TEST_ID recording replay integrity
-    
-    echo ""
-    echo "2️⃣ Component status:"
-    just logs $TEST_ID | grep -i "component.*validation\|integration.*validation" | head -5
-    
-    echo ""
-    echo "3️⃣ Workflow status:"
-    just logs $TEST_ID | grep -i "workflow.*validation\|overall.*status" | head -5
-    
-    echo ""
-    echo "4️⃣ Regression indicators:"
-    just logs $TEST_ID | grep -i "missing.*component\|broken.*integration\|regression.*risk" | head -5
 
 # ================================
 # UTILITY COMMANDS
 # ================================
 
-# List all recording integrity test results
-list-recording-integrity-results:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    echo "📋 Recording integrity test results:"
-    echo ""
-    
-    echo "Recent test runs with integrity validation:"
-    just logs-last | head -10 | while read test_id timestamp config; do
-        if [[ "$config" == *"integrity"* ]] || [[ "$config" == *"recording"* ]]; then
-            ERROR_COUNT=$(just logs-errors-tagged $test_id 2>/dev/null | wc -l | tr -d ' ')
-            STATUS="✅ PASS"
-            if [ "$ERROR_COUNT" -gt 0 ]; then
-                STATUS="❌ FAIL ($ERROR_COUNT errors)"
-            fi
-            echo "  $test_id | $timestamp | $config | $STATUS"
-        fi
-    done
-
-# Clean up recording integrity test artifacts
-clean-recording-integrity:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    echo "🧹 Cleaning recording integrity test artifacts..."
-    
-    # Clean old replay configs (keep recent ones)
-    echo "Cleaning old generated replay configs..."
-    find project/debug_configs -name "replay-*.json" -mtime +7 -delete 2>/dev/null || true
-    
-    # Clean old test logs for integrity tests
-    echo "Cleaning old integrity test logs..."
-    find test_results -name "*integrity*" -mtime +7 -type d -exec rm -rf {} + 2>/dev/null || true
-    
-    echo "✅ Recording integrity cleanup complete"

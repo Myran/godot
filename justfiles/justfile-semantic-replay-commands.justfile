@@ -534,240 +534,8 @@ create-demo-from-last-session demo_name:
     echo ""
     echo "🎉 Demo creation complete!"
 
-# Create demo from the most recent Android session
-create-demo-from-last-session-android demo_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    DEMO_NAME="{{demo_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
-    
-    echo "🎬 Creating demo from most recent Android session..."
-    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    # Force Android log extraction
-    echo "📋 Extracting session from Android logs..."
-    
-    if ! command -v adb >/dev/null 2>&1; then
-        echo "❌ adb command not found. Install Android SDK or platform tools"
-        exit 1
-    fi
-    
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo ""
-        echo "💡 Connect Android device and enable USB debugging"
-        exit 1
-    fi
-    
-    echo "🤖 Using Android adb logcat"
-    RECENT_LOGS=$(just logs-last 2>/dev/null | grep -v "Getting latest" || echo "")
-    
-    if [ -z "$RECENT_LOGS" ]; then
-        echo "❌ No recent Android logs found"
-        echo ""
-        echo "💡 To create a demo, you need to generate logs first:"
-        echo "   1. Run the game: just test-android development-workflow"
-        echo "   2. Play through a sequence (draft, lineup, battle, etc.)"
-        echo "   3. Close the game to save logs"
-        echo "   4. Then try: just create-demo-from-last-session-android DEMO_NAME"
-        exit 1
-    fi
-    
-    # Extract session ID from logs (look for most recent SESSION_START)
-    SESSION_ID=$(echo "$RECENT_LOGS" | grep "SESSION_START" | tail -1 | grep -o '"session_id": *"[^"]*"' | cut -d'"' -f4 || echo "")
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ No session ID found in recent Android logs"
-        echo ""
-        echo "💡 Make sure the game created a session:"
-        echo "   1. Run: just test-android development-workflow"
-        echo "   2. Look for SESSION_START logs"
-        echo "   3. Then try: just create-demo-from-last-session-android DEMO_NAME"
-        exit 1
-    fi
-    
-    echo "✅ Found Android session ID: $SESSION_ID"
-    
-    # Extract semantic actions for this session
-    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"" || echo "")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for Android session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Make sure you performed actions during gameplay (draft, lineup, etc.)"
-        exit 1
-    fi
-    
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions from Android"
-    
-    # Use the shared demo creation logic
-    just create-demo-from-session "$SESSION_ID" "$DEMO_NAME"
 
-# Create demo from the most recent Desktop session  
-create-demo-from-last-session-desktop demo_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    DEMO_NAME="{{demo_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
-    
-    echo "🎬 Creating demo from most recent Desktop session..."
-    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    # Force Desktop log extraction
-    echo "📋 Extracting session from Desktop logs..."
-    echo "🖥️  Using Desktop logs"
-    
-    # Check for self-contained mode first (logs in project directory)
-    PROJECT_LOGS_DIR="{{PROJECT_LOGS_DIR}}"
-    USER_DATA_DIR="{{USER_DATA_DIR}}"
-    STANDARD_LOGS_DIR="{{STANDARD_LOGS_DIR}}"
-    
-    RECENT_LOGS=""
-    LATEST_LOG=""
-    
-    # Find the most recent log file from both locations
-    PROJECT_LATEST=""
-    STANDARD_LATEST=""
-    
-    # Check self-contained logs
-    if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-        PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-    fi
-    
-    # Check standard user data logs
-    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-        STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
-    fi
-    
-    # Choose the most recent log file between the two locations
-    if [ -n "$PROJECT_LATEST" ] && [ -n "$STANDARD_LATEST" ]; then
-        # Compare modification times and use the more recent one
-        if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
-            LATEST_LOG="$PROJECT_LATEST"
-            echo "📁 Using self-contained logs (most recent): $PROJECT_LOGS_DIR"
-        else
-            LATEST_LOG="$STANDARD_LATEST"
-            echo "📁 Using standard logs (most recent): $STANDARD_LOGS_DIR"
-        fi
-    elif [ -n "$PROJECT_LATEST" ]; then
-        LATEST_LOG="$PROJECT_LATEST"
-        echo "📁 Using self-contained logs: $PROJECT_LOGS_DIR"
-    elif [ -n "$STANDARD_LATEST" ]; then
-        LATEST_LOG="$STANDARD_LATEST"
-        echo "📁 Using standard logs: $STANDARD_LOGS_DIR"
-    fi
-    
-    # Read the most recent log file
-    if [ -n "$LATEST_LOG" ]; then
-        echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-        RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-    fi
-    
-    if [ -z "$RECENT_LOGS" ]; then
-        echo "❌ No recent Desktop logs found"
-        echo ""
-        echo "💡 To create a demo, you need to generate logs first:"
-        echo "   1. Run the game: just run-desktop"
-        echo "   2. Play through a sequence (draft, lineup, battle, etc.)"
-        echo "   3. Close the game to save logs"
-        echo "   4. Then try: just create-demo-from-last-session-desktop DEMO_NAME"
-        echo ""
-        echo "📂 Desktop logs locations checked:"
-        echo "   Self-contained: {{PROJECT_LOGS_DIR}}"
-        echo "   Standard: {{STANDARD_LOGS_DIR}}"
-        exit 1
-    fi
-    
-    # Extract session ID from logs (look for most recent SESSION_START)
-    SESSION_ID=$(echo "$RECENT_LOGS" | grep "SESSION_START" | tail -1 | grep -o '"session_id": *"[^"]*"' | cut -d'"' -f4 || echo "")
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ No session ID found in recent Desktop logs"
-        echo ""
-        echo "💡 Make sure the game created a session:"
-        echo "   1. Run: just run-desktop"
-        echo "   2. Play through a sequence and look for SESSION_START logs"
-        echo "   3. Then try: just create-demo-from-last-session-desktop DEMO_NAME"
-        echo ""
-        echo "🔍 Recent log sample (last 5 lines):"
-        echo "$RECENT_LOGS" | tail -5
-        exit 1
-    fi
-    
-    echo "✅ Found Desktop session ID: $SESSION_ID"
-    
-    # Extract semantic actions for this session
-    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"" || echo "")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for Desktop session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Make sure you performed actions during gameplay (draft, lineup, etc.)"
-        exit 1
-    fi
-    
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions from Desktop"
-    
-    # Use the shared demo creation logic
-    just create-demo-from-session "$SESSION_ID" "$DEMO_NAME"
 
-# Create demo from specific session ID
-create-demo-from-session session_id demo_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    SESSION_ID="{{session_id}}"
-    DEMO_NAME="{{demo_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    # Clean demo name for filename
-    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
-    
-    echo "🎬 Creating demo from specific session..."
-    echo "   Session ID: ${SESSION_ID}"
-    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    # Use the existing replay-generate-manual logic but with demo metadata
-    just replay-generate-manual "${SESSION_ID}" "${CLEAN_DEMO_NAME}"
-    
-    # Update the generated config to mark it as a demo
-    if [ -f "${OUTPUT_CONFIG}" ]; then
-        # Add demo-specific metadata using jq
-        jq '. + {
-            "type": "demo",
-            "metadata": (.metadata + {
-                "generation_method": "create_demo_from_session",
-                "demo_name": "'$CLEAN_DEMO_NAME'",
-                "replay_mode": "demo",
-                "can_convert_to_test": true
-            })
-        }' "${OUTPUT_CONFIG}" > "${OUTPUT_CONFIG}.tmp" && mv "${OUTPUT_CONFIG}.tmp" "${OUTPUT_CONFIG}"
-        
-        echo ""
-        echo "✅ Demo created and marked with demo metadata"
-        echo ""
-        echo "🎮 To test your demo:"
-        echo "   just test-android ${CLEAN_DEMO_NAME}        # Test on Android"
-        echo "   just test-desktop-target ${CLEAN_DEMO_NAME} # Test on Desktop"
-    else
-        echo "❌ Failed to create demo config"
-        exit 1
-    fi
 
 # Interactive demo creation with session selection
 create-demo-interactive:
@@ -891,7 +659,36 @@ create-demo-interactive:
         if [ -n "$demo_name" ]; then
             echo ""
             echo "Creating demo from session: $selected_session_id"
-            just create-demo-from-session "$selected_session_id" "$demo_name"
+            
+            # Clean demo name for filename
+            CLEAN_DEMO_NAME=$(echo "$demo_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+            
+            # Generate base replay config
+            just replay-generate "$selected_session_id" "$demo_name"
+            
+            # Add demo metadata to generated config
+            OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
+            if [ -f "${OUTPUT_CONFIG}" ]; then
+                # Add demo-specific metadata using jq
+                jq '. + {
+                    "type": "demo",
+                    "metadata": (.metadata + {
+                        "generation_method": "create_demo_interactive",
+                        "demo_name": "'$CLEAN_DEMO_NAME'",
+                        "replay_mode": "demo",
+                        "can_convert_to_test": true
+                    })
+                }' "${OUTPUT_CONFIG}" > "${OUTPUT_CONFIG}.tmp" && mv "${OUTPUT_CONFIG}.tmp" "${OUTPUT_CONFIG}"
+                
+                echo "✅ Demo metadata added to generated config"
+                echo ""
+                echo "🎮 To test your demo:"
+                echo "   just test-android ${CLEAN_DEMO_NAME}        # Test on Android"
+                echo "   just test-desktop-target ${CLEAN_DEMO_NAME} # Test on Desktop"
+            else
+                echo "❌ Failed to create demo config"
+                exit 1
+            fi
         else
             echo "❌ Demo name cannot be empty"
             exit 1
@@ -1497,125 +1294,6 @@ replay-generate session_id config_name="":
     echo ""
     echo "🎉 Replay generation complete!"
 
-# Generate replay test configuration from semantic logs (manual mode - no quit for verification)
-replay-generate-manual session_id config_name="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    SESSION_ID="{{session_id}}"
-    CONFIG_NAME="{{config_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    # Use session ID as config name if not provided
-    if [ -z "$CONFIG_NAME" ]; then
-        CONFIG_NAME="replay-manual-${SESSION_ID}"
-    fi
-    
-    # Clean config name for filename
-    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
-    
-    echo "🎬 Generating manual verification replay configuration..."
-    echo "   Session ID: ${SESSION_ID}"
-    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo "   Mode: Manual verification (no auto-quit)"
-    echo ""
-    
-    # Cross-platform log detection - find the directory that contains the target session
-    PROJECT_LOGS_DIR="./logs"
-    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
-    
-    # Check which directory contains the target session
-    LOG_DIR=""
-    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$STANDARD_LOGS_DIR"
-        echo "📁 Using user data logs (session found): $LOG_DIR"
-    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$PROJECT_LOGS_DIR"
-        echo "📁 Using project logs (session found): $LOG_DIR"
-    elif [ -d "$STANDARD_LOGS_DIR" ] && [ "$(find "$STANDARD_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
-        LOG_DIR="$STANDARD_LOGS_DIR"
-        echo "📁 Using user data logs (fallback): $LOG_DIR"
-    elif [ -d "$PROJECT_LOGS_DIR" ] && [ "$(find "$PROJECT_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
-        LOG_DIR="$PROJECT_LOGS_DIR"
-        echo "📁 Using project logs (fallback): $LOG_DIR"
-    fi
-    
-    if [ -z "$LOG_DIR" ]; then
-        echo "⚠️  No log files found in log directories"
-        echo "   Checked: $PROJECT_LOGS_DIR"
-        echo "   Checked: $STANDARD_LOGS_DIR"
-        echo "   Make sure semantic actions have been logged with session ID: ${SESSION_ID}"
-        echo ""
-        echo "💡 To capture semantic logs:"
-        echo "   1. Run: just test-android development-workflow (for Android logs)"
-        echo "   2. Run: just run-desktop (for desktop logs)"
-        echo "   3. Look for SESSION_START logs to find session IDs"
-        echo "   4. Use the session ID to generate replay config"
-        exit 1
-    fi
-    
-    echo "📋 Searching for semantic actions in logs..."
-    
-    # Extract semantic actions from logs for the specified session
-    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Available session IDs in recent logs:"
-        find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START\|session_id" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
-        exit 1
-    fi
-    
-    # Count actions
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
-    
-    # Create a manual verification replay configuration
-    GENERATION_TIMESTAMP=$(date -Iseconds)
-    
-    # Create JSON config for manual verification mode
-    printf '{\n' > "${OUTPUT_CONFIG}"
-    printf '  "description": "Manual verification replay from semantic session: %s (no auto-quit)",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '  "session_id": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '  "generation_timestamp": "%s",\n' "$GENERATION_TIMESTAMP" >> "${OUTPUT_CONFIG}"
-    printf '  "semantic_action_count": %s,\n' "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
-    printf '  "actions": [\n' >> "${OUTPUT_CONFIG}"
-    printf '    "system.debug.hide_menu",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "system.debug.registry_stats",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.lineup.populate_enemy",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.draft.reroll_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.draft.upgrade_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.state.transition_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "system.debug.replay_complete"\n' >> "${OUTPUT_CONFIG}"
-    printf '  ],\n' >> "${OUTPUT_CONFIG}"
-    printf '  "metadata": {\n' >> "${OUTPUT_CONFIG}"
-    printf '    "source_session": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '    "generation_method": "justfile_replay_generate_manual",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "config_name": "%s",\n' "$CLEAN_CONFIG_NAME" >> "${OUTPUT_CONFIG}"
-    printf '    "capture_timestamp": "%s",\n' "$TIMESTAMP" >> "${OUTPUT_CONFIG}"
-    printf '    "replay_mode": "manual",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "auto_quit": false,\n' >> "${OUTPUT_CONFIG}"
-    printf '    "manual_verification": true\n' >> "${OUTPUT_CONFIG}"
-    printf '  }\n' >> "${OUTPUT_CONFIG}"
-    printf '}\n' >> "${OUTPUT_CONFIG}"
-    
-    echo ""
-    echo "✅ Manual verification replay configuration generated: ${OUTPUT_CONFIG}"
-    echo "📊 Actions: ${ACTION_COUNT} semantic → 7 debug (manual mode)"
-    echo ""
-    echo "🎮 To test the replay (manual verification):"
-    echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
-    echo ""
-    echo "✨ Manual verification mode:"
-    echo "   • Debug interface will be hidden for clean view"
-    echo "   • App will NOT quit automatically after replay"
-    echo "   • Take screenshots and verify results manually"
-    echo "   • Close app manually when done"
-    echo ""
-    echo "🎉 Manual replay generation complete!"
 
 # Extract checksums from semantic logs and add to existing replay config for validation
 _extract-checksums-to-config session_id config_name:
@@ -1811,128 +1489,7 @@ replay-generate-with-checksums session_id config_name="":
         exit 1
     fi
 
-# Capture semantic logs from a test run and generate replay config (platform-agnostic)
-replay-capture-and-generate config_name test_target="development-workflow" platform="android":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_NAME="{{config_name}}"
-    TEST_TARGET="{{test_target}}"
-    PLATFORM="{{platform}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    echo "🎬 Capturing semantic logs and generating replay config..."
-    echo "   Config Name: ${CONFIG_NAME}"
-    echo "   Test Target: ${TEST_TARGET}"
-    echo "   Platform: ${PLATFORM}"
-    echo ""
-    
-    if [ "$PLATFORM" = "desktop" ]; then
-        echo "🖥️  Capturing desktop semantic logs..."
-        
-        echo "1️⃣ Running desktop test to capture semantic actions..."
-        just test-desktop "${TEST_TARGET}"
-        
-        echo ""
-        echo "2️⃣ Extracting session ID from desktop logs..."
-        SESSION_ID=$(just logs-desktop-last | grep "SESSION_START" | \
-                    grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-        
-        if [ -z "$SESSION_ID" ]; then
-            echo "❌ Could not find desktop session ID"
-            echo "💡 Desktop logs preview:"
-            just logs-desktop-last | tail -10
-            exit 1
-        fi
-        
-        echo "✅ Found desktop session ID: $SESSION_ID"
-        
-    else
-        echo "📱 Capturing Android semantic logs..."
-        
-        echo "1️⃣ Running Android test to capture semantic actions..."
-        
-        # Run the test and capture output
-        TEST_OUTPUT=$(just test-android ${TEST_TARGET} 2>&1)
-        TEST_ID=$(echo "$TEST_OUTPUT" | grep -o 'TEST_ID=[^[:space:]]*' | cut -d= -f2 | tail -1 || echo "")
-        
-        if [ -z "$TEST_ID" ]; then
-            echo "❌ Could not capture TEST_ID from test run"
-            echo "💡 Try running: just test-android ${TEST_TARGET}"
-            echo "   Then manually extract session ID from logs"
-            exit 1
-        fi
-        
-        echo "✅ Test completed with ID: ${TEST_ID}"
-        echo ""
-        
-        echo "2️⃣ Extracting session ID from Android logs..."
-        SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-        
-        if [ -z "$SESSION_ID" ]; then
-            echo "❌ Could not find session ID in test logs"
-            echo "💡 Check logs manually: just logs-last"
-            echo ""
-            echo "🔍 Available session references in logs:"
-            just logs-last | grep -i session | head -3 || echo "   No session references found"
-            exit 1
-        fi
-        
-        echo "✅ Found session ID: ${SESSION_ID}"
-    fi
-    
-    echo ""
-    echo "3️⃣ Generating replay configuration..."
-    just replay-generate "${SESSION_ID}" "${CONFIG_NAME}"
 
-# Capture semantic logs from a test run and generate manual verification replay config (no auto-quit)
-replay-capture-and-generate-manual config_name test_target="development-workflow":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_NAME="{{config_name}}"
-    TEST_TARGET="{{test_target}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    echo "🎬 Capturing semantic logs and generating manual verification replay config..."
-    echo "   Config Name: ${CONFIG_NAME}"
-    echo "   Test Target: ${TEST_TARGET}"
-    echo "   Mode: Manual verification (no auto-quit)"
-    echo ""
-    
-    echo "1️⃣ Running test to capture semantic actions..."
-    
-    # Run the test and capture output
-    TEST_OUTPUT=$(just test-android ${TEST_TARGET} 2>&1)
-    TEST_ID=$(echo "$TEST_OUTPUT" | grep -o 'TEST_ID=[^[:space:]]*' | cut -d= -f2 | tail -1 || echo "")
-    
-    if [ -z "$TEST_ID" ]; then
-        echo "❌ Could not capture TEST_ID from test run"
-        echo "💡 Try running: just test-android ${TEST_TARGET}"
-        echo "   Then manually extract session ID from logs"
-        exit 1
-    fi
-    
-    echo "✅ Test completed with ID: ${TEST_ID}"
-    echo ""
-    
-    echo "2️⃣ Extracting session ID from test logs..."
-    SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ Could not find session ID in test logs"
-        echo "💡 Check logs manually: just logs-last"
-        echo ""
-        echo "🔍 Available session references in logs:"
-        just logs-last | grep -i session | head -3 || echo "   No session references found"
-        exit 1
-    fi
-    
-    echo "✅ Found session ID: ${SESSION_ID}"
-    echo ""
-    
-    echo "3️⃣ Generating manual verification replay configuration..."
-    just replay-generate-manual "${SESSION_ID}" "${CONFIG_NAME}"
 
 # Interactive replay config selection using fzf
 replay-select:
