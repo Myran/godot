@@ -3,6 +3,10 @@ extends RefCounted
 
 # Shared utility for reading debug configuration files
 # Used by both RNG autoload and debug startup coordinator
+#
+# CRITICAL: This enables autonomous RNG seed initialization during autoload phase
+# Seeds are specified in JSON configs using: checksum_config.initial_seed
+# This eliminates timing dependencies and ensures cross-platform determinism
 
 static func get_debug_seed() -> int:
 	"""Get debug seed from config file. Returns default (12345) if not found or invalid."""

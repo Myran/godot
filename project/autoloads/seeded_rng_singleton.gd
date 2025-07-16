@@ -1,5 +1,17 @@
 extends Node
 
+# Autonomous RNG seed initialization system
+# Automatically reads seeds from debug configs during _ready()
+# 
+# Config format for deterministic tests:
+# {
+#   "checksum_config": {
+#     "initial_seed": 12345
+#   }
+# }
+# 
+# NO EXPLICIT ACTIONS NEEDED - seeds are applied before game systems initialize
+
 var seeded_rng: DeterministicRNG = DeterministicRNG.new(1)  # Force deterministic construction
 var _seed: int = 1
 var _seed_source: String = "default"

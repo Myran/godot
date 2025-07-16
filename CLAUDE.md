@@ -226,6 +226,22 @@ just logs-errors-tagged TEST_ID checksum        # Debug checksum failures
 
 **🎲 RNG Determinism**: The RNG system autonomously initializes seeds from debug configs during autoload phase, ensuring cross-platform deterministic behavior without explicit seed actions.
 
+### **Adding Seeds to Debug Configs**
+When creating deterministic tests, add seeds using the `checksum_config` structure:
+```json
+{
+  "description": "Test description",
+  "actions": ["action1", "action2"],
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "seed_validation",
+    "expected_checksums": []
+  }
+}
+```
+**Never use:** `"game.battle.set_seed"` action (obsolete - causes timing issues)  
+**Always use:** `checksum_config.initial_seed` field (autonomous - no timing dependencies)
+
 ## 🏗️ Build System
 
 **Smart three-tier build system:**
