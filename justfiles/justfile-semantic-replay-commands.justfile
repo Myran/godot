@@ -1384,8 +1384,69 @@ replay-generate session_id config_name="":
     ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
     echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
     
-    # Create a simple replay configuration
+    # Parse semantic actions to generate appropriate debug actions
     GENERATION_TIMESTAMP=$(date -Iseconds)
+    
+    echo "🔍 Parsing semantic actions to generate debug action sequence..."
+    
+    # Extract action types and data from semantic actions
+    DEBUG_ACTIONS=()
+    DEBUG_ACTIONS+=("system.debug.hide_menu")
+    
+    # Parse each semantic action and convert to debug action
+    while IFS= read -r action_line; do
+        if [ -n "$action_line" ]; then
+            # Extract action type and data
+            ACTION_TYPE=$(echo "$action_line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+            ACTION_DATA=$(echo "$action_line" | grep -o '"data": {[^}]*}' | cut -d'{' -f2- | sed 's/}$//')
+            
+            echo "   Found semantic action: $ACTION_TYPE"
+            
+            case "$ACTION_TYPE" in
+                "transition.change_state")
+                    # Extract from_state and to_state
+                    FROM_STATE=$(echo "$ACTION_DATA" | grep -o '"from_state": "[^"]*"' | cut -d'"' -f4)
+                    TO_STATE=$(echo "$ACTION_DATA" | grep -o '"to_state": "[^"]*"' | cut -d'"' -f4)
+                    
+                    if [ -n "$FROM_STATE" ] && [ -n "$TO_STATE" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.state.transition_player\", \"params\": { \"from_state\": \"$FROM_STATE\", \"to_state\": \"$TO_STATE\" } }")
+                    else
+                        DEBUG_ACTIONS+=("game.state.transition_player")
+                    fi
+                    ;;
+                "draft.reroll")
+                    DEBUG_ACTIONS+=("game.draft.reroll_player")
+                    ;;
+                "draft.upgrade")
+                    DEBUG_ACTIONS+=("game.draft.upgrade_player")
+                    ;;
+                "draft.toggle_column")
+                    DEBUG_ACTIONS+=("game.draft.toggle_column_player")
+                    ;;
+                "draft.remove_block")
+                    DEBUG_ACTIONS+=("game.draft.remove_block_player")
+                    ;;
+                "lineup.add_card")
+                    DEBUG_ACTIONS+=("game.lineup.add_card_player")
+                    ;;
+                "lineup.move_card")
+                    DEBUG_ACTIONS+=("game.lineup.move_card_player")
+                    ;;
+                "lineup.remove_card")
+                    DEBUG_ACTIONS+=("game.lineup.remove_card_player")
+                    ;;
+                "battle.start")
+                    DEBUG_ACTIONS+=("game.lineup.populate_enemy")
+                    DEBUG_ACTIONS+=("game.battle.start_player")
+                    ;;
+                *)
+                    echo "   Warning: Unknown semantic action type: $ACTION_TYPE"
+                    ;;
+            esac
+        fi
+    done <<< "$SEMANTIC_ACTIONS"
+    
+    DEBUG_ACTIONS+=("system.debug.replay_complete")
     
     # Create JSON config using printf to avoid shell escaping issues
     printf '{\n' > "${OUTPUT_CONFIG}"
@@ -1394,12 +1455,27 @@ replay-generate session_id config_name="":
     printf '  "generation_timestamp": "%s",\n' "$GENERATION_TIMESTAMP" >> "${OUTPUT_CONFIG}"
     printf '  "semantic_action_count": %s,\n' "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
     printf '  "actions": [\n' >> "${OUTPUT_CONFIG}"
-    printf '    "system.debug.registry_stats",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.lineup.populate_enemy",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.draft.reroll_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.draft.upgrade_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "game.state.transition_player",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "system.debug.quit_application"\n' >> "${OUTPUT_CONFIG}"
+    
+    # Generate actions array
+    for i in "${!DEBUG_ACTIONS[@]}"; do
+        ACTION="${DEBUG_ACTIONS[$i]}"
+        if [ $i -eq $((${#DEBUG_ACTIONS[@]} - 1)) ]; then
+            # Last action - no comma
+            if [[ "$ACTION" == *"{"* ]]; then
+                printf '    %s\n' "$ACTION" >> "${OUTPUT_CONFIG}"
+            else
+                printf '    "%s"\n' "$ACTION" >> "${OUTPUT_CONFIG}"
+            fi
+        else
+            # Not last action - add comma
+            if [[ "$ACTION" == *"{"* ]]; then
+                printf '    %s,\n' "$ACTION" >> "${OUTPUT_CONFIG}"
+            else
+                printf '    "%s",\n' "$ACTION" >> "${OUTPUT_CONFIG}"
+            fi
+        fi
+    done
+    
     printf '  ],\n' >> "${OUTPUT_CONFIG}"
     printf '  "metadata": {\n' >> "${OUTPUT_CONFIG}"
     printf '    "source_session": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
@@ -1411,7 +1487,7 @@ replay-generate session_id config_name="":
     
     echo ""
     echo "✅ Replay configuration generated: ${OUTPUT_CONFIG}"
-    echo "📊 Actions: ${ACTION_COUNT} semantic → 6 debug (simplified)"
+    echo "📊 Actions: ${ACTION_COUNT} semantic → ${#DEBUG_ACTIONS[@]} debug (parsed from actual session)"
     echo ""
     echo "🎮 To test the replay:"
     echo "   just test-android-target ${CLEAN_CONFIG_NAME}"

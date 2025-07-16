@@ -1,0 +1,38 @@
+{
+  "description": "Upgrade Player Test - Transition to DRAFT state and upgrade cards (captured from actual gameplay)",
+  "session_id": "session_20250716_163501_e0789920",
+  "generation_timestamp": "2025-07-16T18:47:04+02:00",
+  "semantic_action_count": 2,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "source_session": "session_20250716_163501_e0789920",
+    "generation_method": "justfile_replay_generate",
+    "config_name": "upgrade-player-test-final",
+    "capture_timestamp": "20250716_184704",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      "c2e0aca56b8b5ee006003545bb5382a4176fc7cc965e01453a5aa8a262b9cc8a"
+    ]
+  }
+}
