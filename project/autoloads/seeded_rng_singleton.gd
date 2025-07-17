@@ -2,14 +2,14 @@ extends Node
 
 # Autonomous RNG seed initialization system
 # Automatically reads seeds from debug configs during _ready()
-# 
+#
 # Config format for deterministic tests:
 # {
 #   "checksum_config": {
 #     "initial_seed": 12345
 #   }
 # }
-# 
+#
 # NO EXPLICIT ACTIONS NEEDED - seeds are applied before game systems initialize
 
 var seeded_rng: DeterministicRNG = DeterministicRNG.new(1)  # Force deterministic construction
@@ -21,7 +21,7 @@ func _ready() -> void:
 	# Autonomous seed configuration during autoload initialization
 	# This happens before any game systems can consume RNG values
 	var debug_seed: int = DebugConfigReader.get_debug_seed()
-	
+
 	if debug_seed != 12345:  # 12345 is the default fallback in DebugConfigReader
 		_seed = debug_seed
 		_seed_source = "debug_config"
@@ -51,10 +51,10 @@ func _ready() -> void:
 					{"seed": _seed, "source": _seed_source},
 					["debug", "rng", "initialization"]
 				)
-	
+
 	# Initialize the RNG immediately with the configured seed
 	seeded_rng.reset(_seed)
-	
+
 	if Log:
 		Log.info(
 			"RNG autoload initialization complete",
