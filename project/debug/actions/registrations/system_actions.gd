@@ -494,7 +494,7 @@ static func _replay_complete() -> bool:
 			},
 			["debug", "replay", "automated", "quit"]
 		)
-		
+
 		# Send TEST_COMPLETE signal before quitting for test framework recognition
 		var current_test_id: String = DebugAction.get_current_test_id()
 		Log.info(
@@ -506,7 +506,7 @@ static func _replay_complete() -> bool:
 			},
 			["debug", "test", "test_id"]
 		)
-		
+
 		if not current_test_id.is_empty():
 			Log.info(
 				"TEST_COMPLETE_" + current_test_id,
@@ -523,7 +523,7 @@ static func _replay_complete() -> bool:
 			var config_name: String = "unknown-config"
 			if OS.has_environment("CURRENT_CONFIG_NAME"):
 				config_name = OS.get_environment("CURRENT_CONFIG_NAME")
-			
+
 			var fallback_test_id: String = config_name + "_" + str(int(Time.get_unix_time_from_system()))
 			Log.info(
 				"TEST_COMPLETE_" + fallback_test_id,
@@ -536,7 +536,7 @@ static func _replay_complete() -> bool:
 				},
 				["debug", "test", "complete", "automated"]
 			)
-		
+
 		# Quit automatically for CI/automated testing
 		return _quit_application()
 	else:
@@ -618,11 +618,11 @@ static func _capture_rng_state() -> bool:
 	if not is_instance_valid(rng) or not rng.seeded_rng:
 		Log.error("RNG system not available for state capture", {}, ["debug", "rng", "error"])
 		return false
-	
+
 	# Generate checksum from RNG sequence (same method as determinism tests)
 	var rng_sequence: Array = rng.seeded_rng._result_sequence
 	var rng_checksum: String = str(rng_sequence).md5_text()
-	
+
 	# Log RNG state capture for test framework recognition
 	Log.info(
 		"FINAL_STATE_CAPTURED",
@@ -636,7 +636,7 @@ static func _capture_rng_state() -> bool:
 		},
 		["final_state", "checksum", "rng", "seed_validation"]
 	)
-	
+
 	Log.debug(
 		"RNG state capture completed",
 		{
@@ -646,7 +646,7 @@ static func _capture_rng_state() -> bool:
 		},
 		["debug", "rng", "state"]
 	)
-	
+
 	return true
 
 
