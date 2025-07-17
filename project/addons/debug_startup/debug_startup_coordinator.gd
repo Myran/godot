@@ -87,7 +87,11 @@ func startDebugCoordinator() -> void:
 				"dispatch_timestamp": Time.get_unix_time_from_system()
 			}, ["debug", "startup", "dispatch", "diagnostic"])
 			var callable := Callable(action, "execute_with_params").bind(params)
-			core.action(core.SystemIdleActionEvent.new(callable))
+			
+			# Determine if this action should auto-continue to next action
+			var auto_continue: bool = _should_action_auto_continue(action_name)
+			
+			core.action(core.SystemIdleActionEvent.new(callable, auto_continue))
 		else:
 			Log.error("Action not found, cannot dispatch", {
 				"action": action_name,
@@ -453,3 +457,33 @@ func _cleanup_mobile_config() -> void:
 			Log.error("Could not access user:// directory for cleanup", {}, ["debug", "startup", "error"])
 	else:
 		Log.debug("No external config file to clean up", {}, ["debug", "startup"])
+
+
+func _should_action_auto_continue(action_name: String) -> bool:
+	"""
+	Determine if an action should automatically continue to the next queued action
+	or wait for natural completion events (DraftSteadyEvent, LineupOperationCompleteEvent, etc.)
+	
+	Auto-continue actions: Simple utilities that don't trigger complex cascades
+	Wait actions: Complex operations that need time for animations/cascades to complete
+	"""
+	
+	# Auto-continue actions (immediate continuation)
+	var auto_continue_patterns: Array[String] = [
+		"system.debug.hide_menu",
+		"system.debug.show_menu", 
+		"system.debug.replay_complete",
+		"system.debug.finalize_replay_validation",
+		"system.debug.quit_application",
+		"system.memory.",
+		"system.network.rtdb_status"
+	]
+	
+	# Check if action matches any auto-continue pattern
+	for pattern: String in auto_continue_patterns:
+		if action_name.begins_with(pattern):
+			return true
+	
+	# All other actions wait for natural completion events
+	# This includes: game.state.transition_player, game.draft.upgrade_player, etc.
+	return false
