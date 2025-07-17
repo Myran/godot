@@ -11,32 +11,32 @@ extends RefCounted
 static func get_debug_seed() -> int:
 	"""Get debug seed from config file. Returns default (12345) if not found or invalid."""
 	var config_data: Dictionary = _read_config_file()
-	
+
 	# Check for checksum_config.initial_seed (primary)
 	if config_data.has("checksum_config"):
 		var checksum_config: Dictionary = config_data.checksum_config
 		if checksum_config.has("initial_seed"):
-			var seed: int = checksum_config.initial_seed
+			var _seed: int = checksum_config.initial_seed
 			# Log at info level since this affects determinism
 			if Log:
 				Log.info(
 					"Debug seed loaded from checksum_config.initial_seed",
-					{"seed": seed},
+					{"seed": _seed},
 					["debug", "rng", "config", "seed"]
 				)
-			return seed
-	
+			return _seed
+
 	# Fallback to legacy seed field
 	if config_data.has("seed"):
-		var seed: int = config_data.seed
+		var _seed: int = config_data.seed
 		if Log:
 			Log.info(
 				"Debug seed loaded from legacy seed field",
-				{"seed": seed},
+				{"seed": _seed},
 				["debug", "rng", "config", "seed"]
 			)
-		return seed
-	
+		return _seed
+
 	# No seed found - use default
 	var default_seed: int = 12345
 	if Log:
@@ -56,7 +56,7 @@ static func get_full_config() -> Dictionary:
 static func _read_config_file() -> Dictionary:
 	"""Internal method to read and parse debug config file."""
 	var config_path: String = _get_config_path()
-	
+
 	if not FileAccess.file_exists(config_path):
 		if Log:
 			Log.debug(
@@ -65,7 +65,7 @@ static func _read_config_file() -> Dictionary:
 				["debug", "config", "file"]
 			)
 		return {}
-	
+
 	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 	if not file:
 		if Log:
@@ -75,13 +75,13 @@ static func _read_config_file() -> Dictionary:
 				["debug", "config", "file", "error"]
 			)
 		return {}
-	
+
 	var json_text: String = file.get_as_text()
 	file.close()
-	
+
 	var json: JSON = JSON.new()
 	var result: Error = json.parse(json_text)
-	
+
 	if result != OK:
 		if Log:
 			Log.warning(
@@ -94,7 +94,7 @@ static func _read_config_file() -> Dictionary:
 				["debug", "config", "file", "json", "error"]
 			)
 		return {}
-	
+
 	var data: Dictionary = json.data
 	if Log:
 		Log.debug(
@@ -106,7 +106,7 @@ static func _read_config_file() -> Dictionary:
 			},
 			["debug", "config", "file"]
 		)
-	
+
 	return data
 
 
