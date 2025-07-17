@@ -244,9 +244,15 @@ class LineupOperationCompleteEvent:
 class SystemIdleActionEvent:
 	extends CoreEvent
 	var action_callable: Callable
+	var auto_continue: bool
 
-	func _init(callable: Callable) -> void:
+	func _init(callable: Callable, should_auto_continue: bool = false) -> void:
 		action_callable = callable
+		auto_continue = should_auto_continue
+
+
+class ProcessQueueEvent:
+	extends CoreEvent
 
 
 class RemoveBlockFromDraft:
