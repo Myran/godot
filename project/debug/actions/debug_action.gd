@@ -800,21 +800,17 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 	if action_callable.is_valid():
 		# Execute the action with parameters
-		# Try calling with parameters first, fall back to no parameters if it fails
 		if params.is_empty():
 			# No parameters provided, use legacy call
 			result = await action_callable.call()
 		else:
-			# Parameters provided, try to call with them
-			# If the action doesn't support parameters, fall back to no parameters
-			# Note: GDScript doesn't have try/catch, so we'll just call without parameters
-			# for now and let the actions handle parameters individually
+			# Parameters provided, call with them
 			Log.debug(
-				"Action called with parameters, but action methods don't support parameters yet",
+				"Action called with parameters",
 				{"action": action_name, "params": params},
 				["debug", "action", "params"]
 			)
-			result = await action_callable.call()
+			result = await action_callable.call(params)
 
 		# Determine success based on standardized return patterns
 		success = _evaluate_action_result(result)
