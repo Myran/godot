@@ -895,7 +895,7 @@ replay-generate-from-last-session config_name:
     
     if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
         echo "🤖 Detected Android - using adb logcat"
-        SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+        SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1 || echo "")
     else
         echo "🖥️  Detected Desktop - using desktop logs"
         PROJECT_LOGS_DIR="./logs"
@@ -920,7 +920,7 @@ replay-generate-from-last-session config_name:
         fi
         
         if [ -n "$LATEST_LOG" ]; then
-            SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 || echo "")
+            SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' || echo "")
         fi
     fi
     
