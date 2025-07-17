@@ -317,7 +317,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-
 	registry.register_action(
 		(
 			DebugAction
@@ -510,11 +509,7 @@ static func _replay_complete() -> bool:
 		if not current_test_id.is_empty():
 			Log.info(
 				"TEST_COMPLETE_" + current_test_id,
-				{
-					"test_id": current_test_id,
-					"automated_completion": true,
-					"quit_initiated": true
-				},
+				{"test_id": current_test_id, "automated_completion": true, "quit_initiated": true},
 				["debug", "test", "complete", "automated"]
 			)
 		else:
@@ -524,7 +519,9 @@ static func _replay_complete() -> bool:
 			if OS.has_environment("CURRENT_CONFIG_NAME"):
 				config_name = OS.get_environment("CURRENT_CONFIG_NAME")
 
-			var fallback_test_id: String = config_name + "_" + str(int(Time.get_unix_time_from_system()))
+			var fallback_test_id: String = (
+				config_name + "_" + str(int(Time.get_unix_time_from_system()))
+			)
 			Log.info(
 				"TEST_COMPLETE_" + fallback_test_id,
 				{
@@ -569,10 +566,22 @@ static func _replay_complete() -> bool:
 static func _detect_execution_context() -> Dictionary:
 	"""Detect execution context to determine if running in automated or manual mode"""
 	var context: Dictionary = {
-		"mode": "manual", "platform": OS.get_name(), "command_source": "unknown"  # Default to manual mode
+		"mode": "manual", "platform": OS.get_name(), "command_source": "default_manual"  # Default to manual mode
 	}
 
-	# Method 1: Check for CI environment variables
+	# Check for automated mode set by JSON metadata injection
+	# This is the unified approach used by both desktop and Android
+	if OS.has_environment("GAMETWO_TEST_MODE"):
+		var test_mode: String = OS.get_environment("GAMETWO_TEST_MODE")
+		if test_mode == "automated":
+			context.mode = "automated"
+			context.command_source = "json_metadata"
+		else:
+			context.mode = "manual"
+			context.command_source = "json_metadata"
+		return context
+
+	# Fallback: Check for CI environment variables (keep for CI/CD systems)
 	if (
 		OS.has_environment("CI")
 		or OS.has_environment("GITHUB_ACTIONS")
@@ -582,34 +591,7 @@ static func _detect_execution_context() -> Dictionary:
 		context.command_source = "ci_environment"
 		return context
 
-	# Method 2: Check command line arguments for automation flags
-	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
-	for arg: String in cmdline_args:
-		if arg == "--automated" or arg == "--ci" or arg == "--non-interactive":
-			context.mode = "automated"
-			context.command_source = "cmdline_flag"
-			return context
-
-	# Method 3: Check for test environment variables set by just commands
-	if OS.has_environment("GAMETWO_TEST_MODE"):
-		var test_mode: String = OS.get_environment("GAMETWO_TEST_MODE")
-		if test_mode == "automated":
-			context.mode = "automated"
-			context.command_source = "environment_variable"
-		else:
-			context.mode = "manual"
-			context.command_source = "environment_variable"
-		return context
-
-	# Method 4: Check for headless mode (fallback for existing systems)
-	for arg: String in cmdline_args:
-		if arg == "--headless":
-			context.mode = "automated"
-			context.command_source = "headless_flag"
-			return context
-
 	# Default: manual mode for interactive development
-	context.command_source = "default_manual"
 	return context
 
 

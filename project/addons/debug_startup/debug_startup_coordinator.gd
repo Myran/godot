@@ -128,13 +128,24 @@ func _get_action_names() -> Array:
 		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
 		return embedded_actions
 	else:
-		# Desktop: try command line first, fallback to config
+		# Desktop: try command line first, then external config, then embedded config
 		var cmd_actions := _parse_command_line()
-		return (
-			cmd_actions
-			if not cmd_actions.is_empty()
-			else _parse_config_file("res://debug_startup_actions.json")
-		)
+		if not cmd_actions.is_empty():
+			return cmd_actions
+
+		# Check user:// first (external config), then fallback to res:// (embedded config)
+		var external_config_path := "user://debug_startup_actions.json"
+		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
+		if FileAccess.file_exists(external_config_path):
+			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
+			var external_actions := _parse_config_file(external_config_path)
+			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
+			return external_actions
+
+		Log.info("Using embedded config", {"reason": "no_external_config"}, ["debug", "startup"])
+		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
+		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
+		return embedded_actions
 
 
 # Legacy method removed - we now dispatch all actions at once to idle queue
@@ -206,7 +217,7 @@ func _parse_config_file(path: String) -> Array:
 
 	# Debug: Show what we parsed from JSON
 	Log.info("JSON parsing result", {"data_keys": data.keys(), "data_size": data.size()}, ["debug", "startup", "json"])
-	
+
 	# Check for test metadata and set test context if present
 	if data.has("test_metadata"):
 		var test_metadata := data.test_metadata as Dictionary
@@ -214,7 +225,7 @@ func _parse_config_file(path: String) -> Array:
 			var test_id := str(test_metadata.test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
-	
+
 	# Check for automated mode in config metadata
 	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
 	if data.has("metadata"):

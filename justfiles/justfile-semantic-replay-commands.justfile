@@ -165,377 +165,9 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
 # DEMO CREATION FROM SESSIONS  
 # ================================
 
-# Create demo from the most recent gameplay session
-create-demo-from-last-session demo_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    DEMO_NAME="{{demo_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    # Clean demo name for filename
-    CLEAN_DEMO_NAME=$(echo "$DEMO_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
-    
-    echo "🎬 Creating demo from most recent session..."
-    echo "   Demo Name: ${CLEAN_DEMO_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    # Get platform-appropriate logs using unified LogSourceProvider
-    echo "📋 Extracting session from recent logs..."
-    
-    # Get the most recent logs (platform-agnostic)
-    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
-        echo "🤖 Detected Android - using adb logcat"
-        RECENT_LOGS=$(just logs-last 2>/dev/null | grep -v "Getting latest" || echo "")
-    else
-        echo "🖥️  Detected Desktop - using desktop logs"
-        # Check for self-contained mode first (logs in project directory)
-        PROJECT_LOGS_DIR="{{PROJECT_LOGS_DIR}}"
-        USER_DATA_DIR="{{USER_DATA_DIR}}"
-        STANDARD_LOGS_DIR="{{STANDARD_LOGS_DIR}}"
-        
-        RECENT_LOGS=""
-        LATEST_LOG=""
-        
-        # Find the most recent log file from both locations
-        PROJECT_LATEST=""
-        STANDARD_LATEST=""
-        
-        # Check self-contained logs
-        if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-            PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-        fi
-        
-        # Check standard user data logs
-        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-            STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
-        fi
-        
-        # Choose the most recent log file between the two locations
-        if [ -n "$PROJECT_LATEST" ] && [ -n "$STANDARD_LATEST" ]; then
-            # Compare modification times and use the more recent one
-            if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
-                LATEST_LOG="$PROJECT_LATEST"
-                echo "📁 Using self-contained logs (most recent): $PROJECT_LOGS_DIR"
-            else
-                LATEST_LOG="$STANDARD_LATEST"
-                echo "📁 Using standard logs (most recent): $STANDARD_LOGS_DIR"
-            fi
-        elif [ -n "$PROJECT_LATEST" ]; then
-            LATEST_LOG="$PROJECT_LATEST"
-            echo "📁 Using self-contained logs: $PROJECT_LOGS_DIR"
-        elif [ -n "$STANDARD_LATEST" ]; then
-            LATEST_LOG="$STANDARD_LATEST"
-            echo "📁 Using standard logs: $STANDARD_LOGS_DIR"
-        fi
-        
-        # Read the most recent log file
-        if [ -n "$LATEST_LOG" ]; then
-            echo "📄 Reading desktop log: $(basename "$LATEST_LOG")"
-            RECENT_LOGS=$(cat "$LATEST_LOG" 2>/dev/null || echo "")
-        fi
-    fi
-    
-    if [ -z "$RECENT_LOGS" ]; then
-        echo "❌ No recent logs found"
-        echo ""
-        echo "💡 To create a demo, you need to generate logs first:"
-        echo "   1. Run the game: just run-desktop"
-        echo "   2. Play through a sequence (draft, lineup, battle, etc.)"
-        echo "   3. Close the game to save logs"
-        echo "   4. Then try: just create-demo-from-last-session DEMO_NAME"
-        echo ""
-        echo "📂 Desktop logs locations checked:"
-        echo "   Self-contained: {{PROJECT_LOGS_DIR}}"
-        echo "   Standard: {{STANDARD_LOGS_DIR}}"
-        echo ""
-        echo "🔍 Available demos (you can test these):"
-        just list-demos 2>/dev/null || echo "   No demos available yet"
-        exit 1
-    fi
-    
-    # Extract the most recent session ID (handle both formats)
-    SESSION_ID=$(echo "$RECENT_LOGS" | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1)
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ No session found in recent logs"
-        echo ""
-        echo "💡 To generate a session with semantic actions:"
-        echo "   1. Run the game: just run-desktop"
-        echo "   2. Perform some actions (draft cards, move lineup, etc.)"
-        echo "   3. Close the game"
-        echo "   4. Then try: just create-demo-from-last-session DEMO_NAME"
-        echo ""
-        echo "🔍 Recent log sample (last 5 lines):"
-        echo "$RECENT_LOGS" | tail -5
-        echo ""
-        echo "🔍 Available demos:"
-        just list-demos 2>/dev/null || echo "   No demos available yet"
-        exit 1
-    fi
-    
-    echo "✅ Found session ID: $SESSION_ID"
-    
-    # Extract semantic actions for this session (handle both formats)
-    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"" || echo "")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Make sure you performed actions during gameplay (draft, lineup, etc.)"
-        exit 1
-    fi
-    
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions"
-    
-    # Parse semantic actions and map to debug actions
-    echo "🎬 Parsing semantic actions and mapping to debug actions..."
-    
-    # Extract semantic actions from logs for this session
-    SEMANTIC_ACTIONS=$(echo "$RECENT_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": *\"${SESSION_ID}\"")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for session: ${SESSION_ID}"
-        exit 1
-    fi
-    
-    # Create demo actions array - start with standard setup
-    DEMO_ACTIONS=()
-    DEMO_ACTIONS+=("system.debug.hide_menu")
-    
-    # Store action parameters for actions that need them
-    ACTION_PARAMS_JSON=""
-    
-    # Track action counts for indexing (using simple variables)
-    # We'll use variables like ACTION_COUNT_game_draft_remove_block_player
-    
-    # Helper function to add parameters with proper indexing
-    add_action_params() {
-        local action_name="$1"
-        local params="$2"
-        
-        # Create a safe variable name (replace dots with underscores)
-        local var_name=$(echo "$action_name" | sed 's/\./_/g')
-        local count_var="ACTION_COUNT_$var_name"
-        
-        # Get current count or default to 0
-        local count=$(eval "echo \${$count_var:-0}")
-        count=$((count + 1))
-        
-        # Update the count
-        eval "$count_var=$count"
-        
-        # Create indexed action name if count > 1
-        local indexed_name="$action_name"
-        if [ $count -gt 1 ]; then
-            indexed_name="${action_name}_${count}"
-        fi
-        
-        # Add to action_params JSON
-        if [ -z "$ACTION_PARAMS_JSON" ]; then
-            ACTION_PARAMS_JSON="\"$indexed_name\": $params"
-        else
-            ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"$indexed_name\": $params"
-        fi
-    }
-    
-    # Parse each semantic action and map to corresponding debug action
-    while IFS= read -r action_line; do
-        if [ -z "$action_line" ]; then continue; fi
-        
-        # Extract action type from JSON
-        ACTION_TYPE=$(echo "$action_line" | grep -o '"type": *"[^"]*"' | sed 's/"type": *"//' | sed 's/"//')
-        
-        case "$ACTION_TYPE" in
-            "transition.change_state")
-                DEMO_ACTIONS+=("game.state.transition_player")
-                # Extract state parameters and store for action_params section
-                FROM_STATE=$(echo "$action_line" | grep -o '"from_state": *"[^"]*"' | sed 's/"from_state": *"//' | sed 's/"//')
-                TO_STATE=$(echo "$action_line" | grep -o '"to_state": *"[^"]*"' | sed 's/"to_state": *"//' | sed 's/"//')
-                if [ -n "$TO_STATE" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.state.transition_player\": {\"from_state\":\"$FROM_STATE\",\"to_state\":\"$TO_STATE\"}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.state.transition_player\": {\"from_state\":\"$FROM_STATE\",\"to_state\":\"$TO_STATE\"}"
-                    fi
-                fi
-                ;;
-            "draft.upgrade")
-                DEMO_ACTIONS+=("game.draft.upgrade_player")
-                # Extract level parameter
-                LEVEL=$(echo "$action_line" | grep -o '"level": *[0-9]*' | sed 's/"level": *//')
-                if [ -n "$LEVEL" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.draft.upgrade_player\": {\"level\":$LEVEL}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.draft.upgrade_player\": {\"level\":$LEVEL}"
-                    fi
-                fi
-                ;;
-            "draft.reroll")
-                DEMO_ACTIONS+=("game.draft.reroll_player")
-                # Extract reroll parameters
-                COST=$(echo "$action_line" | grep -o '"cost": *[0-9]*' | sed 's/"cost": *//')
-                if [ -n "$COST" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.draft.reroll_player\": {\"cost\":$COST}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.draft.reroll_player\": {\"cost\":$COST}"
-                    fi
-                fi
-                ;;
-            "draft.toggle_line")
-                DEMO_ACTIONS+=("game.draft.toggle_column_player")
-                # Extract column toggle parameters
-                COLUMN_INDEX=$(echo "$action_line" | grep -o '"column_index": *[0-9]*' | sed 's/"column_index": *//')
-                NEW_STATE=$(echo "$action_line" | grep -o '"new_state": *\(true\|false\)' | sed 's/"new_state": *//')
-                if [ -n "$COLUMN_INDEX" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.draft.toggle_column_player\": {\"column_index\":$COLUMN_INDEX,\"new_state\":${NEW_STATE:-"true"}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.draft.toggle_column_player\": {\"column_index\":$COLUMN_INDEX,\"new_state\":${NEW_STATE:-"true"}}"
-                    fi
-                fi
-                ;;
-            "draft.remove_card")
-                DEMO_ACTIONS+=("game.draft.remove_block_player")
-                # Extract card removal parameters
-                CARD_ID=$(echo "$action_line" | grep -o '"card_id": *"[^"]*"' | sed 's/"card_id": *"//' | sed 's/"//')
-                POSITION_X=$(echo "$action_line" | grep -o '"position": *{[^}]*"x": *[0-9-]*' | grep -o '"x": *[0-9-]*' | sed 's/"x": *//')
-                POSITION_Y=$(echo "$action_line" | grep -o '"position": *{[^}]*"y": *[0-9-]*' | grep -o '"y": *[0-9-]*' | sed 's/"y": *//')
-                if [ -n "$CARD_ID" ]; then
-                    add_action_params "game.draft.remove_block_player" "{\"card_id\":\"$CARD_ID\",\"position\":{\"x\":${POSITION_X:-"-1"},\"y\":${POSITION_Y:-"-1"}}}"
-                fi
-                ;;
-            "lineup.add_card")
-                DEMO_ACTIONS+=("game.lineup.add_card_player")
-                # Extract card addition parameters
-                CARD_ID=$(echo "$action_line" | grep -o '"card_id": *"[^"]*"' | sed 's/"card_id": *"//' | sed 's/"//')
-                TARGET_POS=$(echo "$action_line" | grep -o '"target_position": *[0-9]*' | sed 's/"target_position": *//')
-                SOURCE_X=$(echo "$action_line" | grep -o '"source_position": *{[^}]*"x": *[0-9-]*' | grep -o '"x": *[0-9-]*' | sed 's/"x": *//')
-                SOURCE_Y=$(echo "$action_line" | grep -o '"source_position": *{[^}]*"y": *[0-9-]*' | grep -o '"y": *[0-9-]*' | sed 's/"y": *//')
-                if [ -n "$CARD_ID" ]; then
-                    add_action_params "game.lineup.add_card_player" "{\"card_id\":\"$CARD_ID\",\"target_position\":${TARGET_POS:-"0"},\"source_position\":{\"x\":${SOURCE_X:-"-1"},\"y\":${SOURCE_Y:-"-1"}}}"
-                fi
-                ;;
-            "lineup.move_card")
-                DEMO_ACTIONS+=("game.lineup.move_card_player")
-                # Extract card move parameters
-                CARD_ID=$(echo "$action_line" | grep -o '"card_id": *"[^"]*"' | sed 's/"card_id": *"//' | sed 's/"//')
-                FROM_POS=$(echo "$action_line" | grep -o '"from_position": *[0-9]*' | sed 's/"from_position": *//')
-                TO_POS=$(echo "$action_line" | grep -o '"to_position": *[0-9]*' | sed 's/"to_position": *//')
-                if [ -n "$CARD_ID" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.lineup.move_card_player\": {\"card_id\":\"$CARD_ID\",\"from_position\":${FROM_POS:-"0"},\"to_position\":${TO_POS:-"1"}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.lineup.move_card_player\": {\"card_id\":\"$CARD_ID\",\"from_position\":${FROM_POS:-"0"},\"to_position\":${TO_POS:-"1"}}"
-                    fi
-                fi
-                ;;
-            "lineup.remove_card")
-                DEMO_ACTIONS+=("game.lineup.remove_card_player")
-                # Extract card removal parameters
-                CARD_ID=$(echo "$action_line" | grep -o '"card_id": *"[^"]*"' | sed 's/"card_id": *"//' | sed 's/"//')
-                POSITION=$(echo "$action_line" | grep -o '"position": *[0-9]*' | sed 's/"position": *//')
-                if [ -n "$CARD_ID" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.lineup.remove_card_player\": {\"card_id\":\"$CARD_ID\",\"position\":${POSITION:-"0"}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.lineup.remove_card_player\": {\"card_id\":\"$CARD_ID\",\"position\":${POSITION:-"0"}}"
-                    fi
-                fi
-                ;;
-            "battle.start")
-                DEMO_ACTIONS+=("game.battle.start_player")
-                # Extract battle start parameters
-                PLAYER_COUNT=$(echo "$action_line" | grep -o '"player_lineup_count": *[0-9]*' | sed 's/"player_lineup_count": *//')
-                ENEMY_COUNT=$(echo "$action_line" | grep -o '"enemy_lineup_count": *[0-9]*' | sed 's/"enemy_lineup_count": *//')
-                if [ -n "$PLAYER_COUNT" ] || [ -n "$ENEMY_COUNT" ]; then
-                    if [ -z "$ACTION_PARAMS_JSON" ]; then
-                        ACTION_PARAMS_JSON="\"game.battle.start_player\": {\"player_lineup_count\":${PLAYER_COUNT:-"0"},\"enemy_lineup_count\":${ENEMY_COUNT:-"0"}}"
-                    else
-                        ACTION_PARAMS_JSON="$ACTION_PARAMS_JSON,\"game.battle.start_player\": {\"player_lineup_count\":${PLAYER_COUNT:-"0"},\"enemy_lineup_count\":${ENEMY_COUNT:-"0"}}"
-                    fi
-                fi
-                ;;
-            *)
-                echo "⚠️  Unknown semantic action type: $ACTION_TYPE (skipping)"
-                ;;
-        esac
-    done <<< "$SEMANTIC_ACTIONS"
-    
-    # Add completion action for manual demo mode (no auto-quit)
-    DEMO_ACTIONS+=("system.debug.replay_complete")
-    
-    # Count mapped actions
-    MAPPED_ACTION_COUNT=$((${#DEMO_ACTIONS[@]} - 2))  # Subtract hide_menu and replay_complete
-    echo "📊 Mapped ${ACTION_COUNT} semantic actions → ${MAPPED_ACTION_COUNT} debug actions"
-    
-    # Generate timestamps
-    GENERATION_TIMESTAMP=$(date -Iseconds)
-    
-    # Create JSON config with actual mapped actions
-    printf '{\n' > "${OUTPUT_CONFIG}"
-    printf '  "description": "Demo from gameplay session: %s (%s semantic actions)",\n' "$SESSION_ID" "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
-    printf '  "type": "demo",\n' >> "${OUTPUT_CONFIG}"
-    printf '  "session_id": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '  "generation_timestamp": "%s",\n' "$GENERATION_TIMESTAMP" >> "${OUTPUT_CONFIG}"
-    printf '  "semantic_action_count": %s,\n' "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
-    printf '  "actions": [\n' >> "${OUTPUT_CONFIG}"
-    
-    # Add all mapped actions
-    for i in "${!DEMO_ACTIONS[@]}"; do
-        if [ $i -eq $((${#DEMO_ACTIONS[@]} - 1)) ]; then
-            # Last action, no comma
-            printf '    "%s"\n' "${DEMO_ACTIONS[$i]}" >> "${OUTPUT_CONFIG}"
-        else
-            # Not last action, add comma
-            printf '    "%s",\n' "${DEMO_ACTIONS[$i]}" >> "${OUTPUT_CONFIG}"
-        fi
-    done
-    
-    printf '  ],\n' >> "${OUTPUT_CONFIG}"
-    
-    # Add action_params section if we have any parameters
-    if [ -n "$ACTION_PARAMS_JSON" ]; then
-        printf '  "action_params": {\n' >> "${OUTPUT_CONFIG}"
-        printf '    %s\n' "$ACTION_PARAMS_JSON" >> "${OUTPUT_CONFIG}"
-        printf '  },\n' >> "${OUTPUT_CONFIG}"
-    fi
-    
-    printf '  "metadata": {\n' >> "${OUTPUT_CONFIG}"
-    printf '    "source_session": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '    "generation_method": "semantic_action_mapping",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "demo_name": "%s",\n' "$CLEAN_DEMO_NAME" >> "${OUTPUT_CONFIG}"
-    printf '    "creation_timestamp": "%s",\n' "$TIMESTAMP" >> "${OUTPUT_CONFIG}"
-    printf '    "replay_mode": "demo",\n' >> "${OUTPUT_CONFIG}"
-    printf '    "auto_quit": false,\n' >> "${OUTPUT_CONFIG}"
-    printf '    "can_convert_to_test": true\n' >> "${OUTPUT_CONFIG}"
-    printf '  }\n' >> "${OUTPUT_CONFIG}"
-    printf '}\n' >> "${OUTPUT_CONFIG}"
-    
-    echo ""
-    echo "✅ Demo created: ${OUTPUT_CONFIG}"
-    # Get actual action count from generated config
-    GENERATED_ACTION_COUNT=$(jq '.actions | length' "$OUTPUT_CONFIG" 2>/dev/null || echo "?")
-    echo "📊 Actions: ${ACTION_COUNT} semantic → ${GENERATED_ACTION_COUNT} demo actions"
-    echo ""
-    echo "🎮 To test your demo:"
-    echo "   just test-android ${CLEAN_DEMO_NAME}        # Test on Android"
-    echo "   just test-desktop-target ${CLEAN_DEMO_NAME} # Test on Desktop"
-    echo ""
-    echo "🧪 To convert to regression test:"
-    echo "   just demo-to-test ${CLEAN_DEMO_NAME}"
-    echo ""
-    echo "✨ Demo stays open for verification - perfect for screenshots!"
-    echo ""
-    echo "🎉 Demo creation complete!"
-
-
-
+# NOTE: Legacy create-demo-from-last-session command removed. 
+# Use replay-generate-from-last-session instead for the same workflow.
+# Main command: replay-generate SESSION_ID CONFIG_NAME
 
 # Interactive demo creation with session selection
 create-demo-interactive:
@@ -720,7 +352,7 @@ list-demos:
         echo "📭 No demos found"
         echo ""
         echo "💡 To create demos:"
-        echo "   just create-demo-from-last-session my-demo"
+        echo "   just replay-generate-from-last-session my-demo"
         echo "   just create-demo-interactive"
         exit 0
     fi
@@ -1106,7 +738,212 @@ demo-validate-determinism demo_name runs="3":
 # SEMANTIC LOG CAPTURE & REPLAY
 # ================================
 
-# Generate replay test configuration from semantic logs (automated mode - includes quit)
+
+
+# Extract checksums from semantic logs and add to existing replay config for validation
+_extract-checksums-to-config session_id config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "📸 Extracting checksums for session: ${SESSION_ID}"
+    echo "   Config: ${CONFIG_NAME}"
+    echo "   File: ${CONFIG_FILE}"
+    echo ""
+    
+    # Verify config exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo ""
+        echo "💡 Generate the base config first:"
+        echo "   just replay-generate ${SESSION_ID} ${CONFIG_NAME}"
+        exit 1
+    fi
+    
+    # Cross-platform log detection - find the directory that contains the target session
+    PROJECT_LOGS_DIR="./logs"
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    
+    # Check which directory contains the target session
+    LOG_DIR=""
+    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$STANDARD_LOGS_DIR"
+        echo "📁 Using user data logs (session found): $LOG_DIR"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
+        LOG_DIR="$PROJECT_LOGS_DIR"
+        echo "📁 Using project logs (session found): $LOG_DIR"
+    fi
+    
+    if [ -z "$LOG_DIR" ]; then
+        echo "❌ No logs found for session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Available session IDs:"
+        find "." -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5
+        exit 1
+    fi
+    
+    echo "🔍 Searching for semantic actions with checksums..."
+    
+    # Extract semantic actions with checksums for the specified session
+    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Extract initial seed from session start
+    INITIAL_SEED=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
+    
+    if [ -z "$INITIAL_SEED" ]; then
+        INITIAL_SEED="12345"
+        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+    else
+        echo "✅ Found initial seed: ${INITIAL_SEED}"
+    fi
+    
+    # Count actions and extract checksums
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
+    
+    # Create temporary file for the enhanced config
+    TEMP_CONFIG="${CONFIG_FILE}.tmp"
+    
+    # Parse existing config and add checksum_config section
+    echo "🔧 Adding checksum validation to config..."
+    
+    # Use jq to add checksum_config section, but fall back to manual if jq not available
+    if command -v jq >/dev/null 2>&1; then
+        # Build expected_checksums array from semantic actions (avoid subshell issue)
+        TEMP_ACTIONS_FILE=$(mktemp)
+        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+        
+        CHECKSUMS_JSON="["
+        FIRST=true
+        
+        while IFS= read -r line; do
+            if [ -n "$line" ]; then
+                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
+                
+                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
+                    if [ "$FIRST" = true ]; then
+                        FIRST=false
+                    else
+                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
+                    fi
+                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
+                fi
+            fi
+        done < "$TEMP_ACTIONS_FILE"
+        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
+        
+        # Clean up temp file
+        rm -f "$TEMP_ACTIONS_FILE"
+        
+        # Add checksum_config (seed is handled autonomously via initial_seed field)
+        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
+            .checksum_config = {
+                "state_type": "player_actions",
+                "initial_seed": $initial_seed,
+                "expected_checksums": $checksums
+            } |
+            .actions = (.actions | map(select(. != "game.battle.set_seed"))) |
+            .metadata.test_type = "checksum_validation" |
+            .metadata.validation_mode = "semantic_action_checksums"
+        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
+        
+        # Replace original with enhanced version
+        mv "$TEMP_CONFIG" "$CONFIG_FILE"
+        
+        echo "✅ Checksum validation added successfully!"
+        echo ""
+        echo "📊 Checksum validation summary:"
+        echo "   Initial seed: ${INITIAL_SEED}"
+        echo "   Expected checksums: ${ACTION_COUNT}"
+        echo "   Validation mode: semantic_action_checksums"
+        echo ""
+        echo "🎮 To test with checksum validation:"
+        echo "   just test-desktop-target ${CONFIG_NAME}"
+        echo ""
+        echo "🔍 Checksums will be validated automatically during replay"
+        
+    else
+        echo "❌ jq not available - cannot automatically add checksums"
+        echo "💡 Install jq with: brew install jq"
+        echo "💡 Or manually add checksum_config section to: $CONFIG_FILE"
+        exit 1
+    fi
+
+# Generate replay config from most recent session (convenience wrapper)
+replay-generate-from-last-session config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    echo "🎬 Creating replay config from most recent session..."
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo ""
+    
+    # Auto-detect platform and get most recent session ID
+    echo "📋 Auto-detecting most recent session..."
+    
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+        echo "🤖 Detected Android - using adb logcat"
+        SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+    else
+        echo "🖥️  Detected Desktop - using desktop logs"
+        PROJECT_LOGS_DIR="./logs"
+        STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+        
+        # Find most recent log file
+        LATEST_LOG=""
+        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
+            if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+                PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+                if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
+                    LATEST_LOG="$PROJECT_LATEST"
+                else
+                    LATEST_LOG="$STANDARD_LATEST"
+                fi
+            else
+                LATEST_LOG="$STANDARD_LATEST"
+            fi
+        elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
+            LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
+        fi
+        
+        if [ -n "$LATEST_LOG" ]; then
+            SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 || echo "")
+        fi
+    fi
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ No recent session found"
+        echo ""
+        echo "💡 Make sure you've run a game session first:"
+        echo "   just run-desktop       # Desktop gameplay"
+        echo "   just run-android       # Android gameplay"
+        echo ""
+        echo "🔍 Or use explicit session ID:"
+        echo "   just replay-generate SESSION_ID ${CONFIG_NAME}"
+        exit 1
+    fi
+    
+    echo "✅ Found most recent session: ${SESSION_ID}"
+    echo ""
+    echo "📝 Generating replay config with checksum validation..."
+    
+    # Call the main replay generation command
+    just replay-generate "${SESSION_ID}" "${CONFIG_NAME}"
+
+# Generate replay config with automatic checksum validation
 replay-generate session_id config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -1117,18 +954,20 @@ replay-generate session_id config_name="":
     
     # Use session ID as config name if not provided
     if [ -z "$CONFIG_NAME" ]; then
-        CONFIG_NAME="replay-${SESSION_ID}"
+        CONFIG_NAME="replay-checksum-${SESSION_ID}"
     fi
     
     # Clean config name for filename
     CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
     OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
     
-    echo "🎬 Generating replay configuration..."
+    echo "🚀 Creating replay config with automated checksum validation..."
     echo "   Session ID: ${SESSION_ID}"
     echo "   Config Name: ${CLEAN_CONFIG_NAME}"
     echo "   Output: ${OUTPUT_CONFIG}"
     echo ""
+    
+    echo "1️⃣ Generating base replay configuration..."
     
     # Cross-platform log detection - find the directory that contains the target session
     PROJECT_LOGS_DIR="./logs"
@@ -1283,209 +1122,25 @@ replay-generate session_id config_name="":
     printf '}\n' >> "${OUTPUT_CONFIG}"
     
     echo ""
-    echo "✅ Replay configuration generated: ${OUTPUT_CONFIG}"
-    echo "📊 Actions: ${ACTION_COUNT} semantic → ${#DEBUG_ACTIONS[@]} debug (parsed from actual session)"
-    echo ""
-    echo "🎮 To test the replay:"
-    echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
-    echo ""
-    echo "📸 To add checksum validation:"
-    echo "   just _extract-checksums-to-config ${SESSION_ID} ${CLEAN_CONFIG_NAME}"
-    echo ""
-    echo "🎉 Replay generation complete!"
-
-
-# Extract checksums from semantic logs and add to existing replay config for validation
-_extract-checksums-to-config session_id config_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    SESSION_ID="{{session_id}}"
-    CONFIG_NAME="{{config_name}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
-    
-    echo "📸 Extracting checksums for session: ${SESSION_ID}"
-    echo "   Config: ${CONFIG_NAME}"
-    echo "   File: ${CONFIG_FILE}"
-    echo ""
-    
-    # Verify config exists
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config file not found: $CONFIG_FILE"
-        echo ""
-        echo "💡 Generate the base config first:"
-        echo "   just replay-generate ${SESSION_ID} ${CONFIG_NAME}"
-        exit 1
-    fi
-    
-    # Cross-platform log detection - find the directory that contains the target session
-    PROJECT_LOGS_DIR="./logs"
-    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
-    
-    # Check which directory contains the target session
-    LOG_DIR=""
-    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$STANDARD_LOGS_DIR"
-        echo "📁 Using user data logs (session found): $LOG_DIR"
-    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$PROJECT_LOGS_DIR"
-        echo "📁 Using project logs (session found): $LOG_DIR"
-    fi
-    
-    if [ -z "$LOG_DIR" ]; then
-        echo "❌ No logs found for session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Available session IDs:"
-        find "." -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5
-        exit 1
-    fi
-    
-    echo "🔍 Searching for semantic actions with checksums..."
-    
-    # Extract semantic actions with checksums for the specified session
-    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
-    
-    if [ -z "$SEMANTIC_ACTIONS" ]; then
-        echo "❌ No semantic actions found for session: ${SESSION_ID}"
-        exit 1
-    fi
-    
-    # Extract initial seed from session start
-    INITIAL_SEED=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
-    
-    if [ -z "$INITIAL_SEED" ]; then
-        INITIAL_SEED="12345"
-        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
-    else
-        echo "✅ Found initial seed: ${INITIAL_SEED}"
-    fi
-    
-    # Count actions and extract checksums
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
-    
-    # Create temporary file for the enhanced config
-    TEMP_CONFIG="${CONFIG_FILE}.tmp"
-    
-    # Parse existing config and add checksum_config section
-    echo "🔧 Adding checksum validation to config..."
-    
-    # Use jq to add checksum_config section, but fall back to manual if jq not available
-    if command -v jq >/dev/null 2>&1; then
-        # Build expected_checksums array from semantic actions (avoid subshell issue)
-        TEMP_ACTIONS_FILE=$(mktemp)
-        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+    echo "2️⃣ Adding automated checksum validation..."
+    just _extract-checksums-to-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
         
-        CHECKSUMS_JSON="["
-        FIRST=true
-        
-        while IFS= read -r line; do
-            if [ -n "$line" ]; then
-                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
-                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
-                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
-                
-                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
-                    if [ "$FIRST" = true ]; then
-                        FIRST=false
-                    else
-                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
-                    fi
-                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
-                fi
-            fi
-        done < "$TEMP_ACTIONS_FILE"
-        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
-        
-        # Clean up temp file
-        rm -f "$TEMP_ACTIONS_FILE"
-        
-        # Add checksum_config and ensure game.battle.set_seed is first action
-        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
-            .checksum_config = {
-                "state_type": "player_actions",
-                "initial_seed": $initial_seed,
-                "expected_checksums": $checksums
-            } |
-            .actions = (["game.battle.set_seed"] + (.actions | map(select(. != "game.battle.set_seed")))) |
-            .metadata.test_type = "checksum_validation" |
-            .metadata.validation_mode = "semantic_action_checksums"
-        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
-        
-        # Replace original with enhanced version
-        mv "$TEMP_CONFIG" "$CONFIG_FILE"
-        
-        echo "✅ Checksum validation added successfully!"
-        echo ""
-        echo "📊 Checksum validation summary:"
-        echo "   Initial seed: ${INITIAL_SEED}"
-        echo "   Expected checksums: ${ACTION_COUNT}"
-        echo "   Validation mode: semantic_action_checksums"
-        echo ""
-        echo "🎮 To test with checksum validation:"
-        echo "   just test-desktop-target ${CONFIG_NAME}"
-        echo ""
-        echo "🔍 Checksums will be validated automatically during replay"
-        
-    else
-        echo "❌ jq not available - cannot automatically add checksums"
-        echo "💡 Install jq with: brew install jq"
-        echo "💡 Or manually add checksum_config section to: $CONFIG_FILE"
-        exit 1
-    fi
-
-# Generate replay config with checksum validation (combined workflow)
-replay-generate-with-checksums session_id config_name="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    SESSION_ID="{{session_id}}"
-    CONFIG_NAME="{{config_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-    
-    # Use session ID as config name if not provided
-    if [ -z "$CONFIG_NAME" ]; then
-        CONFIG_NAME="replay-checksum-${SESSION_ID}"
-    fi
-    
-    # Clean config name for filename
-    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
-    
-    echo "🚀 Creating replay config with automated checksum validation..."
-    echo "   Session ID: ${SESSION_ID}"
-    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    echo "1️⃣ Generating base replay configuration..."
-    just replay-generate "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
-    
     if [ $? -eq 0 ]; then
         echo ""
-        echo "2️⃣ Adding automated checksum validation..."
-        just _extract-checksums-to-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
-        
-        if [ $? -eq 0 ]; then
-            echo ""
-            echo "🎉 Complete replay test configuration created!"
-            echo "📄 Config file: ${OUTPUT_CONFIG}"
-            echo ""
-            echo "🎮 Ready to test with automatic checksum validation:"
-            echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
-            echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
-            echo ""
-            echo "🔧 Management commands:"
-            echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
-            echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
-            echo ""
-        else
-            echo "❌ Failed to add checksum validation"
-            echo "💡 Base config created successfully, you can add checksums manually"
-            exit 1
-        fi
+        echo "🎉 Complete replay test configuration created!"
+        echo "📄 Config file: ${OUTPUT_CONFIG}"
+        echo ""
+        echo "🎮 Ready to test with automatic checksum validation:"
+        echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
+        echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
+        echo ""
+        echo "🔧 Management commands:"
+        echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
+        echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
+        echo ""
     else
-        echo "❌ Failed to generate base replay configuration"
+        echo "❌ Failed to add checksum validation"
+        echo "💡 Base config created successfully, you can add checksums manually"
         exit 1
     fi
 
@@ -2027,8 +1682,8 @@ _validate-checksums-from-logs CONFIG_FILE LOG_FILE:
         return 0
     fi
     
-    # Extract actual checksums from replay logs (skip game.battle.set_seed action)
-    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | grep -v '"action_name":"game.battle.set_seed"' | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
+    # Extract actual checksums from replay logs (seed is handled autonomously)
+    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
     
     if [ -z "$ACTUAL_DATA" ]; then
         echo "❌ No SEMANTIC_ACTION logs found in replay"

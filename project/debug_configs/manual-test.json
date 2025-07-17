@@ -1,0 +1,7 @@
+{
+  "description": "Test manual mode without auto-quit functionality",
+  "actions": [
+    "system.debug.hide_menu",
+    "system.debug.replay_complete"
+  ]
+}

@@ -8,6 +8,7 @@ extends RefCounted
 # Seeds are specified in JSON configs using: checksum_config.initial_seed
 # This eliminates timing dependencies and ensures cross-platform determinism
 
+
 static func get_debug_seed() -> int:
 	"""Get debug seed from config file. Returns default (12345) if not found or invalid."""
 	var config_data: Dictionary = _read_config_file()
@@ -60,9 +61,7 @@ static func _read_config_file() -> Dictionary:
 	if not FileAccess.file_exists(config_path):
 		if Log:
 			Log.debug(
-				"Debug config file not found",
-				{"path": config_path},
-				["debug", "config", "file"]
+				"Debug config file not found", {"path": config_path}, ["debug", "config", "file"]
 			)
 		return {}
 
@@ -99,11 +98,7 @@ static func _read_config_file() -> Dictionary:
 	if Log:
 		Log.debug(
 			"Debug config loaded successfully",
-			{
-				"path": config_path,
-				"keys": data.keys(),
-				"size": data.size()
-			},
+			{"path": config_path, "keys": data.keys(), "size": data.size()},
 			["debug", "config", "file"]
 		)
 

@@ -241,7 +241,6 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-
 	registry.register_action(
 		(
 			DebugAction

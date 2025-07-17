@@ -506,6 +506,9 @@ func _process_idle_action_queue() -> void:
 	var action_start_time: float = Time.get_unix_time_from_system()
 	var action_start_frame: int = Engine.get_process_frames()
 
+	# Log current game state before action execution
+	var current_game_state: String = core.GameState.keys()[game_handler.current_gamestate]
+
 	Log.info(
 		"=== PROCESSING IDLE ACTION FROM QUEUE ===",
 		{
@@ -513,7 +516,8 @@ func _process_idle_action_queue() -> void:
 			"action_start_time": action_start_time,
 			"action_start_frame": action_start_frame,
 			"test_id": current_test_id,
-			"ui_state_before_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
+			"ui_state_before_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
+			"game_state_before_action": current_game_state
 		},
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start", "diagnostic"]
 	)
@@ -525,6 +529,9 @@ func _process_idle_action_queue() -> void:
 	var action_end_frame: int = Engine.get_process_frames()
 	var execution_time_ms: float = (action_end_time - action_start_time) * 1000.0
 
+	# Log current game state after action execution
+	var current_game_state_after: String = core.GameState.keys()[game_handler.current_gamestate]
+
 	# Mark as not processing - the next action will be processed when system becomes idle again
 	_processing_idle_action = false
 
@@ -532,6 +539,7 @@ func _process_idle_action_queue() -> void:
 		"=== IDLE ACTION PROCESSING COMPLETE ===",
 		{
 			"remaining_queue_size": _idle_action_queue.size(),
+			"game_state_after_action": current_game_state_after,
 			"execution_time_ms": execution_time_ms,
 			"frames_elapsed": action_end_frame - action_start_frame,
 			"test_id": current_test_id,

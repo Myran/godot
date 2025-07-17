@@ -1,0 +1,15 @@
+{
+  "description": "Test automated mode with auto-quit functionality",
+  "test_metadata": {
+    "test_id": "auto-quit-test",
+    "automated": true
+  },
+  "metadata": {
+    "auto_quit": true,
+    "test_type": "auto_quit_validation"
+  },
+  "actions": [
+    "system.debug.hide_menu",
+    "system.debug.replay_complete"
+  ]
+}

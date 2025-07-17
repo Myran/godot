@@ -3,6 +3,36 @@
 # Makes validation part of ordinary testing without new commands
 
 # ================================
+# UNIFIED METADATA INJECTION FUNCTIONS
+# ================================
+
+# Helper function to inject auto_quit metadata into config JSON
+_inject-auto-quit-metadata source_config target_config auto_quit_value:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SOURCE_CONFIG="{{source_config}}"
+    TARGET_CONFIG="{{target_config}}"
+    AUTO_QUIT="{{auto_quit_value}}"
+    
+    # Read the original config
+    if [ ! -f "$SOURCE_CONFIG" ]; then
+        echo "❌ Source config not found: $SOURCE_CONFIG"
+        exit 1
+    fi
+    
+    # Use jq to inject/update the auto_quit metadata
+    jq --arg auto_quit "$AUTO_QUIT" '
+        .metadata = (.metadata // {}) | 
+        .metadata.auto_quit = ($auto_quit | test("true"))
+    ' "$SOURCE_CONFIG" > "$TARGET_CONFIG"
+    
+    echo "✅ Config updated with auto_quit: $AUTO_QUIT"
+    echo "   Source: $SOURCE_CONFIG"
+    echo "   Target: $TARGET_CONFIG"
+
+
+# ================================
 # CHECKSUM VALIDATION FUNCTIONS
 # ================================
 
@@ -308,6 +338,95 @@ test-android-target config_name:
         exit 1
     fi
 
+# Manual mode test commands that inject auto_quit: false
+test-android-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "🎯 Android Testing (Manual Mode - stays open): $CONFIG_NAME"
+    echo "==========================================================="
+    
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+    
+    # Create temporary config with auto_quit=false for manual mode
+    echo "📱 Creating temporary config with auto_quit=false for manual mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_manual"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+    
+    # Deploy config and start app using standard config-push-android
+    echo "📱 Deploying configuration and starting app..."
+    just config-push-android "$TEMP_CONFIG_NAME"
+    rm -f "$TEMP_CONFIG_PATH"
+    just restart-android-app
+    
+    echo "✅ Android test started in manual mode (app will stay open for verification)"
+
+test-desktop-manual config_name duration="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="project/debug_configs/{{config_name}}.json"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    echo "🖥️  Running desktop test: {{config_name}} (manual mode - stays open)"
+    echo "   Config: $CONFIG_FILE"
+    echo ""
+    
+    # Ensure logs directory exists for desktop
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+    
+    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
+    
+    # Copy config to the expected location for desktop startup (user directory)
+    USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
+    mkdir -p "$USER_DIR"
+    STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
+    
+    # Remove old config file if it exists to prevent stale data
+    if [ -f "$STARTUP_CONFIG" ]; then
+        echo "🧹 Removing old config file: $STARTUP_CONFIG"
+        rm "$STARTUP_CONFIG"
+    fi
+    
+    echo "📋 Injecting auto_quit=false and copying config for desktop startup: $STARTUP_CONFIG"
+    just _inject-auto-quit-metadata "$CONFIG_FILE" "$STARTUP_CONFIG" "false"
+    
+    # Verify the copy was successful
+    if [ ! -f "$STARTUP_CONFIG" ]; then
+        echo "❌ Failed to create config file: $STARTUP_CONFIG"
+        exit 1
+    fi
+    
+    # Verify the file has content
+    if [ ! -s "$STARTUP_CONFIG" ]; then
+        echo "❌ Created config file is empty: $STARTUP_CONFIG"
+        exit 1
+    fi
+    
+    echo "✅ Config file created with auto_quit=false ($(wc -c < "$STARTUP_CONFIG") bytes)"
+    
+    # Run desktop Godot with debug actions (manual mode without quit)
+    # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
+    echo "🚀 Starting desktop test in manual mode with --test-mode flag..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+        && echo "✅ Desktop test completed (app stayed open for verification)" \
+        || echo "⚠️  Desktop test completed with exit code $?"
+    
+    echo ""
+    echo "🎉 Desktop test execution complete! (App should have stayed open for verification)"
+
 # Enhanced version of test-desktop-target that includes automatic error analysis  
 test-desktop-target config_name duration="30":
     #!/usr/bin/env bash
@@ -424,9 +543,17 @@ _test-android-target-original config_name:
     echo "🚀 Starting test execution..."
     echo "============================="
     
-    # Deploy config and start app (config-push-android handles app startup if needed)
+    # Create temporary config with auto_quit=true for automated mode
+    echo "📱 Creating temporary config with auto_quit=true for automated mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_automated"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
+    
+    # Deploy config and start app using standard config-push-android
     echo "📱 Deploying configuration and starting app..."
-    just config-restart-android "$CONFIG_NAME"
+    just config-push-android "$TEMP_CONFIG_NAME"
+    rm -f "$TEMP_CONFIG_PATH"
+    just restart-android-app
     echo ""
     
     # Brief pause for app startup, then start monitoring immediately
@@ -645,13 +772,34 @@ _test-desktop-target-original config_name duration="30":
     USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
     mkdir -p "$USER_DIR"
     STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
-    echo "📋 Copying config for desktop startup: $STARTUP_CONFIG"
-    cp "$CONFIG_FILE" "$STARTUP_CONFIG"
+    
+    # Remove old config file if it exists to prevent stale data
+    if [ -f "$STARTUP_CONFIG" ]; then
+        echo "🧹 Removing old config file: $STARTUP_CONFIG"
+        rm "$STARTUP_CONFIG"
+    fi
+    
+    echo "📋 Injecting auto_quit metadata and copying config for desktop startup: $STARTUP_CONFIG"
+    just _inject-auto-quit-metadata "$CONFIG_FILE" "$STARTUP_CONFIG" "true"
+    
+    # Verify the copy was successful
+    if [ ! -f "$STARTUP_CONFIG" ]; then
+        echo "❌ Failed to create config file: $STARTUP_CONFIG"
+        exit 1
+    fi
+    
+    # Verify the file has content
+    if [ ! -s "$STARTUP_CONFIG" ]; then
+        echo "❌ Created config file is empty: $STARTUP_CONFIG"
+        exit 1
+    fi
+    
+    echo "✅ Config file created with auto_quit=true ($(wc -c < "$STARTUP_CONFIG") bytes)"
     
     # Run desktop Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
     echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
-    GAMETWO_TEST_MODE=automated ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
         && echo "✅ Desktop test completed successfully" \
         || echo "⚠️  Desktop test completed with exit code $?"
     

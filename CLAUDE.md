@@ -30,7 +30,7 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
 ### **Secondary Commands (Weekly Use)**  
 - `just test-android-target CONFIG` - Automated testing (quits after completion)
-- `just replay-generate-with-checksums SESSION_ID NAME` - Create tests from gameplay
+- `just replay-generate SESSION_ID NAME` - Create tests from gameplay
 - `just fastbuild-android` - Smart rebuild system
 
 ### **Advanced Commands (As Needed)**
@@ -208,7 +208,7 @@ just validate-gdscript                  # Fast syntax check (3 sec)
 just run-desktop                    # Shows session ID when finished
 
 # 2. Create test with one command
-just replay-generate-with-checksums SESSION_ID my-test
+just replay-generate SESSION_ID my-test
 
 # 3. Test with validation
 just test-android-target my-test    # Automated mode (quits after validation)
