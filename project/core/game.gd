@@ -24,7 +24,7 @@ signal initialization_complete
 @export var battle_handler: BattleHandler
 
 var ui_state: core.UIState = core.UIState.INITIALIZING
-var _idle_action_queue: Array[Callable] = []
+var _idle_action_queue: Array[Dictionary] = []
 var _processing_idle_action: bool = false
 
 
@@ -338,7 +338,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.DraftSteadyEvent:
 		Log.debug("Draft reached steady state - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
-		_process_idle_action_queue()
+		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.LineupOperationStartEvent:
 		Log.info("Lineup operation started - locking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
@@ -347,7 +347,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupOperationCompleteEvent:
 		Log.info("Lineup operation completed - unlocking UI", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 		ui_state = core.UIState.WAITING
-		_process_idle_action_queue()
+		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.SystemIdleActionEvent:
 		# Always add to queue and process systematically
@@ -370,8 +370,14 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			},
 			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received", "diagnostic"]
 		)
-		_idle_action_queue.append(event.action_callable)
-		_process_idle_action_queue()
+		_idle_action_queue.append({
+			"action": event.action_callable,
+			"auto_continue": event.auto_continue
+		})
+		core.action(core.ProcessQueueEvent.new())
+
+	elif event is core.ProcessQueueEvent:
+		_process_one_queue_item()
 
 	clicker.on_core_event(event, current_context)
 
@@ -458,13 +464,14 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 			core.action(core.UpdateDraftAreaEvent.new())
 
 
-func _process_idle_action_queue() -> void:
+
+func _process_one_queue_item() -> void:
 	# Enhanced diagnostic logging for idle action system
 	var timestamp: float = Time.get_unix_time_from_system()
 	var current_test_id: String = DebugAction.get_current_test_id()
 
 	Log.info(
-		"=== IDLE ACTION QUEUE PROCESSING ENTRY ===",
+		"=== PROCESSING ONE QUEUE ITEM ===",
 		{
 			"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 			"processing_idle_action": _processing_idle_action,
@@ -474,13 +481,13 @@ func _process_idle_action_queue() -> void:
 			"test_id": current_test_id,
 			"system_frame": Engine.get_process_frames()
 		},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_processing", "diagnostic"]
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_item_start", "diagnostic"]
 	)
 
 	# Only process if system is ready and not already processing
 	if ui_state != core.UIState.WAITING or _processing_idle_action or _idle_action_queue.is_empty():
 		Log.info(
-			"Idle action queue processing skipped",
+			"Queue item processing skipped",
 			{
 				"reason": _get_queue_skip_reason(),
 				"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
@@ -496,13 +503,15 @@ func _process_idle_action_queue() -> void:
 					"queue_empty": _idle_action_queue.is_empty()
 				}
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_skip", "diagnostic"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_item_skip", "diagnostic"]
 		)
 		return
 
-	# Process one action at a time, then wait for system to become idle again
+	# Process one action at a time
 	_processing_idle_action = true
-	var action: Callable = _idle_action_queue.pop_front()
+	var queue_item: Dictionary = _idle_action_queue.pop_front()
+	var action: Callable = queue_item["action"]
+	var auto_continue: bool = queue_item["auto_continue"]
 	var action_start_time: float = Time.get_unix_time_from_system()
 	var action_start_frame: int = Engine.get_process_frames()
 
@@ -510,14 +519,15 @@ func _process_idle_action_queue() -> void:
 	var current_game_state: String = core.GameState.keys()[game_handler.current_gamestate]
 
 	Log.info(
-		"=== PROCESSING IDLE ACTION FROM QUEUE ===",
+		"=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTION ===",
 		{
 			"remaining_queue_size": _idle_action_queue.size(),
 			"action_start_time": action_start_time,
 			"action_start_frame": action_start_frame,
 			"test_id": current_test_id,
 			"ui_state_before_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
-			"game_state_before_action": current_game_state
+			"game_state_before_action": current_game_state,
+			"auto_continue": auto_continue
 		},
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start", "diagnostic"]
 	)
@@ -532,11 +542,11 @@ func _process_idle_action_queue() -> void:
 	# Log current game state after action execution
 	var current_game_state_after: String = core.GameState.keys()[game_handler.current_gamestate]
 
-	# Mark as not processing - the next action will be processed when system becomes idle again
+	# Mark as not processing
 	_processing_idle_action = false
 
 	Log.info(
-		"=== IDLE ACTION PROCESSING COMPLETE ===",
+		"=== ONE QUEUE ITEM PROCESSING COMPLETE ===",
 		{
 			"remaining_queue_size": _idle_action_queue.size(),
 			"game_state_after_action": current_game_state_after,
@@ -545,26 +555,35 @@ func _process_idle_action_queue() -> void:
 			"test_id": current_test_id,
 			"ui_state_after_action": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 			"action_end_time": action_end_time,
-			"action_end_frame": action_end_frame
+			"action_end_frame": action_end_frame,
+			"auto_continue": auto_continue
 		},
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_complete", "diagnostic"]
 	)
 
-	# Defer processing next action to next frame to ensure system has chance to handle any state changes
-	if not _idle_action_queue.is_empty():
+	# Conditional continuation based on action's auto_continue flag
+	if auto_continue and not _idle_action_queue.is_empty():
 		Log.info(
-			"Deferring next idle action processing",
+			"Auto-continuing to next queue item (action requested immediate continuation)",
 			{
 				"remaining_queue_size": _idle_action_queue.size(),
-				"defer_timestamp": Time.get_unix_time_from_system(),
-				"defer_frame": Engine.get_process_frames(),
-				"test_id": current_test_id,
-				"current_ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
-				"cascade_settling_expected": true
+				"trigger_timestamp": Time.get_unix_time_from_system(),
+				"trigger_frame": Engine.get_process_frames(),
+				"test_id": DebugAction.get_current_test_id()
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "defer_next", "diagnostic"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "auto_continue", "diagnostic"]
 		)
-		call_deferred("_process_idle_action_queue")
+		core.action(core.ProcessQueueEvent.new())
+	else:
+		Log.info(
+			"Waiting for natural completion events before processing next action",
+			{
+				"auto_continue": auto_continue,
+				"remaining_queue_size": _idle_action_queue.size(),
+				"wait_reason": "action_requires_natural_completion" if not auto_continue else "queue_empty"
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "natural_wait", "diagnostic"]
+		)
 
 
 func start_game() -> void:
@@ -584,6 +603,12 @@ func mode_draft() -> void:
 	holder_enemy.visible = false
 	holder_draft.visible = true
 
+	# Ensure draft system reaches steady state to unlock UI for idle actions
+	# The clicker's update_blocks() method will emit DraftSteadyEvent when complete
+	if clicker:
+		Log.debug("Triggering draft update to reach steady state", {}, [Log.TAG_GAME_STATE, Log.TAG_DRAFT])
+		core.action(core.UpdateDraftAreaEvent.new())
+
 
 func mode_prepare() -> void:
 	Log.debug("Switching to preparation mode", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
@@ -601,7 +626,7 @@ func mode_prepare() -> void:
 		[Log.TAG_GAME_STATE, Log.TAG_UI, "state_transition_complete"]
 	)
 	ui_state = core.UIState.WAITING
-	_process_idle_action_queue()
+	core.action(core.ProcessQueueEvent.new())
 
 
 func mode_pre_battle() -> void:
@@ -754,7 +779,7 @@ func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
 func mode_post_battle() -> void:
 	Log.debug("Switching to post-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 	ui_state = core.UIState.WAITING
-	_process_idle_action_queue()
+	#_process_idle_action_queue()
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
