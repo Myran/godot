@@ -1457,8 +1457,8 @@ static func _reset_board_state() -> bool:
 	# The RNG is already properly seeded during autoload phase via DebugConfigReader
 	# No manual resetting needed for board state reset
 	Log.debug(
-		"Board state reset - RNG already deterministically initialized", 
-		{"rng_available": rng != null and rng.seeded_rng != null}, 
+		"Board state reset - RNG already deterministically initialized",
+		{"rng_available": rng != null and rng.seeded_rng != null},
 		["debug", "board", "reset"]
 	)
 
@@ -2257,7 +2257,7 @@ static func _validate_position_dict(position: Dictionary, param_name: String) ->
 	return ""
 
 
-static func _can_move_card(card_id: String, from_position: int) -> String:
+static func _can_move_card(_card_id: String, from_position: int) -> String:
 	"""Check if card can be moved from position. Returns empty string if valid."""
 	var range_error: String = _validate_range(from_position, 0, 9, "from_position")
 	if not range_error.is_empty():
