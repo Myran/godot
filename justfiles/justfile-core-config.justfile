@@ -47,6 +47,105 @@ DESKTOP_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_use
 DESKTOP_LOG_DIR_ALT := justfile_directory() + "/project/Godot/app_userdata/" + GAME_NAME + "/logs"
 
 # ================================
+# SHARED UTILITY FUNCTIONS
+# ================================
+
+# Unified desktop log retrieval function
+# Returns path to latest desktop log file, with fallback logic
+_get-desktop-log-file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Primary desktop log directory (macOS standard location)
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    # Alternative desktop log directory (project-relative)
+    DESKTOP_LOG_DIR_ALT="{{DESKTOP_LOG_DIR_ALT}}"
+    
+    # Function to find latest log in a directory
+    find_latest_log() {
+        local log_dir="$1"
+        if [ -d "$log_dir" ] && [ -n "$(ls -A "$log_dir"/*.log 2>/dev/null)" ]; then
+            ls -t "$log_dir"/*.log 2>/dev/null | head -1
+        else
+            echo ""
+        fi
+    }
+    
+    # Check primary location first
+    LATEST_LOG=$(find_latest_log "$DESKTOP_LOG_DIR")
+    
+    # If no log found in primary, check alternative location
+    if [ -z "$LATEST_LOG" ]; then
+        LATEST_LOG=$(find_latest_log "$DESKTOP_LOG_DIR_ALT")
+    fi
+    
+    # If still no log found, provide helpful error
+    if [ -z "$LATEST_LOG" ]; then
+        echo "❌ No desktop log files found in either location:" >&2
+        echo "   Primary: $DESKTOP_LOG_DIR" >&2
+        echo "   Alternative: $DESKTOP_LOG_DIR_ALT" >&2
+        echo "" >&2
+        echo "💡 Try running a test first to generate logs:" >&2
+        echo "   just test-desktop development-workflow" >&2
+        exit 1
+    fi
+    
+    # Return the log file path
+    echo "$LATEST_LOG"
+
+# Find desktop log file containing specific test ID
+# Usage: _find-desktop-log-with-test-id TEST_ID
+_find-desktop-log-with-test-id TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    
+    # Get all potential log directories
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    DESKTOP_LOG_DIR_ALT="{{DESKTOP_LOG_DIR_ALT}}"
+    
+    # Function to search for test ID in log directory
+    search_logs_for_test_id() {
+        local log_dir="$1"
+        if [ -d "$log_dir" ]; then
+            # Find all .log files and search for test ID
+            find "$log_dir" -name "*.log" -type f -exec grep -l "$TEST_ID" {} \; 2>/dev/null | head -1
+        fi
+    }
+    
+    # Search primary location first
+    LOG_FILE=$(search_logs_for_test_id "$DESKTOP_LOG_DIR")
+    
+    # If not found, search alternative location
+    if [ -z "$LOG_FILE" ]; then
+        LOG_FILE=$(search_logs_for_test_id "$DESKTOP_LOG_DIR_ALT")
+    fi
+    
+    # If still not found, provide helpful error
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No log file found containing test ID: $TEST_ID" >&2
+        echo "" >&2
+        echo "🔍 Searched in:" >&2
+        echo "   $DESKTOP_LOG_DIR" >&2
+        echo "   $DESKTOP_LOG_DIR_ALT" >&2
+        echo "" >&2
+        echo "💡 Available test IDs:" >&2
+        # Try to show available test IDs from recent logs
+        for log_dir in "$DESKTOP_LOG_DIR" "$DESKTOP_LOG_DIR_ALT"; do
+            if [ -d "$log_dir" ]; then
+                find "$log_dir" -name "*.log" -type f -exec grep -l "Test ID:" {} \; 2>/dev/null | head -3 | while read -r logfile; do
+                    echo "   $(basename "$logfile"): $(grep "Test ID:" "$logfile" 2>/dev/null | head -1 | sed 's/.*Test ID: //' || echo "No test ID found")"
+                done
+            fi
+        done
+        exit 1
+    fi
+    
+    # Return the log file path
+    echo "$LOG_FILE"
+
+# ================================
 # CREDENTIALS (Environment-based)
 # ================================
 # Only sensitive data remains as exports for security
