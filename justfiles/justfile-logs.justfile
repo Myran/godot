@@ -6,12 +6,12 @@ _logs-test-id TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
         echo "💡 Available test IDs:"
-        find test_results -name "test_logs.log" -exec basename {} \; | sed 's/test_logs.log//' | head -5
+        echo "💡 Try: just logs-last  # to see recent logs"
         exit 1
     fi
     
@@ -29,7 +29,7 @@ _logs-results-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
@@ -86,9 +86,21 @@ _logs-list-recent:
     #!/usr/bin/env bash
     echo "📁 Recent Test Results:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    find test_results -name "test_results.json" -type f | \
-    head -10 | \
-    while read file; do
+    # Use unified log retrieval to find recent test results
+    LOG_FILE=$(just _get-desktop-log-file)
+    if [ -n "$LOG_FILE" ]; then
+        echo "📄 Recent test from: $(basename "$LOG_FILE")"
+        grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -5 | cut -d'"' -f4 | while read test_id; do
+            echo "   📄 $test_id"
+        done
+    else
+        echo "❌ No recent test logs found"
+    fi
+    # Legacy approach (fallback):
+    if [ -d "test_results" ]; then
+        find test_results -name "test_results.json" -type f 2>/dev/null | \
+        head -10 | \
+        while read file; do
         if [ -f "$file" ]; then
             test_id=$(jq -r '.test_id // "unknown"' "$file" 2>/dev/null || echo "unknown")
             config=$(jq -r '.config // "unknown"' "$file" 2>/dev/null || echo "unknown")  
@@ -106,7 +118,8 @@ _logs-list-recent:
             echo "   📄 just logs $test_id"
             echo "   📊 just logs-results-only $test_id"
         fi
-    done
+        done
+    fi
 
 
 # Show errors only for a specific test ID (perfect for debugging!)
@@ -114,7 +127,7 @@ _logs-errors-only TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
@@ -135,7 +148,7 @@ _logs-performance TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    LOG_FILE=$(find test_results -name "test_logs.log" -exec grep -l "{{TEST_ID}}" {} \; | head -1)
+    LOG_FILE=$(just _find-desktop-log-with-test-id "{{TEST_ID}}")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No logs found for test ID: {{TEST_ID}}"
