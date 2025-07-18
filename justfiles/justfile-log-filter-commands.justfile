@@ -10,19 +10,8 @@ logs-tags TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🏷️  Filtering logs by tags: $TAGS"
     echo "📄 Log file: $LOG_FILE"
@@ -48,19 +37,8 @@ logs-errors TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🚨 Errors and Failures Only:"
     echo "=============================="
@@ -76,19 +54,8 @@ logs-lifecycle TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🔄 Test Lifecycle Events:"
     echo "========================="
@@ -110,26 +77,13 @@ logs-last:
     else
         echo "🖥️  Getting latest Desktop logs..."
         
-        # Try configured desktop log locations
-        LATEST_LOG=""
-        for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
-            if [ -d "$log_dir" ]; then
-                LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
-                if [ -n "$LATEST_LOG" ]; then
-                    echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
-                    echo "📁 Location: $log_dir"
-                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                    cat "$LATEST_LOG"
-                    exit 0
-                fi
-            fi
-        done
+        # Use unified log retrieval function
+        LATEST_LOG=$(just _get-desktop-log-file)
         
-        echo "❌ No desktop log files found in any configured location"
-        echo "📁 Checked:"
-        echo "   {{DESKTOP_LOG_DIR}}"
-        echo "   {{DESKTOP_LOG_DIR_ALT}}"
-        echo "💡 Run desktop game first: just run-desktop"
+        echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_LOG"
     fi
 
 # Show only performance/timing info
@@ -139,19 +93,8 @@ logs-performance TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "⚡ Performance and Timing:"
     echo "========================="
@@ -170,19 +113,8 @@ logs-summary TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "📋 Quick Summary for $TEST_ID:"
     echo "============================="
@@ -223,19 +155,8 @@ logs-list-tags TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🏷️  Available tags in $TEST_ID:"
     echo "==============================="
