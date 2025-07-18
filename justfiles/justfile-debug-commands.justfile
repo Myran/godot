@@ -9,19 +9,23 @@ debug-quick TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
         echo "🔍 Available recent test IDs:"
-        find test_results -name "test_logs.log" -exec grep -l "DEBUG_TEST_START" {} \; | head -3 | while read f; do
+        # Use unified log retrieval to find recent test IDs
+        LOG_FILE=$(just _get-desktop-log-file)
+        if [ -n "$LOG_FILE" ]; then
+            grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -3 | cut -d'"' -f4 | while read test_id; do
+                echo "   📄 $test_id"
+            done
+        else
+            echo "❌ No recent test logs found"
+        fi
+        # Legacy approach (fallback):
+        find test_results -name "test_logs.log" -exec grep -l "DEBUG_TEST_START" {} \; 2>/dev/null | head -3 | while read f; do
             test_id=$(grep "DEBUG_TEST_START" "$f" | head -1 | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 || echo "unknown")
             echo "   📄 $test_id (in $f)"
         done
@@ -35,7 +39,12 @@ debug-quick TEST_ID:
     
     # Basic stats
     total_lines=$(wc -l < "$LOG_FILE")
-    pids=$(grep "I/godot" "$LOG_FILE" | awk '{print $4}' | sort | uniq | wc -l)
+    # For desktop logs, count unique process information differently
+    if grep -q "I/godot" "$LOG_FILE"; then
+        pids=$(grep "I/godot" "$LOG_FILE" | awk '{print $4}' | sort | uniq | wc -l)
+    else
+        pids=1  # Desktop logs typically have one process
+    fi
     success_count=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
     restart_count=$(grep -c "DEBUG_TEST_RESTART_NEEDED" "$LOG_FILE" 2>/dev/null || echo "0")
     
@@ -67,14 +76,8 @@ debug-pids TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -84,24 +87,46 @@ debug-pids TEST_ID:
     echo "📱 Process ID Analysis: $TEST_ID"
     echo "================================"
     
-    unique_pids=$(grep "I/godot" "$LOG_FILE" | awk '{print $4}' | sort | uniq)
+    if grep -q "I/godot" "$LOG_FILE"; then
+        unique_pids=$(grep "I/godot" "$LOG_FILE" | awk '{print $4}' | sort | uniq)
+    else
+        unique_pids="desktop"  # Single desktop process
+    fi
     
-    for pid in $unique_pids; do
-        line_count=$(grep "$pid" "$LOG_FILE" | wc -l)
-        first_time=$(grep "$pid" "$LOG_FILE" | head -1 | awk '{print $1, $2}')
-        last_time=$(grep "$pid" "$LOG_FILE" | tail -1 | awk '{print $1, $2}')
+    # Handle different log formats (Android vs Desktop)
+    if grep -q "I/godot" "$LOG_FILE"; then
+        # Android log format
+        for pid in $unique_pids; do
+            line_count=$(grep "$pid" "$LOG_FILE" | wc -l)
+            first_time=$(grep "$pid" "$LOG_FILE" | head -1 | awk '{print $1, $2}')
+            last_time=$(grep "$pid" "$LOG_FILE" | tail -1 | awk '{print $1, $2}')
+            
+            echo ""
+            echo "📱 $pid ($line_count lines)"
+            echo "   ⏰ $first_time → $last_time"
+            
+            # Check for key events in this PID
+            recording=$(grep "$pid" "$LOG_FILE" | grep -c "RECORDING MODE" 2>/dev/null || echo "0")
+            validation=$(grep "$pid" "$LOG_FILE" | grep -c "VALIDATION MODE" 2>/dev/null || echo "0")
+            success=$(grep "$pid" "$LOG_FILE" | grep -c "DEBUG_TEST_SUCCESS" 2>/dev/null || echo "0")
+            
+            echo "   🎯 Recording: $recording, Validation: $validation, Success: $success"
+        done
+    else
+        # Desktop log format
+        first_time=$(head -1 "$LOG_FILE" | awk '{print $1, $2}')
+        last_time=$(tail -1 "$LOG_FILE" | awk '{print $1, $2}')
         
         echo ""
-        echo "📱 $pid ($line_count lines)"
+        echo "🖥️  Desktop Process ($total_lines lines)"
         echo "   ⏰ $first_time → $last_time"
         
-        # Check for key events in this PID
-        recording=$(grep "$pid" "$LOG_FILE" | grep -c "RECORDING MODE" 2>/dev/null || echo "0")
-        validation=$(grep "$pid" "$LOG_FILE" | grep -c "VALIDATION MODE" 2>/dev/null || echo "0")
-        success=$(grep "$pid" "$LOG_FILE" | grep -c "DEBUG_TEST_SUCCESS" 2>/dev/null || echo "0")
+        recording=$(grep -c "RECORDING MODE" "$LOG_FILE" 2>/dev/null || echo "0")
+        validation=$(grep -c "VALIDATION MODE" "$LOG_FILE" 2>/dev/null || echo "0")
+        success=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
         
         echo "   🎯 Recording: $recording, Validation: $validation, Success: $success"
-    done
+    fi
 
 # Show restart and phase transitions
 debug-restarts TEST_ID:
@@ -110,14 +135,8 @@ debug-restarts TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -142,14 +161,8 @@ debug-test-flow TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     if [ -z "$LOG_FILE" ]; then
         echo "❌ No log file found containing test ID: $TEST_ID"
@@ -198,7 +211,25 @@ debug-recent:
     echo "📊 Recent Test Results"
     echo "====================="
     
-    find test_results -name "test_results.json" | head -10 | while read result_file; do
+    # Use unified log retrieval to find recent test results
+    LOG_FILE=$(just _get-desktop-log-file)
+    if [ -n "$LOG_FILE" ]; then
+        echo "📄 Recent test from: $(basename "$LOG_FILE")"
+        echo "📁 Location: $(dirname "$LOG_FILE")"
+        echo ""
+        # Extract test IDs from the log
+        grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -10 | cut -d'"' -f4 | while read test_id; do
+            echo "📄 $test_id"
+            echo "   📊 just logs $test_id"
+            echo "   📊 just logs-errors-tagged $test_id"
+            echo ""
+        done
+    else
+        echo "❌ No recent test logs found"
+    fi
+    # Legacy approach (fallback):
+    if [ -d "test_results" ]; then
+        find test_results -name "test_results.json" 2>/dev/null | head -10 | while read result_file; do
         test_dir=$(dirname "$result_file")
         test_name=$(basename "$test_dir")
         
@@ -217,4 +248,5 @@ debug-recent:
             fi
             echo ""
         fi
-    done
+        done
+    fi
