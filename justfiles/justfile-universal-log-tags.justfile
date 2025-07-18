@@ -10,19 +10,8 @@ logs TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Find log file by searching for test_id within the log content
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "📋 Logs for Test: $TEST_ID"
     echo "📄 File: $LOG_FILE"
@@ -57,19 +46,8 @@ logs-errors-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🚨 Errors and Failures:"
     echo "======================="
@@ -104,19 +82,8 @@ logs-performance-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "⚡ Performance and Timing:"
     echo "========================="
@@ -151,19 +118,8 @@ logs-lifecycle-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Find log file
-    LOG_FILE=""
-    for log_file in $(find test_results -name "test_logs.log"); do
-        if grep -q "$TEST_ID" "$log_file" 2>/dev/null; then
-            LOG_FILE="$log_file"
-            break
-        fi
-    done
-    
-    if [ -z "$LOG_FILE" ]; then
-        echo "❌ No log file found containing test ID: $TEST_ID"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
     echo "🔄 Test Lifecycle Events:"
     echo "========================="
@@ -203,25 +159,8 @@ logs-desktop *TAGS:
     
     echo "🖥️  Analyzing latest Desktop logs..."
     
-    # Find the most recent log file from configured locations
-    LATEST_LOG=""
-    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
-        if [ -d "$log_dir" ]; then
-            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                break
-            fi
-        fi
-    done
-    
-    if [ -z "$LATEST_LOG" ]; then
-        echo "❌ No desktop log files found"
-        echo "📁 Checked:"
-        echo "   {{DESKTOP_LOG_DIR}}"
-        echo "   {{DESKTOP_LOG_DIR_ALT}}"
-        echo "💡 Run desktop game first: just run-desktop"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LATEST_LOG=$(just _get-desktop-log-file)
     
     echo "📄 Desktop log: $(basename "$LATEST_LOG")"
     echo "📁 Location: $(dirname "$LATEST_LOG")"
@@ -258,24 +197,8 @@ logs-desktop-errors *TAGS:
     echo "🖥️  🚨 Desktop Log Errors:"
     echo "========================="
     
-    # Find the most recent log file from configured locations
-    LATEST_LOG=""
-    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
-        if [ -d "$log_dir" ]; then
-            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                break
-            fi
-        fi
-    done
-    
-    if [ -z "$LATEST_LOG" ]; then
-        echo "❌ No desktop log files found"
-        echo "📁 Checked:"
-        echo "   {{DESKTOP_LOG_DIR}}"
-        echo "   {{DESKTOP_LOG_DIR_ALT}}"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LATEST_LOG=$(just _get-desktop-log-file)
     
     echo "📄 Analyzing: $(basename "$LATEST_LOG")"
     
@@ -311,24 +234,8 @@ logs-desktop-performance *TAGS:
     echo "🖥️  ⚡ Desktop Log Performance:"
     echo "============================="
     
-    # Find the most recent log file from configured locations
-    LATEST_LOG=""
-    for log_dir in "{{DESKTOP_LOG_DIR}}" "{{DESKTOP_LOG_DIR_ALT}}"; do
-        if [ -d "$log_dir" ]; then
-            LATEST_LOG=$(ls -t "$log_dir"/*.log 2>/dev/null | head -1)
-            if [ -n "$LATEST_LOG" ]; then
-                break
-            fi
-        fi
-    done
-    
-    if [ -z "$LATEST_LOG" ]; then
-        echo "❌ No desktop log files found"
-        echo "📁 Checked:"
-        echo "   {{DESKTOP_LOG_DIR}}"
-        echo "   {{DESKTOP_LOG_DIR_ALT}}"
-        exit 1
-    fi
+    # Use unified log retrieval function
+    LATEST_LOG=$(just _get-desktop-log-file)
     
     echo "📄 Analyzing: $(basename "$LATEST_LOG")"
     
