@@ -1,0 +1,60 @@
+{
+  "description": "Generated replay from semantic session: session_20250717_232535_ebe14490",
+  "session_id": "session_20250717_232535_ebe14490",
+  "generation_timestamp": "2025-07-17T23:26:47+02:00",
+  "semantic_action_count": 5,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.upgrade_player",
+    "game.draft.reroll_player",
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250717_232535_ebe14490",
+    "generation_method": "justfile_replay_generate",
+    "config_name": "newtest02",
+    "capture_timestamp": "20250717_232647",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "5d95e08f649b327297751a3c07fb91d18b890de53a50c4a5ec934a744f615c5a"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "6428f743ba0631e28481adc8794b8b3ec4071c57707fe02a3610ddb8aabd3fe0"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.upgrade",
+        "checksum": "2d0f05f40a976871970b6430f0c640c3f7901c8e1522f139d7a0641c819300d7"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.upgrade",
+        "checksum": "b1255e89e7b6027963b8655d1bbb92826885b5f018a81d46a1f8f34199b51b8e"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.reroll",
+        "checksum": "c0c4c3569ee6695e49f499eda0d44d1cd02af6ec8f06aff57eecf398a7465250"
+      }
+    ]
+  }
+}

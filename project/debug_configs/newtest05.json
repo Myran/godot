@@ -1,0 +1,42 @@
+{
+  "description": "Generated replay from semantic session: session_20250718_005854_1df6b47a",
+  "session_id": "session_20250718_005854_1df6b47a",
+  "generation_timestamp": "2025-07-18T00:59:11+02:00",
+  "semantic_action_count": 2,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    "game.draft.upgrade_player",
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250718_005854_1df6b47a",
+    "generation_method": "justfile_replay_generate",
+    "config_name": "newtest05",
+    "capture_timestamp": "20250718_005911",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "117034a84e40fb9985427d668d3de5c8724c97df9c9757e02eb0d1da16be5f49"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "82a3e66bf5e2e1ca4f2383ccd6b173ec652f188b1f3578eb165933f0b13bdf79"
+      }
+    ]
+  }
+}
