@@ -55,10 +55,6 @@ static func log_lineup_add_card(
 	SessionManager.log_semantic_action("lineup.add_card", data)
 
 
-static func log_lineup_remove_card(card_id: String, position: int) -> void:
-	"""Log lineup card removal action with parameters"""
-	var data: Dictionary = {"card_id": card_id, "position": position}
-	SessionManager.log_semantic_action("lineup.remove_card", data)
 
 
 # State transition logging

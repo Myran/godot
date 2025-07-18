@@ -188,15 +188,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.lineup.remove_card_player", _remove_card_player)
-			. set_category("Gameplay")
-			. set_group("Player Actions")
-			. set_description("Simulate player card removal action")
-		)
-	)
 
 	registry.register_action(
 		(
@@ -1969,80 +1960,6 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 	return true
 
 
-static func _remove_card_player(params: Dictionary = {}) -> bool:
-	"""Simulate player card removal action with parameters"""
-
-	# Step 1: Validate parameters
-	var required_params: Array[String] = ["card_id", "position"]
-	var param_error: String = _validate_required_params(params, required_params)
-	if not param_error.is_empty():
-		Log.error(
-			"Missing required parameters",
-			{"error": param_error},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "remove_card_player: " + param_error)
-		return false
-
-	var card_id: String = params.get("card_id", "")
-	var position: int = params.get("position", -1)
-
-	var removal_error: String = _can_remove_card(card_id, position)
-	if not removal_error.is_empty():
-		Log.error(
-			"Cannot remove card", {"error": removal_error}, ["debug", "replay", "player", "error"]
-		)
-		assert(false, "remove_card_player: " + removal_error)
-		return false
-
-	# Step 2: Validate game state (card removal can happen in DRAFT or PREPARE states)
-	var game: Game = _get_game_node()
-	if not game:
-		Log.error(
-			"Game node not available for card removal", {}, ["debug", "replay", "player", "error"]
-		)
-		assert(false, "remove_card_player: game node not available")
-		return false
-
-	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
-	if current_state != "DRAFT" and current_state != "PREPARE":
-		Log.error(
-			"Cannot remove cards in current state",
-			{"current_state": current_state},
-			["debug", "replay", "player", "error"]
-		)
-		assert(
-			false,
-			(
-				"remove_card_player: can only remove cards in DRAFT or PREPARE state, current: "
-				+ current_state
-			)
-		)
-		return false
-
-	# Step 3: Validate preconditions (must have lineup with cards)
-	if not core:
-		Log.error(
-			"Core system not available for card removal", {}, ["debug", "replay", "player", "error"]
-		)
-		assert(false, "remove_card_player: core system not available")
-		return false
-
-	# Step 4: Execute action (placeholder until full implementation)
-	Log.info(
-		"Simulating player card removal action",
-		{"card_id": card_id, "position": position, "params": params},
-		["debug", "replay", "player"]
-	)
-
-	# TODO: Implement actual card removal when lineup access is available
-	Log.warning(
-		"Card removal replay not fully implemented - needs lineup access",
-		{},
-		["debug", "replay", "player"]
-	)
-
-	return true
 
 
 static func _transition_player(params: Dictionary = {}) -> bool:
@@ -2285,18 +2202,6 @@ static func _can_add_card(card_id: String) -> String:
 	return ""
 
 
-static func _can_remove_card(card_id: String, position: int) -> String:
-	"""Check if card can be removed from position. Returns empty string if valid."""
-	var range_error: String = _validate_range(position, 0, 9, "position")
-	if not range_error.is_empty():
-		return range_error
-
-	if card_id.is_empty():
-		return "card_id cannot be empty"
-
-	# TODO: Add actual lineup checking when game state access is available
-	# For now, just validate basic parameters
-	return ""
 
 
 static func _can_remove_block(card_id: String, position: Dictionary) -> String:

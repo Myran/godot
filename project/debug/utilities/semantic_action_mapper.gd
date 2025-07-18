@@ -10,7 +10,6 @@ static var ACTION_MAPPINGS: Dictionary = {
 	"draft.remove_card": "game.draft.remove_block_player",
 	"lineup.move_card": "game.lineup.move_card_player",
 	"lineup.add_card": "game.lineup.add_card_player",
-	"lineup.remove_card": "game.lineup.remove_card_player",
 	"transition.change_state": "game.state.transition_player",
 	"battle.start": "game.battle.start_player"
 }

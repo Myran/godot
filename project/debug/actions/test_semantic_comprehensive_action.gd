@@ -242,7 +242,6 @@ func _test_player_event_integration() -> Dictionary:
 		"draft.place_card",
 		"draft.sell_card",
 		"lineup.set_card",
-		"lineup.remove_card",
 		"pause.toggle"
 	]
 

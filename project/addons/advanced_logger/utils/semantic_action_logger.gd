@@ -66,11 +66,6 @@ static func log_lineup_action(action_type: String, data: Dictionary = {}) -> voi
 				data.get("target_position", -1),
 				source_pos
 			)
-		"lineup.remove_card":
-			SemanticLogger.log_lineup_remove_card(
-				data.get("card_id", ""),
-				data.get("position", -1)
-			)
 		_:
 			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)
