@@ -1602,9 +1602,17 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	var event: core.UpgradeEvent = core.UpgradeEvent.new(level)
-	event.source = core.EventSource.PLAYER
-	core.action(event)
+	# Use the proper upgrade logic from draft_handler instead of creating event directly
+	# This ensures the level progression is handled correctly
+	if params.has("level"):
+		# If specific level is provided (from replay), create event directly
+		var event: core.UpgradeEvent = core.UpgradeEvent.new(params.get("level"))
+		event.source = core.EventSource.PLAYER
+		core.action(event)
+	else:
+		# If no level specified, use the draft handler's upgrade logic
+		# This will properly increment the current level and create the event
+		game.draft_handler.upgrade()
 
 	return true
 

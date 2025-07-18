@@ -1054,7 +1054,14 @@ replay-generate session_id config_name="":
                     DEBUG_ACTIONS+=("game.draft.reroll_player")
                     ;;
                 "draft.upgrade")
-                    DEBUG_ACTIONS+=("game.draft.upgrade_player")
+                    # Extract level from upgrade action data
+                    LEVEL=$(echo "$ACTION_DATA" | grep -o '"level": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                    
+                    if [ -n "$LEVEL" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.upgrade_player\", \"params\": { \"level\": $LEVEL } }")
+                    else
+                        DEBUG_ACTIONS+=("game.draft.upgrade_player")
+                    fi
                     ;;
                 "draft.toggle_column")
                     DEBUG_ACTIONS+=("game.draft.toggle_column_player")
