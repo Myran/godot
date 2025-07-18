@@ -1682,7 +1682,7 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 
 
 static func _remove_block_player(params: Dictionary = {}) -> bool:
-	"""Simulate player block removal action with parameters"""
+	"""Simulate player block removal action with parameters - mirrors normal UI flow"""
 
 	# Step 1: Validate parameters
 	var required_params: Array[String] = ["card_id", "position"]
@@ -1741,19 +1741,64 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: draft system not available")
 		return false
 
-	# Step 4: Execute action (placeholder until full implementation)
+	# Step 4: Find actual block at position (CRITICAL FIX)
+	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
+	var actual_block: Block = game.clicker.level.get_block(grid_pos)
+	
+	if not actual_block:
+		Log.error(
+			"No block found at specified position",
+			{"position": position, "grid_pos": grid_pos},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: No block found at position")
+		return false
+
+	# Step 5: Validate block matches expected card_id
+	if actual_block.object_type != core.ObjectType.CARD:
+		Log.error(
+			"Block at position is not a card",
+			{"position": position, "block_type": actual_block.object_type},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: Block is not a card")
+		return false
+
+	var actual_card_id: String = actual_block.card_info.id
+	if actual_card_id != card_id:
+		Log.error(
+			"Card ID mismatch at position",
+			{"expected": card_id, "actual": actual_card_id, "position": position},
+			["debug", "replay", "player", "error"]
+		)
+		assert(false, "remove_block_player: Card ID mismatch")
+		return false
+
+	# Step 6: Execute action using actual block reference
 	Log.info(
-		"Simulating player block removal action",
-		{"card_id": card_id, "position": position, "params": params},
+		"Simulating player block removal action with actual block reference",
+		{"card_id": card_id, "position": position, "block_found": true},
 		["debug", "replay", "player"]
 	)
 
-	# TODO: Implement actual block removal when draft area access is available
-	Log.warning(
-		"Block removal replay not fully implemented - needs draft area access",
-		{},
-		["debug", "replay", "player"]
+	# Create removal event with actual block reference (not fake block)
+	var remove_event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(actual_block, true)
+	remove_event.source = core.EventSource.PLAYER
+	core.action(remove_event)
+
+	# Step 7: Trigger cascading actions like normal UI flow (CRITICAL FIX)
+	# This mirrors what happens in input_handler.gd when update_draft = true
+	Log.info(
+		"Triggering cascading actions after block removal",
+		{"card_id": card_id, "position": position},
+		["debug", "replay", "player", "cascading"]
 	)
+	
+	# Lock UI during cascading operations
+	game.ui_state = core.UIState.LOCKED
+	
+	# Trigger the cascading update that handles gravity, refills, and matching
+	core.action(core.UpdateDraftAreaEvent.new())
 
 	return true
 
@@ -1836,7 +1881,7 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_player: core system not available")
 		return false
 
-	# Step 4: Execute action (placeholder until full implementation)
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player card move action",
 		{
@@ -1848,12 +1893,24 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# TODO: Implement actual card movement when lineup access is available
-	Log.warning(
-		"Card move replay not fully implemented - needs lineup access",
-		{},
-		["debug", "replay", "player"]
-	)
+	# Create card object for the move event
+	if not is_instance_valid(card_controller):
+		Log.error("card_controller not available for card move", {}, ["debug", "replay", "player", "error"])
+		assert(false, "move_card_player: card_controller not available")
+		return false
+
+	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
+	if not card:
+		Log.error("Failed to create card for move", {"card_id": card_id}, ["debug", "replay", "player", "error"])
+		assert(false, "move_card_player: Failed to create card")
+		return false
+
+	var typed_card: Card = card
+	typed_card.block_context = Cards.CONTEXT.LINEUP
+
+	# Create and execute the move event
+	var move_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(typed_card, from_position, to_position)
+	core.action(move_event)
 
 	return true
 
@@ -1938,7 +1995,7 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 		assert(false, "add_card_player: draft system not available")
 		return false
 
-	# Step 4: Execute action (placeholder until full implementation)
+	# Step 4: Execute action
 	Log.info(
 		"Simulating player card addition action",
 		{
@@ -1950,12 +2007,28 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# TODO: Implement actual card addition when card access is available
-	Log.warning(
-		"Card addition replay not fully implemented - needs card access",
-		{},
-		["debug", "replay", "player"]
-	)
+	# Create card object for the addition event
+	if not is_instance_valid(card_controller):
+		Log.error("card_controller not available for card addition", {}, ["debug", "replay", "player", "error"])
+		assert(false, "add_card_player: card_controller not available")
+		return false
+
+	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
+	if not card:
+		Log.error("Failed to create card for addition", {"card_id": card_id}, ["debug", "replay", "player", "error"])
+		assert(false, "add_card_player: Failed to create card")
+		return false
+
+	var typed_card: Card = card
+	typed_card.block_context = Cards.CONTEXT.LINEUP
+
+	# Step 5: Position the card in the lineup before creating the event
+	# This is crucial because LineupAddCardEvent expects the card to already be positioned
+	game.lineup_handler.add_card(typed_card, target_position)
+
+	# Create and execute the addition event
+	var add_event: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_card)
+	core.action(add_event)
 
 	return true
 
