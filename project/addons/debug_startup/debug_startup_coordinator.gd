@@ -86,7 +86,7 @@ func startDebugCoordinator() -> void:
 				"total_actions": actions.size(),
 				"dispatch_timestamp": Time.get_unix_time_from_system()
 			}, ["debug", "startup", "dispatch", "diagnostic"])
-			var callable := Callable(action, "execute_with_params").bind(params)
+			var callable := func(): action.execute_with_params(params)
 			
 			# Determine if this action should auto-continue to next action
 			var auto_continue: bool = _should_action_auto_continue(action_name)
