@@ -884,7 +884,7 @@ _extract-checksums-to-config session_id config_name:
 # ================================
 
 # Generate debug actions by reading semantic actions directly from logs (shared logic)
-_generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION_COUNT TIMESTAMP:
+_generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION_COUNT TIMESTAMP PLATFORM:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -893,19 +893,26 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
     CLEAN_CONFIG_NAME="{{CLEAN_CONFIG_NAME}}"
     ACTION_COUNT="{{ACTION_COUNT}}"
     TIMESTAMP="{{TIMESTAMP}}"
+    PLATFORM="{{PLATFORM}}"
     
     echo "🔍 Parsing semantic actions to generate debug action sequence..."
+    echo "   Platform: ${PLATFORM}"
+    echo "   Session ID: ${SESSION_ID}"
     
-    # Determine source of semantic actions based on platform
-    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+    # Get semantic actions based on explicit platform parameter
+    if [ "$PLATFORM" = "android" ]; then
         # Android: get from logs-last
+        echo "   Using Android logs (logs-last command)"
         SEMANTIC_ACTIONS=$(just logs-last 2>/dev/null | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     else
         # Desktop: get from desktop logs using unified retrieval
+        echo "   Using Desktop logs"
         LOG_FILE=$(just _get-desktop-log-file 2>/dev/null || echo "")
         if [ -n "$LOG_FILE" ]; then
+            echo "   Desktop log file: $(basename "$LOG_FILE")"
             SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
         else
+            echo "   ❌ No desktop log file found"
             SEMANTIC_ACTIONS=""
         fi
     fi
@@ -1494,7 +1501,7 @@ replay-generate-android session_id config_name="":
     echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
     
     # Generate debug actions from semantic actions (inline to avoid parameter passing issues)
-    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP"
+    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP" "android"
     
     echo ""
     echo "2️⃣ Adding automated checksum validation..."
@@ -1632,7 +1639,7 @@ replay-generate-desktop session_id config_name="":
     echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
     
     # Generate debug actions from semantic actions (inline to avoid parameter passing issues)
-    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP"
+    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP" "desktop"
     
     echo ""
     echo "2️⃣ Adding automated checksum validation..."
