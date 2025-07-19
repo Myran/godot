@@ -879,151 +879,41 @@ _extract-checksums-to-config session_id config_name:
         exit 1
     fi
 
-# Generate replay config from most recent session (convenience wrapper)
-replay-generate-from-last-session config_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_NAME="{{config_name}}"
-    
-    echo "🎬 Creating replay config from most recent session..."
-    echo "   Config Name: ${CONFIG_NAME}"
-    echo ""
-    
-    # Auto-detect platform and get most recent session ID
-    echo "📋 Auto-detecting most recent session..."
-    
-    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
-        echo "🤖 Detected Android - using adb logcat"
-        SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1 || echo "")
-    else
-        echo "🖥️  Detected Desktop - using desktop logs"
-        PROJECT_LOGS_DIR="./logs"
-        STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
-        
-        # Find most recent log file
-        LATEST_LOG=""
-        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-            STANDARD_LATEST=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-                PROJECT_LATEST=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-                if [ "$PROJECT_LATEST" -nt "$STANDARD_LATEST" ]; then
-                    LATEST_LOG="$PROJECT_LATEST"
-                else
-                    LATEST_LOG="$STANDARD_LATEST"
-                fi
-            else
-                LATEST_LOG="$STANDARD_LATEST"
-            fi
-        elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/*.log 2>/dev/null)" ]; then
-            LATEST_LOG=$(ls -t "$PROJECT_LOGS_DIR"/*.log 2>/dev/null | head -1)
-        fi
-        
-        if [ -n "$LATEST_LOG" ]; then
-            SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' || echo "")
-        fi
-    fi
-    
-    if [ -z "$SESSION_ID" ]; then
-        echo "❌ No recent session found"
-        echo ""
-        echo "💡 Make sure you've run a game session first:"
-        echo "   just run-desktop       # Desktop gameplay"
-        echo "   just run-android       # Android gameplay"
-        echo ""
-        echo "🔍 Or use explicit session ID:"
-        echo "   just replay-generate SESSION_ID ${CONFIG_NAME}"
-        exit 1
-    fi
-    
-    echo "✅ Found most recent session: ${SESSION_ID}"
-    echo ""
-    echo "📝 Generating replay config with checksum validation..."
-    
-    # Call the main replay generation command
-    just replay-generate "${SESSION_ID}" "${CONFIG_NAME}"
+# ================================
+# HELPER FUNCTIONS FOR REPLAY GENERATION
+# ================================
 
-# Generate replay config with automatic checksum validation
-replay-generate session_id config_name="":
+# Generate debug actions by reading semantic actions directly from logs (shared logic)
+_generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION_COUNT TIMESTAMP:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    SESSION_ID="{{session_id}}"
-    CONFIG_NAME="{{config_name}}"
-    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    OUTPUT_CONFIG="{{OUTPUT_CONFIG}}"
+    SESSION_ID="{{SESSION_ID}}"
+    CLEAN_CONFIG_NAME="{{CLEAN_CONFIG_NAME}}"
+    ACTION_COUNT="{{ACTION_COUNT}}"
+    TIMESTAMP="{{TIMESTAMP}}"
     
-    # Use session ID as config name if not provided
-    if [ -z "$CONFIG_NAME" ]; then
-        CONFIG_NAME="replay-checksum-${SESSION_ID}"
+    echo "🔍 Parsing semantic actions to generate debug action sequence..."
+    
+    # Determine source of semantic actions based on platform
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+        # Android: get from logs-last
+        SEMANTIC_ACTIONS=$(just logs-last 2>/dev/null | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    else
+        # Desktop: get from desktop logs using unified retrieval
+        LOG_FILE=$(just _get-desktop-log-file 2>/dev/null || echo "")
+        if [ -n "$LOG_FILE" ]; then
+            SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+        else
+            SEMANTIC_ACTIONS=""
+        fi
     fi
-    
-    # Clean config name for filename
-    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
-    
-    echo "🚀 Creating replay config with automated checksum validation..."
-    echo "   Session ID: ${SESSION_ID}"
-    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
-    echo "   Output: ${OUTPUT_CONFIG}"
-    echo ""
-    
-    echo "1️⃣ Generating base replay configuration..."
-    
-    # Cross-platform log detection - find the directory that contains the target session
-    PROJECT_LOGS_DIR="./logs"
-    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
-    
-    # Check which directory contains the target session
-    LOG_DIR=""
-    if [ -d "$STANDARD_LOGS_DIR" ] && find "$STANDARD_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$STANDARD_LOGS_DIR"
-        echo "📁 Using user data logs (session found): $LOG_DIR"
-    elif [ -d "$PROJECT_LOGS_DIR" ] && find "$PROJECT_LOGS_DIR" -name "*.log" -type f -exec grep -l "\"session_id\": \"${SESSION_ID}\"" {} \; 2>/dev/null | head -1 | grep -q .; then
-        LOG_DIR="$PROJECT_LOGS_DIR"
-        echo "📁 Using project logs (session found): $LOG_DIR"
-    elif [ -d "$STANDARD_LOGS_DIR" ] && [ "$(find "$STANDARD_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
-        LOG_DIR="$STANDARD_LOGS_DIR"
-        echo "📁 Using user data logs (fallback): $LOG_DIR"
-    elif [ -d "$PROJECT_LOGS_DIR" ] && [ "$(find "$PROJECT_LOGS_DIR" -name "*.log" -type f 2>/dev/null | wc -l)" -gt 0 ]; then
-        LOG_DIR="$PROJECT_LOGS_DIR"
-        echo "📁 Using project logs (fallback): $LOG_DIR"
-    fi
-    
-    if [ -z "$LOG_DIR" ]; then
-        echo "⚠️  No log files found in log directories"
-        echo "   Checked: $PROJECT_LOGS_DIR"
-        echo "   Checked: $STANDARD_LOGS_DIR"
-        echo "   Make sure semantic actions have been logged with session ID: ${SESSION_ID}"
-        echo ""
-        echo "💡 To capture semantic logs:"
-        echo "   1. Run: just test-android development-workflow (for Android logs)"
-        echo "   2. Run: just run-desktop (for desktop logs)"
-        echo "   3. Look for SESSION_START logs to find session IDs"
-        echo "   4. Use the session ID to generate replay config"
-        exit 1
-    fi
-    
-    echo "📋 Searching for semantic actions in logs..."
-    
-    # Extract semantic actions from logs for the specified session
-    SEMANTIC_ACTIONS=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SEMANTIC_ACTION" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     
     if [ -z "$SEMANTIC_ACTIONS" ]; then
         echo "❌ No semantic actions found for session: ${SESSION_ID}"
-        echo ""
-        echo "💡 Available session IDs in recent logs:"
-        find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START\|session_id" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
         exit 1
     fi
-    
-    # Count actions
-    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
-    echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
-    
-    # Parse semantic actions to generate appropriate debug actions
-    GENERATION_TIMESTAMP=$(date -Iseconds)
-    
-    echo "🔍 Parsing semantic actions to generate debug action sequence..."
     
     # Extract action types and data from semantic actions
     DEBUG_ACTIONS=()
@@ -1164,7 +1054,7 @@ replay-generate session_id config_name="":
     printf '{\n' > "${OUTPUT_CONFIG}"
     printf '  "description": "Generated replay from semantic session: %s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
     printf '  "session_id": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '  "generation_timestamp": "%s",\n' "$GENERATION_TIMESTAMP" >> "${OUTPUT_CONFIG}"
+    printf '  "generation_timestamp": "%s",\n' "$TIMESTAMP" >> "${OUTPUT_CONFIG}"
     printf '  "semantic_action_count": %s,\n' "$ACTION_COUNT" >> "${OUTPUT_CONFIG}"
     printf '  "actions": [\n' >> "${OUTPUT_CONFIG}"
     
@@ -1191,33 +1081,675 @@ replay-generate session_id config_name="":
     printf '  ],\n' >> "${OUTPUT_CONFIG}"
     printf '  "metadata": {\n' >> "${OUTPUT_CONFIG}"
     printf '    "source_session": "%s",\n' "$SESSION_ID" >> "${OUTPUT_CONFIG}"
-    printf '    "generation_method": "justfile_replay_generate",\n' >> "${OUTPUT_CONFIG}"
+    printf '    "generation_method": "platform_specific_replay_generate",\n' >> "${OUTPUT_CONFIG}"
     printf '    "config_name": "%s",\n' "$CLEAN_CONFIG_NAME" >> "${OUTPUT_CONFIG}"
     printf '    "capture_timestamp": "%s"\n' "$TIMESTAMP" >> "${OUTPUT_CONFIG}"
     printf '  }\n' >> "${OUTPUT_CONFIG}"
     printf '}\n' >> "${OUTPUT_CONFIG}"
     
+    echo "✅ Base config generated: ${OUTPUT_CONFIG}"
+
+# Extract checksums for Android config
+_extract-checksums-to-android-config SESSION_ID CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "📸 Extracting checksums from Android logs for session: ${SESSION_ID}"
+    echo "   Config: ${CONFIG_NAME}"
+    echo "   File: ${CONFIG_FILE}"
+    echo ""
+    
+    # Verify config exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        exit 1
+    fi
+    
+    # Get Android logs
+    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    
+    if [ -z "$ANDROID_LOGS" ]; then
+        echo "❌ No Android logs found"
+        exit 1
+    fi
+    
+    # Extract semantic actions with checksums for the specified session
+    SEMANTIC_ACTIONS=$(echo "$ANDROID_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Extract initial seed from session start
+    INITIAL_SEED=$(echo "$ANDROID_LOGS" | grep "SESSION_START" | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
+    
+    if [ -z "$INITIAL_SEED" ]; then
+        INITIAL_SEED="12345"
+        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+    else
+        echo "✅ Found initial seed: ${INITIAL_SEED}"
+    fi
+    
+    # Count actions and extract checksums
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
+    
+    # Add checksum validation using the existing logic (adapted for Android)
+    just _add-checksum-config-to-android-file "$CONFIG_FILE" "$SESSION_ID" "$INITIAL_SEED"
+
+# Extract checksums for Desktop config
+_extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    LOG_FILE="{{LOG_FILE}}"
+    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "📸 Extracting checksums from Desktop logs for session: ${SESSION_ID}"
+    echo "   Config: ${CONFIG_NAME}"
+    echo "   File: ${CONFIG_FILE}"
+    echo "   Log: $(basename "$LOG_FILE")"
+    echo ""
+    
+    # Verify config exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        exit 1
+    fi
+    
+    # Verify log file exists
+    if [ ! -f "$LOG_FILE" ]; then
+        echo "❌ Log file not found: $LOG_FILE"
+        exit 1
+    fi
+    
+    # Extract semantic actions with checksums for the specified session
+    SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Extract initial seed from session start
+    INITIAL_SEED=$(grep "SESSION_START" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
+    
+    if [ -z "$INITIAL_SEED" ]; then
+        INITIAL_SEED="12345"
+        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+    else
+        echo "✅ Found initial seed: ${INITIAL_SEED}"
+    fi
+    
+    # Count actions and extract checksums
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions with checksums"
+    
+    # Add checksum validation using the existing logic
+    just _add-checksum-config-to-desktop-file "$CONFIG_FILE" "$SESSION_ID" "$INITIAL_SEED" "$LOG_FILE"
+
+# Add checksum config to Android file
+_add-checksum-config-to-android-file CONFIG_FILE SESSION_ID INITIAL_SEED:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="{{CONFIG_FILE}}"
+    SESSION_ID="{{SESSION_ID}}"
+    INITIAL_SEED="{{INITIAL_SEED}}"
+    
+    # Get Android semantic actions
+    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    SEMANTIC_ACTIONS=$(echo "$ANDROID_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Create temporary file for the enhanced config
+    TEMP_CONFIG="${CONFIG_FILE}.tmp"
+    
+    # Parse existing config and add checksum_config section
+    echo "🔧 Adding checksum validation to config..."
+    
+    # Use jq to add checksum_config section
+    if command -v jq >/dev/null 2>&1; then
+        # Build expected_checksums array from semantic actions
+        TEMP_ACTIONS_FILE=$(mktemp)
+        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+        
+        CHECKSUMS_JSON="["
+        FIRST=true
+        
+        while IFS= read -r line; do
+            if [ -n "$line" ]; then
+                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
+                
+                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
+                    if [ "$FIRST" = true ]; then
+                        FIRST=false
+                    else
+                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
+                    fi
+                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
+                fi
+            fi
+        done < "$TEMP_ACTIONS_FILE"
+        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
+        
+        # Clean up temp file
+        rm -f "$TEMP_ACTIONS_FILE"
+        
+        # Add checksum_config
+        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
+            .checksum_config = {
+                "state_type": "player_actions",
+                "initial_seed": $initial_seed,
+                "expected_checksums": $checksums
+            } |
+            .actions = (.actions | map(select(. != "game.battle.set_seed"))) |
+            .metadata.test_type = "checksum_validation" |
+            .metadata.validation_mode = "semantic_action_checksums"
+        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
+        
+        # Replace original with enhanced version
+        mv "$TEMP_CONFIG" "$CONFIG_FILE"
+        
+        echo "✅ Checksum validation added successfully!"
+        echo ""
+        echo "📊 Checksum validation summary:"
+        echo "   Initial seed: ${INITIAL_SEED}"
+        ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+        echo "   Expected checksums: ${ACTION_COUNT}"
+        echo "   Validation mode: semantic_action_checksums"
+        
+    else
+        echo "❌ jq not available - cannot automatically add checksums"
+        echo "💡 Install jq with: brew install jq"
+        exit 1
+    fi
+
+# Add checksum config to Desktop file
+_add-checksum-config-to-desktop-file CONFIG_FILE SESSION_ID INITIAL_SEED LOG_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="{{CONFIG_FILE}}"
+    SESSION_ID="{{SESSION_ID}}"
+    INITIAL_SEED="{{INITIAL_SEED}}"
+    LOG_FILE="{{LOG_FILE}}"
+    
+    # Get Desktop semantic actions from log file
+    SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        exit 1
+    fi
+    
+    # Create temporary file for the enhanced config
+    TEMP_CONFIG="${CONFIG_FILE}.tmp"
+    
+    # Parse existing config and add checksum_config section
+    echo "🔧 Adding checksum validation to config..."
+    
+    # Use jq to add checksum_config section
+    if command -v jq >/dev/null 2>&1; then
+        # Build expected_checksums array from semantic actions
+        TEMP_ACTIONS_FILE=$(mktemp)
+        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+        
+        CHECKSUMS_JSON="["
+        FIRST=true
+        
+        while IFS= read -r line; do
+            if [ -n "$line" ]; then
+                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
+                
+                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
+                    if [ "$FIRST" = true ]; then
+                        FIRST=false
+                    else
+                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
+                    fi
+                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
+                fi
+            fi
+        done < "$TEMP_ACTIONS_FILE"
+        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
+        
+        # Clean up temp file
+        rm -f "$TEMP_ACTIONS_FILE"
+        
+        # Add checksum_config
+        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
+            .checksum_config = {
+                "state_type": "player_actions",
+                "initial_seed": $initial_seed,
+                "expected_checksums": $checksums
+            } |
+            .actions = (.actions | map(select(. != "game.battle.set_seed"))) |
+            .metadata.test_type = "checksum_validation" |
+            .metadata.validation_mode = "semantic_action_checksums"
+        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
+        
+        # Replace original with enhanced version
+        mv "$TEMP_CONFIG" "$CONFIG_FILE"
+        
+        echo "✅ Checksum validation added successfully!"
+        echo ""
+        echo "📊 Checksum validation summary:"
+        echo "   Initial seed: ${INITIAL_SEED}"
+        ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+        echo "   Expected checksums: ${ACTION_COUNT}"
+        echo "   Validation mode: semantic_action_checksums"
+        
+    else
+        echo "❌ jq not available - cannot automatically add checksums"
+        echo "💡 Install jq with: brew install jq"
+        exit 1
+    fi
+
+# Legacy function (kept for compatibility)
+_add-checksum-config-to-file CONFIG_FILE SEMANTIC_ACTIONS INITIAL_SEED:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_FILE="{{CONFIG_FILE}}"
+    SEMANTIC_ACTIONS="{{SEMANTIC_ACTIONS}}"
+    INITIAL_SEED="{{INITIAL_SEED}}"
+    
+    # Create temporary file for the enhanced config
+    TEMP_CONFIG="${CONFIG_FILE}.tmp"
+    
+    # Parse existing config and add checksum_config section
+    echo "🔧 Adding checksum validation to config..."
+    
+    # Use jq to add checksum_config section, but fall back to manual if jq not available
+    if command -v jq >/dev/null 2>&1; then
+        # Build expected_checksums array from semantic actions (avoid subshell issue)
+        TEMP_ACTIONS_FILE=$(mktemp)
+        echo "$SEMANTIC_ACTIONS" > "$TEMP_ACTIONS_FILE"
+        
+        CHECKSUMS_JSON="["
+        FIRST=true
+        
+        while IFS= read -r line; do
+            if [ -n "$line" ]; then
+                SEQUENCE=$(echo "$line" | grep -o '"sequence": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                ACTION_TYPE=$(echo "$line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
+                CHECKSUM=$(echo "$line" | grep -o '"pre_action_checksum": "[^"]*"' | cut -d'"' -f4)
+                
+                if [ -n "$SEQUENCE" ] && [ -n "$ACTION_TYPE" ] && [ -n "$CHECKSUM" ]; then
+                    if [ "$FIRST" = true ]; then
+                        FIRST=false
+                    else
+                        CHECKSUMS_JSON="${CHECKSUMS_JSON},"
+                    fi
+                    CHECKSUMS_JSON="${CHECKSUMS_JSON}{\"sequence\":${SEQUENCE},\"action\":\"${ACTION_TYPE}\",\"checksum\":\"${CHECKSUM}\"}"
+                fi
+            fi
+        done < "$TEMP_ACTIONS_FILE"
+        CHECKSUMS_JSON="${CHECKSUMS_JSON}]"
+        
+        # Clean up temp file
+        rm -f "$TEMP_ACTIONS_FILE"
+        
+        # Add checksum_config (seed is handled autonomously via initial_seed field)
+        jq --argjson initial_seed "$INITIAL_SEED" --argjson checksums "$CHECKSUMS_JSON" '
+            .checksum_config = {
+                "state_type": "player_actions",
+                "initial_seed": $initial_seed,
+                "expected_checksums": $checksums
+            } |
+            .actions = (.actions | map(select(. != "game.battle.set_seed"))) |
+            .metadata.test_type = "checksum_validation" |
+            .metadata.validation_mode = "semantic_action_checksums"
+        ' "$CONFIG_FILE" > "$TEMP_CONFIG"
+        
+        # Replace original with enhanced version
+        mv "$TEMP_CONFIG" "$CONFIG_FILE"
+        
+        echo "✅ Checksum validation added successfully!"
+        echo ""
+        echo "📊 Checksum validation summary:"
+        echo "   Initial seed: ${INITIAL_SEED}"
+        ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+        echo "   Expected checksums: ${ACTION_COUNT}"
+        echo "   Validation mode: semantic_action_checksums"
+        
+    else
+        echo "❌ jq not available - cannot automatically add checksums"
+        echo "💡 Install jq with: brew install jq"
+        echo "💡 Or manually add checksum_config section to: $CONFIG_FILE"
+        exit 1
+    fi
+
+# ================================
+# PLATFORM-SPECIFIC REPLAY GENERATION
+# ================================
+
+# Android-specific replay generation from session ID
+replay-generate-android session_id config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    
+    # Use session ID as config name if not provided
+    if [ -z "$CONFIG_NAME" ]; then
+        CONFIG_NAME="replay-android-${SESSION_ID}"
+    fi
+    
+    # Clean config name for filename
+    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    
+    echo "🚀 Creating Android replay config with automated checksum validation..."
+    echo "   Session ID: ${SESSION_ID}"
+    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo ""
+    
+    echo "1️⃣ Generating base replay configuration from Android logs..."
+    
+    # Get Android logs using existing command
+    echo "📋 Searching for semantic actions in Android logs..."
+    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    
+    if [ -z "$ANDROID_LOGS" ]; then
+        echo "❌ No Android logs found"
+        echo ""
+        echo "💡 Make sure Android device is connected and you've run a test:"
+        echo "   just test-android development-workflow"
+        exit 1
+    fi
+    
+    # Extract semantic actions from Android logs for the specified session
+    SEMANTIC_ACTIONS=$(echo "$ANDROID_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Available session IDs in recent Android logs:"
+        echo "$ANDROID_LOGS" | grep -o '"session_id": "[^"]*"' | sort -u | head -5 || echo "   No session IDs found"
+        exit 1
+    fi
+    
+    # Count actions
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
+    
+    # Generate debug actions from semantic actions (inline to avoid parameter passing issues)
+    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP"
+    
     echo ""
     echo "2️⃣ Adding automated checksum validation..."
-    just _extract-checksums-to-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
-        
+    just _extract-checksums-to-android-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}"
+    
     if [ $? -eq 0 ]; then
         echo ""
-        echo "🎉 Complete replay test configuration created!"
+        echo "🎉 Complete Android replay test configuration created!"
         echo "📄 Config file: ${OUTPUT_CONFIG}"
         echo ""
         echo "🎮 Ready to test with automatic checksum validation:"
-        echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
         echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
         echo ""
         echo "🔧 Management commands:"
-        echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
-        echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
-        echo ""
+        echo "   just test-android-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
+        echo "   just test-android-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
     else
         echo "❌ Failed to add checksum validation"
         echo "💡 Base config created successfully, you can add checksums manually"
         exit 1
+    fi
+
+# Android-specific replay generation from most recent session
+replay-generate-from-last-session-android config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    echo "🎬 Creating Android replay config from most recent session..."
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo ""
+    
+    # Check Android device connectivity
+    if ! command -v adb >/dev/null 2>&1; then
+        echo "❌ adb command not found"
+        echo "💡 Install Android SDK tools to use Android replay generation"
+        exit 1
+    fi
+    
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device detected"
+        echo "💡 Connect Android device and enable USB debugging"
+        exit 1
+    fi
+    
+    echo "📋 Getting most recent session from Android logs..."
+    SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1 || echo "")
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ No recent session found in Android logs"
+        echo ""
+        echo "💡 Make sure you've run a game session first:"
+        echo "   just test-android development-workflow"
+        echo "   just run-android-debug"
+        exit 1
+    fi
+    
+    echo "✅ Found most recent session: ${SESSION_ID}"
+    echo ""
+    echo "📝 Generating Android replay config with checksum validation..."
+    
+    # Call the Android-specific replay generation command
+    just replay-generate-android "${SESSION_ID}" "${CONFIG_NAME}"
+
+# Desktop-specific replay generation from session ID
+replay-generate-desktop session_id config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    
+    # Use session ID as config name if not provided
+    if [ -z "$CONFIG_NAME" ]; then
+        CONFIG_NAME="replay-desktop-${SESSION_ID}"
+    fi
+    
+    # Clean config name for filename
+    CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
+    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    
+    echo "🚀 Creating Desktop replay config with automated checksum validation..."
+    echo "   Session ID: ${SESSION_ID}"
+    echo "   Config Name: ${CLEAN_CONFIG_NAME}"
+    echo "   Output: ${OUTPUT_CONFIG}"
+    echo ""
+    
+    echo "1️⃣ Generating base replay configuration from Desktop logs..."
+    
+    # Use unified desktop log retrieval
+    LOG_FILE=$(just _find-desktop-log-with-test-id "${SESSION_ID}" 2>/dev/null || echo "")
+    
+    if [ -z "$LOG_FILE" ]; then
+        # Fallback to searching for session in latest desktop log
+        echo "📋 Session not found by test ID, searching latest desktop logs..."
+        LOG_FILE=$(just _get-desktop-log-file 2>/dev/null || echo "")
+        
+        if [ -z "$LOG_FILE" ]; then
+            echo "❌ No desktop log files found"
+            echo ""
+            echo "💡 Make sure you've run a desktop session first:"
+            echo "   just test-desktop development-workflow"
+            echo "   just run-desktop"
+            exit 1
+        fi
+        
+        # Check if session exists in this log file
+        if ! grep -q "\"session_id\": \"${SESSION_ID}\"" "$LOG_FILE"; then
+            echo "❌ Session ${SESSION_ID} not found in desktop logs"
+            echo ""
+            echo "💡 Available session IDs in recent desktop logs:"
+            grep -o '"session_id": "[^"]*"' "$LOG_FILE" 2>/dev/null | sort -u | head -5 || echo "   No session IDs found"
+            exit 1
+        fi
+    fi
+    
+    echo "📁 Using desktop log file: $(basename "$LOG_FILE")"
+    echo "📋 Searching for semantic actions in desktop logs..."
+    
+    # Extract semantic actions from desktop logs for the specified session
+    SEMANTIC_ACTIONS=$(grep "SEMANTIC_ACTION" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+    
+    if [ -z "$SEMANTIC_ACTIONS" ]; then
+        echo "❌ No semantic actions found for session: ${SESSION_ID}"
+        echo ""
+        echo "💡 Available session IDs in desktop logs:"
+        grep -o '"session_id": "[^"]*"' "$LOG_FILE" 2>/dev/null | sort -u | head -5 || echo "   No session IDs found"
+        exit 1
+    fi
+    
+    # Count actions
+    ACTION_COUNT=$(echo "$SEMANTIC_ACTIONS" | wc -l | tr -d ' ')
+    echo "✅ Found ${ACTION_COUNT} semantic actions for session ${SESSION_ID}"
+    
+    # Generate debug actions from semantic actions (inline to avoid parameter passing issues)
+    just _generate-debug-actions-inline "$OUTPUT_CONFIG" "$SESSION_ID" "$CLEAN_CONFIG_NAME" "$ACTION_COUNT" "$TIMESTAMP"
+    
+    echo ""
+    echo "2️⃣ Adding automated checksum validation..."
+    just _extract-checksums-to-desktop-config "${SESSION_ID}" "${CLEAN_CONFIG_NAME}" "$LOG_FILE"
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "🎉 Complete Desktop replay test configuration created!"
+        echo "📄 Config file: ${OUTPUT_CONFIG}"
+        echo ""
+        echo "🎮 Ready to test with automatic checksum validation:"
+        echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
+        echo ""
+        echo "🔧 Management commands:"
+        echo "   just test-desktop-update ${CLEAN_CONFIG_NAME}    # Update baseline (legitimate changes)"
+        echo "   just test-desktop-reset ${CLEAN_CONFIG_NAME}     # Reset baseline"
+    else
+        echo "❌ Failed to add checksum validation"
+        echo "💡 Base config created successfully, you can add checksums manually"
+        exit 1
+    fi
+
+# Desktop-specific replay generation from most recent session
+replay-generate-from-last-session-desktop config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    echo "🎬 Creating Desktop replay config from most recent session..."
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo ""
+    
+    echo "📋 Getting most recent session from Desktop logs..."
+    
+    # Use unified desktop log retrieval
+    LATEST_LOG=$(just _get-desktop-log-file 2>/dev/null || echo "")
+    
+    if [ -z "$LATEST_LOG" ]; then
+        echo "❌ No desktop log files found"
+        echo ""
+        echo "💡 Make sure you've run a desktop session first:"
+        echo "   just test-desktop development-workflow"
+        echo "   just run-desktop"
+        exit 1
+    fi
+    
+    SESSION_ID=$(grep "SESSION_START" "$LATEST_LOG" 2>/dev/null | tail -1 | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' || echo "")
+    
+    if [ -z "$SESSION_ID" ]; then
+        echo "❌ No recent session found in desktop logs"
+        echo ""
+        echo "💡 Make sure you've run a game session first:"
+        echo "   just test-desktop development-workflow"
+        echo "   just run-desktop"
+        exit 1
+    fi
+    
+    echo "✅ Found most recent session: ${SESSION_ID}"
+    echo ""
+    echo "📝 Generating Desktop replay config with checksum validation..."
+    
+    # Call the Desktop-specific replay generation command
+    just replay-generate-desktop "${SESSION_ID}" "${CONFIG_NAME}"
+
+# ================================
+# LEGACY CROSS-PLATFORM COMMANDS (AUTO-DETECTION)
+# ================================
+
+# Generate replay config from most recent session (auto-detection wrapper)
+replay-generate-from-last-session config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    echo "🎬 Creating replay config from most recent session (auto-detection)..."
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo ""
+    
+    # Auto-detect platform and delegate to platform-specific command
+    echo "📋 Auto-detecting platform..."
+    
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+        echo "🤖 Detected Android - delegating to Android-specific command"
+        echo ""
+        just replay-generate-from-last-session-android "${CONFIG_NAME}"
+    else
+        echo "🖥️  Detected Desktop - delegating to Desktop-specific command"  
+        echo ""
+        just replay-generate-from-last-session-desktop "${CONFIG_NAME}"
+    fi
+
+# Generate replay config with session ID (auto-detection wrapper)
+replay-generate session_id config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{session_id}}"
+    CONFIG_NAME="{{config_name}}"
+    
+    echo "🚀 Creating replay config with session ID (auto-detection)..."
+    echo "   Session ID: ${SESSION_ID}"
+    echo "   Config Name: ${CONFIG_NAME}"
+    echo ""
+    
+    # Auto-detect platform and delegate to platform-specific command
+    echo "📋 Auto-detecting platform..."
+    
+    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+        echo "🤖 Detected Android - delegating to Android-specific command"
+        echo ""
+        just replay-generate-android "${SESSION_ID}" "${CONFIG_NAME}"
+    else
+        echo "🖥️  Detected Desktop - delegating to Desktop-specific command"
+        echo ""
+        just replay-generate-desktop "${SESSION_ID}" "${CONFIG_NAME}"
     fi
 
 

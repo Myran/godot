@@ -1,0 +1,15 @@
+{
+  "description": "Test lineup.add_card semantic action with card ID and position parameters",
+  "actions": [
+    "system.session.start_session player_test_lineup_add_card",
+    "system.game.transition_to_draft",
+    "system.game.transition_to_lineup",
+    "game.lineup.add_card_player card_001 5 {\"x\": 2, \"y\": 1}",
+    "system.session.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 42006,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}

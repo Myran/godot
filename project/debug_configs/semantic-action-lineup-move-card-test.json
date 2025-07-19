@@ -1,0 +1,15 @@
+{
+  "description": "Test lineup.move_card semantic action with card ID and position parameters",
+  "actions": [
+    "system.session.start_session player_test_lineup_move_card",
+    "system.game.transition_to_draft",
+    "system.game.transition_to_lineup",
+    "game.lineup.move_card_player card_001 3 7",
+    "system.session.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 42005,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}

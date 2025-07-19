@@ -1,0 +1,14 @@
+{
+  "description": "Test draft.remove_card semantic action with card ID and position parameters",
+  "actions": [
+    "system.session.start_session player_test_draft_remove_card",
+    "system.game.transition_to_draft",
+    "game.draft.remove_block_player card_001 {\"x\": 1, \"y\": 2}",
+    "system.session.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 42004,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}

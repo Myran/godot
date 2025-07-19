@@ -1,0 +1,16 @@
+{
+  "description": "Test battle.start semantic action with lineup parameters",
+  "actions": [
+    "system.session.start_session player_test_battle_start",
+    "system.game.transition_to_draft",
+    "system.game.transition_to_lineup",
+    "system.game.transition_to_battle",
+    "game.battle.start_battle_player 5 3",
+    "system.session.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 42008,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}

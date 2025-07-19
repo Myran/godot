@@ -1,0 +1,14 @@
+{
+  "description": "Test draft.toggle_line semantic action with column and state parameters",
+  "actions": [
+    "system.session.start_session player_test_draft_toggle_line",
+    "system.game.transition_to_draft",
+    "game.draft.toggle_column_player 2 true",
+    "system.session.replay_complete"
+  ],
+  "checksum_config": {
+    "initial_seed": 42003,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}
