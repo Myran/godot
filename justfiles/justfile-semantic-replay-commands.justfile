@@ -928,6 +928,9 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
     DEBUG_ACTIONS=()
     DEBUG_ACTIONS+=("system.debug.hide_menu")
     
+    # Track atomic move operations to skip redundant individual actions
+    ATOMIC_MOVES=""
+    
     # Parse each semantic action and convert to debug action
     while IFS= read -r action_line; do
         if [ -n "$action_line" ]; then
@@ -989,22 +992,22 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     POSITION_Y=$(echo "$JSON_PART" | jq -r '.data.position.y // empty')
                     
                     if [ -n "$CARD_ID" ] && [ -n "$POSITION_X" ] && [ -n "$POSITION_Y" ]; then
-                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.remove_block_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"position\": { \"x\": $POSITION_X, \"y\": $POSITION_Y } } }")
+                        # Check if this remove is part of an atomic move operation
+                        IS_ATOMIC_MOVE=false
+                        for move_key in $ATOMIC_MOVES; do
+                            if [[ "$move_key" == ${CARD_ID}_${POSITION_X}_${POSITION_Y}_* ]]; then
+                                IS_ATOMIC_MOVE=true
+                                break
+                            fi
+                        done
+                        
+                        if [ "$IS_ATOMIC_MOVE" = "true" ]; then
+                            echo "   ⏭️  Skipping redundant remove action (part of atomic move): $CARD_ID from ($POSITION_X,$POSITION_Y)"
+                        else
+                            DEBUG_ACTIONS+=("{ \"action\": \"game.draft.remove_block_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"position\": { \"x\": $POSITION_X, \"y\": $POSITION_Y } } }")
+                        fi
                     else
                         DEBUG_ACTIONS+=("game.draft.remove_block_player")
-                    fi
-                    ;;
-                "lineup.add_card")
-                    # Extract card_id, target_position, and source_position from add_card action data using jq
-                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
-                    TARGET_POSITION=$(echo "$JSON_PART" | jq -r '.data.target_position // empty')
-                    SOURCE_X=$(echo "$JSON_PART" | jq -r '.data.source_position.x // empty')
-                    SOURCE_Y=$(echo "$JSON_PART" | jq -r '.data.source_position.y // empty')
-                    
-                    if [ -n "$CARD_ID" ] && [ -n "$TARGET_POSITION" ] && [ -n "$SOURCE_X" ] && [ -n "$SOURCE_Y" ]; then
-                        DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.add_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"target_position\": $TARGET_POSITION, \"source_position\": { \"x\": $SOURCE_X, \"y\": $SOURCE_Y } } }")
-                    else
-                        DEBUG_ACTIONS+=("game.lineup.add_card_player")
                     fi
                     ;;
                 "lineup.move_card")
@@ -1045,6 +1048,9 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     if [ "$MOVE_TYPE" = "draft_to_lineup" ] && [ -n "$CARD_ID" ] && [ -n "$FROM_X" ] && [ -n "$FROM_Y" ] && [ -n "$TO_POSITION" ]; then
                         echo "   🔄 Detected atomic move operation: $CARD_ID from ($FROM_X,$FROM_Y) to lineup position $TO_POSITION"
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.move_card_to_lineup_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"from_position\": { \"x\": $FROM_X, \"y\": $FROM_Y }, \"to_position\": $TO_POSITION } }")
+                        
+                        # Record this atomic move to skip redundant individual actions
+                        ATOMIC_MOVES="$ATOMIC_MOVES ${CARD_ID}_${FROM_X}_${FROM_Y}_${TO_POSITION}"
                     else
                         echo "   Warning: Incomplete or unknown move operation data"
                         DEBUG_ACTIONS+=("game.draft.move_card_to_lineup_player")

@@ -43,16 +43,6 @@ static func log_lineup_move_card(card_id: String, from_position: int, to_positio
 	SessionManager.log_semantic_action("lineup.move_card", data)
 
 
-static func log_lineup_add_card(
-	card_id: String, target_position: int, source_position: Vector2i = Vector2i(-1, -1)
-) -> void:
-	"""Log lineup card addition action with parameters"""
-	var data: Dictionary = {
-		"card_id": card_id,
-		"target_position": target_position,
-		"source_position": {"x": source_position.x, "y": source_position.y}
-	}
-	SessionManager.log_semantic_action("lineup.add_card", data)
 
 
 static func log_draft_to_lineup_move(

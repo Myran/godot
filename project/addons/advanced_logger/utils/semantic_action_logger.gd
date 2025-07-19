@@ -57,15 +57,6 @@ static func log_lineup_action(action_type: String, data: Dictionary = {}) -> voi
 				data.get("from_position", -1),
 				data.get("to_position", -1)
 			)
-		"lineup.add_card":
-			var source_pos: Vector2i = Vector2i(-1, -1)
-			if data.has("source_position") and data.source_position is Dictionary:
-				source_pos = Vector2i(data.source_position.get("x", -1), data.source_position.get("y", -1))
-			SemanticLogger.log_lineup_add_card(
-				data.get("card_id", ""),
-				data.get("target_position", -1),
-				source_pos
-			)
 		_:
 			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)

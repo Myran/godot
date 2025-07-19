@@ -161,13 +161,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 													card_id, draft_pos, holder_index
 												)
 
-												# Keep existing individual logs for backward compatibility
-												SemanticLogger.log_draft_remove_card(
-													card_id, draft_pos
-												)
-												SemanticLogger.log_lineup_add_card(
-													card_id, holder_index, draft_pos
-												)
 
 												current_context.add_event(
 													core.RemoveBlockFromDraft.new(dragging_card)

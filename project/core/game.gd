@@ -201,17 +201,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupAddCardEvent:
 		var block: Block = event.card
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
-		if event.source == core.EventSource.PLAYER:
-			# Find target position from lineup handler
-			var target_pos: int = -1
-			var lineup: Dictionary[int, Card] = lineup_handler.holder_container.get_current_lineup()
-			for pos: int in lineup.keys():
-				if lineup[pos] == block:
-					target_pos = pos
-					break
-			var card_id: String = block.card_info.id
-			SemanticLogger.log_lineup_add_card(card_id, target_pos)
 
 		core.action(core.BlockEntersPlay.new(block))
 		# detta är inte snyggt med -1,-1. antagligen behövs den inte

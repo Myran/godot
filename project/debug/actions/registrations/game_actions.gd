@@ -178,15 +178,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.lineup.add_card_player", _add_card_player)
-			. set_category("Gameplay")
-			. set_group("Player Actions")
-			. set_description("Simulate player card addition action")
-		)
-	)
 
 	registry.register_action(
 		(
@@ -1924,130 +1915,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 	return true
 
 
-static func _add_card_player(params: Dictionary = {}) -> bool:
-	"""Simulate player card addition action with parameters"""
-
-	# Step 1: Validate parameters
-	var required_params: Array[String] = ["card_id", "target_position", "source_position"]
-	var param_error: String = _validate_required_params(params, required_params)
-	if not param_error.is_empty():
-		Log.error(
-			"Missing required parameters",
-			{"error": param_error},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: " + param_error)
-		return false
-
-	var card_id: String = params.get("card_id", "")
-	var target_position: int = params.get("target_position", -1)
-	var source_position: Dictionary = params.get("source_position", {})
-
-	var add_error: String = _can_add_card(card_id)
-	if not add_error.is_empty():
-		Log.error("Cannot add card", {"error": add_error}, ["debug", "replay", "player", "error"])
-		assert(false, "add_card_player: " + add_error)
-		return false
-
-	var position_error: String = _validate_range(target_position, 0, 9, "target_position")
-	if not position_error.is_empty():
-		Log.error(
-			"Invalid target_position parameter",
-			{"error": position_error},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: " + position_error)
-		return false
-
-	var source_error: String = _validate_position_dict(source_position, "source_position")
-	if not source_error.is_empty():
-		Log.error(
-			"Invalid source_position parameter",
-			{"error": source_error},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: " + source_error)
-		return false
-
-	# Step 2: Validate game state (card addition can happen in DRAFT or PREPARE states)
-	var game: Game = _get_game_node()
-	if not game:
-		Log.error(
-			"Game node not available for card addition", {}, ["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: game node not available")
-		return false
-
-	var current_state: String = core.GameState.keys()[game.game_handler.current_gamestate]
-	if current_state != "DRAFT" and current_state != "PREPARE":
-		Log.error(
-			"Cannot add cards in current state",
-			{"current_state": current_state},
-			["debug", "replay", "player", "error"]
-		)
-		assert(
-			false,
-			(
-				"add_card_player: can only add cards in DRAFT or PREPARE state, current: "
-				+ current_state
-			)
-		)
-		return false
-
-	# Step 3: Validate preconditions (must have draft system and available cards)
-	if not game.clicker or not game.clicker.level:
-		Log.error(
-			"Draft system not available for card addition",
-			{},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: draft system not available")
-		return false
-
-	# Step 4: Execute action
-	Log.info(
-		"Simulating player card addition action",
-		{
-			"card_id": card_id,
-			"target_position": target_position,
-			"source_position": source_position,
-			"params": params
-		},
-		["debug", "replay", "player"]
-	)
-
-	# Create card object for the addition event
-	if not is_instance_valid(card_controller):
-		Log.error(
-			"card_controller not available for card addition",
-			{},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: card_controller not available")
-		return false
-
-	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
-	if not card:
-		Log.error(
-			"Failed to create card for addition",
-			{"card_id": card_id},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "add_card_player: Failed to create card")
-		return false
-
-	var typed_card: Card = card
-	typed_card.block_context = Cards.CONTEXT.LINEUP
-
-	# Step 5: Position the card in the lineup before creating the event
-	# This is crucial because LineupAddCardEvent expects the card to already be positioned
-	game.lineup_handler.add_card(typed_card, target_position)
-
-	# Create and execute the addition event
-	var add_event: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_card)
-	core.action(add_event)
-
-	return true
 
 
 static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
@@ -2390,31 +2257,6 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 	return ""
 
 
-static func _can_add_card(card_id: String) -> String:
-	"""Check if card can be added to lineup. Returns empty string if valid."""
-	if card_id.is_empty():
-		return "card_id cannot be empty"
-
-	# Get game instance for actual card availability checking
-	var game: Game = _get_game_node()
-	if not game:
-		return "game not available for validation"
-
-	# Check if data source is available for card validation
-	var data_source = game.data_source
-	if not data_source:
-		return "data source not available for card validation"
-
-	# Validate that the card ID exists in the card database
-	var card_info = data_source.cards.get_card_info(card_id)
-	if not card_info:
-		return "card_id " + card_id + " not found in card database"
-
-	# Check if lineup has space
-	if game.lineup_handler and game.lineup_handler.get_card_count() >= 10:
-		return "lineup is full (max 10 cards)"
-
-	return ""
 
 
 static func _can_remove_block(card_id: String, position: Dictionary) -> String:
