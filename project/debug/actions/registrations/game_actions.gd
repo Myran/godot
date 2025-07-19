@@ -1684,8 +1684,8 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 static func _remove_block_player(params: Dictionary = {}) -> bool:
 	"""Simulate player block removal action with parameters - mirrors normal UI flow"""
 
-	# Step 1: Validate parameters
-	var required_params: Array[String] = ["card_id", "position"]
+	# Step 1: Validate parameters - card_id is optional for locked blocks
+	var required_params: Array[String] = ["position"]
 	var param_error: String = _validate_required_params(params, required_params)
 	if not param_error.is_empty():
 		Log.error(
@@ -1754,24 +1754,35 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: No block found at position")
 		return false
 
-	# Step 5: Validate block matches expected card_id
-	if actual_block.object_type != core.ObjectType.CARD:
+	# Step 5: Validate block matches expected type and card_id
+	if actual_block.object_type == core.ObjectType.CARD:
+		# Card blocks require matching card_id
+		var actual_card_id: String = actual_block.card_info.id
+		if actual_card_id != card_id:
+			Log.error(
+				"Card ID mismatch at position",
+				{"expected": card_id, "actual": actual_card_id, "position": position},
+				["debug", "replay", "player", "error"]
+			)
+			assert(false, "remove_block_player: Card ID mismatch")
+			return false
+	elif actual_block.object_type == core.ObjectType.BLOCK_LOCKED:
+		# Locked blocks should have empty card_id
+		if not card_id.is_empty():
+			Log.error(
+				"Card ID should be empty for locked blocks",
+				{"card_id": card_id, "position": position, "block_type": actual_block.object_type},
+				["debug", "replay", "player", "error"]
+			)
+			assert(false, "remove_block_player: Card ID should be empty for locked blocks")
+			return false
+	else:
 		Log.error(
-			"Block at position is not a card",
+			"Block at position is not removable",
 			{"position": position, "block_type": actual_block.object_type},
 			["debug", "replay", "player", "error"]
 		)
-		assert(false, "remove_block_player: Block is not a card")
-		return false
-
-	var actual_card_id: String = actual_block.card_info.id
-	if actual_card_id != card_id:
-		Log.error(
-			"Card ID mismatch at position",
-			{"expected": card_id, "actual": actual_card_id, "position": position},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "remove_block_player: Card ID mismatch")
+		assert(false, "remove_block_player: Block is not removable")
 		return false
 
 	# Step 6: Execute complete removal using Clicker static method (UI system logic)
@@ -2261,9 +2272,6 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 
 static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 	"""Check if block can be removed from card at position. Returns empty string if valid."""
-	if card_id.is_empty():
-		return "card_id cannot be empty"
-
 	var pos_error: String = _validate_position_dict(position, "position")
 	if not pos_error.is_empty():
 		return pos_error
@@ -2281,12 +2289,18 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 	if not block_at_position:
 		return "no block found at position (" + str(grid_pos.x) + "," + str(grid_pos.y) + ")"
 
-	# Validate it's a card block
-	if block_at_position.object_type != core.ObjectType.CARD:
-		return "block at position is not a card (type: " + str(block_at_position.object_type) + ")"
-
-	# Validate card ID matches
-	if block_at_position.card_info.id != card_id:
-		return "card_id mismatch: expected " + card_id + ", found " + block_at_position.card_info.id
+	# Handle different block types
+	if block_at_position.object_type == core.ObjectType.BLOCK_LOCKED:
+		# Locked blocks don't have card_id - empty card_id is expected
+		if not card_id.is_empty():
+			return "card_id should be empty for locked blocks, got: " + card_id
+	elif block_at_position.object_type == core.ObjectType.CARD:
+		# Card blocks require matching card_id
+		if card_id.is_empty():
+			return "card_id cannot be empty for card blocks"
+		if block_at_position.card_info.id != card_id:
+			return "card_id mismatch: expected " + card_id + ", found " + block_at_position.card_info.id
+	else:
+		return "block at position is not removable (type: " + str(block_at_position.object_type) + ")"
 
 	return ""

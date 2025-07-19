@@ -991,7 +991,7 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     POSITION_X=$(echo "$JSON_PART" | jq -r '.data.position.x // empty')
                     POSITION_Y=$(echo "$JSON_PART" | jq -r '.data.position.y // empty')
                     
-                    if [ -n "$CARD_ID" ] && [ -n "$POSITION_X" ] && [ -n "$POSITION_Y" ]; then
+                    if [ -n "$POSITION_X" ] && [ -n "$POSITION_Y" ]; then
                         # Check if this remove is part of an atomic move operation
                         IS_ATOMIC_MOVE=false
                         for move_key in $ATOMIC_MOVES; do

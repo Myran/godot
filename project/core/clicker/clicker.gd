@@ -93,13 +93,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		var block: Block = event.block
 		var is_destroy: bool = event.destroy_block
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
-		if event.source == core.EventSource.PLAYER:
-			var grid_pos: Vector2i = level.get_grid_pos(block)
-			if block.object_type == core.ObjectType.CARD:
-				var card_id: String = block.card_info.id
-				SemanticLogger.log_draft_remove_card(card_id, grid_pos)
-
 		if level.get_grid_pos(block) != Clicker.NO_POS:
 			level.remove_from_grid(block, is_destroy)
 
@@ -242,11 +235,11 @@ func solve_gravity() -> void:
 
 static func find_block_at_position(clicker_instance: Clicker, position: Vector2i) -> Block:
 	"""Find block at specified grid position.
-	
+
 	Args:
 		clicker_instance: The clicker instance to search in
 		position: Grid position (Vector2i) to look for block
-		
+
 	Returns:
 		Block at position, or null if no block found
 	"""
@@ -260,10 +253,10 @@ static func remove_block_from_draft_complete(
 	clicker_instance: Clicker, block: Block, destroy: bool = true
 ) -> void:
 	"""Complete block removal from draft with proper cascading actions.
-	
+
 	This method replicates the exact UI system logic for block removal,
 	ensuring consistent behavior between UI interactions and debug actions.
-	
+
 	Args:
 		clicker_instance: The clicker instance performing the removal
 		block: The actual block to remove (must be real block from game state)
@@ -277,13 +270,7 @@ static func remove_block_from_draft_complete(
 		)
 		return
 
-	# Step 1: Semantic logging (matches UI system pattern)
-	var grid_pos: Vector2i = clicker_instance.level.get_grid_pos(block)
-	if block.object_type == core.ObjectType.CARD:
-		var card_id: String = block.card_info.id
-		SemanticLogger.log_draft_remove_card(card_id, grid_pos)
-
-	# Step 2: Execute removal event (matches UI system)
+	# Execute removal event (semantic logging happens in input handler)
 	core.action(core.RemoveBlockFromDraft.new(block, destroy))
 
 	# Step 3: Trigger cascading actions (CRITICAL - this is what UI system does)

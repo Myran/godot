@@ -39,11 +39,6 @@ static func log_draft_action(action_type: String, data: Dictionary = {}) -> void
 				data.get("column_index", -1),
 				data.get("new_state", false)
 			)
-		"draft.remove_card":
-			var pos: Vector2i = Vector2i(-1, -1)
-			if data.has("position") and data.position is Dictionary:
-				pos = Vector2i(data.position.get("x", -1), data.position.get("y", -1))
-			SemanticLogger.log_draft_remove_card(data.get("card_id", ""), pos)
 		_:
 			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)

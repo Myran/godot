@@ -94,12 +94,10 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:
 					var m_block: Block = interacted_object
 
-					# Enhanced semantic logging for locked block removal
+					# Log semantic action for locked block removal (no card_id needed)
 					var block_pos: Vector2i = clicker.level.get_grid_pos(m_block)
-					if m_block.object_type == core.ObjectType.CARD:
-						var card_id: String = m_block.card_info.id
-						SemanticLogger.log_draft_remove_card(card_id, block_pos)
-
+					SemanticLogger.log_draft_remove_card("", block_pos)
+					
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 					update_draft = true
 
