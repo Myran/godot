@@ -233,3 +233,54 @@ func solve_gravity() -> void:
 					):
 						level.switch_blocks(block, test_block)
 						gravity_action = true
+
+
+# =============================================================================
+# STATIC UTILITY METHODS FOR DEBUG ACTIONS AND UI CONSISTENCY
+# =============================================================================
+
+static func find_block_at_position(clicker_instance: Clicker, position: Vector2i) -> Block:
+	"""Find block at specified grid position.
+	
+	Args:
+		clicker_instance: The clicker instance to search in
+		position: Grid position (Vector2i) to look for block
+		
+	Returns:
+		Block at position, or null if no block found
+	"""
+	if not clicker_instance or not clicker_instance.level:
+		return null
+	
+	return clicker_instance.level.get_block(position)
+
+
+static func remove_block_from_draft_complete(clicker_instance: Clicker, block: Block, destroy: bool = true) -> void:
+	"""Complete block removal from draft with proper cascading actions.
+	
+	This method replicates the exact UI system logic for block removal,
+	ensuring consistent behavior between UI interactions and debug actions.
+	
+	Args:
+		clicker_instance: The clicker instance performing the removal
+		block: The actual block to remove (must be real block from game state)
+		destroy: Whether to destroy the block after removal
+	"""
+	if not clicker_instance or not block:
+		Log.error("Invalid parameters for block removal", 
+				 {"clicker_valid": clicker_instance != null, "block_valid": block != null}, 
+				 ["debug", "clicker", "error"])
+		return
+	
+	# Step 1: Semantic logging (matches UI system pattern)
+	var grid_pos: Vector2i = clicker_instance.level.get_grid_pos(block)
+	if block.object_type == core.ObjectType.CARD:
+		var card_id: String = block.card_info.id
+		SemanticLogger.log_draft_remove_card(card_id, grid_pos)
+	
+	# Step 2: Execute removal event (matches UI system)
+	core.action(core.RemoveBlockFromDraft.new(block, destroy))
+	
+	# Step 3: Trigger cascading actions (CRITICAL - this is what UI system does)
+	# This triggers: gravity, refill, matching, and DraftSteadyEvent
+	core.action(core.UpdateDraftAreaEvent.new())

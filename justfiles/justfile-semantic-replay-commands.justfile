@@ -1032,17 +1032,19 @@ replay-generate session_id config_name="":
     # Parse each semantic action and convert to debug action
     while IFS= read -r action_line; do
         if [ -n "$action_line" ]; then
-            # Extract action type and data
-            ACTION_TYPE=$(echo "$action_line" | grep -o '"type": "[^"]*"' | cut -d'"' -f4)
-            ACTION_DATA=$(echo "$action_line" | grep -o '"data": {[^}]*}' | cut -d'{' -f2- | sed 's/}$//')
+            # Extract JSON portion from log line
+            JSON_PART=$(echo "$action_line" | sed 's/.*SEMANTIC_ACTION //' | sed 's/ (session_manager\.gd:[0-9]*)$//')
+            
+            # Extract action type and data using jq
+            ACTION_TYPE=$(echo "$JSON_PART" | jq -r '.type // empty')
             
             echo "   Found semantic action: $ACTION_TYPE"
             
             case "$ACTION_TYPE" in
                 "transition.change_state")
-                    # Extract from_state and to_state
-                    FROM_STATE=$(echo "$ACTION_DATA" | grep -o '"from_state": "[^"]*"' | cut -d'"' -f4)
-                    TO_STATE=$(echo "$ACTION_DATA" | grep -o '"to_state": "[^"]*"' | cut -d'"' -f4)
+                    # Extract from_state and to_state using jq
+                    FROM_STATE=$(echo "$JSON_PART" | jq -r '.data.from_state // empty')
+                    TO_STATE=$(echo "$JSON_PART" | jq -r '.data.to_state // empty')
                     
                     if [ -n "$FROM_STATE" ] && [ -n "$TO_STATE" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.state.transition_player\", \"params\": { \"from_state\": \"$FROM_STATE\", \"to_state\": \"$TO_STATE\" } }")
@@ -1051,11 +1053,18 @@ replay-generate session_id config_name="":
                     fi
                     ;;
                 "draft.reroll")
-                    DEBUG_ACTIONS+=("game.draft.reroll_player")
+                    # Extract cost from reroll action data using jq
+                    COST=$(echo "$JSON_PART" | jq -r '.data.cost // empty')
+                    
+                    if [ -n "$COST" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.reroll_player\", \"params\": { \"cost\": $COST } }")
+                    else
+                        DEBUG_ACTIONS+=("game.draft.reroll_player")
+                    fi
                     ;;
                 "draft.upgrade")
-                    # Extract level from upgrade action data
-                    LEVEL=$(echo "$ACTION_DATA" | grep -o '"level": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                    # Extract level from upgrade action data using jq
+                    LEVEL=$(echo "$JSON_PART" | jq -r '.data.level // empty')
                     
                     if [ -n "$LEVEL" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.upgrade_player\", \"params\": { \"level\": $LEVEL } }")
@@ -1064,23 +1073,83 @@ replay-generate session_id config_name="":
                     fi
                     ;;
                 "draft.toggle_column")
-                    DEBUG_ACTIONS+=("game.draft.toggle_column_player")
+                    # Extract column_index and new_state from toggle_column action data using jq
+                    COLUMN_INDEX=$(echo "$JSON_PART" | jq -r '.data.column_index // empty')
+                    NEW_STATE=$(echo "$JSON_PART" | jq -r '.data.new_state // empty')
+                    
+                    if [ -n "$COLUMN_INDEX" ] && [ -n "$NEW_STATE" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.toggle_column_player\", \"params\": { \"column_index\": $COLUMN_INDEX, \"new_state\": $NEW_STATE } }")
+                    else
+                        DEBUG_ACTIONS+=("game.draft.toggle_column_player")
+                    fi
                     ;;
-                "draft.remove_block")
-                    DEBUG_ACTIONS+=("game.draft.remove_block_player")
+                "draft.remove_card")
+                    # Extract card_id and position from remove_card action data using jq
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
+                    POSITION_X=$(echo "$JSON_PART" | jq -r '.data.position.x // empty')
+                    POSITION_Y=$(echo "$JSON_PART" | jq -r '.data.position.y // empty')
+                    
+                    if [ -n "$CARD_ID" ] && [ -n "$POSITION_X" ] && [ -n "$POSITION_Y" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.remove_block_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"position\": { \"x\": $POSITION_X, \"y\": $POSITION_Y } } }")
+                    else
+                        DEBUG_ACTIONS+=("game.draft.remove_block_player")
+                    fi
                     ;;
                 "lineup.add_card")
-                    DEBUG_ACTIONS+=("game.lineup.add_card_player")
+                    # Extract card_id, target_position, and source_position from add_card action data using jq
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
+                    TARGET_POSITION=$(echo "$JSON_PART" | jq -r '.data.target_position // empty')
+                    SOURCE_X=$(echo "$JSON_PART" | jq -r '.data.source_position.x // empty')
+                    SOURCE_Y=$(echo "$JSON_PART" | jq -r '.data.source_position.y // empty')
+                    
+                    if [ -n "$CARD_ID" ] && [ -n "$TARGET_POSITION" ] && [ -n "$SOURCE_X" ] && [ -n "$SOURCE_Y" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.add_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"target_position\": $TARGET_POSITION, \"source_position\": { \"x\": $SOURCE_X, \"y\": $SOURCE_Y } } }")
+                    else
+                        DEBUG_ACTIONS+=("game.lineup.add_card_player")
+                    fi
                     ;;
                 "lineup.move_card")
-                    DEBUG_ACTIONS+=("game.lineup.move_card_player")
+                    # Extract card_id, from_position, and to_position from move_card action data using jq
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
+                    FROM_POSITION=$(echo "$JSON_PART" | jq -r '.data.from_position // empty')
+                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // empty')
+                    
+                    if [ -n "$CARD_ID" ] && [ -n "$FROM_POSITION" ] && [ -n "$TO_POSITION" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.move_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"from_position\": $FROM_POSITION, \"to_position\": $TO_POSITION } }")
+                    else
+                        DEBUG_ACTIONS+=("game.lineup.move_card_player")
+                    fi
                     ;;
                 "lineup.remove_card")
-                    DEBUG_ACTIONS+=("game.lineup.remove_card_player")
+                    # Extract card_id and position from remove_card action data using jq
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
+                    POSITION=$(echo "$JSON_PART" | jq -r '.data.position // empty')
+                    
+                    if [ -n "$CARD_ID" ] && [ -n "$POSITION" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.remove_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"position\": $POSITION } }")
+                    else
+                        DEBUG_ACTIONS+=("game.lineup.remove_card_player")
+                    fi
                     ;;
                 "battle.start")
                     DEBUG_ACTIONS+=("game.lineup.populate_enemy")
                     DEBUG_ACTIONS+=("game.battle.start_player")
+                    ;;
+                "card.move")
+                    # Extract complete move operation parameters using jq
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
+                    FROM_X=$(echo "$JSON_PART" | jq -r '.data.from_position.x // empty')
+                    FROM_Y=$(echo "$JSON_PART" | jq -r '.data.from_position.y // empty')
+                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // empty')
+                    MOVE_TYPE=$(echo "$JSON_PART" | jq -r '.data.move_type // empty')
+                    
+                    if [ "$MOVE_TYPE" = "draft_to_lineup" ] && [ -n "$CARD_ID" ] && [ -n "$FROM_X" ] && [ -n "$FROM_Y" ] && [ -n "$TO_POSITION" ]; then
+                        echo "   🔄 Detected atomic move operation: $CARD_ID from ($FROM_X,$FROM_Y) to lineup position $TO_POSITION"
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.move_card_to_lineup_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"from_position\": { \"x\": $FROM_X, \"y\": $FROM_Y }, \"to_position\": $TO_POSITION } }")
+                    else
+                        echo "   Warning: Incomplete or unknown move operation data"
+                        DEBUG_ACTIONS+=("game.draft.move_card_to_lineup_player")
+                    fi
                     ;;
                 *)
                     echo "   Warning: Unknown semantic action type: $ACTION_TYPE"

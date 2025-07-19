@@ -1,0 +1,35 @@
+{
+  "description": "Test config for _add_card_player action from PREPARE state",
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT", 
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.lineup.add_card_player",
+      "params": {
+        "card_id": "4",
+        "target_position": 3,
+        "source_position": {
+          "x": 2,
+          "y": 1
+        }
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "test_type": "player_action_validation",
+    "validation_mode": "manual_inspection",
+    "created_by": "claude_code",
+    "creation_timestamp": "2025-07-18T12:00:00+02:00"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345
+  }
+}

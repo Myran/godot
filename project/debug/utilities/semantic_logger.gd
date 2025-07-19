@@ -55,6 +55,17 @@ static func log_lineup_add_card(
 	SessionManager.log_semantic_action("lineup.add_card", data)
 
 
+static func log_draft_to_lineup_move(card_id: String, from_position: Vector2i, to_position: int) -> void:
+	"""Log complete draft-to-lineup move operation with atomic semantics"""
+	var data: Dictionary = {
+		"card_id": card_id,
+		"from_position": {"x": from_position.x, "y": from_position.y},
+		"to_position": to_position,
+		"move_type": "draft_to_lineup"
+	}
+	SessionManager.log_semantic_action("card.move", data)
+
+
 
 
 # State transition logging
