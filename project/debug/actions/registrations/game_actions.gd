@@ -1753,7 +1753,7 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 	# Step 4: Find actual block at position using Clicker static method
 	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
 	var actual_block: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
-	
+
 	if not actual_block:
 		Log.error(
 			"No block found at specified position",
@@ -1894,13 +1894,21 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 
 	# Create card object for the move event
 	if not is_instance_valid(card_controller):
-		Log.error("card_controller not available for card move", {}, ["debug", "replay", "player", "error"])
+		Log.error(
+			"card_controller not available for card move",
+			{},
+			["debug", "replay", "player", "error"]
+		)
 		assert(false, "move_card_player: card_controller not available")
 		return false
 
 	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
 	if not card:
-		Log.error("Failed to create card for move", {"card_id": card_id}, ["debug", "replay", "player", "error"])
+		Log.error(
+			"Failed to create card for move",
+			{"card_id": card_id},
+			["debug", "replay", "player", "error"]
+		)
 		assert(false, "move_card_player: Failed to create card")
 		return false
 
@@ -1908,7 +1916,9 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 	typed_card.block_context = Cards.CONTEXT.LINEUP
 
 	# Create and execute the move event
-	var move_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(typed_card, from_position, to_position)
+	var move_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(
+		typed_card, from_position, to_position
+	)
 	core.action(move_event)
 
 	return true
@@ -2008,13 +2018,21 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 
 	# Create card object for the addition event
 	if not is_instance_valid(card_controller):
-		Log.error("card_controller not available for card addition", {}, ["debug", "replay", "player", "error"])
+		Log.error(
+			"card_controller not available for card addition",
+			{},
+			["debug", "replay", "player", "error"]
+		)
 		assert(false, "add_card_player: card_controller not available")
 		return false
 
 	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
 	if not card:
-		Log.error("Failed to create card for addition", {"card_id": card_id}, ["debug", "replay", "player", "error"])
+		Log.error(
+			"Failed to create card for addition",
+			{"card_id": card_id},
+			["debug", "replay", "player", "error"]
+		)
 		assert(false, "add_card_player: Failed to create card")
 		return false
 
@@ -2034,7 +2052,7 @@ static func _add_card_player(params: Dictionary = {}) -> bool:
 
 static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	"""Atomic draft-to-lineup move operation using same card reference"""
-	
+
 	# Step 1: Validate parameters
 	var required_params: Array[String] = ["card_id", "from_position", "to_position"]
 	var param_error: String = _validate_required_params(params, required_params)
@@ -2067,13 +2085,19 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 			{"current_state": current_state},
 			["debug", "replay", "player", "error"]
 		)
-		assert(false, "move_card_to_lineup_player: can only move cards in DRAFT state, current: " + current_state)
+		assert(
+			false,
+			(
+				"move_card_to_lineup_player: can only move cards in DRAFT state, current: "
+				+ current_state
+			)
+		)
 		return false
 
 	# Step 3: Find the actual card to move
 	var grid_pos: Vector2i = Vector2i(from_position.get("x", -1), from_position.get("y", -1))
 	var card_to_move: Card = Clicker.find_block_at_position(game.clicker, grid_pos)
-	
+
 	if not card_to_move:
 		Log.error(
 			"No card found at source position",
@@ -2101,11 +2125,11 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 
 	# Remove from draft (don't destroy - we're moving it)
 	core.action(core.RemoveBlockFromDraft.new(card_to_move, false))
-	
+
 	# Add to lineup (same card instance)
 	game.lineup_handler.add_card(card_to_move, to_position)
 	core.action(core.LineupAddCardEvent.new(card_to_move))
-	
+
 	# Trigger cascading actions for draft refill/gravity
 	core.action(core.UpdateDraftAreaEvent.new())
 
@@ -2337,14 +2361,32 @@ static func _validate_position_dict(position: Dictionary, param_name: String) ->
 	return ""
 
 
-static func _can_move_card(_card_id: String, from_position: int) -> String:
+static func _can_move_card(card_id: String, from_position: int) -> String:
 	"""Check if card can be moved from position. Returns empty string if valid."""
+	if card_id.is_empty():
+		return "card_id cannot be empty"
+
 	var range_error: String = _validate_range(from_position, 0, 9, "from_position")
 	if not range_error.is_empty():
 		return range_error
 
-	# TODO: Add actual lineup checking when game state access is available
-	# For now, just validate the position range
+	# Get game instance for actual lineup checking
+	var game: Game = _get_game_node()
+	if not game or not game.lineup_handler:
+		return "lineup not available for validation"
+
+	# Check if position has a card
+	if from_position >= game.lineup_handler.get_card_count():
+		return "from_position " + str(from_position) + " exceeds lineup size"
+
+	var card_at_position: Card = game.lineup_handler.get_card_at_position(from_position)
+	if not card_at_position:
+		return "no card found at from_position " + str(from_position)
+
+	# Validate card ID matches
+	if card_at_position.card_info.id != card_id:
+		return "card_id mismatch: expected " + card_id + ", found " + card_at_position.card_info.id
+
 	return ""
 
 
@@ -2353,11 +2395,26 @@ static func _can_add_card(card_id: String) -> String:
 	if card_id.is_empty():
 		return "card_id cannot be empty"
 
-	# TODO: Add actual card availability checking when game state access is available
-	# For now, just validate the card_id is not empty
+	# Get game instance for actual card availability checking
+	var game: Game = _get_game_node()
+	if not game:
+		return "game not available for validation"
+
+	# Check if data source is available for card validation
+	var data_source = game.data_source
+	if not data_source:
+		return "data source not available for card validation"
+
+	# Validate that the card ID exists in the card database
+	var card_info = data_source.cards.get_card_info(card_id)
+	if not card_info:
+		return "card_id " + card_id + " not found in card database"
+
+	# Check if lineup has space
+	if game.lineup_handler and game.lineup_handler.get_card_count() >= 10:
+		return "lineup is full (max 10 cards)"
+
 	return ""
-
-
 
 
 static func _can_remove_block(card_id: String, position: Dictionary) -> String:
@@ -2369,6 +2426,25 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 	if not pos_error.is_empty():
 		return pos_error
 
-	# TODO: Add actual block checking when game state access is available
-	# For now, just validate basic parameters
+	# Get game instance for actual block checking
+	var game: Game = _get_game_node()
+	if not game or not game.clicker:
+		return "draft system not available for validation"
+
+	# Convert position dictionary to Vector2i for lookup
+	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
+
+	# Find the actual block at the position
+	var block_at_position: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
+	if not block_at_position:
+		return "no block found at position (" + str(grid_pos.x) + "," + str(grid_pos.y) + ")"
+
+	# Validate it's a card block
+	if block_at_position.object_type != core.ObjectType.CARD:
+		return "block at position is not a card (type: " + str(block_at_position.object_type) + ")"
+
+	# Validate card ID matches
+	if block_at_position.card_info.id != card_id:
+		return "card_id mismatch: expected " + card_id + ", found " + block_at_position.card_info.id
+
 	return ""

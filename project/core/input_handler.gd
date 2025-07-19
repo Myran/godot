@@ -155,12 +155,12 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 												var holder_index: int = (
 													interacted_holder.get_index()
 												)
-												
+
 												# Log the complete move operation (NEW APPROACH)
 												SemanticLogger.log_draft_to_lineup_move(
 													card_id, draft_pos, holder_index
 												)
-												
+
 												# Keep existing individual logs for backward compatibility
 												SemanticLogger.log_draft_remove_card(
 													card_id, draft_pos

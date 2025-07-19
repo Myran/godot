@@ -370,10 +370,9 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			},
 			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received", "diagnostic"]
 		)
-		_idle_action_queue.append({
-			"action": event.action_callable,
-			"auto_continue": event.auto_continue
-		})
+		_idle_action_queue.append(
+			{"action": event.action_callable, "auto_continue": event.auto_continue}
+		)
 		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.ProcessQueueEvent:
@@ -462,7 +461,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		if update_draft:
 			ui_state = core.UIState.LOCKED
 			core.action(core.UpdateDraftAreaEvent.new())
-
 
 
 func _process_one_queue_item() -> void:
@@ -580,7 +578,8 @@ func _process_one_queue_item() -> void:
 			{
 				"auto_continue": auto_continue,
 				"remaining_queue_size": _idle_action_queue.size(),
-				"wait_reason": "action_requires_natural_completion" if not auto_continue else "queue_empty"
+				"wait_reason":
+				"action_requires_natural_completion" if not auto_continue else "queue_empty"
 			},
 			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "natural_wait", "diagnostic"]
 		)
@@ -606,7 +605,9 @@ func mode_draft() -> void:
 	# Ensure draft system reaches steady state to unlock UI for idle actions
 	# The clicker's update_blocks() method will emit DraftSteadyEvent when complete
 	if clicker:
-		Log.debug("Triggering draft update to reach steady state", {}, [Log.TAG_GAME_STATE, Log.TAG_DRAFT])
+		Log.debug(
+			"Triggering draft update to reach steady state", {}, [Log.TAG_GAME_STATE, Log.TAG_DRAFT]
+		)
 		core.action(core.UpdateDraftAreaEvent.new())
 
 
