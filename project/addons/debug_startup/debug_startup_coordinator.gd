@@ -3,6 +3,19 @@ extends Node
 # Enable verbose debug logging for troubleshooting
 const VERBOSE_LOGGING := true
 
+# Track if current config is a test recipe
+var _current_config_is_test_recipe: bool = false
+
+# Completion actions that indicate replay completion
+const COMPLETION_ACTIONS: Array[String] = [
+	"system.debug.replay_complete",
+	"system.debug.quit_application", 
+	"system.debug.finalize_replay_validation"
+]
+
+# Default completion action for auto-completion
+const DEFAULT_COMPLETION_ACTION: String = "system.debug.replay_complete"
+
 func _init() -> void:
 	pass  # Logging not available in _init - Log autoload not ready yet
 
@@ -64,6 +77,10 @@ func startDebugCoordinator() -> void:
 		"test_id": DebugAction.get_current_test_id()
 	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
+	# Track if we dispatch any completion actions and if this is a test recipe
+	var has_completion_action: bool = false
+	var is_test_recipe: bool = _is_current_config_test_recipe()
+
 	for i in range(actions.size()):
 		var action_item = actions[i]
 		var action_name: String
@@ -76,6 +93,10 @@ func startDebugCoordinator() -> void:
 		else:
 			# Legacy format: assume it's a string
 			action_name = str(action_item)
+
+		# Check if this is a completion action
+		if action_name in COMPLETION_ACTIONS:
+			has_completion_action = true
 
 		var action := _get_action_by_name(registry, action_name)
 		if action:
@@ -99,11 +120,22 @@ func startDebugCoordinator() -> void:
 				"available_actions": _get_available_action_names(registry).slice(0, 10)
 			}, ["debug", "startup", "error"])
 
+	# Automatically dispatch completion action if none was found AND this is a test recipe
+	if _should_auto_add_completion(has_completion_action, actions.size(), is_test_recipe):
+		_dispatch_auto_completion_action(registry, actions.size())
+	elif not has_completion_action and actions.size() > 0:
+		Log.debug("No completion action found but not a test recipe - skipping auto-completion", {
+			"action_count": actions.size(),
+			"is_test_recipe": false
+		}, ["debug", "startup", "auto_completion"])
+
 	var dispatch_end_time := Time.get_unix_time_from_system()
 	var dispatch_duration_ms := (dispatch_end_time - dispatch_start_time) * 1000.0
 
 	Log.info("=== BATCH DISPATCH COMPLETE ===", {
 		"count": actions.size(),
+		"is_test_recipe": is_test_recipe,
+		"completion_auto_added": not has_completion_action and actions.size() > 0 and is_test_recipe,
 		"dispatch_duration_ms": dispatch_duration_ms,
 		"dispatch_end_time": dispatch_end_time,
 		"test_id": DebugAction.get_current_test_id(),
@@ -195,6 +227,9 @@ func _parse_command_line() -> Array[String]:
 
 func _parse_config_file(path: String) -> Array:
 	Log.debug("Parsing config file", {"path": path}, ["debug", "startup"])
+	
+	# Reset test recipe flag for each config
+	_current_config_is_test_recipe = false
 
 	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
@@ -224,11 +259,13 @@ func _parse_config_file(path: String) -> Array:
 
 	# Check for test metadata and set test context if present
 	if data.has("test_metadata"):
+		_current_config_is_test_recipe = true
 		var test_metadata := data.test_metadata as Dictionary
 		if test_metadata.has("test_id"):
 			var test_id := str(test_metadata.test_id)
 			DebugAction.set_test_context(test_id)
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
+		Log.info("Test recipe detected", {"test_metadata": test_metadata}, ["debug", "startup", "test_recipe"])
 
 	# Check for automated mode in config metadata
 	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
@@ -360,6 +397,32 @@ func _parse_config_file(path: String) -> Array:
 
 	Log.debug("No actions found in config", {"path": path}, ["debug", "startup"])
 	return []
+
+
+func _is_current_config_test_recipe() -> bool:
+	"""Check if the current config being processed is a test recipe"""
+	return _current_config_is_test_recipe
+
+
+func _should_auto_add_completion(has_completion: bool, action_count: int, is_test_recipe: bool) -> bool:
+	"""Determine if we should automatically add a completion action"""
+	return not has_completion and action_count > 0 and is_test_recipe
+
+
+func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_action_count: int) -> void:
+	"""Dispatch the auto-completion action for test recipes"""
+	var completion_action := _get_action_by_name(registry, DEFAULT_COMPLETION_ACTION)
+	if completion_action:
+		Log.info("Auto-dispatching replay completion action for test recipe", {
+			"action": DEFAULT_COMPLETION_ACTION,
+			"reason": "test_recipe_missing_completion",
+			"original_action_count": original_action_count,
+			"is_test_recipe": true
+		}, ["debug", "startup", "auto_completion", "test_recipe"])
+		
+		var completion_callable := func(): completion_action.execute_with_params({})
+		var auto_continue: bool = _should_action_auto_continue(DEFAULT_COMPLETION_ACTION)
+		core.action(core.SystemIdleActionEvent.new(completion_callable, auto_continue))
 
 
 func _wait_for_game_ready() -> void:
