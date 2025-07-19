@@ -1699,59 +1699,8 @@ replay-generate-from-last-session-desktop config_name:
     just replay-generate-desktop "${SESSION_ID}" "${CONFIG_NAME}"
 
 # ================================
-# LEGACY CROSS-PLATFORM COMMANDS (AUTO-DETECTION)
+# INTERACTIVE SELECTION COMMANDS
 # ================================
-
-# Generate replay config from most recent session (auto-detection wrapper)
-replay-generate-from-last-session config_name:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_NAME="{{config_name}}"
-    
-    echo "🎬 Creating replay config from most recent session (auto-detection)..."
-    echo "   Config Name: ${CONFIG_NAME}"
-    echo ""
-    
-    # Auto-detect platform and delegate to platform-specific command
-    echo "📋 Auto-detecting platform..."
-    
-    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
-        echo "🤖 Detected Android - delegating to Android-specific command"
-        echo ""
-        just replay-generate-from-last-session-android "${CONFIG_NAME}"
-    else
-        echo "🖥️  Detected Desktop - delegating to Desktop-specific command"  
-        echo ""
-        just replay-generate-from-last-session-desktop "${CONFIG_NAME}"
-    fi
-
-# Generate replay config with session ID (auto-detection wrapper)
-replay-generate session_id config_name="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    SESSION_ID="{{session_id}}"
-    CONFIG_NAME="{{config_name}}"
-    
-    echo "🚀 Creating replay config with session ID (auto-detection)..."
-    echo "   Session ID: ${SESSION_ID}"
-    echo "   Config Name: ${CONFIG_NAME}"
-    echo ""
-    
-    # Auto-detect platform and delegate to platform-specific command
-    echo "📋 Auto-detecting platform..."
-    
-    if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
-        echo "🤖 Detected Android - delegating to Android-specific command"
-        echo ""
-        just replay-generate-android "${SESSION_ID}" "${CONFIG_NAME}"
-    else
-        echo "🖥️  Detected Desktop - delegating to Desktop-specific command"
-        echo ""
-        just replay-generate-desktop "${SESSION_ID}" "${CONFIG_NAME}"
-    fi
-
 
 
 # Interactive replay config selection using fzf
