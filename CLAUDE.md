@@ -34,7 +34,6 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 - `just fastbuild-android` - Smart rebuild system
 
 ### **Advanced Commands (As Needed)**
-- `just recording-integrity-test` - System integrity validation
 - `just build` - Complete source-to-device pipeline (46 min)
 
 ## 🔧 Debugging Workflow
@@ -253,9 +252,8 @@ just build-status                 # Check what would be rebuilt
 
 ## 🔧 Advanced Features
 
-**System integrity & performance:**
+**Performance analysis:**
 ```bash
-just recording-integrity-test     # Validate recording/replay system
 just logs-performance-tagged TEST_ID [component] # Performance analysis
 ```
 
