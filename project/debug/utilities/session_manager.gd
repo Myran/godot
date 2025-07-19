@@ -144,9 +144,9 @@ static func end_gameplay_session() -> void:
 static func _capture_pre_action_checksum(action_type: String) -> String:
 	"""Capture game state checksum before semantic action execution"""
 	# Extract current game state using StateExtractor
-	if not StateExtractor:
+	if not ClassDB.class_exists("StateExtractor"):
 		Log.warning(
-			"StateExtractor not available for checksum capture",
+			"StateExtractor class not available for checksum capture",
 			{"action_type": action_type},
 			["session", "checksum", "warning"]
 		)
