@@ -799,8 +799,10 @@ _extract-checksums-to-config session_id config_name:
     INITIAL_SEED=$(find "$LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
     
     if [ -z "$INITIAL_SEED" ]; then
-        INITIAL_SEED="12345"
-        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+        echo "❌ No initial seed found for session: ${SESSION_ID}"
+        echo "   Cannot generate valid replay without original seed"
+        echo "   Make sure the session logs are still available"
+        exit 1
     else
         echo "✅ Found initial seed: ${INITIAL_SEED}"
     fi
@@ -1136,8 +1138,10 @@ _extract-checksums-to-android-config SESSION_ID CONFIG_NAME:
     INITIAL_SEED=$(echo "$ANDROID_LOGS" | grep "SESSION_START" | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
     
     if [ -z "$INITIAL_SEED" ]; then
-        INITIAL_SEED="12345"
-        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+        echo "❌ No initial seed found for session: ${SESSION_ID}"
+        echo "   Cannot generate valid replay without original seed"
+        echo "   Make sure the session logs are still available"
+        exit 1
     else
         echo "✅ Found initial seed: ${INITIAL_SEED}"
     fi
@@ -1189,8 +1193,10 @@ _extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
     INITIAL_SEED=$(grep "SESSION_START" "$LOG_FILE" | grep "\"session_id\": \"${SESSION_ID}\"" | grep -o '"initial_seed": [0-9]*' | cut -d':' -f2 | tr -d ' ' | head -1)
     
     if [ -z "$INITIAL_SEED" ]; then
-        INITIAL_SEED="12345"
-        echo "⚠️  No initial seed found, using default: ${INITIAL_SEED}"
+        echo "❌ No initial seed found for session: ${SESSION_ID}"
+        echo "   Cannot generate valid replay without original seed"
+        echo "   Make sure the session logs are still available"
+        exit 1
     else
         echo "✅ Found initial seed: ${INITIAL_SEED}"
     fi
