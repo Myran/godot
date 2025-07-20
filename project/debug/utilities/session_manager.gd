@@ -192,28 +192,14 @@ static func _capture_pre_action_checksum(action_type: String) -> String:
 ## Get current seed from RNG singleton for deterministic replay
 static func _get_current_seed() -> int:
 	"""Get current seed from the RNG singleton"""
-	# Access the RNG singleton properly
-	var rng_node: Node = (
-		Engine.get_main_loop().get_nodes_in_group("rng").get(0)
-		if Engine.get_main_loop().get_nodes_in_group("rng").size() > 0
-		else null
-	)
-
-	if rng_node and rng_node.has_property("seeded_rng"):
-		var seeded_rng: DeterministicRNG = rng_node.seeded_rng
-		if seeded_rng:
-			return seeded_rng._initial_seed
-
-	# Fallback: try to get from autoload if available
-	if Engine.has_singleton("rng"):
-		var rng_singleton: Node = Engine.get_singleton("rng")
-		if rng_singleton and rng_singleton.has_property("seeded_rng"):
-			var seeded_rng: DeterministicRNG = rng_singleton.seeded_rng
-			if seeded_rng:
-				return seeded_rng._initial_seed
+	# Access the RNG autoload directly (consistent with rest of codebase)
+	if is_instance_valid(rng) and rng.seeded_rng:
+		return rng.seeded_rng._initial_seed
 
 	Log.warning(
-		"Could not access RNG singleton for seed capture", {}, ["session", "seed", "warning"]
+		"Could not access RNG singleton for seed capture",
+		{"rng_available": rng != null, "seeded_rng_available": rng.seeded_rng if rng else null},
+		["session", "seed", "warning"]
 	)
 
 	# Default seed if RNG not available
