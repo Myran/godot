@@ -2231,12 +2231,12 @@ _validate-checksums-from-logs CONFIG_FILE LOG_FILE:
     # Check that both files exist
     if [ ! -f "$CONFIG_FILE" ]; then
         echo "❌ Config file not found: $CONFIG_FILE"
-        return 1
+        exit 1
     fi
     
     if [ ! -f "$LOG_FILE" ]; then
         echo "❌ Log file not found: $LOG_FILE"
-        return 1
+        exit 1
     fi
     
     # Check that seed was set correctly (optional verification)
@@ -2255,21 +2255,22 @@ _validate-checksums-from-logs CONFIG_FILE LOG_FILE:
     
     if [ -z "$EXPECTED_DATA" ]; then
         echo "⚠️  No expected checksums found in config - skipping validation"
-        return 0
+        exit 0
     fi
     
     # Extract actual checksums from replay logs (seed is handled autonomously)
-    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
+    # Extract JSON payload from ALogger format: "timestamp LEVEL [tags] MESSAGE {json} (file.gd:line)"
+    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | sed -n 's/.*SEMANTIC_ACTION \({.*}\) (.*/\1/p' | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
     
     if [ -z "$ACTUAL_DATA" ]; then
         echo "❌ No SEMANTIC_ACTION logs found in replay"
         echo "   This indicates the replay system is not working correctly"
-        return 1
+        exit 1
     fi
     
     # Compare sequence by sequence
-    local sequence=1
-    local validation_passed=true
+    sequence=1
+    validation_passed=true
     
     while IFS= read -r expected_line && IFS= read -r actual_line <&3; do
         if [ -z "$expected_line" ] || [ -z "$actual_line" ]; then
@@ -2315,8 +2316,8 @@ _validate-checksums-from-logs CONFIG_FILE LOG_FILE:
     if [ "$validation_passed" = true ]; then
         echo "✅ All checksums validated successfully!"
         echo "📊 Total validated: $((sequence-1)) actions"
-        return 0
+        exit 0
     else
         echo "❌ Checksum validation failed!"
-        return 1
+        exit 1
     fi
