@@ -79,7 +79,7 @@ func select_id_from_level(lvl: int) -> String:
 
 
 func select_recruited_unit_level(recruit_lvl: int) -> int:
-	var roll: int = (randi() % 99) + 1
+	var roll: int = (rng.seeded_rng.next() % 99) + 1
 
 	# Default values in case the rules don't have these properties
 	var c_lvl_2_star_1: String = "50"
