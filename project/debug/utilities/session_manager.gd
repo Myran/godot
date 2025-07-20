@@ -143,16 +143,23 @@ static func end_gameplay_session() -> void:
 ## Capture pre-action checksum for replay validation
 static func _capture_pre_action_checksum(action_type: String) -> String:
 	"""Capture game state checksum before semantic action execution"""
-	# Extract current game state using StateExtractor
-	if not ClassDB.class_exists("StateExtractor"):
-		Log.warning(
-			"StateExtractor class not available for checksum capture",
-			{"action_type": action_type},
-			["session", "checksum", "warning"]
-		)
-		return ""
+	Log.debug(
+		"Starting checksum capture", {"action_type": action_type}, ["session", "checksum", "debug"]
+	)
 
+	# Extract current game state using StateExtractor
+	# Note: ClassDB.class_exists() doesn't work reliably for static classes, so try direct access
 	var game_state: Dictionary = StateExtractor.extract_game_state()
+	Log.debug(
+		"StateExtractor result",
+		{
+			"action_type": action_type,
+			"state_size": game_state.size(),
+			"is_empty": game_state.is_empty()
+		},
+		["session", "checksum", "debug"]
+	)
+
 	if game_state.is_empty():
 		Log.warning(
 			"StateExtractor returned empty state",
@@ -163,6 +170,11 @@ static func _capture_pre_action_checksum(action_type: String) -> String:
 
 	# Generate checksum for state validation
 	var checksum: String = StateExtractor.generate_checksum(game_state)
+	Log.debug(
+		"Generated checksum",
+		{"action_type": action_type, "checksum": checksum, "checksum_length": checksum.length()},
+		["session", "checksum", "debug"]
+	)
 
 	Log.debug(
 		"Pre-action checksum captured",

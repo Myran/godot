@@ -305,14 +305,46 @@ static func _get_game_instance() -> Game:
 	# Access the main scene and find the Game node
 	var main_loop: SceneTree = Engine.get_main_loop()
 	if not main_loop:
+		Log.warning("StateExtractor: No main loop available", {}, ["state_extractor", "debug"])
 		return null
 
 	var current_scene: Node = main_loop.current_scene
 	if not current_scene:
+		Log.warning("StateExtractor: No current scene available", {}, ["state_extractor", "debug"])
 		return null
 
+	Log.debug(
+		"StateExtractor: Scene info",
+		{
+			"scene_name": current_scene.name,
+			"scene_type": current_scene.get_class(),
+			"scene_children": current_scene.get_children().map(func(child): return child.name)
+		},
+		["state_extractor", "debug"]
+	)
+
 	# Find the Game node with strong typing - fail fast if wrong type
+	if not current_scene.has_node("Game"):
+		Log.warning(
+			"StateExtractor: Game node not found in current scene",
+			{
+				"scene_name": current_scene.name,
+				"available_children":
+				current_scene.get_children().map(func(child): return child.name)
+			},
+			["state_extractor", "debug"]
+		)
+		return null
+
 	var game_node: Game = current_scene.get_node("Game")
+	Log.debug(
+		"StateExtractor: Game node found",
+		{
+			"game_node_name": game_node.name if game_node else "null",
+			"game_node_type": game_node.get_class() if game_node else "null"
+		},
+		["state_extractor", "debug"]
+	)
 	return game_node
 
 
