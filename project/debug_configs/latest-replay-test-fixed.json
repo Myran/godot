@@ -39,7 +39,8 @@
     "config_name": "latest-replay-test-fixed",
     "capture_timestamp": "20250718_003922",
     "test_type": "checksum_validation",
-    "validation_mode": "semantic_action_checksums"
+    "validation_mode": "semantic_action_checksums",
+    "auto_quit": true
   },
   "checksum_config": {
     "state_type": "player_actions",

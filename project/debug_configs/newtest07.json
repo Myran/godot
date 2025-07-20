@@ -51,7 +51,8 @@
     "config_name": "newtest07",
     "capture_timestamp": "20250718_010118",
     "test_type": "checksum_validation",
-    "validation_mode": "semantic_action_checksums"
+    "validation_mode": "semantic_action_checksums",
+    "auto_quit": true
   },
   "checksum_config": {
     "state_type": "player_actions",

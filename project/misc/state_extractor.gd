@@ -150,15 +150,14 @@ static func extract_board_state() -> Dictionary:
 	if game:
 		board_state["game_available"] = true
 
-		# Extract clicker/draft area state - filter for actual cards only
-		var draft_cards: Array[Card] = []
+		# Extract clicker/draft area state - include all block types for deterministic checksums
+		var draft_blocks: Array[Block] = []
 		if game.clicker and game.clicker.has_method("get_all_cards"):
 			var all_blocks: Array[Block] = game.clicker.get_all_cards()
 			for block: Block in all_blocks:
-				if block and block.object_type == core.ObjectType.CARD:
-					var card: Card = block  # Safe assignment since we checked object_type
-					draft_cards.append(card)
-		board_state["draft_area"] = _extract_draft_data(draft_cards)
+				if block:
+					draft_blocks.append(block)
+		board_state["draft_area"] = _extract_draft_data(draft_blocks)
 
 		# Extract level information
 		board_state["current_level"] = (
@@ -369,19 +368,29 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 	return lineup_data
 
 
-## Private helper: Extract draft area card data
-static func _extract_draft_data(draft_cards: Array[Card]) -> Array:
+## Private helper: Extract draft area block data (cards and items)
+static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
 	var draft_data: Array = []
 
-	for i: int in range(draft_cards.size()):
-		var card: Card = draft_cards[i]
-		if card:
-			draft_data.append(
-				{
-					"card_id": card.card_info.id if card.card_info else "",
-					"level": card.level,
-					"draft_position": i
-				}
-			)
+	for i: int in range(draft_blocks.size()):
+		var block: Block = draft_blocks[i]
+		if block:
+			var block_data: Dictionary = {
+				"object_type": block.object_type,
+				"draft_position": i
+			}
+			
+			# Add type-specific data
+			if block.object_type == core.ObjectType.CARD:
+				var card: Card = block as Card
+				block_data["card_id"] = card.card_info.id if card.card_info else ""
+				block_data["level"] = card.level
+			elif block.object_type == core.ObjectType.BLOCK_ITEM:
+				block_data["level"] = block.level if "level" in block else 0
+			else:
+				# For other block types, just include basic info
+				block_data["level"] = block.level if "level" in block else 0
+			
+			draft_data.append(block_data)
 
 	return draft_data

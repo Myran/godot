@@ -1,0 +1,23 @@
+{
+  "description": "Test automated mode detection and quit behavior",
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player", 
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "test_type": "automated_mode_validation",
+    "auto_quit": true
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": []
+  }
+}
