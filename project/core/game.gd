@@ -201,7 +201,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 	elif event is core.LineupAddCardEvent:
 		var block: Block = event.card
 
-
 		core.action(core.BlockEntersPlay.new(block))
 		# detta är inte snyggt med -1,-1. antagligen behövs den inte
 		current_context.add_event(core.TrippleTestEvent.new())

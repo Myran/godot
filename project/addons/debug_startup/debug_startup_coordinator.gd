@@ -9,7 +9,7 @@ var _current_config_is_test_recipe: bool = false
 # Completion actions that indicate replay completion
 const COMPLETION_ACTIONS: Array[String] = [
 	"system.debug.replay_complete",
-	"system.debug.quit_application", 
+	"system.debug.quit_application",
 	"system.debug.finalize_replay_validation"
 ]
 
@@ -108,10 +108,10 @@ func startDebugCoordinator() -> void:
 				"dispatch_timestamp": Time.get_unix_time_from_system()
 			}, ["debug", "startup", "dispatch", "diagnostic"])
 			var callable := func(): action.execute_with_params(params)
-			
+
 			# Determine if this action should auto-continue to next action
 			var auto_continue: bool = _should_action_auto_continue(action_name)
-			
+
 			core.action(core.SystemIdleActionEvent.new(callable, auto_continue))
 		else:
 			Log.error("Action not found, cannot dispatch", {
@@ -227,7 +227,7 @@ func _parse_command_line() -> Array[String]:
 
 func _parse_config_file(path: String) -> Array:
 	Log.debug("Parsing config file", {"path": path}, ["debug", "startup"])
-	
+
 	# Reset test recipe flag for each config
 	_current_config_is_test_recipe = false
 
@@ -419,7 +419,7 @@ func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_ac
 			"original_action_count": original_action_count,
 			"is_test_recipe": true
 		}, ["debug", "startup", "auto_completion", "test_recipe"])
-		
+
 		var completion_callable := func(): completion_action.execute_with_params({})
 		var auto_continue: bool = _should_action_auto_continue(DEFAULT_COMPLETION_ACTION)
 		core.action(core.SystemIdleActionEvent.new(completion_callable, auto_continue))
@@ -526,27 +526,27 @@ func _should_action_auto_continue(action_name: String) -> bool:
 	"""
 	Determine if an action should automatically continue to the next queued action
 	or wait for natural completion events (DraftSteadyEvent, LineupOperationCompleteEvent, etc.)
-	
+
 	Auto-continue actions: Simple utilities that don't trigger complex cascades
 	Wait actions: Complex operations that need time for animations/cascades to complete
 	"""
-	
+
 	# Auto-continue actions (immediate continuation)
 	var auto_continue_patterns: Array[String] = [
 		"system.debug.hide_menu",
-		"system.debug.show_menu", 
+		"system.debug.show_menu",
 		"system.debug.replay_complete",
 		"system.debug.finalize_replay_validation",
 		"system.debug.quit_application",
 		"system.memory.",
 		"system.network.rtdb_status"
 	]
-	
+
 	# Check if action matches any auto-continue pattern
 	for pattern: String in auto_continue_patterns:
 		if action_name.begins_with(pattern):
 			return true
-	
+
 	# All other actions wait for natural completion events
 	# This includes: game.state.transition_player, game.draft.upgrade_player, etc.
 	return false

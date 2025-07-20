@@ -178,7 +178,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-
 	registry.register_action(
 		(
 			DebugAction
@@ -1926,8 +1925,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 	return true
 
 
-
-
 static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	"""Atomic draft-to-lineup move operation using same card reference"""
 
@@ -2268,8 +2265,6 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 	return ""
 
 
-
-
 static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 	"""Check if block can be removed from card at position. Returns empty string if valid."""
 	var pos_error: String = _validate_position_dict(position, "position")
@@ -2299,8 +2294,15 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 		if card_id.is_empty():
 			return "card_id cannot be empty for card blocks"
 		if block_at_position.card_info.id != card_id:
-			return "card_id mismatch: expected " + card_id + ", found " + block_at_position.card_info.id
+			return (
+				"card_id mismatch: expected "
+				+ card_id
+				+ ", found "
+				+ block_at_position.card_info.id
+			)
 	else:
-		return "block at position is not removable (type: " + str(block_at_position.object_type) + ")"
+		return (
+			"block at position is not removable (type: " + str(block_at_position.object_type) + ")"
+		)
 
 	return ""

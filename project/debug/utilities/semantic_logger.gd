@@ -43,8 +43,6 @@ static func log_lineup_move_card(card_id: String, from_position: int, to_positio
 	SessionManager.log_semantic_action("lineup.move_card", data)
 
 
-
-
 static func log_draft_to_lineup_move(
 	card_id: String, from_position: Vector2i, to_position: int
 ) -> void:

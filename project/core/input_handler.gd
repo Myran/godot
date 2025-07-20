@@ -97,7 +97,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					# Log semantic action for locked block removal (no card_id needed)
 					var block_pos: Vector2i = clicker.level.get_grid_pos(m_block)
 					SemanticLogger.log_draft_remove_card("", block_pos)
-					
+
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 					update_draft = true
 
@@ -158,7 +158,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 												SemanticLogger.log_draft_to_lineup_move(
 													card_id, draft_pos, holder_index
 												)
-
 
 												current_context.add_event(
 													core.RemoveBlockFromDraft.new(dragging_card)
