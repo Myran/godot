@@ -1,0 +1,12 @@
+{
+  "description": "Simple semantic action test using available system actions",
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.quit_application"
+  ],
+  "checksum_config": {
+    "initial_seed": 42010,
+    "state_type": "semantic_action_validation",
+    "expected_checksums": []
+  }
+}

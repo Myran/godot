@@ -1,0 +1,88 @@
+{
+  "description": "Generated replay from semantic session: session_20250719_221012_3ef254ca",
+  "session_id": "session_20250719_221012_3ef254ca",
+  "generation_timestamp": "20250719_222425",
+  "semantic_action_count": 5,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "4",
+        "position": {
+          "x": 2,
+          "y": 0
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "4",
+        "position": {
+          "x": 2,
+          "y": 0
+        }
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250719_221012_3ef254ca",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "test-no-add-card",
+    "capture_timestamp": "20250719_222425",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "117034a84e40fb9985427d668d3de5c8724c97df9c9757e02eb0d1da16be5f49"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "177fa88fecd3dff247b60484d8b1d1ed9be75f3382ab8ccbf1099aedd7dc335e"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.upgrade",
+        "checksum": "c0a784d6ec52bcd5e76507d14e892d2cd9e305997ba5cef16f0b0081d85a9c6a"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.remove_card",
+        "checksum": "38be53e1bf54e34e0c4b72ef99683a29c4f2a37d51627014eb71e5cb02ca5f8e"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.remove_card",
+        "checksum": "38be53e1bf54e34e0c4b72ef99683a29c4f2a37d51627014eb71e5cb02ca5f8e"
+      }
+    ]
+  }
+}

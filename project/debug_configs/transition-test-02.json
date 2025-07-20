@@ -1,0 +1,150 @@
+{
+  "description": "Generated replay from semantic session: session_20250720_195846_7fbf62ec",
+  "session_id": "session_20250720_195846_7fbf62ec",
+  "generation_timestamp": "20250720_195947",
+  "semantic_action_count": 11,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250720_195846_7fbf62ec",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "transition-test-02",
+    "capture_timestamp": "20250720_195947",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "100b6db6510ec73214f23a7631f7405e04d2f7ce73fdcdd67519229168be5d41"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "e532a91b16f014fe50aeff371c0772ea919979ad49a7d6be5e9015f1b9f45e3b"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.upgrade",
+        "checksum": "4cdea43bfff0bc8581ec68113aad9966446893b77e7216256f3da3e1340a7ecc"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.upgrade",
+        "checksum": "cf8ad59247cf4d7d789fb74052416965a21fd831a50ec73df35356cc34f4efe2"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.reroll",
+        "checksum": "ca875ac507976684053397db2f2bb3afb42d399c6e834e0b4bae276889d006c1"
+      },
+      {
+        "sequence": 6,
+        "action": "transition.change_state",
+        "checksum": "9b9e38504c3d6be8efe001d78b2414abd522493f590f56448d32301fece02ac2"
+      },
+      {
+        "sequence": 7,
+        "action": "transition.change_state",
+        "checksum": "726a642ad8033a1e065d0e69d248b1d6d8c472a5fb9fb5da1961f04e7f6c5bb1"
+      },
+      {
+        "sequence": 8,
+        "action": "draft.reroll",
+        "checksum": "327fb747aedce81911dc110d74b7181afa8de985f793887bd4c96910420ade07"
+      },
+      {
+        "sequence": 9,
+        "action": "transition.change_state",
+        "checksum": "7c834ec2030c4f63ac04a88ef62193c451d821bb1bd2978be65e4f6c94f343ef"
+      },
+      {
+        "sequence": 10,
+        "action": "transition.change_state",
+        "checksum": "665ee8a31f58a1ffbec95d5c55ac4e868945827aa2b8d4f27323f4dff9ad5cca"
+      },
+      {
+        "sequence": 11,
+        "action": "draft.reroll",
+        "checksum": "d1a837d453a6bb44cc029c0e2ae9ec0f2fee01260ed119d0ea6a90672a3b07d1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "description": "Test semantic action logging with StateExtractor fix",
+  "actions": [
+    "system.debug.hide_menu",
+    "game.lineup.populate_enemy",
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.quit_application"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_type": "semantic_action_validation"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345
+  }
+}
