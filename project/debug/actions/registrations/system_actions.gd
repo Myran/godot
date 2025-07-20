@@ -569,16 +569,15 @@ static func _detect_execution_context() -> Dictionary:
 		"mode": "manual", "platform": OS.get_name(), "command_source": "default_manual"  # Default to manual mode
 	}
 
-	# Check for automated mode set by JSON metadata injection
-	# This is the unified approach used by both desktop and Android
-	if OS.has_environment("GAMETWO_TEST_MODE"):
-		var test_mode: String = OS.get_environment("GAMETWO_TEST_MODE")
-		if test_mode == "automated":
+	# Primary: Check debug config metadata directly (no environment variables)
+	var metadata: Dictionary = DebugConfigReader.get_metadata()
+	if metadata.has("auto_quit"):
+		if metadata.auto_quit == true:
 			context.mode = "automated"
-			context.command_source = "json_metadata"
+			context.command_source = "config_metadata"
 		else:
 			context.mode = "manual"
-			context.command_source = "json_metadata"
+			context.command_source = "config_metadata"
 		return context
 
 	# Fallback: Check for CI environment variables (keep for CI/CD systems)

@@ -267,16 +267,12 @@ func _parse_config_file(path: String) -> Array:
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
 		Log.info("Test recipe detected", {"test_metadata": test_metadata}, ["debug", "startup", "test_recipe"])
 
-	# Check for automated mode in config metadata
+	# Log metadata information for debugging (environment variable approach removed)
 	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
 	if data.has("metadata"):
 		var metadata := data.metadata as Dictionary
 		Log.info("Config metadata found", {"metadata": metadata}, ["debug", "startup", "metadata"])
-		if metadata.has("auto_quit") and metadata.auto_quit == true:
-			OS.set_environment("GAMETWO_TEST_MODE", "automated")
-			Log.info("Automated mode detected from config metadata", {"auto_quit": true}, ["debug", "startup", "automated"])
-		else:
-			Log.info("No auto_quit or auto_quit is false", {"auto_quit": metadata.get("auto_quit", "not_found")}, ["debug", "startup", "metadata"])
+		Log.info("Metadata will be accessed directly by debug actions", {"auto_quit": metadata.get("auto_quit", "not_found")}, ["debug", "startup", "metadata"])
 	else:
 		Log.info("No metadata found in config", {"config_keys": data.keys()}, ["debug", "startup", "metadata"])
 

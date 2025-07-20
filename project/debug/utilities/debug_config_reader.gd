@@ -54,6 +54,29 @@ static func get_full_config() -> Dictionary:
 	return _read_config_file()
 
 
+static func get_metadata() -> Dictionary:
+	"""Get metadata section from debug configuration. Returns empty dict if not found."""
+	var config_data: Dictionary = _read_config_file()
+	
+	if config_data.has("metadata"):
+		var metadata: Dictionary = config_data.metadata
+		if Log:
+			Log.debug(
+				"Debug config metadata accessed",
+				{"metadata_keys": metadata.keys(), "size": metadata.size()},
+				["debug", "config", "metadata"]
+			)
+		return metadata
+	
+	if Log:
+		Log.debug(
+			"No metadata found in debug config",
+			{},
+			["debug", "config", "metadata"]
+		)
+	return {}
+
+
 static func _read_config_file() -> Dictionary:
 	"""Internal method to read and parse debug config file."""
 	var config_path: String = _get_config_path()
