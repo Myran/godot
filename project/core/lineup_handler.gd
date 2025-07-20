@@ -31,9 +31,9 @@ func find_tripples() -> Array[Card]:
 	var found_card_id: String = ""
 	var found_level: int = -1
 
-	for card: Card in lineup.values():
+	for card: Card in DictUtils.values_sorted(lineup):
 		var tripples: Array[Card] = []
-		for lineup_card: Card in lineup.values():
+		for lineup_card: Card in DictUtils.values_sorted(lineup):
 			if lineup_card.card_info.id == card.card_info.id and lineup_card.level == card.level:
 				if not tripples.has(lineup_card):
 					tripples.append(lineup_card)

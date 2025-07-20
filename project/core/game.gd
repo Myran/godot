@@ -408,7 +408,7 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		# SEMANTIC ACTION LOGGING - StartBattleEvent is PLAYER event
 		var current_lineup: Array = []
 		var lineup_dict: Dictionary = holder_allies.get_current_lineup()
-		for card: Card in lineup_dict.values():
+		for card: Card in DictUtils.values_sorted(lineup_dict):
 			if card:
 				current_lineup.append(card)
 		SemanticLogger.log_battle_start(current_lineup, [])
@@ -788,7 +788,7 @@ func _capture_lineup_state() -> Dictionary:
 	var lineup: Dictionary = holder_allies.get_current_lineup()
 	var lineup_data: Dictionary = {}
 
-	for lineup_position: int in lineup.keys():
+	for lineup_position: int in DictUtils.keys_sorted(lineup):
 		var card: Card = lineup[lineup_position]
 		if card:
 			lineup_data[str(lineup_position)] = {

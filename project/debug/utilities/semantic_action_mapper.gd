@@ -63,11 +63,9 @@ static func create_replay_config(
 	for debug_action: Dictionary in debug_sequence:
 		config.actions.append(debug_action.get("action_name", "unknown"))
 
-	# Add completion action based on mode
-	if mode == "automated":
-		config.actions.append("system.debug.quit_application")
-	else:  # manual mode
-		config.actions.append("system.debug.replay_complete")
+	# Add completion action - always use replay_complete which is context-aware
+	# It will automatically detect automated vs manual mode and behave appropriately
+	config.actions.append("system.debug.replay_complete")
 
 	return config
 
@@ -203,11 +201,9 @@ static func create_replay_config_with_validation(
 		for debug_action: Dictionary in debug_sequence:
 			config.actions.append(debug_action.get("action_name", "unknown"))
 
-	# Add completion action based on mode
-	if mode == "automated":
-		config.actions.append("system.debug.quit_application")
-	else:  # manual mode
-		config.actions.append("system.debug.replay_complete")
+	# Add completion action - always use replay_complete which is context-aware
+	# It will automatically detect automated vs manual mode and behave appropriately
+	config.actions.append("system.debug.replay_complete")
 
 	Log.info(
 		"Replay config with validation created",

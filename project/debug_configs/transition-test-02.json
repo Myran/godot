@@ -93,57 +93,57 @@
       {
         "sequence": 1,
         "action": "transition.change_state",
-        "checksum": "100b6db6510ec73214f23a7631f7405e04d2f7ce73fdcdd67519229168be5d41"
+        "checksum": "117034a84e40fb9985427d668d3de5c8724c97df9c9757e02eb0d1da16be5f49"
       },
       {
         "sequence": 2,
         "action": "draft.upgrade",
-        "checksum": "e532a91b16f014fe50aeff371c0772ea919979ad49a7d6be5e9015f1b9f45e3b"
+        "checksum": "177fa88fecd3dff247b60484d8b1d1ed9be75f3382ab8ccbf1099aedd7dc335e"
       },
       {
         "sequence": 3,
         "action": "draft.upgrade",
-        "checksum": "4cdea43bfff0bc8581ec68113aad9966446893b77e7216256f3da3e1340a7ecc"
+        "checksum": "c0a784d6ec52bcd5e76507d14e892d2cd9e305997ba5cef16f0b0081d85a9c6a"
       },
       {
         "sequence": 4,
         "action": "draft.upgrade",
-        "checksum": "cf8ad59247cf4d7d789fb74052416965a21fd831a50ec73df35356cc34f4efe2"
+        "checksum": "38be53e1bf54e34e0c4b72ef99683a29c4f2a37d51627014eb71e5cb02ca5f8e"
       },
       {
         "sequence": 5,
         "action": "draft.reroll",
-        "checksum": "ca875ac507976684053397db2f2bb3afb42d399c6e834e0b4bae276889d006c1"
+        "checksum": "4be46211526cf880cf39cdb064e3a7c31fecbf972e793a34df1613b2f6a8c3cd"
       },
       {
         "sequence": 6,
         "action": "transition.change_state",
-        "checksum": "9b9e38504c3d6be8efe001d78b2414abd522493f590f56448d32301fece02ac2"
+        "checksum": "fbc551bd4f717dd055c157f501722c8c61c96a35042b369944c176c774dd6b82"
       },
       {
         "sequence": 7,
         "action": "transition.change_state",
-        "checksum": "726a642ad8033a1e065d0e69d248b1d6d8c472a5fb9fb5da1961f04e7f6c5bb1"
+        "checksum": "1fef58cd3675efd8cc470cf5714e125d1dd475c094a4efaa24b2aa78b7fb2046"
       },
       {
         "sequence": 8,
         "action": "draft.reroll",
-        "checksum": "327fb747aedce81911dc110d74b7181afa8de985f793887bd4c96910420ade07"
+        "checksum": "fbc551bd4f717dd055c157f501722c8c61c96a35042b369944c176c774dd6b82"
       },
       {
         "sequence": 9,
         "action": "transition.change_state",
-        "checksum": "7c834ec2030c4f63ac04a88ef62193c451d821bb1bd2978be65e4f6c94f343ef"
+        "checksum": "85e33ac006dd825bb9a00355bc783fbef2244eead5335f4b54af7ebb5b7acea0"
       },
       {
         "sequence": 10,
         "action": "transition.change_state",
-        "checksum": "665ee8a31f58a1ffbec95d5c55ac4e868945827aa2b8d4f27323f4dff9ad5cca"
+        "checksum": "442a5a466256bed7a4d91db1533ad5a186bac856d67b2b6a00e0fcd6e282447e"
       },
       {
         "sequence": 11,
         "action": "draft.reroll",
-        "checksum": "d1a837d453a6bb44cc029c0e2ae9ec0f2fee01260ed119d0ea6a90672a3b07d1"
+        "checksum": "85e33ac006dd825bb9a00355bc783fbef2244eead5335f4b54af7ebb5b7acea0"
       }
     ]
   }
