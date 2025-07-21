@@ -1791,8 +1791,15 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Use Clicker static method - handles semantic logging, removal event, and cascading actions
-	Clicker.remove_block_from_draft_complete(game.clicker, actual_block, true)
+	# Create and dispatch RemoveBlockFromDraft event (automatically has PLAYER source)
+	# This triggers semantic logging in clicker.gd event handler
+	var event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(actual_block, true)
+	event.source = core.EventSource.PLAYER
+	core.action(event)
+	
+	# Trigger cascading actions (gravity, refill, matching, and DraftSteadyEvent)
+	# This matches the behavior of Clicker.remove_block_from_draft_complete()
+	core.action(core.UpdateDraftAreaEvent.new())
 
 	Log.info(
 		"Block removal completed with cascading actions",
@@ -2290,16 +2297,17 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 		if not card_id.is_empty():
 			return "card_id should be empty for locked blocks, got: " + card_id
 	elif block_at_position.object_type == core.ObjectType.CARD:
-		# Card blocks require matching card_id
-		if card_id.is_empty():
-			return "card_id cannot be empty for card blocks"
-		if block_at_position.card_info.id != card_id:
-			return (
-				"card_id mismatch: expected "
-				+ card_id
-				+ ", found "
-				+ block_at_position.card_info.id
-			)
+		# Card blocks: allow position-based removal (empty card_id) or specific card_id removal
+		if not card_id.is_empty():
+			# If card_id is specified, it must match
+			if block_at_position.card_info.id != card_id:
+				return (
+					"card_id mismatch: expected "
+					+ card_id
+					+ ", found "
+					+ block_at_position.card_info.id
+				)
+		# If card_id is empty, allow position-based removal (player action style)
 	else:
 		return (
 			"block at position is not removable (type: " + str(block_at_position.object_type) + ")"

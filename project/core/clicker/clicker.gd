@@ -93,6 +93,14 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		var block: Block = event.block
 		var is_destroy: bool = event.destroy_block
 
+		# SEMANTIC ACTION LOGGING - only for PLAYER events
+		if event.source == core.EventSource.PLAYER:
+			var block_pos: Vector2i = level.get_grid_pos(block)
+			var card_id: String = ""
+			if block.object_type == core.ObjectType.CARD:
+				card_id = block.card_info.id
+			SemanticLogger.log_draft_remove_card(card_id, block_pos)
+
 		if level.get_grid_pos(block) != Clicker.NO_POS:
 			level.remove_from_grid(block, is_destroy)
 
