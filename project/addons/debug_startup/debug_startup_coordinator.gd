@@ -535,7 +535,8 @@ func _should_action_auto_continue(action_name: String) -> bool:
 		"system.debug.finalize_replay_validation",
 		"system.debug.quit_application",
 		"system.memory.",
-		"system.network.rtdb_status"
+		"system.network.rtdb_status",
+		"game.draft.toggle_column_player"
 	]
 
 	# Check if action matches any auto-continue pattern
