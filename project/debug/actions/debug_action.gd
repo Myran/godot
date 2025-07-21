@@ -833,7 +833,7 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			test_success_count += 1
 			(
 				Log
-				. error(  # Using Log.error for structured parsing in test analysis
+				. info(  # Using Log.info for proper semantic logging level
 					"DEBUG_TEST_SUCCESS",
 					{
 						"test_id": current_test_id,

@@ -66,7 +66,7 @@ logs-errors-tagged TEST_ID *TAGS:
             fi
         done
         
-        # Filter by tags first, then by errors
+        # Filter by tags first, then by errors (excludes test successes)
         grep "$tag_pattern" "$LOG_FILE" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
     else
         echo "📊 All error types:"
@@ -138,7 +138,7 @@ logs-lifecycle-tagged TEST_ID *TAGS:
             fi
         done
         
-        # Filter by tags first, then by lifecycle events
+        # Filter by tags first, then by lifecycle events (searches both ERROR and INFO levels)
         grep "$tag_pattern" "$LOG_FILE" | grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" | head -20 || echo "⚠️ No lifecycle events in filtered logs"
     else
         echo "📊 All lifecycle events:"

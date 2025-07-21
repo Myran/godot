@@ -61,7 +61,7 @@ logs-lifecycle TEST_ID:
     echo "========================="
     echo ""
     
-    # Show key test events in order
+    # Show key test events in order (searches both ERROR and INFO levels)
     grep -E "DEBUG_TEST_START\|DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE\|DEBUG_TEST_COMPLETE\|DEBUG_TEST_RESTART" "$LOG_FILE" || echo "⚠️ No lifecycle events found"
 
 # Show logs from most recent test run only (platform-agnostic)

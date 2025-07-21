@@ -21,13 +21,23 @@ _inject-auto-quit-metadata source_config target_config auto_quit_value:
         exit 1
     fi
     
-    # Use jq to inject/update the auto_quit metadata
-    jq --arg auto_quit "$AUTO_QUIT" '
-        .metadata = (.metadata // {}) | 
-        .metadata.auto_quit = ($auto_quit | test("true"))
-    ' "$SOURCE_CONFIG" > "$TARGET_CONFIG"
+    # Use jq to inject/update the auto_quit metadata and test_id if TEST_ID is set
+    if [ -n "${TEST_ID:-}" ]; then
+        jq --arg auto_quit "$AUTO_QUIT" --arg test_id "$TEST_ID" '
+            .metadata = (.metadata // {}) | 
+            .metadata.auto_quit = ($auto_quit | test("true")) |
+            .test_metadata = (.test_metadata // {}) |
+            .test_metadata.test_id = $test_id
+        ' "$SOURCE_CONFIG" > "$TARGET_CONFIG"
+        echo "✅ Config updated with auto_quit: $AUTO_QUIT and test_id: $TEST_ID"
+    else
+        jq --arg auto_quit "$AUTO_QUIT" '
+            .metadata = (.metadata // {}) | 
+            .metadata.auto_quit = ($auto_quit | test("true"))
+        ' "$SOURCE_CONFIG" > "$TARGET_CONFIG"
+        echo "✅ Config updated with auto_quit: $AUTO_QUIT"
+    fi
     
-    echo "✅ Config updated with auto_quit: $AUTO_QUIT"
     echo "   Source: $SOURCE_CONFIG"
     echo "   Target: $TARGET_CONFIG"
 
