@@ -938,17 +938,17 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
             JSON_PART=$(echo "$action_line" | sed 's/.*SEMANTIC_ACTION //' | sed 's/ (session_manager\.gd:[0-9]*)$//')
             
             # Extract action type and data using jq
-            ACTION_TYPE=$(echo "$JSON_PART" | jq -r '.type // empty')
+            ACTION_TYPE=$(echo "$JSON_PART" | jq -r '.type // null')
             
             echo "   Found semantic action: $ACTION_TYPE"
             
             case "$ACTION_TYPE" in
                 "transition.change_state")
                     # Extract from_state and to_state using jq
-                    FROM_STATE=$(echo "$JSON_PART" | jq -r '.data.from_state // empty')
-                    TO_STATE=$(echo "$JSON_PART" | jq -r '.data.to_state // empty')
+                    FROM_STATE=$(echo "$JSON_PART" | jq -r '.data.from_state // null')
+                    TO_STATE=$(echo "$JSON_PART" | jq -r '.data.to_state // null')
                     
-                    if [ -n "$FROM_STATE" ] && [ -n "$TO_STATE" ]; then
+                    if [ -n "$FROM_STATE" ] && [ "$FROM_STATE" != "null" ] && [ -n "$TO_STATE" ] && [ "$TO_STATE" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.state.transition_player\", \"params\": { \"from_state\": \"$FROM_STATE\", \"to_state\": \"$TO_STATE\" } }")
                     else
                         DEBUG_ACTIONS+=("game.state.transition_player")
@@ -956,9 +956,9 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "draft.reroll")
                     # Extract cost from reroll action data using jq
-                    COST=$(echo "$JSON_PART" | jq -r '.data.cost // empty')
+                    COST=$(echo "$JSON_PART" | jq -r '.data.cost // null')
                     
-                    if [ -n "$COST" ]; then
+                    if [ -n "$COST" ] && [ "$COST" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.reroll_player\", \"params\": { \"cost\": $COST } }")
                     else
                         DEBUG_ACTIONS+=("game.draft.reroll_player")
@@ -966,9 +966,9 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "draft.upgrade")
                     # Extract level from upgrade action data using jq
-                    LEVEL=$(echo "$JSON_PART" | jq -r '.data.level // empty')
+                    LEVEL=$(echo "$JSON_PART" | jq -r '.data.level // null')
                     
-                    if [ -n "$LEVEL" ]; then
+                    if [ -n "$LEVEL" ] && [ "$LEVEL" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.upgrade_player\", \"params\": { \"level\": $LEVEL } }")
                     else
                         DEBUG_ACTIONS+=("game.draft.upgrade_player")
@@ -976,10 +976,21 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "draft.toggle_column")
                     # Extract column_index and new_state from toggle_column action data using jq
-                    COLUMN_INDEX=$(echo "$JSON_PART" | jq -r '.data.column_index // empty')
-                    NEW_STATE=$(echo "$JSON_PART" | jq -r '.data.new_state // empty')
+                    COLUMN_INDEX=$(echo "$JSON_PART" | jq -r '.data.column_index // null')
+                    NEW_STATE=$(echo "$JSON_PART" | jq -r 'if .data | has("new_state") then .data.new_state else "null" end')
                     
-                    if [ -n "$COLUMN_INDEX" ] && [ -n "$NEW_STATE" ]; then
+                    if [ -n "$COLUMN_INDEX" ] && [ "$COLUMN_INDEX" != "null" ] && [ -n "$NEW_STATE" ] && [ "$NEW_STATE" != "null" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"game.draft.toggle_column_player\", \"params\": { \"column_index\": $COLUMN_INDEX, \"new_state\": $NEW_STATE } }")
+                    else
+                        DEBUG_ACTIONS+=("game.draft.toggle_column_player")
+                    fi
+                    ;;
+                "draft.toggle_line")
+                    # Extract column_index and new_state from toggle_line action data using jq
+                    COLUMN_INDEX=$(echo "$JSON_PART" | jq -r '.data.column_index // null')
+                    NEW_STATE=$(echo "$JSON_PART" | jq -r 'if .data | has("new_state") then .data.new_state else "null" end')
+                    
+                    if [ -n "$COLUMN_INDEX" ] && [ "$COLUMN_INDEX" != "null" ] && [ -n "$NEW_STATE" ] && [ "$NEW_STATE" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.toggle_column_player\", \"params\": { \"column_index\": $COLUMN_INDEX, \"new_state\": $NEW_STATE } }")
                     else
                         DEBUG_ACTIONS+=("game.draft.toggle_column_player")
@@ -987,11 +998,11 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "draft.remove_card")
                     # Extract card_id and position from remove_card action data using jq
-                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
-                    POSITION_X=$(echo "$JSON_PART" | jq -r '.data.position.x // empty')
-                    POSITION_Y=$(echo "$JSON_PART" | jq -r '.data.position.y // empty')
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // null')
+                    POSITION_X=$(echo "$JSON_PART" | jq -r '.data.position.x // null')
+                    POSITION_Y=$(echo "$JSON_PART" | jq -r '.data.position.y // null')
                     
-                    if [ -n "$POSITION_X" ] && [ -n "$POSITION_Y" ]; then
+                    if [ -n "$POSITION_X" ] && [ "$POSITION_X" != "null" ] && [ -n "$POSITION_Y" ] && [ "$POSITION_Y" != "null" ]; then
                         # Check if this remove is part of an atomic move operation
                         IS_ATOMIC_MOVE=false
                         for move_key in $ATOMIC_MOVES; do
@@ -1012,11 +1023,11 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "lineup.move_card")
                     # Extract card_id, from_position, and to_position from move_card action data using jq
-                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
-                    FROM_POSITION=$(echo "$JSON_PART" | jq -r '.data.from_position // empty')
-                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // empty')
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // null')
+                    FROM_POSITION=$(echo "$JSON_PART" | jq -r '.data.from_position // null')
+                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // null')
                     
-                    if [ -n "$CARD_ID" ] && [ -n "$FROM_POSITION" ] && [ -n "$TO_POSITION" ]; then
+                    if [ -n "$CARD_ID" ] && [ "$CARD_ID" != "null" ] && [ -n "$FROM_POSITION" ] && [ "$FROM_POSITION" != "null" ] && [ -n "$TO_POSITION" ] && [ "$TO_POSITION" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.move_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"from_position\": $FROM_POSITION, \"to_position\": $TO_POSITION } }")
                     else
                         DEBUG_ACTIONS+=("game.lineup.move_card_player")
@@ -1024,10 +1035,10 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "lineup.remove_card")
                     # Extract card_id and position from remove_card action data using jq
-                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
-                    POSITION=$(echo "$JSON_PART" | jq -r '.data.position // empty')
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // null')
+                    POSITION=$(echo "$JSON_PART" | jq -r '.data.position // null')
                     
-                    if [ -n "$CARD_ID" ] && [ -n "$POSITION" ]; then
+                    if [ -n "$CARD_ID" ] && [ "$CARD_ID" != "null" ] && [ -n "$POSITION" ] && [ "$POSITION" != "null" ]; then
                         DEBUG_ACTIONS+=("{ \"action\": \"game.lineup.remove_card_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"position\": $POSITION } }")
                     else
                         DEBUG_ACTIONS+=("game.lineup.remove_card_player")
@@ -1039,13 +1050,13 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     ;;
                 "card.move")
                     # Extract complete move operation parameters using jq
-                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // empty')
-                    FROM_X=$(echo "$JSON_PART" | jq -r '.data.from_position.x // empty')
-                    FROM_Y=$(echo "$JSON_PART" | jq -r '.data.from_position.y // empty')
-                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // empty')
-                    MOVE_TYPE=$(echo "$JSON_PART" | jq -r '.data.move_type // empty')
+                    CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // null')
+                    FROM_X=$(echo "$JSON_PART" | jq -r '.data.from_position.x // null')
+                    FROM_Y=$(echo "$JSON_PART" | jq -r '.data.from_position.y // null')
+                    TO_POSITION=$(echo "$JSON_PART" | jq -r '.data.to_position // null')
+                    MOVE_TYPE=$(echo "$JSON_PART" | jq -r '.data.move_type // null')
                     
-                    if [ "$MOVE_TYPE" = "draft_to_lineup" ] && [ -n "$CARD_ID" ] && [ -n "$FROM_X" ] && [ -n "$FROM_Y" ] && [ -n "$TO_POSITION" ]; then
+                    if [ "$MOVE_TYPE" = "draft_to_lineup" ] && [ -n "$CARD_ID" ] && [ "$CARD_ID" != "null" ] && [ -n "$FROM_X" ] && [ "$FROM_X" != "null" ] && [ -n "$FROM_Y" ] && [ "$FROM_Y" != "null" ] && [ -n "$TO_POSITION" ] && [ "$TO_POSITION" != "null" ]; then
                         echo "   🔄 Detected atomic move operation: $CARD_ID from ($FROM_X,$FROM_Y) to lineup position $TO_POSITION"
                         DEBUG_ACTIONS+=("{ \"action\": \"game.draft.move_card_to_lineup_player\", \"params\": { \"card_id\": \"$CARD_ID\", \"from_position\": { \"x\": $FROM_X, \"y\": $FROM_Y }, \"to_position\": $TO_POSITION } }")
                         
