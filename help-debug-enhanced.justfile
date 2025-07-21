@@ -206,7 +206,7 @@ just test-android CONFIG              # Debug actions execute properly
 ❌ WRONG:
 ```bash  
 just run-desktop                      # Skips debug coordinator (editor mode)
-just run-android-debug                # Debug actions won't execute
+just run-android                      # Debug actions won't execute (use test-android instead)
 ```
 
 IMPACT: State capture, checksum validation, semantic logging require debug actions.

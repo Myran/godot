@@ -366,66 +366,9 @@ test-android-manual config_name:
     
     echo "✅ Android test started in manual mode (app will stay open for verification)"
 
-test-desktop-manual config_name duration="30":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    CONFIG_FILE="project/debug_configs/{{config_name}}.json"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "❌ Config not found: $CONFIG_FILE"
-        echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
-        exit 1
-    fi
-    
-    echo "🖥️  Running desktop test: {{config_name}} (manual mode - stays open)"
-    echo "   Config: $CONFIG_FILE"
-    echo ""
-    
-    # Ensure logs directory exists for desktop
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-    LOGS_DIR="$USER_DATA_DIR/logs"
-    mkdir -p "$LOGS_DIR"
-    
-    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
-    
-    # Copy config to the expected location for desktop startup (user directory)
-    USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
-    mkdir -p "$USER_DIR"
-    STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
-    
-    # Remove old config file if it exists to prevent stale data
-    if [ -f "$STARTUP_CONFIG" ]; then
-        echo "🧹 Removing old config file: $STARTUP_CONFIG"
-        rm "$STARTUP_CONFIG"
-    fi
-    
-    echo "📋 Injecting auto_quit=false and copying config for desktop startup: $STARTUP_CONFIG"
-    just _inject-auto-quit-metadata "$CONFIG_FILE" "$STARTUP_CONFIG" "false"
-    
-    # Verify the copy was successful
-    if [ ! -f "$STARTUP_CONFIG" ]; then
-        echo "❌ Failed to create config file: $STARTUP_CONFIG"
-        exit 1
-    fi
-    
-    # Verify the file has content
-    if [ ! -s "$STARTUP_CONFIG" ]; then
-        echo "❌ Created config file is empty: $STARTUP_CONFIG"
-        exit 1
-    fi
-    
-    echo "✅ Config file created with auto_quit=false ($(wc -c < "$STARTUP_CONFIG") bytes)"
-    
-    # Run desktop Godot with debug actions (manual mode without quit)
-    # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
-    echo "🚀 Starting desktop test in manual mode with --test-mode flag..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
-        && echo "✅ Desktop test completed (app stayed open for verification)" \
-        || echo "⚠️  Desktop test completed with exit code $?"
-    
-    echo ""
-    echo "🎉 Desktop test execution complete! (App should have stayed open for verification)"
+# Removed: test-desktop-manual (replaced by unified test-desktop command)
+# Use: just test-desktop CONFIG_NAME  # Interactive mode (manual)
+# Or:  just test-desktop-target CONFIG_NAME  # Automated mode
 
 # Enhanced version of test-desktop-target that includes automatic error analysis  
 test-desktop-target config_name duration="30":
