@@ -179,11 +179,18 @@ launch-ios-ipad-debug: (_ios-launch-app "ipad" "true")
 
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  
-run-android-debug:
+run-android:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🐛 Launching existing Android app in debug mode..."
+    echo "🧹 Clearing any persistent Android configuration..."
+    just config-clear-android > /dev/null 2>&1 || echo "   No config to clear (or clearing failed)"
+    
+    echo "🔄 Stopping any running app instance..."
+    adb -s {{ANDROID_DEVICE_ID}} shell am force-stop {{ANDROID_PACKAGE_NAME}} || true
+    sleep 1
+    
+    echo "🐛 Launching Android app in debug mode..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -a android.intent.action.MAIN -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ App launched in debug mode!"
     

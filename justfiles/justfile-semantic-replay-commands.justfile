@@ -238,7 +238,7 @@ create-demo-interactive:
         echo ""
         echo "💡 Play the game first:"
         echo "   Desktop: just run-desktop"
-        echo "   Android: just run-android-debug"
+        echo "   Android: just run-android"
         exit 1
     fi
     
@@ -1568,7 +1568,7 @@ replay-generate-from-last-session-android config_name:
         echo ""
         echo "💡 Make sure you've run a game session first:"
         echo "   just test-android development-workflow"
-        echo "   just run-android-debug"
+        echo "   just run-android"
         exit 1
     fi
     
