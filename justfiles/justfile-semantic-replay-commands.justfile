@@ -2070,10 +2070,10 @@ test-desktop TARGET="" DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # If arguments provided, use direct execution mode (manual mode - stays open)
+    # If arguments provided, delegate to test-desktop-target (automated mode)
     if [ -n "{{TARGET}}" ]; then
-        echo "🎯 Manual mode execution: {{TARGET}}"
-        just _test-desktop-manual "{{TARGET}}" "{{DURATION}}"
+        echo "🎯 Automated mode execution: {{TARGET}}"
+        just test-desktop-target "{{TARGET}}" "{{DURATION}}"
         exit $?
     fi
     
