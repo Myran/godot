@@ -86,56 +86,16 @@
     "state_type": "player_actions",
     "initial_seed": 12345,
     "expected_checksums": [
-      {
-        "sequence": 1,
-        "action": "transition.change_state",
-        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
-      },
-      {
-        "sequence": 2,
-        "action": "transition.change_state",
-        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
-      },
-      {
-        "sequence": 3,
-        "action": "transition.change_state",
-        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
-      },
-      {
-        "sequence": 4,
-        "action": "transition.change_state",
-        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
-      },
-      {
-        "sequence": 5,
-        "action": "transition.change_state",
-        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
-      },
-      {
-        "sequence": 6,
-        "action": "transition.change_state",
-        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
-      },
-      {
-        "sequence": 7,
-        "action": "transition.change_state",
-        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
-      },
-      {
-        "sequence": 8,
-        "action": "draft.upgrade",
-        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
-      },
-      {
-        "sequence": 9,
-        "action": "draft.upgrade",
-        "checksum": "eef87107f178c6f7f98579ae494fa226c43bbccefde7ebe44ba81841f5e146a5"
-      },
-      {
-        "sequence": 10,
-        "action": "draft.upgrade",
-        "checksum": "b2431e42557a28cd8b0e7da95319648867fc49a5b2b562e6541267c85477ebbe"
-      }
+      "4e0bf926ab46b3abf51ebdd8c7be587112caec94d4a0f419d088d9bc4c277653",
+      "d123613436c73e9aab5e066a52af2abccd1b4d4a1310d68384b075326de4d27c",
+      "80c0fd4093027f1dc6a696b25a76610340839d383c797fac5201bf2e09cdf1bd",
+      "870605bbe0b14acf7e12530880d63a42910a7e163b8ed29cb4309d2638d37d43",
+      "73e1e478d9d709c3b696ec85fa8232d32668e847e349473ddc14bc6c8572dc2b",
+      "781df968d09307809a5798c5041187324b115424aac0ff10463fafa326625bc1",
+      "c6f99715c24a088fac06ca0f2fb1f36560f4cc9bb4dc928b90a2a528878e6356",
+      "7692b2459d73ec8affcfb0491ca439f42aabb3be9785f44bb6bae2231c75fc23",
+      "6df592906e55c12856c2a7e98a17ade22f462c7b02128d278e406400bad72a40",
+      "c582b51fc888fdc0e32cceb186ed751bab75b0d214806f942e8a3b0afaae84d1"
     ]
   }
 }

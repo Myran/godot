@@ -108,8 +108,8 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 	var timestamp_ms: float = Time.get_unix_time_from_system() * 1000.0
 	var session_elapsed_ms: float = timestamp_ms - session_start_time
 
-	# Capture pre-action checksum for replay validation
-	var pre_action_checksum: String = _capture_pre_action_checksum(action_type)
+	# Capture pre-action checksum for replay validation with sequence number
+	var pre_action_checksum: String = _capture_pre_action_checksum(action_type, sequence)
 
 	var semantic_log: Dictionary = {
 		"type": action_type,
@@ -140,11 +140,13 @@ static func end_gameplay_session() -> void:
 # Checksum validation now uses logged checksums only, no separate storage needed
 
 
-## Capture pre-action checksum for replay validation
-static func _capture_pre_action_checksum(action_type: String) -> String:
-	"""Capture game state checksum before semantic action execution"""
+## Capture pre-action checksum for replay validation with sequence number
+static func _capture_pre_action_checksum(action_type: String, sequence: int) -> String:
+	"""Capture game state checksum before semantic action execution, including sequence number"""
 	Log.debug(
-		"Starting checksum capture", {"action_type": action_type}, ["session", "checksum", "debug"]
+		"Starting checksum capture",
+		{"action_type": action_type, "sequence": sequence},
+		["session", "checksum", "debug"]
 	)
 
 	# Extract current game state using StateExtractor
@@ -154,6 +156,7 @@ static func _capture_pre_action_checksum(action_type: String) -> String:
 		"StateExtractor result",
 		{
 			"action_type": action_type,
+			"sequence": sequence,
 			"state_size": game_state.size(),
 			"is_empty": game_state.is_empty()
 		},
@@ -163,16 +166,25 @@ static func _capture_pre_action_checksum(action_type: String) -> String:
 	if game_state.is_empty():
 		Log.warning(
 			"StateExtractor returned empty state",
-			{"action_type": action_type},
+			{"action_type": action_type, "sequence": sequence},
 			["session", "checksum", "warning"]
 		)
 		return ""
+
+	# Add sequence number to game state for unique checksum generation
+	# This ensures identical game states at different points produce different checksums
+	game_state["action_sequence"] = sequence
 
 	# Generate checksum for state validation
 	var checksum: String = StateExtractor.generate_checksum(game_state)
 	Log.debug(
 		"Generated checksum",
-		{"action_type": action_type, "checksum": checksum, "checksum_length": checksum.length()},
+		{
+			"action_type": action_type,
+			"sequence": sequence,
+			"checksum": checksum,
+			"checksum_length": checksum.length()
+		},
 		["session", "checksum", "debug"]
 	)
 
@@ -180,6 +192,7 @@ static func _capture_pre_action_checksum(action_type: String) -> String:
 		"Pre-action checksum captured",
 		{
 			"action_type": action_type,
+			"sequence": sequence,
 			"checksum": checksum,
 			"game_available": game_state.get("lineup", {}).get("game_available", false)
 		},
