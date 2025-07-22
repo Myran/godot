@@ -46,7 +46,40 @@ _inject-auto-quit-metadata source_config target_config auto_quit_value:
 # CHECKSUM VALIDATION FUNCTIONS
 # ================================
 
-# Extract checksums from Android logcat output
+# Unified checksum extraction function for both desktop and Android logs
+_extract-checksums-unified log_file test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    LOG_FILE="{{log_file}}"
+    TEST_ID="{{test_id}}"
+    
+    # Handle different input types (file path vs logcat output)
+    if [[ "$LOG_FILE" == "logcat" ]]; then
+        # Android: Get logcat output
+        LOG_CONTENT=$(adb logcat -d 2>/dev/null || echo "")
+        if [[ -z "$LOG_CONTENT" ]]; then
+            echo "No logcat output available" >&2
+            return 0
+        fi
+    else
+        # Desktop: Read from log file
+        if [[ ! -f "$LOG_FILE" ]]; then
+            echo "Log file not found: $LOG_FILE" >&2
+            return 0
+        fi
+        LOG_CONTENT=$(cat "$LOG_FILE")
+    fi
+    
+    # Unified extraction: Look for SEMANTIC_ACTION logs with pre_action_checksum
+    # This works for both desktop ALogger format and Android logcat format
+    CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | \
+               sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+               grep -v "^$")
+    
+    echo "$CHECKSUMS"
+
+# Extract checksums from Android logcat output - DEPRECATED: Use _extract-checksums-unified instead
 _extract-checksums-from-logcat test_id:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -62,22 +95,22 @@ _extract-checksums-from-logcat test_id:
     fi
     
     # Extract checksums from the actual log format
-    # Look for StateExtractor checksum generation
-    CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "StateExtractor.*checksum.*generated" | \
+    # Look for Generated checksum logs from SessionManager
+    CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "Generated checksum.*checksum.*:" | \
                sed -n 's/.*"checksum": *"\([^"]*\)".*/\1/p' | \
                grep -v "^$" | sort | uniq || echo "")
     
     if [[ -z "$CHECKSUMS" ]]; then
-        # Fallback 1: look for final state checksums
-        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "FINAL_STATE_CAPTURED.*final_checksum" | \
-                   sed -n 's/.*"final_checksum": *"\([^"]*\)".*/\1/p' | \
+        # Fallback 1: look for SEMANTIC_ACTION checksums which contain pre_action_checksum
+        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "SEMANTIC_ACTION.*pre_action_checksum" | \
+                   sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
                    grep -v "^$" | sort | uniq || echo "")
     fi
     
     if [[ -z "$CHECKSUMS" ]]; then
-        # Fallback 2: look for pre-action checksums from SessionManager
-        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "pre_action_checksum" | \
-                   sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+        # Fallback 2: look for final state checksums
+        CHECKSUMS=$(echo "$LOGCAT_OUTPUT" | grep -E "FINAL_STATE_CAPTURED.*final_checksum" | \
+                   sed -n 's/.*"final_checksum": *"\([^"]*\)".*/\1/p' | \
                    grep -v "^$" | sort | uniq || echo "")
     fi
     
@@ -629,9 +662,9 @@ _test-android-target-original config_name:
             echo "📸 Checksum Validation:"
             echo "======================"
             
-            # Extract actual checksums from logcat
+            # Extract actual checksums using unified parser
             EXTRACTED_CHECKSUMS=""
-            if just _extract-checksums-from-logcat "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+            if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
                 EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
             else
                 echo "⚠️  Checksum extraction failed:"

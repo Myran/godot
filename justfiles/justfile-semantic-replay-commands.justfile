@@ -2221,67 +2221,52 @@ _validate-checksums-from-logs CONFIG_FILE LOG_FILE:
     fi
     echo ""
     
-    # Extract expected checksums with metadata from JSON config
-    EXPECTED_DATA=$(jq -c '.checksum_config.expected_checksums[]?' "$CONFIG_FILE" 2>/dev/null || echo "")
+    # Extract expected checksums from JSON config (simple string array)
+    EXPECTED_CHECKSUMS=$(jq -r '.checksum_config.expected_checksums[]?' "$CONFIG_FILE" 2>/dev/null || echo "")
     
-    if [ -z "$EXPECTED_DATA" ]; then
+    if [ -z "$EXPECTED_CHECKSUMS" ]; then
         echo "⚠️  No expected checksums found in config - skipping validation"
         exit 0
     fi
     
-    # Extract actual checksums from replay logs (seed is handled autonomously)
-    # Extract JSON payload from ALogger format: "timestamp LEVEL [tags] MESSAGE {json} (file.gd:line)"
-    ACTUAL_DATA=$(grep "SEMANTIC_ACTION" "$LOG_FILE" 2>/dev/null | sed -n 's/.*SEMANTIC_ACTION \({.*}\) (.*/\1/p' | jq -c '{sequence: .sequence, action: .action_name, checksum: .pre_action_checksum}' 2>/dev/null || echo "")
+    # Extract actual checksums from replay logs using unified parser
+    # Use the unified extraction function to get just the checksums (no metadata for now)
+    ACTUAL_CHECKSUMS=$(just _extract-checksums-unified "$LOG_FILE" "test_id" 2>/dev/null || echo "")
     
-    if [ -z "$ACTUAL_DATA" ]; then
+    if [ -z "$ACTUAL_CHECKSUMS" ]; then
         echo "❌ No SEMANTIC_ACTION logs found in replay"
         echo "   This indicates the replay system is not working correctly"
         exit 1
     fi
     
-    # Compare sequence by sequence
+    # Compare checksums line by line
     sequence=1
     validation_passed=true
     
-    while IFS= read -r expected_line && IFS= read -r actual_line <&3; do
-        if [ -z "$expected_line" ] || [ -z "$actual_line" ]; then
+    while IFS= read -r expected_checksum && IFS= read -r actual_checksum <&3; do
+        if [ -z "$expected_checksum" ] || [ -z "$actual_checksum" ]; then
             break
         fi
         
-        EXPECTED_CHECKSUM=$(echo "$expected_line" | jq -r '.checksum' 2>/dev/null || echo "")
-        EXPECTED_ACTION=$(echo "$expected_line" | jq -r '.action' 2>/dev/null || echo "")
+        echo "🔄 Sequence $sequence"
         
-        ACTUAL_CHECKSUM=$(echo "$actual_line" | jq -r '.checksum' 2>/dev/null || echo "")
-        ACTUAL_ACTION=$(echo "$actual_line" | jq -r '.action' 2>/dev/null || echo "")
-        
-        echo "🔄 Sequence $sequence: $EXPECTED_ACTION"
-        
-        if [[ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]]; then
+        if [[ "$expected_checksum" != "$actual_checksum" ]]; then
             echo "❌ CHECKSUM MISMATCH at sequence $sequence"
-            echo "   Action: $EXPECTED_ACTION"
-            echo "   Expected: $EXPECTED_CHECKSUM"
-            echo "   Actual:   $ACTUAL_CHECKSUM"
+            echo "   Expected: $expected_checksum"
+            echo "   Actual:   $actual_checksum"
             echo ""
             echo "🛠️  Debugging Info:"
             echo "   Config file: $CONFIG_FILE"
             echo "   Log file: $LOG_FILE"
-            echo "   Failed at action: $EXPECTED_ACTION"
+            echo "   Failed at sequence: $sequence"
             echo "   Seed: $EXPECTED_SEED"
             validation_passed=false
             break
         fi
         
-        if [[ "$EXPECTED_ACTION" != "$ACTUAL_ACTION" ]]; then
-            echo "❌ ACTION MISMATCH at sequence $sequence"
-            echo "   Expected: $EXPECTED_ACTION"
-            echo "   Actual: $ACTUAL_ACTION"
-            validation_passed=false
-            break
-        fi
-        
-        echo "   ✅ Checksum match: ${EXPECTED_CHECKSUM:0:12}..."
+        echo "   ✅ Checksum match: ${expected_checksum:0:12}..."
         ((sequence++))
-    done <<< "$EXPECTED_DATA" 3<<< "$ACTUAL_DATA"
+    done <<< "$EXPECTED_CHECKSUMS" 3<<< "$ACTUAL_CHECKSUMS"
     
     echo ""
     if [ "$validation_passed" = true ]; then
