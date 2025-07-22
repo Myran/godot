@@ -761,9 +761,12 @@ _test-desktop-target-original config_name duration="30":
     # Check for checksum validation if config has checksum_config
     if jq -e '.checksum_config' "$CONFIG_FILE" >/dev/null 2>&1; then
         echo "🔍 Checksum validation enabled - validating replay..."
-        just _validate-checksums-from-logs "$CONFIG_FILE" "$LOGS_DIR/godot.log" \
-            && echo "✅ Checksum validation passed!" \
-            || echo "❌ Checksum validation failed!"
+        if ! just _validate-checksums-from-logs "$CONFIG_FILE" "$LOGS_DIR/godot.log"; then
+            echo "❌ Checksum validation failed!"
+            echo "🚨 TEST FAILED - Checksum validation did not pass"
+            exit 1
+        fi
+        echo "✅ Checksum validation passed!"
         echo ""
     fi
     

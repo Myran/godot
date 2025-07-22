@@ -67,7 +67,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			SemanticLogger.log_draft_reroll(0, current_cards, rng.seeded_rng._initial_seed)
 
 		remove_rerollables()
-		update_blocks()
+		_handle_async_update_blocks()
 
 	if event is core.DraftAddBlockEvent:
 		var grid_pos: Vector2i = event.pos
@@ -84,10 +84,10 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			SemanticLogger.log_draft_upgrade(new_level)
 
 		remove_upgrade_blocks(new_level)
-		update_blocks()
+		_handle_async_update_blocks()
 
 	if event is core.UpdateDraftAreaEvent:
-		update_blocks()
+		_handle_async_update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
 		var block: Block = event.block
@@ -141,6 +141,12 @@ func update_blocks() -> void:
 			await merge_completed
 
 	core.action(core.DraftSteadyEvent.new())
+
+
+# Handle async update_blocks from synchronous event context
+# This ensures draft operations complete atomically before state capture
+func _handle_async_update_blocks() -> void:
+	await update_blocks()
 
 
 func find_match() -> Array[Card]:

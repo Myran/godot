@@ -1,0 +1,42 @@
+{
+  "description": "Generated replay from semantic session: session_20250721_181252_3a43340b",
+  "session_id": "session_20250721_181252_3a43340b",
+  "generation_timestamp": "20250721_181319",
+  "semantic_action_count": 2,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250721_181252_3a43340b",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "reroll-test-10",
+    "capture_timestamp": "20250721_181319",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "draft.reroll",
+        "checksum": "ee834c5d8638ba22ffcf3b9f9d9eeee02b36936c7250b03c527e37a9bd824446"
+      }
+    ]
+  }
+}

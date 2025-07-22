@@ -577,12 +577,22 @@ func start_game() -> void:
 	Log.info(
 		"Game starting - locking UI during state transition", {}, [Log.TAG_GAME_STATE, Log.TAG_UI]
 	)
+	game_handler.current_gamestate = core.GameState.START
+	Log.info(
+		"Game state updated atomically", {"state": "START"}, ["game_state", "atomic_transition"]
+	)
+
 	ui_state = core.UIState.LOCKED
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
 
 
 func mode_draft() -> void:
 	Log.debug("Switching to draft mode", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+	game_handler.current_gamestate = core.GameState.DRAFT
+	Log.info(
+		"Game state updated atomically", {"state": "DRAFT"}, ["game_state", "atomic_transition"]
+	)
+
 	top_bar.visible = true
 	bottom_bar_draft.visible = true
 	bottom_bar_prepare.visible = false
@@ -601,6 +611,11 @@ func mode_draft() -> void:
 
 func mode_prepare() -> void:
 	Log.debug("Switching to preparation mode", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
+	game_handler.current_gamestate = core.GameState.PREPARE
+	Log.info(
+		"Game state updated atomically", {"state": "PREPARE"}, ["game_state", "atomic_transition"]
+	)
+
 	top_bar.visible = true
 	bottom_bar_draft.visible = false
 	bottom_bar_prepare.visible = true
@@ -620,6 +635,11 @@ func mode_prepare() -> void:
 
 func mode_pre_battle() -> void:
 	Log.debug("Switching to pre-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
+	game_handler.current_gamestate = core.GameState.PREBATTLE
+	Log.info(
+		"Game state updated atomically", {"state": "PREBATTLE"}, ["game_state", "atomic_transition"]
+	)
+
 	ui_state = core.UIState.LOCKED
 	top_bar.visible = false
 	bottom_bar_draft.visible = false
@@ -630,6 +650,11 @@ func mode_pre_battle() -> void:
 
 func mode_battle() -> void:
 	Log.debug("Switching to battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
+	game_handler.current_gamestate = core.GameState.BATTLE
+	Log.info(
+		"Game state updated atomically", {"state": "BATTLE"}, ["game_state", "atomic_transition"]
+	)
+
 	# Battle event is already queued from StartBattleEvent handler - no additional action needed
 
 
@@ -767,6 +792,13 @@ func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
 
 func mode_post_battle() -> void:
 	Log.debug("Switching to post-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
+	game_handler.current_gamestate = core.GameState.POSTBATTLE
+	Log.info(
+		"Game state updated atomically",
+		{"state": "POSTBATTLE"},
+		["game_state", "atomic_transition"]
+	)
+
 	ui_state = core.UIState.WAITING
 	#_process_idle_action_queue()
 	holder_allies.show_lineup()
