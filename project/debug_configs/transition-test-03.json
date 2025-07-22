@@ -1,0 +1,141 @@
+{
+  "description": "Generated replay from semantic session: session_20250722_101944_606b999a",
+  "session_id": "session_20250722_101944_606b999a",
+  "generation_timestamp": "20250722_102021",
+  "semantic_action_count": 10,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250722_101944_606b999a",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "transition-test-03",
+    "capture_timestamp": "20250722_102021",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 12345,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
+      },
+      {
+        "sequence": 2,
+        "action": "transition.change_state",
+        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
+      },
+      {
+        "sequence": 3,
+        "action": "transition.change_state",
+        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
+      },
+      {
+        "sequence": 4,
+        "action": "transition.change_state",
+        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
+      },
+      {
+        "sequence": 5,
+        "action": "transition.change_state",
+        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
+      },
+      {
+        "sequence": 6,
+        "action": "transition.change_state",
+        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
+      },
+      {
+        "sequence": 7,
+        "action": "transition.change_state",
+        "checksum": "b88d48c9b880c6b6ad6e36990a6b97e109a6ac8ec335b89b6d0957a95393f521"
+      },
+      {
+        "sequence": 8,
+        "action": "draft.upgrade",
+        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
+      },
+      {
+        "sequence": 9,
+        "action": "draft.upgrade",
+        "checksum": "eef87107f178c6f7f98579ae494fa226c43bbccefde7ebe44ba81841f5e146a5"
+      },
+      {
+        "sequence": 10,
+        "action": "draft.upgrade",
+        "checksum": "b2431e42557a28cd8b0e7da95319648867fc49a5b2b562e6541267c85477ebbe"
+      }
+    ]
+  }
+}
