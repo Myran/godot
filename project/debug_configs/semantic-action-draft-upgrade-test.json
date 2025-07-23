@@ -1,14 +1,19 @@
 {
-  "description": "Test draft.upgrade semantic action with level parameter",
-  "actions": [
-    "system.session.start_session player_test_draft_upgrade",
-    "system.game.transition_to_draft",
-    "game.draft.upgrade_player 3",
-    "system.session.replay_complete"
-  ],
-  "checksum_config": {
-    "initial_seed": 42002,
-    "state_type": "semantic_action_validation",
-    "expected_checksums": []
-  }
+"description": "Test draft.upgrade semantic action with level parameter",
+"actions": [
+"system.debug.hide_menu",
+{
+"action": "game.state.transition_player",
+"params": {
+"from_state": "PREPARE",
+"to_state": "DRAFT"
+}
+}
+"game.draft.upgrade_player 3"
+]
+"checksum_config": {
+"initial_seed": 42002,
+"state_type": "semantic_action_validation",
+"expected_checksums": []
+}
 }

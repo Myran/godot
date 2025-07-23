@@ -1796,7 +1796,7 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 	var event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(actual_block, true)
 	event.source = core.EventSource.PLAYER
 	core.action(event)
-	
+
 	# Trigger cascading actions (gravity, refill, matching, and DraftSteadyEvent)
 	# This matches the behavior of Clicker.remove_block_from_draft_complete()
 	core.action(core.UpdateDraftAreaEvent.new())

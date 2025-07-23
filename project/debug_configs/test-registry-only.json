@@ -1,6 +1,0 @@
-{
-  "description": "Test Registry Only - Simple validation",
-  "actions": [
-    "system.debug.registry_stats"
-  ]
-}

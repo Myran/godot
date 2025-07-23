@@ -1,14 +1,19 @@
 {
-  "description": "Test card.move semantic action with atomic draft-to-lineup operation",
-  "actions": [
-    "system.session.start_session player_test_card_move",
-    "system.game.transition_to_draft",
-    "game.move.move_card_to_lineup_player card_001 {\"x\": 1, \"y\": 2} 4",
-    "system.session.replay_complete"
-  ],
-  "checksum_config": {
-    "initial_seed": 42009,
-    "state_type": "semantic_action_validation",
-    "expected_checksums": []
-  }
+"description": "Test card.move semantic action with atomic draft-to-lineup operation",
+"actions": [
+"system.debug.hide_menu",
+{
+"action": "game.state.transition_player",
+"params": {
+"from_state": "PREPARE",
+"to_state": "DRAFT"
+}
+}
+"game.move.move_card_to_lineup_player card_001 {\"x\": 1, \"y\": 2} 4"
+]
+"checksum_config": {
+"initial_seed": 42009,
+"state_type": "semantic_action_validation",
+"expected_checksums": []
+}
 }

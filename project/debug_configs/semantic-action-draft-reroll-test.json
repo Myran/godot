@@ -1,10 +1,15 @@
 {
   "description": "Test draft.reroll semantic action with cost parameter",
   "actions": [
-    "system.session.start_session player_test_draft_reroll",
-    "system.game.transition_to_draft",
-    "game.draft.reroll_player",
-    "system.session.replay_complete"
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    "game.draft.reroll_player"
   ],
   "checksum_config": {
     "initial_seed": 42001,

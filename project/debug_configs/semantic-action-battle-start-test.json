@@ -1,12 +1,29 @@
 {
   "description": "Test battle.start semantic action with lineup parameters",
   "actions": [
-    "system.session.start_session player_test_battle_start",
-    "system.game.transition_to_draft",
-    "system.game.transition_to_lineup",
-    "system.game.transition_to_battle",
-    "game.battle.start_battle_player 5 3",
-    "system.session.replay_complete"
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "LINEUP"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "LINEUP",
+        "to_state": "BATTLE"
+      }
+    },
+    "game.battle.start_battle_player 5 3"
   ],
   "checksum_config": {
     "initial_seed": 42008,

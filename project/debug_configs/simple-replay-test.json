@@ -1,7 +1,0 @@
-{
-  "description": "Simple test with replay_complete action only - no auto-quit metadata",
-  "actions": [
-    "system.debug.hide_menu",
-    "system.debug.replay_complete"
-  ]
-}

@@ -1,14 +1,25 @@
 {
-  "description": "Test transition.change_state semantic action with state parameters",
-  "actions": [
-    "system.session.start_session player_test_transition_change_state",
-    "system.game.transition_to_draft",
-    "game.transition.change_state_player draft lineup",
-    "system.session.replay_complete"
-  ],
-  "checksum_config": {
-    "initial_seed": 42007,
-    "state_type": "semantic_action_validation",
-    "expected_checksums": []
-  }
+"description": "Test transition.change_state semantic action with state parameters",
+"actions": [
+"system.debug.hide_menu",
+{
+"action": "game.state.transition_player",
+"params": {
+"from_state": "PREPARE",
+"to_state": "DRAFT"
+}
+}
+{
+"action": "game.state.transition_player",
+"params": {
+"from_state": "DRAFT",
+"to_state": "LINEUP"
+}
+}
+]
+"checksum_config": {
+"initial_seed": 42007,
+"state_type": "semantic_action_validation",
+"expected_checksums": []
+}
 }

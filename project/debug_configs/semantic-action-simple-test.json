@@ -1,14 +1,14 @@
 {
-  "description": "Simple semantic action test using available system actions",
-  "actions": [
-    "system.debug.registry_stats",
-    "system.debug.quit_application"
-  ],
-  "checksum_config": {
-    "initial_seed": 42010,
-    "state_type": "semantic_action_validation",
-    "expected_checksums": [
-      "49a8ca075043b63a73094bffc06a9854facf46769748c4353c813cf78cce9500"
-    ]
-  }
+"description": "Simple semantic action test using available system actions",
+"actions": [
+"system.debug.registry_stats",
+"system.debug.quit_application"
+],
+"checksum_config": {
+"initial_seed": 42010,
+"state_type": "semantic_action_validation",
+"expected_checksums": [
+"49a8ca075043b63a73094bffc06a9854facf46769748c4353c813cf78cce9500"
+]
+}
 }

@@ -1,8 +1,8 @@
 {
-  "description": "Generated replay from semantic session: session_20250721_152149_2ab7ea9a",
-  "session_id": "session_20250721_152149_2ab7ea9a",
-  "generation_timestamp": "20250721_152228",
-  "semantic_action_count": 22,
+  "description": "Generated replay from semantic session: session_20250721_152112_dae0fdc3",
+  "session_id": "session_20250721_152112_dae0fdc3",
+  "generation_timestamp": "20250721_152127",
+  "semantic_action_count": 21,
   "actions": [
     "system.debug.hide_menu",
     {
@@ -78,68 +78,58 @@
       }
     },
     {
-      "action": "game.draft.reroll_player",
-      "params": {
-        "cost": 0
-      }
-    },
-    {
-      "action": "game.draft.toggle_column_player",
-      "params": {
-        "column_index": 4,
-        "new_state": false
-      }
-    },
-    {
-      "action": "game.draft.reroll_player",
-      "params": {
-        "cost": 0
-      }
-    },
-    {
-      "action": "game.draft.toggle_column_player",
-      "params": {
-        "column_index": 3,
-        "new_state": false
-      }
-    },
-    {
-      "action": "game.draft.reroll_player",
-      "params": {
-        "cost": 0
-      }
-    },
-    {
-      "action": "game.draft.toggle_column_player",
-      "params": {
-        "column_index": 2,
-        "new_state": false
-      }
-    },
-    {
-      "action": "game.draft.reroll_player",
-      "params": {
-        "cost": 0
-      }
-    },
-    {
-      "action": "game.draft.toggle_column_player",
-      "params": {
-        "column_index": 1,
-        "new_state": false
-      }
-    },
-    {
-      "action": "game.draft.reroll_player",
-      "params": {
-        "cost": 0
-      }
-    },
-    {
       "action": "game.draft.toggle_column_player",
       "params": {
         "column_index": 0,
-        "new_state": false
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
       }
     },
     {
@@ -151,10 +141,10 @@
     "system.debug.replay_complete"
   ],
   "metadata": {
-    "source_session": "session_20250721_152149_2ab7ea9a",
+    "source_session": "session_20250721_152112_dae0fdc3",
     "generation_method": "platform_specific_replay_generate",
-    "config_name": "toggle-test-06",
-    "capture_timestamp": "20250721_152228",
+    "config_name": "toggle-test-05-fixed",
+    "capture_timestamp": "20250721_152127",
     "test_type": "checksum_validation",
     "validation_mode": "semantic_action_checksums"
   },
@@ -170,7 +160,7 @@
       {
         "sequence": 2,
         "action": "draft.reroll",
-        "checksum": "d35089644b0543f5b97913862bf7032020c03797d3559f8eca706d053a8d9a3b"
+        "checksum": "575cff5daab7612cdc81f9cf52ea0cc36277ca4c5ba2b21091181ebd9115bc55"
       },
       {
         "sequence": 3,
@@ -180,7 +170,7 @@
       {
         "sequence": 4,
         "action": "draft.reroll",
-        "checksum": "085d1f678ff26c4c13ab60e7c1c3473170d9ef1c2b2ba9e5b42f55803dc7d8d0"
+        "checksum": "ee834c5d8638ba22ffcf3b9f9d9eeee02b36936c7250b03c527e37a9bd824446"
       },
       {
         "sequence": 5,
@@ -190,7 +180,7 @@
       {
         "sequence": 6,
         "action": "draft.reroll",
-        "checksum": "1e891390d1779804831265393d4a6760d636dd21ef8c0a844875abd2a7840835"
+        "checksum": "bfc38a2f7e49816df74a024b9cecec62fd5226a54276d5e1d17af27b3cc371c2"
       },
       {
         "sequence": 7,
@@ -200,7 +190,7 @@
       {
         "sequence": 8,
         "action": "draft.reroll",
-        "checksum": "caa5a21ff5ebc1ee0691a098fc07b10d3135b29cd577066b382982ec30ac2a55"
+        "checksum": "3ebdc44257263cf7478f3aa91f51f10e3385b59d0dd645b867dabac1219f29ed"
       },
       {
         "sequence": 9,
@@ -210,7 +200,12 @@
       {
         "sequence": 10,
         "action": "draft.reroll",
-        "checksum": "035ab9b16872aac5f9c63e685743a3674ce4f42e790acc697e2fee6b6442de91"
+        "checksum": "15220d564ec7721edb80b5cee6886e2b6ff0dfdeac7d5d13f65d86708fe9cb73"
+      },
+      {
+        "sequence": 11,
+        "action": "draft.toggle_line",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       },
       {
         "sequence": 11,
@@ -220,57 +215,47 @@
       {
         "sequence": 12,
         "action": "draft.reroll",
-        "checksum": "4d2174a0a9b9faac2cf761078a8db7106425a4b6d27b12c4ca6b261fda33c0fe"
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
+      },
+      {
+        "sequence": 12,
+        "action": "draft.reroll",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       },
       {
         "sequence": 13,
-        "action": "draft.toggle_line",
+        "action": "draft.reroll",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
+      },
+      {
+        "sequence": 13,
+        "action": "draft.reroll",
         "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       },
       {
         "sequence": 14,
         "action": "draft.reroll",
-        "checksum": "4d2174a0a9b9faac2cf761078a8db7106425a4b6d27b12c4ca6b261fda33c0fe"
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
+      },
+      {
+        "sequence": 14,
+        "action": "draft.reroll",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       },
       {
         "sequence": 15,
-        "action": "draft.toggle_line",
-        "checksum": "f51a4212024201b8c8c6f09c94f5480286e1a37f63e1f90d528cf83cb3c64aee"
+        "action": "draft.reroll",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
+      },
+      {
+        "sequence": 15,
+        "action": "draft.reroll",
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       },
       {
         "sequence": 16,
         "action": "draft.reroll",
-        "checksum": "ebf75a327570c8a3124b0dcd35746d289233e629fb44f0af495d018571848a95"
-      },
-      {
-        "sequence": 17,
-        "action": "draft.toggle_line",
-        "checksum": "7f65cdaa1fbd09500ff8474cab988af007695fe2c2e0c81b2224398e6fcde2b7"
-      },
-      {
-        "sequence": 18,
-        "action": "draft.reroll",
-        "checksum": "3df68ee09bb45684f0b4370351d996adf2608d9866e90cbe7ad6361e6c6084dd"
-      },
-      {
-        "sequence": 19,
-        "action": "draft.toggle_line",
-        "checksum": "5fe7b2e783c86fc08213397dec7ceb8fa893fc868e11b64ffc4032eba05f68cb"
-      },
-      {
-        "sequence": 20,
-        "action": "draft.reroll",
-        "checksum": "b5ab11a88be3c5487e960cd216620bd5f1669f525c309a5e023cd2933a7c4c37"
-      },
-      {
-        "sequence": 21,
-        "action": "draft.toggle_line",
-        "checksum": "f044c3c07a8910fc0ed185c453ffb8a22813febad9ca1911e4e91091d4715e5e"
-      },
-      {
-        "sequence": 22,
-        "action": "draft.reroll",
-        "checksum": "a89121724f74d2ba5514b0218670e311fbcde59312b16019bcfd4e276e3dd881"
+        "checksum": "a52370d1732f3ffcec2915d983c6f08f4b205b7586714f181e5a3b4344cb5681"
       }
     ]
   }

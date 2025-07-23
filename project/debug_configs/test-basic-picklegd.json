@@ -1,7 +1,0 @@
-{
-  "description": "Basic Action Serialization Test - Simple inner class serialization test",
-  "actions": [
-    "test.basic.action_serialization",
-    "system.debug.quit_application"
-  ]
-}

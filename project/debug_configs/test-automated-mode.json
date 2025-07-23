@@ -3,7 +3,7 @@
   "actions": [
     "system.debug.hide_menu",
     {
-      "action": "game.state.transition_player", 
+      "action": "game.state.transition_player",
       "params": {
         "from_state": "PREPARE",
         "to_state": "DRAFT"
@@ -18,6 +18,8 @@
   "checksum_config": {
     "state_type": "player_actions",
     "initial_seed": 12345,
-    "expected_checksums": []
+    "expected_checksums": [
+      "177fa88fecd3dff247b60484d8b1d1ed9be75f3382ab8ccbf1099aedd7dc335e"
+    ]
   }
 }

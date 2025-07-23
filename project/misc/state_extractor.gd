@@ -375,11 +375,8 @@ static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
 	for i: int in range(draft_blocks.size()):
 		var block: Block = draft_blocks[i]
 		if block:
-			var block_data: Dictionary = {
-				"object_type": block.object_type,
-				"draft_position": i
-			}
-			
+			var block_data: Dictionary = {"object_type": block.object_type, "draft_position": i}
+
 			# Add type-specific data
 			if block.object_type == core.ObjectType.CARD:
 				var card: Card = block as Card
@@ -390,7 +387,7 @@ static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
 			else:
 				# For other block types, just include basic info
 				block_data["level"] = block.level if "level" in block else 0
-			
+
 			draft_data.append(block_data)
 
 	return draft_data

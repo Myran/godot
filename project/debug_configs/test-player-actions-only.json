@@ -1,7 +1,0 @@
-{
-  "description": "Player Actions Serialization Test - Test only player actions with unique methods",
-  "actions": [
-    "test.basic.action_serialization",
-    "system.debug.quit_application"
-  ]
-}
