@@ -348,9 +348,8 @@ _validate-config-exists CONFIG:
     grep -h "\"[A-Z].*Test\"" project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/  \1/' | sort -u | head -10 || echo "  (no action examples found)"
     exit 1
 
-# Android log retrieval function
-# Returns content of latest Android log file via adb
-_get-android-log-file:
+# Shared Android prerequisites check
+_check-android-prerequisites:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -365,6 +364,14 @@ _get-android-log-file:
         echo "💡 Connect your Android device and enable USB debugging." >&2
         exit 1
     fi
+
+# Android log retrieval function
+# Returns content of latest Android log file via adb
+_get-android-log-file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    just _check-android-prerequisites
     
     # Android log file path (user://logs/godot.log)
     ANDROID_LOG_PATH="files/logs/godot.log"
@@ -389,16 +396,7 @@ _find-android-log-with-test-id TEST_ID:
     
     TEST_ID="{{TEST_ID}}"
     
-    # Check if adb is available and device is connected
-    if ! command -v adb >/dev/null 2>&1; then
-        echo "❌ adb command not found. Please install Android SDK." >&2
-        exit 1
-    fi
-    
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected." >&2
-        exit 1
-    fi
+    just _check-android-prerequisites
     
     # Android log file path
     ANDROID_LOG_PATH="files/logs/godot.log"
