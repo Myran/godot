@@ -10,11 +10,11 @@ logs TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    # Use unified log retrieval function with auto-detection
+    LOG_CONTENT=$(just _auto-detect-and-get-log "$TEST_ID")
     
     echo "📋 Logs for Test: $TEST_ID"
-    echo "📄 File: $LOG_FILE"
+    echo "🔍 Platform auto-detected from test ID"
     
     if [ -n "$TAGS" ]; then
         echo "🏷️  Filtering by tags: $TAGS"
@@ -31,11 +31,11 @@ logs TEST_ID *TAGS:
         done
         
         # Filter logs by tags
-        grep "$tag_pattern" "$LOG_FILE" | head -100
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | head -100
     else
         echo "📊 Full logs (first 50 lines):"
         echo ""
-        head -50 "$LOG_FILE"
+        echo "$LOG_CONTENT" | head -50
     fi
 
 # Errors with optional tag filtering
@@ -46,8 +46,8 @@ logs-errors-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    # Use unified log retrieval function with auto-detection
+    LOG_CONTENT=$(just _auto-detect-and-get-log "$TEST_ID")
     
     echo "🚨 Errors and Failures:"
     echo "======================="
@@ -67,11 +67,11 @@ logs-errors-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by errors (excludes test successes)
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
     else
         echo "📊 All error types:"
         echo ""
-        grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" "$LOG_FILE" | head -20 || echo "✅ No errors found"
+        echo "$LOG_CONTENT" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors found"
     fi
 
 # Performance with optional tag filtering  
@@ -82,8 +82,8 @@ logs-performance-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    # Use unified log retrieval function with auto-detection
+    LOG_CONTENT=$(just _auto-detect-and-get-log "$TEST_ID")
     
     echo "⚡ Performance and Timing:"
     echo "========================="
@@ -103,11 +103,11 @@ logs-performance-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by performance data
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "duration_ms|memory_mb|performance" | head -20 || echo "No performance data found with specified tags"
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "duration_ms|memory_mb|performance" | head -20 || echo "No performance data found with specified tags"
     else
         echo "📊 All performance data:"
         echo ""
-        grep -E "duration_ms|memory_mb|performance" "$LOG_FILE" | head -20 || echo "No performance data found"
+        echo "$LOG_CONTENT" | grep -E "duration_ms|memory_mb|performance" | head -20 || echo "No performance data found"
     fi
 
 # Lifecycle with optional tag filtering
@@ -118,8 +118,8 @@ logs-lifecycle-tagged TEST_ID *TAGS:
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
     
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    # Use unified log retrieval function with auto-detection
+    LOG_CONTENT=$(just _auto-detect-and-get-log "$TEST_ID")
     
     echo "🔄 Test Lifecycle Events:"
     echo "========================="
@@ -139,11 +139,11 @@ logs-lifecycle-tagged TEST_ID *TAGS:
         done
         
         # Filter by tags first, then by lifecycle events (searches both ERROR and INFO levels)
-        grep "$tag_pattern" "$LOG_FILE" | grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" | head -20 || echo "⚠️ No lifecycle events in filtered logs"
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" | head -20 || echo "⚠️ No lifecycle events in filtered logs"
     else
         echo "📊 All lifecycle events:"
         echo ""
-        grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" "$LOG_FILE" | head -20 || echo "⚠️ No lifecycle events found"
+        echo "$LOG_CONTENT" | grep -E "DEBUG_TEST_START|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|DEBUG_TEST_COMPLETE|DEBUG_TEST_RESTART|Executing|Completed|started|initialized" | head -20 || echo "⚠️ No lifecycle events found"
     fi
 
 # ================================

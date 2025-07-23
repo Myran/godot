@@ -1462,16 +1462,16 @@ test-android target="":
         fi
     fi
     
-    echo "🎯 Testing (manual mode): $TARGET"
+    echo "🎯 Testing (automated mode): $TARGET"
     echo "================================="
     
-    # Auto-detect target type and execute appropriate test in manual mode
+    # Auto-detect target type and execute appropriate test in automated mode
     if [[ -f "./project/test-lists/${TARGET}.json" ]]; then
         echo "📋 Detected test list: $TARGET"
-        just _test-list-android-manual "$TARGET"
+        just _test-list-android "$TARGET"
     elif [[ -f "./project/debug_configs/${TARGET}.json" ]]; then
         echo "📄 Detected configuration: $TARGET"
-        just _test-android-manual "$TARGET"
+        just test-android-target "$TARGET"
     else
         echo "❌ Target not found: $TARGET"
         echo ""

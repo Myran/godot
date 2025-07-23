@@ -348,6 +348,164 @@ _validate-config-exists CONFIG:
     grep -h "\"[A-Z].*Test\"" project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/  \1/' | sort -u | head -10 || echo "  (no action examples found)"
     exit 1
 
+# Android log retrieval function
+# Returns content of latest Android log file via adb
+_get-android-log-file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Check if adb is available and device is connected
+    if ! command -v adb >/dev/null 2>&1; then
+        echo "❌ adb command not found. Please install Android SDK." >&2
+        exit 1
+    fi
+    
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device connected." >&2
+        echo "💡 Connect your Android device and enable USB debugging." >&2
+        exit 1
+    fi
+    
+    # Android log file path (user://logs/godot.log)
+    ANDROID_LOG_PATH="files/logs/godot.log"
+    
+    # Check if log file exists on device
+    if ! adb shell "run-as {{ANDROID_PACKAGE_NAME}} ls $ANDROID_LOG_PATH" >/dev/null 2>&1; then
+        echo "❌ No Android log file found at: $ANDROID_LOG_PATH" >&2
+        echo "" >&2
+        echo "💡 Try running a test first to generate logs:" >&2
+        echo "   just test-android development-workflow" >&2
+        exit 1
+    fi
+    
+    # Retrieve and output the log file content
+    adb shell "run-as {{ANDROID_PACKAGE_NAME}} cat $ANDROID_LOG_PATH" 2>/dev/null
+
+# Find Android log containing specific test ID
+# Usage: _find-android-log-with-test-id TEST_ID
+_find-android-log-with-test-id TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    
+    # Check if adb is available and device is connected
+    if ! command -v adb >/dev/null 2>&1; then
+        echo "❌ adb command not found. Please install Android SDK." >&2
+        exit 1
+    fi
+    
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device connected." >&2
+        exit 1
+    fi
+    
+    # Android log file path
+    ANDROID_LOG_PATH="files/logs/godot.log"
+    
+    # Check if log file exists and contains test ID
+    if adb shell "run-as {{ANDROID_PACKAGE_NAME}} ls $ANDROID_LOG_PATH" >/dev/null 2>&1; then
+        echo "🔍 Searching for test ID: $TEST_ID" >&2
+        if adb shell "run-as {{ANDROID_PACKAGE_NAME}} grep -q '$TEST_ID' $ANDROID_LOG_PATH" 2>/dev/null; then
+            # Return the log content (since Android typically has one main log file)
+            adb shell "run-as {{ANDROID_PACKAGE_NAME}} cat $ANDROID_LOG_PATH" 2>/dev/null
+            exit 0
+        else
+            echo "🔍 Grep command failed for: $TEST_ID" >&2
+        fi
+    fi
+    
+    # If test ID not found, provide helpful error
+    echo "❌ No Android log found containing test ID: $TEST_ID" >&2
+    echo "" >&2
+    echo "🔍 Searched in: Android device $ANDROID_LOG_PATH" >&2
+    echo "" >&2
+    echo "💡 Available recent test IDs from Android:" >&2
+    
+    # Try to show recent test IDs from Android logs
+    if adb shell "run-as {{ANDROID_PACKAGE_NAME}} ls $ANDROID_LOG_PATH" >/dev/null 2>&1; then
+        adb shell "run-as {{ANDROID_PACKAGE_NAME}} grep 'test_id.*transition-test' $ANDROID_LOG_PATH | tail -3" 2>/dev/null | while read -r line; do
+            echo "   $(echo "$line" | sed 's/.*test_id[\"]*: [\"]*\([^\"]*\).*/\1/' | head -1)"
+        done || echo "   (No recent test IDs found in Android logs)"
+    else
+        echo "   (No Android log file found)"
+    fi
+    echo "" >&2
+    exit 1
+
+# Unified log retrieval functions (platform-agnostic)
+# Usage: _get-log-file PLATFORM
+_get-log-file PLATFORM:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{PLATFORM}}"
+    
+    case "$PLATFORM" in
+        "desktop")
+            just _get-desktop-log-file
+            ;;
+        "android")
+            just _get-android-log-file
+            ;;
+        *)
+            echo "❌ Unknown platform: $PLATFORM" >&2
+            echo "💡 Supported platforms: desktop, android" >&2
+            exit 1
+            ;;
+    esac
+
+# Unified log search by test ID (platform-agnostic)
+# Usage: _find-log-with-test-id TEST_ID PLATFORM
+_find-log-with-test-id TEST_ID PLATFORM:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    PLATFORM="{{PLATFORM}}"
+    
+    case "$PLATFORM" in
+        "desktop")
+            just _find-desktop-log-with-test-id "$TEST_ID"
+            ;;
+        "android")
+            just _find-android-log-with-test-id "$TEST_ID"
+            ;;
+        *)
+            echo "❌ Unknown platform: $PLATFORM" >&2
+            echo "💡 Supported platforms: desktop, android" >&2
+            exit 1
+            ;;
+    esac
+
+# Auto-detect platform from test ID and retrieve log
+# Usage: _auto-detect-and-get-log TEST_ID
+_auto-detect-and-get-log TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    
+    # Try to detect platform from test ID pattern
+    if echo "$TEST_ID" | grep -q "_android_"; then
+        echo "🤖 Detected Android test ID: $TEST_ID" >&2
+        just _find-log-with-test-id "$TEST_ID" "android"
+    elif echo "$TEST_ID" | grep -q "_desktop_"; then
+        echo "🖥️  Detected desktop test ID: $TEST_ID" >&2
+        just _find-log-with-test-id "$TEST_ID" "desktop"
+    else
+        # Default fallback - try desktop first, then Android
+        echo "🔍 Auto-detecting platform for test ID: $TEST_ID" >&2
+        if just _find-desktop-log-with-test-id "$TEST_ID" 2>/dev/null; then
+            echo "✅ Found in desktop logs" >&2
+        elif just _find-android-log-with-test-id "$TEST_ID" 2>/dev/null; then
+            echo "✅ Found in Android logs" >&2
+        else
+            echo "❌ Test ID not found in either desktop or Android logs: $TEST_ID" >&2
+            exit 1
+        fi
+    fi
+
 # Gruvbox Material colors
 _gruvbox-colors:
     # Base colors
