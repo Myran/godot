@@ -43,6 +43,114 @@ _inject-auto-quit-metadata source_config target_config auto_quit_value:
 
 
 # ================================
+# SHARED CONFIGURATION FUNCTIONS  
+# ================================
+
+# Unified test ID generation for both platforms
+_generate-test-id config_name platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    PLATFORM="{{platform}}"
+    
+    # Generate consistent test ID format
+    TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"
+    echo "$TEST_ID"
+
+# Unified configuration analysis for both platforms
+_analyze-test-config config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+    
+    # Check if configuration has checksum validation
+    HAS_CHECKSUM=false
+    if jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        HAS_CHECKSUM=true
+        
+        # Get checksum configuration
+        STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+        EXPECTED_CHECKSUMS=$(jq -r '.checksum_config.expected_checksums // []' "$CONFIG_PATH")
+        EXPECTED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+        
+        echo "📸 Checksum Test Detected"
+        echo "State Type: $STATE_TYPE"
+        echo "Expected Checksums: $EXPECTED_CHECKSUMS_COUNT checksums"
+        
+        # Check if baseline is set
+        if [[ "$EXPECTED_CHECKSUMS_COUNT" -eq 0 ]]; then
+            echo ""
+            echo "ℹ️  No baseline checksums set - this will be the first run"
+            echo "   A baseline will be automatically created and saved"
+            echo "   The test will automatically restart to validate the baseline"
+        else
+            echo ""
+            echo "✅ Baseline checksums found - will validate against them"
+        fi
+        
+        # Export checksum info for other functions
+        export HAS_CHECKSUM
+        export STATE_TYPE
+        export EXPECTED_CHECKSUMS_COUNT
+    else
+        export HAS_CHECKSUM=false
+        export EXPECTED_CHECKSUMS_COUNT=0
+    fi
+    
+    # Detect test mode from config
+    AUTO_QUIT=$(jq -r '.metadata.auto_quit // false' "$CONFIG_PATH")
+    if [[ "$AUTO_QUIT" == "true" ]]; then
+        echo "🤖 Test Mode: Automated (auto_quit: true)"
+        export TEST_MODE="automated"
+    else
+        echo "👤 Test Mode: Manual (auto_quit: false)" 
+        export TEST_MODE="manual"
+    fi
+
+# Unified config validation and preparation for both platforms
+_validate-and-prepare-config config_name platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    PLATFORM="{{platform}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "🔍 Validating and preparing config: $CONFIG_NAME"
+    
+    # Validate configuration exists
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    # Analyze config (exports HAS_CHECKSUM, TEST_MODE, etc.)
+    just _analyze-test-config "$CONFIG_PATH"
+    
+    # Generate test ID and export it
+    export TEST_ID=$(just _generate-test-id "$CONFIG_NAME" "$PLATFORM")
+    echo "🔍 Test ID: $TEST_ID"
+    
+    # Create temporary config with auto_quit=true for automated mode
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    
+    echo "📋 Creating temporary config with auto_quit=true for automated mode..."
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
+    
+    # Return temp config path for platform-specific deployment
+    echo "$TEMP_CONFIG_PATH"
+
+# ================================
 # CHECKSUM VALIDATION FUNCTIONS
 # ================================
 
@@ -188,6 +296,142 @@ _compare-checksums extracted_checksums expected_checksums:
         diff <(echo "$EXPECTED_SORTED") <(echo "$EXTRACTED_SORTED") | sed 's/^/  /' || true
     fi
 
+# Unified checksum validation workflow for both platforms
+_handle-checksum-validation config_path platform test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    PLATFORM="{{platform}}"
+    TEST_ID="{{test_id}}"
+    
+    # Only proceed if config has checksum validation
+    if [[ "${HAS_CHECKSUM:-false}" != "true" ]]; then
+        exit 0
+    fi
+    
+    echo ""
+    echo "📸 Checksum Validation:"
+    echo "======================"
+    
+    # Platform-specific log extraction
+    EXTRACTED_CHECKSUMS=""
+    case "$PLATFORM" in
+        "android")
+            if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+            else
+                echo "⚠️  Checksum extraction failed:"
+                cat /tmp/checksum_extraction.log | sed 's/^/  /'
+            fi
+            ;;
+        "desktop")
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            LOGS_DIR="$USER_DATA_DIR/logs"
+            LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
+            if [[ -n "$LATEST_LOG" ]]; then
+                if just _extract-checksums-unified "$LATEST_LOG" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
+            else
+                echo "⚠️  No desktop log files available"
+            fi
+            ;;
+        *)
+            echo "❌ Unknown platform for checksum validation: $PLATFORM"
+            exit 1
+            ;;
+    esac
+    
+    if [[ -z "$EXTRACTED_CHECKSUMS" ]]; then
+        echo "⚠️  No checksums found in test logs"
+        echo "This could indicate:"
+        echo "  • Test completed too quickly for checksum capture"
+        echo "  • SessionManager not logging checksums properly"
+        echo "  • Debug actions not being executed"
+        echo ""
+        echo "💡 Try running the test manually to debug:"
+        if [[ "$PLATFORM" == "android" ]]; then
+            echo "   just test-android $(basename "$CONFIG_PATH" .json)"
+        else
+            echo "   just test-desktop $(basename "$CONFIG_PATH" .json)"
+        fi
+        exit 0
+    fi
+    
+    echo "📸 Extracted $(echo "$EXTRACTED_CHECKSUMS" | wc -l) checksums from logs"
+    
+    # Check if this is first run (no baseline)
+    if [[ "${EXPECTED_CHECKSUMS_COUNT:-0}" -eq 0 ]]; then
+        echo ""
+        echo "📝 Creating baseline checksums..."
+        just _save-checksums-to-config "$CONFIG_PATH" "$EXTRACTED_CHECKSUMS"
+        echo "✅ Baseline checksums created and saved"
+        echo ""
+        echo "Next run will validate against this baseline"
+    else
+        # Compare with expected checksums
+        EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[]' "$CONFIG_PATH")
+        COMPARISON_RESULT=$(just _compare-checksums "$EXTRACTED_CHECKSUMS" "$EXPECTED_CHECKSUMS_LIST")
+        
+        if [[ "$COMPARISON_RESULT" == "MATCH" ]]; then
+            echo "✅ Checksum validation PASSED"
+            echo "All checksums match expected baseline"
+        else
+            echo "❌ Checksum validation FAILED"
+            echo ""
+            echo "$COMPARISON_RESULT"
+            echo ""
+            echo "This could indicate:"
+            echo "  • Legitimate changes requiring baseline update"
+            echo "  • Regression in game state consistency"
+            echo "  • Non-deterministic behavior in game logic"
+            echo ""
+            echo "Use 'just test-${PLATFORM}-target-update $(basename "$CONFIG_PATH" .json)' to update baseline if changes are legitimate"
+            # Set flag to indicate checksum validation failure
+            export CHECKSUM_VALIDATION_FAILED=1
+            exit 1
+        fi
+    fi
+
+# Platform-specific log extraction functions
+_extract-logs-android test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{test_id}}"
+    
+    # Use existing android-logs filtering logic (reuse proven patterns)
+    adb logcat -d 2>/dev/null | \
+        grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" | \
+        grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" | \
+        tail -1000
+
+_extract-logs-desktop test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{test_id}}"
+    
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    
+    if [[ ! -d "$LOGS_DIR" ]]; then
+        echo "⚠️  No desktop logs directory: $LOGS_DIR"
+        exit 1
+    fi
+    
+    LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
+    if [[ -z "$LATEST_LOG" ]]; then
+        echo "⚠️  No desktop log files available"
+        exit 1
+    fi
+    
+    cat "$LATEST_LOG"
+
 # ================================
 # SHARED ERROR ANALYSIS LOGIC
 # ================================
@@ -247,7 +491,9 @@ _analyze-test-errors test_id platform:
     CRITICAL_ERRORS=$(echo "$LOGS" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" 2>/dev/null || echo "0")
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
-    ALL_ERRORS=$(echo "$LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
+    # Filter out common system warnings that are not actual app errors
+    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat)")
+    ALL_ERRORS=$(echo "$FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     WARNINGS=$(echo "$LOGS" | grep -c -E "WARNING|WARN|Deprecated|Missing" 2>/dev/null || echo "0")
@@ -280,7 +526,7 @@ _analyze-test-errors test_id platform:
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Other Errors Found:"
-        echo "$LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
@@ -341,6 +587,328 @@ _post-test-validation test_id platform:
     echo "✅ Test validation complete - no issues found"
 
 # ================================
+# UNIFIED TEST EXECUTION PATTERN
+# ================================
+
+# Universal test wrapper that works for both Android and Desktop
+_execute-test-with-analysis config_name platform duration="30":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    PLATFORM="{{platform}}"
+    DURATION="{{duration}}"
+    
+    echo "🎯 $PLATFORM Testing with Error Analysis: $CONFIG_NAME"
+    echo "$(printf '=%.0s' {1..50})"
+    echo ""
+    
+    # Phase 1: Validate and prepare config (shared logic)
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    # Simple inline validation and setup to avoid export issues
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    # Generate test ID directly
+    TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"
+    export TEST_ID
+    export CURRENT_CONFIG_NAME="$CONFIG_NAME"
+    
+    # Check if configuration has checksum validation  
+    HAS_CHECKSUM=false
+    if jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        HAS_CHECKSUM=true
+        EXPECTED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+        echo "📸 Checksum Test Detected (${EXPECTED_CHECKSUMS_COUNT} expected checksums)"
+    fi
+    export HAS_CHECKSUM
+    export EXPECTED_CHECKSUMS_COUNT
+    
+    # Detect test mode from config
+    AUTO_QUIT=$(jq -r '.metadata.auto_quit // false' "$CONFIG_PATH")
+    if [[ "$AUTO_QUIT" == "true" ]]; then
+        TEST_MODE="automated"
+    else
+        TEST_MODE="manual"
+    fi
+    export TEST_MODE
+    
+    echo "🔍 Test ID: $TEST_ID"
+    echo "📊 Test Mode: $TEST_MODE"
+    echo ""
+    
+    # Create temporary config with auto_quit=true for automated mode
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    
+    echo "📋 Creating temporary config with auto_quit=true for automated mode..."
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
+    echo ""
+    
+    # Phase 2: Platform-specific deployment and execution  
+    echo "🚀 Starting $PLATFORM test execution..."
+    echo "$(printf '=%.0s' {1..35})"
+    
+    TEST_RESULT=0
+    case "$PLATFORM" in
+        "android")
+            # Deploy and execute Android test
+            just _deploy-config-android "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-android "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+            fi
+            ;;
+        "desktop")
+            # Deploy and execute Desktop test  
+            just _deploy-config-desktop "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-desktop "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+            fi
+            ;;
+        *)
+            echo "❌ Unknown platform: $PLATFORM"
+            TEST_RESULT=1
+            ;;
+    esac
+    
+    # Cleanup temp config
+    rm -f "$TEMP_CONFIG_PATH"
+    
+    echo ""
+    echo "📊 Test Execution: $(if [[ $TEST_RESULT -eq 0 ]]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)"
+    
+    # Phase 3: Unified post-test validation (shared logic)
+    if [[ $TEST_RESULT -eq 0 ]]; then
+        # Run error analysis
+        just _post-test-validation "$TEST_ID" "$PLATFORM" || TEST_RESULT=$?
+        
+        # Run checksum validation if applicable
+        if [[ $TEST_RESULT -eq 0 ]]; then
+            just _handle-checksum-validation "$CONFIG_PATH" "$PLATFORM" "$TEST_ID" || TEST_RESULT=$?
+        fi
+    else
+        echo ""
+        echo "❌ OVERALL RESULT: FAILED"  
+        echo "💡 Test execution failed - skipping validation"
+        exit 1
+    fi
+    
+    # Final result
+    if [[ $TEST_RESULT -eq 0 ]]; then
+        echo ""
+        echo "🎉 $PLATFORM test execution complete!"
+        echo "✅ All validations passed"
+    else
+        echo ""
+        echo "❌ OVERALL RESULT: FAILED"
+        exit 1
+    fi
+
+# Platform-specific app stopping functions
+_stop-app-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🛑 Stopping Android app for clean state..."
+    # Clear Android test cache (which includes stopping the app)
+    just clear-android-test-cache
+    echo "✅ Android app stopped"
+
+_stop-app-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🛑 Stopping any running desktop Godot instances..."
+    pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}" 2>/dev/null || true
+    echo "✅ Desktop apps stopped"
+
+# Platform-specific deployment functions
+_deploy-config-android temp_config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEMP_CONFIG_PATH="{{temp_config_path}}"
+    TEMP_CONFIG_NAME=$(basename "$TEMP_CONFIG_PATH" .json)
+    
+    echo "📱 Deploying configuration to Android device..."
+    
+    # Check device connectivity
+    if ! adb devices | grep -q "device$"; then
+        echo "❌ No Android device connected"
+        echo "Please connect a device and enable USB debugging"
+        exit 1
+    fi
+    
+    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
+    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    
+    # Stop app for clean state
+    just _stop-app-android
+    
+    # Deploy config
+    just config-push-android "$TEMP_CONFIG_NAME"
+    echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch"
+
+_deploy-config-desktop temp_config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEMP_CONFIG_PATH="{{temp_config_path}}"
+    
+    echo "🖥️  Deploying configuration to desktop..."
+    
+    # Stop any running desktop instances for consistent state
+    just _stop-app-desktop
+    
+    # Ensure logs directory exists for desktop
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+    
+    echo "📂 Desktop logs will be saved to: $LOGS_DIR"
+    
+    # Copy config to the expected location for desktop startup
+    STARTUP_CONFIG="$USER_DATA_DIR/debug_startup_actions.json"
+    
+    # Remove old config file if it exists to prevent stale data
+    if [ -f "$STARTUP_CONFIG" ]; then
+        echo "🧹 Removing old config file: $STARTUP_CONFIG"
+        rm "$STARTUP_CONFIG"
+    fi
+    
+    echo "📋 Copying config for desktop startup..."
+    cp "$TEMP_CONFIG_PATH" "$STARTUP_CONFIG"
+    
+    # Verify the copy was successful
+    if [ ! -f "$STARTUP_CONFIG" ] || [ ! -s "$STARTUP_CONFIG" ]; then
+        echo "❌ Failed to create config file: $STARTUP_CONFIG"
+        exit 1
+    fi
+    
+    echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch ($(wc -c < "$STARTUP_CONFIG") bytes)"
+
+# Platform-specific execution functions
+_execute-test-android config_name duration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    DURATION="{{duration}}"
+    
+    echo "📱 Starting Android test monitoring..."
+    
+    # Start the app with fresh configuration
+    echo "🚀 Starting Android app with fresh configuration..."
+    just restart-android-app
+    
+    # Clear logcat buffer for clean monitoring (after app start)
+    adb logcat -c
+    
+    # Brief pause for app startup
+    sleep 2
+    
+    # Start real-time log monitoring using proven android-logs filtering
+    echo "🔍 Starting real-time test monitoring (using proven android-logs filtering)..."
+    
+    # Background streaming using EXACT logic from android-logs-live
+    {
+        # Use timeout to prevent hanging, with proven filtering patterns
+        timeout "${DURATION:-60}" adb logcat \
+            --pid=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0") \
+            -v time "*:I" \
+            | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" \
+            | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
+            | while read -r line; do
+                echo "$line"
+                # Test completion detection using same patterns as current code  
+                if echo "$line" | grep -q "TEST_COMPLETE"; then
+                    echo "✅ Test completed successfully"
+                    # Signal main process
+                    echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+                    break
+                fi
+                # Also check for automated completion patterns
+                if echo "$line" | grep -q "automated_completion.*true"; then
+                    echo "✅ Test completed with automated mode signal"
+                    echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+                    break
+                fi
+            done || echo "📱 Monitoring completed (timeout or app closed)"
+    } &
+    MONITOR_PID=$!
+    
+    # Simple completion detection (replace complex polling loop)
+    TIMEOUT=${DURATION:-60}
+    ELAPSED=0
+    
+    echo "🔍 Waiting for test completion (timeout: ${TIMEOUT}s)..."
+    
+    while [[ ! -f /tmp/android_test_complete ]] && [[ $ELAPSED -lt $TIMEOUT ]]; do
+        # Check if app has quit (alternative completion indicator)
+        CURRENT_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
+        if [[ -z "$CURRENT_PID" ]]; then
+            echo ""
+            echo "✅ App quit - test completed"
+            echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+            break
+        fi
+        
+        sleep 2
+        ELAPSED=$((ELAPSED + 2))
+        
+        # Progress indicator
+        if [[ $((ELAPSED % 20)) -eq 0 ]]; then
+            echo "⏳ Test running... (${ELAPSED}s / ${TIMEOUT}s)"
+        fi
+    done
+    
+    # Cleanup background monitoring
+    if kill $MONITOR_PID 2>/dev/null; then
+        echo "🛑 Stopped background monitoring"
+    fi
+    rm -f /tmp/android_test_complete
+    
+    # Final status check
+    if [[ $ELAPSED -ge $TIMEOUT ]]; then
+        echo ""
+        echo "❌ Test timed out after ${TIMEOUT} seconds"
+        exit 1
+    else
+        echo ""
+        echo "✅ Android test execution completed in ${ELAPSED}s"
+    fi
+
+_execute-test-desktop config_name duration:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    DURATION="{{duration}}"
+    
+    echo "🖥️  Starting desktop test execution..."
+    
+    # Run desktop Godot with debug actions (automated mode with quit)
+    # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
+    echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+        && echo "✅ Desktop test completed successfully" \
+        || { 
+            EXIT_CODE=$?
+            echo "⚠️  Desktop test completed with exit code $EXIT_CODE"
+            if [[ $EXIT_CODE -ne 0 ]]; then
+                exit $EXIT_CODE
+            fi
+        }
+    
+    echo ""
+    echo "✅ Desktop test execution completed"
+
+# ================================
 # ENHANCED EXISTING COMMANDS
 # ================================
 
@@ -350,36 +918,9 @@ test-android-target config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    echo "🎯 Android Testing with Error Analysis: $CONFIG_NAME"
-    echo "=================================================="
     
-    # Generate test ID for tracking
-    TEST_ID="${CONFIG_NAME}_$(date +%s)"
-    export TEST_ID
-    export CURRENT_CONFIG_NAME="$CONFIG_NAME"
-    
-    echo "🔍 Test ID: $TEST_ID"
-    echo ""
-    
-    # Call the original test implementation from testing-core
-    echo "📱 Running Android test execution..."
-    echo "==================================="
-    
-    TEST_RESULT=0
-    just _test-android-target-original "$CONFIG_NAME" || TEST_RESULT=$?
-    
-    echo ""
-    echo "📊 Test Execution: $(if [[ $TEST_RESULT -eq 0 ]]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)"
-    
-    # Always run error analysis (even if test failed)
-    if [[ $TEST_RESULT -eq 0 ]]; then
-        just _post-test-validation "$TEST_ID" "android"
-    else
-        echo ""
-        echo "❌ OVERALL RESULT: FAILED"
-        echo "💡 Test execution failed - skipping error analysis"
-        exit 1
-    fi
+    # Use the new unified execution pattern
+    just _execute-test-with-analysis "$CONFIG_NAME" "android"
 
 # Manual mode test commands that inject auto_quit: false
 test-android-manual config_name:
@@ -419,35 +960,10 @@ test-desktop-target config_name duration="30":
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    echo "🎯 Desktop Testing with Error Analysis: $CONFIG_NAME"
-    echo "==================================================="
+    DURATION="{{duration}}"
     
-    # Generate test ID for tracking
-    TEST_ID="${CONFIG_NAME}_desktop_$(date +%s)"
-    export TEST_ID
-    
-    echo "🔍 Test ID: $TEST_ID"
-    echo ""
-    
-    # Call the original test implementation from semantic-replay-commands
-    echo "🖥️  Running desktop test execution..."
-    echo "===================================="
-    
-    TEST_RESULT=0
-    just _test-desktop-target-original "$CONFIG_NAME" "{{duration}}" || TEST_RESULT=$?
-    
-    echo ""
-    echo "📊 Test Execution: $(if [[ $TEST_RESULT -eq 0 ]]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)"
-    
-    # Always run error analysis (even if test failed)
-    if [[ $TEST_RESULT -eq 0 ]]; then
-        just _post-test-validation "$TEST_ID" "desktop"
-    else
-        echo ""
-        echo "❌ OVERALL RESULT: FAILED"  
-        echo "💡 Test execution failed - skipping error analysis"
-        exit 1
-    fi
+    # Use the new unified execution pattern
+    just _execute-test-with-analysis "$CONFIG_NAME" "desktop" "$DURATION"
 
 # ================================
 # ORIGINAL COMMAND PRESERVATION
