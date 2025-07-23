@@ -142,8 +142,8 @@ _find-desktop-log-with-test-id TEST_ID:
         exit 1
     fi
     
-    # Return the log file path
-    echo "$LOG_FILE"
+    # Return the file content (not the path) to match Android function behavior
+    cat "$LOG_FILE"
 
 # ================================
 # CREDENTIALS (Environment-based)
@@ -405,13 +405,10 @@ _find-android-log-with-test-id TEST_ID:
     
     # Check if log file exists and contains test ID
     if adb shell "run-as {{ANDROID_PACKAGE_NAME}} ls $ANDROID_LOG_PATH" >/dev/null 2>&1; then
-        echo "🔍 Searching for test ID: $TEST_ID" >&2
         if adb shell "run-as {{ANDROID_PACKAGE_NAME}} grep -q '$TEST_ID' $ANDROID_LOG_PATH" 2>/dev/null; then
             # Return the log content (since Android typically has one main log file)
             adb shell "run-as {{ANDROID_PACKAGE_NAME}} cat $ANDROID_LOG_PATH" 2>/dev/null
             exit 0
-        else
-            echo "🔍 Grep command failed for: $TEST_ID" >&2
         fi
     fi
     
@@ -433,78 +430,6 @@ _find-android-log-with-test-id TEST_ID:
     echo "" >&2
     exit 1
 
-# Unified log retrieval functions (platform-agnostic)
-# Usage: _get-log-file PLATFORM
-_get-log-file PLATFORM:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    PLATFORM="{{PLATFORM}}"
-    
-    case "$PLATFORM" in
-        "desktop")
-            just _get-desktop-log-file
-            ;;
-        "android")
-            just _get-android-log-file
-            ;;
-        *)
-            echo "❌ Unknown platform: $PLATFORM" >&2
-            echo "💡 Supported platforms: desktop, android" >&2
-            exit 1
-            ;;
-    esac
-
-# Unified log search by test ID (platform-agnostic)
-# Usage: _find-log-with-test-id TEST_ID PLATFORM
-_find-log-with-test-id TEST_ID PLATFORM:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    TEST_ID="{{TEST_ID}}"
-    PLATFORM="{{PLATFORM}}"
-    
-    case "$PLATFORM" in
-        "desktop")
-            just _find-desktop-log-with-test-id "$TEST_ID"
-            ;;
-        "android")
-            just _find-android-log-with-test-id "$TEST_ID"
-            ;;
-        *)
-            echo "❌ Unknown platform: $PLATFORM" >&2
-            echo "💡 Supported platforms: desktop, android" >&2
-            exit 1
-            ;;
-    esac
-
-# Auto-detect platform from test ID and retrieve log
-# Usage: _auto-detect-and-get-log TEST_ID
-_auto-detect-and-get-log TEST_ID:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    TEST_ID="{{TEST_ID}}"
-    
-    # Try to detect platform from test ID pattern
-    if echo "$TEST_ID" | grep -q "_android_"; then
-        echo "🤖 Detected Android test ID: $TEST_ID" >&2
-        just _find-log-with-test-id "$TEST_ID" "android"
-    elif echo "$TEST_ID" | grep -q "_desktop_"; then
-        echo "🖥️  Detected desktop test ID: $TEST_ID" >&2
-        just _find-log-with-test-id "$TEST_ID" "desktop"
-    else
-        # Default fallback - try desktop first, then Android
-        echo "🔍 Auto-detecting platform for test ID: $TEST_ID" >&2
-        if just _find-desktop-log-with-test-id "$TEST_ID" 2>/dev/null; then
-            echo "✅ Found in desktop logs" >&2
-        elif just _find-android-log-with-test-id "$TEST_ID" 2>/dev/null; then
-            echo "✅ Found in Android logs" >&2
-        else
-            echo "❌ Test ID not found in either desktop or Android logs: $TEST_ID" >&2
-            exit 1
-        fi
-    fi
 
 # Gruvbox Material colors
 _gruvbox-colors:
