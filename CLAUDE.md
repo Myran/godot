@@ -6,8 +6,12 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine feat
 
 ```bash
 # Emergency Debugging (Use First)
-just logs-errors-tagged TEST_ID            # Find errors fast (98% token savings)
+just logs-errors TEST_ID                   # Find errors fast (98% token savings)
 just logs-last                             # Latest test results (99% token savings)
+
+# Enhanced Testing with Automatic Validation (NEW)
+just test-android-target CONFIG            # Automated testing with built-in error analysis & checksum validation
+just test-desktop-target CONFIG            # Desktop automated testing with comprehensive validation
 
 # Daily Workflow (Primary Commands)
 just validate                              # Complete validation (format + syntax + runtime)
@@ -15,7 +19,7 @@ just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
-# Debug Decision Tree: logs-errors-tagged → logs TEST_ID [component] → logs TEST_ID [component] [operation]
+# Debug Decision Tree: logs-errors → logs-android/logs-desktop → logs-tags
 ```
 
 ## 🎯 Command System Overview
@@ -25,12 +29,14 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 ### **Primary Commands (Daily Use)**
 - `just validate` - Complete validation pipeline
 - `just test-android TARGET` - Main testing interface (auto-detects patterns/configs)
+- `just test-android-target CONFIG` - ⭐ **NEW: Enhanced automated testing with built-in validation**
+- `just test-desktop-target CONFIG` - ⭐ **NEW: Desktop automated testing with comprehensive validation**
 - `just config-restart-android ACTION` - 5-second iteration cycles
-- `just logs-errors-tagged TEST_ID` - Token-efficient error detection
+- `just logs-errors TEST_ID` - Token-efficient error detection
 
 ### **Secondary Commands (Weekly Use)**  
 - `just test-android-target CONFIG` - Automated testing (quits after completion)
-- `just replay-generate SESSION_ID NAME` - Create tests from gameplay
+- `just replay-generate-desktop SESSION_ID NAME` - Create tests from gameplay
 - `just fastbuild-android` - Smart rebuild system
 
 ### **Advanced Commands (As Needed)**
@@ -39,18 +45,18 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 ## 🔧 Debugging Workflow
 
 **Progressive debugging sequence (token-efficient):**
-1. `just logs-errors-tagged TEST_ID` (5 sec, <10 tokens)
+1. `just logs-errors TEST_ID` (5 sec, <10 tokens)
 2. `just logs TEST_ID [component]` (15 sec, <100 tokens) 
 3. `just logs TEST_ID [component] [operation]` (<200 tokens)
 
 ### **Failure Pattern Quick Reference**
 | Symptom | Debug Command | Fix Command |
 |---------|---------------|-------------|
-| Firebase timeout/auth | `logs-errors-tagged TEST_ID firebase` | `test-android 'system.network.*'` |
+| Firebase timeout/auth | `logs-android-errors TEST_ID firebase` | `test-android 'system.network.*'` |
 | Hash mismatch/validation | `logs TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
 | Performance/timeouts | `logs-performance-tagged TEST_ID` | `test-android '*.*.performance'` |
 | Startup/registry errors | `logs TEST_ID system startup` | `test-android 'system.debug.*'` |
-| Checksum mismatch | `logs-errors-tagged TEST_ID checksum` | `test-android-update CONFIG` or investigate |
+| Checksum mismatch | `logs-android-errors TEST_ID checksum` | `test-android-update CONFIG` or investigate |
 
 ## 📋 Log Commands (Two Distinct Types)
 
@@ -71,7 +77,7 @@ just android-logs-live 60 "*:I" 100       # Live monitoring (60s, INFO level, ma
 ### **📄 Saved Test Result Analysis (Token-Efficient)**
 ```bash
 # Primary (Use First)
-just logs-errors-tagged TEST_ID [tags]     # Error-focused (98% savings)
+just logs-errors TEST_ID                   # Error-focused (98% savings)
 just logs-last                             # Latest run (99% savings)
 just logs TEST_ID [component]              # Component analysis (87-95% savings)
 
@@ -89,8 +95,12 @@ just logs TEST_ID                          # Complete logs (high token cost)
 ### **Testing Commands**
 ```bash
 just test-android TARGET                   # Main interface (auto-detects patterns/configs/lists)
-just test-android-target CONFIG            # Automated mode (quits after completion)
+just test-android-target CONFIG            # ⭐ Enhanced automated mode with built-in validation
+just test-desktop-target CONFIG            # ⭐ Enhanced desktop automated testing
 just test-android-enhanced TARGET          # Enhanced error analysis
+
+# Manual testing (stays open for inspection)
+just test-android-manual CONFIG            # Android manual mode (app stays open)
 
 # Standard workflows
 just test-android development-workflow     # Daily development
@@ -140,6 +150,9 @@ Commands automatically detect input type:
 **Impact**: State capture, checksum validation, semantic logging require debug actions.
 
 ## 📱 Android Configuration
+
+### **⭐ NEW: Streamlined Configuration Management**
+After cleanup of 122 legacy debug configs, only 16 semantic action configs remain for core testing.
 
 ### **Logger Control (Runtime)**
 ```bash
@@ -207,7 +220,7 @@ just validate-gdscript                  # Fast syntax check (3 sec)
 just run-desktop                    # Shows session ID when finished
 
 # 2. Create test with one command
-just replay-generate SESSION_ID my-test
+just replay-generate-desktop SESSION_ID my-test
 
 # 3. Test with validation
 just test-android-target my-test    # Automated mode (quits after validation)
@@ -216,12 +229,20 @@ just test-android my-test          # Manual mode (stays open for inspection)
 
 ## 🧪 Checksum Testing (State Validation)
 
-**Automated regression testing using MD5 checksums:**
+**⭐ NEW: Automatic baseline management in enhanced testing:**
 ```bash
-just test-android-target lineup-checksum-test    # Auto-creates baseline on first run
+# Enhanced testing commands now include automatic checksum validation
+just test-android-target lineup-checksum-test    # Auto-creates baseline on first run + validates
+just test-desktop-target semantic-action-simple-test  # Cross-platform checksum validation
 just test-android-update CONFIG                 # Update baseline (legitimate changes)
-just logs-errors-tagged TEST_ID checksum        # Debug checksum failures
+just logs-android-errors TEST_ID checksum       # Debug checksum failures
 ```
+
+**Key improvements:**
+- Automatic baseline creation and validation
+- Cross-platform checksum extraction (Android + Desktop)
+- Built-in error analysis with checksum validation
+- Progressive failure detection and reporting
 
 **🎲 RNG Determinism**: The RNG system autonomously initializes seeds from debug configs during autoload phase, ensuring cross-platform deterministic behavior without explicit seed actions.
 
@@ -265,6 +286,12 @@ just help-logs                    # Log analysis & token efficiency
 just help-build                   # Build system architecture
 ## 🗂️ Project Architecture
 
+**⭐ NEW: Enhanced Testing System:**
+- **Unified Test Execution**: Cross-platform test wrapper with automatic validation
+- **Built-in Error Analysis**: Automatic log parsing and failure detection (98% token savings)
+- **Automatic Checksum Management**: Baseline creation and validation
+- **Progressive Debugging**: Token-efficient error analysis workflow
+
 **Core Systems:**
 - **DataSource Pattern**: Unified Firebase RTDB + local storage backends
 - **Debug Framework**: 55 debug actions across 7 categories  
@@ -272,8 +299,9 @@ just help-build                   # Build system architecture
 
 **Key Directories:**
 - `project/debug/actions/` - Debug actions by layer (cpp, backend, rtdb, system, game)
-- `project/debug_configs/` - Test configurations with checksum baselines
+- `project/debug_configs/` - ⭐ **Streamlined: 16 semantic action configs** (down from 138)
 - `project/test-lists/` - Workflow configurations
+- `justfiles/justfile-validation-enhanced-testing.justfile` - ⭐ **NEW: Enhanced testing system**
 
 ## 📖 Integration with Just Help System
 

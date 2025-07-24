@@ -8,9 +8,9 @@
 "from_state": "PREPARE",
 "to_state": "DRAFT"
 }
-}
+},
 "game.draft.upgrade_player 3"
-]
+],
 "checksum_config": {
 "initial_seed": 42002,
 "state_type": "semantic_action_validation",

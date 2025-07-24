@@ -16,9 +16,6 @@ screenshot-android name="screenshot":
     adb shell rm /sdcard/{{name}}.png
     
     echo "✅ Screenshot saved to /tmp/{{name}}.png"
-    echo "🤖 Screenshot ready for AI analysis via Read tool"
-    echo ""
-    echo "💡 Use: Read tool with /tmp/{{name}}.png"
 
 
 # Close debug menu by tapping X button (top-right corner)
@@ -175,17 +172,13 @@ status:
     @echo "Main project:"
     git status -s
 
-# Run tests (placeholder, adjust based on your testing framework)
+# Run tests
 test:
     @echo "Running tests..."
-    # Add your test commands here
-    # Example: ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test
 
-# Generate documentation (placeholder, adjust based on your documentation tool)
+# Generate documentation
 generate-docs:
     @echo "Generating documentation..."
-    # Add your documentation generation commands here
-    # Example: doxygen Doxyfile
 
 # Create a new release
 create-release version:

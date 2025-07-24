@@ -8,9 +8,9 @@
 "from_state": "PREPARE",
 "to_state": "DRAFT"
 }
-}
+},
 "game.move.move_card_to_lineup_player card_001 {\"x\": 1, \"y\": 2} 4"
-]
+],
 "checksum_config": {
 "initial_seed": 42009,
 "state_type": "semantic_action_validation",

@@ -92,21 +92,38 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             done
             ;;
         "all"|*)
-            # All configs (debug configs + test lists)
-            for file in project/debug_configs/*.json; do
-                if [ -f "$file" ]; then
-                    name=$(basename "$file" .json)
-                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
-                    options+=("🔧 $name - $desc")
-                fi
-            done
-            
-            # Add test lists with 📝 prefix  
+            # Add test lists first with 📋 prefix and config count
             for file in project/test-lists/*.json; do
                 if [ -f "$file" ]; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
-                    options+=("📝 $name - $desc")
+                    config_count=$(jq -r '.configurations | length' "$file" 2>/dev/null || echo "0")
+                    options+=("📋 $name ($config_count configs) - $desc")
+                fi
+            done
+            
+            # Add debug configs with proper checksum status
+            for file in project/debug_configs/*.json; do
+                if [ -f "$file" ]; then
+                    name=$(basename "$file" .json)
+                    desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
+                    
+                    # Check if it has checksum configuration
+                    if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
+                        state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
+                        expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
+                        
+                        # Determine status (matching test-android format)
+                        if [ -z "$expected_checksum" ]; then
+                            status="❌ NO BASELINE SET"
+                        else
+                            status="✅ BASELINE SET"
+                        fi
+                        
+                        options+=("📸 $name ($state_type) $status - $desc")
+                    else
+                        options+=("📄 $name - $desc")
+                    fi
                 fi
             done
             ;;
@@ -125,8 +142,8 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             header="🖥️  Desktop Testing | 🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
             ;;
         "android") 
-            prompt="Select Android test: "
-            header="📱 Android Testing | 🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            prompt="Select test target (manual mode): "
+            header="📱 Android Testing | 📋 Test Lists | 📸 Checksum Configs | 📄 Debug Configs | Use fuzzy search to filter"
             ;;
         "checksum")
             prompt="Select checksum config to UPDATE: "
@@ -153,8 +170,8 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     
     if [ -n "$selected_line" ]; then
         # Extract the name (between prefix and description) 
-        # Handle different prefixes: 🔧 📝 📸 🎬
-        selected=$(echo "$selected_line" | sed -E 's/^[📝🔧📸🎬] ([^ ]+)( \([^)]*\))? - .*/\1/')
+        # Handle different prefixes: 📋 📸 📄 🔧 📝 🎬
+        selected=$(echo "$selected_line" | sed -E 's/^[📋📸📄🔧📝🎬] ([^ ]+)( \([^)]*\))? .*/\1/')
         echo "$selected"
         exit 0
     else
@@ -1535,7 +1552,7 @@ replay-generate-android session_id config_name="":
         echo "🎉 Complete Android replay test configuration created!"
         echo "📄 Config file: ${OUTPUT_CONFIG}"
         echo ""
-        echo "🎮 Ready to test with automatic checksum validation:"
+        echo "🎮 Ready to test:"
         echo "   just test-android-target ${CLEAN_CONFIG_NAME}"
         echo ""
         echo "🔧 Management commands:"
@@ -1673,7 +1690,7 @@ replay-generate-desktop session_id config_name="":
         echo "🎉 Complete Desktop replay test configuration created!"
         echo "📄 Config file: ${OUTPUT_CONFIG}"
         echo ""
-        echo "🎮 Ready to test with automatic checksum validation:"
+        echo "🎮 Ready to test:"
         echo "   just test-desktop-target ${CLEAN_CONFIG_NAME}"
         echo ""
         echo "🔧 Management commands:"
@@ -2076,15 +2093,15 @@ replay-test-e2e:
 # DESKTOP REPLAY SUPPORT (TDD GREEN Phase)
 # ================================
 
-# Desktop test execution - equivalent of test-android for desktop platform (windowed by default) with fzf selection
-test-desktop TARGET="" DURATION="30":
+# Desktop testing interface - manual mode with fzf selection
+test-desktop target="" duration="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # If arguments provided, delegate to test-desktop-target (automated mode)
-    if [ -n "{{TARGET}}" ]; then
-        echo "🎯 Automated mode execution: {{TARGET}}"
-        just test-desktop-target "{{TARGET}}" "{{DURATION}}"
+    if [ -n "{{target}}" ]; then
+        echo "🎯 Automated mode execution: {{target}}"
+        just test-desktop-target "{{target}}" "{{duration}}"
         exit $?
     fi
     
@@ -2092,7 +2109,7 @@ test-desktop TARGET="" DURATION="30":
     selected=$(just _fzf-select-config "desktop" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
         echo "Running manual mode: just test-desktop-target '$selected'"
-        just test-desktop-target "$selected" "{{DURATION}}"
+        just test-desktop-target "$selected" "{{duration}}"
     else
         echo "❌ No selection made"
         exit 1

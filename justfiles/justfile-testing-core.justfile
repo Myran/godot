@@ -1384,119 +1384,25 @@ test-android-list-checksum:
     fi
 
 
-# Primary Android testing interface - manual mode (stays open for verification)
-test-android target="":
+# Android testing interface - manual mode with fzf selection
+test-android target="" duration="30":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    TARGET="{{target}}"
-    
-    # If no target provided, show interactive selector
-    if [[ -z "$TARGET" ]]; then
-        echo "🔍 Select test target (manual mode - stays open)..."
-        
-        # Build list of all available targets
-        TARGETS=""
-        
-        # Add test lists
-        if [[ -d "./project/test-lists" ]]; then
-            while IFS= read -r -d '' list_file; do
-                if [[ -f "$list_file" ]] && jq -e . "$list_file" >/dev/null 2>&1; then
-                    basename=$(basename "$list_file" .json)
-                    description=$(jq -r '.description // "No description"' "$list_file" 2>/dev/null || echo "No description")
-                    config_count=$(jq -r '.configurations | length' "$list_file" 2>/dev/null || echo "0")
-                    
-                    TARGETS="${TARGETS}📋 ${basename} (${config_count} configs) - ${description}\n"
-                fi
-            done < <(find "./project/test-lists" -name "*.json" -type f -print0)
-        fi
-        
-        # Add individual configurations
-        if [[ -d "./project/debug_configs" ]]; then
-            while IFS= read -r -d '' config_file; do
-                if [[ -f "$config_file" ]] && jq -e . "$config_file" >/dev/null 2>&1; then
-                    basename=$(basename "$config_file" .json)
-                    description=$(jq -r '.description // "No description"' "$config_file" 2>/dev/null || echo "No description")
-                    
-                    # Check if it has checksum configuration
-                    if jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
-                        state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
-                        expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$config_file")
-                        
-                        # Determine status
-                        if [[ -z "$expected_checksum" ]]; then
-                            status="❌ NO BASELINE SET"
-                        else
-                            status="✅ BASELINE SET"
-                        fi
-                        
-                        TARGETS="${TARGETS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
-                    else
-                        TARGETS="${TARGETS}📄 ${basename} - ${description}\n"
-                    fi
-                fi
-            done < <(find "./project/debug_configs" -name "*.json" -type f -print0)
-        fi
-        
-        if [[ -z "$TARGETS" ]]; then
-            echo "❌ No test targets found"
-            exit 1
-        fi
-        
-        # Use fzf for selection if available
-        if command -v fzf >/dev/null 2>&1; then
-            SELECTED=$(echo -e "$TARGETS" | fzf --prompt="Select test target (manual mode): " --height=15 --layout=reverse)
-            if [[ -z "$SELECTED" ]]; then
-                echo "❌ No target selected"
-                exit 1
-            fi
-            
-            # Extract target name from selection
-            TARGET=$(echo "$SELECTED" | sed 's/[📋📸📄] \([^ ]*\) .*/\1/')
-        else
-            echo -e "$TARGETS"
-            echo ""
-            echo "❌ fzf not available for interactive selection"
-            echo "Please specify a target: just test-android TARGET_NAME"
-            exit 1
-        fi
+    # If arguments provided, delegate to test-android-target (automated mode)
+    if [ -n "{{target}}" ]; then
+        echo "🎯 Automated mode execution: {{target}}"
+        just test-android-target "{{target}}"
+        exit $?
     fi
     
-    echo "🎯 Testing (automated mode): $TARGET"
-    echo "================================="
-    
-    # Auto-detect target type and execute appropriate test in automated mode
-    if [[ -f "./project/test-lists/${TARGET}.json" ]]; then
-        echo "📋 Detected test list: $TARGET"
-        just _test-list-android "$TARGET"
-    elif [[ -f "./project/debug_configs/${TARGET}.json" ]]; then
-        echo "📄 Detected configuration: $TARGET"
-        just test-android-target "$TARGET"
+    # Use shared fzf selection for all configs (manual mode)
+    selected=$(just _fzf-select-config "android" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        echo "Running manual mode: just test-android-target '$selected'"
+        just test-android-target "$selected"
     else
-        echo "❌ Target not found: $TARGET"
-        echo ""
-        echo "Available targets:"
-        echo "=================="
-        
-        echo "📋 Test Lists:"
-        if [[ -d "./project/test-lists" ]]; then
-            find "./project/test-lists" -name "*.json" -type f | sort | while read -r list; do
-                basename=$(basename "$list" .json)
-                description=$(jq -r '.description // "No description"' "$list" 2>/dev/null || echo "No description")
-                echo "  • $basename - $description"
-            done
-        fi
-        
-        echo ""
-        echo "📄 Configurations:"
-        if [[ -d "./project/debug_configs" ]]; then
-            find "./project/debug_configs" -name "*.json" -type f | sort | while read -r config; do
-                basename=$(basename "$config" .json)
-                description=$(jq -r '.description // "No description"' "$config" 2>/dev/null || echo "No description")
-                echo "  • $basename - $description"
-            done
-        fi
-        
+        echo "❌ No selection made"
         exit 1
     fi
 

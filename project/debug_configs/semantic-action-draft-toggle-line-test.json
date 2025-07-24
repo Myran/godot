@@ -8,9 +8,9 @@
 "from_state": "PREPARE",
 "to_state": "DRAFT"
 }
-}
+},
 "game.draft.toggle_column_player 2 true"
-]
+],
 "checksum_config": {
 "initial_seed": 42003,
 "state_type": "semantic_action_validation",

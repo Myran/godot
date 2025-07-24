@@ -8,16 +8,16 @@
 "from_state": "PREPARE",
 "to_state": "DRAFT"
 }
-}
+},
 {
 "action": "game.state.transition_player",
 "params": {
 "from_state": "DRAFT",
 "to_state": "LINEUP"
 }
-}
+},
 "game.lineup.move_card_player card_001 3 7"
-]
+],
 "checksum_config": {
 "initial_seed": 42005,
 "state_type": "semantic_action_validation",
