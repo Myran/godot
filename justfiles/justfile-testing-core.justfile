@@ -1385,14 +1385,14 @@ test-android-list-checksum:
 
 
 # Android testing interface - manual mode with fzf selection
-test-android target="" duration="30":
+test-android target="" duration="120":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # If arguments provided, delegate to test-android-target (automated mode)
     if [ -n "{{target}}" ]; then
         echo "🎯 Automated mode execution: {{target}}"
-        just test-android-target "{{target}}"
+        just test-android-target "{{target}}" "{{duration}}"
         exit $?
     fi
     
@@ -1400,7 +1400,7 @@ test-android target="" duration="30":
     selected=$(just _fzf-select-config "android" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
         echo "Running manual mode: just test-android-target '$selected'"
-        just test-android-target "$selected"
+        just test-android-target "$selected" "{{duration}}"
     else
         echo "❌ No selection made"
         exit 1

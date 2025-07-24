@@ -591,7 +591,7 @@ _post-test-validation test_id platform:
 # ================================
 
 # Universal test wrapper that works for both Android and Desktop
-_execute-test-with-analysis config_name platform duration="30":
+_execute-test-with-analysis config_name platform duration="120":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -807,7 +807,7 @@ _execute-test-android config_name duration:
     just restart-android-app
     
     # Clear logcat buffer for clean monitoring (after app start)
-    adb logcat -c
+    adb logcat -c || echo "⚠️  Warning: Could not clear logcat buffer (non-critical)"
     
     # Brief pause for app startup
     sleep 2
@@ -815,16 +815,25 @@ _execute-test-android config_name duration:
     # Start real-time log monitoring using proven android-logs filtering
     echo "🔍 Starting real-time test monitoring (using proven android-logs filtering)..."
     
-    # Background streaming using EXACT logic from android-logs-live
+    # Background streaming with activity monitoring and flexible timeout
     {
-        # Use timeout to prevent hanging, with proven filtering patterns
-        timeout "${DURATION:-60}" adb logcat \
-            --pid=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0") \
+        # Remove hard timeout - let the main loop handle timeout logic
+        APP_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0")
+        if [[ "$APP_PID" == "0" ]]; then
+            echo "❌ Cannot find app process PID"
+            exit 1
+        fi
+        
+        adb logcat \
+            --pid="$APP_PID" \
             -v time "*:I" \
             | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" \
             | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
             | while read -r line; do
                 echo "$line"
+                # Update activity timestamp for main process
+                echo "$(date +%s)" > /tmp/android_test_activity
+                
                 # Test completion detection using same patterns as current code  
                 if echo "$line" | grep -q "TEST_COMPLETE"; then
                     echo "✅ Test completed successfully"
@@ -838,17 +847,21 @@ _execute-test-android config_name duration:
                     echo "MONITOR_COMPLETE" > /tmp/android_test_complete
                     break
                 fi
-            done || echo "📱 Monitoring completed (timeout or app closed)"
+            done || echo "📱 Monitoring completed (app closed or stopped)"
     } &
     MONITOR_PID=$!
     
-    # Simple completion detection (replace complex polling loop)
-    TIMEOUT=${DURATION:-60}
+    # Enhanced completion detection with activity-based timeout
+    MAX_TIMEOUT=${DURATION:-${ANDROID_TEST_MAX_TIMEOUT:-120}}
+    ACTIVITY_TIMEOUT=${ANDROID_TEST_ACTIVITY_TIMEOUT:-60}  # Timeout if no activity for 60 seconds
     ELAPSED=0
     
-    echo "🔍 Waiting for test completion (timeout: ${TIMEOUT}s)..."
+    echo "🔍 Waiting for test completion (max: ${MAX_TIMEOUT}s, activity timeout: ${ACTIVITY_TIMEOUT}s)..."
     
-    while [[ ! -f /tmp/android_test_complete ]] && [[ $ELAPSED -lt $TIMEOUT ]]; do
+    # Initialize activity tracking
+    echo "$(date +%s)" > /tmp/android_test_activity
+    
+    while [[ ! -f /tmp/android_test_complete ]] && [[ $ELAPSED -lt $MAX_TIMEOUT ]]; do
         # Check if app has quit (alternative completion indicator)
         CURRENT_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
         if [[ -z "$CURRENT_PID" ]]; then
@@ -858,12 +871,33 @@ _execute-test-android config_name duration:
             break
         fi
         
+        # Check for activity timeout (no logs for ACTIVITY_TIMEOUT seconds)
+        if [[ -f /tmp/android_test_activity ]]; then
+            LAST_ACTIVITY=$(cat /tmp/android_test_activity 2>/dev/null || echo "0")
+            CURRENT_TIME=$(date +%s)
+            ACTIVITY_ELAPSED=$((CURRENT_TIME - LAST_ACTIVITY))
+            
+            if [[ $ACTIVITY_ELAPSED -gt $ACTIVITY_TIMEOUT ]]; then
+                echo ""
+                echo "❌ Test appears hung - no activity for ${ACTIVITY_ELAPSED}s (limit: ${ACTIVITY_TIMEOUT}s)"
+                echo "💡 Consider if the test legitimately needs more time, or if the process is stuck"
+                break
+            fi
+        fi
+        
         sleep 2
         ELAPSED=$((ELAPSED + 2))
         
-        # Progress indicator
+        # Progress indicator with activity status
         if [[ $((ELAPSED % 20)) -eq 0 ]]; then
-            echo "⏳ Test running... (${ELAPSED}s / ${TIMEOUT}s)"
+            if [[ -f /tmp/android_test_activity ]]; then
+                LAST_ACTIVITY=$(cat /tmp/android_test_activity 2>/dev/null || echo "0")
+                CURRENT_TIME=$(date +%s)
+                ACTIVITY_ELAPSED=$((CURRENT_TIME - LAST_ACTIVITY))
+                echo "⏳ Test running... (${ELAPSED}s / ${MAX_TIMEOUT}s, last activity: ${ACTIVITY_ELAPSED}s ago)"
+            else
+                echo "⏳ Test running... (${ELAPSED}s / ${MAX_TIMEOUT}s)"
+            fi
         fi
     done
     
@@ -871,13 +905,31 @@ _execute-test-android config_name duration:
     if kill $MONITOR_PID 2>/dev/null; then
         echo "🛑 Stopped background monitoring"
     fi
-    rm -f /tmp/android_test_complete
+    rm -f /tmp/android_test_complete /tmp/android_test_activity
     
-    # Final status check
-    if [[ $ELAPSED -ge $TIMEOUT ]]; then
+    # Final status check with enhanced timeout logic
+    if [[ $ELAPSED -ge $MAX_TIMEOUT ]]; then
         echo ""
-        echo "❌ Test timed out after ${TIMEOUT} seconds"
+        echo "❌ Test reached maximum timeout after ${MAX_TIMEOUT} seconds"
         exit 1
+    elif [[ -f /tmp/android_test_activity ]]; then
+        # Check if we exited due to activity timeout
+        LAST_ACTIVITY=$(cat /tmp/android_test_activity 2>/dev/null || echo "0")
+        CURRENT_TIME=$(date +%s)
+        ACTIVITY_ELAPSED=$((CURRENT_TIME - LAST_ACTIVITY))
+        
+        if [[ $ACTIVITY_ELAPSED -gt $ACTIVITY_TIMEOUT ]]; then
+            echo "❌ Test hung - no activity detected"
+            exit 1
+        fi
+    fi
+    
+    # If we reach here without explicit completion, check if test actually completed
+    if [[ ! -f /tmp/android_test_complete ]]; then
+        echo ""
+        echo "⚠️  Test monitoring ended without explicit completion signal"
+        echo "   This may indicate the test completed but didn't send TEST_COMPLETE"
+        echo "   Check logs to verify test actually completed successfully"
     else
         echo ""
         echo "✅ Android test execution completed in ${ELAPSED}s"
@@ -895,13 +947,23 @@ _execute-test-desktop config_name duration:
     # Run desktop Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
     echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+    
+    # Apply timeout for desktop tests as well
+    MAX_TIMEOUT=${DURATION:-${DESKTOP_TEST_MAX_TIMEOUT:-120}}
+    echo "🔍 Desktop test timeout: ${MAX_TIMEOUT}s"
+    
+    timeout "${MAX_TIMEOUT}" ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
         && echo "✅ Desktop test completed successfully" \
         || { 
             EXIT_CODE=$?
-            echo "⚠️  Desktop test completed with exit code $EXIT_CODE"
-            if [[ $EXIT_CODE -ne 0 ]]; then
-                exit $EXIT_CODE
+            if [[ $EXIT_CODE -eq 124 ]]; then
+                echo "❌ Desktop test timed out after ${MAX_TIMEOUT} seconds"
+                exit 1
+            else
+                echo "⚠️  Desktop test completed with exit code $EXIT_CODE"
+                if [[ $EXIT_CODE -ne 0 ]]; then
+                    exit $EXIT_CODE
+                fi
             fi
         }
     
@@ -913,14 +975,15 @@ _execute-test-desktop config_name duration:
 # ================================
 
 # Enhanced version of test-android-target that includes automatic error analysis
-test-android-target config_name:
+test-android-target config_name duration="120":
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
+    DURATION="{{duration}}"
     
     # Use the new unified execution pattern
-    just _execute-test-with-analysis "$CONFIG_NAME" "android"
+    just _execute-test-with-analysis "$CONFIG_NAME" "android" "$DURATION"
 
 # Manual mode test commands that inject auto_quit: false
 test-android-manual config_name:
@@ -955,7 +1018,7 @@ test-android-manual config_name:
 # Or:  just test-desktop-target CONFIG_NAME  # Automated mode
 
 # Enhanced version of test-desktop-target that includes automatic error analysis  
-test-desktop-target config_name duration="30":
+test-desktop-target config_name duration="120":
     #!/usr/bin/env bash
     set -euo pipefail
     

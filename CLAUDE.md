@@ -105,6 +105,16 @@ just test-android-manual CONFIG            # Android manual mode (app stays open
 # Standard workflows
 just test-android development-workflow     # Daily development
 just test-android pre-commit               # Pre-commit validation
+
+# ⭐ NEW: Enhanced Timeout Support
+just test-android TARGET DURATION          # Custom timeout (e.g., just test-android config 300)
+just test-android-target CONFIG DURATION   # Custom timeout for automated tests
+just test-desktop-target CONFIG DURATION   # Custom timeout for desktop tests
+
+# Environment Variables for Timeout Control
+# ANDROID_TEST_MAX_TIMEOUT=300              # Max timeout (default: 120s)
+# ANDROID_TEST_ACTIVITY_TIMEOUT=90          # Activity timeout (default: 60s)
+# DESKTOP_TEST_MAX_TIMEOUT=180              # Desktop max timeout (default: 120s)
 ```
 
 ### **Config Commands (5-second iterations)**
