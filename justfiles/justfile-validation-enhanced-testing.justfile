@@ -492,7 +492,7 @@ _analyze-test-errors test_id platform:
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Filter out common system warnings that are not actual app errors
-    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat)")
+    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|chromium.*GPU process exited|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat|libprocessgroup.*[Ff]ailed to kill|Icing.*Failed to remove|ProviderInstaller.*Failed to load|GoogleApiManager.*Failed to get service|FlagRegistrar.*Failed to register|NetworkController.*onSignalStrengthsChanged)")
     ALL_ERRORS=$(echo "$FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
