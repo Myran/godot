@@ -78,18 +78,42 @@ func _test_state_extractor_implementation() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	# Test 1: StateExtractor accessibility test
-	# Following pattern from session_manager.gd which successfully calls StateExtractor directly
-	var class_available: bool = true  # Assume available since other files use it successfully
+	# Test 1: StateExtractor accessibility test - ACTUALLY test class access
+	# Try to call StateExtractor method directly (like session_manager.gd does)
+	var class_available: bool = false
+	var accessibility_error: String = ""
+	
+	# Test actual StateExtractor access - try to call the method and check result
+	var test_result: Dictionary = StateExtractor.extract_game_state()
+	if test_result != null and typeof(test_result) == TYPE_DICTIONARY:
+		class_available = true
+		accessibility_error = "SUCCESS - StateExtractor working, returned dictionary with %s keys" % str(test_result.size())
+	else:
+		class_available = false  
+		accessibility_error = "FAILED - StateExtractor call failed or returned invalid result"
 	
 	tests.append(
 		{
 			"name": "StateExtractor class available",
 			"success": class_available,
-			"details": "StateExtractor script exists in project",
+			"details": accessibility_error,
 			"expected_result": "PASS - StateExtractor class implemented"
 		}
 	)
+	
+	if not class_available:
+		suite_success = false
+		Log.error(
+			"GREEN PHASE FAILURE: StateExtractor class not found",
+			{"phase": "GREEN", "expected": "PASS"},
+			["test", "tdd", "failure"]
+		)
+		return {
+			"suite_name": "StateExtractor Implementation",
+			"success": false,
+			"tests": tests,
+			"summary": "0/1 implementation tests passed - StateExtractor not accessible"
+		}
 
 	# Test 2: Method availability (if class exists)
 	if class_available:
@@ -119,8 +143,8 @@ func _test_state_extractor_implementation() -> Dictionary:
 		"tests": tests,
 		"summary":
 		(
-			"%d/%d implementation tests passed"
-			% [tests.filter(func(t: Dictionary) -> bool: return t.success).size(), tests.size()]
+			"%s/%s implementation tests passed"
+			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
 		)
 	}
 
@@ -142,8 +166,8 @@ func _test_core_functionality() -> Dictionary:
 			"success": game_state_valid,
 			"details":
 			(
-				"Returned type: %s, Keys: %d"
-				% [type_string(typeof(game_state)), game_state.keys().size() if typeof(game_state) == TYPE_DICTIONARY else 0]
+				"Returned type: %s, Keys: %s"
+				% [type_string(typeof(game_state)), str(game_state.keys().size() if typeof(game_state) == TYPE_DICTIONARY else 0)]
 			),
 			"expected_result": "PASS - Returns valid Dictionary"
 		}
@@ -160,7 +184,7 @@ func _test_core_functionality() -> Dictionary:
 			"name": "generate_checksum returns valid string",
 			"success": checksum_valid,
 			"details":
-			"Type: %s, Length: %d" % [type_string(typeof(checksum)), checksum.length() if typeof(checksum) == TYPE_STRING else 0],
+			"Type: %s, Length: %s" % [type_string(typeof(checksum)), str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)],
 			"expected_result": "PASS - Returns non-empty string"
 		}
 	)
@@ -175,7 +199,7 @@ func _test_core_functionality() -> Dictionary:
 			"name": "normalize_data returns Dictionary",
 			"success": normalize_valid,
 			"details":
-			"Type: %s, Keys: %d" % [type_string(typeof(normalized)), normalized.keys().size() if typeof(normalized) == TYPE_DICTIONARY else 0],
+			"Type: %s, Keys: %s" % [type_string(typeof(normalized)), str(normalized.keys().size() if typeof(normalized) == TYPE_DICTIONARY else 0)],
 			"expected_result": "PASS - Returns valid Dictionary"
 		}
 	)
@@ -203,8 +227,8 @@ func _test_core_functionality() -> Dictionary:
 		"tests": tests,
 		"summary":
 		(
-			"%d/%d functionality tests passed"
-			% [tests.filter(func(t: Dictionary) -> bool: return t.success).size(), tests.size()]
+			"%s/%s functionality tests passed"
+			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
 		)
 	}
 
@@ -232,7 +256,7 @@ func _test_integration_performance() -> Dictionary:
 			"name": "Performance requirements",
 			"success": performance_ok,
 			"details":
-			"Duration: %d ms, Checksum length: %d" % [duration_ms, checksum.length() if typeof(checksum) == TYPE_STRING else 0],
+			"Duration: %s ms, Checksum length: %s" % [str(duration_ms), str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)],
 			"expected_result": "PASS - Completes within 200ms"
 		}
 	)
@@ -271,8 +295,8 @@ func _test_integration_performance() -> Dictionary:
 		"tests": tests,
 		"summary":
 		(
-			"%d/%d integration tests passed"
-			% [tests.filter(func(t: Dictionary) -> bool: return t.success).size(), tests.size()]
+			"%s/%s integration tests passed"
+			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
 		)
 	}
 
@@ -316,8 +340,8 @@ func _generate_green_phase_report(test_results: Array[Dictionary], overall_succe
 
 	report.append(
 		(
-			"Test Results: %d/%d passed (GREEN phase expects %d/%d)"
-			% [passed_tests, total_tests, total_tests, total_tests]
+			"Test Results: %s/%s passed (GREEN phase expects %s/%s)"
+			% [str(passed_tests), str(total_tests), str(total_tests), str(total_tests)]
 		)
 	)
 	report.append("")
