@@ -79,7 +79,7 @@ func _test_state_extractor_implementation() -> Dictionary:
 	var suite_success: bool = true
 
 	# Test 1: StateExtractor class availability
-	var class_available: bool = ClassDB.class_exists("StateExtractor")
+	var class_available: bool = ResourceLoader.exists("res://misc/state_extractor.gd")
 	tests.append(
 		{
 			"name": "StateExtractor class exists",
@@ -136,14 +136,16 @@ func _test_core_functionality() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	if not ClassDB.class_exists("StateExtractor"):
+	# Try to load StateExtractor class
+	var state_extractor_script = load("res://misc/state_extractor.gd")
+	if not state_extractor_script:
 		suite_success = false
 		tests.append(
 			{
 				"name": "StateExtractor functionality",
 				"success": false,
-				"details": "StateExtractor class not available",
-				"expected_result": "PASS - Class should exist"
+				"details": "StateExtractor script not loadable",
+				"expected_result": "PASS - Script should exist"
 			}
 		)
 	else:
@@ -157,7 +159,7 @@ func _test_core_functionality() -> Dictionary:
 				"details":
 				(
 					"Returned type: %s, Keys: %d"
-					% [type_string(typeof(game_state)), game_state.keys().size()]
+					% [type_string(typeof(game_state)), game_state.keys().size() if typeof(game_state) == TYPE_DICTIONARY else 0]
 				),
 				"expected_result": "PASS - Returns valid Dictionary"
 			}
@@ -174,7 +176,7 @@ func _test_core_functionality() -> Dictionary:
 				"name": "generate_checksum returns valid string",
 				"success": checksum_valid,
 				"details":
-				"Type: %s, Length: %d" % [type_string(typeof(checksum)), checksum.length()],
+				"Type: %s, Length: %d" % [type_string(typeof(checksum)), checksum.length() if typeof(checksum) == TYPE_STRING else 0],
 				"expected_result": "PASS - Returns non-empty string"
 			}
 		)
@@ -189,7 +191,7 @@ func _test_core_functionality() -> Dictionary:
 				"name": "normalize_data returns Dictionary",
 				"success": normalize_valid,
 				"details":
-				"Type: %s, Keys: %d" % [type_string(typeof(normalized)), normalized.keys().size()],
+				"Type: %s, Keys: %d" % [type_string(typeof(normalized)), normalized.keys().size() if typeof(normalized) == TYPE_DICTIONARY else 0],
 				"expected_result": "PASS - Returns valid Dictionary"
 			}
 		)
@@ -231,7 +233,7 @@ func _test_integration_performance() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	if not ClassDB.class_exists("StateExtractor"):
+	if not ResourceLoader.exists("res://misc/state_extractor.gd"):
 		suite_success = false
 		tests.append(
 			{
@@ -255,7 +257,7 @@ func _test_integration_performance() -> Dictionary:
 				"name": "Performance requirements",
 				"success": performance_ok,
 				"details":
-				"Duration: %d ms, Checksum length: %d" % [duration_ms, checksum.length()],
+				"Duration: %d ms, Checksum length: %d" % [duration_ms, checksum.length() if typeof(checksum) == TYPE_STRING else 0],
 				"expected_result": "PASS - Completes within 200ms"
 			}
 		)

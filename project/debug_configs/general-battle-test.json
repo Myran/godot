@@ -1,7 +1,7 @@
 {
   "description": "General Battle Animation Test - Validates battle system with lineup population and proper stat display without conflicts",
   "actions": [
-    "game.ui.hide_debug_menu",
+    "game.debug.hide_debug_menu",
     "game.lineup.populate_enemy",
     "game.battle.start"
   ]
