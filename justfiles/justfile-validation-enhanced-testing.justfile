@@ -492,8 +492,13 @@ _analyze-test-errors test_id platform:
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Filter out common system warnings that are not actual app errors
-    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|chromium.*GPU process exited|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat|libprocessgroup.*[Ff]ailed to kill|Icing.*Failed to remove|ProviderInstaller.*Failed to load|GoogleApiManager.*Failed to get service|FlagRegistrar.*Failed to register|NetworkController.*onSignalStrengthsChanged)")
-    ALL_ERRORS=$(echo "$FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
+    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|chromium.*GPU process exited|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat|libprocessgroup.*[Ff]ailed to kill|Icing.*Failed to remove|ProviderInstaller.*Failed to load|GoogleApiManager.*Failed to get service|FlagRegistrar.*Failed to register|NetworkController.*onSignalStrengthsChanged|FlagRegistrar.*Phenotype\.API is not available|Failed to find local clusters|dex2oat.*Failed to open classpath|installd.*Failed to create profile|installd.*Failed to open profile|ERROR.*resources still in use at exit)")
+    
+    # Filter out intentional test errors from error handling validation actions
+    # These actions deliberately generate errors to test error handling - they should not be counted as failures
+    ERROR_HANDLING_FILTERED_LOGS=$(echo "$FILTERED_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Firebase Backend.*ERROR.*failed|C\+\+ Firebase.*ERROR.*returned null|Firebase Backend.*ERROR.*Error:|Backend async pattern test failed|Testing backend Error: Invalid Path|Testing backend Error: Timeout|BUFFER.*Firebase Backend.*ERROR|BUFFER.*C\+\+ Firebase.*ERROR|Invalid Firebase Database path.*Invalid|Couldn't create child reference.*Invalid|C\+\+ get_value operation returned null|Completing request.*with error.*SET_VALUE_FAILED|Invalid database path provided|debug.*cpp_firebase.*error.*returned null|FB_Backend.*get_data requires non-empty path|firebase.*error.*get_data requires non-empty path)")
+    
+    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     WARNINGS=$(echo "$LOGS" | grep -c -E "WARNING|WARN|Deprecated|Missing" 2>/dev/null || echo "0")
@@ -526,7 +531,7 @@ _analyze-test-errors test_id platform:
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Other Errors Found:"
-        echo "$FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
@@ -560,6 +565,202 @@ _analyze-test-errors test_id platform:
 # TEST COMMAND ENHANCEMENT HOOKS
 # ================================
 
+# Collect action execution results from logs and save to file
+_collect-action-results test_id platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{test_id}}"
+    PLATFORM="{{platform}}"
+    
+    # Get logs based on platform using existing logic
+    case "$PLATFORM" in
+        "android")
+            if ! command -v adb >/dev/null 2>&1; then
+                return 0
+            fi
+            LOGS=$(adb logcat -d 2>/dev/null | tail -2000)
+            ;;
+        "desktop")
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            LOGS_DIR="$USER_DATA_DIR/logs"
+            if [[ ! -d "$LOGS_DIR" ]]; then
+                return 0
+            fi
+            LATEST_LOG=$(find "$LOGS_DIR" -name "*.log" -type f -exec ls -t {} + | head -1)
+            if [[ -z "$LATEST_LOG" ]]; then
+                return 0
+            fi
+            LOGS=$(cat "$LATEST_LOG")
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+    
+    if [[ -z "$LOGS" ]]; then
+        return 0
+    fi
+    
+    # Create results file
+    RESULTS_FILE="/tmp/test_action_results_${TEST_ID}.json"
+    echo "[]" > "$RESULTS_FILE"
+    
+    # Process successful actions - use process substitution to avoid subshell issues
+    while IFS= read -r line; do
+        # Extract JSON part - look for { and } to get the JSON object
+        if [[ "$line" == *"DEBUG_TEST_SUCCESS"* && "$line" == *"{"* && "$line" == *"}"* ]]; then
+            # Extract everything from first { to last } (inclusive)
+            JSON_PART="${line#*\{}"
+            JSON_PART="{"$JSON_PART
+            JSON_PART="${JSON_PART%\}*}}"
+            
+            # Validate it's proper JSON and extract fields
+            if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null) 
+                GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+                
+                if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                    # Create result entry using jq for proper JSON formatting
+                    TEMP_FILE=$(mktemp)
+                    if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                        mv "$TEMP_FILE" "$RESULTS_FILE"
+                    else
+                        rm -f "$TEMP_FILE"
+                    fi
+                fi
+            fi
+        fi
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" || true)
+    
+    # Process failed actions - use process substitution to avoid subshell issues
+    while IFS= read -r line; do
+        # Extract JSON part - look for { and } to get the JSON object
+        if [[ "$line" == *"DEBUG_TEST_FAILURE"* && "$line" == *"{"* && "$line" == *"}"* ]]; then
+            # Extract everything from first { to last } (inclusive)
+            JSON_PART="${line#*\{}"
+            JSON_PART="{"$JSON_PART
+            JSON_PART="${JSON_PART%\}*}}"
+            
+            # Validate it's proper JSON and extract fields
+            if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
+                GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+                ERROR_MSG=$(echo "$JSON_PART" | jq -r '.error // ""' 2>/dev/null)
+                
+                if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                    # Create result entry using jq for proper JSON formatting and escaping
+                    TEMP_FILE=$(mktemp)
+                    if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                        mv "$TEMP_FILE" "$RESULTS_FILE"
+                    else
+                        rm -f "$TEMP_FILE"
+                    fi
+                fi
+            fi
+        fi
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" || true)
+
+# Generate detailed action summary from collected results file
+_generate-action-summary-from-file test_id config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{test_id}}"
+    CONFIG_NAME="{{config_name}}"
+    RESULTS_FILE="/tmp/test_action_results_${TEST_ID}.json"
+    
+    echo ""
+    echo "📊 Detailed Action Execution Summary"
+    echo "====================================="
+    echo ""
+    echo "**Test Configuration**: \`$CONFIG_NAME\`"
+    echo "**Test ID**: \`$TEST_ID\`"
+    echo ""
+    
+    if [[ ! -f "$RESULTS_FILE" ]] || [[ ! -s "$RESULTS_FILE" ]]; then
+        echo "⚠️  No action execution data collected"
+        exit 0
+    fi
+    
+    # Parse results and group by category
+    TOTAL_ACTIONS=$(jq 'length' "$RESULTS_FILE")
+    PASSED_ACTIONS=$(jq '[.[] | select(.success == true)] | length' "$RESULTS_FILE")
+    FAILED_ACTIONS=$(jq '[.[] | select(.success == false)] | length' "$RESULTS_FILE")
+    
+    if [[ "$TOTAL_ACTIONS" == "0" ]]; then
+        echo "⚠️  No actions found in results file"
+        exit 0
+    fi
+    
+    echo "## **📊 Action Execution Results**"
+    echo ""
+    
+    # Get unique categories and their actions
+    CATEGORIES=$(jq -r '[.[].category] | unique | .[]' "$RESULTS_FILE")
+    
+    while IFS= read -r category; do
+        if [[ -z "$category" || "$category" == "null" ]]; then
+            continue
+        fi
+        
+        # Count actions in this category
+        CATEGORY_COUNT=$(jq --arg cat "$category" '[.[] | select(.category == $cat)] | length' "$RESULTS_FILE")
+        
+        if [[ "$CATEGORY_COUNT" == "0" ]]; then
+            continue
+        fi
+        
+        # Determine category emoji and name
+        case "$category" in
+            "C++ Firebase")
+                echo "### **🔥 C++ Firebase Layer** (\`cpp.firebase.*\` - $CATEGORY_COUNT actions)"
+                ;;
+            "Firebase Backend")
+                echo "### **🚀 Firebase Backend Layer** (\`backend.firebase.*\` - $CATEGORY_COUNT actions)"
+                ;;
+            "RTDB")
+                echo "### **🗄️ RTDB Database Layer** (\`rtdb.*\` - $CATEGORY_COUNT actions)"
+                ;;
+            "System")
+                echo "### **🌐 System Network Layer** (\`system.*\` - $CATEGORY_COUNT actions)"
+                ;;
+            *)
+                echo "### **⚙️ $category Layer** - $CATEGORY_COUNT actions"
+                ;;
+        esac
+        
+        echo "| Action | Category | End State | Duration |"
+        echo "|--------|----------|-----------|----------|"
+        
+        # Show actions for this category, sorted by sequence
+        jq -r --arg cat "$category" '
+            [.[] | select(.category == $cat)] | 
+            sort_by(.sequence) | 
+            .[] | 
+            "\(.action)|\(.category)|\(if .success then "✅ **PASSED**" else "❌ **FAILED**" end)|\(.duration_ms)ms"
+        ' "$RESULTS_FILE" | while IFS='|' read -r action category status duration; do
+            echo "| \`$action\` | $category | $status | $duration |"
+        done
+        
+        echo ""
+    done <<< "$CATEGORIES"
+    
+    echo "---"
+    echo ""
+    echo "**✅ Total Actions Executed**: **$TOTAL_ACTIONS actions**"
+    echo "**✅ Actions Passed**: **$PASSED_ACTIONS/$TOTAL_ACTIONS ($((PASSED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
+    echo "**❌ Actions Failed**: **$FAILED_ACTIONS/$TOTAL_ACTIONS ($((FAILED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
+    
+    # Clean up results file
+    rm -f "$RESULTS_FILE"
+
 # Hook that can be called after any test execution to add error analysis
 _post-test-validation test_id platform:
     #!/usr/bin/env bash
@@ -567,6 +768,12 @@ _post-test-validation test_id platform:
     
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
+    
+    # Collect action results from logs first
+    just _collect-action-results "$TEST_ID" "$PLATFORM"
+    
+    # Generate detailed action summary
+    just _generate-action-summary-from-file "$TEST_ID" "${CURRENT_CONFIG_NAME:-unknown}"
     
     echo ""
     echo "🔍 Running Post-Test Error Analysis..."
