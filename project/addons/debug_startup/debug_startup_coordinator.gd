@@ -523,27 +523,28 @@ func _should_action_auto_continue(action_name: String) -> bool:
 	Determine if an action should automatically continue to the next queued action
 	or wait for natural completion events (DraftSteadyEvent, LineupOperationCompleteEvent, etc.)
 
-	Auto-continue actions: Simple utilities that don't trigger complex cascades
-	Wait actions: Complex operations that need time for animations/cascades to complete
+	DEFAULT: Auto-continue (immediate continuation) for all actions
+	EXCEPTION: Complex operations that need time for animations/cascades to complete
 	"""
 
-	# Auto-continue actions (immediate continuation)
-	var auto_continue_patterns: Array[String] = [
-		"system.debug.hide_menu",
-		"system.debug.show_menu",
-		"system.debug.replay_complete",
-		"system.debug.finalize_replay_validation",
-		"system.debug.quit_application",
-		"system.memory.",
-		"system.network.rtdb_status",
-		"game.draft.toggle_column_player"
+	# Actions that should NOT auto-continue (wait for natural completion events)
+	# These are complex operations that trigger animations/cascades requiring event completion
+	var wait_for_completion_patterns: Array[String] = [
+		"game.state.transition_player",
+		"game.draft.upgrade_player", 
+		"game.draft.reroll_player",
+		"game.draft.move_card_to_lineup_player",
+		"game.lineup.move_card_player",
+		"game.battle.start_player",
+		"game.battle.start",
+		"game.battle.populate_enemy_and_start"
 	]
 
-	# Check if action matches any auto-continue pattern
-	for pattern: String in auto_continue_patterns:
+	# Check if action matches any wait-for-completion pattern
+	for pattern: String in wait_for_completion_patterns:
 		if action_name.begins_with(pattern):
-			return true
+			return false
 
-	# All other actions wait for natural completion events
-	# This includes: game.state.transition_player, game.draft.upgrade_player, etc.
-	return false
+	# DEFAULT: All other actions auto-continue immediately
+	# This includes: cpp.firebase.*, backend.firebase.*, rtdb.database.*, system.*, etc.
+	return true
