@@ -1,7 +1,0 @@
-{
-  "description": "Semantic Action Logging Test - Verify semantic logging functionality",
-  "actions": [
-    "system.debug.test_semantic_logging",
-    "system.debug.quit_application"
-  ]
-}

@@ -1,7 +1,0 @@
-{
-  "description": "Simple Combination Events Test - Test basic event recording combinations",
-  "actions": [
-    "test.recording.simple_combination",
-    "system.debug.quit_application"
-  ]
-}

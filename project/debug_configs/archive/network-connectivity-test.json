@@ -1,9 +1,0 @@
-{
-  "description": "Network Connectivity Test - Firebase connection and network resilience",
-  "actions": [
-    "*.firebase.connection*",
-    "*.*.network*",
-    "*.*.timeout*",
-    "system.*.connectivity*"
-  ]
-}

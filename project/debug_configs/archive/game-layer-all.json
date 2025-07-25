@@ -1,6 +1,0 @@
-{
-  "description": "Game layer - All game logic, match operations, and gameplay tests",
-  "actions": [
-    "game.*"
-  ]
-}

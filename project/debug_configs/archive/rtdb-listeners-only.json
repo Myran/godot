@@ -1,8 +1,0 @@
-{
-  "description": "RTDB Listener Operations Only - Real-time data synchronization",
-  "actions": [
-    "rtdb.*.listener*",
-    "rtdb.*.subscription*",
-    "rtdb.*.realtime*"
-  ]
-}

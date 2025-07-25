@@ -1,8 +1,0 @@
-{
-  "description": "Regression Test - Validates core functionality remains intact",
-  "actions": [
-    "*.basic.*",
-    "*.*.error_handling",
-    "system.debug.*"
-  ]
-}

@@ -1,8 +1,0 @@
-{
-  "description": "Test wildcard functionality with current action names",
-  "actions": [
-    "C++*",
-    "*Error*",
-    "Backend*"
-  ]
-}

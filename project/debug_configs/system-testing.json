@@ -1,8 +1,0 @@
-{
-  "description": "System layer - Safe utilities only (excludes quit and disruptive actions)",
-  "actions": [
-    "system.debug.registry_stats",
-    "system.network.*", 
-    "system.diagnostics.*"
-  ]
-}

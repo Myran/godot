@@ -1,7 +1,0 @@
-{
-  "description": "Firebase C++ and Backend layers only - Engine and application level (excludes RTDB API)",
-  "actions": [
-    "cpp.firebase.*",
-    "backend.firebase.*"
-  ]
-}

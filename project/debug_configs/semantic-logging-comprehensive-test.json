@@ -1,9 +1,0 @@
-{
-  "description": "Semantic Action Logging COMPREHENSIVE Test - Verify all functionality works end-to-end",
-  "actions": [
-    "system.debug.test_semantic_logging",
-    "system.debug.test_semantic_coverage", 
-    "system.debug.test_semantic_integration",
-    "system.debug.quit_application"
-  ]
-}

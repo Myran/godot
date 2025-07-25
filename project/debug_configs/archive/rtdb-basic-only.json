@@ -1,8 +1,0 @@
-{
-  "description": "RTDB Basic Operations Only - Core GDScript API functionality",
-  "actions": [
-    "rtdb.basic.*",
-    "rtdb.*.set_value",
-    "rtdb.*.get_value"
-  ]
-}

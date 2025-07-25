@@ -1,6 +1,0 @@
-{
-  "description": "Debug the RTDB error handling test specifically",
-  "actions": [
-    "rtdb.testing.error_handling"
-  ]
-}

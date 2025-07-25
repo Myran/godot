@@ -1,6 +1,0 @@
-{
-  "description": "Firebase across ALL layers - C++ SDK + Backend + RTDB comprehensive testing",
-  "actions": [
-    "*.firebase.*"
-  ]
-}

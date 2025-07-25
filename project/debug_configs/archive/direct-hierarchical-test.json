@@ -1,6 +1,0 @@
-{
-  "description": "Test direct hierarchical action name (no wildcards)",
-  "actions": [
-    "cpp.firebase.set_value"
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "description": "Quick Smoke Test - Essential functionality validation (under 30 seconds)",
-  "actions": [
-    "system.debug.print_info",
-    "*.*.set_value",
-    "*.*.get_value",
-    "game.match.reset_level"
-  ]
-}

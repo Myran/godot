@@ -1,8 +1,0 @@
-{
-  "description": "Proof of concept for Firebase layer testing - one test per layer to validate separation",
-  "actions": [
-    "C++ Set Value Test",
-    "Backend Async Pattern Test", 
-    "Set Simple Value"
-  ]
-}

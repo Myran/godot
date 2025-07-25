@@ -1,9 +1,0 @@
-{
-  "description": "Domain-specific wildcard patterns - Focus on specific functionality domains",
-  "actions": [
-    "*.firebase.*",
-    "*.debug.*", 
-    "*.match.*",
-    "system.*"
-  ]
-}
