@@ -1080,12 +1080,12 @@ _execute-test-android config_name duration:
     echo "$(date +%s)" > /tmp/android_test_activity
     
     while [[ ! -f /tmp/android_test_complete ]] && [[ $ELAPSED -lt $MAX_TIMEOUT ]]; do
-        # Check if app has quit (alternative completion indicator)
+        # Check if app has quit (but don't assume completion yet - let final logic determine)
         CURRENT_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
         if [[ -z "$CURRENT_PID" ]]; then
             echo ""
-            echo "✅ App quit - test completed"
-            echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+            echo "✅ App quit - checking if test completed properly..."
+            # Don't write MONITOR_COMPLETE here - let final completion logic determine
             break
         fi
         
@@ -1120,8 +1120,12 @@ _execute-test-android config_name duration:
     done
     
     # Cleanup background monitoring
-    if kill $MONITOR_PID 2>/dev/null; then
-        echo "🛑 Stopped background monitoring"
+    # Give background monitoring a chance to complete fallback detection
+    if kill -0 $MONITOR_PID 2>/dev/null; then
+        sleep 0.5  # Allow background process to complete fallback completion detection
+        if kill $MONITOR_PID 2>/dev/null; then
+            echo "🛑 Stopped background monitoring"
+        fi
     fi
     rm -f /tmp/android_test_complete /tmp/android_test_activity
     
