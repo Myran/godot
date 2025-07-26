@@ -1123,9 +1123,14 @@ _execute-test-android config_name duration:
     # Give background monitoring a chance to complete fallback detection
     if kill -0 $MONITOR_PID 2>/dev/null; then
         sleep 0.5  # Allow background process to complete fallback completion detection
-        if kill $MONITOR_PID 2>/dev/null; then
-            echo "🛑 Stopped background monitoring"
-        fi
+        # Gracefully terminate monitoring and suppress all termination messages
+        {
+            if kill $MONITOR_PID 2>/dev/null; then
+                echo "🛑 Stopped background monitoring"
+            fi
+            # Wait briefly for process cleanup
+            sleep 0.1
+        } 2>/dev/null
     fi
     rm -f /tmp/android_test_complete /tmp/android_test_activity
     
