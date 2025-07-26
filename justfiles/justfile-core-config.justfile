@@ -142,8 +142,8 @@ _find-desktop-log-with-test-id TEST_ID:
         exit 1
     fi
     
-    # Return the file content (not the path) to match Android function behavior
-    cat "$LOG_FILE"
+    # Return the log file path (replay generation needs the path, not content)
+    echo "$LOG_FILE"
 
 # ================================
 # CREDENTIALS (Environment-based)
