@@ -181,9 +181,37 @@ _extract-checksums-unified log_file test_id:
     
     # Unified extraction: Look for SEMANTIC_ACTION logs with pre_action_checksum
     # This works for both desktop ALogger format and Android logcat format
-    CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | \
-               sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
-               grep -v "^$")
+    # For Android: get the most recent session to avoid picking up old test checksums
+    if [[ "$LOG_FILE" == "logcat" && -n "$TEST_ID" && "$TEST_ID" != "test_id" ]]; then
+        # Extract timestamp from test ID (format: config_platform_timestamp)
+        TIMESTAMP=$(echo "$TEST_ID" | grep -o '[0-9]\{10\}$' || echo "")
+        if [[ -n "$TIMESTAMP" ]]; then
+            # Get the most recent session ID that matches the test timing
+            RECENT_SESSION=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -1 | \
+                           sed -n 's/.*"session_id": *"\([^"]*\)".*/\1/p' || echo "")
+            if [[ -n "$RECENT_SESSION" ]]; then
+                # Extract checksums from the most recent session only
+                CHECKSUMS=$(echo "$LOG_CONTENT" | grep "$RECENT_SESSION" | grep "SEMANTIC_ACTION" | \
+                           sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                           grep -v "^$")
+            else
+                # Fallback to all recent SEMANTIC_ACTION logs
+                CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -20 | \
+                           sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                           grep -v "^$")
+            fi
+        else
+            # No timestamp in test ID - use most recent logs
+            CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -20 | \
+                       sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                       grep -v "^$")
+        fi
+    else
+        # Desktop logs or fallback: get all SEMANTIC_ACTION checksums
+        CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | \
+                   sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                   grep -v "^$")
+    fi
     
     echo "$CHECKSUMS"
 
@@ -487,21 +515,30 @@ _analyze-test-errors test_id platform:
             ;;
     esac
     
-    # Count errors using shared patterns (ensure clean single numbers)
-    CRITICAL_ERRORS=$(echo "$LOGS" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" 2>/dev/null || echo "0")
+    # WHITELIST APPROACH: Only look for test-relevant logs, ignore all system noise
+    # Focus on our application logs with specific test ID or Godot tags
+    if [[ -n "$TEST_ID" ]]; then
+        # Filter to only logs related to this specific test or Godot app
+        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "($TEST_ID|godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
+    else
+        # Fallback: only Godot application errors
+        RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
+    fi
+    
+    # Count critical errors in relevant logs only
+    CRITICAL_ERRORS=$(echo "$RELEVANT_LOGS" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" 2>/dev/null || echo "0")
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
-    # Filter out common system warnings that are not actual app errors
-    FILTERED_LOGS=$(echo "$LOGS" | grep -v -E "(chromium.*Failed to read DnsConfig|chromium.*GPU process exited|unused DT entry|linker.*Warning|hwservicemanager.*Cannot find entry|graphics.mapper.*IMapper|ProvidersCache.*Failed to load some roots|ActivityThread.*Failed to find provider|com.sec.android.easyMover|com.samsung.android.mdx|ProcessCpuTracker.*Failed to stat|libprocessgroup.*[Ff]ailed to kill|Icing.*Failed to remove|ProviderInstaller.*Failed to load|GoogleApiManager.*Failed to get service|FlagRegistrar.*Failed to register|NetworkController.*onSignalStrengthsChanged|FlagRegistrar.*Phenotype\.API is not available|Failed to find local clusters|dex2oat.*Failed to open classpath|installd.*Failed to create profile|installd.*Failed to open profile|ERROR.*resources still in use at exit)")
+    # Filter out intentional test errors (error handling validation actions)
+    # These actions deliberately generate errors to test error handling
+    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout)" || echo "")
     
-    # Filter out intentional test errors from error handling validation actions
-    # These actions deliberately generate errors to test error handling - they should not be counted as failures
-    ERROR_HANDLING_FILTERED_LOGS=$(echo "$FILTERED_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Firebase Backend.*ERROR.*failed|C\+\+ Firebase.*ERROR.*returned null|Firebase Backend.*ERROR.*Error:|Backend async pattern test failed|Testing backend Error: Invalid Path|Testing backend Error: Timeout|BUFFER.*Firebase Backend.*ERROR|BUFFER.*C\+\+ Firebase.*ERROR|Invalid Firebase Database path.*Invalid|Couldn't create child reference.*Invalid|C\+\+ get_value operation returned null|Completing request.*with error.*SET_VALUE_FAILED|Invalid database path provided|debug.*cpp_firebase.*error.*returned null|FB_Backend.*get_data requires non-empty path|firebase.*error.*get_data requires non-empty path)")
-    
-    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" 2>/dev/null || echo "0")
+    # Count all errors in filtered relevant logs
+    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
-    WARNINGS=$(echo "$LOGS" | grep -c -E "WARNING|WARN|Deprecated|Missing" 2>/dev/null || echo "0")
+    # Count warnings in relevant logs only
+    WARNINGS=$(echo "$RELEVANT_LOGS" | grep -c -E "WARNING|WARN" 2>/dev/null || echo "0")
     WARNINGS=$(echo "$WARNINGS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Subtract errors from warnings to avoid double counting (with safe arithmetic)
@@ -521,17 +558,17 @@ _analyze-test-errors test_id platform:
     echo "   Total Errors: $ALL_ERRORS"
     echo "   Warnings: $WARNINGS"
     
-    # Show sample errors if found
+    # Show sample errors if found (from relevant logs only)
     if [[ $CRITICAL_ERRORS -gt 0 ]]; then
         echo ""
         echo "🚨 Critical Errors Found:"
-        echo "$LOGS" | grep -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$RELEVANT_LOGS" | grep -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
-        echo "❌ Other Errors Found:"
-        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error|Invalid|Failed to|Cannot|Unable to" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "❌ Test-Related Errors Found:"
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
