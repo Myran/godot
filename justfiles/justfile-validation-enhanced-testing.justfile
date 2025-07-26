@@ -460,6 +460,120 @@ _extract-logs-desktop test_id:
     
     cat "$LATEST_LOG"
 
+# Desktop log filtering with error-safe suppression (Android-style clean output)
+_filter-desktop-logs-safely temp_file_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEMP_FILE="{{temp_file_path}}"
+    
+    if [[ ! -f "$TEMP_FILE" ]]; then
+        echo "❌ Temp file not found: $TEMP_FILE"
+        return 1
+    fi
+    
+    # CRITICAL ERROR DETECTION FIRST - Whitelist approach for maximum safety
+    # Check for any critical error patterns BEFORE applying any filtering
+    CRITICAL_PATTERNS="SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error"
+    
+    # Check for critical errors, excluding known safe warnings
+    if grep -i -E "$CRITICAL_PATTERNS" "$TEMP_FILE" >/dev/null 2>&1; then
+        # Check specifically for known safe warnings that contain "WARNING" pattern
+        SAFE_WARNINGS=$(grep -E "(ObjectDB instances leaked|WARNING.*ObjectDB|WARNING.*deprecated|WARNING.*Viewport)" "$TEMP_FILE" | wc -l)
+        # Count only actual critical errors (excluding the WARNING pattern entirely for this check)
+        REAL_CRITICAL_ERRORS=$(grep -i -E "(SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error)" "$TEMP_FILE" | wc -l)
+        
+        if [[ $SAFE_WARNINGS -gt 0 ]] && [[ $REAL_CRITICAL_ERRORS -eq 0 ]]; then
+            # Only safe warnings found - proceed with filtering
+            echo "ℹ️  Only safe warnings detected (ObjectDB, etc.) - applying filtering"
+        else
+            # Real critical errors found
+            echo "⚠️  CRITICAL ERRORS DETECTED - Preserving full output for debugging"
+            echo "🔍 Error-safe mode: Showing unfiltered logs"
+            echo ""
+            cat "$TEMP_FILE"
+            exit 0
+        fi
+    fi
+    
+    # NO CRITICAL ERRORS DETECTED - Safe to apply filtering for clean output
+    echo "✅ No critical errors detected - Applying clean output filtering"
+    echo ""
+    
+    # Create filtered version step by step
+    TEMP_FILTERED=$(mktemp)
+    
+    # Apply aggressive filtering - only show ERROR level and above, plus essential test events
+    grep -E "(ERROR|CRITICAL|FAILED|SCRIPT ERROR|TEST_COMPLETE|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|CHECKSUM|STATE_CAPTURED|SESSION_|SEMANTIC_ACTION)" "$TEMP_FILE" > "$TEMP_FILTERED" || true
+    
+    # If that results in too few lines, include WARNING level as well
+    LINE_COUNT=$(wc -l < "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    if [[ $LINE_COUNT -lt 5 ]]; then
+        grep -E "(ERROR|CRITICAL|FAILED|WARNING|SCRIPT ERROR|TEST_COMPLETE|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE|CHECKSUM|STATE_CAPTURED|SESSION_|SEMANTIC_ACTION)" "$TEMP_FILE" > "$TEMP_FILTERED" || true
+    fi
+    
+    # Filter out ANSI color codes for clean terminal output
+    sed 's/\x1b\[[0-9;]*m//g' "$TEMP_FILTERED" > "${TEMP_FILTERED}.2" && mv "${TEMP_FILTERED}.2" "$TEMP_FILTERED"
+    
+    # Remove font tags for cleaner output
+    sed 's/\[font_size=[^]]*\]//g; s/\[\/font_size\]//g' "$TEMP_FILTERED" > "${TEMP_FILTERED}.3" && mv "${TEMP_FILTERED}.3" "$TEMP_FILTERED"
+    
+    # Generate Android-style structured summary
+    echo "📊 Desktop Test Execution Summary"
+    echo "================================="
+    echo ""
+    
+    # Extract essential test info from filtered logs
+    ACTION_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    FAILED_COUNT=$(grep -c "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    ERROR_COUNT=$(grep -c -E "(ERROR|CRITICAL|FAILED)" "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    
+    # Extract session info for better reporting
+    SESSION_INFO=$(grep "SESSION_END" "$TEMP_FILTERED" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
+    if [[ "$SESSION_INFO" != "0" ]]; then
+        DURATION_SECONDS=$((SESSION_INFO / 1000))
+        DURATION_DISPLAY="${DURATION_SECONDS}s"
+    else
+        DURATION_DISPLAY="unknown"
+    fi
+    
+    echo "**Actions Executed**: $ACTION_COUNT"
+    echo "**Actions Failed**: $FAILED_COUNT"
+    echo "**Test Duration**: $DURATION_DISPLAY"
+    
+    if [[ $ERROR_COUNT -gt 0 ]]; then
+        echo "**Status**: ❌ ERRORS DETECTED ($ERROR_COUNT)"
+    else
+        echo "**Status**: ✅ COMPLETED"
+    fi
+    echo ""
+    
+    # Show only the most essential events
+    echo "📋 Key Test Events:"
+    if [[ -s "$TEMP_FILTERED" ]]; then
+        # Show filtered essential events only
+        grep -E "(SESSION_START|SESSION_END|TEST_COMPLETE|CHECKSUM.*validation)" "$TEMP_FILTERED" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
+        
+        # Show any errors/failures found
+        if [[ $ERROR_COUNT -gt 0 ]] || [[ $FAILED_COUNT -gt 0 ]]; then
+            echo ""
+            echo "⚠️  Issues found:"
+            grep -E "(ERROR|CRITICAL|FAILED|DEBUG_TEST_FAILURE)" "$TEMP_FILTERED" | head -3 | sed 's/^/  /' 2>/dev/null
+        fi
+    else
+        echo "  Test executed with minimal logging - no issues detected"
+    fi
+    
+    echo ""
+    if [[ $ERROR_COUNT -eq 0 ]] && [[ $FAILED_COUNT -eq 0 ]]; then
+        echo "🎯 Test completed successfully with clean output"
+    else
+        echo "⚠️  Test completed with $ERROR_COUNT errors and $FAILED_COUNT failures"
+    fi
+    
+    # Cleanup
+    rm -f "$TEMP_FILTERED"
+
 # ================================
 # SHARED ERROR ANALYSIS LOGIC
 # ================================
@@ -1228,21 +1342,74 @@ _execute-test-desktop config_name duration:
     # Apply timeout for desktop tests as well
     MAX_TIMEOUT=${DURATION:-${DESKTOP_TEST_MAX_TIMEOUT:-120}}
     echo "🔍 Desktop test timeout: ${MAX_TIMEOUT}s"
+    echo ""
     
-    timeout "${MAX_TIMEOUT}" ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
-        && echo "✅ Desktop test completed successfully" \
-        || { 
-            EXIT_CODE=$?
-            if [[ $EXIT_CODE -eq 124 ]]; then
-                echo "❌ Desktop test timed out after ${MAX_TIMEOUT} seconds"
-                exit 1
-            else
-                echo "⚠️  Desktop test completed with exit code $EXIT_CODE"
-                if [[ $EXIT_CODE -ne 0 ]]; then
-                    exit $EXIT_CODE
-                fi
-            fi
-        }
+    # Capture all output to a temporary file for filtering
+    TEMP_OUTPUT=$(mktemp)
+    
+    # Execute test with reduced logging but preserve essential test information
+    # Use --verbose to override quiet mode and get test logs, but filter output
+    {
+        timeout "${MAX_TIMEOUT}" ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode 2>&1
+        TEST_EXIT_CODE=$?
+    } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
+    
+    # Show minimal, clean output for desktop testing
+    echo "📊 Desktop Test Execution Summary"
+    echo "================================="
+    echo ""
+    
+    # Check for any critical errors first (excluding ObjectDB warnings)
+    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
+    
+    if [[ -n "$CRITICAL_ERRORS" ]]; then
+        echo "⚠️  ERRORS DETECTED - Showing relevant output:"
+        echo ""
+        echo "$CRITICAL_ERRORS" | head -10
+        TEST_EXIT_CODE=1
+    else
+        # Extract essential test info from output (preserve logs for checksum extraction)
+        ACTION_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
+        FAILED_COUNT=$(grep -c "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
+        
+        # Extract session duration if available
+        SESSION_INFO=$(grep "SESSION_END" "$TEMP_OUTPUT" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
+        if [[ "$SESSION_INFO" != "0" ]]; then
+            DURATION_SECONDS=$((SESSION_INFO / 1000))
+            DURATION_DISPLAY="${DURATION_SECONDS}s"
+        else
+            DURATION_DISPLAY="completed"
+        fi
+        
+        echo "**Actions Executed**: $ACTION_COUNT"
+        echo "**Actions Failed**: $FAILED_COUNT"  
+        echo "**Status**: ✅ COMPLETED"
+        echo "**Duration**: $DURATION_DISPLAY"
+        echo ""
+        
+        # Show key test events in a concise format (no verbose startup logs)
+        echo "📋 Key Test Events:"
+        grep -E "(SESSION_START|SESSION_END|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE)" "$TEMP_OUTPUT" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
+        
+        echo ""
+        echo "🎯 Test completed successfully with clean output"
+    fi
+    
+    # Cleanup temp file
+    rm -f "$TEMP_OUTPUT"
+    
+    # Handle exit codes
+    if [[ ${TEST_EXIT_CODE:-0} -eq 124 ]]; then
+        echo ""
+        echo "❌ Desktop test timed out after ${MAX_TIMEOUT} seconds"
+        exit 1
+    elif [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
+        echo ""
+        echo "⚠️  Desktop test completed with exit code ${TEST_EXIT_CODE}"
+        if [[ ${TEST_EXIT_CODE} -ne 0 ]]; then
+            exit ${TEST_EXIT_CODE}
+        fi
+    fi
     
     echo ""
     echo "✅ Desktop test execution completed"
