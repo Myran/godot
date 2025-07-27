@@ -1,8 +1,8 @@
 {
-  "description": "Generated replay from semantic session: session_20250727_214225_ec39e22c",
-  "session_id": "session_20250727_214225_ec39e22c",
-  "generation_timestamp": "20250727_214252",
-  "semantic_action_count": 4,
+  "description": "Generated replay from semantic session: session_20250727_222846_c416484a",
+  "session_id": "session_20250727_222846_c416484a",
+  "generation_timestamp": "20250727_222909",
+  "semantic_action_count": 5,
   "actions": [
     "system.debug.hide_menu",
     {
@@ -33,13 +33,20 @@
         "to_state": "PREPARE"
       }
     },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
     "system.debug.replay_complete"
   ],
   "metadata": {
-    "source_session": "session_20250727_214225_ec39e22c",
+    "source_session": "session_20250727_222846_c416484a",
     "generation_method": "platform_specific_replay_generate",
-    "config_name": "test-08",
-    "capture_timestamp": "20250727_214252",
+    "config_name": "test-10",
+    "capture_timestamp": "20250727_222909",
     "test_type": "checksum_validation",
     "validation_mode": "semantic_action_checksums"
   },
@@ -50,7 +57,8 @@
       "4e0bf926ab46b3abf51ebdd8c7be587112caec94d4a0f419d088d9bc4c277653",
       "d123613436c73e9aab5e066a52af2abccd1b4d4a1310d68384b075326de4d27c",
       "80c0fd4093027f1dc6a696b25a76610340839d383c797fac5201bf2e09cdf1bd",
-      "870605bbe0b14acf7e12530880d63a42910a7e163b8ed29cb4309d2638d37d43"
+      "870605bbe0b14acf7e12530880d63a42910a7e163b8ed29cb4309d2638d37d43",
+      "73e1e478d9d709c3b696ec85fa8232d32668e847e349473ddc14bc6c8572dc2b"
     ]
   }
 }
