@@ -1592,10 +1592,13 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Always use draft handler's upgrade logic for consistent behavior
-	# This ensures level progression is handled identically in original gameplay and replay
-	# Player intent is "upgrade", not "upgrade to specific level"
-	game.draft_handler.upgrade()
+	# CRITICAL FIX: Set draft level to specific value for deterministic replay
+	# The original upgrade() method is stateful (increments from current level)
+	# But replay needs absolute level values for deterministic behavior
+	game.draft_handler.current_draft_upgrade_level = level
+	var event: core.UpgradeEvent = core.UpgradeEvent.new(level)
+	event.source = core.EventSource.PLAYER
+	core.action(event)
 
 	return true
 
