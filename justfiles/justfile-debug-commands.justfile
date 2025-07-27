@@ -221,7 +221,7 @@ debug-recent:
         grep -o '"config_name": "[^"]*"' "$LOG_FILE" | head -10 | cut -d'"' -f4 | while read test_id; do
             echo "📄 $test_id"
             echo "   📊 just logs $test_id"
-            echo "   📊 just logs-errors-tagged $test_id"
+            echo "   📊 just logs-errors $test_id"
             echo ""
         done
     else

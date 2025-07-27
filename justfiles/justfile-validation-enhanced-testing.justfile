@@ -402,8 +402,15 @@ _handle-checksum-validation config_path platform test_id:
         echo ""
         echo "Next run will validate against this baseline"
     else
-        # Compare with expected checksums
-        EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[].checksum' "$CONFIG_PATH")
+        # Compare with expected checksums - handle both formats (strings and objects)
+        # First check if expected_checksums contains objects with .checksum field
+        if jq -e '.checksum_config.expected_checksums[0] | has("checksum")' "$CONFIG_PATH" >/dev/null 2>&1; then
+            # Old structured format: extract .checksum field
+            EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[].checksum' "$CONFIG_PATH")
+        else
+            # New simple format: checksums are direct strings
+            EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[]' "$CONFIG_PATH")
+        fi
         
         # Create detailed action-to-checksum mapping for better debugging
         echo "📋 Checksum-to-Action Mapping:"
@@ -413,13 +420,27 @@ _handle-checksum-validation config_path platform test_id:
         # Get expected checksums with metadata for comparison
         EXPECTED_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
         
+        # Check format of expected checksums for action mapping display
+        HAS_METADATA=false
+        if jq -e '.checksum_config.expected_checksums[0] | has("checksum")' "$CONFIG_PATH" >/dev/null 2>&1; then
+            HAS_METADATA=true
+        fi
+        
         MATCH_STATUS="PASS"
         INDEX=0
         while IFS= read -r ACTUAL_CHECKSUM && [[ $INDEX -lt $EXPECTED_COUNT ]]; do
-            EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
-            EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
-            EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
-            EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            if [[ "$HAS_METADATA" == "true" ]]; then
+                # Structured format with metadata
+                EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+                EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
+                EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
+                EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            else
+                # Simple string format
+                EXPECTED_CHECKSUM=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+                EXPECTED_SEQ=$((INDEX + 1))
+                EXPECTED_ACTION="checksum_validation"
+            fi
             
             # Compare checksums
             if [[ "$EXPECTED_CHECKSUM" == "$ACTUAL_CHECKSUM" ]]; then
@@ -439,10 +460,16 @@ _handle-checksum-validation config_path platform test_id:
         
         # Handle case where actual has fewer checksums than expected
         while [[ $INDEX -lt $EXPECTED_COUNT ]]; do
-            EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
-            EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
-            EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
-            EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            if [[ "$HAS_METADATA" == "true" ]]; then
+                EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+                EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
+                EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
+                EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            else
+                EXPECTED_CHECKSUM=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+                EXPECTED_SEQ=$((INDEX + 1))
+                EXPECTED_ACTION="checksum_validation"
+            fi
             
             EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
             echo "| $EXPECTED_SEQ | $EXPECTED_ACTION | $EXPECTED_SHORT | MISSING... | ❌ |"
@@ -746,10 +773,10 @@ _analyze-test-errors test_id platform:
         echo ""
         case "$PLATFORM" in
             "android")
-                echo "🔧 Debug: just logs-errors-tagged $TEST_ID"
+                echo "🔧 Debug: just logs-android-errors $TEST_ID"
                 ;;
             "desktop") 
-                echo "🔧 Debug: just logs-desktop-errors"
+                echo "🔧 Debug: just logs-desktop-errors $TEST_ID"
                 ;;
         esac
         exit 1
@@ -1780,7 +1807,7 @@ _test-android-target-original config_name:
                         echo "  • Regression in game state consistency"
                         echo "  • Non-deterministic behavior in game logic"
                         echo ""
-                        echo "Use 'just test-android-target-update $CONFIG_NAME' to update baseline if changes are legitimate"
+                        echo "Use 'just test-android-update $CONFIG_NAME' to update baseline if changes are legitimate"
                         # Set a flag to indicate checksum validation failure
                         export CHECKSUM_VALIDATION_FAILED=1
                     fi
@@ -1876,3 +1903,231 @@ _test-desktop-target-original config_name duration="30":
     
     echo "🎉 Desktop test execution complete!"
     echo "💡 Check logs with: just logs-desktop-last"
+
+# ================================
+# CHECKSUM BASELINE UPDATE COMMANDS
+# ================================
+
+# Shared function for updating checksum baselines across platforms
+_update-checksum-baseline platform config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{platform}}"
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "🔄 Updating checksum baseline for: $CONFIG_NAME ($PLATFORM)"
+    echo "============================================================="
+    
+    # Validate configuration exists
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+    
+    # Check if configuration has checksum support
+    if ! jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
+        echo "❌ Configuration does not support checksum validation"
+        echo "Add a checksum_config section to enable checksum testing"
+        exit 1
+    fi
+    
+    # Get current checksum configuration
+    STATE_TYPE=$(jq -r '.checksum_config.state_type // "unknown"' "$CONFIG_PATH")
+    CURRENT_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+    
+    echo "📸 Checksum Configuration:"
+    echo "State Type: $STATE_TYPE"
+    echo "Current Checksums: $CURRENT_CHECKSUMS_COUNT checksums"
+    
+    # Clear expected checksums to force baseline creation
+    echo ""
+    echo "🔄 Clearing current baseline..."
+    TEMP_CONFIG=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_CONFIG"
+    mv "$TEMP_CONFIG" "$CONFIG_PATH"
+    
+    echo "✅ Baseline cleared - running test to generate new baseline..."
+    
+    # Run test to generate new baseline
+    echo ""
+    echo "🚀 Generating new baseline..."
+    echo "============================="
+    
+    # Execute platform-specific test which will create new baseline
+    if [[ "$PLATFORM" == "android" ]]; then
+        just test-android-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
+    elif [[ "$PLATFORM" == "desktop" ]]; then
+        just test-desktop-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
+    else
+        echo "❌ Unknown platform: $PLATFORM"
+        exit 1
+    fi
+    
+    # Check if baseline was created
+    UPDATED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+    
+    if [[ "$UPDATED_CHECKSUMS_COUNT" -gt 0 ]]; then
+        echo ""
+        echo "✅ Baseline update completed successfully!"
+        echo "========================================"
+        echo "Configuration: $CONFIG_NAME"
+        echo "Platform: $PLATFORM"
+        echo "State Type: $STATE_TYPE"
+        echo "Previous Checksums: $CURRENT_CHECKSUMS_COUNT checksums"
+        echo "New Checksums: $UPDATED_CHECKSUMS_COUNT checksums"
+        echo ""
+        echo "The new baseline has been saved and will be used for future validations."
+    else
+        echo ""
+        echo "❌ Baseline update failed"
+        echo "========================"
+        echo "The test may have failed or the checksum was not properly generated."
+        echo "Check the test logs for more details."
+        exit 1
+    fi
+
+# Update checksum baseline for Android test configuration
+test-android-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+        
+        # Find all checksum-enabled configs
+        CONFIG_DIR="./project/debug_configs"
+        CHECKSUM_CONFIGS=""
+        
+        if [[ -d "$CONFIG_DIR" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+                    
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+                    
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "$CONFIG_DIR" -name "*.json" -type f -print0)
+        fi
+        
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+        
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+        
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+            
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-android-update CONFIG_NAME"
+            echo ""
+            echo "Available configurations:"
+            echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
+            exit 1
+        fi
+    fi
+    
+    # Call shared update function
+    just _update-checksum-baseline "android" "$CONFIG_NAME"
+
+# Update checksum baseline for Desktop test configuration
+test-desktop-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+        
+        # Find all checksum-enabled configs
+        CONFIG_DIR="./project/debug_configs"
+        CHECKSUM_CONFIGS=""
+        
+        if [[ -d "$CONFIG_DIR" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+                    
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+                    
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "$CONFIG_DIR" -name "*.json" -type f -print0)
+        fi
+        
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+        
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+        
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+            
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-desktop-update CONFIG_NAME"
+            echo ""
+            echo "Available configurations:"
+            echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
+            exit 1
+        fi
+    fi
+    
+    # Call shared update function
+    just _update-checksum-baseline "desktop" "$CONFIG_NAME"
