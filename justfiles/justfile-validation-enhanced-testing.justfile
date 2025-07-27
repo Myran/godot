@@ -390,7 +390,8 @@ _handle-checksum-validation config_path platform test_id:
         exit 0
     fi
     
-    echo "📸 Extracted $(echo "$EXTRACTED_CHECKSUMS" | wc -l) checksums from logs"
+    CHECKSUM_COUNT=$(echo "$EXTRACTED_CHECKSUMS" | wc -l | tr -d ' ')
+    echo "📸 Extracted $CHECKSUM_COUNT checksums from logs"
     
     # Check if this is first run (no baseline)
     if [[ "${EXPECTED_CHECKSUMS_COUNT:-0}" -eq 0 ]]; then
@@ -402,7 +403,54 @@ _handle-checksum-validation config_path platform test_id:
         echo "Next run will validate against this baseline"
     else
         # Compare with expected checksums
-        EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[]' "$CONFIG_PATH")
+        EXPECTED_CHECKSUMS_LIST=$(jq -r '.checksum_config.expected_checksums[].checksum' "$CONFIG_PATH")
+        
+        # Create detailed action-to-checksum mapping for better debugging
+        echo "📋 Checksum-to-Action Mapping:"
+        echo "| Seq | Action | Expected | Actual | Status |"
+        echo "|-----|--------|----------|--------|--------|"
+        
+        # Get expected checksums with metadata for comparison
+        EXPECTED_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
+        
+        MATCH_STATUS="PASS"
+        INDEX=0
+        while IFS= read -r ACTUAL_CHECKSUM && [[ $INDEX -lt $EXPECTED_COUNT ]]; do
+            EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+            EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
+            EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
+            EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            
+            # Compare checksums
+            if [[ "$EXPECTED_CHECKSUM" == "$ACTUAL_CHECKSUM" ]]; then
+                STATUS="✅"
+            else
+                STATUS="❌"
+                MATCH_STATUS="FAIL"
+            fi
+            
+            # Truncate checksums for display (first 12 chars)
+            EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
+            ACTUAL_SHORT="${ACTUAL_CHECKSUM:0:12}..."
+            
+            echo "| $EXPECTED_SEQ | $EXPECTED_ACTION | $EXPECTED_SHORT | $ACTUAL_SHORT | $STATUS |"
+            INDEX=$((INDEX + 1))
+        done <<< "$EXTRACTED_CHECKSUMS"
+        
+        # Handle case where actual has fewer checksums than expected
+        while [[ $INDEX -lt $EXPECTED_COUNT ]]; do
+            EXPECTED_ENTRY=$(jq -r ".checksum_config.expected_checksums[$INDEX]" "$CONFIG_PATH")
+            EXPECTED_SEQ=$(echo "$EXPECTED_ENTRY" | jq -r '.sequence')
+            EXPECTED_ACTION=$(echo "$EXPECTED_ENTRY" | jq -r '.action')
+            EXPECTED_CHECKSUM=$(echo "$EXPECTED_ENTRY" | jq -r '.checksum')
+            
+            EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
+            echo "| $EXPECTED_SEQ | $EXPECTED_ACTION | $EXPECTED_SHORT | MISSING... | ❌ |"
+            MATCH_STATUS="FAIL"
+            INDEX=$((INDEX + 1))
+        done
+        echo ""
+        
         COMPARISON_RESULT=$(just _compare-checksums "$EXTRACTED_CHECKSUMS" "$EXPECTED_CHECKSUMS_LIST")
         
         if [[ "$COMPARISON_RESULT" == "MATCH" ]]; then
