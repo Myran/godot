@@ -245,6 +245,7 @@ just test-android my-test          # Manual mode (stays open for inspection)
 just test-android-target lineup-checksum-test    # Auto-creates baseline on first run + validates
 just test-desktop-target semantic-action-simple-test  # Cross-platform checksum validation
 just test-android-update CONFIG                 # Update baseline (legitimate changes)
+just test-desktop-update CONFIG                 # Update baseline (legitimate changes)
 just logs-android-errors TEST_ID checksum       # Debug checksum failures
 ```
 

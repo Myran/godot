@@ -493,7 +493,7 @@ _handle-checksum-validation config_path platform test_id:
             echo "  • Regression in game state consistency"
             echo "  • Non-deterministic behavior in game logic"
             echo ""
-            echo "Use 'just test-${PLATFORM}-target-update $(basename "$CONFIG_PATH" .json)' to update baseline if changes are legitimate"
+            echo "Use 'just test-${PLATFORM}-update $(basename "$CONFIG_PATH" .json)' to update baseline if changes are legitimate"
             # Set flag to indicate checksum validation failure
             export CHECKSUM_VALIDATION_FAILED=1
             exit 1
