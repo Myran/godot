@@ -1251,8 +1251,8 @@ _add-checksum-config-to-android-file CONFIG_FILE SESSION_ID INITIAL_SEED:
     SESSION_ID="{{SESSION_ID}}"
     INITIAL_SEED="{{INITIAL_SEED}}"
     
-    # Get Android semantic actions
-    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    # Get Android semantic actions using session-specific log retrieval
+    ANDROID_LOGS=$(just _get-logs-for-session "${SESSION_ID}" 2>/dev/null || echo "")
     SEMANTIC_ACTIONS=$(echo "$ANDROID_LOGS" | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     
     if [ -z "$SEMANTIC_ACTIONS" ]; then
@@ -1513,9 +1513,9 @@ replay-generate-android session_id config_name="":
     
     echo "1️⃣ Generating base replay configuration from Android logs..."
     
-    # Get Android logs using existing command
-    echo "📋 Searching for semantic actions in Android logs..."
-    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    # Get Android logs using session-specific retrieval
+    echo "📋 Searching for semantic actions in Android logs for session: ${SESSION_ID}..."
+    ANDROID_LOGS=$(just _get-logs-for-session "${SESSION_ID}" 2>/dev/null || echo "")
     
     if [ -z "$ANDROID_LOGS" ]; then
         echo "❌ No Android logs found"

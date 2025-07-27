@@ -145,6 +145,155 @@ _find-desktop-log-with-test-id TEST_ID:
     # Return the log file path (replay generation needs the path, not content)
     echo "$LOG_FILE"
 
+
+_find-desktop-log-with-session-id SESSION_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    
+    # Get all potential log directories
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    DESKTOP_LOG_DIR_ALT="{{DESKTOP_LOG_DIR_ALT}}"
+    
+    # Function to search for session ID in log directory
+    search_logs_for_session_id() {
+        local log_dir="$1"
+        if [ -d "$log_dir" ]; then
+            # Find all .log files and search for session ID in SESSION_START entries
+            find "$log_dir" -name "*.log" -type f -exec grep -l "SESSION_START.*\"session_id\": \"$SESSION_ID\"" {} \; 2>/dev/null | head -1
+        fi
+    }
+    
+    # Search primary location first
+    LOG_FILE=$(search_logs_for_session_id "$DESKTOP_LOG_DIR")
+    
+    # If not found, search alternative location
+    if [ -z "$LOG_FILE" ]; then
+        LOG_FILE=$(search_logs_for_session_id "$DESKTOP_LOG_DIR_ALT")
+    fi
+    
+    # If still not found, provide helpful error
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No log file found containing session ID: $SESSION_ID" >&2
+        echo "" >&2
+        echo "🔍 Searched in:" >&2
+        echo "   $DESKTOP_LOG_DIR" >&2
+        echo "   $DESKTOP_LOG_DIR_ALT" >&2
+        echo "" >&2
+        echo "💡 Available session IDs:" >&2
+        if [ -d "$DESKTOP_LOG_DIR" ]; then
+            find "$DESKTOP_LOG_DIR" -name "*.log" -type f -exec grep -h "SESSION_START" {} \; 2>/dev/null | grep -o '"session_id": "[^"]*"' | sort -u | head -5 >&2 || echo "   (no sessions found)" >&2
+        fi
+        exit 1
+    fi
+    
+    echo "$LOG_FILE"
+
+
+_find-android-log-with-session-id SESSION_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    
+    # For Android, we need to check if current logs contain the session
+    # Use session-aware log retrieval
+    ANDROID_LOGS=$(just _get-android-log-file 2>/dev/null || echo "")
+    
+    if [ -z "$ANDROID_LOGS" ]; then
+        echo "❌ No Android logs available" >&2
+        exit 1
+    fi
+    
+    # Check if session exists in current logs
+    SESSION_CHECK=$(echo "$ANDROID_LOGS" | grep "SESSION_START.*\"session_id\": \"$SESSION_ID\"" || echo "")
+    
+    if [ -z "$SESSION_CHECK" ]; then
+        echo "❌ Session ID not found in current Android logs: $SESSION_ID" >&2
+        echo "" >&2
+        echo "💡 Available session IDs in current logs:" >&2
+        echo "$ANDROID_LOGS" | grep "SESSION_START" | grep -o '"session_id": "[^"]*"' | sort -u | head -5 >&2 || echo "   (no sessions found)" >&2
+        exit 1
+    fi
+    
+    # Return success - session exists in current logs
+    echo "android-logs-current"
+
+
+_validate-session-logs SESSION_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    
+    echo "🔍 Validating session logs for: $SESSION_ID"
+    
+    # Try to find session in desktop logs first
+    if DESKTOP_LOG=$(just _find-desktop-log-with-session-id "$SESSION_ID" 2>/dev/null); then
+        echo "✅ Found session in desktop logs: $DESKTOP_LOG"
+        
+        # Count semantic actions in this session
+        SEMANTIC_COUNT=$(grep "SEMANTIC_ACTION.*\"session_id\": \"$SESSION_ID\"" "$DESKTOP_LOG" 2>/dev/null | wc -l | tr -d ' ')
+        echo "📊 Semantic actions found: $SEMANTIC_COUNT"
+        
+        # Check for session start
+        if grep -q "SESSION_START.*\"session_id\": \"$SESSION_ID\"" "$DESKTOP_LOG" 2>/dev/null; then
+            echo "✅ Session has proper SESSION_START marker"
+        else
+            echo "⚠️  Warning: No SESSION_START marker found for session"
+        fi
+        
+        return 0
+    fi
+    
+    # Try Android logs if desktop not found
+    if just _find-android-log-with-session-id "$SESSION_ID" >/dev/null 2>&1; then
+        echo "✅ Found session in Android logs"
+        
+        # Get Android logs for counting
+        ANDROID_LOGS=$(just _get-android-log-file 2>/dev/null || echo "")
+        SEMANTIC_COUNT=$(echo "$ANDROID_LOGS" | grep "SEMANTIC_ACTION.*\"session_id\": \"$SESSION_ID\"" | wc -l | tr -d ' ')
+        echo "📊 Semantic actions found: $SEMANTIC_COUNT"
+        
+        # Check for session start
+        if echo "$ANDROID_LOGS" | grep -q "SESSION_START.*\"session_id\": \"$SESSION_ID\""; then
+            echo "✅ Session has proper SESSION_START marker"
+        else
+            echo "⚠️  Warning: No SESSION_START marker found for session"
+        fi
+        
+        return 0
+    fi
+    
+    echo "❌ Session not found in any log source: $SESSION_ID"
+    return 1
+
+
+_get-logs-for-session SESSION_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    SESSION_ID="{{SESSION_ID}}"
+    
+    # Try desktop logs first
+    if DESKTOP_LOG=$(just _find-desktop-log-with-session-id "$SESSION_ID" 2>/dev/null); then
+        # Return the content of the specific log file
+        cat "$DESKTOP_LOG"
+        return 0
+    fi
+    
+    # Try Android logs
+    if just _find-android-log-with-session-id "$SESSION_ID" >/dev/null 2>&1; then
+        # Return Android logs - session filtering handled by caller
+        ANDROID_LOGS=$(just _get-android-log-file 2>/dev/null || echo "")
+        echo "$ANDROID_LOGS"
+        return 0
+    fi
+    
+    echo "❌ No logs found for session: $SESSION_ID" >&2
+    return 1
+
 # ================================
 # CREDENTIALS (Environment-based)
 # ================================
