@@ -1584,8 +1584,10 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# CRITICAL FIX: Use natural upgrade progression (same as recording)
-	# This ensures identical state transitions between recording and replay
+	# CRITICAL FIX: Simulate exact UI interaction to match recording timing
+	# This ensures identical UI state transitions between recording and replay
+	# Must set UI to LOCKED before upgrade call (same as ui.UpgradeEvent handler in game.gd:439)
+	game.ui_state = core.UIState.LOCKED
 	game.draft_handler.upgrade()
 
 	return true
