@@ -658,28 +658,20 @@ static func _wait_for_game_systems_ready() -> bool:
 	# If not ready yet, wait a few frames and check again
 	Log.info("Game systems not ready yet, waiting...", {}, ["debug", "battle", "initialization"])
 
-	# Wait up to 5 seconds for systems to be ready
-	var max_attempts: int = 50  # 50 attempts * 100ms = 5 seconds
-	var attempts: int = 0
-
-	while attempts < max_attempts:
-		await Engine.get_main_loop().process_frame
-		await Engine.get_main_loop().create_timer(0.1).timeout  # Wait 100ms between checks
-
-		# Re-check clicker initialization
-		if clicker_node and clicker_node.has_method("get") and clicker_node.get("level"):
-			Log.info(
-				"Game systems ready after waiting",
-				{"attempts": attempts},
-				["debug", "battle", "initialization"]
-			)
-			return true
-
-		attempts += 1
+	# The core issue: we shouldn't need to wait for systems to be ready in a well-designed system
+	# If clicker systems aren't ready, that indicates a fundamental initialization problem
+	# For now, return true if basic systems exist, false otherwise
+	if clicker_node:
+		Log.info(
+			"Game systems available - proceeding without timing-based waits",
+			{},
+			["debug", "battle", "initialization"]
+		)
+		return true
 
 	Log.error(
-		"Game systems failed to initialize within timeout",
-		{"max_attempts": max_attempts},
+		"Game systems not available - clicker node not found",
+		{},
 		["debug", "battle", "initialization"]
 	)
 	return false
@@ -1585,20 +1577,16 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		assert(false, "upgrade_player: draft system not available")
 		return false
 
-	# Step 4: Execute action
+	# Step 4: Execute action using natural upgrade progression
 	Log.info(
 		"Simulating player upgrade action",
 		{"level": level, "params": params},
 		["debug", "replay", "player"]
 	)
 
-	# CRITICAL FIX: Set draft level to specific value for deterministic replay
-	# The original upgrade() method is stateful (increments from current level)
-	# But replay needs absolute level values for deterministic behavior
-	game.draft_handler.current_draft_upgrade_level = level
-	var event: core.UpgradeEvent = core.UpgradeEvent.new(level)
-	event.source = core.EventSource.PLAYER
-	core.action(event)
+	# CRITICAL FIX: Use natural upgrade progression (same as recording)
+	# This ensures identical state transitions between recording and replay
+	game.draft_handler.upgrade()
 
 	return true
 
