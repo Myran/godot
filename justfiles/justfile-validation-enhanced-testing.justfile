@@ -1126,7 +1126,7 @@ _execute-test-with-analysis config_name platform duration="120":
         
         # Run checksum validation if applicable
         if [[ $TEST_RESULT -eq 0 ]]; then
-            just _handle-checksum-validation "$CONFIG_PATH" "$PLATFORM" "$TEST_ID" || TEST_RESULT=$?
+            HAS_CHECKSUM="$HAS_CHECKSUM" EXPECTED_CHECKSUMS_COUNT="$EXPECTED_CHECKSUMS_COUNT" just _handle-checksum-validation "$CONFIG_PATH" "$PLATFORM" "$TEST_ID" || TEST_RESULT=$?
         fi
     else
         echo ""
