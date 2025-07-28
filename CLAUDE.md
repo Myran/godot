@@ -204,6 +204,32 @@ just screenshot-android                  # Quick screenshot (/tmp/screenshot.png
 just screenshot-android error-state      # Named screenshot (/tmp/error-state.png)
 ```
 
+## 🚫 FORBIDDEN PATTERNS (GDScript Anti-Patterns)
+
+**NEVER use timing-based waits or delays - they create race conditions and non-deterministic behavior:**
+
+```gdscript
+# ❌ FORBIDDEN - Never use these patterns
+await Engine.get_main_loop().process_frame
+await Engine.get_main_loop().create_timer(0.3).timeout
+await get_tree().create_timer(1.0).timeout
+await get_tree().process_frame
+
+# ❌ These cause:
+# - Non-deterministic test results
+# - Race conditions between actions  
+# - Checksum validation failures
+# - Unreliable async synchronization
+```
+
+**✅ Use proper async completion instead:**
+```gdscript
+# ✅ Wait for actual completion signals
+await some_operation_completed
+await async_function_call()
+# ✅ Use proper state-based synchronization
+```
+
 ## 💪 Strong Typing Requirements
 
 **CRITICAL: Always use fail-fast typing to catch errors at compile time**
