@@ -1160,9 +1160,16 @@ _stop-app-desktop:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🛑 Stopping any running desktop Godot instances..."
-    pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}" 2>/dev/null || true
-    echo "✅ Desktop apps stopped"
+    echo "🛑 Stopping desktop test instances (preserving editor)..."
+    
+    # Only kill test processes (--test-mode), preserve editor processes (--editor)
+    # This prevents terminating the editor when running tests
+    pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}.*--test-mode" 2>/dev/null || true
+    
+    # Also kill any headless instances that might be running tests
+    pkill -f "{{GODOT_EXECUTABLE}}.*{{PROJECT_PATH}}.*--headless" 2>/dev/null || true
+    
+    echo "✅ Desktop test instances stopped (editor preserved)"
 
 # Platform-specific deployment functions
 _deploy-config-android temp_config_path:
