@@ -1744,9 +1744,9 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		Log.error(
 			"No block found at specified position",
 			{"position": position, "grid_pos": grid_pos},
-			["debug", "replay", "player", "error"]
+			["debug", "replay", "player", "warning", "error"]
 		)
-		assert(false, "remove_block_player: No block found at position")
+		assert(false, "block not found at expeected position")
 		return false
 
 	# Step 5: Validate block matches expected type and card_id
@@ -1796,6 +1796,9 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 	# Trigger cascading actions (gravity, refill, matching, and DraftSteadyEvent)
 	# This matches the behavior of Clicker.remove_block_from_draft_complete()
 	core.action(core.UpdateDraftAreaEvent.new())
+
+	# Signal operation complete (unlocks UI like DraftSteadyEvent does)
+	core.action(core.DraftSteadyEvent.new())
 
 	Log.info(
 		"Block removal completed with cascading actions",
