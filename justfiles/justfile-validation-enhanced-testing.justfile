@@ -1062,9 +1062,18 @@ _execute-test-with-analysis config_name platform duration="120":
     export HAS_CHECKSUM
     export EXPECTED_CHECKSUMS_COUNT
     
-    # Detect test mode from config
-    AUTO_QUIT=$(jq -r '.metadata.auto_quit // false' "$CONFIG_PATH")
-    if [[ "$AUTO_QUIT" == "true" ]]; then
+    # Set auto_quit value - this determines both behavior and display
+    # -target commands use automated mode (auto_quit=true)
+    # Other commands should pass their specific mode
+    AUTO_QUIT_VALUE="true"  # Default to automated for -target commands
+    
+    # Create temporary config with auto_quit metadata
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "$AUTO_QUIT_VALUE"
+    
+    # Set display mode based on the auto_quit value we just injected
+    if [[ "$AUTO_QUIT_VALUE" == "true" ]]; then
         TEST_MODE="automated"
     else
         TEST_MODE="manual"
@@ -1075,12 +1084,7 @@ _execute-test-with-analysis config_name platform duration="120":
     echo "📊 Test Mode: $TEST_MODE"
     echo ""
     
-    # Create temporary config with auto_quit=true for automated mode
-    TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
-    
-    echo "📋 Creating temporary config with auto_quit=true for automated mode..."
-    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
+    echo "📋 Creating temporary config with auto_quit=${AUTO_QUIT_VALUE} for ${TEST_MODE} mode..."
     echo ""
     
     # Phase 2: Platform-specific deployment and execution  
@@ -1532,9 +1536,36 @@ test-android-manual config_name:
     
     echo "✅ Android test started in manual mode (app will stay open for verification)"
 
-# Removed: test-desktop-manual (replaced by unified test-desktop command)
-# Use: just test-desktop CONFIG_NAME  # Interactive mode (manual)
-# Or:  just test-desktop-target CONFIG_NAME  # Automated mode
+# Desktop manual mode test command
+test-desktop-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    echo "🎯 Desktop Testing (Manual Mode - stays open): $CONFIG_NAME"
+    echo "=========================================================="
+    
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+    
+    # Create temporary config with auto_quit=false for manual mode
+    echo "🖥️  Creating temporary config with auto_quit=false for manual mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_desktop_manual"
+    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+    
+    # Deploy config to desktop (this stops any running instances)
+    echo "🖥️  Deploying configuration to desktop..."
+    just _deploy-config-desktop "$TEMP_CONFIG_PATH"
+    rm -f "$TEMP_CONFIG_PATH"
+    
+    # Start desktop app in manual mode with --test-mode flag (reads debug config but doesn't quit due to auto_quit: false)
+    echo "🚀 Starting desktop app in manual mode with --test-mode flag..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode &
+    
+    echo "✅ Desktop test started in manual mode (app will stay open for verification)"
 
 # Enhanced version of test-desktop-target that includes automatic error analysis  
 test-desktop-target config_name duration="120":

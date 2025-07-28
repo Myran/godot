@@ -1259,8 +1259,8 @@ test-android target="" duration="120":
     # Use shared fzf selection for all configs (manual mode)
     selected=$(just _fzf-select-config "android" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
-        echo "Running manual mode: just test-android-target '$selected'"
-        just test-android-target "$selected" "{{duration}}"
+        echo "Running manual mode: just test-android-manual '$selected'"
+        just test-android-manual "$selected"
     else
         echo "❌ No selection made"
         exit 1
