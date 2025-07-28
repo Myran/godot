@@ -295,6 +295,13 @@ help-logs:
     @echo "  just logs-tags abc123 firebase"
     @echo "  just logs-tags abc123 battle determinism"
     @echo ""
+    @echo "SPECIALIZED DEBUGGING COMMANDS"
+    @echo "============================="
+    @echo "just logs-checksum-detail TEST_ID       # Detailed checksum state comparison"
+    @echo "just logs-performance TEST_ID            # Performance and timing analysis"
+    @echo "just logs-lifecycle TEST_ID              # Test lifecycle events"
+    @echo "just logs-summary TEST_ID                # Quick test summary"
+    @echo ""
 
 # Workflow patterns and best practices help
 help-workflows:

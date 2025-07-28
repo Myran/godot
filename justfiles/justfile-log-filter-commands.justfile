@@ -103,6 +103,29 @@ logs-performance TEST_ID:
     # Extract timing information
     grep -E "duration_ms\|memory_mb\|performance" "$LOG_FILE" | head -20
 
+# Show detailed checksum content for state comparison debugging
+logs-checksum-detail TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    
+    # Use unified log retrieval function
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    
+    echo "=== Detailed Checksum Content for $TEST_ID ==="
+    echo ""
+    echo "Shows exact game state content that gets hashed for each checksum."
+    echo "Critical for debugging checksum mismatches between recording and replay."
+    echo ""
+    
+    # Show CHECKSUM_CONTENT_DETAIL entries
+    grep "CHECKSUM_CONTENT_DETAIL" "$LOG_FILE"
+    
+    echo ""
+    echo "=== Generated Checksums ==="
+    grep "Generated checksum" "$LOG_FILE"
+
 
 
 
