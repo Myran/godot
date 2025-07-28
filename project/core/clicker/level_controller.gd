@@ -58,12 +58,20 @@ func setup_level(level_name: String = "default") -> void:
 
 func create_blocks_from_level() -> void:
 	Log.debug(
-		"Creating blocks from level layout",
+		"Creating blocks from level layout (sequential execution for deterministic RNG)",
 		{"tile_count": current_level.get_used_cells().size()},
 		[Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
 	)
-	for tile_pos: Vector2i in current_level.get_used_cells():
+
+	# Get all tile positions and process them sequentially to ensure deterministic RNG order
+	var tile_positions: Array[Vector2i] = current_level.get_used_cells()
+
+	# Process tiles one at a time to guarantee identical RNG consumption order
+	# between recording and replay, preventing async timing-based RNG divergence
+	for i in range(tile_positions.size()):
+		var tile_pos: Vector2i = tile_positions[i]
 		var block: Block
+
 		match current_level.get_cell_source_id(tile_pos):
 			0:
 				block = _block_factory.create_locked_block()
@@ -78,10 +86,14 @@ func create_blocks_from_level() -> void:
 			5:
 				block = _block_factory.create_passtrough_block()
 			_:
+				# CRITICAL: Sequential execution ensures each await completes
+				# before the next tile starts, maintaining deterministic RNG order
 				block = await create_block()
+
 		block.block_context = Cards.CONTEXT.DRAFT
 		#add_to_grid(tile_pos, block)
 		core.action(core.DraftAddBlockEvent.new(block, tile_pos))
+
 	current_level.clear()
 
 

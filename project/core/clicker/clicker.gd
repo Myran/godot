@@ -67,7 +67,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			SemanticLogger.log_draft_reroll(0, current_cards, rng.seeded_rng._initial_seed)
 
 		remove_rerollables()
-		_handle_async_update_blocks()
+		await _handle_async_update_blocks()
 
 	if event is core.DraftAddBlockEvent:
 		var grid_pos: Vector2i = event.pos
@@ -78,16 +78,15 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 	if event is core.UpgradeEvent:
 		var new_level: int = event.new_level
-
 		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			SemanticLogger.log_draft_upgrade(new_level)
 
 		remove_upgrade_blocks(new_level)
-		_handle_async_update_blocks()
+		await _handle_async_update_blocks()
 
 	if event is core.UpdateDraftAreaEvent:
-		_handle_async_update_blocks()
+		await _handle_async_update_blocks()
 
 	if event is core.RemoveBlockFromDraft:
 		var block: Block = event.block

@@ -163,6 +163,21 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 		["session", "checksum", "debug"]
 	)
 
+	# DETAILED CHECKSUM CONTENT LOGGING - Show exactly what's being hashed
+	Log.info(
+		"CHECKSUM_CONTENT_DETAIL",
+		{
+			"action_type": action_type,
+			"sequence": sequence,
+			"game_state_content": game_state,
+			"draft_area_count": game_state.get("board", {}).get("draft_area", []).size(),
+			"lineup_allies_count": game_state.get("lineup", {}).get("allies", {}).size(),
+			"current_game_state": game_state.get("lineup", {}).get("current_game_state", "UNKNOWN"),
+			"ui_state": game_state.get("lineup", {}).get("ui_state", "UNKNOWN")
+		},
+		["session", "checksum", "content_detail"]
+	)
+
 	if game_state.is_empty():
 		Log.warning(
 			"StateExtractor returned empty state",
