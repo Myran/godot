@@ -101,6 +101,7 @@ just test-android-enhanced TARGET          # Enhanced error analysis
 
 # Manual testing (stays open for inspection)
 just test-android-manual CONFIG            # Android manual mode (app stays open)
+just test-desktop-manual CONFIG            # Desktop manual mode (app stays open)
 
 # Standard workflows
 just test-android development-workflow     # Daily development
@@ -161,7 +162,10 @@ Commands automatically detect input type:
 
 ## 📱 Android Configuration
 
-### **⭐ NEW: Streamlined Configuration Management**
+### **⭐ FIXED: Android Checksum Validation**
+Resolved critical environment variable propagation issue that was causing Android checksum validation to silently fail. Tests now properly validate all checksums on both Android and desktop platforms.
+
+**⭐ NEW: Streamlined Configuration Management**
 After cleanup of 122 legacy debug configs, only 16 semantic action configs remain for core testing.
 
 ### **Logger Control (Runtime)**
@@ -297,11 +301,12 @@ just help-logs                    # Log analysis & token efficiency
 just help-build                   # Build system architecture
 ## 🗂️ Project Architecture
 
-**⭐ NEW: Enhanced Testing System:**
-- **Unified Test Execution**: Cross-platform test wrapper with automatic validation
-- **Built-in Error Analysis**: Automatic log parsing and failure detection (98% token savings)
-- **Automatic Checksum Management**: Baseline creation and validation
-- **Progressive Debugging**: Token-efficient error analysis workflow
+**⭐ FIXED: Enhanced Testing System:**
+- **Unified Test Execution**: Cross-platform test wrapper with automatic validation ✅ **WORKING**
+- **Built-in Error Analysis**: Automatic log parsing and failure detection (98% token savings) ✅ **WORKING**
+- **Automatic Checksum Management**: Baseline creation and validation ✅ **FIXED - Android validation working**
+- **Progressive Debugging**: Token-efficient error analysis workflow ✅ **WORKING**
+- **Manual Test Modes**: Both Android and desktop support manual inspection modes
 
 **Core Systems:**
 - **DataSource Pattern**: Unified Firebase RTDB + local storage backends
