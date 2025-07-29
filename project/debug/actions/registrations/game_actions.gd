@@ -200,6 +200,16 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
+	registry.register_action(
+		(
+			DebugAction
+			. create("game.draft.remove_block_player", _remove_block_player)
+			. set_category("Gameplay")
+			. set_group("Player Actions")
+			. set_description("Simulate player block removal action")
+		)
+	)
+
 
 static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 	# Battle actions using GameStateMonitor
@@ -1766,20 +1776,24 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: Block is not removable")
 		return false
 
-	# Step 6: Store card reference for potential move operation (maintains compatibility)
+	# Step 6: Perform the actual block removal - same as manual UI interaction
 	Log.info(
-		"Storing card reference for draft-to-lineup sequence",
-		{"card_id": card_id, "position": position, "block_found": true},
+		"Performing block removal action",
+		{"card_id": card_id, "position": position, "block_type": actual_block.object_type},
 		["debug", "replay", "player"]
 	)
 
-	# Note: The actual removal will be handled by shared code path when move_card_to_lineup_player is called
-	# For now, just validate the card exists and can be removed
+	# Trigger the actual block removal event - same as manual UI interaction
+	core.action(core.RemoveBlockFromDraft.new(actual_block, true))
+
+	# Step 7: Trigger cascading draft updates - same as manual UI interaction
+	# This triggers: gravity, refill, matching, and DraftSteadyEvent
+	core.action(core.UpdateDraftAreaEvent.new())
 
 	Log.info(
-		"Block removal completed with cascading actions",
+		"Block removal completed",
 		{"card_id": card_id, "position": position},
-		["debug", "replay", "player", "cascading"]
+		["debug", "replay", "player"]
 	)
 
 	return true
