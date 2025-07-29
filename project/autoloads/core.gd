@@ -213,6 +213,22 @@ class MoveLineupCardEvent:
 		return &"core.MoveLineupCardEvent"
 
 
+class LineupAddCardFromDraftEvent:
+	extends CoreEvent
+	var card: Card
+	var from_position: Vector2i  # Draft grid position
+	var to_position: int  # Lineup holder index
+
+	func _init(m_card: Card, m_from_pos: Vector2i, m_to_pos: int) -> void:
+		self.card = m_card
+		self.from_position = m_from_pos
+		self.to_position = m_to_pos
+		source = EventSource.PLAYER  # Ensures semantic logging triggers
+
+	func get_serialization_type_name() -> StringName:
+		return &"core.LineupAddCardFromDraftEvent"
+
+
 class BattleEvent:
 	extends CoreEvent
 	var battle_events: Array[Context.Event]
