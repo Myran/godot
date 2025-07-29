@@ -13,6 +13,8 @@ import "justfiles/justfile-support.justfile"
 import "justfiles/justfile-enhanced-log-analysis.justfile"
 import "justfiles/justfile-debug-commands.justfile"
 import "justfiles/justfile-log-filter-commands.justfile"
+import "justfiles/justfile-wildcard-core.justfile"
+import "justfiles/justfile-wildcard-commands.justfile"
 import "justfiles/justfile-universal-log-tags.justfile"
 import "justfiles/justfile-semantic-replay-commands.justfile"
 import "justfiles/justfile-code-analysis.justfile"
@@ -25,6 +27,7 @@ import "justfiles/justfile-config.justfile"
 import "justfiles/justfile-logs.justfile"
 import "justfiles/justfile-build-utils.justfile"
 import "justfiles/justfile-android-device-logs.justfile"
+# Wildcard help is now integrated in justfile-wildcard-commands.justfile
 
 # Import validation-enhanced-testing LAST to override existing test commands
 import "justfiles/justfile-validation-enhanced-testing.justfile"
