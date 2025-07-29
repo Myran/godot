@@ -1776,19 +1776,15 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: Block is not removable")
 		return false
 
-	# Step 6: Perform the actual block removal - same as manual UI interaction
+	# Step 6: Perform the actual block removal - cascading updates handled automatically
 	Log.info(
 		"Performing block removal action",
 		{"card_id": card_id, "position": position, "block_type": actual_block.object_type},
 		["debug", "replay", "player"]
 	)
 
-	# Trigger the actual block removal event - same as manual UI interaction
+	# Trigger the block removal event - cascading updates automatically handled by event system
 	core.action(core.RemoveBlockFromDraft.new(actual_block, true))
-
-	# Step 7: Trigger cascading draft updates - same as manual UI interaction
-	# This triggers: gravity, refill, matching, and DraftSteadyEvent
-	core.action(core.UpdateDraftAreaEvent.new())
 
 	Log.info(
 		"Block removal completed",

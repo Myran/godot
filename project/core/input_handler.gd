@@ -95,7 +95,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					var m_block: Block = interacted_object
 
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
-					update_draft = true
+					# update_draft = true  // No longer needed - cascading handled by event system
 
 			core.TapState.HOLDING:
 				if dragging_cargo.object_type == core.ObjectType.CARD:

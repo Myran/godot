@@ -103,6 +103,11 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		if level.get_grid_pos(block) != Clicker.NO_POS:
 			level.remove_from_grid(block, is_destroy)
 
+		# Auto-trigger cascading draft updates for standalone removal actions
+		# Only for PLAYER and DEBUG_SETUP events, not SYSTEM_CASCADE (which handle own cascading)
+		if event.source in [core.EventSource.PLAYER, core.eventsource.DEBUG_SETUP]:
+			core.action(core.UpdateDraftAreaEvent.new())
+
 	if event is core.DraftMergeEvent:
 		var matches: Array[Card] = event.matches
 		var merge_info: Dictionary = await merge_matched_cards(matches)
@@ -271,7 +276,6 @@ static func remove_block_from_draft_complete(
 	ensuring consistent behavior between UI interactions and debug actions.
 
 	Args:
-		clicker_instance: The clicker instance performing the removal
 		block: The actual block to remove (must be real block from game state)
 		destroy: Whether to destroy the block after removal
 	"""
@@ -283,9 +287,5 @@ static func remove_block_from_draft_complete(
 		)
 		return
 
-	# Execute removal event (semantic logging happens in input handler)
+	# Execute removal event - cascading updates now handled automatically by event handler
 	core.action(core.RemoveBlockFromDraft.new(block, destroy))
-
-	# Step 3: Trigger cascading actions (CRITICAL - this is what UI system does)
-	# This triggers: gravity, refill, matching, and DraftSteadyEvent
-	core.action(core.UpdateDraftAreaEvent.new())
