@@ -19,7 +19,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	assert(self == DebugRegistry, "DebugActionRegistry must be the DebugRegistry autoload")
-	Log.info("Initializing debug action registry...", {}, ["debug", "system"])
+	Log.info("Initializing debug action registry...", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 
 	var start_time: int = Time.get_ticks_msec()
 	_register_all_actions()
@@ -76,11 +76,11 @@ func register_action(action: DebugAction) -> bool:
 	# Register a debug action with validation
 
 	if not action:
-		Log.error("Cannot register null action", {}, ["debug", "error"])
+		Log.error("Cannot register null action", {}, [Log.TAG_DEBUG, Log.TAG_ERROR])
 		return false
 
 	if action.action_name.is_empty():
-		Log.error("Cannot register action with empty name", {}, ["debug", "error"])
+		Log.error("Cannot register action with empty name", {}, [Log.TAG_DEBUG, Log.TAG_ERROR])
 		return false
 
 	# Set default category if empty

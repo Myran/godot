@@ -1,6 +1,8 @@
 class_name SessionManager
 extends RefCounted
-
+# Session configuration
+const SESSION_ID_PREFIX: String = "session_"
+# Note: No timeout - sessions last for entire gameplay duration
 # Session management for full gameplay semantic action logging
 # Provides single session per gameplay session from start to quit
 
@@ -8,10 +10,6 @@ static var current_session_id: String = ""
 static var session_start_time: float = 0.0
 static var session_action_count: int = 0
 static var session_context: Dictionary = {}
-
-# Session configuration
-const SESSION_ID_PREFIX: String = "session_"
-# Note: No timeout - sessions last for entire gameplay duration
 
 
 static func start_new_session(trigger: String = "manual", context: Dictionary = {}) -> String:
@@ -43,7 +41,7 @@ static func start_new_session(trigger: String = "manual", context: Dictionary = 
 			"initial_seed": initial_seed,
 			"context": session_context
 		},
-		["session", "start", "semantic"]
+		[Log.TAG_SESSION_START, Log.TAG_SEMANTIC]
 	)
 
 	return current_session_id
@@ -73,7 +71,7 @@ static func end_current_session(reason: String = "manual") -> void:
 			"action_count": session_action_count,
 			"context": session_context
 		},
-		["session", "end", "semantic"]
+		[Log.TAG_SESSION_END, Log.TAG_SEMANTIC]
 	)
 
 	current_session_id = ""
@@ -122,7 +120,13 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 		"data": data
 	}
 
-	Log.info("SEMANTIC_ACTION", semantic_log, ["semantic", "action", "player"])
+	# Emit semantic action log with semantic tags
+	Log.info("SEMANTIC_ACTION", semantic_log, [Log.TAG_SEMANTIC_ACTION, Log.TAG_PLAYER])
+
+	# Also emit with hierarchical tags for unified filtering
+	var hierarchical_tags: Array[String] = _get_hierarchical_tags_for_semantic_action(action_type)
+	if not hierarchical_tags.is_empty():
+		Log.info("Semantic Action: " + action_type, data, hierarchical_tags)
 
 
 # Application lifecycle management for full gameplay sessions
@@ -146,7 +150,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 	Log.debug(
 		"Starting checksum capture",
 		{"action_type": action_type, "sequence": sequence},
-		["session", "checksum", "debug"]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_DEBUG]
 	)
 
 	# Extract current game state using StateExtractor
@@ -160,7 +164,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"state_size": game_state.size(),
 			"is_empty": game_state.is_empty()
 		},
-		["session", "checksum", "debug"]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_DEBUG]
 	)
 
 	# DETAILED CHECKSUM CONTENT LOGGING - Show exactly what's being hashed
@@ -175,14 +179,14 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"current_game_state": game_state.get("lineup", {}).get("current_game_state", "UNKNOWN"),
 			"ui_state": game_state.get("lineup", {}).get("ui_state", "UNKNOWN")
 		},
-		["session", "checksum", "content_detail"]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_CONTENT_DETAIL]
 	)
 
 	if game_state.is_empty():
 		Log.warning(
 			"StateExtractor returned empty state",
 			{"action_type": action_type, "sequence": sequence},
-			["session", "checksum", "warning"]
+			[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_WARNING]
 		)
 		return ""
 
@@ -200,7 +204,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"checksum": checksum,
 			"checksum_length": checksum.length()
 		},
-		["session", "checksum", "debug"]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_DEBUG]
 	)
 
 	Log.debug(
@@ -211,7 +215,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"checksum": checksum,
 			"game_available": game_state.get("lineup", {}).get("game_available", false)
 		},
-		["session", "checksum", "capture"]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_CAPTURE]
 	)
 
 	return checksum
@@ -227,7 +231,7 @@ static func _get_current_seed() -> int:
 	Log.warning(
 		"Could not access RNG singleton for seed capture",
 		{"rng_available": rng != null, "seeded_rng_available": rng.seeded_rng if rng else null},
-		["session", "seed", "warning"]
+		[Log.TAG_SESSION, Log.TAG_SEED, Log.TAG_WARNING]
 	)
 
 	# Default seed if RNG not available
@@ -253,7 +257,11 @@ static func _log_simple_gamestate_marker(
 		"ui_state": _get_current_ui_state()
 	}
 
-	Log.info("SEMANTIC_ACTION_GAMESTATE_MARKER", marker_log, ["semantic", "gamestate", "marker"])
+	Log.info(
+		"SEMANTIC_ACTION_GAMESTATE_MARKER",
+		marker_log,
+		[Log.TAG_SEMANTIC, Log.TAG_GAMESTATE, Log.TAG_MARKER]
+	)
 
 
 static func _get_current_game_phase() -> String:
@@ -308,7 +316,7 @@ static func setup_replay_validation(demo_config_path: String) -> bool:
 	Log.info(
 		"Setting up simplified replay validation",
 		{"demo_config_path": demo_config_path},
-		["replay", "validation", "setup"]
+		[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_SETUP]
 	)
 
 	# For now, just log that validation setup was requested
@@ -330,6 +338,35 @@ static func finalize_replay_validation() -> Dictionary:
 		"note": "Using simplified validation - comprehensive checksum system removed"
 	}
 
-	Log.info("REPLAY_VALIDATION_COMPLETE", summary, ["replay", "validation", "complete"])
+	Log.info(
+		"REPLAY_VALIDATION_COMPLETE",
+		summary,
+		[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_COMPLETE]
+	)
 
 	return summary
+
+
+## Maps semantic action types to hierarchical tags for unified filtering
+static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> Array[String]:
+	"""Convert semantic action type to hierarchical tags for unified filtering"""
+	match action_type:
+		"draft.reroll":
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_REROLL, Log.TAG_SEMANTIC_ACTION]
+		"draft.upgrade":
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_UPGRADE, Log.TAG_SEMANTIC_ACTION]
+		"draft.toggle_line":
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_TOGGLE_LINE, Log.TAG_SEMANTIC_ACTION]
+		"draft.remove_card":
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_REMOVE_CARD, Log.TAG_SEMANTIC_ACTION]
+		"lineup.move_card":
+			return [Log.TAG_GAME, Log.TAG_LINEUP, Log.TAG_MOVE_CARD, Log.TAG_SEMANTIC_ACTION]
+		"card.move":
+			return [Log.TAG_GAME, Log.TAG_CARD, Log.TAG_MOVE, Log.TAG_SEMANTIC_ACTION]
+		"transition.change_state":
+			return [Log.TAG_GAME, Log.TAG_STATE_TRANSITION, Log.TAG_CHANGE, Log.TAG_SEMANTIC_ACTION]
+		"battle.start":
+			return [Log.TAG_GAME, Log.TAG_BATTLE, Log.TAG_START, Log.TAG_SEMANTIC_ACTION]
+		_:
+			# Default fallback for unknown semantic actions
+			return [Log.TAG_SEMANTIC_ACTION, Log.TAG_UNKNOWN]

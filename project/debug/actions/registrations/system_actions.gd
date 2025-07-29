@@ -28,7 +28,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	# Legacy checksum actions removed - now using semantic logging approach
 	_register_test_actions(registry)
 
-	Log.info("System debug actions registered", {}, ["debug", "system"])
+	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 
 
 static func _register_memory_actions(registry: DebugActionRegistry) -> void:
@@ -111,14 +111,18 @@ static func _register_connectivity_actions(registry: DebugActionRegistry) -> voi
 # System action implementations
 static func _force_low_memory() -> bool:
 	# Simulate low memory condition
-	Log.warning("Simulating low memory condition for testing", {}, ["debug", "system", "memory"])
+	Log.warning(
+		"Simulating low memory condition for testing",
+		{},
+		[Log.TAG_DEBUG, Log.TAG_SYSTEM, Log.TAG_MEMORY]
+	)
 
 	if OS.has_method("low_processor_usage_mode"):
 		var old_mode: bool = OS.low_processor_usage_mode
 		OS.low_processor_usage_mode = true
 		OS.low_processor_usage_mode = old_mode
 
-	Log.info("Low memory simulation completed", {}, ["debug", "system", "memory"])
+	Log.info("Low memory simulation completed", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM, Log.TAG_MEMORY])
 	return true
 
 
@@ -143,7 +147,9 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 
 		stats.categories[category] = category_stats
 
-	Log.info("Debug Action Registry Statistics", stats, ["debug", "registry", "stats"])
+	Log.info(
+		"Debug Action Registry Statistics", stats, [Log.TAG_DEBUG, Log.TAG_REGISTRY, Log.TAG_STATS]
+	)
 	return true
 
 
@@ -170,7 +176,7 @@ static func _capture_final_state() -> void:
 				"session_id": SessionManager.get_current_session_id(),
 				"quit_timestamp": Time.get_unix_time_from_system()
 			},
-			["final_state", "warning", "quit"]
+			[Log.TAG_FINAL_STATE, Log.TAG_WARNING, Log.TAG_QUIT]
 		)
 		return
 
@@ -185,7 +191,7 @@ static func _capture_final_state() -> void:
 				"state_size": final_state.size(),
 				"quit_timestamp": Time.get_unix_time_from_system()
 			},
-			["final_state", "warning", "checksum", "quit"]
+			[Log.TAG_FINAL_STATE, Log.TAG_WARNING, Log.TAG_CHECKSUM, Log.TAG_QUIT]
 		)
 		return
 
@@ -202,7 +208,7 @@ static func _capture_final_state() -> void:
 			"extraction_timestamp": Time.get_unix_time_from_system(),
 			"state_components": final_state.keys()
 		},
-		["final_state", "checksum", "session", "quit"]
+		[Log.TAG_FINAL_STATE, Log.TAG_CHECKSUM, Log.TAG_SESSION, Log.TAG_QUIT]
 	)
 
 	Log.debug(
@@ -212,7 +218,7 @@ static func _capture_final_state() -> void:
 			"state_size_bytes": var_to_bytes(final_state).size(),
 			"session_id": SessionManager.get_current_session_id()
 		},
-		["final_state", "debug", "quit"]
+		[Log.TAG_FINAL_STATE, Log.TAG_DEBUG, Log.TAG_QUIT]
 	)
 
 
@@ -225,7 +231,7 @@ static func _rtdb_status_check() -> bool:
 		"timestamp": Time.get_unix_time_from_system()
 	}
 
-	Log.info("RTDB Status Check", status, ["debug", "rtdb", "status"])
+	Log.info("RTDB Status Check", status, [Log.TAG_DEBUG, Log.TAG_RTDB, Log.TAG_STATUS])
 	return true
 
 

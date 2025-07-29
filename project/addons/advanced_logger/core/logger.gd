@@ -21,6 +21,36 @@ const TAG_LOCAL: String = "local_data"
 const TAG_ERROR: String = "error"
 const TAG_NETWORK: String = "network"
 
+# Database operation tags
+const TAG_DB_QUERY: String = "database.query"
+const TAG_DB_INSERT: String = "database.insert"
+const TAG_DB_UPDATE: String = "database.update"
+const TAG_DB_DELETE: String = "database.delete"
+const TAG_DB_CONNECTION: String = "database.connection"
+
+# Cache operation tags
+const TAG_CACHE_HIT: String = "cache.hit"
+const TAG_CACHE_MISS: String = "cache.miss"
+const TAG_CACHE_INVALIDATE: String = "cache.invalidate"
+const TAG_CACHE_POPULATE: String = "cache.populate"
+
+# Firebase operation tags
+const TAG_FIREBASE_CONNECT: String = "firebase.connect"
+const TAG_FIREBASE_DISCONNECT: String = "firebase.disconnect"
+const TAG_FIREBASE_TIMEOUT: String = "firebase.timeout"
+const TAG_FIREBASE_AUTH: String = "firebase.auth"
+const TAG_FIREBASE_RTDB: String = "firebase.rtdb"
+const TAG_FIREBASE_READ: String = "firebase.read"
+const TAG_FIREBASE_WRITE: String = "firebase.write"
+const TAG_FIREBASE_RETRY: String = "firebase.retry"
+
+# Network operation tags
+const TAG_NETWORK_REQUEST: String = "network.request"
+const TAG_NETWORK_RESPONSE: String = "network.response"
+const TAG_NETWORK_TIMEOUT: String = "network.timeout"
+const TAG_NETWORK_ERROR: String = "network.error"
+const TAG_NETWORK_RETRY: String = "network.retry"
+
 # Domain-specific tag constants
 const TAG_UI: String = "ui"
 const TAG_UI_INPUT: String = "ui_input"
@@ -61,6 +91,101 @@ const TAG_ABILITY : String = 'ability'
 const TAG_EFFECT : String = 'effect'
 const TAG_DEEP_COPY : String = 'deep_copy'
 
+# Authentication operation tags
+const TAG_AUTH_LOGIN: String = "auth.login"
+const TAG_AUTH_LOGOUT: String = "auth.logout"
+const TAG_AUTH_REFRESH: String = "auth.refresh"
+const TAG_AUTH_VALIDATE: String = "auth.validate"
+const TAG_AUTH_EXPIRE: String = "auth.expire"
+
+# Performance monitoring tags
+const TAG_PERFORMANCE_MEMORY: String = "performance.memory"
+const TAG_PERFORMANCE_CPU: String = "performance.cpu"
+const TAG_PERFORMANCE_RENDER: String = "performance.render"
+const TAG_PERFORMANCE_TIMING: String = "performance.timing"
+
+# Debug operation tags
+const TAG_DEBUG_ACTION: String = "debug.action"
+const TAG_DEBUG_REGISTRY: String = "debug.registry"
+const TAG_DEBUG_MENU: String = "debug.menu"
+const TAG_DEBUG_AUTOMATION: String = "debug.automation"
+const TAG_DEBUG_MANUAL: String = "debug.manual"
+
+# Test operation tags
+const TAG_TEST_START: String = "test.start"
+const TAG_TEST_END: String = "test.end"
+const TAG_TEST_PASS: String = "test.pass"
+const TAG_TEST_FAIL: String = "test.fail"
+const TAG_TEST_SETUP: String = "test.setup"
+
+# Semantic action tags (for consistency with string literals)
+const TAG_SEMANTIC: String = "semantic"
+const TAG_SEMANTIC_ACTION: String = "semantic.action"
+const TAG_SESSION: String = "session"
+const TAG_SESSION_START: String = "session.start"
+const TAG_SESSION_END: String = "session.end"
+
+# String literal tags found in codebase (high priority)
+const TAG_STATS: String = "stats"
+const TAG_REGISTRY: String = "registry"
+const TAG_REPLAY: String = "replay"
+const TAG_AUTOMATED: String = "automated"
+const TAG_MANUAL: String = "manual"
+const TAG_COMPLETE: String = "complete"
+const TAG_GAMEPLAY: String = "gameplay"
+const TAG_BOARD: String = "board"
+const TAG_RESET: String = "reset"
+const TAG_WORKFLOW: String = "workflow"
+const TAG_INTEGRATION: String = "integration"
+const TAG_FINAL_STATE: String = "final_state"
+const TAG_CHECKSUM: String = "checksum"
+const TAG_DIAGNOSTIC: String = "diagnostic"
+const TAG_IDLE_ACTION: String = "idle_action"
+const TAG_ATOMIC_TRANSITION: String = "atomic_transition"
+
+# Additional system workflow and test tags
+const TAG_RTDB: String = "rtdb"
+const TAG_STATUS: String = "status"
+const TAG_INTEGRITY: String = "integrity"
+const TAG_REGISTRATION: String = "registration"
+const TAG_MENU: String = "menu"
+const TAG_INTERACTIVE: String = "interactive"
+const TAG_CONTEXT: String = "context"
+const TAG_TEST_ID: String = "test_id"
+const TAG_STATE: String = "state"
+const TAG_FINALIZE: String = "finalize"
+const TAG_DETERMINISM: String = "determinism"
+const TAG_REPORT: String = "report"
+const TAG_SUCCESS: String = "success"
+const TAG_FAILURE: String = "failure"
+const TAG_TDD: String = "tdd"
+const TAG_DESKTOP: String = "desktop"
+const TAG_GREEN_PHASE: String = "green_phase"
+const TAG_CRITICAL: String = "critical"
+const TAG_SEMANTIC_MAPPER: String = "semantic_mapper"
+const TAG_STATE_EXTRACTOR: String = "state_extractor"
+const TAG_QUIT: String = "quit"
+
+# Semantic action tags (hierarchical game actions)
+const TAG_GAME_DRAFT_REROLL: String = "game.draft.reroll"
+const TAG_GAME_DRAFT_UPGRADE: String = "game.draft.upgrade"
+const TAG_GAME_DRAFT_TOGGLE_LINE: String = "game.draft.toggle_line"
+const TAG_GAME_DRAFT_REMOVE_CARD: String = "game.draft.remove_card"
+const TAG_GAME_LINEUP_MOVE_CARD: String = "game.lineup.move_card"
+const TAG_GAME_CARD_MOVE: String = "game.card.move"
+const TAG_GAME_TRANSITION_CHANGE_STATE: String = "game.transition.change_state"
+const TAG_GAME_BATTLE_START: String = "game.battle.start"
+
+# Legacy semantic action support (for backward compatibility)
+const TAG_DRAFT_REROLL: String = "draft.reroll"
+const TAG_DRAFT_UPGRADE: String = "draft.upgrade"
+const TAG_DRAFT_TOGGLE_LINE: String = "draft.toggle_line"
+const TAG_DRAFT_REMOVE_CARD: String = "draft.remove_card"
+const TAG_LINEUP_MOVE_CARD: String = "lineup.move_card"
+const TAG_CARD_MOVE: String = "card.move"
+const TAG_TRANSITION_CHANGE_STATE: String = "transition.change_state"
+const TAG_BATTLE_START: String = "battle.start"
+
 # Level tag constants
 const TAG_LEVEL_PREFIX: String = "level:"
 const TAG_LEVEL_DEBUG: String = "level:debug"
@@ -68,6 +193,37 @@ const TAG_LEVEL_INFO: String = "level:info"
 const TAG_LEVEL_WARNING: String = "level:warning"
 const TAG_LEVEL_ERROR: String = "level:error"
 const TAG_LEVEL_CRITICAL: String = "level:critical"
+
+# Additional operation tags for semantic actions
+const TAG_CONTENT_DETAIL: String = "content_detail"
+const TAG_CAPTURE: String = "capture"
+const TAG_SEED: String = "seed"
+const TAG_GAMESTATE: String = "gamestate"
+const TAG_MARKER: String = "marker"
+const TAG_SETUP: String = "setup"
+const TAG_UNKNOWN: String = "unknown"
+
+# Semantic action operation tags
+const TAG_REROLL: String = "reroll"
+const TAG_UPGRADE: String = "upgrade"
+const TAG_TOGGLE_LINE: String = "toggle_line"
+const TAG_REMOVE_CARD: String = "remove_card"
+const TAG_MOVE_CARD: String = "move_card"
+const TAG_MOVE: String = "move"
+const TAG_CHANGE: String = "change"
+const TAG_START: String = "start"
+
+# Debug UI and workflow tags
+const TAG_DEBUG_UI: String = "debug_ui"
+const TAG_ABORTION: String = "abortion"
+const TAG_NAVIGATION: String = "navigation"
+const TAG_RUN_ALL: String = "run_all"
+const TAG_SUMMARY: String = "summary"
+
+# System and runtime tags
+const TAG_CMDLINE: String = "cmdline"
+const TAG_TEST_MODE: String = "test_mode"
+
 
 # Mapping between log levels and corresponding tags
 const LEVEL_TAGS: Dictionary = {

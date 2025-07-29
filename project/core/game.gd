@@ -161,7 +161,7 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 				"effect": permanent_effect.get_description(),
 				"target": stat_effect_event.target_card.card_info.id
 			},
-			["debug", "stats", "effect"]
+			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT]
 		)
 
 	elif event is core.TransitionEvent:
@@ -382,7 +382,13 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 				"can_process_immediately":
 				ui_state == core.UIState.WAITING and not _processing_idle_action
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "event_received", "diagnostic"]
+			[
+				Log.TAG_SYSTEM,
+				Log.TAG_EVENT,
+				Log.TAG_IDLE_ACTION,
+				"event_received",
+				Log.TAG_DIAGNOSTIC
+			]
 		)
 		_idle_action_queue.append(
 			{"action": event.action_callable, "auto_continue": event.auto_continue}
@@ -493,7 +499,7 @@ func _process_one_queue_item() -> void:
 			"test_id": current_test_id,
 			"system_frame": Engine.get_process_frames()
 		},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_item_start", "diagnostic"]
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "queue_item_start", Log.TAG_DIAGNOSTIC]
 	)
 
 	# Only process if system is ready and not already processing
@@ -515,7 +521,13 @@ func _process_one_queue_item() -> void:
 					"queue_empty": _idle_action_queue.is_empty()
 				}
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "queue_item_skip", "diagnostic"]
+			[
+				Log.TAG_SYSTEM,
+				Log.TAG_EVENT,
+				Log.TAG_IDLE_ACTION,
+				"queue_item_skip",
+				Log.TAG_DIAGNOSTIC
+			]
 		)
 		return
 
@@ -541,7 +553,7 @@ func _process_one_queue_item() -> void:
 			"game_state_before_action": current_game_state,
 			"auto_continue": auto_continue
 		},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_start", "diagnostic"]
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_start", Log.TAG_DIAGNOSTIC]
 	)
 
 	# Execute the action
@@ -570,7 +582,7 @@ func _process_one_queue_item() -> void:
 			"action_end_frame": action_end_frame,
 			"auto_continue": auto_continue
 		},
-		[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "action_complete", "diagnostic"]
+		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_complete", Log.TAG_DIAGNOSTIC]
 	)
 
 	# Conditional continuation based on action's auto_continue flag
@@ -583,7 +595,13 @@ func _process_one_queue_item() -> void:
 				"trigger_frame": Engine.get_process_frames(),
 				"test_id": DebugAction.get_current_test_id()
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "auto_continue", "diagnostic"]
+			[
+				Log.TAG_SYSTEM,
+				Log.TAG_EVENT,
+				Log.TAG_IDLE_ACTION,
+				"auto_continue",
+				Log.TAG_DIAGNOSTIC
+			]
 		)
 		core.action(core.ProcessQueueEvent.new())
 	else:
@@ -595,7 +613,7 @@ func _process_one_queue_item() -> void:
 				"wait_reason":
 				"action_requires_natural_completion" if not auto_continue else "queue_empty"
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "idle_action", "natural_wait", "diagnostic"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "natural_wait", Log.TAG_DIAGNOSTIC]
 		)
 
 
@@ -605,7 +623,9 @@ func start_game() -> void:
 	)
 	game_handler.current_gamestate = core.GameState.START
 	Log.info(
-		"Game state updated atomically", {"state": "START"}, ["game_state", "atomic_transition"]
+		"Game state updated atomically",
+		{"state": "START"},
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	ui_state = core.UIState.LOCKED
@@ -616,7 +636,9 @@ func mode_draft() -> void:
 	Log.debug("Switching to draft mode", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 	game_handler.current_gamestate = core.GameState.DRAFT
 	Log.info(
-		"Game state updated atomically", {"state": "DRAFT"}, ["game_state", "atomic_transition"]
+		"Game state updated atomically",
+		{"state": "DRAFT"},
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	top_bar.visible = true
@@ -639,7 +661,9 @@ func mode_prepare() -> void:
 	Log.debug("Switching to preparation mode", {}, [Log.TAG_GAME_STATE, Log.TAG_UI])
 	game_handler.current_gamestate = core.GameState.PREPARE
 	Log.info(
-		"Game state updated atomically", {"state": "PREPARE"}, ["game_state", "atomic_transition"]
+		"Game state updated atomically",
+		{"state": "PREPARE"},
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	top_bar.visible = true
@@ -663,7 +687,9 @@ func mode_pre_battle() -> void:
 	Log.debug("Switching to pre-battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 	game_handler.current_gamestate = core.GameState.PREBATTLE
 	Log.info(
-		"Game state updated atomically", {"state": "PREBATTLE"}, ["game_state", "atomic_transition"]
+		"Game state updated atomically",
+		{"state": "PREBATTLE"},
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	ui_state = core.UIState.LOCKED
@@ -678,7 +704,9 @@ func mode_battle() -> void:
 	Log.debug("Switching to battle mode", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 	game_handler.current_gamestate = core.GameState.BATTLE
 	Log.info(
-		"Game state updated atomically", {"state": "BATTLE"}, ["game_state", "atomic_transition"]
+		"Game state updated atomically",
+		{"state": "BATTLE"},
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	# Battle event is already queued from StartBattleEvent handler - no additional action needed
@@ -822,7 +850,7 @@ func mode_post_battle() -> void:
 	Log.info(
 		"Game state updated atomically",
 		{"state": "POSTBATTLE"},
-		["game_state", "atomic_transition"]
+		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
 	ui_state = core.UIState.WAITING
