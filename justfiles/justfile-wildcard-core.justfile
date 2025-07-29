@@ -52,8 +52,8 @@ _validate-pattern PATTERN:
     PATTERN="{{PATTERN}}"
     ERRORS=""
     
-    # Check for invalid characters
-    if [[ "$PATTERN" =~ [^a-zA-Z0-9._*{}!|&(),] ]]; then
+    # Check for invalid characters (simplified check)
+    if [[ "$PATTERN" =~ [^a-zA-Z0-9._*] ]]; then
         ERRORS="Invalid characters in pattern. Use only letters, numbers, dots, and wildcards."
     fi
     
@@ -75,10 +75,10 @@ _validate-pattern PATTERN:
     # Return validation result
     if [[ -n "$ERRORS" ]]; then
         echo "❌ Pattern validation failed: $ERRORS"
-        return 1
+        exit 1
     else
         echo "✅ Pattern '$PATTERN' is valid"
-        return 0
+        exit 0
     fi
 
 # Extract available tags from log file for pattern matching
