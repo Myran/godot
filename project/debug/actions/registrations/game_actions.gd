@@ -353,7 +353,7 @@ static func _populate_enemy_lineup() -> bool:
 		return false
 
 	# Ensure game systems are ready before starting operation
-	if not await _wait_for_game_systems_ready():
+	if not _wait_for_game_systems_ready():
 		return false
 
 	# Signal operation start (locks UI like clicker does)
@@ -520,7 +520,7 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		return false
 
 	# Ensure game systems are ready before starting operation (COPY FROM WORKING FUNCTION)
-	if not await _wait_for_game_systems_ready():
+	if not _wait_for_game_systems_ready():
 		return false
 
 	# Signal operation start (locks UI like clicker does) (COPY FROM WORKING FUNCTION)
@@ -1729,7 +1729,9 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		return false
 
 	# Step 4: Find actual block at position using Clicker static method
-	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
+	var pos_x: int = position.get("x", -1)
+	var pos_y: int = position.get("y", -1)
+	var grid_pos: Vector2i = Vector2i(pos_x, pos_y)
 	var actual_block: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
 
 	# Store reference for subsequent move operation (deprecated - no longer used)
@@ -1934,7 +1936,9 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	var card_id: String = params.get("card_id", "")
 	var from_position: Dictionary = params.get("from_position", {})
 	var to_position: int = params.get("to_position", -1)
-	var grid_pos: Vector2i = Vector2i(from_position.get("x", -1), from_position.get("y", -1))
+	var from_x: int = from_position.get("x", -1)
+	var from_y: int = from_position.get("y", -1)
+	var grid_pos: Vector2i = Vector2i(from_x, from_y)
 
 	# Step 2: Validate game state
 	var game: Game = _get_game_node()
@@ -2252,7 +2256,9 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 		return "draft system not available for validation"
 
 	# Convert position dictionary to Vector2i for lookup
-	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
+	var pos_x: int = position.get("x", -1)
+	var pos_y: int = position.get("y", -1)
+	var grid_pos: Vector2i = Vector2i(pos_x, pos_y)
 
 	# Find the actual block at the position
 	var block_at_position: Block = Clicker.find_block_at_position(game.clicker, grid_pos)

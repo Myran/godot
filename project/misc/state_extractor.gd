@@ -317,7 +317,8 @@ static func _get_game_instance() -> Game:
 		{
 			"scene_name": current_scene.name,
 			"scene_type": current_scene.get_class(),
-			"scene_children": current_scene.get_children().map(func(child): return child.name)
+			"scene_children":
+			current_scene.get_children().map(func(child: Node) -> String: return child.name)
 		},
 		["state_extractor", "debug"]
 	)
@@ -329,7 +330,7 @@ static func _get_game_instance() -> Game:
 			{
 				"scene_name": current_scene.name,
 				"available_children":
-				current_scene.get_children().map(func(child): return child.name)
+				current_scene.get_children().map(func(child: Node) -> String: return child.name)
 			},
 			["state_extractor", "debug"]
 		)
@@ -339,7 +340,7 @@ static func _get_game_instance() -> Game:
 	Log.debug(
 		"StateExtractor: Game node found",
 		{
-			"game_node_name": game_node.name if game_node else "null",
+			"game_node_name": str(game_node.name) if game_node else "null",
 			"game_node_type": game_node.get_class() if game_node else "null"
 		},
 		["state_extractor", "debug"]

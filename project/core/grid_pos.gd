@@ -4,7 +4,7 @@ var object_type: int = core.ObjectType.CARD_HOLDER
 var _content: Node2D = null  # Assuming card is a Node2D-derived type
 
 
-func can_set_card(card: Card) -> bool:
+func can_set_card(_card: Card) -> bool:
 	return _content == null
 
 

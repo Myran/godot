@@ -68,7 +68,7 @@ func create_blocks_from_level() -> void:
 
 	# Process tiles one at a time to guarantee identical RNG consumption order
 	# between recording and replay, preventing async timing-based RNG divergence
-	for i in range(tile_positions.size()):
+	for i: int in range(tile_positions.size()):
 		var tile_pos: Vector2i = tile_positions[i]
 		var block: Block
 

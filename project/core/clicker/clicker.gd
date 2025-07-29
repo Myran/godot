@@ -105,7 +105,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 		# Auto-trigger cascading draft updates for standalone removal actions
 		# Only for PLAYER and DEBUG_SETUP events, not SYSTEM_CASCADE (which handle own cascading)
-		if event.source in [core.EventSource.PLAYER, core.eventsource.DEBUG_SETUP]:
+		if event.source in [core.EventSource.PLAYER, core.EventSource.DEBUG_SETUP]:
 			core.action(core.UpdateDraftAreaEvent.new())
 
 	if event is core.DraftMergeEvent:

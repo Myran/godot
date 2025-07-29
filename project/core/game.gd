@@ -205,7 +205,8 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 
 		# SEMANTIC ACTION LOGGING - only for PLAYER events (matches RemoveBlockFromDraft pattern)
 		if event.source == core.EventSource.PLAYER:
-			SemanticLogger.log_draft_to_lineup_move(card.card_info.id, from_pos, to_pos)
+			var card_id: String = card.card_info.id
+			SemanticLogger.log_draft_to_lineup_move(card_id, from_pos, to_pos)
 
 		# STEP 1: Remove card from draft (with SYSTEM_CASCADE to avoid duplicate logging)
 		var remove_event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(card, false)
