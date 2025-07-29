@@ -82,16 +82,19 @@ func _test_state_extractor_implementation() -> Dictionary:
 	# Try to call StateExtractor method directly (like session_manager.gd does)
 	var class_available: bool = false
 	var accessibility_error: String = ""
-	
+
 	# Test actual StateExtractor access - try to call the method and check result
 	var test_result: Dictionary = StateExtractor.extract_game_state()
 	if test_result != null and typeof(test_result) == TYPE_DICTIONARY:
 		class_available = true
-		accessibility_error = "SUCCESS - StateExtractor working, returned dictionary with %s keys" % str(test_result.size())
+		accessibility_error = (
+			"SUCCESS - StateExtractor working, returned dictionary with %s keys"
+			% str(test_result.size())
+		)
 	else:
-		class_available = false  
+		class_available = false
 		accessibility_error = "FAILED - StateExtractor call failed or returned invalid result"
-	
+
 	tests.append(
 		{
 			"name": "StateExtractor class available",
@@ -100,7 +103,7 @@ func _test_state_extractor_implementation() -> Dictionary:
 			"expected_result": "PASS - StateExtractor class implemented"
 		}
 	)
-	
+
 	if not class_available:
 		suite_success = false
 		Log.error(
@@ -144,7 +147,10 @@ func _test_state_extractor_implementation() -> Dictionary:
 		"summary":
 		(
 			"%s/%s implementation tests passed"
-			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
+			% [
+				str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()),
+				str(tests.size())
+			]
 		)
 	}
 
@@ -156,7 +162,7 @@ func _test_core_functionality() -> Dictionary:
 	var suite_success: bool = true
 
 	# Test StateExtractor methods directly (following session_manager.gd pattern)
-	
+
 	# Test 1: extract_game_state returns Dictionary
 	var game_state: Dictionary = StateExtractor.extract_game_state()
 	var game_state_valid: bool = typeof(game_state) == TYPE_DICTIONARY
@@ -167,7 +173,10 @@ func _test_core_functionality() -> Dictionary:
 			"details":
 			(
 				"Returned type: %s, Keys: %s"
-				% [type_string(typeof(game_state)), str(game_state.keys().size() if typeof(game_state) == TYPE_DICTIONARY else 0)]
+				% [
+					type_string(typeof(game_state)),
+					str(game_state.keys().size() if typeof(game_state) == TYPE_DICTIONARY else 0)
+				]
 			),
 			"expected_result": "PASS - Returns valid Dictionary"
 		}
@@ -184,7 +193,13 @@ func _test_core_functionality() -> Dictionary:
 			"name": "generate_checksum returns valid string",
 			"success": checksum_valid,
 			"details":
-			"Type: %s, Length: %s" % [type_string(typeof(checksum)), str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)],
+			(
+				"Type: %s, Length: %s"
+				% [
+					type_string(typeof(checksum)),
+					str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)
+				]
+			),
 			"expected_result": "PASS - Returns non-empty string"
 		}
 	)
@@ -199,7 +214,13 @@ func _test_core_functionality() -> Dictionary:
 			"name": "normalize_data returns Dictionary",
 			"success": normalize_valid,
 			"details":
-			"Type: %s, Keys: %s" % [type_string(typeof(normalized)), str(normalized.keys().size() if typeof(normalized) == TYPE_DICTIONARY else 0)],
+			(
+				"Type: %s, Keys: %s"
+				% [
+					type_string(typeof(normalized)),
+					str(normalized.keys().size() if typeof(normalized) == TYPE_DICTIONARY else 0)
+				]
+			),
 			"expected_result": "PASS - Returns valid Dictionary"
 		}
 	)
@@ -228,7 +249,10 @@ func _test_core_functionality() -> Dictionary:
 		"summary":
 		(
 			"%s/%s functionality tests passed"
-			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
+			% [
+				str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()),
+				str(tests.size())
+			]
 		)
 	}
 
@@ -242,7 +266,7 @@ func _test_integration_performance() -> Dictionary:
 	var suite_success: bool = true
 
 	# Test StateExtractor integration directly
-	
+
 	# Test 1: Performance timing
 	var start_time: int = Time.get_ticks_msec()
 	var game_state: Dictionary = StateExtractor.extract_game_state()
@@ -256,7 +280,13 @@ func _test_integration_performance() -> Dictionary:
 			"name": "Performance requirements",
 			"success": performance_ok,
 			"details":
-			"Duration: %s ms, Checksum length: %s" % [str(duration_ms), str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)],
+			(
+				"Duration: %s ms, Checksum length: %s"
+				% [
+					str(duration_ms),
+					str(checksum.length() if typeof(checksum) == TYPE_STRING else 0)
+				]
+			),
 			"expected_result": "PASS - Completes within 200ms"
 		}
 	)
@@ -296,7 +326,10 @@ func _test_integration_performance() -> Dictionary:
 		"summary":
 		(
 			"%s/%s integration tests passed"
-			% [str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()), str(tests.size())]
+			% [
+				str(tests.filter(func(t: Dictionary) -> bool: return t.success).size()),
+				str(tests.size())
+			]
 		)
 	}
 
