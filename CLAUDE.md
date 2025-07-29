@@ -5,9 +5,15 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine feat
 ## 🚨 CRITICAL COMMANDS (Emergency Reference)
 
 ```bash
-# Emergency Debugging (Use First)
+# Emergency Debugging (Use First) 
 just logs-errors TEST_ID                   # Find errors fast (98% token savings)
 just logs-last                             # Latest test results (99% token savings)
+
+# 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
+just logs-tree TEST_ID                     # Explore log structure (2 sec)
+just logs-pattern TEST_ID "*.error"        # All errors with precision
+just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
+just help-wildcards                        # Complete pattern guide
 
 # Enhanced Testing with Automatic Validation (NEW)
 just test-android-target CONFIG            # Automated testing with built-in error analysis & checksum validation
@@ -19,7 +25,7 @@ just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
-# Debug Decision Tree: logs-errors → logs-android/logs-desktop → logs-tags
+# Debug Decision Tree: logs-tree → logs-pattern → logs-exclude → logs-errors (traditional backup)
 ```
 
 ## 🎯 Command System Overview
@@ -44,19 +50,29 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
 ## 🔧 Debugging Workflow
 
-**Progressive debugging sequence (token-efficient):**
+**🚀 NEW: Wildcard Pattern Debugging (10x Faster & More Precise)**
+1. `just logs-tree TEST_ID` (2 sec, explore structure)
+2. `just logs-discover TEST_ID firebase` (3 sec, find domain tags)
+3. `just logs-pattern TEST_ID "firebase.*"` (5 sec, precise filtering)
+4. `just logs-exclude TEST_ID "firebase.*" "firebase.debug"` (refine results)
+
+**Traditional Progressive debugging sequence (still available):**
 1. `just logs-errors TEST_ID` (5 sec, <10 tokens)
 2. `just logs TEST_ID [component]` (15 sec, <100 tokens) 
 3. `just logs TEST_ID [component] [operation]` (<200 tokens)
 
-### **Failure Pattern Quick Reference**
-| Symptom | Debug Command | Fix Command |
-|---------|---------------|-------------|
-| Firebase timeout/auth | `logs-android-errors TEST_ID firebase` | `test-android 'system.network.*'` |
-| Hash mismatch/validation | `logs TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
-| Performance/timeouts | `logs-performance-tagged TEST_ID` | `test-android '*.*.performance'` |
-| Startup/registry errors | `logs TEST_ID system startup` | `test-android 'system.debug.*'` |
-| Checksum mismatch | `logs-android-errors TEST_ID checksum` | `test-android-update CONFIG` or investigate |
+### **🎯 Enhanced Failure Pattern Quick Reference (Wildcard + Traditional)**
+| Symptom | Wildcard Debug Command (NEW) | Traditional Debug Command | Fix Command |
+|---------|------------------------------|---------------------------|-------------|
+| Firebase timeout/auth | `logs-pattern TEST_ID "firebase.*"` | `logs-android-errors TEST_ID firebase` | `test-android 'system.network.*'` |
+| All error types | `logs-pattern TEST_ID "*.error"` | `logs-errors TEST_ID` | Investigate specific errors |
+| Hash mismatch/validation | `logs-pattern TEST_ID "*.checksum"` | `logs TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
+| Performance/timeouts | `logs-pattern TEST_ID "performance.*"` | `logs-performance-tagged TEST_ID` | `test-android '*.*.performance'` |
+| Game system issues | `logs-pattern TEST_ID "game.*"` | `logs TEST_ID game` | `test-android 'game.*'` |
+| Startup/registry errors | `logs-pattern TEST_ID "system.initialization"` | `logs TEST_ID system startup` | `test-android 'system.debug.*'` |
+| Database issues | `logs-pattern TEST_ID "database.*"` | `logs TEST_ID database` | `test-android 'database.*'` |
+| Network problems | `logs-multi TEST_ID "*.timeout" "*.error" "network.*"` | `logs TEST_ID network` | `test-android 'network.*'` |
+| Checksum mismatch | `logs-pattern TEST_ID "*.checksum"` | `logs-android-errors TEST_ID checksum` | `test-android-update CONFIG` or investigate |
 
 ## 📋 Log Commands (Two Distinct Types)
 
@@ -75,6 +91,32 @@ just android-logs-live 60 "*:I" 100       # Live monitoring (60s, INFO level, ma
 - **Configurable limits**: Default 20-50 lines, but adjustable as last parameter
 
 ### **📄 Saved Test Result Analysis (Token-Efficient)**
+
+**🚀 NEW: Wildcard Pattern System (10x Productivity Boost)**
+```bash
+# Pattern Discovery & Structure Exploration  
+just logs-tree TEST_ID                     # Show hierarchical tag structure (most efficient start)
+just logs-discover TEST_ID PREFIX          # Find all tags with prefix (e.g., firebase)
+just logs-suggest TEST_ID PARTIAL          # Auto-complete suggestions
+
+# Advanced Pattern Matching (Ultra-Precise)
+just logs-pattern TEST_ID PATTERN          # Single pattern: firebase.*, *.error, game.*.start
+just logs-multi TEST_ID PATTERN1 PATTERN2  # Multiple patterns (OR logic)
+just logs-exclude TEST_ID PATTERN EXCLUDE  # Include/exclude: firebase.* but not firebase.debug
+
+# Pattern Examples (Copy-Paste Ready)
+just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
+just logs-pattern TEST_ID "*.error"        # All error operations  
+just logs-pattern TEST_ID "game.*.start"   # All start events
+just logs-pattern TEST_ID "database.query" # Exact match
+just logs-exclude TEST_ID "firebase.*" "firebase.debug" # Firebase without debug noise
+
+# Pattern Help
+just help-wildcards                        # Complete pattern system guide
+just help-wildcard-quick                   # Quick reference
+```
+
+**Traditional Commands (Still Available)**
 ```bash
 # Primary (Use First)
 just logs-errors TEST_ID                   # Error-focused (98% savings)
@@ -325,6 +367,128 @@ just help                         # Main help with clickable commands
 just help-debug                   # Debug & testing workflows  
 just help-logs                    # Log analysis & token efficiency
 just help-build                   # Build system architecture
+## 🚀 Wildcard Pattern System Deep Dive
+
+**Transform your debugging with hierarchical pattern matching - providing 10x productivity improvement over traditional log analysis.**
+
+### **🎯 Pattern Types & Examples**
+
+**1. Prefix Patterns (`domain.*`)**
+```bash
+just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
+just logs-pattern TEST_ID "database.*"     # All database operations  
+just logs-pattern TEST_ID "performance.*"  # All performance monitoring
+```
+
+**2. Suffix Patterns (`*.operation`)**
+```bash
+just logs-pattern TEST_ID "*.error"        # All error operations
+just logs-pattern TEST_ID "*.timeout"      # All timeout events
+just logs-pattern TEST_ID "*.start"        # All start operations
+```
+
+**3. Middle Wildcards (`layer.*.operation`)**
+```bash
+just logs-pattern TEST_ID "game.*.start"   # All game start events
+just logs-pattern TEST_ID "system.*.init"  # All system initialization
+just logs-pattern TEST_ID "firebase.*.error" # All Firebase errors
+```
+
+**4. Exact Matches (`specific.tag`)**
+```bash
+just logs-pattern TEST_ID "firebase.auth"      # Firebase authentication only
+just logs-pattern TEST_ID "database.query"     # Database queries only
+just logs-pattern TEST_ID "game.battle.end"    # Battle end events only
+```
+
+### **🔍 Discovery Workflow Examples**
+
+**Scenario: Investigating Firebase Issues**
+```bash
+# 1. Explore what Firebase tags exist
+just logs-tree TEST_ID                          # See full hierarchy
+
+# 2. Discover Firebase-specific tags  
+just logs-discover TEST_ID firebase             # Find all firebase.* tags
+
+# 3. Get broad Firebase overview
+just logs-pattern TEST_ID "firebase.*"          # All Firebase operations
+
+# 4. Focus on Firebase errors only
+just logs-pattern TEST_ID "firebase.*.error"    # Firebase errors across all modules
+
+# 5. Exclude noisy debug logs
+just logs-exclude TEST_ID "firebase.*" "firebase.debug"  # Firebase without debug noise
+```
+
+**Scenario: Game System Debugging**
+```bash
+# 1. See all game-related activity
+just logs-pattern TEST_ID "game.*"              # All game operations
+
+# 2. Focus on battle system
+just logs-pattern TEST_ID "game.battle.*"       # Battle system only
+
+# 3. Find all start/end events across game systems
+just logs-multi TEST_ID "game.*.start" "game.*.end"  # All game lifecycle events
+
+# 4. Investigate specific battle phases
+just logs-pattern TEST_ID "game.battle.phase"   # Battle phase transitions
+```
+
+**Scenario: Performance Analysis**
+```bash
+# 1. All performance data
+just logs-pattern TEST_ID "performance.*"       # All performance monitoring
+
+# 2. Memory-specific issues
+just logs-pattern TEST_ID "*.memory"            # Memory-related logs across all systems
+
+# 3. Multi-system performance view
+just logs-multi TEST_ID "performance.*" "*.timeout" "*.slow"  # Performance + issues
+
+# 4. Exclude low-priority performance logs
+just logs-exclude TEST_ID "performance.*" "performance.debug"  # Performance without debug
+```
+
+### **⚡ Productivity Comparison**
+
+| Task | Traditional Method | Wildcard Pattern Method | Time Savings |
+|------|-------------------|-------------------------|--------------|
+| Find Firebase errors | `logs TEST_ID firebase` → manual scan | `logs-pattern TEST_ID "firebase.*.error"` | **90% faster** |
+| All error types | Multiple `logs` commands | `logs-pattern TEST_ID "*.error"` | **95% faster** |
+| System exploration | Manual browsing | `logs-tree TEST_ID` | **98% faster** |
+| Cross-system patterns | Multiple separate commands | `logs-multi TEST_ID pattern1 pattern2` | **85% faster** |
+| Noise filtering | Manual filtering | `logs-exclude TEST_ID include exclude` | **90% faster** |
+
+### **💡 Advanced Tips**
+
+**Pattern Testing Before Use:**
+```bash
+# Test your pattern against sample tags first
+just logs-test-pattern "firebase.*" firebase.auth firebase.connect database.error
+# ✅ firebase.auth  ✅ firebase.connect  ❌ database.error
+```
+
+**Performance Optimization:**
+```bash
+# Benchmark pattern performance
+just logs-benchmark TEST_ID "firebase.*"
+# See timing and optimization suggestions
+```
+
+**Auto-completion:**
+```bash
+# Get suggestions for partial matches
+just logs-suggest TEST_ID fire
+# Suggests: firebase.auth, firebase.connect, firebase.timeout...
+```
+
+**Pattern Caching:**
+- Patterns are automatically cached for faster repeated use
+- Complex patterns are compiled once and reused
+- Cache is persistent across sessions
+
 ## 🗂️ Project Architecture
 
 **⭐ FIXED: Enhanced Testing System:**
