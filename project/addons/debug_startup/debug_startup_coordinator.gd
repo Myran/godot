@@ -531,7 +531,7 @@ func _should_action_auto_continue(action_name: String) -> bool:
 	# These are complex operations that trigger animations/cascades requiring event completion
 	var wait_for_completion_patterns: Array[String] = [
 		"game.state.transition_player",
-		"game.draft.upgrade_player", 
+		"game.draft.upgrade_player",
 		"game.draft.reroll_player",
 		"game.draft.remove_block_player",
 		"game.draft.move_card_to_lineup_player",

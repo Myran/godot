@@ -198,6 +198,31 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		lineup_handler.add_card(card, pos)
 		current_context.add_event(core.TrippleTestEvent.new())
 		current_context.solve_events()
+	elif event is core.LineupAddCardFromDraftEvent:
+		var card: Card = event.card
+		var from_pos: Vector2i = event.from_position
+		var to_pos: int = event.to_position
+
+		# SEMANTIC ACTION LOGGING - only for PLAYER events (matches RemoveBlockFromDraft pattern)
+		if event.source == core.EventSource.PLAYER:
+			SemanticLogger.log_draft_to_lineup_move(card.card_info.id, from_pos, to_pos)
+
+		# STEP 1: Remove card from draft (with SYSTEM_CASCADE to avoid duplicate logging)
+		var remove_event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(card, false)
+		remove_event.source = core.EventSource.SYSTEM_CASCADE
+		current_context.add_event(remove_event)
+		current_context.solve_events()
+
+		# STEP 2: Add card to lineup
+		lineup_handler.add_card(card, to_pos)
+
+		# STEP 3: Trigger standard lineup processing
+		core.action(core.BlockEntersPlay.new(card))
+		current_context.add_event(core.TrippleTestEvent.new())
+
+		# STEP 4: Update draft area to handle cascading effects (gravity, refill, etc.)
+		ui_state = core.UIState.LOCKED
+		core.action(core.UpdateDraftAreaEvent.new())
 	elif event is core.LineupAddCardEvent:
 		var block: Block = event.card
 

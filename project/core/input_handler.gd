@@ -94,7 +94,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:
 					var m_block: Block = interacted_object
 
-
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 					update_draft = true
 
@@ -138,10 +137,8 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 								Cards.CONTEXT.DRAFT:
 									if is_instance_valid(dragging_card):
 										if clicker.has_card(dragging_card):
-											release_handled = interacted_holder.set_card(
-												dragging_card
-											)
-											if release_handled:
+											# Validate move before triggering event
+											if interacted_holder.can_set_card(dragging_card):
 												# Enhanced semantic logging for draft to lineup move
 												var draft_pos: Vector2i = (
 													clicker.level.get_grid_pos(dragging_card)
@@ -151,20 +148,15 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 													interacted_holder.get_index()
 												)
 
-												# Log the complete move operation (NEW APPROACH)
-												SemanticLogger.log_draft_to_lineup_move(
-													card_id, draft_pos, holder_index
+												# Use LineupAddCardFromDraftEvent directly
+												core.action(
+													core.LineupAddCardFromDraftEvent.new(
+														dragging_card, draft_pos, holder_index
+													)
 												)
-
-												current_context.add_event(
-													core.RemoveBlockFromDraft.new(dragging_card)
-												)
-												current_context.solve_events()
-												current_context.add_event(
-													core.LineupAddCardEvent.new(dragging_card)
-												)
-												current_context.solve_events()
-												update_draft = true
+												# Event handles completion, so we set update_draft = false
+												update_draft = false
+												release_handled = true
 
 					if not release_handled:
 						match dragging_card.block_context:

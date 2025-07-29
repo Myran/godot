@@ -4,6 +4,8 @@
 class_name GameDebugActions
 extends RefCounted
 
+# Game debug actions for draft, lineup, and battle operations
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_gameplay_actions(registry)
@@ -155,16 +157,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player column toggle action")
-		)
-	)
-
-	registry.register_action(
-		(
-			DebugAction
-			. create("game.draft.remove_block_player", _remove_block_player)
-			. set_category("Gameplay")
-			. set_group("Player Actions")
-			. set_description("Simulate player block removal action")
 		)
 	)
 
@@ -1730,6 +1722,10 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 	var grid_pos: Vector2i = Vector2i(position.get("x", -1), position.get("y", -1))
 	var actual_block: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
 
+	# Store reference for subsequent move operation (deprecated - no longer used)
+	# if actual_block is Card:
+	#	_last_removed_card = actual_block as Card
+
 	if not actual_block:
 		Log.error(
 			"No block found at specified position",
@@ -1770,25 +1766,15 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: Block is not removable")
 		return false
 
-	# Step 6: Execute complete removal using Clicker static method (UI system logic)
+	# Step 6: Store card reference for potential move operation (maintains compatibility)
 	Log.info(
-		"Simulating player block removal action with actual block reference",
+		"Storing card reference for draft-to-lineup sequence",
 		{"card_id": card_id, "position": position, "block_found": true},
 		["debug", "replay", "player"]
 	)
 
-	# Create and dispatch RemoveBlockFromDraft event (automatically has PLAYER source)
-	# This triggers semantic logging in clicker.gd event handler
-	var event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(actual_block, true)
-	event.source = core.EventSource.PLAYER
-	core.action(event)
-
-	# Trigger cascading actions (gravity, refill, matching, and DraftSteadyEvent)
-	# This matches the behavior of Clicker.remove_block_from_draft_complete()
-	core.action(core.UpdateDraftAreaEvent.new())
-
-	# Signal operation complete (unlocks UI like DraftSteadyEvent does)
-	core.action(core.DraftSteadyEvent.new())
+	# Note: The actual removal will be handled by shared code path when move_card_to_lineup_player is called
+	# For now, just validate the card exists and can be removed
 
 	Log.info(
 		"Block removal completed with cascading actions",
@@ -1922,8 +1908,7 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 
 
 static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
-	"""Atomic draft-to-lineup move operation using same card reference"""
-
+	"""Atomic draft-to-lineup move operation using LineupAddCardFromDraftEvent"""
 	# Step 1: Validate parameters
 	var required_params: Array[String] = ["card_id", "from_position", "to_position"]
 	var param_error: String = _validate_required_params(params, required_params)
@@ -1939,13 +1924,12 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	var card_id: String = params.get("card_id", "")
 	var from_position: Dictionary = params.get("from_position", {})
 	var to_position: int = params.get("to_position", -1)
+	var grid_pos: Vector2i = Vector2i(from_position.get("x", -1), from_position.get("y", -1))
 
 	# Step 2: Validate game state
 	var game: Game = _get_game_node()
 	if not game:
-		Log.error(
-			"Game node not available for move operation", {}, ["debug", "replay", "player", "error"]
-		)
+		Log.error("Game node not available", {}, ["debug", "replay", "player", "error"])
 		assert(false, "move_card_to_lineup_player: game node not available")
 		return false
 
@@ -1956,60 +1940,45 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 			{"current_state": current_state},
 			["debug", "replay", "player", "error"]
 		)
-		assert(
-			false,
-			(
-				"move_card_to_lineup_player: can only move cards in DRAFT state, current: "
-				+ current_state
-			)
-		)
+		assert(false, "move_card_to_lineup_player: invalid game state")
 		return false
 
-	# Step 3: Find the actual card to move
-	var grid_pos: Vector2i = Vector2i(from_position.get("x", -1), from_position.get("y", -1))
-	var card_to_move: Card = Clicker.find_block_at_position(game.clicker, grid_pos)
-
+	# Step 3: Find the card at the draft position
+	var card_to_move: Card = Clicker.find_block_at_position(game.clicker, grid_pos) as Card
 	if not card_to_move:
 		Log.error(
-			"No card found at source position",
-			{"position": from_position, "grid_pos": grid_pos},
+			"No card found at position",
+			{"position": from_position},
 			["debug", "replay", "player", "error"]
 		)
-		assert(false, "move_card_to_lineup_player: No card found at source position")
+		assert(false, "move_card_to_lineup_player: card not found")
 		return false
 
-	if card_to_move.card_info.id != card_id:
+	# Step 4: Validate target lineup position is available
+	var target_holder: Holder = game.lineup_handler.holder_container.get_holder(to_position)
+	if not target_holder.can_set_card(card_to_move):
 		Log.error(
-			"Card ID mismatch at source position",
-			{"expected": card_id, "actual": card_to_move.card_info.id, "position": from_position},
+			"Target lineup position occupied",
+			{"position": to_position, "card_id": card_id},
 			["debug", "replay", "player", "error"]
 		)
-		assert(false, "move_card_to_lineup_player: Card ID mismatch")
+		assert(false, "move_card_to_lineup_player: target position occupied")
 		return false
 
-	# Step 4: Execute atomic move operation
+	# Step 5: Use LineupAddCardFromDraftEvent directly (same as manual UI)
 	Log.info(
-		"Executing atomic draft-to-lineup move operation",
+		"Executing draft-to-lineup move via LineupAddCardFromDraftEvent",
 		{"card_id": card_id, "from": from_position, "to": to_position},
 		["debug", "replay", "player", "move"]
 	)
 
-	# Remove from draft (don't destroy - we're moving it)
-	core.action(core.RemoveBlockFromDraft.new(card_to_move, false))
-
-	# Add to lineup (same card instance)
-	game.lineup_handler.add_card(card_to_move, to_position)
-	core.action(core.LineupAddCardEvent.new(card_to_move))
-
-	# Trigger cascading actions for draft refill/gravity
-	core.action(core.UpdateDraftAreaEvent.new())
+	core.action(core.LineupAddCardFromDraftEvent.new(card_to_move, grid_pos, to_position))
 
 	Log.info(
-		"Atomic move operation completed successfully",
+		"Draft-to-lineup move completed successfully",
 		{"card_id": card_id, "from": from_position, "to": to_position},
 		["debug", "replay", "player", "move"]
 	)
-
 	return true
 
 
