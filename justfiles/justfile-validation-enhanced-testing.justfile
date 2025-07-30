@@ -46,6 +46,55 @@ _inject-auto-quit-metadata source_config target_config auto_quit_value:
 # SHARED CONFIGURATION FUNCTIONS  
 # ================================
 
+# Calculate dynamic timeout based on action count and platform
+_calculate-dynamic-timeout config_path platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    PLATFORM="{{platform}}"
+    
+    # Count actions in the config
+    ACTION_COUNT=$(jq '.actions | length' "$CONFIG_PATH" 2>/dev/null || echo "1")
+    
+    # Platform-specific timing (seconds per action + base overhead)
+    # Based on observed performance: Android ~2.1 actions/sec, Desktop ~9.3 actions/sec
+    case "$PLATFORM" in
+        "android")
+            # Android: 0.8 seconds per action + 60s base + 20% buffer
+            BASE_TIME=60
+            PER_ACTION_TIME=0.8
+            BUFFER_MULTIPLIER=1.2
+            ;;
+        "desktop") 
+            # Desktop: 0.2 seconds per action + 30s base + 20% buffer
+            BASE_TIME=30
+            PER_ACTION_TIME=0.2
+            BUFFER_MULTIPLIER=1.2
+            ;;
+        *)
+            # Default to Android timing for unknown platforms
+            BASE_TIME=60
+            PER_ACTION_TIME=0.8
+            BUFFER_MULTIPLIER=1.2
+            ;;
+    esac
+    
+    # Calculate: (base + actions * per_action_time) * buffer
+    CALCULATED_TIMEOUT=$(echo "scale=0; ($BASE_TIME + $ACTION_COUNT * $PER_ACTION_TIME) * $BUFFER_MULTIPLIER / 1" | bc)
+    
+    # Apply reasonable min/max bounds
+    MIN_TIMEOUT=60
+    MAX_TIMEOUT=900  # 15 minutes max
+    
+    if [[ $CALCULATED_TIMEOUT -lt $MIN_TIMEOUT ]]; then
+        CALCULATED_TIMEOUT=$MIN_TIMEOUT
+    elif [[ $CALCULATED_TIMEOUT -gt $MAX_TIMEOUT ]]; then
+        CALCULATED_TIMEOUT=$MAX_TIMEOUT
+    fi
+    
+    echo "$CALCULATED_TIMEOUT"
+
 # Unified test ID generation for both platforms
 _generate-test-id config_name platform:
     #!/usr/bin/env bash
@@ -1360,8 +1409,20 @@ _execute-test-android config_name duration:
     } &
     MONITOR_PID=$!
     
-    # Enhanced completion detection with activity-based timeout
-    MAX_TIMEOUT=${DURATION:-${ANDROID_TEST_MAX_TIMEOUT:-120}}
+    # Enhanced completion detection with dynamic timeout calculation
+    if [[ -n "${DURATION:-}" ]]; then
+        # Use explicit duration if provided
+        MAX_TIMEOUT="$DURATION"
+        echo "🕐 Using explicit timeout: ${MAX_TIMEOUT}s"
+    else
+        # Calculate dynamic timeout based on action count
+        DYNAMIC_TIMEOUT=$(just _calculate-dynamic-timeout "$USER_DATA_DIR/debug_startup_actions.json" "android")
+        MAX_TIMEOUT=${ANDROID_TEST_MAX_TIMEOUT:-$DYNAMIC_TIMEOUT}
+        echo "🕐 Dynamic timeout calculated: ${DYNAMIC_TIMEOUT}s (based on config action count)"
+        if [[ "$MAX_TIMEOUT" != "$DYNAMIC_TIMEOUT" ]]; then
+            echo "🕐 Using override timeout: ${MAX_TIMEOUT}s"
+        fi
+    fi
     ACTIVITY_TIMEOUT=${ANDROID_TEST_ACTIVITY_TIMEOUT:-60}  # Timeout if no activity for 60 seconds
     ELAPSED=0
     
@@ -1482,8 +1543,20 @@ _execute-test-desktop config_name duration:
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
     echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
     
-    # Apply timeout for desktop tests as well
-    MAX_TIMEOUT=${DURATION:-${DESKTOP_TEST_MAX_TIMEOUT:-120}}
+    # Apply dynamic timeout for desktop tests
+    if [[ -n "${DURATION:-}" ]]; then
+        # Use explicit duration if provided
+        MAX_TIMEOUT="$DURATION"
+        echo "🕐 Using explicit timeout: ${MAX_TIMEOUT}s"
+    else
+        # Calculate dynamic timeout based on action count
+        DYNAMIC_TIMEOUT=$(just _calculate-dynamic-timeout "$HOME/Library/Application Support/Godot/app_userdata/gametwo/debug_startup_actions.json" "desktop")
+        MAX_TIMEOUT=${DESKTOP_TEST_MAX_TIMEOUT:-$DYNAMIC_TIMEOUT}
+        echo "🕐 Dynamic timeout calculated: ${DYNAMIC_TIMEOUT}s (based on config action count)"
+        if [[ "$MAX_TIMEOUT" != "$DYNAMIC_TIMEOUT" ]]; then
+            echo "🕐 Using override timeout: ${MAX_TIMEOUT}s"
+        fi
+    fi
     echo "🔍 Desktop test timeout: ${MAX_TIMEOUT}s"
     echo ""
     
