@@ -118,14 +118,80 @@ android-logs-recent LINES="50":
             | head -{{LINES}}
     fi
 
-# Clear Android device logs
+# Clear Android device logs with robust error handling
 android-logs-clear:
     #!/usr/bin/env bash
     set -euo pipefail
     
     echo "🧹 Clearing Android device logs..."
-    adb -s {{ANDROID_DEVICE_ID}} logcat -c
-    echo "✅ Android device logs cleared"
+    
+    # Check if device is available
+    if ! adb -s {{ANDROID_DEVICE_ID}} get-state >/dev/null 2>&1; then
+        echo "❌ Android device {{ANDROID_DEVICE_ID}} not available"
+        echo "💡 Check device connection: adb devices"
+        exit 1
+    fi
+    
+    # Kill any existing adb server connections that might block clearing
+    echo "🔄 Restarting ADB server to ensure clean logcat access..."
+    adb kill-server 2>/dev/null || true
+    adb start-server 2>/dev/null || true
+    sleep 1
+    
+    # Attempt multiple clearing methods with retries
+    RETRY_COUNT=0
+    MAX_RETRIES=3
+    
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        # Method 1: Clear all buffers explicitly (main, events, radio)
+        echo "🧹 Clearing all log buffers (main, events, radio)..."
+        adb -s {{ANDROID_DEVICE_ID}} logcat -b all -c 2>/dev/null || true
+        
+        # Method 2: Clear individual buffers as fallback
+        adb -s {{ANDROID_DEVICE_ID}} logcat -b main -c 2>/dev/null || true
+        adb -s {{ANDROID_DEVICE_ID}} logcat -b events -c 2>/dev/null || true
+        adb -s {{ANDROID_DEVICE_ID}} logcat -b radio -c 2>/dev/null || true
+        
+        # Method 3: Alternative shell command approach
+        adb -s {{ANDROID_DEVICE_ID}} shell "logcat -b all -c" 2>/dev/null || true
+        
+        # Brief pause to let clearing take effect
+        sleep 1
+        
+        # Verify clearing worked by checking all buffers
+        MAIN_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b main -d 2>/dev/null | wc -l || echo "999")
+        EVENTS_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b events -d 2>/dev/null | wc -l || echo "999")
+        RADIO_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b radio -d 2>/dev/null | wc -l || echo "999")
+        TOTAL_COUNT=$((MAIN_COUNT + EVENTS_COUNT + RADIO_COUNT))
+        
+        if [ "$TOTAL_COUNT" -le 10 ]; then  # Allow for a few system messages across all buffers
+            echo "✅ All logcat buffers cleared successfully"
+            echo "   📊 main: $MAIN_COUNT, events: $EVENTS_COUNT, radio: $RADIO_COUNT (total: $TOTAL_COUNT)"
+            exit 0
+        else
+            echo "⚠️  Logcat buffers still contain entries after clearing attempt $((RETRY_COUNT + 1))"
+            echo "   📊 main: $MAIN_COUNT, events: $EVENTS_COUNT, radio: $RADIO_COUNT (total: $TOTAL_COUNT)"
+        fi
+        
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "🔄 Retrying logcat clear in 2 seconds..."
+            sleep 2
+        fi
+    done
+    
+    # If we still have many logs, warn but don't fail the test
+    FINAL_LOG_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -d 2>/dev/null | wc -l || echo "999")
+    if [ "$FINAL_LOG_COUNT" -gt 20 ]; then
+        echo "⚠️  Warning: Logcat buffer still contains $FINAL_LOG_COUNT lines"
+        echo "💡 This may cause old error logs to appear in current test results"
+        echo "💡 Consider manually clearing or restarting the Android device"
+    else
+        echo "✅ Logcat buffer acceptably clear ($FINAL_LOG_COUNT lines)"
+    fi
+    
+    # Don't fail the test - just warn about potential pollution
+    exit 0
 
 # Android device log monitoring with auto-restart detection
 android-logs-monitor-restart DURATION="120" LINES="20":

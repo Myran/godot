@@ -176,10 +176,17 @@ func move_blocks() -> void:
 	)
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
 	var b_moving: Array = all_blocks()
-	for block_iterator: Block in b_moving:
-		block_iterator.move_to_position(grid_to_world_pos(get_grid_pos(block_iterator)))
+
+	for i: int in range(b_moving.size()):
+		var block_iterator: Block = b_moving[i]
+		var current_pos: Vector2i = get_grid_pos(block_iterator)
+		var target_pos: Vector2i = grid_to_world_pos(current_pos)
+
+		block_iterator.move_to_position(target_pos)
 		awaiter.add(block_iterator.movement_done)
+
 	await awaiter.finished
+
 	Log.debug("Block movement complete", {}, [Log.TAG_LEVEL, Log.TAG_GRID, Log.TAG_UI_ANIMATION])
 
 
@@ -197,4 +204,5 @@ func remove_from_grid(block: Block, destroy: bool = true) -> void:
 	if destroy:
 		if block.get_parent():
 			block.get_parent().remove_child(block)
-		block.queue_free()
+		block.block_kill()
+	# kolla om signaler connected is fall disconnecta

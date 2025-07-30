@@ -346,11 +346,26 @@ _handle-checksum-validation config_path platform test_id:
     EXTRACTED_CHECKSUMS=""
     case "$PLATFORM" in
         "android")
-            if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
-                EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+            # First try to use saved Android log file
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
+            
+            if [[ -f "$ANDROID_LOG_FILE" ]]; then
+                # Use saved log file for checksum extraction
+                if just _extract-checksums-unified "$ANDROID_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from saved file:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
             else
-                echo "⚠️  Checksum extraction failed:"
-                cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                # Fallback to live logcat
+                if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
             fi
             ;;
         "desktop")
@@ -507,11 +522,40 @@ _extract-logs-android test_id:
     
     TEST_ID="{{test_id}}"
     
-    # Use existing android-logs filtering logic (reuse proven patterns)
-    adb logcat -d 2>/dev/null | \
-        grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" | \
-        grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" | \
-        tail -1000
+    # Extract all Android logs for the test and save to expected location
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+    
+    ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
+    
+    # Check if logs were captured during real-time monitoring
+    echo "📱 Checking for logs captured during test execution..."
+    
+    # If real-time monitoring didn't capture logs, fall back to post-extraction
+    if [[ ! -f "$ANDROID_LOG_FILE" || ! -s "$ANDROID_LOG_FILE" ]]; then
+        echo "📱 No real-time logs found - attempting post-test extraction..."
+        
+        # Get app PID - if running, use PID filtering; if not, fall back to package name filtering
+        APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
+        
+        if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
+            echo "📱 App PID found: $APP_PID - using expert PID filtering"
+            adb logcat -b all -d --pid="$APP_PID" 2>/dev/null > "$ANDROID_LOG_FILE" || true
+        else
+            echo "📱 App not running - using package name filtering from all buffers"
+            adb logcat -b all -d 2>/dev/null | grep -E "(com\.primaryhive\.gametwo|godot|$TEST_ID)" > "$ANDROID_LOG_FILE" || true
+        fi
+    else
+        echo "📱 Real-time logs found - using captured logs"
+    fi
+    
+    if [[ -f "$ANDROID_LOG_FILE" ]]; then
+        echo "📄 Android logs saved to: $ANDROID_LOG_FILE"
+        wc -l "$ANDROID_LOG_FILE" | awk '{print "📊 Log lines captured:", $1}'
+    else
+        echo "⚠️  Failed to save Android logs"
+    fi
 
 _extract-logs-desktop test_id:
     #!/usr/bin/env bash
@@ -664,7 +708,7 @@ _analyze-test-errors test_id platform:
     echo "🔍 Analyzing test errors for: $TEST_ID ($PLATFORM)"
     echo "================================================"
     
-    # Get logs based on platform
+    # Get logs based on platform  
     case "$PLATFORM" in
         "android")
             if ! command -v adb >/dev/null 2>&1; then
@@ -672,7 +716,18 @@ _analyze-test-errors test_id platform:
                 exit 0
             fi
             
-            LOGS=$(adb logcat -d 2>/dev/null | tail -1000)
+            # First try to read from saved Android log file
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
+            
+            if [[ -f "$ANDROID_LOG_FILE" ]]; then
+                echo "📄 Analyzing: android_${TEST_ID}.log"
+                LOGS=$(cat "$ANDROID_LOG_FILE")
+            else
+                # Fallback to live logcat if no saved file
+                LOGS=$(adb logcat -d 2>/dev/null | tail -1000)
+            fi
+            
             if [[ -z "$LOGS" ]]; then
                 echo "⚠️  No Android logs available"
                 exit 0
@@ -799,13 +854,22 @@ _collect-action-results test_id platform:
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
     
-    # Get logs based on platform using existing logic
+    # Extract and save logs for analysis (this persists them for later use)
     case "$PLATFORM" in
         "android")
             if ! command -v adb >/dev/null 2>&1; then
                 return 0
             fi
-            LOGS=$(adb logcat -d 2>/dev/null | tail -2000)
+            # Extract and save Android logs to file for later analysis
+            just _extract-logs-android "$TEST_ID"
+            # Then read from the saved file
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
+            if [[ -f "$ANDROID_LOG_FILE" ]]; then
+                LOGS=$(cat "$ANDROID_LOG_FILE")
+            else
+                LOGS=""
+            fi
             ;;
         "desktop")
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
@@ -1251,7 +1315,8 @@ _execute-test-android config_name duration:
     just restart-android-app
     
     # Clear logcat buffer for clean monitoring (after app start)
-    adb logcat -c || echo "⚠️  Warning: Could not clear logcat buffer (non-critical)"
+    echo "🧹 Clearing Android logcat buffer (critical for clean test isolation)..."
+    just android-logs-clear
     
     # Brief pause for app startup
     sleep 2
@@ -1268,13 +1333,22 @@ _execute-test-android config_name duration:
             exit 1
         fi
         
+        # Prepare log file for real-time capture
+        USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+        LOGS_DIR="$USER_DATA_DIR/logs"
+        mkdir -p "$LOGS_DIR"
+        ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
+        
         adb logcat \
             --pid="$APP_PID" \
+            -b all \
             -v time "*:I" \
             | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" \
             | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
             | while read -r line; do
                 echo "$line"
+                # Save log line to file in real-time
+                echo "$line" >> "$ANDROID_LOG_FILE"
                 # Update activity timestamp for main process
                 echo "$(date +%s)" > /tmp/android_test_activity
                 
@@ -1800,11 +1874,26 @@ _test-android-target-original config_name:
             
             # Extract actual checksums using unified parser
             EXTRACTED_CHECKSUMS=""
-            if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
-                EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+            # First try to use saved Android log file
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
+            
+            if [[ -f "$ANDROID_LOG_FILE" ]]; then
+                # Use saved log file for checksum extraction
+                if just _extract-checksums-unified "$ANDROID_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from saved file:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
             else
-                echo "⚠️  Checksum extraction failed:"
-                cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                # Fallback to live logcat
+                if just _extract-checksums-unified "logcat" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
             fi
             
             if [[ -z "$EXTRACTED_CHECKSUMS" ]]; then

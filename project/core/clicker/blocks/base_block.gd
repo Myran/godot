@@ -2,6 +2,9 @@ class_name Block extends TouchScreenButton
 
 signal movement_done
 
+func _ready() -> void:
+	pass
+
 const MOVE_SPEED: float = 0.05
 const MERGE_SPEED: float = 0.15
 const TOP_MOVE_SPEED: float = 0.15
@@ -57,12 +60,14 @@ func shake(left: bool = true) -> void:
 			. set_ease(Tween.EASE_IN_OUT)
 		)
 	await block_tween.finished
-	queue_free()
+	block_kill()
 
 
 func move_to_position(new_position: Vector2) -> void:
 	var time: float = abs(((new_position - position).y / texture_normal.get_height()) * MOVE_SPEED)
+	
 	var scene_tween: Tween = create_tween()
+	
 	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "position", new_position, time)
 	@warning_ignore("return_value_discarded")
@@ -101,6 +106,11 @@ func show_upgrade() -> Tween:
 	@warning_ignore("return_value_discarded")
 	scene_tween.tween_property(self, "scale", Vector2(1, 1), 0.2)
 	return scene_tween
+
+
+func block_kill() -> void:
+	movement_done.emit()
+	queue_free()
 
 
 func _on_area_2d_input_event(_viewport: Node, _event: InputEvent, _shape_idx: int) -> void:
