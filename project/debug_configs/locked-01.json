@@ -1,0 +1,354 @@
+{
+  "description": "Generated replay from semantic session: session_20250730_104939_0061e68b",
+  "session_id": "session_20250730_104939_0061e68b",
+  "generation_timestamp": "20250730_105034",
+  "semantic_action_count": 29,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 2,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 3,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 4,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 1,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 0,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 0,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 1,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 2,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 3,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 4,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 2,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "DRAFT",
+        "to_state": "PREPARE"
+      }
+    },
+    "game.lineup.populate_enemy",
+    "game.battle.start_player",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "PREBATTLE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250730_104939_0061e68b",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "locked-01",
+    "capture_timestamp": "20250730_105034",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 1,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "806cf46ee89fa6025ab078c7cac815b5701648fc89cc5286f7472bc646cc1209"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.reroll",
+        "checksum": "98a397f2bdbbbf4b8734e8330d5b8d89823da53d62cfbe35fdbe1057e85ab1c6"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.toggle_line",
+        "checksum": "f42b8a1ee180a56828f1b4b34513fe33945d9304eb367ccadbc6dd4c5980a66e"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.reroll",
+        "checksum": "07da104c8a38e8e428a163c619c50739ada587be01f4b39f45bae079d48f357d"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.toggle_line",
+        "checksum": "9a62bc4e4772b296ff65a498ee6bb911b7a2d59081250d4439501f6238899f49"
+      },
+      {
+        "sequence": 6,
+        "action": "draft.reroll",
+        "checksum": "83c85ed52d90297faec6b580cd8d8717bda77f14c10802885dcec53aa840c594"
+      },
+      {
+        "sequence": 7,
+        "action": "draft.toggle_line",
+        "checksum": "7e3fd405c9d78acbd273ba04f54719368b8ca25d9ba7786d664dc1cb5c016a58"
+      },
+      {
+        "sequence": 8,
+        "action": "draft.reroll",
+        "checksum": "1bc6c49f072bb2deeb3ca97ee489b714b33642a14a8b9b58d7c3064ef69f346a"
+      },
+      {
+        "sequence": 9,
+        "action": "draft.toggle_line",
+        "checksum": "975d70ed0d90ef6d8a2751b7b921fbc255d272d3b2f274740403d64c2925f7ac"
+      },
+      {
+        "sequence": 10,
+        "action": "draft.reroll",
+        "checksum": "7d63f008da19baa510767b1eee5dee69dab8d7e1195945bf501d4f0ca3bb3c94"
+      },
+      {
+        "sequence": 11,
+        "action": "draft.toggle_line",
+        "checksum": "d57ca502d207bf3200575891804bc272181436f08a9eabb4f39f65fa3a060e6d"
+      },
+      {
+        "sequence": 12,
+        "action": "draft.reroll",
+        "checksum": "cbb43369fb116683eea97547e2f8c6b466bea2de02f4cfb30d08098bb75b5a7e"
+      },
+      {
+        "sequence": 13,
+        "action": "draft.toggle_line",
+        "checksum": "5dbd515bbca1a5c8173b7c34e1edc05fdf8ee71d810091aa0738b629641b65a9"
+      },
+      {
+        "sequence": 14,
+        "action": "draft.reroll",
+        "checksum": "13dd4be1cfd4874df6a3f182dc846a2d4027493785258441539a03010502ca36"
+      },
+      {
+        "sequence": 15,
+        "action": "draft.toggle_line",
+        "checksum": "390304124235097ba287ce43c645c97963160b63a2b28ffedd771862e95a72ea"
+      },
+      {
+        "sequence": 16,
+        "action": "draft.reroll",
+        "checksum": "8fa7c2db0655ef61e28782ca5d12b07e159b297c62bda76073a8285932823ccf"
+      },
+      {
+        "sequence": 17,
+        "action": "draft.toggle_line",
+        "checksum": "636e42199a1ce76b9425b8ca86111b48a706a0cf264b026dcbc2f7a627405834"
+      },
+      {
+        "sequence": 18,
+        "action": "draft.reroll",
+        "checksum": "52f6a94a530a1c15cff8aabdd2bd4a00fcc923cb0f7737613c3500e462887593"
+      },
+      {
+        "sequence": 19,
+        "action": "draft.toggle_line",
+        "checksum": "e5934283cd7e6e39bb614da7f0ac01db6de56f4e2504800215b2b79354828160"
+      },
+      {
+        "sequence": 20,
+        "action": "draft.reroll",
+        "checksum": "1549249571021bcbfd830c819fa51f4c6a2b7e0ac9d621543dbe2fe69106fd83"
+      },
+      {
+        "sequence": 21,
+        "action": "draft.toggle_line",
+        "checksum": "e37b1311819ae11156c1c6857c4b8998d305bda10dc5abd2b3b486bd0ea8cf84"
+      },
+      {
+        "sequence": 22,
+        "action": "draft.reroll",
+        "checksum": "9bb94b512aef0f21a19281e4f4debfdc2c18a57f26beec582eb4877238069714"
+      },
+      {
+        "sequence": 23,
+        "action": "draft.toggle_line",
+        "checksum": "29dbfceaa654abaf9fe6d985a8773c22942e69c11d17b16de8b60cab94f9ae3b"
+      },
+      {
+        "sequence": 24,
+        "action": "draft.reroll",
+        "checksum": "2f010bc3b480c7c1dbdaf1656f75ee60fd817414b581efe642ce33dc9f6dd68a"
+      },
+      {
+        "sequence": 25,
+        "action": "transition.change_state",
+        "checksum": "a36da37d90c84dca7088da5f11caad051c5e51a0045b04c95a174fb9b1c8a2ea"
+      },
+      {
+        "sequence": 26,
+        "action": "battle.start",
+        "checksum": "a7c9a7378b16f8d2f87011191915469c899831bce21dfa1119374ceb74dabfe0"
+      },
+      {
+        "sequence": 27,
+        "action": "transition.change_state",
+        "checksum": "35b7f4d2e36fde43397485a4a5db72b50df00c6626a0b2736d9aa2487723238c"
+      },
+      {
+        "sequence": 28,
+        "action": "transition.change_state",
+        "checksum": "f569ccb29ba7205e74e86bc43b450664d25f92849aa577224b2d237804c08b28"
+      },
+      {
+        "sequence": 29,
+        "action": "draft.reroll",
+        "checksum": "6c328e0a9b3dafbaaab3d5d34c758f9bbffb892cad1616573911a090d2f52241"
+      }
+    ]
+  }
+}

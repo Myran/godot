@@ -1,0 +1,16 @@
+{
+  "description": "Simple test for Android",
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    }
+  ],
+  "metadata": {
+    "auto_quit": true
+  }
+}

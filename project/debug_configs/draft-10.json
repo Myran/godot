@@ -1,0 +1,268 @@
+{
+  "description": "Generated replay from semantic session: session_20250729_231910_40e374e1",
+  "session_id": "session_20250729_231910_40e374e1",
+  "generation_timestamp": "20250729_232034",
+  "semantic_action_count": 28,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 0,
+          "y": 1
+        },
+        "to_position": 6
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 4
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 3,
+          "y": 0
+        },
+        "to_position": 8
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 4,
+          "y": 0
+        },
+        "to_position": 7
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 2,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 0,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 4,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 1,
+        "new_state": true
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 0,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 1,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 2,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.toggle_column_player",
+      "params": {
+        "column_index": 4,
+        "new_state": false
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250729_231910_40e374e1",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "draft-10",
+    "capture_timestamp": "20250729_232034",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 1,
+    "expected_checksums": [
+      "806cf46ee89fa6025ab078c7cac815b5701648fc89cc5286f7472bc646cc1209",
+      "98a397f2bdbbbf4b8734e8330d5b8d89823da53d62cfbe35fdbe1057e85ab1c6",
+      "ab84947f84b1103cb56b09eed9d9d8337ccc8a7454f12fe88b5fc91a84f2715e",
+      "da0a0cf555aa5f0d1c910df76796f4e6fa7fc2526accd49e6ac877423975491e",
+      "499896e751f4b8d8be8f5c7fea79e5ea5d5adf9f979e49e0b3aea92e7f88dc94",
+      "33890ce88d400d73d67f02afafb59385e259dd851e29e9fe1027555154557133",
+      "b862ecb2894451028bdf68ec7552810ff3f6a27c0a2c6afed427f806b78f65e9",
+      "359bb0b2b1ded56b2201280098005e64391b079e0d14072d2da9ed613d7d6ce0",
+      "da4c3de64f3b659c458ff219c47a2d642d13892a2d2570091f60f11cc66a4c97",
+      "16f83d981a0a4bd1949626f591f082ba5649915d6c9fc9b318ff4c2cc5c820b5",
+      "e76b400f5f476a10d80290dc7a7de6e582c9a117b3bcbb50d81400120e5ede5c",
+      "eca16f4319b0614395b6d0b68c30e6e8360c2259c17266b3a3f2bb7126d38ea9",
+      "6bbebbaa6730bb1c9e8b9621df54ad49b7a30f5a5b3fb3558986e8d96bf84cba",
+      "0d64ea080fee66627991497510fd2a4b19996a6eac2106d4331f420049f06ab2",
+      "ddea523d74a59b60412da3b6ab26a37f36ae2623d9eb6d1a03672b6f0cf919f2",
+      "9454063780862b101d9ac53d73c3b84df528c38d2a1a4f2ba466a015d70c9a8a",
+      "20caa7df4176cba804560217c1d7f4101ac26bbe10d7db0eadae3864d3ebf34c",
+      "a34deb99ee26dc3e17613b12eb7e469492dd40a9605a08ffcb0d5ea2646d7aef",
+      "b5d2ea2c00ad7c926ac68fb57a2162d66af059df2a20d4f67a95d03b7068d246",
+      "1473c16f2e35ae502c900591592a492cb539e782ee87b95941089a11869e87b4",
+      "3f62abe9fed48c53b796a25866c5d46d76a3711caac2371cb40da28f92ae69ed",
+      "4edcdd80c45609115d42be810223a3b2c957494e962cadf3c629d11654f7e47b",
+      "e9cf73d999b8332c912d8a408b53379e6a36782ba32216a532bd715bc80d73dc",
+      "a4c07c91b5128b66ff86db5513f7925a1962bf596e8de2186f92b3a0ff39f325",
+      "009d86b5a114bacb603b93d65e7e76a2010a347856d951c845dbc1bdeadc34ac",
+      "e28fde7097b5d3e79f087e2103bf148f8ba1acd451d5525e443c2695454f9f16",
+      "e564cf54a90fcddac0707ee4502ca38ab8f40ecfbfcb69ddd9656aaa0761e44d",
+      "68e284e1346be252dfb4bb8da0026b45513a4cc320ecfbf45f3e2028f28cd205"
+    ]
+  }
+}

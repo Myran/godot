@@ -1,0 +1,365 @@
+{
+  "description": "Generated replay from semantic session: session_20250730_123207_45d54507",
+  "session_id": "session_20250730_123207_45d54507",
+  "generation_timestamp": "20250730_123308",
+  "semantic_action_count": 26,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 1
+        },
+        "to_position": 6
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 0,
+          "y": 1
+        },
+        "to_position": 5
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 4,
+          "y": 0
+        },
+        "to_position": 9
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 4,
+          "y": 2
+        },
+        "to_position": 7
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "10",
+        "from_position": {
+          "x": 2,
+          "y": 1
+        },
+        "to_position": 8
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "12",
+        "from_position": {
+          "x": 3,
+          "y": 1
+        },
+        "to_position": 9
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250730_123207_45d54507",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "draft-14",
+    "capture_timestamp": "20250730_123308",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 1,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "f532506b4bdd8e28895724ec136f4b1c497b9e34bccf6c3c733affe93570cf08"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "61b8c340a0f5df946a41848c47f13e00e2255201975c798e6464d5464d79964d"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.upgrade",
+        "checksum": "96e5723b183c33ea15ef62e90253c8eab19d23316c107c2e9bb8f0854b5f153c"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.upgrade",
+        "checksum": "4f55601557ddbeb44d0b49ead6578f6372ce499abda319858e3d0c83669643fc"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.remove_card",
+        "checksum": "74e9d29a874cb229279bb19838482345763da7692d20274017f64ba3905435ad"
+      },
+      {
+        "sequence": 6,
+        "action": "draft.remove_card",
+        "checksum": "c201f941b4f5b54216816286d560e4d3cdc494dcf629459b1f227f8fda3c9371"
+      },
+      {
+        "sequence": 7,
+        "action": "draft.remove_card",
+        "checksum": "c9ecea3ccb4dfc421611ffd4aebdc93c8551bf0918530daa4d6f7470d71fa777"
+      },
+      {
+        "sequence": 8,
+        "action": "draft.remove_card",
+        "checksum": "93c29ef7f7e720d3ad6c7cefa31691ef6080a8ed04365340e25581947ee9600c"
+      },
+      {
+        "sequence": 9,
+        "action": "draft.remove_card",
+        "checksum": "a4b8c37be1715efde37fbc6237b14f659d103a0c0795ca24aa32cce0339bd586"
+      },
+      {
+        "sequence": 10,
+        "action": "draft.remove_card",
+        "checksum": "e15fd95fb4e907c6aa66a2f4974cc556a42092fb2f3f1d0f48c623cb31cc8765"
+      },
+      {
+        "sequence": 11,
+        "action": "draft.reroll",
+        "checksum": "12d1c73107ed26d733a456d1d40c5005313fe462682d47653a019fb07876c918"
+      },
+      {
+        "sequence": 12,
+        "action": "draft.reroll",
+        "checksum": "aa28283add5d297b38e72979117888c0a4becfcd03070129e0165754cbcf5db5"
+      },
+      {
+        "sequence": 13,
+        "action": "draft.reroll",
+        "checksum": "999e41a17542c7cde6ecc6a95cec3bb2bbf6552821be1c4e06811acc450ababe"
+      },
+      {
+        "sequence": 14,
+        "action": "draft.reroll",
+        "checksum": "f723d8a3adcdb42893ce1ff80d26c47d9e8a600ad46ba7b9beb552131450ea16"
+      },
+      {
+        "sequence": 15,
+        "action": "card.move",
+        "checksum": "121f31d4f1d83c28d87543bc849cf30ee878cdd40116cdb78999a5b3b82a4160"
+      },
+      {
+        "sequence": 16,
+        "action": "card.move",
+        "checksum": "83b081950be94226794cc5a8592f5f9e92e94d7481a387ff1decedcac64b3d7f"
+      },
+      {
+        "sequence": 17,
+        "action": "card.move",
+        "checksum": "d78aebc883e9f36a015c3f76f94e42305812ef1a40015f4c52ecbc2e4297cd29"
+      },
+      {
+        "sequence": 18,
+        "action": "card.move",
+        "checksum": "086d2d98a66af371f6087660cdd64a7e6f2c3f75c669d9f22be5967bf2287c51"
+      },
+      {
+        "sequence": 19,
+        "action": "draft.reroll",
+        "checksum": "14fd62fed5579bd0de7ca1483d1c7956cf1621c0be836e14fa8761917185fd5c"
+      },
+      {
+        "sequence": 20,
+        "action": "draft.reroll",
+        "checksum": "9b71b878356cf1f2f460383cf90aca193c8fcbe24197b4a3b2f170733fa4b766"
+      },
+      {
+        "sequence": 21,
+        "action": "card.move",
+        "checksum": "a17079cce06cf018aa7265e39005db563f02114a918e2a04950992ca972a8af5"
+      },
+      {
+        "sequence": 22,
+        "action": "card.move",
+        "checksum": "b041383b6f52aa7df19394d239b4eb28d869ff797baadc3221b293803c5562b3"
+      },
+      {
+        "sequence": 23,
+        "action": "draft.reroll",
+        "checksum": "ce5e7ed6e125c18e7fc2fa2efa3c26751326e156e193085dfe94b6f1990d069d"
+      },
+      {
+        "sequence": 24,
+        "action": "draft.reroll",
+        "checksum": "97446647c88816b693298fd01e87c35ec2df18fb0782ea6d58e88455ac796078"
+      },
+      {
+        "sequence": 25,
+        "action": "draft.reroll",
+        "checksum": "80904af006448f0e6f5e52de1974249504157c7217cb0dbbc02a49dcd680bf1a"
+      },
+      {
+        "sequence": 26,
+        "action": "draft.reroll",
+        "checksum": "5d4edc34c140e946cff3aca2759967bab64af4738f910db40a94a78839c3f02b"
+      }
+    ]
+  }
+}

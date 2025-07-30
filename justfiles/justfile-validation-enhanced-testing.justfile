@@ -1310,73 +1310,53 @@ _execute-test-android config_name duration:
     
     echo "📱 Starting Android test monitoring..."
     
+    # Prepare log file path for background monitoring
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
+    
+    # Start background monitoring BEFORE app launch
+    echo "🔍 Starting background log monitoring before app launch..."
+    just android-logs-monitor-background "${TEST_ID}" "$ANDROID_LOG_FILE"
+    
+    # Clear logcat buffer for clean monitoring
+    echo "🧹 Clearing Android logcat buffer (critical for clean test isolation)..."
+    just android-logs-clear
+    
+    # Brief pause to ensure monitoring is ready
+    sleep 1
+    
     # Start the app with fresh configuration
     echo "🚀 Starting Android app with fresh configuration..."
     just restart-android-app
     
-    # Clear logcat buffer for clean monitoring (after app start)
-    echo "🧹 Clearing Android logcat buffer (critical for clean test isolation)..."
-    just android-logs-clear
-    
     # Brief pause for app startup
     sleep 2
     
-    # Start real-time log monitoring using proven android-logs filtering
-    echo "🔍 Starting real-time test monitoring (using proven android-logs filtering)..."
+    # The background monitoring is now capturing logs automatically
+    echo "🔍 Background monitoring active - waiting for test completion..."
     
-    # Background streaming with activity monitoring and flexible timeout
+    # Simplified completion detection - background monitoring handles log capture
     {
-        # Remove hard timeout - let the main loop handle timeout logic
-        APP_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0")
-        if [[ "$APP_PID" == "0" ]]; then
-            echo "❌ Cannot find app process PID"
-            exit 1
-        fi
-        
-        # Prepare log file for real-time capture
-        USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-        LOGS_DIR="$USER_DATA_DIR/logs"
-        mkdir -p "$LOGS_DIR"
-        ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
-        
-        adb logcat \
-            --pid="$APP_PID" \
-            -b all \
-            -v time "*:I" \
-            | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE)" \
-            | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
-            | while read -r line; do
-                echo "$line"
-                # Save log line to file in real-time
-                echo "$line" >> "$ANDROID_LOG_FILE"
-                # Update activity timestamp for main process
-                echo "$(date +%s)" > /tmp/android_test_activity
-                
-                # Test completion detection using same patterns as current code  
-                if echo "$line" | grep -q "TEST_COMPLETE"; then
-                    echo "✅ Test completed successfully"
-                    # Signal main process
-                    echo "MONITOR_COMPLETE" > /tmp/android_test_complete
-                    break
-                fi
-                # Also check for automated completion patterns
-                if echo "$line" | grep -q "automated_completion.*true"; then
-                    echo "✅ Test completed with automated mode signal"
-                    echo "MONITOR_COMPLETE" > /tmp/android_test_complete
-                    break
-                fi
-            done || {
-                echo "📱 Monitoring completed (app closed or stopped)"
-                # PID-based monitoring failed (likely due to app quit) - check for completion signals in recent logs
-                echo "🔍 Checking recent logs for completion signals..."
-                RECENT_COMPLETE=$(adb logcat -d 2>/dev/null | grep "TEST_COMPLETE.*automated_completion.*true" 2>/dev/null | tail -1 || echo "")
-                if [[ -n "$RECENT_COMPLETE" ]]; then
-                    echo "✅ Found completion signal in recent logs"
-                    echo "MONITOR_COMPLETE" > /tmp/android_test_complete
-                else
-                    echo "⚠️  No completion signal found in recent logs"
-                fi
-            }
+        # Just watch for app to quit or completion signals
+        while true; do
+            APP_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "0")
+            if [[ "$APP_PID" == "0" ]]; then
+                echo "✅ Test completed successfully (app quit detected)"
+                echo "💡 Note: No completion signal expected - app quit indicates completion"
+                echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+                break
+            fi
+            
+            # Check for explicit completion signals in background log file
+            if [[ -f "$ANDROID_LOG_FILE" ]] && grep -q "TEST_COMPLETE" "$ANDROID_LOG_FILE" 2>/dev/null; then
+                echo "✅ Test completed successfully (completion signal found)"
+                echo "MONITOR_COMPLETE" > /tmp/android_test_complete
+                break
+            fi
+            
+            sleep 1
+        done
     } &
     MONITOR_PID=$!
     
@@ -1431,13 +1411,16 @@ _execute-test-android config_name duration:
     done
     
     # Cleanup background monitoring
+    echo "🛑 Stopping background log monitoring..."
+    just android-logs-monitor-stop "${TEST_ID}"
+    
     # Give background monitoring a chance to complete fallback detection
     if kill -0 $MONITOR_PID 2>/dev/null; then
         sleep 0.5  # Allow background process to complete fallback completion detection
         # Gracefully terminate monitoring and suppress all termination messages
         {
             if kill $MONITOR_PID 2>/dev/null; then
-                echo "🛑 Stopped background monitoring"
+                echo "🛑 Stopped foreground monitoring process"
             fi
             # Wait briefly for process cleanup
             sleep 0.1

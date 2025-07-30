@@ -119,6 +119,86 @@ android-logs-recent LINES="50":
     fi
 
 # Clear Android device logs with robust error handling
+# Background monitoring that captures logs from app launch until stopped
+android-logs-monitor-background TEST_ID LOG_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    LOG_FILE="{{LOG_FILE}}"
+    
+    echo "🔍 Starting background Android log monitoring for test: $TEST_ID"
+    echo "📄 Logs will be saved to: $LOG_FILE"
+    
+    # Ensure log directory exists
+    mkdir -p "$(dirname "$LOG_FILE")"
+    
+    # Clear the log file to start fresh
+    > "$LOG_FILE"
+    
+    # Create control files for start/stop signaling
+    MONITOR_CONTROL="/tmp/android_monitor_${TEST_ID}"
+    echo "monitoring" > "$MONITOR_CONTROL"
+    
+    # Background monitoring loop
+    {
+        while [[ -f "$MONITOR_CONTROL" && "$(cat "$MONITOR_CONTROL" 2>/dev/null)" == "monitoring" ]]; do
+            # Check if app is running
+            APP_PID=$(adb -s {{ANDROID_DEVICE_ID}} shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "0")
+            
+            if [[ "$APP_PID" != "0" ]]; then
+                echo "📱 App detected with PID: $APP_PID - capturing logs..." | tee -a "$LOG_FILE"
+                
+                # Capture logs while app is running
+                timeout 120 adb -s {{ANDROID_DEVICE_ID}} logcat \
+                    --pid="$APP_PID" \
+                    -b all \
+                    -v time "*:I" \
+                    | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE|$TEST_ID)" \
+                    | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
+                    | tee -a "$LOG_FILE" || echo "📱 App monitoring ended" | tee -a "$LOG_FILE"
+            else
+                # Wait for app to start
+                sleep 0.5
+            fi
+        done
+        
+        echo "🔍 Background monitoring stopped for test: $TEST_ID" | tee -a "$LOG_FILE"
+    } &
+    
+    # Store the background process PID for later cleanup
+    MONITOR_PID=$!
+    echo "$MONITOR_PID" > "${MONITOR_CONTROL}_pid"
+    echo "🔍 Background monitoring started with PID: $MONITOR_PID"
+
+# Stop background monitoring
+android-logs-monitor-stop TEST_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    MONITOR_CONTROL="/tmp/android_monitor_${TEST_ID}"
+    MONITOR_PID_FILE="${MONITOR_CONTROL}_pid"
+    
+    # Signal monitoring to stop
+    if [[ -f "$MONITOR_CONTROL" ]]; then
+        echo "stopping" > "$MONITOR_CONTROL"
+        echo "🔍 Signaled background monitoring to stop for test: $TEST_ID"
+    fi
+    
+    # Kill the background process if it exists
+    if [[ -f "$MONITOR_PID_FILE" ]]; then
+        MONITOR_PID=$(cat "$MONITOR_PID_FILE")
+        if kill -0 "$MONITOR_PID" 2>/dev/null; then
+            kill "$MONITOR_PID" 2>/dev/null || true
+            echo "🔍 Stopped background monitoring process: $MONITOR_PID"
+        fi
+        rm -f "$MONITOR_PID_FILE"
+    fi
+    
+    # Cleanup control file
+    rm -f "$MONITOR_CONTROL"
+
 android-logs-clear:
     #!/usr/bin/env bash
     set -euo pipefail
