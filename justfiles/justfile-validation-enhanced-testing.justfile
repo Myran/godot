@@ -1137,7 +1137,7 @@ _post-test-validation test_id platform:
 # ================================
 
 # Universal test wrapper that works for both Android and Desktop
-_execute-test-with-analysis config_name platform duration="120":
+_execute-test-with-analysis config_name platform duration="":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1210,14 +1210,22 @@ _execute-test-with-analysis config_name platform duration="120":
             # Deploy and execute Android test
             just _deploy-config-android "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
-                just _execute-test-android "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+                if [[ -n "${DURATION:-}" ]]; then
+                    just _execute-test-android "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+                else
+                    just _execute-test-android "$CONFIG_NAME" "" || TEST_RESULT=$?
+                fi
             fi
             ;;
         "desktop")
             # Deploy and execute Desktop test  
             just _deploy-config-desktop "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
-                just _execute-test-desktop "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+                if [[ -n "${DURATION:-}" ]]; then
+                    just _execute-test-desktop "$CONFIG_NAME" "$DURATION" || TEST_RESULT=$?
+                else
+                    just _execute-test-desktop "$CONFIG_NAME" "" || TEST_RESULT=$?
+                fi
             fi
             ;;
         *)
@@ -1375,11 +1383,10 @@ _execute-test-android config_name duration:
     # Brief pause to ensure monitoring is ready
     sleep 1
     
-    # Start the app with fresh configuration
-    echo "🚀 Starting Android app with fresh configuration..."
-    just restart-android-app
+    # App is already running from config deployment - no need to restart
+    echo "🔍 App is running with fresh configuration from deployment phase..."
     
-    # Brief pause for app startup
+    # Brief pause for log monitoring to stabilize
     sleep 2
     
     # The background monitoring is now capturing logs automatically
@@ -1410,7 +1417,7 @@ _execute-test-android config_name duration:
     MONITOR_PID=$!
     
     # Enhanced completion detection with dynamic timeout calculation
-    if [[ -n "${DURATION:-}" ]]; then
+    if [[ -n "${DURATION:-}" && "${DURATION}" != "" ]]; then
         # Use explicit duration if provided
         MAX_TIMEOUT="$DURATION"
         echo "🕐 Using explicit timeout: ${MAX_TIMEOUT}s"
@@ -1544,7 +1551,7 @@ _execute-test-desktop config_name duration:
     echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
     
     # Apply dynamic timeout for desktop tests
-    if [[ -n "${DURATION:-}" ]]; then
+    if [[ -n "${DURATION:-}" && "${DURATION}" != "" ]]; then
         # Use explicit duration if provided
         MAX_TIMEOUT="$DURATION"
         echo "🕐 Using explicit timeout: ${MAX_TIMEOUT}s"
@@ -1635,7 +1642,7 @@ _execute-test-desktop config_name duration:
 # ================================
 
 # Enhanced version of test-android-target that includes automatic error analysis
-test-android-target config_name duration="120":
+test-android-target config_name duration="":
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -1705,7 +1712,7 @@ test-desktop-manual config_name:
     echo "✅ Desktop test started in manual mode (app will stay open for verification)"
 
 # Enhanced version of test-desktop-target that includes automatic error analysis  
-test-desktop-target config_name duration="120":
+test-desktop-target config_name duration="":
     #!/usr/bin/env bash
     set -euo pipefail
     
