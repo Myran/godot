@@ -455,7 +455,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		# SEMANTIC ACTION LOGGING - RerollEvent is PLAYER event
 		# UI reroll triggers core.RerollDraftEvent which has enhanced logging
 
-		ui_state = core.UIState.LOCKED
 		draft_handler.reroll()
 
 	elif _event is ui.HideCardEvent:
@@ -468,7 +467,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		# UI upgrade triggers core.UpgradeEvent which has enhanced logging
 
 		#check cost here
-		ui_state = core.UIState.LOCKED
 		draft_handler.upgrade()
 
 	elif _event is ui.TouchEvent:
