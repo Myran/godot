@@ -273,6 +273,25 @@ android-logs-clear:
     # Don't fail the test - just warn about potential pollution
     exit 0
 
+# Lightweight logcat clearing optimized for PID-based filtering
+android-logs-clear-lightweight:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🧹 Performing lightweight logcat clear (optimized for PID filtering)..."
+    
+    # Check if device is available
+    if ! adb -s {{ANDROID_DEVICE_ID}} get-state >/dev/null 2>&1; then
+        echo "❌ Android device {{ANDROID_DEVICE_ID}} not available"
+        echo "💡 Check device connection: adb devices"
+        exit 1
+    fi
+    
+    # Simple clear - since we use PID-specific filtering, we don't need aggressive clearing
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c 2>/dev/null || true
+    
+    echo "✅ Logcat cleared (test isolation provided by PID-based filtering)"
+
 # Android device log monitoring with auto-restart detection
 android-logs-monitor-restart DURATION="120" LINES="20":
     #!/usr/bin/env bash

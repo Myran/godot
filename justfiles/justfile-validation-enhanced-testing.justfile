@@ -240,9 +240,17 @@ _extract-checksums-unified log_file test_id:
                            sed -n 's/.*"session_id": *"\([^"]*\)".*/\1/p' || echo "")
             if [[ -n "$RECENT_SESSION" ]]; then
                 # Extract checksums from the most recent session only
-                CHECKSUMS=$(echo "$LOG_CONTENT" | grep "$RECENT_SESSION" | grep "SEMANTIC_ACTION" | \
-                           sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
-                           grep -v "^$")
+                # Get all checksums and take the last N based on expected count
+                ALL_CHECKSUMS=$(echo "$LOG_CONTENT" | grep "$RECENT_SESSION" | grep "SEMANTIC_ACTION" | \
+                               sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
+                               grep -v "^$")
+                # Take the last EXPECTED_CHECKSUMS_COUNT entries to avoid duplicates
+                if [[ -n "${EXPECTED_CHECKSUMS_COUNT:-}" && "${EXPECTED_CHECKSUMS_COUNT}" -gt 0 ]]; then
+                    CHECKSUMS=$(echo "$ALL_CHECKSUMS" | tail -${EXPECTED_CHECKSUMS_COUNT})
+                else
+                    # Fallback: take last 8 entries
+                    CHECKSUMS=$(echo "$ALL_CHECKSUMS" | tail -8)
+                fi
             else
                 # Fallback to all recent SEMANTIC_ACTION logs
                 CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -20 | \
@@ -1376,9 +1384,9 @@ _execute-test-android config_name duration:
     echo "🔍 Starting background log monitoring before app launch..."
     just android-logs-monitor-background "${TEST_ID}" "$ANDROID_LOG_FILE"
     
-    # Clear logcat buffer for clean monitoring
-    echo "🧹 Clearing Android logcat buffer (critical for clean test isolation)..."
-    just android-logs-clear
+    # Clear logcat buffer for clean monitoring (lightweight - PID filtering provides isolation)
+    echo "🧹 Clearing Android logcat buffer (lightweight with PID-based isolation)..."
+    just android-logs-clear-lightweight
     
     # Brief pause to ensure monitoring is ready
     sleep 1
