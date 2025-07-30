@@ -12,16 +12,16 @@ func set_gamestate(new_state: core.GameState) -> void:
 
 	match new_state:
 		core.GameState.START:
-			owner.start_game()
+			owner.call_deferred("start_game")
 		core.GameState.DRAFT:
-			owner.mode_draft()
+			owner.call_deferred("mode_draft")
 		core.GameState.PREPARE:
-			owner.mode_prepare()
+			owner.call_deferred("mode_prepare")
 		core.GameState.PREBATTLE:
-			owner.mode_pre_battle()
+			owner.call_deferred("mode_pre_battle")
 		core.GameState.BATTLE:
-			owner.mode_battle()
+			owner.call_deferred("mode_battle")
 		core.GameState.POSTBATTLE:
-			owner.mode_post_battle()
+			owner.call_deferred("mode_post_battle")
 
 	# current_gamestate update moved to individual mode functions for atomic state transitions
