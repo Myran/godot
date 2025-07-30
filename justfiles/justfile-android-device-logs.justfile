@@ -140,31 +140,31 @@ android-logs-monitor-background TEST_ID LOG_FILE:
     MONITOR_CONTROL="/tmp/android_monitor_${TEST_ID}"
     echo "monitoring" > "$MONITOR_CONTROL"
     
-    # Background monitoring loop
+    # Background monitoring loop (redirect all output to prevent terminal spill)
     {
         while [[ -f "$MONITOR_CONTROL" && "$(cat "$MONITOR_CONTROL" 2>/dev/null)" == "monitoring" ]]; do
             # Check if app is running
             APP_PID=$(adb -s {{ANDROID_DEVICE_ID}} shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "0")
             
             if [[ "$APP_PID" != "0" ]]; then
-                echo "📱 App detected with PID: $APP_PID - capturing logs..." | tee -a "$LOG_FILE"
+                echo "📱 App detected with PID: $APP_PID - capturing logs..." >> "$LOG_FILE"
                 
                 # Capture logs while app is running
                 timeout 120 adb -s {{ANDROID_DEVICE_ID}} logcat \
                     --pid="$APP_PID" \
                     -b all \
                     -v time "*:I" \
-                    | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE|$TEST_ID)" \
+                    | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE|SEMANTIC_ACTION|$TEST_ID)" \
                     | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
-                    | tee -a "$LOG_FILE" || echo "📱 App monitoring ended" | tee -a "$LOG_FILE"
+                    >> "$LOG_FILE" || echo "📱 App monitoring ended" >> "$LOG_FILE"
             else
                 # Wait for app to start
                 sleep 0.5
             fi
         done
         
-        echo "🔍 Background monitoring stopped for test: $TEST_ID" | tee -a "$LOG_FILE"
-    } &
+        echo "🔍 Background monitoring stopped for test: $TEST_ID" >> "$LOG_FILE"
+    } >/dev/null 2>&1 &
     
     # Store the background process PID for later cleanup
     MONITOR_PID=$!
