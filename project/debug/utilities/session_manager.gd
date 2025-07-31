@@ -179,7 +179,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"current_game_state": game_state.get("lineup", {}).get("current_game_state", "UNKNOWN"),
 			"ui_state": game_state.get("lineup", {}).get("ui_state", "UNKNOWN")
 		},
-		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_CONTENT_DETAIL]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM]
 	)
 
 	if game_state.is_empty():
@@ -215,7 +215,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"checksum": checksum,
 			"game_available": game_state.get("lineup", {}).get("game_available", false)
 		},
-		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_CAPTURE]
+		[Log.TAG_SESSION, Log.TAG_CHECKSUM]
 	)
 
 	return checksum
@@ -352,19 +352,19 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 	"""Convert semantic action type to hierarchical tags for unified filtering"""
 	match action_type:
 		"draft.reroll":
-			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_REROLL, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"draft.upgrade":
-			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_UPGRADE, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"draft.toggle_line":
 			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_TOGGLE_LINE, Log.TAG_SEMANTIC_ACTION]
 		"draft.remove_card":
-			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_REMOVE_CARD, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"lineup.move_card":
 			return [Log.TAG_GAME, Log.TAG_LINEUP, Log.TAG_MOVE_CARD, Log.TAG_SEMANTIC_ACTION]
 		"card.move":
 			return [Log.TAG_GAME, Log.TAG_CARD, Log.TAG_MOVE, Log.TAG_SEMANTIC_ACTION]
 		"transition.change_state":
-			return [Log.TAG_GAME, Log.TAG_STATE_TRANSITION, Log.TAG_CHANGE, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_STATE_TRANSITION, Log.TAG_SEMANTIC_ACTION]
 		"battle.start":
 			return [Log.TAG_GAME, Log.TAG_BATTLE, Log.TAG_START, Log.TAG_SEMANTIC_ACTION]
 		_:
