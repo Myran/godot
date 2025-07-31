@@ -119,7 +119,7 @@ android-logs-recent LINES="50":
     fi
 
 # Clear Android device logs with robust error handling
-# Background monitoring that captures logs from app launch until stopped
+# Session-isolated monitoring that captures logs only for a specific test session
 android-logs-monitor-background TEST_ID LOG_FILE:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -127,7 +127,7 @@ android-logs-monitor-background TEST_ID LOG_FILE:
     TEST_ID="{{TEST_ID}}"
     LOG_FILE="{{LOG_FILE}}"
     
-    echo "🔍 Starting background Android log monitoring for test: $TEST_ID"
+    echo "🔍 Starting session-isolated Android log monitoring for test: $TEST_ID"
     echo "📄 Logs will be saved to: $LOG_FILE"
     
     # Ensure log directory exists
@@ -140,36 +140,55 @@ android-logs-monitor-background TEST_ID LOG_FILE:
     MONITOR_CONTROL="/tmp/android_monitor_${TEST_ID}"
     echo "monitoring" > "$MONITOR_CONTROL"
     
+    # Get current timestamp for session isolation
+    SESSION_START_TIME=$(date +%s)
+    
     # Background monitoring loop (redirect all output to prevent terminal spill)
     {
+        FIRST_APP_DETECTION=""
+        
         while [[ -f "$MONITOR_CONTROL" && "$(cat "$MONITOR_CONTROL" 2>/dev/null)" == "monitoring" ]]; do
             # Check if app is running
             APP_PID=$(adb -s {{ANDROID_DEVICE_ID}} shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "0")
             
             if [[ "$APP_PID" != "0" ]]; then
-                echo "📱 App detected with PID: $APP_PID - capturing logs..." >> "$LOG_FILE"
+                # Record first app detection time for session validation
+                if [[ -z "$FIRST_APP_DETECTION" ]]; then
+                    FIRST_APP_DETECTION=$(date +%s)
+                    echo "📱 App detected with PID: $APP_PID (session started: $SESSION_START_TIME)" >> "$LOG_FILE"
+                fi
                 
-                # Capture logs while app is running
-                timeout 120 adb -s {{ANDROID_DEVICE_ID}} logcat \
+                # Only capture logs from this specific test session using main buffer only to avoid duplicates
+                # Remove timeout to prevent monitoring restarts during long-running tests
+                adb -s {{ANDROID_DEVICE_ID}} logcat \
                     --pid="$APP_PID" \
-                    -b all \
+                    -b main \
                     -v time "*:I" \
                     | grep -E "({{ANDROID_PACKAGE_NAME}}|E/godot|SCRIPT ERROR|ERROR:|FAILED|DEBUG_TEST_FAILURE|TEST_COMPLETE|SEMANTIC_ACTION|$TEST_ID)" \
                     | grep -v -E "(OpenGL|GL_|font|Buffer|VSYNC|Touch|Input)" \
-                    >> "$LOG_FILE" || echo "📱 App monitoring ended" >> "$LOG_FILE"
+                    | while IFS= read -r line; do
+                        # Only accept logs that contain our specific TEST_ID or are SEMANTIC_ACTION logs from our session
+                        if [[ "$line" =~ $TEST_ID ]] || [[ "$line" =~ SEMANTIC_ACTION ]]; then
+                            echo "$line" >> "$LOG_FILE"
+                        fi
+                        # Check if monitoring should stop (control file check)
+                        if [[ ! -f "$MONITOR_CONTROL" || "$(cat "$MONITOR_CONTROL" 2>/dev/null)" != "monitoring" ]]; then
+                            break
+                        fi
+                    done || echo "📱 App monitoring ended" >> "$LOG_FILE"
             else
                 # Wait for app to start
                 sleep 0.5
             fi
         done
         
-        echo "🔍 Background monitoring stopped for test: $TEST_ID" >> "$LOG_FILE"
+        echo "🔍 Background monitoring stopped for test: $TEST_ID (session duration: $(($(date +%s) - SESSION_START_TIME))s)" >> "$LOG_FILE"
     } >/dev/null 2>&1 &
     
     # Store the background process PID for later cleanup
     MONITOR_PID=$!
     echo "$MONITOR_PID" > "${MONITOR_CONTROL}_pid"
-    echo "🔍 Background monitoring started with PID: $MONITOR_PID"
+    echo "🔍 Session-isolated monitoring started with PID: $MONITOR_PID"
 
 # Stop background monitoring
 android-logs-monitor-stop TEST_ID:

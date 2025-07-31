@@ -597,11 +597,11 @@ _extract-logs-android test_id:
         APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
         
         if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
-            echo "📱 App PID found: $APP_PID - using expert PID filtering"
-            adb logcat -b all -d --pid="$APP_PID" 2>/dev/null > "$ANDROID_LOG_FILE" || true
+            echo "📱 App PID found: $APP_PID - using PID filtering with main buffer"
+            adb logcat -b main -d --pid="$APP_PID" 2>/dev/null > "$ANDROID_LOG_FILE" || true
         else
-            echo "📱 App not running - using package name filtering from all buffers"
-            adb logcat -b all -d 2>/dev/null | grep -E "(com\.primaryhive\.gametwo|godot|$TEST_ID)" > "$ANDROID_LOG_FILE" || true
+            echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering for session isolation"
+            adb logcat -b main -d 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION)" > "$ANDROID_LOG_FILE" || true
         fi
     else
         echo "📱 Real-time logs found - using captured logs"
@@ -1380,9 +1380,9 @@ _execute-test-android config_name duration:
     LOGS_DIR="$USER_DATA_DIR/logs"
     ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
     
-    # Start background monitoring BEFORE app launch
-    echo "🔍 Starting background log monitoring before app launch..."
-    just android-logs-monitor-background "${TEST_ID}" "$ANDROID_LOG_FILE"
+    # Skip complex background monitoring - use simple post-test extraction instead
+    echo "🔍 Skipping background monitoring - will extract logs after test completion..."
+    # just android-logs-monitor-background "${TEST_ID}" "$ANDROID_LOG_FILE"
     
     # Clear logcat buffer for clean monitoring (lightweight - PID filtering provides isolation)
     echo "🧹 Clearing Android logcat buffer (lightweight with PID-based isolation)..."
@@ -1486,9 +1486,9 @@ _execute-test-android config_name duration:
         fi
     done
     
-    # Cleanup background monitoring
-    echo "🛑 Stopping background log monitoring..."
-    just android-logs-monitor-stop "${TEST_ID}"
+    # No background monitoring to cleanup - using post-test extraction instead
+    echo "🔍 No background monitoring to stop - will extract logs from device..."
+    # just android-logs-monitor-stop "${TEST_ID}"
     
     # Give background monitoring a chance to complete fallback detection
     if kill -0 $MONITOR_PID 2>/dev/null; then
