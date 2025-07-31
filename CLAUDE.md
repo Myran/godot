@@ -58,20 +58,20 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
 **Traditional Progressive debugging sequence (still available):**
 1. `just logs-errors TEST_ID` (5 sec, <10 tokens)
-2. `just logs TEST_ID [component]` (15 sec, <100 tokens) 
-3. `just logs TEST_ID [component] [operation]` (<200 tokens)
+2. `just logs-android TEST_ID [component]` or `just logs-desktop TEST_ID [component]` (15 sec, <100 tokens) 
+3. `just logs-android TEST_ID [component] [operation]` or `just logs-desktop TEST_ID [component] [operation]` (<200 tokens)
 
 ### **🎯 Enhanced Failure Pattern Quick Reference (Wildcard + Traditional)**
 | Symptom | Wildcard Debug Command (NEW) | Traditional Debug Command | Fix Command |
 |---------|------------------------------|---------------------------|-------------|
 | Firebase timeout/auth | `logs-pattern TEST_ID "firebase.*"` | `logs-android-errors TEST_ID firebase` | `test-android 'system.network.*'` |
 | All error types | `logs-pattern TEST_ID "*.error"` | `logs-errors TEST_ID` | Investigate specific errors |
-| Hash mismatch/validation | `logs-pattern TEST_ID "*.checksum"` | `logs TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
-| Performance/timeouts | `logs-pattern TEST_ID "performance.*"` | `logs-performance-tagged TEST_ID` | `test-android '*.*.performance'` |
-| Game system issues | `logs-pattern TEST_ID "game.*"` | `logs TEST_ID game` | `test-android 'game.*'` |
-| Startup/registry errors | `logs-pattern TEST_ID "system.initialization"` | `logs TEST_ID system startup` | `test-android 'system.debug.*'` |
-| Database issues | `logs-pattern TEST_ID "database.*"` | `logs TEST_ID database` | `test-android 'database.*'` |
-| Network problems | `logs-multi TEST_ID "*.timeout" "*.error" "network.*"` | `logs TEST_ID network` | `test-android 'network.*'` |
+| Hash mismatch/validation | `logs-pattern TEST_ID "*.checksum"` | `logs-android TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
+| Performance/timeouts | `logs-pattern TEST_ID "performance.*"` | `logs-performance TEST_ID` | `test-android '*.*.performance'` |
+| Game system issues | `logs-pattern TEST_ID "game.*"` | `logs-android TEST_ID game` | `test-android 'game.*'` |
+| Startup/registry errors | `logs-pattern TEST_ID "system.initialization"` | `logs-android TEST_ID system startup` | `test-android 'system.debug.*'` |
+| Database issues | `logs-pattern TEST_ID "database.*"` | `logs-android TEST_ID database` | `test-android 'database.*'` |
+| Network problems | `logs-multi TEST_ID "*.timeout" "*.error" "network.*"` | `logs-android TEST_ID network` | `test-android 'network.*'` |
 | Checksum mismatch | `logs-pattern TEST_ID "*.checksum"` | `logs-android-errors TEST_ID checksum` | `test-android-update CONFIG` or investigate |
 
 ## 📋 Log Commands (Two Distinct Types)
@@ -121,15 +121,15 @@ just help-wildcard-quick                   # Quick reference
 # Primary (Use First)
 just logs-errors TEST_ID                   # Error-focused (98% savings)
 just logs-last                             # Latest run (99% savings)
-just logs TEST_ID [component]              # Component analysis (87-95% savings)
+just logs-android TEST_ID [component] or just logs-desktop TEST_ID [component]  # Component analysis (87-95% savings)
 
 # Performance & Specialized  
-just logs-performance-tagged TEST_ID [tags] # Performance data
-just logs-desktop-errors                   # Desktop errors only
-just logs-lifecycle-tagged TEST_ID [tags]  # App lifecycle events
+just logs-performance TEST_ID              # Performance data
+just logs-desktop-errors TEST_ID           # Desktop errors only
+just logs-lifecycle TEST_ID                # App lifecycle events
 
 # Full logs (avoid unless necessary)
-just logs TEST_ID                          # Complete logs (high token cost)
+just logs-android TEST_ID or just logs-desktop TEST_ID  # Complete logs (high token cost)
 ```
 
 ## ⚡ Core Commands Reference
@@ -358,7 +358,7 @@ just build-status                 # Check what would be rebuilt
 
 **Performance analysis:**
 ```bash
-just logs-performance-tagged TEST_ID [component] # Performance analysis
+just logs-performance TEST_ID               # Performance analysis
 ```
 
 **For detailed help on any topic:**
@@ -455,8 +455,8 @@ just logs-exclude TEST_ID "performance.*" "performance.debug"  # Performance wit
 
 | Task | Traditional Method | Wildcard Pattern Method | Time Savings |
 |------|-------------------|-------------------------|--------------|
-| Find Firebase errors | `logs TEST_ID firebase` → manual scan | `logs-pattern TEST_ID "firebase.*.error"` | **90% faster** |
-| All error types | Multiple `logs` commands | `logs-pattern TEST_ID "*.error"` | **95% faster** |
+| Find Firebase errors | `logs-android TEST_ID firebase` → manual scan | `logs-pattern TEST_ID "firebase.*.error"` | **90% faster** |
+| All error types | Multiple `logs-android/logs-desktop` commands | `logs-pattern TEST_ID "*.error"` | **95% faster** |
 | System exploration | Manual browsing | `logs-tree TEST_ID` | **98% faster** |
 | Cross-system patterns | Multiple separate commands | `logs-multi TEST_ID pattern1 pattern2` | **85% faster** |
 | Noise filtering | Manual filtering | `logs-exclude TEST_ID include exclude` | **90% faster** |
