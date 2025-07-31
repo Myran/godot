@@ -36,10 +36,10 @@ func handle_draft_event(
 	if phase != core.Tempus.POST:
 		return
 
-	if not draft_event is core.LineupAddCardEvent:
+	if not draft_event is core.LineupAddCardFromDraftEvent:
 		return
 
-	var add_event: core.LineupAddCardEvent = draft_event as core.LineupAddCardEvent
+	var add_event: core.LineupAddCardFromDraftEvent= draft_event
 	var added_card: Card = add_event.card
 	if added_card != unit:
 		return
