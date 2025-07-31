@@ -1245,14 +1245,14 @@ test-android-list-checksum:
 
 
 # Android testing interface - manual mode with fzf selection
-test-android target="" duration="120":
+test-android target="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # If arguments provided, delegate to test-android-target (automated mode)
     if [ -n "{{target}}" ]; then
         echo "🎯 Automated mode execution: {{target}}"
-        just test-android-target "{{target}}" "{{duration}}"
+        just test-android-target "{{target}}"
         exit $?
     fi
     

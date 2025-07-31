@@ -2094,14 +2094,14 @@ replay-test-e2e:
 # ================================
 
 # Desktop testing interface - manual mode with fzf selection
-test-desktop target="" duration="30":
+test-desktop target="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     # If arguments provided, delegate to test-desktop-target (automated mode)
     if [ -n "{{target}}" ]; then
         echo "🎯 Automated mode execution: {{target}}"
-        just test-desktop-target "{{target}}" "{{duration}}"
+        just test-desktop-target "{{target}}"
         exit $?
     fi
     
