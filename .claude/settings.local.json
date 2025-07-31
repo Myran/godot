@@ -139,7 +139,9 @@
       "Bash(curl:*)",
       "Bash(for config in project/debug_configs/newtest0{3,4,5,6,7}.json)",
       "Bash(do echo \"Checking $config:\")",
-      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=30 just test-android-target semantic-action-simple-test 180)"
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=30 just test-android-target semantic-action-simple-test 180)",
+      "mcp__basic-memory__search_notes",
+      "mcp__basic-memory__edit_note"
     ],
     "deny": []
   }
