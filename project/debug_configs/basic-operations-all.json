@@ -1,0 +1,8 @@
+{
+  "description": "Basic operations across ALL systems - Quick validation and smoke testing",
+  "actions": [
+    "*.basic.*",
+    "system.debug.*",
+    "game.match.reset_level"
+  ]
+}

@@ -1127,6 +1127,7 @@ _execute-test-with-analysis config_name platform:
     
     # Check if configuration has checksum validation  
     HAS_CHECKSUM=false
+    EXPECTED_CHECKSUMS_COUNT=0
     if jq -e '.checksum_config' "$CONFIG_PATH" >/dev/null 2>&1; then
         HAS_CHECKSUM=true
         EXPECTED_CHECKSUMS_COUNT=$(jq -r '.checksum_config.expected_checksums | length' "$CONFIG_PATH")
