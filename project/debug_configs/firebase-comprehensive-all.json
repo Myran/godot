@@ -1,0 +1,21 @@
+{
+  "description": "COMPREHENSIVE Firebase Testing - All 3 layers: C++ SDK + Backend + RTDB (use this for complete Firebase validation)",
+  "actions": [
+    "cpp.firebase.set_value",
+    "cpp.firebase.get_value", 
+    "cpp.firebase.remove_value",
+    "cpp.firebase.error_handling",
+    "cpp.firebase.signal_integrity",
+    "cpp.firebase.concurrent_ops",
+    "cpp.firebase.large_data",
+    "cpp.firebase.timeout_behavior",
+    "backend.firebase.error_handling",
+    "backend.firebase.lifecycle",
+    "backend.firebase.async_pattern",
+    "backend.firebase.method_mapping",
+    "rtdb.database.get_value",
+    "rtdb.database.set_value",
+    "rtdb.database.update_value",
+    "rtdb.database.remove_value"
+  ]
+}
