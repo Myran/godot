@@ -42,13 +42,56 @@ func handle_draft_event(
 	if not unit.block_context == Cards.CONTEXT.LINEUP:
 		return
 
+	var merge_event: core.DraftMergeEvent = draft_event as core.DraftMergeEvent
 	var card: Card = unit as Card
+
+	# Enhanced logging for debugging the self-exclusion logic
+	var card_id: String = card.unit_info.card_info.get("id", "")
+	var merged_card_ids: Array[String] = []
+	for match_card: Card in merge_event.matches:
+		merged_card_ids.append(match_card.unit_info.card_info.get("id", ""))
+
+	Log.debug(
+		"MergeBonusAbility: Evaluating merge event",
+		{
+			"evaluating_card_id": card_id,
+			"merged_card_ids": merged_card_ids,
+			"matches_count": merge_event.matches.size(),
+			"card_instance_in_merge": merge_event.matches.has(card)
+		},
+		[Log.TAG_ABILITY, Log.TAG_MERGE, Log.TAG_DEBUG]
+	)
+
+	# Exclude self - don't trigger bonus if this specific card instance is being merged
+	if merge_event.matches.has(card):
+		Log.debug(
+			"MergeBonusAbility: Skipping self-trigger - this card instance is being merged",
+			{
+				"card_id": card_id,
+				"matches_count": merge_event.matches.size(),
+				"card_instance_in_merge": true
+			},
+			[Log.TAG_ABILITY, Log.TAG_MERGE, Log.TAG_EFFECT]
+		)
+		return
 
 	# Create StatEffectEvent and add to context - this will handle the proper flow
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
 		card, health_bonus, attack_bonus, core.EventSource.SYSTEM_CASCADE
 	)
 	draft_context.add_event(stat_effect_event)
+
+	Log.debug(
+		"MergeBonusAbility: Triggered bonus for other card merge",
+		{
+			"bonus_recipient": card_id,
+			"merged_card_ids": merged_card_ids,
+			"matches_count": merge_event.matches.size(),
+			"health_bonus": health_bonus,
+			"attack_bonus": attack_bonus
+		},
+		[Log.TAG_ABILITY, Log.TAG_MERGE, Log.TAG_EFFECT]
+	)
 
 
 func debug_trigger_effect(target_card: Card) -> bool:
