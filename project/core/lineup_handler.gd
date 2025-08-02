@@ -3,8 +3,8 @@ class_name LineupHandler extends Node
 var holder_container: HolderContainer
 
 
-func setup(_holder: HolderContainer) -> void:
-	holder_container = _holder
+func setup(holder: HolderContainer) -> void:
+	holder_container = holder
 
 
 func add_card(card: Card, pos: int) -> void:
@@ -26,10 +26,24 @@ func add_card(card: Card, pos: int) -> void:
 
 
 func find_tripples() -> Array[Card]:
-	var lineup: Dictionary = holder_container.get_current_lineup()
+	var lineup: Dictionary[int, Card] = holder_container.get_current_lineup()
 	var tripple_found: bool = false
 	var found_card_id: String = ""
 	var found_level: int = -1
+
+	# Enhanced granular logging for tripple detection call
+	var lineup_summary: Array[Dictionary] = []
+	for pos: int in lineup.keys():
+		var card: Card = lineup[pos]
+		lineup_summary.append(
+			{"position": pos, "card_id": card.card_info.id, "card_level": card.level}
+		)
+
+	Log.debug(
+		"TRIPPLE DETECTION CALLED - Current lineup state",
+		{"lineup_size": lineup.size(), "lineup_cards": lineup_summary, "handler": "lineup_handler"},
+		["semantic", "lineup", "tripple_detection_start"]
+	)
 
 	for card: Card in DictUtils.values_sorted(lineup):
 		var tripples: Array[Card] = []
@@ -66,61 +80,68 @@ func find_tripples() -> Array[Card]:
 	return []
 
 
-func merge(card: Card, tripples: Array) -> Card:
-	var merge_start_time: float = Time.get_unix_time_from_system() * 1000.0
-	var old_level: int = card.level
-	var new_level: int = card.level + 1
-
-	# Enhanced semantic logging for merge start
+func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 	Log.info(
-		"Starting lineup card merge",
+		"Starting lineup merge",
 		{
-			"card_id": card.card_info.id,
-			"old_level": old_level,
-			"new_level": new_level,
-			"tripple_count": tripples.size(),
-			"handler": "lineup_handler"
+			"card_id": base_card.card_info.id,
+			"level": base_card.level,
+			"sources": source_cards.size()
 		},
-		["semantic", "lineup", "merge_start"]
+		[Log.TAG_MERGE]
 	)
 
-	var new_card: Card
-	var merge_pos: Vector2i
-	var awaiter: SignalAwaiter = SignalAwaiter.All.new()
-	for trip_card: Card in tripples:
-		var lineup_pos: int = holder_container.get_card_position(trip_card)
-		var current_holder: Holder = holder_container.get_holder(lineup_pos)
-		current_holder.remove_card()
+	# Create merged card with effects transferred
+	var new_card: Card = await _create_merged_card(base_card, source_cards)
 
-		if trip_card == card:
-			var id: String = card.card_info.id
-			new_card = await card_controller.create_unit_from_id(id, card.level + 1)
-			new_card.block_context = Cards.CONTEXT.LINEUP
-			current_holder.set_card(new_card)
-			new_card.show_upgrade()
-			merge_pos = new_card.get_global_position()
+	# Handle positioning and animation
+	await _finalize_merge_animation(source_cards, new_card)
 
-	for trip_card: Card in tripples:
-		awaiter.add(trip_card.movement_done)
-		trip_card.move_to_on_top(merge_pos)
-	await awaiter.finished
-	for trip_card: Card in tripples:
-		trip_card.queue_free()
-
-	var merge_duration: float = (Time.get_unix_time_from_system() * 1000.0) - merge_start_time
-
-	# Enhanced semantic logging for merge completion
 	Log.info(
-		"Lineup card merge completed",
-		{
-			"card_id": card.card_info.id,
-			"old_level": old_level,
-			"new_level": new_level,
-			"merge_duration_ms": merge_duration,
-			"tripples_merged": tripples.size(),
-			"handler": "lineup_handler"
-		},
-		["semantic", "lineup", "merge_complete", "performance"]
+		"Lineup merge completed",
+		{"card_id": base_card.card_info.id, "effects": new_card.unit_info.effects_perm.size()},
+		[Log.TAG_MERGE]
 	)
 
 	return new_card
+
+
+# Create merged card with proper effect transfer
+func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
+	var new_card: Card = await card_controller.create_unit_from_id(
+		base_card.card_info.id, base_card.level + 1
+	)
+	new_card.block_context = Cards.CONTEXT.LINEUP
+
+	# Transfer effects directly from cards (more efficient)
+	new_card.unit_info.transfer_merge_effects_from_cards(source_cards)
+	new_card.unit_info.apply_permanent_effects_to_current_stats()
+	new_card.refresh_ui_from_unit_data()
+
+	return new_card
+
+
+# Handle merge animation and cleanup
+func _finalize_merge_animation(source_cards: Array[Card], new_card: Card) -> void:
+	# Remove source cards and place new card
+	var base_pos: int = holder_container.get_card_position(source_cards[0])
+
+	for source_card: Card in source_cards:
+		var pos: int = holder_container.get_card_position(source_card)
+		holder_container.get_holder(pos).remove_card()
+
+	holder_container.get_holder(base_pos).set_card(new_card)
+	new_card.show_upgrade()
+
+	# Animate and cleanup
+	var merge_pos: Vector2i = new_card.get_global_position()
+	var awaiter: SignalAwaiter.All = SignalAwaiter.All.new()
+
+	for source_card: Card in source_cards:
+		awaiter.add(source_card.movement_done)
+		source_card.move_to_on_top(merge_pos)
+
+	await awaiter.finished
+
+	for source_card: Card in source_cards:
+		source_card.queue_free()

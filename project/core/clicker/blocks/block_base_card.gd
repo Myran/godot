@@ -67,3 +67,9 @@ func init_battle_reenactment(source_card: Card) -> void:
 
 func get_card_name() -> String:
 	return card_name
+
+
+func refresh_ui_from_unit_data() -> void:
+	"""Updates card UI to reflect current unit_info stats"""
+	base.set_card_attack(unit_info.current_attack)
+	base.set_card_health(unit_info.current_health)

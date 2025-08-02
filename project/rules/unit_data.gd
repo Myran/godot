@@ -51,27 +51,27 @@ func init_with_info(_card_info: Dictionary) -> void:
 	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_string)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
-			# Template abilities are marked as PERMANENT
-			_ab.persistence_type = Ability.PersistenceType.PERMANENT
+			# Template abilities are marked as TEMPLATE
+			_ab.persistence_type = Ability.PersistenceType.TEMPLATE
 			add_ability(_ab)
 
 	var ability: Ability
-	# debug init cards with an ability (permanent template abilities)
+	# debug init cards with an ability (template abilities)
 	if card_info.id == str(1):
 		ability = DamageShieldAbility.new()
-		ability.persistence_type = Ability.PersistenceType.PERMANENT
+		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 	if card_info.id == str(2):
 		ability = DeathTriggerHealthAbility.new(2)
-		ability.persistence_type = Ability.PersistenceType.PERMANENT
+		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 	if card_info.id == str(12):
 		ability = EvilSynergyAbility.new()
-		ability.persistence_type = Ability.PersistenceType.PERMANENT
+		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 	if card_info.id == str(4):
 		ability = MergeBonusAbility.new(1, 1)
-		ability.persistence_type = Ability.PersistenceType.PERMANENT
+		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 
 
@@ -94,10 +94,15 @@ func remove_ability(_ability: Ability) -> void:
 
 
 # Get abilities by persistence type
-func get_permanent_abilities() -> Array[Ability]:
+func get_template_abilities() -> Array[Ability]:
 	return abilities.filter(
-		func(ab: Ability) -> bool: return ab.persistence_type == Ability.PersistenceType.PERMANENT
+		func(ab: Ability) -> bool: return ab.persistence_type == Ability.PersistenceType.TEMPLATE
 	)
+
+
+func get_permanent_abilities() -> Array[Ability]:
+	# Legacy method - returns template abilities for backward compatibility
+	return get_template_abilities()
 
 
 func get_acquired_abilities() -> Array[Ability]:
@@ -109,6 +114,12 @@ func get_acquired_abilities() -> Array[Ability]:
 func get_temporary_abilities() -> Array[Ability]:
 	return abilities.filter(
 		func(ab: Ability) -> bool: return ab.persistence_type == Ability.PersistenceType.TEMPORARY
+	)
+
+
+func get_enhancement_abilities() -> Array[Ability]:
+	return abilities.filter(
+		func(ab: Ability) -> bool: return ab.persistence_type == Ability.PersistenceType.ENHANCEMENT
 	)
 
 
@@ -203,7 +214,15 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 	var duplicated_effects: Array[Variant] = []
 	for effect: Variant in effects_perm:
 		if effect is StatEffect:
-			duplicated_effects.append(effect.deep_duplicate())
+			var stat_effect: StatEffect = effect
+			if not stat_effect:
+				Log.error(
+					"Invalid StatEffect during duplication",
+					{"card_id": card_info.get("id", "unknown")},
+					[Log.TAG_ERROR]
+				)
+				continue
+			duplicated_effects.append(stat_effect.deep_duplicate())
 		else:
 			# For non-StatEffect types, use standard duplication
 			duplicated_effects.append(effect.duplicate(true) if effect is Resource else effect)
@@ -215,28 +234,73 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 
 # Apply all permanent stat effects to current stats (used for battle copies)
 func apply_permanent_effects_to_current_stats() -> void:
+	var stats_before_attack: int = current_attack
+	var stats_before_health: int = current_health
 	var total_health_bonus: int = 0
 	var total_attack_bonus: int = 0
 
+	Log.debug(
+		"STAT REAPPLICATION CALLED - Before applying effects",
+		{
+			"card_id": card_info.get("id", "unknown"),
+			"level": level,
+			"current_attack_before": stats_before_attack,
+			"current_health_before": stats_before_health,
+			"max_attack": max_attack,
+			"max_health": max_health,
+			"effects_perm_count": effects_perm.size(),
+			"call_source": "apply_permanent_effects_to_current_stats"
+		},
+		[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh"]
+	)
+
 	for effect: Variant in effects_perm:
 		if effect is StatEffect:
-			total_health_bonus += effect.health_bonus
-			total_attack_bonus += effect.attack_bonus
+			var stat_effect: StatEffect = effect
+			if not stat_effect:
+				Log.error(
+					"Invalid StatEffect in effects_perm array",
+					{"card_id": card_info.get("id", "unknown")},
+					[Log.TAG_ERROR]
+				)
+				continue
 
-	# Apply bonuses to current stats
-	current_attack += total_attack_bonus
-	current_health += total_health_bonus
+			total_health_bonus += stat_effect.health_bonus
+			total_attack_bonus += stat_effect.attack_bonus
+			Log.debug(
+				"Processing StatEffect for reapplication",
+				{
+					"card_id": card_info.get("id", "unknown"),
+					"effect_health": stat_effect.health_bonus,
+					"effect_attack": stat_effect.attack_bonus,
+					"running_health_total": total_health_bonus,
+					"running_attack_total": total_attack_bonus
+				},
+				[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh"]
+			)
 
-	Log.debug(
-		"Applied permanent effects to current stats",
+	# Apply bonuses to base stats (max_attack/max_health are the level-appropriate base stats)
+	current_attack = max_attack + total_attack_bonus
+	current_health = max_health + total_health_bonus
+
+	Log.info(
+		"STAT REAPPLICATION COMPLETED - Stats updated",
 		{
-			"health_bonus": total_health_bonus,
-			"attack_bonus": total_attack_bonus,
+			"card_id": card_info.get("id", "unknown"),
+			"level": level,
+			"stats_before_attack": stats_before_attack,
+			"stats_before_health": stats_before_health,
+			"stats_after_attack": current_attack,
+			"stats_after_health": current_health,
+			"health_bonus_applied": total_health_bonus,
+			"attack_bonus_applied": total_attack_bonus,
 			"final_attack": current_attack,
 			"final_health": current_health,
-			"effects_count": effects_perm.size()
+			"effects_count": effects_perm.size(),
+			"stat_delta_attack": current_attack - stats_before_attack,
+			"stat_delta_health": current_health - stats_before_health
 		},
-		[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT]
+		[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh"]
 	)
 
 
@@ -256,6 +320,140 @@ func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
 					{"ability": acquired_ability.get_class()},
 					[Log.TAG_CARD, Log.TAG_MERGE, Log.TAG_ABILITY]
 				)
+
+
+# Transfer stat effects from source units during merge
+func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
+	Log.debug(
+		"Starting StatEffect transfer",
+		{
+			"target_card_id": card_info.get("id", ""),
+			"source_units_count": source_units.size(),
+			"target_effects_before": effects_perm.size()
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	)
+
+	for i: int in range(source_units.size()):
+		var source_unit: UnitData = source_units[i]
+		var source_card_id: String = source_unit.card_info.get("id", "")
+
+		Log.debug(
+			"Processing source unit for StatEffect transfer",
+			{
+				"source_index": i,
+				"source_card_id": source_card_id,
+				"source_effects_count": source_unit.effects_perm.size()
+			},
+			[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+		)
+
+		for j: int in range(source_unit.effects_perm.size()):
+			var effect: Variant = source_unit.effects_perm[j]
+			if effect is StatEffect:
+				var stat_effect: StatEffect = effect
+				if not stat_effect:
+					Log.error(
+						"Invalid StatEffect during transfer",
+						{"source_card_id": source_card_id},
+						[Log.TAG_ERROR, Log.TAG_MERGE]
+					)
+					continue
+				# Create a deep copy to avoid reference sharing
+				var copied_effect: StatEffect = stat_effect.deep_duplicate()
+				effects_perm.append(copied_effect)
+
+				Log.debug(
+					"Transferred StatEffect from source unit",
+					{
+						"source_card_id": source_card_id,
+						"target_card_id": card_info.get("id", ""),
+						"effect_description": stat_effect.get_description(),
+						"health_bonus": stat_effect.health_bonus,
+						"attack_bonus": stat_effect.attack_bonus,
+						"effect_source": stat_effect.source,
+						"effect_id": stat_effect.get_instance_id(),
+						"copied_effect_id": copied_effect.get_instance_id()
+					},
+					[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+				)
+			else:
+				Log.debug(
+					"Skipping non-StatEffect during transfer",
+					{
+						"source_card_id": source_card_id,
+						"effect_type": effect.get_class() if effect != null else "null"
+					},
+					[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+				)
+
+	Log.debug(
+		"Completed StatEffect transfer",
+		{
+			"target_card_id": card_info.get("id", ""),
+			"target_effects_after": effects_perm.size(),
+			"effects_transferred": effects_perm.size() - 0  # We know it started at 0 for new cards
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	)
+
+
+# Transfer both abilities and stat effects from source units during merge
+func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
+	Log.debug(
+		"Starting merge effects transfer",
+		{
+			"target_card_id": card_info.get("id", ""),
+			"source_units_count": source_units.size(),
+			"target_abilities_before": abilities.size(),
+			"target_effects_before": effects_perm.size()
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	)
+
+	# Transfer abilities (ACQUIRED + ENHANCEMENT types)
+	for i: int in range(source_units.size()):
+		var source_unit: UnitData = source_units[i]
+		var source_card_id: String = source_unit.card_info.get("id", "")
+		var transferable_abilities: Array[Ability] = []
+		transferable_abilities.append_array(source_unit.get_acquired_abilities())
+		transferable_abilities.append_array(source_unit.get_enhancement_abilities())
+
+		Log.debug(
+			"Processing source unit for ability transfer",
+			{
+				"source_index": i,
+				"source_card_id": source_card_id,
+				"acquired_abilities": source_unit.get_acquired_abilities().size(),
+				"enhancement_abilities": source_unit.get_enhancement_abilities().size(),
+				"transferable_abilities": transferable_abilities.size()
+			},
+			[Log.TAG_MERGE, Log.TAG_ABILITY, Log.TAG_DEBUG]
+		)
+
+		for ability: Ability in transferable_abilities:
+			abilities.append(ability)
+
+	# Transfer stat effects
+	transfer_stat_effects_from(source_units)
+
+	Log.debug(
+		"Completed merge effects transfer",
+		{
+			"target_card_id": card_info.get("id", ""),
+			"target_abilities_after": abilities.size(),
+			"target_effects_after": effects_perm.size()
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	)
+
+
+# Optimized transfer directly from Cards (avoids intermediate UnitData array)
+func transfer_merge_effects_from_cards(source_cards: Array[Card]) -> void:
+	var source_units: Array[UnitData] = []
+	for card: Card in source_cards:
+		source_units.append(card.unit_info)
+	transfer_merge_effects_from(source_units)
 
 
 # Called after battle to apply permanent changes from battle duplicates back to originals
@@ -301,24 +499,36 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 		if not battle_effect is StatEffect:
 			continue
 
+		var battle_stat_effect: StatEffect = battle_effect
+		if not battle_stat_effect:
+			Log.error(
+				"Invalid StatEffect in battle state during reconciliation",
+				{"unit_died": battle_died},
+				[Log.TAG_ERROR, Log.TAG_BATTLE]
+			)
+			continue
+
 		# Check if we already have this exact effect (avoid duplicates)
 		var already_has_effect: bool = false
 		for existing_effect: Variant in self.effects_perm:
 			if existing_effect is StatEffect:
+				var existing_stat_effect: StatEffect = existing_effect
+				if not existing_stat_effect:
+					continue
 				if (
-					existing_effect.source == battle_effect.source
-					and existing_effect.health_bonus == battle_effect.health_bonus
-					and existing_effect.attack_bonus == battle_effect.attack_bonus
+					existing_stat_effect.source == battle_stat_effect.source
+					and existing_stat_effect.health_bonus == battle_stat_effect.health_bonus
+					and existing_stat_effect.attack_bonus == battle_stat_effect.attack_bonus
 				):
 					already_has_effect = true
 					break
 
 		if not already_has_effect:
-			self.effects_perm.append(battle_effect)
+			self.effects_perm.append(battle_stat_effect)
 			effects_transferred += 1
 			Log.info(
 				"Transferred permanent stat effect from battle",
-				{"effect": battle_effect.get_description(), "unit_died": battle_died},
+				{"effect": battle_stat_effect.get_description(), "unit_died": battle_died},
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT, Log.TAG_EFFECT]
 			)
 
@@ -334,12 +544,19 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			battle_ability.persistence_type == Ability.PersistenceType.ACQUIRED
 			and not battle_ability.get_class() in current_ability_classes
 		):
-			# This is a new permanent ability gained during combat! Add it.
-			self.add_ability(battle_ability)
+			# This is a new permanent ability gained during combat!
+			# Convert it to ENHANCEMENT to prevent re-transfer in future combats
+			var enhanced_ability: Ability = battle_ability.deep_duplicate()
+			enhanced_ability.persistence_type = Ability.PersistenceType.ENHANCEMENT
+			self.add_ability(enhanced_ability)
 			abilities_transferred += 1
 			Log.info(
-				"Unit gained new permanent ability from combat",
-				{"ability": battle_ability.get_class(), "unit_died": battle_died},
+				"Unit gained new permanent ability from combat (converted to ENHANCEMENT)",
+				{
+					"ability": enhanced_ability.get_class(),
+					"unit_died": battle_died,
+					"converted_from": "ACQUIRED"
+				},
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ABILITY]
 			)
 
