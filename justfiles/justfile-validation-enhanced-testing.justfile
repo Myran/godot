@@ -652,9 +652,9 @@ _filter-desktop-logs-safely temp_file_path:
     echo "================================="
     echo ""
     
-    # Extract essential test info from filtered logs
-    ACTION_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null || echo "0")
-    FAILED_COUNT=$(grep -c "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    # Extract essential test info from filtered logs (exclude buffer replays)
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
     ERROR_COUNT=$(grep -c -E "(ERROR|CRITICAL|FAILED)" "$TEMP_FILTERED" 2>/dev/null || echo "0")
     
     # Extract session info for better reporting
@@ -934,7 +934,7 @@ _collect-action-results test_id platform:
                 fi
             fi
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" || true)
     
     # Process failed actions - use process substitution to avoid subshell issues
     while IFS= read -r line; do
@@ -965,7 +965,7 @@ _collect-action-results test_id platform:
                 fi
             fi
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
 
 # Generate detailed action summary from collected results file
 _generate-action-summary-from-file test_id config_name:
@@ -1418,9 +1418,9 @@ _execute-test-desktop config_name:
         echo "$CRITICAL_ERRORS" | head -10
         TEST_EXIT_CODE=1
     else
-        # Extract essential test info from output (preserve logs for checksum extraction)
-        ACTION_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
-        FAILED_COUNT=$(grep -c "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
+        # Extract essential test info from output (preserve logs for checksum extraction, exclude buffer replays)
+        ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
+        FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
         
         # Extract session duration if available
         SESSION_INFO=$(grep "SESSION_END" "$TEMP_OUTPUT" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
@@ -1437,9 +1437,9 @@ _execute-test-desktop config_name:
         echo "**Duration**: $DURATION_DISPLAY"
         echo ""
         
-        # Show key test events in a concise format (no verbose startup logs)
+        # Show key test events in a concise format (no verbose startup logs, exclude buffer replays)
         echo "📋 Key Test Events:"
-        grep -E "(SESSION_START|SESSION_END|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE)" "$TEMP_OUTPUT" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
+        grep -E "(SESSION_START|SESSION_END|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE)" "$TEMP_OUTPUT" | grep -v "\[BUFFER\]" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
         
         echo ""
         echo "🎯 Test completed successfully with clean output"
