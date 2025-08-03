@@ -605,7 +605,7 @@ static func _log_lineup_final_state() -> void:
 	var lineup: Dictionary = lineup_handler.holder_container.get_current_lineup()
 	var lineup_states: Array[Dictionary] = []
 
-	for position in lineup.keys():
+	for position: Variant in lineup.keys():
 		var card: Card = lineup[position]
 		if card and card.unit_info:
 			var card_state: Dictionary = {
@@ -624,7 +624,7 @@ static func _log_lineup_final_state() -> void:
 			var effects_details: Array[Dictionary] = []
 			for effect: Variant in card.unit_info.effects_perm:
 				if effect is StatEffect:
-					var stat_effect: StatEffect = effect as StatEffect
+					var stat_effect: StatEffect = effect
 					effects_details.append(
 						{
 							"health_bonus": stat_effect.health_bonus,
@@ -646,7 +646,13 @@ static func _log_lineup_final_state() -> void:
 		{
 			"total_positions": lineup.size(),
 			"cards_present":
-			lineup_states.filter(func(state): return state.get("card_id", "") != "empty").size(),
+			(
+				lineup_states
+				. filter(
+					func(state: Dictionary) -> bool: return state.get("card_id", "") != "empty"
+				)
+				. size()
+			),
 			"lineup_details": lineup_states
 		},
 		["debug", "replay", "complete", "lineup", "final_state"]

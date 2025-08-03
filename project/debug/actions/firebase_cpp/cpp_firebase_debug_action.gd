@@ -131,7 +131,7 @@ func _create_operation_handler(
 
 # Handler for get_value_completed(int request_id, String key, Variant data) - state-based
 func _create_get_value_state_handler(
-	op_data: Dictionary, request_id: int, start_time: int, op_name: String, method_name: String
+	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, rtdb_key: String, value: Variant) -> void:
 		if recv_request_id == request_id:
@@ -160,9 +160,10 @@ func _create_get_value_state_handler(
 				)
 
 
-# Handler for set_value_completed/remove_value_completed(int request_id, bool success, String error_message) - state-based
+# Handler for set_value_completed/remove_value_completed
+#(int request_id, bool success, String error_message) - state-based
 func _create_set_value_state_handler(
-	op_data: Dictionary, request_id: int, start_time: int, op_name: String, method_name: String
+	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, success: bool, error_message: String) -> void:
 		if recv_request_id == request_id:
@@ -233,13 +234,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	push_error("_execute_action_logic() not implemented in " + get_script().get_path())
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
 	return DebugAction.Result.new_failure(
-		"_execute_action_logic() not implemented in " + get_script().get_path(),
+		str("_execute_action_logic() not implemented in " + get_script().get_path()),
 		"NOT_IMPLEMENTED",
 		DebugAction.Result.ErrorCategory.SYSTEM,
-		null,
+		{"error": "missing_implementation"},
 		0,
 		action_name,
-		{"error": "missing_implementation"}
+		{}
 	)
 
 

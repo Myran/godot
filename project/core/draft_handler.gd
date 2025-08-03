@@ -14,7 +14,7 @@ func hold_toggle(col: int, new_state: bool) -> void:
 
 func reroll() -> void:
 	# Handle UI locking consistently for all callers
-	var game_parent = get_parent() as Game
+	var game_parent: Game = get_parent() as Game
 	if game_parent:
 		game_parent.ui_state = core.UIState.LOCKED
 
@@ -24,7 +24,7 @@ func reroll() -> void:
 
 func upgrade() -> void:
 	# Handle UI locking consistently for all callers
-	var game_parent = get_parent() as Game
+	var game_parent: Game = get_parent() as Game
 	if game_parent:
 		game_parent.ui_state = core.UIState.LOCKED
 

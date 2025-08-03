@@ -123,7 +123,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 				"matches_count": matches.size(),
 				"event_source":
 				(
-					event.source
+					str(event.source)
 					if event.has_method("get") and event.get("source") != null
 					else "unknown"
 				)
@@ -132,7 +132,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		)
 
 		# Log effects_perm status before merge
-		for i in range(matches.size()):
+		for i: int in range(matches.size()):
 			var match_card: Card = matches[i]
 			Log.debug(
 				"Pre-merge card StatEffect status",
@@ -268,7 +268,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 	)
 
-	for i in range(source_units.size()):
+	for i: int in range(source_units.size()):
 		var source_unit: UnitData = source_units[i]
 		Log.debug(
 			"Source unit StatEffect inventory",
