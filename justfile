@@ -239,6 +239,11 @@ help-debug:
     @echo "just run-desktop                      # Skips debug coordinator (editor mode)"
     @echo "just run-android                      # Debug actions won't execute"
     @echo ""
+    @echo "DESKTOP DEBUG COMMANDS"
+    @echo "====================="
+    @echo "just run-desktop-debug               # Debug mode (normal output)"
+    @echo "just run-desktop-debug verbose      # Debug mode with ObjectDB leak details"
+    @echo ""
 
 # Build system architecture and timing help
 help-build:

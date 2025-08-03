@@ -135,14 +135,21 @@ run-desktop: _validate-godot-editor
     wait $GODOT_PID
 
 # LEVEL 1: Launch in Godot editor with debug (1-2 sec, no build needed)
-run-desktop-debug:
+run-desktop-debug VERBOSE="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     echo "Running project in debug mode..."
     
+    # Build verbose flag - if VERBOSE is provided, add --verbose
+    VERBOSE_FLAG=""
+    if [ "{{VERBOSE}}" != "" ]; then
+        VERBOSE_FLAG="--verbose"
+        echo "Running with verbose output to show ObjectDB leak details..."
+    fi
+    
     # Start the Godot process and save its PID
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --debug --verbose &
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --debug $VERBOSE_FLAG &
     DEBUG_PID=$!
     
     echo "Started debug process with PID: $DEBUG_PID"

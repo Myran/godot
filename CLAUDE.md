@@ -356,6 +356,12 @@ just build-status                 # Check what would be rebuilt
 
 ## 🔧 Advanced Features
 
+**Desktop debugging with ObjectDB leak detection:**
+```bash
+just run-desktop-debug                      # Normal debug mode
+just run-desktop-debug verbose             # Verbose mode (shows ObjectDB leak details)
+```
+
 **Performance analysis:**
 ```bash
 just logs-performance TEST_ID               # Performance analysis
