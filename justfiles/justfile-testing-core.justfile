@@ -48,15 +48,15 @@ validate-godot pattern="":
     # Run Godot validation
     if [[ "{{pattern}}" != "" ]]; then
         echo "Using pattern filter: {{pattern}}"
-        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | grep -E "{{pattern}}" || true
+        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --verbose --debug-stringnames --quit 2>&1 | grep -E "{{pattern}}" || true
     else
         echo "Running full validation..."
-        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit 2>&1 | head -50 || true
+        timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --verbose --debug-stringnames --quit 2>&1 | head -50 || true
     fi
     
     # Check for critical errors
     TEMP_VALIDATION=$(mktemp)
-    if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit > "$TEMP_VALIDATION" 2>&1; then
+    if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --verbose --debug-stringnames --quit > "$TEMP_VALIDATION" 2>&1; then
         # Validation succeeded, check for errors in output
         if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" >/dev/null 2>&1; then
             echo ""
@@ -107,7 +107,7 @@ validate-godot-detailed:
     TEMP_LOG=$(mktemp)
     
     # Run validation and capture output
-    if timeout 60 {{GODOT_EXECUTABLE}} --headless --validate-only --quit > "$TEMP_LOG" 2>&1; then
+    if timeout 60 {{GODOT_EXECUTABLE}} --headless --validate-only --verbose --debug-stringnames --quit > "$TEMP_LOG" 2>&1; then
         echo "✅ Godot validation completed successfully"
     else
         echo "❌ Godot validation failed"
