@@ -94,30 +94,57 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
         "all"|*)
             # Add test lists first with 📋 prefix and config count
             for file in project/test-lists/*.json; do
-                if [ -f "$file" ]; then
+                if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
-                    config_count=$(jq -r '.configurations | length' "$file" 2>/dev/null || echo "0")
-                    options+=("📋 $name ($config_count configs) - $desc")
+                    config_count=$(jq -r '.configs | length' "$file" 2>/dev/null || echo "0")
+                    
+                    # Check if all referenced configs exist
+                    missing_configs=0
+                    if [ "$config_count" != "0" ]; then
+                        while IFS= read -r config; do
+                            if [ ! -f "project/debug_configs/${config}.json" ]; then
+                                missing_configs=$((missing_configs + 1))
+                            fi
+                        done < <(jq -r '.configs[]' "$file" 2>/dev/null)
+                    fi
+                    
+                    # Only add test list if all configs exist
+                    if [ "$missing_configs" -eq 0 ]; then
+                        options+=("📋 $name ($config_count configs) - $desc")
+                    fi
                 fi
             done
             
             # Add debug configs with proper checksum status
             for file in project/debug_configs/*.json; do
-                if [ -f "$file" ]; then
+                if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
                     
                     # Check if it has checksum configuration
                     if jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
                         state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$file")
-                        expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
                         
-                        # Determine status (matching test-android format)
-                        if [ -z "$expected_checksum" ]; then
-                            status="❌ NO BASELINE SET"
-                        else
+                        # Check both expected_checksum (singular) and expected_checksums (plural array)
+                        has_baseline=false
+                        if jq -e '.checksum_config.expected_checksums' "$file" >/dev/null 2>&1; then
+                            checksum_count=$(jq -r '.checksum_config.expected_checksums | length' "$file" 2>/dev/null || echo "0")
+                            if [ "$checksum_count" != "0" ]; then
+                                has_baseline=true
+                            fi
+                        elif jq -e '.checksum_config.expected_checksum' "$file" >/dev/null 2>&1; then
+                            expected_checksum=$(jq -r '.checksum_config.expected_checksum // ""' "$file")
+                            if [ -n "$expected_checksum" ]; then
+                                has_baseline=true
+                            fi
+                        fi
+                        
+                        # Determine status
+                        if [ "$has_baseline" = "true" ]; then
                             status="✅ BASELINE SET"
+                        else
+                            status="❌ NO BASELINE SET"
                         fi
                         
                         options+=("📸 $name ($state_type) $status - $desc")
