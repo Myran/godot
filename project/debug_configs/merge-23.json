@@ -1,0 +1,174 @@
+{
+  "description": "Generated replay from semantic session: session_20250801_094328_648fb0f4",
+  "session_id": "session_20250801_094328_648fb0f4",
+  "generation_timestamp": "20250801_094421",
+  "semantic_action_count": 15,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 3,
+          "y": 1
+        },
+        "to_position": 8
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 1
+        },
+        "to_position": 6
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 2,
+          "y": 0
+        },
+        "to_position": 7
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "13",
+        "from_position": {
+          "x": 0,
+          "y": 0
+        },
+        "to_position": 5
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250801_094328_648fb0f4",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "merge-23",
+    "capture_timestamp": "20250801_094421",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 1,
+    "expected_checksums": [
+      "f532506b4bdd8e28895724ec136f4b1c497b9e34bccf6c3c733affe93570cf08",
+      "61b8c340a0f5df946a41848c47f13e00e2255201975c798e6464d5464d79964d",
+      "96e5723b183c33ea15ef62e90253c8eab19d23316c107c2e9bb8f0854b5f153c",
+      "cd3d77f428466cc59e46887bdaed7965ae46561386219c7e11bffd44ab87169b",
+      "906d363518c215549b9bcba19bec753eeafbd2f58f647f38e77979d7809b8d24",
+      "2f84710a03f678edc1ed3855a5976cd26e785fc1fee4cca7c4fc8896552c26bb",
+      "fd3f86d97b19ca8360e269322fc78cca4749d883c05e1273259558db4a1f7199",
+      "d45a3c469d8bba6284eaff4a669f7968635a01363fefcee6e24dc9335307b275",
+      "cd33d55fefbbd4d6f597d0786a9430bd3331135eace7387eec8083ef8b3456f6",
+      "0f5ee3eb0f5efb9a6a40f884d920d91449ed0b923b2d4c76956f2b2858e01e90",
+      "dc2779fed2fa4ac1e115c55309f71f4c01d571f7238debdc6d4330e4744c5467",
+      "968eb99bb3d7c9ea69def63c7002e4eb1c6736f159f8c373e9a882ce91267164",
+      "488916fef5e443e27f05e502a74aadbb64df9ad908f42b2f086c2bb5c708d713",
+      "1732ac778e77020f92b574fac9f62d3d2072e44d05ec93871a9e410f49ac3fcb",
+      "24ddf503dff837c74850ef924e81f7f6ce286cbc157c812121389249796180ed"
+    ]
+  }
+}

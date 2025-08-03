@@ -1,0 +1,78 @@
+{
+  "description": "Debug test to force dwarf merges and verify effect transfer",
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 0,
+          "y": 0
+        },
+        "to_position": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 0
+        },
+        "to_position": 1
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 2,
+          "y": 0
+        },
+        "to_position": 2
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 42,
+    "expected_checksums": [
+      "83efd993acaf6386d2cfea7ef258640fabca7a8e71fb58652dc5529e383b62fb",
+      "42b8e5d6282ada81b6e793af3833aa6836a5edc1c46dc6a141aaae84ef6cff61",
+      "bec33673903dd4abaef9d7c9080404b17e6ff9693253a53c5d1bb12b2003c556",
+      "7a8081d372abf799a4a93a5de7db153339dc0a4988ec7aa26cf194c7f9ef249b",
+      "3a8079921e8013e181b98d19e25f55d204a584e97ee2aa105f686b2fdf87e7a1",
+      "9273ef408ce682d5b7d220445c40ad3264499dfc15b3cafc4f06e893d09b0ffb",
+      "38805524426764b245b0ef43562c0fe9b11362e9952714bbb58d58e610d9b198"
+    ]
+  }
+}
