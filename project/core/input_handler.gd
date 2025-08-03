@@ -13,7 +13,7 @@ var dragging_cargo: Object = null  # Can't type more specifically due to polymor
 
 
 class Empty:
-	extends Object
+	extends RefCounted
 
 
 func setup(_clicker: Clicker) -> void:
