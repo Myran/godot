@@ -360,7 +360,7 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 		"draft.remove_card":
 			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"lineup.move_card":
-			return [Log.TAG_GAME, Log.TAG_LINEUP, Log.TAG_MOVE_CARD, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_LINEUP, Log.TAG_SEMANTIC_ACTION]
 		"card.move":
 			return [Log.TAG_GAME, Log.TAG_CARD, Log.TAG_MOVE, Log.TAG_SEMANTIC_ACTION]
 		"transition.change_state":

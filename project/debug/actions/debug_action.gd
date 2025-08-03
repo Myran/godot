@@ -774,22 +774,29 @@ func execute() -> void:
 
 func execute_with_params(params: Dictionary = {}) -> void:
 	"""Execute action with optional parameters - enhanced version of execute()"""
+
+	Log.debug(
+		"TEMP DEBUG: execute_with_params called",
+		{"action": action_name, "count": test_action_count},
+		["debug", "temp"]
+	)
+
 	# Track test execution if we're in test context
 	if current_test_id != "":
 		test_action_count += 1
 
-	# Check if we should use automatic state validation for demo/replay configs
-	var should_validate: bool = _should_auto_validate_state()
-	if should_validate:
-		Log.info(
-			"Auto-enabling state validation for demo/replay config",
-			{"action": action_name, "test_id": current_test_id},
-			["debug", "validation", "auto"]
-		)
-
-		# Use the state validation execution path asynchronously
-		_execute_with_validation_async(current_test_id, test_action_count - 1)
-		return
+	# TEMPORARILY DISABLED: Check if we should use automatic state validation for demo/replay configs
+	# var should_validate: bool = _should_auto_validate_state()
+	# if should_validate:
+	# 	Log.info(
+	# 		"Auto-enabling state validation for demo/replay config",
+	# 		{"action": action_name, "test_id": current_test_id},
+	# 		["debug", "validation", "auto"]
+	# 	)
+	#
+	# 	# Use the state validation execution path asynchronously
+	# 	_execute_with_validation_async(current_test_id, test_action_count - 1)
+	# 	return
 
 	var start_time: int = Time.get_ticks_msec()
 	var success: bool = false
@@ -1164,34 +1171,35 @@ func execute_with_auto_validation() -> DebugAction.Result:
 
 
 ## Helper method to determine if automatic state validation should be used
-func _should_auto_validate_state() -> bool:
-	"""Check if current execution context should use automatic state validation"""
-	# Only enable for test contexts (when current_test_id is set)
-	if current_test_id.is_empty():
-		return false
-
-	# Check if this appears to be a demo or replay by examining the test ID
-	# Demo configs typically have "demo", "replay", or "test" in their names
-	var test_id_lower: String = current_test_id.to_lower()
-	var is_demo_test: bool = (
-		test_id_lower.contains("demo")
-		or test_id_lower.contains("replay")
-		or test_id_lower.contains("working")
-		or test_id_lower.contains("manual")
-	)
-
-	Log.debug(
-		"Auto validation check",
-		{
-			"action": action_name,
-			"test_id": current_test_id,
-			"is_demo_test": is_demo_test,
-			"test_action_count": test_action_count
-		},
-		["debug", "validation", "auto_check"]
-	)
-
-	return is_demo_test
+# TEMPORARILY DISABLED ENTIRE FUNCTION
+# func _should_auto_validate_state() -> bool:
+# 	"""Check if current execution context should use automatic state validation"""
+# 	# Only enable for test contexts (when current_test_id is set)
+# 	if current_test_id.is_empty():
+# 		return false
+#
+# 	# Check if this appears to be a demo or replay by examining the test ID
+# 	# Demo configs typically have "demo", "replay", or "test" in their names
+# 	var test_id_lower: String = current_test_id.to_lower()
+# 	var is_demo_test: bool = (
+# 		test_id_lower.contains("demo")
+# 		or test_id_lower.contains("replay")
+# 		or test_id_lower.contains("working")
+# 		or test_id_lower.contains("manual")
+# 	)
+#
+# 	Log.debug(
+# 		"Auto validation check",
+# 		{
+# 			"action": action_name,
+# 			"test_id": current_test_id,
+# 			"is_demo_test": is_demo_test,
+# 			"test_action_count": test_action_count
+# 		},
+# 		["debug", "validation", "auto_check"]
+# 	)
+#
+# 	return is_demo_test
 
 
 ## Async wrapper for state validation execution

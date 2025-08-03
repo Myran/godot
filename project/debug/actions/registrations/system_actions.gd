@@ -489,6 +489,9 @@ static func _replay_complete() -> bool:
 		["debug", "replay", "complete", "context"]
 	)
 
+	# Log final lineup state for verification
+	_log_lineup_final_state()
+
 	if execution_context.mode == "automated":
 		Log.info(
 			"Automated mode detected - quitting application for CI/automated testing",
@@ -567,6 +570,87 @@ static func _replay_complete() -> bool:
 		)
 
 		return true
+
+
+static func _log_lineup_final_state() -> void:
+	"""Log the final state of all cards in the lineup for verification"""
+	# Get the game handler through the scene tree
+	var main_node: Node = Engine.get_main_loop().current_scene
+	if not main_node:
+		Log.error(
+			"Cannot log lineup state - Main scene not found", {}, ["debug", "replay", "error"]
+		)
+		return
+
+	var game_node: Game = main_node.get_node_or_null("Game")
+	if not game_node:
+		Log.error("Cannot log lineup state - Game node not found", {}, ["debug", "replay", "error"])
+		return
+
+	var game_handler: GameHandler = game_node.game_handler
+	if not game_handler:
+		Log.error(
+			"Cannot log lineup state - GameHandler not found", {}, ["debug", "replay", "error"]
+		)
+		return
+
+	var lineup_handler: LineupHandler = game_node.lineup_handler
+	if not lineup_handler:
+		Log.error(
+			"Cannot log lineup state - LineupHandler not found", {}, ["debug", "replay", "error"]
+		)
+		return
+
+	# Get all cards in the lineup through the holder container
+	var lineup: Dictionary = lineup_handler.holder_container.get_current_lineup()
+	var lineup_states: Array[Dictionary] = []
+
+	for position in lineup.keys():
+		var card: Card = lineup[position]
+		if card and card.unit_info:
+			var card_state: Dictionary = {
+				"position": position,
+				"card_id": card.card_info.id,
+				"level": card.level,
+				"current_attack": card.unit_info.current_attack,
+				"current_health": card.unit_info.current_health,
+				"max_attack": card.unit_info.max_attack,
+				"max_health": card.unit_info.max_health,
+				"effects_perm_count": card.unit_info.effects_perm.size(),
+				"abilities_count": card.unit_info.abilities.size()
+			}
+
+			# Add detailed StatEffect information
+			var effects_details: Array[Dictionary] = []
+			for effect: Variant in card.unit_info.effects_perm:
+				if effect is StatEffect:
+					var stat_effect: StatEffect = effect as StatEffect
+					effects_details.append(
+						{
+							"health_bonus": stat_effect.health_bonus,
+							"attack_bonus": stat_effect.attack_bonus,
+							"source": stat_effect.source,
+							"description": stat_effect.get_description()
+						}
+					)
+			card_state["effects_details"] = effects_details
+
+			lineup_states.append(card_state)
+		else:
+			lineup_states.append(
+				{"position": position, "card_id": "empty", "status": "no_card_or_unit_info"}
+			)
+
+	Log.info(
+		"FINAL LINEUP STATE - Complete card analysis",
+		{
+			"total_positions": lineup.size(),
+			"cards_present":
+			lineup_states.filter(func(state): return state.get("card_id", "") != "empty").size(),
+			"lineup_details": lineup_states
+		},
+		["debug", "replay", "complete", "lineup", "final_state"]
+	)
 
 
 static func _detect_execution_context() -> Dictionary:
