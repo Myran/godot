@@ -58,7 +58,7 @@ validate-godot pattern="":
     TEMP_VALIDATION=$(mktemp)
     if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --quit > "$TEMP_VALIDATION" 2>&1; then
         # Validation succeeded, check for errors in output
-        if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -5; then
+        if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" >/dev/null 2>&1; then
             echo ""
             echo "❌ Validation found critical errors!"
             echo ""
@@ -72,7 +72,7 @@ validate-godot pattern="":
         exit_code=$?
         if [[ $exit_code -eq 124 || $exit_code -eq 141 ]]; then
             # Timeout or SIGPIPE - check for actual errors in output
-            if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -5; then
+            if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" >/dev/null 2>&1; then
                 echo ""
                 echo "❌ Validation found critical errors!"
                 echo ""
