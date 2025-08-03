@@ -1,9 +1,0 @@
-{
-  "name": "Firebase Essential Operations",
-  "description": "Core Firebase functionality for daily development - auto-discovers all basic operations",
-  "configs": [
-    "firebase-cpp-backend-only",
-    "rtdb-basic-only",
-    "basic-operations-all"
-  ]
-}
