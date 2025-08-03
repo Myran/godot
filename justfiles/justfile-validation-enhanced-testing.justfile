@@ -1469,11 +1469,22 @@ _execute-test-desktop config_name:
 # ================================
 
 # Enhanced version of test-android-target that includes automatic error analysis
-test-android-target config_name:
+test-android-target config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    CONFIG_NAME="{{config_name}}"
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "android" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
     
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "android"
