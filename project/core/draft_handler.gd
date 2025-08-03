@@ -17,7 +17,7 @@ func reroll() -> void:
 	var game_parent = get_parent() as Game
 	if game_parent:
 		game_parent.ui_state = core.UIState.LOCKED
-	
+
 	# Enhanced semantic logging handled in clicker.gd on_core_event
 	core.action(core.RerollDraftEvent.new())
 
@@ -27,7 +27,7 @@ func upgrade() -> void:
 	var game_parent = get_parent() as Game
 	if game_parent:
 		game_parent.ui_state = core.UIState.LOCKED
-	
+
 	current_draft_upgrade_level += 1
 	# Enhanced semantic logging handled in clicker.gd on_core_event
 	core.action(core.UpgradeEvent.new(current_draft_upgrade_level))

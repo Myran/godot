@@ -1,8 +1,8 @@
 class_name Ability extends Resource
 
-enum PersistenceType { PERMANENT, ACQUIRED, TEMPORARY }  # Inherent to card template, never removed  # Gained during gameplay, persist after battle  # Combat-only effects, cleared after battle
+enum PersistenceType { TEMPLATE, ACQUIRED, TEMPORARY, ENHANCEMENT }  # Inherent to card template, never removed  # Gained during combat, converted to ENHANCEMENT post-battle  # Combat-only effects, cleared after battle  # Permanent effects from any source, transferable in merges
 
-var persistence_type: PersistenceType = PersistenceType.PERMANENT
+var persistence_type: PersistenceType = PersistenceType.TEMPLATE
 
 
 # Base class marks all parameters as unused since they're meant for subclasses

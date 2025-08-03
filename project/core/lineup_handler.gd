@@ -58,7 +58,7 @@ func find_tripples() -> Array[Card]:
 	var card_iteration_order: Array[String] = []
 	for card: Card in sorted_cards:
 		card_iteration_order.append("%s_L%d" % [card.card_info.id, card.level])
-	
+
 	Log.debug(
 		"DETERMINISM DEBUG - Position-based iteration order",
 		{
@@ -73,20 +73,20 @@ func find_tripples() -> Array[Card]:
 
 	# Track which card types we've already processed to avoid duplicate merges
 	var processed_types: Array[String] = []
-	
+
 	for card: Card in sorted_cards:
 		var card_type_key: String = "%s_L%d" % [card.card_info.id, card.level]
-		
+
 		# Skip if we've already processed this card type
 		if processed_types.has(card_type_key):
 			continue
-			
+
 		var tripples: Array[Card] = []
 		for lineup_card: Card in sorted_cards:
 			if lineup_card.card_info.id == card.card_info.id and lineup_card.level == card.level:
 				if not tripples.has(lineup_card):
 					tripples.append(lineup_card)
-		
+
 		# Log tripple detection progress for this card
 		Log.debug(
 			"Checking card for tripples",
@@ -100,7 +100,7 @@ func find_tripples() -> Array[Card]:
 			},
 			["semantic", "lineup", "tripple_check"]
 		)
-		
+
 		if tripples.size() >= core.CARD_MERGE_AMOUNT:
 			tripple_found = true
 			found_card_id = card.card_info.id
@@ -110,8 +110,10 @@ func find_tripples() -> Array[Card]:
 			var merge_card_details: Array[String] = []
 			for merge_card: Card in tripples:
 				var card_pos: int = holder_container.get_card_position(merge_card)
-				merge_card_details.append("pos_%d:%s_L%d" % [card_pos, merge_card.card_info.id, merge_card.level])
-			
+				merge_card_details.append(
+					"pos_%d:%s_L%d" % [card_pos, merge_card.card_info.id, merge_card.level]
+				)
+
 			Log.info(
 				"Tripple cards found for merge",
 				{
@@ -127,7 +129,7 @@ func find_tripples() -> Array[Card]:
 			)
 
 			return tripples
-		
+
 		# Mark this card type as processed
 		processed_types.append(card_type_key)
 

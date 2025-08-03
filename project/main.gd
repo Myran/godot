@@ -4,7 +4,7 @@ extends Node
 
 
 func _ready() -> void:
-	Log.info("Main scene initialized", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+	Log.info("Main scene initialized", {}, ["system", "initialization"])
 	Log.set_debug_filter_logging(false)
 
 	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
@@ -18,23 +18,23 @@ func _ready() -> void:
 			"cmdline_args_size": cmdline_args.size(),
 			"cmdline_user_args_size": cmdline_user_args.size()
 		},
-		[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_CMDLINE]
+		["system", "initialization"]
 	)
 
 	DebugManager.debug_event.connect(_on_debug_event)
 	match OS.get_name():
 		"Windows":
-			Log.info("Running on Windows platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on Windows platform", {}, ["system", "initialization"])
 		"macOS":
-			Log.info("Running on macOS platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on macOS platform", {}, ["system", "initialization"])
 		"Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD":
-			Log.info("Running on Linux/BSD platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on Linux/BSD platform", {}, ["system", "initialization"])
 		"Android":
-			Log.info("Running on Android platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on Android platform", {}, ["system", "initialization"])
 		"iOS":
-			Log.info("Running on iOS platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on iOS platform", {}, ["system", "initialization"])
 		"Web":
-			Log.info("Running on Web platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
+			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
 	# Check for test mode (platform-specific)
 	var is_test_mode: bool = false
@@ -44,7 +44,7 @@ func _ready() -> void:
 		Log.info(
 			"Android test mode detection",
 			{"is_test_mode": is_test_mode},
-			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST_MODE]
+			["system", "initialization", "test_mode"]
 		)
 	elif OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
 		# Desktop platforms: Check for --test-mode command line flag
@@ -56,7 +56,7 @@ func _ready() -> void:
 				"cmdline_args": cmdline_args,
 				"platform_name": OS.get_name()
 			},
-			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST_MODE]
+			["system", "initialization", "test_mode"]
 		)
 	else:
 		Log.info(
@@ -68,7 +68,7 @@ func _ready() -> void:
 				"has_desktop": OS.has_feature("desktop"),
 				"has_editor": OS.has_feature("editor")
 			},
-			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST_MODE]
+			["system", "initialization", "test_mode"]
 		)
 
 	if (
@@ -85,7 +85,7 @@ func _ready() -> void:
 				"is_headless": DisplayServer.get_name() == "headless",
 				"is_test_mode": is_test_mode
 			},
-			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
+			["system", "initialization"]
 		)
 		return
 
@@ -95,18 +95,12 @@ func _ready() -> void:
 
 
 func _wait_for_game_initialization() -> void:
-	Log.info(
-		"Waiting for game initialization to complete", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
-	)
+	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
 
 	# Get the Game node from the scene
 	var game_node: Game = get_node("Game")
 	if game_node == null:
-		Log.error(
-			"Game node not found in main scene",
-			{},
-			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_ERROR]
-		)
+		Log.error("Game node not found in main scene", {}, ["system", "initialization", "error"])
 		return
 
 	# Wait for the game's initialization_complete signal
@@ -116,7 +110,7 @@ func _wait_for_game_initialization() -> void:
 	Log.info(
 		"Game initialization complete (signal received), starting debug coordinator",
 		{},
-		[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
+		["system", "initialization"]
 	)
 
 
@@ -127,9 +121,7 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()
 		DebugManager.DebugEventType.EVENT_QUIT:
-			Log.info(
-				"Quit event received, exiting application", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
-			)
+			Log.info("Quit event received, exiting application", {}, ["debug", "system"])
 			SessionManager.end_gameplay_session()
 			get_tree().quit()
 

@@ -110,10 +110,63 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 	if event is core.DraftMergeEvent:
 		var matches: Array[Card] = event.matches
+
+		# Enhanced logging for merge events
+		var matched_card_ids: Array[String] = []
+		for card: Card in matches:
+			matched_card_ids.append(card.unit_info.card_info.get("id", ""))
+
+		Log.debug(
+			"DraftMergeEvent: Starting merge process",
+			{
+				"matched_cards": matched_card_ids,
+				"matches_count": matches.size(),
+				"event_source":
+				(
+					event.source
+					if event.has_method("get") and event.get("source") != null
+					else "unknown"
+				)
+			},
+			[Log.TAG_MERGE, Log.TAG_CLICKER, Log.TAG_DEBUG]
+		)
+
+		# Log effects_perm status before merge
+		for i in range(matches.size()):
+			var match_card: Card = matches[i]
+			Log.debug(
+				"Pre-merge card StatEffect status",
+				{
+					"card_index": i,
+					"card_id": match_card.card_info.id,
+					"effects_perm_count": match_card.unit_info.effects_perm.size(),
+					"card_level": match_card.level
+				},
+				[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+			)
+
 		var merge_info: Dictionary = await merge_matched_cards(matches)
 		await merge_info.awaiter.finished
 		var new_block: Block = merge_info.block
 		var pos: Vector2i = merge_info.pos
+
+		# Log post-merge StatEffect status
+		if new_block is Card:
+			var merged_card: Card = new_block as Card
+			Log.debug(
+				"Post-merge card StatEffect status",
+				{
+					"merged_card_id": merged_card.card_info.id,
+					"merged_card_level": merged_card.level,
+					"effects_perm_count": merged_card.unit_info.effects_perm.size(),
+					"current_attack": merged_card.unit_info.current_attack,
+					"current_health": merged_card.unit_info.current_health,
+					"max_attack": merged_card.unit_info.max_attack,
+					"max_health": merged_card.unit_info.max_health
+				},
+				[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+			)
+
 		for _block: Block in event.matches:
 			level.remove_from_grid(_block)
 		core.action(core.DraftAddBlockEvent.new(new_block, pos))
@@ -163,11 +216,120 @@ func find_match() -> Array[Card]:
 
 
 func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
-	var card_id: String = cluster[0].card_info.id
-	var cluster_level: int = cluster[0].level
+	# Fail-fast assertions per CLAUDE.md requirements
+	if cluster.is_empty():
+		Log.error("Cannot merge empty cluster", {}, [Log.TAG_ERROR, Log.TAG_MERGE])
+		return {}
+
+	var first_card: Card = cluster[0] as Card
+	if not first_card or not first_card.card_info:
+		Log.error(
+			"Invalid first card in cluster",
+			{"cluster_size": cluster.size()},
+			[Log.TAG_ERROR, Log.TAG_MERGE]
+		)
+		return {}
+
+	var card_id: String = first_card.card_info.id
+	var cluster_level: int = first_card.level
 	var new_level: int = cluster_level + 1
-	var new_card: Block = await card_controller.create_unit_from_id(card_id, new_level)
+
+	# Collect UnitData from source cards for ability and effect transfer
+	var source_units: Array[UnitData] = []
+	for card: Card in cluster:
+		if not card or not card.unit_info:
+			Log.error(
+				"Invalid card in cluster",
+				{"card_id": card_id if card else "null"},
+				[Log.TAG_ERROR, Log.TAG_MERGE]
+			)
+			continue
+		source_units.append(card.unit_info)
+
+	var new_card: Card = await card_controller.create_unit_from_id(card_id, new_level)
+	if not new_card or not new_card.unit_info:
+		Log.error(
+			"Failed to create new merged card",
+			{"card_id": card_id, "new_level": new_level},
+			[Log.TAG_ERROR, Log.TAG_MERGE]
+		)
+		return {}
+
 	new_card.block_context = Cards.CONTEXT.DRAFT
+
+	# Log before transfer to understand what source units have
+	Log.debug(
+		"Before StatEffect transfer - source units analysis",
+		{
+			"card_id": card_id,
+			"source_units_count": source_units.size(),
+			"new_card_initial_effects": new_card.unit_info.effects_perm.size()
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	)
+
+	for i in range(source_units.size()):
+		var source_unit: UnitData = source_units[i]
+		Log.debug(
+			"Source unit StatEffect inventory",
+			{
+				"source_index": i,
+				"source_card_id": source_unit.card_info.get("id", ""),
+				"effects_perm_count": source_unit.effects_perm.size()
+			},
+			[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+		)
+
+	# Transfer abilities and stat effects from source units to merged card
+	new_card.unit_info.transfer_merge_effects_from(source_units)
+
+	Log.debug(
+		"ABOUT TO REAPPLY STATS - Post-transfer, pre-reapplication state",
+		{
+			"card_id": card_id,
+			"new_level": new_level,
+			"effects_perm_count": new_card.unit_info.effects_perm.size(),
+			"current_attack_before_reapply": new_card.unit_info.current_attack,
+			"current_health_before_reapply": new_card.unit_info.current_health,
+			"max_attack": new_card.unit_info.max_attack,
+			"max_health": new_card.unit_info.max_health,
+			"context": "merge_matched_cards_post_transfer"
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG, "stat_refresh"]
+	)
+
+	# **CRITICAL**: Apply transferred effects to current stats
+	new_card.unit_info.apply_permanent_effects_to_current_stats()
+
+	Log.info(
+		"STAT REAPPLICATION COMPLETED - Final merged card state",
+		{
+			"card_id": card_id,
+			"new_level": new_level,
+			"effects_perm_count": new_card.unit_info.effects_perm.size(),
+			"current_attack_after_reapply": new_card.unit_info.current_attack,
+			"current_health_after_reapply": new_card.unit_info.current_health,
+			"max_attack": new_card.unit_info.max_attack,
+			"max_health": new_card.unit_info.max_health,
+			"context": "merge_matched_cards_post_reapply"
+		},
+		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG, "stat_refresh"]
+	)
+
+	Log.info(
+		"Merged card with transferred effects",
+		{
+			"card_id": card_id,
+			"old_level": cluster_level,
+			"new_level": new_level,
+			"source_units_count": source_units.size(),
+			"final_effects_count": new_card.unit_info.effects_perm.size(),
+			"final_abilities_count": new_card.unit_info.abilities.size(),
+			"final_current_attack": new_card.unit_info.current_attack,
+			"final_current_health": new_card.unit_info.current_health
+		},
+		[Log.TAG_CARD, Log.TAG_MERGE, Log.TAG_EFFECT]
+	)
 	var cluster_block: Block = cluster[1]
 	var cluster_pos: Vector2i = level.get_grid_pos(cluster_block)
 	var awaiter: SignalAwaiter = SignalAwaiter.All.new()

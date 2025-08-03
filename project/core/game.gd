@@ -137,7 +137,25 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		card.show_upgrade()
 
 	elif event is core.StatEffectEvent:
-		var stat_effect_event: core.StatEffectEvent = event
+		var stat_effect_event: core.StatEffectEvent = event as core.StatEffectEvent
+
+		# Fail-fast type assertions per CLAUDE.md requirements
+		var target_card: Card = stat_effect_event.target_card as Card
+		if not target_card:
+			Log.error(
+				"StatEffectEvent target_card is null or invalid type",
+				{"event": stat_effect_event},
+				[Log.TAG_ERROR]
+			)
+			return
+
+		if not target_card.unit_info:
+			Log.error(
+				"Target card unit_info is null",
+				{"card_id": target_card.card_info.id},
+				[Log.TAG_ERROR]
+			)
+			return
 
 		# 1. Add permanent effect to card's effects_perm
 		# Convert EventSource enum to human-readable string for StatEffect
@@ -145,22 +163,60 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var permanent_effect: StatEffect = StatEffect.new(
 			stat_effect_event.health_bonus, stat_effect_event.attack_bonus, source_description
 		)
-		stat_effect_event.target_card.unit_info.effects_perm.append(permanent_effect)
+		target_card.unit_info.effects_perm.append(permanent_effect)
 
-		# 2. Create CardStatChangeEvent and add to context (NOT process immediately)
-		var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
-			stat_effect_event.target_card,
-			stat_effect_event.health_bonus,
-			stat_effect_event.attack_bonus
+		# Enhanced logging to confirm StatEffect storage
+		Log.debug(
+			"StatEffect stored in card's effects_perm array",
+			{
+				"card_id": target_card.card_info.id,
+				"effect_description": permanent_effect.get_description(),
+				"effects_perm_count": target_card.unit_info.effects_perm.size(),
+				"health_bonus": stat_effect_event.health_bonus,
+				"attack_bonus": stat_effect_event.attack_bonus,
+				"source": source_description
+			},
+			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT]
 		)
-		current_context.add_event(stat_change_event)
+
+		# 2. Apply StatEffects properly via the unified method instead of bypassing
+		Log.debug(
+			"APPLYING STATEFFECTS - About to call apply_permanent_effects_to_current_stats()",
+			{
+				"card_id": target_card.card_info.id,
+				"effects_perm_count_before": target_card.unit_info.effects_perm.size(),
+				"current_attack_before": target_card.unit_info.current_attack,
+				"current_health_before": target_card.unit_info.current_health,
+				"context": "StatEffectEvent_processing_unified_application"
+			},
+			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT, "stat_refresh"]
+		)
+
+		# Apply all permanent effects to current stats (including the newly added one)
+		target_card.unit_info.apply_permanent_effects_to_current_stats()
+
+		# Update UI to reflect new stats
+		target_card.refresh_ui_from_unit_data()
+
+		# Show upgrade animation to indicate stat boost
+		@warning_ignore("return_value_discarded")
+		target_card.show_upgrade()
+
+		Log.info(
+			"APPLIED STATEFFECTS - Stats updated via unified method",
+			{
+				"card_id": target_card.card_info.id,
+				"effects_perm_count_after": target_card.unit_info.effects_perm.size(),
+				"current_attack_after": target_card.unit_info.current_attack,
+				"current_health_after": target_card.unit_info.current_health,
+				"context": "StatEffectEvent_processing_unified_completed"
+			},
+			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT, "stat_refresh"]
+		)
 
 		Log.info(
 			"Added permanent stat effect",
-			{
-				"effect": permanent_effect.get_description(),
-				"target": stat_effect_event.target_card.card_info.id
-			},
+			{"effect": permanent_effect.get_description(), "target": target_card.card_info.id},
 			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT]
 		)
 
@@ -232,27 +288,62 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		current_context.add_event(core.TrippleTestEvent.new())
 
 	elif event is core.TrippleTestEvent:
-		Log.debug("Testing for card tripples", {}, [Log.TAG_CARD, Log.TAG_RULES])
+		Log.debug(
+			"TRIPPLE TEST EVENT RECEIVED - Starting tripple detection",
+			{"event_type": "TrippleTestEvent"},
+			[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_DEBUG]
+		)
+
 		var tripples: Array[Card] = lineup_handler.find_tripples()
+
 		if not tripples.is_empty():
 			Log.info(
-				"Found card tripple match",
-				{"tripple_count": tripples.size()},
-				[Log.TAG_CARD, Log.TAG_RULES]
+				"TRIPPLE MATCH FOUND - Creating LineupMergeEvent",
+				{
+					"tripple_count": tripples.size(),
+					"card_id": tripples[0].card_info.id,
+					"card_level": tripples[0].level
+				},
+				[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_MERGE]
 			)
 			var card: Card = tripples[0]
 			current_context.add_event(core.LineupMergeEvent.new(card, tripples))
+		else:
+			Log.debug(
+				"TRIPPLE TEST COMPLETE - No tripples found",
+				{"lineup_checked": true},
+				[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_DEBUG]
+			)
+
 		current_context.solve_events()
 
 	elif event is core.LineupMergeEvent:
 		var card: Card = event.card
 		var tripples: Array = event.tripples
+
 		Log.info(
-			"Merging cards",
-			{"base_card": card.card_info.id, "tripple_count": tripples.size()},
-			[Log.TAG_CARD, Log.TAG_RULES]
+			"LINEUP MERGE EVENT RECEIVED - Starting card merge",
+			{
+				"base_card_id": card.card_info.id,
+				"base_card_level": card.level,
+				"tripple_count": tripples.size(),
+				"merge_type": "lineup_merge"
+			},
+			[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_MERGE]
 		)
+
 		var new_card: Card = await lineup_handler.merge(card, tripples)
+
+		Log.info(
+			"LINEUP MERGE COMPLETED - New card created",
+			{
+				"new_card_id": new_card.card_info.id,
+				"new_card_level": new_card.level,
+				"merge_successful": true
+			},
+			[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_MERGE]
+		)
+
 		current_context = update_context_units(current_context)
 		# Simplified to avoid potential ternary issues
 		current_context.add_event(core.LineupAddCardEvent.new(new_card))
