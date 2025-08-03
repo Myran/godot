@@ -1,0 +1,6 @@
+{
+  "description": "Debug C++ Firebase initialization and execution - single action test",
+  "actions": [
+    "cpp.firebase.set_value"
+  ]
+}

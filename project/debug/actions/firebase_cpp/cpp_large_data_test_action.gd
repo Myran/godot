@@ -8,7 +8,9 @@ func _init() -> void:
 	action_name = "cpp.firebase.large_data"
 
 
-func execute_cpp_action() -> bool:
+# Modern DebugAction.Result pattern
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ with large data payloads...")
 
 	var test_results: Array[Dictionary] = []
@@ -90,13 +92,13 @@ func execute_cpp_action() -> bool:
 			}
 		)
 
-		# Small delay between tests
-		await Engine.get_main_loop().create_timer(0.5).timeout
+		# No delay needed - proceed immediately to next test
 
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.75  # 75% of large data tests should pass
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var _final_result: Dictionary = {
+	var final_result: Dictionary = {
 		"successful_tests": successful_tests,
 		"total_tests": total_tests,
 		"success_rate": success_rate,
@@ -113,6 +115,9 @@ func execute_cpp_action() -> bool:
 			+ " data sizes handled)"
 		)
 		_update_status(success_message)
+		return DebugAction.Result.new_success(
+			success_message, total_duration, action_name, final_result
+		)
 	else:
 		var failure_message: String = (
 			"Large data test FAILED ("
@@ -122,8 +127,21 @@ func execute_cpp_action() -> bool:
 			+ " succeeded)"
 		)
 		_update_status(failure_message, true)
+		return DebugAction.Result.new_failure(
+			failure_message,
+			"LARGE_DATA_FAILED",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			total_duration,
+			action_name,
+			final_result
+		)
 
-	return overall_success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_cpp_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 
 # Generate test data of specified size

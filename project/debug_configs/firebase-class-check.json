@@ -1,0 +1,15 @@
+{
+  "description": "Direct Firebase C++ class availability check",
+  "test_metadata": {
+    "test_id": "firebase-class-check",
+    "automated": true
+  },
+  "metadata": {
+    "auto_quit": true,
+    "test_type": "firebase_class_availability"
+  },
+  "actions": [
+    "cpp.firebase.database_availability",
+    "system.debug.replay_complete"
+  ]
+}

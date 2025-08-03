@@ -8,7 +8,9 @@ func _init() -> void:
 	action_name = "cpp.firebase.signal_integrity"
 
 
-func execute_cpp_action() -> bool:
+# Modern DebugAction.Result pattern
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ signal integrity...")
 
 	var operations_count: int = 3
@@ -23,11 +25,11 @@ func execute_cpp_action() -> bool:
 		]
 		var test_value: String = "Signal Test " + str(i) + ": " + str(Time.get_ticks_msec())
 
-		var start_time: int = Time.get_ticks_msec()
+		var operation_start: int = Time.get_ticks_msec()
 		var result: Variant = await execute_cpp_operation(
 			"set_value_async", [test_path, test_value], "Signal Integrity " + str(i), "set_value"
 		)
-		var duration: int = Time.get_ticks_msec() - start_time
+		var duration: int = Time.get_ticks_msec() - operation_start
 
 		if result:
 			successful_operations += 1
@@ -44,15 +46,14 @@ func execute_cpp_action() -> bool:
 				["debug", "cpp_firebase", "warning"]
 			)
 
-		# Small delay between operations
-		await Engine.get_main_loop().create_timer(0.1).timeout
+		# No delay needed - proceed immediately to next operation
 
 	var success_rate: float = float(successful_operations) / float(operations_count)
 	var avg_duration: int = (
 		int(float(total_duration) / float(operations_count)) if operations_count > 0 else 0
 	)
-
 	var success: bool = success_rate >= 0.8  # 80% success rate required
+	var total_test_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_result: Dictionary = {
 		"successful_operations": successful_operations,
@@ -73,6 +74,9 @@ func execute_cpp_action() -> bool:
 			)
 		)
 		Log.info("C++ Signal integrity test passed", test_result, ["debug", "cpp_firebase"])
+		return DebugAction.Result.new_success(
+			"C++ signal integrity test passed", total_test_duration, action_name, test_result
+		)
 	else:
 		_update_status(
 			(
@@ -87,5 +91,18 @@ func execute_cpp_action() -> bool:
 		Log.error(
 			"C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"]
 		)
+		return DebugAction.Result.new_failure(
+			"C++ signal integrity test failed",
+			"SIGNAL_INTEGRITY_FAILED",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			total_test_duration,
+			action_name,
+			test_result
+		)
 
-	return success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_cpp_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()

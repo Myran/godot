@@ -10,7 +10,7 @@ var cpp_db_instance_id: int = -1
 func _init() -> void:
 	super._init()
 	category = "C++ Firebase"
-	action_callable = Callable(self, "execute_cpp_action")
+	action_callable = Callable(self, "_execute_action_logic")
 
 
 # Initialize direct C++ Firebase instance
@@ -42,7 +42,7 @@ func get_cpp_firebase_database() -> Object:
 	return cpp_db
 
 
-# Type-safe C++ operation with specific signal handlers
+# Type-safe C++ operation with consistent async pattern (based on FirebaseOperationManager)
 func execute_cpp_operation(
 	method_name: String, args: Array, operation_name: String = "", operation_type: String = ""
 ) -> Variant:
@@ -60,56 +60,87 @@ func execute_cpp_operation(
 	var request_id: int = Time.get_ticks_msec()
 	var full_args: Array = [request_id] + args
 
-	# Connect to completion signal with type-safe handler
-	var signal_name: String = method_name.replace("_async", "_completed")
-	var handler: Callable = _create_handler_for_operation(
-		operation_type, request_id, start_time, op_name, method_name
-	)
+	# Setup operation tracking (consistent with FirebaseOperationManager pattern)
+	var op_data: Dictionary = {
+		"operation": method_name,
+		"completed": false,
+		"result": null,
+		"error": null,
+		"start_time": start_time,
+		"request_id": request_id
+	}
 
-	# Connect signal temporarily
+	# Connect to completion signal
+	var signal_name: String = method_name.replace("_async", "_completed")
 	var signal_string_name: StringName = StringName(signal_name)
-	if db.has_signal(signal_string_name):
-		db.connect(signal_string_name, handler, Object.CONNECT_ONE_SHOT)
+
+	if not db.has_signal(signal_string_name):
+		_update_status("ERROR: Signal not found: " + signal_name, true)
+		return null
+
+	# Create signal handler that updates operation state
+	var handler: Callable = _create_operation_handler(
+		op_data, operation_type, request_id, start_time, op_name, method_name
+	)
+	db.connect(signal_string_name, handler, Object.CONNECT_ONE_SHOT)
 
 	# Call C++ method
 	db.callv(method_name, full_args)
 
-	# Wait briefly for response (simplified)
-	await Engine.get_main_loop().process_frame
-	await Engine.get_main_loop().create_timer(1.0).timeout
+	# Wait for completion using polling pattern (consistent with FirebaseOperationManager)
+	while not op_data.completed:
+		await Engine.get_main_loop().process_frame
 
 	var duration: int = Time.get_ticks_msec() - start_time
+
+	if op_data.error != null:
+		_update_status("ERROR: " + op_name + " failed: " + str(op_data.error), true)
+		return null
+
 	_update_status(op_name + " completed (" + str(duration) + "ms)")
-	return true
+	return op_data.result
 
 
 # Removed problematic execute_cpp_operation_with_timeout method - use execute_cpp_operation instead
 
 
-# Create type-safe signal handler based on operation type
-func _create_handler_for_operation(
-	operation_type: String, request_id: int, start_time: int, op_name: String, method_name: String
+# Create operation handler that updates state (consistent with FirebaseOperationManager)
+func _create_operation_handler(
+	op_data: Dictionary,
+	operation_type: String,
+	request_id: int,
+	start_time: int,
+	op_name: String,
+	method_name: String
 ) -> Callable:
 	match operation_type:
 		"get_value":
-			return _create_get_value_handler(request_id, start_time, op_name, method_name)
+			return _create_get_value_state_handler(
+				op_data, request_id, start_time, op_name, method_name
+			)
 		"set_value", "remove_value":
-			return _create_set_value_handler(request_id, start_time, op_name, method_name)
+			return _create_set_value_state_handler(
+				op_data, request_id, start_time, op_name, method_name
+			)
 		_:
 			push_error("Unknown operation type: " + operation_type)
-			return func() -> void: pass
+			return func() -> void:
+				op_data.completed = true
+				op_data.error = "Unknown operation type: " + operation_type
 
 
-# Handler for get_value_completed(int request_id, String key, Variant data)
-func _create_get_value_handler(
-	request_id: int, start_time: int, op_name: String, method_name: String
+# Handler for get_value_completed(int request_id, String key, Variant data) - state-based
+func _create_get_value_state_handler(
+	op_data: Dictionary, request_id: int, start_time: int, op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, rtdb_key: String, value: Variant) -> void:
 		if recv_request_id == request_id:
 			var duration: int = Time.get_ticks_msec() - start_time
 			var success: bool = value != null
 
+			op_data.completed = true
 			if success:
+				op_data.result = value
 				Log.info(
 					"C++ get_value operation completed",
 					{
@@ -120,41 +151,99 @@ func _create_get_value_handler(
 					},
 					["debug", "cpp_firebase"]
 				)
-				_update_status(op_name + " completed (" + str(duration) + "ms)")
 			else:
+				op_data.error = "Operation returned null"
 				Log.error(
 					"C++ get_value operation returned null",
 					{"method": method_name, "duration_ms": duration, "rtdb_key": rtdb_key},
 					["debug", "cpp_firebase", "error"]
 				)
-				_update_status("ERROR: " + op_name + " returned null", true)
 
 
-# Handler for set_value_completed/remove_value_completed(int request_id, bool success, String error_message)
-func _create_set_value_handler(
-	request_id: int, start_time: int, op_name: String, method_name: String
+# Handler for set_value_completed/remove_value_completed(int request_id, bool success, String error_message) - state-based
+func _create_set_value_state_handler(
+	op_data: Dictionary, request_id: int, start_time: int, op_name: String, method_name: String
 ) -> Callable:
 	return func(recv_request_id: int, success: bool, error_message: String) -> void:
 		if recv_request_id == request_id:
 			var duration: int = Time.get_ticks_msec() - start_time
 
+			op_data.completed = true
 			if success:
+				op_data.result = true
 				Log.info(
 					"C++ set/remove operation completed",
 					{"method": method_name, "duration_ms": duration},
 					["debug", "cpp_firebase"]
 				)
-				_update_status(op_name + " completed (" + str(duration) + "ms)")
 			else:
+				op_data.error = error_message
 				Log.error(
 					"C++ set/remove operation failed",
 					{"method": method_name, "duration_ms": duration, "error": error_message},
 					["debug", "cpp_firebase", "error"]
 				)
-				_update_status("ERROR: " + op_name + " failed: " + error_message, true)
 
 
-# Default implementation - subclasses override this
+# State validation execution - delegates to actual C++ logic
+func execute_with_state_validation(
+	session_id: String = "", sequence: int = -1
+) -> DebugAction.Result:
+	"""Execute C++ Firebase action with state validation integration"""
+	var start_time: int = Time.get_ticks_msec()
+
+	Log.info(
+		"Executing C++ Firebase action with state validation",
+		{"action_name": action_name, "session_id": session_id, "sequence": sequence},
+		["debug", "cpp_firebase", "state_validation"]
+	)
+
+	# Call the actual C++ action implementation
+	var success: bool = execute_cpp_action()
+	var duration: int = Time.get_ticks_msec() - start_time
+
+	if success:
+		Log.info(
+			"C++ Firebase action completed successfully",
+			{"action_name": action_name, "duration_ms": duration},
+			["debug", "cpp_firebase", "success"]
+		)
+		return DebugAction.Result.new_success(
+			success, duration, action_name, {"session_id": session_id, "sequence": sequence}
+		)
+	else:
+		Log.error(
+			"C++ Firebase action failed",
+			{"action_name": action_name, "duration_ms": duration},
+			["debug", "cpp_firebase", "error"]
+		)
+		return DebugAction.Result.new_failure(
+			"C++ Firebase action failed",
+			"C++_FIREBASE_FAILURE",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			duration,
+			action_name,
+			{"session_id": session_id, "sequence": sequence}
+		)
+
+
+# Modern DebugAction.Result pattern - default fallback implementation
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+	push_error("_execute_action_logic() not implemented in " + get_script().get_path())
+	_update_status("ERROR: _execute_action_logic() not implemented", true)
+	return DebugAction.Result.new_failure(
+		"_execute_action_logic() not implemented in " + get_script().get_path(),
+		"NOT_IMPLEMENTED",
+		DebugAction.Result.ErrorCategory.SYSTEM,
+		null,
+		0,
+		action_name,
+		{"error": "missing_implementation"}
+	)
+
+
+# Legacy method - subclasses override this
 func execute_cpp_action() -> bool:
 	push_error("execute_cpp_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_cpp_action() not implemented", true)

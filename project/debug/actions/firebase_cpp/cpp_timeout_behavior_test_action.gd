@@ -8,7 +8,9 @@ func _init() -> void:
 	action_name = "cpp.firebase.timeout_behavior"
 
 
-func execute_cpp_action() -> bool:
+# Modern DebugAction.Result pattern
+func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ basic operations (timeout method removed)...")
 
 	var operation_tests: Array[Dictionary] = []
@@ -75,8 +77,9 @@ func execute_cpp_action() -> bool:
 
 	var success_rate: float = float(passed_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.8  # 80% of operations should work
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var _test_result: Dictionary = {
+	var test_result: Dictionary = {
 		"passed_tests": passed_tests,
 		"total_tests": total_tests,
 		"success_rate": success_rate,
@@ -85,27 +88,40 @@ func execute_cpp_action() -> bool:
 	}
 
 	if overall_success:
-		_update_status(
-			(
-				"Basic operations test PASSED ("
-				+ str(passed_tests)
-				+ "/"
-				+ str(total_tests)
-				+ " operations succeeded)"
-			)
+		var success_message: String = (
+			"Basic operations test PASSED ("
+			+ str(passed_tests)
+			+ "/"
+			+ str(total_tests)
+			+ " operations succeeded)"
+		)
+		_update_status(success_message)
+		return DebugAction.Result.new_success(
+			success_message, total_duration, action_name, test_result
 		)
 	else:
-		_update_status(
-			(
-				"Basic operations test FAILED ("
-				+ str(passed_tests)
-				+ "/"
-				+ str(total_tests)
-				+ " operations worked)"
-			),
-			true
+		var failure_message: String = (
+			"Basic operations test FAILED ("
+			+ str(passed_tests)
+			+ "/"
+			+ str(total_tests)
+			+ " operations worked)"
+		)
+		_update_status(failure_message, true)
+		return DebugAction.Result.new_failure(
+			failure_message,
+			"TIMEOUT_BEHAVIOR_FAILED",
+			DebugAction.Result.ErrorCategory.FIREBASE,
+			null,
+			total_duration,
+			action_name,
+			test_result
 		)
 
-	return overall_success
+
+# Legacy method for compatibility - delegates to new pattern
+func execute_cpp_action() -> bool:
+	var result: DebugAction.Result = await _execute_action_logic({})
+	return result.is_success()
 
 # Removed timeout-related helper methods since timeout functionality was removed

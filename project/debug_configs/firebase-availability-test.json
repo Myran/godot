@@ -1,0 +1,15 @@
+{
+  "description": "Test Firebase C++ class availability and registry stats",
+  "test_metadata": {
+    "test_id": "firebase-availability-test",
+    "automated": true
+  },
+  "metadata": {
+    "auto_quit": true,
+    "test_type": "firebase_availability_check"
+  },
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.replay_complete"
+  ]
+}

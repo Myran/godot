@@ -27,6 +27,9 @@ const CPPLargeDataTestActionClass = preload(
 const CPPTimeoutBehaviorTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_timeout_behavior_test_action.gd"
 )
+const CPPDatabaseAvailabilityActionClass = preload(
+	"res://debug/actions/firebase_cpp/cpp_database_availability_action.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -65,6 +68,12 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	)
 	_register_with_count(
 		registry, CPPTimeoutBehaviorTestActionClass.new(), "CPPTimeoutBehaviorTestAction", counters
+	)
+	_register_with_count(
+		registry,
+		CPPDatabaseAvailabilityActionClass.new(),
+		"CPPDatabaseAvailabilityAction",
+		counters
 	)
 
 	Log.info(
