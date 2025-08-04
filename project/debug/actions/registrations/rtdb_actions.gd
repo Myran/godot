@@ -2,6 +2,27 @@
 class_name RTDBDebugActions
 extends RefCounted
 
+# Preload all RTDB action classes
+const RTDBGetSimpleValueActionClass = preload("res://debug/actions/rtdb/rtdb_get_simple_value_action.gd")
+const RTDBSetSimpleValueActionClass = preload("res://debug/actions/rtdb/rtdb_set_simple_value_action.gd")
+const RTDBDeleteValueActionClass = preload("res://debug/actions/rtdb/rtdb_delete_value_action.gd")
+const RTDBUpdateValueActionClass = preload("res://debug/actions/rtdb/rtdb_update_value_action.gd")
+const RTDBGetNestedPathActionClass = preload("res://debug/actions/rtdb/rtdb_get_nested_path_action.gd")
+const RTDBSetNestedPathActionClass = preload("res://debug/actions/rtdb/rtdb_set_nested_path_action.gd")
+const RTDBListChildrenActionClass = preload("res://debug/actions/rtdb/rtdb_list_children_action.gd")
+const RTDBPushItemActionClass = preload("res://debug/actions/rtdb/rtdb_push_item_action.gd")
+const RTDBSingleValueListenerActionClass = preload("res://debug/actions/rtdb/rtdb_single_value_listener_action.gd")
+const RTDBChildAddedListenerActionClass = preload("res://debug/actions/rtdb/rtdb_child_added_listener_action.gd")
+const RTDBChildChangedListenerActionClass = preload("res://debug/actions/rtdb/rtdb_child_changed_listener_action.gd")
+const RTDBChildRemovedListenerActionClass = preload("res://debug/actions/rtdb/rtdb_child_removed_listener_action.gd")
+const RTDBRemoveAllListenersActionClass = preload("res://debug/actions/rtdb/rtdb_remove_all_listeners_action.gd")
+const RTDBTransactionTestActionClass = preload("res://debug/actions/rtdb/rtdb_transaction_test_action.gd")
+const RTDBConcurrentOperationsActionClass = preload("res://debug/actions/rtdb/rtdb_concurrent_operations_action.gd")
+const RTDBBatchOperationsActionClass = preload("res://debug/actions/rtdb/rtdb_batch_operations_action.gd")
+const RTDBPathValidationActionClass = preload("res://debug/actions/rtdb/rtdb_path_validation_action.gd")
+const RTDBErrorHandlingTestActionClass = preload("res://debug/actions/rtdb/rtdb_error_handling_test_action.gd")
+const RTDBLargeDataTestActionClass = preload("res://debug/actions/rtdb/rtdb_large_data_test_action.gd")
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	# Register all RTDB debug actions
@@ -11,59 +32,59 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 	# Basic RTDB Operations
 	_register_with_count(
-		registry, RTDBGetSimpleValueAction.new(), "RTDBGetSimpleValueAction", counters
+		registry, RTDBGetSimpleValueActionClass.new(), "RTDBGetSimpleValueAction", counters
 	)
 	_register_with_count(
-		registry, RTDBSetSimpleValueAction.new(), "RTDBSetSimpleValueAction", counters
+		registry, RTDBSetSimpleValueActionClass.new(), "RTDBSetSimpleValueAction", counters
 	)
-	_register_with_count(registry, RTDBDeleteValueAction.new(), "RTDBDeleteValueAction", counters)
-	_register_with_count(registry, RTDBUpdateValueAction.new(), "RTDBUpdateValueAction", counters)
+	_register_with_count(registry, RTDBDeleteValueActionClass.new(), "RTDBDeleteValueAction", counters)
+	_register_with_count(registry, RTDBUpdateValueActionClass.new(), "RTDBUpdateValueAction", counters)
 	_register_with_count(
-		registry, RTDBGetNestedPathAction.new(), "RTDBGetNestedPathAction", counters
+		registry, RTDBGetNestedPathActionClass.new(), "RTDBGetNestedPathAction", counters
 	)
 	_register_with_count(
-		registry, RTDBSetNestedPathAction.new(), "RTDBSetNestedPathAction", counters
+		registry, RTDBSetNestedPathActionClass.new(), "RTDBSetNestedPathAction", counters
 	)
-	_register_with_count(registry, RTDBListChildrenAction.new(), "RTDBListChildrenAction", counters)
-	_register_with_count(registry, RTDBPushItemAction.new(), "RTDBPushItemAction", counters)
+	_register_with_count(registry, RTDBListChildrenActionClass.new(), "RTDBListChildrenAction", counters)
+	_register_with_count(registry, RTDBPushItemActionClass.new(), "RTDBPushItemAction", counters)
 
 	# Listener Operations
 	_register_with_count(
-		registry, RTDBSingleValueListenerAction.new(), "RTDBSingleValueListenerAction", counters
+		registry, RTDBSingleValueListenerActionClass.new(), "RTDBSingleValueListenerAction", counters
 	)
 	_register_with_count(
-		registry, RTDBChildAddedListenerAction.new(), "RTDBChildAddedListenerAction", counters
+		registry, RTDBChildAddedListenerActionClass.new(), "RTDBChildAddedListenerAction", counters
 	)
 	_register_with_count(
-		registry, RTDBChildChangedListenerAction.new(), "RTDBChildChangedListenerAction", counters
+		registry, RTDBChildChangedListenerActionClass.new(), "RTDBChildChangedListenerAction", counters
 	)
 	_register_with_count(
-		registry, RTDBChildRemovedListenerAction.new(), "RTDBChildRemovedListenerAction", counters
+		registry, RTDBChildRemovedListenerActionClass.new(), "RTDBChildRemovedListenerAction", counters
 	)
 	_register_with_count(
-		registry, RTDBRemoveAllListenersAction.new(), "RTDBRemoveAllListenersAction", counters
+		registry, RTDBRemoveAllListenersActionClass.new(), "RTDBRemoveAllListenersAction", counters
 	)
 
 	# Advanced Operations
 	_register_with_count(
-		registry, RTDBTransactionTestAction.new(), "RTDBTransactionTestAction", counters
+		registry, RTDBTransactionTestActionClass.new(), "RTDBTransactionTestAction", counters
 	)
 	_register_with_count(
-		registry, RTDBConcurrentOperationsAction.new(), "RTDBConcurrentOperationsAction", counters
+		registry, RTDBConcurrentOperationsActionClass.new(), "RTDBConcurrentOperationsAction", counters
 	)
 	_register_with_count(
-		registry, RTDBBatchOperationsAction.new(), "RTDBBatchOperationsAction", counters
+		registry, RTDBBatchOperationsActionClass.new(), "RTDBBatchOperationsAction", counters
 	)
 
 	# Utility & Testing Operations
 	_register_with_count(
-		registry, RTDBPathValidationAction.new(), "RTDBPathValidationAction", counters
+		registry, RTDBPathValidationActionClass.new(), "RTDBPathValidationAction", counters
 	)
 	_register_with_count(
-		registry, RTDBErrorHandlingTestAction.new(), "RTDBErrorHandlingTestAction", counters
+		registry, RTDBErrorHandlingTestActionClass.new(), "RTDBErrorHandlingTestAction", counters
 	)
 	_register_with_count(
-		registry, RTDBLargeDataTestAction.new(), "RTDBLargeDataTestAction", counters
+		registry, RTDBLargeDataTestActionClass.new(), "RTDBLargeDataTestAction", counters
 	)
 
 	Log.info(

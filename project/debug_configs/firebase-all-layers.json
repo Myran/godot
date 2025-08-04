@@ -1,9 +1,8 @@
 {
-  "description": "Firebase across ALL layers - C++ SDK + Backend + RTDB comprehensive testing",
+  "description": "Firebase across ALL layers - C++ SDK + Backend + RTDB comprehensive testing (100% action coverage)",
   "actions": [
     "cpp.firebase.*",
-    "backend.firebase.*", 
-    "rtdb.basic.*",
-    "rtdb.database.*"
+    "backend.firebase.*",
+    "rtdb.*"
   ]
 }
