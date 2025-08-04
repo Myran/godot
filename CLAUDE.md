@@ -208,7 +208,28 @@ Commands automatically detect input type:
 Resolved critical environment variable propagation issue that was causing Android checksum validation to silently fail. Tests now properly validate all checksums on both Android and desktop platforms.
 
 **⭐ NEW: Streamlined Configuration Management**
-After cleanup of 122 legacy debug configs, only 16 semantic action configs remain for core testing.
+After comprehensive cleanup, only 9 core debug configs remain (46 archived) organized by layer:
+
+**Core Debug Configs (9 active):**
+- `battle-animated` - Battle system with full animations
+- `battle-logic-only` - Battle logic without visual effects  
+- `firebase-backend-layer` - Backend Firebase operations
+- `firebase-cpp-layer` - C++ Firebase SDK layer
+- `firebase-network-connectivity` - Network connectivity testing
+- `firebase-rtdb-layer` - Real-time Database layer
+- `system-error-handling` - Error handling validation
+- `system-layer-all` - Complete system utilities (system.*)
+- `system-performance` - Performance monitoring
+
+**Test Lists (13 active workflows):**
+- `production-ready` - Release readiness validation
+- `pre-commit` - Essential pre-commit checks
+- `firebase-all` - Complete Firebase testing
+- `battle-all` - Battle system comprehensive testing
+- `system-all` - System layer validation
+- `comprehensive-with-determinism` - Full deterministic testing
+- `recording-system-integrity` - Replay system validation
+- `wildcard-discovery` - Pattern discovery workflow
 
 ### **Logger Control (Runtime)**
 ```bash
@@ -511,8 +532,9 @@ just logs-suggest TEST_ID fire
 
 **Key Directories:**
 - `project/debug/actions/` - Debug actions by layer (cpp, backend, rtdb, system, game)
-- `project/debug_configs/` - ⭐ **Streamlined: 16 semantic action configs** (down from 138)
-- `project/test-lists/` - Workflow configurations
+- `project/debug_configs/` - ⭐ **Streamlined: 9 core configs** (46 archived, organized by layer)
+- `project/test-lists/` - 13 active workflow configurations
+- `project/debug_configs/archive/` - Archived configs (duplicates, experimental, generated-replays)
 - `justfiles/justfile-validation-enhanced-testing.justfile` - ⭐ **NEW: Enhanced testing system**
 
 ## 📖 Integration with Just Help System
