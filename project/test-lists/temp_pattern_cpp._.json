@@ -1,7 +1,0 @@
-{
-  "name": "Config Pattern: cpp.*",
-  "description": "Auto-generated test list for config pattern: cpp.*",
-  "configs": [
-    "cpp-layer-all"
-  ]
-}

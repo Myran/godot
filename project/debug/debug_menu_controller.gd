@@ -445,7 +445,7 @@ func _populate_groups_view(category_name: String) -> void:
 		Log.debug(
 			"Category has ungrouped actions, redirecting to category_with_actions view",
 			{"category": category_name},
-			[Log.TAG_DEBUG_UI, Log.TAG_NAVIGATION]
+			[Log.TAG_DEBUG_UI]
 		)
 		# Clear the back button we just added and delegate to the proper view
 		item_list_navigator.clear()

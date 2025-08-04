@@ -141,7 +141,12 @@
       "Bash(do echo \"Checking $config:\")",
       "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=30 just test-android-target semantic-action-simple-test 180)",
       "mcp__basic-memory__search_notes",
-      "mcp__basic-memory__edit_note"
+      "mcp__basic-memory__edit_note",
+      "Bash(gdparse:*)",
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=90 just test-android-target firebase-rtdb-comprehensive)",
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=60 just test-android-target firebase-rtdb-listeners)",
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=60 just test-android-target firebase-cpp-backend-only)",
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=90 just test-android-target firebase-all-layers)"
     ],
     "deny": []
   }

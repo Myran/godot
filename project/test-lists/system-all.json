@@ -1,0 +1,14 @@
+{
+  "name": "System All Testing",
+  "description": "Complete system validation - all Firebase layers, battle logic, system utilities, error handling and performance",
+  "configs": [
+    "firebase-cpp-layer",
+    "firebase-backend-layer", 
+    "firebase-rtdb-layer",
+    "firebase-network-connectivity",
+    "system-layer-all",
+    "battle-logic-only",
+    "system-error-handling",
+    "system-performance"
+  ]
+}

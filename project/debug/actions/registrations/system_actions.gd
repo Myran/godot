@@ -92,16 +92,9 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 
 
 static func _register_connectivity_actions(registry: DebugActionRegistry) -> void:
-	# RTDB Status check - always available
-	registry.register_action(
-		(
-			DebugAction
-			. create("system.network.rtdb_status", _rtdb_status_check)
-			. set_category("RTDB")
-			. set_group("Utilities")
-			. set_description("Check RTDB availability and connection status")
-		)
-	)
+	# No connectivity actions currently registered
+	# Note: RTDB status check removed as Firebase classes not available on all platforms
+	pass
 
 
 # Legacy checksum validation function removed - now using semantic logging approach
@@ -222,17 +215,7 @@ static func _capture_final_state() -> void:
 	)
 
 
-static func _rtdb_status_check() -> bool:
-	# Check RTDB status and availability
-	var status: Dictionary = {
-		"firebase_database_available": ClassDB.class_exists("FirebaseDatabase"),
-		"firebase_auth_available": ClassDB.class_exists("FirebaseAuth"),
-		"platform": OS.get_name(),
-		"timestamp": Time.get_unix_time_from_system()
-	}
-
-	Log.info("RTDB Status Check", status, [Log.TAG_DEBUG, Log.TAG_RTDB, Log.TAG_STATUS])
-	return true
+# RTDB status check function removed - Firebase classes not consistently available across platforms
 
 
 # Legacy _validate_checksum function removed - now using semantic logging approach
