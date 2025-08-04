@@ -1,0 +1,6 @@
+{
+  "description": "Complete Firebase C++ layer testing - auto-discovers all C++ Firebase SDK operations",
+  "actions": [
+    "cpp.firebase.*"
+  ]
+}

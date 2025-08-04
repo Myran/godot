@@ -1,0 +1,8 @@
+{
+  "description": "Test debug menu visibility and basic interaction",
+  "actions": [
+    "system.debug.show_menu",
+    "system.debug.hide_menu",
+    "system.debug.replay_complete"
+  ]
+}

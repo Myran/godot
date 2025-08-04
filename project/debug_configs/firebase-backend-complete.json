@@ -1,0 +1,6 @@
+{
+  "description": "Complete Firebase Backend layer testing - auto-discovers all backend Firebase operations",
+  "actions": [
+    "backend.firebase.*"
+  ]
+}

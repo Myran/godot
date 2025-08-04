@@ -1,0 +1,6 @@
+{
+  "description": "Firebase RTDB Listeners testing - auto-discovers all real-time listener operations for reactive data monitoring",
+  "actions": [
+    "rtdb.listeners.*"
+  ]
+}

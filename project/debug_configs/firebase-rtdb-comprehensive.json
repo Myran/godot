@@ -1,0 +1,11 @@
+{
+  "description": "Comprehensive RTDB testing - auto-discovers all Firebase Realtime Database operations across all namespaces",
+  "actions": [
+    "rtdb.database.*",
+    "rtdb.listeners.*",
+    "rtdb.paths.*",
+    "rtdb.children.*",
+    "rtdb.advanced.*",
+    "rtdb.testing.*"
+  ]
+}
