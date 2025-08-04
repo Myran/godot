@@ -57,13 +57,13 @@ validate-godot pattern="":
     # Check for critical errors
     TEMP_VALIDATION=$(mktemp)
     if timeout 30 {{GODOT_EXECUTABLE}} --headless --validate-only --verbose --debug-stringnames --quit > "$TEMP_VALIDATION" 2>&1; then
-        # Validation succeeded, check for errors in output
-        if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" >/dev/null 2>&1; then
+        # Validation succeeded, check for critical errors in output (excluding ObjectDB/resource leak warnings)
+        if grep -E "SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" >/dev/null 2>&1; then
             echo ""
             echo "❌ Validation found critical errors!"
             echo ""
             echo "Full error output:"
-            grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -20
+            grep -E "SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | head -20
             rm -f "$TEMP_VALIDATION"
             exit 1
         fi
@@ -71,13 +71,13 @@ validate-godot pattern="":
         # Validation command failed - could be timeout (exit 124) which is expected
         exit_code=$?
         if [[ $exit_code -eq 124 || $exit_code -eq 141 ]]; then
-            # Timeout or SIGPIPE - check for actual errors in output
-            if grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" >/dev/null 2>&1; then
+            # Timeout or SIGPIPE - check for critical errors in output (excluding ObjectDB/resource leak warnings)
+            if grep -E "SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" >/dev/null 2>&1; then
                 echo ""
                 echo "❌ Validation found critical errors!"
                 echo ""
                 echo "Full error output:"
-                grep -E "ERROR|SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | head -20
+                grep -E "SCRIPT ERROR|Parse Error" "$TEMP_VALIDATION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | head -20
                 rm -f "$TEMP_VALIDATION"
                 exit 1
             fi

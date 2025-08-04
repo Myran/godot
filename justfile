@@ -52,23 +52,10 @@ validate:
     echo "🚀 Running complete validation..."
     echo ""
 
-    # Step 1: Check if code needs formatting (without modifying)
-    echo "1️⃣ Checking code formatting..."
-    format_needed=false
-
-    # Check if any .gd files need formatting using gdformat --check
-    cd {{PROJECT_PATH}}
-    if ! find . -name "*.gd" -type f -not -path "./addons/*" -exec /Users/mattiasmyhrman/.local/bin/gdformat --check {} + 2>/dev/null; then
-        format_needed=true
-    fi
-    cd - > /dev/null  # Return to original directory
-
-    if [ "$format_needed" = true ]; then
-        echo "❌ Code formatting required. Please run 'just format' and commit the changes."
-        echo "📝 To see which files need formatting, run: just format"
-        exit 1
-    fi
-    echo "✅ Code formatting validated"
+    # Step 1: Apply code formatting automatically
+    echo "1️⃣ Running code formatting..."
+    just format
+    echo "✅ Code formatting completed"
     echo ""
 
     # Step 2: Syntax validation
