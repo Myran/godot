@@ -1094,6 +1094,121 @@ _post-test-validation test_id platform:
     echo "✅ Test validation complete - no issues found"
 
 # ================================
+# SHARED TEST LIST EXECUTION
+# ================================
+
+# Generic test list executor that works for both Android and Desktop
+_test-list-generic test_list platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_LIST="{{test_list}}"
+    PLATFORM="{{platform}}"
+    TEST_LIST_DIR="./project/test-lists"
+    TEST_LIST_PATH="$TEST_LIST_DIR/${TEST_LIST}.json"
+    
+    echo "🧪 Executing test list: $TEST_LIST ($PLATFORM)"
+    echo "=============================================="
+    
+    # Validate test list exists
+    if [[ ! -f "$TEST_LIST_PATH" ]]; then
+        echo "❌ Test list not found: $TEST_LIST_PATH"
+        exit 1
+    fi
+    
+    # Validate JSON format
+    if ! jq -e . "$TEST_LIST_PATH" >/dev/null 2>&1; then
+        echo "❌ Invalid JSON in test list: $TEST_LIST_PATH"
+        exit 1
+    fi
+    
+    # Extract configs
+    if ! jq -e '.configs' "$TEST_LIST_PATH" >/dev/null 2>&1; then
+        echo "❌ Test list missing required 'configs' field"
+        exit 1
+    fi
+    
+    # Check if test list contains @ references and expand accordingly
+    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
+    HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
+    
+    if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
+        echo "🔄 Expanding @ references..."
+        CONFIGS=$(just _expand_at_references "$TEST_LIST")
+    else
+        CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
+    fi
+    
+    if [[ -z "$CONFIGS" ]]; then
+        echo "❌ No configurations found in test list"
+        exit 1
+    fi
+    
+    # Show test list info
+    description=$(jq -r '.description // "No description provided"' "$TEST_LIST_PATH")
+    echo "Description: $description"
+    
+    config_count=$(jq -r '.configs | length' "$TEST_LIST_PATH")
+    echo "Configurations: $config_count"
+    
+    echo ""
+    echo "📋 Configuration List:"
+    echo "==================="
+    echo "$CONFIGS" | nl -w2 -s'. '
+    
+    echo ""
+    echo "🚀 Starting test execution..."
+    echo "============================="
+    
+    # Execute each configuration using the unified analysis system
+    TOTAL_CONFIGS=0
+    PASSED_CONFIGS=0
+    FAILED_CONFIGS=0
+    
+    while IFS= read -r config; do
+        if [[ -z "$config" ]]; then
+            continue
+        fi
+        
+        TOTAL_CONFIGS=$((TOTAL_CONFIGS + 1))
+        
+        echo ""
+        echo "🔍 Testing configuration $TOTAL_CONFIGS: $config"
+        echo "================================================="
+        
+        # Execute configuration using the unified system
+        if just _execute-test-with-analysis "$config" "$PLATFORM"; then
+            echo "✅ Configuration passed: $config"
+            PASSED_CONFIGS=$((PASSED_CONFIGS + 1))
+        else
+            echo "❌ Configuration failed: $config"
+            FAILED_CONFIGS=$((FAILED_CONFIGS + 1))
+        fi
+        
+        # Small delay between tests
+        sleep 2
+    done <<< "$CONFIGS"
+    
+    echo ""
+    echo "📊 Test List Results Summary"
+    echo "============================="
+    echo "Test List: $TEST_LIST"
+    echo "Platform: $PLATFORM"
+    echo "Total Configurations: $TOTAL_CONFIGS"
+    echo "Passed: $PASSED_CONFIGS"
+    echo "Failed: $FAILED_CONFIGS"
+    echo "Success Rate: $(( PASSED_CONFIGS * 100 / TOTAL_CONFIGS ))%"
+    
+    if [[ $FAILED_CONFIGS -gt 0 ]]; then
+        echo ""
+        echo "❌ Some configurations failed. Check individual test results above."
+        exit 1
+    else
+        echo ""
+        echo "✅ All configurations passed!"
+    fi
+
+# ================================
 # UNIFIED TEST EXECUTION PATTERN
 # ================================
 
@@ -1116,12 +1231,7 @@ _execute-test-with-analysis config_name platform:
     # Check if it's a test list first
     if [[ -f "$TEST_LIST_PATH" ]]; then
         echo "📋 Detected test list: $CONFIG_NAME"
-        if [[ "$PLATFORM" == "android" ]]; then
-            just _test-list-android "$CONFIG_NAME"
-        else
-            echo "❌ Test list execution not yet implemented for platform: $PLATFORM"
-            exit 1
-        fi
+        just _test-list-generic "$CONFIG_NAME" "$PLATFORM"
         return
     fi
     
@@ -1575,11 +1685,22 @@ test-desktop-manual config_name:
     echo "✅ Desktop test started in manual mode (app will stay open for verification)"
 
 # Enhanced version of test-desktop-target that includes automatic error analysis  
-test-desktop-target config_name:
+test-desktop-target config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
     
-    CONFIG_NAME="{{config_name}}"
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "desktop" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
     
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "desktop"
