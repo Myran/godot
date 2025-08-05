@@ -187,3 +187,21 @@ logs-list-tags TEST_ID:
     
     # Extract unique tags from log entries
     grep -o '\["[^"]*"[^]]*\]' "$LOG_FILE" | sort | uniq | head -20
+
+# Simple free-text search in logs (case-insensitive)
+logs-text TEST_ID SEARCH_TERM:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    SEARCH_TERM="{{SEARCH_TERM}}"
+    
+    # Use existing infrastructure
+    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    
+    echo "🔍 Searching logs for: $SEARCH_TERM"
+    echo "📄 Log file: $LOG_FILE"
+    echo ""
+    
+    # Case-insensitive search with limit for token efficiency
+    grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"

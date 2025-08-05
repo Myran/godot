@@ -7,6 +7,7 @@ GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine feat
 ```bash
 # Emergency Debugging (Use First) 
 just logs-errors TEST_ID                   # Find errors fast (98% token savings)
+just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search - any string (99% token savings)
 just logs-last                             # Latest test results (99% token savings)
 
 # 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
@@ -25,7 +26,7 @@ just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
-# Debug Decision Tree: logs-tree → logs-pattern → logs-exclude → logs-errors (traditional backup)
+# Debug Decision Tree: logs-tree → logs-pattern → logs-text → logs-exclude → logs-errors (traditional backup)
 ```
 
 ## 🎯 Command System Overview
@@ -62,18 +63,18 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 2. `just logs-android TEST_ID [component]` or `just logs-desktop TEST_ID [component]` (15 sec, <100 tokens) 
 3. `just logs-android TEST_ID [component] [operation]` or `just logs-desktop TEST_ID [component] [operation]` (<200 tokens)
 
-### **🎯 Enhanced Failure Pattern Quick Reference (Wildcard + Traditional)**
-| Symptom | Wildcard Debug Command (NEW) | Traditional Debug Command | Fix Command |
-|---------|------------------------------|---------------------------|-------------|
-| Firebase timeout/auth | `logs-pattern TEST_ID "firebase.*"` | `logs-android-errors TEST_ID firebase` | `test-android 'system.network.*'` |
-| All error types | `logs-pattern TEST_ID "*.error"` | `logs-errors TEST_ID` | Investigate specific errors |
-| Hash mismatch/validation | `logs-pattern TEST_ID "*.checksum"` | `logs-android TEST_ID battle determinism` | `test-android 'game.match.reset_level'` |
-| Performance/timeouts | `logs-pattern TEST_ID "performance.*"` | `logs-performance TEST_ID` | `test-android '*.*.performance'` |
-| Game system issues | `logs-pattern TEST_ID "game.*"` | `logs-android TEST_ID game` | `test-android 'game.*'` |
-| Startup/registry errors | `logs-pattern TEST_ID "system.initialization"` | `logs-android TEST_ID system startup` | `test-android 'system.debug.*'` |
-| Database issues | `logs-pattern TEST_ID "database.*"` | `logs-android TEST_ID database` | `test-android 'database.*'` |
-| Network problems | `logs-multi TEST_ID "*.timeout" "*.error" "network.*"` | `logs-android TEST_ID network` | `test-android 'network.*'` |
-| Checksum mismatch | `logs-pattern TEST_ID "*.checksum"` | `logs-android-errors TEST_ID checksum` | `test-android-update CONFIG` or investigate |
+### **🎯 Enhanced Failure Pattern Quick Reference (Wildcard + Text Search + Traditional)**
+| Symptom | Best Debug Command | Alternative Commands | Fix Command |
+|---------|-------------------|---------------------|-------------|
+| Firebase timeout/auth | `logs-text TEST_ID "firebase"` | `logs-pattern TEST_ID "firebase.*"` | `test-android 'system.network.*'` |
+| All error types | `logs-text TEST_ID "error"` | `logs-pattern TEST_ID "*.error"` or `logs-errors TEST_ID` | Investigate specific errors |
+| Hash mismatch/validation | `logs-text TEST_ID "checksum"` | `logs-pattern TEST_ID "*.checksum"` | `test-android 'game.match.reset_level'` |
+| Performance/timeouts | `logs-text TEST_ID "timeout"` | `logs-pattern TEST_ID "performance.*"` | `test-android '*.*.performance'` |
+| Integration failures | `logs-text TEST_ID "integration"` | `logs-pattern TEST_ID "*.integrity"` | Fix specific integration issue |
+| System warnings | `logs-text TEST_ID "warning"` | `logs-pattern TEST_ID "*.warning"` | Investigate warnings |
+| Database issues | `logs-text TEST_ID "database"` | `logs-pattern TEST_ID "database.*"` | `test-android 'database.*'` |
+| Network problems | `logs-text TEST_ID "network"` | `logs-multi TEST_ID "*.timeout" "*.error"` | `test-android 'network.*'` |
+| Specific text search | `logs-text TEST_ID "any string"` | N/A | Context-dependent |
 
 ## 📋 Log Commands (Two Distinct Types)
 
@@ -121,6 +122,7 @@ just help-wildcard-quick                   # Quick reference
 ```bash
 # Primary (Use First)
 just logs-errors TEST_ID                   # Error-focused (98% savings)
+just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search (case-insensitive, token-efficient)
 just logs-last                             # Latest run (99% savings)
 just logs-android TEST_ID [component] or just logs-desktop TEST_ID [component]  # Component analysis (87-95% savings)
 
