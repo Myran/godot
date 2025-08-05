@@ -153,6 +153,158 @@ _validate-and-prepare-config config_name platform:
     echo "$TEMP_CONFIG_PATH"
 
 # ================================
+# PLATFORM FILTERING FUNCTIONS
+# ================================
+
+# Check if a config supports the specified platform
+_is-platform-supported config_path platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    PLATFORM="{{platform}}"
+    
+    # Check if config file exists
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "false"
+        exit 0
+    fi
+    
+    # Check if platforms field exists and contains the specified platform
+    if jq -e '.platforms' "$CONFIG_PATH" >/dev/null 2>&1; then
+        # Platforms field exists - check if it contains our platform
+        if jq -e --arg platform "$PLATFORM" '.platforms | index($platform)' "$CONFIG_PATH" >/dev/null 2>&1; then
+            echo "true"
+        else
+            echo "false"
+        fi
+    else
+        # No platforms field - assume cross-platform (backward compatibility)
+        echo "true"
+    fi
+
+# Get supported platforms from config
+_get-supported-platforms config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_PATH="{{config_path}}"
+    
+    # Check if config file exists
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "unknown"
+        exit 0
+    fi
+    
+    # Check if platforms field exists
+    if jq -e '.platforms' "$CONFIG_PATH" >/dev/null 2>&1; then
+        # Extract platforms and format nicely
+        PLATFORMS=$(jq -r '.platforms | join(", ")' "$CONFIG_PATH")
+        echo "$PLATFORMS"
+    else
+        # No platforms field - assume cross-platform
+        echo "android, desktop"
+    fi
+
+# Show platform compatibility for a config
+_show-platform-info config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_NAME"
+        exit 0
+    fi
+    
+    DESCRIPTION=$(jq -r '.description // "No description"' "$CONFIG_PATH")
+    PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH")
+    
+    echo "📋 Config: $CONFIG_NAME"
+    echo "   Description: $DESCRIPTION"
+    echo "   Platforms: $PLATFORMS"
+
+# Show platform compatibility for multiple configs or test lists
+show-platform-matrix target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TARGET="{{target}}"
+    
+    if [[ -z "$TARGET" ]]; then
+        echo "Usage: just show-platform-matrix CONFIG_OR_TEST_LIST"
+        echo ""
+        echo "Examples:"
+        echo "  just show-platform-matrix firebase-all"
+        echo "  just show-platform-matrix firebase-cpp-layer"
+        exit 1
+    fi
+    
+    # Check if it's a test list first
+    TEST_LIST_PATH="./project/test-lists/${TARGET}.json"
+    CONFIG_PATH="./project/debug_configs/${TARGET}.json"
+    
+    if [[ -f "$TEST_LIST_PATH" ]]; then
+        echo "📋 PLATFORM COMPATIBILITY MATRIX: $TARGET (Test List)"
+        echo "================================================"
+        
+        # Get configs from test list (handle @ references)
+        HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
+        HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
+        if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
+            CONFIGS=$(just _expand_at_references "$TARGET")
+        else
+            CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
+        fi
+        
+        echo "┌─────────────────────────────┬─────────┬─────────┐"
+        echo "│ Config                      │ Android │ Desktop │"
+        echo "├─────────────────────────────┼─────────┼─────────┤"
+        
+        while IFS= read -r config; do
+            if [[ -z "$config" ]]; then
+                continue
+            fi
+            
+            CONFIG_FILE="./project/debug_configs/${config}.json"
+            if [[ ! -f "$CONFIG_FILE" ]]; then
+                printf "│ %-27s │    ?    │    ?    │\n" "$config"
+                continue
+            fi
+            
+            ANDROID_SUPPORT="❌"
+            DESKTOP_SUPPORT="❌"
+            
+            if [[ "$(just _is-platform-supported "$CONFIG_FILE" "android")" == "true" ]]; then
+                ANDROID_SUPPORT="✅"
+            fi
+            
+            if [[ "$(just _is-platform-supported "$CONFIG_FILE" "desktop")" == "true" ]]; then
+                DESKTOP_SUPPORT="✅"
+            fi
+            
+            printf "│ %-27s │   %-3s   │   %-3s   │\n" "$config" "$ANDROID_SUPPORT" "$DESKTOP_SUPPORT"
+        done <<< "$CONFIGS"
+        
+        echo "└─────────────────────────────┴─────────┴─────────┘"
+        
+    elif [[ -f "$CONFIG_PATH" ]]; then
+        echo "📋 PLATFORM COMPATIBILITY: $TARGET (Config)"
+        echo "========================================="
+        just _show-platform-info "$TARGET"
+        
+    else
+        echo "❌ Neither test list nor config found: $TARGET"
+        echo "💡 Available test lists:"
+        ls project/test-lists/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
+        echo "💡 Available configs:"
+        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        exit 1
+    fi
+
+# ================================
 # CHECKSUM VALIDATION FUNCTIONS
 # ================================
 
@@ -1164,6 +1316,9 @@ _test-list-generic test_list platform:
     TOTAL_CONFIGS=0
     PASSED_CONFIGS=0
     FAILED_CONFIGS=0
+    SKIPPED_CONFIGS=0
+    SKIPPED_CONFIG_NAMES=()
+    SKIPPED_CONFIG_REASONS=()
     
     while IFS= read -r config; do
         if [[ -z "$config" ]]; then
@@ -1177,9 +1332,26 @@ _test-list-generic test_list platform:
         echo "================================================="
         
         # Execute configuration using the unified system
-        if just _execute-test-with-analysis "$config" "$PLATFORM"; then
+        set +e  # Temporarily disable exit on error to capture exit codes
+        just _execute-test-with-analysis "$config" "$PLATFORM"
+        exit_code=$?
+        set -e  # Re-enable exit on error
+        
+        if [[ $exit_code -eq 0 ]]; then
             echo "✅ Configuration passed: $config"
             PASSED_CONFIGS=$((PASSED_CONFIGS + 1))
+        elif [[ $exit_code -eq 2 ]]; then
+            # Platform skip - extract supported platforms for summary
+            CONFIG_PATH="./project/debug_configs/${config}.json"
+            if [[ -f "$CONFIG_PATH" ]]; then
+                SUPPORTED_PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH")
+                SKIPPED_CONFIG_NAMES+=("$config")
+                SKIPPED_CONFIG_REASONS+=("Available on: $SUPPORTED_PLATFORMS")
+            else
+                SKIPPED_CONFIG_NAMES+=("$config")
+                SKIPPED_CONFIG_REASONS+=("Platform compatibility issue")
+            fi
+            SKIPPED_CONFIGS=$((SKIPPED_CONFIGS + 1))
         else
             echo "❌ Configuration failed: $config"
             FAILED_CONFIGS=$((FAILED_CONFIGS + 1))
@@ -1195,9 +1367,34 @@ _test-list-generic test_list platform:
     echo "Test List: $TEST_LIST"
     echo "Platform: $PLATFORM"
     echo "Total Configurations: $TOTAL_CONFIGS"
-    echo "Passed: $PASSED_CONFIGS"
-    echo "Failed: $FAILED_CONFIGS"
-    echo "Success Rate: $(( PASSED_CONFIGS * 100 / TOTAL_CONFIGS ))%"
+    echo "✅ Passed: $PASSED_CONFIGS"
+    echo "❌ Failed: $FAILED_CONFIGS"
+    echo "⏭️ Skipped (Platform): $SKIPPED_CONFIGS"
+    
+    # Calculate success rate based on actually executed configs
+    EXECUTED_CONFIGS=$((PASSED_CONFIGS + FAILED_CONFIGS))
+    if [[ $EXECUTED_CONFIGS -gt 0 ]]; then
+        echo "Success Rate: $(( PASSED_CONFIGS * 100 / EXECUTED_CONFIGS ))% (of executed configs)"
+    fi
+    
+    # Show skipped configs with details
+    if [[ $SKIPPED_CONFIGS -gt 0 ]]; then
+        echo ""
+        echo "⏭️ SKIPPED CONFIGURATIONS:"
+        for i in "${!SKIPPED_CONFIG_NAMES[@]}"; do
+            echo "   • ${SKIPPED_CONFIG_NAMES[$i]} → ${SKIPPED_CONFIG_REASONS[$i]}"
+        done
+        
+        echo ""
+        echo "💡 To run skipped configs:"
+        if [[ "$PLATFORM" == "desktop" ]]; then
+            echo "   just test-android-target $TEST_LIST"
+            echo "   just test-android-target $(printf '%s ' "${SKIPPED_CONFIG_NAMES[@]}")"
+        else
+            echo "   just test-desktop-target $TEST_LIST"
+            echo "   just test-desktop-target $(printf '%s ' "${SKIPPED_CONFIG_NAMES[@]}")"
+        fi
+    fi
     
     if [[ $FAILED_CONFIGS -gt 0 ]]; then
         echo ""
@@ -1232,7 +1429,7 @@ _execute-test-with-analysis config_name platform:
     if [[ -f "$TEST_LIST_PATH" ]]; then
         echo "📋 Detected test list: $CONFIG_NAME"
         just _test-list-generic "$CONFIG_NAME" "$PLATFORM"
-        return
+        exit $?
     fi
     
     # Check if it's a debug config, or try to create wildcard pattern config
@@ -1255,6 +1452,22 @@ _execute-test-with-analysis config_name platform:
             exit 1
         fi
     fi
+    
+    # Platform compatibility check
+    echo "🔍 Checking platform compatibility..."
+    if [[ "$(just _is-platform-supported "$CONFIG_PATH" "$PLATFORM")" == "false" ]]; then
+        SUPPORTED_PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH")
+        echo "⏭️ SKIPPED: $CONFIG_NAME (requires $SUPPORTED_PLATFORMS - not supported on $PLATFORM)"
+        echo ""
+        echo "💡 To run this config:"
+        if [[ "$PLATFORM" == "desktop" ]]; then
+            echo "   just test-android-target $CONFIG_NAME"
+        else
+            echo "   just test-desktop-target $CONFIG_NAME"
+        fi
+        exit 2  # Special exit code for platform skip
+    fi
+    echo "✅ Platform compatible: $PLATFORM"
     
     # Generate test ID directly
     TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"

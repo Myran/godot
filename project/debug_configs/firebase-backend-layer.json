@@ -2,5 +2,6 @@
   "description": "Backend Firebase layer - All application backend and DataSource tests",
   "actions": [
 	"backend.*"
-  ]
+  ],
+  "platforms": ["android"]
 }

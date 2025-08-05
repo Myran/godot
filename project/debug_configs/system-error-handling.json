@@ -2,5 +2,6 @@
   "description": "Error handling across ALL systems - Tests resilience and error recovery",
   "actions": [
     "*.*.error_handling"
-  ]
+  ],
+  "platforms": ["android"]
 }

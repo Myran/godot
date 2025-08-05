@@ -3,6 +3,7 @@
   "actions": [
     "cpp.*"
   ],
+  "platforms": ["android"],
   "metadata": {
     "auto_quit": true
   },
