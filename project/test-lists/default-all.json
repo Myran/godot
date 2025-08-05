@@ -2,6 +2,6 @@
   "name": "Complete Test Suite",
   "description": "Comprehensive testing with full wildcard coverage - safe automation-friendly actions only",
   "configs": [
-    "@comprehensive-test-all"
+    "@comprehensive-with-determinism"
   ]
 }

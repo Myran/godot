@@ -149,7 +149,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
                         
                         options+=("📸 $name ($state_type) $status - $desc")
                     else
-                        options+=("📄 $name - $desc")
+                        options+=("⚙️ $name - $desc")
                     fi
                 fi
             done
@@ -166,11 +166,11 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     case "$CONTEXT" in
         "desktop")
             prompt="Select desktop test: "
-            header="🖥️  Desktop Testing | 🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            header="🖥️  Desktop Testing | ⚙️ Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
             ;;
         "android") 
             prompt="Select test target (manual mode): "
-            header="📱 Android Testing | 📋 Test Lists | 📸 Checksum Configs | 📄 Debug Configs | Use fuzzy search to filter"
+            header="📱 Android Testing | 📋 Test Lists | 📸 Checksum Configs | ⚙️ Debug Configs | Use fuzzy search to filter"
             ;;
         "checksum")
             prompt="Select checksum config to UPDATE: "
@@ -182,7 +182,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             ;;
         *)
             prompt="Select configuration: "
-            header="🔧 Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
+            header="⚙️ Debug Configs | 📝 Test Lists | Use fuzzy search to filter"
             ;;
     esac
     
@@ -197,8 +197,8 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     
     if [ -n "$selected_line" ]; then
         # Extract the name (between prefix and description) 
-        # Handle different prefixes: 📋 📸 📄 🔧 📝 🎬
-        selected=$(echo "$selected_line" | sed -E 's/^[📋📸📄🔧📝🎬] ([^ ]+)( \([^)]*\))? .*/\1/')
+        # Remove icon prefix, then remove description (either after dash or parentheses)
+        selected=$(echo "$selected_line" | sed 's/^[^ ]* //' | sed 's/ -.*//; s/ (.*//')
         echo "$selected"
         exit 0
     else
@@ -312,7 +312,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             done
             
             echo ""
-            echo "📄 DEBUG CONFIGS:"
+            echo "⚙️ DEBUG CONFIGS:"
             echo "----------------"
             # Add debug configs with proper checksum status
             for file in project/debug_configs/*.json; do
@@ -349,7 +349,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
                         
                         options+=("📸 $name ($state_type) $status - $desc")
                     else
-                        options+=("📄 $name - $desc")
+                        options+=("⚙️ $name - $desc")
                     fi
                 fi
             done

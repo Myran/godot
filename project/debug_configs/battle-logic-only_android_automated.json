@@ -1,0 +1,15 @@
+{
+  "description": "Test battle determinism with logic-only execution (fast, no animation)",
+  "seed": 55555,
+  "actions": [
+    "game.debug.hide_debug_menu",
+    "game.lineup.populate_enemy",
+    "game.battle.test_determinism_logic_only"
+  ],
+  "metadata": {
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "battle-logic-only_android_1754341673"
+  }
+}

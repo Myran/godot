@@ -23,7 +23,6 @@ const EdgeCasesRedPhaseScript = preload("res://debug/actions/test_edge_cases_red
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_memory_actions(registry)
 	_register_debug_system_actions(registry)
-	_register_connectivity_actions(registry)
 	_register_integrity_actions(registry)
 	# Legacy checksum actions removed - now using semantic logging approach
 	_register_test_actions(registry)
@@ -91,14 +90,7 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	)
 
 
-static func _register_connectivity_actions(registry: DebugActionRegistry) -> void:
-	# No connectivity actions currently registered
-	# Note: RTDB status check removed as Firebase classes not available on all platforms
-	pass
 
-
-# Legacy checksum validation function removed - now using semantic logging approach
-# The capture-based checksum system has been replaced with semantic action logging
 
 
 # System action implementations

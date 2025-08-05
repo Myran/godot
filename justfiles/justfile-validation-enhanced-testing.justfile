@@ -1109,15 +1109,41 @@ _execute-test-with-analysis config_name platform:
     echo "$(printf '=%.0s' {1..50})"
     echo ""
     
-    # Phase 1: Validate and prepare config (shared logic)
+    # Phase 1: Auto-detect between test list and debug config
+    TEST_LIST_PATH="./project/test-lists/${CONFIG_NAME}.json"
     CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
     
-    # Simple inline validation and setup to avoid export issues
+    # Check if it's a test list first
+    if [[ -f "$TEST_LIST_PATH" ]]; then
+        echo "📋 Detected test list: $CONFIG_NAME"
+        if [[ "$PLATFORM" == "android" ]]; then
+            just _test-list-android "$CONFIG_NAME"
+        else
+            echo "❌ Test list execution not yet implemented for platform: $PLATFORM"
+            exit 1
+        fi
+        return
+    fi
+    
+    # Check if it's a debug config, or try to create wildcard pattern config
     if [[ ! -f "$CONFIG_PATH" ]]; then
-        echo "❌ Config not found: $CONFIG_PATH"
-        echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
-        exit 1
+        echo "🔍 Config not found, checking for wildcard pattern: $CONFIG_NAME"
+        
+        # Try to validate/create config (handles wildcards, single actions, etc.)
+        if just _validate-config-exists "$CONFIG_NAME" >/dev/null 2>&1; then
+            echo "✅ Wildcard pattern config created: $CONFIG_NAME"
+            # Update CONFIG_PATH to point to the created temporary config
+            CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+        else
+            echo "❌ Neither test list nor config found:"
+            echo "   Test list: $TEST_LIST_PATH"
+            echo "   Config: $CONFIG_PATH"
+            echo "💡 Available configs:"
+            ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+            echo "💡 Available test lists:"
+            ls project/test-lists/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
+            exit 1
+        fi
     fi
     
     # Generate test ID directly

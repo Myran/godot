@@ -369,4 +369,4 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 			return [Log.TAG_GAME, Log.TAG_BATTLE, Log.TAG_SEMANTIC_ACTION]
 		_:
 			# Default fallback for unknown semantic actions
-			return [Log.TAG_SEMANTIC_ACTION, Log.TAG_UNKNOWN]
+			return [Log.TAG_SEMANTIC_ACTION]

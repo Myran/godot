@@ -545,6 +545,134 @@ _test-config-android-enhanced config_name:
     echo "✅ Enhanced test analysis completed"
     echo "Use 'just logs $TEST_ID' for detailed log analysis"
 
+# Match test lists based on wildcard pattern
+_match_test_list_pattern pattern current_context:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PATTERN="{{pattern}}"
+    CURRENT_CONTEXT="{{current_context}}"
+    TEST_LIST_DIR="./project/test-lists"
+    
+    # Remove @ prefix if present
+    PATTERN="${PATTERN#@}"
+    
+    # Convert wildcard pattern to shell glob
+    case "$PATTERN" in
+        *"*"*)
+            # Has wildcards - use shell globbing
+            shopt -s nullglob
+            for file in "$TEST_LIST_DIR"/${PATTERN}.json; do
+                if [[ -f "$file" ]] && jq -e . "$file" >/dev/null 2>&1; then
+                    list_name=$(basename "${file%%.json}")
+                    # Exclude self-reference to prevent circular dependencies
+                    if [[ "$list_name" != "$CURRENT_CONTEXT" ]]; then
+                        echo "$list_name"
+                    fi
+                fi
+            done
+            shopt -u nullglob
+            ;;
+        *)
+            # Exact match
+            if [[ -f "$TEST_LIST_DIR/${PATTERN}.json" ]] && jq -e . "$TEST_LIST_DIR/${PATTERN}.json" >/dev/null 2>&1; then
+                # Exclude self-reference
+                if [[ "$PATTERN" != "$CURRENT_CONTEXT" ]]; then
+                    echo "$PATTERN"
+                fi
+            fi
+            ;;
+    esac
+
+# Resolve test list reference with circular dependency detection
+_resolve_test_list_reference ref visited_stack:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    REF="{{ref}}"
+    VISITED_STACK="{{visited_stack}}"
+    TEST_LIST_DIR="./project/test-lists"
+    MAX_DEPTH=10
+    
+    # Remove @ prefix
+    REF_NAME="${REF#@}"
+    
+    # Check for circular dependency
+    if [[ "$VISITED_STACK" == *"|$REF_NAME|"* ]]; then
+        echo "❌ Circular reference detected: $REF_NAME in chain: ${VISITED_STACK//|/ → }"
+        exit 1
+    fi
+    
+    # Check recursion depth
+    DEPTH=$(echo "$VISITED_STACK" | tr -cd '|' | wc -c)
+    if [[ $DEPTH -gt $MAX_DEPTH ]]; then
+        echo "❌ Maximum reference depth ($MAX_DEPTH) exceeded: ${VISITED_STACK//|/ → } → $REF_NAME"
+        exit 1
+    fi
+    
+    # Update visited stack
+    NEW_VISITED_STACK="${VISITED_STACK}|${REF_NAME}|"
+    
+    # Resolve pattern or direct reference
+    if [[ "$REF_NAME" == *"*"* ]]; then
+        # Wildcard pattern - get all matching test lists
+        # Extract the root context from the visited stack
+        ROOT_CONTEXT=$(echo "$VISITED_STACK" | sed 's/^|\([^|]*\)|.*/\1/')
+        while IFS= read -r matched_list; do
+            if [[ -n "$matched_list" ]]; then
+                just _resolve_test_list_reference "@${matched_list}" "$NEW_VISITED_STACK"
+            fi
+        done < <(just _match_test_list_pattern "$REF_NAME" "$ROOT_CONTEXT")
+    else
+        # Direct reference - load and expand the test list
+        if [[ ! -f "$TEST_LIST_DIR/${REF_NAME}.json" ]]; then
+            echo "❌ Referenced test list not found: $REF_NAME"
+            exit 1
+        fi
+        
+        # Extract configs from referenced test list
+        jq -r '.configs[]?' "$TEST_LIST_DIR/${REF_NAME}.json" 2>/dev/null | while IFS= read -r config; do
+            if [[ "$config" =~ ^@ ]]; then
+                # Recursive @ reference
+                just _resolve_test_list_reference "$config" "$NEW_VISITED_STACK"
+            else
+                # Regular config
+                echo "$config"
+            fi
+        done
+    fi
+
+# Expand @ symbols in test list configs
+_expand_at_references test_list:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_LIST="{{test_list}}"
+    TEST_LIST_DIR="./project/test-lists"
+    
+    # Check if test list exists
+    if [[ ! -f "$TEST_LIST_DIR/${TEST_LIST}.json" ]]; then
+        echo "❌ Test list not found: $TEST_LIST_DIR/${TEST_LIST}.json"
+        exit 1
+    fi
+    
+    # Process each config in the test list and remove duplicates
+    TEMP_FILE=$(mktemp)
+    
+    jq -r '.configs[]?' "$TEST_LIST_DIR/${TEST_LIST}.json" 2>/dev/null | while IFS= read -r config; do
+        if [[ "$config" =~ ^@ ]]; then
+            # @ reference - resolve it, starting with the current test list as context
+            just _resolve_test_list_reference "$config" "|${TEST_LIST}|"
+        else
+            # Regular config
+            echo "$config"
+        fi
+    done | sort | uniq > "$TEMP_FILE"
+    
+    # Output unique configs
+    cat "$TEMP_FILE"
+    rm -f "$TEMP_FILE"
+
 # Expand test list configuration
 _expand_test_list test_list:
     #!/usr/bin/env bash
@@ -594,11 +722,26 @@ _expand_test_list test_list:
         exit 1
     fi
     
-    # Extract configuration names
-    echo "📋 Test list configurations:"
-    jq -r '.configs[]' "$TEST_LIST_DIR/${TEST_LIST}.json" | while read -r config; do
-        echo "  • $config"
-    done
+    # Check if test list contains @ references
+    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_DIR/${TEST_LIST}.json" 2>/dev/null | grep -c "^@" || echo "0")
+    HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
+    
+    if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
+        echo "🔄 Processing @ references in test list..."
+        echo "📋 Expanded configurations:"
+        
+        # Use @ symbol expansion
+        just _expand_at_references "$TEST_LIST" | while read -r config; do
+            if [[ -n "$config" ]]; then
+                echo "  • $config"
+            fi
+        done
+    else
+        echo "📋 Test list configurations:"
+        jq -r '.configs[]' "$TEST_LIST_DIR/${TEST_LIST}.json" | while read -r config; do
+            echo "  • $config"
+        done
+    fi
     
     echo ""
     echo "✅ Test list expanded successfully"
@@ -637,8 +780,16 @@ _test-list-android test_list:
         exit 1
     fi
     
-    # Get configs array
-    CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
+    # Check if test list contains @ references and expand accordingly
+    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
+    HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
+    
+    if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
+        echo "🔄 Expanding @ references..."
+        CONFIGS=$(just _expand_at_references "$TEST_LIST")
+    else
+        CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
+    fi
     
     if [[ -z "$CONFIGS" ]]; then
         echo "❌ No configurations found in test list"
@@ -649,7 +800,7 @@ _test-list-android test_list:
     description=$(jq -r '.description // "No description provided"' "$TEST_LIST_PATH")
     echo "Description: $description"
     
-    config_count=$(jq -r '.configurations | length' "$TEST_LIST_PATH")
+    config_count=$(jq -r '.configs | length' "$TEST_LIST_PATH")
     echo "Configurations: $config_count"
     
     echo ""

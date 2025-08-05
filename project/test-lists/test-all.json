@@ -1,0 +1,7 @@
+{
+  "name": "All Test Suites",
+  "description": "Comprehensive testing suite that automatically includes all *-all test lists using @ symbol wildcard expansion",
+  "configs": [
+    "@*-all"
+  ]
+}

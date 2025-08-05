@@ -37,6 +37,7 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 - `just test-android TARGET` - Main testing interface (auto-detects patterns/configs)
 - `just test-android-target CONFIG` - ⭐ **NEW: Enhanced automated testing with built-in validation**
 - `just test-desktop-target CONFIG` - ⭐ **NEW: Desktop automated testing with comprehensive validation**
+- `just test-android test-all` - ⭐ **NEW: Run ALL test suites automatically using @ symbol expansion**
 - `just config-restart-android ACTION` - 5-second iteration cycles
 - `just logs-errors TEST_ID` - Token-efficient error detection
 
@@ -186,6 +187,44 @@ just test-android '*.debug.*'             # All debug utilities
 just test-android '*.*.error_handling'    # All error handling
 just test-android '*.*.performance'       # All performance tests
 ```
+
+### **⭐ NEW: @ Symbol Test List References**
+
+**Automatically include configs from other test lists using @ symbol references:**
+
+```bash
+# Direct test list references
+"@system-all"              # Include all configs from system-all.json
+"@firebase-all"            # Include all configs from firebase-all.json  
+"@battle-all"              # Include all configs from battle-all.json
+
+# Wildcard test list references  
+"@*-all"                   # Include configs from ALL test lists ending with "-all"
+"@firebase-*"              # Include configs from ALL test lists starting with "firebase-"
+"@*-validation"            # Include configs from ALL test lists ending with "-validation"
+```
+
+**Example Test List with @ References:**
+```json
+{
+  "name": "All Test Suites",
+  "description": "Run all *-all test suites automatically",
+  "configs": [
+    "@*-all"
+  ]
+}
+```
+
+**Built-in Test Lists Using @ References:**
+- `test-all` - Automatically runs ALL `*-all` test suites using `@*-all` pattern
+- Automatically prevents circular references and deduplicates configs
+- Supports unlimited nesting depth with cycle detection
+
+**Key Benefits:**
+- ✅ **Automatic Discovery**: New `*-all` lists are automatically included
+- ✅ **No Duplication**: Configs appearing in multiple lists are deduplicated  
+- ✅ **Circular Protection**: Built-in circular dependency detection
+- ✅ **Easy Maintenance**: Add new test suites without updating master lists
 
 ### **Input Auto-Detection**
 Commands automatically detect input type:
