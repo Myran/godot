@@ -1300,19 +1300,52 @@ _test-list-generic test_list platform:
     description=$(jq -r '.description // "No description provided"' "$TEST_LIST_PATH")
     echo "Description: $description"
     
-    config_count=$(jq -r '.configs | length' "$TEST_LIST_PATH")
+    # Convert configs to array for reliable iteration using standard bash
+    IFS=$'\n' read -r -d '' -a CONFIG_ARRAY <<< "$CONFIGS" || true
+    config_count=${#CONFIG_ARRAY[@]}
     echo "Configurations: $config_count"
     
     echo ""
-    echo "📋 Configuration List:"
-    echo "==================="
-    echo "$CONFIGS" | nl -w2 -s'. '
+    echo "📋 Full Test Execution Plan (Expanded from @ references):"
+    echo "=========================================================="
+    COMPATIBLE_COUNT=0
+    SKIP_COUNT=0
+    for i in "${!CONFIG_ARRAY[@]}"; do
+        config="${CONFIG_ARRAY[$i]}"
+        printf "%2d. %-30s" $((i+1)) "$config"
+        
+        # Show config type and platform compatibility
+        CONFIG_PATH="./project/debug_configs/${config}.json"
+        if [[ -f "$CONFIG_PATH" ]]; then
+            # Check platform compatibility using the same logic as execution
+            PLATFORM_CHECK=$(just _is-platform-supported "$CONFIG_PATH" "$PLATFORM" 2>/dev/null || echo "false")
+            if [[ "$PLATFORM_CHECK" == "true" ]]; then
+                echo " ✅ Will run on $PLATFORM"
+                COMPATIBLE_COUNT=$((COMPATIBLE_COUNT + 1))
+            else
+                SUPPORTED_PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH" 2>/dev/null || echo "unknown")
+                echo " ⏭️  Skip - Requires: $SUPPORTED_PLATFORMS"
+                SKIP_COUNT=$((SKIP_COUNT + 1))
+            fi
+        else
+            # For auto-generated configs (wildcards), assume compatible with current platform
+            echo " 🔍 Will run on $PLATFORM (auto-generated)"
+            COMPATIBLE_COUNT=$((COMPATIBLE_COUNT + 1))
+        fi
+    done
+    
+    echo ""
+    echo "📊 Platform Compatibility Summary:"
+    echo "   ✅ Will execute: $COMPATIBLE_COUNT configs on $PLATFORM"
+    if [[ $SKIP_COUNT -gt 0 ]]; then
+        echo "   ⏭️  Will skip: $SKIP_COUNT configs (platform incompatible)"
+    fi
     
     echo ""
     echo "🚀 Starting test execution..."
     echo "============================="
     
-    # Execute each configuration using the unified analysis system
+    # Execute each configuration using array-based iteration
     TOTAL_CONFIGS=0
     PASSED_CONFIGS=0
     FAILED_CONFIGS=0
@@ -1320,7 +1353,9 @@ _test-list-generic test_list platform:
     SKIPPED_CONFIG_NAMES=()
     SKIPPED_CONFIG_REASONS=()
     
-    while IFS= read -r config; do
+    for i in "${!CONFIG_ARRAY[@]}"; do
+        config="${CONFIG_ARRAY[$i]}"
+        
         if [[ -z "$config" ]]; then
             continue
         fi
@@ -1328,12 +1363,12 @@ _test-list-generic test_list platform:
         TOTAL_CONFIGS=$((TOTAL_CONFIGS + 1))
         
         echo ""
-        echo "🔍 Testing configuration $TOTAL_CONFIGS: $config"
-        echo "================================================="
+        echo "🔍 Testing configuration $TOTAL_CONFIGS/$config_count: $config"
+        echo "================================================================="
         
         # Execute configuration using the unified system
         set +e  # Temporarily disable exit on error to capture exit codes
-        just _execute-test-with-analysis "$config" "$PLATFORM"
+        INSIDE_TEST_LIST_EXECUTION=true just _execute-test-with-analysis "$config" "$PLATFORM"
         exit_code=$?
         set -e  # Re-enable exit on error
         
@@ -1358,8 +1393,11 @@ _test-list-generic test_list platform:
         fi
         
         # Small delay between tests
-        sleep 2
-    done <<< "$CONFIGS"
+        if [[ $TOTAL_CONFIGS -lt $config_count ]]; then
+            echo "⏱️  Pausing 2 seconds before next test..."
+            sleep 2
+        fi
+    done
     
     echo ""
     echo "📊 Test List Results Summary"
@@ -1425,8 +1463,8 @@ _execute-test-with-analysis config_name platform:
     TEST_LIST_PATH="./project/test-lists/${CONFIG_NAME}.json"
     CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
     
-    # Check if it's a test list first
-    if [[ -f "$TEST_LIST_PATH" ]]; then
+    # Check if it's a test list first (but skip if we're already inside test list execution)
+    if [[ -f "$TEST_LIST_PATH" && "${INSIDE_TEST_LIST_EXECUTION:-false}" != "true" ]]; then
         echo "📋 Detected test list: $CONFIG_NAME"
         just _test-list-generic "$CONFIG_NAME" "$PLATFORM"
         exit $?
