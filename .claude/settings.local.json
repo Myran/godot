@@ -146,7 +146,12 @@
       "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=90 just test-android-target firebase-rtdb-comprehensive)",
       "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=60 just test-android-target firebase-rtdb-listeners)",
       "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=60 just test-android-target firebase-cpp-backend-only)",
-      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=90 just test-android-target firebase-all-layers)"
+      "Bash(ANDROID_TEST_ACTIVITY_TIMEOUT=90 just test-android-target firebase-all-layers)",
+      "Bash(ANDROID_TEST_MAX_TIMEOUT=60 just test-android system-all)",
+      "Bash(chmod:*)",
+      "Bash(/tmp/debug_collect.sh:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)"
     ],
     "deny": []
   }
