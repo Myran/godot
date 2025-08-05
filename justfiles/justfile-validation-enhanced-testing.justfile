@@ -1009,54 +1009,79 @@ _analyze-test-errors test_id platform:
 # ================================
 
 # Collect action execution results from logs and save to file
-_collect-action-results test_id platform:
+_collect-action-results test_id platform config_name="unknown":
     #!/usr/bin/env bash
-    set -euo pipefail
+    set -eo pipefail
     
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
+    CONFIG_NAME="{{config_name}}"
+    
+    # Create persistent results file that includes config name and platform for comprehensive breakdown
+    # Use a more specific naming pattern that won't conflict
+    RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+    echo "[]" > "$RESULTS_FILE"
+    
+    LOGS=""
     
     # Extract and save logs for analysis (this persists them for later use)
     case "$PLATFORM" in
         "android")
             if ! command -v adb >/dev/null 2>&1; then
-                return 0
-            fi
-            # Extract and save Android logs to file for later analysis
-            just _extract-logs-android "$TEST_ID"
-            # Then read from the saved file
-            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
-            if [[ -f "$ANDROID_LOG_FILE" ]]; then
-                LOGS=$(cat "$ANDROID_LOG_FILE")
+                echo "⚠️  adb not available - creating empty results file"
             else
-                LOGS=""
+                # Extract and save Android logs to file for later analysis
+                just _extract-logs-android "$TEST_ID" || echo "⚠️  Failed to extract Android logs"
+                # Then read from the saved file
+                USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+                ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
+                if [[ -f "$ANDROID_LOG_FILE" ]]; then
+                    LOGS=$(cat "$ANDROID_LOG_FILE")
+                    echo "📄 Read $(echo "$LOGS" | wc -l) lines from Android log file"
+                else
+                    echo "⚠️  Android log file not found: $ANDROID_LOG_FILE"
+                fi
             fi
             ;;
         "desktop")
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
             LOGS_DIR="$USER_DATA_DIR/logs"
             if [[ ! -d "$LOGS_DIR" ]]; then
-                return 0
+                echo "⚠️  Desktop logs directory not found: $LOGS_DIR"
+            else
+                LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
+                if [[ -z "$LATEST_LOG" ]]; then
+                    echo "⚠️  No desktop log files found in $LOGS_DIR"
+                else
+                    echo "🔍 Found desktop log file: $LATEST_LOG"
+                    if [[ -f "$LATEST_LOG" ]]; then
+                        LOGS=$(cat "$LATEST_LOG" || echo "")
+                        if [[ -n "$LOGS" ]]; then
+                            echo "📄 Read $(echo "$LOGS" | wc -l) lines from desktop log file: $LATEST_LOG"
+                        else
+                            echo "⚠️  Desktop log file is empty: $LATEST_LOG"
+                        fi
+                    else
+                        echo "⚠️  Desktop log file not accessible: $LATEST_LOG"
+                    fi
+                fi
             fi
-            LATEST_LOG=$(find "$LOGS_DIR" -name "*.log" -type f -exec ls -t {} + | head -1)
-            if [[ -z "$LATEST_LOG" ]]; then
-                return 0
-            fi
-            LOGS=$(cat "$LATEST_LOG")
             ;;
         *)
-            return 0
+            echo "⚠️  Unsupported platform: $PLATFORM"
             ;;
     esac
     
     if [[ -z "$LOGS" ]]; then
+        echo "📝 No logs found - creating empty results file: $RESULTS_FILE"
+        echo "   TEST_ID: $TEST_ID"
+        echo "   CONFIG_NAME: $CONFIG_NAME" 
+        echo "   PLATFORM: $PLATFORM"
         return 0
     fi
     
-    # Create results file
-    RESULTS_FILE="/tmp/test_action_results_${TEST_ID}.json"
-    echo "[]" > "$RESULTS_FILE"
+    LOG_LINE_COUNT=$(echo "$LOGS" | wc -l | tr -d ' ')
+    echo "🔍 Processing $LOG_LINE_COUNT log lines for action results..."
     
     # Process successful actions - use process substitution to avoid subshell issues
     while IFS= read -r line; do
@@ -1076,9 +1101,9 @@ _collect-action-results test_id platform:
                 SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
                 
                 if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
-                    # Create result entry using jq for proper JSON formatting
+                    # Create result entry using jq for proper JSON formatting with context
                     TEMP_FILE=$(mktemp)
-                    if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                    if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\",\"test_id\":\"$TEST_ID\",\"config_name\":\"$CONFIG_NAME\",\"platform\":\"$PLATFORM\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
                         mv "$TEMP_FILE" "$RESULTS_FILE"
                     else
                         rm -f "$TEMP_FILE"
@@ -1107,9 +1132,9 @@ _collect-action-results test_id platform:
                 ERROR_MSG=$(echo "$JSON_PART" | jq -r '.error // ""' 2>/dev/null)
                 
                 if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
-                    # Create result entry using jq for proper JSON formatting and escaping
+                    # Create result entry using jq for proper JSON formatting and escaping with context
                     TEMP_FILE=$(mktemp)
-                    if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                    if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg platform "$PLATFORM" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error,\"test_id\":\$test_id,\"config_name\":\$config_name,\"platform\":\$platform}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
                         mv "$TEMP_FILE" "$RESULTS_FILE"
                     else
                         rm -f "$TEMP_FILE"
@@ -1118,15 +1143,25 @@ _collect-action-results test_id platform:
             fi
         fi
     done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
+    
+    # Log completion status
+    ACTION_COUNT=$(jq 'length' "$RESULTS_FILE" 2>/dev/null || echo 0)
+    echo "✅ Action results collection complete:"
+    echo "   📁 File: $RESULTS_FILE"
+    echo "   📊 Actions collected: $ACTION_COUNT"
+    echo "   🎯 TEST_ID: $TEST_ID"
+    echo "   ⚙️  CONFIG_NAME: $CONFIG_NAME"
+    echo "   🖥️  PLATFORM: $PLATFORM"
 
 # Generate detailed action summary from collected results file
-_generate-action-summary-from-file test_id config_name:
+_generate-action-summary-from-file test_id config_name platform:
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{test_id}}"
     CONFIG_NAME="{{config_name}}"
-    RESULTS_FILE="/tmp/test_action_results_${TEST_ID}.json"
+    PLATFORM="{{platform}}"
+    RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
     
     echo ""
     echo "📊 Detailed Action Execution Summary"
@@ -1210,22 +1245,22 @@ _generate-action-summary-from-file test_id config_name:
     echo "**✅ Actions Passed**: **$PASSED_ACTIONS/$TOTAL_ACTIONS ($((PASSED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
     echo "**❌ Actions Failed**: **$FAILED_ACTIONS/$TOTAL_ACTIONS ($((FAILED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
     
-    # Clean up results file
-    rm -f "$RESULTS_FILE"
+    # Keep results file for comprehensive breakdown - it will be cleaned up later
 
 # Hook that can be called after any test execution to add error analysis
-_post-test-validation test_id platform:
+_post-test-validation test_id platform config_name="unknown":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
+    CONFIG_NAME="{{config_name}}"
     
     # Collect action results from logs first
-    just _collect-action-results "$TEST_ID" "$PLATFORM"
+    just _collect-action-results "$TEST_ID" "$PLATFORM" "$CONFIG_NAME"
     
     # Generate detailed action summary
-    just _generate-action-summary-from-file "$TEST_ID" "${CURRENT_CONFIG_NAME:-unknown}"
+    just _generate-action-summary-from-file "$TEST_ID" "$CONFIG_NAME" "$PLATFORM"
     
     echo ""
     echo "🔍 Running Post-Test Error Analysis..."
@@ -1283,6 +1318,19 @@ _test-list-generic test_list platform:
     # Check if test list contains @ references and expand accordingly
     HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
     HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
+    
+    # Create hierarchical mapping data structure for comprehensive breakdown
+    HIERARCHY_FILE="/tmp/test_hierarchy_${TEST_LIST}_$(date +%s).json"
+    echo '{"test_list": "'$TEST_LIST'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
+    
+    # Store original config structure from test list
+    jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | while IFS= read -r config; do
+        if [[ -n "$config" ]]; then
+            TEMP_FILE=$(mktemp)
+            jq --arg config "$config" '.original_configs += [$config]' \
+               "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
+        fi
+    done
     
     if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
         echo "🔄 Expanding @ references..."
@@ -1372,9 +1420,15 @@ _test-list-generic test_list platform:
         exit_code=$?
         set -e  # Re-enable exit on error
         
+        # Store execution result in hierarchy file for comprehensive breakdown
         if [[ $exit_code -eq 0 ]]; then
             echo "✅ Configuration passed: $config"
             PASSED_CONFIGS=$((PASSED_CONFIGS + 1))
+            # Store success result
+            TEMP_FILE=$(mktemp)
+            jq --arg config "$config" --arg status "passed" --arg platform "$PLATFORM" \
+               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": 0}]' \
+               "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
         elif [[ $exit_code -eq 2 ]]; then
             # Platform skip - extract supported platforms for summary
             CONFIG_PATH="./project/debug_configs/${config}.json"
@@ -1383,13 +1437,24 @@ _test-list-generic test_list platform:
                 SKIPPED_CONFIG_NAMES+=("$config")
                 SKIPPED_CONFIG_REASONS+=("Available on: $SUPPORTED_PLATFORMS")
             else
+                SUPPORTED_PLATFORMS="Platform compatibility issue"
                 SKIPPED_CONFIG_NAMES+=("$config")
-                SKIPPED_CONFIG_REASONS+=("Platform compatibility issue")
+                SKIPPED_CONFIG_REASONS+=("$SUPPORTED_PLATFORMS")
             fi
             SKIPPED_CONFIGS=$((SKIPPED_CONFIGS + 1))
+            # Store skip result
+            TEMP_FILE=$(mktemp)
+            jq --arg config "$config" --arg status "skipped" --arg platform "$PLATFORM" --arg reason "$SUPPORTED_PLATFORMS" \
+               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": 2, "skip_reason": $reason}]' \
+               "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
         else
             echo "❌ Configuration failed: $config"
             FAILED_CONFIGS=$((FAILED_CONFIGS + 1))
+            # Store failure result
+            TEMP_FILE=$(mktemp)
+            jq --arg config "$config" --arg status "failed" --arg platform "$PLATFORM" --argjson exit_code "$exit_code" \
+               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": $exit_code}]' \
+               "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
         fi
         
         # Small delay between tests
@@ -1434,6 +1499,11 @@ _test-list-generic test_list platform:
         fi
     fi
     
+    # Generate comprehensive breakdown showing complete traceability
+    if [[ -f "$HIERARCHY_FILE" ]]; then
+        just _generate-comprehensive-breakdown "$HIERARCHY_FILE"
+    fi
+    
     if [[ $FAILED_CONFIGS -gt 0 ]]; then
         echo ""
         echo "❌ Some configurations failed. Check individual test results above."
@@ -1442,6 +1512,203 @@ _test-list-generic test_list platform:
         echo ""
         echo "✅ All configurations passed!"
     fi
+
+# ================================
+# COMPREHENSIVE BREAKDOWN GENERATION
+# ================================
+
+# Generate comprehensive hierarchical breakdown showing test list → configs → actions
+_generate-comprehensive-breakdown hierarchy_file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    HIERARCHY_FILE="{{hierarchy_file}}"
+    
+    # Check if hierarchy file exists
+    if [[ ! -f "$HIERARCHY_FILE" ]]; then
+        echo "⚠️  Hierarchy file not found: $HIERARCHY_FILE"
+        return 0
+    fi
+    
+    # Check if file has valid JSON
+    if ! jq -e . "$HIERARCHY_FILE" >/dev/null 2>&1; then
+        echo "⚠️  Invalid JSON in hierarchy file"
+        return 0
+    fi
+    
+    echo ""
+    echo "📋 Complete Test Execution Breakdown"
+    echo "===================================="
+    
+    # Extract basic info from hierarchy file
+    TEST_LIST=$(jq -r '.test_list // "unknown"' "$HIERARCHY_FILE")
+    PLATFORM=$(jq -r '.config_results[0].platform // "unknown"' "$HIERARCHY_FILE")
+    TOTAL_CONFIGS=$(jq '.config_results | length' "$HIERARCHY_FILE")
+    
+    echo "Test List: $TEST_LIST ($PLATFORM) - $TOTAL_CONFIGS configs executed"
+    echo ""
+    
+    # Track overall statistics
+    TOTAL_ACTIONS=0
+    PASSED_ACTIONS=0
+    FAILED_ACTIONS=0
+    SKIPPED_ACTIONS=0
+    
+    # Process @ references first (expanded configs)
+    jq -r '.original_configs[]?' "$HIERARCHY_FILE" 2>/dev/null | while IFS= read -r original_config; do
+        if [[ "$original_config" =~ ^@ ]]; then
+            echo "📦 ${original_config} (expanded from @ reference)"
+            
+            # Get all configs that would have come from this @ reference
+            # For now, we'll group by @ references by finding configs that match patterns
+            AT_REF_NAME="${original_config#@}"  # Remove @ symbol
+            
+            # Find configs that likely came from this @ reference based on naming patterns
+            # This is a simplified approach - in a full implementation we'd need more sophisticated mapping
+            jq -r '.config_results[] | select(.config | contains("'"$AT_REF_NAME"'") or (.config | test("firebase|backend|rtdb|cpp"))) | .config' "$HIERARCHY_FILE" 2>/dev/null | sort | uniq | while IFS= read -r config; do
+                if [[ -n "$config" ]]; then
+                    # Get config execution result
+                    CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                    
+                    case "$CONFIG_STATUS" in
+                        "passed")
+                            echo "   ├── 🔧 $config ✅ PASSED"
+                            ;;
+                        "failed")
+                            echo "   ├── 🔧 $config ❌ FAILED"
+                            ;;
+                        "skipped")
+                            SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                            echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
+                            ;;
+                        *)
+                            echo "   ├── 🔧 $config ❓ UNKNOWN"
+                            ;;
+                    esac
+                    
+                    # Find action results for this config using the new naming pattern
+                    # The pattern is: test_action_results_{config}_{platform}_{test_id}.json
+                    for results_file in /tmp/test_action_results_${config}_${PLATFORM}_*.json; do
+                        if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
+                            # File name already matches our config, so we can proceed directly
+                        # Show individual actions for this config (exclude replay_complete)
+                        jq -r '.[] | select(.action | contains("replay_complete") | not) | "\(.success)|\(.action)|\(.duration_ms)|\(.error_message)"' "$results_file" 2>/dev/null | while IFS='|' read -r success action duration error; do
+                                    if [[ -n "$action" ]]; then
+                                        if [[ "$success" == "true" ]]; then
+                                            echo "   │   ├── ✅ $action (${duration}ms)"
+                                        else
+                                            if [[ -n "$error" && "$error" != "null" && "$error" != "" ]]; then
+                                                echo "   │   ├── ❌ $action ($error)"
+                                            else
+                                                echo "   │   ├── ❌ $action (FAILED)"
+                                            fi
+                                        fi
+                                    fi
+                                done
+                                break  # Found the results file for this config
+                        fi
+                    done
+                fi
+            done
+            echo ""
+        fi
+    done
+    
+    # Process direct configs (non-@ references)
+    DIRECT_CONFIGS=$(jq -r '.original_configs[]? | select(. | startswith("@") | not)' "$HIERARCHY_FILE" 2>/dev/null)
+    if [[ -n "$DIRECT_CONFIGS" ]]; then
+        echo "📦 Direct configs"
+        echo "$DIRECT_CONFIGS" | while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                # Get config execution result
+                CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                
+                case "$CONFIG_STATUS" in
+                    "passed")
+                        echo "   ├── 🔧 $config ✅ PASSED"
+                        ;;
+                    "failed")
+                        echo "   ├── 🔧 $config ❌ FAILED"
+                        ;;
+                    "skipped")
+                        SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                        echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
+                        ;;
+                    *)
+                        echo "   ├── 🔧 $config ❓ UNKNOWN"
+                        ;;
+                esac
+                
+                # Find action results for this config using the new naming pattern
+                for results_file in /tmp/test_action_results_${config}_${PLATFORM}_*.json; do
+                    if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
+                        # File name already matches our config, so we can proceed directly
+                        # Show individual actions for this config (exclude replay_complete)
+                        jq -r '.[] | select(.action | contains("replay_complete") | not) | "\(.success)|\(.action)|\(.duration_ms)|\(.error_message)"' "$results_file" 2>/dev/null | while IFS='|' read -r success action duration error; do
+                                if [[ -n "$action" ]]; then
+                                    if [[ "$success" == "true" ]]; then
+                                        echo "   │   ├── ✅ $action (${duration}ms)"
+                                    else
+                                        if [[ -n "$error" && "$error" != "null" && "$error" != "" ]]; then
+                                            echo "   │   ├── ❌ $action ($error)"
+                                        else
+                                            echo "   │   ├── ❌ $action (FAILED)"
+                                        fi
+                                    fi
+                                fi
+                            done
+                            break  # Found the results file for this config
+                        fi
+                done
+            fi
+        done
+        echo ""
+    fi
+    
+    echo "📊 Execution Summary"
+    echo "==================="
+    echo "Total Test Lists: 1"  
+    echo "Total Configs: $TOTAL_CONFIGS"
+    
+    # Calculate action statistics from all action result files for this test session
+    PASSED_ACTIONS=0
+    FAILED_ACTIONS=0 
+    TOTAL_ACTIONS=0
+    
+    # Find all action result files for configs from this test list
+    for results_file in /tmp/test_action_results_*.json; do
+        if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
+            # Check if this results file is from our current test session
+            CONFIG_FROM_FILE=$(jq -r '.[0].config_name // ""' "$results_file" 2>/dev/null)
+            
+            # Check if this config was part of our test list
+            if jq -e '.config_results[] | select(.config == "'"$CONFIG_FROM_FILE"'")' "$HIERARCHY_FILE" >/dev/null 2>&1; then
+                # Count actions excluding replay_complete
+                ACTIONS_PASSED=$(jq '[.[] | select(.success == true and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
+                ACTIONS_FAILED=$(jq '[.[] | select(.success == false and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
+                ACTIONS_TOTAL=$(jq '[.[] | select(.action | contains("replay_complete") | not)] | length' "$results_file" 2>/dev/null || echo 0)
+                
+                PASSED_ACTIONS=$((PASSED_ACTIONS + ACTIONS_PASSED))
+                FAILED_ACTIONS=$((FAILED_ACTIONS + ACTIONS_FAILED))
+                TOTAL_ACTIONS=$((TOTAL_ACTIONS + ACTIONS_TOTAL))
+            fi
+        fi
+    done
+    
+    if [[ $TOTAL_ACTIONS -gt 0 ]]; then
+        echo "Total Debug Actions: $TOTAL_ACTIONS"
+        echo "✅ Passed Actions: $PASSED_ACTIONS ($(( PASSED_ACTIONS * 100 / TOTAL_ACTIONS ))%)"
+        echo "❌ Failed Actions: $FAILED_ACTIONS ($(( FAILED_ACTIONS * 100 / TOTAL_ACTIONS ))%)"
+        if [[ $SKIPPED_ACTIONS -gt 0 ]]; then
+            echo "⏭️ Skipped Actions: $SKIPPED_ACTIONS ($(( SKIPPED_ACTIONS * 100 / TOTAL_ACTIONS ))%)"
+        fi
+    else
+        echo "No action-level results available"
+    fi
+    
+    # Clean up action results files and hierarchy file
+    rm -f /tmp/test_action_results_*_${PLATFORM}_*.json
+    rm -f "$HIERARCHY_FILE"
 
 # ================================
 # UNIFIED TEST EXECUTION PATTERN
@@ -1583,7 +1850,7 @@ _execute-test-with-analysis config_name platform:
     # Phase 3: Unified post-test validation (shared logic)
     if [[ $TEST_RESULT -eq 0 ]]; then
         # Run error analysis
-        just _post-test-validation "$TEST_ID" "$PLATFORM" || TEST_RESULT=$?
+        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" || TEST_RESULT=$?
         
         # Run checksum validation if applicable
         if [[ $TEST_RESULT -eq 0 ]]; then
