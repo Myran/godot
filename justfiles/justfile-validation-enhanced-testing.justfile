@@ -677,69 +677,88 @@ _handle-checksum-validation config_path platform test_id:
         fi
     fi
 
-# Platform-specific log extraction functions
-_extract-logs-android test_id:
+# Unified log extraction function for both platforms
+_extract-logs test_id platform temp_output_file="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{test_id}}"
+    PLATFORM="{{platform}}"
+    TEMP_OUTPUT_FILE="{{temp_output_file}}"
     
-    # Extract all Android logs for the test and save to expected location
+    # Setup common paths
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     mkdir -p "$LOGS_DIR"
     
-    ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
+    # Platform-specific log file naming
+    LOG_FILE="$LOGS_DIR/${PLATFORM}_${TEST_ID}.log"
     
-    # Check if logs were captured during real-time monitoring
-    echo "📱 Checking for logs captured during test execution..."
+    case "$PLATFORM" in
+        "android")
+            echo "📱 Extracting Android logs for test: $TEST_ID"
+            
+            # Check if logs were captured during real-time monitoring
+            if [[ ! -f "$LOG_FILE" || ! -s "$LOG_FILE" ]]; then
+                echo "📱 No real-time logs found - attempting post-test extraction..."
+                
+                # Get app PID - if running, use PID filtering; if not, fall back to package name filtering
+                APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
+                
+                if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
+                    echo "📱 App PID found: $APP_PID - using PID filtering with main buffer"
+                    adb logcat -b main -d --pid="$APP_PID" 2>/dev/null > "$LOG_FILE" || true
+                else
+                    echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering for session isolation"
+                    adb logcat -b main -d 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION)" > "$LOG_FILE" || true
+                fi
+            else
+                echo "📱 Real-time logs found - using captured logs"
+            fi
+            ;;
+        "desktop")
+            echo "🖥️  Extracting desktop logs for test: $TEST_ID"
+            
+            # If temp output file is provided, use it; otherwise look for recent logs
+            if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
+                echo "🖥️  Using provided temp output file: $TEMP_OUTPUT_FILE"
+                cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
+            else
+                # Fallback: look for recent desktop logs (for backward compatibility)
+                echo "🖥️  No temp file provided - looking for recent desktop logs..."
+                LATEST_LOG=$(ls -t "$LOGS_DIR"/godot*.log 2>/dev/null | head -1)
+                if [[ -n "$LATEST_LOG" && -f "$LATEST_LOG" ]]; then
+                    echo "🖥️  Using latest desktop log: $LATEST_LOG"
+                    cp "$LATEST_LOG" "$LOG_FILE"
+                else
+                    echo "⚠️  No desktop logs found"
+                    touch "$LOG_FILE"  # Create empty file to prevent errors
+                fi
+            fi
+            ;;
+        *)
+            echo "❌ Unsupported platform: $PLATFORM"
+            exit 1
+            ;;
+    esac
     
-    # If real-time monitoring didn't capture logs, fall back to post-extraction
-    if [[ ! -f "$ANDROID_LOG_FILE" || ! -s "$ANDROID_LOG_FILE" ]]; then
-        echo "📱 No real-time logs found - attempting post-test extraction..."
-        
-        # Get app PID - if running, use PID filtering; if not, fall back to package name filtering
-        APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
-        
-        if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
-            echo "📱 App PID found: $APP_PID - using PID filtering with main buffer"
-            adb logcat -b main -d --pid="$APP_PID" 2>/dev/null > "$ANDROID_LOG_FILE" || true
-        else
-            echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering for session isolation"
-            adb logcat -b main -d 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION)" > "$ANDROID_LOG_FILE" || true
-        fi
+    # Verify and report results
+    if [[ -f "$LOG_FILE" ]]; then
+        LINE_COUNT=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+        echo "📄 ${PLATFORM} logs saved to: $(basename "$LOG_FILE")"
+        echo "📊 Log lines captured: $LINE_COUNT"
     else
-        echo "📱 Real-time logs found - using captured logs"
-    fi
-    
-    if [[ -f "$ANDROID_LOG_FILE" ]]; then
-        echo "📄 Android logs saved to: $ANDROID_LOG_FILE"
-        wc -l "$ANDROID_LOG_FILE" | awk '{print "📊 Log lines captured:", $1}'
-    else
-        echo "⚠️  Failed to save Android logs"
+        echo "⚠️  Failed to save ${PLATFORM} logs"
+        exit 1
     fi
 
+# Legacy function for backward compatibility - calls unified function
+_extract-logs-android test_id:
+    just _extract-logs "{{test_id}}" "android"
+
+# Legacy function for backward compatibility - calls unified function  
 _extract-logs-desktop test_id:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    TEST_ID="{{test_id}}"
-    
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-    LOGS_DIR="$USER_DATA_DIR/logs"
-    
-    if [[ ! -d "$LOGS_DIR" ]]; then
-        echo "⚠️  No desktop logs directory: $LOGS_DIR"
-        exit 1
-    fi
-    
-    LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
-    if [[ -z "$LATEST_LOG" ]]; then
-        echo "⚠️  No desktop log files available"
-        exit 1
-    fi
-    
-    cat "$LATEST_LOG"
+    just _extract-logs "{{test_id}}" "desktop"
 
 # Desktop log filtering with error-safe suppression (Android-style clean output)
 _filter-desktop-logs-safely temp_file_path:
@@ -870,56 +889,41 @@ _analyze-test-errors test_id platform:
     echo "🔍 Analyzing test errors for: $TEST_ID ($PLATFORM)"
     echo "================================================"
     
-    # Get logs based on platform  
+    # Get logs using unified file naming pattern
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    PLATFORM_LOG_FILE="$LOGS_DIR/${PLATFORM}_${TEST_ID}.log"
+    
     case "$PLATFORM" in
         "android")
             if ! command -v adb >/dev/null 2>&1; then
                 echo "⚠️  adb not available - skipping Android log analysis"
                 exit 0
             fi
-            
-            # First try to read from saved Android log file
-            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-            ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
-            
-            if [[ -f "$ANDROID_LOG_FILE" ]]; then
-                echo "📄 Analyzing: android_${TEST_ID}.log"
-                LOGS=$(cat "$ANDROID_LOG_FILE")
-            else
-                # Fallback to live logcat if no saved file
-                LOGS=$(adb logcat -d 2>/dev/null | tail -1000)
-            fi
-            
-            if [[ -z "$LOGS" ]]; then
-                echo "⚠️  No Android logs available"
-                exit 0
-            fi
             ;;
-            
         "desktop")
-            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-            LOGS_DIR="$USER_DATA_DIR/logs"
-            
-            if [[ ! -d "$LOGS_DIR" ]]; then
-                echo "⚠️  No desktop logs directory: $LOGS_DIR"
-                exit 0
-            fi
-            
-            LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [[ -z "$LATEST_LOG" ]]; then
-                echo "⚠️  No desktop log files available"
-                exit 0
-            fi
-            
-            LOGS=$(cat "$LATEST_LOG")
-            echo "📄 Analyzing: $(basename "$LATEST_LOG")"
+            # Desktop platform supported
             ;;
-            
         *)
             echo "❌ Unknown platform: $PLATFORM"
             exit 1
             ;;
     esac
+    
+    # Read from the unified platform-specific log file
+    if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+        echo "📄 Analyzing: $(basename "$PLATFORM_LOG_FILE")"
+        LOGS=$(cat "$PLATFORM_LOG_FILE")
+    else
+        echo "⚠️  No ${PLATFORM} log file found: $(basename "$PLATFORM_LOG_FILE")"
+        echo "💡 Expected file should have been created by test execution"
+        exit 0
+    fi
+    
+    if [[ -z "$LOGS" ]]; then
+        echo "⚠️  No ${PLATFORM} logs available in file"
+        exit 0
+    fi
     
     # WHITELIST APPROACH: Only look for test-relevant logs, ignore all system noise
     # Focus on our application logs with specific test ID or Godot tags
@@ -1024,51 +1028,46 @@ _collect-action-results test_id platform config_name="unknown":
     
     LOGS=""
     
-    # Extract and save logs for analysis (this persists them for later use)
+    # Extract and save logs for analysis using unified approach
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    PLATFORM_LOG_FILE="$LOGS_DIR/${PLATFORM}_${TEST_ID}.log"
+    
+    # Platform-specific extraction prerequisites
     case "$PLATFORM" in
         "android")
             if ! command -v adb >/dev/null 2>&1; then
                 echo "⚠️  adb not available - creating empty results file"
+                LOGS=""
             else
-                # Extract and save Android logs to file for later analysis
-                just _extract-logs-android "$TEST_ID" || echo "⚠️  Failed to extract Android logs"
-                # Then read from the saved file
-                USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-                ANDROID_LOG_FILE="$USER_DATA_DIR/logs/android_${TEST_ID}.log"
-                if [[ -f "$ANDROID_LOG_FILE" ]]; then
-                    LOGS=$(cat "$ANDROID_LOG_FILE")
+                # Extract logs using unified function
+                just _extract-logs "$TEST_ID" "$PLATFORM" || echo "⚠️  Failed to extract Android logs"
+                
+                # Read from the saved file
+                if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+                    LOGS=$(cat "$PLATFORM_LOG_FILE")
                     echo "📄 Read $(echo "$LOGS" | wc -l) lines from Android log file"
                 else
-                    echo "⚠️  Android log file not found: $ANDROID_LOG_FILE"
+                    echo "⚠️  Android log file not found: $PLATFORM_LOG_FILE"
+                    LOGS=""
                 fi
             fi
             ;;
         "desktop")
-            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-            LOGS_DIR="$USER_DATA_DIR/logs"
-            if [[ ! -d "$LOGS_DIR" ]]; then
-                echo "⚠️  Desktop logs directory not found: $LOGS_DIR"
+            # For desktop, the extraction should have happened in _execute-test-desktop
+            # Here we just read the file that should already exist
+            if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+                LOGS=$(cat "$PLATFORM_LOG_FILE")
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from desktop log file"
             else
-                LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
-                if [[ -z "$LATEST_LOG" ]]; then
-                    echo "⚠️  No desktop log files found in $LOGS_DIR"
-                else
-                    echo "🔍 Found desktop log file: $LATEST_LOG"
-                    if [[ -f "$LATEST_LOG" ]]; then
-                        LOGS=$(cat "$LATEST_LOG" || echo "")
-                        if [[ -n "$LOGS" ]]; then
-                            echo "📄 Read $(echo "$LOGS" | wc -l) lines from desktop log file: $LATEST_LOG"
-                        else
-                            echo "⚠️  Desktop log file is empty: $LATEST_LOG"
-                        fi
-                    else
-                        echo "⚠️  Desktop log file not accessible: $LATEST_LOG"
-                    fi
-                fi
+                echo "⚠️  Desktop log file not found: $PLATFORM_LOG_FILE"
+                echo "💡 Desktop logs should be extracted by _execute-test-desktop"
+                LOGS=""
             fi
             ;;
         *)
             echo "⚠️  Unsupported platform: $PLATFORM"
+            LOGS=""
             ;;
     esac
     
@@ -1973,7 +1972,7 @@ _execute-test-android config_name:
     
     echo "📱 Starting Android test monitoring..."
     
-    # Prepare log file path for background monitoring
+    # Prepare log file path for background monitoring (using unified naming pattern)
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     ANDROID_LOG_FILE="$LOGS_DIR/android_${TEST_ID}.log"
@@ -2017,8 +2016,8 @@ _execute-test-android config_name:
     echo "🔍 Extracting logs from Android device after test completion..."
     sleep 2  # Give device time to flush logs
     
-    # Use the existing Android log extraction function
-    just _extract-logs-android "$TEST_ID"
+    # Use the unified log extraction function
+    just _extract-logs "$TEST_ID" "android"
     
     if [[ -f "$ANDROID_LOG_FILE" && -s "$ANDROID_LOG_FILE" ]]; then
         LOG_LINES=$(wc -l < "$ANDROID_LOG_FILE")
@@ -2098,6 +2097,10 @@ _execute-test-desktop config_name:
         echo ""
         echo "🎯 Test completed successfully with clean output"
     fi
+    
+    # Extract and save desktop logs using unified function before cleanup
+    echo "📄 Extracting desktop logs for analysis..."
+    just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
     
     # Cleanup temp file
     rm -f "$TEMP_OUTPUT"
