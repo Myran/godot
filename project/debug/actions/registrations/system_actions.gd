@@ -99,7 +99,7 @@ static func _force_low_memory() -> bool:
 	Log.warning(
 		"Simulating low memory condition for testing",
 		{},
-		[Log.TAG_DEBUG, Log.TAG_SYSTEM, Log.TAG_MEMORY]
+		[Log.TAG_DEBUG, Log.TAG_SYSTEM]
 	)
 
 	if OS.has_method("low_processor_usage_mode"):
@@ -107,7 +107,7 @@ static func _force_low_memory() -> bool:
 		OS.low_processor_usage_mode = true
 		OS.low_processor_usage_mode = old_mode
 
-	Log.info("Low memory simulation completed", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM, Log.TAG_MEMORY])
+	Log.info("Low memory simulation completed", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 	return true
 
 
