@@ -44,8 +44,8 @@ logs-errors TEST_ID:
     echo "=============================="
     echo ""
     
-    # Show errors, failures, and critical issues
-    grep -E "ERROR\|FAILURE\|error\|failure\|RESTART_NEEDED" "$LOG_FILE" || echo "✅ No errors found"
+    # Show errors, failures, warnings, and critical issues (exclude "error": false)
+    grep -E "ERROR|FAILURE|WARNING.*⚠️|RESTART_NEEDED" "$LOG_FILE" | grep -v '"error": false' || echo "✅ No errors found"
 
 # Show only test lifecycle events 
 logs-lifecycle TEST_ID:
