@@ -1407,11 +1407,11 @@ test-android target="":
         exit $?
     fi
     
-    # Use shared fzf selection for all configs (manual mode)
+    # Use shared fzf selection for all configs (automatic mode)
     selected=$(just _fzf-select-config "android" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
-        echo "Running manual mode: just test-android-manual '$selected'"
-        just test-android-manual "$selected"
+        echo "Running automatic mode: just test-android-target '$selected'"
+        just test-android-target "$selected"
     else
         echo "❌ No selection made"
         exit 1

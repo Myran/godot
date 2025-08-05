@@ -137,7 +137,8 @@ just logs-android TEST_ID or just logs-desktop TEST_ID  # Complete logs (high to
 
 ### **Testing Commands**
 ```bash
-just test-android TARGET                   # Main interface (auto-detects patterns/configs/lists)
+just test-android TARGET                   # Main interface - AUTOMATIC MODE (auto-detects patterns/configs/lists)
+just test-desktop TARGET                   # Desktop interface - AUTOMATIC MODE (auto-detects patterns/configs/lists)
 just test-android-target CONFIG            # ⭐ Enhanced automated mode with built-in validation
 just test-desktop-target CONFIG            # ⭐ Enhanced desktop automated testing
 just test-android-enhanced TARGET          # Enhanced error analysis
@@ -236,7 +237,8 @@ Commands automatically detect input type:
 ## 🚨 CRITICAL: Debug Action Execution
 
 **ALWAYS use `test-*` commands for debug actions:**
-- ✅ `just test-desktop CONFIG` - Enables debug coordinator
+- ✅ `just test-desktop CONFIG` - Enables debug coordinator (AUTOMATIC MODE - quits after completion)
+- ✅ `just test-desktop-manual CONFIG` - Enables debug coordinator (MANUAL MODE - stays open)
 - ❌ `just run-desktop` - Skips debug coordinator (editor mode)
 
 **Impact**: State capture, checksum validation, semantic logging require debug actions.
@@ -366,7 +368,8 @@ just replay-generate-desktop SESSION_ID my-test
 
 # 3. Test with validation
 just test-android-target my-test    # Automated mode (quits after validation)
-just test-android my-test          # Manual mode (stays open for inspection)
+just test-android my-test          # Automated mode (quits after validation) - NEW DEFAULT
+just test-android-manual my-test   # Manual mode (stays open for inspection)
 ```
 
 ## 🧪 Checksum Testing (State Validation)

@@ -2296,11 +2296,11 @@ test-desktop target="":
         exit $?
     fi
     
-    # Use shared fzf selection for all configs (manual mode)
+    # Use shared fzf selection for all configs (automatic mode)
     selected=$(just _fzf-select-config "desktop" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
-        echo "Running manual mode: just test-desktop-manual '$selected'"
-        just test-desktop-manual "$selected"
+        echo "Running automatic mode: just test-desktop-target '$selected'"
+        just test-desktop-target "$selected"
     else
         echo "❌ No selection made"
         exit 1
