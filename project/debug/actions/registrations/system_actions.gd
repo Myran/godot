@@ -51,9 +51,9 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.quit_application", func() -> bool: return _quit_application())
-			. set_category("System")
-			. set_group("Debug")
+			. create("app.quit_application", func() -> bool: return _quit_application())
+			. set_category("Application")
+			. set_group("Lifecycle")
 			. set_description("Quit Application")
 		)
 	)

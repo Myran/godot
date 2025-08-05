@@ -9,7 +9,7 @@ var _current_config_is_test_recipe: bool = false
 # Completion actions that indicate replay completion
 const COMPLETION_ACTIONS: Array[String] = [
 	"system.debug.replay_complete",
-	"system.debug.quit_application",
+	"app.quit_application",
 	"system.debug.finalize_replay_validation"
 ]
 
