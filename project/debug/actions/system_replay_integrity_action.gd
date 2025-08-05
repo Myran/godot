@@ -60,12 +60,12 @@ func _validate_config_structures() -> Dictionary:
 		Log.debug("Replay config directory exists", {}, ["debug", "replay", "validation"])
 
 	# Test known replay configuration
-	var test_config_path: String = "res://debug_configs/my-battle-scenario.json"
+	var test_config_path: String = "res://debug_configs/battle-animated.json"
 	if FileAccess.file_exists(test_config_path):
 		var config_content: Dictionary = _load_config_file(test_config_path)
 		if config_content != null:
 			config_validation.schema_compliance = _validate_config_schema(config_content)
-			config_validation.semantic_metadata = config_content.has("session_id")
+			config_validation.semantic_metadata = config_content.has("description")
 			config_validation.action_sequences = (
 				config_content.has("actions") and config_content.actions.size() > 0
 			)

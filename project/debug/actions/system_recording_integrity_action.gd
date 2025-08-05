@@ -119,7 +119,7 @@ func _validate_component_integration() -> Dictionary:
 	var config: Dictionary = SemanticActionMapper.create_replay_config(
 		"test_session", debug_sequence
 	)
-	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 2)
+	integration.parsing_to_config = (config.has("actions") and config.actions.size() == 4)
 	Log.debug(
 		"Parsing to config integration: %s" % integration.parsing_to_config,
 		{},
