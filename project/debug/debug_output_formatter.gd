@@ -95,10 +95,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
 	var report: String = ""
 
-	# Enhanced header with device/environment context
-	var device_info: String = _get_device_context_header()
-	report += device_info + "\n"
-
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	report += (
@@ -106,6 +102,25 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		% [FONT_SIZE_XXL, status_icon]
 	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
+
+	# Status section with enhanced visual indicators - AT THE TOP
+	var final_status_icon: String = "✓" if success else "✗"
+	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
+	var final_status_text: String = "SUCCESS" if success else "FAILURE"
+
+	report += (
+		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	report += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
+	)
+
+	# Device/environment context - moved below status
+	var device_info: String = _get_device_context_header()
+	report += device_info + "\n"
 
 	# Enhanced result status with visual indicator
 	report += _build_result_status_section(success, payload)
@@ -126,21 +141,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		)
 
 	report += "\n"
-
-	# Status section with enhanced visual indicators
-	var final_status_icon: String = "✓" if success else "✗"
-	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-	var final_status_text: String = "SUCCESS" if success else "FAILURE"
-
-	report += (
-		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
-		% [FONT_SIZE_XL, UI_COLORS.info]
-	)
-	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	report += (
-		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
-		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
-	)
 
 	# Result/error details
 	if success:
@@ -186,6 +186,21 @@ func _build_action_report_structured(
 	report += "[font_size=%s][b]ACTION EXECUTION COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
+	# Enhanced status section with performance info - MOVED TO TOP
+	var status_icon: String = "✓" if action_result.is_success() else "✗"
+	var status_color: String = UI_COLORS.success if action_result.is_success() else UI_COLORS.danger
+	var status_text: String = "SUCCESS" if action_result.is_success() else "FAILURE"
+
+	report += (
+		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	report += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, status_color, status_icon, status_text]
+	)
+
 	# Action details section
 	report += (
 		"[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n"
@@ -214,17 +229,6 @@ func _build_action_report_structured(
 		)
 
 	report += "\n"
-
-	# Enhanced status section with performance info
-	var status_icon: String = "✓" if action_result.is_success() else "✗"
-	var status_color: String = UI_COLORS.success if action_result.is_success() else UI_COLORS.danger
-	var status_text: String = "SUCCESS" if action_result.is_success() else "FAILURE"
-
-	report += (
-		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
-		% [FONT_SIZE_XL, UI_COLORS.info]
-	)
-	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 	report += (
 		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n"
 		% [FONT_SIZE_XL, status_color, status_icon, status_text]
@@ -977,10 +981,6 @@ func _build_action_report_with_execution_log(
 	"""Generate comprehensive report with complete step-by-step execution history"""
 	var report: String = ""
 
-	# Enhanced header with device/environment context
-	var device_info: String = _get_device_context_header()
-	report += device_info + "\n"
-
 	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	report += (
@@ -988,6 +988,21 @@ func _build_action_report_with_execution_log(
 		% [FONT_SIZE_XXL, status_icon]
 	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
+
+	# Status section with enhanced visual indicators - AT THE TOP
+	var final_status_icon: String = "✓" if success else "✗"
+	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
+	var final_status_text: String = "SUCCESS" if success else "FAILURE"
+
+	report += (
+		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
+		% [FONT_SIZE_XL, UI_COLORS.info]
+	)
+	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
+	report += (
+		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
+		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
+	)
 
 	# EXECUTION STEPS SECTION - This is what the user wanted to see!
 	report += (
@@ -1031,6 +1046,10 @@ func _build_action_report_with_execution_log(
 
 	report += "\n"
 
+	# Device/environment context - moved below status and steps
+	var device_info: String = _get_device_context_header()
+	report += device_info + "\n"
+
 	# Enhanced result status with visual indicator
 	report += _build_result_status_section(success, payload)
 
@@ -1050,21 +1069,6 @@ func _build_action_report_with_execution_log(
 		)
 
 	report += "\n"
-
-	# Status section with enhanced visual indicators
-	var final_status_icon: String = "✓" if success else "✗"
-	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-	var final_status_text: String = "SUCCESS" if success else "FAILURE"
-
-	report += (
-		"[font_size=%s][color=%s]EXECUTION STATUS[/color][/font_size]\n"
-		% [FONT_SIZE_XL, UI_COLORS.info]
-	)
-	report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	report += (
-		"[font_size=%s][color=%s]%s %s[/color][/font_size]\n\n"
-		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
-	)
 
 	# Result/error details
 	if success:
