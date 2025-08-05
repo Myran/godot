@@ -174,7 +174,23 @@ status:
 
 # Run tests
 test:
-    @echo "Running tests..."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🚀 Running main test suite - Desktop first, then Android"
+    echo "======================================================="
+    echo ""
+    
+    # Run desktop tests first
+    echo "1️⃣ Running desktop tests..."
+    just test-desktop-target main
+    
+    echo ""
+    echo "2️⃣ Running Android tests..."
+    just test-android-target main
+    
+    echo ""
+    echo "✅ Main test suite completed successfully!"
 
 # Generate documentation
 generate-docs:

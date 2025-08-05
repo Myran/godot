@@ -1,0 +1,9 @@
+{
+  "name": "Main Test Suite",
+  "description": "Essential test suite for daily development - runs core system validation and battle logic",
+  "configs": [
+    "@system-infrastructure",
+    "@firebase-all",
+    "@battle-all"
+  ]
+}

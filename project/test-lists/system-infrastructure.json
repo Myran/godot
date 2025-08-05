@@ -1,10 +1,7 @@
 {
-  "name": "System Infrastructure Testing",
-  "description": "Infrastructure testing - Firebase layers, system utilities, performance and error handling",
+  "name": "System Infrastructure Testing", 
+  "description": "Core system utilities testing - performance monitoring, error handling, and system layer validation (non-Firebase)",
   "configs": [
-    "firebase-cpp-layer",
-    "firebase-backend-layer",
-    "firebase-rtdb-layer",
     "system-layer-all",
     "system-performance",
     "system-error-handling"
