@@ -5,19 +5,9 @@ class_name SystemActions
 
 # Using class_name resolution instead of preload as requested
 # Preload test actions that aren't found automatically
-const StateExtractorRedPhaseScript = preload(
-	"res://debug/actions/test_state_extractor_red_phase_action.gd"
-)
 const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
-const PreActionIntegrationRedPhaseScript = preload(
-	"res://debug/actions/test_pre_action_integration_red_phase_action.gd"
-)
-const PerformanceRequirementsRedPhaseScript = preload(
-	"res://debug/actions/test_performance_requirements_red_phase_action.gd"
-)
-const EdgeCasesRedPhaseScript = preload("res://debug/actions/test_edge_cases_red_phase_action.gd")
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -244,31 +234,11 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	var semantic_logging_test: TestSemanticLoggingAction = TestSemanticLoggingAction.new()
 	registry.register_action(semantic_logging_test)
 
-	# TDD RED PHASE - StateExtractor implementation tests (SHOULD FAIL)
-	var state_extractor_test: StateExtractorRedPhaseScript = StateExtractorRedPhaseScript.new()
-	registry.register_action(state_extractor_test)
-
 	# TDD GREEN PHASE - StateExtractor implementation validation (SHOULD PASS)
 	var state_extractor_green_test: StateExtractorGreenPhaseScript = (
 		StateExtractorGreenPhaseScript.new()
 	)
 	registry.register_action(state_extractor_green_test)
-
-	# TDD RED PHASE - Pre-Action Integration tests (SHOULD FAIL)
-	var pre_action_integration_test: PreActionIntegrationRedPhaseScript = (
-		PreActionIntegrationRedPhaseScript.new()
-	)
-	registry.register_action(pre_action_integration_test)
-
-	# TDD RED PHASE - Performance Requirements tests (SHOULD FAIL)
-	var performance_requirements_test: PerformanceRequirementsRedPhaseScript = (
-		PerformanceRequirementsRedPhaseScript.new()
-	)
-	registry.register_action(performance_requirements_test)
-
-	# TDD RED PHASE - Edge Cases Handling tests (SHOULD FAIL)
-	var edge_cases_test: EdgeCasesRedPhaseScript = EdgeCasesRedPhaseScript.new()
-	registry.register_action(edge_cases_test)
 
 	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 
