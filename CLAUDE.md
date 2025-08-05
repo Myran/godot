@@ -50,6 +50,46 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 ### **Advanced Commands (As Needed)**
 - `just build` - Complete source-to-device pipeline (46 min)
 
+## 🤖 Claude Code Tool Preferences
+
+**CRITICAL: Always use ripgrep instead of grep**
+- **Use `rg` command** instead of `grep` for all text searching operations
+- **Use `rg` command** instead of the built-in Grep tool when practical
+- **Performance**: ripgrep is 2-10x faster than grep with superior regex engine
+- **Features**: Better Unicode support, JSON output, automatic gitignore respect, SIMD optimizations
+
+### **Ripgrep Migration Guide**
+| Old grep command | New ripgrep equivalent | Notes |
+|------------------|------------------------|-------|
+| `grep -r "pattern" /path` | `rg "pattern" /path` | Recursive by default |
+| `grep -o "pattern" file` | `rg -o "pattern" file` | Extract matches only |
+| `grep -l "pattern" files` | `rg -l "pattern" files` | List matching files |
+| `grep -c "pattern" file` | `rg -c "pattern" file` | Count matches |
+| `grep -E "regex" file` | `rg "regex" file` | Extended regex default |
+| `grep -i "pattern" file` | `rg -i "pattern" file` | Case insensitive |
+| `grep -v "pattern" file` | `rg -v "pattern" file` | Invert match |
+| `grep -A5 -B5 "pattern"` | `rg -A5 -B5 "pattern"` | Context lines |
+
+### **Ripgrep Advanced Features**
+```bash
+# Compressed file search (not possible with grep)
+rg -z "pattern" logs.gz
+
+# JSON-structured output  
+rg --json "pattern" file.log
+
+# Smart case (case-insensitive unless uppercase in pattern)
+rg -S "pattern" files
+
+# File type filtering
+rg "pattern" -t rust -t javascript
+
+# Multiline pattern matching
+rg -U "function.*{.*}" src/
+```
+
+**Exception**: Only use `grep` when required for exact compatibility with existing pipeline scripts that depend on specific grep behavior.
+
 ## 🔧 Debugging Workflow
 
 **🚀 NEW: Wildcard Pattern Debugging (10x Faster & More Precise)**
