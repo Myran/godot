@@ -1541,99 +1541,117 @@ _generate-comprehensive-breakdown hierarchy_file:
     
     # Extract basic info from hierarchy file with error handling
     TEST_LIST=$(jq -r '.test_list // "unknown"' "$HIERARCHY_FILE" 2>/dev/null || echo "unknown")
-    PLATFORM=$(jq -r '.config_results[0].platform // "unknown"' "$HIERARCHY_FILE" 2>/dev/null || echo "unknown")
+    
+    # Get all platforms from action results (more accurate than hierarchy file)
+    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
     TOTAL_CONFIGS=$(jq '.config_results | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
     
-    echo "Test List: $TEST_LIST ($PLATFORM) - $TOTAL_CONFIGS configs executed"
+    echo "Test List: $TEST_LIST ($PLATFORMS_FROM_RESULTS) - $TOTAL_CONFIGS configs executed"
     echo ""
     
-    # Process @ references with detailed config breakdown
+    # NEW: Platform-first breakdown - group by platform, then by test list/config
     set +e  # Disable exit on error for this section to handle jq failures gracefully
     
-    # Use a temp file to avoid subshell issues (mapfile not available on macOS)
-    TEMP_CONFIGS="/tmp/original_configs_$$"
-    jq -r '.original_configs[]?' "$HIERARCHY_FILE" 2>/dev/null > "$TEMP_CONFIGS"
+    # Get all platforms that ran tests
+    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_*_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
     
-    while IFS= read -r original_config || [[ -n "$original_config" ]]; do
-        if [[ -n "$original_config" && "$original_config" =~ ^@ ]]; then
-            echo "📦 ${original_config} (expanded from @ reference)"
-                
-                # Get all configs that were derived from this @ reference based on naming patterns
-                AT_REF_NAME="${original_config#@}"  # Remove @ symbol
-                
-                # Create a mapping based on common patterns
-                case "$AT_REF_NAME" in
-                    "system-infrastructure"|"system-all")
-                        PATTERN="system"
-                        ;;
-                    "firebase-all")
-                        PATTERN="firebase"
-                        ;;
-                    "battle-all")
-                        PATTERN="battle"
-                        ;;
-                    *)
-                        PATTERN="$AT_REF_NAME"
-                        ;;
+    if [[ -n "$ALL_PLATFORMS" ]]; then
+        # Process each platform separately
+        while IFS= read -r platform_name; do
+            if [[ -n "$platform_name" ]]; then
+                # Platform header with icon
+                case "$platform_name" in
+                    "android") PLATFORM_ICON="📱" ;;
+                    "desktop") PLATFORM_ICON="🖥️" ;;
+                    *) PLATFORM_ICON="⚙️" ;;
                 esac
+                echo "$PLATFORM_ICON Platform: $platform_name"
+                echo "================================"
                 
-                # Find matching configs with error handling - use temp file to avoid subshell
-                TEMP_MATCHING="/tmp/matching_configs_$$"
-                jq -r '.config_results[] | select(.config | contains("'"$PATTERN"'")) | .config' "$HIERARCHY_FILE" 2>/dev/null | sort | uniq > "$TEMP_MATCHING"
+                # Process @ references for this platform
+                TEMP_CONFIGS="/tmp/original_configs_$$"
+                jq -r '.original_configs[]?' "$HIERARCHY_FILE" 2>/dev/null > "$TEMP_CONFIGS"
                 
-                while IFS= read -r config || [[ -n "$config" ]]; do
-                        if [[ -n "$config" ]]; then
-                            # Get config execution result with error handling
-                            CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                while IFS= read -r original_config || [[ -n "$original_config" ]]; do
+                    if [[ -n "$original_config" && "$original_config" =~ ^@ ]]; then
+                        # Get all configs that were derived from this @ reference based on naming patterns
+                        AT_REF_NAME="${original_config#@}"  # Remove @ symbol
+                        
+                        # Create a mapping based on common patterns
+                        case "$AT_REF_NAME" in
+                            "system-infrastructure"|"system-all")
+                                PATTERN="system"
+                                ;;
+                            "firebase-all")
+                                PATTERN="firebase"
+                                ;;
+                            "battle-all")
+                                PATTERN="battle"
+                                ;;
+                            *)
+                                PATTERN="$AT_REF_NAME"
+                                ;;
+                        esac
+                        
+                        # Find matching configs with error handling - use temp file to avoid subshell
+                        TEMP_MATCHING="/tmp/matching_configs_$$"
+                        jq -r '.config_results[] | select(.config | contains("'"$PATTERN"'")) | .config' "$HIERARCHY_FILE" 2>/dev/null | sort | uniq > "$TEMP_MATCHING"
+                        
+                        # Check if any configs in this @ reference ran on this platform
+                        PLATFORM_HAS_CONFIGS=false
+                        while IFS= read -r config || [[ -n "$config" ]]; do
+                            if [[ -n "$config" ]] && ls /tmp/test_action_results_${config}_${platform_name}_*.json >/dev/null 2>&1; then
+                                PLATFORM_HAS_CONFIGS=true
+                                break
+                            fi
+                        done < "$TEMP_MATCHING"
+                        
+                        # Show @ reference header only if this platform has configs for it
+                        if [[ "$PLATFORM_HAS_CONFIGS" == "true" ]]; then
+                            echo "📦 ${original_config} (expanded from @ reference)"
                             
-                            case "$CONFIG_STATUS" in
-                                "passed")
-                                    echo "   ├── 🔧 $config ✅ PASSED"
-                                    ;;
-                                "failed")
-                                    echo "   ├── 🔧 $config ❌ FAILED"
-                                    ;;
-                                "skipped")
-                                    SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
-                                    echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
-                                    ;;
-                                *)
-                                    echo "   ├── 🔧 $config ❓ UNKNOWN"
-                                    ;;
-                            esac
-                            
-                            # Show individual actions for passed configs only (to avoid clutter)
-                            if [[ "$CONFIG_STATUS" == "passed" ]]; then
-                                # Find action results for this config on ALL platforms
-                                PLATFORMS_FOR_CONFIG=$(ls /tmp/test_action_results_${config}_*_*.json 2>/dev/null | xargs -r basename -a | sed "s/test_action_results_${config}_\([^_]*\)_.*$/\1/" | sort | uniq)
-                                
-                                if [[ -n "$PLATFORMS_FOR_CONFIG" ]]; then
-                                    while IFS= read -r platform_name; do
-                                        if [[ -n "$platform_name" ]]; then
+                            # Process configs for this @ reference on this platform
+                            while IFS= read -r config || [[ -n "$config" ]]; do
+                                if [[ -n "$config" ]]; then
+                                    # Check if this config ran on this platform
+                                    if ls /tmp/test_action_results_${config}_${platform_name}_*.json >/dev/null 2>&1; then
+                                        # Get config execution result
+                                        CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                        
+                                        case "$CONFIG_STATUS" in
+                                            "passed")
+                                                echo "   ├── 🔧 $config ✅ PASSED"
+                                                ;;
+                                            "failed")
+                                                echo "   ├── 🔧 $config ❌ FAILED"
+                                                ;;
+                                            "skipped")
+                                                SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                                echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
+                                                ;;
+                                            *)
+                                                echo "   ├── 🔧 $config ❓ UNKNOWN"
+                                                ;;
+                                        esac
+                                        
+                                        # Show individual actions for passed configs only
+                                        if [[ "$CONFIG_STATUS" == "passed" ]]; then
                                             # Find the most recent results file for this config and platform
                                             LATEST_ACTION_FILE=$(ls -t /tmp/test_action_results_${config}_${platform_name}_*.json 2>/dev/null | head -1)
                                             
                                             if [[ -f "$LATEST_ACTION_FILE" ]] && jq -e . "$LATEST_ACTION_FILE" >/dev/null 2>&1; then
-                                                # Platform header with icon
-                                                case "$platform_name" in
-                                                    "android") PLATFORM_ICON="📱" ;;
-                                                    "desktop") PLATFORM_ICON="🖥️" ;;
-                                                    *) PLATFORM_ICON="⚙️" ;;
-                                                esac
-                                                echo "   │   $PLATFORM_ICON $platform_name:"
-                                                
-                                                # Show individual actions with platform-specific timing
+                                                # Show individual actions
                                                 TEMP_ACTIONS="/tmp/actions_${platform_name}_$$"
                                                 jq -r '.[] | select(.action | contains("replay_complete") | not) | "\(.success)|\(.action)|\(.duration_ms)|\(.error_message // "")"' "$LATEST_ACTION_FILE" 2>/dev/null > "$TEMP_ACTIONS"
                                                 while IFS='|' read -r success action duration error 2>/dev/null || [[ -n "$action" ]]; do
                                                     if [[ -n "$action" ]]; then
                                                         if [[ "$success" == "true" ]]; then
-                                                            echo "   │   │   ├── ✅ $action (${duration}ms)"
+                                                            echo "   │   ├── ✅ $action (${duration}ms)"
                                                         else
                                                             if [[ -n "$error" && "$error" != "null" && "$error" != "" ]]; then
-                                                                echo "   │   │   ├── ❌ $action ($error)"
+                                                                echo "   │   ├── ❌ $action ($error)"
                                                             else
-                                                                echo "   │   │   ├── ❌ $action (FAILED)"
+                                                                echo "   │   ├── ❌ $action (FAILED)"
                                                             fi
                                                         fi
                                                     fi
@@ -1641,96 +1659,92 @@ _generate-comprehensive-breakdown hierarchy_file:
                                                 rm -f "$TEMP_ACTIONS"
                                             fi
                                         fi
-                                    done < <(echo "$PLATFORMS_FOR_CONFIG")
+                                    fi
+                                fi
+                            done < "$TEMP_MATCHING"
+                            echo ""
+                        fi
+                        rm -f "$TEMP_MATCHING"
+                    fi
+                done < "$TEMP_CONFIGS"
+                
+                # Process direct configs (non-@ references) for this platform
+                TEMP_DIRECT="/tmp/direct_configs_$$"
+                jq -r '.original_configs[]? | select(. | startswith("@") | not)' "$HIERARCHY_FILE" 2>/dev/null > "$TEMP_DIRECT"
+                
+                # Check if any direct configs ran on this platform
+                PLATFORM_HAS_DIRECT=false
+                if [[ -s "$TEMP_DIRECT" ]]; then
+                    while IFS= read -r config || [[ -n "$config" ]]; do
+                        if [[ -n "$config" ]] && ls /tmp/test_action_results_${config}_${platform_name}_*.json >/dev/null 2>&1; then
+                            PLATFORM_HAS_DIRECT=true
+                            break
+                        fi
+                    done < "$TEMP_DIRECT"
+                fi
+                
+                if [[ "$PLATFORM_HAS_DIRECT" == "true" ]]; then
+                    echo "📦 Direct configs"
+                    while IFS= read -r config || [[ -n "$config" ]]; do
+                        if [[ -n "$config" ]]; then
+                            # Check if this config ran on this platform
+                            if ls /tmp/test_action_results_${config}_${platform_name}_*.json >/dev/null 2>&1; then
+                                # Get config execution result
+                                CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                
+                                case "$CONFIG_STATUS" in
+                                    "passed")
+                                        echo "   ├── 🔧 $config ✅ PASSED"
+                                        ;;
+                                    "failed")
+                                        echo "   ├── 🔧 $config ❌ FAILED"
+                                        ;;
+                                    "skipped")
+                                        SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                        echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
+                                        ;;
+                                    *)
+                                        echo "   ├── 🔧 $config ❓ UNKNOWN"
+                                        ;;
+                                esac
+                                
+                                # Show individual actions for passed configs
+                                if [[ "$CONFIG_STATUS" == "passed" ]]; then
+                                    # Find the most recent results file for this config and platform
+                                    LATEST_ACTION_FILE=$(ls -t /tmp/test_action_results_${config}_${platform_name}_*.json 2>/dev/null | head -1)
+                                    
+                                    if [[ -f "$LATEST_ACTION_FILE" ]] && jq -e . "$LATEST_ACTION_FILE" >/dev/null 2>&1; then
+                                        # Show individual actions
+                                        TEMP_ACTIONS="/tmp/actions_direct_${platform_name}_$$"
+                                        jq -r '.[] | select(.action | contains("replay_complete") | not) | "\(.success)|\(.action)|\(.duration_ms)|\(.error_message // "")"' "$LATEST_ACTION_FILE" 2>/dev/null > "$TEMP_ACTIONS"
+                                        while IFS='|' read -r success action duration error 2>/dev/null || [[ -n "$action" ]]; do
+                                            if [[ -n "$action" ]]; then
+                                                if [[ "$success" == "true" ]]; then
+                                                    echo "   │   ├── ✅ $action (${duration}ms)"
+                                                else
+                                                    if [[ -n "$error" && "$error" != "null" && "$error" != "" ]]; then
+                                                        echo "   │   ├── ❌ $action ($error)"
+                                                    else
+                                                        echo "   │   ├── ❌ $action (FAILED)"
+                                                    fi
+                                                fi
+                                            fi
+                                        done < "$TEMP_ACTIONS"
+                                        rm -f "$TEMP_ACTIONS"
+                                    fi
                                 fi
                             fi
                         fi
-                done < "$TEMP_MATCHING"
-                rm -f "$TEMP_MATCHING"
+                    done < "$TEMP_DIRECT"
+                    echo ""
+                fi
+                rm -f "$TEMP_DIRECT"
+                rm -f "$TEMP_CONFIGS"
                 echo ""
             fi
-    done < "$TEMP_CONFIGS"
-    rm -f "$TEMP_CONFIGS"
-    set -e  # Re-enable exit on error
-    
-    # Process direct configs (non-@ references) with error handling  
-    set +e
-    
-    # Use temp file to avoid subshell issues
-    TEMP_DIRECT="/tmp/direct_configs_$$"
-    jq -r '.original_configs[]? | select(. | startswith("@") | not)' "$HIERARCHY_FILE" 2>/dev/null > "$TEMP_DIRECT"
-    
-    if [[ -s "$TEMP_DIRECT" ]]; then
-        echo "📦 Direct configs"
-        while IFS= read -r config || [[ -n "$config" ]]; do
-            if [[ -n "$config" ]]; then
-                # Get config execution result with error handling
-                CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
-                
-                case "$CONFIG_STATUS" in
-                    "passed")
-                        echo "   ├── 🔧 $config ✅ PASSED"
-                        ;;
-                    "failed")
-                        echo "   ├── 🔧 $config ❌ FAILED"
-                        ;;
-                    "skipped")
-                        SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
-                        echo "   ├── 🔧 $config ⏭️  SKIPPED - $SKIP_REASON"
-                        ;;
-                    *)
-                        echo "   ├── 🔧 $config ❓ UNKNOWN"
-                        ;;
-                esac
-                
-                # Show individual actions for passed configs on ALL platforms
-                if [[ "$CONFIG_STATUS" == "passed" ]]; then
-                    # Find action results for this config on ALL platforms
-                    PLATFORMS_FOR_CONFIG=$(ls /tmp/test_action_results_${config}_*_*.json 2>/dev/null | xargs -r basename -a | sed "s/test_action_results_${config}_\([^_]*\)_.*$/\1/" | sort | uniq)
-                    
-                    if [[ -n "$PLATFORMS_FOR_CONFIG" ]]; then
-                        while IFS= read -r platform_name; do
-                            if [[ -n "$platform_name" ]]; then
-                                # Find the most recent results file for this config and platform
-                                LATEST_ACTION_FILE=$(ls -t /tmp/test_action_results_${config}_${platform_name}_*.json 2>/dev/null | head -1)
-                                
-                                if [[ -f "$LATEST_ACTION_FILE" ]] && jq -e . "$LATEST_ACTION_FILE" >/dev/null 2>&1; then
-                                    # Platform header with icon
-                                    case "$platform_name" in
-                                        "android") PLATFORM_ICON="📱" ;;
-                                        "desktop") PLATFORM_ICON="🖥️" ;;
-                                        *) PLATFORM_ICON="⚙️" ;;
-                                    esac
-                                    echo "   │   $PLATFORM_ICON $platform_name:"
-                                    
-                                    # Show individual actions with platform-specific timing
-                                    TEMP_ACTIONS="/tmp/actions_direct_${platform_name}_$$"
-                                    jq -r '.[] | select(.action | contains("replay_complete") | not) | "\(.success)|\(.action)|\(.duration_ms)|\(.error_message // "")"' "$LATEST_ACTION_FILE" 2>/dev/null > "$TEMP_ACTIONS"
-                                    while IFS='|' read -r success action duration error 2>/dev/null || [[ -n "$action" ]]; do
-                                        if [[ -n "$action" ]]; then
-                                            if [[ "$success" == "true" ]]; then
-                                                echo "   │   │   ├── ✅ $action (${duration}ms)"
-                                            else
-                                                if [[ -n "$error" && "$error" != "null" && "$error" != "" ]]; then
-                                                    echo "   │   │   ├── ❌ $action ($error)"
-                                                else
-                                                    echo "   │   │   ├── ❌ $action (FAILED)"
-                                                fi
-                                            fi
-                                        fi
-                                    done < "$TEMP_ACTIONS"
-                                    rm -f "$TEMP_ACTIONS"
-                                fi
-                            fi
-                        done < <(echo "$PLATFORMS_FOR_CONFIG")
-                    fi
-                fi
-            fi
-        done < "$TEMP_DIRECT"
-        echo ""
+        done < <(echo "$ALL_PLATFORMS")
     fi
-    rm -f "$TEMP_DIRECT"
-    set -e
+    set -e  # Re-enable exit on error
     
     # Multi-platform summary statistics with error handling
     echo "📊 Execution Summary"
