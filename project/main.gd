@@ -123,11 +123,11 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 		DebugManager.DebugEventType.EVENT_QUIT:
 			Log.info("Quit event received, exiting application", {}, ["debug", "system"])
 			SessionManager.end_gameplay_session()
-			get_tree().quit()
+			get_tree().quit(0)
 
 
 func _input(event: InputEvent) -> void:
 	if event.as_text() == "Escape" and event.is_pressed():
 		%PopupDebug.show()
 	if event.as_text() == "Q" and event.is_pressed():
-		get_tree().quit()
+		get_tree().quit(0)

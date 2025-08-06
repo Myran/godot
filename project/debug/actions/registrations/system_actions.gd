@@ -85,19 +85,17 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 
 # System action implementations
 static func _force_low_memory() -> bool:
-	# Simulate low memory condition
-	Log.warning(
-		"Simulating low memory condition for testing",
-		{},
-		[Log.TAG_DEBUG, Log.TAG_SYSTEM]
-	)
-
-	if OS.has_method("low_processor_usage_mode"):
-		var old_mode: bool = OS.low_processor_usage_mode
-		OS.low_processor_usage_mode = true
-		OS.low_processor_usage_mode = old_mode
-
-	Log.info("Low memory simulation completed", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
+	# Android-compatible memory simulation
+	print("DEBUG: _force_low_memory called")
+	
+	# Use basic logging that should work on all platforms
+	Log.info("Memory warning simulation", {}, ["debug", "system"])
+	
+	# Avoid OS-specific operations that might fail on Android
+	# Just simulate a simple memory warning without changing system settings
+	Log.warning("Low memory condition simulated", {}, ["debug", "system"])
+	
+	print("DEBUG: _force_low_memory returning true")
 	return true
 
 

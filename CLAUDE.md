@@ -10,6 +10,9 @@ just logs-errors TEST_ID                   # Find errors fast (98% token savings
 just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search - any string (99% token savings)
 just logs-last                             # Latest test results (99% token savings)
 
+# 🚨 CRITICAL: Android Development Rule
+just fastbuild-android                     # REQUIRED after ANY code changes before Android testing
+
 # 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
 just logs-tree TEST_ID                     # Explore log structure (2 sec)
 just logs-pattern TEST_ID "*.error"        # All errors with precision
@@ -284,6 +287,22 @@ Commands automatically detect input type:
 - ❌ `just run-desktop` - Skips debug coordinator (editor mode)
 
 **Impact**: State capture, checksum validation, semantic logging require debug actions.
+
+## 🚨 CRITICAL: Android Development Workflow
+
+**MANDATORY STEP: Always rebuild after code changes before Android testing**
+```bash
+# After ANY code changes (GDScript, C++, config):
+just fastbuild-android                     # Deploy updated code to Android
+# Then proceed with testing:
+just test-android-target CONFIG            # Test with updated code
+```
+
+**Why this is critical:**
+- Android uses compiled/cached code that doesn't auto-update
+- Code changes don't take effect until rebuild and deployment
+- Failing to fastbuild leads to testing old code versions
+- Results in false negatives and debugging the wrong code
 
 ## 📱 Android Configuration
 
