@@ -21,16 +21,8 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 
 static func _register_memory_actions(registry: DebugActionRegistry) -> void:
-	# System memory utilities
-	registry.register_action(
-		(
-			DebugAction
-			. create("system.memory.force_warning", _force_low_memory)
-			. set_category("System")
-			. set_group("Memory")
-			. set_description("Simulates low memory condition for testing memory management")
-		)
-	)
+	# Memory actions removed - simulation was causing intermittent failures
+	pass
 
 
 static func _register_debug_system_actions(registry: DebugActionRegistry) -> void:
@@ -84,20 +76,6 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 
 
 # System action implementations
-static func _force_low_memory() -> bool:
-	# Android-compatible memory simulation
-	print("DEBUG: _force_low_memory called")
-	
-	# Use basic logging that should work on all platforms
-	Log.info("Memory warning simulation", {}, ["debug", "system"])
-	
-	# Avoid OS-specific operations that might fail on Android
-	# Just simulate a simple memory warning without changing system settings
-	Log.warning("Low memory condition simulated", {}, ["debug", "system"])
-	
-	print("DEBUG: _force_low_memory returning true")
-	return true
-
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 	# Display debug action registry statistics
