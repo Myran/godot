@@ -1,6 +1,10 @@
 editor/godot.macos.editor.arm64
 .DS_Store
 .aider*
+# Claude Code / Node.js artifacts
+package.json
+package-lock.json
+node_modules/
 editor/editor_data/cache
 # Gradle files
 .gradle/
