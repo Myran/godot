@@ -1008,17 +1008,23 @@ _analyze-test-errors test_id platform:
 # ================================
 
 # Collect action execution results from logs and save to file
-_collect-action-results test_id platform config_name="unknown":
+_collect-action-results test_id platform config_name="unknown" session="":
     #!/usr/bin/env bash
     set -eo pipefail
     
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
     CONFIG_NAME="{{config_name}}"
+    SESSION="{{session}}"
     
-    # Create persistent results file that includes config name and platform for comprehensive breakdown
-    # Use a more specific naming pattern that won't conflict
-    RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+    # Create persistent results file that includes session for proper cleanup
+    # Each test creates a unique file using session timestamp to avoid conflicts
+    if [[ -n "$SESSION" ]]; then
+        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+    else
+        # Fallback to old naming for backwards compatibility
+        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+    fi
     echo "[]" > "$RESULTS_FILE"
     
     LOGS=""
@@ -1148,14 +1154,22 @@ _collect-action-results test_id platform config_name="unknown":
     echo "   🖥️  PLATFORM: $PLATFORM"
 
 # Generate detailed action summary from collected results file
-_generate-action-summary-from-file test_id config_name platform:
+_generate-action-summary-from-file test_id config_name platform session="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{test_id}}"
     CONFIG_NAME="{{config_name}}"
     PLATFORM="{{platform}}"
-    RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+    SESSION="{{session}}"
+    
+    # Use session-aware file naming to match the file created by _collect-action-results
+    if [[ -n "$SESSION" ]]; then
+        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+    else
+        # Fallback to old naming for backwards compatibility
+        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+    fi
     
     echo ""
     echo "📊 Detailed Action Execution Summary"
@@ -1242,19 +1256,20 @@ _generate-action-summary-from-file test_id config_name platform:
     # Keep results file for comprehensive breakdown - it will be cleaned up later
 
 # Hook that can be called after any test execution to add error analysis
-_post-test-validation test_id platform config_name="unknown":
+_post-test-validation test_id platform config_name="unknown" session="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
     CONFIG_NAME="{{config_name}}"
+    SESSION="{{session}}"
     
     # Collect action results from logs first
-    just _collect-action-results "$TEST_ID" "$PLATFORM" "$CONFIG_NAME"
+    just _collect-action-results "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION"
     
     # Generate detailed action summary
-    just _generate-action-summary-from-file "$TEST_ID" "$CONFIG_NAME" "$PLATFORM"
+    just _generate-action-summary-from-file "$TEST_ID" "$CONFIG_NAME" "$PLATFORM" "$SESSION"
     
     echo ""
     echo "🔍 Running Post-Test Error Analysis..."
@@ -1313,9 +1328,17 @@ _test-list-generic test_list platform:
     HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
     HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
     
+    # Create session timestamp for consistent file naming and cleanup
+    TEST_SESSION="$(date +%s)"
+    
+    # Clean up old test result files from previous sessions (older than 1 hour)
+    echo "🧹 Cleaning up old test result files..."
+    find /tmp -name "test_action_results_*.json" -mtime +1h -delete 2>/dev/null || true
+    find /tmp -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
+    
     # Create hierarchical mapping data structure for comprehensive breakdown
-    HIERARCHY_FILE="/tmp/test_hierarchy_${TEST_LIST}_$(date +%s).json"
-    echo '{"test_list": "'$TEST_LIST'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
+    HIERARCHY_FILE="/tmp/test_hierarchy_${TEST_LIST}_${TEST_SESSION}.json"
+    echo '{"test_list": "'$TEST_LIST'", "test_session": "'$TEST_SESSION'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
     
     # Store original config structure from test list
     jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | while IFS= read -r config; do
@@ -1410,7 +1433,7 @@ _test-list-generic test_list platform:
         
         # Execute configuration using the unified system
         set +e  # Temporarily disable exit on error to capture exit codes
-        INSIDE_TEST_LIST_EXECUTION=true just _execute-test-with-analysis "$config" "$PLATFORM"
+        INSIDE_TEST_LIST_EXECUTION=true just _execute-test-with-analysis "$config" "$PLATFORM" "$TEST_SESSION"
         exit_code=$?
         set -e  # Re-enable exit on error
         
@@ -1498,6 +1521,16 @@ _test-list-generic test_list platform:
         just _generate-comprehensive-breakdown "$HIERARCHY_FILE"
     fi
     
+    # Cleanup session-specific test result files after summary generation
+    # Skip cleanup if we're in multi-platform mode (files will be preserved for final summary)
+    if [[ "${MULTI_PLATFORM_MODE:-false}" != "true" ]]; then
+        echo "🧹 Cleaning up session test result files..."
+        rm -f /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null || true
+        rm -f "$HIERARCHY_FILE" 2>/dev/null || true
+    else
+        echo "🔄 Preserving files for multi-platform final summary..."
+    fi
+    
     if [[ $FAILED_CONFIGS -gt 0 ]]; then
         echo ""
         echo "❌ Some configurations failed. Check individual test results above."
@@ -1554,12 +1587,8 @@ _generate-comprehensive-breakdown hierarchy_file:
         # Process each platform separately
         while IFS= read -r platform_name; do
             if [[ -n "$platform_name" ]]; then
-                # Platform header with icon
-                case "$platform_name" in
-                    "android") PLATFORM_ICON="📱" ;;
-                    "desktop") PLATFORM_ICON="🖥️" ;;
-                    *) PLATFORM_ICON="⚙️" ;;
-                esac
+                # Dynamic platform icon mapping (future-proof for any platform)
+                PLATFORM_ICON=$(just _get-platform-icon "$platform_name")
                 echo "$PLATFORM_ICON Platform: $platform_name"
                 echo "================================"
                 
@@ -1760,15 +1789,19 @@ _generate-comprehensive-breakdown hierarchy_file:
     echo "Platforms Tested: $PLATFORMS_LIST ($PLATFORM_COUNT platform$(if [[ $PLATFORM_COUNT -gt 1 ]]; then echo 's'; fi))"
     echo ""
     
-    # Always show platform breakdown for clarity
-    echo "📱 Platform Breakdown:"
+    # Dynamic platform breakdown for any number of platforms
+    echo "🎯 Platform Breakdown:"
     while IFS= read -r platform; do
         if [[ -n "$platform" ]]; then
+            # Get dynamic platform icon and display name
+            PLATFORM_ICON=$(just _get-platform-icon "$platform")
+            PLATFORM_DISPLAY=$(just _get-platform-display-name "$platform")
+            
             P_PASSED=$(jq '[.config_results[] | select(.platform == "'"$platform"'" and .status == "passed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
             P_SKIPPED=$(jq '[.config_results[] | select(.platform == "'"$platform"'" and .status == "skipped")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0") 
             P_FAILED=$(jq '[.config_results[] | select(.platform == "'"$platform"'" and .status == "failed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
             P_TOTAL=$((P_PASSED + P_SKIPPED + P_FAILED))
-            echo "   ${platform}: ✅ $P_PASSED passed, ⏭️ $P_SKIPPED skipped, ❌ $P_FAILED failed ($P_TOTAL total)"
+            echo "   $PLATFORM_ICON ${platform}: ✅ $P_PASSED passed, ⏭️ $P_SKIPPED skipped, ❌ $P_FAILED failed ($P_TOTAL total)"
         fi
     done < <(echo "$PLATFORMS")
     
@@ -1784,7 +1817,20 @@ _generate-comprehensive-breakdown hierarchy_file:
     FAILED_ACTIONS=0
     FAILED_ACTIONS_DETAILS=""
     
-    # Process ALL platform results, not just current platform
+    # For execution summary, we need to capture platform results before cleanup
+    # The hierarchy file should contain the platform information we need
+    PLATFORMS=$(jq -r '[.config_results[].platform] | unique | .[]' "$HIERARCHY_FILE" 2>/dev/null | sort | uniq)
+    
+    if [[ -n "$PLATFORMS" ]]; then
+        echo "🔍 Platform information found in hierarchy file"
+        # Platform information is already captured in HIERARCHY_FILE
+        # Action-level details may not be available if files were cleaned up
+        echo "📊 Using platform summary from test execution"
+    else
+        echo "⚠️ No platform information found in hierarchy file"
+    fi
+    
+    # Action-level analysis (may not find files if already cleaned up)
     for results_file in /tmp/test_action_results_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
             # Check if this config was part of our test list with error handling
@@ -1839,12 +1885,13 @@ _generate-comprehensive-breakdown hierarchy_file:
 # ================================
 
 # Universal test wrapper that works for both Android and Desktop
-_execute-test-with-analysis config_name platform:
+_execute-test-with-analysis config_name platform session="":
     #!/usr/bin/env bash
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
     PLATFORM="{{platform}}"
+    SESSION="{{session}}"
     
     echo "🎯 $PLATFORM Testing with Error Analysis: $CONFIG_NAME"
     echo "$(printf '=%.0s' {1..50})"
@@ -1974,7 +2021,7 @@ _execute-test-with-analysis config_name platform:
     # Phase 3: Unified post-test validation (shared logic)
     if [[ $TEST_RESULT -eq 0 ]]; then
         # Run error analysis
-        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" || TEST_RESULT=$?
+        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" || TEST_RESULT=$?
         
         # Run checksum validation if applicable
         if [[ $TEST_RESULT -eq 0 ]]; then
@@ -1985,6 +2032,15 @@ _execute-test-with-analysis config_name platform:
         echo "❌ OVERALL RESULT: FAILED"  
         echo "💡 Test execution failed - skipping validation"
         exit 1
+    fi
+    
+    # Cleanup session-specific test result files after individual test
+    # Skip cleanup if we're in multi-platform mode
+    if [[ -n "$SESSION" && "${DISABLE_TEST_CLEANUP:-false}" != "true" ]]; then
+        echo "🧹 Cleaning up session test result files..."
+        rm -f /tmp/test_action_results_*_${SESSION}_*.json 2>/dev/null || true
+    elif [[ "${DISABLE_TEST_CLEANUP:-false}" == "true" ]]; then
+        echo "🔄 Preserving session files for multi-platform summary..."
     fi
     
     # Final result
@@ -2294,8 +2350,11 @@ test-android-target config_name="":
         CONFIG_NAME="{{config_name}}"
     fi
     
+    # Create session timestamp for individual test
+    TEST_SESSION="$(date +%s)"
+    
     # Use the new unified execution pattern
-    just _execute-test-with-analysis "$CONFIG_NAME" "android"
+    just _execute-test-with-analysis "$CONFIG_NAME" "android" "$TEST_SESSION"
 
 # Manual mode test commands that inject auto_quit: false
 test-android-manual config_name:
@@ -2374,8 +2433,11 @@ test-desktop-target config_name="":
         CONFIG_NAME="{{config_name}}"
     fi
     
+    # Create session timestamp for individual test
+    TEST_SESSION="$(date +%s)"
+    
     # Use the new unified execution pattern
-    just _execute-test-with-analysis "$CONFIG_NAME" "desktop"
+    just _execute-test-with-analysis "$CONFIG_NAME" "desktop" "$TEST_SESSION"
 
 # ================================
 # ORIGINAL COMMAND PRESERVATION
@@ -2976,3 +3038,92 @@ test-desktop-update config_name="":
     
     # Call shared update function
     just _update-checksum-baseline "desktop" "$CONFIG_NAME"
+
+# ================================
+# FUTURE-PROOF PLATFORM SUPPORT
+# ================================
+
+# Dynamic platform icon mapping - easily extensible for new platforms
+_get-platform-icon platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{platform}}"
+    
+    # Extensible platform icon registry
+    case "$PLATFORM" in
+        "android") echo "📱" ;;
+        "desktop") echo "🖥️" ;;
+        "ios") echo "📱" ;;
+        "web") echo "🌐" ;;
+        "switch") echo "🎮" ;;
+        "playstation") echo "🎮" ;;
+        "xbox") echo "🎮" ;;
+        "steam") echo "🎮" ;;
+        "macos") echo "🍎" ;;
+        "linux") echo "🐧" ;;
+        "windows") echo "🪟" ;;
+        *) echo "⚙️" ;;  # Generic fallback for any future platform
+    esac
+
+# Get all supported platforms dynamically
+_get-all-platforms:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Auto-discover platforms from available test functions and configs
+    # This makes the system truly platform-agnostic
+    PLATFORMS=""
+    
+    # Check for platform-specific test functions
+    if command -v just >/dev/null 2>&1; then
+        # Look for test-*-target functions
+        PLATFORM_FUNCTIONS=$(just --list 2>/dev/null | rg "test-([^-]+)-target" -o -r '$1' | sort | uniq)
+        if [[ -n "$PLATFORM_FUNCTIONS" ]]; then
+            PLATFORMS="$PLATFORM_FUNCTIONS"
+        fi
+    fi
+    
+    # Fallback to known platforms if auto-discovery fails
+    if [[ -z "$PLATFORMS" ]]; then
+        PLATFORMS="android desktop"
+    fi
+    
+    echo "$PLATFORMS"
+
+# Validate if a platform exists in the system (different from config-platform support check)
+_platform-exists platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{platform}}"
+    SUPPORTED_PLATFORMS=$(just _get-all-platforms)
+    
+    if echo "$SUPPORTED_PLATFORMS" | grep -qw "$PLATFORM"; then
+        echo "true"
+    else
+        echo "false"
+    fi
+
+# Get platform display name (for future localization/customization)
+_get-platform-display-name platform:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{platform}}"
+    
+    # Extensible platform display name registry
+    case "$PLATFORM" in
+        "android") echo "Android Device" ;;
+        "desktop") echo "Desktop (Linux/macOS/Windows)" ;;
+        "ios") echo "iOS Device" ;;
+        "web") echo "Web Browser" ;;
+        "switch") echo "Nintendo Switch" ;;
+        "playstation") echo "PlayStation" ;;
+        "xbox") echo "Xbox" ;;
+        "steam") echo "Steam Deck" ;;
+        "macos") echo "macOS" ;;
+        "linux") echo "Linux" ;;
+        "windows") echo "Windows" ;;
+        *) echo "$PLATFORM" ;;  # Use platform name as-is for unknown platforms
+    esac

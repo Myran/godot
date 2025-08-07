@@ -172,25 +172,211 @@ status:
     @echo "Main project:"
     git status -s
 
-# Run tests
+# Run tests across multiple platforms with unified summary
 test:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🚀 Running main test suite - Desktop first, then Android"
-    echo "======================================================="
+    echo "🚀 Running multi-platform test suite"
+    echo "===================================="
     echo ""
     
-    # Run desktop tests first
-    echo "1️⃣ Running desktop tests..."
-    just test-desktop-target main
+    # Create shared session timestamp for multi-platform test
+    MULTI_SESSION="$(date +%s)"
+    export MULTI_PLATFORM_SESSION="$MULTI_SESSION"
+    
+    echo "🔍 Multi-platform session: $MULTI_SESSION"
+    echo ""
+    
+    # Clean up any old test files first
+    echo "🧹 Cleaning up old test result files..."
+    find /tmp -name "test_action_results_*.json" -mtime +1h -delete 2>/dev/null || true
+    find /tmp -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
+    
+    # Get all supported platforms dynamically
+    SUPPORTED_PLATFORMS=$(just _get-all-platforms)
+    echo "🎯 Auto-detected platforms: $SUPPORTED_PLATFORMS"
+    
+    # Define the platforms and configs to test (easily configurable)
+    TEST_PLATFORMS="desktop android"  # Can be expanded to: "desktop android ios web"
+    TEST_CONFIG="main"
+    
+    # Initialize tracking arrays (bash 3.2 compatible)
+    PLATFORM_RESULTS=""
+    PLATFORM_HIERARCHIES=""
+    HIERARCHY_FILES=""
+    
+    # Run tests on each platform
+    PLATFORM_NUM=1
+    for PLATFORM in $TEST_PLATFORMS; do
+        # Get platform icon and display name  
+        PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM")
+        PLATFORM_DISPLAY=$(just _get-platform-display-name "$PLATFORM")
+        
+        echo ""
+        echo "${PLATFORM_NUM}️⃣ Running ${PLATFORM_DISPLAY} tests..."
+        
+        # Run platform-specific test
+        PLATFORM_RESULT=0
+        if DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just "test-${PLATFORM}-target" "$TEST_CONFIG" 2>/dev/null; then
+            PLATFORM_RESULT=0
+        else
+            # Check if command exists by trying a help/list call
+            if just "test-${PLATFORM}-target" --help >/dev/null 2>&1 || just "test-${PLATFORM}-target" "" >/dev/null 2>&1; then
+                # Command exists but failed - real failure
+                PLATFORM_RESULT=1
+            else
+                # Command doesn't exist - skip
+                echo "⚠️ Platform $PLATFORM not supported - skipping"
+                PLATFORM_RESULT=2
+            fi
+        fi
+        
+        # Store result and find hierarchy file (bash 3.2 compatible)
+        PLATFORM_RESULTS="$PLATFORM_RESULTS${PLATFORM}:${PLATFORM_RESULT};"
+        
+        if [[ $PLATFORM_RESULT -ne 2 ]]; then  # Not skipped
+            # Find the hierarchy file created by this platform test
+            # Look for files with the test config pattern or session timestamp
+            HIERARCHY_FILE=$(ls -t /tmp/test_hierarchy_${TEST_CONFIG}_*.json /tmp/test_hierarchy_*_${MULTI_SESSION}_*.json 2>/dev/null | head -1 || echo "")
+            if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+                echo "📁 Found ${PLATFORM} hierarchy: $(basename "$HIERARCHY_FILE")"
+                
+                # Update platform info in hierarchy file
+                TEMP_FILE=$(mktemp)
+                jq --arg platform "$PLATFORM" '.config_results[].platform = $platform' "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
+                
+                PLATFORM_HIERARCHIES="$PLATFORM_HIERARCHIES${PLATFORM}:${HIERARCHY_FILE};"
+                HIERARCHY_FILES="$HIERARCHY_FILES $HIERARCHY_FILE"
+            else
+                echo "⚠️ No hierarchy file found for ${PLATFORM} - metrics will show 0"
+            fi
+        fi
+        
+        PLATFORM_NUM=$((PLATFORM_NUM + 1))
+    done
+    
+    # Generate unified multi-platform summary
+    echo ""
+    echo "📊 Multi-Platform Test Results"
+    echo "==============================="
+    echo ""
+    echo "🎯 Final Multi-Platform Summary:"
+    echo "================================"
+    
+    # Dynamically calculate totals across all platforms
+    TOTAL_PASSED=0
+    TOTAL_SKIPPED=0  
+    TOTAL_FAILED=0
+    TESTED_PLATFORMS=""
+    PLATFORM_COUNT=0
+    
+    # Helper function to get value from string-based storage
+    get_platform_result() {
+        local platform="$1"
+        echo "$PLATFORM_RESULTS" | grep -o "${platform}:[^;]*" | cut -d: -f2
+    }
+    
+    get_platform_hierarchy() {
+        local platform="$1"
+        echo "$PLATFORM_HIERARCHIES" | grep -o "${platform}:[^;]*" | cut -d: -f2
+    }
+    
+    # Process each platform's results
+    for PLATFORM in $TEST_PLATFORMS; do
+        RESULT=$(get_platform_result "$PLATFORM")
+        HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
+        
+        if [[ "$RESULT" == "2" ]]; then
+            continue  # Skip platforms that aren't supported
+        fi
+        
+        PLATFORM_COUNT=$((PLATFORM_COUNT + 1))
+        TESTED_PLATFORMS="$TESTED_PLATFORMS $PLATFORM"
+        
+        if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+            # Extract metrics for this platform
+            P_PASSED=$(jq '[.config_results[] | select(.status == "passed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            P_SKIPPED=$(jq '[.config_results[] | select(.status == "skipped")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            P_FAILED=$(jq '[.config_results[] | select(.status == "failed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            
+            # Add to totals
+            TOTAL_PASSED=$((TOTAL_PASSED + P_PASSED))
+            TOTAL_SKIPPED=$((TOTAL_SKIPPED + P_SKIPPED))
+            TOTAL_FAILED=$((TOTAL_FAILED + P_FAILED))
+        fi
+    done
+    
+    TOTAL_CONFIGS=$((TOTAL_PASSED + TOTAL_SKIPPED + TOTAL_FAILED))
+    TESTED_PLATFORMS_LIST=$(echo "$TESTED_PLATFORMS" | sed 's/^ *//' | tr ' ' ',')
+    
+    # Display summary header
+    echo "Total Test Lists: 1"
+    echo "Total Configs: $TOTAL_CONFIGS"
+    echo "Platforms Tested: $TESTED_PLATFORMS_LIST ($PLATFORM_COUNT platform$(if [[ $PLATFORM_COUNT -gt 1 ]]; then echo 's'; fi))"
+    echo ""
+    
+    # Display per-platform breakdown
+    echo "🎯 Platform Breakdown:"
+    for PLATFORM in $TEST_PLATFORMS; do
+        RESULT=$(get_platform_result "$PLATFORM")
+        HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
+        
+        if [[ "$RESULT" == "2" ]]; then
+            continue  # Skip unsupported platforms
+        fi
+        
+        PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM")
+        
+        if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+            P_PASSED=$(jq '[.config_results[] | select(.status == "passed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            P_SKIPPED=$(jq '[.config_results[] | select(.status == "skipped")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            P_FAILED=$(jq '[.config_results[] | select(.status == "failed")] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+            P_TOTAL=$((P_PASSED + P_SKIPPED + P_FAILED))
+            
+            echo "   $PLATFORM_ICON $PLATFORM: ✅ $P_PASSED passed, ⏭️ $P_SKIPPED skipped, ❌ $P_FAILED failed ($P_TOTAL total)"
+        else
+            echo "   $PLATFORM_ICON $PLATFORM: ❌ ERROR (no results available)"
+        fi
+    done
     
     echo ""
-    echo "2️⃣ Running Android tests..."
-    just test-android-target main
-    
+    echo "Combined Results:"
+    echo "✅ Passed: $TOTAL_PASSED"
+    echo "⏭️  Skipped: $TOTAL_SKIPPED"
+    echo "❌ Failed: $TOTAL_FAILED"
     echo ""
-    echo "✅ Main test suite completed successfully!"
+    echo "✅ Multi-platform breakdown complete"
+    
+    # Cleanup session files after summary
+    echo "🧹 Cleaning up multi-platform session files..."
+    rm -f /tmp/test_action_results_*_${MULTI_SESSION}_*.json 2>/dev/null || true
+    for HIERARCHY_FILE in $HIERARCHY_FILES; do
+        [[ -n "$HIERARCHY_FILE" ]] && rm -f "$HIERARCHY_FILE" 2>/dev/null || true
+    done
+    
+    # Determine final result
+    OVERALL_RESULT=0
+    FAILED_PLATFORMS=""
+    for PLATFORM in $TEST_PLATFORMS; do
+        RESULT=$(get_platform_result "$PLATFORM")
+        if [[ "$RESULT" != "0" && "$RESULT" != "2" ]]; then  # Not success and not skipped
+            OVERALL_RESULT=1
+            PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM")
+            FAILED_PLATFORMS="$FAILED_PLATFORMS\n   $PLATFORM_ICON $PLATFORM: FAILED (exit code: $RESULT)"
+        fi
+    done
+    
+    # Final result
+    echo ""
+    if [[ $OVERALL_RESULT -eq 0 ]]; then
+        echo "✅ Multi-platform test suite completed successfully!"
+        exit 0
+    else
+        echo "❌ Some platforms failed:"
+        echo -e "$FAILED_PLATFORMS"
+        exit 1
+    fi
 
 # Generate documentation
 generate-docs:
