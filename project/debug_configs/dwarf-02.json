@@ -1,0 +1,55 @@
+{
+  "description": "Generated replay from semantic session: session_20250806_201614_e675a7c7",
+  "session_id": "session_20250806_201614_e675a7c7",
+  "generation_timestamp": "20250806_201739",
+  "semantic_action_count": 3,
+  "actions": [
+    "system.debug.hide_menu",
+    "game.lineup.populate_enemy",
+    "game.battle.start_player",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "PREBATTLE"
+      }
+    },
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "PREBATTLE"
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250806_201614_e675a7c7",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "dwarf-02",
+    "capture_timestamp": "20250806_201739",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 55555,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "battle.start",
+        "checksum": "b417eb0f82cf030c02b09494832762bb9d25f1dfd1ed857cc334b1a0a22f4762"
+      },
+      {
+        "sequence": 2,
+        "action": "transition.change_state",
+        "checksum": "16a7bce1a812ff319aedb68f5435832bd3786491692bda775d3ddc657d2e64e0"
+      },
+      {
+        "sequence": 3,
+        "action": "transition.change_state",
+        "checksum": "c5cbab1c67871f2266ca373bad8f59dbf5ae72abacd7094ed0c8789839ec13e0"
+      }
+    ]
+  }
+}

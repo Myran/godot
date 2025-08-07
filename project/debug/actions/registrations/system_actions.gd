@@ -72,10 +72,8 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	)
 
 
-
-
-
 # System action implementations
+
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 	# Display debug action registry statistics
@@ -174,7 +172,6 @@ static func _capture_final_state() -> void:
 
 
 # RTDB status check function removed - Firebase classes not consistently available across platforms
-
 
 # Legacy _validate_checksum function removed - now using semantic logging approach
 

@@ -1,0 +1,69 @@
+{
+  "description": "Generated replay from semantic session: session_20250806_204212_2f0e0760",
+  "session_id": "session_20250806_204212_2f0e0760",
+  "generation_timestamp": "20250806_204833",
+  "semantic_action_count": 4,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250806_204212_2f0e0760",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "test-01-no-fallback",
+    "capture_timestamp": "20250806_204833",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 55555,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "e9a591d7aae316e0877c36e5dc1069eac1ba54d86b1774219547d69887237146"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "ee5fa06cc197f4d3c13018f61a19b0ba303b6221578c7235837b8f3890f96655"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.upgrade",
+        "checksum": "e962587c0d1502f58d0319ce7dca8cf644309bc4863b71166fbe5af809352409"
+      },
+      {
+        "sequence": 4,
+        "action": "draft.upgrade",
+        "checksum": "b3bd3bfe0b3b1d703ba0f86eb2b8f3522642b0e17e618ce6cb27b8f755122327"
+      }
+    ]
+  }
+}

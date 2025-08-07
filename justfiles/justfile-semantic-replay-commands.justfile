@@ -1142,8 +1142,8 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
     # Parse each semantic action and convert to debug action
     while IFS= read -r action_line; do
         if [ -n "$action_line" ]; then
-            # Extract JSON portion from log line
-            JSON_PART=$(echo "$action_line" | sed 's/.*SEMANTIC_ACTION //' | sed 's/ (session_manager\.gd:[0-9]*)$//')
+            # Extract JSON portion from log line and remove ANSI color codes
+            JSON_PART=$(echo "$action_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/.*SEMANTIC_ACTION //' | sed 's/ (session_manager\.gd:[0-9]*)$//')
             
             # Extract action type and data using jq
             ACTION_TYPE=$(echo "$JSON_PART" | jq -r '.type // null')

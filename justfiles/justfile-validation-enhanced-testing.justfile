@@ -533,16 +533,18 @@ _handle-checksum-validation config_path platform test_id:
         "desktop")
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
             LOGS_DIR="$USER_DATA_DIR/logs"
-            LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
-            if [[ -n "$LATEST_LOG" ]]; then
-                if just _extract-checksums-unified "$LATEST_LOG" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+            DESKTOP_LOG_FILE="$LOGS_DIR/desktop_${TEST_ID}.log"
+            
+            if [[ -f "$DESKTOP_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$DESKTOP_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
                     EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
                 else
-                    echo "⚠️  Checksum extraction failed:"
+                    echo "⚠️  Checksum extraction failed from desktop test log:"
                     cat /tmp/checksum_extraction.log | sed 's/^/  /'
                 fi
             else
-                echo "⚠️  No desktop log files available"
+                echo "⚠️  Desktop test log file not found: $DESKTOP_LOG_FILE"
+                echo "💡 Expected file name pattern: desktop_\${TEST_ID}.log"
             fi
             ;;
         *)
@@ -719,21 +721,14 @@ _extract-logs test_id platform temp_output_file="":
         "desktop")
             echo "🖥️  Extracting desktop logs for test: $TEST_ID"
             
-            # If temp output file is provided, use it; otherwise look for recent logs
+            # Temp output file is required for desktop logs
             if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
                 echo "🖥️  Using provided temp output file: $TEMP_OUTPUT_FILE"
                 cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
             else
-                # Fallback: look for recent desktop logs (for backward compatibility)
-                echo "🖥️  No temp file provided - looking for recent desktop logs..."
-                LATEST_LOG=$(ls -t "$LOGS_DIR"/godot*.log 2>/dev/null | head -1)
-                if [[ -n "$LATEST_LOG" && -f "$LATEST_LOG" ]]; then
-                    echo "🖥️  Using latest desktop log: $LATEST_LOG"
-                    cp "$LATEST_LOG" "$LOG_FILE"
-                else
-                    echo "⚠️  No desktop logs found"
-                    touch "$LOG_FILE"  # Create empty file to prevent errors
-                fi
+                echo "❌ No temp output file provided for desktop log extraction"
+                echo "💡 Desktop logs must be extracted from test execution output"
+                exit 1
             fi
             ;;
         *)
