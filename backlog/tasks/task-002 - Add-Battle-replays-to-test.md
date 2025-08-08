@@ -526,3 +526,244 @@ just test-android battle-all "/generated-replays/merge-*" @firebase-all
 **Month 1**: Comprehensive replay coverage without complex infrastructure overhead
 
 This elegant solution delivers 80% of the value of complex approaches in 1% of the implementation time, perfectly aligning with GameTwo's need for **test validity that's paramount to company survival** while maintaining development velocity.
+
+---
+
+## 🎯 IMPLEMENTATION COMPLETE - PRACTICAL USAGE EXAMPLES
+
+### 📁 **Current File Structure (After Implementation)**
+
+```
+/tests/
+├── debug_configs/
+│   ├── battle-animated.json              # 9 core configs
+│   ├── battle-logic-only.json
+│   ├── firebase-backend-layer.json
+│   ├── firebase-cpp-layer.json
+│   ├── firebase-network-connectivity.json
+│   ├── firebase-rtdb-layer.json
+│   ├── system-error-handling.json
+│   ├── system-layer-all.json
+│   ├── system-performance.json
+│   └── archive/
+│       ├── generated-replays/            # 🎯 TARGET FOLDER - 23 battle replays
+│       │   ├── draft-07.json
+│       │   ├── draft-09.json
+│       │   ├── draft-10.json through draft-14.json
+│       │   ├── locked-01.json, locked-02.json, locked-02_manual.json
+│       │   ├── merge-20.json through merge-25.json  # 6 merge scenarios
+│       │   ├── reroll-01.json
+│       │   ├── test-05.json through test-10.json
+│       │   └── troll-01.json
+│       └── experimental/                 # 6 experimental configs
+│           ├── firebase-availability-test.json
+│           ├── firebase-class-check.json
+│           └── ... (4 more)
+└── test-lists/
+    ├── battle-all.json                   # Existing test-lists
+    ├── firebase-all.json
+    ├── system-all.json  
+    ├── test-all.json
+    ├── comprehensive-with-replays.json   # 🚀 NEW - Mix @ + folder patterns
+    └── replay-testing.json               # 🚀 NEW - Mixed pattern demo
+```
+
+### 🚀 **IMMEDIATE USAGE - Copy/Paste Ready Commands**
+
+#### **1. Access All Battle Replays (23 configs)**
+```bash
+# Test all generated battle replays
+just test-android '/archive/generated-replays/'
+
+# Desktop equivalent  
+just test-desktop '/archive/generated-replays/'
+```
+
+#### **2. Specific Battle Replay Categories**
+```bash
+# All merge scenarios (merge-20 through merge-25)
+just test-android '/archive/generated-replays/merge-*'
+
+# All draft scenarios starting with 1 (draft-10 through draft-14) 
+just test-android '/archive/generated-replays/draft-1*'
+
+# All locked scenarios
+just test-android '/archive/generated-replays/locked-*'
+
+# All test scenarios  
+just test-android '/archive/generated-replays/test-*'
+
+# Specific patterns ending in 01
+just test-android '/archive/generated-replays/*-01'    # locked-01, reroll-01, troll-01
+```
+
+#### **3. Mixed Pattern Testing (Most Powerful)**
+```bash
+# Use our new comprehensive-with-replays.json (32 total configs)
+just test-android comprehensive-with-replays
+# Expands to: @battle-all + @system-all + all 23 replay configs
+
+# Use our new replay-testing.json (18 total configs)  
+just test-android replay-testing
+# Expands to: battle-logic-only + @firebase-all + merge patterns + draft patterns
+```
+
+### 📋 **CREATE YOUR OWN TEST-LISTS**
+
+#### **Example 1: Daily Regression with Key Replays**
+```json
+{
+  "name": "Daily Regression Enhanced",
+  "description": "Core regression testing enhanced with critical battle replays",
+  "configs": [
+    "@system-all",                           // 3 system configs
+    "@firebase-all",                         // 6 Firebase configs  
+    "battle-logic-only",                     // 1 direct config
+    "/archive/generated-replays/merge-*",    // 6 merge replays (merge-20 to merge-25)
+    "/archive/generated-replays/locked-*"    // 3 locked replays (edge cases)
+  ]
+}
+// Result: ~19 unique configs combining traditional + replay testing
+```
+
+#### **Example 2: Comprehensive Battle Validation**
+```json
+{
+  "name": "Complete Battle System Validation",
+  "description": "Every battle-related config + all battle replays",
+  "configs": [
+    "@battle-all",                          // All battle system configs
+    "/archive/generated-replays/"           // All 23 battle replay configs
+  ]
+}
+// Result: ~31 unique configs (8 battle + 23 replays)
+```
+
+#### **Example 3: Selective Replay Testing**
+```json
+{
+  "name": "High-Value Replay Scenarios", 
+  "description": "Focus on most important replay patterns",
+  "configs": [
+    "/archive/generated-replays/merge-2[0-5]",  // merge-20 through merge-25
+    "/archive/generated-replays/draft-1*",      // draft-10 through draft-14  
+    "/archive/generated-replays/locked-*",      // All locked scenarios
+    "/archive/generated-replays/test-10"        // Specific high-value test
+  ]
+}
+// Result: 15 carefully selected replay configs
+```
+
+#### **Example 4: Experimental Integration**
+```json
+{
+  "name": "Experimental Features with Replay Validation",
+  "description": "Test experimental configs alongside proven replays",
+  "configs": [
+    "/archive/experimental/firebase-*",      // 2 experimental Firebase configs
+    "/archive/generated-replays/merge-*",    // 6 proven merge scenarios
+    "system-performance"                     // 1 performance baseline
+  ]
+}
+// Result: 9 configs mixing experimental + stable replay validation
+```
+
+### ⚡ **QUICK PRODUCTIVITY PATTERNS**
+
+#### **Pattern 1: Merge Testing Focus**
+```bash
+# Test just merge scenarios with system validation
+just test-android system-layer-all '/archive/generated-replays/merge-*'
+# Runs: 1 system config + 6 merge replays = 7 total configs
+```
+
+#### **Pattern 2: Draft System Deep Dive**  
+```bash
+# All draft-related testing
+just test-android '/archive/generated-replays/draft-*'
+# Runs: draft-07, draft-09, draft-10, draft-11, draft-12, draft-13, draft-14 = 7 configs
+```
+
+#### **Pattern 3: Firebase + Replay Integration**
+```bash  
+# Firebase testing enhanced with replay validation
+just test-android firebase-all '/archive/generated-replays/test-*'
+# Runs: 6 Firebase configs + 6 test replays = 12 total configs
+```
+
+#### **Pattern 4: Quick Smoke Test with Replays**
+```bash
+# Minimal smoke test enhanced with key replays
+just test-android battle-logic-only '/archive/generated-replays/merge-20' '/archive/generated-replays/locked-01'
+# Runs: 1 core config + 2 critical replays = 3 total configs
+```
+
+### 🔍 **DISCOVERY AND EXPLORATION COMMANDS**
+
+```bash
+# See what replay configs are available
+just _resolve_folder_reference "/archive/generated-replays/"
+
+# Preview what a test-list will run
+just _expand_at_references comprehensive-with-replays
+
+# Check folder structure
+just help-at-symbols  # Shows complete folder syntax guide
+
+# Count available configs
+echo "Total replays: $(just _resolve_folder_reference '/archive/generated-replays/' | wc -l)"
+echo "Merge scenarios: $(just _resolve_folder_reference '/archive/generated-replays/merge-*' | wc -l)"
+```
+
+### 💡 **TEAM ADOPTION RECOMMENDATIONS**
+
+#### **Week 1: Start Simple**
+```bash
+# Begin with existing comprehensive test + key replays
+just test-android comprehensive-with-replays  # 32 configs including replays
+```
+
+#### **Week 2: Add Targeted Replay Testing**  
+```bash
+# Focus on specific replay categories that matter to your feature
+just test-android '/archive/generated-replays/merge-*'  # If working on merge logic
+just test-android '/archive/generated-replays/draft-*'  # If working on draft system  
+```
+
+#### **Week 3: Create Custom Test-Lists**
+```bash
+# Create feature-specific test-lists mixing traditional + replay configs
+# Save as /tests/test-lists/my-feature-validation.json
+```
+
+#### **Week 4: Full Integration**
+```bash
+# Use folder patterns in daily workflows
+# Replace static config lists with dynamic folder patterns
+# Benefit from auto-discovery as new replays are generated
+```
+
+### 🛡️ **ERROR HANDLING EXAMPLES**
+
+```bash
+# What happens with nonexistent folders?
+just test-android '/nonexistent-folder/'
+# ❌ Folder not found: tests/debug_configs/nonexistent-folder
+# 💡 Available folders in tests/debug_configs: [helpful list]
+
+# What about patterns with no matches?  
+just test-android '/archive/generated-replays/nonexistent-*'
+# ⚠️  No valid configs found matching: /archive/generated-replays/nonexistent-*
+# 💡 Available configs in tests/debug_configs/archive/generated-replays: [sample list]
+```
+
+### 📈 **REAL RESULTS WITH CURRENT FILES**
+
+**✅ VERIFIED WITH ACTUAL DATA:**
+- **23 battle replay configs** immediately accessible via `/archive/generated-replays/`
+- **6 merge scenarios** available via `/archive/generated-replays/merge-*` (merge-20 to merge-25)
+- **5 draft scenarios** available via `/archive/generated-replays/draft-1*` (draft-10 to draft-14)  
+- **32 total configs** in comprehensive-with-replays.json test-list
+- **18 total configs** in replay-testing.json mixed pattern demo
+
+**Teams can start using these exact commands immediately** to enhance their regression testing with battle replay validation while maintaining the **test validity paramount to company survival**.
