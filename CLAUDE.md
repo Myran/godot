@@ -23,6 +23,11 @@ just help-wildcards                        # Complete pattern guide
 just test-android-target CONFIG            # Automated testing with built-in error analysis & checksum validation
 just test-desktop-target CONFIG            # Desktop automated testing with comprehensive validation
 
+# 🚀 NEW: Battle Replay Integration (Instant Access)
+just test-android '/archive/generated-replays/'        # All 25+ battle replay configs
+just test-android '/archive/generated-replays/merge-*' # Merge scenarios (merge-20 through merge-25)
+just test-android comprehensive-with-replays           # Full regression + replay validation
+
 # Daily Workflow (Primary Commands)
 just validate                              # Complete validation (format + syntax + runtime)
 just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
@@ -38,10 +43,11 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
 ### **Primary Commands (Daily Use)**
 - `just validate` - Complete validation pipeline
-- `just test-android TARGET` - Main testing interface (auto-detects patterns/configs)
+- `just test-android TARGET` - Main testing interface (auto-detects patterns/configs/folders)
 - `just test-android-target CONFIG` - ⭐ **NEW: Enhanced automated testing with built-in validation**
 - `just test-desktop-target CONFIG` - ⭐ **NEW: Desktop automated testing with comprehensive validation**
 - `just test-android test-all` - ⭐ **NEW: Run ALL test suites automatically using @ symbol expansion**
+- `just test-android '/archive/generated-replays/'` - 🚀 **NEW: All battle replays (25+ configs)**
 - `just config-restart-android ACTION` - 5-second iteration cycles
 - `just logs-errors TEST_ID` - Token-efficient error detection
 
@@ -272,12 +278,67 @@ just test-android '*.*.performance'       # All performance tests
 - ✅ **Circular Protection**: Built-in circular dependency detection
 - ✅ **Easy Maintenance**: Add new test suites without updating master lists
 
+### **🚀 NEW: /folder/ Syntax for Battle Replay Integration**
+
+**Automatically include configs from folders using /folder/ syntax:**
+
+```bash
+# Folder references
+"/archive/generated-replays/"         # Include ALL replay configs from folder
+"/archive/generated-replays/merge-*"  # Wildcard pattern within folder  
+"/archive/experimental/firebase-*"    # Subfolder with pattern
+"/templates/"                         # All configs in templates folder
+```
+
+**Example Test List with /folder/ Syntax:**
+```json
+{
+  "name": "Comprehensive Testing with Battle Replays", 
+  "description": "Daily regression enhanced with replay validation",
+  "configs": [
+    "battle-logic-only",              // Traditional config
+    "@firebase-all",                  // @ reference
+    "/archive/generated-replays/",    // All replay configs  
+    "/archive/generated-replays/merge-*"  // Specific replay pattern
+  ]
+}
+```
+
+**Available Folders (Relative to /tests/debug_configs/):**
+- `/archive/generated-replays/` - 25+ battle replay configs (merge-*, draft-*, locked-*, etc.)
+- `/archive/experimental/` - Experimental test configurations  
+- `/templates/` - Config templates and examples
+- `/` - Direct debug_configs folder access
+
+**Folder Pattern Examples:**
+```bash
+# All generated battle replays (25+ configs)
+just test-android "/archive/generated-replays/"
+
+# Just merge scenarios (merge-20 through merge-25) 
+just test-android "/archive/generated-replays/merge-*"
+
+# Draft scenarios 10-14
+just test-android "/archive/generated-replays/draft-1*"
+
+# Mix patterns in test-lists
+just test-android replay-testing  # Uses folder + @ + direct configs
+```
+
+**Key Benefits:**
+- ✅ **Instant Replay Access**: All 25+ existing replays immediately available
+- ✅ **Auto-Discovery**: New replay configs automatically included
+- ✅ **Pattern Matching**: Powerful wildcard support within folders
+- ✅ **Mixed Syntax**: Combine `/folder/`, `@symbols`, and direct configs
+- ✅ **Error Handling**: Clear messages for missing folders/patterns
+
 ### **Input Auto-Detection**
 Commands automatically detect input type:
 - **Actions**: `'system.debug.registry_stats'` → Direct execution
 - **Wildcards**: `'cpp.*'` → Auto-discovery
 - **Configs**: `system-testing` → Load configuration  
 - **Test Lists**: `development-workflow` → Execute suite
+- **Folder Patterns**: `'/archive/generated-replays/merge-*'` → Folder expansion ⭐ NEW
 
 ## 🚨 CRITICAL: Debug Action Execution
 
@@ -635,9 +696,9 @@ just logs-suggest TEST_ID fire
 
 **Key Directories:**
 - `project/debug/actions/` - Debug actions by layer (cpp, backend, rtdb, system, game)
-- `project/debug_configs/` - ⭐ **Streamlined: 9 core configs** (46 archived, organized by layer)
-- `project/test-lists/` - 13 active workflow configurations
-- `project/debug_configs/archive/` - Archived configs (duplicates, experimental, generated-replays)
+- `tests/debug_configs/` - ⭐ **NEW LOCATION: 9 core configs** (moved from project/, organized by layer)
+- `tests/test-lists/` - ⭐ **NEW LOCATION: 13+ workflow configurations** (moved from project/)
+- `tests/debug_configs/archive/generated-replays/` - ⭐ **25+ battle replay configs** (accessible via /folder/ syntax)
 - `justfiles/justfile-validation-enhanced-testing.justfile` - ⭐ **NEW: Enhanced testing system**
 
 ## 📖 Integration with Just Help System

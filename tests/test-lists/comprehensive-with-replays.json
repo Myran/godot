@@ -1,0 +1,9 @@
+{
+  "name": "Comprehensive Testing with Battle Replays",
+  "description": "Daily regression testing enhanced with battle replay validation using the new folder expansion syntax",
+  "configs": [
+    "@battle-all",
+    "@system-all", 
+    "/archive/generated-replays/"
+  ]
+}

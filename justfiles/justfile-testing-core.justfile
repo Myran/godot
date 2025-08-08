@@ -659,6 +659,9 @@ _expand_at_references test_list:
         if [[ "$config" =~ ^@ ]]; then
             # @ reference - resolve it, starting with the current test list as context
             just _resolve_test_list_reference "$config" "|${TEST_LIST}|"
+        elif [[ "$config" =~ ^/ ]]; then
+            # NEW: / folder reference - resolve it
+            just _resolve_folder_reference "$config"
         else
             # Regular config
             echo "$config"
@@ -668,6 +671,66 @@ _expand_at_references test_list:
     # Output unique configs
     cat "$TEMP_FILE"
     rm -f "$TEMP_FILE"
+
+# Resolve folder reference (NEW: /folder/ syntax support)
+_resolve_folder_reference ref:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    REF="{{ref}}"
+    
+    # Remove leading / if present
+    FOLDER_PATH="${REF#/}"
+    # Remove trailing / if present
+    FOLDER_PATH="${FOLDER_PATH%/}"
+    
+    # Check if it contains a pattern (has * or ?)
+    if [[ "$FOLDER_PATH" == *"*"* ]] || [[ "$FOLDER_PATH" == *"?"* ]]; then
+        # Extract folder and pattern parts
+        if [[ "$FOLDER_PATH" == *"/"* ]]; then
+            # Pattern like "generated-replays/merge-*" 
+            FOLDER_DIR="${FOLDER_PATH%/*}"
+            PATTERN="${FOLDER_PATH##*/}"
+            FULL_FOLDER_PATH="{{DEBUG_CONFIG_DIR}}/${FOLDER_DIR}"
+        else
+            # Pattern like "generated-*" (direct in debug_configs)
+            FOLDER_DIR=""
+            PATTERN="$FOLDER_PATH"
+            FULL_FOLDER_PATH="{{DEBUG_CONFIG_DIR}}"
+        fi
+    else
+        # No wildcards - treat as folder name
+        FOLDER_DIR="$FOLDER_PATH"
+        PATTERN="*"
+        FULL_FOLDER_PATH="{{DEBUG_CONFIG_DIR}}/${FOLDER_DIR}"
+    fi
+    
+    # Verify folder exists
+    if [[ ! -d "$FULL_FOLDER_PATH" ]]; then
+        echo "❌ Folder not found: $FULL_FOLDER_PATH" >&2
+        echo "💡 Available folders in {{DEBUG_CONFIG_DIR}}:" >&2
+        find "{{DEBUG_CONFIG_DIR}}" -type d -maxdepth 2 2>/dev/null | sort | sed 's/^/   /' >&2 || true
+        exit 1
+    fi
+    
+    # Find matching configs
+    FOUND_CONFIGS=0
+    shopt -s nullglob
+    for file in "$FULL_FOLDER_PATH"/${PATTERN}.json; do
+        if [[ -f "$file" ]] && jq -e . "$file" >/dev/null 2>&1; then
+            config_name=$(basename "${file%%.json}")
+            echo "$config_name"
+            FOUND_CONFIGS=$((FOUND_CONFIGS + 1))
+        fi
+    done
+    shopt -u nullglob
+    
+    # Warn if no configs found
+    if [[ $FOUND_CONFIGS -eq 0 ]]; then
+        echo "⚠️  No valid configs found matching: ${REF}" >&2
+        echo "💡 Available configs in $FULL_FOLDER_PATH:" >&2
+        find "$FULL_FOLDER_PATH" -name "*.json" -type f 2>/dev/null | head -5 | sed 's/^/   /' >&2 || true
+    fi
 
 # Expand test list configuration
 _expand_test_list test_list:

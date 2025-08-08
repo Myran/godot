@@ -1,10 +1,10 @@
 ---
 id: task-003
 title: move configs and tests out of project
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-07 09:06'
-updated_date: '2025-08-08 09:22'
+updated_date: '2025-08-08 20:40'
 labels: []
 dependencies: []
 ---

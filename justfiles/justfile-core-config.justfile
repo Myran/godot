@@ -42,8 +42,8 @@ KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".k
 # ================================
 # DEBUG SYSTEM PATHS
 # ================================
-DEBUG_CONFIG_DIR := "debug_configs"
-TEST_LIST_DIR := "test-lists"
+DEBUG_CONFIG_DIR := "tests/debug_configs"
+TEST_LIST_DIR := "tests/test-lists"
 
 # ================================
 # LOG PATHS

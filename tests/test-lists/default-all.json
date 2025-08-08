@@ -1,0 +1,9 @@
+{
+  "name": "Default Test Suite",
+  "description": "Default comprehensive testing - specific test lists without circular reference",
+  "configs": [
+    "@battle-all",
+    "@firebase-all",
+    "@system-all"
+  ]
+}

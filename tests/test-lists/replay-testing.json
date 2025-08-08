@@ -1,0 +1,10 @@
+{
+  "name": "Replay Testing with Folder Patterns",
+  "description": "Example test-list demonstrating /folder/ syntax mixed with @ references and direct configs",
+  "configs": [
+    "battle-logic-only",
+    "@firebase-all",
+    "/archive/generated-replays/merge-*",
+    "/archive/generated-replays/draft-1*"
+  ]
+}
