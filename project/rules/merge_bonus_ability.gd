@@ -1,17 +1,18 @@
-class_name MergeBonusAbility extends Ability
+class_name MergeBonusAbility
+extends Ability
 
-var health_bonus: int
-var attack_bonus: int
+var base_health_bonus: int
+var base_attack_bonus: int
 
 
-func _init(bonus_health: int = 1, bonus_attack: int = 1) -> void:
-	health_bonus = bonus_health
-	attack_bonus = bonus_attack
+func _init(base_health: int = 1, base_attack: int = 1) -> void:
+	base_health_bonus = base_health
+	base_attack_bonus = base_attack
 
 
 ## Override deep_duplicate to ensure stat bonuses are properly copied
 func deep_duplicate() -> Ability:
-	var copy: MergeBonusAbility = MergeBonusAbility.new(health_bonus, attack_bonus)
+	var copy: MergeBonusAbility = MergeBonusAbility.new(base_health_bonus, base_attack_bonus)
 	copy.persistence_type = self.persistence_type
 	return copy
 
@@ -42,14 +43,17 @@ func handle_draft_event(
 	if not unit.block_context == Cards.CONTEXT.LINEUP:
 		return
 
-	var merge_event: core.DraftMergeEvent = draft_event as core.DraftMergeEvent
-	var card: Card = unit as Card
+	var merge_event: core.DraftMergeEvent = draft_event
+	var card: Card = unit
 
 	# Enhanced logging for debugging the self-exclusion logic
 	var card_id: String = card.unit_info.card_info.get("id", "")
 	var merged_card_ids: Array[String] = []
 	for match_card: Card in merge_event.matches:
 		merged_card_ids.append(match_card.unit_info.card_info.get("id", ""))
+	var level: int = card.level
+	var calc_attack_bonus: int = base_attack_bonus * level
+	var calc_health_bonus: int = base_health_bonus * level
 
 	Log.debug(
 		"MergeBonusAbility: Evaluating merge event",
@@ -77,7 +81,7 @@ func handle_draft_event(
 
 	# Create StatEffectEvent and add to context - this will handle the proper flow
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
-		card, health_bonus, attack_bonus, core.EventSource.SYSTEM_CASCADE
+		card, calc_health_bonus, calc_attack_bonus, core.EventSource.SYSTEM_CASCADE
 	)
 	draft_context.add_event(stat_effect_event)
 
@@ -87,17 +91,8 @@ func handle_draft_event(
 			"bonus_recipient": card_id,
 			"merged_card_ids": merged_card_ids,
 			"matches_count": merge_event.matches.size(),
-			"health_bonus": health_bonus,
-			"attack_bonus": attack_bonus
+			"health_bonus": calc_health_bonus,
+			"attack_bonus": calc_attack_bonus
 		},
 		[Log.TAG_ABILITY, Log.TAG_MERGE, Log.TAG_EFFECT]
 	)
-
-
-func debug_trigger_effect(target_card: Card) -> bool:
-	# Create StatEffectEvent and process directly via core.action
-	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
-		target_card, health_bonus, attack_bonus, core.EventSource.DEBUG_SETUP
-	)
-	core.action(stat_effect_event)
-	return true
