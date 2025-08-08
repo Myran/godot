@@ -301,6 +301,9 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 	# **CRITICAL**: Apply transferred effects to current stats
 	new_card.unit_info.apply_permanent_effects_to_current_stats()
 
+	# **CRITICAL**: Update UI to reflect new stats after applying permanent effects
+	new_card.refresh_ui_from_unit_data()
+
 	Log.info(
 		"STAT REAPPLICATION COMPLETED - Final merged card state",
 		{

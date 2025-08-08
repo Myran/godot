@@ -71,5 +71,17 @@ func get_card_name() -> String:
 
 func refresh_ui_from_unit_data() -> void:
 	"""Updates card UI to reflect current unit_info stats"""
+	Log.debug(
+		"UI REFRESH - Updating card display stats",
+		{
+			"card_id": card_info.get("id", "unknown"),
+			"level": level,
+			"attack_displayed": unit_info.current_attack,
+			"health_displayed": unit_info.current_health,
+			"effects_count": unit_info.effects_perm.size(),
+			"context": "refresh_ui_from_unit_data"
+		},
+		[Log.TAG_UI, Log.TAG_CARD, Log.TAG_STAT, "ui_refresh"]
+	)
 	base.set_card_attack(unit_info.current_attack)
 	base.set_card_health(unit_info.current_health)

@@ -431,6 +431,10 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var battle_result: Battle.BattleResult = event.battle_result
 		apply_battle_reconciliation(battle_result)
 
+		# **CRITICAL**: Refresh UI for all lineup cards after battle reconciliation
+		# Battle reconciliation may have modified unit stats, abilities, and health
+		_refresh_lineup_card_ui_after_battle()
+
 		Log.debug(
 			"Battle complete, transitioning to post-battle",
 			{},
@@ -974,3 +978,31 @@ func _capture_lineup_state() -> Dictionary:
 			}
 
 	return lineup_data
+
+
+# Refresh UI for all cards in lineup after battle reconciliation
+# This ensures that any stat changes, health restoration, or new effects are reflected visually
+func _refresh_lineup_card_ui_after_battle() -> void:
+	var lineup: Dictionary[int, Card] = holder_allies.get_current_lineup()
+	var cards_refreshed: int = 0
+
+	for card: Card in lineup.values():
+		if card and card.has_method("refresh_ui_from_unit_data"):
+			card.refresh_ui_from_unit_data()
+			cards_refreshed += 1
+			Log.debug(
+				"Refreshed card UI after battle reconciliation",
+				{
+					"card_id": card.card_info.id,
+					"current_attack": card.unit_info.current_attack,
+					"current_health": card.unit_info.current_health,
+					"effects_count": card.unit_info.effects_perm.size()
+				},
+				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_UI]
+			)
+
+	Log.info(
+		"Battle reconciliation UI refresh completed",
+		{"cards_refreshed": cards_refreshed, "total_lineup_size": lineup.size()},
+		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_UI]
+	)
