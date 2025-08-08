@@ -151,7 +151,10 @@
       "Bash(chmod:*)",
       "Bash(/tmp/debug_collect.sh:*)",
       "Bash(wc:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just test-desktop-target system-layer-all)",
+      "Bash(backlog task list:*)",
+      "Bash(backlog task:*)"
     ],
     "deny": []
   }
