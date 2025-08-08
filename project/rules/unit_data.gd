@@ -7,6 +7,9 @@ const DRAFT_PRE_EVENT_RESPONSE: String = "draft_pre_event_response"
 
 var max_health: int = 1
 var max_attack: int = 1
+var base_health: int = 1
+var base_attack: int = 1
+
 var current_health: int = 1:
 	set = set_current_health
 var current_attack: int = 1:
@@ -77,8 +80,8 @@ func init_with_info(_card_info: Dictionary) -> void:
 
 func add_ability(_ability: Ability) -> void:
 	# Check for duplicates before adding
-	if not _has_ability_instance(_ability):
-		abilities.append(_ability)
+	# if not _has_ability_instance(_ability):
+	abilities.append(_ability)
 
 
 # Helper to check for duplicate ability instances
@@ -87,6 +90,21 @@ func _has_ability_instance(new_ability: Ability) -> bool:
 		if existing_ability.get_class() == new_ability.get_class():
 			return true
 	return false
+
+
+# Helper function to convert persistence type to readable name for debugging
+func _persistence_type_name(persistence_type: int) -> String:
+	match persistence_type:
+		Ability.PersistenceType.TEMPLATE:
+			return "TEMPLATE"
+		Ability.PersistenceType.ACQUIRED:
+			return "ACQUIRED"
+		Ability.PersistenceType.TEMPORARY:
+			return "TEMPORARY"
+		Ability.PersistenceType.ENHANCEMENT:
+			return "ENHANCEMENT"
+		_:
+			return "UNKNOWN"
 
 
 func remove_ability(_ability: Ability) -> void:
@@ -136,24 +154,14 @@ func upgrade_unit_to_level(_new_level: int) -> void:
 
 
 func upgrade_stats_to_new_level(_level: int) -> void:
-	# Default values
-	var health: String = "1"
-	var attack: String = "1"
 
-	# Get values only if they exist in card_info
-	if card_info.has("health"):
-		health = card_info.health
-	else:
-		Log.warning("Card info missing 'health' field", {"card_info": card_info}, ["debug"])
+	var health: int = card_info.health.to_int()
+	var attack: int = card_info.attack.to_int()
 
-	if card_info.has("attack"):
-		attack = card_info.attack
-	else:
-		Log.warning("Card info missing 'attack' field", {"card_info": card_info}, ["debug"])
-	max_health = int(health) * _level
-	max_attack = int(attack) * _level
-	current_attack = max_attack
-	current_health = max_health
+	base_health = health * _level
+	base_attack = attack * _level
+
+	apply_permanent_effects_to_current_stats()
 
 
 func select_action(_battle_context: BattleContext) -> Dictionary:
@@ -280,8 +288,10 @@ func apply_permanent_effects_to_current_stats() -> void:
 			)
 
 	# Apply bonuses to base stats (max_attack/max_health are the level-appropriate base stats)
-	current_attack = max_attack + total_attack_bonus
-	current_health = max_health + total_health_bonus
+	max_attack = base_attack + total_attack_bonus
+	max_health = base_health + total_health_bonus
+	current_attack = max_attack
+	current_health = max_health
 
 	Log.info(
 		"STAT REAPPLICATION COMPLETED - Stats updated",
@@ -313,13 +323,13 @@ func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
 		var acquired_abilities: Array[Ability] = source_unit.get_acquired_abilities()
 		for acquired_ability: Ability in acquired_abilities:
 			# Only add if we don't already have this ability type
-			if not _has_ability_instance(acquired_ability):
-				abilities.append(acquired_ability)
-				Log.debug(
-					"Transferred acquired ability from merge",
-					{"ability": acquired_ability.get_class()},
-					[Log.TAG_CARD, Log.TAG_MERGE, Log.TAG_ABILITY]
-				)
+			# if not _has_ability_instance(acquired_ability):
+			abilities.append(acquired_ability)
+			Log.debug(
+				"Transferred acquired ability from merge",
+				{"ability": acquired_ability.get_class()},
+				[Log.TAG_CARD, Log.TAG_MERGE, Log.TAG_ABILITY]
+			)
 
 
 # Transfer stat effects from source units during merge
@@ -411,27 +421,67 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 	)
 
-	# Transfer abilities (ACQUIRED + ENHANCEMENT types)
+	# Transfer abilities (ACQUIRED + ENHANCEMENT types and temporary)
 	for i: int in range(source_units.size()):
 		var source_unit: UnitData = source_units[i]
 		var source_card_id: String = source_unit.card_info.get("id", "")
+
+		# Debug: Log ALL abilities in source unit with their persistence types
+		Log.debug(
+			"Source unit ability inventory (ALL abilities)",
+			{
+				"source_index": i,
+				"source_card_id": source_card_id,
+				"total_abilities": source_unit.abilities.size()
+			},
+			[Log.TAG_MERGE, Log.TAG_ABILITY, Log.TAG_DEBUG]
+		)
+
+		for j: int in range(source_unit.abilities.size()):
+			var source_ability: Ability = source_unit.abilities[j]
+			Log.debug(
+				"Source ability details",
+				{
+					"source_card_id": source_card_id,
+					"ability_index": j,
+					"ability_class": source_ability.get_class(),
+					"persistence_type": source_ability.persistence_type,
+					"persistence_name": _persistence_type_name(source_ability.persistence_type)
+				},
+				[Log.TAG_MERGE, Log.TAG_ABILITY, Log.TAG_DEBUG]
+			)
+
 		var transferable_abilities: Array[Ability] = []
 		transferable_abilities.append_array(source_unit.get_acquired_abilities())
 		transferable_abilities.append_array(source_unit.get_enhancement_abilities())
+		transferable_abilities.append_array(source_unit.get_temporary_abilities())
 
 		Log.debug(
 			"Processing source unit for ability transfer",
 			{
 				"source_index": i,
 				"source_card_id": source_card_id,
+				"template_abilities": source_unit.get_template_abilities().size(),
 				"acquired_abilities": source_unit.get_acquired_abilities().size(),
 				"enhancement_abilities": source_unit.get_enhancement_abilities().size(),
+				"temporary_abilities": source_unit.get_temporary_abilities().size(),
 				"transferable_abilities": transferable_abilities.size()
 			},
 			[Log.TAG_MERGE, Log.TAG_ABILITY, Log.TAG_DEBUG]
 		)
 
 		for ability: Ability in transferable_abilities:
+			Log.debug(
+				"Transferring ability",
+				{
+					"source_card_id": source_card_id,
+					"target_card_id": card_info.get("id", ""),
+					"ability_class": ability.get_class(),
+					"persistence_type": ability.persistence_type,
+					"persistence_name": _persistence_type_name(ability.persistence_type)
+				},
+				[Log.TAG_MERGE, Log.TAG_ABILITY, Log.TAG_DEBUG]
+			)
 			abilities.append(ability)
 
 	# Transfer stat effects
@@ -572,6 +622,20 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 		},
 		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_VALIDATION]
 	)
+
+	# **CRITICAL**: Apply newly transferred permanent effects to current stats
+	# This ensures that effects gained during battle affect the unit's current stats
+	if effects_transferred > 0:
+		self.apply_permanent_effects_to_current_stats()
+		Log.debug(
+			"Applied transferred battle effects to current stats",
+			{
+				"current_attack": self.current_attack,
+				"current_health": self.current_health,
+				"effects_applied": effects_transferred
+			},
+			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT]
+		)
 
 	# Temporary abilities are automatically discarded when battle duplicates are discarded
 	# Original units should only ever have PERMANENT and ACQUIRED abilities
