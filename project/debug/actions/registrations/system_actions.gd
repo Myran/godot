@@ -11,18 +11,12 @@ const StateExtractorGreenPhaseScript = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	_register_memory_actions(registry)
 	_register_debug_system_actions(registry)
 	_register_integrity_actions(registry)
 	# Legacy checksum actions removed - now using semantic logging approach
 	_register_test_actions(registry)
 
 	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
-
-
-static func _register_memory_actions(registry: DebugActionRegistry) -> void:
-	# Memory actions removed - simulation was causing intermittent failures
-	pass
 
 
 static func _register_debug_system_actions(registry: DebugActionRegistry) -> void:
