@@ -110,13 +110,13 @@ config-list:
     echo "📋 Available debug configurations:"
     echo ""
 
-    if [ ! -d "project/debug_configs" ]; then
+    if [ ! -d "{{DEBUG_CONFIG_DIR}}" ]; then
         echo "❌ No debug configs directory found"
         echo "💡 Run 'just config-setup' to create sample configs"
         exit 1
     fi
 
-    for config in project/debug_configs/*.json; do
+    for config in {{DEBUG_CONFIG_DIR}}/*.json; do
         if [ -f "$config" ]; then
             name=$(basename "$config" .json)
             echo "📄 $name:"
@@ -142,7 +142,7 @@ cleanup-temp-configs VERBOSE="false":
     set -euo pipefail
 
     # Clean up legacy temporary files
-    temp_files=(project/debug_configs/temp_wildcard_*.json)
+    temp_files=({{DEBUG_CONFIG_DIR}}/temp_wildcard_*.json)
     files_cleaned=0
 
     if [[ -e "${temp_files[0]}" ]]; then
@@ -159,7 +159,7 @@ cleanup-temp-configs VERBOSE="false":
     # Clean up new safe filename temporary files (those created from wildcards/actions)
     # Look for files with patterns like rtdb_*.json, backend_*.json, etc.
     # These are temporary files created for testing that don't match standard config names
-    for pattern_file in project/debug_configs/*_*.json; do
+    for pattern_file in {{DEBUG_CONFIG_DIR}}/*_*.json; do
         if [[ -f "$pattern_file" ]]; then
             # Check if this looks like a temporary file by seeing if it contains wildcards in the description
             if grep -q "Temporary config for" "$pattern_file" 2>/dev/null; then

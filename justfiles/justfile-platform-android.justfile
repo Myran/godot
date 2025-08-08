@@ -93,7 +93,7 @@ _validate-android-config-workflow CONFIG:
 _get-safe-config-file CONFIG:
     #!/usr/bin/env bash
     SAFE_CONFIG_NAME=$(echo "{{CONFIG}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
-    echo "project/debug_configs/${SAFE_CONFIG_NAME}.json"
+    echo "{{DEBUG_CONFIG_DIR}}/${SAFE_CONFIG_NAME}.json"
 
 # Pre-build hook
 pre-build:

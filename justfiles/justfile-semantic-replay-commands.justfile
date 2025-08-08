@@ -37,7 +37,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
     case "$FILTER" in
         "checksum")
             # Only checksum-enabled configs
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -56,7 +56,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             ;;
         "replay")
             # Only replay configs (those with session_id or replay metadata)
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ]; then
                     if jq -e '.session_id // .metadata.source_session' "$file" >/dev/null 2>&1; then
                         name=$(basename "$file" .json)
@@ -71,7 +71,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             ;;
         "demo")
             # Only demo configs (those with "type": "demo" or demo metadata)
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ]; then
                     if jq -e '.type == "demo" or .metadata.replay_mode == "demo" or (.metadata.generation_method | contains("demo"))' "$file" >/dev/null 2>&1; then
                         name=$(basename "$file" .json)
@@ -93,7 +93,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             ;;
         "all"|*)
             # Add test lists first with 📋 prefix and config count
-            for file in project/test-lists/*.json; do
+            for file in {{TEST_LIST_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -103,7 +103,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
                     missing_configs=0
                     if [ "$config_count" != "0" ]; then
                         while IFS= read -r config; do
-                            if [ ! -f "project/debug_configs/${config}.json" ]; then
+                            if [ ! -f "{{DEBUG_CONFIG_DIR}}/${config}.json" ]; then
                                 missing_configs=$((missing_configs + 1))
                             fi
                         done < <(jq -r '.configs[]' "$file" 2>/dev/null)
@@ -117,7 +117,7 @@ _fzf-select-config CONTEXT="generic" FILTER="all":
             done
             
             # Add debug configs with proper checksum status
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -226,7 +226,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             echo "📸 CHECKSUM CONFIGS:"
             echo "-------------------"
             # Only checksum-enabled configs
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e '.checksum_config' "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -247,7 +247,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             echo "🎬 REPLAY CONFIGS:"
             echo "-----------------"
             # Only replay configs (those with session_id or replay metadata)
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ]; then
                     if jq -e '.session_id // .metadata.source_session' "$file" >/dev/null 2>&1; then
                         name=$(basename "$file" .json)
@@ -264,7 +264,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             echo "🎬 DEMO CONFIGS:"
             echo "---------------"
             # Only demo configs (those with "type": "demo" or demo metadata)
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ]; then
                     if jq -e '.type == "demo" or .metadata.replay_mode == "demo" or (.metadata.generation_method | contains("demo"))' "$file" >/dev/null 2>&1; then
                         name=$(basename "$file" .json)
@@ -288,7 +288,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             echo "📋 TEST LISTS:"
             echo "---------------"
             # Add test lists first with 📋 prefix and config count
-            for file in project/test-lists/*.json; do
+            for file in {{TEST_LIST_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // .name // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -298,7 +298,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
                     missing_configs=0
                     if [ "$config_count" != "0" ]; then
                         while IFS= read -r config; do
-                            if [ ! -f "project/debug_configs/${config}.json" ]; then
+                            if [ ! -f "{{DEBUG_CONFIG_DIR}}/${config}.json" ]; then
                                 missing_configs=$((missing_configs + 1))
                             fi
                         done < <(jq -r '.configs[]' "$file" 2>/dev/null)
@@ -315,7 +315,7 @@ debug-fzf-configs CONTEXT="android" FILTER="all":
             echo "⚙️ DEBUG CONFIGS:"
             echo "----------------"
             # Add debug configs with proper checksum status
-            for file in project/debug_configs/*.json; do
+            for file in {{DEBUG_CONFIG_DIR}}/*.json; do
                 if [ -f "$file" ] && jq -e . "$file" >/dev/null 2>&1; then
                     name=$(basename "$file" .json)
                     desc=$(jq -r '.description // "No description"' "$file" 2>/dev/null || echo "No description")
@@ -507,7 +507,7 @@ create-demo-interactive:
             just replay-generate "$selected_session_id" "$demo_name"
             
             # Add demo metadata to generated config
-            OUTPUT_CONFIG="project/debug_configs/${CLEAN_DEMO_NAME}.json"
+            OUTPUT_CONFIG="{{DEBUG_CONFIG_DIR}}/${CLEAN_DEMO_NAME}.json"
             if [ -f "${OUTPUT_CONFIG}" ]; then
                 # Add demo-specific metadata using jq
                 jq '. + {
@@ -547,14 +547,14 @@ list-demos:
     echo "=================="
     echo ""
     
-    CONFIGS_DIR="project/debug_configs"
-    if [ ! -d "$CONFIGS_DIR" ]; then
-        echo "❌ No debug configs directory found: $CONFIGS_DIR"
+    CONFIGS_DIR="{{DEBUG_CONFIG_DIR}}"
+    if [ ! -d "{{DEBUG_CONFIG_DIR}}" ]; then
+        echo "❌ No debug configs directory found: {{DEBUG_CONFIG_DIR}}"
         exit 1
     fi
     
     # Find demo configs (those with "type": "demo" or demo-related metadata)
-    DEMO_CONFIGS=$(find "$CONFIGS_DIR" -name "*.json" -type f -exec grep -l '"type":\s*"demo"\|"replay_mode":\s*"demo"\|generation_method.*demo' {} \; 2>/dev/null | sort)
+    DEMO_CONFIGS=$(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -exec grep -l '"type":\s*"demo"\|"replay_mode":\s*"demo"\|generation_method.*demo' {} \; 2>/dev/null | sort)
     
     if [ -z "$DEMO_CONFIGS" ]; then
         echo "📭 No demos found"
@@ -599,8 +599,8 @@ demo-to-test demo_name:
     set -euo pipefail
     
     DEMO_NAME="{{demo_name}}"
-    DEMO_CONFIG="project/debug_configs/${DEMO_NAME}.json"
-    TEST_CONFIG="project/debug_configs/${DEMO_NAME}-test.json"
+    DEMO_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}.json"
+    TEST_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}-test.json"
     
     echo "🧪 Converting demo to regression test..."
     echo "   Demo: ${DEMO_NAME}"
@@ -689,8 +689,8 @@ demo-to-test-custom demo_name state_type:
     
     DEMO_NAME="{{demo_name}}"
     STATE_TYPE="{{state_type}}"
-    DEMO_CONFIG="project/debug_configs/${DEMO_NAME}.json"
-    TEST_CONFIG="project/debug_configs/${DEMO_NAME}-${STATE_TYPE}-test.json"
+    DEMO_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}.json"
+    TEST_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}-${STATE_TYPE}-test.json"
     
     echo "🧪 Converting demo to custom regression test..."
     echo "   Demo: ${DEMO_NAME}"
@@ -770,7 +770,7 @@ demo-test-cross-platform demo_name:
     set -euo pipefail
     
     DEMO_NAME="{{demo_name}}"
-    DEMO_CONFIG="project/debug_configs/${DEMO_NAME}.json"
+    DEMO_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}.json"
     
     echo "🌐 Cross-Platform Demo Testing"
     echo "=============================="
@@ -882,7 +882,7 @@ demo-validate-determinism demo_name runs="3":
     
     DEMO_NAME="{{demo_name}}"
     RUNS={{runs}}
-    DEMO_CONFIG="project/debug_configs/${DEMO_NAME}.json"
+    DEMO_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}.json"
     
     echo "🔄 Demo Determinism Validation"
     echo "=============================="
@@ -897,7 +897,7 @@ demo-validate-determinism demo_name runs="3":
     fi
     
     # First, convert demo to test if not already done
-    TEST_CONFIG="project/debug_configs/${DEMO_NAME}-test.json"
+    TEST_CONFIG="{{DEBUG_CONFIG_DIR}}/${DEMO_NAME}-test.json"
     if [ ! -f "$TEST_CONFIG" ]; then
         echo "🔨 Converting demo to test for determinism validation..."
         just demo-to-test "$DEMO_NAME"
@@ -955,7 +955,7 @@ _extract-checksums-to-config session_id config_name:
     
     SESSION_ID="{{session_id}}"
     CONFIG_NAME="{{config_name}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "📸 Extracting checksums for session: ${SESSION_ID}"
     echo "   Config: ${CONFIG_NAME}"
@@ -1330,7 +1330,7 @@ _extract-checksums-to-android-config SESSION_ID CONFIG_NAME:
     
     SESSION_ID="{{SESSION_ID}}"
     CONFIG_NAME="{{CONFIG_NAME}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "📸 Extracting checksums from Android logs for session: ${SESSION_ID}"
     echo "   Config: ${CONFIG_NAME}"
@@ -1386,7 +1386,7 @@ _extract-checksums-to-desktop-config SESSION_ID CONFIG_NAME LOG_FILE:
     SESSION_ID="{{SESSION_ID}}"
     CONFIG_NAME="{{CONFIG_NAME}}"
     LOG_FILE="{{LOG_FILE}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "📸 Extracting checksums from Desktop logs for session: ${SESSION_ID}"
     echo "   Config: ${CONFIG_NAME}"
@@ -1694,7 +1694,7 @@ replay-generate-android session_id config_name="":
     
     # Clean config name for filename
     CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    OUTPUT_CONFIG="{{DEBUG_CONFIG_DIR}}/${CLEAN_CONFIG_NAME}.json"
     
     echo "🚀 Creating Android replay config with automated checksum validation..."
     echo "   Session ID: ${SESSION_ID}"
@@ -1814,7 +1814,7 @@ replay-generate-desktop session_id config_name="":
     
     # Clean config name for filename
     CLEAN_CONFIG_NAME=$(echo "$CONFIG_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/_/g')
-    OUTPUT_CONFIG="project/debug_configs/${CLEAN_CONFIG_NAME}.json"
+    OUTPUT_CONFIG="{{DEBUG_CONFIG_DIR}}/${CLEAN_CONFIG_NAME}.json"
     
     echo "🚀 Creating Desktop replay config with automated checksum validation..."
     echo "   Session ID: ${SESSION_ID}"
@@ -2004,14 +2004,14 @@ replay-list:
     echo "🎮 Available Replay Configurations:"
     echo ""
     
-    CONFIGS_DIR="project/debug_configs"
-    if [ ! -d "$CONFIGS_DIR" ]; then
-        echo "❌ No debug configs directory found: $CONFIGS_DIR"
+    CONFIGS_DIR="{{DEBUG_CONFIG_DIR}}"
+    if [ ! -d "{{DEBUG_CONFIG_DIR}}" ]; then
+        echo "❌ No debug configs directory found: {{DEBUG_CONFIG_DIR}}"
         exit 1
     fi
     
     # Find replay configs (those with semantic_actions or session_id)
-    REPLAY_CONFIGS=$(find "$CONFIGS_DIR" -name "*.json" -type f -exec grep -l "semantic_action_count\|session_id\|replay" {} \; 2>/dev/null | sort)
+    REPLAY_CONFIGS=$(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -exec grep -l "semantic_action_count\|session_id\|replay" {} \; 2>/dev/null | sort)
     
     if [ -z "$REPLAY_CONFIGS" ]; then
         echo "📭 No replay configurations found"
@@ -2048,7 +2048,7 @@ replay-validate config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🔍 Validating replay configuration: ${CONFIG_NAME}"
     echo ""
@@ -2101,19 +2101,19 @@ replay-clean older_than_days="7":
     set -euo pipefail
     
     OLDER_THAN="{{older_than_days}}"
-    CONFIGS_DIR="project/debug_configs"
+    CONFIGS_DIR="{{DEBUG_CONFIG_DIR}}"
     
     echo "🧹 Cleaning old replay configurations..."
     echo "   Removing configs older than ${OLDER_THAN} days"
     echo ""
     
-    if [ ! -d "$CONFIGS_DIR" ]; then
-        echo "❌ No debug configs directory found: $CONFIGS_DIR"
+    if [ ! -d "{{DEBUG_CONFIG_DIR}}" ]; then
+        echo "❌ No debug configs directory found: {{DEBUG_CONFIG_DIR}}"
         exit 1
     fi
     
     # Find replay configs older than specified days
-    OLD_CONFIGS=$(find "$CONFIGS_DIR" -name "replay-*.json" -type f -mtime +${OLDER_THAN} 2>/dev/null || echo "")
+    OLD_CONFIGS=$(find "{{DEBUG_CONFIG_DIR}}" -name "replay-*.json" -type f -mtime +${OLDER_THAN} 2>/dev/null || echo "")
     
     if [ -z "$OLD_CONFIGS" ]; then
         echo "✅ No old replay configurations found"
@@ -2228,23 +2228,23 @@ replay-test-e2e:
     EPOCH=$(date +%s)
     
     # Create JSON config using printf to avoid shell escaping issues
-    printf '{\n' > "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "description": "End-to-end validation test for semantic replay system",\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "session_id": "test-e2e-%s",\n' "$EPOCH" >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "generation_timestamp": "%s",\n' "$TIMESTAMP" >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "semantic_action_count": 3,\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "actions": [\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "system.debug.registry_stats",\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "game.lineup.populate_enemy",\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "system.debug.quit_application"\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  ],\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  "metadata": {\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "source_session": "manual-e2e-test",\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "generation_method": "manual_validation",\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "config_name": "%s",\n' "$TEST_CONFIG" >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '    "test_type": "end_to_end_validation"\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '  }\n' >> "project/debug_configs/${TEST_CONFIG}.json"
-    printf '}\n' >> "project/debug_configs/${TEST_CONFIG}.json"
+    printf '{\n' > "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "description": "End-to-end validation test for semantic replay system",\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "session_id": "test-e2e-%s",\n' "$EPOCH" >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "generation_timestamp": "%s",\n' "$TIMESTAMP" >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "semantic_action_count": 3,\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "actions": [\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "system.debug.registry_stats",\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "game.lineup.populate_enemy",\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "system.debug.quit_application"\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  ],\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  "metadata": {\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "source_session": "manual-e2e-test",\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "generation_method": "manual_validation",\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "config_name": "%s",\n' "$TEST_CONFIG" >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '    "test_type": "end_to_end_validation"\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '  }\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
+    printf '}\n' >> "{{DEBUG_CONFIG_DIR}}/${TEST_CONFIG}.json"
     
     echo "✅ Generated test configuration: ${TEST_CONFIG}"
     echo ""
@@ -2312,11 +2312,11 @@ test-desktop target="":
 #     #!/usr/bin/env bash
 #     set -euo pipefail
 #     
-#     CONFIG_FILE="project/debug_configs/{{CONFIG_NAME}}.json"
+#     CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/{{CONFIG_NAME}}.json"
 #     if [ ! -f "$CONFIG_FILE" ]; then
 #         echo "❌ Config not found: $CONFIG_FILE"
 #         echo "💡 Available configs:"
-#         ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+#         ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
 #         exit 1
 #     fi
 #     

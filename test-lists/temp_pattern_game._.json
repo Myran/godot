@@ -1,0 +1,7 @@
+{
+  "name": "Config Pattern: game.*",
+  "description": "Auto-generated test list for config pattern: game.*",
+  "configs": [
+    "game.battle._"
+  ]
+}

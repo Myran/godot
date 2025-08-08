@@ -28,8 +28,8 @@ test-cross-platform-config-generation SESSION CONFIG:
     fi
     
     # Validate both configs exist
-    DESKTOP_CONFIG="project/debug_configs/${CONFIG_NAME}_desktop.json"
-    ANDROID_CONFIG="project/debug_configs/${CONFIG_NAME}_android.json"
+    DESKTOP_CONFIG="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_desktop.json"
+    ANDROID_CONFIG="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_android.json"
     
     if [[ ! -f "$DESKTOP_CONFIG" ]]; then
         echo "❌ Desktop config not generated: $DESKTOP_CONFIG"
@@ -151,7 +151,7 @@ create-test-config-with-platform-specific-actions CONFIG:
     set -euo pipefail
     
     CONFIG_NAME="{{CONFIG}}"
-    CONFIG_FILE="project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🧪 Creating test config with platform-specific actions (should FAIL validation)"
     echo "   Config: $CONFIG_NAME"
@@ -212,7 +212,7 @@ test-cross-platform-suite:
     KNOWN_GOOD_CONFIGS=("test06")  # Add more as available
     
     for config in "${KNOWN_GOOD_CONFIGS[@]}"; do
-        if [[ -f "project/debug_configs/${config}.json" ]]; then
+        if [[ -f "{{DEBUG_CONFIG_DIR}}/${config}.json" ]]; then
             echo "   Testing: $config"
             if just validate-semantic-config "$config" >/dev/null 2>&1; then
                 echo "   ✅ $config: Platform-agnostic"

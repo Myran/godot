@@ -1,0 +1,176 @@
+{
+  "description": "Generated replay from semantic session: session_20250807_145911_9e9a7af7",
+  "session_id": "session_20250807_145911_9e9a7af7",
+  "generation_timestamp": "20250807_150023",
+  "semantic_action_count": 16,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 2
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 3
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 0
+        },
+        "to_position": 6
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 0
+        },
+        "to_position": 7
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "12",
+        "from_position": {
+          "x": 2,
+          "y": 2
+        },
+        "to_position": 8
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250807_145911_9e9a7af7",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "dwarf-10",
+    "capture_timestamp": "20250807_150023",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 42424,
+    "expected_checksums": [
+      "d59dc91aa6e13fd1187ab6dece5fe0712f0f48574e181492f05036342b3a310d",
+      "13c20a6f2749ac1311ab0aac4b8ea7b667afba2902c9e48e9a621dfb8b4e6c60",
+      "1eb51bbaddfd7c5eb8937fbc567fcc98fc6ed07c12ccae499890917d0c5fddf8",
+      "1d0c4c5c3ba3b5988c60178a5cde75706f97ecddd642dfde4bd94840f6a6491f",
+      "3f176ffcbe7d5c86d4d6bb7ff8c4aff3a50ccc0a97865ebbc41ab02d3675612b",
+      "27410f084660c9f18caf0318a2b2e19de5154d850defba24d2ea9a1e91fc2c31",
+      "bd0ade49f338497042e00534e804fdb19cc1b1448e1b16377d9a0c107fe7fcde",
+      "e095be12ca082a6521e8acd87c8b5001662010f6333f52f3ab553ce94ff28fb7",
+      "6142aecea427973659421520dec258e25a43fc29b8e5696b800f8872ae9f7ad6",
+      "d1b02a2bab06509ca7460554c18677ac63b6ac65cfce919407e420b410432fc4",
+      "e42031423a1fcc501b43c82fceae413a39c5c57c93c4d2d17b2d16965f5055ce",
+      "3a7d2dcc90f342ab30741a106d59d74889478d44155acbfd75296ffd7a15a878",
+      "545a10ef30044a3332c154d488f14c85771f54df3acf90b330faea22ba6ee1fd",
+      "a5fa507e79cd1986aaeafe9c85e0a08da3c8b90c3bd26a545875399d87a914e4",
+      "cd0231ef8ef547cd4518140334527372b644fe0e159ef9f7b033687232dd9f0d",
+      "2e2978aed6d1a84524730eab219f27e22289ee470bbdedaf8efc842992385b52"
+    ]
+  }
+}

@@ -154,7 +154,6 @@ func upgrade_unit_to_level(_new_level: int) -> void:
 
 
 func upgrade_stats_to_new_level(_level: int) -> void:
-
 	var health: int = card_info.health.to_int()
 	var attack: int = card_info.attack.to_int()
 

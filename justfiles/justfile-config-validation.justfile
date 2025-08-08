@@ -6,7 +6,7 @@ validate-semantic-config CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/{{CONFIG}}.json"
     
     echo "🔍 Validating semantic config: {{CONFIG}}"
     echo "📄 Config file: $CONFIG_FILE"
@@ -15,7 +15,7 @@ validate-semantic-config CONFIG:
     if [[ ! -f "$CONFIG_FILE" ]]; then
         echo "❌ Config file not found: $CONFIG_FILE"
         echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||' | sed 's|\.json$||' | sed 's/^/   /' || echo "   (no configs found)"
+        ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's|{{DEBUG_CONFIG_DIR}}/||' | sed 's|\.json$||' | sed 's/^/   /' || echo "   (no configs found)"
         exit 1
     fi
     
@@ -112,9 +112,9 @@ validate-all-semantic-configs:
     echo "🔍 Validating all semantic configs..."
     echo ""
     
-    CONFIGS_DIR="project/debug_configs"
-    if [[ ! -d "$CONFIGS_DIR" ]]; then
-        echo "❌ Debug configs directory not found: $CONFIGS_DIR"
+    CONFIGS_DIR="{{DEBUG_CONFIG_DIR}}"
+    if [[ ! -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+        echo "❌ Debug configs directory not found: {{DEBUG_CONFIG_DIR}}"
         exit 1
     fi
     
@@ -122,7 +122,7 @@ validate-all-semantic-configs:
     VALID_CONFIGS=0
     INVALID_CONFIGS=0
     
-    for config_file in "$CONFIGS_DIR"/*.json; do
+    for config_file in "{{DEBUG_CONFIG_DIR}}"/*.json; do
         [[ -f "$config_file" ]] || continue
         
         config_name=$(basename "$config_file" .json)

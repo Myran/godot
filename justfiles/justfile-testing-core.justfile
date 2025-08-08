@@ -18,9 +18,8 @@ validate-all:
     # Validate JSON configurations
     echo ""
     echo "2. Validating JSON configurations..."
-    CONFIG_DIR="./project/debug_configs"
-    if [[ -d "$CONFIG_DIR" ]]; then
-        find "$CONFIG_DIR" -name "*.json" -type f | while read -r config; do
+    if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+        find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f | while read -r config; do
             basename=$(basename "$config" .json)
             echo "  Validating: $basename"
             if ! jq -e . "$config" >/dev/null 2>&1; then
@@ -30,7 +29,7 @@ validate-all:
         done
         echo "  ✅ All JSON configurations valid"
     else
-        echo "  ⚠️  No configuration directory found: $CONFIG_DIR"
+        echo "  ⚠️  No configuration directory found: {{DEBUG_CONFIG_DIR}}"
     fi
     
     echo ""
@@ -208,7 +207,7 @@ _test-config-android config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🧪 Testing configuration: $CONFIG_NAME"
     echo "=================================="
@@ -350,7 +349,7 @@ _test-config-android-enhanced config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🔬 Enhanced Testing: $CONFIG_NAME"
     echo "================================="
@@ -552,7 +551,6 @@ _match_test_list_pattern pattern current_context:
     
     PATTERN="{{pattern}}"
     CURRENT_CONTEXT="{{current_context}}"
-    TEST_LIST_DIR="./project/test-lists"
     
     # Remove @ prefix if present
     PATTERN="${PATTERN#@}"
@@ -562,7 +560,7 @@ _match_test_list_pattern pattern current_context:
         *"*"*)
             # Has wildcards - use shell globbing
             shopt -s nullglob
-            for file in "$TEST_LIST_DIR"/${PATTERN}.json; do
+            for file in "{{TEST_LIST_DIR}}"/${PATTERN}.json; do
                 if [[ -f "$file" ]] && jq -e . "$file" >/dev/null 2>&1; then
                     list_name=$(basename "${file%%.json}")
                     # Exclude self-reference to prevent circular dependencies
@@ -575,7 +573,7 @@ _match_test_list_pattern pattern current_context:
             ;;
         *)
             # Exact match
-            if [[ -f "$TEST_LIST_DIR/${PATTERN}.json" ]] && jq -e . "$TEST_LIST_DIR/${PATTERN}.json" >/dev/null 2>&1; then
+            if [[ -f "{{TEST_LIST_DIR}}/${PATTERN}.json" ]] && jq -e . "{{TEST_LIST_DIR}}/${PATTERN}.json" >/dev/null 2>&1; then
                 # Exclude self-reference
                 if [[ "$PATTERN" != "$CURRENT_CONTEXT" ]]; then
                     echo "$PATTERN"
@@ -591,7 +589,6 @@ _resolve_test_list_reference ref visited_stack:
     
     REF="{{ref}}"
     VISITED_STACK="{{visited_stack}}"
-    TEST_LIST_DIR="./project/test-lists"
     MAX_DEPTH=10
     
     # Remove @ prefix
@@ -625,13 +622,13 @@ _resolve_test_list_reference ref visited_stack:
         done < <(just _match_test_list_pattern "$REF_NAME" "$ROOT_CONTEXT")
     else
         # Direct reference - load and expand the test list
-        if [[ ! -f "$TEST_LIST_DIR/${REF_NAME}.json" ]]; then
+        if [[ ! -f "{{TEST_LIST_DIR}}/${REF_NAME}.json" ]]; then
             echo "❌ Referenced test list not found: $REF_NAME"
             exit 1
         fi
         
         # Extract configs from referenced test list
-        jq -r '.configs[]?' "$TEST_LIST_DIR/${REF_NAME}.json" 2>/dev/null | while IFS= read -r config; do
+        jq -r '.configs[]?' "{{TEST_LIST_DIR}}/${REF_NAME}.json" 2>/dev/null | while IFS= read -r config; do
             if [[ "$config" =~ ^@ ]]; then
                 # Recursive @ reference
                 just _resolve_test_list_reference "$config" "$NEW_VISITED_STACK"
@@ -648,18 +645,17 @@ _expand_at_references test_list:
     set -euo pipefail
     
     TEST_LIST="{{test_list}}"
-    TEST_LIST_DIR="./project/test-lists"
     
     # Check if test list exists
-    if [[ ! -f "$TEST_LIST_DIR/${TEST_LIST}.json" ]]; then
-        echo "❌ Test list not found: $TEST_LIST_DIR/${TEST_LIST}.json"
+    if [[ ! -f "{{TEST_LIST_DIR}}/${TEST_LIST}.json" ]]; then
+        echo "❌ Test list not found: {{TEST_LIST_DIR}}/${TEST_LIST}.json"
         exit 1
     fi
     
     # Process each config in the test list and remove duplicates
     TEMP_FILE=$(mktemp)
     
-    jq -r '.configs[]?' "$TEST_LIST_DIR/${TEST_LIST}.json" 2>/dev/null | while IFS= read -r config; do
+    jq -r '.configs[]?' "{{TEST_LIST_DIR}}/${TEST_LIST}.json" 2>/dev/null | while IFS= read -r config; do
         if [[ "$config" =~ ^@ ]]; then
             # @ reference - resolve it, starting with the current test list as context
             just _resolve_test_list_reference "$config" "|${TEST_LIST}|"
@@ -679,17 +675,16 @@ _expand_test_list test_list:
     set -euo pipefail
     
     TEST_LIST="{{test_list}}"
-    TEST_LIST_DIR="./project/test-lists"
     
     echo "🔍 Expanding test list: $TEST_LIST"
     
     # Check if test list exists
-    if [[ ! -f "$TEST_LIST_DIR/${TEST_LIST}.json" ]]; then
-        echo "❌ Test list not found: $TEST_LIST_DIR/${TEST_LIST}.json"
+    if [[ ! -f "{{TEST_LIST_DIR}}/${TEST_LIST}.json" ]]; then
+        echo "❌ Test list not found: {{TEST_LIST_DIR}}/${TEST_LIST}.json"
         echo ""
         echo "Available test lists:"
-        if [[ -d "$TEST_LIST_DIR" ]]; then
-            find "$TEST_LIST_DIR" -name "*.json" -type f | sort | while read -r list; do
+        if [[ -d "{{TEST_LIST_DIR}}" ]]; then
+            find "{{TEST_LIST_DIR}}" -name "*.json" -type f | sort | while read -r list; do
                 basename=$(basename "$list" .json)
                 if [[ -f "$list" ]] && jq -e . "$list" >/dev/null 2>&1; then
                     description=$(jq -r '.description // "No description"' "$list" 2>/dev/null || echo "No description")
@@ -699,31 +694,31 @@ _expand_test_list test_list:
                 fi
             done
         else
-            echo "  No test list directory found: $TEST_LIST_DIR"
+            echo "  No test list directory found: {{TEST_LIST_DIR}}"
         fi
         exit 1
     fi
     
     # Validate JSON format
-    if ! jq -e . "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
-        echo "❌ Invalid JSON in test list: $TEST_LIST_DIR/${TEST_LIST}.json"
+    if ! jq -e . "{{TEST_LIST_DIR}}/${TEST_LIST}.json" >/dev/null 2>&1; then
+        echo "❌ Invalid JSON in test list: {{TEST_LIST_DIR}}/${TEST_LIST}.json"
         exit 1
     fi
     
     # Extract configs
-    if ! jq -e '.configs' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
+    if ! jq -e '.configs' "{{TEST_LIST_DIR}}/${TEST_LIST}.json" >/dev/null 2>&1; then
         echo "❌ Test list missing required 'configs' field"
         exit 1
     fi
     
     # Validate configs is an array
-    if ! jq -e '.configs | type == "array"' "$TEST_LIST_DIR/${TEST_LIST}.json" >/dev/null 2>&1; then
+    if ! jq -e '.configs | type == "array"' "{{TEST_LIST_DIR}}/${TEST_LIST}.json" >/dev/null 2>&1; then
         echo "❌ Test list 'configs' field must be an array"
         exit 1
     fi
     
     # Check if test list contains @ references
-    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_DIR/${TEST_LIST}.json" 2>/dev/null | grep -c "^@" || echo "0")
+    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "{{TEST_LIST_DIR}}/${TEST_LIST}.json" 2>/dev/null | grep -c "^@" || echo "0")
     HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
     
     if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
@@ -738,7 +733,7 @@ _expand_test_list test_list:
         done
     else
         echo "📋 Test list configurations:"
-        jq -r '.configs[]' "$TEST_LIST_DIR/${TEST_LIST}.json" | while read -r config; do
+        jq -r '.configs[]' "{{TEST_LIST_DIR}}/${TEST_LIST}.json" | while read -r config; do
             echo "  • $config"
         done
     fi
@@ -756,8 +751,7 @@ _test-list-android test_list:
     set -euo pipefail
     
     TEST_LIST="{{test_list}}"
-    TEST_LIST_DIR="./project/test-lists"
-    TEST_LIST_PATH="$TEST_LIST_DIR/${TEST_LIST}.json"
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${TEST_LIST}.json"
     
     echo "🧪 Executing test list: $TEST_LIST"
     echo "================================="
@@ -871,7 +865,7 @@ test-android-trace target:
 #     set -euo pipefail
 #     
 #     CONFIG_NAME="{{config_name}}"
-#     CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+#     CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
 #     
 #     echo "🎯 Testing target: $CONFIG_NAME"
 #     echo "==============================="
@@ -1086,7 +1080,7 @@ _test-android-manual config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🎯 Testing target (manual mode - stays open): $CONFIG_NAME"
     echo "=================================================="
@@ -1152,7 +1146,7 @@ _test-list-android-manual list_name:
     
     # For now, just run the first config in manual mode
     # This is a simplified implementation - full test list support would require more work
-    FIRST_CONFIG=$(jq -r '.configurations[0].name // "development-workflow"' "./project/test-lists/${LIST_NAME}.json" 2>/dev/null || echo "development-workflow")
+    FIRST_CONFIG=$(jq -r '.configurations[0].name // "development-workflow"' "./{{TEST_LIST_DIR}}/${LIST_NAME}.json" 2>/dev/null || echo "development-workflow")
     echo "Running first config in manual mode: $FIRST_CONFIG"
     just _test-android-manual "$FIRST_CONFIG"
 
@@ -1167,10 +1161,10 @@ test-android-enhanced target:
     echo "==================================="
     
     # Check if target is a test list or configuration
-    if [[ -f "./project/test-lists/${TARGET}.json" ]]; then
+    if [[ -f "./{{TEST_LIST_DIR}}/${TARGET}.json" ]]; then
         echo "📋 Detected test list: $TARGET"
         just _test-list-android "$TARGET"
-    elif [[ -f "./project/debug_configs/${TARGET}.json" ]]; then
+    elif [[ -f "./{{DEBUG_CONFIG_DIR}}/${TARGET}.json" ]]; then
         echo "📄 Detected configuration: $TARGET"
         just _test-config-android-enhanced "$TARGET"
     else
@@ -1180,8 +1174,8 @@ test-android-enhanced target:
         echo "=================="
         
         echo "📋 Test Lists:"
-        if [[ -d "./project/test-lists" ]]; then
-            find "./project/test-lists" -name "*.json" -type f | sort | while read -r list; do
+        if [[ -d "./{{TEST_LIST_DIR}}" ]]; then
+            find "./{{TEST_LIST_DIR}}" -name "*.json" -type f | sort | while read -r list; do
                 basename=$(basename "$list" .json)
                 description=$(jq -r '.description // "No description"' "$list" 2>/dev/null || echo "No description")
                 echo "  • $basename - $description"
@@ -1190,8 +1184,8 @@ test-android-enhanced target:
         
         echo ""
         echo "📄 Configurations:"
-        if [[ -d "./project/debug_configs" ]]; then
-            find "./project/debug_configs" -name "*.json" -type f | sort | while read -r config; do
+        if [[ -d "./{{DEBUG_CONFIG_DIR}}" ]]; then
+            find "./{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f | sort | while read -r config; do
                 basename=$(basename "$config" .json)
                 description=$(jq -r '.description // "No description"' "$config" 2>/dev/null || echo "No description")
                 echo "  • $basename - $description"
@@ -1214,10 +1208,9 @@ test-android-reset config_name="":
         echo "🔍 Selecting checksum test configuration..."
         
         # Find all checksum-enabled configs
-        CONFIG_DIR="./project/debug_configs"
         CHECKSUM_CONFIGS=""
         
-        if [[ -d "$CONFIG_DIR" ]]; then
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
             while IFS= read -r -d '' config_file; do
                 if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
                     basename=$(basename "$config_file" .json)
@@ -1235,7 +1228,7 @@ test-android-reset config_name="":
                     # Format for fzf
                     CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
                 fi
-            done < <(find "$CONFIG_DIR" -name "*.json" -type f -print0)
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
         fi
         
         if [[ -z "$CHECKSUM_CONFIGS" ]]; then
@@ -1268,7 +1261,7 @@ test-android-reset config_name="":
     echo "🗑️  Resetting checksum baseline for: $CONFIG_NAME"
     echo "================================================="
     
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     # Validate configuration exists
     just _validate-config-exists "$CONFIG_NAME"
@@ -1331,17 +1324,16 @@ test-android-list-checksum:
     echo "📸 Checksum-Enabled Test Configurations"
     echo "======================================="
     
-    CONFIG_DIR="./project/debug_configs"
     CHECKSUM_CONFIGS=0
     REGULAR_CONFIGS=0
     
-    if [[ ! -d "$CONFIG_DIR" ]]; then
-        echo "❌ Configuration directory not found: $CONFIG_DIR"
+    if [[ ! -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+        echo "❌ Configuration directory not found: {{DEBUG_CONFIG_DIR}}"
         exit 1
     fi
     
     # Find all configurations
-    find "$CONFIG_DIR" -name "*.json" -type f | sort | while read -r config_file; do
+    find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f | sort | while read -r config_file; do
         if [[ -f "$config_file" ]] && jq -e . "$config_file" >/dev/null 2>&1; then
             basename=$(basename "$config_file" .json)
             description=$(jq -r '.description // "No description"' "$config_file" 2>/dev/null || echo "No description")
@@ -1441,15 +1433,14 @@ list-test-lists:
     echo "📋 Available Test Lists"
     echo "======================"
     
-    TEST_LIST_DIR="./project/test-lists"
     
-    if [[ ! -d "$TEST_LIST_DIR" ]]; then
-        echo "❌ Test list directory not found: $TEST_LIST_DIR"
+    if [[ ! -d "{{TEST_LIST_DIR}}" ]]; then
+        echo "❌ Test list directory not found: {{TEST_LIST_DIR}}"
         exit 1
     fi
     
     # Find all test lists
-    find "$TEST_LIST_DIR" -name "*.json" -type f | sort | while read -r list_file; do
+    find "{{TEST_LIST_DIR}}" -name "*.json" -type f | sort | while read -r list_file; do
         if [[ -f "$list_file" ]] && jq -e . "$list_file" >/dev/null 2>&1; then
             basename=$(basename "$list_file" .json)
             description=$(jq -r '.description // "No description"' "$list_file" 2>/dev/null || echo "No description")
@@ -1474,7 +1465,7 @@ list-test-lists:
     
     echo "📊 Summary:"
     echo "==========="
-    TOTAL_LISTS=$(find "$TEST_LIST_DIR" -name "*.json" -type f | wc -l)
+    TOTAL_LISTS=$(find "{{TEST_LIST_DIR}}" -name "*.json" -type f | wc -l)
     echo "Total test lists: $TOTAL_LISTS"
 
 # Show test lists matching pattern
@@ -1487,17 +1478,16 @@ list-test-lists-matching pattern:
     echo "🔍 Test Lists Matching: $PATTERN"
     echo "================================"
     
-    TEST_LIST_DIR="./project/test-lists"
     
-    if [[ ! -d "$TEST_LIST_DIR" ]]; then
-        echo "❌ Test list directory not found: $TEST_LIST_DIR"
+    if [[ ! -d "{{TEST_LIST_DIR}}" ]]; then
+        echo "❌ Test list directory not found: {{TEST_LIST_DIR}}"
         exit 1
     fi
     
     MATCHES=0
     
     # Find matching test lists
-    find "$TEST_LIST_DIR" -name "*.json" -type f | sort | while read -r list_file; do
+    find "{{TEST_LIST_DIR}}" -name "*.json" -type f | sort | while read -r list_file; do
         if [[ -f "$list_file" ]] && jq -e . "$list_file" >/dev/null 2>&1; then
             basename=$(basename "$list_file" .json)
             description=$(jq -r '.description // "No description"' "$list_file" 2>/dev/null || echo "No description")
@@ -1524,7 +1514,7 @@ list-test-lists-matching pattern:
         echo "❌ No test lists match pattern: $PATTERN"
         echo ""
         echo "Available test lists:"
-        find "$TEST_LIST_DIR" -name "*.json" -type f | sort | while read -r list_file; do
+        find "{{TEST_LIST_DIR}}" -name "*.json" -type f | sort | while read -r list_file; do
             basename=$(basename "$list_file" .json)
             echo "  • $basename"
         done

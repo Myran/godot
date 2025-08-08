@@ -123,7 +123,7 @@ _validate-and-prepare-config config_name platform:
     
     CONFIG_NAME="{{config_name}}"
     PLATFORM="{{platform}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🔍 Validating and preparing config: $CONFIG_NAME"
     
@@ -131,7 +131,7 @@ _validate-and-prepare-config config_name platform:
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "❌ Config not found: $CONFIG_PATH"
         echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
         exit 1
     fi
     
@@ -144,7 +144,7 @@ _validate-and-prepare-config config_name platform:
     
     # Create temporary config with auto_quit=true for automated mode
     TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     
     echo "📋 Creating temporary config with auto_quit=true for automated mode..."
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
@@ -212,7 +212,7 @@ _show-platform-info config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "❌ Config not found: $CONFIG_NAME"
@@ -243,8 +243,8 @@ show-platform-matrix target="":
     fi
     
     # Check if it's a test list first
-    TEST_LIST_PATH="./project/test-lists/${TARGET}.json"
-    CONFIG_PATH="./project/debug_configs/${TARGET}.json"
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${TARGET}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TARGET}.json"
     
     if [[ -f "$TEST_LIST_PATH" ]]; then
         echo "📋 PLATFORM COMPATIBILITY MATRIX: $TARGET (Test List)"
@@ -268,7 +268,7 @@ show-platform-matrix target="":
                 continue
             fi
             
-            CONFIG_FILE="./project/debug_configs/${config}.json"
+            CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${config}.json"
             if [[ ! -f "$CONFIG_FILE" ]]; then
                 printf "│ %-27s │    ?    │    ?    │\n" "$config"
                 continue
@@ -298,9 +298,9 @@ show-platform-matrix target="":
     else
         echo "❌ Neither test list nor config found: $TARGET"
         echo "💡 Available test lists:"
-        ls project/test-lists/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
+        ls {{TEST_LIST_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
         echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
         exit 1
     fi
 
@@ -1300,8 +1300,8 @@ _test-list-generic test_list platform:
     
     TEST_LIST="{{test_list}}"
     PLATFORM="{{platform}}"
-    TEST_LIST_DIR="./project/test-lists"
-    TEST_LIST_PATH="$TEST_LIST_DIR/${TEST_LIST}.json"
+    # Using centralized TEST_LIST_DIR variable
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${TEST_LIST}.json"
     
     echo "🧪 Executing test list: $TEST_LIST ($PLATFORM)"
     echo "=============================================="
@@ -1380,7 +1380,7 @@ _test-list-generic test_list platform:
         printf "%2d. %-30s" $((i+1)) "$config"
         
         # Show config type and platform compatibility
-        CONFIG_PATH="./project/debug_configs/${config}.json"
+        CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${config}.json"
         if [[ -f "$CONFIG_PATH" ]]; then
             # Check platform compatibility using the same logic as execution
             PLATFORM_CHECK=$(just _is-platform-supported "$CONFIG_PATH" "$PLATFORM" 2>/dev/null || echo "false")
@@ -1448,7 +1448,7 @@ _test-list-generic test_list platform:
                "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
         elif [[ $exit_code -eq 2 ]]; then
             # Platform skip - extract supported platforms for summary
-            CONFIG_PATH="./project/debug_configs/${config}.json"
+            CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${config}.json"
             if [[ -f "$CONFIG_PATH" ]]; then
                 SUPPORTED_PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH")
                 SKIPPED_CONFIG_NAMES+=("$config")
@@ -1898,8 +1898,8 @@ _execute-test-with-analysis config_name platform session="":
     echo ""
     
     # Phase 1: Auto-detect between test list and debug config
-    TEST_LIST_PATH="./project/test-lists/${CONFIG_NAME}.json"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    TEST_LIST_PATH="{{TEST_LIST_DIR}}/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     # Check if it's a test list first (but skip if we're already inside test list execution)
     if [[ -f "$TEST_LIST_PATH" && "${INSIDE_TEST_LIST_EXECUTION:-false}" != "true" ]]; then
@@ -1916,15 +1916,15 @@ _execute-test-with-analysis config_name platform session="":
         if just _validate-config-exists "$CONFIG_NAME" >/dev/null 2>&1; then
             echo "✅ Wildcard pattern config created: $CONFIG_NAME"
             # Update CONFIG_PATH to point to the created temporary config
-            CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+            CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
         else
             echo "❌ Neither test list nor config found:"
             echo "   Test list: $TEST_LIST_PATH"
             echo "   Config: $CONFIG_PATH"
             echo "💡 Available configs:"
-            ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+            ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
             echo "💡 Available test lists:"
-            ls project/test-lists/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
+            ls {{TEST_LIST_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No test lists found"
             exit 1
         fi
     fi
@@ -1968,7 +1968,7 @@ _execute-test-with-analysis config_name platform session="":
     
     # Create temporary config with auto_quit metadata
     TEMP_CONFIG_NAME="${CONFIG_NAME}_${PLATFORM}_automated"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "$AUTO_QUIT_VALUE"
     
     # Set display mode based on the auto_quit value we just injected
@@ -2362,7 +2362,7 @@ test-android-manual config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🎯 Android Testing (Manual Mode - stays open): $CONFIG_NAME"
     echo "==========================================================="
@@ -2373,7 +2373,7 @@ test-android-manual config_name:
     # Create temporary config with auto_quit=false for manual mode
     echo "📱 Creating temporary config with auto_quit=false for manual mode..."
     TEMP_CONFIG_NAME="${CONFIG_NAME}_manual"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
     
     # Deploy config and start app using standard config-push-android
@@ -2390,7 +2390,7 @@ test-desktop-manual config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🎯 Desktop Testing (Manual Mode - stays open): $CONFIG_NAME"
     echo "=========================================================="
@@ -2401,7 +2401,7 @@ test-desktop-manual config_name:
     # Create temporary config with auto_quit=false for manual mode
     echo "🖥️  Creating temporary config with auto_quit=false for manual mode..."
     TEMP_CONFIG_NAME="${CONFIG_NAME}_desktop_manual"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
     
     # Deploy config to desktop (this stops any running instances)
@@ -2449,7 +2449,7 @@ _test-android-target-original config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🎯 Testing target: $CONFIG_NAME"
     echo "==============================="
@@ -2522,7 +2522,7 @@ _test-android-target-original config_name:
     # Create temporary config with auto_quit=true for automated mode
     echo "📱 Creating temporary config with auto_quit=true for automated mode..."
     TEMP_CONFIG_NAME="${CONFIG_NAME}_automated"
-    TEMP_CONFIG_PATH="./project/debug_configs/${TEMP_CONFIG_NAME}.json"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
     
     # Deploy config and start app using standard config-push-android
@@ -2740,11 +2740,11 @@ _test-desktop-target-original config_name:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    CONFIG_FILE="project/debug_configs/{{config_name}}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/{{config_name}}.json"
     if [ ! -f "$CONFIG_FILE" ]; then
         echo "❌ Config not found: $CONFIG_FILE"
         echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
         exit 1
     fi
     
@@ -2822,7 +2822,7 @@ _update-checksum-baseline platform config_name:
     
     PLATFORM="{{platform}}"
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./project/debug_configs/${CONFIG_NAME}.json"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
     echo "🔄 Updating checksum baseline for: $CONFIG_NAME ($PLATFORM)"
     echo "============================================================="
@@ -2831,7 +2831,7 @@ _update-checksum-baseline platform config_name:
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "❌ Config not found: $CONFIG_PATH"
         echo "💡 Available configs:"
-        ls project/debug_configs/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
+        ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | head -5 | xargs -I {} basename {} .json || echo "   No configs found"
         exit 1
     fi
     
@@ -2909,10 +2909,10 @@ test-android-update config_name="":
         echo "🔍 Selecting checksum test configuration..."
         
         # Find all checksum-enabled configs
-        CONFIG_DIR="./project/debug_configs"
+        # Using centralized DEBUG_CONFIG_DIR variable
         CHECKSUM_CONFIGS=""
         
-        if [[ -d "$CONFIG_DIR" ]]; then
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
             while IFS= read -r -d '' config_file; do
                 if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
                     basename=$(basename "$config_file" .json)
@@ -2930,7 +2930,7 @@ test-android-update config_name="":
                     # Format for fzf
                     CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
                 fi
-            done < <(find "$CONFIG_DIR" -name "*.json" -type f -print0)
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
         fi
         
         if [[ -z "$CHECKSUM_CONFIGS" ]]; then
@@ -2980,10 +2980,10 @@ test-desktop-update config_name="":
         echo "🔍 Selecting checksum test configuration..."
         
         # Find all checksum-enabled configs
-        CONFIG_DIR="./project/debug_configs"
+        # Using centralized DEBUG_CONFIG_DIR variable
         CHECKSUM_CONFIGS=""
         
-        if [[ -d "$CONFIG_DIR" ]]; then
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
             while IFS= read -r -d '' config_file; do
                 if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
                     basename=$(basename "$config_file" .json)
@@ -3001,7 +3001,7 @@ test-desktop-update config_name="":
                     # Format for fzf
                     CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
                 fi
-            done < <(find "$CONFIG_DIR" -name "*.json" -type f -print0)
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
         fi
         
         if [[ -z "$CHECKSUM_CONFIGS" ]]; then

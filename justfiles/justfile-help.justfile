@@ -203,7 +203,7 @@ help-at-symbols:
     echo "🎯 EXAMPLE TEST LIST WITH @ SYMBOLS"
     echo "==================================="
     echo ""
-    echo "File: project/test-lists/comprehensive.json"
+    echo "File: {{TEST_LIST_DIR}}/comprehensive.json"
     echo "{"
     echo "  \"name\": \"Comprehensive Testing\","
     echo "  \"description\": \"Auto-discovers and runs all test suites\","

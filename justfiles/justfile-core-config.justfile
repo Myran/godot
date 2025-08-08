@@ -40,6 +40,12 @@ ANDROID_GRADLE_DIR := "project/android/build"
 KEYSTORE_PATH := env_var_or_default("KEYSTORE_PATH", "./keys/" + GAME_NAME + ".keystore")
 
 # ================================
+# DEBUG SYSTEM PATHS
+# ================================
+DEBUG_CONFIG_DIR := "debug_configs"
+TEST_LIST_DIR := "test-lists"
+
+# ================================
 # LOG PATHS
 # ================================
 # Desktop Godot logs (macOS)
@@ -310,7 +316,7 @@ jobs := `sysctl -n hw.logicalcpu`
 _cleanup-temp-config CONFIG:
     #!/usr/bin/env bash
     set -euo pipefail
-    CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/{{CONFIG}}.json"
     
     # Check if this is a temporary config by looking for our specific description patterns
     if [ -f "$CONFIG_FILE" ] && (grep -q "Temporary config for single action:" "$CONFIG_FILE" 2>/dev/null || grep -q "Temporary.*config for.*pattern:" "$CONFIG_FILE" 2>/dev/null); then
@@ -334,11 +340,11 @@ _handle-json-action-params CONFIG:
     # Create safe filename based on action name
     SAFE_ACTION_NAME=$(echo "$ACTION_NAME" | sed 's/[^a-zA-Z0-9._-]/_/g')
     if [[ "{{CONFIG}}" == *"params:"* ]]; then
-        CONFIG_FILE="project/debug_configs/temp_${SAFE_ACTION_NAME}_with_params.json"
+        CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/temp_${SAFE_ACTION_NAME}_with_params.json"
         CONFIG_DESC="Temporary config for action with parameters: $ACTION_NAME"
         echo "🔧 Creating temporary config for action with params: $ACTION_NAME"
     else
-        CONFIG_FILE="project/debug_configs/temp_${SAFE_ACTION_NAME}_json_action.json"
+        CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/temp_${SAFE_ACTION_NAME}_json_action.json"
         CONFIG_DESC="Temporary config for JSON action: $ACTION_NAME"
         echo "🔧 Creating temporary config for JSON action: $ACTION_NAME"
     fi
@@ -373,7 +379,7 @@ _validate-config-exists CONFIG:
     
     # Generate safe filename for config (replace unsafe characters)
     SAFE_CONFIG_NAME=$(echo "{{CONFIG}}" | sed 's/[^a-zA-Z0-9._-]/_/g')
-    CONFIG_FILE="project/debug_configs/${SAFE_CONFIG_NAME}.json"
+    CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/${SAFE_CONFIG_NAME}.json"
     
     # Check if safe config file exists (including temporary ones)
     if [ -f "$CONFIG_FILE" ]; then
@@ -381,7 +387,7 @@ _validate-config-exists CONFIG:
     fi
     
     # Also check if original unsafe filename exists (for backward compatibility)
-    ORIGINAL_CONFIG_FILE="project/debug_configs/{{CONFIG}}.json"
+    ORIGINAL_CONFIG_FILE="{{DEBUG_CONFIG_DIR}}/{{CONFIG}}.json"
     if [ -f "$ORIGINAL_CONFIG_FILE" ]; then
         exit 0
     fi
@@ -396,7 +402,7 @@ _validate-config-exists CONFIG:
         # First, try to match config file names
         echo "🔍 Checking for matching config files..."
         CONFIG_PATTERN="{{CONFIG}}"
-        MATCHING_CONFIGS=$(ls project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20 || true)
+        MATCHING_CONFIGS=$(ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's|{{DEBUG_CONFIG_DIR}}/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20 || true)
         
         if [ -n "$MATCHING_CONFIGS" ]; then
             echo "✅ Found matching config files:"
@@ -404,7 +410,7 @@ _validate-config-exists CONFIG:
             echo "🔧 Creating temporary test list for config pattern: {{CONFIG}}"
             
             # Create temporary test list file 
-            TEMP_LIST_FILE="project/test-lists/temp_pattern_${SAFE_CONFIG_NAME}.json"
+            TEMP_LIST_FILE="{{TEST_LIST_DIR}}/temp_pattern_${SAFE_CONFIG_NAME}.json"
             CONFIG_LIST=$(echo "$MATCHING_CONFIGS" | sed 's/^/    "/' | sed 's/$/",/' | sed '$s/,$//')
             {
                 echo '{'
@@ -437,7 +443,7 @@ _validate-config-exists CONFIG:
     fi
     
     # Look for the action in existing config files to see if it's a valid action name
-    if grep -r "\"{{CONFIG}}\"" project/debug_configs/*.json >/dev/null 2>&1; then
+    if grep -r "\"{{CONFIG}}\"" {{DEBUG_CONFIG_DIR}}/*.json >/dev/null 2>&1; then
         echo "✅ Found '{{CONFIG}}' as an action name"
         echo "🔧 Creating temporary config for single action: {{CONFIG}}"
         
@@ -460,7 +466,7 @@ _validate-config-exists CONFIG:
             MATCHED_PATTERN="$pattern"
             break
         fi
-    done < <(grep -rh '"[^"]*\*[^"]*"' project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | sort -u)
+    done < <(grep -rh '"[^"]*\*[^"]*"' {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | sort -u)
     
     if [ -n "$MATCHED_PATTERN" ]; then
         echo "✅ Action '{{CONFIG}}' matches wildcard pattern: $MATCHED_PATTERN"
@@ -478,10 +484,10 @@ _validate-config-exists CONFIG:
     echo "❌ Neither config file nor action name found for: {{CONFIG}}"
     echo ""
     echo "💡 Available config files:"
-    ls -1 project/debug_configs/*.json 2>/dev/null | sed 's|project/debug_configs/||g' | sed 's|\.json||g' | sed 's/^/  /' || echo "  (no configs found)"
+    ls -1 {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's|{{DEBUG_CONFIG_DIR}}/||g' | sed 's|\.json||g' | sed 's/^/  /' || echo "  (no configs found)"
     echo ""
     echo "💡 Example action names (from existing configs):"
-    grep -h "\"[A-Z].*Test\"" project/debug_configs/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/  \1/' | sort -u | head -10 || echo "  (no action examples found)"
+    grep -h "\"[A-Z].*Test\"" {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's/.*"\([^"]*\)".*/  \1/' | sort -u | head -10 || echo "  (no action examples found)"
     exit 1
 
 # Shared Android prerequisites check

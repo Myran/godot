@@ -154,7 +154,8 @@
       "Bash(head:*)",
       "Bash(DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just test-desktop-target system-layer-all)",
       "Bash(backlog task list:*)",
-      "Bash(backlog task:*)"
+      "Bash(backlog task:*)",
+      "Bash(DESKTOP_TEST_MAX_TIMEOUT=60 just test-desktop-target battle-logic-only)"
     ],
     "deny": []
   }

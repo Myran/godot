@@ -1,0 +1,159 @@
+{
+  "description": "Generated replay from semantic session: session_20250807_175235_e44157b5",
+  "session_id": "session_20250807_175235_e44157b5",
+  "generation_timestamp": "20250807_175340",
+  "semantic_action_count": 10,
+  "actions": [
+    "system.debug.hide_menu",
+    {
+      "action": "game.state.transition_player",
+      "params": {
+        "from_state": "PREPARE",
+        "to_state": "DRAFT"
+      }
+    },
+    {
+      "action": "game.draft.upgrade_player",
+      "params": {
+        "level": 1
+      }
+    },
+    {
+      "action": "game.draft.remove_block_player",
+      "params": {
+        "card_id": "",
+        "position": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 0,
+          "y": 0
+        },
+        "to_position": 5
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 0
+        },
+        "to_position": 6
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "4",
+        "from_position": {
+          "x": 1,
+          "y": 0
+        },
+        "to_position": 7
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.reroll_player",
+      "params": {
+        "cost": 0
+      }
+    },
+    {
+      "action": "game.draft.move_card_to_lineup_player",
+      "params": {
+        "card_id": "0",
+        "from_position": {
+          "x": 4,
+          "y": 0
+        },
+        "to_position": 9
+      }
+    },
+    "system.debug.replay_complete"
+  ],
+  "metadata": {
+    "source_session": "session_20250807_175235_e44157b5",
+    "generation_method": "platform_specific_replay_generate",
+    "config_name": "dwarf-11",
+    "capture_timestamp": "20250807_175340",
+    "test_type": "checksum_validation",
+    "validation_mode": "semantic_action_checksums"
+  },
+  "checksum_config": {
+    "state_type": "player_actions",
+    "initial_seed": 42424,
+    "expected_checksums": [
+      {
+        "sequence": 1,
+        "action": "transition.change_state",
+        "checksum": "d59dc91aa6e13fd1187ab6dece5fe0712f0f48574e181492f05036342b3a310d"
+      },
+      {
+        "sequence": 2,
+        "action": "draft.upgrade",
+        "checksum": "dbc5dae94900075c5452f5226e437a23cb4f84a9e2582e09148453467f1e91f1"
+      },
+      {
+        "sequence": 3,
+        "action": "draft.remove_card",
+        "checksum": "5fa0331919b5e936ab34b7adcfabc39582ac357538834af33e77e94d81babe91"
+      },
+      {
+        "sequence": 4,
+        "action": "card.move",
+        "checksum": "a7ee30c0e04728b1e2b69a98a1b25e12af8149eaa0ee7fdb56f06c208aaee2b6"
+      },
+      {
+        "sequence": 5,
+        "action": "draft.reroll",
+        "checksum": "8035e2bbb8971969daa08c1b4bc42c70ee417a667e8d0ad0722fa18e4ba04f34"
+      },
+      {
+        "sequence": 6,
+        "action": "card.move",
+        "checksum": "1f4c54bcbdbce2d23a82a403abf2838897bfb52fd06e8bad07557858cc772c4a"
+      },
+      {
+        "sequence": 7,
+        "action": "card.move",
+        "checksum": "bc9f558a8e350315349d87e11c031e39e53866dbbb469906c6a25e124f965c0f"
+      },
+      {
+        "sequence": 8,
+        "action": "draft.reroll",
+        "checksum": "6bca069063ead4ac9b08c6f7e28438f1e70e4783f4c19298757de14a9881c0dc"
+      },
+      {
+        "sequence": 9,
+        "action": "draft.reroll",
+        "checksum": "19237440b56609fc075d8e684b779bce0441eef0ff46ce1355919f8b8cfecb6d"
+      },
+      {
+        "sequence": 10,
+        "action": "card.move",
+        "checksum": "4ee97cb6ab2114869384e25413de7a7b0c755cb090b38cb4c141bca7021b2e4d"
+      }
+    ]
+  }
+}

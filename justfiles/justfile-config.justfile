@@ -9,31 +9,31 @@ config-setup:
     echo "📋 Setting up debug configuration files..."
     
     # Create debug configs directory
-    mkdir -p project/debug_configs
+    mkdir -p {{DEBUG_CONFIG_DIR}}
     
     # Create sample configuration files
     
     # 1. System testing config
-    echo '{"actions": ["Show Registry Stats", "Print Debug Info", "Log System Info"]}' > project/debug_configs/system-testing.json
+    echo '{"actions": ["Show Registry Stats", "Print Debug Info", "Log System Info"]}' > {{DEBUG_CONFIG_DIR}}/system-testing.json
     
     # 2. Database testing config  
-    echo '{"actions": ["RTDB Status", "RTDB Get Simple Value", "RTDB List Children"]}' > project/debug_configs/database-testing.json
+    echo '{"actions": ["RTDB Status", "RTDB Get Simple Value", "RTDB List Children"]}' > {{DEBUG_CONFIG_DIR}}/database-testing.json
     
     # 3. Gameplay testing config
-    echo '{"actions": ["Reset Match Level", "Load Match Level 1", "Draw Hand"]}' > project/debug_configs/gameplay-testing.json
+    echo '{"actions": ["Reset Match Level", "Load Match Level 1", "Draw Hand"]}' > {{DEBUG_CONFIG_DIR}}/gameplay-testing.json
     
     # 4. Performance testing config
-    echo '{"actions": ["Show Registry Stats", "RTDB Concurrent Operations", "RTDB Large Data Test"]}' > project/debug_configs/performance-testing.json
+    echo '{"actions": ["Show Registry Stats", "RTDB Concurrent Operations", "RTDB Large Data Test"]}' > {{DEBUG_CONFIG_DIR}}/performance-testing.json
     
     # 5. Minimal testing config
-    echo '{"actions": ["Print Debug Info"]}' > project/debug_configs/minimal-testing.json
+    echo '{"actions": ["Print Debug Info"]}' > {{DEBUG_CONFIG_DIR}}/minimal-testing.json
     
     # 6. Empty config (no actions)
-    echo '{"actions": []}' > project/debug_configs/no-actions.json
+    echo '{"actions": []}' > {{DEBUG_CONFIG_DIR}}/no-actions.json
     
     echo "✅ Debug configs created:"
-    echo "  📁 project/debug_configs/"
-    ls -la project/debug_configs/
+    echo "  📁 {{DEBUG_CONFIG_DIR}}/"
+    ls -la {{DEBUG_CONFIG_DIR}}/
     echo ""
     echo "💡 Use 'just config-set <name>' to switch configs"
     echo "   Example: just config-set system-testing"
