@@ -9,7 +9,7 @@ var stop_button: Button
 var connection_count_label: Label
 var log_text: TextEdit
 
-func _ready():
+func _ready() -> void:
 	status_label = $VBoxContainer/StatusContainer/StatusLabel
 	port_input = $VBoxContainer/PortContainer/PortSpinBox
 	start_button = $VBoxContainer/ButtonsContainer/StartButton
@@ -31,7 +31,7 @@ func _ready():
 
 		port_input.value = websocket_server.get_port()
 
-func _update_ui():
+func _update_ui() -> void:
 	if not websocket_server:
 		status_label.text = "Server: Not initialized"
 		start_button.disabled = true
@@ -52,7 +52,7 @@ func _update_ui():
 	else:
 		connection_count_label.text = "0"
 
-func _on_start_button_pressed():
+func _on_start_button_pressed() -> void:
 	if websocket_server:
 		var result = websocket_server.start_server()
 		if result == OK:
@@ -61,31 +61,31 @@ func _on_start_button_pressed():
 			_log_message("Failed to start server: " + str(result))
 		_update_ui()
 
-func _on_stop_button_pressed():
+func _on_stop_button_pressed() -> void:
 	if websocket_server:
 		websocket_server.stop_server()
 		_log_message("Server stopped")
 		_update_ui()
 
-func _on_port_changed(new_port: float):
+func _on_port_changed(new_port: float) -> void:
 	if websocket_server:
 		websocket_server.set_port(int(new_port))
 		_log_message("Port changed to " + str(int(new_port)))
 
-func _on_client_connected(client_id: int):
+func _on_client_connected(client_id: int) -> void:
 	_log_message("Client connected: " + str(client_id))
 	_update_ui()
 
-func _on_client_disconnected(client_id: int):
+func _on_client_disconnected(client_id: int) -> void:
 	_log_message("Client disconnected: " + str(client_id))
 	_update_ui()
 
-func _on_command_received(client_id: int, command: Dictionary):
+func _on_command_received(client_id: int, command: Dictionary) -> void:
 	var command_type = command.get("type", "unknown")
 	var command_id = command.get("commandId", "no-id")
 	_log_message("Received command: " + command_type + " (ID: " + command_id + ") from client " + str(client_id))
 
-func _log_message(message: String):
+func _log_message(message: String) -> void:
 	var timestamp = Time.get_datetime_string_from_system()
 	log_text.text += "[" + timestamp + "] " + message + "\n"
 	log_text.scroll_vertical = log_text.get_line_count()

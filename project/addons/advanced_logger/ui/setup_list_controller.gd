@@ -314,29 +314,7 @@ func _on_setups_list_item_clicked(index: int, at_position: Vector2, mouse_button
 	if _setup_manager._config.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Using setup name for menu actions: '%s'[/color]" % [LoggerColors.DEBUG_HTML, setup_name])
 
-	popup.id_pressed.connect(func(idx: int):
-		match idx:
-			0:
-				load_setup(setup_name)
-			1:
-				if setup_name != null and setup_name is String and not setup_name.is_empty():
-					if _setup_manager._config.get_show_editor_debug():
-						print_rich("[color=#%s]DEBUG: Emitting setup_renamed signal for '%s'[/color]" %
-							[LoggerColors.DEBUG_HTML, setup_name])
-					setup_renamed.emit(setup_name, "")  # Signal to show rename dialog
-				else:
-					if _setup_manager._config.get_show_editor_debug():
-						print_rich("[color=#%s]ERROR: Cannot rename setup with invalid name: '%s'[/color]" %
-							[LoggerColors.ERROR_HTML, setup_name])
-			2: # Delete
-				if setup_name != null and setup_name is String and not setup_name.is_empty():
-					delete_setup(setup_name)
-				else:
-					if _setup_manager._config.get_show_editor_debug():
-						print_rich("[color=#%s]ERROR: Cannot delete setup with invalid name: '%s'[/color]" %
-							[LoggerColors.ERROR_HTML, setup_name])
-		popup.queue_free()
-	)
+	popup.id_pressed.connect(_handle_popup_action.bind(setup_name, popup))
 
 	_setups_list.add_child(popup)
 
@@ -346,6 +324,29 @@ func _on_setups_list_item_clicked(index: int, at_position: Vector2, mouse_button
 	if _setup_manager._config.get_show_editor_debug():
 		print_rich("[color=#%s]DEBUG: Menu positioning - rect position: %s[/color]" %
 			[LoggerColors.DEBUG_HTML, global_rect.position])
+
+func _handle_popup_action(setup_name: String, popup: PopupMenu, idx: int) -> void:
+	match idx:
+		0:
+			load_setup(setup_name)
+		1:
+			if setup_name != null and setup_name is String and not setup_name.is_empty():
+				if _setup_manager._config.get_show_editor_debug():
+					print_rich("[color=#%s]DEBUG: Emitting setup_renamed signal for '%s'[/color]" %
+						[LoggerColors.DEBUG_HTML, setup_name])
+				setup_renamed.emit(setup_name, "")  # Signal to show rename dialog
+			else:
+				if _setup_manager._config.get_show_editor_debug():
+					print_rich("[color=#%s]ERROR: Cannot rename setup with invalid name: '%s'[/color]" %
+						[LoggerColors.ERROR_HTML, setup_name])
+		2: # Delete
+			if setup_name != null and setup_name is String and not setup_name.is_empty():
+				delete_setup(setup_name)
+			else:
+				if _setup_manager._config.get_show_editor_debug():
+					print_rich("[color=#%s]ERROR: Cannot delete setup with invalid name: '%s'[/color]" %
+						[LoggerColors.ERROR_HTML, setup_name])
+	popup.queue_free()
 
 func _on_setup_changed(setup_name: String, is_new: bool) -> void:
 	refresh_setups_list()

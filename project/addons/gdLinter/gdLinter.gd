@@ -68,14 +68,14 @@ func _exit_tree() -> void:
 		prints("Unload GDLint Plugin success")
 
 func read_gdlintignore() -> Array:
-	var project_root = ProjectSettings.globalize_path("res://")
-	var full_path = project_root.path_join(".gdlintignore")
-	var file = FileAccess.open(full_path, FileAccess.READ)
-	var ignored_files = []
+	var project_root: String = ProjectSettings.globalize_path("res://")
+	var full_path: String = project_root.path_join(".gdlintignore")
+	var file: FileAccess = FileAccess.open(full_path, FileAccess.READ)
+	var ignored_files: Array[String] = []
 
 	if file:
 		while !file.eof_reached():
-			var line = file.get_line().strip_edges()
+			var line: String = file.get_line().strip_edges()
 			if !line.is_empty() and !line.begins_with("#"):
 				ignored_files.append(line)
 		file.close()
@@ -84,7 +84,7 @@ func read_gdlintignore() -> Array:
 
 	return ignored_files
 
-func _ready():
+func _ready() -> void:
 	var ignored = read_gdlintignore()
 	for pattern in ignored:
 		print("Ignore pattern: ", pattern)

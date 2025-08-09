@@ -37,7 +37,7 @@ var _output_array = []
 var _error_message = ""
 var _parent
 
-func custom_print(values):
+func custom_print(values: Array) -> void:
 	var output_str = ""
 	if values is Array:
 		for i in range(values.size()):
@@ -50,7 +50,7 @@ func custom_print(values):
 	_output_array.append(output_str)
 	print(output_str)  # Still print to the console for debugging
 
-func run():
+func run() -> void:
 	print("Executing script... ready func")
 	_parent = get_parent()
 	var scene = get_tree().edited_scene_root
@@ -62,7 +62,7 @@ func run():
 
 	execution_completed.emit()
 
-func _execute_code():
+func _execute_code() -> int:
 {user_code}
 	return OK
 """

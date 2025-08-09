@@ -18,23 +18,23 @@ var script_editor
 var editor_settings
 var button
 
-var shortcut = InputEventShortcut.new()
+var shortcut: InputEventShortcut = InputEventShortcut.new()
 
 
-func _get_plugin_name():
+func _get_plugin_name() -> String:
 	return "Open External Editor"
 
 
-func _enter_tree():
+func _enter_tree() -> void:
 	godot_version = Engine.get_version_info()
 	if godot_version["major"] < 4:
 		print(
-			'This version of the "Open External Editor" plugin requires Godot 4.0 or higher. A Godot 3 version is also available.'
+			'This version of the "Open External Editor" plugin requires Godot 4.0 or higher.'
 		)
 		return
 	script_editor = get_editor_interface().get_script_editor()
 	editor_settings = get_editor_interface().get_editor_settings()
-	var input_event = InputEventKey.new()
+	var input_event: InputEventKey = InputEventKey.new()
 	input_event.physical_keycode = SHORTCUT_SCANCODE
 	if SHORTCUT_MODIFIERS & KEY_MASK_ALT:
 		input_event.alt = true
@@ -67,12 +67,12 @@ func _enter_tree():
 	hbox1.add_child(button)
 
 
-func _exit_tree():
+func _exit_tree() -> void:
 	if button != null:
 		button.free()
 
 
-func _input(event):
+func _input(event: InputEvent) -> void:
 	if (
 		shortcut
 		&& shortcut.shortcut
@@ -83,10 +83,10 @@ func _input(event):
 		open_external_editor()
 
 
-func open_external_editor():
-	var use_external_editor = editor_settings.get_setting(USE_EXTERNAL_EDITOR_SETTING)
-	var exec_path = editor_settings.get_setting(EXEC_PATH_SETTING)
-	var exec_flags = editor_settings.get_setting(EXEC_FLAGS_SETTING)
+func open_external_editor() -> void:
+	var use_external_editor: bool = editor_settings.get_setting(USE_EXTERNAL_EDITOR_SETTING)
+	var exec_path: String = editor_settings.get_setting(EXEC_PATH_SETTING)
+	var exec_flags: String = editor_settings.get_setting(EXEC_FLAGS_SETTING)
 	if use_external_editor:
 		return
 	var args = parse_exec_flags(exec_flags)
@@ -95,7 +95,7 @@ func open_external_editor():
 	OS.execute(exec_path, args)
 
 
-func get_text_edit():
+func get_text_edit() -> Control:
 	var vbox1 = script_editor.get_child(0)
 	var hsplit1 = vbox1.get_child(1)
 	var tab_cont1 = hsplit1.get_child(1)
@@ -110,20 +110,21 @@ func get_text_edit():
 			var editor = child.get_child(0)
 			return editor.get_child(0).get_child(0)
 		i += 1
+	return null
 
 
-func parse_exec_flags(flags):
+func parse_exec_flags(flags: String) -> PackedStringArray:
 	var text_edit = get_text_edit()
 	if text_edit == null:
 		printerr("Couldn't get TextEdit node")
-		return
+		return PackedStringArray()
 	var script = script_editor.get_current_script()
 	if script == null:
-		return
+		return PackedStringArray()
 	var project_path = ProjectSettings.globalize_path("res://")
 	var script_path = ProjectSettings.globalize_path(script.resource_path)
 	if script_path.is_empty():
-		return
+		return PackedStringArray()
 	var line = text_edit.get_caret_line() + 1
 	var column = text_edit.get_caret_column() + 1
 	flags = flags.replacen("{line}", str(max(1, line)))

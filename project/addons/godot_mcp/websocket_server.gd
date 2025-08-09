@@ -19,15 +19,15 @@ class PendingPeer:
 	var ws: WebSocketPeer = null
 	var connect_time: int
 	
-	func _init(p_tcp: StreamPeerTCP):
+	func _init(p_tcp: StreamPeerTCP) -> void:
 		tcp = p_tcp
 		connection = tcp
 		connect_time = Time.get_ticks_msec()
 
-func _ready():
+func _ready() -> void:
 	set_process(false)
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	poll()
 
 func is_server_active() -> bool:

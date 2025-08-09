@@ -20,7 +20,7 @@ class WebSocketClient:
 	var handshake_time: int
 	var last_poll_time: int
 	
-	func _init(p_tcp: StreamPeerTCP, p_id: int):
+	func _init(p_tcp: StreamPeerTCP, p_id: int) -> void:
 		tcp = p_tcp
 		id = p_id
 		handshake_time = Time.get_ticks_msec()
@@ -33,7 +33,7 @@ class WebSocketClient:
 var clients := {}
 var next_client_id := 1
 
-func _enter_tree():
+func _enter_tree() -> void:
 	Engine.set_meta("GodotMCPPlugin", self)
 	
 	print("\n=== MCP SERVER STARTING ===")
@@ -55,7 +55,7 @@ func _enter_tree():
 	
 	print("=== MCP SERVER INITIALIZED ===\n")
 
-func _exit_tree():
+func _exit_tree() -> void:
 	if Engine.has_meta("GodotMCPPlugin"):
 		Engine.remove_meta("GodotMCPPlugin")
 	
@@ -66,11 +66,11 @@ func _exit_tree():
 	
 	print("=== MCP SERVER SHUTDOWN ===")
 
-func _log(client_id, message):
+func _log(client_id: int, message: String) -> void:
 	if log_detailed:
 		print("[Client ", client_id, "] ", message)
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if not tcp_server.is_listening():
 		return
 	

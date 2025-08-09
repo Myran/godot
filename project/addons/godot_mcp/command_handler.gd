@@ -5,7 +5,7 @@ extends Node
 var _websocket_server
 var _command_processors = []
 
-func _ready():
+func _ready() -> void:
 	print("Command handler initializing...")
 	await get_tree().process_frame
 	_websocket_server = get_parent()
@@ -15,7 +15,7 @@ func _ready():
 	
 	print("Command handler initialized and ready to process commands")
 
-func _initialize_command_processors():
+func _initialize_command_processors() -> void:
 	var node_commands = MCPNodeCommands.new()
 	var script_commands = MCPScriptCommands.new()
 	var scene_commands = MCPSceneCommands.new() 
