@@ -10,7 +10,6 @@ func _init(base_health: int = 1, base_attack: int = 1) -> void:
 	base_attack_bonus = base_attack
 
 
-## Override deep_duplicate to ensure stat bonuses are properly copied
 func deep_duplicate() -> Ability:
 	var copy: MergeBonusAbility = MergeBonusAbility.new(base_health_bonus, base_attack_bonus)
 	copy.persistence_type = self.persistence_type
@@ -46,7 +45,6 @@ func handle_draft_event(
 	var merge_event: core.DraftMergeEvent = draft_event
 	var card: Card = unit
 
-	# Enhanced logging for debugging the self-exclusion logic
 	var card_id: String = card.unit_info.card_info.get("id", "")
 	var merged_card_ids: Array[String] = []
 	for match_card: Card in merge_event.matches:
@@ -66,7 +64,6 @@ func handle_draft_event(
 		[Log.TAG_ABILITY, Log.TAG_MERGE, Log.TAG_DEBUG]
 	)
 
-	# Exclude self - don't trigger bonus if this specific card instance is being merged
 	if merge_event.matches.has(card):
 		Log.debug(
 			"MergeBonusAbility: Skipping self-trigger - this card instance is being merged",
@@ -79,7 +76,6 @@ func handle_draft_event(
 		)
 		return
 
-	# Create StatEffectEvent and add to context - this will handle the proper flow
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
 		card, calc_health_bonus, calc_attack_bonus, core.EventSource.SYSTEM_CASCADE
 	)

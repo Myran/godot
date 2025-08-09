@@ -1,8 +1,6 @@
-# project/debug/actions/registrations/rtdb_actions.gd
 class_name RTDBDebugActions
 extends RefCounted
 
-# Preload all RTDB action classes
 const RTDBGetSimpleValueActionClass = preload(
 	"res://debug/actions/rtdb/rtdb_get_simple_value_action.gd"
 )
@@ -55,12 +53,10 @@ const RTDBLargeDataTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	# Register all RTDB debug actions
 	Log.info("Registering RTDB debug actions...", {}, ["debug", "rtdb", "registration"])
 
 	var counters: Array[int] = [0, 0]  # [registered, failed]
 
-	# Basic RTDB Operations
 	_register_with_count(
 		registry, RTDBGetSimpleValueActionClass.new(), "RTDBGetSimpleValueAction", counters
 	)
@@ -84,7 +80,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	)
 	_register_with_count(registry, RTDBPushItemActionClass.new(), "RTDBPushItemAction", counters)
 
-	# Listener Operations
 	_register_with_count(
 		registry,
 		RTDBSingleValueListenerActionClass.new(),
@@ -110,7 +105,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		registry, RTDBRemoveAllListenersActionClass.new(), "RTDBRemoveAllListenersAction", counters
 	)
 
-	# Advanced Operations
 	_register_with_count(
 		registry, RTDBTransactionTestActionClass.new(), "RTDBTransactionTestAction", counters
 	)
@@ -124,7 +118,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		registry, RTDBBatchOperationsActionClass.new(), "RTDBBatchOperationsAction", counters
 	)
 
-	# Utility & Testing Operations
 	_register_with_count(
 		registry, RTDBPathValidationActionClass.new(), "RTDBPathValidationAction", counters
 	)
@@ -145,7 +138,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 static func _register_with_count(
 	registry: DebugActionRegistry, action: DebugAction, name: String, counters: Array[int]
 ) -> void:
-	# Helper function to register with error checking and count tracking
 	if registry.register_action(action):
 		counters[0] += 1  # registered count
 	else:

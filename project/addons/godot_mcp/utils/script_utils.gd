@@ -2,7 +2,6 @@
 class_name ScriptUtils
 extends RefCounted
 
-# Create a new GDScript with basic template content
 static func create_new_script(class_name_str: String = "", extends_type: String = "Node") -> GDScript:
 	var script = GDScript.new()
 	var content = ""
@@ -17,9 +16,7 @@ static func create_new_script(class_name_str: String = "", extends_type: String 
 	script.source_code = content
 	return script
 
-# Create a new script file with basic template content
 static func create_script_file(path: String, class_name_str: String = "", extends_type: String = "Node") -> bool:
-	# Make sure directory exists
 	var dir_path = path.get_base_dir()
 	if not DirAccess.dir_exists_absolute(dir_path):
 		var err = DirAccess.make_dir_recursive_absolute(dir_path)
@@ -46,7 +43,6 @@ static func create_script_file(path: String, class_name_str: String = "", extend
 	
 	return true
 
-# Parse a script file and extract its class name and base class
 static func get_script_info(path: String) -> Dictionary:
 	var result = {
 		"class_name": "",
@@ -62,14 +58,12 @@ static func get_script_info(path: String) -> Dictionary:
 	var content = file.get_as_text()
 	file = null  # Close the file
 	
-	# Find class_name
 	var class_name_regex = RegEx.new()
 	class_name_regex.compile("class_name\\s+([A-Za-z0-9_]+)")
 	var matches = class_name_regex.search(content)
 	if matches:
 		result["class_name"] = matches.get_string(1)
 	
-	# Find extends
 	var extends_regex = RegEx.new()
 	extends_regex.compile("extends\\s+([A-Za-z0-9_]+)")
 	matches = extends_regex.search(content)
@@ -78,7 +72,6 @@ static func get_script_info(path: String) -> Dictionary:
 	
 	return result
 
-# Extract all method names from a script
 static func get_script_methods(path: String) -> Array:
 	var methods = []
 	
@@ -99,7 +92,6 @@ static func get_script_methods(path: String) -> Array:
 	
 	return methods
 
-# Apply a script to a node
 static func apply_script_to_node(node: Node, script_path: String) -> bool:
 	if not node:
 		push_error("Node is null")

@@ -1,34 +1,23 @@
 class_name ItemCollection
 extends BaseCollection
 
-# Import class references directly
 const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
-## Collection class for item data.
-## Provides access to item information with caching and validation.
 
 var _item_cache: Array[Dictionary] = []
 
-# Whether the cache has been initialized
 var _is_cache_initialized: bool = false
 
-# Key for retrieving item data
 var _collection_key: String = ""
 
 
-## Initialize the item collection with the backend
-## @param backend The data backend to use
-## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, [data_source.DEFAULT_SHEETS_ID], "items")
 	_collection_key = "items_" + str(test_group)
 	Log.info("ItemCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
 
-## Get all items
-## @param use_cache Whether to use the cache if available
-## @return Array of item dictionaries
 func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		Log.debug(
@@ -61,11 +50,9 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 
-	# Process the result using JSONPathNavigator for additional safety
 	var result: Array[Dictionary]
 
 	if raw_result != null and raw_result is Array:
-		# Check each item to ensure they are dictionaries before assignment
 		var safe_result: Array[Dictionary] = []
 		for item: Variant in raw_result:
 			if item is Dictionary:
@@ -89,7 +76,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			[Log.TAG_DB]
 		)
 	elif raw_result != null:
-		# Try to navigate using JSONPathNavigator
 		var nav_result: NavigationResultClass = JSONPathNavigator.navigate(raw_result, [])
 
 		if nav_result.found and nav_result.is_array():
@@ -128,7 +114,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		[Log.TAG_DB]
 	)
 
-	# Handle case where result is null or not an array
 	if result == null:
 		Log.error(
 			"No item data returned",
@@ -151,7 +136,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			)
 		)
 
-		# For editor testing, create minimal test items
 		var test_items: Array[Dictionary] = []
 		for i: int in range(5):
 			test_items.append(
@@ -195,7 +179,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 
 	_is_cache_initialized = true
 
-	# Log detailed results
 	Log.info(
 		"Retrieved all items",
 		{
@@ -209,7 +192,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		[Log.TAG_DB]
 	)
 
-	# Validate important fields in the items
 	if _item_cache.size() > 0:
 		var sample_item: Dictionary = _item_cache[0]
 		var sample_item_keys: Array[String]
@@ -273,7 +255,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	return _item_cache
 
 
-## Helper to get a simplified stack trace for debugging
 func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	var stack: Array = get_stack()
 	var simplified_stack: Array[Dictionary] = []
@@ -290,10 +271,6 @@ func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	return simplified_stack
 
 
-## Get a specific item by ID
-## @param item_id The ID of the item to retrieve
-## @param use_cache Whether to use the cache if available
-## @return Item dictionary or empty dictionary if not found
 func get_by_id(item_id: String, use_cache: bool = true) -> Dictionary:
 	Log.info("Getting item info", {"item_id": item_id, "use_cache": use_cache}, [Log.TAG_DB])
 
@@ -316,10 +293,6 @@ func get_by_id(item_id: String, use_cache: bool = true) -> Dictionary:
 	return {}
 
 
-## Get item ID from name
-## @param item_name The name of the item to look up
-## @param use_cache Whether to use the cache if available
-## @return Item ID or empty string if not found
 func get_id_by_name(item_name: String, use_cache: bool = true) -> String:
 	Log.info("Getting item ID from name", {"name": item_name, "use_cache": use_cache}, [Log.TAG_DB])
 
@@ -341,10 +314,6 @@ func get_id_by_name(item_name: String, use_cache: bool = true) -> String:
 	return ""
 
 
-## Get items by type
-## @param item_type The type of items to retrieve
-## @param use_cache Whether to use the cache if available
-## @return Array of item dictionaries matching the type
 func get_by_type(item_type: String, use_cache: bool = true) -> Array[Dictionary]:
 	Log.info("Getting items by type", {"type": item_type, "use_cache": use_cache}, [Log.TAG_DB])
 
@@ -369,10 +338,6 @@ func get_by_type(item_type: String, use_cache: bool = true) -> Array[Dictionary]
 	return filtered_items
 
 
-## Get items by rarity
-## @param rarity The rarity of items to retrieve
-## @param use_cache Whether to use the cache if available
-## @return Array of item dictionaries matching the rarity
 func get_by_rarity(rarity: String, use_cache: bool = true) -> Array[Dictionary]:
 	Log.info("Getting items by rarity", {"rarity": rarity, "use_cache": use_cache}, [Log.TAG_DB])
 
@@ -397,11 +362,6 @@ func get_by_rarity(rarity: String, use_cache: bool = true) -> Array[Dictionary]:
 	return filtered_items
 
 
-## Get items by price range
-## @param min_price Minimum price (inclusive)
-## @param max_price Maximum price (inclusive), or -1 for no upper limit
-## @param use_cache Whether to use the cache if available
-## @return Array of item dictionaries within the price range
 func get_by_price_range(
 	min_price: int, max_price: int = -1, use_cache: bool = true
 ) -> Array[Dictionary]:
@@ -450,11 +410,8 @@ func get_by_price_range(
 	return filtered_items
 
 
-## Clear the item cache
-## @return void
 func clear_cache() -> void:
 	Log.info("Clearing item cache", {}, [Log.TAG_DB, Log.TAG_CACHE])
 	_is_cache_initialized = false
 	_item_cache = []
-	# Clear cache in parent class
 	super.clear_cache()

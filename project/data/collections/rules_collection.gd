@@ -4,17 +4,12 @@ extends BaseCollection
 var _collection_key: String = ""
 
 
-## Initialize the rules collection with the backend
-## @param backend The data backend to use
-## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, [data_source.DEFAULT_SHEETS_ID], "rules")
 	_collection_key = "rules_" + str(test_group)
 	Log.info("RulesCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
 
-## Get rules data
-## @return Dictionary containing rules data
 func get_rules() -> Dictionary:
 	Log.info(
 		"Getting rules data",
@@ -41,9 +36,7 @@ func get_rules() -> Dictionary:
 		},
 		[Log.TAG_DB]
 	)
-	# Define the expected structure for rules data
 
-	# Error out if result is null or empty
 	if result == null or result.is_empty():
 		Log.error(
 			"Rules data is missing or empty",
@@ -65,7 +58,6 @@ func get_rules() -> Dictionary:
 	elif result is Dictionary:
 		result_dict = result
 
-	# Check data structure in detail
 	Log.debug(
 		"Validating rules data structure",
 		{
@@ -79,7 +71,6 @@ func get_rules() -> Dictionary:
 	return result_dict
 
 
-## Helper to get a simplified stack trace for debugging
 func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	var stack: Array = get_stack()
 	var simplified_stack: Array[Dictionary] = []

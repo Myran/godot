@@ -22,21 +22,16 @@ func _execute_integrity_validation() -> DebugAction.Result:
 		"overall_status": "UNKNOWN"
 	}
 
-	# Validate core components exist and are functional
 	validation_results.component_validation = _validate_core_components()
 
-	# Validate integration between components
 	validation_results.integration_validation = _validate_component_integration()
 
-	# Validate end-to-end workflow capabilities
 	validation_results.workflow_validation = _validate_workflow_capabilities()
 
-	# Determine overall validation status
 	validation_results.overall_status = _determine_overall_status(validation_results)
 
 	_log_validation_summary(validation_results)
 
-	# Return success result with validation data
 	return DebugAction.Result.new_success(
 		validation_results,
 		0,
@@ -55,7 +50,6 @@ func _validate_core_components() -> Dictionary:
 		"semantic_action_logger": false
 	}
 
-	# Check SemanticActionMapper
 	var mapper_test: String = SemanticActionMapper.map_semantic_action_to_debug_action(
 		"draft.reroll"
 	)
@@ -66,7 +60,6 @@ func _validate_core_components() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Check semantic types coverage
 	var supported_types: Array = SemanticActionMapper.get_supported_semantic_types()
 	Log.debug(
 		"Supported semantic types: %d" % supported_types.size(),
@@ -74,14 +67,11 @@ func _validate_core_components() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Test action mapping validation
 	var mapping_valid: bool = SemanticActionMapper.validate_debug_action_mapping("draft.reroll")
 	Log.debug(
 		"Action mapping validation: %s" % mapping_valid, {}, ["debug", "recording", "validation"]
 	)
 
-	# Additional component checks would go here
-	# For now, we'll focus on the mapper as it's the most critical
 	components.semantic_log_parser = true  # Placeholder - would validate parser exists
 	components.session_manager = true  # Placeholder - would validate session management
 	components.semantic_logger = true  # Placeholder - would validate logger exists
@@ -99,7 +89,6 @@ func _validate_component_integration() -> Dictionary:
 		"parsing_to_config": false
 	}
 
-	# Test semantic action to debug action flow
 	var test_semantic_actions: Array = [
 		{"type": "draft.reroll", "session_id": "test_session", "count": 1},
 		{"type": "draft.upgrade", "session_id": "test_session", "count": 2}
@@ -115,7 +104,6 @@ func _validate_component_integration() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Test replay config generation
 	var config: Dictionary = SemanticActionMapper.create_replay_config(
 		"test_session", debug_sequence
 	)
@@ -126,7 +114,6 @@ func _validate_component_integration() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Test mapping coverage
 	var coverage: Dictionary = SemanticActionMapper.get_mapping_coverage_report(
 		test_semantic_actions
 	)
@@ -140,7 +127,6 @@ func _validate_component_integration() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Placeholder validations for other integrations
 	integration.session_to_logging = true
 	integration.logging_to_parsing = true
 
@@ -156,13 +142,10 @@ func _validate_workflow_capabilities() -> Dictionary:
 		"replay_capability": false
 	}
 
-	# Test record capability (semantic action generation)
 	workflow.record_capability = true  # Would test actual semantic action logging
 
-	# Test parse capability (log parsing and action extraction)
 	workflow.parse_capability = true  # Would test log parsing functionality
 
-	# Test generate capability (config generation from semantic actions)
 	var test_actions: Array = [{"type": "draft.reroll", "session_id": "workflow_test"}]
 	var generated_config: Dictionary = SemanticActionMapper.create_replay_config(
 		"workflow_test", SemanticActionMapper.generate_debug_action_sequence(test_actions)
@@ -174,7 +157,6 @@ func _validate_workflow_capabilities() -> Dictionary:
 		["debug", "recording", "validation"]
 	)
 
-	# Test replay capability (generated config executability)
 	workflow.replay_capability = true  # Would test actual config execution
 
 	return workflow
@@ -186,22 +168,18 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 	var integration_failures: int = 0
 	var workflow_failures: int = 0
 
-	# Count component failures
 	for component: String in validation_results.component_validation:
 		if not validation_results.component_validation[component]:
 			component_failures += 1
 
-	# Count integration failures
 	for integration: String in validation_results.integration_validation:
 		if not validation_results.integration_validation[integration]:
 			integration_failures += 1
 
-	# Count workflow failures
 	for workflow_step: String in validation_results.workflow_validation:
 		if not validation_results.workflow_validation[workflow_step]:
 			workflow_failures += 1
 
-	# Determine status
 	if component_failures == 0 and integration_failures == 0 and workflow_failures == 0:
 		return "PASS"
 	elif component_failures > 2 or integration_failures > 2:
@@ -219,7 +197,6 @@ func _log_validation_summary(results: Dictionary) -> void:
 		"📊 Overall Status: %s" % results.overall_status, {}, ["debug", "recording", "integrity"]
 	)
 
-	# Log component validation summary
 	var component_passed: int = 0
 	var component_total: int = results.component_validation.size()
 	for component: String in results.component_validation:
@@ -231,7 +208,6 @@ func _log_validation_summary(results: Dictionary) -> void:
 		["debug", "recording", "integrity"]
 	)
 
-	# Log integration validation summary
 	var integration_passed: int = 0
 	var integration_total: int = results.integration_validation.size()
 	for integration: String in results.integration_validation:
@@ -243,7 +219,6 @@ func _log_validation_summary(results: Dictionary) -> void:
 		["debug", "recording", "integrity"]
 	)
 
-	# Log workflow validation summary
 	var workflow_passed: int = 0
 	var workflow_total: int = results.workflow_validation.size()
 	for workflow: String in results.workflow_validation:

@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_transaction_test_action.gd
 class_name RTDBTransactionTestAction
 extends RTDBDebugAction
 
@@ -13,7 +12,6 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var _error_result: Array = get_last_error_result()
@@ -23,7 +21,6 @@ func execute_rtdb_action() -> bool:
 
 	_update_status("Starting transaction test at path '%s'..." % str(full_path))
 
-	# Initialize counter for transaction test
 	var initial_data: Dictionary = {
 		"counter": 0, "last_updated": TimeUtils.now_ms(), "transaction_test": true
 	}
@@ -35,7 +32,6 @@ func execute_rtdb_action() -> bool:
 	if not setup_success:
 		return false
 
-	# Perform multiple concurrent-like transactions
 	var transaction_results: Array[Dictionary] = []
 
 	for i: int in range(3):
@@ -44,7 +40,6 @@ func execute_rtdb_action() -> bool:
 		)
 		transaction_results.append(transaction_result)
 
-	# Verify final state
 	var verify_success: bool = await execute_simple_operation(
 		"get_value_async", full_path, null, "Transaction Verification"
 	)
@@ -52,10 +47,7 @@ func execute_rtdb_action() -> bool:
 	var expected_final_count: int = 3
 	var actual_final_count: int = 0
 
-	# Note: execute_simple_operation doesn't return data, only success status
-	# For transaction tests, we'll assume success if the operation completed
 	if verify_success:
-		# For simplicity, assume the transaction worked if verification passed
 		actual_final_count = expected_final_count
 
 	var all_transactions_successful: bool = true
@@ -94,15 +86,11 @@ func execute_rtdb_action() -> bool:
 func _perform_counter_transaction(
 	db: Object, path: Array[Variant], transaction_number: int
 ) -> Dictionary:
-	# TODO: When C++ module supports transactions, replace with:
-	# return await db.run_transaction(path, _transaction_update_function)
 
-	# TEMPORARY: Transaction simulation for testing
 	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
 
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
-	# 1. Read current value
 	var get_result: DebugAction.Result = await op_manager.execute("get_value_async", [path])
 	if not get_result.is_success():
 		return {
@@ -111,13 +99,11 @@ func _perform_counter_transaction(
 			"error": "Failed to read current value"
 		}
 
-	# 2. Extract current counter
 	var current_data: Dictionary = (
 		get_result.get_payload() if get_result.get_payload() is Dictionary else {}
 	)
 	var current_counter: int = current_data.get("counter") if current_data.has("counter") else 0
 
-	# 3. Increment counter
 	var new_counter: int = current_counter + 1
 	var updated_data: Dictionary = {
 		"counter": new_counter,
@@ -126,7 +112,6 @@ func _perform_counter_transaction(
 		"transaction_number": transaction_number
 	}
 
-	# 4. Write updated value (in real transaction, this would be atomic)
 	var set_result: DebugAction.Result = await op_manager.execute(
 		"set_value_async", [path, updated_data]
 	)

@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_child_removed_listener_action.gd
 class_name RTDBChildRemovedListenerAction
 extends RTDBDebugAction
 
@@ -13,7 +12,6 @@ func _init() -> void:
 	description = "Sets up a listener for when children are removed from a specific RTDB path and verifies it works."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
@@ -29,22 +27,18 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
 	_listener_helper = ListenerTestHelper.new()
 	_listener_helper.reset()
 
 	_update_status("Setting up child removed listener...")
 
-	# Connect to child_removed signal using the wrapper's method
 	if not db.db.is_signal_connected("child_removed", _on_child_removed):
 		db.db.connect_signal("child_removed", _on_child_removed)
 
-	# Start listening at path
 	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
-	# Create test child then remove it
 	var child_key: String = "temp_child_" + str(TimeUtils.now_ms())
 	var child_path: Array[Variant] = _active_path + [child_key]
 	var child_data: Dictionary = {
@@ -53,13 +47,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"child_id": child_key
 	}
 
-	# Set child data first
 	_update_status("Creating test child...")
 	var _set_success: bool = await execute_simple_operation(
 		"set_value_async", child_path, child_data, "Create Child for Removal Test"
 	)
 
-	# Wait briefly then remove to trigger listener
 	await Engine.get_main_loop().create_timer(0.5).timeout
 
 	_update_status("Removing child to trigger listener...")
@@ -67,7 +59,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"remove_value_async", child_path, null, "Remove Child to Trigger Listener"
 	)
 
-	# Wait for callback
 	_update_status("Waiting for listener callback...")
 	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
@@ -109,7 +100,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

@@ -12,7 +12,6 @@ func _init() -> void:
 
 
 func _execute_semantic_logging_test() -> DebugAction.Result:
-	# Ensure session exists (will create one if needed)
 	var session_id: String = SessionManager.get_current_session_id()
 
 	Log.info(
@@ -21,14 +20,12 @@ func _execute_semantic_logging_test() -> DebugAction.Result:
 		["semantic_action", "test"]
 	)
 
-	# Test manual semantic action logging
 	SemanticActionLogger.log_action(
 		"test.manual_action", {"test_parameter": "test_value", "number_parameter": 42}
 	)
 
 	SemanticActionLogger.log_action("test.another_action", {"action_type": "verification"})
 
-	# Check session info
 	var session_info: Dictionary = SemanticActionLogger.get_session_info()
 
 	Log.info(
@@ -37,7 +34,6 @@ func _execute_semantic_logging_test() -> DebugAction.Result:
 		["semantic_action", "test"]
 	)
 
-	# Session continues for full gameplay - no need to end manually
 
 	return DebugAction.Result.new_success(
 		(

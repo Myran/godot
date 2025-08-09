@@ -1,15 +1,11 @@
 class_name SemanticActionLogger
 extends RefCounted
 
-# Enhanced semantic action logging with proper session management
-# Delegates to SessionManager for session handling and uses improved logging format
 
-# Compatibility wrapper for existing code - delegates to SessionManager
 static func log_action(action_type: String, data: Dictionary = {}) -> void:
 	"""Log a semantic player action with session context (compatibility wrapper)"""
 	SessionManager.log_semantic_action(action_type, data)
 
-# Session info (read-only) - delegates to SessionManager
 static func get_session_info() -> Dictionary:
 	"""Get current session info (read-only compatibility wrapper)"""
 	return {
@@ -18,7 +14,6 @@ static func get_session_info() -> Dictionary:
 		"is_active": not SessionManager.current_session_id.is_empty()
 	}
 
-# Enhanced logging methods using SemanticLogger
 static func log_draft_action(action_type: String, data: Dictionary = {}) -> void:
 	"""Enhanced draft action logging"""
 	match action_type:
@@ -40,7 +35,6 @@ static func log_draft_action(action_type: String, data: Dictionary = {}) -> void
 				data.get("new_state", false)
 			)
 		_:
-			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)
 
 static func log_lineup_action(action_type: String, data: Dictionary = {}) -> void:
@@ -53,7 +47,6 @@ static func log_lineup_action(action_type: String, data: Dictionary = {}) -> voi
 				data.get("to_position", -1)
 			)
 		_:
-			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)
 
 static func log_state_transition(from_state: String, to_state: String) -> void:
@@ -69,10 +62,8 @@ static func log_battle_action(action_type: String, data: Dictionary = {}) -> voi
 				data.get("enemy_lineup", [])
 			)
 		_:
-			# Fallback to basic logging
 			SessionManager.log_semantic_action(action_type, data)
 
-# Compatibility methods for existing code (deprecated - use SessionManager directly)
 static func _ensure_session_active() -> void:
 	"""Ensure session is active (compatibility - now just ensures gameplay session exists)"""
 	SessionManager.get_current_session_id()  # This will create one if needed

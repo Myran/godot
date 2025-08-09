@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_timeout_behavior_test_action.gd
 class_name CPPTimeoutBehaviorTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "cpp.firebase.timeout_behavior"
 
 
-# Modern DebugAction.Result pattern
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ basic operations (timeout method removed)...")
@@ -17,7 +15,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var passed_tests: int = 0
 	var total_tests: int = 0
 
-	# Test 1: Basic set operation
 	_update_status("Testing basic set operation...")
 	var set_result: Variant = await execute_cpp_operation(
 		"set_value_async",
@@ -34,7 +31,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		passed_tests += 1
 	total_tests += 1
 
-	# Test 2: Basic get operation
 	_update_status("Testing basic get operation...")
 	var get_result: Variant = await execute_cpp_operation(
 		"get_value_async",
@@ -51,7 +47,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		passed_tests += 1
 	total_tests += 1
 
-	# Test 3: Sequential operations
 	_update_status("Testing sequential operations...")
 	var sequential_success: bool = true
 	for i: int in range(3):
@@ -119,9 +114,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()
 
-# Removed timeout-related helper methods since timeout functionality was removed

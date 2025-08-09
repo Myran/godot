@@ -1,11 +1,9 @@
 extends MarginContainer
 
-# Member variables with types
 @onready var viewport: Viewport = get_viewport()
 @onready var screen_size: Vector2 = viewport.get_visible_rect().size
 
 
-# Functions with return type annotations
 func _ready() -> void:
 	viewport.connect("size_changed", Callable(self, "resize_window"))
 	resize_window()

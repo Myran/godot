@@ -1,11 +1,6 @@
 @tool
 class_name LoggerDock extends Control
-## Editor dock for configuring the Advanced Logger settings
-##
-## Coordinates controllers that manage different aspects of the logger UI.
-## Acts as a facade for the more specialized controller classes.
 
-# Preload required dependencies
 const TagScanner = preload("res://addons/advanced_logger/utils/tag_scanner.gd")
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const TagCategories = preload("res://addons/advanced_logger/utils/tag_categories.gd")
@@ -18,10 +13,8 @@ const TagsTabController = preload("res://addons/advanced_logger/ui/tags_tab_cont
 const SettingsTabController = preload("res://addons/advanced_logger/ui/settings_tab_controller.gd")
 const SetupDialogController = preload("res://addons/advanced_logger/ui/setup_dialog_controller.gd")
 
-# Manager instances
 var _config: ConfigManager = null
 
-# Controller instances
 var _tag_list_controller: TagListController
 var _setup_list_controller: SetupListController
 var _drag_drop_helper: DragDropHelper
@@ -29,13 +22,10 @@ var _tags_tab_controller: TagsTabController
 var _settings_tab_controller: SettingsTabController
 var _setup_dialog_controller: SetupDialogController
 
-# Debug flag
 var _show_editor_debug: bool = false
 
-# UI Components
 @onready var _startup_message: Label = $VBoxContainer/StartupMessage
 
-# UI reference shortcuts
 @onready var _level_option: OptionButton = $VBoxContainer/TabContainer/Tags/LevelSection/LevelOption
 @onready var _available_tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/AvailableTagsSection/ScrollContainer/TagsList
 @onready var _tags_list: ItemList = $VBoxContainer/TabContainer/Tags/TagsContainer/TagsSection/ScrollContainer/TagsList
@@ -56,46 +46,33 @@ var _show_editor_debug: bool = false
 @onready var _reset_button: Button = $VBoxContainer/TabContainer/Settings/ButtonsSection/ResetButton
 
 func _ready() -> void:
-	# Get config instance
 	_config = ConfigManager.get_instance()
 
-	# Register for configuration changes
 	_config.config_changed.connect(_on_config_changed)
 
-	# Load the debug flag
 	_show_editor_debug = _config.get_show_editor_debug()
 
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: LoggerDock _ready called[/color]" % [LoggerColors.DEBUG_HTML])
 
-	# Create and initialize controllers
 	_initialize_controllers()
 
-	# Display startup message
 	_update_startup_message()
 
-	# Perform initial tag scan if needed
 	call_deferred("_initial_tag_scan")
 
-## Initialize all controllers
 func _initialize_controllers() -> void:
-	# Create base controllers first - but don't set them up yet
 	var setup_manager = TagSetupManager.new(_config)
 	_drag_drop_helper = DragDropHelper.new(TagManager)
 	_tag_list_controller = TagListController.new(TagManager, _config)
 	_setup_list_controller = SetupListController.new(setup_manager)
 
-	# Initialize the tag list controller
-	# We'll connect this one signal here, but let the tab controllers handle the rest
 	_tag_list_controller.tag_moved.connect(_on_tag_moved)
 
-	# Configure ItemLists for drag and drop
 	call_deferred("_configure_item_lists_for_drag_drop")
 
-	# Connect drag and drop signals for tag lists
 	call_deferred("_connect_drag_drop_signals")
 
-	# Initialize the setup dialog controller
 	_setup_dialog_controller = SetupDialogController.new(
 		_config,
 		_tag_list_controller,
@@ -108,7 +85,6 @@ func _initialize_controllers() -> void:
 	_setup_dialog_controller.setup_saved.connect(_on_setup_saved)
 	_setup_dialog_controller.setup_renamed.connect(_on_setup_renamed)
 
-	# Initialize tab controllers
 	_tags_tab_controller = TagsTabController.new(
 		_config,
 		_tag_list_controller,
@@ -146,14 +122,11 @@ func _initialize_controllers() -> void:
 	_settings_tab_controller.settings_reset.connect(_on_settings_reset)
 	_settings_tab_controller.tags_scanned.connect(_on_tags_scanned)
 
-## Override drag and drop methods for Godot 4
 func _get_drag_data(at_position: Vector2) -> Variant:
-	# Check which list the position is over by converting to each list's local coordinates
 	var available_pos = _available_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
 	var active_pos = _tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
 	var ignored_pos = _ignored_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
 
-	# Check if position is inside available tags list
 	if _available_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _available_tags_list.size).has_point(available_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, TagCategories.category_to_string(TagCategories.Category.AVAILABLE))
 		if drag_data:
@@ -164,7 +137,6 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 
-	# Check if position is inside active tags list
 	if _tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _tags_list.size).has_point(active_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_tags_list, TagCategories.category_to_string(TagCategories.Category.ACTIVE))
 		if drag_data:
@@ -175,7 +147,6 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 				TagManager.format_tag_for_display(drag_data.tag)))
 		return drag_data
 
-	# Check if position is inside ignored tags list
 	if _ignored_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _ignored_tags_list.size).has_point(ignored_pos):
 		var drag_data = _drag_drop_helper.get_drag_data_for_list(_ignored_tags_list, TagCategories.category_to_string(TagCategories.Category.IGNORED))
 		if drag_data:
@@ -188,35 +159,23 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 
 	return null
 
-## Configure ItemLists for proper drag and drop behavior
 func _configure_item_lists_for_drag_drop() -> void:
-	# Configure all tag lists to support drag and drop
 	for list in [_available_tags_list, _tags_list, _ignored_tags_list]:
 		if list:
-			# Ensure lists can process mouse events
 			list.mouse_filter = Control.MOUSE_FILTER_PASS
 			list.focus_mode = Control.FOCUS_ALL
 			list.select_mode = ItemList.SELECT_SINGLE
 
-			# Debug output
 			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Configured drag-drop for %s[/color]" % [LoggerColors.DEBUG_HTML, list.name])
 
-## Connect drag and drop signals for each tag list - not needed as we're using Control's _can_drop_data and _drop_data
-## This is kept as a placeholder for reference but functionality has been moved to the Control's methods
 func _connect_drag_drop_signals() -> void:
-	# In Godot 4.4, ItemList doesn't have separate drop signals
-	# The parent Control's _can_drop_data and _drop_data are used instead
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: Using Control's built-in drag-drop handling[/color]" % [LoggerColors.DEBUG_HTML])
 
-## Helper method to determine the target category from a position
-# --- START OF MODIFIED FUNCTION ---
 func _get_target_category_at_position(at_position: Vector2) -> int:
-	# at_position is local to LoggerDock. Convert it to global coordinates.
 	var global_pos: Vector2 = get_global_transform() * at_position
 
-	# Check if the global position is within the global rectangle of each list
 	if _available_tags_list.is_visible_in_tree() and _available_tags_list.get_global_rect().has_point(global_pos):
 		if OS.is_debug_build() and _show_editor_debug:
 			print_rich("[color=#%s]DEBUG: Target identified as AVAILABLE[/color]" % [LoggerColors.DEBUG_HTML])
@@ -235,9 +194,7 @@ func _get_target_category_at_position(at_position: Vector2) -> int:
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: No valid target list found at position[/color]" % [LoggerColors.WARNING_HTML])
 	return -1 # No valid target list found
-# --- END OF MODIFIED FUNCTION ---
 
-## Get the ItemList corresponding to a category
 func _get_list_for_category(category: int) -> ItemList:
 	match category:
 		TagCategories.Category.AVAILABLE: return _available_tags_list
@@ -245,9 +202,7 @@ func _get_list_for_category(category: int) -> ItemList:
 		TagCategories.Category.IGNORED: return _ignored_tags_list
 	return null
 
-## Handles configuration changes - update UI based on changes
 func _on_config_changed(section: String, key: String, value: Variant) -> void:
-	# Refresh tags if they've changed
 	if section == ConfigManager.SECTION_LOGGER and (
 		key == ConfigManager.KEY_ACTIVE_TAGS or
 		key == ConfigManager.KEY_IGNORED_TAGS or
@@ -255,25 +210,19 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 	):
 		_update_startup_message()
 
-	# Refresh setups if they've changed
 	if section == ConfigManager.SECTION_SETUPS:
 		_setup_list_controller.refresh_setups_list()
 
-	# Update debug flag if it changed
 	if section == ConfigManager.SECTION_FORMAT and key == ConfigManager.KEY_SHOW_EDITOR_DEBUG:
 		_show_editor_debug = value
 
-## Updates the startup message with current tag status
 func _update_startup_message() -> void:
-	# Get current tag lists directly from config to ensure we're seeing the saved state
 	var active_tags = _config.get_active_tags()
 	var ignored_tags = _config.get_ignored_tags()
 
-	# Create message about current active and ignored tags
 	var message: String = ""
 
 	if _show_editor_debug:
-		# Show detailed tag information when debug is enabled
 		if active_tags.size() > 0:
 			message += "Active filter tags: " + ", ".join(active_tags)
 		else:
@@ -284,25 +233,20 @@ func _update_startup_message() -> void:
 		else:
 			message += "\nNo ignored tags"
 
-		# Also print to console when debug is enabled
 		print_rich("[color=#%s]Advanced Logger Tags:[/color]" % LoggerColors.INFO_HTML)
 		print_rich("[color=#%s]%s[/color]" % [LoggerColors.INFO_HTML, message])
 	else:
-		# Show simplified message when debug is disabled
 		message = "Logger initialized. Enable 'Show Editor Debug' in Settings tab for detailed logging tests."
 
 	_startup_message.text = message
 
-	# Update tooltips for level tags
 	_update_level_tag_tooltips()
 
-## Update tooltips for level tag items in lists
 func _update_level_tag_tooltips() -> void:
 	_update_tooltip_for_tag_list(_available_tags_list)
 	_update_tooltip_for_tag_list(_tags_list)
 	_update_tooltip_for_tag_list(_ignored_tags_list)
 
-## Helper to update tooltips for a specific list
 func _update_tooltip_for_tag_list(list: ItemList) -> void:
 	if not list:
 		return
@@ -324,67 +268,47 @@ func _update_tooltip_for_tag_list(list: ItemList) -> void:
 					tooltip += "Shows CRITICAL level messages."
 			list.set_item_tooltip(i, tooltip)
 
-## Performs an initial tag scan when the plugin is loaded
 func _initial_tag_scan() -> void:
-	# Check if we need to do an initial scan
 	var tag_lists = _tag_list_controller.get_tag_lists()
 	if tag_lists.available_tags.size() <= 1: # Accounting for possible example tag
 		_on_scan_tags()
 
-## Shows the rename dialog
 func _show_rename_dialog(old_name: String) -> void:
-	# Delegate to the setup dialog controller
 	_setup_dialog_controller.show_rename_dialog(old_name)
 
-#
-# Signal handlers
-#
 
-## Handler for tag setup request
 func _on_tag_setup_requested() -> void:
 	_setup_dialog_controller.show_save_dialog()
 
-## Handler for tag movement
 func _on_tag_moved(_tag: String, _from_category: int, _to_category: int) -> void:
 	_update_startup_message()
 
-## Handler for setup loaded
 func _on_setup_loaded(setup_name: String, active_tags: Array, ignored_tags: Array) -> void:
-	# Let the tags tab controller handle this
 	_tags_tab_controller._on_setup_loaded(setup_name, active_tags, ignored_tags)
 	_update_startup_message()
 
-## Handler for setup saved
 func _on_setup_saved(_setup_name: String) -> void:
 	_update_startup_message()
 
-## Handler for setup renamed
 func _on_setup_renamed(old_name: String, new_name: String) -> void:
-	# If new_name is empty, it's a request to show the rename dialog
 	if new_name.is_empty():
 		_show_rename_dialog(old_name)
 	else:
 		_update_startup_message()
 
-## Handler for tag scanning
 func _on_scan_tags() -> void:
 	_settings_tab_controller._on_scan_tags()
 
-## Handler for tags scanned
 func _on_tags_scanned(_added_count: int) -> void:
 	_update_startup_message()
 
-## Handler for settings saved
 func _on_settings_saved() -> void:
 	_update_startup_message()
 
-## Handler for settings reset
 func _on_settings_reset() -> void:
 	_update_startup_message()
 
-## Can drop data implementation - determines if the drop is valid
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		if OS.is_debug_build() and _show_editor_debug:
 			print_rich("[color=#%s]DEBUG: Invalid drag data for drop validation[/color]" % [LoggerColors.DEBUG_HTML])
@@ -393,7 +317,6 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	var tag = data["tag"]
 	var source = data.get("source", "")
 
-	# Get target category using helper method
 	var target_category = _get_target_category_at_position(at_position)
 
 	if OS.is_debug_build() and _show_editor_debug:
@@ -407,10 +330,8 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if target_category < 0:
 		return false
 
-	# Get tag lists from the controller
 	var tag_lists = _tag_list_controller.get_tag_lists()
 
-	# Use drag_drop_helper to check if drop is valid
 	var source_category = TagCategories.from_string(source)
 	var can_drop = _drag_drop_helper.can_drop_tag(
 		tag,
@@ -425,9 +346,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 	return can_drop
 
-## Drop data implementation - handles the drop
 func _drop_data(at_position: Vector2, data: Variant) -> void:
-	# Validate the data
 	if not data is Dictionary or not data.has("type") or data["type"] != "tag" or not data.has("tag"):
 		if OS.is_debug_build() and _show_editor_debug:
 			print_rich("[color=#%s]DEBUG: Invalid drag data for drop[/color]" % [LoggerColors.ERROR_HTML])
@@ -436,7 +355,6 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	var tag = data["tag"]
 	var source = data.get("source", "")
 
-	# Get target category using helper method
 	var target_category = _get_target_category_at_position(at_position)
 
 	if OS.is_debug_build() and _show_editor_debug:
@@ -450,16 +368,13 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if target_category < 0:
 		return
 
-	# Get target list
 	var target_list = _get_list_for_category(target_category)
 
-	# Visual feedback
 	if target_list:
 		target_list.add_theme_color_override("font_selected_color", Color.GREEN)
 		await get_tree().create_timer(0.2).timeout
 		target_list.add_theme_color_override("font_selected_color", Color.WHITE)
 
-	# Use the tag list controller to handle the move
 	var source_category = TagCategories.from_string(source)
 
 	if OS.is_debug_build() and _show_editor_debug:

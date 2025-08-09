@@ -3,7 +3,6 @@ class_name DamageShieldAbility extends Ability
 var shield_used: bool = false
 
 
-## Override deep_duplicate to ensure mutable state is properly isolated
 func deep_duplicate() -> Ability:
 	var copy: DamageShieldAbility = DamageShieldAbility.new()
 	copy.persistence_type = self.persistence_type

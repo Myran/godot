@@ -18,13 +18,10 @@ var level: int = 0
 var card_info: Dictionary
 var effects_temp: Array[Variant] = []
 var effects_perm: Array[Variant] = []
-# Single array with metadata-based persistence management
 var abilities: Array[Ability] = []
-# Reference to original unit for battle reconciliation (only set on battle duplicates)
 var battle_original_reference: UnitData = null
 
 
-# Helper to get all active abilities for the current context (e.g., during combat)
 func get_active_abilities() -> Array[Ability]:
 	return abilities
 
@@ -44,7 +41,6 @@ func set_current_attack(new_attack: int) -> void:
 func init_with_info(_card_info: Dictionary) -> void:
 	card_info = _card_info
 
-	# Check if abilities exists in the card info
 	var abilities_string: String = ""
 	if card_info.has("abilities"):
 		abilities_string = card_info.abilities
@@ -54,12 +50,10 @@ func init_with_info(_card_info: Dictionary) -> void:
 	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_string)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
-			# Template abilities are marked as TEMPLATE
 			_ab.persistence_type = Ability.PersistenceType.TEMPLATE
 			add_ability(_ab)
 
 	var ability: Ability
-	# debug init cards with an ability (template abilities)
 	if card_info.id == str(1):
 		ability = DamageShieldAbility.new()
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
@@ -79,12 +73,9 @@ func init_with_info(_card_info: Dictionary) -> void:
 
 
 func add_ability(_ability: Ability) -> void:
-	# Check for duplicates before adding
-	# if not _has_ability_instance(_ability):
 	abilities.append(_ability)
 
 
-# Helper to check for duplicate ability instances
 func _has_ability_instance(new_ability: Ability) -> bool:
 	for existing_ability: Ability in abilities:
 		if existing_ability.get_class() == new_ability.get_class():
@@ -92,7 +83,6 @@ func _has_ability_instance(new_ability: Ability) -> bool:
 	return false
 
 
-# Helper function to convert persistence type to readable name for debugging
 func _persistence_type_name(persistence_type: int) -> String:
 	match persistence_type:
 		Ability.PersistenceType.TEMPLATE:
@@ -111,7 +101,6 @@ func remove_ability(_ability: Ability) -> void:
 	abilities.erase(_ability)
 
 
-# Get abilities by persistence type
 func get_template_abilities() -> Array[Ability]:
 	return abilities.filter(
 		func(ab: Ability) -> bool: return ab.persistence_type == Ability.PersistenceType.TEMPLATE
@@ -119,7 +108,6 @@ func get_template_abilities() -> Array[Ability]:
 
 
 func get_permanent_abilities() -> Array[Ability]:
-	# Legacy method - returns template abilities for backward compatibility
 	return get_template_abilities()
 
 
@@ -141,7 +129,6 @@ func get_enhancement_abilities() -> Array[Ability]:
 	)
 
 
-# Clear only temporary abilities after battle
 func clear_temporary_abilities() -> void:
 	abilities = abilities.filter(
 		func(ab: Ability) -> bool: return ab.persistence_type != Ability.PersistenceType.TEMPORARY
@@ -205,10 +192,8 @@ func check_draft_abilities(
 		_ability.handle_draft_event(tempus, pos, u, context, event)
 
 
-# --- DEEP COPY HELPERS ---
 
 
-# Create a deep copy of the abilities array with proper state isolation
 func deep_duplicate_abilities() -> Array[Ability]:
 	var duplicated_abilities: Array[Ability] = []
 	for ability: Ability in abilities:
@@ -216,7 +201,6 @@ func deep_duplicate_abilities() -> Array[Ability]:
 	return duplicated_abilities
 
 
-# Create a deep copy of the effects_perm array with proper state isolation
 func deep_duplicate_effects_perm() -> Array[Variant]:
 	var duplicated_effects: Array[Variant] = []
 	for effect: Variant in effects_perm:
@@ -231,15 +215,12 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 				continue
 			duplicated_effects.append(stat_effect.deep_duplicate())
 		else:
-			# For non-StatEffect types, use standard duplication
 			duplicated_effects.append(effect.duplicate(true) if effect is Resource else effect)
 	return duplicated_effects
 
 
-# --- PERMANENT EFFECTS APPLICATION ---
 
 
-# Apply all permanent stat effects to current stats (used for battle copies)
 func apply_permanent_effects_to_current_stats() -> void:
 	var stats_before_attack: int = current_attack
 	var stats_before_health: int = current_health
@@ -286,7 +267,6 @@ func apply_permanent_effects_to_current_stats() -> void:
 				[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh"]
 			)
 
-	# Apply bonuses to base stats (max_attack/max_health are the level-appropriate base stats)
 	max_attack = base_attack + total_attack_bonus
 	max_health = base_health + total_health_bonus
 	current_attack = max_attack
@@ -313,16 +293,12 @@ func apply_permanent_effects_to_current_stats() -> void:
 	)
 
 
-# --- MERGE AND RECONCILIATION LOGIC ---
 
 
-# Transfer acquired abilities from source units during merge
 func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
 	for source_unit: UnitData in source_units:
 		var acquired_abilities: Array[Ability] = source_unit.get_acquired_abilities()
 		for acquired_ability: Ability in acquired_abilities:
-			# Only add if we don't already have this ability type
-			# if not _has_ability_instance(acquired_ability):
 			abilities.append(acquired_ability)
 			Log.debug(
 				"Transferred acquired ability from merge",
@@ -331,7 +307,6 @@ func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
 			)
 
 
-# Transfer stat effects from source units during merge
 func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
 	Log.debug(
 		"Starting StatEffect transfer",
@@ -368,7 +343,6 @@ func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
 						[Log.TAG_ERROR, Log.TAG_MERGE]
 					)
 					continue
-				# Create a deep copy to avoid reference sharing
 				var copied_effect: StatEffect = stat_effect.deep_duplicate()
 				effects_perm.append(copied_effect)
 
@@ -407,7 +381,6 @@ func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
 	)
 
 
-# Transfer both abilities and stat effects from source units during merge
 func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 	Log.debug(
 		"Starting merge effects transfer",
@@ -420,12 +393,10 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 	)
 
-	# Transfer abilities (ACQUIRED + ENHANCEMENT types and temporary)
 	for i: int in range(source_units.size()):
 		var source_unit: UnitData = source_units[i]
 		var source_card_id: String = source_unit.card_info.get("id", "")
 
-		# Debug: Log ALL abilities in source unit with their persistence types
 		Log.debug(
 			"Source unit ability inventory (ALL abilities)",
 			{
@@ -483,7 +454,6 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 			)
 			abilities.append(ability)
 
-	# Transfer stat effects
 	transfer_stat_effects_from(source_units)
 
 	Log.debug(
@@ -497,7 +467,6 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 	)
 
 
-# Optimized transfer directly from Cards (avoids intermediate UnitData array)
 func transfer_merge_effects_from_cards(source_cards: Array[Card]) -> void:
 	var source_units: Array[UnitData] = []
 	for card: Card in source_cards:
@@ -505,7 +474,6 @@ func transfer_merge_effects_from_cards(source_cards: Array[Card]) -> void:
 	transfer_merge_effects_from(source_units)
 
 
-# Called after battle to apply permanent changes from battle duplicates back to originals
 func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 	var _original_effects_count: int = self.effects_perm.size()
 	var _original_abilities_count: int = self.get_acquired_abilities().size()
@@ -523,7 +491,6 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ABILITY]
 	)
 
-	# 1. Update max stats if they changed (abilities can permanently modify stats)
 	if final_battle_state.max_health > self.max_health:
 		self.max_health = final_battle_state.max_health
 		Log.debug(
@@ -539,10 +506,8 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT]
 		)
 
-	# 2. Restore health to max (battle damage is not permanent)
 	self.current_health = self.max_health
 
-	# 3. Transfer NEW permanent stat effects from battle (effects_perm array)
 	var effects_transferred: int = 0
 	for battle_effect: Variant in final_battle_state.effects_perm:
 		if not battle_effect is StatEffect:
@@ -557,7 +522,6 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			)
 			continue
 
-		# Check if we already have this exact effect (avoid duplicates)
 		var already_has_effect: bool = false
 		for existing_effect: Variant in self.effects_perm:
 			if existing_effect is StatEffect:
@@ -581,20 +545,16 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT, Log.TAG_EFFECT]
 			)
 
-	# 4. Transfer ONLY NEW acquired abilities from the battle (ACQUIRED type)
 	var current_ability_classes: Array[String] = []
 	for ab: Ability in self.abilities:
 		current_ability_classes.append(ab.get_class())
 
 	var abilities_transferred: int = 0
 	for battle_ability: Ability in final_battle_state.abilities:
-		# Only transfer ACQUIRED abilities that we don't already have
 		if (
 			battle_ability.persistence_type == Ability.PersistenceType.ACQUIRED
 			and not battle_ability.get_class() in current_ability_classes
 		):
-			# This is a new permanent ability gained during combat!
-			# Convert it to ENHANCEMENT to prevent re-transfer in future combats
 			var enhanced_ability: Ability = battle_ability.deep_duplicate()
 			enhanced_ability.persistence_type = Ability.PersistenceType.ENHANCEMENT
 			self.add_ability(enhanced_ability)
@@ -609,7 +569,6 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ABILITY]
 			)
 
-	# 5. Summary logging for validation
 	Log.info(
 		"Battle reconciliation summary",
 		{
@@ -622,8 +581,6 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_VALIDATION]
 	)
 
-	# **CRITICAL**: Apply newly transferred permanent effects to current stats
-	# This ensures that effects gained during battle affect the unit's current stats
 	if effects_transferred > 0:
 		self.apply_permanent_effects_to_current_stats()
 		Log.debug(
@@ -636,5 +593,3 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT]
 		)
 
-	# Temporary abilities are automatically discarded when battle duplicates are discarded
-	# Original units should only ever have PERMANENT and ACQUIRED abilities

@@ -1,12 +1,9 @@
 extends Node
 
-# Firebase auth error enum is available globally via class_name FirebaseAuthError
 
 signal fb_respons(res: Dictionary)
 signal apple_auth_respons(res: Dictionary)
 
-# We can't use FirebaseAuth type directly as it's not defined in the current scope
-# Using Object with clear naming convention to maintain type safety
 var firebase_auth: Object  # FirebaseAuth instance
 var godot_apple_auth: Object
 var apple_aut_res: Dictionary = {}

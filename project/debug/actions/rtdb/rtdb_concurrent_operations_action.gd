@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_concurrent_operations_action.gd
 class_name RTDBConcurrentOperationsAction
 extends RTDBDebugAction
 
@@ -10,7 +9,6 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -18,7 +16,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var full_path: Array[Variant] = create_test_path(path_suffix)
 	var base_timestamp: int = Time.get_ticks_msec()
 
-	# Define operations to test concurrency
 	var operations: Array[Dictionary] = [
 		{
 			"name": "Set Item 1",
@@ -44,7 +41,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var successful_operations: int = 0
 	var failed_operations: int = 0
 
-	# Execute operations sequentially (real Firebase operations)
 	for operation: Dictionary in operations:
 		var operation_start_time: int = Time.get_ticks_msec()
 		var method_str: String = operation["method"]
@@ -78,10 +74,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 	var overall_success: bool = failed_operations == 0
 
-	# Calculate success rates by operation type
 	var success_rates: Dictionary = {"overall": success_rate, "set_operations": success_rate}  # All operations are sets in this test
 
-	# Use the new specialized factory method for concurrent results
 	return DebugAction.Result.new_concurrent_result(
 		operation_results,
 		success_rates,
@@ -97,7 +91,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

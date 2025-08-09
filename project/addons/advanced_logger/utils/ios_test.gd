@@ -1,19 +1,15 @@
 @tool
 class_name IosLoggerTest
 extends RefCounted
-## Test utility for iOS logger formatting
 
-## Run a test to verify iOS formatting handling
 static func test_ios_formatting():
 	print("\n=== iOS LOGGER FORMATTING TEST ===")
 
-	# Load helpers
 	var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 	if not ios_helper:
 		print("ERROR: Could not load iOS helper")
 		return
 
-	# Test messages with various formatting
 	var test_messages = [
 		"[color=#ff0000]This has BBCode formatting[/color]",
 		"[38;2;216;166;87m]This has ANSI color codes[39m",
@@ -48,7 +44,6 @@ static func test_ios_formatting():
 
 	return "Test completed successfully"
 
-## Entry point - run all tests
 static func run_tests():
 	var result = test_ios_formatting()
 	return result

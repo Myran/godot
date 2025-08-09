@@ -1,16 +1,11 @@
 @tool
 class_name SettingsTabController
 extends RefCounted
-## Controller for the Settings tab in the Logger dock
-##
-## Manages the Settings tab UI, including format settings,
-## tag scanning, and general logger configuration.
 
 signal settings_saved
 signal settings_reset
 signal tags_scanned(added_count: int)
 
-# UI Components (set via setup method)
 var _show_timestamp_check: CheckBox
 var _show_tags_check: CheckBox
 var _use_colors_check: CheckBox
@@ -22,7 +17,6 @@ var _save_button: Button
 var _reset_button: Button
 var _update_tags_button: Button
 
-# Settings cache
 var _show_timestamp: bool = true
 var _show_tags: bool = true
 var _use_colors: bool = true
@@ -31,16 +25,13 @@ var _buffer_size: int = ConfigManager.DEFAULT_BUFFER_SIZE
 var _enable_buffer_dump: bool = ConfigManager.DEFAULT_ENABLE_BUFFER_DUMP
 var _show_editor_debug: bool = ConfigManager.DEFAULT_SHOW_EDITOR_DEBUG
 
-# Local reference for convenience
 var _show_debug: bool = false
 
-# Dependencies (injected in constructor)
 var _config: ConfigManager
 var _tag_list_controller: TagListController
 var _parent_dock: Control
 
 
-# Constructor with dependency injection
 func _init(
 	config: ConfigManager, tag_list_controller: TagListController, parent_dock: Control
 ) -> void:
@@ -49,7 +40,6 @@ func _init(
 	_parent_dock = parent_dock
 
 
-## Setup UI components - called by the main dock
 func setup(
 	show_timestamp_check: CheckBox,
 	show_tags_check: CheckBox,
@@ -62,7 +52,6 @@ func setup(
 	reset_button: Button,
 	update_tags_button: Button
 ) -> void:
-	# Store references to UI components
 	_show_timestamp_check = show_timestamp_check
 	_show_tags_check = show_tags_check
 	_use_colors_check = use_colors_check
@@ -74,7 +63,6 @@ func setup(
 	_reset_button = reset_button
 	_update_tags_button = update_tags_button
 
-	# Connect UI signals
 	_show_timestamp_check.toggled.connect(_on_show_timestamp_toggled)
 	_show_tags_check.toggled.connect(_on_show_tags_toggled)
 	_use_colors_check.toggled.connect(_on_use_colors_toggled)
@@ -86,13 +74,10 @@ func setup(
 	_reset_button.pressed.connect(_on_reset_settings)
 	_update_tags_button.pressed.connect(_on_scan_tags)
 
-	# Load current settings from config
 	_load_settings_from_config()
 
 
-## Load settings from the ConfigManager
 func _load_settings_from_config() -> void:
-	# Load format settings
 	_show_timestamp = _config.get_show_timestamp()
 	_show_timestamp_check.button_pressed = _show_timestamp
 
@@ -105,31 +90,25 @@ func _load_settings_from_config() -> void:
 	_show_source = _config.get_show_source()
 	_show_source_check.button_pressed = _show_source
 
-	# Load buffer settings
 	_buffer_size = _config.get_buffer_size()
 	_buffer_size_spin.value = _buffer_size
 
 	_enable_buffer_dump = _config.get_enable_buffer_dump()
 	_enable_buffer_dump_check.button_pressed = _enable_buffer_dump
 
-	# Load editor debug settings
 	_show_editor_debug = _config.get_show_editor_debug()
 	_show_editor_debug_check.button_pressed = _show_editor_debug
 
-	# Local variable for convenience
 	_show_debug = _show_editor_debug
 
 
-## Scan for tags in the project
 func _on_scan_tags() -> void:
 	if _show_debug:
 		print_rich("[color=#%s]Scanning project for Log tags...[/color]" % LoggerColors.INFO_HTML)
 
-	# Determine directories to exclude based on project settings
 	var exclude_dirs: Array[String] = []
 	var include_test_tags = ProjectSettings.get_setting("advanced_logger/include_test_tags", false)
 
-	# If not including test tags, exclude the tests directory
 	if not include_test_tags:
 		exclude_dirs.append("res://tests/")
 		if _show_editor_debug:
@@ -137,7 +116,6 @@ func _on_scan_tags() -> void:
 	elif _show_editor_debug:
 		print_rich("[color=#%s]Including test tags[/color]" % LoggerColors.INFO_HTML)
 
-	# Let the controller handle the scan
 	var added_count = _tag_list_controller.scan_tags(exclude_dirs)
 
 	if _show_debug:
@@ -148,33 +126,25 @@ func _on_scan_tags() -> void:
 			)
 		)
 
-	# Test iOS logging while scanning
 	if _show_editor_debug:
 		_test_platform_logging()
 
-	# Signal the results
 	tags_scanned.emit(added_count)
 
-	# Update the startup message
 	_parent_dock.call("_update_startup_message")
 
 
-## Save settings to config
 func _save_settings_to_config() -> Error:
-	# Save format settings
 	_config.set_show_timestamp(_show_timestamp)
 	_config.set_show_tags(_show_tags)
 	_config.set_use_colors(_use_colors)
 	_config.set_show_source(_show_source)
 
-	# Save buffer settings
 	_config.set_buffer_size(_buffer_size)
 	_config.set_enable_buffer_dump(_enable_buffer_dump)
 
-	# Save editor debug settings
 	_config.set_show_editor_debug(_show_editor_debug)
 
-	# Save the config
 	var result = _config.save()
 
 	if result == OK:
@@ -187,9 +157,7 @@ func _save_settings_to_config() -> Error:
 	return result
 
 
-## Apply default settings
 func _apply_defaults() -> void:
-	# Set defaults using config default values
 	_show_timestamp = ConfigManager.DEFAULT_SHOW_TIMESTAMP
 	_show_tags = ConfigManager.DEFAULT_SHOW_TAGS
 	_use_colors = ConfigManager.DEFAULT_USE_COLORS
@@ -198,7 +166,6 @@ func _apply_defaults() -> void:
 	_enable_buffer_dump = ConfigManager.DEFAULT_ENABLE_BUFFER_DUMP
 	_show_editor_debug = ConfigManager.DEFAULT_SHOW_EDITOR_DEBUG
 
-	# Update UI
 	_show_timestamp_check.button_pressed = _show_timestamp
 	_show_tags_check.button_pressed = _show_tags
 	_use_colors_check.button_pressed = _use_colors
@@ -207,23 +174,19 @@ func _apply_defaults() -> void:
 	_enable_buffer_dump_check.button_pressed = _enable_buffer_dump
 	_show_editor_debug_check.button_pressed = _show_editor_debug
 
-	# Clear tag lists through the tag list controller
 	var tag_lists = _tag_list_controller.get_tag_lists()
 	tag_lists.available_tags.clear()
 	tag_lists.active_tags.clear()
 	tag_lists.ignored_tags.clear()
 	_tag_list_controller.refresh_tag_lists()
 
-	# Save to config
 	_save_settings_to_config()
 	_tag_list_controller.save_tags_to_config()
 
 
-## Test iOS and Android logger implementation
 func _test_platform_logging() -> void:
 	print_rich("\n[color=#%s]=== TESTING PLATFORM LOGGING ===[/color]" % LoggerColors.INFO_HTML)
 
-	# Check if platform test module is available
 	var platform_test = load("res://addons/advanced_logger/utils/platform_test.gd")
 	if platform_test:
 		platform_test.run_all_tests()
@@ -231,7 +194,6 @@ func _test_platform_logging() -> void:
 	else:
 		print_rich("[color=#%s]Platform test module not found[/color]" % LoggerColors.ERROR_HTML)
 
-	# Run iOS-specific formatting tests
 	var ios_test = load("res://addons/advanced_logger/utils/ios_test.gd")
 	if ios_test:
 		ios_test.run_tests()
@@ -239,13 +201,11 @@ func _test_platform_logging() -> void:
 	else:
 		print_rich("[color=#%s]iOS test module not found[/color]" % LoggerColors.ERROR_HTML)
 
-	# Test iOS specific logging
 	var current_platform = OS.get_name()
 
 	print_rich("[color=#%s]Current platform: %s[/color]" % [LoggerColors.INFO_HTML, current_platform])
 	print_rich("[color=#%s]Testing platform-specific logging...[/color]" % LoggerColors.INFO_HTML)
 
-	# Load platform helpers if available
 	var ios_helper = null
 	var android_helper = null
 
@@ -257,7 +217,6 @@ func _test_platform_logging() -> void:
 		android_helper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
 		print_rich("[color=#%s]Android helper loaded[/color]" % LoggerColors.SUCCESS_HTML)
 
-	# Test logger instance with simple text (no formatting)
 	print("\n--- Testing logger with simple text ---")
 	Log.debug("Platform Logger Test - Debug Message", {"platform": current_platform}, ["test", "platform"])
 	Log.info("Platform Logger Test - Info Message", {"platform": current_platform}, ["test", "platform"])
@@ -266,7 +225,6 @@ func _test_platform_logging() -> void:
 
 	print_rich("[color=#%s]=== PLATFORM LOGGING TEST COMPLETE ===[/color]\n" % LoggerColors.INFO_HTML)
 
-# Signal handlers for UI events
 
 
 func _on_show_timestamp_toggled(button_pressed: bool) -> void:
@@ -363,5 +321,4 @@ func _on_reset_settings() -> void:
 		print_rich("[color=#%s]Logger settings reset to defaults[/color]" % LoggerColors.INFO_HTML)
 	settings_reset.emit()
 
-	# Update the startup message
 	_parent_dock.call("_update_startup_message")

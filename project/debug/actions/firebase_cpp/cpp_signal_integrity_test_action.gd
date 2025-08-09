@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_signal_integrity_test_action.gd
 class_name CPPSignalIntegrityTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "cpp.firebase.signal_integrity"
 
 
-# Modern DebugAction.Result pattern
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ signal integrity...")
@@ -46,7 +44,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				["debug", "cpp_firebase", "warning"]
 			)
 
-		# No delay needed - proceed immediately to next operation
 
 	var success_rate: float = float(successful_operations) / float(operations_count)
 	var avg_duration: int = (
@@ -102,7 +99,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

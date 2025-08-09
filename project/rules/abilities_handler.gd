@@ -1,4 +1,3 @@
-# ability_parser.gd
 class_name AbilitiesHandler extends Resource
 
 

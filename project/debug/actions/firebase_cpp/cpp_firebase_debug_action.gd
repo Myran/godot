@@ -1,8 +1,6 @@
-# project/debug/actions/firebase_cpp/cpp_firebase_debug_action.gd
 class_name CPPFirebaseDebugAction
 extends DebugAction
 
-# Direct C++ Firebase database instance (NOT wrapped)
 var cpp_db: Object = null
 var cpp_db_instance_id: int = -1
 
@@ -13,7 +11,6 @@ func _init() -> void:
 	action_callable = Callable(self, "_execute_action_logic")
 
 
-# Initialize direct C++ Firebase instance
 func get_cpp_firebase_database() -> Object:
 	if cpp_db != null and is_instance_valid(cpp_db):
 		return cpp_db
@@ -42,7 +39,6 @@ func get_cpp_firebase_database() -> Object:
 	return cpp_db
 
 
-# Type-safe C++ operation with consistent async pattern (based on FirebaseOperationManager)
 func execute_cpp_operation(
 	method_name: String, args: Array, operation_name: String = "", operation_type: String = ""
 ) -> Variant:
@@ -56,11 +52,9 @@ func execute_cpp_operation(
 	var op_name: String = operation_name if not operation_name.is_empty() else method_name
 	_update_status("🚀 Starting: " + op_name + "...")
 
-	# Generate unique request ID
 	var request_id: int = Time.get_ticks_msec()
 	var full_args: Array = [request_id] + args
 
-	# Setup operation tracking (consistent with FirebaseOperationManager pattern)
 	var op_data: Dictionary = {
 		"operation": method_name,
 		"completed": false,
@@ -70,7 +64,6 @@ func execute_cpp_operation(
 		"request_id": request_id
 	}
 
-	# Connect to completion signal
 	var signal_name: String = method_name.replace("_async", "_completed")
 	var signal_string_name: StringName = StringName(signal_name)
 
@@ -78,16 +71,13 @@ func execute_cpp_operation(
 		_update_status("ERROR: Signal not found: " + signal_name, true)
 		return null
 
-	# Create signal handler that updates operation state
 	var handler: Callable = _create_operation_handler(
 		op_data, operation_type, request_id, start_time, op_name, method_name
 	)
 	db.connect(signal_string_name, handler, Object.CONNECT_ONE_SHOT)
 
-	# Call C++ method
 	db.callv(method_name, full_args)
 
-	# Wait for completion using polling pattern (consistent with FirebaseOperationManager)
 	while not op_data.completed:
 		await Engine.get_main_loop().process_frame
 
@@ -101,10 +91,8 @@ func execute_cpp_operation(
 	return op_data.result
 
 
-# Removed problematic execute_cpp_operation_with_timeout method - use execute_cpp_operation instead
 
 
-# Create operation handler that updates state (consistent with FirebaseOperationManager)
 func _create_operation_handler(
 	op_data: Dictionary,
 	operation_type: String,
@@ -129,7 +117,6 @@ func _create_operation_handler(
 				op_data.error = "Unknown operation type: " + operation_type
 
 
-# Handler for get_value_completed(int request_id, String key, Variant data) - state-based
 func _create_get_value_state_handler(
 	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
@@ -160,8 +147,6 @@ func _create_get_value_state_handler(
 				)
 
 
-# Handler for set_value_completed/remove_value_completed
-#(int request_id, bool success, String error_message) - state-based
 func _create_set_value_state_handler(
 	op_data: Dictionary, request_id: int, start_time: int, _op_name: String, method_name: String
 ) -> Callable:
@@ -186,7 +171,6 @@ func _create_set_value_state_handler(
 				)
 
 
-# State validation execution - delegates to actual C++ logic
 func execute_with_state_validation(
 	session_id: String = "", sequence: int = -1
 ) -> DebugAction.Result:
@@ -199,7 +183,6 @@ func execute_with_state_validation(
 		["debug", "cpp_firebase", "state_validation"]
 	)
 
-	# Call the actual C++ action implementation
 	var success: bool = execute_cpp_action()
 	var duration: int = Time.get_ticks_msec() - start_time
 
@@ -229,7 +212,6 @@ func execute_with_state_validation(
 		)
 
 
-# Modern DebugAction.Result pattern - default fallback implementation
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	push_error("_execute_action_logic() not implemented in " + get_script().get_path())
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
@@ -244,7 +226,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Legacy method - subclasses override this
 func execute_cpp_action() -> bool:
 	push_error("execute_cpp_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_cpp_action() not implemented", true)

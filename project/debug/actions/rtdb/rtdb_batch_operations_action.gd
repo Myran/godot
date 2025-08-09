@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_batch_operations_action.gd
 class_name RTDBBatchOperationsAction
 extends RTDBDebugAction
 
@@ -10,7 +9,6 @@ func _init() -> void:
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -29,7 +27,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var batch_operations: Array[Dictionary] = []
 	var base_timestamp: int = TimeUtils.now_ms()
 
-	# Define multiple operations to perform in batch
 	var operations_to_perform: Array[Dictionary] = [
 		{
 			"type": "set",
@@ -54,16 +51,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		{"type": "get", "path": full_path + ["batch_item_2"], "data": null}
 	]
 
-	# Execute batch operations
 	for i: int in range(operations_to_perform.size()):
 		var operation: Dictionary = operations_to_perform[i]
 		var operation_result: Dictionary = await _execute_single_operation(db, operation, i)
 		batch_operations.append(operation_result)
 
-		# Brief delay between operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
-	# Calculate success rate
 	var successful_operations: int = 0
 	for result: Dictionary in batch_operations:
 		if result.get("success", false):
@@ -75,7 +69,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# Use the new specialized factory method for batch results
 	return DebugAction.Result.new_batch_result(
 		batch_operations,
 		success_rate,
@@ -89,7 +82,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()
@@ -118,7 +110,6 @@ func _execute_single_operation(
 			}
 
 		"update":
-			# Use set for now as C++ module may not have update_value_async
 			var success_bool: bool = await execute_simple_operation(
 				"set_value_async", operation_path, operation_data, "Batch Update Operation"
 			)

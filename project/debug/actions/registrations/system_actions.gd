@@ -1,10 +1,6 @@
-# project/debug/actions/registrations/system_actions.gd
-# System-level debug actions for infrastructure and platform utilities
 
 class_name SystemActions
 
-# Using class_name resolution instead of preload as requested
-# Preload test actions that aren't found automatically
 const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
@@ -13,14 +9,12 @@ const StateExtractorGreenPhaseScript = preload(
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_debug_system_actions(registry)
 	_register_integrity_actions(registry)
-	# Legacy checksum actions removed - now using semantic logging approach
 	_register_test_actions(registry)
 
 	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 
 
 static func _register_debug_system_actions(registry: DebugActionRegistry) -> void:
-	# Registry introspection utilities
 	registry.register_action(
 		(
 			DebugAction
@@ -33,7 +27,6 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 		)
 	)
 
-	# Registry introspection utilities
 	registry.register_action(
 		(
 			DebugAction
@@ -44,7 +37,6 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 		)
 	)
 
-	# Debug menu visibility control
 	registry.register_action(
 		(
 			DebugAction
@@ -66,11 +58,9 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	)
 
 
-# System action implementations
 
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
-	# Display debug action registry statistics
 	var stats: Dictionary = {
 		"total_actions": registry.get_all_actions().size(),
 		"total_categories": registry.get_categories().size(),
@@ -97,19 +87,15 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 
 
 static func _quit_application() -> bool:
-	# Capture final state before quitting for replay validation
 	_capture_final_state()
 
-	# End gameplay session before quitting
 	SessionManager.end_gameplay_session()
-	# Quit the application
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
 	return true
 
 
 static func _capture_final_state() -> void:
 	"""Capture final game state before quitting for replay validation"""
-	# Extract final game state using existing StateExtractor infrastructure
 	var final_state: Dictionary = StateExtractor.extract_game_state()
 
 	if final_state.is_empty():
@@ -123,7 +109,6 @@ static func _capture_final_state() -> void:
 		)
 		return
 
-	# Generate deterministic checksum for final state validation
 	var final_checksum: String = StateExtractor.generate_checksum(final_state)
 
 	if final_checksum.is_empty():
@@ -138,7 +123,6 @@ static func _capture_final_state() -> void:
 		)
 		return
 
-	# Log final state capture for replay validation
 	Log.info(
 		"FINAL_STATE_CAPTURED",
 		{
@@ -165,51 +149,36 @@ static func _capture_final_state() -> void:
 	)
 
 
-# RTDB status check function removed - Firebase classes not consistently available across platforms
 
-# Legacy _validate_checksum function removed - now using semantic logging approach
 
-# Legacy checksum validation completely removed - functionality replaced by semantic logging
 
 
 static func _register_integrity_actions(registry: DebugActionRegistry) -> void:
-	# Recording and replay system integrity validation actions
 	Log.info("Registering integrity validation actions", {}, ["debug", "integrity", "registration"])
 
-	# Register recording system integrity validation
 	var recording_integrity: SystemRecordingIntegrityAction = SystemRecordingIntegrityAction.new()
 	registry.register_action(recording_integrity)
 
-	# Register replay system integrity validation
 	var replay_integrity: SystemReplayIntegrityAction = SystemReplayIntegrityAction.new()
 	registry.register_action(replay_integrity)
 
 
 static func _register_test_actions(registry: DebugActionRegistry) -> void:
-	# Test actions for validating Phase 1 implementation
 	Log.info("Registering test actions", {}, ["debug", "test", "registration"])
 
-	# Legacy test removed - TestEventCategorizationAction referenced deleted ActionRecorder
 
-	# Duplicate test action removed - use game.test.simple_player_events instead
 
-	# Legacy test removed - TestBasicActionSerialization referenced deleted RecordedAction class
 
-	# Legacy test files removed - no longer registering deleted test actions
 
-	# Register semantic logging test using class_name
 	var semantic_logging_test: TestSemanticLoggingAction = TestSemanticLoggingAction.new()
 	registry.register_action(semantic_logging_test)
 
-	# TDD GREEN PHASE - StateExtractor implementation validation (SHOULD PASS)
 	var state_extractor_green_test: StateExtractorGreenPhaseScript = (
 		StateExtractorGreenPhaseScript.new()
 	)
 	registry.register_action(state_extractor_green_test)
 
-	# Legacy Phase 2 test actions removed - development phase testing no longer needed
 
-	# TDD Phase 3 (GREEN) - Register interactive replay actions
 	registry.register_action(
 		(
 			DebugAction
@@ -303,7 +272,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# TDD RED Phase - These actions test desktop functionality that doesn't exist yet
 	registry.register_action(
 		(
 			DebugAction
@@ -344,8 +312,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	)
 
 
-# Legacy _generate_simple_player_events function removed - duplicate functionality
-# Use game.test.simple_player_events instead
 
 
 static func _hide_debug_menu() -> bool:
@@ -362,7 +328,6 @@ static func _show_debug_menu() -> bool:
 	return true
 
 
-# TDD Phase 3 (GREEN) - Interactive replay action implementations
 static func _test_replay_generation_no_quit() -> bool:
 	"""Test replay config generation functionality without quit action"""
 	Log.info(
@@ -375,8 +340,6 @@ static func _test_replay_generation_no_quit() -> bool:
 		["debug", "test", "replay", "interactive"]
 	)
 
-	# Simulate replay config generation without quit action
-	# This is a test action to validate the TDD workflow
 	Log.info(
 		"Replay generation test completed - no quit action included",
 		{"success": true, "interactive_mode": true},
@@ -401,7 +364,6 @@ static func _replay_complete() -> bool:
 		["debug", "replay", "complete", "context"]
 	)
 
-	# Log final lineup state for verification
 	_log_lineup_final_state()
 
 	if execution_context.mode == "automated":
@@ -415,7 +377,6 @@ static func _replay_complete() -> bool:
 			["debug", "replay", "automated", "quit"]
 		)
 
-		# Send TEST_COMPLETE signal before quitting for test framework recognition
 		var current_test_id: String = DebugAction.get_current_test_id()
 		Log.info(
 			"Debug: Current test ID",
@@ -434,8 +395,6 @@ static func _replay_complete() -> bool:
 				["debug", "test", "complete", "automated"]
 			)
 		else:
-			# Generate a fallback test ID based on current timestamp
-			# Try to get config name from environment or use generic fallback
 			var config_name: String = "unknown-config"
 			if OS.has_environment("CURRENT_CONFIG_NAME"):
 				config_name = OS.get_environment("CURRENT_CONFIG_NAME")
@@ -455,7 +414,6 @@ static func _replay_complete() -> bool:
 				["debug", "test", "complete", "automated"]
 			)
 
-		# Quit automatically for CI/automated testing
 		return _quit_application()
 	else:
 		Log.info(
@@ -469,7 +427,6 @@ static func _replay_complete() -> bool:
 			["debug", "replay", "manual", "interactive"]
 		)
 
-		# Log semantic action for recording system integration
 		Log.info(
 			"SEMANTIC_ACTION",
 			{
@@ -486,7 +443,6 @@ static func _replay_complete() -> bool:
 
 static func _log_lineup_final_state() -> void:
 	"""Log the final state of all cards in the lineup for verification"""
-	# Get the game handler through the scene tree
 	var main_node: Node = Engine.get_main_loop().current_scene
 	if not main_node:
 		Log.error(
@@ -513,7 +469,6 @@ static func _log_lineup_final_state() -> void:
 		)
 		return
 
-	# Get all cards in the lineup through the holder container
 	var lineup: Dictionary = lineup_handler.holder_container.get_current_lineup()
 	var lineup_states: Array[Dictionary] = []
 
@@ -532,7 +487,6 @@ static func _log_lineup_final_state() -> void:
 				"abilities_count": card.unit_info.abilities.size()
 			}
 
-			# Add detailed StatEffect information
 			var effects_details: Array[Dictionary] = []
 			for effect: Variant in card.unit_info.effects_perm:
 				if effect is StatEffect:
@@ -577,7 +531,6 @@ static func _detect_execution_context() -> Dictionary:
 		"mode": "manual", "platform": OS.get_name(), "command_source": "default_manual"  # Default to manual mode
 	}
 
-	# Primary: Check debug config metadata directly (no environment variables)
 	var metadata: Dictionary = DebugConfigReader.get_metadata()
 	if metadata.has("auto_quit"):
 		if metadata.auto_quit == true:
@@ -588,7 +541,6 @@ static func _detect_execution_context() -> Dictionary:
 			context.command_source = "config_metadata"
 		return context
 
-	# Fallback: Check for CI environment variables (keep for CI/CD systems)
 	if (
 		OS.has_environment("CI")
 		or OS.has_environment("GITHUB_ACTIONS")
@@ -598,7 +550,6 @@ static func _detect_execution_context() -> Dictionary:
 		context.command_source = "ci_environment"
 		return context
 
-	# Default: manual mode for interactive development
 	return context
 
 
@@ -608,11 +559,9 @@ static func _capture_rng_state() -> bool:
 		Log.error("RNG system not available for state capture", {}, ["debug", "rng", "error"])
 		return false
 
-	# Generate checksum from RNG sequence (same method as determinism tests)
 	var rng_sequence: Array = rng.seeded_rng._result_sequence
 	var rng_checksum: String = str(rng_sequence).md5_text()
 
-	# Log RNG state capture for test framework recognition
 	Log.info(
 		"FINAL_STATE_CAPTURED",
 		{
@@ -643,10 +592,8 @@ static func _finalize_replay_validation() -> bool:
 	"""Finalize replay validation and output comprehensive checksum summary"""
 	Log.info("Finalizing replay validation...", {}, ["debug", "replay", "validation", "finalize"])
 
-	# Get comprehensive validation summary
 	var validation_summary: Dictionary = SessionManager.finalize_replay_validation()
 
-	# Create detailed report
 	var replay_determinism_report: Dictionary = {
 		"validation_summary": validation_summary,
 		"determinism_status": "PASSED" if validation_summary.replay_deterministic else "FAILED",
@@ -658,14 +605,12 @@ static func _finalize_replay_validation() -> bool:
 		"finalization_timestamp": Time.get_datetime_string_from_system()
 	}
 
-	# Log the comprehensive report
 	Log.info(
 		"REPLAY_DETERMINISM_VALIDATION_REPORT",
 		replay_determinism_report,
 		["replay", "validation", "determinism", "report"]
 	)
 
-	# Log result for easy parsing by CI/CD
 	if validation_summary.replay_deterministic:
 		Log.info(
 			"REPLAY_VALIDATION_SUCCESS: All gamestate checksums matched original session",
@@ -686,7 +631,6 @@ static func _finalize_replay_validation() -> bool:
 	return validation_summary.replay_deterministic
 
 
-# TDD GREEN Phase - Desktop functionality test implementations (now PASS)
 static func _test_desktop_functionality() -> bool:
 	"""TDD GREEN Phase: Test desktop test execution functionality (should PASS)"""
 	Log.info(
@@ -733,7 +677,6 @@ static func _test_platform_agnostic_replay() -> bool:
 	return true  # TDD GREEN phase - functionality implemented and working
 
 
-## CRITICAL INTEGRATION TESTS - COMPANY SURVIVAL DEPENDENT
 
 
 static func _test_state_validation_integration() -> DebugAction.Result:
@@ -747,29 +690,23 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 	var test_session_id: String = "integration_test_" + str(Time.get_unix_time_from_system())
 	var test_sequence: int = 1
 
-	# Test 1: SessionManager integration (updated for simplified system)
 	Log.info(
 		"Testing SessionManager simplified checksum system...", {}, ["debug", "test", "integration"]
 	)
 
-	# Note: State storage/retrieval methods were removed during simplification
-	# The system now uses semantic logging with automatic checksum capture
 	SessionManager.log_semantic_action("test.integration", {"test": "integration_data"})
 
-	# Simplified system doesn't store/retrieve separate pre/post states
 	Log.info(
 		"SessionManager integration updated for simplified checksum system",
 		{"note": "State storage methods removed, using semantic logging checksums"},
 		["debug", "test", "integration"]
 	)
 
-	# Test 2: StateExtractor checksum generation
 	Log.info("Testing StateExtractor checksum generation...", {}, ["debug", "test", "integration"])
 	var test_state: Dictionary = {"test": "integration_data", "sequence": test_sequence}
 	var checksum: String = StateExtractor.generate_checksum(test_state)
 	var checksum_valid: bool = not checksum.is_empty() and checksum.length() > 0
 
-	# Test 3: SemanticActionMapper integration
 	Log.info(
 		"Testing SemanticActionMapper with validation...", {}, ["debug", "test", "integration"]
 	)
@@ -780,7 +717,6 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 		test_session_id, test_debug_sequence, {"test": true}, "automated", true
 	)
 
-	# Validate results
 	var success: bool = (
 		checksum_valid
 		and not validation_config.is_empty()
@@ -833,7 +769,6 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 		["debug", "test", "integration", "debug_action"]
 	)
 
-	# Create a test action
 	var test_action: DebugAction = (
 		DebugAction
 		. create("test.validation.action", func() -> bool: return true)
@@ -841,7 +776,6 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 		. set_group("Validation")
 	)
 
-	# Test execution with validation
 	var result: DebugAction.Result = await test_action.execute_with_auto_validation()
 
 	var success: bool = result.is_success()
@@ -877,13 +811,11 @@ static func _test_semantic_mapper_integration() -> DebugAction.Result:
 		{"action_name": "system.debug.registry_stats", "sequence": 1}
 	]
 
-	# Test with validation enabled
 	var config_with_validation: Dictionary = (
 		SemanticActionMapper
 		. create_replay_config_with_validation(test_session, test_sequence, {}, "automated", true)
 	)
 
-	# Test without validation
 	var config_without_validation: Dictionary = (
 		SemanticActionMapper
 		. create_replay_config_with_validation(test_session, test_sequence, {}, "automated", false)
@@ -934,19 +866,16 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 		["debug", "test", "integration", "state_extractor"]
 	)
 
-	# Test checksum generation with different states
 	var state1: Dictionary = {"lineup": {"cards": [1, 2, 3]}, "game_phase": "draft"}
 	var state2: Dictionary = {"lineup": {"cards": [1, 2, 4]}, "game_phase": "draft"}
 
 	var checksum1: String = StateExtractor.generate_checksum(state1)
 	var checksum2: String = StateExtractor.generate_checksum(state2)
 
-	# Test that checksums are generated correctly
 	var checksums_valid: bool = (
 		not checksum1.is_empty() and not checksum2.is_empty() and checksum1 != checksum2
 	)  # Different states should have different checksums
 
-	# Test deterministic behavior - same state should give same checksum
 	var checksum1_repeat: String = StateExtractor.generate_checksum(state1)
 	var deterministic: bool = checksum1 == checksum1_repeat
 

@@ -15,5 +15,4 @@ func on_hold_toggle(state: bool, btn: TextureButton) -> void:
 		["ui", "draft"]
 	)
 	var col: int = btn.get_index()
-#	ui.action(ui.EVENT_TYPE.DRAFT_HOLD_TOGGLED,[btn.button_pressed,col])
 	ui.action(ui.DraftHolderToggledEvent.new(btn.button_pressed, col))

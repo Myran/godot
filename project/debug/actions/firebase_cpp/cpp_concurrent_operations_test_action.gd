@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_concurrent_operations_test_action.gd
 class_name CPPConcurrentOperationsTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,14 +7,12 @@ func _init() -> void:
 	action_name = "cpp.firebase.concurrent_ops"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
 	var concurrent_count: int = _params.get("concurrent_count", 4)
 	var test_data: Array[Dictionary] = []
 
-	# Prepare test data
 	for i: int in range(concurrent_count):
 		test_data.append(
 			{
@@ -25,7 +22,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Execute set operations
 	var set_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
 		var operation_start: int = Time.get_ticks_msec()
@@ -50,7 +46,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Execute get operations
 	var get_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
 		var operation_start: int = Time.get_ticks_msec()
@@ -77,7 +72,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Calculate metrics
 	var successful_sets: int = 0
 	var successful_gets: int = 0
 	var matching_values: int = 0
@@ -100,12 +94,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		set_success_rate >= 0.8 and get_success_rate >= 0.8 and value_accuracy >= 0.8
 	)
 
-	# Combine all operation results
 	var all_operation_results: Array[Dictionary] = []
 	all_operation_results.append_array(set_results)
 	all_operation_results.append_array(get_results)
 
-	# Create success rates dictionary
 	var success_rates: Dictionary = {
 		"overall": (set_success_rate + get_success_rate) / 2.0,
 		"set_operations": set_success_rate,
@@ -115,7 +107,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	# Use the new specialized factory method for concurrent results
 	return DebugAction.Result.new_concurrent_result(
 		all_operation_results,
 		success_rates,
@@ -133,7 +124,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

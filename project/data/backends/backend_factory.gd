@@ -1,4 +1,3 @@
-# project/data/backends/backend_factory.gd
 class_name BackendFactory
 extends RefCounted
 
@@ -72,7 +71,6 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 				[Log.TAG_NETWORK]
 			)
 
-	# Cleanup
 	if internet_status.has_internet.is_connected(has_internet_callable):
 		internet_status.has_internet.disconnect(has_internet_callable)
 	if internet_status.no_internet.is_connected(no_internet_callable):
@@ -98,7 +96,6 @@ static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
 static func create_backend() -> DataBackend:
 	var selected_backend_type: BackendSelection = BackendSelection.NONE
 
-	# Log all decision factors
 	var is_editor: bool = OS.has_feature("editor")
 	var force_local: bool = ProjectSettings.get_setting("game/debug/force_local_data", false)
 
@@ -176,7 +173,6 @@ static func create_backend() -> DataBackend:
 static func create_firebase_backend() -> FirebaseBackend:
 	Log.debug("Creating FirebaseBackend instance", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
-	# Only essential check: C++ module availability
 	if not ClassDB.class_exists("FirebaseDatabase"):
 		Log.error(
 			"FirebaseDatabase C++ module not available",
@@ -185,7 +181,6 @@ static func create_firebase_backend() -> FirebaseBackend:
 		)
 		return null
 
-	# Direct instantiation with strong typing - no defensive checks needed
 	var firebase_backend: FirebaseBackend = FirebaseBackend.new()
 	if firebase_backend == null:
 		Log.error(
@@ -210,7 +205,6 @@ static func create_local_backend(file_path: String = "") -> LocalJSONBackend:
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
 
-	# Direct instantiation with strong typing
 	var local_backend: LocalJSONBackend = LocalJSONBackend.new(file_path)
 	if local_backend == null:
 		Log.error(

@@ -1,7 +1,5 @@
 class_name SemanticLogParser
 
-# Utility class for parsing semantic action logs from test output
-# Supports extraction, filtering, and session grouping
 
 
 static func parse_semantic_actions_from_log(log_data: String) -> Array:
@@ -23,7 +21,6 @@ static func extract_sessions_from_log(log_data: String) -> Dictionary:
 	var lines: PackedStringArray = log_data.split("\n")
 
 	for line: String in lines:
-		# Parse session start events (both old and new formats)
 		if line.contains("SESSION_START") or line.contains("SEMANTIC_SESSION_START"):
 			var event_type: String = (
 				"SESSION_START" if line.contains("SESSION_START") else "SEMANTIC_SESSION_START"
@@ -38,7 +35,6 @@ static func extract_sessions_from_log(log_data: String) -> Dictionary:
 				else:
 					sessions[session_id]["start_event"] = start_data
 
-		# Parse session end events (both old and new formats)
 		elif line.contains("SESSION_END") or line.contains("SEMANTIC_SESSION_END"):
 			var event_type: String = (
 				"SESSION_END" if line.contains("SESSION_END") else "SEMANTIC_SESSION_END"
@@ -51,7 +47,6 @@ static func extract_sessions_from_log(log_data: String) -> Dictionary:
 				else:
 					sessions[session_id]["end_event"] = end_data
 
-		# Parse semantic actions
 		elif line.contains("SEMANTIC_ACTION"):
 			var action: Dictionary = _parse_semantic_action_line(line)
 			if not action.is_empty():
@@ -93,7 +88,6 @@ static func get_session_sequence(log_data: String, session_id: String) -> Array:
 	"""Get ordered sequence of actions for a session"""
 	var session_actions: Array = parse_session_actions(log_data, session_id)
 
-	# Sort by sequence (action sequence number within session)
 	session_actions.sort_custom(
 		func(a: Dictionary, b: Dictionary) -> bool:
 			return a.get("sequence", 0) < b.get("sequence", 0)
@@ -112,7 +106,6 @@ static func _parse_semantic_action_line(line: String) -> Dictionary:
 	if not line.contains("SEMANTIC_ACTION"):
 		return {}
 
-	# Find the JSON part of the log line
 	var json_start: int = line.find("{")
 	var json_end: int = line.rfind("}")
 
@@ -121,7 +114,6 @@ static func _parse_semantic_action_line(line: String) -> Dictionary:
 
 	var json_text: String = line.substr(json_start, json_end - json_start + 1)
 
-	# Parse JSON
 	var json: JSON = JSON.new()
 	var parse_result: Error = json.parse(json_text)
 
@@ -133,7 +125,6 @@ static func _parse_semantic_action_line(line: String) -> Dictionary:
 
 	var parsed_data: Dictionary = json.data as Dictionary
 
-	# Extract timestamp and tags from log line prefix
 	var enhanced_data: Dictionary = parsed_data.duplicate()
 	enhanced_data["log_timestamp"] = _extract_log_timestamp(line)
 	enhanced_data["tags"] = _extract_log_tags(line)
@@ -146,7 +137,6 @@ static func _parse_session_event_line(line: String, event_type: String) -> Dicti
 	if not line.contains(event_type):
 		return {}
 
-	# Find the JSON part of the log line
 	var json_start: int = line.find("{")
 	var json_end: int = line.rfind("}")
 
@@ -155,7 +145,6 @@ static func _parse_session_event_line(line: String, event_type: String) -> Dicti
 
 	var json_text: String = line.substr(json_start, json_end - json_start + 1)
 
-	# Parse JSON
 	var json: JSON = JSON.new()
 	var parse_result: Error = json.parse(json_text)
 
@@ -170,7 +159,6 @@ static func _parse_session_event_line(line: String, event_type: String) -> Dicti
 
 static func _extract_log_timestamp(line: String) -> String:
 	"""Extract timestamp from log line prefix"""
-	# Pattern: "07-02 20:42:35.755"
 	var regex: RegEx = RegEx.new()
 	regex.compile(r"(\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})")
 	var result: RegExMatch = regex.search(line)
@@ -185,7 +173,6 @@ static func _extract_log_tags(line: String) -> Array[String]:
 	"""Extract tags from log line - look for [tag1, tag2] pattern"""
 	var tags: Array[String] = []
 
-	# Look for semantic_action tag and other tags in the line
 	if line.contains("semantic_action"):
 		tags.append("semantic_action")
 	if line.contains("gameplay"):

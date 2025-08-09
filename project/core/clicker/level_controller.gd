@@ -63,11 +63,8 @@ func create_blocks_from_level() -> void:
 		[Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
 	)
 
-	# Get all tile positions and process them sequentially to ensure deterministic RNG order
 	var tile_positions: Array[Vector2i] = current_level.get_used_cells()
 
-	# Process tiles one at a time to guarantee identical RNG consumption order
-	# between recording and replay, preventing async timing-based RNG divergence
 	for i: int in range(tile_positions.size()):
 		var tile_pos: Vector2i = tile_positions[i]
 		var block: Block
@@ -87,11 +84,9 @@ func create_blocks_from_level() -> void:
 				block = _block_factory.create_passtrough_block()
 			_:
 				# CRITICAL: Sequential execution ensures each await completes
-				# before the next tile starts, maintaining deterministic RNG order
 				block = await create_block()
 
 		block.block_context = Cards.CONTEXT.DRAFT
-		#add_to_grid(tile_pos, block)
 		core.action(core.DraftAddBlockEvent.new(block, tile_pos))
 
 	current_level.clear()
@@ -127,12 +122,6 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 	block_grid[grid_pos] = block
 	current_level.add_child(block)
 	var refill_pos: Vector2 = refill_distance * refill
-	# Uncomment for detailed debugging:
-	# Log.debug("Block positioning calculation", {
-	#   "refill_pos": refill_pos,
-	#   "final_position": current_level.map_to_local(grid_pos) - refill_pos,
-	#   "grid_pos": grid_pos
-	# }, [Log.TAG_CLICKER])
 	block.position = grid_to_world_pos(grid_pos) - refill_pos
 
 
@@ -197,7 +186,6 @@ func remove_from_grid(block: Block, destroy: bool = true) -> void:
 		[Log.TAG_LEVEL, Log.TAG_GRID]
 	)
 	var remove_pos: Vector2i = get_grid_pos(block)
-	#kan om redan borttaget som inmergade objectet
 	if remove_pos != Clicker.NO_POS:
 		var empty_space: Block = _block_factory.create_empty_space()
 		add_to_grid(remove_pos, empty_space)
@@ -205,4 +193,3 @@ func remove_from_grid(block: Block, destroy: bool = true) -> void:
 		if block.get_parent():
 			block.get_parent().remove_child(block)
 		block.block_kill()
-	# kolla om signaler connected is fall disconnecta

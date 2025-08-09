@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_lifecycle_test_action.gd
 class_name BackendLifecycleTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.lifecycle"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend lifecycle...")
@@ -17,7 +15,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var successful_tests: int = 0
 	var total_tests: int = 0
 
-	# Test 1: Backend availability check
 	_update_status("Testing backend availability...")
 	total_tests += 1
 	var backend: FirebaseBackend = get_firebase_backend_for_testing()
@@ -51,7 +48,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			{"test_type": "backend_lifecycle", "failed_at": "backend_availability_check"}
 		)
 
-	# Test 2: Backend initialization state
 	_update_status("Testing backend initialization state...")
 	total_tests += 1
 	var initialization_success: bool = backend.is_available()
@@ -66,7 +62,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: DataSource integration
 	_update_status("Testing DataSource integration...")
 	total_tests += 1
 	var datasource_integration: bool = data_source != null and data_source.is_initialized()
@@ -82,7 +77,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 4: Backend method accessibility
 	_update_status("Testing backend method accessibility...")
 	total_tests += 1
 	var methods_accessible: bool = (
@@ -107,7 +101,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 5: Basic operation functionality (lightweight test)
 	_update_status("Testing basic operation functionality...")
 	total_tests += 1
 	var test_path: Array[String] = ["backend_tests", "lifecycle", "basic_op"]
@@ -130,7 +123,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 6: Backend state consistency
 	_update_status("Testing backend state consistency...")
 	total_tests += 1
 	var state_consistent: bool = (
@@ -150,7 +142,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Calculate success rate
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.8  # 80% of lifecycle tests should pass
 	var total_duration: int = Time.get_ticks_msec() - start_time

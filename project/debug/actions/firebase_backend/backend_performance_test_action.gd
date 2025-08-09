@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_performance_test_action.gd
 class_name BackendPerformanceTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.performance"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -27,7 +25,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var test_base_path: Array[String] = ["backend_tests", "performance"]
 	var test_timestamp: String = str(Time.get_ticks_msec())
 
-	# Performance Test 1: Single operation timing
 	var single_path: Array = test_base_path + ["single", test_timestamp]
 	var single_key: String = "perf_single_" + test_timestamp
 	var single_value: String = "Performance test single operation"
@@ -47,7 +44,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Performance Test 2: Rapid sequential operations
 	var sequential_operations: int = 3
 	var sequential_durations: Array[int] = []
 	var sequential_successes: int = 0
@@ -67,7 +63,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		if seq_result:
 			sequential_successes += 1
 
-		# Small delay between operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
 	var avg_sequential_duration: int = 0
@@ -89,7 +84,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Performance Test 3: RequestSignalHelper overhead measurement
 	var overhead_path: Array = test_base_path + ["overhead", test_timestamp]
 	var overhead_key: String = "perf_overhead_" + test_timestamp
 	var _overhead_value: String = "RequestSignalHelper overhead test"
@@ -109,14 +103,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Analyze performance results
 	var total_operations: int = 1 + sequential_operations + 1  # single + sequential + overhead
 	var successful_operations: int = (
 		(1 if single_result else 0) + sequential_successes + (1 if overhead_result != null else 0)
 	)
 	var success_rate: float = float(successful_operations) / float(total_operations)
 
-	# Performance thresholds (compared to C++ baseline of 1455-3336ms)
 	var single_acceptable: bool = single_duration < 5000  # Should be under 5 seconds
 	var avg_acceptable: bool = avg_sequential_duration < 5000  # Average should be under 5 seconds
 	var overhead_acceptable: bool = overhead_duration < 10000  # Overhead test can be slower
@@ -126,7 +118,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	# Performance metrics for the specialized result
 	var performance_metrics: Dictionary = {
 		"operations_per_second": float(total_operations) / (float(total_duration) / 1000.0),
 		"average_latency_ms": float(total_duration) / float(total_operations),
@@ -142,7 +133,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"success_rate": success_rate
 	}
 
-	# Performance thresholds for validation
 	var performance_thresholds: Dictionary = {
 		"max_single_operation_ms": 5000,
 		"max_avg_sequential_ms": 5000,
@@ -151,7 +141,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"max_avg_latency_ms": 6000
 	}
 
-	# Use the new specialized factory method for performance results
 	return DebugAction.Result.new_performance_result(
 		performance_tests,  # Array of performance test results
 		overall_success,
@@ -173,7 +162,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Helper method to calculate 95th percentile latency
 func _calculate_p95_latency(durations: Array[int]) -> int:
 	if durations.is_empty():
 		return 0
@@ -188,7 +176,6 @@ func _calculate_p95_latency(durations: Array[int]) -> int:
 	return sorted_durations[p95_index]
 
 
-# Helper function to combine duration arrays with proper typing
 func _combine_duration_arrays(
 	base_durations: Array[int], single_duration: int, overhead_duration: int
 ) -> Array[int]:

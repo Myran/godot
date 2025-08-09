@@ -2,7 +2,6 @@
 class_name NodeUtils
 extends RefCounted
 
-# Get all nodes of a certain type in the scene tree
 static func get_nodes_by_type(root_node: Node, type_name: String) -> Array[Node]:
 	var result: Array[Node] = []
 	
@@ -14,7 +13,6 @@ static func get_nodes_by_type(root_node: Node, type_name: String) -> Array[Node]
 	
 	return result
 
-# Get a node by its path, or null if not found
 static func find_node_by_path(root_node: Node, path: String) -> Node:
 	if path.is_empty():
 		return null
@@ -38,7 +36,6 @@ static func find_node_by_path(root_node: Node, path: String) -> Node:
 	
 	return current_node
 
-# Convert a node to a JSON-compatible dictionary
 static func node_to_dict(node: Node) -> Dictionary:
 	var result = {
 		"name": node.name,
@@ -47,7 +44,6 @@ static func node_to_dict(node: Node) -> Dictionary:
 		"properties": {}
 	}
 	
-	# Get properties
 	var properties = {}
 	var property_list = node.get_property_list()
 	
@@ -56,7 +52,6 @@ static func node_to_dict(node: Node) -> Dictionary:
 		if not name.begins_with("_"): # Skip internal properties
 			result["properties"][name] = node.get(name)
 	
-	# Get children
 	var children = []
 	for child in node.get_children():
 		children.append({
@@ -69,7 +64,6 @@ static func node_to_dict(node: Node) -> Dictionary:
 	
 	return result
 
-# Create a screenshot of a node (only works for CanvasItem nodes)
 static func take_node_screenshot(node: CanvasItem) -> Image:
 	if not node is CanvasItem:
 		push_error("Can only take screenshots of CanvasItem nodes")

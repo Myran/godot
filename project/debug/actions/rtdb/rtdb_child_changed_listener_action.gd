@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_child_changed_listener_action.gd
 class_name RTDBChildChangedListenerAction
 extends RTDBDebugAction
 
@@ -13,7 +12,6 @@ func _init() -> void:
 	description = "Sets up a listener for when children are changed at a specific RTDB path and verifies it works."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
@@ -29,26 +27,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	# Setup test path and helper
 	_active_path = RTDBTestPaths.to_variant_array(RTDBTestPaths.CHILD_EVENTS)
 	_listener_helper = ListenerTestHelper.new()
 	_listener_helper.reset()
 
 	_update_status("Setting up child changed listener...")
 
-	# Connect to child_changed signal using the wrapper's method
 	if not db.db.is_signal_connected("child_changed", _on_child_changed):
 		db.db.connect_signal("child_changed", _on_child_changed)
 
-	# Start listening at path
 	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
-	# Create test data
 	var child_key: String = "test_child_" + str(TimeUtils.now_ms())
 	var child_path: Array[Variant] = _active_path + [child_key]
 
-	# Set initial data
 	var initial_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Initial data", "version": 1
 	}
@@ -56,10 +49,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"set_value_async", child_path, initial_data, "Set Initial Data for Change Test"
 	)
 
-	# Wait briefly then update to trigger change listener
 	await Engine.get_main_loop().create_timer(0.5).timeout
 
-	# Update data to trigger listener
 	var updated_data: Dictionary = {
 		"timestamp": TimeUtils.now_ms(), "message": "Updated data", "version": 2
 	}
@@ -67,7 +58,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"set_value_async", child_path, updated_data, "Update Data to Trigger Change Listener"
 	)
 
-	# Wait for callback
 	_update_status("Waiting for listener callback...")
 	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
@@ -109,7 +99,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

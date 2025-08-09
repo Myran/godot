@@ -1,8 +1,6 @@
-# project/debug/actions/registrations/backend_firebase_actions.gd
 class_name BackendFirebaseActions
 extends RefCounted
 
-# Preload the action classes
 const BackendAsyncPatternTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_async_pattern_test_action.gd"
 )
@@ -35,7 +33,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 	var counters: Array[int] = [0, 0]  # [registered, failed]
 
-	# Core Backend Firebase operations
 	_register_with_count(
 		registry,
 		BackendAsyncPatternTestActionClass.new(),
@@ -58,7 +55,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		registry, BackendLifecycleTestActionClass.new(), "BackendLifecycleTestAction", counters
 	)
 
-	# Advanced Backend Firebase operations
 	_register_with_count(
 		registry,
 		BackendErrorHandlingTestActionClass.new(),

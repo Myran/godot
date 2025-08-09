@@ -1,4 +1,3 @@
-# abilities/death_trigger_health_ability.gd
 class_name DeathTriggerHealthAbility extends Ability
 
 var health_bonus: int
@@ -8,7 +7,6 @@ func _init(bonus_health: int = 1) -> void:
 	health_bonus = bonus_health
 
 
-## Override deep_duplicate to ensure health bonus is properly copied
 func deep_duplicate() -> Ability:
 	var copy: DeathTriggerHealthAbility = DeathTriggerHealthAbility.new(health_bonus)
 	copy.persistence_type = self.persistence_type

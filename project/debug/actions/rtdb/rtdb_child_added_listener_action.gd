@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_child_added_listener_action.gd
 class_name RTDBChildAddedListenerAction
 extends RTDBDebugAction
 
@@ -34,15 +33,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	_update_status("Setting up child added listener...")
 
-	# Connect to child_added signal using the wrapper's method
 	if not db.db.is_signal_connected("child_added", _on_child_added):
 		db.db.connect_signal("child_added", _on_child_added)
 
-	# Start listening at path
 	db.start_listening(_active_path)
 	_update_status("Listener active for path: %s" % str(_active_path))
 
-	# Add test child to trigger listener
 	var child_key: String = "test_child_" + str(TimeUtils.now_ms())
 	var child_path: Array[Variant] = _active_path + [child_key]
 	var child_data: Dictionary = {
@@ -56,7 +52,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"set_value_async", child_path, child_data, "Add Child for Listener Test"
 	)
 
-	# Wait for callback
 	_update_status("Waiting for listener callback...")
 	var result: Dictionary = await _listener_helper.wait_for_callback(5.0)
 
@@ -96,7 +91,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

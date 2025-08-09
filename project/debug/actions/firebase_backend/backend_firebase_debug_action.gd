@@ -1,8 +1,6 @@
-# project/debug/actions/firebase_backend/backend_firebase_debug_action.gd
 class_name BackendFirebaseDebugAction
 extends DebugAction
 
-# Firebase backend instance (wrapped, not direct C++)
 var firebase_backend: FirebaseBackend = null
 
 
@@ -12,7 +10,6 @@ func _init() -> void:
 	action_callable = Callable(self, "execute_backend_action")
 
 
-# Get Firebase backend instance through DataSource - follow RTDB pattern
 func get_firebase_backend_for_testing() -> FirebaseBackend:
 	if firebase_backend != null and is_instance_valid(firebase_backend):
 		return firebase_backend
@@ -51,7 +48,6 @@ func get_firebase_backend_for_testing() -> FirebaseBackend:
 		return null
 
 
-# Simplified backend async test - follow RTDB pattern
 func test_backend_async_pattern(
 	method_name: String,
 	path: Array,
@@ -75,7 +71,6 @@ func test_backend_async_pattern(
 
 	var result: Variant
 
-	# Call backend method based on method name
 	match method_name:
 		"get_data":
 			@warning_ignore("redundant_await")
@@ -114,9 +109,7 @@ func test_backend_async_pattern(
 	return success
 
 
-# New DebugAction.Result pattern - subclasses should override this
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
-	# Default implementation for base class - subclasses should override
 	var error_message: String = (
 		"_execute_action_logic() not implemented in " + get_script().get_path()
 	)
@@ -133,15 +126,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Default implementation - subclasses override this (legacy compatibility)
 func execute_backend_action() -> bool:
-	# Check if subclass implements new pattern
 	if has_method("_execute_action_logic"):
 		@warning_ignore("redundant_await")
 		var result: DebugAction.Result = await _execute_action_logic({})
 		return result.is_success()
 	else:
-		# Fallback to error for classes that don't implement either pattern
 		push_error("execute_backend_action() not implemented in " + get_script().get_path())
 		_update_status("ERROR: execute_backend_action() not implemented", true)
 		return false

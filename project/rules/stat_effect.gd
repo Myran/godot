@@ -11,7 +11,6 @@ func _init(h: int = 0, a: int = 0, src: String = "") -> void:
 	source = src
 
 
-## Create a deep copy of this stat effect with proper value isolation
 func deep_duplicate() -> StatEffect:
 	var copy: StatEffect = StatEffect.new(health_bonus, attack_bonus, source)
 	return copy

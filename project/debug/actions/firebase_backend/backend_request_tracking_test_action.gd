@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_request_tracking_test_action.gd
 class_name BackendRequestTrackingTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.request_tracking"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend request tracking...")
@@ -28,7 +26,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var successful_tests: int = 0
 	var total_tests: int = 0
 
-	# Test 1: Sequential request tracking
 	_update_status("Testing sequential request tracking...")
 	total_tests += 1
 	var sequential_count: int = 3
@@ -73,7 +70,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 2: Concurrent-style request handling (rapid fire)
 	_update_status("Testing rapid request handling...")
 	total_tests += 1
 	var rapid_count: int = 4
@@ -81,13 +77,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var rapid_results: Array[Dictionary] = []
 	var rapid_success: int = 0
 
-	# Execute all requests rapidly one after another
 	for i: int in range(rapid_count):
 		var rapid_path: Array[String] = ["backend_tests", "request_tracking", "rapid", str(i)]
 		var rapid_key: String = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var rapid_value: String = "Rapid request " + str(i)
 
-		# Execute request directly for rapid testing
 		var rapid_start: int = Time.get_ticks_msec()
 		var rapid_result: bool = await test_backend_async_pattern(
 			"set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i)
@@ -101,7 +95,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		if rapid_result:
 			rapid_success += 1
 
-		# Very small delay to simulate rapid firing
 		await Engine.get_main_loop().process_frame
 
 	var rapid_test_success: bool = rapid_success >= (rapid_count * 0.75)  # 75% success rate for rapid requests
@@ -119,12 +112,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: RequestSignalHelper pattern validation
 	_update_status("Testing RequestSignalHelper pattern...")
 	total_tests += 1
 
-	# Test multiple operations of different types to stress RequestSignalHelper
-	# Use set-then-get pattern to ensure get_data has valid data to retrieve
 	var base_key: String = "pattern_test_" + str(Time.get_ticks_msec())
 	var pattern_operations: Array[Dictionary] = [
 		{
@@ -180,7 +170,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		if pattern_result:
 			pattern_success += 1
 
-		# Small delay between pattern operations
 		await Engine.get_main_loop().create_timer(0.1).timeout
 
 	var pattern_test_success: bool = pattern_success >= (pattern_operations.size() * 0.75)  # 75% success rate
@@ -197,7 +186,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Calculate overall success
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.8  # 80% of tracking tests should pass
 	var total_duration: int = Time.get_ticks_msec() - start_time

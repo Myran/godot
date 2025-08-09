@@ -6,7 +6,6 @@ signal client_connected(id)
 signal client_disconnected(id)
 signal command_received(client_id, command)
 
-# Custom implementation of WebSocket server using TCP + WebSocketPeer
 var tcp_server = TCPServer.new()
 var peers = {}
 var pending_peers = []
@@ -51,7 +50,6 @@ func stop_server() -> void:
 	if is_server_active():
 		tcp_server.stop()
 		
-		# Close all client connections
 		for client_id in DictUtils.keys_sorted(peers):
 			peers[client_id].close()
 		peers.clear()
@@ -64,19 +62,16 @@ func poll() -> void:
 	if not tcp_server.is_listening():
 		return
 		
-	# Accept any incoming TCP connections
 	while not refuse_new_connections and tcp_server.is_connection_available():
 		var conn = tcp_server.take_connection()
 		assert(conn != null)
 		print("New TCP connection, starting WebSocket handshake...")
 		pending_peers.append(PendingPeer.new(conn))
 	
-	# Process pending connections (handshake)
 	var to_remove := []
 	for p in pending_peers:
 		if not _connect_pending(p):
 			if p.connect_time + handshake_timeout < Time.get_ticks_msec():
-				# Timeout
 				print("WebSocket handshake timed out")
 				to_remove.append(p)
 			continue # Still pending
@@ -85,7 +80,6 @@ func poll() -> void:
 		pending_peers.erase(r)
 	to_remove.clear()
 	
-	# Process connected peers
 	for id in peers:
 		var p: WebSocketPeer = peers[id]
 		p.poll()
@@ -97,12 +91,10 @@ func poll() -> void:
 			to_remove.append(id)
 			continue
 		
-		# Process incoming messages
 		while p.get_available_packet_count() > 0:
 			var packet = p.get_packet()
 			var text = packet.get_string_from_utf8()
 			
-			# Parse the JSON command
 			var json = JSON.new()
 			var parse_result = json.parse(text)
 			
@@ -114,13 +106,11 @@ func poll() -> void:
 				print("Error parsing JSON from client %d: %s at line %d" % 
 					[id, json.get_error_message(), json.get_error_line()])
 	
-	# Remove disconnected clients
 	for r in to_remove:
 		peers.erase(r)
 
 func _connect_pending(p: PendingPeer) -> bool:
 	if p.ws != null:
-		# Poll websocket client if doing handshake
 		p.ws.poll()
 		var state = p.ws.get_ready_state()
 		
@@ -139,7 +129,6 @@ func _connect_pending(p: PendingPeer) -> bool:
 			print("TCP connection lost during handshake")
 			return true # TCP disconnected.
 		else:
-			# TCP is ready, create WS peer
 			print("TCP connected, upgrading to WebSocket...")
 			p.ws = WebSocketPeer.new()
 			p.ws.accept_stream(p.tcp)

@@ -21,25 +21,21 @@ func _execute_green_phase_test() -> DebugAction.Result:
 	var test_results: Array[Dictionary] = []
 	var overall_success: bool = true
 
-	# Test Suite 1: StateExtractor class existence and basic functionality
 	var implementation_result: Dictionary = _test_state_extractor_implementation()
 	test_results.append(implementation_result)
 	if not implementation_result.success:
 		overall_success = false
 
-	# Test Suite 2: Core functionality validation
 	var functionality_result: Dictionary = _test_core_functionality()
 	test_results.append(functionality_result)
 	if not functionality_result.success:
 		overall_success = false
 
-	# Test Suite 3: Integration and performance
 	var integration_result: Dictionary = _test_integration_performance()
 	test_results.append(integration_result)
 	if not integration_result.success:
 		overall_success = false
 
-	# Generate comprehensive GREEN phase report
 	var report: String = _generate_green_phase_report(test_results, overall_success)
 
 	Log.info(
@@ -55,7 +51,6 @@ func _execute_green_phase_test() -> DebugAction.Result:
 		["test", "tdd", "green_phase", "complete"]
 	)
 
-	# GREEN phase tests SHOULD pass - this validates implementation
 	if overall_success:
 		return (
 			DebugAction
@@ -78,12 +73,9 @@ func _test_state_extractor_implementation() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	# Test 1: StateExtractor accessibility test - ACTUALLY test class access
-	# Try to call StateExtractor method directly (like session_manager.gd does)
 	var class_available: bool = false
 	var accessibility_error: String = ""
 
-	# Test actual StateExtractor access - try to call the method and check result
 	var test_result: Dictionary = StateExtractor.extract_game_state()
 	if test_result != null and typeof(test_result) == TYPE_DICTIONARY:
 		class_available = true
@@ -118,7 +110,6 @@ func _test_state_extractor_implementation() -> Dictionary:
 			"summary": "0/1 implementation tests passed - StateExtractor not accessible"
 		}
 
-	# Test 2: Method availability (if class exists)
 	if class_available:
 		var required_methods: Array[String] = [
 			"extract_game_state",
@@ -130,7 +121,6 @@ func _test_state_extractor_implementation() -> Dictionary:
 		]
 
 		for method_name: String in required_methods:
-			# Since we can't use has_method on static classes, we assume methods exist if class exists
 			tests.append(
 				{
 					"name": "Method %s available" % method_name,
@@ -161,9 +151,7 @@ func _test_core_functionality() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	# Test StateExtractor methods directly (following session_manager.gd pattern)
 
-	# Test 1: extract_game_state returns Dictionary
 	var game_state: Dictionary = StateExtractor.extract_game_state()
 	var game_state_valid: bool = typeof(game_state) == TYPE_DICTIONARY
 	tests.append(
@@ -184,7 +172,6 @@ func _test_core_functionality() -> Dictionary:
 	if not game_state_valid:
 		suite_success = false
 
-	# Test 2: generate_checksum works
 	var test_data: Dictionary = {"test": "data", "number": 42}
 	var checksum: String = StateExtractor.generate_checksum(test_data)
 	var checksum_valid: bool = typeof(checksum) == TYPE_STRING and checksum.length() > 0
@@ -206,7 +193,6 @@ func _test_core_functionality() -> Dictionary:
 	if not checksum_valid:
 		suite_success = false
 
-	# Test 3: normalize_data works
 	var normalized: Dictionary = StateExtractor.normalize_data(test_data)
 	var normalize_valid: bool = typeof(normalized) == TYPE_DICTIONARY
 	tests.append(
@@ -227,7 +213,6 @@ func _test_core_functionality() -> Dictionary:
 	if not normalize_valid:
 		suite_success = false
 
-	# Test 4: is_state_valid validation
 	var valid_check: bool = StateExtractor.is_state_valid(test_data)
 	var empty_check: bool = StateExtractor.is_state_valid({})
 	var validation_works: bool = valid_check == true and empty_check == false
@@ -265,9 +250,7 @@ func _test_integration_performance() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-	# Test StateExtractor integration directly
 
-	# Test 1: Performance timing
 	var start_time: int = Time.get_ticks_msec()
 	var game_state: Dictionary = StateExtractor.extract_game_state()
 	var checksum: String = StateExtractor.generate_checksum(game_state)
@@ -293,7 +276,6 @@ func _test_integration_performance() -> Dictionary:
 	if not performance_ok:
 		suite_success = false
 
-	# Test 2: Deterministic behavior
 	var checksum1: String = StateExtractor.generate_checksum(game_state)
 	var checksum2: String = StateExtractor.generate_checksum(game_state)
 	var deterministic: bool = checksum1 == checksum2
@@ -308,7 +290,6 @@ func _test_integration_performance() -> Dictionary:
 	if not deterministic:
 		suite_success = false
 
-	# Test 3: Integration with DictUtils (use same approach as StateExtractor)
 	var dict_utils_available: bool = true  # Assume available since it's used by StateExtractor
 	tests.append(
 		{

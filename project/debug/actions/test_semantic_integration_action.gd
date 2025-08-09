@@ -12,7 +12,6 @@ func _init() -> void:
 
 
 func _execute_semantic_integration_test() -> DebugAction.Result:
-	# Ensure session exists (will create one if needed)
 	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
@@ -24,19 +23,16 @@ func _execute_semantic_integration_test() -> DebugAction.Result:
 
 	var test_results: Array[String] = []
 
-	# Test 1: Verify session is active
 	var session_info: Dictionary = SemanticActionLogger.get_session_info()
 	if session_info.is_active:
 		test_results.append("✅ Session is active after start")
 	else:
 		test_results.append("❌ Session not active after start")
 
-	# Test 2: Log sample semantic actions and verify count
 	SemanticActionLogger.log_action("test.integration_action_1", {"test": true})
 	SemanticActionLogger.log_action("test.integration_action_2", {"value": 42})
 	SemanticActionLogger.log_action("test.integration_action_3", {"data": "test"})
 
-	# Test 3: Verify action count increased correctly
 	var final_session_info: Dictionary = SemanticActionLogger.get_session_info()
 	var actions_logged: int = final_session_info.action_count - initial_count
 
@@ -45,13 +41,11 @@ func _execute_semantic_integration_test() -> DebugAction.Result:
 	else:
 		test_results.append("❌ Expected 3 actions, got %d" % actions_logged)
 
-	# Test 4: Verify session consistency
 	if final_session_info.session_id == session_id:
 		test_results.append("✅ Session ID remained consistent")
 	else:
 		test_results.append("❌ Session ID changed during test")
 
-	# Test 5: Session continues for full gameplay (always active)
 	var current_session_info: Dictionary = SemanticActionLogger.get_session_info()
 
 	if current_session_info.is_active:
@@ -59,7 +53,6 @@ func _execute_semantic_integration_test() -> DebugAction.Result:
 	else:
 		test_results.append("❌ Session unexpectedly inactive")
 
-	# Generate test summary
 	var success_count: int = 0
 	var total_tests: int = test_results.size()
 

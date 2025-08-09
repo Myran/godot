@@ -2,7 +2,6 @@ class_name BattleContext extends Context
 
 enum BattleState { PRE_BATTLE, BATTLE, POST_BATTLE }
 
-# Member variables with type hints
 var allied_side: Side = Side.new()
 var enemy_side: Side = Side.new()
 var battle_state: BattleState = BattleState.BATTLE
@@ -11,7 +10,6 @@ var active_unit: UnitData = null
 var battle_solver: Node
 
 
-# Base Event class for battle events
 class BaseEvent:
 	extends Context.Event
 
@@ -123,7 +121,6 @@ func _init(solver: Node) -> void:
 	battle_solver = solver
 
 
-# Override solve_events with battle-specific logic
 func solve_events() -> void:
 	while unresolved_events.size():
 		var event_stack: Array = unresolved_events.duplicate(true)
@@ -153,7 +150,6 @@ static func broadcast_event(
 			unit.call(responder, position, is_allied, battle_context, battle_event)
 
 
-# Battle state management
 func get_side(is_allied: bool) -> Side:
 	return allied_side if is_allied else enemy_side
 

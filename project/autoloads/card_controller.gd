@@ -10,7 +10,6 @@ var _rules: Dictionary = {}
 func get_card_image_name(card_id: String) -> String:
 	var asset_variant_value: int = 0  # Default value
 
-	# Direct access to the asset_variant property
 	if (
 		DebugManager
 		and DebugManager.has_method("get")
@@ -57,12 +56,10 @@ func select_id_from_level(lvl: int) -> String:
 			if int(level) == sel_lvl:
 				cards_with_level.append(card)
 
-	# Handle the case where no cards match the level
 	if cards_with_level.size() == 0:
 		Log.warning(
 			"No cards found for level %d, using first card as fallback" % sel_lvl, {}, ["debug"]
 		)
-		# Return first card id as fallback or empty string if no cards exist
 		if all_cards.size() > 0 and all_cards[0].has("id"):
 			return all_cards[0].id
 		return ""
@@ -81,14 +78,12 @@ func select_id_from_level(lvl: int) -> String:
 func select_recruited_unit_level(recruit_lvl: int) -> int:
 	var roll: int = (rng.seeded_rng.next() % 99) + 1
 
-	# Default values in case the rules don't have these properties
 	var c_lvl_2_star_1: String = "50"
 	var c_lvl_2_star_2: String = "100"
 	var c_lvl_3_star_1: String = "30"
 	var c_lvl_3_star_2: String = "70"
 	var c_lvl_3_star_3: String = "100"
 
-	# Only access properties if they exist in _rules
 	if _rules.has("chance_lvl_2_star_1"):
 		c_lvl_2_star_1 = _rules.chance_lvl_2_star_1
 	if _rules.has("chance_lvl_2_star_2"):

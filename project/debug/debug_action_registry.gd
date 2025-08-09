@@ -1,19 +1,14 @@
-# project/debug/debug_action_registry.gd
-# Debug action registry for GameTwo - Pure registry logic only
 
 class_name DebugActionRegistry
 extends Node
 
-# Signal emitted when registry initialization is complete
 signal registry_initialized(action_count: int)
 
-# Internal storage: category -> group -> Array[DebugAction]
 var _actions: Dictionary = {}
 var _flat_actions: Array[DebugAction] = []
 
 
 func _init() -> void:
-	# Debug logging happens in _ready() when Log autoload is available
 	pass
 
 
@@ -35,45 +30,38 @@ func _ready() -> void:
 		["debug", "init"]
 	)
 
-	# Emit signal to notify that registry is ready
 	registry_initialized.emit(_flat_actions.size())
 
 
 func _register_all_actions() -> void:
-	# Register system-level actions (infrastructure/platform)
 	var system_actions_script: GDScript = load(
 		"res://debug/actions/registrations/system_actions.gd"
 	)
 	if system_actions_script:
 		system_actions_script.register_all(self)
 
-	# Load and register C++ Firebase actions (NEW)
 	var cpp_firebase_actions_script: GDScript = load(
 		"res://debug/actions/registrations/cpp_firebase_actions.gd"
 	)
 	if cpp_firebase_actions_script:
 		cpp_firebase_actions_script.register_all(self)
 
-	# Load and register Backend Firebase actions (NEW)
 	var backend_firebase_actions_script: GDScript = load(
 		"res://debug/actions/registrations/backend_firebase_actions.gd"
 	)
 	if backend_firebase_actions_script:
 		backend_firebase_actions_script.register_all(self)
 
-	# Load and register RTDB actions (existing integration tests)
 	var rtdb_actions_script: GDScript = load("res://debug/actions/registrations/rtdb_actions.gd")
 	if rtdb_actions_script:
 		rtdb_actions_script.register_all(self)
 
-	# Register game-specific actions (GameTwo domain logic)
 	var game_actions_script: GDScript = load("res://debug/actions/registrations/game_actions.gd")
 	if game_actions_script:
 		game_actions_script.register_all(self)
 
 
 func register_action(action: DebugAction) -> bool:
-	# Register a debug action with validation
 
 	if not action:
 		Log.error("Cannot register null action", {}, [Log.TAG_DEBUG, Log.TAG_ERROR])
@@ -83,21 +71,17 @@ func register_action(action: DebugAction) -> bool:
 		Log.error("Cannot register action with empty name", {}, [Log.TAG_DEBUG, Log.TAG_ERROR])
 		return false
 
-	# Set default category if empty
 	if action.category.is_empty():
 		action.category = "Uncategorized"
 
-	# Ensure category exists
 	if not _actions.has(action.category):
 		_actions[action.category] = {}
 
-	# Ensure group exists
 	var group_name: String = action.group if not action.group.is_empty() else "_ungrouped"
 	if not _actions[action.category].has(group_name):
 		var new_array: Array[DebugAction] = []
 		_actions[action.category][group_name] = new_array
 
-	# Register the action
 	_actions[action.category][group_name].append(action)
 
 	_flat_actions.append(action)
@@ -116,19 +100,15 @@ func register_action(action: DebugAction) -> bool:
 	return true
 
 
-# Public API methods for accessing registered actions
 func get_categories() -> Array[String]:
-	# Get all registered categories, sorted alphabetically using DictUtils
 	return DictUtils.keys_typed_sorted(_actions, TYPE_STRING)
 
 
 func get_groups_for_category(category_name: String) -> Array[String]:
-	# Get all groups within a category, excluding ungrouped actions
 	if not _actions.has(category_name):
 		var empty_array: Array[String] = []
 		return empty_array
 
-	# Use DictUtils for consistent sorting
 	var category_dict: Dictionary = _actions[category_name]
 	var groups: Array[String] = DictUtils.keys_typed_sorted(category_dict, TYPE_STRING)
 	groups.erase("_ungrouped")
@@ -165,7 +145,6 @@ func get_actions() -> Array[DebugAction]:
 	return get_all_actions()
 
 
-# Wildcard pattern matching for action names
 func find_actions_matching(pattern: String) -> Array[String]:
 	"""
 	Find all action names that match the given wildcard pattern.
@@ -179,7 +158,6 @@ func find_actions_matching(pattern: String) -> Array[String]:
 	"""
 	var matching_names: Array[String] = []
 
-	# Convert glob pattern to regex
 	var regex_pattern: String = _glob_to_regex(pattern)
 	var regex: RegEx = RegEx.new()
 	var compile_result: Error = regex.compile(regex_pattern)
@@ -192,13 +170,11 @@ func find_actions_matching(pattern: String) -> Array[String]:
 		)
 		return matching_names
 
-	# Test each action name against the pattern
 	for action: DebugAction in _flat_actions:
 		var action_name: String = action.action_name
 		if regex.search(action_name):
 			matching_names.append(action_name)
 
-	# Sort results for consistent ordering
 	matching_names.sort()
 
 	Log.debug(
@@ -231,7 +207,6 @@ func _glob_to_regex(glob_pattern: String) -> String:
 	"""
 	var regex_pattern: String = ""
 
-	# Escape special regex characters except *
 	var escaped: String = glob_pattern
 	escaped = escaped.replace("\\", "\\\\")  # Escape backslashes first
 	escaped = escaped.replace(".", "\\.")  # Escape dots
@@ -247,10 +222,8 @@ func _glob_to_regex(glob_pattern: String) -> String:
 	escaped = escaped.replace("}", "\\}")
 	escaped = escaped.replace("|", "\\|")  # Escape pipes
 
-	# Convert * to regex equivalent (.*)
 	escaped = escaped.replace("*", ".*")
 
-	# Anchor the pattern to match the entire string
 	regex_pattern = "^" + escaped + "$"
 
 	return regex_pattern

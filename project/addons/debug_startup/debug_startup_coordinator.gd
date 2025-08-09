@@ -1,19 +1,15 @@
 extends Node
 
-# Enable verbose debug logging for troubleshooting
 const VERBOSE_LOGGING := true
 
-# Track if current config is a test recipe
 var _current_config_is_test_recipe: bool = false
 
-# Completion actions that indicate replay completion
 const COMPLETION_ACTIONS: Array[String] = [
 	"system.debug.replay_complete",
 	"app.quit_application",
 	"system.debug.finalize_replay_validation"
 ]
 
-# Default completion action for auto-completion
 const DEFAULT_COMPLETION_ACTION: String = "system.debug.replay_complete"
 
 func _init() -> void:
@@ -34,14 +30,12 @@ func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String
 func startDebugCoordinator() -> void:
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
-	# Fail fast on missing dependency - that's it
 	if not has_node("/root/DebugRegistry"):
 		Log.error("DebugRegistry missing", {"path": "/root/DebugRegistry"}, ["debug", "startup", "fatal"])
 		return
 
 	_log_verbose("DebugRegistry found, getting actions...", {}, ["debug", "startup"])
 
-	# Get actions from command line or config (inline platform logic)
 	var actions := _get_action_names()
 	Log.info(
 		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
@@ -52,21 +46,16 @@ func startDebugCoordinator() -> void:
 		return
 	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	DebugManager.action(DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST)
-	# Wait for game ready then execute
 	_log_verbose("Waiting for game ready...", {}, ["debug", "startup"])
 	await _wait_for_game_ready()
 
-	# Wait for action registry to be fully initialized using proper signal-based approach
 	_log_verbose("Waiting for action registry initialization...", {}, ["debug", "startup"])
 	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
 	await _wait_for_registry_ready(registry)
 
-	# Wait for DataSource initialization to avoid RTDB/Database action failures
 	_log_verbose("Waiting for DataSource initialization...", {}, ["debug", "startup"])
 	await _wait_for_data_source_ready()
 
-	# All actions are dispatched at once to the idle queue.
-	# The idle queue system handles one-at-a-time execution with proper cascade settling.
 	var dispatch_start_time := Time.get_unix_time_from_system()
 	var dispatch_start_frame := Engine.get_process_frames()
 
@@ -77,7 +66,6 @@ func startDebugCoordinator() -> void:
 		"test_id": DebugAction.get_current_test_id()
 	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
-	# Track if we dispatch any completion actions and if this is a test recipe
 	var has_completion_action: bool = false
 	var is_test_recipe: bool = _is_current_config_test_recipe()
 
@@ -87,14 +75,11 @@ func startDebugCoordinator() -> void:
 		var params: Dictionary = {}
 
 		if action_item is Dictionary:
-			# New format with parameters
 			action_name = action_item.action
 			params = action_item.get("params", {})
 		else:
-			# Legacy format: assume it's a string
 			action_name = str(action_item)
 
-		# Check if this is a completion action
 		if action_name in COMPLETION_ACTIONS:
 			has_completion_action = true
 
@@ -109,7 +94,6 @@ func startDebugCoordinator() -> void:
 			}, ["debug", "startup", "dispatch", "diagnostic"])
 			var callable := func(): action.execute_with_params(params)
 
-			# Determine if this action should auto-continue to next action
 			var auto_continue: bool = _should_action_auto_continue(action_name)
 
 			core.action(core.SystemIdleActionEvent.new(callable, auto_continue))
@@ -120,7 +104,6 @@ func startDebugCoordinator() -> void:
 				"available_actions": _get_available_action_names(registry).slice(0, 10)
 			}, ["debug", "startup", "error"])
 
-	# Automatically dispatch completion action if none was found AND this is a test recipe
 	if _should_auto_add_completion(has_completion_action, actions.size(), is_test_recipe):
 		_dispatch_auto_completion_action(registry, actions.size())
 	elif not has_completion_action and actions.size() > 0:
@@ -142,15 +125,11 @@ func startDebugCoordinator() -> void:
 		"idle_queue_execution_starts_now": true
 	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
-	# The coordinator's primary job is now complete.
-	# The idle action queue in game.gd will handle execution when the system is ready.
 
 
 func _get_action_names() -> Array:
 	Log.debug("Getting action names", {"platform": "mobile" if OS.has_feature("mobile") else "desktop"}, ["debug", "startup"])
-	# Inline platform differences - no abstraction needed for 2 conditions
 	if OS.has_feature("mobile"):
-		# Check user:// first (external config), then fallback to res:// (embedded config)
 		var external_config_path := "user://debug_startup_actions.json"
 		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
@@ -164,12 +143,10 @@ func _get_action_names() -> Array:
 		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
 		return embedded_actions
 	else:
-		# Desktop: try command line first, then external config, then embedded config
 		var cmd_actions := _parse_command_line()
 		if not cmd_actions.is_empty():
 			return cmd_actions
 
-		# Check user:// first (external config), then fallback to res:// (embedded config)
 		var external_config_path := "user://debug_startup_actions.json"
 		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
@@ -184,8 +161,6 @@ func _get_action_names() -> Array:
 		return embedded_actions
 
 
-# Legacy method removed - we now dispatch all actions at once to idle queue
-# The idle queue system in game.gd handles sequential execution with proper cascade settling
 
 
 
@@ -200,7 +175,6 @@ func _get_available_action_names(registry: DebugActionRegistry) -> Array[String]
 
 
 func _get_action_by_name(registry: DebugActionRegistry, action_name: String) -> DebugAction:
-	# Search through all actions since registry doesn't provide get_action(name)
 	var all_actions := registry.get_all_actions()
 	for action in all_actions:
 		if action.action_name == action_name:
@@ -214,12 +188,10 @@ func _parse_command_line() -> Array[String]:
 
 	for i in range(args.size()):
 		if args[i] == "--debug-actions" and i + 1 < args.size():
-			# Split comma-separated actions
 			var action_list := args[i + 1].split(",")
 			for action in action_list:
 				actions.append(action.strip_edges())
 		elif args[i] == "--debug-action" and i + 1 < args.size():
-			# Single action
 			actions.append(args[i + 1].strip_edges())
 
 	return actions
@@ -228,7 +200,6 @@ func _parse_command_line() -> Array[String]:
 func _parse_config_file(path: String) -> Array:
 	Log.debug("Parsing config file", {"path": path}, ["debug", "startup"])
 
-	# Reset test recipe flag for each config
 	_current_config_is_test_recipe = false
 
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -239,7 +210,6 @@ func _parse_config_file(path: String) -> Array:
 		}, ["debug", "startup"])
 		return []
 
-	# Trust Godot's RAII - file auto-closes when out of scope
 	var json_text := file.get_as_text()
 	var json := JSON.new()
 	var result := json.parse(json_text)
@@ -254,10 +224,8 @@ func _parse_config_file(path: String) -> Array:
 
 	var data := json.data as Dictionary
 
-	# Debug: Show what we parsed from JSON
 	Log.info("JSON parsing result", {"data_keys": data.keys(), "data_size": data.size()}, ["debug", "startup", "json"])
 
-	# Check for test metadata and set test context if present
 	if data.has("test_metadata"):
 		_current_config_is_test_recipe = true
 		var test_metadata := data.test_metadata as Dictionary
@@ -267,7 +235,6 @@ func _parse_config_file(path: String) -> Array:
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
 		Log.info("Test recipe detected", {"test_metadata": test_metadata}, ["debug", "startup", "test_recipe"])
 
-	# Log metadata information for debugging (environment variable approach removed)
 	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
 	if data.has("metadata"):
 		var metadata := data.metadata as Dictionary
@@ -276,7 +243,6 @@ func _parse_config_file(path: String) -> Array:
 	else:
 		Log.info("No metadata found in config", {"config_keys": data.keys()}, ["debug", "startup", "metadata"])
 
-	# Setup replay validation if this is a demo/replay config
 	if data.has("type") and data.type == "demo":
 		Log.info("Demo config detected, setting up replay validation", {"config_path": path}, ["debug", "startup", "replay"])
 		var validation_setup_success: bool = SessionManager.setup_replay_validation(path)
@@ -289,7 +255,6 @@ func _parse_config_file(path: String) -> Array:
 		var raw_actions := data.actions as Array
 		var actions: Array = []
 
-		# Process actions - support both strings and objects with parameters
 		for action in raw_actions:
 			var action_type = typeof(action)
 			var type_name = ""
@@ -302,11 +267,9 @@ func _parse_config_file(path: String) -> Array:
 			_log_verbose("Processing raw action", {"action": action, "type": action_type, "type_name": type_name}, ["startup", "parser"])
 
 			if action_type == TYPE_STRING:
-				# Legacy format: simple string
 				var action_str := str(action)
 				_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
 				if action_str.contains("*"):
-					# This is a wildcard pattern - expand it
 					var expanded_actions := _expand_wildcard_pattern(action_str)
 					for expanded_action in expanded_actions:
 						actions.append({"action": expanded_action, "params": {}})
@@ -316,10 +279,8 @@ func _parse_config_file(path: String) -> Array:
 						"expanded_actions": expanded_actions
 					}, ["debug", "startup", "wildcard"])
 				else:
-					# Regular action name - convert to object format
 					actions.append({"action": action_str, "params": {}})
 			elif action_type == TYPE_DICTIONARY:
-				# New format: object with action and params
 				var action_dict := action as Dictionary
 				if action_dict.has("action"):
 					var action_name := str(action_dict.action)
@@ -327,7 +288,6 @@ func _parse_config_file(path: String) -> Array:
 					_log_verbose("Processing parameterized action", {"action": action_name, "params": params}, ["startup", "parser"])
 
 					if action_name.contains("*"):
-						# Wildcard pattern with params
 						var expanded_actions := _expand_wildcard_pattern(action_name)
 						for expanded_action in expanded_actions:
 							actions.append({"action": expanded_action, "params": params})
@@ -337,46 +297,37 @@ func _parse_config_file(path: String) -> Array:
 							"expanded_count": expanded_actions.size()
 						}, ["debug", "startup", "wildcard"])
 					else:
-						# Regular parameterized action
 						actions.append({"action": action_name, "params": params})
 				else:
 					Log.warning("Invalid action object missing 'action' key", {"action_object": action_dict}, ["debug", "startup"])
 			else:
 				Log.warning("Invalid action type, must be String or Dictionary", {"action": action, "type": typeof(action)}, ["debug", "startup"])
 
-		# Check for action_params section and merge parameters
 		if data.has("action_params"):
 			var action_params := data.action_params as Dictionary
 			Log.debug("Found action_params section", {"param_actions": action_params.keys()}, ["debug", "startup"])
 
-			# Track action counts for indexed parameter matching
 			var action_counts: Dictionary = {}
 
-			# Merge action_params into actions
 			for i in range(actions.size()):
 				var action_item := actions[i] as Dictionary
 				var action_name: String = action_item.get("action", "")
 
-				# Track how many times we've seen this action
 				action_counts[action_name] = action_counts.get(action_name, 0) + 1
 				var count: int = action_counts[action_name]
 
-				# Try both the base action name and indexed name
 				var param_key: String = action_name
 				var indexed_key: String = action_name + "_" + str(count)
 
 				var extra_params: Dictionary = {}
 				if action_params.has(param_key) and count == 1:
-					# First instance uses base name
 					extra_params = action_params[param_key] as Dictionary
 				elif action_params.has(indexed_key):
-					# Subsequent instances use indexed names
 					extra_params = action_params[indexed_key] as Dictionary
 
 				if not extra_params.is_empty():
 					var current_params := action_item.get("params", {}) as Dictionary
 
-					# Merge parameters (action_params override existing params)
 					for param_key_inner in extra_params:
 						current_params[param_key_inner] = extra_params[param_key_inner]
 
@@ -424,31 +375,25 @@ func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_ac
 func _wait_for_game_ready() -> void:
 	Log.info("Checking tree ready state...", {}, ["debug", "startup"])
 
-	# Since DebugStartupCoordinator now starts AFTER game initialization_complete signal,
-	# the game is guaranteed to be ready. No need to wait for frames.
 	Log.debug("Tree root is ready", {}, ["debug", "startup"])
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
 
 
 func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
-	# Proper event-driven approach: wait for the registry's initialization signal
 	if not registry:
 		Log.error("Registry not available", {}, ["debug", "startup", "error"])
 		return
 
-	# Check if already initialized
 	if registry.get_all_actions().size() > 0:
 		Log.info("Action registry already ready", {"action_count": registry.get_all_actions().size()}, ["debug", "startup"])
 		return
 
-	# Wait for the registry_initialized signal
 	Log.info("Waiting for registry initialization signal...", {}, ["debug", "startup"])
 	var action_count: int = await registry.registry_initialized
 	Log.info("Action registry ready", {"action_count": action_count}, ["debug", "startup"])
 
 
 func _wait_for_data_source_ready() -> void:
-	# Wait for DataSource initialization to prevent RTDB/Database action failures
 	if not has_node("/root/data_source"):
 		Log.warning("DataSource autoload not found, skipping DataSource wait", {}, ["debug", "startup"])
 		return
@@ -458,12 +403,10 @@ func _wait_for_data_source_ready() -> void:
 		Log.warning("DataSource node not available, skipping DataSource wait", {}, ["debug", "startup"])
 		return
 
-	# Check if already initialized
 	if data_source_node.has_method("is_initialized") and data_source_node.is_initialized():
 		Log.info("DataSource already initialized", {}, ["debug", "startup"])
 		return
 
-	# Wait for startup_completed signal
 	if data_source_node.has_signal("startup_completed"):
 		Log.info("Waiting for DataSource startup_completed signal...", {}, ["debug", "startup"])
 		await data_source_node.startup_completed
@@ -479,13 +422,11 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 	"""
 	var expanded_actions: Array[String] = []
 
-	# Get registry - it should be available since we wait for it in startDebugCoordinator
 	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
 	if not registry:
 		Log.warning("Registry not available for wildcard expansion", {"pattern": pattern}, ["debug", "startup", "wildcard"])
 		return expanded_actions
 
-	# Use the registry's wildcard matching
 	expanded_actions = registry.find_actions_matching(pattern)
 
 	Log.debug("Wildcard pattern expanded", {
@@ -501,7 +442,6 @@ func _cleanup_mobile_config() -> void:
 	if not OS.has_feature("mobile"):
 		return
 
-	# Clean up external config file if it exists
 	var external_config_path := "user://debug_startup_actions.json"
 	if FileAccess.file_exists(external_config_path):
 		Log.info("Cleaning up external config file", {"path": external_config_path}, ["debug", "startup"])
@@ -527,8 +467,6 @@ func _should_action_auto_continue(action_name: String) -> bool:
 	EXCEPTION: Complex operations that need time for animations/cascades to complete
 	"""
 
-	# Actions that should NOT auto-continue (wait for natural completion events)
-	# These are complex operations that trigger animations/cascades requiring event completion
 	var wait_for_completion_patterns: Array[String] = [
 		"game.state.transition_player",
 		"game.draft.upgrade_player",
@@ -541,11 +479,8 @@ func _should_action_auto_continue(action_name: String) -> bool:
 		"game.battle.populate_enemy_and_start"
 	]
 
-	# Check if action matches any wait-for-completion pattern
 	for pattern: String in wait_for_completion_patterns:
 		if action_name.begins_with(pattern):
 			return false
 
-	# DEFAULT: All other actions auto-continue immediately
-	# This includes: cpp.firebase.*, backend.firebase.*, rtdb.database.*, system.*, etc.
 	return true

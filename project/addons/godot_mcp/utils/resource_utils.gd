@@ -2,7 +2,6 @@
 class_name ResourceUtils
 extends RefCounted
 
-# Load a resource safely, returning null if it fails
 static func safe_load(path: String) -> Resource:
 	if not ResourceLoader.exists(path):
 		push_error("Resource does not exist: " + path)
@@ -15,13 +14,11 @@ static func safe_load(path: String) -> Resource:
 	
 	return res
 
-# Save a resource safely, returning true if successful
 static func safe_save(resource: Resource, path: String) -> bool:
 	if not resource:
 		push_error("Cannot save null resource")
 		return false
 	
-	# Make sure directory exists
 	var dir_path = path.get_base_dir()
 	if not DirAccess.dir_exists_absolute(dir_path):
 		var err = DirAccess.make_dir_recursive_absolute(dir_path)
@@ -36,7 +33,6 @@ static func safe_save(resource: Resource, path: String) -> bool:
 	
 	return true
 
-# Create a new resource instance by type name
 static func create_resource(type_name: String) -> Resource:
 	if not ClassDB.class_exists(type_name):
 		push_error("Class does not exist: " + type_name)
@@ -52,7 +48,6 @@ static func create_resource(type_name: String) -> Resource:
 	
 	return ClassDB.instantiate(type_name)
 
-# Get a list of all resource types that inherit from a base class
 static func get_resource_types(base_class: String = "Resource") -> Array[String]:
 	var result: Array[String] = []
 	
@@ -62,7 +57,6 @@ static func get_resource_types(base_class: String = "Resource") -> Array[String]
 	
 	return result
 
-# Convert a resource to a JSON-compatible dictionary
 static func resource_to_dict(resource: Resource) -> Dictionary:
 	var result = {
 		"resource_path": resource.resource_path,
@@ -71,7 +65,6 @@ static func resource_to_dict(resource: Resource) -> Dictionary:
 		"properties": {}
 	}
 	
-	# Get properties
 	var property_list = resource.get_property_list()
 	for prop in property_list:
 		var prop_name = prop["name"]

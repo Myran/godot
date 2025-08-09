@@ -1,17 +1,11 @@
 class_name DataSource
 extends Node
 
-# Firebase auth error enum is available globally via class_name FirebaseAuthError
 
-## Emitted when data source initialization is complete
 signal startup_completed
 const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
 
-## Data source manager for game data from Firebase or local JSON files.
-## Provides centralized access to cards, levels, items, players, events, and rules data.
-## Uses collection-based architecture with proper separation of concerns.
 
-# Collections
 var cards: CardCollection = null
 var levels: LevelCollection = null
 var items: ItemCollection = null
@@ -19,35 +13,28 @@ var players: PlayerCollection = null
 var events: EventCollection = null
 var rules: RulesCollection = null
 
-# Test group identifier
 var test_group: int = 0
 
-# Internal state
 var using_local_data: bool = false
 var _backend: DataBackend = null
 var _initialized: bool = false
 
 
-## Called when the node enters the scene tree
 func _ready() -> void:
 	Log.info("DataSource initializing", {"instance_id": get_instance_id()}, [Log.TAG_DB])
 	_initialized = false
 
-	# Initialize async
 	call_deferred("_initialize")
 
 
-## Initialize the data source and collections
 func _initialize() -> void:
 	Log.debug(
 		"Starting DataSource initialization", {"instance_id": get_instance_id()}, [Log.TAG_DB]
 	)
 
-	# Create the backend - let it crash if type is wrong
 	@warning_ignore("redundant_await")
 	_backend = await BackendFactory.create_backend()
 
-	# Track whether we're using local data
 	using_local_data = _backend.get_class() == "LocalJSONBackend"
 
 	Log.debug(
@@ -60,10 +47,8 @@ func _initialize() -> void:
 		[Log.TAG_DB]
 	)
 
-	# Initialize collections
 	_initialize_collections()
 
-	# Connect to backend signals
 	if _backend != null:
 		if not _backend.startup_completed.is_connected(_on_backend_startup_completed):
 			_backend.startup_completed.connect(_on_backend_startup_completed)
@@ -71,7 +56,6 @@ func _initialize() -> void:
 	Log.debug("Waiting for backend startup", {"instance_id": get_instance_id()}, [Log.TAG_DB])
 
 
-## Called when backend startup is complete
 func _on_backend_startup_completed() -> void:
 	Log.info(
 		"DataSource initialization complete",
@@ -82,11 +66,9 @@ func _on_backend_startup_completed() -> void:
 	_initialized = true
 	startup_completed.emit()
 
-	# Log active collections
 	_log_active_collections()
 
 
-## Initialize the collection instances
 func _initialize_collections() -> void:
 	Log.debug(
 		"Initializing collections",
@@ -94,12 +76,9 @@ func _initialize_collections() -> void:
 		[Log.TAG_DB]
 	)
 
-	# No null check - will crash immediately if _backend is null (fail fast)
 
-	# Create all collections with proper error handling
 	var initialization_success: bool = true
 
-	# Initialize all collections individually to isolate potential errors
 	initialization_success = initialization_success and _initialize_collection("cards")
 	initialization_success = initialization_success and _initialize_collection("levels")
 	initialization_success = initialization_success and _initialize_collection("items")
@@ -121,9 +100,6 @@ func _initialize_collections() -> void:
 		)
 
 
-## Helper function to initialize a single collection
-## @param collection_name The name of the collection to initialize
-## @return bool True if initialization was successful
 func _initialize_collection(collection_name: String) -> bool:
 	Log.debug(
 		"Initializing collection",
@@ -169,25 +145,16 @@ func _initialize_collection(collection_name: String) -> bool:
 	return success
 
 
-## Helper function to create a collection
-## @param creation_function The function to call to create the collection
-## @param collection_name The name of the collection being created (for logging)
-## @return bool True if initialization was successful
 func _safely_create_collection(creation_function: Callable, collection_name: String) -> bool:
-	# No null check - will crash immediately if _backend is null (fail fast)
 
-	# In GDScript 4, errors will propagate up and crash if they're not handled
-	# We'll simply log before and after to confirm success
 	Log.debug(
 		"Initializing collection",
 		{"collection_name": collection_name, "instance_id": get_instance_id()},
 		[Log.TAG_DB]
 	)
 
-	# Call the creation function directly
 	creation_function.call()
 
-	# If we reach this point, the function call succeeded
 	Log.debug(
 		"Successfully initialized collection",
 		{"collection_name": collection_name, "instance_id": get_instance_id()},
@@ -197,18 +164,12 @@ func _safely_create_collection(creation_function: Callable, collection_name: Str
 	return true
 
 
-## Set the test group identifier
-## @param group The test group to use
 func set_test_group(group: int) -> void:
 	test_group = group
-	# Reinitialize collections with new test group
 	_initialize_collections()
 
 
-## Check if Firebase is available and connected
-## @return True if Firebase is available, false otherwise
 func is_firebase_available() -> bool:
-	# No null check - will crash if _backend is null (fail fast)
 	var available: bool = false
 	if _backend.get_class() == "FirebaseBackend":
 		var firebase_backend: FirebaseBackend = _backend
@@ -222,19 +183,15 @@ func is_firebase_available() -> bool:
 	return available
 
 
-## Check if data source is fully initialized
-## @return True if initialized, false otherwise
 func is_initialized() -> bool:
 	return _initialized
 
 
-## Initialize card cache with all cards
 func activate_card_cache() -> void:
 	Log.info(
 		"Activating card cache", {"instance_id": get_instance_id()}, [Log.TAG_CACHE, Log.TAG_DB]
 	)
 
-	# No null check - will crash if cards is null (fail fast)
 
 	var request_start_time: int = Time.get_ticks_msec()
 	@warning_ignore("redundant_await")
@@ -253,8 +210,6 @@ func activate_card_cache() -> void:
 	)
 
 
-## Set up player data from server or create new data
-## @return true if successful, false otherwise
 func setup_player_data() -> bool:
 	Log.info("Setting up player data", {"instance_id": get_instance_id()}, [Log.TAG_DB])
 
@@ -276,10 +231,8 @@ func setup_player_data() -> bool:
 			[Log.TAG_DB]
 		)
 
-		# Firebase auth returns integer error code - 0 means success
 		@warning_ignore("redundant_await")
 		var auth_result: int = await auth.login()
-		# Use explicit integer constant to avoid enum comparison warnings
 		var success_code: int = 0  # FirebaseAuthError.Code.NONE value
 		auth_success = (auth_result == success_code)
 
@@ -305,7 +258,6 @@ func setup_player_data() -> bool:
 			[Log.TAG_DB, Log.TAG_WARNING]
 		)
 
-	# Create default player data
 	var data: Dictionary = players.get_default_data()
 	Log.debug(
 		"Created default player data",
@@ -332,19 +284,8 @@ func setup_player_data() -> bool:
 	return true
 
 
-#------------------------------------------------------------------
-# Legacy compatibility methods are now removed
-# All consumers updated to use collection-based API
-#------------------------------------------------------------------
-# Use direct collection access instead:
-# data_source.cards.get_by_id() instead of data_source.get_card_info()
-# data_source.rules.get_rules() instead of data_source.get_rules_data()
-# etc.
 
 
-## Clear all collection caches
-## Useful for forcing fresh data to be loaded
-## @return void
 func clear_all_caches() -> void:
 	Log.info(
 		"Clearing all collection caches",
@@ -373,8 +314,6 @@ func clear_all_caches() -> void:
 	Log.debug("All caches cleared", {"instance_id": get_instance_id()}, [Log.TAG_DB, Log.TAG_CACHE])
 
 
-## Helper to log active collections
-## @return void
 func _log_active_collections() -> void:
 	var collection_status: Dictionary = {
 		"cards": cards != null,
@@ -385,7 +324,6 @@ func _log_active_collections() -> void:
 		"rules": rules != null
 	}
 
-	# Count active collections
 	var active_count: int = 0
 	for collection_name: String in collection_status:
 		if collection_status[collection_name]:

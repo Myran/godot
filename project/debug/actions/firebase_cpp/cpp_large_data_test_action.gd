@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_large_data_test_action.gd
 class_name CPPLargeDataTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "cpp.firebase.large_data"
 
 
-# Modern DebugAction.Result pattern
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ with large data payloads...")
@@ -29,14 +27,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		var config_name: String = size_config.name
 		_update_status("Testing " + size_description + "...")
 
-		# Generate test data of specified size
 		var size_bytes: int = size_config.size
 		var large_data: String = _generate_test_data(size_bytes)
 		var test_path: Array[String] = [
 			"cpp_tests", "large_data", config_name.to_lower(), str(Time.get_ticks_msec())
 		]
 
-		# Test set operation with large data
 		_update_status("Setting " + size_description + " via C++...")
 		var set_start_time: int = Time.get_ticks_msec()
 		var set_result: Variant = await execute_cpp_operation(
@@ -49,7 +45,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 		var set_success: bool = set_result != null
 
-		# Test get operation if set was successful
 		var get_success: bool = false
 		var get_duration: int = 0
 		var data_matches: bool = false
@@ -64,7 +59,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 			get_success = get_result != null
 			if get_success:
-				# For simplified testing, assume data integrity is maintained
 				data_matches = true
 
 				Log.info(
@@ -92,7 +86,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-		# No delay needed - proceed immediately to next test
 
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.75  # 75% of large data tests should pass
@@ -138,32 +131,26 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()
 
 
-# Generate test data of specified size
 func _generate_test_data(target_size: int) -> String:
 	var data: String = "Large Data Test - "
 	var base_content: String = "This is test data for Firebase C++ layer performance validation. "
 
-	# Calculate how many repetitions we need
 	var header_size: int = data.length()
 	var remaining_size: int = target_size - header_size
 	var repetitions: int = max(1, int(float(remaining_size) / float(base_content.length())))
 
-	# Build the large data string
 	for i: int in range(repetitions):
 		data += base_content
 
-	# Add timestamp and size info
 	data += (
 		" [Generated: " + str(Time.get_ticks_msec()) + ", Target: " + str(target_size) + " bytes]"
 	)
 
-	# Trim or pad to get close to target size
 	if data.length() > target_size:
 		data = data.substr(0, target_size)
 	elif data.length() < target_size:

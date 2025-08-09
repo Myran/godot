@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_async_pattern_test_action.gd
 class_name BackendAsyncPatternTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.async_pattern"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
@@ -17,7 +15,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var test_key: String = "test_" + str(Time.get_ticks_msec())
 	var test_value: String = "Backend Async Test: " + str(Time.get_ticks_msec())
 
-	# Test set_data pattern
 	var set_success: bool = await test_backend_async_pattern(
 		"set_data", test_path, test_key, test_value, "Backend Set Data"
 	)
@@ -39,7 +36,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Test get_data pattern
 	var get_success: bool = await test_backend_async_pattern(
 		"get_data", test_path, test_key, null, "Backend Get Data"
 	)

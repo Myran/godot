@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_remove_all_listeners_action.gd
 class_name RTDBRemoveAllListenersAction
 extends RTDBDebugAction
 
@@ -13,7 +12,6 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var _error_result: Array = get_last_error_result()
@@ -21,8 +19,6 @@ func execute_rtdb_action() -> bool:
 
 	_update_status("Removing RTDB listeners...")
 
-	# The C++ Firebase module only supports one active child listener at a time
-	# We'll remove listeners from common test paths used by debug actions
 	var test_paths: Array[Array] = [
 		create_test_path(["child_events"]),  # Used by child listener actions
 		create_test_path(["single_value"]),  # Used by single value listener
@@ -32,7 +28,6 @@ func execute_rtdb_action() -> bool:
 
 	var removed_count: int = 0
 	for path: Array in test_paths:
-		# Use the correct API: stop_listening()
 		db.stop_listening(path)
 		removed_count += 1
 

@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_error_handling_test_action.gd
 class_name RTDBErrorHandlingTestAction
 extends RTDBDebugAction
 
@@ -10,7 +9,6 @@ func _init() -> void:
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -29,13 +27,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_tests: int = 3
 	var test_results: Array[Dictionary] = []
 
-	# Test 1: Invalid path access (should fail gracefully)
 	_update_status("Testing invalid path access...")
 	var invalid_path: Array[Variant] = ["invalid", "restricted", "path"]
 	var test1_result: bool = await execute_simple_operation(
 		"get_value_async", invalid_path, null, "Invalid Path Test"
 	)
-	# For error handling, we expect operations to fail gracefully (return false, not crash)
 	var test1_passed: bool = not test1_result  # Should fail
 	if test1_passed:
 		passed_tests += 1
@@ -48,7 +44,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 2: Nonexistent path access (should return false gracefully)
 	_update_status("Testing nonexistent path access...")
 	var nonexistent_path: Array[Variant] = create_test_path(
 		["nonexistent", "data", str(Time.get_ticks_msec())]
@@ -56,7 +51,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var test2_result: bool = await execute_simple_operation(
 		"get_value_async", nonexistent_path, null, "Nonexistent Path Test"
 	)
-	# This should complete gracefully but return false for nonexistent data
 	var test2_passed: bool = true  # Any completion (success or graceful failure) is acceptable
 	if test2_passed:
 		passed_tests += 1
@@ -69,14 +63,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: Valid operation (should succeed)
 	_update_status("Testing valid operation for comparison...")
 	var valid_path: Array[Variant] = create_test_path(["error_test", "valid_operation"])
 	var test_data: Dictionary = {"test": "data", "timestamp": Time.get_ticks_msec()}
 	var test3_result: bool = await execute_simple_operation(
 		"set_value_async", valid_path, test_data, "Valid Operation Test"
 	)
-	# This should succeed to verify the system is working normally
 	var test3_passed: bool = test3_result
 	if test3_passed:
 		passed_tests += 1
@@ -129,7 +121,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

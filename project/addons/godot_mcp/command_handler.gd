@@ -11,13 +11,11 @@ func _ready():
 	_websocket_server = get_parent()
 	print("WebSocket server reference set: ", _websocket_server)
 	
-	# Initialize command processors
 	_initialize_command_processors()
 	
 	print("Command handler initialized and ready to process commands")
 
 func _initialize_command_processors():
-	# Create and add all command processors
 	var node_commands = MCPNodeCommands.new()
 	var script_commands = MCPScriptCommands.new()
 	var scene_commands = MCPSceneCommands.new() 
@@ -25,7 +23,6 @@ func _initialize_command_processors():
 	var editor_commands = MCPEditorCommands.new()
 	var editor_script_commands = MCPEditorScriptCommands.new()  # Add our new processor
 	
-	# Set server reference for all processors
 	node_commands._websocket_server = _websocket_server
 	script_commands._websocket_server = _websocket_server
 	scene_commands._websocket_server = _websocket_server
@@ -33,7 +30,6 @@ func _initialize_command_processors():
 	editor_commands._websocket_server = _websocket_server
 	editor_script_commands._websocket_server = _websocket_server  # Set server reference
 	
-	# Add them to our processor list
 	_command_processors.append(node_commands)
 	_command_processors.append(script_commands)
 	_command_processors.append(scene_commands)
@@ -41,7 +37,6 @@ func _initialize_command_processors():
 	_command_processors.append(editor_commands)
 	_command_processors.append(editor_script_commands)  # Add to processor list
 	
-	# Add them as children for proper lifecycle management
 	add_child(node_commands)
 	add_child(script_commands)
 	add_child(scene_commands)
@@ -56,12 +51,10 @@ func _handle_command(client_id: int, command: Dictionary) -> void:
 	
 	print("Processing command: %s" % command_type)
 	
-	# Try each processor until one handles the command
 	for processor in _command_processors:
 		if processor.process_command(client_id, command_type, params, command_id):
 			return
 	
-	# If no processor handled the command, send an error
 	_send_error(client_id, "Unknown command: %s" % command_type, command_id)
 
 func _send_error(client_id: int, message: String, command_id: String) -> void:

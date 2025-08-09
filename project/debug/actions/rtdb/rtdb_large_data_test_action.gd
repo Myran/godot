@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_large_data_test_action.gd
 class_name RTDBLargeDataTestAction
 extends RTDBDebugAction
 
@@ -13,13 +12,11 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	# Use unique path to avoid test interference
 	var path_suffix: Array[Variant] = ["large_data_test"]
 	var test_path: Array[Variant] = create_test_path(path_suffix)
 
 	_update_status("Generating large test dataset...")
 
-	# Create a substantial test dataset
 	var large_data: Dictionary = _generate_large_test_data()
 	var data_size_estimate: int = JSON.stringify(large_data).length()
 
@@ -27,7 +24,6 @@ func execute_rtdb_action() -> bool:
 
 	var start_time: int = Time.get_ticks_msec()
 
-	# Use the working pattern: execute_simple_operation
 	var write_success: bool = await execute_simple_operation(
 		"set_value_async", test_path, large_data, action_name + " (Write)"
 	)
@@ -43,7 +39,6 @@ func execute_rtdb_action() -> bool:
 		"Successfully wrote large data (%d bytes) in %d ms" % [data_size_estimate, write_duration]
 	)
 
-	# Now test retrieval
 	_update_status("Testing retrieval of large data...")
 	var retrieve_start: int = Time.get_ticks_msec()
 
@@ -68,7 +63,6 @@ func execute_rtdb_action() -> bool:
 		)
 		success_data["retrieval_success"] = true
 
-		# Basic data integrity check
 		if retrieved_data is Dictionary and retrieved_data.has("metadata"):
 			success_data["data_integrity_check"] = "passed"
 		else:
@@ -100,7 +94,6 @@ func _generate_large_test_data() -> Dictionary:
 		"configuration": {}
 	}
 
-# Generate user data (simulate 100 users)
 	for i: int in range(100):
 		var user_id: String = "user_%d" % i
 		data.users[user_id] = {
@@ -126,7 +119,6 @@ func _generate_large_test_data() -> Dictionary:
 			}
 		}
 
-# Generate session data (simulate 200 sessions)
 	for i: int in range(200):
 		var session_id: String = "session_%d" % i
 		data.sessions[session_id] = {
@@ -138,7 +130,6 @@ func _generate_large_test_data() -> Dictionary:
 			"score": randi() % 1000
 		}
 
-# Generate event data (simulate 500 events)
 	for i: int in range(500):
 		data.events.append(
 			{
@@ -150,7 +141,6 @@ func _generate_large_test_data() -> Dictionary:
 			}
 		)
 
-# Generate configuration data
 	data.configuration = {
 		"game_settings":
 		{
@@ -169,7 +159,6 @@ func _generate_large_test_data() -> Dictionary:
 		"feature_flags": {}
 	}
 
-# Add feature flags
 	for i: int in range(20):
 		var flag_name: String = "feature_flag_%d" % i
 		data.configuration.feature_flags[flag_name] = randi() % 2 == 0
@@ -196,7 +185,6 @@ func _generate_achievements(user_index: int) -> Array[String]:
 		"lone_wolf"
 	]
 
-# Give users random achievements based on their index
 	var achievement_count: int = (user_index % 5) + 1
 	for i: int in range(achievement_count):
 		var achievement: String = possible_achievements[

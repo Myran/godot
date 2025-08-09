@@ -1,16 +1,11 @@
-# project/debug/actions/debug_action.gd
 class_name DebugAction
 extends Resource
 
-# Preload the output service for unified output handling
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 
 
-## Inner class for debug action results
 class Result:
 	extends RefCounted
-	## Unified result class for debug action completion
-	## Provides type-safe, consistent handling of action results across all debug action categories
 
 	enum ErrorCategory {
 		NONE,
@@ -21,7 +16,6 @@ class Result:
 		SYSTEM,
 		FIREBASE,
 		DATABASE,
-		# Enhanced categories for comprehensive error handling
 		AUTHENTICATION,  # Auth failures, permission denied
 		CONFIGURATION,  # Setup/config errors, missing settings
 		CONCURRENT,  # Race conditions, concurrency issues
@@ -31,7 +25,6 @@ class Result:
 		PERFORMANCE  # Performance threshold violations
 	}
 
-	# Core result data
 	var _success: bool
 	var _payload: Variant
 	var _error_message: String
@@ -60,7 +53,6 @@ class Result:
 		_operation = p_operation
 		_metadata = p_metadata.duplicate()
 
-	## Static factory methods for clean result creation
 	static func new_success(
 		payload: Variant = null,
 		duration_ms: int = 0,
@@ -167,7 +159,6 @@ class Result:
 			metadata
 		)
 
-	## Specialized factory methods for common debug action patterns
 
 	static func new_performance_result(
 		operation_metrics: Array,
@@ -322,7 +313,6 @@ class Result:
 				enhanced_metadata
 			)
 
-	## Core query methods
 	func is_success() -> bool:
 		return _success
 
@@ -350,7 +340,6 @@ class Result:
 	func get_metadata() -> Dictionary:
 		return _metadata.duplicate()
 
-	## Fluent builder methods for complex results
 	func with_operation(operation: String) -> DebugAction.Result:
 		_operation = operation
 		return self
@@ -368,7 +357,6 @@ class Result:
 			_metadata[key] = metadata[key]
 		return self
 
-	## Enhanced compatibility for existing systems
 	func to_completion_args() -> Array:
 		"""Returns [success: bool, data: Variant] for current completion system"""
 		if _success:
@@ -387,7 +375,6 @@ class Result:
 				error_data["metadata"] = _metadata
 			return [false, error_data]
 
-	## Enhanced serialization
 	func to_dict() -> Dictionary:
 		var result: Dictionary = {
 			"success": _success,
@@ -427,7 +414,6 @@ class Result:
 				base += " [metadata: %s]" % str(_metadata)
 			return base
 
-	## Validation helpers
 	func is_network_error() -> bool:
 		return _error_category == ErrorCategory.NETWORK
 
@@ -440,7 +426,6 @@ class Result:
 	func is_firebase_error() -> bool:
 		return _error_category == ErrorCategory.FIREBASE
 
-	## Performance analysis helpers
 	func is_fast_operation(threshold_ms: int = 500) -> bool:
 		return _duration_ms < threshold_ms
 
@@ -455,7 +440,6 @@ class Result:
 		else:
 			return "SLOW"
 
-	## Enhanced analysis methods for specialized result types
 
 	func get_performance_metrics() -> Dictionary:
 		"""Get performance metrics if this is a performance result"""
@@ -470,7 +454,6 @@ class Result:
 		if thresholds.is_empty():
 			thresholds = _metadata.get("performance_thresholds", {})
 
-		# Check each threshold
 		for threshold_name: String in thresholds:
 			var threshold_value: Variant = thresholds[threshold_name]
 			var metric_value: Variant = metrics.get(threshold_name)
@@ -550,7 +533,6 @@ class Result:
 
 		return _metadata.get("operation_results", [])
 
-	## Enhanced error category helpers
 
 	func is_authentication_error() -> bool:
 		return _error_category == ErrorCategory.AUTHENTICATION
@@ -581,14 +563,11 @@ class Result:
 @export var requires_confirmation: bool = false
 @export var keyboard_shortcut: String = ""
 
-# Signal for status updates - decouples actions from UI
 signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
 
-# Add support for callable-based actions
 var action_callable: Callable
 
-# Static test tracking variables for smart test system
 static var current_test_id: String = ""
 static var test_action_count: int = 0
 static var test_success_count: int = 0
@@ -600,7 +579,6 @@ func _init(p_name: String = "", p_callable: Callable = Callable()) -> void:
 	action_callable = p_callable
 
 
-# Builder pattern methods for fluent configuration
 func set_category(p_category: String) -> DebugAction:
 	category = p_category
 	return self
@@ -626,7 +604,6 @@ func set_keyboard_shortcut(p_shortcut: String) -> DebugAction:
 	return self
 
 
-# Static test context management for smart testing
 static func set_test_context(test_id: String) -> void:
 	"""Set the current test ID for all debug actions"""
 	current_test_id = test_id
@@ -674,13 +651,11 @@ static func is_test_active() -> bool:
 	return current_test_id != ""
 
 
-# Static factory method for creating programmatic actions
 static func create(p_name: String, p_callable: Callable) -> DebugAction:
 	var action: DebugAction = DebugAction.new(p_name, p_callable)
 	return action
 
 
-# Legacy factory method for compatibility
 static func create_from_callable(
 	p_name: String,
 	p_callable: Callable,
@@ -695,9 +670,7 @@ static func create_from_callable(
 	return action
 
 
-# Enhanced execute method with smart test tracking
 func execute() -> void:
-	# Track test execution if we're in test context
 	if current_test_id != "":
 		test_action_count += 1
 
@@ -709,10 +682,8 @@ func execute() -> void:
 	_update_status("Executing " + action_name + "...")
 
 	if action_callable.is_valid():
-		# Execute the action - GDScript doesn't have try/except
 		result = await action_callable.call()
 
-		# Determine success based on standardized return patterns
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
@@ -720,14 +691,12 @@ func execute() -> void:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
-		# No callable defined
 		success = false
 		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# Emit test tracking signals if in test context
 	if current_test_id != "":
 		var process_id: int = OS.get_process_id()
 		if success:
@@ -768,7 +737,6 @@ func execute() -> void:
 				["debug", "test", "failure", "pid", "sequence"]
 			)
 
-	# Emit execution completed signal that UI components are waiting for
 	execution_completed.emit(success, result)
 
 
@@ -781,22 +749,9 @@ func execute_with_params(params: Dictionary = {}) -> void:
 		["debug", "temp"]
 	)
 
-	# Track test execution if we're in test context
 	if current_test_id != "":
 		test_action_count += 1
 
-	# TEMPORARILY DISABLED: Check if we should use automatic state validation for demo/replay configs
-	# var should_validate: bool = _should_auto_validate_state()
-	# if should_validate:
-	# 	Log.info(
-	# 		"Auto-enabling state validation for demo/replay config",
-	# 		{"action": action_name, "test_id": current_test_id},
-	# 		["debug", "validation", "auto"]
-	# 	)
-	#
-	# 	# Use the state validation execution path asynchronously
-	# 	_execute_with_validation_async(current_test_id, test_action_count - 1)
-	# 	return
 
 	var start_time: int = Time.get_ticks_msec()
 	var success: bool = false
@@ -806,12 +761,9 @@ func execute_with_params(params: Dictionary = {}) -> void:
 	_update_status("Executing " + action_name + " with params...")
 
 	if action_callable.is_valid():
-		# Execute the action with parameters
 		if params.is_empty():
-			# No parameters provided, use legacy call
 			result = await action_callable.call()
 		else:
-			# Parameters provided, call with them
 			Log.debug(
 				"Action called with parameters",
 				{"action": action_name, "params": params},
@@ -819,7 +771,6 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			)
 			result = await action_callable.call(params)
 
-		# Determine success based on standardized return patterns
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
@@ -827,14 +778,12 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
-		# No callable defined
 		success = false
 		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# Record test results only if we're in a test context
 	if current_test_id != "":
 		if success:
 			test_success_count += 1
@@ -876,41 +825,31 @@ func execute_with_params(params: Dictionary = {}) -> void:
 				["debug", "test", "failure", "pid", "sequence"]
 			)
 
-	# Emit execution completed signal that UI components are waiting for
 	execution_completed.emit(success, result)
 
 
-# Type-safe result evaluation methods
 func _evaluate_action_result(result: Variant) -> bool:
 	"""Determine if an action result indicates success using standardized patterns"""
-	# Handle null/void results as failure
 	if result == null:
 		return false
 
-	# Handle DebugAction.Result (new pattern)
 	if result is DebugAction.Result:
-		# Special case: RESTART_PENDING is not a failure, it's a pending state
 		if result.get_error_code() == "RESTART_NEEDED":
 			return true  # Treat restart pending as success to avoid test failure
 		return result.is_success()
 
-	# Handle boolean results
 	if result is bool:
 		return result
 
-	# Handle array pattern [success: bool, data: Variant]
 	if result is Array and result.size() >= 1:
 		return result[0] == true
 
-	# Handle dictionary with error key
 	if result is Dictionary and result.has("error"):
 		return false
 
-	# Handle dictionary with success key
 	if result is Dictionary and result.has("success"):
 		return result["success"] == true
 
-	# Any other non-null result is considered success
 	return true
 
 
@@ -919,7 +858,6 @@ func _extract_error_message(result: Variant) -> String:
 	if result == null:
 		return "Action returned null"
 
-	# Handle DebugAction.Result (new pattern)
 	if result is DebugAction.Result:
 		if result.is_failure():
 			return result.get_error_message()
@@ -929,7 +867,6 @@ func _extract_error_message(result: Variant) -> String:
 	if result == false:
 		return "Action returned false"
 
-	# Handle array pattern [false, error_data]
 	if result is Array and result.size() >= 2:
 		var error_data: Variant = result[1]
 		if error_data is String:
@@ -939,23 +876,17 @@ func _extract_error_message(result: Variant) -> String:
 		else:
 			return str(error_data)
 
-	# Handle dictionary with error key
 	if result is Dictionary and result.has("error"):
 		return str(result["error"])
 
-	# Fallback to string representation
 	return str(result)
 
 
-# Helper to update status via signal instead of direct UI access
 func _update_status(text: String, is_error: bool = false) -> void:
-	# Unified output for all execution paths using DebugOutputService
 	DebugOutputService.output_action_status(self, text, is_error)
 
-	# Emit status update signal
 	status_updated.emit(text, is_error)
 
-	# Keep original logging for system logs
 	Log.info(
 		text,
 		{"category": category, "group": group, "action": action_name, "error": is_error},
@@ -963,8 +894,6 @@ func _update_status(text: String, is_error: bool = false) -> void:
 	)
 
 
-## CRITICAL: Execute action with comprehensive state validation
-## This is the company-survival method that ensures replay validation works
 func execute_with_state_validation(
 	session_id: String = "", sequence: int = -1
 ) -> DebugAction.Result:
@@ -983,8 +912,6 @@ func execute_with_state_validation(
 		["debug", "validation", "execution"]
 	)
 
-	# Pre-action state capture is now handled automatically via semantic logging
-	# The system captures pre-action checksums during log_semantic_action
 	var pre_action_state: Dictionary = {}
 	if not session_id.is_empty() and sequence >= 0:
 		(
@@ -1002,7 +929,6 @@ func execute_with_state_validation(
 			)
 		)
 
-	# Execute the core action
 	var execution_result: Variant = null
 	var execution_success: bool = false
 	var error_message: String = ""
@@ -1010,7 +936,6 @@ func execute_with_state_validation(
 	_update_status("Executing " + action_name + " with validation...")
 
 	if action_callable.is_valid():
-		# Execute the actual action
 		execution_result = await action_callable.call()
 		execution_success = _evaluate_action_result(execution_result)
 
@@ -1034,8 +959,6 @@ func execute_with_state_validation(
 			["debug", "validation", "configuration_error"]
 		)
 
-	# Post-action state capture removed in favor of simplified checksum validation
-	# The system now relies on checksum-based validation through semantic logging
 	var post_action_state: Dictionary = {}
 	var state_validation_result: Dictionary = {}
 
@@ -1051,7 +974,6 @@ func execute_with_state_validation(
 			["debug", "validation", "post_state"]
 		)
 
-		# Skip complex state validation - simplified system uses checksum logging
 		Log.info(
 			"Using simplified checksum validation approach",
 			{
@@ -1064,10 +986,8 @@ func execute_with_state_validation(
 			["debug", "validation", "state_validation"]
 		)
 
-	# Calculate total execution time
 	var total_duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# Create comprehensive result
 	var result_metadata: Dictionary = {
 		"action_name": action_name,
 		"category": category,
@@ -1079,7 +999,6 @@ func execute_with_state_validation(
 		"execution_result": execution_result
 	}
 
-	# Determine overall success including state validation
 	var overall_success: bool = execution_success
 	var final_error_message: String = error_message
 	var error_category: DebugAction.Result.ErrorCategory = DebugAction.Result.ErrorCategory.NONE
@@ -1105,13 +1024,11 @@ func execute_with_state_validation(
 				["debug", "validation", "validation_failure"]
 			)
 
-	# Update status based on final result
 	if overall_success:
 		_update_status("Completed: " + action_name + " (validated)")
 	else:
 		_update_status("ERROR: " + action_name + " - " + final_error_message, true)
 
-	# Create and return comprehensive result
 	var final_result: DebugAction.Result
 	if overall_success:
 		final_result = DebugAction.Result.new_success(
@@ -1145,64 +1062,27 @@ func execute_with_state_validation(
 	return final_result
 
 
-## Enhanced execute method that automatically detects if state validation is needed
-## Uses current session context to determine validation requirements
 func execute_with_auto_validation() -> DebugAction.Result:
 	"""Execute with automatic state validation detection based on current session context"""
-	# Get current session context
 	var current_session_id: String = SessionManager.get_current_session_id()
 	var current_sequence: int = SessionManager.session_action_count + 1
 
-	# Use state validation if we have session context
 	if not current_session_id.is_empty():
 		return await execute_with_state_validation(current_session_id, current_sequence)
 	else:
-		# Fall back to standard execution
 		Log.debug(
 			"No session context available, using standard execution",
 			{"action_name": action_name},
 			["debug", "validation", "no_session"]
 		)
 		execute()
-		# Convert to Result format for consistency
 		return DebugAction.Result.new_success(
 			null, 0, action_name, {"validation_mode": "none", "reason": "no_session_context"}
 		)
 
 
-## Helper method to determine if automatic state validation should be used
-# TEMPORARILY DISABLED ENTIRE FUNCTION
-# func _should_auto_validate_state() -> bool:
-# 	"""Check if current execution context should use automatic state validation"""
-# 	# Only enable for test contexts (when current_test_id is set)
-# 	if current_test_id.is_empty():
-# 		return false
-#
-# 	# Check if this appears to be a demo or replay by examining the test ID
-# 	# Demo configs typically have "demo", "replay", or "test" in their names
-# 	var test_id_lower: String = current_test_id.to_lower()
-# 	var is_demo_test: bool = (
-# 		test_id_lower.contains("demo")
-# 		or test_id_lower.contains("replay")
-# 		or test_id_lower.contains("working")
-# 		or test_id_lower.contains("manual")
-# 	)
-#
-# 	Log.debug(
-# 		"Auto validation check",
-# 		{
-# 			"action": action_name,
-# 			"test_id": current_test_id,
-# 			"is_demo_test": is_demo_test,
-# 			"test_action_count": test_action_count
-# 		},
-# 		["debug", "validation", "auto_check"]
-# 	)
-#
-# 	return is_demo_test
 
 
-## Async wrapper for state validation execution
 func _execute_with_validation_async(session_id: String, sequence: int) -> void:
 	"""Execute state validation asynchronously and handle result"""
 	var validation_result: DebugAction.Result = await execute_with_state_validation(
@@ -1211,20 +1091,17 @@ func _execute_with_validation_async(session_id: String, sequence: int) -> void:
 	_process_validation_result_for_legacy_execution(validation_result)
 
 
-## Process validation result for compatibility with legacy execution flow
 func _process_validation_result_for_legacy_execution(validation_result: DebugAction.Result) -> void:
 	"""Convert state validation result to legacy execution result format"""
 	var success: bool = validation_result.is_success()
 	var result: Variant = validation_result.payload
 	var error_message: String = validation_result.error_message
 
-	# Update status based on validation result
 	if success:
 		_update_status("Completed with validation: " + action_name)
 	else:
 		_update_status("ERROR with validation: " + action_name + " - " + error_message, true)
 
-	# Emit execution completed signal for UI consistency
 	execution_completed.emit(success, result)
 
 	Log.info(

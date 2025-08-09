@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_error_handling_test_action.gd
 class_name BackendErrorHandlingTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.error_handling"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend error handling...")
@@ -28,7 +26,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var successful_error_handling: int = 0
 	var total_error_tests: int = 0
 
-	# Test 1: Invalid path handling
 	_update_status("Testing invalid path error handling...")
 	total_error_tests += 1
 	var invalid_path: Array[String] = []  # Empty path should be handled gracefully
@@ -36,7 +33,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"get_data", invalid_path, "", null, "Error: Invalid Path"
 	)
 
-	# For error handling, we expect the operation to fail gracefully (return false/null, not crash)
 	var invalid_handled: bool = invalid_result == false or invalid_result == null
 	if invalid_handled:
 		successful_error_handling += 1
@@ -44,7 +40,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		{"test": "invalid_path", "handled_gracefully": invalid_handled, "result": invalid_result}
 	)
 
-	# Test 2: Network timeout simulation (using very long path)
 	_update_status("Testing timeout error handling...")
 	total_error_tests += 1
 	var timeout_path: Array[String] = [
@@ -57,7 +52,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 	var timeout_duration: int = Time.get_ticks_msec() - timeout_start_time
 
-	# Backend should handle timeouts gracefully and return within reasonable time
 	var timeout_handled: bool = timeout_duration < 30000  # Should not hang for more than 30 seconds
 	if timeout_handled:
 		successful_error_handling += 1
@@ -70,17 +64,14 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: Unsupported method handling
 	_update_status("Testing unsupported method error handling...")
 	total_error_tests += 1
 	var unsupported_path: Array[String] = ["backend_tests", "error_handling", "unsupported"]
 
-	# Call test_backend_async_pattern with an unsupported method
 	var unsupported_result: Variant = await test_backend_async_pattern(
 		"unsupported_method", unsupported_path, "test", "value", "Error: Unsupported Method"
 	)
 
-	# Should return false and not crash
 	var unsupported_handled: bool = unsupported_result == false
 	if unsupported_handled:
 		successful_error_handling += 1
@@ -92,7 +83,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 4: Backend availability check
 	_update_status("Testing backend availability error handling...")
 	total_error_tests += 1
 	var availability_check: bool = backend.is_available()
@@ -107,7 +97,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Calculate success rate
 	var error_success_rate: float = float(successful_error_handling) / float(total_error_tests)
 	var overall_success: bool = error_success_rate >= 0.75  # 75% of error scenarios should be handled gracefully
 	var total_duration: int = Time.get_ticks_msec() - start_time

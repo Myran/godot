@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_remove_value_test_action.gd
 class_name CPPRemoveValueTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,15 +7,12 @@ func _init() -> void:
 	action_name = "cpp.firebase.remove_value"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
-	# First set a value directly via C++
 	var test_path: Array = ["cpp_tests", "direct", "remove_value", str(Time.get_ticks_msec())]
 	var test_value: String = "CPP Remove Test Value: " + str(Time.get_ticks_msec())
 
-	# Step 1: Set test value
 	var set_start: int = Time.get_ticks_msec()
 	var set_result: Variant = await execute_cpp_operation(
 		"set_value_async", [test_path, test_value], "C++ Set (for Remove test)", "set_value"
@@ -39,7 +35,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Step 2: Remove the value directly via C++
 	var remove_start: int = Time.get_ticks_msec()
 	var remove_result: Variant = await execute_cpp_operation(
 		"remove_value_async", [test_path], "C++ Remove Value", "remove_value"
@@ -81,7 +76,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

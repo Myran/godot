@@ -54,10 +54,8 @@ func init_battle_reenactment(source_card: Card) -> void:
 	level = source_card.level
 	card_name = source_card.card_name
 
-	# Extract minimal data from source
 	var card_id: String = source_card.unit_info.card_info.id
 
-	# Set visual components only (no UnitData)
 	var img_string: String = card_controller.get_card_image_name(card_id)
 	base.set_card_img(img_string)
 	base.set_card_attack(source_card.unit_info.current_attack)

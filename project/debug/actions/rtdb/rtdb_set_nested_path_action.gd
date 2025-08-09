@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_set_nested_path_action.gd
 class_name RTDBSetNestedPathAction
 extends RTDBDebugAction
 
@@ -10,7 +9,6 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -75,7 +73,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

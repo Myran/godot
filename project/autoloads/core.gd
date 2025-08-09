@@ -20,9 +20,6 @@ enum ObjectType {
 }
 
 enum EventSource { PLAYER, DEBUG_SETUP, SYSTEM_CASCADE }
-# PLAYER: Direct player decisions (record these)
-# DEBUG_SETUP: Debug actions that setup game state (record these)
-# SYSTEM_CASCADE: System-generated consequences (don't record)
 
 const CARD_MERGE_AMOUNT: int = 3
 
@@ -30,7 +27,6 @@ const CARD_MERGE_AMOUNT: int = 3
 class CoreEvent:
 	extends Context.Event
 
-	# Polymorphic method for type identification - override in serializable events
 	func get_serialization_type_name() -> StringName:
 		return &""  # Default: not serializable
 

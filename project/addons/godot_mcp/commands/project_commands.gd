@@ -26,11 +26,9 @@ func _get_project_info(client_id: int, _params: Dictionary, command_id: String) 
 	var project_version = ProjectSettings.get_setting("application/config/version", "1.0.0")
 	var project_path = ProjectSettings.globalize_path("res://")
 	
-	# Get Godot version info and structure it as expected by the server
 	var version_info = Engine.get_version_info()
 	print("Raw Godot version info: ", version_info)
 	
-	# Create structured version object with the expected properties
 	var structured_version = {
 		"major": version_info.get("major", 0),
 		"minor": version_info.get("minor", 0),
@@ -49,7 +47,6 @@ func _list_project_files(client_id: int, params: Dictionary, command_id: String)
 	var extensions = params.get("extensions", [])
 	var files = []
 	
-	# Get all files with the specified extensions
 	var dir = DirAccess.open("res://")
 	if dir:
 		_scan_directory(dir, "", extensions, files)
@@ -126,7 +123,6 @@ func _analyze_project_structure(dir: DirAccess, path: String, structure: Diction
 	dir.list_dir_end()
 
 func _get_project_settings(client_id: int, params: Dictionary, command_id: String) -> void:
-	# Get relevant project settings
 	var settings = {
 		"project_name": ProjectSettings.get_setting("application/config/name", "Untitled Project"),
 		"project_version": ProjectSettings.get_setting("application/config/version", "1.0.0"),
@@ -152,7 +148,6 @@ func _get_project_settings(client_id: int, params: Dictionary, command_id: Strin
 		"input_map": {}
 	}
 	
-	# Get input mappings
 	var input_map = ProjectSettings.get_setting("input")
 	if input_map:
 		settings["input_map"] = input_map
@@ -189,7 +184,6 @@ func _scan_resources(dir: DirAccess, path: String, resources: Dictionary) -> voi
 		else:
 			var file_path = "res://" + path + file_name
 			
-			# Categorize by extension
 			if file_name.ends_with(".tscn") or file_name.ends_with(".scn"):
 				resources["scenes"].append(file_path)
 			elif file_name.ends_with(".gd") or file_name.ends_with(".cs"):

@@ -17,7 +17,6 @@ func setup_card(card: Card) -> void:
 	Log.info("Setting up card in card view", {"card": card}, [Log.TAG_DB, Log.TAG_CARD, Log.TAG_UI])
 
 	var info: UnitData = card.unit_info
-#	var img_string = str("cardtest/card_image_",debug.asset_variant,"_",info.card_info.id,".png")
 	var id: String = info.card_info.id
 	var img_string: String = card_controller.get_card_image_name(id)
 	card_image.texture = load(img_string)

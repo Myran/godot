@@ -8,8 +8,6 @@ func _ready() -> void:
 
 
 func _on_core_event(event: core.CoreEvent) -> void:
-	#match event_type:
-	# 	core.EVENT_TYPE.GAME_STATE_TRANSITION:
 	if event is core.TransitionEvent:
 		var new_state: core.GameState = event.new_state
 		match new_state:

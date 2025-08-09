@@ -1,49 +1,16 @@
 @tool
 class_name ConfigManager
 extends RefCounted
-## Centralized configuration manager for Advanced Logger
-##
-## Provides a single source of truth for configuration constants, values,
-## and operations. Eliminates duplication across multiple files and
-## provides a notification system for configuration changes.
-##
-## This is the primary access point for all configuration operations.
-## Other classes should use this manager instead of directly accessing
-## configuration files or using deprecated alternatives.
-##
-## Example usage:
-## ```gdscript
-## # Get the ConfigManager instance
-## var config = ConfigManager.get_instance()
-##
-## # Get configuration values
-## var level = config.get_log_level()
-## var active_tags = config.get_active_tags()
-##
-## # Set configuration values
-## config.set_log_level(Logger.LogLevel.INFO)
-## config.set_show_timestamp(true)
-##
-## # Save changes
-## config.save()
-## ```
 
 signal config_changed(section: String, key: String, value: Variant)
 
-## Configuration file constants
-## These are the centralized constants for all configuration operations.
-## Using these constants instead of hardcoded strings ensures consistency
-## across the codebase and simplifies future changes.
 
-# Configuration file path
 const CONFIG_PATH: String = "res://addons/advanced_logger/settings.cfg"
 
-# Configuration section names
 const SECTION_LOGGER: String = "logger"  ## Section for logger settings (log level, tags)
 const SECTION_FORMAT: String = "format"  ## Section for formatting settings (timestamp, colors)
 const SECTION_SETUPS: String = "tag_setups"  ## Section for tag setups/presets
 
-# Configuration keys
 const KEY_LOG_LEVEL: String = "log_level"  ## Key for log level setting
 const KEY_ACTIVE_TAGS: String = "active_tags"  ## Key for active (filter) tags
 const KEY_IGNORED_TAGS: String = "ignored_tags"  ## Key for ignored tags
@@ -56,7 +23,6 @@ const KEY_BUFFER_SIZE: String = "buffer_size"  ## Key for buffer size setting
 const KEY_ENABLE_BUFFER_DUMP: String = "enable_buffer_dump"  ## Key for buffer dump toggle
 const KEY_SHOW_EDITOR_DEBUG: String = "show_editor_debug"  ## Key for showing editor debug prints toggle
 
-# Default values used when config file is missing or incomplete
 const DEFAULT_LOG_LEVEL: int = 1  ## Default log level (INFO)
 const DEFAULT_SHOW_TIMESTAMP: bool = true  ## Default timestamp display (on)
 const DEFAULT_SHOW_TAGS: bool = true  ## Default tags display (on)
@@ -66,43 +32,30 @@ const DEFAULT_BUFFER_SIZE: int = 20    ## Default buffer size
 const DEFAULT_ENABLE_BUFFER_DUMP: bool = true  ## Default buffer dump setting (enabled)
 const DEFAULT_SHOW_EDITOR_DEBUG: bool = false  ## Default editor debug prints (disabled)
 
-## Singleton pattern implementation
-## This ensures that only one instance of ConfigManager exists throughout the application.
-## Always use get_instance() to access the ConfigManager instead of creating a new instance.
 
 static var _instance: ConfigManager = null
-# Config file instance
 var _config: ConfigFile = ConfigFile.new()
 var _config_loaded: bool = false
 
 
 
 
-## Get the singleton instance of ConfigManager
-## This is the main access point for the ConfigManager.
-## Returns: The shared ConfigManager instance
 static func get_instance() -> ConfigManager:
 	if _instance == null:
 		_instance = ConfigManager.new()
 	return _instance
 
-## Cleanup function to properly free the singleton instance
 static func cleanup() -> void:
 	if _instance != null:
-		# Clean up instance properly
 		_instance.cleanup_instance()
 
-		# Force free the instance if possible
 		if is_instance_valid(_instance):
 			if _instance._config:
-				# Clear the ConfigFile instance
 				_instance._config = null
 
-			# Clear cached instance first
 			var temp_instance = _instance
 			_instance = null
 
-			# Free the instance if it inherits from Object
 			if temp_instance is Object and not temp_instance is RefCounted:
 				temp_instance.free()
 		else:
@@ -111,21 +64,16 @@ static func cleanup() -> void:
 func _init() -> void:
 	_load_config()
 
-## Loads the configuration file and handles version upgrades
-## Returns: Error code from the load operation
 func _load_config() -> Error:
-	# Get the appropriate config path for the platform
 	var config_path = _get_platform_config_path()
 	var result = Error.FAILED
 
 	print("[ConfigManager] Attempting to load config from: %s" % config_path)
 	print("[ConfigManager] File exists: %s" % FileAccess.file_exists(config_path))
 
-	# First try the standard load
 	result = _config.load(config_path)
 	print("[ConfigManager] Standard load result: %s (%d)" % [error_string(result), result])
 
-	# If that fails on mobile platforms, try using FileAccess
 	if result != OK and _is_mobile_platform():
 		print("[ConfigManager] Standard load failed on mobile, trying FileAccess method")
 		if FileAccess.file_exists(config_path):
@@ -141,35 +89,28 @@ func _load_config() -> Error:
 				print("[ConfigManager] Failed to open file with FileAccess")
 		else:
 			print("[ConfigManager] Config file doesn't exist, creating and copying from project config")
-			# On mobile platforms, copy project config to user:// if it doesn't exist
 			_create_default_config()
 			result = OK
 
 	_config_loaded = result == OK or result == ERR_FILE_NOT_FOUND
 	print("[ConfigManager] Config loaded successfully: %s" % _config_loaded)
 
-	# Handle configuration version upgrades
 	if result == OK:
 		print("[ConfigManager] Config loaded OK, checking for upgrades")
 		_upgrade_config_if_needed()
 	else:
 		print("[ConfigManager] Config load failed, final result: %s" % error_string(result))
 
-	# Print the actual log level that was loaded
 	if _config_loaded:
 		var loaded_log_level = get_log_level()
 		print("[ConfigManager] Loaded log level: %d (%s)" % [loaded_log_level, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][loaded_log_level]])
 
 	return result
 
-## Creates a default configuration in memory for mobile platforms
-## First attempts to migrate from res:// config, then falls back to hardcoded defaults
 func _create_default_config() -> void:
-	# Try to migrate from res:// config first
 	if not _migrate_from_res_config():
 		print("[ConfigManager] No res:// config found, using hardcoded defaults")
 
-		# Set default logger settings
 		_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
 		_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
 		_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
@@ -177,17 +118,14 @@ func _create_default_config() -> void:
 		_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
 		_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
 
-		# Set default format settings
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
 		_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
 
-	# Set version marker
 	_config.set_value("meta", "version", 1)
 
-	# Save the migrated/default config to user:// on mobile platforms
 	if _is_mobile_platform():
 		var save_result = save()
 		if save_result == OK:
@@ -195,10 +133,7 @@ func _create_default_config() -> void:
 		else:
 			print("[ConfigManager] Failed to save migrated config: %s" % error_string(save_result))
 
-## Attempts to migrate configuration from res:// to current config
-## Returns true if migration was successful, false otherwise
 func _migrate_from_res_config() -> bool:
-	# Create a temporary ConfigFile to load the res:// config
 	var res_config = ConfigFile.new()
 	print("[ConfigManager] Attempting to migrate config from res:// path: %s" % CONFIG_PATH)
 	print("[ConfigManager] res:// config file exists: %s" % FileAccess.file_exists(CONFIG_PATH))
@@ -211,7 +146,6 @@ func _migrate_from_res_config() -> bool:
 
 	print("[ConfigManager] Successfully loaded res:// config, migrating settings to mobile platform")
 
-	# Migrate logger settings
 	if res_config.has_section(SECTION_LOGGER):
 		var log_level = res_config.get_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
 		_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, log_level)
@@ -232,7 +166,6 @@ func _migrate_from_res_config() -> bool:
 		var enable_buffer_dump = res_config.get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
 		_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, enable_buffer_dump)
 
-	# Migrate format settings
 	if res_config.has_section(SECTION_FORMAT):
 		var show_timestamp = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, show_timestamp)
@@ -249,7 +182,6 @@ func _migrate_from_res_config() -> bool:
 		var show_editor_debug = res_config.get_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, show_editor_debug)
 
-	# Migrate tag setups if they exist (both new and legacy sections)
 	if res_config.has_section(SECTION_SETUPS):
 		print("[ConfigManager] Migrating tag_setups section")
 		var setup_keys = res_config.get_section_keys(SECTION_SETUPS)
@@ -257,7 +189,6 @@ func _migrate_from_res_config() -> bool:
 			var value = res_config.get_value(SECTION_SETUPS, key)
 			_config.set_value(SECTION_SETUPS, key, value)
 
-	# Also migrate legacy "setups" section if it exists
 	if res_config.has_section("setups"):
 		print("[ConfigManager] Migrating legacy setups section")
 		var legacy_keys = res_config.get_section_keys("setups")
@@ -268,70 +199,44 @@ func _migrate_from_res_config() -> bool:
 	print("[ConfigManager] Successfully migrated configuration from res:// to mobile platform")
 	return true
 
-## Upgrades configuration format if needed
-## This ensures backward compatibility with older config formats
 func _upgrade_config_if_needed() -> void:
-	# Check if config has a version marker
 	if not _config.has_section_key("meta", "version"):
-		# This is a pre-versioned config, upgrade to version 1
 
-		# Migrate any old 'setups' section to 'tag_setups' if needed
 		if _config.has_section("setups") and not _config.has_section(SECTION_SETUPS):
 			var keys = _config.get_section_keys("setups")
 			for key in keys:
 				var value = _config.get_value("setups", key)
 				_config.set_value(SECTION_SETUPS, key, value)
 
-		# Add version marker
 		_config.set_value("meta", "version", 1)
 
-		# Save updated config
 		save()
 		print_rich("[color=#%s]Config upgraded to version 1[/color]" % LoggerColors.INFO_HTML)
 
-## Gets a value from the configuration with fallback to default
-## Parameters:
-## - section: Configuration section name
-## - key: Configuration key
-## - default_value: Default value if key doesn't exist
-##
-## Returns: The stored value or default if not found
 func get_value(section: String, key: String, default_value: Variant = null) -> Variant:
 	if not _config_loaded:
 		_load_config()
 
 	return _config.get_value(section, key, default_value)
 
-## Sets a value in the configuration and notifies listeners
-## Parameters:
-## - section: Configuration section name
-## - key: Configuration key
-## - value: Value to store
-##
-## Validates input values where appropriate and performs type checking
 func set_value(section: String, key: String, value: Variant) -> void:
 	if not _config_loaded:
 		_load_config()
 
-	# Validate certain known values before storing
 	if section == SECTION_LOGGER and key == KEY_LOG_LEVEL:
-		# Validate log level is within bounds
 		if not (value is int and value >= 0 and value <= 4):
 			push_warning("Invalid log level value: %s. Using default." % str(value))
 			value = DEFAULT_LOG_LEVEL
 
-	# Ensure array types are converted properly for certain keys
 	if section == SECTION_LOGGER and (key == KEY_ACTIVE_TAGS or key == KEY_IGNORED_TAGS or key == KEY_AVAILABLE_TAGS):
 		if not value is Array:
 			push_warning("Non-array value for %s.%s. Converting to empty array." % [section, key])
 			value = []
 
-	# Format settings should be booleans
 	if section == SECTION_FORMAT and (key == KEY_SHOW_TIMESTAMP or key == KEY_SHOW_TAGS or
 			key == KEY_USE_COLORS or key == KEY_SHOW_SOURCE):
 		if not value is bool:
 			push_warning("Non-boolean value for %s.%s. Converting to default." % [section, key])
-			# Use appropriate default based on key
 			if key == KEY_SHOW_TIMESTAMP:
 				value = DEFAULT_SHOW_TIMESTAMP
 			elif key == KEY_SHOW_TAGS:
@@ -344,13 +249,10 @@ func set_value(section: String, key: String, value: Variant) -> void:
 	_config.set_value(section, key, value)
 	config_changed.emit(section, key, value)
 
-## Get appropriate config path based on platform
 func _get_platform_config_path() -> String:
-	# Check if platform-specific helpers are available
 	var platform = OS.get_name()
 	print("[ConfigManager] Platform detected: %s" % platform)
 
-	# Try to use Android helper if on Android
 	if platform == "Android":
 		var android_helper: Script = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
 		if android_helper:
@@ -361,7 +263,6 @@ func _get_platform_config_path() -> String:
 			print("[ConfigManager] Android helper failed to load, using fallback path")
 			return "user://advanced_logger_settings.cfg"
 
-	# Try to use iOS helper if on iOS
 	elif platform == "iOS":
 		var ios_helper: Script = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 		if ios_helper:
@@ -372,31 +273,23 @@ func _get_platform_config_path() -> String:
 			print("[ConfigManager] iOS helper failed to load, using fallback path")
 			return "user://advanced_logger_settings.cfg"
 
-	# Default path for desktop platforms
 	print("[ConfigManager] Desktop platform, using res:// config path: %s" % CONFIG_PATH)
 	return CONFIG_PATH
 
-## Check if running on a mobile platform
 func _is_mobile_platform() -> bool:
 	var platform = OS.get_name()
 	return platform == "Android" or platform == "iOS"
 
-## Saves the configuration to disk
-## Returns: Error code from the save operation
 func save() -> Error:
-	# On mobile platforms, we can't save to res://, use user:// instead
 	if _is_mobile_platform():
 		var user_config_path = "user://advanced_logger_settings.cfg"
 		return _config.save(user_config_path)
 
-	# On desktop platforms, use standard save
-	# Create directories if needed
 	var dir_path = CONFIG_PATH.get_base_dir()
 	var dir = DirAccess.open("res://")
 	if not dir:
 		return FileAccess.get_open_error()
 
-	# Create directory path if it doesn't exist
 	if not dir.dir_exists(dir_path):
 		var current_path = "res://"
 		for path_part in dir_path.trim_prefix("res://").split("/"):
@@ -409,23 +302,12 @@ func save() -> Error:
 
 	return _config.save(CONFIG_PATH)
 
-## Checks if the configuration has a specific key
-## Parameters:
-## - section: Configuration section name
-## - key: Configuration key
-##
-## Returns: True if the key exists
 func has_value(section: String, key: String) -> bool:
 	if not _config_loaded:
 		_load_config()
 
 	return _config.has_section_key(section, key)
 
-## Clears a section of the configuration
-## Parameters:
-## - section: Configuration section name to clear
-##
-## Returns: True if the section was found and cleared
 func clear_section(section: String) -> bool:
 	if not _config_loaded:
 		_load_config()
@@ -433,16 +315,13 @@ func clear_section(section: String) -> bool:
 	if not _config.has_section(section):
 		return false
 
-	# Get all keys in the section
 	var keys = _config.get_section_keys(section)
 
-	# Remove each key
 	for key in keys:
 		_config.set_value(section, key, null)
 
 	return true
 
-## Helper methods for common operations
 
 func get_log_level() -> int:
 	return get_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
@@ -461,7 +340,6 @@ func get_active_tags() -> Array[String]:
 	return []
 
 func set_active_tags(tags: Array[String]) -> void:
-	# Filter out any category names before saving
 	var filtered_tags: Array[String] = []
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
@@ -479,7 +357,6 @@ func get_ignored_tags() -> Array[String]:
 		return result
 	return []
 
-# Helper function to check if a tag name is a reserved category name
 func _is_reserved_category_name(tag: String) -> bool:
 	if not tag is String:
 		return false
@@ -488,7 +365,6 @@ func _is_reserved_category_name(tag: String) -> bool:
 	return lower_tag == "available" or lower_tag == "active" or lower_tag == "ignored"
 
 func set_ignored_tags(tags: Array[String]) -> void:
-	# Filter out any category names before saving
 	var filtered_tags: Array[String] = []
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
@@ -507,7 +383,6 @@ func get_available_tags() -> Array[String]:
 	return []
 
 func set_available_tags(tags: Array[String]) -> void:
-	# Filter out any category names before saving
 	var filtered_tags: Array[String] = []
 	for tag in tags:
 		if not _is_reserved_category_name(tag):
@@ -543,7 +418,6 @@ func get_buffer_size() -> int:
 	return get_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
 
 func set_buffer_size(size: int) -> void:
-	# Ensure buffer size is reasonable
 	set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, max(1, size))
 
 func get_enable_buffer_dump() -> bool:
@@ -558,23 +432,12 @@ func get_show_editor_debug() -> bool:
 func set_show_editor_debug(show: bool) -> void:
 	set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, show)
 
-## Gets a tag setup by name
-## Parameters:
-## - setup_name: Name of the tag setup
-##
-## Returns: Dictionary with the setup or empty Dictionary if not found
 func get_tag_setup(setup_name: String) -> Dictionary:
 	return get_value(SECTION_SETUPS, setup_name, {})
 
-## Sets a tag setup
-## Parameters:
-## - setup_name: Name of the tag setup
-## - setup_data: Dictionary containing setup data
 func set_tag_setup(setup_name: String, setup_data: Dictionary) -> void:
 	set_value(SECTION_SETUPS, setup_name, setup_data)
 
-## Gets all tag setups
-## Returns: Dictionary with all setups
 func get_all_tag_setups() -> Dictionary:
 	if not _config_loaded:
 		_load_config()
@@ -587,16 +450,10 @@ func get_all_tag_setups() -> Dictionary:
 
 	return result
 
-## Reset all settings to default values
-## This does not affect tag setups
-##
-## Returns: Error code from the save operation
 func reset_to_defaults() -> Error:
-	# Clear existing sections first
 	clear_section(SECTION_LOGGER)
 	clear_section(SECTION_FORMAT)
 
-	# Set defaults for logger settings
 	set_log_level(DEFAULT_LOG_LEVEL)
 	set_active_tags([])
 	set_ignored_tags([])
@@ -604,30 +461,22 @@ func reset_to_defaults() -> Error:
 	set_buffer_size(DEFAULT_BUFFER_SIZE)
 	set_enable_buffer_dump(DEFAULT_ENABLE_BUFFER_DUMP)
 
-	# Set defaults for format settings
 	set_show_timestamp(DEFAULT_SHOW_TIMESTAMP)
 	set_show_tags(DEFAULT_SHOW_TAGS)
 	set_use_colors(DEFAULT_USE_COLORS)
 	set_show_source(DEFAULT_SHOW_SOURCE)
 	set_show_editor_debug(DEFAULT_SHOW_EDITOR_DEBUG)
 
-	# Save the changes
 	return save()
 
-## Instance cleanup function to be called when the plugin is disabled
 func cleanup_instance() -> void:
-	# Disconnect any signals first
 	if is_instance_valid(self):
-		# Clear all signal connections
 		var connections = get_signal_connection_list("config_changed")
 		for connection in connections:
 			disconnect("config_changed", connection["callable"])
 
-	# Clear any references we hold
 	if _config != null:
-		# Clear the ConfigFile completely
 		_config.clear()
 		_config = null
 
-	# Clear any other references
 	_config_loaded = false

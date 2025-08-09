@@ -1,6 +1,5 @@
 class_name SignalAwaiter extends Node
 
-# Added signal typing to indicate it emits no arguments
 signal finished
 
 
@@ -9,7 +8,6 @@ func _init() -> void:  # Added return type
 	win.call_deferred("add_child", self)
 
 
-# Added Signal type to indicate godot built-in Signal class
 func add(_signal: Signal) -> SignalAwaiter:  # Added return type
 	@warning_ignore("return_value_discarded")
 	_signal.connect(_on_signal_received.bind(_signal), CONNECT_ONE_SHOT)
@@ -30,7 +28,6 @@ func _on_signal_received(_signal: Signal) -> void:  # Added param and return typ
 	finish()
 
 
-# Changed inner classes to properly extend base class and add typing
 class Any:
 	extends SignalAwaiter
 

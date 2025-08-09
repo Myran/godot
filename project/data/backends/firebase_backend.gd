@@ -1,13 +1,8 @@
-# File: project/data/backends/firebase_backend.gd
 class_name FirebaseBackend
 extends DataBackend
 
-#-----------------------------------------------------------------------------#
-# Type-Safe Inner Classes                                                     #
-#-----------------------------------------------------------------------------#
 
 
-## Strongly-typed wrapper for Firebase C++ database instance
 class FirebaseDatabaseWrapper:
 	var _cpp_instance: Object
 	var _instance_id: int
@@ -36,7 +31,6 @@ class FirebaseDatabaseWrapper:
 		return _cpp_instance.callv(method_name, args)
 
 
-## Type-safe Timer management
 class TimerManager:
 	var _timer: Timer
 	var _timer_id: int
@@ -81,7 +75,6 @@ class TimerManager:
 		_is_active = false
 
 
-## Strongly-typed request tracking
 class RequestTracker:
 	var request_id: int
 	var signal_helper: RequestSignalHelper
@@ -107,34 +100,26 @@ class RequestTracker:
 			timer_manager.cleanup()
 
 
-## Helper class to emit unique signals for each request
 class RequestSignalHelper:  # RefCounted so it's managed by Godot's GC
 	signal completed(result_data: Variant)  # Signal to indicate operation completion (success or error)
 
 
 const DEFAULT_TIMEOUT: float = 10.0  # Default timeout for operations in seconds
 
-# Type-safe Firebase database wrapper
 var db: FirebaseDatabaseWrapper = null
 
-# Internal State
 var _initialized: bool = false
-# Strongly-typed request tracking
 var _pending_requests: Dictionary = {}  # request_id: int -> RequestTracker
 var _next_request_id: int = 0
 var _signal_connect_errors: Dictionary = {}  # Stores errors from connecting C++ signals
 var _is_being_freed: bool = false  # Flag to prevent actions during object deallocation
 var _backend_instance_id_str: String  # Cached string of this instance's ID for logging
 
-#-----------------------------------------------------------------------------#
-# Initialization & Lifecycle                                                  #
-#-----------------------------------------------------------------------------#
 
 
 func _init() -> void:
 	_is_being_freed = false
 	_backend_instance_id_str = str(get_instance_id())  # Cache for logging
-	# Log with ERROR level to make multiple inits very obvious in logs, if they occur
 	Log.info(
 		"FirebaseBackend _init CALLED (DirectAwait Pattern)",
 		{"instance_id": _backend_instance_id_str},
@@ -156,7 +141,6 @@ func _notification(what: int) -> void:
 		)
 		_is_being_freed = true  # Set flag to stop further processing
 
-		# Clean up pending requests using type-safe RequestTracker
 		var request_ids_to_clear: Array[int] = _pending_requests.keys()
 		for request_id: int in request_ids_to_clear:
 			if _pending_requests.has(request_id):
@@ -168,10 +152,8 @@ func _notification(what: int) -> void:
 					[Log.TAG_FIREBASE]
 				)
 
-				# Clean up timer safely
 				request_tracker.cleanup()
 
-				# Emit completion signal if not already settled
 				if (
 					not request_tracker.is_settled
 					and is_instance_valid(request_tracker.signal_helper)
@@ -191,7 +173,6 @@ func _notification(what: int) -> void:
 
 		_pending_requests.clear()
 
-		# Release database wrapper reference
 		if db != null and db.is_valid():
 			Log.debug(
 				"FirebaseBackend: Releasing database wrapper on predelete",
@@ -201,7 +182,6 @@ func _notification(what: int) -> void:
 		db = null
 
 
-## Initializes the Firebase backend, C++ module, and signal connections.
 func initialize() -> bool:
 	Log.debug(
 		"FirebaseBackend initialize starting... (DirectAwait Pattern)",
@@ -234,7 +214,6 @@ func initialize() -> bool:
 		)
 		return false
 
-	# Create type-safe wrapper
 	db = FirebaseDatabaseWrapper.new(cpp_db_instance)
 	Log.debug(
 		"FirebaseDatabase wrapper created",
@@ -257,20 +236,15 @@ func initialize() -> bool:
 			{"errors": _signal_connect_errors, "instance_id": _backend_instance_id_str},
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
-		# Consider if any failed signal connections are critical enough to return false
 
 	call_deferred("emit_signal", "startup_completed")  # Notify that backend setup is done
 	return true
 
 
-## Checks if the backend is initialized, the database wrapper is valid, and not being freed.
 func is_available() -> bool:
 	return _initialized and db != null and db.is_valid() and not _is_being_freed
 
 
-#-----------------------------------------------------------------------------#
-# C++ Module Signal Connection                                                #
-#-----------------------------------------------------------------------------#
 
 
 func _connect_signals() -> void:
@@ -339,9 +313,6 @@ func _connect_signals() -> void:
 	)
 
 
-#-----------------------------------------------------------------------------#
-# Internal Request Management (Direct Signal Await)                           #
-#-----------------------------------------------------------------------------#
 
 
 func _get_next_request_id() -> int:
@@ -349,8 +320,6 @@ func _get_next_request_id() -> int:
 	return _next_request_id
 
 
-## Executes a C++ RTDB operation and returns its result after awaiting a unique signal.
-## This version includes the modified timeout_callable logic.
 func _execute_rtdb_operation_and_await(
 	cpp_method_name: String,
 	full_path: Array[Variant],
@@ -385,18 +354,15 @@ func _execute_rtdb_operation_and_await(
 		)
 		return {"status": "error", "code": "TIMER_SETUP_FAIL", "message": "Root node unavailable"}
 
-	# Create type-safe timer manager
 	var timer_name: String = "FB_Timer_%s_%d" % [_backend_instance_id_str, request_id]
 	var timer_manager: TimerManager = TimerManager.new(root_node, timer_name)
 	timer_manager.configure(timeout_sec, true)
 
-	# Create strongly-typed request tracker
 	var request_tracker: RequestTracker = RequestTracker.new(
 		request_id, signal_helper, timer_manager
 	)
 	_pending_requests[request_id] = request_tracker
 
-	# Type-safe timeout handling
 	var timeout_callable: Callable = func() -> void:
 		if _is_being_freed:
 			return
@@ -418,7 +384,6 @@ func _execute_rtdb_operation_and_await(
 			)
 			return
 
-		# Timeout wins the race
 		var timeout_result: Dictionary = {
 			"status": "error",
 			"code": "TIMEOUT",
@@ -439,7 +404,6 @@ func _execute_rtdb_operation_and_await(
 			[Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 
-		# Settle request and emit signal
 		req_tracker.settle_with_result(timeout_result)
 		_pending_requests.erase(request_id)
 
@@ -481,7 +445,6 @@ func _execute_rtdb_operation_and_await(
 		[Log.TAG_FIREBASE, Log.TAG_NETWORK]
 	)
 
-	# Use type-safe database wrapper
 	db.call_method(cpp_method_name, call_args)
 	timer_manager.start()
 
@@ -498,7 +461,6 @@ func _execute_rtdb_operation_and_await(
 		[Log.TAG_FIREBASE]
 	)
 
-	# Clean up any remaining request tracker
 	if _pending_requests.has(request_id):
 		Log.warning(
 			"Request %d still in tracking after settlement, force cleaning" % request_id,
@@ -512,7 +474,6 @@ func _execute_rtdb_operation_and_await(
 	return final_result_data
 
 
-## Type-safe completion handler using RequestTracker
 func _complete_direct_await(
 	request_id: int,
 	result_payload: Variant,
@@ -568,7 +529,6 @@ func _complete_direct_await(
 			[Log.TAG_FIREBASE]
 		)
 
-	# Settle request safely
 	request_tracker.settle_with_result(result_for_signal)
 	_pending_requests.erase(request_id)
 
@@ -582,9 +542,6 @@ func _complete_direct_await(
 		)
 
 
-#-----------------------------------------------------------------------------#
-# C++ Signal Handlers (Calling _complete_direct_await)                        #
-#-----------------------------------------------------------------------------#
 
 
 func _on_get_value_completed(request_id: int, rtdb_key: String, value: Variant) -> void:
@@ -713,7 +670,6 @@ func _on_transaction_completed(
 		_complete_direct_await(request_id, error_message, true, "TRANSACTION_FAILED", error_message)
 
 
-# --- Real-time Listener Signals (These don't use the request/await pattern) ---
 func _on_child_added(key: String, value: Variant) -> void:
 	Log.info(
 		"[RTDB LISTENER] Child Added",
@@ -762,9 +718,6 @@ func _on_db_error(code: String, message: String) -> void:
 	)
 
 
-#-----------------------------------------------------------------------------#
-# Public DataBackend API Implementation (Using Direct Signal Await)           #
-#-----------------------------------------------------------------------------#
 
 
 func get_data(p_path: Array[Variant], key: String) -> Variant:
@@ -976,7 +929,6 @@ func set_server_timestamp(p_path: Array[Variant]) -> bool:
 	return false
 
 
-# Listener Management methods are unchanged as they are not promise-based.
 func start_listening(path_array: Array[Variant]) -> void:
 	if not is_available():
 		Log.error(
@@ -1022,8 +974,6 @@ func stop_listening(path_array: Array[Variant]) -> void:
 		[Log.TAG_DB, Log.TAG_FIREBASE]
 	)
 	if is_instance_valid(db):
-		# Note: Using the correct C++ API method name
-		# Check if the C++ module has the method by trying to call it
 		var result: Variant = db.call_method("remove_listener_at_path", [path_array])
 		if result == null:
 			Log.warning(

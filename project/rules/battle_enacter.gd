@@ -79,7 +79,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 				defender = enemy_units[event.defender_position]
 			else:
 				defender = allied_units[event.defender_position]
-			# Prepare names with explicit variables instead of ternary operators
 			var attacker_name: String = "unknown"
 			var defender_name: String = "unknown"
 
@@ -96,7 +95,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 
 			var combat_tween: Tween = create_tween()
 
-			# Animation timing configuration
 			var anim_speed: float = 0.2
 			var attack_distance: float = 0.65
 			var defense_distance: float = 0.25
@@ -112,7 +110,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			var defender_battle_pos: Vector2 = defender_start_pos.lerp(battle_pos, defense_distance)
 			var attacker_start_pos: Vector2 = attacker.global_position
 
-			# Highlight animation
 			(
 				combat_tween
 				. tween_property(defender, "scale", highlight_scale, highlight_speed)
@@ -128,7 +125,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 				. set_ease(Tween.EASE_IN_OUT)
 			)
 
-			# Movement animation
 			(
 				combat_tween
 				. tween_property(defender, "global_position", defender_battle_pos, anim_speed)
@@ -146,7 +142,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			combat_tween.play()
 			await combat_tween.finished
 
-			# Return animation
 			return_tween = create_tween()
 			var return_speed: float = anim_speed * return_multiplier
 
@@ -197,7 +192,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 				target = allied_units[event.target_position]
 			else:
 				target = enemy_units[event.target_position]
-			# Get target name explicitly
 			var target_name: String = "unknown"
 			if target != null:
 				target_name = target.get_card_name()
@@ -227,7 +221,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 				target.show_shield()
 			else:
 				target.hide_shield()
-			# Get target name explicitly
 			var target_name: String = "unknown"
 			if target != null:
 				target_name = target.get_card_name()
@@ -300,10 +293,8 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			)
 			await return_tween.finished
 
-	# Cleanup phase
 	await get_tree().create_timer(1.25).timeout
 	for side: Dictionary[int, Card] in [allied_units, enemy_units]:
-		# Use deterministic iteration for consistent cleanup order
 		var positions: Array[int] = DictUtils.keys_typed_sorted(side, TYPE_INT)
 		for pos: int in positions:
 			var unit: Card = side[pos]

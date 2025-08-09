@@ -95,7 +95,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 					var m_block: Block = interacted_object
 
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
-					# update_draft = true  // No longer needed - cascading handled by event system
 
 			core.TapState.HOLDING:
 				if dragging_cargo.object_type == core.ObjectType.CARD:
@@ -118,15 +117,12 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 									var from_pos: int = prev_holder.get_index()
 									var to_pos: int = interacted_holder.get_index()
 
-									# Only emit action if the move would be valid (destination empty)
 									if interacted_holder.get_card() == null:
-										# Enhanced semantic logging for player lineup move action
 										var card_id: String = dragging_card.card_info.id
 										SemanticLogger.log_lineup_move_card(
 											card_id, from_pos, to_pos
 										)
 
-										# Emit semantic action - game logic will perform the actual move
 										core.action(
 											core.MoveLineupCardEvent.new(
 												dragging_card, from_pos, to_pos
@@ -137,9 +133,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 								Cards.CONTEXT.DRAFT:
 									if is_instance_valid(dragging_card):
 										if clicker.has_card(dragging_card):
-											# Validate move before triggering event
 											if interacted_holder.can_set_card(dragging_card):
-												# Enhanced semantic logging for draft to lineup move
 												var draft_pos: Vector2i = (
 													clicker.level.get_grid_pos(dragging_card)
 												)
@@ -148,13 +142,11 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 													interacted_holder.get_index()
 												)
 
-												# Use LineupAddCardFromDraftEvent directly
 												core.action(
 													core.LineupAddCardFromDraftEvent.new(
 														dragging_card, draft_pos, holder_index
 													)
 												)
-												# Event handles completion, so we set update_draft = false
 												update_draft = false
 												release_handled = true
 

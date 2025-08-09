@@ -1,10 +1,4 @@
-class_name DictUtils
-extends RefCounted
 ## Utility class for deterministic and type-safe dictionary operations.
-##
-## Provides standardized methods for dictionary iteration, transformation,
-## and validation to ensure consistent behavior across the project.
-## Critical for battle system determinism and type safety.
 ##
 ## USAGE EXAMPLES:
 ##
@@ -29,11 +23,8 @@ extends RefCounted
 ## # Type-safe key extraction:
 ## var string_keys: Array[String] = DictUtils.keys_typed_sorted(dict, TYPE_STRING)
 ## var int_keys: Array[int] = DictUtils.keys_typed_sorted(dict, TYPE_INT)
-##
-## # Validation for deterministic behavior:
-## if DictUtils.validate_deterministic_keys(dict):
-##     # Safe to iterate deterministically
-
+class_name DictUtils
+extends RefCounted
 
 ## Returns an array of dictionaries, each containing a 'key' and 'value',
 ## sorted deterministically by the original dictionary's key.
@@ -47,7 +38,6 @@ extends RefCounted
 ## Example Usage:
 ## for item in DictUtils.get_sorted_items(my_dictionary):
 ##     print("Key: ", item.key, ", Value: ", item.value)
-##
 static func get_sorted_items(dict: Dictionary) -> Array[Dictionary]:
 	if not dict is Dictionary:
 		Log.error(
@@ -68,21 +58,16 @@ static func get_sorted_items(dict: Dictionary) -> Array[Dictionary]:
 	return items
 
 
-## Get dictionary keys as a sorted array for deterministic iteration
-## Returns Array[Variant] containing the sorted keys
 static func keys_sorted(dict: Dictionary) -> Array:
 	var keys_array: Array = dict.keys()
 	keys_array.sort()
 	return keys_array
 
 
-## Get dictionary keys as a strongly-typed sorted array
-## Type parameter must match the actual key type in the dictionary
 static func keys_typed_sorted(dict: Dictionary, type: Variant.Type = TYPE_NIL) -> Array:
 	var keys_array: Array = dict.keys()
 	keys_array.sort()
 
-	# If type is specified, validate and create typed array
 	if type != TYPE_NIL:
 		match type:
 			TYPE_INT:
@@ -103,8 +88,6 @@ static func keys_typed_sorted(dict: Dictionary, type: Variant.Type = TYPE_NIL) -
 	return keys_array
 
 
-## Get dictionary values in key-sorted order for deterministic iteration
-## Returns values in the same order as keys_sorted() would return keys
 static func values_sorted(dict: Dictionary) -> Array:
 	var sorted_keys: Array = keys_sorted(dict)
 	var values_array: Array = []
@@ -115,11 +98,9 @@ static func values_sorted(dict: Dictionary) -> Array:
 	return values_array
 
 
-## Get dictionary values as strongly-typed array in key-sorted order
 static func values_typed_sorted(dict: Dictionary, type: Variant.Type) -> Array:
 	var sorted_keys: Array = keys_sorted(dict)
 
-	# Create typed array based on specified type
 	match type:
 		TYPE_INT:
 			var typed_values: Array[int] = []
@@ -145,9 +126,6 @@ static func values_typed_sorted(dict: Dictionary, type: Variant.Type) -> Array:
 			return values_sorted(dict)
 
 
-## Create a new dictionary with keys and values transformed by functions
-## key_func: function to transform keys (key) -> new_key
-## value_func: function to transform values (key, value) -> new_value
 static func transform_dict(
 	dict: Dictionary, key_func: Callable = Callable(), value_func: Callable = Callable()
 ) -> Dictionary:
@@ -163,8 +141,6 @@ static func transform_dict(
 	return result
 
 
-## Filter dictionary entries based on predicate function
-## predicate: function (key, value) -> bool
 static func filter_dict(dict: Dictionary, predicate: Callable) -> Dictionary:
 	var result: Dictionary = {}
 	var sorted_keys: Array = keys_sorted(dict)
@@ -177,8 +153,6 @@ static func filter_dict(dict: Dictionary, predicate: Callable) -> Dictionary:
 	return result
 
 
-## Generate deterministic hash for dictionary contents
-## Useful for battle system validation and debugging
 static func deterministic_hash(dict: Dictionary) -> String:
 	var sorted_keys: Array = keys_sorted(dict)
 	var hash_parts: Array[String] = []
@@ -193,12 +167,9 @@ static func deterministic_hash(dict: Dictionary) -> String:
 	return combined.sha256_text()
 
 
-## Validate that dictionary iteration will be deterministic
-## Returns true if dictionary can be safely iterated deterministically
 static func validate_deterministic_keys(dict: Dictionary) -> bool:
 	var keys_array: Array = dict.keys()
 
-	# Check if all keys are comparable (same type)
 	if keys_array.is_empty():
 		return true
 
@@ -215,8 +186,6 @@ static func validate_deterministic_keys(dict: Dictionary) -> bool:
 	return true
 
 
-## Create a copy of dictionary with deterministically sorted keys
-## Useful for ensuring consistent ordering when dictionary will be serialized
 static func make_deterministic(dict: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
 	var sorted_keys: Array = keys_sorted(dict)
@@ -227,7 +196,6 @@ static func make_deterministic(dict: Dictionary) -> Dictionary:
 	return result
 
 
-## Debug helper: print dictionary contents in deterministic order
 static func debug_print_sorted(dict: Dictionary, label: String = "Dictionary") -> void:
 	Log.debug(
 		"%s contents (deterministic order)" % label,
@@ -240,12 +208,9 @@ static func debug_print_sorted(dict: Dictionary, label: String = "Dictionary") -
 		Log.debug("  [%s] -> %s" % [str(key), str(dict[key])], {}, [Log.TAG_DEBUG])
 
 
-## Merge dictionaries with deterministic key handling
-## Later dictionaries override earlier ones for conflicting keys
 static func merge_dicts_deterministic(dicts: Array[Dictionary]) -> Dictionary:
 	var result: Dictionary = {}
 
-	# Process dictionaries in order
 	for dict: Dictionary in dicts:
 		var sorted_keys: Array = keys_sorted(dict)
 		for key: Variant in sorted_keys:
@@ -254,8 +219,6 @@ static func merge_dicts_deterministic(dicts: Array[Dictionary]) -> Dictionary:
 	return result
 
 
-## Helper for battle system: get lineup positions in deterministic order
-## Specialized helper for Dictionary[int, UnitData] pattern used in battles
 static func get_battle_positions(lineup: Dictionary) -> Array[int]:
 	if not validate_deterministic_keys(lineup):
 		Log.error(
@@ -270,8 +233,6 @@ static func get_battle_positions(lineup: Dictionary) -> Array[int]:
 	return positions
 
 
-## Helper for battle system: iterate over lineup in deterministic order
-## Returns array of [position, unit] pairs in sorted position order
 static func get_battle_lineup_pairs(lineup: Dictionary) -> Array:
 	var pairs: Array = []
 	var sorted_positions: Array[int] = get_battle_positions(lineup)

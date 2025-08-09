@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_method_mapping_test_action.gd
 class_name BackendMethodMappingTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.method_mapping"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend method mappings...")
@@ -30,7 +28,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_methods: int = 0
 	var successful_methods: int = 0
 
-	# Test 1: set_data method
 	_update_status("Testing set_data method mapping...")
 	total_methods += 1
 	var set_test_path: Array[String] = []
@@ -45,7 +42,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	if set_success:
 		successful_methods += 1
 
-	# Test 2: get_data method (using the value we just set)
 	_update_status("Testing get_data method mapping...")
 	total_methods += 1
 	var get_success: bool = await test_backend_async_pattern(
@@ -55,7 +51,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	if get_success:
 		successful_methods += 1
 
-	# Test 3: push_data method
 	_update_status("Testing push_data method mapping...")
 	total_methods += 1
 	var push_path: Array[String] = []
@@ -69,7 +64,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	if push_success:
 		successful_methods += 1
 
-	# Test 4: remove_data method (remove the set value)
 	_update_status("Testing remove_data method mapping...")
 	total_methods += 1
 	var remove_success: bool = await test_backend_async_pattern(
@@ -79,7 +73,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	if remove_success:
 		successful_methods += 1
 
-	# Calculate success rate
 	var success_rate: float = float(successful_methods) / float(total_methods)
 	var overall_success: bool = success_rate >= 0.75  # 75% of methods must work
 	var total_duration: int = Time.get_ticks_msec() - start_time

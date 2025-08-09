@@ -1,21 +1,14 @@
 class_name LocalJSONBackend
 extends DataBackend
 
-## Local JSON backend for data retrieval from local JSON files.
-## Handles file loading, parsing, and data access with JSONPathNavigator.
 
-# Suppress warning for the signal since it's required for the DataBackend interface
 @warning_ignore("unused_signal")
 
-# Loaded JSON data
 var local_data: Dictionary = {}
 
-# File paths (initialized from ProjectSettings)
-#var default_db_file: String
 var battle_db_file: String
 var current_file: String
 
-# Sheet ID for the main data structure
 
 
 func _init(file_path: String = "") -> void:
@@ -25,8 +18,6 @@ func _init(file_path: String = "") -> void:
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
 
-	# Load file paths from project settings with fallbacks
-	#default_db_file = _get_project_setting("gametwo/data/default_db_file", "res://resources/data.json")
 	battle_db_file = _get_project_setting(
 		"gametwo/data/battle_db_file", "res://resources/gameone-577cb-export.json"
 	)
@@ -48,7 +39,6 @@ func _init(file_path: String = "") -> void:
 
 
 func initialize() -> bool:
-	# Check if we should use the battle DB file
 
 	current_file = battle_db_file
 	Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
@@ -83,18 +73,14 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
 
-	# Create navigation path with sheets handling
 	var target_data: Variant = local_data
 	var navigation_path: Array[Variant] = []
 
-	# Get sheets ID from project settings or use default
 	var sheets_id: String = _get_project_setting(
 		"gametwo/data/sheets_id", data_source.DEFAULT_SHEETS_ID
 	)
 
-	# Handle sheets path prefix consistently - no special cases, always use JSONPathNavigator
 	if p_path.size() > 0 and p_path[0] is String and p_path[0] == "sheets":
-		# First navigate to the sheets data
 		var sheets_nav_result: NavigationResult = JSONPathNavigator.navigate(
 			local_data, [sheets_id]
 		)
@@ -111,14 +97,11 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 			)
 			return null
 
-		# Use the sheets data as the starting point
 		target_data = sheets_nav_result.value
 
-		# Skip the "sheets" part in the navigation path
 		for i_idx: int in range(1, p_path.size()):
 			navigation_path.append(p_path[i_idx])
 	else:
-		# Use the path as is for regular navigation
 		navigation_path = p_path.duplicate()
 
 	Log.debug(
@@ -131,12 +114,10 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
 
-	# Add key to path if provided
 	var final_path: Array[Variant] = navigation_path.duplicate()
 	if not p_key.is_empty():
 		final_path.append(p_key)
 
-	# Let JSONPathNavigator handle all navigation - always use the same pattern
 	var nav_result: NavigationResult = JSONPathNavigator.navigate(target_data, final_path)
 
 	if nav_result.found:
@@ -184,7 +165,6 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 		return null
 
 
-# Helper to get information about a value for logging
 func _get_value_info(value: Variant) -> Dictionary:
 	var info: Dictionary = {}
 	info["type"] = typeof(value)
@@ -202,10 +182,6 @@ func _get_value_info(value: Variant) -> Dictionary:
 	return info
 
 
-## Helper to get a project setting with fallback
-## @param setting_name The name of the project setting
-## @param default_value The default value if setting doesn't exist
-## @return The setting value or default value
 func _get_project_setting(setting_name: String, default_value: Variant) -> Variant:
 	if ProjectSettings.has_setting(setting_name):
 		var setting_value: Variant = ProjectSettings.get_setting(setting_name)
@@ -213,7 +189,6 @@ func _get_project_setting(setting_name: String, default_value: Variant) -> Varia
 	return default_value
 
 
-# Helper to get a simplified stack trace for debugging
 func _get_simple_stack_trace() -> Array[Dictionary]:
 	var stack: Array = get_stack()
 	var simplified_stack: Array[Dictionary] = []
@@ -228,7 +203,6 @@ func _get_simple_stack_trace() -> Array[Dictionary]:
 				}
 			)
 
-			# Only show a few frames for brevity
 			if simplified_stack.size() >= 3:
 				break
 
@@ -244,8 +218,6 @@ func set_data(p_path: Array[Variant], p_key: String, _p_data: Variant) -> bool:
 		{"path": p_path, "key": p_key},
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
-	# For test environments, we might want to simulate write operations
-	# But in production, local JSON is read-only
 	return false
 
 
@@ -258,7 +230,6 @@ func push_data(p_path: Array[Variant], _p_data: Variant) -> String:
 		{"path": p_path},
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
-	# Read-only implementation
 	return "local-read-only-" + str(Time.get_unix_time_from_system())
 
 
@@ -271,7 +242,6 @@ func remove_data(p_path: Array[Variant], p_key: String) -> bool:
 		{"path": p_path, "key": p_key},
 		[Log.TAG_DB, Log.TAG_LOCAL]
 	)
-	# Read-only implementation
 	return false
 
 
@@ -330,7 +300,6 @@ func _load_local_data() -> bool:
 		)
 		return false
 
-	# Store the entire JSON result
 	if json_result is Dictionary:
 		local_data = json_result
 	else:
@@ -345,7 +314,6 @@ func _load_local_data() -> bool:
 		)
 		return false
 
-	# Log extensive data structure info to help with debugging
 	var top_level_keys: Array[Variant] = local_data.keys()
 	Log.info(
 		"Local data file loaded successfully",
@@ -358,7 +326,6 @@ func _load_local_data() -> bool:
 		[Log.TAG_LOCAL, Log.TAG_DB]
 	)
 
-	# Log more detailed structure information for debugging
 	if top_level_keys.size() > 0:
 		var structure_info: Dictionary = {}
 		for key_name: String in top_level_keys:
@@ -375,7 +342,6 @@ func _load_local_data() -> bool:
 				elif value_item is Array:
 					var array_value: Array = value_item
 					structure_info[key_name] = {"type": "Array", "size": array_value.size()}
-					# Avoid using ternary operator to prevent INCOMPATIBLE_TERNARY error
 					if array_value.size() > 0:
 						structure_info[key_name]["sample"] = _get_value_type_info(array_value[0])
 					else:
@@ -392,7 +358,6 @@ func _load_local_data() -> bool:
 	return true
 
 
-# Helper to get readable error messages
 func _get_file_error_string(error_code: int) -> String:
 	match error_code:
 		ERR_FILE_NOT_FOUND:
@@ -423,7 +388,6 @@ func _get_file_error_string(error_code: int) -> String:
 			return "Unknown error " + str(error_code)
 
 
-# Helper to get type info for a value
 func _get_value_type_info(p_value: Variant) -> Dictionary:
 	if p_value is Dictionary:
 		return {"type": "Dictionary", "keys": p_value.keys()}

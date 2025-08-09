@@ -1,28 +1,20 @@
 class_name CardCollection
 extends BaseCollection
 
-# Import class references directly
 const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
-# Cache and initialization variables
 var _is_cache_initialized: bool = false
 var _collection_key: String = ""
 var _card_cache: Array[Dictionary] = []
 
 
-## Initialize the card collection with the backend
-## @param backend The data backend to use
-## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, [data_source.DEFAULT_SHEETS_ID], "cards")
 	_collection_key = "cards_" + str(test_group)
 	Log.info("CardCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
 
-## Get all cards
-## @param use_cache Whether to use the cache if available
-## @return Array of card dictionaries
 func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		Log.debug(
@@ -52,15 +44,12 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 
 	var request_start_time: int = Time.get_ticks_msec()
 
-	# Use the backend to get raw data
 	var raw_result: Variant = await _backend.get_data(_get_path(), _collection_key)
 	var request_duration: int = Time.get_ticks_msec() - request_start_time
 
-	# Process the result using JSONPathNavigator for additional safety
 	var result: Array[Dictionary]
 
 	if raw_result != null and raw_result is Array:
-		# First ensure the raw result is a proper Array before assigning
 		var array_result: Array = raw_result
 		result.assign(array_result)
 
@@ -75,7 +64,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			[Log.TAG_DB]
 		)
 	elif raw_result != null:
-		# Try to navigate using JSONPathNavigator
 		var nav_result: NavigationResult = JSONPathNavigator.navigate(raw_result, [])
 
 		if nav_result.found and nav_result.is_array():
@@ -114,7 +102,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		[Log.TAG_DB]
 	)
 
-	# Handle case where result is null or not an array
 	if result == null:
 		Log.error(
 			"No card data returned",
@@ -128,7 +115,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 			[Log.TAG_DB, Log.TAG_ERROR]
 		)
 
-		# For editor testing, create minimal test cards
 		var test_cards: Array[Dictionary] = []
 		for i: int in range(5):
 			test_cards.append(
@@ -174,7 +160,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 
 	_is_cache_initialized = true
 
-	# Log detailed results
 	Log.info(
 		"Retrieved all cards",
 		{
@@ -188,7 +173,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		[Log.TAG_DB]
 	)
 
-	# Validate important fields in the cards
 	if _card_cache.size() > 0:
 		var sample_card: Dictionary = _card_cache[0]
 		var sample_card_keys: Array[String]  # This is used in logging below
@@ -243,7 +227,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	return _card_cache
 
 
-## Helper to get a simplified stack trace for debugging
 func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	var stack: Array = get_stack()
 	var simplified_stack: Array[Dictionary] = []
@@ -260,10 +243,6 @@ func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	return simplified_stack
 
 
-## Get a specific card by ID
-## @param card_id The ID of the card to retrieve
-## @param use_cache Whether to use the cache if available
-## @return Card dictionary or empty dictionary if not found
 func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 	Log.info("Getting card info", {"card_id": card_id, "use_cache": use_cache}, [Log.TAG_DB])
 
@@ -278,9 +257,6 @@ func get_by_id(card_id: String, use_cache: bool = true) -> Dictionary:
 	return {}
 
 
-## Get card ID from name
-## @param card_name The name of the card to look up
-## @return Card ID or empty string if not found
 func get_id_by_name(card_name: String) -> String:
 	Log.info("Getting card ID from name", {"name": card_name}, [Log.TAG_DB])
 
@@ -294,9 +270,6 @@ func get_id_by_name(card_name: String) -> String:
 	return ""
 
 
-## Get cards by type
-## @param card_type The type of cards to retrieve
-## @return Array of card dictionaries matching the type
 func get_by_type(card_type: String) -> Array[Dictionary]:
 	Log.info("Getting cards by type", {"type": card_type}, [Log.TAG_DB])
 
@@ -313,11 +286,8 @@ func get_by_type(card_type: String) -> Array[Dictionary]:
 	return filtered_cards
 
 
-## Clear the card cache
-## @return void
 func clear_cache() -> void:
 	Log.info("Clearing card cache", {}, [Log.TAG_DB, Log.TAG_CACHE])
 	_is_cache_initialized = false
 	_card_cache = []
-	# Clear cache in parent class
 	super.clear_cache()

@@ -8,6 +8,10 @@ const NO_UNIT_FOUND: int = -1
 
 
 # Data class to hold battle results
+# Return both events and final unit states for reconciliation
+# Note: Temporary abilities are preserved in final state so reconciliation
+# can see what abilities influenced the battle outcome
+# Include dead units so permanent effects on dead units are not lost
 class BattleResult:
 	var events: Array[Context.Event]
 	var final_allied_units: Dictionary[int, UnitData]
@@ -46,10 +50,6 @@ func battle_solver(
 		if context.is_battle_ongoing():
 			process_turn(context)
 
-	# Return both events and final unit states for reconciliation
-	# Note: Temporary abilities are preserved in final state so reconciliation
-	# can see what abilities influenced the battle outcome
-	# Include dead units so permanent effects on dead units are not lost
 	return BattleResult.new(
 		context.event_list,
 		context.allied_side.lineup,
@@ -92,7 +92,6 @@ static func _initialize_battle(
 	context.solve_events()
 
 
-# Turn processing
 static func process_turn(context: BattleContext) -> void:
 	Log.debug(
 		"Processing battle turn",
@@ -110,7 +109,6 @@ static func process_turn(context: BattleContext) -> void:
 	end_of_turn(context)
 
 
-# Event solvers
 static func solve_event(event: Context.Event, context: BattleContext) -> void:
 	if event is BattleContext.FindNextUnitEvent:
 		var active_side: Side = context.get_active_side()
@@ -262,7 +260,6 @@ static func find_next_unactive_on_side(side: Side) -> int:
 		{"side_units": side.lineup.size()},
 		[Log.TAG_BATTLE, Log.TAG_COMBAT]
 	)
-	# Use deterministic iteration for battle consistency
 	var positions: Array[int] = DictUtils.get_battle_positions(side.lineup)
 	for pos: int in positions:
 		var unit: UnitData = side.lineup[pos]
@@ -271,7 +268,6 @@ static func find_next_unactive_on_side(side: Side) -> int:
 	return NO_UNIT_FOUND
 
 
-# Combat helpers
 static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
 	Log.debug(
 		"Creating combat event",
@@ -319,12 +315,10 @@ static func activate_current_unit(context: BattleContext) -> void:
 		context.add_event(event)
 
 
-# Death handling
 static func solve_death_test(context: BattleContext) -> void:
 	Log.debug("Testing for unit deaths", {}, [Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_RULES])
 	for is_allied: bool in [true, false]:
 		var side: Side = context.get_side(is_allied)
-		# Use deterministic iteration for battle consistency
 		var positions: Array[int] = DictUtils.get_battle_positions(side.lineup)
 		for pos: int in positions:
 			var unit: UnitData = side.lineup[pos]
@@ -366,42 +360,33 @@ static func solve_win_conditions(context: BattleContext) -> void:
 		)
 
 
-# Utility functions
 static func duplicate_resource(res: Variant) -> Variant:
 	if res is Resource:
-		# Use Godot's proper deep copy for Resources
 		return res.duplicate(true)  # true = deep copy
 	else:
-		# Fallback for non-Resource types
 		return str_to_var(var_to_str(res))
 
 
-# Duplicate lineup while setting original references on battle copies
 static func duplicate_lineup_with_references(
 	lineup: Dictionary[int, UnitData]
 ) -> Dictionary[int, UnitData]:
 	var duplicated_lineup: Dictionary[int, UnitData] = {}
 
-	# Use deterministic iteration for battle consistency
 	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
 	for position: int in positions:
 		var original_unit: UnitData = lineup[position]
 		var battle_copy: UnitData = duplicate_resource(original_unit)
 
-		# Set the reference to the original unit
 		battle_copy.battle_original_reference = original_unit
 
-		# Perform deep copy of complex arrays to ensure proper state isolation
 		battle_copy.abilities = original_unit.deep_duplicate_abilities()
 		battle_copy.effects_perm = original_unit.deep_duplicate_effects_perm()
 
-		# Copy current stats (these are simple values)
 		battle_copy.current_attack = original_unit.current_attack
 		battle_copy.current_health = original_unit.current_health
 
 		duplicated_lineup[position] = battle_copy
 
-		# Enhanced logging to track deep copy operations
 		Log.debug(
 			"Battle unit deep copy created",
 			{
@@ -421,7 +406,6 @@ static func duplicate_lineup_with_references(
 
 
 static func find_combat_target(lineup: Dictionary[int, UnitData]) -> UnitData:
-	# Use deterministic iteration for battle consistency
 	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
 	if positions.size() > 0:
 		return lineup[positions[0]]
@@ -429,7 +413,6 @@ static func find_combat_target(lineup: Dictionary[int, UnitData]) -> UnitData:
 
 
 static func get_pos_for_unit(lineup: Dictionary[int, UnitData], unit: UnitData) -> int:
-	# Use deterministic iteration for battle consistency
 	var positions: Array[int] = DictUtils.get_battle_positions(lineup)
 	for pos: int in positions:
 		if lineup[pos] == unit:
@@ -443,16 +426,12 @@ static func prepare_lineup_from_holder(lineup: Dictionary) -> Dictionary[int, Un
 
 static func abstract_lineup(lineup: Dictionary) -> Dictionary[int, UnitData]:
 	var abs_lineup: Dictionary[int, UnitData] = {}
-	# Use deterministic iteration for battle consistency
 	var positions: Array = DictUtils.keys_sorted(lineup)
 	for pos: int in positions:
 		var card: Card = lineup[pos]
 		var unit_data: UnitData = card.unit_info
 
-		# Ensure UnitData has the current display stats from the card
-		# This is critical for enhanced/modified cards to show correct stats in battle
 		if card.base != null:
-			# Read the actual displayed values from the UI labels
 			var attack_label: Label = card.base.get_node("%label_attack")
 			var health_label: Label = card.base.get_node("%label_health")
 
@@ -461,7 +440,6 @@ static func abstract_lineup(lineup: Dictionary) -> Dictionary[int, UnitData]:
 			if health_label != null and health_label.text != "":
 				unit_data.current_health = int(health_label.text)
 
-		# Log the sync for debugging
 		Log.debug(
 			"Battle copy sync",
 			{

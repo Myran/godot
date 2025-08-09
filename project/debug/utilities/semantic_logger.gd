@@ -1,11 +1,8 @@
 class_name SemanticLogger
 extends RefCounted
 
-# Enhanced semantic action logging with parameter capture
-# Provides convenient methods for logging player actions with full parameter data
 
 
-# Draft action logging
 static func log_draft_reroll(
 	cost: int = 0, previous_cards: Array = [], seed_before: int = -1
 ) -> void:
@@ -34,7 +31,6 @@ static func log_draft_remove_card(card_id: String, position: Vector2i = Vector2i
 	SessionManager.log_semantic_action("draft.remove_card", data)
 
 
-# Lineup action logging
 static func log_lineup_move_card(card_id: String, from_position: int, to_position: int) -> void:
 	"""Log lineup card move action with parameters"""
 	var data: Dictionary = {
@@ -56,23 +52,19 @@ static func log_draft_to_lineup_move(
 	SessionManager.log_semantic_action("card.move", data)
 
 
-# State transition logging
 static func log_state_transition(from_state: String, to_state: String) -> void:
 	"""Log game state transition with parameters"""
 	var data: Dictionary = {"from_state": from_state, "to_state": to_state}
 
-	# Update session context with current state info
 	SessionManager.update_session_context("current_state", to_state)
 	SessionManager.update_session_context("last_transition", from_state + "_to_" + to_state)
 
 	SessionManager.log_semantic_action("transition.change_state", data)
 
 
-# Battle action logging
 static func log_battle_start(player_lineup: Array = [], enemy_lineup: Array = []) -> void:
 	"""Log battle start action with parameters"""
 
-	# Convert generic arrays to typed Card arrays using assign()
 	var player_cards_typed: Array[Card] = []
 	player_cards_typed.assign(player_lineup)
 	var enemy_cards_typed: Array[Card] = []
@@ -85,14 +77,12 @@ static func log_battle_start(player_lineup: Array = [], enemy_lineup: Array = []
 		"enemy_cards": _extract_card_ids(enemy_cards_typed)
 	}
 
-	# Update session context for battle phase
 	SessionManager.update_session_context("game_phase", "battle")
 	SessionManager.update_session_context("battle_data", data)
 
 	SessionManager.log_semantic_action("battle.start", data)
 
 
-# Helper methods
 static func _extract_card_ids(lineup: Array[Card]) -> Array[String]:
 	"""Extract card IDs from lineup for logging"""
 	var card_ids: Array[String] = []
@@ -105,7 +95,6 @@ static func _extract_card_ids(lineup: Array[Card]) -> Array[String]:
 	return card_ids
 
 
-# Full gameplay session control methods
 static func start_gameplay_session() -> String:
 	"""Start a new full gameplay session"""
 	return SessionManager.start_gameplay_session()
@@ -116,14 +105,11 @@ static func end_gameplay_session() -> void:
 	SessionManager.end_gameplay_session()
 
 
-# Simple action logging without automatic session management
 static func log_action(action_type: String, data: Dictionary = {}) -> void:
 	"""Log semantic action to current session"""
-	# Simply log the action to the current session
 	SessionManager.log_semantic_action(action_type, data)
 
 
-# Debug and validation helpers
 static func get_current_session_info() -> Dictionary:
 	"""Get current session information for debugging"""
 	return {

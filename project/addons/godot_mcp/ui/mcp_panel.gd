@@ -21,10 +21,8 @@ func _ready():
 	stop_button.pressed.connect(_on_stop_button_pressed)
 	port_input.value_changed.connect(_on_port_changed)
 
-	# Initial UI setup
 	_update_ui()
 
-	# Setup server signals once it's available
 	await get_tree().process_frame
 	if websocket_server:
 		websocket_server.connect("client_connected", Callable(self, "_on_client_connected"))
@@ -90,5 +88,4 @@ func _on_command_received(client_id: int, command: Dictionary):
 func _log_message(message: String):
 	var timestamp = Time.get_datetime_string_from_system()
 	log_text.text += "[" + timestamp + "] " + message + "\n"
-	# Auto-scroll to bottom
 	log_text.scroll_vertical = log_text.get_line_count()

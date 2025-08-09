@@ -4,28 +4,21 @@ extends BaseCollection
 var _collection_key: String = ""
 
 
-## Initialize the event collection with the backend
-## @param backend The data backend to use
-## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
 	super(backend, [data_source.DEFAULT_SHEETS_ID], "events")
 	_collection_key = "event_data_" + str(test_group)
 	Log.info("EventCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
 
-## Get all events
-## @return Array of event dictionaries
 func get_all() -> Array[Dictionary]:
 	Log.info("Getting event data", {}, [Log.TAG_DB])
 	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 
-	# Handle case where result is null
 	if result == null:
 		Log.warning("No event data returned, using empty array", {}, [Log.TAG_DB, Log.TAG_ERROR])
 		return []
 
-	# Directly cast with fail-fast approach
 	if result is Array:
 		var typed_result: Array[Dictionary] = []
 		for item: Variant in result:
@@ -47,9 +40,6 @@ func get_all() -> Array[Dictionary]:
 		return []
 
 
-## Get lineup data for an event
-## @param event Event ID to get lineups for
-## @return Dictionary containing lineup data
 func get_lineup_data(event: String) -> Dictionary:
 	Log.info("Getting event lineups data", {"event": event}, [Log.TAG_DB])
 
@@ -67,14 +57,6 @@ func get_lineup_data(event: String) -> Dictionary:
 	return {}
 
 
-## Save lineup data for an event
-## @param event Event ID to save lineup for
-## @param lineup Lineup data to save
-## @param level Level number for the lineup
-## @param p_data Player data to include
-## @param lives Number of lives
-## @param lineup_uuid Existing lineup ID (if updating existing lineup)
-## @return String Lineup ID
 func save_lineup_data(
 	event: String,
 	lineup: Dictionary,
@@ -116,9 +98,6 @@ func save_lineup_data(
 	return push_id
 
 
-## Remove lineups from an event
-## @param event Event ID to remove lineups from
-## @return bool True if removal was successful
 func remove_event_lineups(event: String) -> bool:
 	Log.info("Removing event lineups", {"event": event}, [Log.TAG_DB])
 

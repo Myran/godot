@@ -1,7 +1,5 @@
 class_name ListenerTestHelper
 extends RefCounted
-## Helper class for testing Firebase listeners with proper timeout and callback verification.
-## Simplifies the common pattern of waiting for listener callbacks.
 
 signal callback_received(data: Dictionary)
 

@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_error_handling_test_action.gd
 class_name CPPErrorHandlingTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,14 +7,12 @@ func _init() -> void:
 	action_name = "cpp.firebase.error_handling"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	var passed_tests: int = 0
 	var total_tests: int = 3
 	var test_results: Array[Dictionary] = []
 
-	# Test 1: Basic operation (should work normally)
 	_update_status("Testing basic C++ operation...")
 	var test1_result: Variant = await execute_cpp_operation(
 		"get_value_async",
@@ -35,7 +32,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 2: Set operation (should work normally)
 	_update_status("Testing C++ set operation...")
 	var test2_result: Variant = await execute_cpp_operation(
 		"set_value_async",
@@ -55,7 +51,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: Invalid path test (should handle gracefully)
 	_update_status("Testing C++ invalid path handling...")
 	var test3_result: Variant = await execute_cpp_operation(
 		"get_value_async",
@@ -63,7 +58,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"Invalid Path Handling Test",
 		"get_value"
 	)
-	# For error handling, we test that the system doesn't crash and handles errors gracefully
 	var test3_passed: bool = true  # Any completion without crash is considered success
 	if test3_passed:
 		passed_tests += 1
@@ -114,7 +108,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

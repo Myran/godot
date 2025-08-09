@@ -19,11 +19,9 @@ func _execute_player_events_test() -> DebugAction.Result:
 	)
 
 	var test_results: Array[Dictionary] = []
-	# Ensure session exists (will create one if needed)
 	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
-	# Test 1: Generate actual RerollDraftEvent (PLAYER source)
 	var reroll_success: bool = _test_reroll_event()
 	test_results.append(
 		{
@@ -33,7 +31,6 @@ func _execute_player_events_test() -> DebugAction.Result:
 		}
 	)
 
-	# Test 2: Generate actual UpgradeEvent (PLAYER source)
 	var upgrade_success: bool = _test_upgrade_event()
 	test_results.append(
 		{
@@ -43,7 +40,6 @@ func _execute_player_events_test() -> DebugAction.Result:
 		}
 	)
 
-	# Test 3: Generate actual TransitionEvent
 	var transition_success: bool = _test_transition_event()
 	test_results.append(
 		{
@@ -53,7 +49,6 @@ func _execute_player_events_test() -> DebugAction.Result:
 		}
 	)
 
-	# Verify action count increased (events are processed synchronously)
 	var final_info: Dictionary = SemanticActionLogger.get_session_info()
 	var actions_logged: int = final_info.action_count - initial_count
 	var expected_actions: int = (
@@ -67,9 +62,7 @@ func _execute_player_events_test() -> DebugAction.Result:
 	}
 	test_results.append(count_test)
 
-	# Session continues for full gameplay - no need to end manually
 
-	# Generate report
 	var passed_tests: int = (
 		test_results.filter(func(t: Dictionary) -> bool: return t.success).size()
 	)
@@ -115,30 +108,22 @@ func _execute_player_events_test() -> DebugAction.Result:
 func _test_reroll_event() -> bool:
 	Log.info("Testing RerollDraftEvent semantic logging", {}, ["semantic_action", "test", "reroll"])
 
-	# Create and dispatch a real RerollDraftEvent with PLAYER source
 	var reroll_event: core.RerollDraftEvent = core.RerollDraftEvent.new()
 
-	# Ensure it's marked as PLAYER event
 	reroll_event.source = core.EventSource.PLAYER
 
-	# Dispatch the event through the core system (processed synchronously)
 	core.action(reroll_event)
 
-	# For now, assume success if no errors occurred
-	# In a full implementation, we would parse logs to verify the semantic action was logged
 	return true
 
 
 func _test_upgrade_event() -> bool:
 	Log.info("Testing UpgradeEvent semantic logging", {}, ["semantic_action", "test", "upgrade"])
 
-	# Create and dispatch a real UpgradeEvent with PLAYER source
 	var upgrade_event: core.UpgradeEvent = core.UpgradeEvent.new(2)  # Upgrade to level 2
 
-	# Ensure it's marked as PLAYER event
 	upgrade_event.source = core.EventSource.PLAYER
 
-	# Dispatch the event through the core system (processed synchronously)
 	core.action(upgrade_event)
 
 	return true
@@ -149,11 +134,9 @@ func _test_transition_event() -> bool:
 		"Testing TransitionEvent semantic logging", {}, ["semantic_action", "test", "transition"]
 	)
 
-	# Get current game state to create a valid transition
 	var current_state: core.GameState = core.game_handler.current_gamestate
 	var target_state: core.GameState
 
-	# Choose a safe transition (avoid breaking game state)
 	match current_state:
 		core.GameState.START:
 			target_state = core.GameState.DRAFT
@@ -162,14 +145,11 @@ func _test_transition_event() -> bool:
 		_:
 			target_state = core.GameState.START
 
-	# Create and dispatch a TransitionEvent
 	var transition_event: core.TransitionEvent = core.TransitionEvent.new(target_state)
 	transition_event.source = core.EventSource.PLAYER
 
-	# Dispatch the event (processed synchronously)
 	core.action(transition_event)
 
-	# Transition back to avoid disrupting the test environment
 	var restore_event: core.TransitionEvent = core.TransitionEvent.new(current_state)
 	restore_event.source = core.EventSource.PLAYER
 	core.action(restore_event)

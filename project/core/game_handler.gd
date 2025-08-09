@@ -24,4 +24,3 @@ func set_gamestate(new_state: core.GameState) -> void:
 		core.GameState.POSTBATTLE:
 			owner.call_deferred("mode_post_battle")
 
-	# current_gamestate update moved to individual mode functions for atomic state transitions

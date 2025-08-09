@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_set_simple_value_action.gd
 class_name RTDBSetSimpleValueAction
 extends RTDBDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "rtdb.database.set_value"
 
 
-# Override the new pattern instead of the legacy one
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	var test_value: String = _params.get("value_to_set", "Test Value: " + str(TimeUtils.now_ms()))
@@ -34,7 +32,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	# Use Firebase backend directly - it returns DebugAction.Result-compatible data
 	var path_variants: Array = RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE)
 	var key: String = path_variants[-1] if path_variants.size() > 0 else ""
 	var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
@@ -60,8 +57,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Keep legacy method for compatibility but mark it as deprecated
 func execute_rtdb_action() -> bool:
-	# This will be removed once all actions migrate to new pattern
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

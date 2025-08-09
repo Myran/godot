@@ -68,7 +68,5 @@ func clear_lineup() -> void:
 	for pos: Holder in $grid_container.get_children():
 		var card: Card = pos.get_card()
 		if card:
-			# Clear holder reference first (sets _content = null)
 			pos.remove_card()
-			# Free the card (Godot will handle scene tree removal)
 			card.queue_free()

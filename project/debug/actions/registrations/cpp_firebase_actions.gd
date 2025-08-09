@@ -1,8 +1,6 @@
-# project/debug/actions/registrations/cpp_firebase_actions.gd
 class_name CPPFirebaseActions
 extends RefCounted
 
-# Preload the action classes
 const CPPSetValueTestActionClass = preload(
 	"res://debug/actions/firebase_cpp/cpp_set_value_test_action.gd"
 )
@@ -39,7 +37,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 	var counters: Array[int] = [0, 0]  # [registered, failed]
 
-	# Core C++ Firebase operations
 	_register_with_count(
 		registry, CPPSetValueTestActionClass.new(), "CPPSetValueTestAction", counters
 	)
@@ -53,7 +50,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		registry, CPPSignalIntegrityTestActionClass.new(), "CPPSignalIntegrityTestAction", counters
 	)
 
-	# Advanced C++ Firebase operations
 	_register_with_count(
 		registry, CPPErrorHandlingTestActionClass.new(), "CPPErrorHandlingTestAction", counters
 	)

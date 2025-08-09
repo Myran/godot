@@ -1,8 +1,6 @@
-# project/debug/actions/rtdb/rtdb_single_value_listener_action.gd
 class_name RTDBSingleValueListenerAction
 extends RTDBDebugAction
 
-# Store active listener ID to manage cleanup
 var active_listener_id: String = ""
 var callback_received: bool = false
 var callback_data: Dictionary = {}
@@ -16,7 +14,6 @@ func _init() -> void:
 	description = "Sets up a listener for changes on a specific RTDB path using child listeners (C++ module limitation) and verifies it works."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
@@ -34,25 +31,20 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.SINGLE_VALUE)
 
-	# Reset test state
 	callback_received = false
 	callback_data = {}
 	test_start_time = Time.get_ticks_msec()
 
 	_update_status("Setting up value listener for path '%s'..." % str(full_path))
 
-	# Note: C++ Firebase module only supports child listeners, not single value listeners
-	# We'll use child_changed signal to detect value changes
 	if not db.db.is_signal_connected("child_changed", _on_value_changed):
 		db.db.connect_signal("child_changed", _on_value_changed)
 
-	# Use the only available listener method in C++ module
 	db.start_listening(full_path)
 	active_listener_id = str(full_path)  # Use path as ID for tracking
 
 	_update_status("Value listener active for path '%s' (using child listener)" % [str(full_path)])
 
-	# Set up some initial test data to trigger the listener
 	var test_child_key: String = "test_value"
 	var test_child_path: Array[Variant] = full_path + [test_child_key]
 	var initial_value: String = "Listener Test: " + str(Time.get_ticks_msec())
@@ -62,7 +54,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"set_value_async", test_child_path, initial_value, "Create Initial Test Data"
 	)
 
-	# Wait and update to trigger change
 	await Engine.get_main_loop().create_timer(0.5).timeout
 	_update_status("Modifying data to trigger listener...")
 	var updated_value: String = "Updated Listener Test: " + str(Time.get_ticks_msec())
@@ -70,7 +61,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"set_value_async", test_child_path, updated_value, "Update Data to Trigger Listener"
 	)
 
-	# NOW WAIT TO VERIFY THE LISTENER ACTUALLY FIRES
 	_update_status("Waiting for listener callback...")
 	var timeout_ms: int = 5000  # 5 seconds in milliseconds
 	var wait_start: int = Time.get_ticks_msec()
@@ -106,7 +96,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				}
 			)
 
-	# SUCCESS - callback was received!
 	var success_msg: String = (
 		"Listener test PASSED: Callback received with data: %s" % str(callback_data)
 	)
@@ -140,16 +129,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()
 
 
-## Signal handler for value changes (using child_changed from C++ Firebase module)
-## Signature matches the C++ module: child_changed(key: String, value: Variant)
 func _on_value_changed(child_key: String, child_value: Variant) -> void:
-	# Mark that we received the callback!
 	callback_received = true
 	callback_data = {
 		"child_key": child_key,

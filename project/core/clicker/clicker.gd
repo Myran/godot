@@ -38,7 +38,6 @@ func remove_rerollables() -> void:
 
 func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 	if event is core.DraftColumnStateEvent:
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			var column: int = event.col
 			var locked_state: bool = event.is_locked
@@ -56,9 +55,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			columns_locked.erase(event.col)
 
 	if event is core.RerollDraftEvent:
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
-			# Capture current cards before reroll
 			var current_cards: Array = []
 			for block: Block in level.all_blocks():
 				if block.object_type == core.ObjectType.CARD:
@@ -78,7 +75,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 	if event is core.UpgradeEvent:
 		var new_level: int = event.new_level
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			SemanticLogger.log_draft_upgrade(new_level)
 
@@ -92,7 +88,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		var block: Block = event.block
 		var is_destroy: bool = event.destroy_block
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			var block_pos: Vector2i = level.get_grid_pos(block)
 			var card_id: String = ""
@@ -103,15 +98,12 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		if level.get_grid_pos(block) != Clicker.NO_POS:
 			level.remove_from_grid(block, is_destroy)
 
-		# Auto-trigger cascading draft updates for standalone removal actions
-		# Only for PLAYER and DEBUG_SETUP events, not SYSTEM_CASCADE (which handle own cascading)
 		if event.source in [core.EventSource.PLAYER, core.EventSource.DEBUG_SETUP]:
 			core.action(core.UpdateDraftAreaEvent.new())
 
 	if event is core.DraftMergeEvent:
 		var matches: Array[Card] = event.matches
 
-		# Enhanced logging for merge events
 		var matched_card_ids: Array[String] = []
 		for card: Card in matches:
 			matched_card_ids.append(card.unit_info.card_info.get("id", ""))
@@ -131,7 +123,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			[Log.TAG_MERGE, Log.TAG_CLICKER, Log.TAG_DEBUG]
 		)
 
-		# Log effects_perm status before merge
 		for i: int in range(matches.size()):
 			var match_card: Card = matches[i]
 			Log.debug(
@@ -150,7 +141,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		var new_block: Block = merge_info.block
 		var pos: Vector2i = merge_info.pos
 
-		# Log post-merge StatEffect status
 		if new_block is Card:
 			var merged_card: Card = new_block as Card
 			Log.debug(
@@ -200,8 +190,6 @@ func update_blocks() -> void:
 	core.action(core.DraftSteadyEvent.new())
 
 
-# Handle async update_blocks from synchronous event context
-# This ensures draft operations complete atomically before state capture
 func _handle_async_update_blocks() -> void:
 	await update_blocks()
 
@@ -216,7 +204,6 @@ func find_match() -> Array[Card]:
 
 
 func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
-	# Fail-fast assertions per CLAUDE.md requirements
 	if cluster.is_empty():
 		Log.error("Cannot merge empty cluster", {}, [Log.TAG_ERROR, Log.TAG_MERGE])
 		return {}
@@ -234,7 +221,6 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 	var cluster_level: int = first_card.level
 	var new_level: int = cluster_level + 1
 
-	# Collect UnitData from source cards for ability and effect transfer
 	var source_units: Array[UnitData] = []
 	for card: Card in cluster:
 		if not card or not card.unit_info:
@@ -257,7 +243,6 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 
 	new_card.block_context = Cards.CONTEXT.DRAFT
 
-	# Log before transfer to understand what source units have
 	Log.debug(
 		"Before StatEffect transfer - source units analysis",
 		{
@@ -280,7 +265,6 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 			[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 		)
 
-	# Transfer abilities and stat effects from source units to merged card
 	new_card.unit_info.transfer_merge_effects_from(source_units)
 
 	Log.debug(
@@ -298,10 +282,8 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG, "stat_refresh"]
 	)
 
-	# **CRITICAL**: Apply transferred effects to current stats
 	new_card.unit_info.apply_permanent_effects_to_current_stats()
 
-	# **CRITICAL**: Update UI to reflect new stats after applying permanent effects
 	new_card.refresh_ui_from_unit_data()
 
 	Log.info(
@@ -411,9 +393,6 @@ func solve_gravity() -> void:
 						gravity_action = true
 
 
-# =============================================================================
-# STATIC UTILITY METHODS FOR DEBUG ACTIONS AND UI CONSISTENCY
-# =============================================================================
 
 
 static func find_block_at_position(clicker_instance: Clicker, position: Vector2i) -> Block:
@@ -452,5 +431,4 @@ static func remove_block_from_draft_complete(
 		)
 		return
 
-	# Execute removal event - cascading updates now handled automatically by event handler
 	core.action(core.RemoveBlockFromDraft.new(block, destroy))

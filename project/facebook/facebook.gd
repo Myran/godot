@@ -133,7 +133,6 @@ func set_advertiser_tracking(enabled: bool) -> void:
 		_fb.setAdvertiserTracking(enabled)
 
 
-# FACEBOOK SDK CALLBACKS
 func login_success(tkn: String) -> void:
 	token = tkn
 	print("Facebook login success: %s" % tkn)

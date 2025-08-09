@@ -1,10 +1,7 @@
-# project/debug/actions/registrations/game_actions.gd
-# GameTwo-specific debug actions for gameplay, content, and domain logic
 
 class_name GameDebugActions
 extends RefCounted
 
-# Game debug actions for draft, lineup, and battle operations
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -12,7 +9,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_match_level_actions(registry)
 	_register_lineup_actions(registry)
 	_register_battle_actions(registry)
-	#_register_card_actions(registry)
 	_register_database_actions(registry)
 	_register_quick_actions(registry)
 
@@ -20,7 +16,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 
 static func _register_gameplay_actions(registry: DebugActionRegistry) -> void:
-	# Core gameplay actions
 	registry.register_action(
 		(
 			DebugAction
@@ -32,7 +27,6 @@ static func _register_gameplay_actions(registry: DebugActionRegistry) -> void:
 
 
 static func _register_match_level_actions(registry: DebugActionRegistry) -> void:
-	# Match Level Actions
 	registry.register_action(
 		(
 			DebugAction
@@ -81,7 +75,6 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 
 
 static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
-	# Enemy/Debug Lineup Actions
 	registry.register_action(
 		(
 			DebugAction
@@ -92,7 +85,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Simple test action for Phase 1 - validate registration works
 	registry.register_action(
 		(
 			DebugAction
@@ -103,7 +95,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Test action for Phase 1 - populate lineup with fake PLAYER events
 	registry.register_action(
 		(
 			DebugAction
@@ -114,11 +105,8 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Legacy lineup capture action removed - now using semantic logging approach
 
-	# Legacy board capture action removed - now using semantic logging approach
 
-	# Board reset for deterministic testing
 	registry.register_action(
 		(
 			DebugAction
@@ -129,7 +117,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 
-	# Player-simulated actions for semantic replay
 	registry.register_action(
 		(
 			DebugAction
@@ -212,7 +199,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 
 
 static func _register_battle_actions(registry: DebugActionRegistry) -> void:
-	# Battle actions using GameStateMonitor
 	registry.register_action(
 		(
 			DebugAction
@@ -254,21 +240,9 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 	)
 
 
-#static func _register_card_actions(registry: DebugActionRegistry) -> void:
-## Player Card Actions
-#registry.register_action(
-#(
-#DebugAction
-#. create("Spawn Test Cards", _spawn_test_cards)
-#. set_category("Gameplay")
-#. set_group("Cards")
-#. set_description("Spawns 3 random test cards for the player")
-#)
-#)
 
 
 static func _register_database_actions(registry: DebugActionRegistry) -> void:
-	# GameTwo database actions
 	registry.register_action(
 		(
 			DebugAction
@@ -290,7 +264,6 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 
 
 static func _register_quick_actions(registry: DebugActionRegistry) -> void:
-	# Quick utility actions for GameTwo
 	registry.register_action(
 		(
 			DebugAction
@@ -319,9 +292,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	)
 
 
-# Game action implementations
 static func _reset_match_level() -> bool:
-	# Reset the current match level
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
 		Log.info("Match level reset", {}, ["debug", "gameplay"])
@@ -332,7 +303,6 @@ static func _reset_match_level() -> bool:
 
 
 static func _load_match_level(level_num: int) -> bool:
-	# Load a specific match level
 	if DebugManager:
 		DebugManager.action(
 			DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % level_num]
@@ -345,23 +315,19 @@ static func _load_match_level(level_num: int) -> bool:
 
 
 static func _populate_enemy_lineup() -> bool:
-	# Add test cards to enemy lineup
 	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		Log.error(
 			"Cannot populate enemy lineup: core or card_controller missing", {}, ["debug", "error"]
 		)
 		return false
 
-	# Ensure game systems are ready before starting operation
 	if not _wait_for_game_systems_ready():
 		return false
 
-	# Signal operation start (locks UI like clicker does)
 	core.action(core.LineupOperationStartEvent.new())
 
 	Log.info("Populating enemy lineup with test cards", {}, ["debug", "gameplay"])
 
-	# Create enemy cards
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
@@ -369,7 +335,6 @@ static func _populate_enemy_lineup() -> bool:
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
 
-	# Create debug cards including a "dwarf" with acquired ability
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
@@ -377,13 +342,11 @@ static func _populate_enemy_lineup() -> bool:
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
-	# Create the dwarf card (ID 4) separately and enhance it
 	var dwarf_card: Variant = await card_controller.create_unit_from_id(str(4), 1)
 	if dwarf_card and is_instance_valid(dwarf_card):
 		var typed_dwarf: Card = dwarf_card  # Fail fast if not actually a Card
 		typed_dwarf.block_context = Cards.CONTEXT.LINEUP
 
-		# Log initial stats
 		Log.info(
 			"Dwarf initial stats",
 			{
@@ -393,7 +356,6 @@ static func _populate_enemy_lineup() -> bool:
 			["debug", "gameplay", "ability", "stats"]
 		)
 
-		# Find and trigger the dwarf's MergeBonusAbility
 		var merge_ability: MergeBonusAbility = null
 		for ability: Ability in typed_dwarf.unit_info.get_active_abilities():
 			if ability is MergeBonusAbility:
@@ -413,37 +375,16 @@ static func _populate_enemy_lineup() -> bool:
 		else:
 			Log.warning("MergeBonusAbility not found on dwarf", {}, ["debug", "gameplay"])
 
-		# Add the enhanced dwarf to lineup at position 3
 		core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
 		Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
 
-	# Signal operation complete (unlocks UI like DraftSteadyEvent does)
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
 
 
-#static func _spawn_test_cards() -> void:
-## Spawn 3 random test cards for the player
-#if not is_instance_valid(card_controller) or not is_instance_valid(core):
-#Log.error("Cannot spawn cards: Missing card_controller or core", {}, ["debug", "error"])
-#return
-#
-#Log.info("Spawning 3 test cards for player...", {}, ["debug", "gameplay"])
-#
-#for i: int in 3:
-#var card: Variant = await card_controller.get_card_from_pool()
-#if card:
-#var typed_card: Card = card  # Fail fast if not actually a Card
-## Add to player's hand or appropriate location
-#core.action(core.DrawCardEvent.new(typed_card))
-#var card_id: String = str(typed_card.get("id")) if typed_card.has("id") else "unknown"
-#Log.debug("Spawned card: %s" % card_id, {"card_id": card_id}, ["debug", "gameplay"])
-#
-#Log.info("Test cards spawned successfully", {}, ["debug", "gameplay"])
 
 
 static func _clear_card_cache() -> bool:
-	# Clear the card data cache
 	if data_source and data_source.has_method("clear_card_cache"):
 		data_source.clear_card_cache()
 		Log.info("Card cache cleared", {}, ["debug", "database"])
@@ -458,7 +399,6 @@ static func _clear_card_cache() -> bool:
 
 
 static func _toggle_local_battle_db() -> bool:
-	# Toggle between local and remote battle database
 	if DebugManager:
 		DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
 		Log.info(
@@ -471,7 +411,6 @@ static func _toggle_local_battle_db() -> bool:
 
 
 static func _cycle_asset_variant() -> bool:
-	# Cycle through asset variants (1-3)
 	if DebugManager:
 		DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
 		Log.info("Asset variant set to: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
@@ -482,7 +421,6 @@ static func _cycle_asset_variant() -> bool:
 
 
 static func _print_debug_info() -> bool:
-	# Print current debug settings
 	Log.info("=== Debug Info ===", {}, ["debug", "quick"])
 	if DebugManager:
 		Log.info("Local DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "quick"])
@@ -496,14 +434,11 @@ static func _print_debug_info() -> bool:
 
 
 static func _test_simple_player_events() -> bool:
-	# Simple test function to validate registration is working
 	Log.info("Simple test function executed successfully", {}, ["debug", "test"])
 	return true
 
 
 static func _populate_enemy_lineup_as_player() -> bool:
-	# Same as _populate_enemy_lineup but generates PLAYER events instead of DEBUG_SETUP
-	# This tests the Phase 1 recording system by creating recordable events
 
 	Log.info(
 		"Populating enemy lineup with fake PLAYER events for testing",
@@ -519,17 +454,13 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		Log.error("core not available", {}, ["debug", "error"])
 		return false
 
-	# Ensure game systems are ready before starting operation (COPY FROM WORKING FUNCTION)
 	if not _wait_for_game_systems_ready():
 		return false
 
-	# Signal operation start (locks UI like clicker does) (COPY FROM WORKING FUNCTION)
 	core.action(core.LineupOperationStartEvent.new())
 
 	Log.info("Creating cards for enemy lineup (like working function)", {}, ["debug", "test"])
 
-	# FIRST: Create and add cards to enemy lineup (like working function does)
-	# This ensures the game has actual content before generating fake player events
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
@@ -540,7 +471,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 				"Added card to enemy lineup", {"card_id": str(n), "position": n}, ["debug", "test"]
 			)
 
-	# Create the dwarf card (ID 4) for enhanced testing
 	var dwarf_card: Variant = await card_controller.create_unit_from_id(str(4), 1)
 	if not dwarf_card:
 		Log.error("Failed to create dwarf card", {}, ["debug", "error"])
@@ -549,7 +479,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 	var typed_dwarf: Card = dwarf_card
 	typed_dwarf.block_context = Cards.CONTEXT.LINEUP  # COPY FROM WORKING FUNCTION
 
-	# Add dwarf to debug lineup to ensure it's available for events
 	core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
 	Log.info(
 		"Added dwarf to debug lineup for event testing",
@@ -557,10 +486,7 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		["debug", "test"]
 	)
 
-	# NOW: Generate FAKE PLAYER EVENTS with actual game content available
-	# These should be recorded by ActionRecorder since they have EventSource.PLAYER
 
-	# 1. Fake LineupAddCardEvent (simulates player adding card to lineup)
 	var fake_player_event1: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_dwarf)
 	core.action(fake_player_event1)
 	Log.info(
@@ -569,7 +495,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		["debug", "test", "event_categorization"]
 	)
 
-	# 2. Fake RerollDraftEvent (simulates player rerolling)
 	var fake_player_event2: core.RerollDraftEvent = core.RerollDraftEvent.new()
 	core.action(fake_player_event2)
 	Log.info(
@@ -578,7 +503,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		["debug", "test", "event_categorization"]
 	)
 
-	# 3. Fake UpgradeEvent (simulates player upgrading)
 	var fake_player_event3: core.UpgradeEvent = core.UpgradeEvent.new(2)
 	core.action(fake_player_event3)
 	Log.info(
@@ -587,7 +511,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		["debug", "test", "event_categorization"]
 	)
 
-	# Also add one real debug event to show the difference
 	var debug_event: core.DebugLineupAddCardEvent = core.DebugLineupAddCardEvent.new(typed_dwarf, 0)
 	core.action(debug_event)
 	Log.info(
@@ -602,13 +525,11 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		["test", "event_categorization", "success"]
 	)
 
-	# Signal operation complete (unlocks UI like DraftSteadyEvent does) (COPY FROM WORKING FUNCTION)
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
 
 
 static func _hide_debug_menu() -> bool:
-	# Hide the debug menu interface
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 		Log.info("Debug menu hidden", {}, ["debug", "ui"])
@@ -618,7 +539,6 @@ static func _hide_debug_menu() -> bool:
 		return false
 
 
-# Helper function to get game node
 static func _get_game_node() -> Game:
 	var root: Node = Engine.get_main_loop().current_scene
 	if root and root.has_method("find_child"):
@@ -627,15 +547,12 @@ static func _get_game_node() -> Game:
 	return null
 
 
-# Helper function to wait for game systems to be ready
 static func _wait_for_game_systems_ready() -> bool:
 	Log.info("Waiting for game systems to be ready...", {}, ["debug", "battle", "initialization"])
 
-	# Try to find the game node in the scene tree
 	var game_node: Node = null
 	var root: Node = Engine.get_main_loop().current_scene
 
-	# Search for Game node (could be child of main or direct scene)
 	if root and root.has_method("find_child"):
 		game_node = root.find_child("Game", true, false)
 
@@ -643,12 +560,10 @@ static func _wait_for_game_systems_ready() -> bool:
 		Log.warning("Game node not found in scene tree", {}, ["debug", "battle", "initialization"])
 		return false
 
-	# Check if the game has a clicker that's properly initialized
 	var clicker_node: Node = null
 	if game_node.has_method("get") and game_node.get("clicker"):
 		clicker_node = game_node.get("clicker")
 
-		# Check if clicker has a level (indicating it's been set up)
 		if clicker_node.has_method("get") and clicker_node.get("level"):
 			Log.info(
 				"Game systems ready - clicker initialized",
@@ -657,12 +572,8 @@ static func _wait_for_game_systems_ready() -> bool:
 			)
 			return true
 
-	# If not ready yet, wait a few frames and check again
 	Log.info("Game systems not ready yet, waiting...", {}, ["debug", "battle", "initialization"])
 
-	# The core issue: we shouldn't need to wait for systems to be ready in a well-designed system
-	# If clicker systems aren't ready, that indicates a fundamental initialization problem
-	# For now, return true if basic systems exist, false otherwise
 	if clicker_node:
 		Log.info(
 			"Game systems available - proceeding without timing-based waits",
@@ -679,13 +590,11 @@ static func _wait_for_game_systems_ready() -> bool:
 	return false
 
 
-# Battle action implementations using new idle action system
 static func _start_battle() -> DebugAction.Result:
 	var game: Game = _get_game_node()
 	if not game:
 		return DebugAction.Result.new_failure("Game node not available")
 
-	# Use the new idle action system
 	core.action(core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_start_battle")))
 
 	return DebugAction.Result.new_success({"battle_queued": true})
@@ -701,7 +610,6 @@ static func _populate_enemy_and_start_battle() -> DebugAction.Result:
 	if not game:
 		return DebugAction.Result.new_failure("Game node not available")
 
-	# Queue both actions - they will run in order when idle
 	core.action(
 		core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_populate_enemy_lineup"))
 	)
@@ -712,18 +620,13 @@ static func _populate_enemy_and_start_battle() -> DebugAction.Result:
 
 static func _trigger_populate_enemy_lineup() -> void:
 	Log.info("Populating enemy lineup via idle action", {}, ["debug", "battle"])
-	# Call the populate function but don't await - it will handle its own state transitions
 	var populate_task: Callable = func() -> void: await _populate_enemy_lineup()
 	populate_task.call()
 
 
-# _battle_set_seed function removed - obsolete due to autonomous RNG initialization
-# Seeds are now automatically applied during autoload phase via DebugConfigReader
-# Use checksum_config.initial_seed in JSON configs instead of explicit actions
 
 
 static func _battle_test_determinism_logic_only() -> DebugAction.Result:
-	# Test battle determinism using logic-only execution (no animation) - much faster
 	if not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("RNG singleton not available")
 
@@ -741,7 +644,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		["debug", "battle", "determinism", "pid", "phase"]
 	)
 
-	# Get determinism configuration (force skip_animation to true)
 	var config: Dictionary = _get_determinism_config()
 	var current_seed: int = config.seed
 	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
@@ -759,13 +661,11 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		["debug", "battle", "determinism", "pid"]
 	)
 
-	# Execute battle logic directly without UI/animation
 	var logic_result: Dictionary = _battle_execute_logic_only()
 
 	var duration: int
 
 	if not logic_result.success:
-		# Logic-only execution failed
 		var error_msg: String = logic_result.error
 		return DebugAction.Result.new_failure("Logic-only battle execution failed: " + error_msg)
 
@@ -776,12 +676,10 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		["debug", "battle", "determinism"]
 	)
 
-	# Generate end checksum from RNG sequence
 	var rng_sequence: Array = rng.seeded_rng._result_sequence
 	var actual_hash: String = str(rng_sequence).md5_text()
 
 	if mode == "validation":
-		# Validation mode - compare against expected hash from config
 		Log.info(
 			"=== VALIDATION MODE ===",
 			{
@@ -836,7 +734,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 				"DETERMINISM_LOGIC_ONLY_FAILED"
 			)
 	else:
-		# Recording mode - save hash to config for future validation
 		Log.info(
 			"=== RECORDING MODE ===",
 			{
@@ -852,7 +749,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		var update_success: bool = _update_config_with_hash(actual_hash)
 
 		if update_success:
-			# Emit restart signal for automatic validation phase
 			Log.info(
 				"DEBUG_TEST_RESTART_NEEDED",
 				{
@@ -917,10 +813,8 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 
 
 static func _battle_execute_logic_only() -> Dictionary:
-	# Execute battle logic directly without UI/animation - much faster
 	var start_time: int = Time.get_ticks_msec()
 
-	# Find the game node to access battle systems
 	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
 	if not scene_tree:
 		Log.error(
@@ -945,7 +839,6 @@ static func _battle_execute_logic_only() -> Dictionary:
 			"event_count": 0
 		}
 
-	# Find the Game node (should be the main scene or child)
 	var game_node: Game = main_scene as Game
 	if not game_node:
 		game_node = main_scene.find_child("Game", true, false) as Game
@@ -961,7 +854,6 @@ static func _battle_execute_logic_only() -> Dictionary:
 			"event_count": 0
 		}
 
-	# Access the battle handler
 	var battle_handler: BattleHandler = game_node.battle_handler
 	if not battle_handler:
 		Log.error(
@@ -980,7 +872,6 @@ static func _battle_execute_logic_only() -> Dictionary:
 		"Executing logic-only battle (direct battle solver)", {}, ["debug", "battle", "determinism"]
 	)
 
-	# Execute battle logic directly using the battle handler
 	var battle_result: Battle.BattleResult = battle_handler.create_battle()
 	var events: Array[Context.Event] = battle_result.events
 	var event_count: int = events.size()
@@ -997,7 +888,6 @@ static func _battle_execute_logic_only() -> Dictionary:
 
 
 static func _get_determinism_config() -> Dictionary:
-	# Read determinism config (seed and optional expectedHash) from external config file
 	var config_path: String = "user://debug_startup_actions.json"
 	var default_config: Dictionary = {
 		"seed": 55555, "expectedHash": null, "mode": "recording", "skip_animation": false
@@ -1005,7 +895,6 @@ static func _get_determinism_config() -> Dictionary:
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
 
-	# Enhanced file system debugging with PID
 	Log.info(
 		"=== CONFIG LOAD ===",
 		{
@@ -1057,7 +946,6 @@ static func _get_determinism_config() -> Dictionary:
 	var data: Dictionary = json.data
 	var config: Dictionary = {}
 
-	# Debug: log the raw data to see what's being read
 	Log.info(
 		"Raw config data",
 		{
@@ -1069,14 +957,12 @@ static func _get_determinism_config() -> Dictionary:
 		["debug", "battle", "determinism", "pid"]
 	)
 
-	# Extract seed - fail fast if type is wrong
 	if data.has("seed"):
 		var seed_value: int = data.seed
 		config.seed = seed_value
 	else:
 		config.seed = default_config.seed
 
-	# Extract expectedHash if present
 	Log.info(
 		"Checking for expectedHash",
 		{
@@ -1106,7 +992,6 @@ static func _get_determinism_config() -> Dictionary:
 			["debug", "battle", "determinism", "pid"]
 		)
 
-	# Extract skip_animation option - fail fast if type is wrong
 	if data.has("skip_animation"):
 		var skip_value: bool = data.skip_animation
 		config.skip_animation = skip_value
@@ -1127,12 +1012,10 @@ static func _get_determinism_config() -> Dictionary:
 
 
 static func _update_config_with_hash(hash_value: String) -> bool:
-	# Add computed hash to the config file for future validation
 	var config_path: String = "user://debug_startup_actions.json"
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
 
-	# Enhanced file system debugging with PID
 	Log.info(
 		"=== CONFIG UPDATE ===",
 		{
@@ -1154,7 +1037,6 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 		)
 		return false
 
-	# Read current config
 	var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 	if not file:
 		Log.error(
@@ -1178,11 +1060,9 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 		)
 		return false
 
-	# Add expectedHash to config
 	var data: Dictionary = json.data
 	data.expectedHash = hash_value
 
-	# Write updated config back
 	var updated_json: String = JSON.stringify(data, "\t")
 	file = FileAccess.open(config_path, FileAccess.WRITE)
 	if not file:
@@ -1196,7 +1076,6 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 	file.store_string(updated_json)
 	file.close()
 
-	# Verify file was written successfully
 	var exists_after: bool = FileAccess.file_exists(config_path)
 	Log.info(
 		"Config updated with expectedHash",
@@ -1210,7 +1089,6 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 		["debug", "battle", "determinism", "filesystem", "pid"]
 	)
 
-	# Double-check by trying to read back the hash
 	if exists_after:
 		var verification_file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 		if verification_file:
@@ -1231,17 +1109,12 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 	return true
 
 
-# _get_seed_from_config function removed - obsolete due to autonomous RNG initialization
-# Seeds are now handled by DebugConfigReader during autoload phase
-# Use DebugConfigReader.get_debug_seed() if manual seed access is needed
 
 
 static func _battle_test_determinism() -> DebugAction.Result:
-	# Test battle determinism with JSON-based hash validation
 	if not is_instance_valid(ui) or not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("Required systems not available")
 
-	# Get determinism configuration
 	var config: Dictionary = _get_determinism_config()
 	var current_seed: int = config.seed
 	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
@@ -1257,7 +1130,6 @@ static func _battle_test_determinism() -> DebugAction.Result:
 	var duration: int
 
 	if skip_animation:
-		# Logic-only mode: Execute battle directly without UI/animation
 		Log.info(
 			"Executing battle in logic-only mode (no animation)",
 			{},
@@ -1276,26 +1148,21 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			["debug", "battle", "determinism"]
 		)
 	else:
-		# Animated mode: Full UI battle (original behavior)
 		var start_time: int = Time.get_ticks_msec()
 		Log.info("Executing battle with full animation", {}, ["debug", "battle", "determinism"])
 
-		# Use new idle action system for battle execution
 		var game: Game = _get_game_node()
 		if not game:
 			return DebugAction.Result.new_failure("Game node not available")
 
-		# Queue the battle start and wait for completion using game state transitions
 		var initial_state: core.GameState = game.game_handler.current_gamestate
 		core.action(
 			core.SystemIdleActionEvent.new(Callable(GameDebugActions, "_trigger_start_battle"))
 		)
 
-		# Wait for battle to start (state will change from current state)
 		while game.game_handler.current_gamestate == initial_state:
 			await Engine.get_main_loop().process_frame
 
-		# Wait for battle to complete (state becomes POSTBATTLE)
 		while game.game_handler.current_gamestate != core.GameState.POSTBATTLE:
 			await Engine.get_main_loop().process_frame
 
@@ -1306,12 +1173,10 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			["debug", "battle", "determinism"]
 		)
 
-	# Generate end checksum from RNG sequence
 	var rng_sequence: Array = rng.seeded_rng._result_sequence
 	var actual_hash: String = str(rng_sequence).md5_text()
 
 	if mode == "validation":
-		# Validation mode - compare against expected hash from config
 		if expected_hash == actual_hash:
 			Log.info(
 				"Battle determinism test PASSED",
@@ -1338,10 +1203,8 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				"Determinism test failed - hash mismatch", "DETERMINISM_FAILED"
 			)
 	else:
-		# Recording mode - save hash to config for future validation
 		var update_success: bool = _update_config_with_hash(actual_hash)
 
-		# VALIDATION TEST: Immediately verify we can read the hash back
 		if update_success:
 			Log.info(
 				"Attempting to read back written hash for validation...",
@@ -1376,7 +1239,6 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				)
 
 		if update_success:
-			# Emit restart signal for automatic validation phase
 			var current_test_id: String = DebugAction.get_current_test_id()
 			Log.info(
 				"DEBUG_TEST_RESTART_NEEDED",
@@ -1423,12 +1285,9 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			)
 
 
-# Legacy capture action implementations removed - now using semantic logging approach
 
 
 static func _reset_board_state() -> bool:
-	# Reset battle state to initial state for deterministic testing
-	# In this game, "board state" refers to the battle lineup and game state
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error(
@@ -1436,16 +1295,12 @@ static func _reset_board_state() -> bool:
 		)
 		return false
 
-	# NOTE: RNG reset removed - autonomous initialization ensures deterministic behavior
-	# The RNG is already properly seeded during autoload phase via DebugConfigReader
-	# No manual resetting needed for board state reset
 	Log.debug(
 		"Board state reset - RNG already deterministically initialized",
 		{"rng_available": rng != null and rng.seeded_rng != null},
 		["debug", "board", "reset"]
 	)
 
-	# Clear lineups if they exist
 	var reset_successful: bool = true
 
 	if game.holder_allies:
@@ -1472,12 +1327,10 @@ static func _reset_board_state() -> bool:
 		Log.warning("Enemy lineup not found for reset", {}, ["debug", "board", "reset"])
 		reset_successful = false
 
-	# Reset game state to a clean state
 	if game.game_handler:
 		game.game_handler.set_gamestate(core.GameState.PREPARE)
 		Log.info("Game state reset to PREPARE", {}, ["debug", "board", "reset"])
 
-	# Reset UI state
 	game.ui_state = core.UIState.WAITING
 	Log.info("UI state reset to WAITING", {}, ["debug", "board", "reset"])
 
@@ -1489,18 +1342,15 @@ static func _reset_board_state() -> bool:
 	return reset_successful
 
 
-# Player action implementations for semantic replay
 static func _reroll_player(params: Dictionary = {}) -> bool:
 	"""Simulate player reroll action with parameters"""
 
-	# Step 1: Validate parameters
 	var cost: int = params.get("cost", 0)
 	if cost < 0:
 		Log.error("Invalid cost parameter", {"cost": cost}, ["debug", "replay", "player", "error"])
 		assert(false, "reroll_player: cost cannot be negative")
 		return false
 
-	# Step 2: Validate game state (rerolls only work in DRAFT state)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error("Game node not available for reroll", {}, ["debug", "replay", "player", "error"])
@@ -1517,7 +1367,6 @@ static func _reroll_player(params: Dictionary = {}) -> bool:
 		assert(false, "reroll_player: can only reroll in DRAFT state, current: " + current_state)
 		return false
 
-	# Step 3: Validate preconditions (draft must exist and be rerollable)
 	if not game.clicker or not game.clicker.level:
 		Log.error(
 			"Draft system not available for reroll", {}, ["debug", "replay", "player", "error"]
@@ -1525,7 +1374,6 @@ static func _reroll_player(params: Dictionary = {}) -> bool:
 		assert(false, "reroll_player: draft system not available")
 		return false
 
-	# Step 4: Execute action
 	Log.info(
 		"Simulating player reroll action",
 		{"cost": cost, "params": params},
@@ -1540,7 +1388,6 @@ static func _reroll_player(params: Dictionary = {}) -> bool:
 static func _upgrade_player(params: Dictionary = {}) -> bool:
 	"""Simulate player upgrade action with parameters"""
 
-	# Step 1: Validate parameters
 	var level: int = params.get("level", 1)
 	var level_error: String = _validate_range(level, 1, 5, "level")
 	if not level_error.is_empty():
@@ -1552,7 +1399,6 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		assert(false, "upgrade_player: " + level_error)
 		return false
 
-	# Step 2: Validate game state (upgrades only work in DRAFT state)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error("Game node not available for upgrade", {}, ["debug", "replay", "player", "error"])
@@ -1569,7 +1415,6 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		assert(false, "upgrade_player: can only upgrade in DRAFT state, current: " + current_state)
 		return false
 
-	# Step 3: Validate preconditions (draft must exist and be upgradeable)
 	if not game.clicker or not game.clicker.level:
 		Log.error(
 			"Draft system not available for upgrade", {}, ["debug", "replay", "player", "error"]
@@ -1577,7 +1422,6 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 		assert(false, "upgrade_player: draft system not available")
 		return false
 
-	# Step 4: Execute action using natural upgrade progression
 	Log.info(
 		"Simulating player upgrade action",
 		{"level": level, "params": params},
@@ -1592,7 +1436,6 @@ static func _upgrade_player(params: Dictionary = {}) -> bool:
 static func _toggle_column_player(params: Dictionary = {}) -> bool:
 	"""Simulate player column toggle action with parameters"""
 
-	# Step 1: Validate parameters
 	var required_params: Array[String] = ["column_index", "new_state"]
 	var param_error: String = _validate_required_params(params, required_params)
 	if not param_error.is_empty():
@@ -1617,7 +1460,6 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 		assert(false, "toggle_column_player: " + column_error)
 		return false
 
-	# Step 2: Validate game state (column toggle only works in DRAFT state)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error(
@@ -1638,7 +1480,6 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 		)
 		return false
 
-	# Step 3: Validate preconditions (draft must exist and have columns)
 	if not game.clicker or not game.clicker.level:
 		Log.error(
 			"Draft system not available for column toggle",
@@ -1648,7 +1489,6 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 		assert(false, "toggle_column_player: draft system not available")
 		return false
 
-	# Step 4: Execute action
 	Log.info(
 		"Simulating player column toggle action",
 		{"column_index": column_index, "new_state": new_state, "params": params},
@@ -1665,7 +1505,6 @@ static func _toggle_column_player(params: Dictionary = {}) -> bool:
 static func _remove_block_player(params: Dictionary = {}) -> bool:
 	"""Simulate player block removal action with parameters - mirrors normal UI flow"""
 
-	# Step 1: Validate parameters - card_id is optional for locked blocks
 	var required_params: Array[String] = ["position"]
 	var param_error: String = _validate_required_params(params, required_params)
 	if not param_error.is_empty():
@@ -1690,7 +1529,6 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: " + validation_error)
 		return false
 
-	# Step 2: Validate game state (block removal only works in DRAFT state)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error(
@@ -1712,7 +1550,6 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		)
 		return false
 
-	# Step 3: Validate preconditions (draft must exist and have blocks)
 	if not game.clicker or not game.clicker.level:
 		Log.error(
 			"Draft system not available for block removal",
@@ -1722,15 +1559,11 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: draft system not available")
 		return false
 
-	# Step 4: Find actual block at position using Clicker static method
 	var pos_x: int = position.get("x", -1)
 	var pos_y: int = position.get("y", -1)
 	var grid_pos: Vector2i = Vector2i(pos_x, pos_y)
 	var actual_block: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
 
-	# Store reference for subsequent move operation (deprecated - no longer used)
-	# if actual_block is Card:
-	#	_last_removed_card = actual_block as Card
 
 	if not actual_block:
 		Log.error(
@@ -1741,9 +1574,7 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "block not found at expeected position")
 		return false
 
-	# Step 5: Validate block matches expected type and card_id
 	if actual_block.object_type == core.ObjectType.CARD:
-		# Card blocks require matching card_id
 		var actual_card_id: String = actual_block.card_info.id
 		if actual_card_id != card_id:
 			Log.error(
@@ -1754,7 +1585,6 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 			assert(false, "remove_block_player: Card ID mismatch")
 			return false
 	elif actual_block.object_type == core.ObjectType.BLOCK_LOCKED:
-		# Locked blocks should have empty card_id
 		if not card_id.is_empty():
 			Log.error(
 				"Card ID should be empty for locked blocks",
@@ -1772,14 +1602,12 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		assert(false, "remove_block_player: Block is not removable")
 		return false
 
-	# Step 6: Perform the actual block removal - cascading updates handled automatically
 	Log.info(
 		"Performing block removal action",
 		{"card_id": card_id, "position": position, "block_type": actual_block.object_type},
 		["debug", "replay", "player"]
 	)
 
-	# Trigger the block removal event - cascading updates automatically handled by event system
 	core.action(core.RemoveBlockFromDraft.new(actual_block, true))
 
 	Log.info(
@@ -1794,7 +1622,6 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 static func _move_card_player(params: Dictionary = {}) -> bool:
 	"""Simulate player card move action with parameters"""
 
-	# Step 1: Validate parameters
 	var required_params: Array[String] = ["card_id", "from_position", "to_position"]
 	var param_error: String = _validate_required_params(params, required_params)
 	if not param_error.is_empty():
@@ -1836,7 +1663,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_player: " + move_error)
 		return false
 
-	# Step 2: Validate game state (card moves can happen in DRAFT or PREPARE states)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error(
@@ -1861,7 +1687,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		)
 		return false
 
-	# Step 3: Validate preconditions (must have lineup with cards)
 	if not core:
 		Log.error(
 			"Core system not available for card move", {}, ["debug", "replay", "player", "error"]
@@ -1869,7 +1694,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_player: core system not available")
 		return false
 
-	# Step 4: Execute action
 	Log.info(
 		"Simulating player card move action",
 		{
@@ -1881,7 +1705,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Create card object for the move event
 	if not is_instance_valid(card_controller):
 		Log.error(
 			"card_controller not available for card move",
@@ -1904,7 +1727,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 	var typed_card: Card = card
 	typed_card.block_context = Cards.CONTEXT.LINEUP
 
-	# Create and execute the move event
 	var move_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(
 		typed_card, from_position, to_position
 	)
@@ -1915,7 +1737,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 
 static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	"""Atomic draft-to-lineup move operation using LineupAddCardFromDraftEvent"""
-	# Step 1: Validate parameters
 	var required_params: Array[String] = ["card_id", "from_position", "to_position"]
 	var param_error: String = _validate_required_params(params, required_params)
 	if not param_error.is_empty():
@@ -1934,7 +1755,6 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 	var from_y: int = from_position.get("y", -1)
 	var grid_pos: Vector2i = Vector2i(from_x, from_y)
 
-	# Step 2: Validate game state
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error("Game node not available", {}, ["debug", "replay", "player", "error"])
@@ -1951,7 +1771,6 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_to_lineup_player: invalid game state")
 		return false
 
-	# Step 3: Find the card at the draft position
 	var card_to_move: Card = Clicker.find_block_at_position(game.clicker, grid_pos) as Card
 	if not card_to_move:
 		Log.error(
@@ -1962,7 +1781,6 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_to_lineup_player: card not found")
 		return false
 
-	# Step 4: Validate target lineup position is available
 	var target_holder: Holder = game.lineup_handler.holder_container.get_holder(to_position)
 	if not target_holder.can_set_card(card_to_move):
 		Log.error(
@@ -1973,7 +1791,6 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_to_lineup_player: target position occupied")
 		return false
 
-	# Step 5: Use LineupAddCardFromDraftEvent directly (same as manual UI)
 	Log.info(
 		"Executing draft-to-lineup move via LineupAddCardFromDraftEvent",
 		{"card_id": card_id, "from": from_position, "to": to_position},
@@ -1995,7 +1812,6 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 	var from_state: String = params.get("from_state", "")  # Expected starting state (empty = skip validation)
 	var to_state: String = params.get("to_state", "PREPARE")  # Target state
 
-	# Step 1: Validate parameters (to_state is required)
 	if to_state.is_empty():
 		Log.error(
 			"to_state parameter is required",
@@ -2005,7 +1821,6 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 		assert(false, "transition_player: to_state parameter is required")
 		return false
 
-	# Step 2 & 3: Validate current state matches expected from_state (if provided)
 	if not from_state.is_empty():
 		var game: Game = _get_game_node()
 		if not game:
@@ -2049,7 +1864,6 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	# Convert state string to GameState enum and create TransitionEvent
 	var target_state: core.GameState
 
 	match to_state:
@@ -2074,7 +1888,6 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 			assert(false, "transition_player: unknown target state: " + to_state)
 			return false
 
-	# Create TransitionEvent with PLAYER source
 	var event: core.TransitionEvent = core.TransitionEvent.new(target_state)
 	event.source = core.EventSource.PLAYER
 	core.action(event)
@@ -2085,7 +1898,6 @@ static func _transition_player(params: Dictionary = {}) -> bool:
 static func _start_battle_player(params: Dictionary = {}) -> bool:
 	"""Simulate player battle start action with parameters"""
 
-	# Step 1: Validate parameters
 	var player_lineup_count: int = params.get("player_lineup_count", 3)
 	var enemy_lineup_count: int = params.get("enemy_lineup_count", 3)
 
@@ -2109,7 +1921,6 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 		assert(false, "start_battle_player: " + enemy_error)
 		return false
 
-	# Step 2: Validate game state (battle can only start from PREPARE state)
 	var game: Game = _get_game_node()
 	if not game:
 		Log.error(
@@ -2134,7 +1945,6 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 		)
 		return false
 
-	# Step 3: Validate preconditions (must have ui system)
 	if not ui:
 		Log.error(
 			"UI system not available for battle start", {}, ["debug", "replay", "player", "error"]
@@ -2142,7 +1952,6 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 		assert(false, "start_battle_player: UI system not available")
 		return false
 
-	# Step 4: Execute action
 	Log.info(
 		"Simulating player battle start action",
 		{
@@ -2158,9 +1967,6 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 	return true
 
 
-# ================================================================
-# VALIDATION HELPERS - Simple and Robust Parameter Validation
-# ================================================================
 
 
 static func _validate_required_params(params: Dictionary, required_keys: Array[String]) -> String:
@@ -2218,12 +2024,10 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 	if not range_error.is_empty():
 		return range_error
 
-	# Get game instance for actual lineup checking
 	var game: Game = _get_game_node()
 	if not game or not game.lineup_handler:
 		return "lineup not available for validation"
 
-	# Check if position has a card
 	if from_position >= game.lineup_handler.get_card_count():
 		return "from_position " + str(from_position) + " exceeds lineup size"
 
@@ -2231,7 +2035,6 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 	if not card_at_position:
 		return "no card found at from_position " + str(from_position)
 
-	# Validate card ID matches
 	if card_at_position.card_info.id != card_id:
 		return "card_id mismatch: expected " + card_id + ", found " + card_at_position.card_info.id
 
@@ -2244,30 +2047,23 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 	if not pos_error.is_empty():
 		return pos_error
 
-	# Get game instance for actual block checking
 	var game: Game = _get_game_node()
 	if not game or not game.clicker:
 		return "draft system not available for validation"
 
-	# Convert position dictionary to Vector2i for lookup
 	var pos_x: int = position.get("x", -1)
 	var pos_y: int = position.get("y", -1)
 	var grid_pos: Vector2i = Vector2i(pos_x, pos_y)
 
-	# Find the actual block at the position
 	var block_at_position: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
 	if not block_at_position:
 		return "no block found at position (" + str(grid_pos.x) + "," + str(grid_pos.y) + ")"
 
-	# Handle different block types
 	if block_at_position.object_type == core.ObjectType.BLOCK_LOCKED:
-		# Locked blocks don't have card_id - empty card_id is expected
 		if not card_id.is_empty():
 			return "card_id should be empty for locked blocks, got: " + card_id
 	elif block_at_position.object_type == core.ObjectType.CARD:
-		# Card blocks: allow position-based removal (empty card_id) or specific card_id removal
 		if not card_id.is_empty():
-			# If card_id is specified, it must match
 			if block_at_position.card_info.id != card_id:
 				return (
 					"card_id mismatch: expected "
@@ -2275,7 +2071,6 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 					+ ", found "
 					+ block_at_position.card_info.id
 				)
-		# If card_id is empty, allow position-based removal (player action style)
 	else:
 		return (
 			"block at position is not removable (type: " + str(block_at_position.object_type) + ")"

@@ -1,4 +1,3 @@
-# project/autoloads/internet_status.gd
 class_name InternetStatus  # Assuming you might want to use this as a type elsewhere
 extends Node
 

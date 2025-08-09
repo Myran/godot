@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_backend/backend_timer_manager_test_action.gd
 class_name BackendTimerManagerTestAction
 extends BackendFirebaseDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "backend.firebase.timer_manager"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend timer management...")
@@ -24,7 +22,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			action_name
 		)
 
-	# Test 1: Normal operation within timeout
 	_update_status("Testing normal timeout handling...")
 	var test_path: Array = ["backend_tests", "timer_manager", "normal"]
 	var test_key: String = "timer_test_" + str(Time.get_ticks_msec())
@@ -36,7 +33,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 	var normal_duration: int = Time.get_ticks_msec() - timer_start
 
-	# Test 2: Multiple rapid requests (stress test RequestSignalHelper)
 	_update_status("Testing rapid request handling...")
 	var rapid_requests: int = 3
 	var rapid_success: int = 0
@@ -57,13 +53,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			rapid_success += 1
 		total_rapid_duration += rapid_duration
 
-		# Small delay between requests
 		await Engine.get_main_loop().create_timer(0.05).timeout
 
 	var rapid_success_rate: float = float(rapid_success) / float(rapid_requests)
 	var avg_rapid_duration: int = int(float(total_rapid_duration) / float(rapid_requests))
 
-	# Evaluate results
 	var normal_ok: bool = normal_result and normal_duration < 5000  # Under 5 seconds
 	var rapid_ok: bool = rapid_success_rate >= 0.8  # 80% success rate
 	var overall_success: bool = normal_ok and rapid_ok

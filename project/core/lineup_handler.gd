@@ -10,7 +10,6 @@ func setup(holder: HolderContainer) -> void:
 func add_card(card: Card, pos: int) -> void:
 	var holder_pos: Holder = holder_container.get_holder(pos)
 
-	# Enhanced semantic logging for lineup addition (system action)
 	Log.info(
 		"Lineup handler adding card",
 		{
@@ -31,7 +30,6 @@ func find_tripples() -> Array[Card]:
 	var found_card_id: String = ""
 	var found_level: int = -1
 
-	# Enhanced granular logging for tripple detection call
 	var lineup_summary: Array[Dictionary] = []
 	for pos: int in lineup.keys():
 		var card: Card = lineup[pos]
@@ -45,13 +43,11 @@ func find_tripples() -> Array[Card]:
 		["semantic", "lineup", "tripple_detection_start"]
 	)
 
-	# Use position-based sorting instead of card object values for deterministic iteration
 	var sorted_cards: Array[Card] = []
 	var sorted_positions: Array[int] = DictUtils.keys_sorted(lineup)
 	for pos: int in sorted_positions:
 		sorted_cards.append(lineup[pos])
 
-	# Log the sorting process for debugging cross-platform determinism
 	var position_order: Array[String] = []
 	for pos: int in sorted_positions:
 		position_order.append(str(pos))
@@ -71,13 +67,11 @@ func find_tripples() -> Array[Card]:
 		["semantic", "lineup", "determinism_debug"]
 	)
 
-	# Track which card types we've already processed to avoid duplicate merges
 	var processed_types: Array[String] = []
 
 	for card: Card in sorted_cards:
 		var card_type_key: String = "%s_L%d" % [card.card_info.id, card.level]
 
-		# Skip if we've already processed this card type
 		if processed_types.has(card_type_key):
 			continue
 
@@ -87,7 +81,6 @@ func find_tripples() -> Array[Card]:
 				if not tripples.has(lineup_card):
 					tripples.append(lineup_card)
 
-		# Log tripple detection progress for this card
 		Log.debug(
 			"Checking card for tripples",
 			{
@@ -106,7 +99,6 @@ func find_tripples() -> Array[Card]:
 			found_card_id = card.card_info.id
 			found_level = card.level
 
-			# Enhanced semantic logging for tripple detection with merge order
 			var merge_card_details: Array[String] = []
 			for merge_card: Card in tripples:
 				var card_pos: int = holder_container.get_card_position(merge_card)
@@ -130,10 +122,8 @@ func find_tripples() -> Array[Card]:
 
 			return tripples
 
-		# Mark this card type as processed
 		processed_types.append(card_type_key)
 
-	# Log when no tripples found
 	Log.debug(
 		"No tripples found in current lineup",
 		{"lineup_card_count": lineup.size(), "handler": "lineup_handler"},
@@ -154,10 +144,8 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 		[Log.TAG_MERGE]
 	)
 
-	# Create merged card with effects transferred
 	var new_card: Card = await _create_merged_card(base_card, source_cards)
 
-	# Handle positioning and animation
 	await _finalize_merge_animation(source_cards, new_card)
 
 	Log.info(
@@ -169,14 +157,12 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 	return new_card
 
 
-# Create merged card with proper effect transfer
 func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
 	var new_card: Card = await card_controller.create_unit_from_id(
 		base_card.card_info.id, base_card.level + 1
 	)
 	new_card.block_context = Cards.CONTEXT.LINEUP
 
-	# Transfer effects directly from cards (more efficient)
 	new_card.unit_info.transfer_merge_effects_from_cards(source_cards)
 	new_card.unit_info.apply_permanent_effects_to_current_stats()
 	new_card.refresh_ui_from_unit_data()
@@ -184,9 +170,7 @@ func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
 	return new_card
 
 
-# Handle merge animation and cleanup
 func _finalize_merge_animation(source_cards: Array[Card], new_card: Card) -> void:
-	# Remove source cards and place new card
 	var base_pos: int = holder_container.get_card_position(source_cards[0])
 
 	for source_card: Card in source_cards:
@@ -196,7 +180,6 @@ func _finalize_merge_animation(source_cards: Array[Card], new_card: Card) -> voi
 	holder_container.get_holder(base_pos).set_card(new_card)
 	new_card.show_upgrade()
 
-	# Animate and cleanup
 	var merge_pos: Vector2i = new_card.get_global_position()
 	var awaiter: SignalAwaiter.All = SignalAwaiter.All.new()
 

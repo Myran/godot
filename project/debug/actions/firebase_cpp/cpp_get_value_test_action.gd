@@ -1,4 +1,3 @@
-# project/debug/actions/firebase_cpp/cpp_get_value_test_action.gd
 class_name CPPGetValueTestAction
 extends CPPFirebaseDebugAction
 
@@ -8,15 +7,12 @@ func _init() -> void:
 	action_name = "cpp.firebase.get_value"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
-	# First set a value directly via C++
 	var test_path: Array = ["cpp_tests", "direct", "get_value", str(Time.get_ticks_msec())]
 	var test_value: String = "CPP Get Test Value: " + str(Time.get_ticks_msec())
 
-	# Step 1: Set test value
 	var set_start: int = Time.get_ticks_msec()
 	var set_result: Variant = await execute_cpp_operation(
 		"set_value_async", [test_path, test_value], "C++ Set (for Get test)", "set_value"
@@ -39,7 +35,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Step 2: Get the value directly via C++
 	var get_start: int = Time.get_ticks_msec()
 	var get_result: Variant = await execute_cpp_operation(
 		"get_value_async", [test_path], "C++ Get Value", "get_value"
@@ -81,7 +76,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_cpp_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

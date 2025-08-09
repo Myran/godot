@@ -1,19 +1,10 @@
 @tool
 class_name LoggerSettings
 extends RefCounted
-## [DEPRECATED] Compatibility wrapper for existing code - Use ConfigManager instead
-##
-## WARNING: This class is deprecated and will be removed in a future version.
-## It is maintained only for backward compatibility with existing tests.
-## All new code should use ConfigManager directly instead.
-##
-## @deprecated
 
-# Make sure dependencies are preloaded
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 
-# Add backward compatibility constants to avoid breaking tests
 const CONFIG_PATH = ConfigManager.CONFIG_PATH
 const CONFIG_SECTION_LOGGER = ConfigManager.SECTION_LOGGER
 const CONFIG_SECTION_FORMAT = ConfigManager.SECTION_FORMAT
@@ -31,10 +22,6 @@ const DEFAULT_SHOW_TAGS = ConfigManager.DEFAULT_SHOW_TAGS
 const DEFAULT_USE_COLORS = ConfigManager.DEFAULT_USE_COLORS
 const DEFAULT_SHOW_SOURCE = ConfigManager.DEFAULT_SHOW_SOURCE
 
-## [DEPRECATED] Sets the logger settings from the ConfigManager to the logger instance
-## Returns OK if successful, FAILED otherwise
-##
-## @deprecated Use ConfigManager directly instead
 static func load_settings(logger_instance: Logger) -> Error:
 	push_warning("[Deprecated] LoggerSettings.load_settings is deprecated. Use ConfigManager directly instead.")
 	if not logger_instance:
@@ -43,16 +30,13 @@ static func load_settings(logger_instance: Logger) -> Error:
 
 	var config = ConfigManager.get_instance()
 
-	# Load log level
 	var level = config.get_log_level()
 	if level >= 0 and level < ALogger.LogLevel.size():
 		logger_instance.set_level(level)
 
-	# Clear existing tags
 	logger_instance.clear_tags()
 	logger_instance.clear_ignored_tags()
 
-	# Load tags
 	var active_tags = config.get_active_tags()
 	for tag in active_tags:
 		if TagManager.is_valid_tag(tag):
@@ -63,7 +47,6 @@ static func load_settings(logger_instance: Logger) -> Error:
 		if TagManager.is_valid_tag(tag):
 			logger_instance.add_ignored_tag(tag)
 
-	# Load format settings
 	logger_instance.set_show_source(config.get_show_source())
 	logger_instance.set_show_timestamp(config.get_show_timestamp())
 	logger_instance.set_show_tags(config.get_show_tags())
@@ -71,10 +54,6 @@ static func load_settings(logger_instance: Logger) -> Error:
 
 	return OK
 
-## [DEPRECATED] Saves the logger settings to the config
-## Returns OK if successful, FAILED otherwise
-##
-## @deprecated Use ConfigManager directly instead
 static func save_settings(logger_instance: Logger) -> Error:
 	push_warning("[Deprecated] LoggerSettings.save_settings is deprecated. Use ConfigManager directly instead.")
 	if not logger_instance:
@@ -83,14 +62,11 @@ static func save_settings(logger_instance: Logger) -> Error:
 
 	var config = ConfigManager.get_instance()
 
-	# Save log level
 	config.set_log_level(logger_instance.get_level())
 
-	# Save tags
 	config.set_active_tags(logger_instance._active_tags)
 	config.set_ignored_tags(logger_instance._ignored_tags)
 
-	# Save format settings
 	config.set_show_source(logger_instance._show_source)
 	config.set_show_timestamp(logger_instance._show_timestamp)
 	config.set_show_tags(logger_instance._show_tags)
@@ -98,14 +74,5 @@ static func save_settings(logger_instance: Logger) -> Error:
 
 	return config.save()
 
-## [DEPRECATED] Checks if a tag is valid
-##
-## Tags must be non-empty strings and follow allowed naming conventions.
-## - Cannot be empty
-## - Must contain only alphanumeric characters, underscores, or hyphens
-##
-## @deprecated Use TagManager.is_valid_tag instead
-##
-## Returns: true if valid, false otherwise
 static func _is_valid_tag(tag) -> bool:
 	return TagManager.is_valid_tag(tag)

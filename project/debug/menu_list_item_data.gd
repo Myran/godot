@@ -1,4 +1,3 @@
-# project/debug/menu_list_item_data.gd
 class_name MenuListItemData
 extends RefCounted
 

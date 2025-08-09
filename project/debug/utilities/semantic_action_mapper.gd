@@ -1,8 +1,6 @@
 class_name SemanticActionMapper
 
-# Maps semantic action types to debug action names for replay generation
 
-# Core mapping from semantic action types to debug actions
 static var ACTION_MAPPINGS: Dictionary = {
 	"draft.reroll": "game.draft.reroll_player",
 	"draft.upgrade": "game.draft.upgrade_player",
@@ -52,19 +50,14 @@ static func create_replay_config(
 		"metadata": _generate_metadata(session_id, debug_sequence, mode)
 	}
 
-	# Add any provided metadata
 	for key: String in metadata:
 		config.metadata[key] = metadata[key]
 
-	# Add hide menu action as first action for clean replay output
 	config.actions.append("system.debug.hide_menu")
 
-	# Extract action names for the config
 	for debug_action: Dictionary in debug_sequence:
 		config.actions.append(debug_action.get("action_name", "unknown"))
 
-	# Add completion action - always use replay_complete which is context-aware
-	# It will automatically detect automated vs manual mode and behave appropriately
 	config.actions.append("system.debug.replay_complete")
 
 	return config
@@ -147,7 +140,6 @@ static func _convert_semantic_to_debug_action(semantic_action: Dictionary) -> Di
 		"session_elapsed_ms": semantic_action.get("session_elapsed_ms", 0)
 	}
 
-	# Include action data/parameters
 	var data: Dictionary = semantic_action.get("data", {})
 	if not data.is_empty():
 		debug_action["params"] = data
@@ -155,8 +147,6 @@ static func _convert_semantic_to_debug_action(semantic_action: Dictionary) -> Di
 	return debug_action
 
 
-## CRITICAL: Create replay config with comprehensive state validation integration
-## This method ensures ALL semantic actions are validated during replay
 static func create_replay_config_with_validation(
 	session_id: String,
 	debug_sequence: Array[Dictionary],
@@ -177,7 +167,6 @@ static func create_replay_config_with_validation(
 		["replay", "validation", "config_generation"]
 	)
 
-	# Start with base config
 	var config: Dictionary = {
 		"description": _generate_validation_description(session_id, mode, validation_enabled),
 		"session_id": session_id,
@@ -186,23 +175,17 @@ static func create_replay_config_with_validation(
 		_generate_validation_metadata(session_id, debug_sequence, mode, validation_enabled)
 	}
 
-	# Add any provided metadata
 	for key: String in metadata:
 		config.metadata[key] = metadata[key]
 
-	# Add hide menu action first for clean replay
 	config.actions.append("system.debug.hide_menu")
 
 	if validation_enabled:
-		# Inject state validation actions between semantic actions
 		config.actions = _inject_validation_actions(debug_sequence, session_id)
 	else:
-		# Use standard action sequence without validation
 		for debug_action: Dictionary in debug_sequence:
 			config.actions.append(debug_action.get("action_name", "unknown"))
 
-	# Add completion action - always use replay_complete which is context-aware
-	# It will automatically detect automated vs manual mode and behave appropriately
 	config.actions.append("system.debug.replay_complete")
 
 	Log.info(
@@ -219,7 +202,6 @@ static func create_replay_config_with_validation(
 	return config
 
 
-## CRITICAL: Inject validation actions between semantic actions for comprehensive testing
 static func _inject_validation_actions(
 	debug_sequence: Array[Dictionary], session_id: String
 ) -> Array[String]:
@@ -232,7 +214,6 @@ static func _inject_validation_actions(
 		["replay", "validation", "injection"]
 	)
 
-	# Add initial state capture before any actions
 	enhanced_actions.append("system.debug.capture_initial_state")
 
 	for i: int in range(debug_sequence.size()):
@@ -240,16 +221,12 @@ static func _inject_validation_actions(
 		var action_name: String = debug_action.get("action_name", "unknown")
 		var sequence: int = debug_action.get("sequence", i + 1)
 
-		# Add pre-action state validation
 		enhanced_actions.append("system.debug.validate_pre_action_state")
 
-		# Add the actual semantic action
 		enhanced_actions.append(action_name)
 
-		# Add post-action state validation
 		enhanced_actions.append("system.debug.validate_post_action_state")
 
-		# Add state comparison validation
 		enhanced_actions.append("system.debug.compare_action_states")
 
 		Log.debug(
@@ -258,7 +235,6 @@ static func _inject_validation_actions(
 			["replay", "validation", "action_injection"]
 		)
 
-	# Add final state validation
 	enhanced_actions.append("system.debug.validate_final_state")
 
 	Log.info(
@@ -280,7 +256,6 @@ static func _inject_validation_actions(
 	return enhanced_actions
 
 
-## Generate description for validation-enabled configs
 static func _generate_validation_description(
 	session_id: String, mode: String, validation_enabled: bool
 ) -> String:
@@ -296,14 +271,12 @@ static func _generate_validation_description(
 		return base_desc + validation_status + " - Automated testing mode"
 
 
-## Generate metadata for validation-enabled configs
 static func _generate_validation_metadata(
 	session_id: String, debug_sequence: Array[Dictionary], mode: String, validation_enabled: bool
 ) -> Dictionary:
 	"""Generate metadata with validation configuration"""
 	var base_metadata: Dictionary = _generate_metadata(session_id, debug_sequence, mode)
 
-	# Add validation-specific metadata
 	base_metadata["state_validation_enabled"] = validation_enabled
 	base_metadata["validation_injection"] = validation_enabled
 	base_metadata["company_survival_mode"] = true  # Mark as critical for company survival
@@ -320,8 +293,6 @@ static func _generate_validation_metadata(
 	return base_metadata
 
 
-## Create state validation actions for debugging workflow
-## These are the actions that get injected between semantic actions
 static func create_validation_debug_actions() -> Array[Dictionary]:
 	"""Create debug action definitions for state validation workflow"""
 	return [
@@ -358,12 +329,9 @@ static func create_validation_debug_actions() -> Array[Dictionary]:
 	]
 
 
-## PRODUCTION INTEGRATION: Generate replay config for production use
-## Uses validation by default unless explicitly disabled
 static func generate_production_replay_config(session_id: String) -> Dictionary:
 	"""Generate production-ready replay config with full validation - DEFAULT FOR COMPANY SURVIVAL"""
 
-	# Extract semantic actions from session logs
 	var semantic_actions: Array = _extract_semantic_actions_from_session(session_id)
 
 	if semantic_actions.is_empty():
@@ -374,10 +342,8 @@ static func generate_production_replay_config(session_id: String) -> Dictionary:
 		)
 		return {}
 
-	# Convert to debug action sequence
 	var debug_sequence: Array[Dictionary] = generate_debug_action_sequence(semantic_actions)
 
-	# Create config with validation enabled by default
 	return create_replay_config_with_validation(
 		session_id,
 		debug_sequence,
@@ -387,11 +353,8 @@ static func generate_production_replay_config(session_id: String) -> Dictionary:
 	)
 
 
-## Extract semantic actions from session logs
 static func _extract_semantic_actions_from_session(session_id: String) -> Array:
 	"""Extract semantic actions from session logs for replay generation"""
-	# This is a placeholder implementation - in production this would parse actual log files
-	# For now, return empty array to avoid errors
 	Log.warning(
 		"Semantic action extraction not yet implemented - using placeholder",
 		{"session_id": session_id},

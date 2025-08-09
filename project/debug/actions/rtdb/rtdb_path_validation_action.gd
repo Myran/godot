@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_path_validation_action.gd
 class_name RTDBPathValidationAction
 extends RTDBDebugAction
 
@@ -13,7 +12,6 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	# Converted from execute_legacy
 	var db: Object = get_firebase_database()
 	if not db:
 		var _error_result: Array = get_last_error_result()
@@ -23,7 +21,6 @@ func execute_rtdb_action() -> bool:
 
 	var validation_results: Array[Dictionary] = []
 
-# Test different path scenarios
 	var test_paths: Array[Dictionary] = [
 		{
 			"name": "Valid Nested Path",
@@ -43,7 +40,6 @@ func execute_rtdb_action() -> bool:
 		{"name": "Root Access Path", "path": ["debug_tests"], "should_exist": true}
 	]
 
-# Set up test data for valid paths
 	for test_case: Dictionary in test_paths:
 		var test_path: Array = test_case["path"]
 		var test_name: String = test_case["name"]
@@ -56,10 +52,8 @@ func execute_rtdb_action() -> bool:
 				"set_value_async", test_path, test_data, "Path Setup: " + test_name
 			)
 
-	# Wait for setup to complete
 	await Engine.get_main_loop().create_timer(0.3).timeout
 
-	# Now validate each path
 	for test_case: Dictionary in test_paths:
 		var path_result: Dictionary = await _validate_single_path(db, test_case)
 		validation_results.append(path_result)
@@ -99,15 +93,12 @@ func _validate_single_path(_db: Variant, test_case: Dictionary) -> Dictionary:
 	var path_name: String = test_case.name
 	var should_exist: bool = test_case.should_exist
 
-	# Use the working API to test path accessibility
 	var result: bool = await execute_simple_operation(
 		"get_value_async", path, null, "Path Validation: " + path_name
 	)
 
-	# Simulate async response
 	await Engine.get_main_loop().create_timer(0.2).timeout
 
-	# Check if path is accessible based on operation result
 	var path_accessible: bool = result
 	var validation_success: bool = path_accessible == should_exist
 

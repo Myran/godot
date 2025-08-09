@@ -1,7 +1,5 @@
 class_name FirebaseOperationManager
 extends RefCounted
-## Manages Firebase operations with proper signal handling and timeout management.
-## This class encapsulates the complexity of async Firebase operations.
 
 signal operation_completed(request_id: int, success: bool, data: Variant)
 
@@ -29,7 +27,6 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 	}
 	_pending_ops[request_id] = op_data
 
-	# Execute operation
 	var executed: bool = await _execute_operation(request_id, operation, args)
 	if not executed:
 		_pending_ops.erase(request_id)
@@ -42,7 +39,6 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 			operation
 		)
 
-	# Wait for completion
 	var result: DebugAction.Result = await _wait_for_completion(request_id, timeout_sec)
 	_pending_ops.erase(request_id)
 
@@ -52,28 +48,22 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 func _execute_operation(request_id: int, operation: String, args: Array) -> bool:
 	match operation:
 		"get_value_async":
-			# Convert to current API: get_data(path_array, key)
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var result: Variant = await _db.get_data(path, key)
-			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "get", result, "")
 			return true
 		"set_value_async":
-			# Convert to current API: set_data(path_array, key, data)
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var data: Variant = args[2] if args.size() > 2 else null
 			var result: Variant = await _db.set_data(path, key, data)
-			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "set", result, "")
 			return true
 		"remove_value_async":
-			# Convert to current API: remove_data(path_array, key)
 			var path: Array = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var result: Variant = await _db.remove_data(path, key)
-			# Simulate async completion
 			_simulate_async_completion.call_deferred(request_id, "remove", result, "")
 			return true
 		_:
@@ -83,18 +73,15 @@ func _execute_operation(request_id: int, operation: String, args: Array) -> bool
 func _simulate_async_completion(
 	request_id: int, operation_type: String, result: Variant, error: String
 ) -> void:
-	# Simulate async behavior by completing on next frame
 	await Engine.get_main_loop().process_frame
 
 	if error != null and error != "":
-		# Simulate error completion
 		match operation_type:
 			"get":
 				_on_get_error(request_id, "", "API_ERROR", error)
 			"set", "remove":
 				_on_set_completed(request_id, false, error)
 	else:
-		# Simulate successful completion
 		match operation_type:
 			"get":
 				_on_get_completed(request_id, "", result)
@@ -105,7 +92,6 @@ func _simulate_async_completion(
 func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Result:
 	var deadline: int = TimeUtils.deadline_ms(timeout_sec)
 
-	# Declare variables at function scope to avoid redeclaration
 	var operation_str: String = ""
 	var start_time_variant: Variant = null
 	var start_time_int: int = 0
@@ -165,7 +151,6 @@ func _connect_signals() -> void:
 	if not is_instance_valid(_db):
 		return
 
-	# Connect to completion signals
 	if _db.has_signal("get_value_completed"):
 		_db.get_value_completed.connect(_on_get_completed)
 	if _db.has_signal("get_value_error"):
@@ -178,7 +163,6 @@ func _connect_signals() -> void:
 		_db.db_error.connect(_on_general_error)
 
 
-## Signal handlers
 func _on_get_completed(request_id: int, rtdb_key: String, value: Variant) -> void:
 	if _pending_ops.has(request_id):
 		var op_data: Dictionary = _pending_ops[request_id]

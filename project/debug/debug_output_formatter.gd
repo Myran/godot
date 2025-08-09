@@ -1,8 +1,6 @@
-# project/debug/debug_output_formatter.gd
 class_name DebugOutputFormatter
 extends RefCounted
 
-# Extract these constants from debug_menu_controller.gd
 const FONT_SIZE_XXL: int = 34
 const FONT_SIZE_XL: int = 32
 const FONT_SIZE_L: int = 30
@@ -44,7 +42,6 @@ func format_enhanced_status(action: DebugAction, text: String, is_error: bool) -
 	var status_icon: String = "⚠️" if is_error else "🔄"
 	var color: String = UI_COLORS.danger if is_error else UI_COLORS.info
 
-	# Use enhanced font size for status messages (increased by 25%)
 	var enhanced: String = "[font_size=24]"
 	enhanced += "[color=%s]%s[/color] " % [UI_COLORS.muted, timestamp]
 	enhanced += "[color=%s]%s[/color] " % [color, status_icon]
@@ -76,7 +73,6 @@ func format_completion_report_with_execution_log(
 func output_formatted_text(formatted_text: String) -> void:
 	match OS.get_name():
 		"Android", "iOS":
-			# Strip BBCode for mobile platforms
 			var plain: String = _strip_bbcode_tags(formatted_text)
 			print(plain)
 		_:
@@ -90,12 +86,10 @@ func _format_status_message(_action: DebugAction, text: String, is_error: bool) 
 		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, text]
 
 
-# Build comprehensive action report - extracted from debug_menu_controller.gd
 func _build_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
 	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
 	var report: String = ""
 
-	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	report += (
 		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
@@ -103,7 +97,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
-	# Status section with enhanced visual indicators - AT THE TOP
 	var final_status_icon: String = "✓" if success else "✗"
 	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	var final_status_text: String = "SUCCESS" if success else "FAILURE"
@@ -118,20 +111,15 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
 	)
 
-	# Device/environment context - moved below status
 	var device_info: String = _get_device_context_header()
 	report += device_info + "\n"
 
-	# Enhanced result status with visual indicator
 	report += _build_result_status_section(success, payload)
 
-	# Action details section with enhanced metadata
 	report += _build_action_details_section(action)
 
-	# Performance metrics section
 	report += _build_performance_metrics_section(payload)
 
-	# Test data analysis section
 	report += _build_test_data_analysis_section(payload, success)
 
 	if action.description != "":
@@ -142,7 +130,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 
 	report += "\n"
 
-	# Result/error details
 	if success:
 		report += (
 			"[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n"
@@ -166,7 +153,6 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 		var error_message: String = _format_error_message(payload)
 		report += error_message + "\n"
 
-	# Timestamp
 	report += (
 		"\n[color=%s]Completed at: %s[/color]"
 		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
@@ -175,18 +161,15 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 	return report
 
 
-# Enhanced action report for DebugAction.Result with structured error information
 func _build_action_report_structured(
 	action: DebugAction, action_result: DebugAction.Result
 ) -> String:
 	"""Generate enhanced report for DebugAction.Result with richer error categorization"""
 	var report: String = ""
 
-	# Header with modern styling
 	report += "[font_size=%s][b]ACTION EXECUTION COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
-	# Enhanced status section with performance info - MOVED TO TOP
 	var status_icon: String = "✓" if action_result.is_success() else "✗"
 	var status_color: String = UI_COLORS.success if action_result.is_success() else UI_COLORS.danger
 	var status_text: String = "SUCCESS" if action_result.is_success() else "FAILURE"
@@ -201,7 +184,6 @@ func _build_action_report_structured(
 		% [FONT_SIZE_XL, status_color, status_icon, status_text]
 	)
 
-	# Action details section
 	report += (
 		"[font_size=%s][color=%s]ACTION DETAILS[/color][/font_size]\n"
 		% [FONT_SIZE_XL, UI_COLORS.info]
@@ -234,7 +216,6 @@ func _build_action_report_structured(
 		% [FONT_SIZE_XL, status_color, status_icon, status_text]
 	)
 
-	# Performance information
 	var duration_ms: int = action_result.get_duration_ms()
 	var perf_category: String = action_result.get_performance_category()
 	var perf_color: String = (
@@ -248,7 +229,6 @@ func _build_action_report_structured(
 		% [UI_COLORS.text_secondary, perf_color, duration_ms, perf_category]
 	)
 
-	# Operation information
 	if not action_result.get_operation().is_empty():
 		report += (
 			"[color=%s]Operation:[/color] [color=%s]%s[/color]\n"
@@ -257,7 +237,6 @@ func _build_action_report_structured(
 
 	report += "\n"
 
-	# Result/error details with enhanced error information
 	if action_result.is_success():
 		report += (
 			"[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n"
@@ -280,7 +259,6 @@ func _build_action_report_structured(
 		)
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 
-		# Enhanced error information
 		report += (
 			"[color=%s]Message:[/color] [color=%s]%s[/color]\n"
 			% [UI_COLORS.text_secondary, UI_COLORS.danger, action_result.get_error_message()]
@@ -300,7 +278,6 @@ func _build_action_report_structured(
 				% [UI_COLORS.text_secondary, UI_COLORS.warning, category_name]
 			)
 
-		# Show payload if available (might contain additional error context)
 		var error_payload: Variant = action_result.get_payload()
 		if error_payload != null:
 			report += (
@@ -308,7 +285,6 @@ func _build_action_report_structured(
 				% [UI_COLORS.text_secondary, _pretty_print_value_no_truncation(error_payload)]
 			)
 
-	# Metadata information
 	var metadata: Dictionary = action_result.get_metadata()
 	if not metadata.is_empty():
 		report += (
@@ -318,7 +294,6 @@ func _build_action_report_structured(
 		report += "[color=%s]" % UI_COLORS.surface + "─".repeat(20) + "[/color]\n"
 		report += _pretty_print_value_no_truncation(metadata) + "\n"
 
-	# Timestamp
 	report += (
 		"\n[color=%s]Completed at: %s[/color]"
 		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
@@ -327,7 +302,6 @@ func _build_action_report_structured(
 	return report
 
 
-# Pretty-print a value with NO TRUNCATION and modern styling
 func _pretty_print_value_no_truncation(
 	value: Variant, indent_level: int = 0, max_depth: int = 10
 ) -> String:
@@ -345,7 +319,6 @@ func _pretty_print_value_no_truncation(
 		return _format_array_no_truncation(val_array, indent_level, max_depth)
 	elif value is String:
 		var str_val: String = value
-		# NO TRUNCATION - show full string with proper formatting
 		var escaped_str: String = str_val.replace("\n", "\\n").replace("\t", "\\t")
 		return '[color=%s]"%s"[/color]' % [UI_COLORS.string, escaped_str]
 	elif value is bool:
@@ -353,11 +326,9 @@ func _pretty_print_value_no_truncation(
 	elif value is int or value is float:
 		return "[color=%s]%s[/color]" % [UI_COLORS.number, str(value)]
 	else:
-		# NO TRUNCATION - show full value regardless of length
 		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
 
 
-# Format dictionary with NO TRUNCATION and enhanced styling
 func _format_dictionary_no_truncation(
 	dict: Dictionary, indent_level: int = 0, max_depth: int = 10
 ) -> String:
@@ -374,7 +345,6 @@ func _format_dictionary_no_truncation(
 	var keys: Array = dict.keys()
 	keys.sort()  # Sort keys for consistent display
 
-	# NO ITEM LIMIT - show all items regardless of count
 	for key: Variant in keys:
 		var value: Variant = dict[key]
 		var key_str: String = "[color=%s]%s[/color]" % [UI_COLORS.key, str(key)]
@@ -382,7 +352,6 @@ func _format_dictionary_no_truncation(
 			value, indent_level + 1, max_depth
 		)
 
-		# Handle multiline values with better formatting
 		if "\n" in value_str:
 			result += (
 				child_indent
@@ -402,7 +371,6 @@ func _format_dictionary_no_truncation(
 	return result
 
 
-# Format array with NO TRUNCATION and enhanced styling
 func _format_array_no_truncation(
 	array: Array, indent_level: int = 0, max_depth: int = 10
 ) -> String:
@@ -412,7 +380,6 @@ func _format_array_no_truncation(
 	if indent_level > max_depth:
 		return "[color=%s][ <max depth> ][/color]" % UI_COLORS.warning
 
-	# For small arrays of simple values, show inline with better styling
 	if array.size() <= 5 and indent_level > 0:
 		var all_simple: bool = true
 		for item: Variant in array:
@@ -433,12 +400,10 @@ func _format_array_no_truncation(
 	var child_indent: String = "  ".repeat(indent_level + 1)
 	var result: String = "[color=%s][[/color]\n" % UI_COLORS.text_secondary
 
-	# NO ITEM LIMIT - show all items regardless of count
 	for i: int in range(array.size()):
 		var item: Variant = array[i]
 		var item_str: String = _pretty_print_value_no_truncation(item, indent_level + 1, max_depth)
 
-		# Handle multiline items with better formatting
 		if "\n" in item_str:
 			result += (
 				child_indent
@@ -461,16 +426,13 @@ func _format_array_no_truncation(
 	return result
 
 
-# Extract key information from complex payloads for display
 func _format_payload_summary(payload: Variant) -> String:
 	if payload == null:
 		return "No result data"
 
-	# Handle dictionary payloads (common from Firebase actions)
 	if payload is Dictionary:
 		var dict_payload: Dictionary = payload
 
-		# Firebase operation result
 		if dict_payload.has("operation") and dict_payload.has("result"):
 			var operation: String = str(dict_payload.get("operation"))
 			var result_data: Variant = dict_payload.get("result")
@@ -495,39 +457,32 @@ func _format_payload_summary(payload: Variant) -> String:
 					path_str = str(path_data)
 				summary += "Path: %s\n" % path_str
 
-			# Pretty-print result data for better readability
 			summary += "Result:\n"
 			var formatted_result: String = _pretty_print_value_no_truncation(result_data, 1, 5)
 			summary += "  %s" % formatted_result.replace("\n", "\n  ")
 
 			return summary
 
-		# Generic dictionary - use pretty-printing for better readability
 		else:
 			return (
 				"Result:\n  %s"
 				% _pretty_print_value_no_truncation(dict_payload, 1, 5).replace("\n", "\n  ")
 			)
 
-	# Handle simple types with pretty-printing
 	return "Result: %s" % _pretty_print_value_no_truncation(payload, 0, 5)
 
 
-# Format error message from payload, extracting meaningful info instead of raw dict
 func _format_error_message(payload: Variant) -> String:
 	if payload == null:
 		return "[color=%s]Unknown error - no details provided[/color]" % UI_COLORS.danger
 
-	# Handle dictionary errors (common from Firebase) - NO TRUNCATION
 	if payload is Dictionary:
 		var dict_payload: Dictionary = payload
 
-		# Firebase error with structured info
 		if dict_payload.has("error"):
 			var error_data: Variant = dict_payload.get("error")
 			var error_str: String = str(error_data)
 
-			# Extract meaningful error messages with full context
 			if error_str.contains("PERMISSION_DENIED"):
 				return (
 					"[color=%s]Permission denied[/color] - check Firebase rules\n[color=%s]Full error:[/color] %s"
@@ -554,10 +509,8 @@ func _format_error_message(payload: Variant) -> String:
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
 			else:
-				# NO TRUNCATION - show full error with styling
 				return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
 
-		# Generic dictionary error - show full structured data
 		else:
 			return (
 				"[color=%s]Structured error:[/color]\n%s"
@@ -566,7 +519,6 @@ func _format_error_message(payload: Variant) -> String:
 
 	var payload_str: String = str(payload)
 
-	# Try to extract meaningful error info from string patterns - NO TRUNCATION
 	if payload_str.contains("FirebaseDatabase"):
 		return (
 			"[color=%s]Firebase connection issue[/color]\n[color=%s]Details:[/color] %s"
@@ -588,18 +540,15 @@ func _format_error_message(payload: Variant) -> String:
 			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
 		)
 	else:
-		# NO TRUNCATION - show full error message with proper styling
 		return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
 
 
-# Helper method to strip BBCode tags for mobile platforms
 func _strip_bbcode_tags(text: String) -> String:
 	var regex: RegEx = RegEx.new()
 	regex.compile("\\[/?[^\\]]+\\]")
 	return regex.sub(text, "", true)
 
 
-# Enhanced helper methods for comprehensive test reporting
 
 
 func _get_device_context_header() -> String:
@@ -708,7 +657,6 @@ func _build_performance_metrics_section(payload: Variant) -> String:
 	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 
-	# Extract timing information from payload
 	var timing_info: Dictionary = _extract_timing_info(payload)
 
 	if timing_info.has("duration_ms"):
@@ -729,14 +677,12 @@ func _build_performance_metrics_section(payload: Variant) -> String:
 		)
 		section += "%s\n" % perf_bar
 
-	# Add operation counts if available
 	if timing_info.has("operation_count"):
 		section += (
 			"[color=%s]Operations:[/color] [color=%s]%d[/color]\n"
 			% [UI_COLORS.text_secondary, UI_COLORS.number, timing_info["operation_count"]]
 		)
 
-	# Add throughput if calculable
 	if timing_info.has("duration_ms") and timing_info.has("operation_count"):
 		var operation_count_var: Variant = timing_info["operation_count"]
 		var duration_ms_var: Variant = timing_info["duration_ms"]
@@ -762,7 +708,6 @@ func _build_test_data_analysis_section(payload: Variant, success: bool) -> Strin
 	)
 	section += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
 
-	# Analyze payload for test-specific data
 	var analysis: Dictionary = _analyze_test_payload(payload, success)
 
 	if analysis.has("test_type"):
@@ -821,7 +766,6 @@ func _generate_performance_bar(duration_ms: int) -> String:
 	var category: String = _categorize_performance(duration_ms)
 	var color: String = _get_performance_color(category)
 
-	# Create a visual representation based on duration
 	var bar_length: int = min(20, max(1, int(duration_ms / 50.0)))  # Scale based on duration
 	var bar: String = "▓".repeat(bar_length)
 
@@ -869,7 +813,6 @@ func _extract_timing_info(payload: Variant) -> Dictionary:
 	if payload is Dictionary:
 		var dict_payload: Dictionary = payload
 
-		# Look for common timing fields
 		if dict_payload.has("duration_ms"):
 			timing["duration_ms"] = dict_payload["duration_ms"]
 		elif dict_payload.has("execution_time_ms"):
@@ -877,7 +820,6 @@ func _extract_timing_info(payload: Variant) -> Dictionary:
 		elif dict_payload.has("elapsed_ms"):
 			timing["duration_ms"] = dict_payload["elapsed_ms"]
 
-		# Look for operation counts
 		if dict_payload.has("operation_count"):
 			timing["operation_count"] = dict_payload["operation_count"]
 		elif dict_payload.has("total_operations"):
@@ -895,7 +837,6 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 	if payload is Dictionary:
 		var dict_payload: Dictionary = payload
 
-		# Determine test type
 		if dict_payload.has("test_type"):
 			analysis["test_type"] = dict_payload["test_type"]
 		elif dict_payload.has("operation"):
@@ -903,7 +844,6 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 		else:
 			analysis["test_type"] = "General Test"
 
-		# Count data points
 		var data_points: int = 0
 		if dict_payload.has("results") and dict_payload["results"] is Array:
 			data_points = dict_payload["results"].size()
@@ -913,7 +853,6 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 			data_points = 1
 		analysis["data_points"] = data_points
 
-		# Calculate success rate
 		if dict_payload.has("success_rate"):
 			var success_rate_var: Variant = dict_payload["success_rate"]
 			if success_rate_var is float:
@@ -951,7 +890,6 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 		else:
 			analysis["success_rate"] = 1.0 if success else 0.0
 
-		# Generate key insights
 		var insights: Array[String] = []
 
 		if dict_payload.has("performance_metrics"):
@@ -974,14 +912,12 @@ func _analyze_test_payload(payload: Variant, success: bool) -> Dictionary:
 	return analysis
 
 
-# New enhanced report builder with complete execution log
 func _build_action_report_with_execution_log(
 	action: DebugAction, success: bool, payload: Variant, execution_log: Array[Dictionary]
 ) -> String:
 	"""Generate comprehensive report with complete step-by-step execution history"""
 	var report: String = ""
 
-	# Header with modern styling
 	var status_icon: String = "✅" if success else "❌"
 	report += (
 		"[font_size=%s][b]%s ACTION EXECUTION COMPLETE[/b][/font_size]\n"
@@ -989,7 +925,6 @@ func _build_action_report_with_execution_log(
 	)
 	report += "[color=%s]" % UI_COLORS.surface + "━".repeat(50) + "[/color]\n\n"
 
-	# Status section with enhanced visual indicators - AT THE TOP
 	var final_status_icon: String = "✓" if success else "✗"
 	var final_status_color: String = UI_COLORS.success if success else UI_COLORS.danger
 	var final_status_text: String = "SUCCESS" if success else "FAILURE"
@@ -1004,7 +939,6 @@ func _build_action_report_with_execution_log(
 		% [FONT_SIZE_XL, final_status_color, final_status_icon, final_status_text]
 	)
 
-	# EXECUTION STEPS SECTION - This is what the user wanted to see!
 	report += (
 		"[font_size=%s][color=%s]📋 EXECUTION STEPS[/color][/font_size]\n"
 		% [FONT_SIZE_XL, UI_COLORS.info]
@@ -1021,7 +955,6 @@ func _build_action_report_with_execution_log(
 			var timestamp: String = entry.get("timestamp", "")
 			var message: String = entry.get("message", "")
 
-			# Extract just the time from timestamp
 			var time_part: String = timestamp.split("T")[1] if "T" in timestamp else timestamp
 			if " " in time_part:
 				time_part = (
@@ -1046,20 +979,15 @@ func _build_action_report_with_execution_log(
 
 	report += "\n"
 
-	# Device/environment context - moved below status and steps
 	var device_info: String = _get_device_context_header()
 	report += device_info + "\n"
 
-	# Enhanced result status with visual indicator
 	report += _build_result_status_section(success, payload)
 
-	# Action details section with enhanced metadata
 	report += _build_action_details_section(action)
 
-	# Performance metrics section
 	report += _build_performance_metrics_section(payload)
 
-	# Test data analysis section
 	report += _build_test_data_analysis_section(payload, success)
 
 	if action.description != "":
@@ -1070,7 +998,6 @@ func _build_action_report_with_execution_log(
 
 	report += "\n"
 
-	# Result/error details
 	if success:
 		report += (
 			"[font_size=%s][color=%s]RESULT DATA[/color][/font_size]\n"
@@ -1099,7 +1026,6 @@ func _build_action_report_with_execution_log(
 				"[color=%s]Action failed with no error details provided[/color]\n" % UI_COLORS.muted
 			)
 
-	# Add timestamp at the end
 	report += (
 		"\n[color=%s]Report generated at %s[/color]"
 		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]

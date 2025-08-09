@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_get_nested_path_action.gd
 class_name RTDBGetNestedPathAction
 extends RTDBDebugAction
 
@@ -10,7 +9,6 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -28,7 +26,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var nested_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA)
 	var nested_data: Dictionary = _create_nested_test_data()
 
-	# Step 1: Set up nested test data
 	var setup_start: int = Time.get_ticks_msec()
 	var setup_success: bool = await execute_simple_operation(
 		"set_value_async", nested_path, nested_data, "Setup Nested Data"
@@ -51,7 +48,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	# Step 2: Get the nested data
 	var get_start: int = Time.get_ticks_msec()
 	var get_success: bool = await execute_simple_operation(
 		"get_value_async", nested_path, null, "Get Nested Data"
@@ -89,7 +85,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

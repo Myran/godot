@@ -36,10 +36,8 @@ func _ready() -> void:
 		"Web":
 			Log.info("Running on Web platform", {}, ["system", "initialization"])
 
-	# Check for test mode (platform-specific)
 	var is_test_mode: bool = false
 	if OS.has_feature("android"):
-		# Android: Always allow debug actions (uses exported APK, not editor)
 		is_test_mode = true
 		Log.info(
 			"Android test mode detection",
@@ -47,7 +45,6 @@ func _ready() -> void:
 			["system", "initialization", "test_mode"]
 		)
 	elif OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
-		# Desktop platforms: Check for --test-mode command line flag
 		is_test_mode = "--test-mode" in cmdline_args
 		Log.info(
 			"Desktop test mode detection",
@@ -89,7 +86,6 @@ func _ready() -> void:
 		)
 		return
 
-	# Wait for game to fully initialize before starting debug coordinator
 	await _wait_for_game_initialization()
 	DebugStartupCoordinator.startDebugCoordinator()
 
@@ -97,14 +93,11 @@ func _ready() -> void:
 func _wait_for_game_initialization() -> void:
 	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
 
-	# Get the Game node from the scene
 	var game_node: Game = get_node("Game")
 	if game_node == null:
 		Log.error("Game node not found in main scene", {}, ["system", "initialization", "error"])
 		return
 
-	# Wait for the game's initialization_complete signal
-	# This is emitted when ui_state transitions to WAITING and all systems are ready
 	await game_node.initialization_complete
 
 	Log.info(

@@ -1,14 +1,9 @@
 class_name FirebaseAuthError
 extends RefCounted
 
-## Firebase Auth Error Codes
-## Maps to firebase::auth::AuthError enum from Firebase C++ SDK
-## Values must match the constants used in Firebase C++ module
 
 enum Code {
-	# Success case
 	NONE = 0,  # kAuthErrorNone - operation succeeded
-	# Common auth errors (based on Firebase C++ SDK)
 	INVALID_CUSTOM_TOKEN = 1,
 	CUSTOM_TOKEN_MISMATCH = 2,
 	INVALID_CREDENTIAL = 3,
@@ -34,12 +29,10 @@ enum Code {
 }
 
 
-## Check if the error code represents success
 static func is_success(error_code: Code) -> bool:
 	return error_code == Code.NONE
 
 
-## Get human-readable error message
 static func get_error_message(error_code: Code) -> String:
 	match error_code:
 		Code.NONE:

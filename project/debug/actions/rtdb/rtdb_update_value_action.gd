@@ -1,4 +1,3 @@
-# project/debug/actions/rtdb/rtdb_update_value_action.gd
 class_name RTDBUpdateValueAction
 extends RTDBDebugAction
 
@@ -8,7 +7,6 @@ func _init() -> void:
 	action_name = "rtdb.database.update_value"
 
 
-# New DebugAction.Result pattern - this is the future
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -63,7 +61,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 
-# Legacy method for compatibility - delegates to new pattern
 func execute_rtdb_action() -> bool:
 	var result: DebugAction.Result = await _execute_action_logic({})
 	return result.is_success()

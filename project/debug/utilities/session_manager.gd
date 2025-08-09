@@ -1,10 +1,6 @@
 class_name SessionManager
 extends RefCounted
-# Session configuration
 const SESSION_ID_PREFIX: String = "session_"
-# Note: No timeout - sessions last for entire gameplay duration
-# Session management for full gameplay semantic action logging
-# Provides single session per gameplay session from start to quit
 
 static var current_session_id: String = ""
 static var session_start_time: float = 0.0
@@ -24,12 +20,10 @@ static func start_new_session(trigger: String = "manual", context: Dictionary = 
 	session_action_count = 0
 	session_context = context.duplicate()
 
-	# Add default context
 	session_context["trigger"] = trigger
 	session_context["start_time"] = session_start_time
 	session_context["platform"] = OS.get_name()
 
-	# Capture initial seed for deterministic replay
 	var initial_seed: int = _get_current_seed()
 	session_context["initial_seed"] = initial_seed
 
@@ -96,7 +90,6 @@ static func get_session_context() -> Dictionary:
 	return session_context.duplicate()
 
 
-# Session expiration removed - sessions persist for entire gameplay
 
 
 static func log_semantic_action(action_type: String, data: Dictionary = {}) -> void:
@@ -106,7 +99,6 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 	var timestamp_ms: float = Time.get_unix_time_from_system() * 1000.0
 	var session_elapsed_ms: float = timestamp_ms - session_start_time
 
-	# Capture pre-action checksum for replay validation with sequence number
 	var pre_action_checksum: String = _capture_pre_action_checksum(action_type, sequence)
 
 	var semantic_log: Dictionary = {
@@ -120,16 +112,13 @@ static func log_semantic_action(action_type: String, data: Dictionary = {}) -> v
 		"data": data
 	}
 
-	# Emit semantic action log with semantic tags
 	Log.info("SEMANTIC_ACTION", semantic_log, [Log.TAG_SEMANTIC_ACTION, Log.TAG_PLAYER])
 
-	# Also emit with hierarchical tags for unified filtering
 	var hierarchical_tags: Array[String] = _get_hierarchical_tags_for_semantic_action(action_type)
 	if not hierarchical_tags.is_empty():
 		Log.info("Semantic Action: " + action_type, data, hierarchical_tags)
 
 
-# Application lifecycle management for full gameplay sessions
 static func start_gameplay_session() -> String:
 	"""Start a new full gameplay session"""
 	return start_new_session("gameplay_start", {"session_type": "full_gameplay"})
@@ -140,11 +129,8 @@ static func end_gameplay_session() -> void:
 	end_current_session("gameplay_end")
 
 
-# === SIMPLIFIED CHECKSUM INTEGRATION ===
-# Checksum validation now uses logged checksums only, no separate storage needed
 
 
-## Capture pre-action checksum for replay validation with sequence number
 static func _capture_pre_action_checksum(action_type: String, sequence: int) -> String:
 	"""Capture game state checksum before semantic action execution, including sequence number"""
 	Log.debug(
@@ -153,8 +139,6 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_DEBUG]
 	)
 
-	# Extract current game state using StateExtractor
-	# Note: ClassDB.class_exists() doesn't work reliably for static classes, so try direct access
 	var game_state: Dictionary = StateExtractor.extract_game_state()
 	Log.debug(
 		"StateExtractor result",
@@ -167,7 +151,6 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 		[Log.TAG_SESSION, Log.TAG_CHECKSUM, Log.TAG_DEBUG]
 	)
 
-	# DETAILED CHECKSUM CONTENT LOGGING - Show exactly what's being hashed
 	Log.info(
 		"CHECKSUM_CONTENT_DETAIL",
 		{
@@ -190,11 +173,8 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 		)
 		return ""
 
-	# Add sequence number to game state for unique checksum generation
-	# This ensures identical game states at different points produce different checksums
 	game_state["action_sequence"] = sequence
 
-	# Generate checksum for state validation
 	var checksum: String = StateExtractor.generate_checksum(game_state)
 	Log.debug(
 		"Generated checksum",
@@ -221,10 +201,8 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 	return checksum
 
 
-## Get current seed from RNG singleton for deterministic replay
 static func _get_current_seed() -> int:
 	"""Get current seed from the RNG singleton"""
-	# Access the RNG autoload directly (consistent with rest of codebase)
 	if is_instance_valid(rng) and rng.seeded_rng:
 		return rng.seeded_rng._initial_seed
 
@@ -234,14 +212,10 @@ static func _get_current_seed() -> int:
 		[Log.TAG_SESSION, Log.TAG_SEED, Log.TAG_WARNING]
 	)
 
-	# Default seed if RNG not available
 	return 12345
 
 
-# === REMOVED POST-ACTION CAPTURE CODE ===
-# Post-action state capture has been removed in favor of simpler checksum-only validation
 
-# === HELPER FUNCTIONS ===
 
 
 static func _log_simple_gamestate_marker(
@@ -266,7 +240,6 @@ static func _log_simple_gamestate_marker(
 
 static func _get_current_game_phase() -> String:
 	"""Get current game phase for simple validation"""
-	# Access singletons properly using get_node
 	var game_node: Node = (
 		Engine.get_main_loop().get_nodes_in_group("game_handler").get(0)
 		if Engine.get_main_loop().get_nodes_in_group("game_handler").size() > 0
@@ -288,7 +261,6 @@ static func _get_current_game_phase() -> String:
 
 static func _get_current_ui_state() -> String:
 	"""Get current UI state for simple validation"""
-	# Access singletons properly using get_node
 	var game_node: Node = (
 		Engine.get_main_loop().get_nodes_in_group("game_handler").get(0)
 		if Engine.get_main_loop().get_nodes_in_group("game_handler").size() > 0
@@ -308,7 +280,6 @@ static func _get_current_ui_state() -> String:
 	return "UNKNOWN"
 
 
-# === REPLAY VALIDATION SETUP ===
 
 
 static func setup_replay_validation(demo_config_path: String) -> bool:
@@ -319,9 +290,6 @@ static func setup_replay_validation(demo_config_path: String) -> bool:
 		[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_SETUP]
 	)
 
-	# For now, just log that validation setup was requested
-	# In the future, this could parse the demo config and extract session info
-	# for more sophisticated validation
 	return true
 
 
@@ -347,7 +315,6 @@ static func finalize_replay_validation() -> Dictionary:
 	return summary
 
 
-## Maps semantic action types to hierarchical tags for unified filtering
 static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> Array[String]:
 	"""Convert semantic action type to hierarchical tags for unified filtering"""
 	match action_type:
@@ -368,5 +335,4 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 		"battle.start":
 			return [Log.TAG_GAME, Log.TAG_BATTLE, Log.TAG_SEMANTIC_ACTION]
 		_:
-			# Default fallback for unknown semantic actions
 			return [Log.TAG_SEMANTIC_ACTION]

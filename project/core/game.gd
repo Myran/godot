@@ -66,26 +66,21 @@ func intitialize_game() -> void:
 	# RNG is now auto-initialized during autoload _ready() phase
 	game_handler.set_gamestate(core.GameState.START)
 
-	# Game systems are now fully initialized - UI remains LOCKED until proper state transition
 	Log.info(
 		"Game initialization complete - UI remains LOCKED until state transition",
 		{},
 		[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, Log.TAG_UI]
 	)
-	# UI will be unlocked in mode_prepare() when state transition completes
 
-	# Emit signal to indicate system is fully ready for external operations
 	Log.info(
 		"Emitting initialization_complete signal", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
 	)
 	initialization_complete.emit()
 
-	# Start gameplay session for semantic logging
 	SessionManager.start_gameplay_session()
 
 
 func new_event(event: core.CoreEvent) -> void:
-	# printt("New event: ", event)
 	var draft_context: DraftContext = DraftContext.new(self)
 	draft_context = update_context_units(draft_context)
 	draft_context.add_event(event)
@@ -157,15 +152,12 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			)
 			return
 
-		# 1. Add permanent effect to card's effects_perm
-		# Convert EventSource enum to human-readable string for StatEffect
 		var source_description: String = core.EventSource.keys()[stat_effect_event.effect_source]
 		var permanent_effect: StatEffect = StatEffect.new(
 			stat_effect_event.health_bonus, stat_effect_event.attack_bonus, source_description
 		)
 		target_card.unit_info.effects_perm.append(permanent_effect)
 
-		# Enhanced logging to confirm StatEffect storage
 		Log.debug(
 			"StatEffect stored in card's effects_perm array",
 			{
@@ -179,7 +171,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT]
 		)
 
-		# 2. Apply StatEffects properly via the unified method instead of bypassing
 		Log.debug(
 			"APPLYING STATEFFECTS - About to call apply_permanent_effects_to_current_stats()",
 			{
@@ -192,13 +183,10 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT, "stat_refresh"]
 		)
 
-		# Apply all permanent effects to current stats (including the newly added one)
 		target_card.unit_info.apply_permanent_effects_to_current_stats()
 
-		# Update UI to reflect new stats
 		target_card.refresh_ui_from_unit_data()
 
-		# Show upgrade animation to indicate stat boost
 		@warning_ignore("return_value_discarded")
 		target_card.show_upgrade()
 
@@ -231,7 +219,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_GAME_STATE, Log.TAG_STATE_TRANSITION]
 		)
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			SemanticLogger.log_state_transition(from_state, to_state)
 
@@ -259,32 +246,26 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var from_pos: Vector2i = event.from_position
 		var to_pos: int = event.to_position
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events (matches RemoveBlockFromDraft pattern)
 		if event.source == core.EventSource.PLAYER:
 			var card_id: String = card.card_info.id
 			SemanticLogger.log_draft_to_lineup_move(card_id, from_pos, to_pos)
 
-		# STEP 1: Remove card from draft (with SYSTEM_CASCADE to avoid duplicate logging)
 		var remove_event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(card, false)
 		remove_event.source = core.EventSource.SYSTEM_CASCADE
 		current_context.add_event(remove_event)
 		current_context.solve_events()
 
-		# STEP 2: Add card to lineup
 		lineup_handler.add_card(card, to_pos)
 
-		# STEP 3: Trigger standard lineup processing
 		core.action(core.BlockEntersPlay.new(card))
 		current_context.add_event(core.TrippleTestEvent.new())
 
-		# STEP 4: Update draft area to handle cascading effects (gravity, refill, etc.)
 		ui_state = core.UIState.LOCKED
 		core.action(core.UpdateDraftAreaEvent.new())
 	elif event is core.LineupAddCardEvent:
 		var block: Block = event.card
 
 		core.action(core.BlockEntersPlay.new(block))
-		# detta är inte snyggt med -1,-1. antagligen behövs den inte
 		current_context.add_event(core.TrippleTestEvent.new())
 
 	elif event is core.TrippleTestEvent:
@@ -345,7 +326,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		)
 
 		current_context = update_context_units(current_context)
-		# Simplified to avoid potential ternary issues
 		current_context.add_event(core.LineupAddCardEvent.new(new_card))
 		current_context.solve_events()
 
@@ -360,22 +340,17 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 
-		# SEMANTIC ACTION LOGGING - only for PLAYER events
 		if event.source == core.EventSource.PLAYER:
 			var card_id: String = card.card_info.id
 			SemanticLogger.log_lineup_move_card(card_id, from_pos, to_pos)
 
-		# Perform the actual move in the game logic
 		var from_holder: Holder = lineup_handler.holder_container.get_holder(from_pos)
 		var to_holder: Holder = lineup_handler.holder_container.get_holder(to_pos)
 
 		if from_holder and to_holder and from_holder.get_card() == card:
-			# Try to perform the move
 			if to_holder.set_card(card):
 				from_holder.remove_card()
 
-				# Now emit the system event to notify other systems
-				# Use the same MoveLineupCardEvent but with SYSTEM_CASCADE source
 				var system_event: core.MoveLineupCardEvent = core.MoveLineupCardEvent.new(
 					card, from_pos, to_pos
 				)
@@ -406,8 +381,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 
-		# This is a system cascade event - just log it for other systems that need to know
-		# The actual move was already performed and the action was already recorded
 
 	elif event is core.BattleEvent:
 		Log.info(
@@ -422,7 +395,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		await enacter.enact(events, battle_result_param)
 		enacter.queue_free()
 
-		# NEW: Apply permanent changes from battle back to original units
 		Log.info(
 			"Battle complete, applying permanent changes to units",
 			{},
@@ -431,8 +403,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		var battle_result: Battle.BattleResult = event.battle_result
 		apply_battle_reconciliation(battle_result)
 
-		# **CRITICAL**: Refresh UI for all lineup cards after battle reconciliation
-		# Battle reconciliation may have modified unit stats, abilities, and health
 		_refresh_lineup_card_ui_after_battle()
 
 		Log.debug(
@@ -459,7 +429,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.SystemIdleActionEvent:
-		# Always add to queue and process systematically
 		var state_name: String = ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
 		var current_test_id: String = DebugAction.get_current_test_id()
 		var event_timestamp: float = Time.get_unix_time_from_system()
@@ -523,7 +492,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.TransitionEvent:
 		var new_state: core.GameState = _event.new_state
 
-		# SEMANTIC ACTION LOGGING - UI TransitionEvent is PLAYER event
 		var from_state: String = core.GameState.keys()[game_handler.current_gamestate]
 		var to_state: String = core.GameState.keys()[new_state]
 		SemanticLogger.log_state_transition(from_state, to_state)
@@ -532,7 +500,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.StartBattleEvent:
 		Log.info("Battle started by user", {}, [Log.TAG_GAME_STATE, Log.TAG_BATTLE])
 
-		# SEMANTIC ACTION LOGGING - StartBattleEvent is PLAYER event
 		var current_lineup: Array = []
 		var lineup_dict: Dictionary = holder_allies.get_current_lineup()
 		for card: Card in DictUtils.values_sorted(lineup_dict):
@@ -541,14 +508,11 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		SemanticLogger.log_battle_start(current_lineup, [])
 
 		var battle_result: Battle.BattleResult = battle_handler.create_battle()
-		# Pass both events and result through the event system for reconciliation
 		core.action(core.BattleEvent.new(battle_result.events, battle_result))
 		ui.action(ui.TransitionEvent.new(core.GameState.PREBATTLE))
 	elif _event is ui.RerollEvent:
 		Log.info("Rerolling draft cards", {}, [Log.TAG_UI, Log.TAG_DRAFT])
 
-		# SEMANTIC ACTION LOGGING - RerollEvent is PLAYER event
-		# UI reroll triggers core.RerollDraftEvent which has enhanced logging
 
 		draft_handler.reroll()
 
@@ -558,10 +522,7 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.UpgradeEvent:
 		Log.info("Upgrading cards", {}, [Log.TAG_UI, Log.TAG_DRAFT, Log.TAG_CARD])
 
-		# SEMANTIC ACTION LOGGING - UpgradeEvent is PLAYER event
-		# UI upgrade triggers core.UpgradeEvent which has enhanced logging
 
-		#check cost here
 		draft_handler.upgrade()
 
 	elif _event is ui.TouchEvent:
@@ -577,7 +538,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 
 func _process_one_queue_item() -> void:
-	# Enhanced diagnostic logging for idle action system
 	var timestamp: float = Time.get_unix_time_from_system()
 	var current_test_id: String = DebugAction.get_current_test_id()
 
@@ -595,7 +555,6 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "queue_item_start", Log.TAG_DIAGNOSTIC]
 	)
 
-	# Only process if system is ready and not already processing
 	if ui_state != core.UIState.WAITING or _processing_idle_action or _idle_action_queue.is_empty():
 		Log.info(
 			"Queue item processing skipped",
@@ -624,7 +583,6 @@ func _process_one_queue_item() -> void:
 		)
 		return
 
-	# Process one action at a time
 	_processing_idle_action = true
 	var queue_item: Dictionary = _idle_action_queue.pop_front()
 	var action: Callable = queue_item["action"]
@@ -632,7 +590,6 @@ func _process_one_queue_item() -> void:
 	var action_start_time: float = Time.get_unix_time_from_system()
 	var action_start_frame: int = Engine.get_process_frames()
 
-	# Log current game state before action execution
 	var current_game_state: String = core.GameState.keys()[game_handler.current_gamestate]
 
 	Log.info(
@@ -649,17 +606,14 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_start", Log.TAG_DIAGNOSTIC]
 	)
 
-	# Execute the action
 	action.call()
 
 	var action_end_time: float = Time.get_unix_time_from_system()
 	var action_end_frame: int = Engine.get_process_frames()
 	var execution_time_ms: float = (action_end_time - action_start_time) * 1000.0
 
-	# Log current game state after action execution
 	var current_game_state_after: String = core.GameState.keys()[game_handler.current_gamestate]
 
-	# Mark as not processing
 	_processing_idle_action = false
 
 	Log.info(
@@ -678,7 +632,6 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_complete", Log.TAG_DIAGNOSTIC]
 	)
 
-	# Conditional continuation based on action's auto_continue flag
 	if auto_continue and not _idle_action_queue.is_empty():
 		Log.info(
 			"Auto-continuing to next queue item (action requested immediate continuation)",
@@ -741,8 +694,6 @@ func mode_draft() -> void:
 	holder_enemy.visible = false
 	holder_draft.visible = true
 
-	# Ensure draft system reaches steady state to unlock UI for idle actions
-	# The clicker's update_blocks() method will emit DraftSteadyEvent when complete
 	if clicker:
 		Log.debug(
 			"Triggering draft update to reach steady state", {}, [Log.TAG_GAME_STATE, Log.TAG_DRAFT]
@@ -766,7 +717,6 @@ func mode_prepare() -> void:
 	holder_enemy.visible = true
 	holder_draft.visible = false
 
-	# State transition is complete - unlock UI and process any queued idle actions
 	Log.info(
 		"PREPARE mode active - unlocking UI and processing idle actions",
 		{},
@@ -802,23 +752,18 @@ func mode_battle() -> void:
 		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
 
-	# Battle event is already queued from StartBattleEvent handler - no additional action needed
 
 
 func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
-	# Apply permanent changes from battle duplicates back to original units using references
 	var units_processed: int = 0
 	var dead_units_processed: int = 0
 	var surviving_units_processed: int = 0
 
-	# Collect all battle units (surviving and dead) for reference-based reconciliation
 	var all_battle_units: Array[UnitData] = []
 
-	# Add surviving units
 	for battle_unit: UnitData in battle_result.final_allied_units.values():
 		all_battle_units.append(battle_unit)
 
-	# Add dead units
 	for battle_unit: UnitData in battle_result.final_dead_allied_units.values():
 		all_battle_units.append(battle_unit)
 
@@ -832,7 +777,6 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION]
 	)
 
-	# Process each battle unit and find its original through reference
 	for battle_unit: UnitData in all_battle_units:
 		if battle_unit.battle_original_reference == null:
 			Log.warning(
@@ -845,7 +789,6 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		var original_unit: UnitData = battle_unit.battle_original_reference
 		var unit_survived: bool = battle_unit in battle_result.final_allied_units.values()
 
-		# Apply permanent changes from battle
 		original_unit.apply_permanent_changes_from(battle_unit)
 		units_processed += 1
 
@@ -867,7 +810,6 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_CARD]
 		)
 
-	# Validate that no permanent effects were lost
 	validate_no_effects_lost(battle_result)
 
 	Log.info(
@@ -883,13 +825,11 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 
 
 func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
-	# Comprehensive validation to ensure no permanent effects are lost during reconciliation
 	var total_battle_effects: int = 0
 	var total_battle_acquired_abilities: int = 0
 	var total_original_effects: int = 0
 	var total_original_acquired_abilities: int = 0
 
-	# Count all effects in battle results (surviving + dead)
 	for battle_unit: UnitData in battle_result.final_allied_units.values():
 		total_battle_effects += battle_unit.effects_perm.size()
 		total_battle_acquired_abilities += battle_unit.get_acquired_abilities().size()
@@ -898,13 +838,11 @@ func validate_no_effects_lost(battle_result: Battle.BattleResult) -> void:
 		total_battle_effects += dead_unit.effects_perm.size()
 		total_battle_acquired_abilities += dead_unit.get_acquired_abilities().size()
 
-	# Count all effects in original lineup after reconciliation
 	var original_allies: Dictionary[int, Card] = holder_allies.get_current_lineup()
 	for card: Card in original_allies.values():
 		total_original_effects += card.unit_info.effects_perm.size()
 		total_original_acquired_abilities += card.unit_info.get_acquired_abilities().size()
 
-	# Validation - original lineup should have >= effects than battle (some may be pre-existing)
 	var validation_passed: bool = (
 		total_original_effects >= total_battle_effects
 		and total_original_acquired_abilities >= total_battle_acquired_abilities
@@ -947,7 +885,6 @@ func mode_post_battle() -> void:
 	)
 
 	ui_state = core.UIState.WAITING
-	#_process_idle_action_queue()
 	holder_allies.show_lineup()
 	holder_enemy.show_lineup()
 	core.action(core.TransitionEvent.new(core.GameState.PREPARE))
@@ -962,7 +899,6 @@ func _get_queue_skip_reason() -> String:
 		return "queue_empty"
 
 
-# Helper function for semantic logging
 func _capture_lineup_state() -> Dictionary:
 	var lineup: Dictionary = holder_allies.get_current_lineup()
 	var lineup_data: Dictionary = {}
@@ -980,8 +916,6 @@ func _capture_lineup_state() -> Dictionary:
 	return lineup_data
 
 
-# Refresh UI for all cards in lineup after battle reconciliation
-# This ensures that any stat changes, health restoration, or new effects are reflected visually
 func _refresh_lineup_card_ui_after_battle() -> void:
 	var lineup: Dictionary[int, Card] = holder_allies.get_current_lineup()
 	var cards_refreshed: int = 0

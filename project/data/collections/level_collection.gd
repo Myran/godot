@@ -6,11 +6,7 @@ var _collection_key: String = ""
 var _level_cache: Array[Dictionary] = []
 
 
-## Initialize the level collection with the backend
-## @param backend The data backend to use
-## @param test_group The test group suffix to use
 func _init(backend: DataBackend, test_group: int = 0) -> void:
-	# Initialize with base path and collection name
 	var base_path: Array[Variant] = []
 	base_path.append(data_source.DEFAULT_SHEETS_ID)
 	super(backend, base_path, "Levels")
@@ -18,9 +14,6 @@ func _init(backend: DataBackend, test_group: int = 0) -> void:
 	Log.info("LevelCollection initialized", {"test_group": test_group}, [Log.TAG_DB])
 
 
-## Get all levels
-## @param use_cache Whether to use the cache if available
-## @return Array of level dictionaries
 func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	if use_cache and _is_cache_initialized:
 		return _level_cache
@@ -29,12 +22,10 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	@warning_ignore("redundant_await")
 	var result: Variant = await _backend.get_data(_get_path(), _collection_key)
 
-	# Handle case where result is null
 	if result == null:
 		Log.warning("No level data returned, using empty array", {}, [Log.TAG_DB, Log.TAG_ERROR])
 		_level_cache = []
 	elif result is Array:
-		# Check type before assigning to avoid unsafe assignment
 		if result is Array:
 			var array_result: Array = result
 			_level_cache = []
@@ -60,9 +51,6 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 	return _level_cache
 
 
-## Get a specific level by number
-## @param level_nr The level number to retrieve
-## @return Level dictionary or empty dictionary if not found
 func get_by_number(level_nr: int) -> Dictionary:
 	Log.info("Getting level data", {"level": level_nr}, [Log.TAG_DB])
 
@@ -82,8 +70,6 @@ func get_by_number(level_nr: int) -> Dictionary:
 	return {}
 
 
-## Clear the level cache
-## @return void
 func clear_cache() -> void:
 	_is_cache_initialized = false
 	_level_cache = []
