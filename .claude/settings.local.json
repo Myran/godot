@@ -155,7 +155,16 @@
       "Bash(DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just test-desktop-target system-layer-all)",
       "Bash(backlog task list:*)",
       "Bash(backlog task:*)",
-      "Bash(DESKTOP_TEST_MAX_TIMEOUT=60 just test-desktop-target battle-logic-only)"
+      "Bash(DESKTOP_TEST_MAX_TIMEOUT=60 just test-desktop-target battle-logic-only)",
+      "Bash(claude mcp:*)",
+      "mcp__repomix__pack_codebase",
+      "mcp__repomix__grep_repomix_output",
+      "Bash(./test_comment_cleanup_baseline.sh:*)",
+      "Bash(./clean_obvious_comments.sh:*)",
+      "Bash(./aggressive_comment_cleanup.sh:*)",
+      "Bash(./clean_gdscript_comments.sh:*)",
+      "Bash(./test_validation_baseline.sh:*)",
+      "Bash(./comprehensive_gdscript_cleanup.sh:*)"
     ],
     "deny": []
   }
