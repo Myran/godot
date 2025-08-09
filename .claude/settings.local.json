@@ -164,7 +164,11 @@
       "Bash(./aggressive_comment_cleanup.sh:*)",
       "Bash(./clean_gdscript_comments.sh:*)",
       "Bash(./test_validation_baseline.sh:*)",
-      "Bash(./comprehensive_gdscript_cleanup.sh:*)"
+      "Bash(./comprehensive_gdscript_cleanup.sh:*)",
+      "Bash(./analyze_type_safety.sh:*)",
+      "Bash(./comprehensive_type_fixer.sh:*)",
+      "Bash(./simple_type_adder.sh:*)",
+      "Bash(./find_actual_missing_types.sh)"
     ],
     "deny": []
   }
