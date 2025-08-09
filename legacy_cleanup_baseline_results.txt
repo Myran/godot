@@ -1,0 +1,72 @@
+🧹 LEGACY CODE CLEANUP TESTING BASELINE
+========================================
+Timestamp: 2025-08-09_10-09-02
+Working Directory: /Users/mattiasmyhrman/repos/gametwo
+
+⚙️  TESTING ACTIVE CONFIG COMMANDS
+===================================
+
+🔍 Testing: just --dry-run config-status-android
+   Description: Check Android configuration status
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;set -euo pipefail;echo "📱 Android configuration status...";
+   Output Length:       22 lines
+
+🔍 Testing: just --dry-run config-clear-android
+   Description: Clear external Android configuration
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;set -euo pipefail;echo "🧹 Clearing external Android configuration...";
+   Output Length:       10 lines
+
+🔍 Testing: just --dry-run config-android-reset
+   Description: Reset Android logger config to defaults
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;set -euo pipefail;;
+   Output Length:       16 lines
+
+🔍 Testing: just --dry-run config-push-android system-testing
+   Description: Deploy config to Android device
+   Exit Code: 0
+   Output Preview: echo "✅ Android config workflow validated for system-testing";#!/usr/bin/env bash;set -euo pipefail;
+   Output Length:       54 lines
+
+🧪 TESTING VALIDATION AND ENHANCED TESTING COMMANDS
+====================================================
+
+🔍 Testing: just --dry-run validate-all
+   Description: Validate all project files
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;echo "🔍 Running comprehensive validation...";echo "";
+   Output Length:       27 lines
+
+🔍 Testing: just --dry-run test-android-target system-testing
+   Description: Enhanced Android testing
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;set -euo pipefail;;
+   Output Length:       21 lines
+
+🔍 Testing: just --dry-run test-desktop-target system-testing
+   Description: Enhanced desktop testing
+   Exit Code: 0
+   Output Preview: #!/usr/bin/env bash;set -euo pipefail;;
+   Output Length:       21 lines
+
+🔨 TESTING BUILD AND SUPPORT COMMANDS
+======================================
+
+🔍 Testing: just --dry-run build-status
+   Description: Check build status
+   Exit Code: 0
+   Output Preview: echo "📊 BUILD STATUS CHECK";echo "====================";echo "";
+   Output Length:       17 lines
+
+🔍 Testing: just --dry-run quick-build-all
+   Description: Quick build for all platforms
+   Exit Code: 0
+   Output Preview: echo "⚡ Quick build for all platforms (5-10 min)...";just quick-build-android;just quick-build-ios;
+   Output Length:        4 lines
+
+🗑️  CURRENT LEGACY CODE LOCATIONS
+==================================
+
+Scanning for _removed_ functions...

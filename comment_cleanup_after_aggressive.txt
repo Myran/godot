@@ -1,0 +1,13 @@
+💬 COMMENT CLEANUP TESTING BASELINE
+=====================================
+Timestamp: 2025-08-09_16-05-38
+Working Directory: /Users/mattiasmyhrman/repos/gametwo
+
+🧪 TESTING CORE FUNCTIONALITY
+==============================
+
+🔍 Testing: just --dry-run validate-all
+   Description: Complete validation pipeline
+   Exit Code: 1
+   Output Length:        5 lines
+

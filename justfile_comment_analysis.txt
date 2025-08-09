@@ -1,0 +1,133 @@
+📝 JUSTFILE COMMENT ANALYSIS
+=============================
+Timestamp: 2025-08-09_15-52-43
+
+Starting comprehensive comment analysis...
+
+🔍 TODO COMMENTS
+==================================================
+Pattern: # TODO|# FIXME|# HACK|# NOTE.*TODO
+Description: TODO items that might be obsolete
+
+Found 1 matches:
+justfiles/justfile-cross-platform-testing.justfile:120:        # TODO: Add proper desktop test execution
+
+🔍 TEMPORARY COMMENTS
+==================================================
+Pattern: # TEMP|# TEMPORARY|# Quick|# For now
+Description: Temporary fixes that might be permanent now
+
+Found 13 matches:
+justfiles/justfile-semantic-replay-commands.justfile:2135:# Quick test to validate end-to-end workflow
+justfiles/justfile-android-device-logs.justfile:89:# Quick Android device status and recent logs
+justfiles/justfile-dev-tools.justfile:26:# Quick shortcuts for common operations
+justfiles/justfile-testing-core.justfile:156:# Quick validation for testing
+justfiles/justfile-testing-core.justfile:1210:    # For now, just run the first config in manual mode
+justfiles/justfile-platform-ios.justfile:63:    echo "  just quick-build-ios             # Quick iOS build"
+justfiles/justfile-platform-ios.justfile:151:# Quick iOS build for development iteration
+justfiles/justfile-config.justfile:71:# Quick tag filtering for focused debugging sessions
+justfiles/justfile-config.justfile:197:# Quick tag filtering for focused debugging sessions
+justfiles/justfile-platform-android.justfile:14:# Quick Android build - Export APK and AAB files (2-3 minutes)
+justfiles/justfile-help.justfile:132:    echo "  just screenshot-android          # Quick screenshot for AI analysis"
+justfiles/justfile-help.justfile:150:    echo "  just logs-errors TEST_ID         # Quick error scan (98% token savings)"
+justfiles/justfile-debug-commands.justfile:5:# Quick overview of test execution flow
+
+🔍 DEBUG COMMENTS
+==================================================
+Pattern: # DEBUG|# Testing|# Test this|# For debugging
+Description: Debug comments that might not be needed
+
+Found 4 matches:
+justfiles/justfile-core-config.justfile:43:# DEBUG SYSTEM PATHS
+justfiles/justfile-testing-core.justfile:1:# Testing & Validation Core Infrastructure
+justfiles/justfile-config.justfile:2:# DEBUG CONFIG MANAGEMENT
+justfiles/justfile-help.justfile:348:    echo "  just help-debug      # Testing workflows with @ symbols"
+
+🔍 OBVIOUS COMMENTS
+==================================================
+Pattern: # Set |# Get |# Check |# Run |# Call |# Execute 
+Description: Comments that just restate the code
+
+Found 251 matches:
+justfiles/justfile-config-validation.justfile:14:    # Check config exists
+justfiles/justfile-config-validation.justfile:22:    # Check config is valid JSON
+justfiles/justfile-config-validation.justfile:156:# Check if a specific action is platform-agnostic
+justfiles/justfile-semantic-replay-commands.justfile:27:    # Check if fzf is available
+justfiles/justfile-semantic-replay-commands.justfile:102:                    # Check if all referenced configs exist
+justfiles/justfile-semantic-replay-commands.justfile:125:                    # Check if it has checksum configuration
+justfiles/justfile-semantic-replay-commands.justfile:129:                        # Check both expected_checksum (singular) and expected_checksums (plural array)
+justfiles/justfile-semantic-replay-commands.justfile:159:    # Check if we have any options
+justfiles/justfile-semantic-replay-commands.justfile:165:    # Set context-specific prompt and header
+justfiles/justfile-semantic-replay-commands.justfile:297:                    # Check if all referenced configs exist
+justfiles/justfile-semantic-replay-commands.justfile:325:                    # Check if it has checksum configuration
+justfiles/justfile-semantic-replay-commands.justfile:329:                        # Check both expected_checksum (singular) and expected_checksums (plural array)
+justfiles/justfile-semantic-replay-commands.justfile:387:    # Get recent logs to find sessions
+justfiles/justfile-semantic-replay-commands.justfile:395:        # Check for self-contained mode first (logs in project directory)
+justfiles/justfile-semantic-replay-commands.justfile:407:        # Check self-contained logs
+justfiles/justfile-semantic-replay-commands.justfile:412:        # Check standard user data logs
+justfiles/justfile-semantic-replay-commands.justfile:466:            # Get session start time (simplified)
+justfiles/justfile-semantic-replay-commands.justfile:609:    # Check if demo exists
+justfiles/justfile-semantic-replay-commands.justfile:618:    # Check if demo can be converted
+justfiles/justfile-semantic-replay-commands.justfile:626:    # Get demo metadata
+... and 231 more matches
+
+🔍 VERSION REFERENCES
+==================================================
+Pattern: # v[0-9]|# version|# Godot [0-9]|# Android [0-9]
+Description: Version-specific comments that might be outdated
+
+Found 0 matches:
+
+🔍 IMPLEMENTATION DETAILS
+==================================================
+Pattern: # This function|# This command|# This will|# We need to
+Description: Comments explaining obvious implementation
+
+Found 0 matches:
+
+🔍 LONG SEPARATORS
+==================================================
+Pattern: #{10,}
+Description: Long comment separator lines
+
+Found 0 matches:
+
+🔍 DUPLICATE HEADERS
+==================================================
+Pattern: # [A-Z][A-Z ]{20,}
+Description: Potentially duplicate section headers
+
+Found 36 matches:
+justfiles/justfile-semantic-replay-commands.justfile:7:# GLOBAL LOG PATH CONFIGURATION
+justfiles/justfile-semantic-replay-commands.justfile:16:# SHARED FZF SELECTION UTILITIES
+justfiles/justfile-semantic-replay-commands.justfile:373:# DEMO CREATION FROM SESSIONS  
+justfiles/justfile-semantic-replay-commands.justfile:944:# SEMANTIC LOG CAPTURE & REPLAY
+justfiles/justfile-semantic-replay-commands.justfile:1091:# HELPER FUNCTIONS FOR REPLAY GENERATION
+justfiles/justfile-semantic-replay-commands.justfile:1865:# INTERACTIVE SELECTION COMMANDS
+justfiles/justfile-semantic-replay-commands.justfile:2209:# DESKTOP REPLAY SUPPORT (TDD GREEN Phase)
+justfiles/justfile-semantic-replay-commands.justfile:2320:# CHECKSUM VALIDATION SYSTEM
+justfiles/justfile-wildcard-core.justfile:2:# WILDCARD PATTERN CORE FUNCTIONS
+justfiles/justfile-run.justfile:4:# PLATFORM ABSTRACTION FUNCTIONS
+justfiles/justfile-validation-shared.justfile:1:# CONSOLIDATED VALIDATION FUNCTIONS
+justfiles/justfile-core-config.justfile:9:# CORE PROJECT CONFIGURATION
+justfiles/justfile-core-config.justfile:55:# SHARED UTILITY FUNCTIONS
+justfiles/justfile-core-config.justfile:312:# SHARED UTILITY FUNCTIONS
+justfiles/justfile-validation-enhanced-testing.justfile:6:# UNIFIED METADATA INJECTION FUNCTIONS
+justfiles/justfile-validation-enhanced-testing.justfile:46:# SHARED CONFIGURATION FUNCTIONS  
+justfiles/justfile-validation-enhanced-testing.justfile:156:# PLATFORM FILTERING FUNCTIONS
+justfiles/justfile-validation-enhanced-testing.justfile:308:# CHECKSUM VALIDATION FUNCTIONS
+justfiles/justfile-validation-enhanced-testing.justfile:763:    # CRITICAL ERROR DETECTION FIRST - Whitelist approach for maximum safety
+justfiles/justfile-validation-enhanced-testing.justfile:787:    # NO CRITICAL ERRORS DETECTED - Safe to apply filtering for clean output
+... and 16 more matches
+
+📊 COMMENT STATISTICS
+=====================
+Total comment lines: 2124
+Total justfiles: 28
+Total lines: 12959
+Comment density: 16.3%
+
+🎉 ANALYSIS COMPLETED
+=====================
+Results saved to: /Users/mattiasmyhrman/repos/gametwo/justfile_comment_analysis.txt
+Review the categories above to identify cleanup candidates.
