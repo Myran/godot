@@ -2,7 +2,6 @@ class_name SemanticLogger
 extends RefCounted
 
 
-
 static func log_draft_reroll(
 	cost: int = 0, previous_cards: Array = [], seed_before: int = -1
 ) -> void:

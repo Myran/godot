@@ -62,7 +62,6 @@ func _execute_player_events_test() -> DebugAction.Result:
 	}
 	test_results.append(count_test)
 
-
 	var passed_tests: int = (
 		test_results.filter(func(t: Dictionary) -> bool: return t.success).size()
 	)

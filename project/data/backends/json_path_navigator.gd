@@ -2,7 +2,6 @@ class_name JSONPathNavigator
 extends RefCounted
 
 
-
 static func navigate(
 	json_data: Variant, path: Array, _default_value: Variant = null
 ) -> NavigationResult:

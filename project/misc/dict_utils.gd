@@ -26,6 +26,7 @@
 class_name DictUtils
 extends RefCounted
 
+
 ## Returns an array of dictionaries, each containing a 'key' and 'value',
 ## sorted deterministically by the original dictionary's key.
 ## This is the primary, simplified way to iterate over dictionaries where order matters.

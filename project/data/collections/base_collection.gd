@@ -1,7 +1,6 @@
 class_name BaseCollection
 extends RefCounted
 
-
 var _backend: DataBackend
 var _base_path: Array[Variant] = []
 var _collection_name: String = ""

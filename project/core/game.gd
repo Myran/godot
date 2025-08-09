@@ -381,7 +381,6 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 
-
 	elif event is core.BattleEvent:
 		Log.info(
 			"Starting battle event sequence",
@@ -513,7 +512,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 	elif _event is ui.RerollEvent:
 		Log.info("Rerolling draft cards", {}, [Log.TAG_UI, Log.TAG_DRAFT])
 
-
 		draft_handler.reroll()
 
 	elif _event is ui.HideCardEvent:
@@ -521,7 +519,6 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 
 	elif _event is ui.UpgradeEvent:
 		Log.info("Upgrading cards", {}, [Log.TAG_UI, Log.TAG_DRAFT, Log.TAG_CARD])
-
 
 		draft_handler.upgrade()
 
@@ -751,7 +748,6 @@ func mode_battle() -> void:
 		{"state": "BATTLE"},
 		[Log.TAG_GAME_STATE, Log.TAG_ATOMIC_TRANSITION]
 	)
-
 
 
 func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:

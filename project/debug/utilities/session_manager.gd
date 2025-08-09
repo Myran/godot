@@ -90,8 +90,6 @@ static func get_session_context() -> Dictionary:
 	return session_context.duplicate()
 
 
-
-
 static func log_semantic_action(action_type: String, data: Dictionary = {}) -> void:
 	"""Log a semantic action with session context and pre-action checksum"""
 	var session_id: String = get_current_session_id()
@@ -127,8 +125,6 @@ static func start_gameplay_session() -> String:
 static func end_gameplay_session() -> void:
 	"""End the current gameplay session"""
 	end_current_session("gameplay_end")
-
-
 
 
 static func _capture_pre_action_checksum(action_type: String, sequence: int) -> String:
@@ -215,9 +211,6 @@ static func _get_current_seed() -> int:
 	return 12345
 
 
-
-
-
 static func _log_simple_gamestate_marker(
 	action_type: String, session_id: String, sequence: int
 ) -> void:
@@ -278,8 +271,6 @@ static func _get_current_ui_state() -> String:
 		return str(ui_node.get_current_state())
 
 	return "UNKNOWN"
-
-
 
 
 static func setup_replay_validation(demo_config_path: String) -> bool:

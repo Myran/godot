@@ -27,8 +27,6 @@ func _ready() -> void:
 	use_local_battle_db = false
 	asset_variant = 1
 
-
-
 	Log.info("DebugManager (Global Event Bus) initialized.", {}, ["debug", "system"])
 
 	if OS.get_name() == "iOS" or OS.get_name() == "Android":
@@ -37,8 +35,6 @@ func _ready() -> void:
 
 func action(type: DebugEventType, args: Array = []) -> void:
 	debug_event.emit(type, args)
-
-
 
 
 func _verify_logger_export() -> void:
@@ -66,4 +62,3 @@ func _verify_mobile_helper(helper_path: String) -> bool:
 
 	Log.debug("Mobile helper verification successful", {"path": helper_path}, [Log.TAG_DEBUG])
 	return true
-

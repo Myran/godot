@@ -192,8 +192,6 @@ func check_draft_abilities(
 		_ability.handle_draft_event(tempus, pos, u, context, event)
 
 
-
-
 func deep_duplicate_abilities() -> Array[Ability]:
 	var duplicated_abilities: Array[Ability] = []
 	for ability: Ability in abilities:
@@ -217,8 +215,6 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 		else:
 			duplicated_effects.append(effect.duplicate(true) if effect is Resource else effect)
 	return duplicated_effects
-
-
 
 
 func apply_permanent_effects_to_current_stats() -> void:
@@ -291,8 +287,6 @@ func apply_permanent_effects_to_current_stats() -> void:
 		},
 		[Log.TAG_BATTLE, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh"]
 	)
-
-
 
 
 func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
@@ -592,4 +586,3 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			},
 			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT]
 		)
-

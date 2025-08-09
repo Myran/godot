@@ -23,4 +23,3 @@ func set_gamestate(new_state: core.GameState) -> void:
 			owner.call_deferred("mode_battle")
 		core.GameState.POSTBATTLE:
 			owner.call_deferred("mode_post_battle")
-

@@ -18,5 +18,4 @@ func _cleanup_singletons() -> void:
 		if _ConfigManager and _ConfigManager.has_method("cleanup"):
 			_ConfigManager.cleanup()
 
-
 	print("Singleton cleanup completed")

@@ -1,6 +1,5 @@
 class_name SemanticActionMapper
 
-
 static var ACTION_MAPPINGS: Dictionary = {
 	"draft.reroll": "game.draft.reroll_player",
 	"draft.upgrade": "game.draft.upgrade_player",

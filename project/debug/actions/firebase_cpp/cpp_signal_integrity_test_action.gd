@@ -44,7 +44,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				["debug", "cpp_firebase", "warning"]
 			)
 
-
 	var success_rate: float = float(successful_operations) / float(operations_count)
 	var avg_duration: int = (
 		int(float(total_duration) / float(operations_count)) if operations_count > 0 else 0

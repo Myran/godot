@@ -1,14 +1,12 @@
 class_name LocalJSONBackend
 extends DataBackend
 
-
 @warning_ignore("unused_signal")
 
 var local_data: Dictionary = {}
 
 var battle_db_file: String
 var current_file: String
-
 
 
 func _init(file_path: String = "") -> void:
@@ -39,7 +37,6 @@ func _init(file_path: String = "") -> void:
 
 
 func initialize() -> bool:
-
 	current_file = battle_db_file
 	Log.debug("Using battle database file", {"file": current_file}, [Log.TAG_LOCAL])
 

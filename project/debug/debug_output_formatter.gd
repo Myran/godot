@@ -549,8 +549,6 @@ func _strip_bbcode_tags(text: String) -> String:
 	return regex.sub(text, "", true)
 
 
-
-
 func _get_device_context_header() -> String:
 	"""Generate device and environment context information"""
 	var platform: String = OS.get_name()

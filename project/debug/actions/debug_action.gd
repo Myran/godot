@@ -159,7 +159,6 @@ class Result:
 			metadata
 		)
 
-
 	static func new_performance_result(
 		operation_metrics: Array,
 		overall_success: bool,
@@ -440,7 +439,6 @@ class Result:
 		else:
 			return "SLOW"
 
-
 	func get_performance_metrics() -> Dictionary:
 		"""Get performance metrics if this is a performance result"""
 		return _metadata.get("performance_metrics", {})
@@ -532,7 +530,6 @@ class Result:
 			return []
 
 		return _metadata.get("operation_results", [])
-
 
 	func is_authentication_error() -> bool:
 		return _error_category == ErrorCategory.AUTHENTICATION
@@ -751,7 +748,6 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 	if current_test_id != "":
 		test_action_count += 1
-
 
 	var start_time: int = Time.get_ticks_msec()
 	var success: bool = false
@@ -1079,8 +1075,6 @@ func execute_with_auto_validation() -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			null, 0, action_name, {"validation_mode": "none", "reason": "no_session_context"}
 		)
-
-
 
 
 func _execute_with_validation_async(session_id: String, sequence: int) -> void:

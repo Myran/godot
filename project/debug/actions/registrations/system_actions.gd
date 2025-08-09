@@ -1,4 +1,3 @@
-
 class_name SystemActions
 
 const StateExtractorGreenPhaseScript = preload(
@@ -56,8 +55,6 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 			. set_description("Show debug menu navigation list")
 		)
 	)
-
-
 
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
@@ -149,10 +146,6 @@ static func _capture_final_state() -> void:
 	)
 
 
-
-
-
-
 static func _register_integrity_actions(registry: DebugActionRegistry) -> void:
 	Log.info("Registering integrity validation actions", {}, ["debug", "integrity", "registration"])
 
@@ -166,10 +159,6 @@ static func _register_integrity_actions(registry: DebugActionRegistry) -> void:
 static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	Log.info("Registering test actions", {}, ["debug", "test", "registration"])
 
-
-
-
-
 	var semantic_logging_test: TestSemanticLoggingAction = TestSemanticLoggingAction.new()
 	registry.register_action(semantic_logging_test)
 
@@ -177,7 +166,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		StateExtractorGreenPhaseScript.new()
 	)
 	registry.register_action(state_extractor_green_test)
-
 
 	registry.register_action(
 		(
@@ -310,8 +298,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. set_description("TDD RED: Test platform-agnostic replay (should FAIL)")
 		)
 	)
-
-
 
 
 static func _hide_debug_menu() -> bool:
@@ -675,8 +661,6 @@ static func _test_platform_agnostic_replay() -> bool:
 		["debug", "test", "tdd", "desktop", "green_phase"]
 	)
 	return true  # TDD GREEN phase - functionality implemented and working
-
-
 
 
 static func _test_state_validation_integration() -> DebugAction.Result:

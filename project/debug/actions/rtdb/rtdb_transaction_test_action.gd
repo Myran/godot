@@ -86,7 +86,6 @@ func execute_rtdb_action() -> bool:
 func _perform_counter_transaction(
 	db: Object, path: Array[Variant], transaction_number: int
 ) -> Dictionary:
-
 	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
 
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)

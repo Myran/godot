@@ -91,8 +91,6 @@ func execute_cpp_operation(
 	return op_data.result
 
 
-
-
 func _create_operation_handler(
 	op_data: Dictionary,
 	operation_type: String,

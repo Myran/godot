@@ -34,7 +34,6 @@ func _execute_semantic_logging_test() -> DebugAction.Result:
 		["semantic_action", "test"]
 	)
 
-
 	return DebugAction.Result.new_success(
 		(
 			"Semantic logging test completed successfully. Session ID: %s, Actions logged: %d"

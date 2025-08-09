@@ -4,7 +4,6 @@ extends BaseCollection
 const JSONPathNavigatorClass = preload("res://data/backends/json_path_navigator.gd")
 const NavigationResultClass = preload("res://data/backends/navigation_result.gd")
 
-
 var _item_cache: Array[Dictionary] = []
 
 var _is_cache_initialized: bool = false

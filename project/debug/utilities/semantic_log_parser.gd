@@ -1,7 +1,6 @@
 class_name SemanticLogParser
 
 
-
 static func parse_semantic_actions_from_log(log_data: String) -> Array:
 	"""Parse semantic action entries from raw log data"""
 	var actions: Array[Dictionary] = []

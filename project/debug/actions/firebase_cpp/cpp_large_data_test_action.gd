@@ -86,7 +86,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.75  # 75% of large data tests should pass
 	var total_duration: int = Time.get_ticks_msec() - start_time

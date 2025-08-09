@@ -2,7 +2,6 @@ class_name FirebaseBackend
 extends DataBackend
 
 
-
 class FirebaseDatabaseWrapper:
 	var _cpp_instance: Object
 	var _instance_id: int
@@ -114,7 +113,6 @@ var _next_request_id: int = 0
 var _signal_connect_errors: Dictionary = {}  # Stores errors from connecting C++ signals
 var _is_being_freed: bool = false  # Flag to prevent actions during object deallocation
 var _backend_instance_id_str: String  # Cached string of this instance's ID for logging
-
 
 
 func _init() -> void:
@@ -245,8 +243,6 @@ func is_available() -> bool:
 	return _initialized and db != null and db.is_valid() and not _is_being_freed
 
 
-
-
 func _connect_signals() -> void:
 	if db == null or not db.is_valid():
 		Log.error(
@@ -311,8 +307,6 @@ func _connect_signals() -> void:
 		{"backend_id": _backend_instance_id_str},
 		[Log.TAG_FIREBASE]
 	)
-
-
 
 
 func _get_next_request_id() -> int:
@@ -542,8 +536,6 @@ func _complete_direct_await(
 		)
 
 
-
-
 func _on_get_value_completed(request_id: int, rtdb_key: String, value: Variant) -> void:
 	Log.debug(
 		"FB_Backend: _on_get_value_completed (DirectAwait) CALLED",
@@ -716,8 +708,6 @@ func _on_db_error(code: String, message: String) -> void:
 		{"code": code, "message": message, "fb_backend_id": _backend_instance_id_str},
 		[Log.TAG_FIREBASE, Log.TAG_ERROR]
 	)
-
-
 
 
 func get_data(p_path: Array[Variant], key: String) -> Variant:

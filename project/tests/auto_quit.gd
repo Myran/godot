@@ -1,6 +1,5 @@
 extends Node
 
-
 var max_test_time: float = 60.0  # Maximum seconds to allow a test to run
 
 

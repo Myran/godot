@@ -1,6 +1,5 @@
 extends Node
 
-
 signal fb_respons(res: Dictionary)
 signal apple_auth_respons(res: Dictionary)
 

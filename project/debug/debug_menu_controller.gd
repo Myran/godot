@@ -1,4 +1,3 @@
-
 extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
 
@@ -221,8 +220,6 @@ func _update_toggle_button_state() -> void:
 			text_toggle_button.text = "Debug Menu"
 
 
-
-
 func _update_status_label_text(text: String, is_error: bool = false) -> void:
 	if is_instance_valid(status_label):
 		status_label.bbcode_enabled = true
@@ -373,7 +370,6 @@ func _populate_groups_view(category_name: String) -> void:
 		if category_found:
 			category_exists = true
 
-
 	if not category_exists:
 		_update_status_label_text(
 			"ERROR: Category '%s' not found in debug system." % category_name, true
@@ -406,7 +402,6 @@ func _populate_groups_view(category_name: String) -> void:
 	else:
 		Log.error("DebugRegistry autoload not found", {}, [Log.TAG_DEBUG_UI, Log.TAG_ERROR])
 		return
-
 
 	if groups.is_empty():
 		item_list_navigator.add_item("No groups in this category.")
@@ -451,7 +446,6 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	if not _validate_navigation_state("_populate_category_with_actions_view"):
 		return
 
-
 	item_list_navigator.add_item(BACK_TO_MAIN_MENU_TEXT)
 	item_list_navigator.set_item_metadata(0, MenuListItemData.create_back_to_main())
 
@@ -468,12 +462,10 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 			)
 			item_index += 1
 
-
 	var all_groups: Array[String] = []
 
 	if DebugRegistry:
 		all_groups = DebugRegistry.get_groups_for_category(category_name)
-
 
 	for group_name: String in all_groups:
 		item_list_navigator.add_item("▸ " + group_name)  # Arrow to show it's expandable
@@ -547,7 +539,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 			item_index, MenuListItemData.create_action(action, category_name, group_name)
 		)
 		item_index += 1
-
 
 
 func _abort_current_execution_if_needed() -> void:
@@ -681,7 +672,6 @@ func _on_run_all_pressed() -> void:
 		for action: DebugAction in debug_actions:
 			var result_item: ActionExecutionResult = ActionExecutionResult.new(action, false)
 			actions_to_run.append(result_item)
-
 
 	else:
 		Log.warning("Run All pressed in an unsupported view level.", {}, [Log.TAG_DEBUG_UI])

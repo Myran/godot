@@ -2,7 +2,6 @@ class_name StateExtractor
 extends RefCounted
 
 
-
 static func extract_game_state() -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 

@@ -1,7 +1,6 @@
 class_name FirebaseAuthError
 extends RefCounted
 
-
 enum Code {
 	NONE = 0,  # kAuthErrorNone - operation succeeded
 	INVALID_CUSTOM_TOKEN = 1,

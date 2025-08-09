@@ -107,7 +107,6 @@ func _test_basic_api() -> Dictionary:
 	if not session_available:
 		suite_success = false
 
-
 	return {
 		"suite_name": "Basic API Functionality",
 		"success": suite_success,
@@ -262,7 +261,6 @@ func _test_player_event_integration() -> Dictionary:
 		}
 	)
 
-
 	return {
 		"suite_name": "Player Event Integration",
 		"success": suite_success,
@@ -331,7 +329,6 @@ func _test_log_format_validation() -> Dictionary:
 			"details": "Successfully handled various action type formats"
 		}
 	)
-
 
 	return {
 		"suite_name": "Log Format Validation",
@@ -402,7 +399,6 @@ func _test_performance_reliability() -> Dictionary:
 	)
 	if not session_stable:
 		suite_success = false
-
 
 	return {
 		"suite_name": "Performance & Reliability",

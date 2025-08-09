@@ -393,8 +393,6 @@ func solve_gravity() -> void:
 						gravity_action = true
 
 
-
-
 static func find_block_at_position(clicker_instance: Clicker, position: Vector2i) -> Block:
 	"""Find block at specified grid position.
 

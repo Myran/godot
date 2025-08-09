@@ -151,7 +151,6 @@ func _test_core_functionality() -> Dictionary:
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
 
-
 	var game_state: Dictionary = StateExtractor.extract_game_state()
 	var game_state_valid: bool = typeof(game_state) == TYPE_DICTIONARY
 	tests.append(
@@ -249,7 +248,6 @@ func _test_integration_performance() -> Dictionary:
 
 	var tests: Array[Dictionary] = []
 	var suite_success: bool = true
-
 
 	var start_time: int = Time.get_ticks_msec()
 	var game_state: Dictionary = StateExtractor.extract_game_state()

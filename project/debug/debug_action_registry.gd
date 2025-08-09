@@ -1,4 +1,3 @@
-
 class_name DebugActionRegistry
 extends Node
 
@@ -62,7 +61,6 @@ func _register_all_actions() -> void:
 
 
 func register_action(action: DebugAction) -> bool:
-
 	if not action:
 		Log.error("Cannot register null action", {}, [Log.TAG_DEBUG, Log.TAG_ERROR])
 		return false

@@ -1,7 +1,6 @@
 class_name DebugOutputService
 extends RefCounted
 
-
 static var _formatter: DebugOutputFormatter
 static var _initialized: bool = false
 

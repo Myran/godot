@@ -1,10 +1,8 @@
 class_name DataSource
 extends Node
 
-
 signal startup_completed
 const DEFAULT_SHEETS_ID: String = "1WTKwZ8aXSeQVEVT8qeNtwUZepVZh7wv5skRGn_zFUsY"
-
 
 var cards: CardCollection = null
 var levels: LevelCollection = null
@@ -76,7 +74,6 @@ func _initialize_collections() -> void:
 		[Log.TAG_DB]
 	)
 
-
 	var initialization_success: bool = true
 
 	initialization_success = initialization_success and _initialize_collection("cards")
@@ -146,7 +143,6 @@ func _initialize_collection(collection_name: String) -> bool:
 
 
 func _safely_create_collection(creation_function: Callable, collection_name: String) -> bool:
-
 	Log.debug(
 		"Initializing collection",
 		{"collection_name": collection_name, "instance_id": get_instance_id()},
@@ -191,7 +187,6 @@ func activate_card_cache() -> void:
 	Log.info(
 		"Activating card cache", {"instance_id": get_instance_id()}, [Log.TAG_CACHE, Log.TAG_DB]
 	)
-
 
 	var request_start_time: int = Time.get_ticks_msec()
 	@warning_ignore("redundant_await")
@@ -282,8 +277,6 @@ func setup_player_data() -> bool:
 		[Log.TAG_DB]
 	)
 	return true
-
-
 
 
 func clear_all_caches() -> void:

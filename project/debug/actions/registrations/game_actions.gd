@@ -1,7 +1,5 @@
-
 class_name GameDebugActions
 extends RefCounted
-
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -104,8 +102,6 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_description("Populate enemy lineup using fake PLAYER events to test recording")
 		)
 	)
-
-
 
 	registry.register_action(
 		(
@@ -238,8 +234,6 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			. set_description("Test battle determinism with logic-only execution (fast)")
 		)
 	)
-
-
 
 
 static func _register_database_actions(registry: DebugActionRegistry) -> void:
@@ -382,8 +376,6 @@ static func _populate_enemy_lineup() -> bool:
 	return true
 
 
-
-
 static func _clear_card_cache() -> bool:
 	if data_source and data_source.has_method("clear_card_cache"):
 		data_source.clear_card_cache()
@@ -439,7 +431,6 @@ static func _test_simple_player_events() -> bool:
 
 
 static func _populate_enemy_lineup_as_player() -> bool:
-
 	Log.info(
 		"Populating enemy lineup with fake PLAYER events for testing",
 		{},
@@ -485,7 +476,6 @@ static func _populate_enemy_lineup_as_player() -> bool:
 		{"card_id": typed_dwarf.id},
 		["debug", "test"]
 	)
-
 
 	var fake_player_event1: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_dwarf)
 	core.action(fake_player_event1)
@@ -622,8 +612,6 @@ static func _trigger_populate_enemy_lineup() -> void:
 	Log.info("Populating enemy lineup via idle action", {}, ["debug", "battle"])
 	var populate_task: Callable = func() -> void: await _populate_enemy_lineup()
 	populate_task.call()
-
-
 
 
 static func _battle_test_determinism_logic_only() -> DebugAction.Result:
@@ -1109,8 +1097,6 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 	return true
 
 
-
-
 static func _battle_test_determinism() -> DebugAction.Result:
 	if not is_instance_valid(ui) or not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("Required systems not available")
@@ -1283,8 +1269,6 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				duration,
 				"hash_recorded_partial_restart_pending"
 			)
-
-
 
 
 static func _reset_board_state() -> bool:
@@ -1563,7 +1547,6 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 	var pos_y: int = position.get("y", -1)
 	var grid_pos: Vector2i = Vector2i(pos_x, pos_y)
 	var actual_block: Block = Clicker.find_block_at_position(game.clicker, grid_pos)
-
 
 	if not actual_block:
 		Log.error(
@@ -1965,8 +1948,6 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 	ui.action(ui.StartBattleEvent.new())
 
 	return true
-
-
 
 
 static func _validate_required_params(params: Dictionary, required_keys: Array[String]) -> String:

@@ -1,6 +1,5 @@
 extends Node
 
-
 var seeded_rng: DeterministicRNG = DeterministicRNG.new(1)  # Force deterministic construction
 var _seed: int = 1
 var _seed_source: String = "default"
