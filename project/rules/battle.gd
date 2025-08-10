@@ -207,7 +207,7 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		context.add_event(stat_change)
 
 	elif event is BattleContext.StatChangeEvent:
-		if event.change_value == 0:
+		if event.change_value == GameConstants.BattleSystem.ZERO_STAT_VALUE:
 			return
 		var event_side: bool = event.is_allied_side
 		var side: Side = context.get_side(event_side)
@@ -322,7 +322,7 @@ static func solve_death_test(context: BattleContext) -> void:
 		var positions: Array[int] = DictUtils.get_battle_positions(side.lineup)
 		for pos: int in positions:
 			var unit: UnitData = side.lineup[pos]
-			if unit.current_health <= 0:
+			if unit.current_health <= GameConstants.BattleSystem.ZERO_HEALTH_THRESHOLD:
 				var event: BattleContext.DeathEvent = BattleContext.DeathEvent.new(is_allied, pos)
 				context.add_event(event)
 

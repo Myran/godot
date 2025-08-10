@@ -7,12 +7,12 @@ func set_level(_lvl: int) -> void:
 	$"%icon_level_3".visible = false
 
 	match _lvl:
-		1:
+		GameConstants.CardSystem.DEFAULT_LEVEL:
 			$"%icon_level_1".visible = true
-		2:
+		GameConstants.CardSystem.LEVEL_TWO:
 			$"%icon_level_1".visible = true
 			$"%icon_level_2".visible = true
-		3:
+		GameConstants.CardSystem.LEVEL_THREE:
 			$"%icon_level_1".visible = true
 			$"%icon_level_2".visible = true
 			$"%icon_level_3".visible = true

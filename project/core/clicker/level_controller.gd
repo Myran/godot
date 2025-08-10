@@ -70,17 +70,17 @@ func create_blocks_from_level() -> void:
 		var block: Block
 
 		match current_level.get_cell_source_id(tile_pos):
-			0:
+			GameConstants.BlockSystem.TYPE_ZERO:
 				block = _block_factory.create_locked_block()
-			1:
-				block = _block_factory.create_upgrade_block(1)
-			2:
-				block = _block_factory.create_upgrade_block(2)
-			3:
-				block = _block_factory.create_upgrade_block(3)
-			4:
+			GameConstants.CardSystem.DEFAULT_LEVEL:
+				block = _block_factory.create_upgrade_block(GameConstants.CardSystem.DEFAULT_LEVEL)
+			GameConstants.CardSystem.LEVEL_TWO:
+				block = _block_factory.create_upgrade_block(GameConstants.CardSystem.LEVEL_TWO)
+			GameConstants.CardSystem.LEVEL_THREE:
+				block = _block_factory.create_upgrade_block(GameConstants.CardSystem.LEVEL_THREE)
+			GameConstants.BlockSystem.UPGRADE_LEVEL_FOUR:
 				block = _block_factory.create_nospace_block()
-			5:
+			GameConstants.BlockSystem.UPGRADE_LEVEL_FIVE:
 				block = _block_factory.create_passtrough_block()
 			_:
 				# CRITICAL: Sequential execution ensures each await completes

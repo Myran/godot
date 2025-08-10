@@ -5,7 +5,7 @@ extends RefCounted
 
 
 static func get_debug_seed() -> int:
-	"""Get debug seed from config file. Returns default (12345) if not found or invalid."""
+	"""Get debug seed from config file. Returns default GameConstants.RandomSystem.DEFAULT_SEED if not found or invalid."""
 	var config_data: Dictionary = _read_config_file()
 
 	if config_data.has("checksum_config"):
@@ -30,7 +30,7 @@ static func get_debug_seed() -> int:
 			)
 		return _seed
 
-	var default_seed: int = 12345
+	var default_seed: int = GameConstants.RandomSystem.DEFAULT_SEED
 	if Log:
 		Log.debug(
 			"No debug seed found in config, using default",

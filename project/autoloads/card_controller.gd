@@ -95,19 +95,19 @@ func select_recruited_unit_level(recruit_lvl: int) -> int:
 	if _rules.has("chance_lvl_3_star_3"):
 		c_lvl_3_star_3 = _rules.chance_lvl_3_star_3
 	match recruit_lvl:
-		1:
-			return 1
-		2:
+		GameConstants.CardSystem.DEFAULT_LEVEL:
+			return GameConstants.CardSystem.DEFAULT_LEVEL
+		GameConstants.CardSystem.LEVEL_TWO:
 			if roll <= int(c_lvl_2_star_1):
-				return 1
+				return GameConstants.CardSystem.DEFAULT_LEVEL
 			if roll <= int(c_lvl_2_star_2):
-				return 2
-		3:
+				return GameConstants.CardSystem.LEVEL_TWO
+		GameConstants.CardSystem.LEVEL_THREE:
 			if roll <= int(c_lvl_3_star_1):
-				return 1
+				return GameConstants.CardSystem.DEFAULT_LEVEL
 			if roll <= int(c_lvl_3_star_2):
-				return 2
+				return GameConstants.CardSystem.LEVEL_TWO
 			if roll <= int(c_lvl_3_star_3):
-				return 3
+				return GameConstants.CardSystem.LEVEL_THREE
 
-	return 1  # Default fallback return
+	return GameConstants.CardSystem.DEFAULT_LEVEL  # Default fallback return
