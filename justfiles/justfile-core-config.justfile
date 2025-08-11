@@ -51,6 +51,11 @@ TEST_LIST_DIR := "tests/test-lists"
 # Desktop Godot logs (macOS)
 DESKTOP_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_userdata/" + GAME_NAME + "/logs"
 
+# Additional log path variables (consolidated from semantic-replay-commands)
+PROJECT_LOGS_DIR := "./logs"
+USER_DATA_DIR := "$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+STANDARD_LOGS_DIR := USER_DATA_DIR + "/logs"
+
 # ================================
 # SHARED UTILITY FUNCTIONS
 # ================================
@@ -495,17 +500,8 @@ _check-android-prerequisites:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    # Check if adb is available and device is connected
-    if ! command -v adb >/dev/null 2>&1; then
-        echo "❌ adb command not found. Please install Android SDK." >&2
-        exit 1
-    fi
-    
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected." >&2
-        echo "💡 Connect your Android device and enable USB debugging." >&2
-        exit 1
-    fi
+    # Use shared enhanced device check
+    just _android-check-device-detailed >/dev/null
 
 # Android log retrieval function
 # Returns content of latest Android log file via adb
@@ -513,22 +509,8 @@ _get-android-log-file:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    just _check-android-prerequisites
-    
-    # Android log file path (user://logs/godot.log)
-    ANDROID_LOG_PATH="files/logs/godot.log"
-    
-    # Check if log file exists on device
-    if ! adb shell "run-as {{ANDROID_PACKAGE_NAME}} ls $ANDROID_LOG_PATH" >/dev/null 2>&1; then
-        echo "❌ No Android log file found at: $ANDROID_LOG_PATH" >&2
-        echo "" >&2
-        echo "💡 Try running a test first to generate logs:" >&2
-        echo "   just test-android development-workflow" >&2
-        exit 1
-    fi
-    
-    # Retrieve and output the log file content
-    adb shell "run-as {{ANDROID_PACKAGE_NAME}} cat $ANDROID_LOG_PATH" 2>/dev/null
+    # Use shared Android log retrieval
+    just _android-get-app-log "godot.log"
 
 # Find Android log containing specific test ID
 # Usage: _find-android-log-with-test-id TEST_ID

@@ -13,38 +13,7 @@ _require-android-device:
     fi
     echo "✅ Android device connected"
 
-# Validate iOS device connectivity  
-_validate-ios-device DEVICE_TYPE:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    # Get device ID based on type
-    if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
-        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
-        DEVICE_NAME="iPhone"
-    elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
-        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
-        DEVICE_NAME="iPad"
-    else
-        echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
-        exit 1
-    fi
-    
-    # Check device connectivity
-    if ! xcrun devicectl list devices | grep -q "$DEVICE_ID" 2>/dev/null; then
-        echo "❌ $DEVICE_NAME not connected: $DEVICE_ID"
-        echo "💡 Check device connection and run: xcrun devicectl list devices"
-        exit 1
-    fi
-
-# Validate file or directory exists
-_validate-path-exists PATH:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -e "{{PATH}}" ]; then
-        echo "❌ Path not found: {{PATH}}"
-        exit 1
-    fi
+# NOTE: _validate-ios-device and _validate-path-exists moved to justfile-validation-shared.justfile
 
 # Ensure directory exists, create if missing
 _ensure-directory-exists DIR:
@@ -56,33 +25,7 @@ _ensure-directory-exists DIR:
     fi
 
 # Combined validation for Android workflow requirements
-_validate-android-workflow:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    # Check if Android SDK is available
-    if [ ! -d "{{ANDROID_SDK_PATH}}" ]; then
-        echo "❌ Android SDK not found: {{ANDROID_SDK_PATH}}"
-        echo "💡 Install Android SDK and set ANDROID_SDK_PATH"
-        exit 1
-    fi
-    
-    # Check if adb is available
-    if ! command -v adb >/dev/null 2>&1; then
-        echo "❌ adb not found in PATH"
-        echo "💡 Add Android SDK platform-tools to PATH"
-        exit 1
-    fi
-    
-    echo "✅ Android workflow environment validated"
-
-# Combined validation for iOS development workflow  
-_validate-ios-workflow DEVICE_TYPE:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    just _validate-ios-tools
-    just _validate-ios-device "{{DEVICE_TYPE}}"
-    echo "✅ iOS {{DEVICE_TYPE}} workflow validated"
+# NOTE: _validate-android-workflow and _validate-ios-workflow moved to justfile-validation-shared.justfile
 
 # Validate GDScript code by checking for syntax errors using gdparse
 check OUTPUT="console":

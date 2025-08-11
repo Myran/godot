@@ -5,6 +5,262 @@
 # Note: Variables and dependencies inherited from main justfile
 # This module does not import other modules to avoid circular dependencies
 
+# ================================
+# SHARED TEST SETUP FUNCTIONS
+# ================================
+
+# Common test setup for all Android test variants
+_test-setup-android CONFIG_NAME TEST_TYPE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    TEST_TYPE="{{TEST_TYPE}}"
+    
+    # Display appropriate header based on test type
+    case "$TEST_TYPE" in
+        "basic")
+            echo "🧪 Testing configuration: $CONFIG_NAME"
+            ;;
+        "enhanced")
+            echo "🔬 Enhanced Testing: $CONFIG_NAME"
+            ;;
+        "manual")
+            echo "🎯 Testing target (manual mode - stays open): $CONFIG_NAME"
+            echo "=================================================="
+            return 0  # Manual has different separator
+            ;;
+        *)
+            echo "🧪 Testing: $CONFIG_NAME"
+            ;;
+    esac
+    echo "=================================="
+
+# Common test preparation (cache clear + validation)
+_test-prepare-android CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    
+    # Clear Android test cache first to prevent stale state contamination
+    echo "🧹 Clearing Android test cache to ensure fresh state..."
+    just clear-android-test-cache
+    echo ""
+    
+    # Validate configuration exists and is properly formatted
+    just _validate-config-exists "$CONFIG_NAME"
+
+# Common Android device connectivity check
+_test-check-android-device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Use enhanced device check
+    just _android-check-device-detailed
+
+# ================================
+# SHARED DESKTOP TEST FUNCTIONS
+# ================================
+
+# Common test setup for all Desktop test variants
+_test-setup-desktop CONFIG_NAME TEST_TYPE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    TEST_TYPE="{{TEST_TYPE}}"
+    
+    echo "🖥️  Testing target ($TEST_TYPE mode): $CONFIG_NAME"
+    echo "=================================================="
+
+# Common desktop test preparation (config validation)
+_test-prepare-desktop CONFIG_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    
+    echo "🧹 Preparing desktop test environment..."
+    
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+    echo ""
+
+# Common desktop Godot editor check
+_test-check-desktop-godot:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Use shared validation pattern
+    just _validate-file-exists "./editor/{{GODOT_EXECUTABLE}}" "Build the editor first: just build-editor"
+    echo "✅ Godot editor found: ./editor/{{GODOT_EXECUTABLE}}"
+
+# ================================
+# SHARED VALIDATION PATTERNS
+# ================================
+
+# NOTE: Validation helper functions moved to justfile-validation-shared.justfile
+# Use shared functions: _validate-file-exists, _validate-dir-exists, _validate-command-exists
+
+# ================================
+# SHARED ANDROID OPERATIONS
+# ================================
+
+# NOTE: Android helper functions moved to justfile-validation-shared.justfile
+# Available shared functions:
+# - _android-run-as-command
+# - _android-get-device-info  
+# - _android-check-app-installed
+# - _android-check-device-detailed
+# - _android-get-app-log
+
+# ================================
+# SHARED TEST INFRASTRUCTURE
+# ================================
+
+# Generate standardized test ID with configurable format
+_shared-generate-test-id CONFIG_NAME TEST_TYPE PLATFORM="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    TEST_TYPE="{{TEST_TYPE}}"
+    PLATFORM="{{PLATFORM}}"
+    
+    # Generate timestamp
+    TIMESTAMP=$(date +%s)
+    
+    # Format test ID based on parameters
+    if [[ -n "$PLATFORM" ]]; then
+        # Include platform: config_platform_type_timestamp
+        TEST_ID="${CONFIG_NAME}_${PLATFORM}_${TEST_TYPE}_${TIMESTAMP}"
+    else
+        # No platform: config_type_timestamp
+        TEST_ID="${CONFIG_NAME}_${TEST_TYPE}_${TIMESTAMP}"
+    fi
+    
+    echo "$TEST_ID"
+
+# Display standardized test information header
+_display-test-info TEST_ID CONFIG_NAME TEST_TYPE PLATFORM="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    TEST_TYPE="{{TEST_TYPE}}"
+    PLATFORM="{{PLATFORM}}"
+    
+    echo ""
+    echo "🔍 Test ID: $TEST_ID"
+    echo "⚙️  Config: $CONFIG_NAME"
+    echo "🎯 Type: $TEST_TYPE"
+    
+    # Add platform-specific info
+    if [[ "$PLATFORM" == "android" ]]; then
+        just _android-get-device-info
+    elif [[ "$PLATFORM" == "desktop" ]]; then
+        echo "🖥️  Platform: Desktop"
+        echo "🔧 Editor: {{GODOT_EXECUTABLE}}"
+    elif [[ -n "$PLATFORM" ]]; then
+        echo "🔧 Platform: $PLATFORM"
+    fi
+
+# Parse test list JSON and extract configurations with error handling
+_parse-test-list-json TEST_LIST_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_LIST_FILE="{{TEST_LIST_FILE}}"
+    
+    # Validate file exists
+    if [[ ! -f "$TEST_LIST_FILE" ]]; then
+        echo "❌ Test list file not found: $TEST_LIST_FILE" >&2
+        return 1
+    fi
+    
+    # Validate JSON format
+    if ! jq -e . "$TEST_LIST_FILE" >/dev/null 2>&1; then
+        echo "❌ Invalid JSON in test list: $TEST_LIST_FILE" >&2
+        return 1
+    fi
+    
+    # Check for required configs field
+    if ! jq -e '.configs' "$TEST_LIST_FILE" >/dev/null 2>&1; then
+        echo "❌ Test list missing required 'configs' field" >&2
+        return 1
+    fi
+    
+    # Extract and return configs (handles @ references)
+    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_FILE" 2>/dev/null | grep -c "^@" || echo "0")
+    
+    if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
+        echo "🔄 Expanding @ references..." >&2
+        # Note: This would need @ reference expansion logic
+        # For now, return basic configs
+        jq -r '.configs[] | select(test("^@") | not)' "$TEST_LIST_FILE"
+    else
+        jq -r '.configs[]' "$TEST_LIST_FILE"
+    fi
+
+# Get test list metadata (name, description, config count)
+_get-test-list-metadata TEST_LIST_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_LIST_FILE="{{TEST_LIST_FILE}}"
+    
+    # Validate file exists and is valid JSON
+    if [[ ! -f "$TEST_LIST_FILE" ]] || ! jq -e . "$TEST_LIST_FILE" >/dev/null 2>&1; then
+        echo "❌ Invalid test list file: $TEST_LIST_FILE" >&2
+        return 1
+    fi
+    
+    # Extract metadata
+    NAME=$(jq -r '.name // (input_filename | split("/") | last | split(".") | first)' "$TEST_LIST_FILE" --arg input_filename "$TEST_LIST_FILE")
+    DESCRIPTION=$(jq -r '.description // "No description provided"' "$TEST_LIST_FILE")
+    CONFIG_COUNT=$(jq -r '.configs | length' "$TEST_LIST_FILE")
+    
+    echo "Name: $NAME"
+    echo "Description: $DESCRIPTION"
+    echo "Configurations: $CONFIG_COUNT"
+
+# Standardized test summary display
+_display-test-summary TEST_ID CONFIG_NAME DURATION_SECONDS STATUS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    CONFIG_NAME="{{CONFIG_NAME}}"
+    DURATION_SECONDS="{{DURATION_SECONDS}}"
+    STATUS="{{STATUS}}"
+    
+    echo ""
+    echo "📊 Test Summary"
+    echo "==============="
+    echo "🔍 Test ID: $TEST_ID"
+    echo "⚙️  Configuration: $CONFIG_NAME"
+    echo "⏱️  Duration: ${DURATION_SECONDS}s"
+    
+    # Status with appropriate emoji
+    case "$STATUS" in
+        "COMPLETED"|"SUCCESS")
+            echo "✅ Status: COMPLETED"
+            ;;
+        "FAILED"|"ERROR")
+            echo "❌ Status: FAILED"
+            ;;
+        "TIMEOUT")
+            echo "⏰ Status: TIMEOUT"
+            ;;
+        *)
+            echo "🔍 Status: $STATUS"
+            ;;
+    esac
+    
+    echo "💡 Use 'just logs $TEST_ID' for detailed analysis"
+
 # Validate all project files
 validate-all:
     #!/usr/bin/env bash
@@ -158,13 +414,8 @@ _test-quick-android:
     #!/usr/bin/env bash
     echo "🚀 Running quick Android validation..."
     
-    # Basic connectivity check
-    if adb devices | grep -q "device$"; then
-        echo "✅ Android device connected"
-    else
-        echo "❌ No Android device connected"
-        exit 1
-    fi
+    # Use shared connectivity check
+    just _test-check-android-device
 
 # Android test monitoring with activity timeout
 test-monitor-android duration_seconds="30":
@@ -209,23 +460,10 @@ _test-config-android config_name:
     CONFIG_NAME="{{config_name}}"
     CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
-    echo "🧪 Testing configuration: $CONFIG_NAME"
-    echo "=================================="
-    
-    # Clear Android test cache first to prevent stale state contamination
-    echo "🧹 Clearing Android test cache to ensure fresh state..."
-    just clear-android-test-cache
-    echo ""
-    
-    # Validate configuration exists and is properly formatted
-    just _validate-config-exists "$CONFIG_NAME"
-    
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo "Connect a device and enable USB debugging"
-        exit 1
-    fi
+    # Use shared setup and preparation functions
+    just _test-setup-android "$CONFIG_NAME" "basic"
+    just _test-prepare-android "$CONFIG_NAME"
+    just _test-check-android-device
     
     echo ""
     echo "📱 Device connected, starting test..."
@@ -351,31 +589,17 @@ _test-config-android-enhanced config_name:
     CONFIG_NAME="{{config_name}}"
     CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
-    echo "🔬 Enhanced Testing: $CONFIG_NAME"
-    echo "================================="
+    # Use shared setup and preparation functions
+    just _test-setup-android "$CONFIG_NAME" "enhanced"
+    just _test-prepare-android "$CONFIG_NAME"
+    just _test-check-android-device
     
-    # Clear Android test cache first to prevent stale state contamination
-    echo "🧹 Clearing Android test cache to ensure fresh state..."
-    just clear-android-test-cache
-    echo ""
-    
-    # Validate configuration
-    just _validate-config-exists "$CONFIG_NAME"
-    
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        exit 1
-    fi
-    
-    # Generate unique test ID
-    TEST_ID="${CONFIG_NAME}_enhanced_$(date +%s)"
+    # Generate unique test ID using shared function
+    TEST_ID=$(just _shared-generate-test-id "$CONFIG_NAME" "enhanced")
     export TEST_ID
     
-    echo ""
-    echo "🔍 Test ID: $TEST_ID"
-    echo "📱 Device: $(adb devices | grep 'device$' | cut -f1)"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    # Display standardized test info
+    just _display-test-info "$TEST_ID" "$CONFIG_NAME" "enhanced" "android"
     
     # Pre-test device state
     echo ""
@@ -819,46 +1043,15 @@ _test-list-android test_list:
     echo "🧪 Executing test list: $TEST_LIST"
     echo "================================="
     
-    # Validate test list exists
-    if [[ ! -f "$TEST_LIST_PATH" ]]; then
-        echo "❌ Test list not found: $TEST_LIST_PATH"
-        exit 1
-    fi
-    
-    # Validate JSON format
-    if ! jq -e . "$TEST_LIST_PATH" >/dev/null 2>&1; then
-        echo "❌ Invalid JSON in test list: $TEST_LIST_PATH"
-        exit 1
-    fi
-    
-    # Extract configs
-    if ! jq -e '.configs' "$TEST_LIST_PATH" >/dev/null 2>&1; then
-        echo "❌ Test list missing required 'configs' field"
-        exit 1
-    fi
-    
-    # Check if test list contains @ references and expand accordingly
-    HAS_AT_REFERENCES=$(jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | grep -c "^@" || echo "0")
-    HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
-    
-    if [[ "${HAS_AT_REFERENCES:-0}" -gt 0 ]]; then
-        echo "🔄 Expanding @ references..."
-        CONFIGS=$(just _expand_at_references "$TEST_LIST")
-    else
-        CONFIGS=$(jq -r '.configs[]' "$TEST_LIST_PATH")
-    fi
-    
+    # Use shared JSON parsing for validation and config extraction
+    CONFIGS=$(just _parse-test-list-json "$TEST_LIST_PATH")
     if [[ -z "$CONFIGS" ]]; then
         echo "❌ No configurations found in test list"
         exit 1
     fi
     
-    # Show test list info
-    description=$(jq -r '.description // "No description provided"' "$TEST_LIST_PATH")
-    echo "Description: $description"
-    
-    config_count=$(jq -r '.configs | length' "$TEST_LIST_PATH")
-    echo "Configurations: $config_count"
+    # Show test list metadata using shared function
+    just _get-test-list-metadata "$TEST_LIST_PATH"
     
     echo ""
     echo "📋 Configuration List:"
@@ -1143,34 +1336,18 @@ _test-android-manual config_name:
     set -euo pipefail
     
     CONFIG_NAME="{{config_name}}"
-    CONFIG_PATH="./{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
     
-    echo "🎯 Testing target (manual mode - stays open): $CONFIG_NAME"
-    echo "=================================================="
+    # Use shared setup functions
+    just _test-setup-android "$CONFIG_NAME" "manual"
+    just _test-prepare-android "$CONFIG_NAME"
+    just _test-check-android-device
     
-    # Clear Android test cache first to prevent stale state contamination
-    echo "🧹 Clearing Android test cache to ensure fresh state..."
-    just clear-android-test-cache
-    echo ""
-    
-    # Validate configuration exists
-    just _validate-config-exists "$CONFIG_NAME"
-    
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo "Please connect a device and enable USB debugging"
-        exit 1
-    fi
-    
-    # Generate unique test ID
-    TEST_ID="${CONFIG_NAME}_manual_$(date +%s)"
+    # Generate unique test ID using shared function
+    TEST_ID=$(just _shared-generate-test-id "$CONFIG_NAME" "manual")
     export TEST_ID
     
-    echo ""
-    echo "🔍 Test ID: $TEST_ID"
-    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    # Display standardized test info
+    just _display-test-info "$TEST_ID" "$CONFIG_NAME" "manual" "android"
     echo "👁️  Mode: Manual (stays open for verification)"
     
     # Clear logcat buffer

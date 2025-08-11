@@ -56,8 +56,8 @@ _generate-test-id config_name platform:
     CONFIG_NAME="{{config_name}}"
     PLATFORM="{{platform}}"
     
-    # Generate consistent test ID format
-    TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"
+    # Generate consistent test ID format using shared function
+    TEST_ID=$(just _shared-generate-test-id "$CONFIG_NAME" "test" "$PLATFORM")
     echo "$TEST_ID"
 
 # Unified configuration analysis for both platforms
@@ -2089,15 +2089,9 @@ _deploy-config-android temp_config_path:
     
     echo "📱 Deploying configuration to Android device..."
     
-    # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo "Please connect a device and enable USB debugging"
-        exit 1
-    fi
-    
-    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    # Use shared device check and info display
+    just _android-check-device-detailed
+    just _android-get-device-info
     
     # Stop app for clean state
     just _stop-app-android
@@ -2463,11 +2457,7 @@ _test-android-target-original config_name:
     just _validate-config-exists "$CONFIG_NAME"
     
     # Check device connectivity
-    if ! adb devices | grep -q "device$"; then
-        echo "❌ No Android device connected"
-        echo "Please connect a device and enable USB debugging"
-        exit 1
-    fi
+    just _android-check-device-detailed
     
     # Check if configuration has checksum validation
     HAS_CHECKSUM=false
@@ -2495,14 +2485,12 @@ _test-android-target-original config_name:
         fi
     fi
     
-    # Generate unique test ID
-    TEST_ID="${CONFIG_NAME}_$(date +%s)"
+    # Generate unique test ID using shared function  
+    TEST_ID=$(just _shared-generate-test-id "$CONFIG_NAME" "android")
     export TEST_ID
     
-    echo ""
-    echo "🔍 Test ID: $TEST_ID"
-    echo "📱 Device: $(adb devices | grep 'device$' | head -1 | cut -f1)"
-    echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
+    # Display standardized test info
+    just _display-test-info "$TEST_ID" "$CONFIG_NAME" "android" "android"
     
     # Clear logcat buffer
     adb logcat -c

@@ -168,7 +168,9 @@
       "Bash(./analyze_type_safety.sh:*)",
       "Bash(./comprehensive_type_fixer.sh:*)",
       "Bash(./simple_type_adder.sh:*)",
-      "Bash(./find_actual_missing_types.sh)"
+      "Bash(./find_actual_missing_types.sh)",
+      "Bash(git stash:*)",
+      "mcp__repomix__read_repomix_output"
     ],
     "deny": []
   }

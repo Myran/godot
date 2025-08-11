@@ -7,10 +7,7 @@
 # GLOBAL LOG PATH CONFIGURATION
 # ================================
 
-# Desktop log paths for self-contained and system installations
-PROJECT_LOGS_DIR := "./logs"
-USER_DATA_DIR := "$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-STANDARD_LOGS_DIR := USER_DATA_DIR + "/logs"
+# Desktop log paths (now defined in core/config.justfile)
 
 # ================================
 # SHARED FZF SELECTION UTILITIES
