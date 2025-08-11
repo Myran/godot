@@ -1,7 +1,7 @@
 ---
 id: task-021
 title: Eliminate duplicate validation functions across justfiles
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-09 06:44'
 updated_date: '2025-08-11 18:45'
