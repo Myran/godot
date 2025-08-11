@@ -61,6 +61,11 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
 ## 🤖 Claude Code Tool Preferences
 
+**CRITICAL: Always link backlog tasks with implementations**
+- **Use bidirectional linking**: Reference task in commit, reference commit in task
+- **Use `git commit --amend`**: For including documentation updates in the same logical commit
+- **Follow commit format**: Include "Closes: task-XXX" and "Related: backlog/tasks/..." references
+
 **CRITICAL: Always use ripgrep instead of grep**
 - **Use `rg` command** instead of `grep` for all text searching operations
 - **Use `rg` command** instead of the built-in Grep tool when practical
@@ -679,6 +684,66 @@ just logs-suggest TEST_ID fire
 - Patterns are automatically cached for faster repeated use
 - Complex patterns are compiled once and reused
 - Cache is persistent across sessions
+
+## 📋 Git Workflow & Backlog Integration
+
+**CRITICAL: Always create bidirectional links between backlog tasks and their implementation commits.**
+
+### **Backlog Task → Commit Workflow**
+
+1. **Reference task in commit message:**
+```bash
+git commit -m "$(cat <<'EOF'
+feat: implement user authentication system
+
+Add Firebase Auth integration with email/password and OAuth providers.
+Includes user session management and profile synchronization.
+
+Closes: task-045
+Related: backlog/tasks/task-045 - Implement-user-authentication-system.md
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+2. **Update backlog task with commit reference:**
+```markdown
+## Completion Summary
+
+**Completed 2025-08-11**: Successfully implemented user authentication system.
+
+**Commit**: `abc123def` - [feat: implement user authentication system](../../commit/abc123def)
+```
+
+### **Git Best Practices**
+
+**Use `git commit --amend` for related updates:**
+- When you forgot to include documentation updates
+- When backlog task updates are part of the same logical change
+- Before pushing to remote (clean history is better than preserving wrong hashes)
+
+**Commit message format:**
+```
+type(scope): brief description
+
+Detailed explanation of what was changed and why.
+Include business context and technical decisions.
+
+Closes: task-XXX
+Related: backlog/tasks/task-XXX - Task-Title.md
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Benefits of bidirectional linking:**
+- ✅ **Full traceability** between requirements and implementation
+- ✅ **Historical context** - understand why changes were made
+- ✅ **Code review efficiency** - reviewers can quickly understand the business context
+- ✅ **Debugging assistance** - trace bugs back to original requirements
+- ✅ **Knowledge transfer** - new team members can understand project evolution
 
 ## 🗂️ Project Architecture
 
