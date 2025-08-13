@@ -1,26 +1,13 @@
 class_name UnitContext extends RefCounted
 
 # Standalone context class encapsulating all unit-related battle event data
-# with object pooling for mobile performance optimization
+# Simple instance-based implementation for clean, testable code
 
 var position: int
 var is_allied: bool
 var battle_context: BattleContext
 var event: Context.Event
 var phase: core.Tempus
-
-# Object Pool Implementation
-static var _pool: Array[UnitContext] = []
-static var _pool_mutex: Mutex = Mutex.new()
-static var _max_pool_size: int = 100
-static var _pool_stats: Dictionary = {
-	"created": 0,
-	"reused": 0,
-	"pool_hits": 0,
-	"pool_misses": 0,
-	"current_pool_size": 0,
-	"peak_pool_size": 0
-}
 
 func _init(pos: int = -1, allied: bool = false, context: BattleContext = null, evt: Context.Event = null, ph: core.Tempus = core.Tempus.PRE):
 	position = pos
@@ -29,100 +16,9 @@ func _init(pos: int = -1, allied: bool = false, context: BattleContext = null, e
 	event = evt
 	phase = ph
 
-# ===== OBJECT POOL MANAGEMENT =====
-
 static func create(pos: int, allied: bool, context: BattleContext, evt: Context.Event, ph: core.Tempus) -> UnitContext:
-	"""Factory method that uses object pooling for performance optimization"""
-	_pool_mutex.lock()
-	
-	var unit_context: UnitContext
-	
-	if _pool.size() > 0:
-		# Reuse from pool
-		unit_context = _pool.pop_back()
-		_pool_stats.reused += 1
-		_pool_stats.pool_hits += 1
-	else:
-		# Create new instance
-		unit_context = UnitContext.new()
-		_pool_stats.created += 1
-		_pool_stats.pool_misses += 1
-	
-	# Update current pool size
-	_pool_stats.current_pool_size = _pool.size()
-	_pool_mutex.unlock()
-	
-	# Initialize/reset the context
-	unit_context._reset_and_initialize(pos, allied, context, evt, ph)
-	
-	return unit_context
-
-static func release(unit_context: UnitContext) -> void:
-	"""Return a UnitContext to the object pool for reuse"""
-	if not unit_context:
-		return
-	
-	_pool_mutex.lock()
-	
-	# Only pool if under max size
-	if _pool.size() < _max_pool_size:
-		# Clear references to prevent memory leaks
-		unit_context._clear_references()
-		_pool.append(unit_context)
-		
-		# Update stats
-		_pool_stats.current_pool_size = _pool.size()
-		_pool_stats.peak_pool_size = max(_pool_stats.peak_pool_size, _pool_stats.current_pool_size)
-	
-	_pool_mutex.unlock()
-
-static func configure_pool(max_size: int) -> void:
-	"""Configure the object pool parameters"""
-	_pool_mutex.lock()
-	_max_pool_size = max_size
-	
-	# Trim pool if necessary
-	while _pool.size() > _max_pool_size:
-		_pool.pop_back()
-	
-	_pool_stats.current_pool_size = _pool.size()
-	_pool_mutex.unlock()
-
-static func get_pool_stats() -> Dictionary:
-	"""Get current pool statistics for monitoring and debugging"""
-	_pool_mutex.lock()
-	var stats_copy = _pool_stats.duplicate()
-	_pool_mutex.unlock()
-	
-	# Calculate derived stats
-	var total_requests = stats_copy.pool_hits + stats_copy.pool_misses
-	stats_copy["hit_rate_percent"] = (float(stats_copy.pool_hits) / float(total_requests)) * 100.0 if total_requests > 0 else 0.0
-	stats_copy["total_requests"] = total_requests
-	
-	return stats_copy
-
-static func clear_pool() -> void:
-	"""Clear the entire object pool - useful for testing and cleanup"""
-	_pool_mutex.lock()
-	_pool.clear()
-	_pool_stats.current_pool_size = 0
-	_pool_mutex.unlock()
-
-func _reset_and_initialize(pos: int, allied: bool, context: BattleContext, evt: Context.Event, ph: core.Tempus) -> void:
-	"""Reset and initialize this context for reuse"""
-	position = pos
-	is_allied = allied
-	battle_context = context
-	event = evt
-	phase = ph
-
-func _clear_references() -> void:
-	"""Clear all references to prevent memory leaks when pooled"""
-	battle_context = null
-	event = null
-	position = -1
-	is_allied = false
-	phase = core.Tempus.PRE
+	"""Factory method for creating UnitContext instances"""
+	return UnitContext.new(pos, allied, context, evt, ph)
 
 # ===== INTELLIGENT TARGETING METHODS =====
 
@@ -137,6 +33,9 @@ func is_event_targeting_this_unit() -> bool:
 	elif event is BattleContext.ShieldEvent:
 		var shield_event = event as BattleContext.ShieldEvent
 		return shield_event.target_position == position and shield_event.is_allied_side == is_allied
+	elif event is BattleContext.DeathEvent:
+		var death_event = event as BattleContext.DeathEvent
+		return death_event.unit_position == position and death_event.is_allied_side == is_allied
 	return false
 
 func is_event_from_this_unit() -> bool:

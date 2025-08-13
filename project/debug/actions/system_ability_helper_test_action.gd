@@ -2,8 +2,10 @@ class_name AbilityHelperTestAction
 extends DebugAction
 
 func _init() -> void:
-	super._init()
-	action_name = "system.battle.ability_helper_test"
+	super("system.battle.ability_helper_test", _execute_action_logic)
+	set_category("System")
+	set_group("Battle System")
+	set_description("Unit tests for AbilityHelper static methods")
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
@@ -59,6 +61,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	
 	_update_status("AbilityHelper tests completed: %d/%d passed (%.1f%%)" % [tests_passed, total_tests, coverage_percentage])
 	
+	# Debug: Log failed tests (if any)
+	for test_result in test_results:
+		if not test_result.success:
+			_update_status("FAILED TEST: %s" % test_result.test_name)
+	
 	var test_data: Dictionary = {
 		"tests_passed": tests_passed,
 		"total_tests": total_tests,
@@ -67,22 +74,20 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"duration_ms": duration
 	}
 	
-	if tests_passed == total_tests and coverage_percentage >= 95.0:
-		return DebugAction.Result.new_success(
-			"All AbilityHelper tests passed with %.1f%% coverage" % coverage_percentage,
-			"ABILITY_HELPER_TESTS_COMPLETE",
-			test_data,
-			duration,
-			action_name
-		)
+	if tests_passed == total_tests and coverage_percentage >= 100.0:
+		return DebugAction.Result.new_success({
+			"message": "All AbilityHelper tests passed with %.1f%% coverage" % coverage_percentage,
+			"tests_passed": tests_passed,
+			"total_tests": total_tests,
+			"coverage_percentage": coverage_percentage,
+			"test_data": test_data,
+			"duration_ms": duration
+		})
 	else:
 		return DebugAction.Result.new_failure(
 			"AbilityHelper tests failed: %d/%d passed (%.1f%% coverage)" % [tests_passed, total_tests, coverage_percentage],
 			"ABILITY_HELPER_TESTS_FAILED",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_data,
-			duration,
-			action_name
+			DebugAction.Result.ErrorCategory.VALIDATION
 		)
 
 func _create_mock_battle_context() -> BattleContext:
@@ -101,7 +106,7 @@ func _create_mock_battle_context() -> BattleContext:
 
 func _create_mock_unit(name: String, current_health: int, current_attack: int, max_health: int, max_attack: int) -> UnitData:
 	var unit = UnitData.new()
-	unit.unit_name = name
+	unit.card_info = {"name": name, "id": name.hash()}
 	unit.current_health = current_health
 	unit.current_attack = current_attack
 	unit.max_health = max_health
@@ -150,12 +155,7 @@ func _test_event_type_checking(context: BattleContext, results: Array[Dictionary
 		"combat_post": combat_post_correct
 	})
 	
-	# Cleanup
-	UnitContext.release(damage_unit_pre)
-	UnitContext.release(damage_unit_post)
-	UnitContext.release(death_unit)
-	UnitContext.release(combat_unit_pre)
-	UnitContext.release(combat_unit_post)
+	# No cleanup needed with instance-based UnitContext
 	
 	return 1 if success else 0
 
@@ -180,8 +180,7 @@ func _test_phase_checking(context: BattleContext, results: Array[Dictionary]) ->
 		"cross_phase_false": stat_pre_false and stat_post_false
 	})
 	
-	UnitContext.release(stat_unit_pre)
-	UnitContext.release(stat_unit_post)
+	# No cleanup needed
 	
 	return 1 if success else 0
 
@@ -231,8 +230,7 @@ func _test_shield_event_checking(context: BattleContext, results: Array[Dictiona
 		"shield_post": shield_post_correct
 	})
 	
-	UnitContext.release(shield_unit_pre)
-	UnitContext.release(shield_unit_post)
+	# No cleanup needed
 	
 	return 1 if success else 0
 
@@ -255,8 +253,7 @@ func _test_turn_event_checking(context: BattleContext, results: Array[Dictionary
 		"end_of_turn": end_correct
 	})
 	
-	UnitContext.release(start_unit)
-	UnitContext.release(end_unit)
+	# No cleanup needed
 	
 	return 1 if success else 0
 
@@ -278,8 +275,7 @@ func _test_stat_change_checking(context: BattleContext, results: Array[Dictionar
 		"stat_post": post_correct
 	})
 	
-	UnitContext.release(unit_pre)
-	UnitContext.release(unit_post)
+	# No cleanup needed
 	
 	return 1 if success else 0
 
@@ -302,7 +298,7 @@ func _test_complex_event_combinations(context: BattleContext, results: Array[Dic
 		"not_combat": is_not_combat
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_event_timing_edge_cases(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -326,8 +322,8 @@ func _test_event_timing_edge_cases(context: BattleContext, results: Array[Dictio
 		"post_matches_post": post_matches_post
 	})
 	
-	UnitContext.release(unit_pre)
-	UnitContext.release(unit_post)
+	# No cleanup needed #unit_pre)
+	# No cleanup needed #unit_post)
 	
 	return 1 if success else 0
 
@@ -366,7 +362,7 @@ func _test_health_bonus_creation(context: BattleContext, results: Array[Dictiona
 		"blocked_invalid_events": no_invalid_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_attack_bonus_creation(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -395,7 +391,7 @@ func _test_attack_bonus_creation(context: BattleContext, results: Array[Dictiona
 		"attack_events": attack_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_damage_creation(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -423,7 +419,7 @@ func _test_damage_creation(context: BattleContext, results: Array[Dictionary]) -
 		"damage_events": damage_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_shield_activation(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -449,7 +445,7 @@ func _test_shield_activation(context: BattleContext, results: Array[Dictionary])
 		"shield_events": shield_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_custom_stat_bonuses(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -475,7 +471,7 @@ func _test_custom_stat_bonuses(context: BattleContext, results: Array[Dictionary
 		"custom_stat_events": custom_stat_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_event_creation_edge_cases(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -502,7 +498,7 @@ func _test_event_creation_edge_cases(context: BattleContext, results: Array[Dict
 		"event_count_unchanged": final_event_count == initial_event_count
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 # Delegation tests
@@ -529,7 +525,7 @@ func _test_damage_to_random_enemy(context: BattleContext, results: Array[Diction
 		"damage_events_created": damage_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_ally_bonuses_delegation(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -559,7 +555,7 @@ func _test_ally_bonuses_delegation(context: BattleContext, results: Array[Dictio
 		"attack_events": attack_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_damage_all_enemies(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -583,10 +579,13 @@ func _test_damage_all_enemies(context: BattleContext, results: Array[Dictionary]
 		"damage_events": damage_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_bonuses_including_self(context: BattleContext, results: Array[Dictionary]) -> int:
+	# Clear any events from previous tests
+	context.unresolved_events.clear()
+	
 	var damage_event = BattleContext.DamageEvent.new(5, 1, true)
 	var unit = UnitContext.create(1, true, context, damage_event, core.Tempus.PRE)
 	
@@ -609,6 +608,9 @@ func _test_bonuses_including_self(context: BattleContext, results: Array[Diction
 	
 	var success = health_events == 3 and attack_events == 3 and self_events == 2  # All 3 allies + self gets both bonuses
 	
+	# Debug output (for development)
+	# _update_status("bonuses_including_self: health=%d, attack=%d, self=%d (expect: 3,3,2)" % [health_events, attack_events, self_events])
+	
 	results.append({
 		"test_name": "bonuses_including_self",
 		"success": success,
@@ -617,7 +619,7 @@ func _test_bonuses_including_self(context: BattleContext, results: Array[Diction
 		"self_events": self_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_delegation_edge_cases(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -644,7 +646,7 @@ func _test_delegation_edge_cases(context: BattleContext, results: Array[Dictiona
 		"handled_empty_context": no_crash_and_no_events
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 # Utility and helper method tests
@@ -656,16 +658,17 @@ func _test_targeting_helpers(context: BattleContext, results: Array[Dictionary])
 	var target_unit = AbilityHelper.get_target_unit(unit)
 	
 	var combat_event = BattleContext.CombatEvent.new(1, 0, true)
-	unit._reset_and_initialize(1, true, context, combat_event, core.Tempus.PRE)
+	# Create new context for combat event since we can't reset
+	var combat_unit = UnitContext.create(1, true, context, combat_event, core.Tempus.PRE)
 	
-	var is_from_unit = AbilityHelper.is_event_from_unit(unit)
-	var attacker_unit = AbilityHelper.get_attacker_unit(unit)
+	var is_from_unit = AbilityHelper.is_event_from_unit(combat_unit)
+	var attacker_unit = AbilityHelper.get_attacker_unit(combat_unit)
 	
 	var success = (
 		is_targeting and 
-		target_unit != null and target_unit.unit_name == "Allied2" and
+		target_unit != null and target_unit.card_info.get("name", "") == "Allied2" and
 		is_from_unit and 
-		attacker_unit != null and attacker_unit.unit_name == "Allied2"
+		attacker_unit != null and attacker_unit.card_info.get("name", "") == "Allied2"
 	)
 	
 	results.append({
@@ -677,7 +680,7 @@ func _test_targeting_helpers(context: BattleContext, results: Array[Dictionary])
 		"attacker_unit_found": attacker_unit != null
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_unit_retrieval(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -685,14 +688,14 @@ func _test_unit_retrieval(context: BattleContext, results: Array[Dictionary]) ->
 	var unit = UnitContext.create(1, true, context, damage_event, core.Tempus.PRE)
 	
 	var target_unit = AbilityHelper.get_target_unit(unit)
-	var target_is_enemy = target_unit != null and target_unit.unit_name == "Enemy1"
+	var target_is_enemy = target_unit != null and target_unit.card_info.get("name", "") == "Enemy1"
 	
-	# Test with non-targeting event
+	# Test with non-targeting event - create new context
 	var start_turn_event = BattleContext.StartOfTurnEvent.new()
-	unit._reset_and_initialize(1, true, context, start_turn_event, core.Tempus.POST)
+	var turn_unit = UnitContext.create(1, true, context, start_turn_event, core.Tempus.POST)
 	
-	var no_target_for_turn_event = AbilityHelper.get_target_unit(unit) == null
-	var no_attacker_for_turn_event = AbilityHelper.get_attacker_unit(unit) == null
+	var no_target_for_turn_event = AbilityHelper.get_target_unit(turn_unit) == null
+	var no_attacker_for_turn_event = AbilityHelper.get_attacker_unit(turn_unit) == null
 	
 	var success = target_is_enemy and no_target_for_turn_event and no_attacker_for_turn_event
 	
@@ -704,7 +707,7 @@ func _test_unit_retrieval(context: BattleContext, results: Array[Dictionary]) ->
 		"no_attacker_for_turn_event": no_attacker_for_turn_event
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_condition_checking(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -730,8 +733,8 @@ func _test_condition_checking(context: BattleContext, results: Array[Dictionary]
 		"thresholds_work": is_not_high_health and is_not_low_health
 	})
 	
-	UnitContext.release(low_health_unit)
-	UnitContext.release(high_health_unit)
+	# No cleanup needed #low_health_unit)
+	# No cleanup needed #high_health_unit)
 	
 	return 1 if success else 0
 
@@ -742,9 +745,10 @@ func _test_event_data_extraction(context: BattleContext, results: Array[Dictiona
 	var damage_amount = AbilityHelper.get_damage_from_event(unit)
 	
 	var stat_event = BattleContext.StatChangeEvent.new(Battle.UNIT_HEALTH, 1, true, 3, 13)
-	unit._reset_and_initialize(1, true, context, stat_event, core.Tempus.PRE)
+	# Create new context for stat event
+	var stat_unit = UnitContext.create(1, true, context, stat_event, core.Tempus.PRE)
 	
-	var stat_change = AbilityHelper.get_stat_change_from_event(unit)
+	var stat_change = AbilityHelper.get_stat_change_from_event(stat_unit)
 	
 	var success = (
 		damage_amount == 7 and
@@ -760,7 +764,7 @@ func _test_event_data_extraction(context: BattleContext, results: Array[Dictiona
 		"stat_change_keys": stat_change.keys()
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_ability_optimization(results: Array[Dictionary]) -> int:
@@ -814,7 +818,7 @@ func _test_counting_with_conditions(context: BattleContext, results: Array[Dicti
 		"high_attack_enemies": high_attack_enemies
 	})
 	
-	UnitContext.release(unit)
+	# No cleanup needed
 	return 1 if success else 0
 
 func _test_trigger_condition_checking(context: BattleContext, results: Array[Dictionary]) -> int:
@@ -838,6 +842,9 @@ func _test_trigger_condition_checking(context: BattleContext, results: Array[Dic
 	
 	var success = death_trigger and damage_trigger and turn_trigger and unknown_trigger
 	
+	# Debug output (for development)
+	# _update_status("trigger_condition_checking: death=%s, damage=%s, turn=%s, unknown=%s" % [death_trigger, damage_trigger, turn_trigger, unknown_trigger])
+	
 	results.append({
 		"test_name": "trigger_condition_checking",
 		"success": success,
@@ -847,9 +854,7 @@ func _test_trigger_condition_checking(context: BattleContext, results: Array[Dic
 		"handles_unknown": unknown_trigger
 	})
 	
-	UnitContext.release(death_unit)
-	UnitContext.release(damage_unit)
-	UnitContext.release(turn_unit)
+	# No cleanup needed
 	
 	return 1 if success else 0
 

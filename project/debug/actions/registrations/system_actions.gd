@@ -178,9 +178,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	var unit_context_test: UnitContextTestAction = UnitContextTestAction.new()
 	registry.register_action(unit_context_test)
 
-	var unit_context_performance: UnitContextPerformanceAction = UnitContextPerformanceAction.new()
-	registry.register_action(unit_context_performance)
-
 	# Register AbilityHelper test actions
 	var ability_helper_test: AbilityHelperTestAction = AbilityHelperTestAction.new()
 	registry.register_action(ability_helper_test)

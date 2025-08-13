@@ -2,8 +2,10 @@ class_name BattleRulesTestAction
 extends DebugAction
 
 func _init() -> void:
-	super._init()
-	action_name = "system.battle.rules_test"
+	super("system.battle.rules_test", _execute_action_logic)
+	set_category("System")
+	set_group("Battle System")
+	set_description("Unit tests for BattleRules static methods")
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
@@ -48,21 +50,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	}
 	
 	if tests_passed == total_tests and coverage_percentage >= 90.0:
-		return DebugAction.Result.new_success(
-			"All BattleRules tests passed with %.1f%% coverage" % coverage_percentage,
-			"BATTLE_RULES_TESTS_COMPLETE",
-			test_data,
-			duration,
-			action_name
-		)
+		return DebugAction.Result.new_success({
+			"message": "All BattleRules tests passed with %.1f%% coverage" % coverage_percentage,
+			"tests_passed": tests_passed,
+			"total_tests": total_tests,
+			"coverage_percentage": coverage_percentage,
+			"test_data": test_data,
+			"duration_ms": duration
+		})
 	else:
 		return DebugAction.Result.new_failure(
 			"BattleRules tests failed: %d/%d passed (%.1f%% coverage)" % [tests_passed, total_tests, coverage_percentage],
 			"BATTLE_RULES_TESTS_FAILED",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_data,
-			duration,
-			action_name
+			DebugAction.Result.ErrorCategory.VALIDATION
 		)
 
 func _create_mock_battle_context() -> BattleContext:
@@ -82,9 +82,11 @@ func _create_mock_battle_context() -> BattleContext:
 
 func _create_mock_unit(name: String, health: int, attack: int) -> UnitData:
 	var unit = UnitData.new()
-	unit.unit_name = name
+	unit.card_info = {"name": name, "id": name.hash()}
 	unit.current_health = health
 	unit.current_attack = attack
+	unit.max_health = health + 5
+	unit.max_attack = attack + 2
 	return unit
 
 # Position and targeting rule tests

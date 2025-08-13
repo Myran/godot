@@ -2,8 +2,10 @@ class_name BattleRulesPerformanceAction
 extends DebugAction
 
 func _init() -> void:
-	super._init()
-	action_name = "system.battle.rules_performance"
+	super("system.battle.rules_performance", _execute_action_logic)
+	set_category("System")
+	set_group("Battle System")
+	set_description("Performance benchmarks for BattleRules static methods")
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var start_time: int = Time.get_ticks_msec()
@@ -100,21 +102,17 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var performance_acceptable = _validate_performance_thresholds(benchmark_results, acceptable_thresholds)
 	
 	if performance_acceptable:
-		return DebugAction.Result.new_success(
-			"BattleRules performance benchmark passed all thresholds",
-			"BATTLE_RULES_PERFORMANCE_VALIDATED",
-			result_data,
-			total_duration,
-			action_name
-		)
+		return DebugAction.Result.new_success({
+			"message": "BattleRules performance benchmark passed all thresholds",
+			"benchmark_results": benchmark_results,
+			"performance_analysis": performance_analysis,
+			"benchmark_duration_ms": total_duration
+		})
 	else:
 		return DebugAction.Result.new_failure(
 			"BattleRules performance benchmark exceeded acceptable thresholds",
 			"BATTLE_RULES_PERFORMANCE_THRESHOLD_EXCEEDED", 
-			DebugAction.Result.ErrorCategory.PERFORMANCE,
-			result_data,
-			total_duration,
-			action_name
+			DebugAction.Result.ErrorCategory.PERFORMANCE
 		)
 
 func _create_battle_context(allied_units: int, enemy_units: int) -> BattleContext:
