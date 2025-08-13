@@ -1,0 +1,7 @@
+{
+  "description": "BattleRules class unit tests - validates static method functionality and performance",
+  "actions": [
+    "system.battle.rules_test",
+    "system.battle.rules_performance"
+  ]
+}

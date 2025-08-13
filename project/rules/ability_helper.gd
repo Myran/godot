@@ -1,0 +1,261 @@
+class_name AbilityHelper extends RefCounted
+
+# Pure ability utilities - focused on ability-specific operations
+# All methods are STATIC to ensure consistent separation of concerns
+# Delegates complex operations to BattleRules for clean architecture
+
+# ===== EVENT TYPE + PHASE CHECKING (ABILITY-SPECIFIC) =====
+
+static func is_death_post(unit: UnitContext) -> bool:
+	"""Check if event is a death event in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.DeathEvent
+
+static func is_damage_pre(unit: UnitContext) -> bool:
+	"""Check if event is a damage event in PRE phase"""
+	return unit.phase == core.Tempus.PRE and unit.event is BattleContext.DamageEvent
+
+static func is_damage_post(unit: UnitContext) -> bool:
+	"""Check if event is a damage event in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.DamageEvent
+
+static func is_combat_pre(unit: UnitContext) -> bool:
+	"""Check if event is a combat event in PRE phase"""
+	return unit.phase == core.Tempus.PRE and unit.event is BattleContext.CombatEvent
+
+static func is_combat_post(unit: UnitContext) -> bool:
+	"""Check if event is a combat event in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.CombatEvent
+
+static func is_stat_change_pre(unit: UnitContext) -> bool:
+	"""Check if event is a stat change event in PRE phase"""
+	return unit.phase == core.Tempus.PRE and unit.event is BattleContext.StatChangeEvent
+
+static func is_stat_change_post(unit: UnitContext) -> bool:
+	"""Check if event is a stat change event in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.StatChangeEvent
+
+static func is_shield_event_pre(unit: UnitContext) -> bool:
+	"""Check if event is a shield event in PRE phase"""
+	return unit.phase == core.Tempus.PRE and unit.event is BattleContext.ShieldEvent
+
+static func is_shield_event_post(unit: UnitContext) -> bool:
+	"""Check if event is a shield event in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.ShieldEvent
+
+static func is_start_of_turn_post(unit: UnitContext) -> bool:
+	"""Check if event is start of turn in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.StartOfTurnEvent
+
+static func is_end_of_turn_post(unit: UnitContext) -> bool:
+	"""Check if event is end of turn in POST phase"""
+	return unit.phase == core.Tempus.POST and unit.event is BattleContext.EndOfTurnEvent
+
+# Note: BattleStartEvent doesn't exist in current BattleContext, so we'll add it when needed
+# static func is_battle_start_post(unit: UnitContext) -> bool:
+#	"""Check if event is a battle start event in POST phase"""
+#	return unit.phase == core.Tempus.POST and unit.event is BattleContext.BattleStartEvent
+
+# ===== SINGLE-UNIT EVENT CREATION (ABILITY-SPECIFIC) =====
+
+static func grant_health_bonus(unit: UnitContext, bonus: int) -> void:
+	"""Grant health bonus to the unit"""
+	if bonus <= 0:
+		return
+	
+	var event = BattleContext.StatChangeEvent.new(Battle.UNIT_HEALTH, unit.position, unit.is_allied, bonus)
+	unit.battle_context.add_event(event)
+
+static func grant_attack_bonus(unit: UnitContext, bonus: int) -> void:
+	"""Grant attack bonus to the unit"""
+	if bonus <= 0:
+		return
+	
+	var event = BattleContext.StatChangeEvent.new(Battle.UNIT_ATTACK, unit.position, unit.is_allied, bonus)
+	unit.battle_context.add_event(event)
+
+static func deal_damage_to_unit(unit: UnitContext, damage: int) -> void:
+	"""Deal damage to the unit"""
+	if damage <= 0:
+		return
+	
+	var event = BattleContext.DamageEvent.new(damage, unit.position, unit.is_allied)
+	unit.battle_context.add_event(event)
+
+static func activate_shield(unit: UnitContext, is_active: bool = true) -> void:
+	"""Activate or deactivate shield for the unit"""
+	var event = BattleContext.ShieldEvent.new(unit.position, unit.is_allied, is_active)
+	unit.battle_context.add_event(event)
+
+static func grant_stat_bonus(unit: UnitContext, stat_name: StringName, bonus: int) -> void:
+	"""Grant bonus to any stat type"""
+	if bonus <= 0:
+		return
+	
+	var event = BattleContext.StatChangeEvent.new(stat_name, unit.position, unit.is_allied, bonus)
+	unit.battle_context.add_event(event)
+
+# ===== COMPLEX ABILITY OPERATIONS (DELEGATES TO BATTLE RULES) =====
+
+static func deal_damage_to_random_enemy(unit: UnitContext, damage: int, count: int = 1) -> void:
+	"""Deal damage to random enemies (delegates to BattleRules)"""
+	BattleRules.deal_damage_to_random_enemies(unit.battle_context, unit.is_allied, damage, count)
+
+static func deal_damage_to_random_enemies(unit: UnitContext, damage: int, count: int) -> void:
+	"""Deal damage to multiple random enemies (delegates to BattleRules)"""
+	BattleRules.deal_damage_to_random_enemies(unit.battle_context, unit.is_allied, damage, count)
+
+static func grant_ally_bonuses(unit: UnitContext, health_bonus: int, attack_bonus: int) -> void:
+	"""Grant bonuses to all allies except self (delegates to BattleRules)"""
+	BattleRules.grant_bonuses_to_all_allies(unit.battle_context, unit.position, unit.is_allied, health_bonus, attack_bonus)
+
+static func deal_damage_to_all_enemies(unit: UnitContext, damage: int) -> void:
+	"""Deal damage to all enemy units (delegates to BattleRules)"""
+	var enemy_positions = unit.get_enemy_positions()
+	BattleRules.deal_damage_to_random_enemies(unit.battle_context, unit.is_allied, damage, enemy_positions.size())
+
+static func grant_bonuses_to_all_allies_including_self(unit: UnitContext, health_bonus: int, attack_bonus: int) -> void:
+	"""Grant bonuses to all allies including self"""
+	# Grant to self first
+	if health_bonus > 0:
+		grant_health_bonus(unit, health_bonus)
+	if attack_bonus > 0:
+		grant_attack_bonus(unit, attack_bonus)
+	
+	# Then to other allies
+	grant_ally_bonuses(unit, health_bonus, attack_bonus)
+
+# ===== ABILITY SYSTEM OPTIMIZATION =====
+
+static func should_process_event(ability: Ability, event: Context.Event) -> bool:
+	"""Check if ability should process this event type for performance optimization"""
+	if not ability:
+		return false
+	
+	var handled_event_classes = ability.get_handled_event_classes()
+	if handled_event_classes.is_empty():
+		return true  # Process all events if no filtering specified
+	
+	# Check if event is instance of any handled class
+	for event_class in handled_event_classes:
+		if is_instance_of(event, event_class):
+			return true
+	
+	return false
+
+# ===== TARGETING HELPERS =====
+
+static func is_event_targeting_unit(unit: UnitContext) -> bool:
+	"""Check if current event is targeting this specific unit (delegates to UnitContext)"""
+	return unit.is_event_targeting_this_unit()
+
+static func is_event_from_unit(unit: UnitContext) -> bool:
+	"""Check if current event originated from this specific unit (delegates to UnitContext)"""
+	return unit.is_event_from_this_unit()
+
+static func get_target_unit(unit: UnitContext) -> UnitData:
+	"""Get the unit being targeted by the current event, if applicable"""
+	if unit.event is BattleContext.DamageEvent:
+		var damage_event = unit.event as BattleContext.DamageEvent
+		return unit.battle_context.get_unit_at_position(damage_event.target_position, damage_event.is_allied_side)
+	elif unit.event is BattleContext.StatChangeEvent:
+		var stat_event = unit.event as BattleContext.StatChangeEvent
+		return unit.battle_context.get_unit_at_position(stat_event.target_position, stat_event.is_allied_side)
+	elif unit.event is BattleContext.ShieldEvent:
+		var shield_event = unit.event as BattleContext.ShieldEvent
+		return unit.battle_context.get_unit_at_position(shield_event.target_position, shield_event.is_allied_side)
+	
+	return null
+
+static func get_attacker_unit(unit: UnitContext) -> UnitData:
+	"""Get the unit that initiated the current combat event, if applicable"""
+	if unit.event is BattleContext.CombatEvent:
+		var combat_event = unit.event as BattleContext.CombatEvent
+		return unit.battle_context.get_unit_at_position(combat_event.attacker_position, combat_event.is_allied_attack)
+	
+	return null
+
+# ===== CONDITION CHECKING HELPERS =====
+
+static func is_unit_at_low_health(unit: UnitContext, threshold_percent: float = 0.25) -> bool:
+	"""Check if the unit is at low health (default: 25% or below)"""
+	var unit_data = unit.get_self_unit()
+	if not unit_data:
+		return false
+	
+	var health_ratio = float(unit_data.current_health) / float(unit_data.max_health)
+	return health_ratio <= threshold_percent
+
+static func is_unit_at_high_health(unit: UnitContext, threshold_percent: float = 0.75) -> bool:
+	"""Check if the unit is at high health (default: 75% or above)"""
+	var unit_data = unit.get_self_unit()
+	if not unit_data:
+		return false
+	
+	var health_ratio = float(unit_data.current_health) / float(unit_data.max_health)
+	return health_ratio >= threshold_percent
+
+static func count_allies_with_condition(unit: UnitContext, condition_func: Callable) -> int:
+	"""Count allied units that meet a specific condition"""
+	var count = 0
+	var ally_positions = unit.get_ally_positions()
+	
+	for pos in ally_positions:
+		var ally_unit = unit.battle_context.get_unit_at_position(pos, unit.is_allied)
+		if ally_unit and condition_func.call(ally_unit):
+			count += 1
+	
+	return count
+
+static func count_enemies_with_condition(unit: UnitContext, condition_func: Callable) -> int:
+	"""Count enemy units that meet a specific condition"""
+	var count = 0
+	var enemy_positions = unit.get_enemy_positions()
+	
+	for pos in enemy_positions:
+		var enemy_unit = unit.battle_context.get_unit_at_position(pos, not unit.is_allied)
+		if enemy_unit and condition_func.call(enemy_unit):
+			count += 1
+	
+	return count
+
+# ===== UTILITY METHODS =====
+
+static func get_damage_from_event(unit: UnitContext) -> int:
+	"""Extract damage amount from damage event, if applicable"""
+	if unit.event is BattleContext.DamageEvent:
+		var damage_event = unit.event as BattleContext.DamageEvent
+		return damage_event.damage_amount
+	
+	return 0
+
+static func get_stat_change_from_event(unit: UnitContext) -> Dictionary:
+	"""Extract stat change information from stat change event"""
+	if unit.event is BattleContext.StatChangeEvent:
+		var stat_event = unit.event as BattleContext.StatChangeEvent
+		return {
+			"stat_name": stat_event.stat_name,
+			"change_value": stat_event.change_value,
+			"new_value": stat_event.new_stat_value
+		}
+	
+	return {}
+
+static func is_ability_trigger_condition_met(unit: UnitContext, trigger_type: StringName) -> bool:
+	"""Check if general ability trigger conditions are met"""
+	match trigger_type:
+		"on_death":
+			return is_death_post(unit) and is_event_targeting_unit(unit)
+		"on_take_damage":
+			return is_damage_post(unit) and is_event_targeting_unit(unit)
+		"on_deal_damage":
+			return is_damage_post(unit) and is_event_from_unit(unit)
+		"on_combat_start":
+			return is_combat_pre(unit) and is_event_from_unit(unit)
+		"on_combat_end":
+			return is_combat_post(unit) and is_event_from_unit(unit)
+		"on_turn_start":
+			return is_start_of_turn_post(unit)
+		"on_turn_end":
+			return is_end_of_turn_post(unit)
+		_:
+			return false
