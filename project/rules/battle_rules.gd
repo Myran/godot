@@ -44,7 +44,7 @@ static func deal_damage_to_random_enemies(
 		return
 
 	for i in range(min(count, enemy_positions.size())):
-		var target_pos = enemy_positions[randi() % enemy_positions.size()]
+		var target_pos = enemy_positions[rng.seeded_rng.next() % enemy_positions.size()]
 		var event = BattleContext.DamageEvent.new(damage, target_pos, not source_allied)
 		context.add_event(event)
 
@@ -78,7 +78,7 @@ static func get_random_enemy_position(context: BattleContext, source_allied: boo
 	var enemy_positions = get_enemy_positions(context, source_allied)
 	if enemy_positions.is_empty():
 		return Battle.NO_UNIT_FOUND
-	return enemy_positions[randi() % enemy_positions.size()]
+	return enemy_positions[rng.seeded_rng.next() % enemy_positions.size()]
 
 
 static func get_random_ally_position(
@@ -89,7 +89,7 @@ static func get_random_ally_position(
 		ally_positions = ally_positions.filter(func(pos): return pos != exclude_self_pos)
 	if ally_positions.is_empty():
 		return Battle.NO_UNIT_FOUND
-	return ally_positions[randi() % ally_positions.size()]
+	return ally_positions[rng.seeded_rng.next() % ally_positions.size()]
 
 
 static func is_position_valid(context: BattleContext, position: int, is_allied: bool) -> bool:
