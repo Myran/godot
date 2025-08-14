@@ -43,4 +43,4 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 
 
 func count_evil_units_in_lineup(lineup: Dictionary[int, Card], current_unit: Block) -> int:
-	return AbilityHelper.count_units_with_tribe_in_lineup(lineup, GameConstants.UnitTribes.EVIL, current_unit)
+	return AbilityHelper.count_units_with_tags_in_lineup(lineup, [GameConstants.UnitTags.EVIL], current_unit)

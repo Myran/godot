@@ -39,22 +39,6 @@ class UnitTags:
 	const SOLDIER: String = "soldier"
 
 
-class UnitTribes:
-	"""
-	Unit Tribes - Primary classification for units (single value per unit).
-	
-	Complete list of all tribes found in game data:
-	- evil: Found in 7 units
-	- forest: Found in 7 units
-	- magic: Found in 5 units  
-	- soldier: Found in 8 units (most common)
-	
-	Note: 3 units have no tribe (empty string)
-	"""
-	const EVIL: String = "evil"
-	const FOREST: String = "forest"
-	const MAGIC: String = "magic"
-	const SOLDIER: String = "soldier"
 
 
 class BlockSystem:

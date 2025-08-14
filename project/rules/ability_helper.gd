@@ -282,6 +282,40 @@ static func count_enemies_with_condition(unit: BattleAbilityEvent, condition_fun
 	return count
 
 
+# ===== TAG RETRIEVAL UTILITIES =====
+
+
+static func get_all_tags_from_card(card: Card) -> Array[String]:
+	"""
+	Get all tags from a card, including both explicit tags and tribe.
+	This is the canonical way to retrieve all classification tags for a unit.
+	
+	Returns:
+		Array[String]: All tags including tribe (empty array if no tags/tribe)
+	"""
+	if not card or not card.unit_info or not card.unit_info.card_info:
+		return []
+	
+	var card_tags: String = card.unit_info.card_info.get("tags", "")
+	var card_tribe: String = card.unit_info.card_info.get("tribe", "")
+	
+	var all_tags: Array[String] = []
+	
+	# Add explicit tags
+	if not card_tags.is_empty():
+		var tag_list: PackedStringArray = card_tags.split(",")
+		for tag: String in tag_list:
+			var trimmed_tag: String = tag.strip_edges()
+			if not trimmed_tag.is_empty():
+				all_tags.append(trimmed_tag)
+	
+	# Add tribe as a tag
+	if not card_tribe.is_empty():
+		all_tags.append(card_tribe)
+	
+	return all_tags
+
+
 # ===== TAG-BASED UNIT COUNTING =====
 
 
@@ -336,39 +370,25 @@ static func count_units_with_all_tags_in_lineup(lineup: Dictionary[int, Card], t
 
 
 static func has_any_tag(card: Card, tags: Array[String]) -> bool:
-	"""Check if card has ANY of the specified tags"""
-	if not card or not card.unit_info or not card.unit_info.card_info:
-		return false
-	
-	var card_tags: String = card.unit_info.card_info.get("tags", "")
-	if card_tags.is_empty():
-		return false
-	
-	var card_tag_list: PackedStringArray = card_tags.split(",")
+	"""Check if card has ANY of the specified tags (includes both tags and tribe)"""
+	var all_card_tags: Array[String] = get_all_tags_from_card(card)
 	
 	for tag: String in tags:
-		for card_tag: String in card_tag_list:
-			if card_tag.strip_edges() == tag:
+		for card_tag: String in all_card_tags:
+			if card_tag == tag:
 				return true
 	
 	return false
 
 
 static func has_all_tags(card: Card, tags: Array[String]) -> bool:
-	"""Check if card has ALL of the specified tags"""
-	if not card or not card.unit_info or not card.unit_info.card_info:
-		return false
-	
-	var card_tags: String = card.unit_info.card_info.get("tags", "")
-	if card_tags.is_empty():
-		return false
-	
-	var card_tag_list: PackedStringArray = card_tags.split(",")
+	"""Check if card has ALL of the specified tags (includes both tags and tribe)"""
+	var all_card_tags: Array[String] = get_all_tags_from_card(card)
 	
 	for tag: String in tags:
 		var found: bool = false
-		for card_tag: String in card_tag_list:
-			if card_tag.strip_edges() == tag:
+		for card_tag: String in all_card_tags:
+			if card_tag == tag:
 				found = true
 				break
 		if not found:
@@ -377,38 +397,6 @@ static func has_all_tags(card: Card, tags: Array[String]) -> bool:
 	return true
 
 
-static func count_units_with_tribe_in_lineup(lineup: Dictionary[int, Card], tribe: String, exclude_unit: Block = null) -> int:
-	"""
-	Count units in lineup that have the specified tribe.
-	
-	Args:
-		lineup: Dictionary of position -> Card
-		tribe: Tribe string to match
-		exclude_unit: Optional unit to exclude from count (typically self)
-	
-	Returns:
-		int: Count of units with matching tribe
-	"""
-	var count: int = 0
-	
-	for unit_position: int in lineup:
-		var card: Card = lineup[unit_position]
-		if card == exclude_unit:
-			continue
-			
-		if has_tribe(card, tribe):
-			count += 1
-	
-	return count
-
-
-static func has_tribe(card: Card, tribe: String) -> bool:
-	"""Check if card has the specified tribe"""
-	if not card or not card.unit_info or not card.unit_info.card_info:
-		return false
-	
-	var card_tribe: String = card.unit_info.card_info.get("tribe", "")
-	return card_tribe.match("*" + tribe + "*")
 
 
 # ===== UTILITY METHODS =====
