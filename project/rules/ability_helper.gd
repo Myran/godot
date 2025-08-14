@@ -282,6 +282,125 @@ static func count_enemies_with_condition(unit: BattleAbilityEvent, condition_fun
 	return count
 
 
+# ===== TAG-BASED UNIT COUNTING =====
+
+
+static func count_units_with_tags_in_lineup(lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null) -> int:
+	"""
+	Count units in lineup that have ANY of the specified tags.
+	
+	Args:
+		lineup: Dictionary of position -> Card
+		tags: Array of tag strings to match (OR logic - unit needs ANY tag)
+		exclude_unit: Optional unit to exclude from count (typically self)
+	
+	Returns:
+		int: Count of units with matching tags
+	"""
+	var count: int = 0
+	
+	for unit_position: int in lineup:
+		var card: Card = lineup[unit_position]
+		if card == exclude_unit:
+			continue
+			
+		if has_any_tag(card, tags):
+			count += 1
+	
+	return count
+
+
+static func count_units_with_all_tags_in_lineup(lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null) -> int:
+	"""
+	Count units in lineup that have ALL of the specified tags.
+	
+	Args:
+		lineup: Dictionary of position -> Card
+		tags: Array of tag strings to match (AND logic - unit needs ALL tags)
+		exclude_unit: Optional unit to exclude from count (typically self)
+	
+	Returns:
+		int: Count of units with all matching tags
+	"""
+	var count: int = 0
+	
+	for unit_position: int in lineup:
+		var card: Card = lineup[unit_position]
+		if card == exclude_unit:
+			continue
+			
+		if has_all_tags(card, tags):
+			count += 1
+	
+	return count
+
+
+static func has_any_tag(card: Card, tags: Array[String]) -> bool:
+	"""Check if card has ANY of the specified tags"""
+	if not card or not card.unit_info or not card.unit_info.card_info:
+		return false
+	
+	var card_tags: String = card.unit_info.card_info.get("tags", "")
+	if card_tags.is_empty():
+		return false
+	
+	for tag: String in tags:
+		if card_tags.match("*" + tag + "*"):
+			return true
+	
+	return false
+
+
+static func has_all_tags(card: Card, tags: Array[String]) -> bool:
+	"""Check if card has ALL of the specified tags"""
+	if not card or not card.unit_info or not card.unit_info.card_info:
+		return false
+	
+	var card_tags: String = card.unit_info.card_info.get("tags", "")
+	if card_tags.is_empty():
+		return false
+	
+	for tag: String in tags:
+		if not card_tags.match("*" + tag + "*"):
+			return false
+	
+	return true
+
+
+static func count_units_with_tribe_in_lineup(lineup: Dictionary[int, Card], tribe: String, exclude_unit: Block = null) -> int:
+	"""
+	Count units in lineup that have the specified tribe.
+	
+	Args:
+		lineup: Dictionary of position -> Card
+		tribe: Tribe string to match
+		exclude_unit: Optional unit to exclude from count (typically self)
+	
+	Returns:
+		int: Count of units with matching tribe
+	"""
+	var count: int = 0
+	
+	for unit_position: int in lineup:
+		var card: Card = lineup[unit_position]
+		if card == exclude_unit:
+			continue
+			
+		if has_tribe(card, tribe):
+			count += 1
+	
+	return count
+
+
+static func has_tribe(card: Card, tribe: String) -> bool:
+	"""Check if card has the specified tribe"""
+	if not card or not card.unit_info or not card.unit_info.card_info:
+		return false
+	
+	var card_tribe: String = card.unit_info.card_info.get("tribe", "")
+	return card_tribe.match("*" + tribe + "*")
+
+
 # ===== UTILITY METHODS =====
 
 
