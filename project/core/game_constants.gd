@@ -15,6 +15,48 @@ class CardSystem:
 	const DEFAULT_UNIT_LEVEL: int = 1
 
 
+# ================================
+# UNIT CLASSIFICATION CONSTANTS
+# ================================
+
+
+class UnitTags:
+	"""
+	Unit Tags - Used to categorize units with multiple possible classifications.
+	Units can have multiple tags (comma-separated in data).
+	
+	Complete list of all tags found in game data:
+	- evil: Found in 3 units (knight_red, monk, mooseman)
+	- forest: Found in 3 units (knight_green, monk, swordman)
+	- knight: Found in 6 units (knight_blue, knight_green, knight_red, monk, swordman, knight_gold)
+	- soldier: Found in 2 units (monk, archer)
+	
+	Note: 21 units have no tags (empty string)
+	"""
+	const EVIL: String = "evil"
+	const FOREST: String = "forest"
+	const KNIGHT: String = "knight"
+	const SOLDIER: String = "soldier"
+
+
+class UnitTribes:
+	"""
+	Unit Tribes - Primary classification for units (single value per unit).
+	
+	Complete list of all tribes found in game data:
+	- evil: Found in 7 units
+	- forest: Found in 7 units
+	- magic: Found in 5 units  
+	- soldier: Found in 8 units (most common)
+	
+	Note: 3 units have no tribe (empty string)
+	"""
+	const EVIL: String = "evil"
+	const FOREST: String = "forest"
+	const MAGIC: String = "magic"
+	const SOLDIER: String = "soldier"
+
+
 class BlockSystem:
 	const TYPE_ZERO: int = 0
 	const UPGRADE_LEVEL_FOUR: int = 4

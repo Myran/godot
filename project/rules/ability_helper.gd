@@ -344,9 +344,12 @@ static func has_any_tag(card: Card, tags: Array[String]) -> bool:
 	if card_tags.is_empty():
 		return false
 	
+	var card_tag_list: PackedStringArray = card_tags.split(",")
+	
 	for tag: String in tags:
-		if card_tags.match("*" + tag + "*"):
-			return true
+		for card_tag: String in card_tag_list:
+			if card_tag.strip_edges() == tag:
+				return true
 	
 	return false
 
@@ -360,8 +363,15 @@ static func has_all_tags(card: Card, tags: Array[String]) -> bool:
 	if card_tags.is_empty():
 		return false
 	
+	var card_tag_list: PackedStringArray = card_tags.split(",")
+	
 	for tag: String in tags:
-		if not card_tags.match("*" + tag + "*"):
+		var found: bool = false
+		for card_tag: String in card_tag_list:
+			if card_tag.strip_edges() == tag:
+				found = true
+				break
+		if not found:
 			return false
 	
 	return true
