@@ -13,15 +13,9 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(unit: UnitContext) -> void:
+func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
 
 
-func handle_draft_event(
-	_phase: core.Tempus,
-	_unit_pos: int,
-	_unit: Block,
-	_draft_context: DraftContext,
-	_event: core.CoreEvent
-) -> void:
+func handle_draft_event(event: DraftAbilityEvent) -> void:
 	print("Draft action processing")

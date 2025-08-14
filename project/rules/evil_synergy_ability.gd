@@ -15,37 +15,31 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(unit: UnitContext) -> void:
+func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
 
 
-func handle_draft_event(
-	phase: core.Tempus,
-	_unit_position: int,
-	unit: Block,
-	draft_context: DraftContext,
-	draft_event: core.CoreEvent
-) -> void:
-	if phase != core.Tempus.POST:
+func handle_draft_event(event: DraftAbilityEvent) -> void:
+	if event.phase != core.Tempus.POST:
 		return
 
-	if not draft_event is core.LineupAddCardFromDraftEvent:
+	if not event.event is core.LineupAddCardFromDraftEvent:
 		return
 
-	var add_event: core.LineupAddCardFromDraftEvent = draft_event
+	var add_event: core.LineupAddCardFromDraftEvent = event.event
 	var added_card: Card = add_event.card
-	if added_card != unit:
+	if added_card != event.unit:
 		return
 
-	var evil_unit_count: int = count_evil_units_in_lineup(draft_context.lineup, unit)
+	var evil_unit_count: int = count_evil_units_in_lineup(event.draft_context.lineup, event.unit)
 	if evil_unit_count > 0:
 		var total_health_bonus: int = health_per_evil * evil_unit_count
 		var total_attack_bonus: int = attack_per_evil * evil_unit_count
-		var modified_card: Card = unit
+		var modified_card: Card = event.unit
 		var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
 			modified_card, total_health_bonus, total_attack_bonus
 		)
-		draft_context.add_event(stat_change_event)
+		event.draft_context.add_event(stat_change_event)
 
 
 func count_evil_units_in_lineup(lineup: Dictionary[int, Card], current_unit: Block) -> int:

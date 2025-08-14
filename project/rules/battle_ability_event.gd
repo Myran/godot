@@ -1,4 +1,4 @@
-class_name UnitContext extends RefCounted
+class_name BattleAbilityEvent extends RefCounted
 
 # Standalone context class encapsulating all unit-related battle event data
 # Simple instance-based implementation for clean, testable code
@@ -26,9 +26,9 @@ func _init(
 
 static func create(
 	pos: int, allied: bool, context: BattleContext, evt: Context.Event, ph: core.Tempus
-) -> UnitContext:
-	"""Factory method for creating UnitContext instances"""
-	return UnitContext.new(pos, allied, context, evt, ph)
+) -> BattleAbilityEvent:
+	"""Factory method for creating BattleAbilityEvent instances"""
+	return BattleAbilityEvent.new(pos, allied, context, evt, ph)
 
 
 # ===== INTELLIGENT TARGETING METHODS =====
