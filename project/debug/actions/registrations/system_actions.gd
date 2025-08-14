@@ -167,20 +167,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	)
 	registry.register_action(state_extractor_green_test)
 
-	# Register BattleRules test actions
-	var battle_rules_test: BattleRulesTestAction = BattleRulesTestAction.new()
-	registry.register_action(battle_rules_test)
-
-	var battle_rules_performance: BattleRulesPerformanceAction = BattleRulesPerformanceAction.new()
-	registry.register_action(battle_rules_performance)
-
-	# Register UnitContext test actions
-	var unit_context_test: UnitContextTestAction = UnitContextTestAction.new()
-	registry.register_action(unit_context_test)
-
-	# Register AbilityHelper test actions
-	var ability_helper_test: AbilityHelperTestAction = AbilityHelperTestAction.new()
-	registry.register_action(ability_helper_test)
 
 	registry.register_action(
 		(

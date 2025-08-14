@@ -1,7 +1,0 @@
-{
-  "description": "UnitContext class tests - validates functionality and object pooling performance",
-  "actions": [
-    "system.battle.unit_context_test",
-    "system.battle.unit_context_performance"
-  ]
-}

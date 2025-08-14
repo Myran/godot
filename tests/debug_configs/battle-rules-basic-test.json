@@ -1,6 +1,0 @@
-{
-  "description": "BattleRules basic unit test only",
-  "actions": [
-    "system.battle.rules_test"
-  ]
-}
