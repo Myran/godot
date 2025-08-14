@@ -54,10 +54,6 @@ func init_with_info(_card_info: Dictionary) -> void:
 			add_ability(_ab)
 
 	var ability: Ability
-	if card_info.id == str(1):
-		ability = DamageShieldAbility.new()
-		ability.persistence_type = Ability.PersistenceType.TEMPLATE
-		add_ability(ability)
 	if card_info.id == str(2):
 		ability = DeathTriggerHealthAbility.new(2)
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE

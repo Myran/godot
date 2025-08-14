@@ -289,18 +289,18 @@ static func get_all_tags_from_card(card: Card) -> Array[String]:
 	"""
 	Get all tags from a card, including both explicit tags and tribe.
 	This is the canonical way to retrieve all classification tags for a unit.
-	
+
 	Returns:
 		Array[String]: All tags including tribe (empty array if no tags/tribe)
 	"""
 	if not card or not card.unit_info or not card.unit_info.card_info:
 		return []
-	
+
 	var card_tags: String = card.unit_info.card_info.get("tags", "")
 	var card_tribe: String = card.unit_info.card_info.get("tribe", "")
-	
+
 	var all_tags: Array[String] = []
-	
+
 	# Add explicit tags
 	if not card_tags.is_empty():
 		var tag_list: PackedStringArray = card_tags.split(",")
@@ -308,83 +308,87 @@ static func get_all_tags_from_card(card: Card) -> Array[String]:
 			var trimmed_tag: String = tag.strip_edges()
 			if not trimmed_tag.is_empty():
 				all_tags.append(trimmed_tag)
-	
+
 	# Add tribe as a tag
 	if not card_tribe.is_empty():
 		all_tags.append(card_tribe)
-	
+
 	return all_tags
 
 
 # ===== TAG-BASED UNIT COUNTING =====
 
 
-static func count_units_with_tags_in_lineup(lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null) -> int:
+static func count_units_with_tags_in_lineup(
+	lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null
+) -> int:
 	"""
 	Count units in lineup that have ANY of the specified tags.
-	
+
 	Args:
 		lineup: Dictionary of position -> Card
 		tags: Array of tag strings to match (OR logic - unit needs ANY tag)
 		exclude_unit: Optional unit to exclude from count (typically self)
-	
+
 	Returns:
 		int: Count of units with matching tags
 	"""
 	var count: int = 0
-	
+
 	for unit_position: int in lineup:
 		var card: Card = lineup[unit_position]
 		if card == exclude_unit:
 			continue
-			
+
 		if has_any_tag(card, tags):
 			count += 1
-	
+
 	return count
 
 
-static func count_units_with_all_tags_in_lineup(lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null) -> int:
+static func count_units_with_all_tags_in_lineup(
+	lineup: Dictionary[int, Card], tags: Array[String], exclude_unit: Block = null
+) -> int:
 	"""
 	Count units in lineup that have ALL of the specified tags.
-	
+
 	Args:
 		lineup: Dictionary of position -> Card
 		tags: Array of tag strings to match (AND logic - unit needs ALL tags)
 		exclude_unit: Optional unit to exclude from count (typically self)
-	
+
 	Returns:
 		int: Count of units with all matching tags
 	"""
 	var count: int = 0
-	
+
 	for unit_position: int in lineup:
 		var card: Card = lineup[unit_position]
 		if card == exclude_unit:
 			continue
-			
+
 		if has_all_tags(card, tags):
 			count += 1
-	
+
 	return count
 
 
 static func has_any_tag(card: Card, tags: Array[String]) -> bool:
 	"""Check if card has ANY of the specified tags (includes both tags and tribe)"""
 	var all_card_tags: Array[String] = get_all_tags_from_card(card)
-	
+
 	for tag: String in tags:
 		for card_tag: String in all_card_tags:
 			if card_tag == tag:
 				return true
-	
+
 	return false
 
 
 static func has_all_tags(card: Card, tags: Array[String]) -> bool:
 	"""Check if card has ALL of the specified tags (includes both tags and tribe)"""
 	var all_card_tags: Array[String] = get_all_tags_from_card(card)
-	
+
 	for tag: String in tags:
 		var found: bool = false
 		for card_tag: String in all_card_tags:
@@ -393,10 +397,27 @@ static func has_all_tags(card: Card, tags: Array[String]) -> bool:
 				break
 		if not found:
 			return false
-	
+
 	return true
 
 
+# ===== DRAFT SYNERGY HELPERS =====
+
+
+static func apply_permanent_stat_bonus(
+	event: DraftAbilityEvent,
+	health_bonus: int,
+	attack_bonus: int
+) -> void:
+	"""Apply permanent stat bonuses to a unit during draft"""
+	if health_bonus <= 0 and attack_bonus <= 0:
+		return
+
+	var modified_card: Card = event.unit
+	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
+		modified_card, health_bonus, attack_bonus, core.EventSource.SYSTEM_CASCADE
+	)
+	event.draft_context.add_event(stat_effect_event)
 
 
 # ===== UTILITY METHODS =====

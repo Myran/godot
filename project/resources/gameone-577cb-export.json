@@ -5,7 +5,7 @@
 		"abilities": "guard:1;1",
 		"attack": "1",
 		"card_name": "Brettonian Guard",
-		"description": "Gain +1/+1 for each unique knight in play.",
+		"description": "Gain +1/+1 for each unique soldier in play.",
 		"health": "1",
 		"id": "0",
 		"name": "guard",

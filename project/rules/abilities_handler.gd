@@ -29,7 +29,8 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 	match ability_type:
 		"guard":
 			var health_bonus: int = int(params[0])
-			new_ability = DeathTriggerHealthAbility.new(health_bonus)
+			var attack_bonus: int = int(params[1])
+			new_ability = SoldierBonusAbility.new(health_bonus, attack_bonus)
 		"troll":
 			var health_bonus: int = int(params[0])
 			var attack_bonus: int = int(params[1])

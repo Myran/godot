@@ -39,8 +39,6 @@ class UnitTags:
 	const SOLDIER: String = "soldier"
 
 
-
-
 class BlockSystem:
 	const TYPE_ZERO: int = 0
 	const UPGRADE_LEVEL_FOUR: int = 4

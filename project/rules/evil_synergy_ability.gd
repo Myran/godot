@@ -31,16 +31,11 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 	if added_card != event.unit:
 		return
 
-	var evil_unit_count: int = count_evil_units_in_lineup(event.draft_context.lineup, event.unit)
+	var evil_unit_count: int = AbilityHelper.count_units_with_tags_in_lineup(
+		event.draft_context.lineup, [GameConstants.UnitTags.EVIL], event.unit
+	)
+
 	if evil_unit_count > 0:
 		var total_health_bonus: int = health_per_evil * evil_unit_count
 		var total_attack_bonus: int = attack_per_evil * evil_unit_count
-		var modified_card: Card = event.unit
-		var stat_change_event: core.CardStatChangeEvent = core.CardStatChangeEvent.new(
-			modified_card, total_health_bonus, total_attack_bonus
-		)
-		event.draft_context.add_event(stat_change_event)
-
-
-func count_evil_units_in_lineup(lineup: Dictionary[int, Card], current_unit: Block) -> int:
-	return AbilityHelper.count_units_with_tags_in_lineup(lineup, [GameConstants.UnitTags.EVIL], current_unit)
+		AbilityHelper.apply_permanent_stat_bonus(event, total_health_bonus, total_attack_bonus)
