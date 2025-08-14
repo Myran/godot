@@ -57,7 +57,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	if tests_passed == total_tests:
 		return DebugAction.Result.new_success(
-			test_data, duration, "Revolutionary UnitContext API Test", {"message": "✅ Revolutionary UnitContext API - ALL TESTS PASSED!"}
+			test_data,
+			duration,
+			"Revolutionary UnitContext API Test",
+			{"message": "✅ Revolutionary UnitContext API - ALL TESTS PASSED!"}
 		)
 	else:
 		return DebugAction.Result.new_failure(
@@ -73,7 +76,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 func _test_base_ability_api(test_results: Array[Dictionary]) -> bool:
 	var mock_battle_context: BattleContext = BattleContext.new(null)
 	var mock_event: Context.Event = Context.Event.new()
-	var unit_context: UnitContext = UnitContext.create(1, true, mock_battle_context, mock_event, core.Tempus.PRE)
+	var unit_context: UnitContext = UnitContext.create(
+		1, true, mock_battle_context, mock_event, core.Tempus.PRE
+	)
 
 	var ability: Ability = Ability.new()
 	ability.handle_battle_event(unit_context)  # Revolutionary single-parameter API!
