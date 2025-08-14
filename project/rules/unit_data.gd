@@ -184,7 +184,9 @@ func check_abilities(
 	tempus: int, u_pos: int, u_side: int, battle_context: BattleContext, _event: Context.Event
 ) -> void:
 	for _ability: Ability in get_active_abilities():
-		var unit_context: BattleAbilityEvent = BattleAbilityEvent.create(u_pos, u_side, battle_context, _event, tempus)
+		var unit_context: BattleAbilityEvent = BattleAbilityEvent.create(
+			u_pos, u_side, battle_context, _event, tempus
+		)
 		_ability.handle_battle_event(unit_context)
 
 
@@ -192,7 +194,9 @@ func check_draft_abilities(
 	tempus: int, pos: int, context: DraftContext, event: core.CoreEvent, u: Block
 ) -> void:
 	for _ability: Ability in get_active_abilities():
-		var draft_event: DraftAbilityEvent = DraftAbilityEvent.create(pos, u, context, event, tempus)
+		var draft_event: DraftAbilityEvent = DraftAbilityEvent.create(
+			pos, u, context, event, tempus
+		)
 		_ability.handle_draft_event(draft_event)
 
 

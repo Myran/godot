@@ -4,7 +4,7 @@ class_name DraftAbilityEvent extends RefCounted
 # Provides single-parameter API for draft ability processing
 
 var position: int
-var unit: Block  
+var unit: Block
 var draft_context: DraftContext
 var event: core.CoreEvent
 var phase: core.Tempus

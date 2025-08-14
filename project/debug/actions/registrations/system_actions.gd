@@ -167,7 +167,6 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	)
 	registry.register_action(state_extractor_green_test)
 
-
 	registry.register_action(
 		(
 			DebugAction

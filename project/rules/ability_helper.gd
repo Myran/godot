@@ -119,17 +119,23 @@ static func grant_stat_bonus(unit: BattleAbilityEvent, stat_name: StringName, bo
 # ===== COMPLEX ABILITY OPERATIONS (DELEGATES TO BATTLE RULES) =====
 
 
-static func deal_damage_to_random_enemy(unit: BattleAbilityEvent, damage: int, count: int = 1) -> void:
+static func deal_damage_to_random_enemy(
+	unit: BattleAbilityEvent, damage: int, count: int = 1
+) -> void:
 	"""Deal damage to random enemies (delegates to BattleRules)"""
 	BattleRules.deal_damage_to_random_enemies(unit.battle_context, unit.is_allied, damage, count)
 
 
-static func deal_damage_to_random_enemies(unit: BattleAbilityEvent, damage: int, count: int) -> void:
+static func deal_damage_to_random_enemies(
+	unit: BattleAbilityEvent, damage: int, count: int
+) -> void:
 	"""Deal damage to multiple random enemies (delegates to BattleRules)"""
 	BattleRules.deal_damage_to_random_enemies(unit.battle_context, unit.is_allied, damage, count)
 
 
-static func grant_ally_bonuses(unit: BattleAbilityEvent, health_bonus: int, attack_bonus: int) -> void:
+static func grant_ally_bonuses(
+	unit: BattleAbilityEvent, health_bonus: int, attack_bonus: int
+) -> void:
 	"""Grant bonuses to all allies except self (delegates to BattleRules)"""
 	BattleRules.grant_bonuses_to_all_allies(
 		unit.battle_context, unit.position, unit.is_allied, health_bonus, attack_bonus
@@ -226,7 +232,9 @@ static func get_attacker_unit(unit: BattleAbilityEvent) -> UnitData:
 # ===== CONDITION CHECKING HELPERS =====
 
 
-static func is_unit_at_low_health(unit: BattleAbilityEvent, threshold_percent: float = 0.25) -> bool:
+static func is_unit_at_low_health(
+	unit: BattleAbilityEvent, threshold_percent: float = 0.25
+) -> bool:
 	"""Check if the unit is at low health (default: 25% or below)"""
 	var unit_data = unit.get_self_unit()
 	if not unit_data:
@@ -236,7 +244,9 @@ static func is_unit_at_low_health(unit: BattleAbilityEvent, threshold_percent: f
 	return health_ratio <= threshold_percent
 
 
-static func is_unit_at_high_health(unit: BattleAbilityEvent, threshold_percent: float = 0.75) -> bool:
+static func is_unit_at_high_health(
+	unit: BattleAbilityEvent, threshold_percent: float = 0.75
+) -> bool:
 	"""Check if the unit is at high health (default: 75% or above)"""
 	var unit_data = unit.get_self_unit()
 	if not unit_data:
@@ -297,7 +307,9 @@ static func get_stat_change_from_event(unit: BattleAbilityEvent) -> Dictionary:
 	return {}
 
 
-static func is_ability_trigger_condition_met(unit: BattleAbilityEvent, trigger_type: StringName) -> bool:
+static func is_ability_trigger_condition_met(
+	unit: BattleAbilityEvent, trigger_type: StringName
+) -> bool:
 	"""Check if general ability trigger conditions are met"""
 	match trigger_type:
 		"on_death":
