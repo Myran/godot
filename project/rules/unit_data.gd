@@ -596,3 +596,46 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			},
 			[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_STAT]
 		)
+
+
+func get_state_checksum() -> String:
+	"""Generate deterministic checksum for complete unit state including stats, abilities, and effects"""
+	var state_data: Dictionary = {
+		"card_id": card_info.get("id", ""),
+		"level": level,
+		"current_health": current_health,
+		"current_attack": current_attack,
+		"max_health": max_health,
+		"max_attack": max_attack,
+		"base_health": base_health,
+		"base_attack": base_attack,
+		"abilities_count": abilities.size(),
+		"effects_perm_count": effects_perm.size()
+	}
+
+	var ability_types: Array[String] = []
+	for ability: Ability in abilities:
+		if ability:
+			ability_types.append(ability.get_class())
+	ability_types.sort()
+	state_data["ability_types"] = ability_types
+
+	var effect_details: Array[Dictionary] = []
+	for effect: Variant in effects_perm:
+		if effect is StatEffect:
+			var stat_effect: StatEffect = effect
+			effect_details.append(
+				{
+					"type": "StatEffect",
+					"health_bonus": stat_effect.health_bonus,
+					"attack_bonus": stat_effect.attack_bonus,
+					"source": stat_effect.source
+				}
+			)
+		else:
+			effect_details.append({"type": str(type_string(typeof(effect))), "value": str(effect)})
+
+	effect_details.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a) < str(b))
+	state_data["effect_details"] = effect_details
+
+	return DictUtils.deterministic_hash(state_data)

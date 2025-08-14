@@ -290,9 +290,8 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 			lineup_data[position] = {
 				"card_id": card.card_info.id if card.card_info else "",
 				"level": card.level,
-				"health": card.unit_info.current_health if card.unit_info else 0,
-				"attack": card.unit_info.current_attack if card.unit_info else 0,
-				"position": position
+				"position": position,
+				"unit_checksum": card.unit_info.get_state_checksum() if card.unit_info else ""
 			}
 
 	return lineup_data
@@ -310,6 +309,9 @@ static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
 				var card: Card = block as Card
 				block_data["card_id"] = card.card_info.id if card.card_info else ""
 				block_data["level"] = card.level
+				block_data["unit_checksum"] = (
+					card.unit_info.get_state_checksum() if card.unit_info else ""
+				)
 			elif block.object_type == core.ObjectType.BLOCK_ITEM:
 				block_data["level"] = block.level if "level" in block else 0
 			else:
