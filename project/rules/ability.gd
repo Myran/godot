@@ -5,13 +5,7 @@ enum PersistenceType { TEMPLATE, ACQUIRED, TEMPORARY, ENHANCEMENT }  # Inherent 
 var persistence_type: PersistenceType = PersistenceType.TEMPLATE
 
 
-func handle_battle_event(
-	_phase: core.Tempus,
-	_unit_position: int,
-	_is_allied_unit: bool,
-	_battle_context: BattleContext,
-	_battle_event: Context.Event
-) -> void:
+func handle_battle_event(unit: UnitContext) -> void:
 	pass
 
 

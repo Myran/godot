@@ -15,13 +15,7 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(
-	_phase: core.Tempus,
-	_unit_position: int,
-	_is_allied_unit: bool,
-	_battle_context: BattleContext,
-	_battle_event: Context.Event
-) -> void:
+func handle_battle_event(unit: UnitContext) -> void:
 	pass
 
 

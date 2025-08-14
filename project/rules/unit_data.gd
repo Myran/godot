@@ -184,7 +184,8 @@ func check_abilities(
 	tempus: int, u_pos: int, u_side: int, battle_context: BattleContext, _event: Context.Event
 ) -> void:
 	for _ability: Ability in get_active_abilities():
-		_ability.handle_battle_event(tempus, u_pos, u_side, battle_context, _event)
+		var unit_context: UnitContext = UnitContext.create(u_pos, u_side, battle_context, _event, tempus)
+		_ability.handle_battle_event(unit_context)
 
 
 func check_draft_abilities(

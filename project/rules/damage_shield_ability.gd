@@ -10,21 +10,15 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(
-	phase: core.Tempus,
-	unit_position: int,
-	is_allied_unit: bool,
-	_battle_context: BattleContext,
-	battle_event: Context.Event
-) -> void:
+func handle_battle_event(unit: UnitContext) -> void:
 	if shield_used:
 		return
 
-	if phase == core.Tempus.PRE and battle_event is BattleContext.DamageEvent:
-		var damage_event: BattleContext.DamageEvent = battle_event as BattleContext.DamageEvent
+	if unit.phase == core.Tempus.PRE and unit.event is BattleContext.DamageEvent:
+		var damage_event: BattleContext.DamageEvent = unit.event as BattleContext.DamageEvent
 		var is_target_unit: bool = (
-			damage_event.is_allied_side == is_allied_unit
-			and damage_event.target_position == unit_position
+			damage_event.is_allied_side == unit.is_allied
+			and damage_event.target_position == unit.position
 		)
 		if is_target_unit:
 			damage_event.damage_effects.append({"effect_type": "shield", "ability": self})
