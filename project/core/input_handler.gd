@@ -94,6 +94,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 				if interacted_object.object_type == core.ObjectType.BLOCK_LOCKED:
 					var m_block: Block = interacted_object
 
+					# Semantic logging handled by clicker.gd when processing RemoveBlockFromDraft event
 					core.action(core.RemoveBlockFromDraft.new(m_block, true))
 
 			core.TapState.HOLDING:

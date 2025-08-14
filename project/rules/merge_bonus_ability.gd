@@ -16,34 +16,22 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(
-	_phase: core.Tempus,
-	_unit_position: int,
-	_is_allied_unit: bool,
-	_battle_context: BattleContext,
-	_battle_event: Context.Event
-) -> void:
+func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
 
 
-func handle_draft_event(
-	phase: core.Tempus,
-	_unit_position: int,
-	unit: Block,
-	draft_context: DraftContext,
-	draft_event: core.CoreEvent
-) -> void:
-	if phase != core.Tempus.POST:
+func handle_draft_event(event: DraftAbilityEvent) -> void:
+	if event.phase != core.Tempus.POST:
 		return
 
-	if not draft_event is core.DraftMergeEvent:
+	if not event.event is core.DraftMergeEvent:
 		return
 
-	if not unit.block_context == Cards.CONTEXT.LINEUP:
+	if not event.unit.block_context == Cards.CONTEXT.LINEUP:
 		return
 
-	var merge_event: core.DraftMergeEvent = draft_event
-	var card: Card = unit
+	var merge_event: core.DraftMergeEvent = event.event
+	var card: Card = event.unit
 
 	var card_id: String = card.unit_info.card_info.get("id", "")
 	var merged_card_ids: Array[String] = []
@@ -79,7 +67,7 @@ func handle_draft_event(
 	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
 		card, calc_health_bonus, calc_attack_bonus, core.EventSource.SYSTEM_CASCADE
 	)
-	draft_context.add_event(stat_effect_event)
+	event.draft_context.add_event(stat_effect_event)
 
 	Log.debug(
 		"MergeBonusAbility: Triggered bonus for other card merge",

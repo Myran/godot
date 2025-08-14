@@ -162,6 +162,8 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		core.action(core.DraftAddBlockEvent.new(new_block, pos))
 		var tween: Tween = new_block.show_upgrade()
 		await tween.finished
+
+
 		merge_completed.emit()
 
 
@@ -241,7 +243,8 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 		)
 		return {}
 
-	new_card.block_context = Cards.CONTEXT.DRAFT
+	# Preserve the original context from source cards (LINEUP vs DRAFT)
+	new_card.block_context = first_card.block_context
 
 	Log.debug(
 		"Before StatEffect transfer - source units analysis",

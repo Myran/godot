@@ -13,15 +13,9 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
-func handle_battle_event(
-	phase: core.Tempus,
-	unit_position: int,
-	is_allied_unit: bool,
-	battle_context: BattleContext,
-	battle_event: Context.Event
-) -> void:
-	if phase == core.Tempus.POST and battle_event is BattleContext.DeathEvent:
+func handle_battle_event(event: BattleAbilityEvent) -> void:
+	if event.phase == core.Tempus.POST and event.event is BattleContext.DeathEvent:
 		var stat_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
-			Battle.UNIT_HEALTH, unit_position, is_allied_unit, health_bonus
+			Battle.UNIT_HEALTH, event.position, event.is_allied, health_bonus
 		)
-		battle_context.add_event(stat_event)
+		event.battle_context.add_event(stat_event)

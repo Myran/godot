@@ -171,7 +171,8 @@
       "Bash(./find_actual_missing_types.sh)",
       "Bash(git stash:*)",
       "mcp__repomix__read_repomix_output",
-      "Bash(backlog:*)"
+      "Bash(backlog:*)",
+      "Bash(git log:*)"
     ],
     "deny": []
   }
