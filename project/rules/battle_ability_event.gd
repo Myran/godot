@@ -39,13 +39,16 @@ func is_event_targeting_this_unit() -> bool:
 	if event is BattleContext.DamageEvent:
 		var dmg_event = event as BattleContext.DamageEvent
 		return dmg_event.target_position == position and dmg_event.is_allied_side == is_allied
-	elif event is BattleContext.StatChangeEvent:
+
+	if event is BattleContext.StatChangeEvent:
 		var stat_event = event as BattleContext.StatChangeEvent
 		return stat_event.target_position == position and stat_event.is_allied_side == is_allied
-	elif event is BattleContext.ShieldEvent:
+
+	if event is BattleContext.ShieldEvent:
 		var shield_event = event as BattleContext.ShieldEvent
 		return shield_event.target_position == position and shield_event.is_allied_side == is_allied
-	elif event is BattleContext.DeathEvent:
+
+	if event is BattleContext.DeathEvent:
 		var death_event = event as BattleContext.DeathEvent
 		return death_event.unit_position == position and death_event.is_allied_side == is_allied
 	return false
@@ -59,7 +62,8 @@ func is_event_from_this_unit() -> bool:
 			combat_event.attacker_position == position
 			and combat_event.is_allied_attack == is_allied
 		)
-	elif event is BattleContext.SelectActiveUnitEvent:
+
+	if event is BattleContext.SelectActiveUnitEvent:
 		var select_event = event as BattleContext.SelectActiveUnitEvent
 		return (
 			select_event.selected_unit_position == position

@@ -2,11 +2,6 @@ class_name Block extends TouchScreenButton
 
 signal movement_done
 
-
-func _ready() -> void:
-	pass
-
-
 const MOVE_SPEED: float = 0.05
 const MERGE_SPEED: float = 0.15
 const TOP_MOVE_SPEED: float = 0.15
@@ -14,6 +9,10 @@ const TOP_MOVE_SPEED: float = 0.15
 @export var object_type: core.ObjectType = core.ObjectType.TEST
 var holder: Holder = null
 var block_context: Cards.CONTEXT = Cards.CONTEXT.NOT_SET
+
+
+func _ready() -> void:
+	pass
 
 
 func shake(left: bool = true) -> void:

@@ -204,12 +204,14 @@ static func get_target_unit(unit: BattleAbilityEvent) -> UnitData:
 		return unit.battle_context.get_unit_at_position(
 			damage_event.target_position, damage_event.is_allied_side
 		)
-	elif unit.event is BattleContext.StatChangeEvent:
+
+	if unit.event is BattleContext.StatChangeEvent:
 		var stat_event = unit.event as BattleContext.StatChangeEvent
 		return unit.battle_context.get_unit_at_position(
 			stat_event.target_position, stat_event.is_allied_side
 		)
-	elif unit.event is BattleContext.ShieldEvent:
+
+	if unit.event is BattleContext.ShieldEvent:
 		var shield_event = unit.event as BattleContext.ShieldEvent
 		return unit.battle_context.get_unit_at_position(
 			shield_event.target_position, shield_event.is_allied_side
@@ -405,9 +407,7 @@ static func has_all_tags(card: Card, tags: Array[String]) -> bool:
 
 
 static func apply_permanent_stat_bonus(
-	event: DraftAbilityEvent,
-	health_bonus: int,
-	attack_bonus: int
+	event: DraftAbilityEvent, health_bonus: int, attack_bonus: int
 ) -> void:
 	"""Apply permanent stat bonuses to a unit during draft"""
 	if health_bonus <= 0 and attack_bonus <= 0:

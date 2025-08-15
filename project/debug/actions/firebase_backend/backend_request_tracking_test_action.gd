@@ -73,7 +73,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	_update_status("Testing rapid request handling...")
 	total_tests += 1
 	var rapid_count: int = 4
-	var __rapid_tasks: Array[Variant] = []
+	var rapid_tasks: Array[Variant] = []
 	var rapid_results: Array[Dictionary] = []
 	var rapid_success: int = 0
 

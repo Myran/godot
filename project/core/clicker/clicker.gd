@@ -163,7 +163,6 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 		var tween: Tween = new_block.show_upgrade()
 		await tween.finished
 
-
 		merge_completed.emit()
 
 

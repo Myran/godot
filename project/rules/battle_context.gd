@@ -104,17 +104,14 @@ class SelectActiveUnitEvent:
 
 class FindNextUnitEvent:
 	extends BaseEvent
-	pass
 
 
 class StartOfTurnEvent:
 	extends BaseEvent
-	pass
 
 
 class EndOfTurnEvent:
 	extends BaseEvent
-	pass
 
 
 func _init(solver: Node) -> void:

@@ -185,7 +185,7 @@ func unlink_facebook() -> void:
 	Log.info("Unlinking Facebook provider", {}, [Log.TAG_FIREBASE, "auth", "facebook"])
 	firebase_auth.unlink_provider("facebook.com")
 	@warning_ignore("redundant_await")
-	var _res: String = await firebase_auth.account_unlinked
+	var _unlink_result: String = await firebase_auth.account_unlinked
 
 
 func link_facebook() -> int:
@@ -244,7 +244,7 @@ func unlink_apple() -> void:
 	Log.info("Unlinking Apple provider", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	firebase_auth.unlink_provider("apple.com")
 	@warning_ignore("redundant_await")
-	var _res: String = await firebase_auth.account_unlinked
+	var _apple_unlink_result: String = await firebase_auth.account_unlinked
 
 
 func _on_credential(result: Dictionary) -> void:

@@ -349,15 +349,16 @@ static func solve_win_conditions(context: BattleContext) -> void:
 			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION, Log.TAG_STATE_TRANSITION]
 		)
 		context.end_battle()
-	else:
-		Log.debug(
-			"Win conditions not met, continuing battle",
-			{
-				"allied_units": context.get_side(true).lineup.size(),
-				"enemy_units": context.get_side(false).lineup.size()
-			},
-			[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION]
-		)
+		return
+
+	Log.debug(
+		"Win conditions not met, continuing battle",
+		{
+			"allied_units": context.get_side(true).lineup.size(),
+			"enemy_units": context.get_side(false).lineup.size()
+		},
+		[Log.TAG_BATTLE, Log.TAG_WIN_CONDITION]
+	)
 
 
 static func duplicate_resource(res: Variant) -> Variant:

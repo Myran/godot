@@ -1,5 +1,7 @@
 extends Node
 
+const _APP_ID: int = 914537337160544
+
 signal fb_inited
 signal fb_login_success(token: String)
 signal fb_login_cancelled
@@ -12,8 +14,6 @@ signal fb_logged_out
 var _fb: Object = null
 var token: String = ""
 var user: Dictionary = {}
-
-const _APP_ID: int = 914537337160544
 
 
 func _ready() -> void:
@@ -40,9 +40,9 @@ func login(permissions: Array[String] = ["public_profile", "email"]) -> bool:
 	return false
 
 
-func game_request(message: String, recipients: String = "", objectId: String = "") -> void:
+func game_request(message: String, recipients: String = "", object_id: String = "") -> void:
 	if _fb != null:
-		_fb.gameRequest(message, recipients, objectId)
+		_fb.gameRequest(message, recipients, object_id)
 
 
 func game_requests(object: Object, method: String) -> void:

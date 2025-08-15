@@ -368,14 +368,19 @@ func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
 					[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 				)
 
-	Log.debug(
-		"Completed StatEffect transfer",
-		{
-			"target_card_id": card_info.get("id", ""),
-			"target_effects_after": effects_perm.size(),
-			"effects_transferred": effects_perm.size() - GameConstants.BattleSystem.ZERO_STAT_VALUE  # We know it started at 0 for new cards
-		},
-		[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+	(
+		Log
+		. debug(
+			"Completed StatEffect transfer",
+			{
+				"target_card_id": card_info.get("id", ""),
+				"target_effects_after": effects_perm.size(),
+				# We know it started at 0 for new cards
+				"effects_transferred":
+				effects_perm.size() - GameConstants.BattleSystem.ZERO_STAT_VALUE
+			},
+			[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
+		)
 	)
 
 
@@ -473,8 +478,8 @@ func transfer_merge_effects_from_cards(source_cards: Array[Card]) -> void:
 
 
 func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
-	var _original_effects_count: int = self.effects_perm.size()
-	var _original_abilities_count: int = self.get_acquired_abilities().size()
+	var original_effects_count: int = self.effects_perm.size()
+	var original_abilities_count: int = self.get_acquired_abilities().size()
 	var battle_died: bool = (
 		final_battle_state.current_health <= GameConstants.BattleSystem.ZERO_HEALTH_THRESHOLD
 	)

@@ -86,7 +86,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var overhead_path: Array = test_base_path + ["overhead", test_timestamp]
 	var overhead_key: String = "perf_overhead_" + test_timestamp
-	var _overhead_value: String = "RequestSignalHelper overhead test"
+	var overhead_value: String = "RequestSignalHelper overhead test"
 
 	var overhead_start: int = Time.get_ticks_msec()
 	var overhead_result: Variant = await test_backend_async_pattern(

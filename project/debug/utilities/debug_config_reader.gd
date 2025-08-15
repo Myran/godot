@@ -122,5 +122,5 @@ static func _get_config_path() -> String:
 		if FileAccess.file_exists(external_path):
 			return external_path
 		return "res://debug_startup_actions.json"
-	else:
-		return "user://debug_startup_actions.json"
+
+	return "user://debug_startup_actions.json"

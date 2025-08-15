@@ -1,12 +1,21 @@
 class_name Ability extends Resource
 
-enum PersistenceType { TEMPLATE, ACQUIRED, TEMPORARY, ENHANCEMENT }  # Inherent to card template, never removed  # Gained during combat, converted to ENHANCEMENT post-battle  # Combat-only effects, cleared after battle  # Permanent effects from any source, transferable in merges
+# Inherent to card template, never removed
+# Gained during combat, converted to ENHANCEMENT post-battle
+# Combat-only effects, cleared after battle
+# Permanent effects from any source, transferable in merges
+enum PersistenceType { TEMPLATE, ACQUIRED, TEMPORARY, ENHANCEMENT }
 
 var persistence_type: PersistenceType = PersistenceType.TEMPLATE
+
+@warning_ignore("unused_parameter")
 
 
 func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
+
+
+@warning_ignore("unused_parameter")
 
 
 func handle_draft_event(event: DraftAbilityEvent) -> void:

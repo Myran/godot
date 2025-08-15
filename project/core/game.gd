@@ -889,10 +889,9 @@ func mode_post_battle() -> void:
 func _get_queue_skip_reason() -> String:
 	if ui_state != core.UIState.WAITING:
 		return "ui_state_not_waiting"
-	elif _processing_idle_action:
+	if _processing_idle_action:
 		return "already_processing"
-	else:
-		return "queue_empty"
+	return "queue_empty"
 
 
 func _capture_lineup_state() -> Dictionary:

@@ -15,6 +15,9 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+@warning_ignore("unused_parameter")
+
+
 func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
 
@@ -35,7 +38,7 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 	var soldier_unit_count: int = AbilityHelper.count_units_with_tags_in_lineup(
 		event.draft_context.lineup, [GameConstants.UnitTags.SOLDIER], event.unit
 	)
-	
+
 	if soldier_unit_count > 0:
 		var total_health_bonus: int = health_per_soldier * soldier_unit_count
 		var total_attack_bonus: int = attack_per_soldier * soldier_unit_count

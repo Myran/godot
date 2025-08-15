@@ -57,7 +57,7 @@ static func _create_result_for_type(data: Variant, path: Array) -> NavigationRes
 	if data is Dictionary:
 		var dict_data: Dictionary = data
 		return NavigationResult.new_dictionary(dict_data, path)
-	elif data is Array:
+	if data is Array:
 		var array_data: Array = data
 		return NavigationResult.new_array(array_data, path)
 	else:
@@ -119,10 +119,10 @@ static func get_int(json_data: Variant, path: Array[Variant], default_int: int =
 		if result.value is int:
 			var int_value: int = result.value
 			return int_value
-		elif result.value is float:
+		if result.value is float:
 			var float_value: float = result.value
 			return int(float_value)
-		elif result.value is String:
+		if result.value is String:
 			var string_value: String = result.value
 			if string_value.is_valid_int():
 				return string_value.to_int()
@@ -137,10 +137,10 @@ static func get_float(
 		if result.value is float:
 			var float_value: float = result.value
 			return float_value
-		elif result.value is int:
+		if result.value is int:
 			var int_value: int = result.value
 			return float(int_value)
-		elif result.value is String:
+		if result.value is String:
 			var string_value: String = result.value
 			if string_value.is_valid_float():
 				return string_value.to_float()
@@ -153,14 +153,14 @@ static func get_bool(json_data: Variant, path: Array[Variant], default_bool: boo
 		if result.value is bool:
 			var bool_value: bool = result.value
 			return bool_value
-		elif result.value is int:
+		if result.value is int:
 			var int_value: int = result.value
 			return int_value != 0
-		elif result.value is String:
+		if result.value is String:
 			var string_value: String = result.value
 			var lower_str: String = string_value.to_lower()
 			if lower_str == "true" or lower_str == "yes" or lower_str == "1":
 				return true
-			elif lower_str == "false" or lower_str == "no" or lower_str == "0":
+			if lower_str == "false" or lower_str == "no" or lower_str == "0":
 				return false
 	return default_bool
