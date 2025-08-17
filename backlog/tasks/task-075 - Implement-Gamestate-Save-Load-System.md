@@ -62,72 +62,69 @@ Implement comprehensive gamestate save/load functionality that preserves complet
 - Maintain compatibility with replay system
 - Support existing debug configuration system
 
-## 🏗️ Implementation Strategy (Executive Approved)
+## 🏗️ Implementation Strategy (SIMPLIFIED - Final CTO Approved)
 
-### Enhanced Three-Tier Save System
+### **FINAL DECISION: Two-Tier Mobile-First System**
 
-1. **Local Binary** (Auto-saves, performance-critical)
+**REJECTED**: Complex three-tier approach - over-engineered for MVP
+
+**APPROVED**: Simplified approach leveraging existing proven systems
+
+1. **Primary: Binary Local Saves** (Mobile-optimized)
    - Format: `var_to_bytes()` → PackedByteArray
-   - Use: Auto-saves, quick checkpoints
-   - **Mobile Optimization**: Background threading via WorkerThreadPool
+   - Use: All saves (auto-save, manual, checkpoints)
+   - **Memory Safety**: Streaming for states >5MB, <25MB total limit
+   - **Performance Target**: <100ms on 2GB Android devices
 
-2. **Local JSON** (Manual saves, debug)
-   - Format: Compressed JSON with 20-40% field name optimization  
-   - Use: Manual saves, debug builds
-   - **Compression**: GZIP for mobile bandwidth optimization
+2. **Secondary: Firebase Cloud Sync** (Week 4 only if time permits)
+   - Format: Compressed binary for Firebase Storage
+   - Use: Cross-device sync, backup only
+   - **Deployment**: Only after local saves proven stable
 
-3. **Firebase Structured** (Cloud sync, cross-device)
-   - Format: Structured JSON optimized for Firebase queries and cost
-   - Use: Cloud saves, progression sync
-   - **Conflict Resolution**: Optimistic locking with timestamp validation
-
-### Save Data Structure (Optimized)
-```json
-{
-  "fv": "1.0",                    // format_version (compressed)
-  "ts": 1703123456,              // save_timestamp  
-  "gs": {                        // game_state
-    "cst": { /* StateExtractor output */ },
-    "ui": { /* UI state, current level */ },
-    "prog": { /* Player progress, collections */ }
-  },
-  "rs": "seed:12345,state:67890", // rng_state
-  "cs": "validation_hash_here"     // checksum
+### Save Data Structure (Simplified)
+```gdscript
+# Binary save structure - minimal and fast
+var save_data = {
+    "gs": StateExtractor.extract_game_state(),  # Leverage existing system
+    "rs": DeterministicRNG.save_state(),        # Leverage existing system
+    "ts": Time.get_unix_time_from_system()      # Timestamp only
 }
+var bytes = var_to_bytes(save_data)  # Direct binary serialization
 ```
 
-## 📋 Implementation Tasks (CEO/CTO Enhanced Timeline)
+## 📋 Implementation Tasks (SIMPLIFIED 4-Week Plan)
 
-### Phase 1: Foundation & Risk Mitigation (Week 1-2)
-- [ ] **Week 1**: Create `GameStateManager` singleton with memory constraints
-- [ ] **Week 1**: Extend `StateExtractor` for serialization-specific data extraction
-- [ ] **Week 1**: Implement basic JSON format with compression and field optimization
-- [ ] **Week 1**: Add platform-specific file path management (iOS sandbox handling)
-- [ ] **Week 2**: **Mobile Memory Testing**: Low-end Android device validation
-- [ ] **Week 2**: **Error Recovery System**: Comprehensive fallback mechanisms
-- [ ] **Week 2**: **Performance Monitoring**: Real-time save/load metrics
+### WEEK 1: Foundation & Critical Risk Mitigation 🚨
+**Goal**: Prevent project-killing issues (memory crashes, circular refs)
+- [ ] Create `MobileSaveManager` with memory limits (<25MB)
+- [ ] Extend `StateExtractor` for save-specific data extraction  
+- [ ] Handle `UnitData.battle_original_reference` circular references
+- [ ] Implement binary format with streaming fallback (>5MB)
+- [ ] **CRITICAL**: Test on real Android device throughout week
 
-### Phase 2: Core Serialization & Complexity Management (Week 2-3)  
-- [ ] **Week 2**: Implement `UnitData.serialize()` with circular reference handling
-- [ ] **Week 3**: Handle complex ability system serialization (4 persistence types)
-- [ ] **Week 3**: Implement binary format for performance saves with streaming
-- [ ] **Week 3**: Add checksum validation using existing systems
-- [ ] **Week 3**: **Mobile Testing**: Continuous testing on target devices
+### WEEK 2: Core Integration 🔧
+**Goal**: Working save/load in Game class
+- [ ] Add `Game.save_game()` and `Game.load_game()` methods
+- [ ] Implement checksum validation using existing `DictUtils`
+- [ ] Create error recovery and fallback mechanisms
+- [ ] Handle lineup restoration using existing card systems
+- [ ] **CRITICAL**: Continuous mobile device testing
 
-### Phase 3: Game Integration & Validation (Week 4-5)
-- [ ] **Week 4**: Add `Game.save_game_state()` and `Game.load_game_state()` methods
-- [ ] **Week 4**: Implement lineup restoration with card recreation
-- [ ] **Week 4**: Add UI state and progression restoration
-- [ ] **Week 4**: Integrate with existing RNG deterministic system
-- [ ] **Week 5**: **Comprehensive Testing**: Cross-platform validation
-- [ ] **Week 5**: **Performance Optimization**: Mobile-specific improvements
+### WEEK 3: Mobile Optimization & Polish 📱
+**Goal**: Production-ready mobile performance
+- [ ] Platform-specific optimizations (remove debug data on mobile)
+- [ ] Auto-save integration with background threading
+- [ ] Multiple save slot support
+- [ ] Performance monitoring and real-time metrics
+- [ ] **CRITICAL**: End-to-end mobile validation <100ms target
 
-### Phase 4: Firebase Integration & Production Readiness (Week 5-6)
-- [ ] **Week 5**: Extend existing Firebase backend for save data
-- [ ] **Week 5**: Implement structured JSON for cloud saves with cost optimization
-- [ ] **Week 6**: Add conflict resolution for multi-device saves
-- [ ] **Week 6**: Create save/load debug actions for testing
-- [ ] **Week 6**: **Production Validation**: End-to-end testing and monitoring
+### WEEK 4: Cloud Sync (Optional) ☁️
+**Goal**: Firebase integration IF local saves working perfectly
+**ONLY PROCEED IF**: Weeks 1-3 targets met, no performance issues
+- [ ] Firebase cloud save integration using existing backend
+- [ ] Conflict resolution (timestamp wins - simple approach)
+- [ ] Upload optimization (WiFi only, manual trigger)
+- [ ] Production deployment preparation
 
 ## 🎯 Technical Specifications (Validated)
 
