@@ -420,6 +420,36 @@ static func apply_permanent_stat_bonus(
 	event.draft_context.add_event(stat_effect_event)
 
 
+static func apply_permanent_stat_bonus_to_unit(
+	event: DraftAbilityEvent, target_unit: Card, health_bonus: int, attack_bonus: int
+) -> void:
+	"""Apply permanent stat bonuses to a specific target unit during draft"""
+	if health_bonus <= 0 and attack_bonus <= 0:
+		return
+
+	var stat_effect_event: core.StatEffectEvent = core.StatEffectEvent.new(
+		target_unit, health_bonus, attack_bonus, core.EventSource.SYSTEM_CASCADE
+	)
+	event.draft_context.add_event(stat_effect_event)
+
+
+static func get_units_with_tag_in_lineup(
+	lineup: Dictionary[int, Card], tag: String, exclude_unit: Block = null
+) -> Array[Card]:
+	"""Get all units in lineup that have the specified tag, optionally excluding one unit"""
+	var units: Array[Card] = []
+	
+	for position: int in lineup:
+		var card: Card = lineup[position]
+		if card == exclude_unit:
+			continue
+		
+		if has_any_tag(card, [tag]):
+			units.append(card)
+	
+	return units
+
+
 # ===== UTILITY METHODS =====
 
 

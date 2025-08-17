@@ -36,6 +36,7 @@ class UnitTags:
 	const EVIL: String = "evil"
 	const FOREST: String = "forest"
 	const KNIGHT: String = "knight"
+	const MAGIC: String = "magic"
 	const SOLDIER: String = "soldier"
 
 

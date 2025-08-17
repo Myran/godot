@@ -41,4 +41,6 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 			var health_bonus: int = int(params[0])
 			var attack_bonus: int = int(params[1])
 			new_ability = MergeBonusAbility.new(health_bonus, attack_bonus)
+		"harmony":
+			new_ability = HarmonyAbility.new()
 	return new_ability

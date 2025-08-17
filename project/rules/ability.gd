@@ -11,6 +11,10 @@ var persistence_type: PersistenceType = PersistenceType.TEMPLATE
 @warning_ignore("unused_parameter")
 
 
+func get_handled_event_classes() -> Array:
+	return []
+
+
 func handle_battle_event(event: BattleAbilityEvent) -> void:
 	pass
 
