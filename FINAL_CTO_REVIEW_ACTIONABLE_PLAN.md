@@ -26,7 +26,7 @@ The comprehensive research proposed Resource/Binary/JSON tiers = **over-engineer
 #### **PRIMARY: Binary Local Saves**
 ```gdscript
 # NEW FILE: project/core/saves/mobile_save_manager.gd
-class_name MobileSaveManager extends RefCounted
+class_name GameStateSaveManager extends RefCounted
 
 static func save_game_state(slot: int = 0) -> bool:
     var start_time = Time.get_ticks_msec()
@@ -75,7 +75,7 @@ static func serialize_with_memory_check(data: Dictionary) -> PackedByteArray:
 ```
 
 **Week 1 Deliverables:**
-- [ ] `MobileSaveManager` with memory limits
+- [ ] `GameStateSaveManager` with memory limits
 - [ ] Extend `StateExtractor` for save-specific extraction  
 - [ ] Handle `UnitData.battle_original_reference` circular refs
 - [ ] **CRITICAL**: Test on real Android device (not simulator)
@@ -88,11 +88,11 @@ static func serialize_with_memory_check(data: Dictionary) -> PackedByteArray:
 # Add to project/core/game.gd:
 func save_game() -> bool:
     Log.info("Saving game state", {}, [Log.TAG_SAVE])
-    return MobileSaveManager.save_game_state()
+    return GameStateSaveManager.save_game_state()
 
 func load_game(slot: int = 0) -> bool:
     Log.info("Loading game state", {"slot": slot}, [Log.TAG_SAVE])
-    return MobileSaveManager.load_game_state(slot)
+    return GameStateSaveManager.load_game_state(slot)
 ```
 
 **Week 2 Deliverables:**
@@ -116,7 +116,7 @@ static func _optimize_for_mobile(data: Dictionary) -> Dictionary:
 func _on_auto_save_timer_timeout() -> void:
     if not _save_in_progress:
         _save_in_progress = true
-        MobileSaveManager.save_game_state()
+        GameStateSaveManager.save_game_state()
         _save_in_progress = false
 ```
 
@@ -221,7 +221,7 @@ func track_save_performance(duration: int) -> void:
 # Safe deployment with immediate rollback
 func save_game() -> bool:
     if FeatureFlags.is_enabled("save_system_v2"):
-        return MobileSaveManager.save_game_state()
+        return GameStateSaveManager.save_game_state()
     else:
         return _legacy_fallback()  # Keep old system ready
 ```
@@ -232,7 +232,7 @@ func save_game() -> bool:
 
 ### **Day 1 Actions**
 1. Create `project/core/saves/` directory
-2. Implement `MobileSaveManager` skeleton
+2. Implement `GameStateSaveManager` skeleton
 3. Set up Android device for testing
 4. Create debug action: `just test-android save-load-basic-test`
 
