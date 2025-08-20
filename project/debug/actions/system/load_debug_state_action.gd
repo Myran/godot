@@ -84,7 +84,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
 			"original_timestamp": capture_dict.get("capture_timestamp", "unknown"),
 			"load_method": "in_place_restoration",
-			"restored_state": gamestate.get("lineup", {}).get("current_game_state", "UNKNOWN")
+			"restored_state": capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
 		}
 	)
 
@@ -95,7 +95,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 			"message": "Gamestate restored in current session",
 			"gamestate_file": actual_file_path.get_file(),
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
-			"restored_state": gamestate.get("lineup", {}).get("current_game_state", "UNKNOWN"),
+			"restored_state": capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN"),
 			"load_method": "in_place_restoration"
 		},
 		duration
@@ -175,4 +175,5 @@ func _find_most_recent_saved_state() -> String:
 
 
 static func create_for_file(file_path: String) -> LoadDebugStateAction:
+	"""Create a LoadDebugStateAction with a specific file path"""
 	return LoadDebugStateAction.new(file_path)
