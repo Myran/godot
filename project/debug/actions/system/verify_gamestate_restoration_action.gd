@@ -1,8 +1,6 @@
 class_name VerifyGamestateRestorationAction extends DebugAction
 
 var _verification_results: Dictionary = {}
-var _original_board_state: Array = []
-var _restored_board_state: Array = []
 
 
 func _init() -> void:
@@ -13,40 +11,44 @@ func _init() -> void:
 
 
 func _verify_gamestate_restoration() -> DebugAction.Result:
-	"""Verify gamestate restoration by comparing before/after states"""
+	"""Verify gamestate restoration using save-load-save-compare approach"""
 	Log.info(
-		"Starting gamestate restoration verification", {}, ["debug", "validation", "gamestate"]
+		"Starting gamestate restoration verification using save-load-save-compare approach", 
+		{}, ["debug", "validation", "gamestate"]
 	)
 
-	# Get current board state for comparison
-	var current_state: Dictionary = _extract_current_gamestate()
+	# Step 1: Load the original saved gamestate file for comparison
+	var original_gamestate: Dictionary = _load_original_gamestate()
+	if original_gamestate.is_empty():
+		return DebugAction.Result.new_failure(
+			"Could not load original gamestate file for comparison",
+			"ORIGINAL_GAMESTATE_NOT_FOUND"
+		)
 
-	# Check if we have evidence of gamestate restoration
-	var restoration_evidence: Dictionary = _check_restoration_evidence()
-
-	# Validate board state integrity
-	var board_validation: Dictionary = _validate_board_state(current_state)
-
-	# Validate RNG state consistency
-	var rng_validation: Dictionary = _validate_rng_consistency()
+	# Step 2: Save current state after restoration
+	var current_gamestate: Dictionary = _extract_current_gamestate()
+	
+	# Step 3: Compare gamestates using checksums
+	var original_checksum: String = _calculate_gamestate_checksum(original_gamestate)
+	var current_checksum: String = _calculate_gamestate_checksum(current_gamestate)
+	var checksums_match: bool = original_checksum == current_checksum
 
 	# Compile verification results
 	_verification_results = {
-		"restoration_detected": restoration_evidence.get("detected", false),
-		"restoration_session_id": restoration_evidence.get("session_id", "unknown"),
-		"board_state_valid": board_validation.get("valid", false),
-		"board_card_count": board_validation.get("card_count", 0),
-		"board_position_accuracy": board_validation.get("position_accuracy", 0.0),
-		"rng_state_consistent": rng_validation.get("consistent", false),
-		"rng_seed_restored": rng_validation.get("seed_restored", false),
+		"comparison_approach": "checksum_comparison",
+		"original_gamestate_loaded": not original_gamestate.is_empty(),
+		"current_gamestate_extracted": not current_gamestate.is_empty(),
+		"original_checksum": original_checksum,
+		"current_checksum": current_checksum,
+		"checksums_match": checksums_match,
 		"overall_success": false
 	}
 
-	# Overall success determination
+	# Overall success determination - checksums must match exactly
 	_verification_results.overall_success = (
-		_verification_results.restoration_detected
-		and _verification_results.board_state_valid
-		and _verification_results.rng_state_consistent
+		_verification_results.original_gamestate_loaded
+		and _verification_results.current_gamestate_extracted
+		and _verification_results.checksums_match
 	)
 
 	# Log results
@@ -95,6 +97,61 @@ func _verify_gamestate_restoration() -> DebugAction.Result:
 		)
 
 
+func _load_original_gamestate() -> Dictionary:
+	"""Load the original gamestate file that was used for restoration"""
+	# Get the gamestate file name from test metadata
+	var metadata: Dictionary = DebugConfigReader.get_metadata()
+	var gamestate_filename: String = metadata.get("gamestate_file", "test-save-load-validation.json")
+	
+	# Construct full path to saved state file
+	var saved_states_dir: String = "user://debug/saved_states/"
+	var gamestate_file_path: String = saved_states_dir + gamestate_filename
+	
+	Log.debug(
+		"Loading original gamestate file for comparison",
+		{"file_path": gamestate_file_path, "filename": gamestate_filename},
+		["debug", "validation", "gamestate"]
+	)
+	
+	# Read and parse JSON file
+	var file: FileAccess = FileAccess.open(gamestate_file_path, FileAccess.READ)
+	if not file:
+		Log.error(
+			"Cannot open original gamestate file",
+			{"file_path": gamestate_file_path},
+			["debug", "validation", "gamestate", "error"]
+		)
+		return {}
+	
+	var json_text: String = file.get_as_text()
+	file.close()
+	
+	var json: JSON = JSON.new()
+	var parse_result: Error = json.parse(json_text)
+	if parse_result != OK:
+		Log.error(
+			"Failed to parse original gamestate JSON",
+			{"file_path": gamestate_file_path, "error": parse_result},
+			["debug", "validation", "gamestate", "error"]
+		)
+		return {}
+	
+	var gamestate_data: Dictionary = json.data as Dictionary
+	var original_gamestate: Dictionary = gamestate_data.get("gamestate", {})
+	
+	Log.info(
+		"Original gamestate loaded successfully",
+		{
+			"board_items": original_gamestate.get("board", {}).get("draft_area", []).size(),
+			"game_state": original_gamestate.get("lineup", {}).get("current_game_state", "unknown"),
+			"source_file": gamestate_filename
+		},
+		["debug", "validation", "gamestate"]
+	)
+	
+	return original_gamestate
+
+
 func _extract_current_gamestate() -> Dictionary:
 	"""Extract current game state for analysis"""
 	var current_state: Dictionary = StateExtractor.extract_game_state()
@@ -112,144 +169,35 @@ func _extract_current_gamestate() -> Dictionary:
 	return current_state
 
 
-func _check_restoration_evidence() -> Dictionary:
-	"""Check for evidence that gamestate restoration occurred"""
-	# Check current session first
-	var current_session_id: String = SessionManager.get_current_session_id()
-	var session_context: Dictionary = SessionManager.get_session_context()
-
-	var current_session_loaded: bool = (
-		session_context.get("session_type", "") == "loaded_state_recording"
-		or session_context.get("loaded_at_startup", false) == true
-	)
-
-	var restoration_detected: bool = current_session_loaded
-	var evidence_session_id: String = current_session_id
-
-	# If current session doesn't show loading, check for evidence of loaded state session in game instance
-	if not restoration_detected:
-		# Check if main scene has gamestate restore mode set (indicates loading occurred)
-		var main_node: Node = Engine.get_main_loop().current_scene
-		if main_node and main_node.has_method("is_gamestate_restore_mode"):
-			var was_restore_mode: bool = main_node.call("is_gamestate_restore_mode")
-			if was_restore_mode:
-				restoration_detected = true
-				evidence_session_id = "detected_via_main_restore_mode"
-
-	# Additional check: Look for gamestate_restore logs in the current session
-	if not restoration_detected:
-		# Check if gamestate restoration actually occurred by looking for restoration logs
-		# This is the most reliable indicator since restoration logs are always generated
-		var current_game: Game = _get_game_instance()
-		if current_game and current_game.level_controller:
-			# If we have a level controller, check if it shows signs of restoration
-			# We can identify this by looking for the current board state characteristics
-			var current_board_state: Dictionary = _extract_current_gamestate()
-			var board_data: Dictionary = current_board_state.get("board", {})
-			var draft_area: Array = board_data.get("draft_area", [])
-
-			# If we have exactly 20 blocks with specific patterns, it's likely restored
-			if draft_area.size() == 20:
-				var has_cards: bool = false
-				var has_locked: bool = false
-				var has_upgrade: bool = false
-
-				for block_data in draft_area:
-					var obj_type: int = block_data.get("object_type", 0)
-					if obj_type == 1:
-						has_cards = true
-					elif obj_type == 4:
-						has_locked = true
-					elif obj_type == 5:
-						has_upgrade = true
-
-				# If we have the expected mix of block types, restoration likely occurred
-				if has_cards and has_locked and has_upgrade:
-					restoration_detected = true
-					evidence_session_id = "detected_via_board_analysis"
-
+func _calculate_gamestate_checksum(gamestate: Dictionary) -> String:
+	"""Calculate checksum of gamestate data (excluding timestamps and metadata)"""
+	# Create a clean copy with only the essential game state data
+	var clean_gamestate: Dictionary = {
+		"board": gamestate.get("board", {}),
+		"lineup": gamestate.get("lineup", {})
+		# Exclude metadata, timestamps, session_id, etc.
+	}
+	
+	# Convert to deterministic JSON string
+	var json_string: String = JSON.stringify(clean_gamestate)
+	
+	# Calculate SHA256 hash
+	var checksum: String = json_string.sha256_text()
+	
 	Log.debug(
-		"Restoration evidence check",
+		"Gamestate checksum calculated",
 		{
-			"restoration_detected": restoration_detected,
-			"current_session_id": current_session_id,
-			"session_type": session_context.get("session_type", "unknown"),
-			"loaded_at_startup": session_context.get("loaded_at_startup", false),
-			"current_session_loaded": current_session_loaded,
-			"evidence_session_id": evidence_session_id
+			"checksum": checksum,
+			"board_items": clean_gamestate.get("board", {}).get("draft_area", []).size(),
+			"lineup_state": clean_gamestate.get("lineup", {}).get("current_game_state", "unknown"),
+			"json_length": json_string.length()
 		},
 		["debug", "validation", "gamestate"]
 	)
-
-	return {"detected": restoration_detected, "session_id": evidence_session_id}
-
-
-func _validate_board_state(current_state: Dictionary) -> Dictionary:
-	"""Validate that board state was properly restored"""
-	var board_data: Dictionary = current_state.get("board", {})
-	var draft_area: Array = board_data.get("draft_area", [])
-
-	var card_count: int = 0
-	var valid_positions: int = 0
-	var total_positions: int = draft_area.size()
-
-	# Count valid blocks and positions (all block types, not just cards)
-	for i in range(draft_area.size()):
-		var block_data: Dictionary = draft_area[i]
-		var object_type: int = block_data.get("object_type", 0)
-		var draft_position: int = block_data.get("draft_position", -1)
-
-		if object_type == 1:  # Card block
-			card_count += 1
-			var card_id: String = block_data.get("card_id", "")
-			if not card_id.is_empty() and draft_position >= 0:
-				valid_positions += 1
-		elif object_type in [4, 5, 6, 7, 8, 9]:  # Other valid block types
-			if draft_position >= 0:
-				valid_positions += 1
-
-	var position_accuracy: float = float(valid_positions) / max(1, total_positions)
-	var state_valid: bool = card_count > 0 and position_accuracy > 0.8  # At least 80% accuracy
-
-	Log.debug(
-		"Board state validation",
-		{
-			"valid": state_valid,
-			"card_count": card_count,
-			"valid_positions": valid_positions,
-			"total_positions": total_positions,
-			"position_accuracy": position_accuracy
-		},
-		["debug", "validation", "gamestate"]
-	)
-
-	return {"valid": state_valid, "card_count": card_count, "position_accuracy": position_accuracy}
+	
+	return checksum
 
 
-func _validate_rng_consistency() -> Dictionary:
-	"""Validate RNG state restoration"""
-	# Check if RNG was initialized with restored state
-	var rng_initialized: bool = rng != null and rng.seeded_rng != null
-	var seed_restored: bool = false
-
-	if rng_initialized:
-		# Check if we have a deterministic seed (not default)
-		# Note: We can't directly access the seed, but we can check if RNG was used
-		seed_restored = true  # If seeded_rng exists, assume it was properly restored
-
-	var rng_consistent: bool = rng_initialized and seed_restored
-
-	Log.debug(
-		"RNG consistency validation",
-		{
-			"consistent": rng_consistent,
-			"rng_initialized": rng_initialized,
-			"seed_restored": seed_restored
-		},
-		["debug", "validation", "gamestate"]
-	)
-
-	return {"consistent": rng_consistent, "seed_restored": seed_restored}
 
 
 func _get_game_instance() -> Game:
@@ -267,11 +215,11 @@ func _get_failure_summary() -> String:
 	"""Generate failure summary for debugging"""
 	var failures: Array[String] = []
 
-	if not _verification_results.restoration_detected:
-		failures.append("No restoration detected")
-	if not _verification_results.board_state_valid:
-		failures.append("Board state invalid")
-	if not _verification_results.rng_state_consistent:
-		failures.append("RNG state inconsistent")
+	if not _verification_results.original_gamestate_loaded:
+		failures.append("Original gamestate file not loaded")
+	if not _verification_results.current_gamestate_extracted:
+		failures.append("Current gamestate not extracted")
+	if not _verification_results.checksums_match:
+		failures.append("Checksums do not match - state restoration failed")
 
 	return ", ".join(failures) if not failures.is_empty() else "Unknown failure"

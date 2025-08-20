@@ -64,7 +64,24 @@ func intitialize_game() -> void:
 	Log.info("Initializing game", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
 	await data_source.activate_card_cache()
 	# RNG is now auto-initialized during autoload _ready() phase
-	game_handler.set_gamestate(core.GameState.START)
+
+	# Check for pending gamestate from restart system
+	var pending_gamestate: Variant = get_tree().get_meta("pending_gamestate", null)
+	if pending_gamestate != null:
+		Log.info(
+			"Pending gamestate detected, initializing from saved state",
+			{},
+			[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, "gamestate"]
+		)
+		get_tree().remove_meta("pending_gamestate")  # Clean up
+		await _initialize_from_gamestate(pending_gamestate as Dictionary)
+	else:
+		Log.info(
+			"Normal initialization, starting fresh game",
+			{},
+			[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
+		)
+		game_handler.set_gamestate(core.GameState.START)
 
 	Log.info(
 		"Game initialization complete - UI remains LOCKED until state transition",
@@ -935,3 +952,260 @@ func _refresh_lineup_card_ui_after_battle() -> void:
 		{"cards_refreshed": cards_refreshed, "total_lineup_size": lineup.size()},
 		[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_UI]
 	)
+
+
+func _initialize_from_gamestate(gamestate_data: Dictionary) -> void:
+	"""Simple gamestate initialization using existing game systems"""
+	Log.info("Initializing game from saved gamestate", {}, [Log.TAG_INITIALIZATION, "gamestate"])
+
+	var gamestate: Dictionary = gamestate_data.get("gamestate", {})
+	var rng_state: String = gamestate_data.get("rng_state", "")
+
+	# Restore RNG state first
+	if not rng_state.is_empty():
+		if rng.seeded_rng and rng.seeded_rng.has_method("load_state"):
+			rng.seeded_rng.load_state(rng_state)
+			Log.info(
+				"RNG state restored successfully", {}, [Log.TAG_INITIALIZATION, "gamestate", "rng"]
+			)
+		else:
+			Log.warning(
+				"RNG system not available for state loading, continuing with default",
+				{},
+				[Log.TAG_INITIALIZATION, "gamestate", "rng"]
+			)
+
+	# Restore board content using existing deserialization system
+	await _restore_board_content(gamestate)
+
+	# Extract saved game state from lineup data
+	var lineup_data: Dictionary = gamestate.get("lineup", {})
+	var saved_game_state: String = lineup_data.get("current_game_state", "START")
+
+	# Set the appropriate game state
+	var target_state: core.GameState
+	match saved_game_state:
+		"DRAFT":
+			target_state = core.GameState.DRAFT
+		"PREPARE":
+			target_state = core.GameState.PREPARE
+		"PREBATTLE":
+			target_state = core.GameState.PREBATTLE
+		"BATTLE":
+			target_state = core.GameState.BATTLE
+		"POSTBATTLE":
+			target_state = core.GameState.POSTBATTLE
+		_:
+			target_state = core.GameState.START
+
+	game_handler.set_gamestate(target_state)
+
+	Log.info(
+		"Gamestate initialization complete",
+		{"restored_state": saved_game_state, "target_state": core.GameState.keys()[target_state]},
+		[Log.TAG_INITIALIZATION, "gamestate"]
+	)
+
+
+func _restore_board_content(gamestate: Dictionary) -> void:
+	"""Restore board content using existing deserialization system"""
+	var board_data: Dictionary = gamestate.get("board", {})
+	var draft_area: Array = board_data.get("draft_area", [])
+	
+	if draft_area.is_empty():
+		Log.warning(
+			"No draft area data found in gamestate",
+			{},
+			[Log.TAG_INITIALIZATION, "gamestate", "board"]
+		)
+		return
+	
+	Log.info(
+		"Restoring board content from saved state",
+		{"total_blocks": draft_area.size()},
+		[Log.TAG_INITIALIZATION, "gamestate", "board"]
+	)
+	
+	var blocks_restored: int = 0
+	var cards_restored: int = 0
+	
+	for block_data in draft_area:
+		if not block_data is Dictionary:
+			continue
+			
+		var block_dict: Dictionary = block_data as Dictionary
+		var object_type: int = block_dict.get("object_type", 0)
+		var draft_position: int = block_dict.get("draft_position", -1)
+		
+		if draft_position < 0:
+			Log.warning(
+				"Invalid draft position in block data",
+				{"block_data": block_dict},
+				[Log.TAG_INITIALIZATION, "gamestate", "board"]
+			)
+			continue
+		
+		# Route to appropriate deserializer based on object_type
+		var restored_block: Block = await _deserialize_block_by_type(object_type, block_dict)
+		if restored_block:
+			# Calculate grid position from draft position
+			var grid_pos: Vector2i = _draft_position_to_grid(draft_position)
+			
+			# Place block directly in grid without triggering events
+			level_controller.add_to_grid(grid_pos, restored_block, 0)
+			
+			blocks_restored += 1
+			if object_type == core.ObjectType.CARD:
+				cards_restored += 1
+				
+			Log.debug(
+				"Block restored to grid",
+				{
+					"object_type": object_type,
+					"draft_position": draft_position,
+					"grid_pos": grid_pos,
+					"block_type": restored_block.get_class()
+				},
+				[Log.TAG_INITIALIZATION, "gamestate", "board"]
+			)
+		else:
+			Log.warning(
+				"Failed to restore block from data",
+				{"object_type": object_type, "draft_position": draft_position},
+				[Log.TAG_INITIALIZATION, "gamestate", "board"]
+			)
+	
+	Log.info(
+		"Board content restoration complete",
+		{
+			"total_blocks_restored": blocks_restored,
+			"cards_restored": cards_restored,
+			"total_processed": draft_area.size()
+		},
+		[Log.TAG_INITIALIZATION, "gamestate", "board"]
+	)
+
+
+func _deserialize_block_by_type(object_type: int, block_data: Dictionary) -> Block:
+	"""Route to appropriate deserializer based on object_type"""
+	match object_type:
+		core.ObjectType.CARD:
+			# Use existing card deserialization system (async because it loads from database)
+			return await Card.deserialize_from_dict(block_data)
+		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
+			# Use existing item block deserialization system (synchronous)  
+			return ItemBlock.deserialize_from_dict(block_data)
+		_:
+			Log.warning(
+				"Deserialization not implemented for object type",
+				{"object_type": object_type, "available_types": core.ObjectType.keys()},
+				[Log.TAG_INITIALIZATION, "gamestate", "deserialization"]
+			)
+			return null
+
+
+func _draft_position_to_grid(draft_position: int) -> Vector2i:
+	"""Convert draft position to grid coordinates"""
+	# Assuming standard grid layout (20 positions in 4 rows x 5 columns)
+	var grid_width: int = 5
+	var grid_x: int = draft_position % grid_width
+	var grid_y: int = draft_position / grid_width
+	return Vector2i(grid_x, grid_y)
+
+
+func load_state_from_file(gamestate_file_path: String) -> bool:
+	"""Load and restore gamestate from file without restarting the app"""
+	Log.info(
+		"Loading gamestate from file in current session",
+		{"file_path": gamestate_file_path},
+		[Log.TAG_DEBUG, "gamestate", "load"]
+	)
+
+	# Read and parse JSON file
+	var file: FileAccess = FileAccess.open(gamestate_file_path, FileAccess.READ)
+	if not file:
+		Log.error(
+			"Cannot open gamestate file",
+			{"file_path": gamestate_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load", "error"]
+		)
+		return false
+
+	var json_text: String = file.get_as_text()
+	file.close()
+
+	var json: JSON = JSON.new()
+	var parse_result: Error = json.parse(json_text)
+	if parse_result != OK:
+		Log.error(
+			"Failed to parse gamestate JSON",
+			{"file_path": gamestate_file_path, "error": parse_result},
+			[Log.TAG_DEBUG, "gamestate", "load", "error"]
+		)
+		return false
+
+	var gamestate_data: Dictionary = json.data as Dictionary
+	
+	# Extract the actual gamestate and RNG data
+	var gamestate: Dictionary = gamestate_data.get("gamestate", {})
+	var rng_state: String = gamestate_data.get("rng_state", "")
+	
+	if gamestate.is_empty():
+		Log.error(
+			"No gamestate data found in file",
+			{"file_path": gamestate_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load", "error"]
+		)
+		return false
+
+	# Restore RNG state first
+	if not rng_state.is_empty():
+		if rng.seeded_rng and rng.seeded_rng.has_method("load_state"):
+			rng.seeded_rng.load_state(rng_state)
+			Log.info(
+				"RNG state restored successfully", 
+				{}, 
+				[Log.TAG_DEBUG, "gamestate", "rng"]
+			)
+
+	# Restore board content
+	await _restore_board_content(gamestate)
+
+	# Restore lineup and transition to the saved game state
+	var lineup_data: Dictionary = gamestate.get("lineup", {})
+	var saved_game_state: String = lineup_data.get("current_game_state", "START")
+
+	# Set the appropriate game state and transition
+	var target_state: core.GameState
+	match saved_game_state:
+		"DRAFT":
+			target_state = core.GameState.DRAFT
+		"PREPARE":
+			target_state = core.GameState.PREPARE  
+		"PREBATTLE":
+			target_state = core.GameState.PREBATTLE
+		"BATTLE":
+			target_state = core.GameState.BATTLE
+		"POSTBATTLE":
+			target_state = core.GameState.POSTBATTLE
+		_:
+			target_state = core.GameState.START
+
+	# Apply the restored game state
+	game_handler.current_gamestate = target_state
+	
+	# Let LineupHandler restore lineup state if needed
+	if not lineup_data.is_empty():
+		lineup_handler.restore_from_saved_state(lineup_data)
+
+	Log.info(
+		"Gamestate loaded and transitioned successfully",
+		{
+			"file": gamestate_file_path.get_file(),
+			"restored_state": saved_game_state,
+			"target_state": core.GameState.keys()[target_state]
+		},
+		[Log.TAG_DEBUG, "gamestate", "load"]
+	)
+	
+	return true

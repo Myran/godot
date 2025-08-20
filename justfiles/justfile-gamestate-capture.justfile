@@ -183,6 +183,7 @@ gamestate-help:
     @echo "  just gamestate-help                   # Show this help"
     @echo "  just gamestate-status                 # System status and diagnostics"
     @echo "  just test-gamestate-system            # Validate system files"
+    @echo "  just test-save-load-cycle             # Complete save/load cycle validation"
     @echo ""
     @echo "📁 Files created in: {{SAVED_STATES_DIR}}"
 
@@ -281,4 +282,128 @@ gamestate-status:
         else
             echo "   ❌ No Save State action found"
         fi
+    fi
+
+
+# 🧪 Complete Save/Load Cycle Test with Checksum Validation
+test-save-load-cycle:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🧪 Starting Complete Save/Load Cycle Test"
+    echo "========================================"
+    echo ""
+    
+    # Clean up any previous test files
+    echo "🧹 Cleaning up previous test files..."
+    rm -f "{{SAVED_STATES_DIR}}"/cycle_test_*.json
+    
+    echo "📋 Step 1: Run initial save test"
+    echo "--------------------------------"
+    just test-desktop-target gamestate-save-test || {
+        echo "❌ Initial save test failed"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 2: Extract first saved state"
+    echo "-----------------------------------"
+    just capture-gamestate cycle_test_first || {
+        echo "❌ Failed to extract first gamestate"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 3: Load saved state and save again"
+    echo "-----------------------------------------"
+    
+    # Create temporary test config for load+save
+    cat > tests/debug_configs/gamestate-load-and-save-test.json << 'EOF'
+    {
+      "description": "Load gamestate and save it again for cycle testing",
+      "checksum_config": {
+        "initial_seed": 12345,
+        "state_type": "load_and_save_cycle"
+      },
+      "actions": [
+        "system.debug.load_gamestate",
+        "system.debug.save_gamestate"
+      ],
+      "metadata": {
+        "gamestate_file": "cycle_test_first.json"
+      }
+    }
+    EOF
+    
+    just test-desktop-target gamestate-load-and-save-test || {
+        echo "❌ Load and save test failed"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 4: Extract second saved state"
+    echo "------------------------------------"
+    just capture-gamestate cycle_test_second || {
+        echo "❌ Failed to extract second gamestate"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 5: Compare gamestate files"
+    echo "---------------------------------"
+    
+    FIRST_FILE="{{SAVED_STATES_DIR}}/cycle_test_first.json"
+    SECOND_FILE="{{SAVED_STATES_DIR}}/cycle_test_second.json"
+    
+    if [[ ! -f "$FIRST_FILE" ]]; then
+        echo "❌ First save file not found: $FIRST_FILE"
+        exit 1
+    fi
+    
+    if [[ ! -f "$SECOND_FILE" ]]; then
+        echo "❌ Second save file not found: $SECOND_FILE"
+        exit 1
+    fi
+    
+    echo "📊 Calculating checksums..."
+    FIRST_CHECKSUM=$(jq -r '.gamestate' "$FIRST_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
+    SECOND_CHECKSUM=$(jq -r '.gamestate' "$SECOND_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
+    
+    echo "🔍 First save checksum:  $FIRST_CHECKSUM"
+    echo "🔍 Second save checksum: $SECOND_CHECKSUM"
+    echo ""
+    
+    if [[ "$FIRST_CHECKSUM" == "$SECOND_CHECKSUM" ]]; then
+        echo "✅ SUCCESS: Save/Load cycle preserves gamestate perfectly!"
+        echo "🎉 Checksums match - the system works correctly"
+        
+        # Clean up temporary test file
+        rm -f tests/debug_configs/gamestate-load-and-save-test.json
+        
+        echo ""
+        echo "📊 Test Summary:"
+        echo "• Initial save: ✅ Success"
+        echo "• State extraction: ✅ Success" 
+        echo "• Load and re-save: ✅ Success"
+        echo "• Second extraction: ✅ Success"
+        echo "• Checksum comparison: ✅ MATCH"
+        echo ""
+        echo "🎯 The gamestate save/load system is working perfectly!"
+        
+    else
+        echo "❌ FAILURE: Save/Load cycle does not preserve gamestate"
+        echo "💡 Checksums differ - there may be an issue with the restoration logic"
+        echo ""
+        echo "🔍 Debug Information:"
+        echo "First file size:  $(wc -c < "$FIRST_FILE") bytes"
+        echo "Second file size: $(wc -c < "$SECOND_FILE") bytes"
+        echo ""
+        echo "🔧 Compare files manually:"
+        echo "diff '$FIRST_FILE' '$SECOND_FILE'"
+        echo ""
+        echo "🔧 Compare gamestate sections only:"
+        echo "diff <(jq -S '.gamestate' '$FIRST_FILE') <(jq -S '.gamestate' '$SECOND_FILE')"
+        
+        # Don't clean up files for debugging
+        exit 1
     fi
