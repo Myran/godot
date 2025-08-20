@@ -55,6 +55,7 @@ DESKTOP_LOG_DIR := env_var("HOME") + "/Library/Application Support/Godot/app_use
 PROJECT_LOGS_DIR := "./logs"
 USER_DATA_DIR := "$HOME/Library/Application Support/Godot/app_userdata/gametwo"
 STANDARD_LOGS_DIR := USER_DATA_DIR + "/logs"
+SAVED_STATES_DIR := USER_DATA_DIR + "/debug/saved_states"
 
 # ================================
 # SHARED UTILITY FUNCTIONS

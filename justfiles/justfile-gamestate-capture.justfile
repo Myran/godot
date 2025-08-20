@@ -1,0 +1,284 @@
+# GameState Debug Capture & Load System
+# Enables complete developer workflow for scenario testing
+
+# Extract captured gamestate from logs and create debug save file
+capture-gamestate NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting gamestate '{{NAME}}' from logs..."
+    echo ""
+    
+    # Use shared log command for DRY compliance
+    echo "1️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in desktop logs..."
+    
+    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    
+    if [ -z "$CAPTURE_OUTPUT" ]; then
+        echo "❌ No gamestate capture found in recent desktop logs"
+        echo ""
+        echo "💡 To capture a gamestate:"
+        echo "   1. Start game: just run-desktop"
+        echo "   2. Open debug menu (press D key)"
+        echo "   3. Click 'Save State' button"
+        echo "   4. Exit game"
+        echo "   5. Run: just capture-gamestate NAME"
+        echo ""
+        echo "🔍 Check if Save State action was used:"
+        if just logs-desktop-last 2>/dev/null | grep -q "Save State\|DEBUG_GAMESTATE_CAPTURE"; then
+            SAVE_STATE_COUNT=$(just logs-desktop-last 2>/dev/null | grep -c "DEBUG_GAMESTATE_CAPTURE" || echo "0")
+            echo "   ✅ Save State action found in logs ($SAVE_STATE_COUNT captures)"
+        else
+            echo "   ❌ No Save State action found"
+        fi
+        exit 1
+    fi
+    
+    # Extract the most recent capture line from the search results
+    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | tail -1)
+    
+    if [ -z "$CAPTURE_LINE" ]; then
+        echo "❌ No valid DEBUG_GAMESTATE_CAPTURE entry found"
+        exit 1
+    fi
+    
+    # Create debug saves directory in user data location (cross-platform compatible)
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    mkdir -p "$SAVED_STATES_DIR"
+    
+    # Extract JSON data from the capture line
+    echo "2️⃣ Extracting JSON data from capture..."
+    JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+    
+    if [ -z "$JSON_DATA" ]; then
+        echo "❌ No valid JSON data found in capture line"
+        echo "Debug info: $CAPTURE_LINE"
+        exit 1
+    fi
+    
+    # Validate and save JSON data
+    echo "$JSON_DATA" | jq '.' > /tmp/gamestate_temp.json
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Invalid JSON in captured gamestate"
+        echo "Raw data: $JSON_DATA"
+        exit 1
+    fi
+    
+    # Move to final location
+    mv /tmp/gamestate_temp.json "$SAVED_STATES_DIR/{{NAME}}.json"
+    
+    # Verify file creation and show info
+    if [ -f "$SAVED_STATES_DIR/{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/{{NAME}}.json")
+        
+        echo ""
+        echo "✅ Gamestate saved successfully!"
+        echo "📄 File: $SAVED_STATES_DIR/{{NAME}}.json"
+        echo "🆔 Capture ID: $CAPTURE_ID"
+        echo "📱 Session ID: $SESSION_ID"
+        echo "⏰ Captured: $TIMESTAMP"
+        echo "📏 Size: ${FILE_SIZE} bytes"
+        echo ""
+        echo "🎮 Next steps:"
+        echo "   1. Start game: just run-desktop"
+        echo "   2. Open debug menu (press D key)"
+        echo "   3. Navigate to 'Saved States'"
+        echo "   4. Click 'Load: {{NAME}}'"
+        echo "   5. Continue with new actions for recording"
+        echo ""
+        echo "🔄 Integration with existing recording system:"
+        echo "   • Load this state and perform actions"
+        echo "   • Exit game to get NEW session ID (don't use the captured one)"
+        echo "   • Generate replay config: just replay-generate-desktop NEW_SESSION_ID replay-from-{{NAME}}"
+        echo ""
+        echo "💡 The captured session ID ($SESSION_ID) is from when this state was originally saved."
+        echo "   After loading and performing new actions, you'll get a fresh session ID for replay generation."
+    else
+        echo "❌ Failed to create gamestate file"
+        exit 1
+    fi
+
+# List all available saved states
+list-saved-states:
+    #!/usr/bin/env bash
+    echo "🔄 Available Debug Saved States:"
+    echo "================================"
+    
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    
+    if [ ! -d "$SAVED_STATES_DIR" ]; then
+        echo "📁 No saved states directory found"
+        echo "💡 Use 'just capture-gamestate NAME' to create saved states"
+        exit 0
+    fi
+    
+    cd "$SAVED_STATES_DIR"
+    
+    if [ -z "$(ls -A . 2>/dev/null)" ]; then
+        echo "📁 No saved states found"
+        echo "💡 Use debug menu 'Save State' + 'just capture-gamestate NAME'"
+        exit 0
+    fi
+    
+    for file in *.json; do
+        if [ -f "$file" ]; then
+            NAME=$(basename "$file" .json)
+            CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$file" 2>/dev/null)
+            SESSION_ID=$(jq -r '.session_id // "unknown"' "$file" 2>/dev/null)
+            TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$file" 2>/dev/null)
+            SIZE=$(wc -c < "$file")
+            
+            echo "🎯 $NAME"
+            echo "   📄 File: $file"
+            echo "   🆔 Capture ID: $CAPTURE_ID"
+            echo "   📱 Session ID: $SESSION_ID"
+            echo "   ⏰ Captured: $TIMESTAMP"
+            echo "   📏 Size: ${SIZE} bytes"
+            echo ""
+        fi
+    done
+    
+    echo "🎮 To load a state:"
+    echo "   1. just run-desktop"
+    echo "   2. Debug menu → Saved States → Load: [name]"
+
+# Clean up old saved states
+clean-saved-states:
+    #!/usr/bin/env bash
+    echo "🧹 Cleaning saved states..."
+    
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    
+    if [ -d "$SAVED_STATES_DIR" ]; then
+        COUNT=$(ls -1 "$SAVED_STATES_DIR"/*.json 2>/dev/null | wc -l)
+        rm -f "$SAVED_STATES_DIR"/*.json
+        echo "✅ Removed $COUNT saved state files"
+    else
+        echo "📁 No saved states directory found"
+    fi
+
+# Show comprehensive gamestate workflow help
+gamestate-help:
+    @echo "🎮 GameState Debug Workflow Commands:"
+    @echo "===================================="
+    @echo ""
+    @echo "📋 Complete Workflow:"
+    @echo "  1. just run-desktop                    # Start game"
+    @echo "  2. Debug menu → 'Save State'           # Capture state during gameplay"  
+    @echo "  3. Exit game"
+    @echo "  4. just capture-gamestate NAME         # Extract from logs → JSON file"
+    @echo "  5. just run-desktop                    # Start again"
+    @echo "  6. Debug menu → 'Saved States'         # Navigate to saved states"
+    @echo "  7. Click 'Load: NAME'                  # Load as recording starting point"
+    @echo "  8. Continue with new actions/recording"
+    @echo ""
+    @echo "🔧 Commands:"
+    @echo "  just capture-gamestate NAME           # Extract last captured state from logs"
+    @echo "  just list-saved-states                # Show all available saved states"
+    @echo "  just clean-saved-states               # Remove all saved state files"
+    @echo "  just gamestate-help                   # Show this help"
+    @echo "  just gamestate-status                 # System status and diagnostics"
+    @echo "  just test-gamestate-system            # Validate system files"
+    @echo ""
+    @echo "📁 Files created in: {{SAVED_STATES_DIR}}"
+
+# Quick test of gamestate system (for development validation)
+test-gamestate-system:
+    #!/usr/bin/env bash
+    echo "🧪 Testing gamestate capture system..."
+    
+    # Check if required directories exist
+    if [ ! -d "project/debug/actions/system" ]; then
+        echo "❌ Debug actions directory not found"
+        echo "💡 Run implementation first"
+        exit 1
+    fi
+    
+    # Check for required files
+    REQUIRED_FILES=(
+        "project/debug/actions/system/save_debug_state_action.gd"
+        "project/debug/actions/system/load_debug_state_action.gd"
+        "project/core/saves/gamestate_save_manager.gd"
+        "justfiles/justfile-gamestate-capture.justfile"
+    )
+    
+    MISSING_FILES=0
+    for file in "${REQUIRED_FILES[@]}"; do
+        if [ ! -f "$file" ]; then
+            echo "❌ Missing: $file"
+            MISSING_FILES=$((MISSING_FILES + 1))
+        else
+            echo "✅ Found: $file"
+        fi
+    done
+    
+    if [ $MISSING_FILES -eq 0 ]; then
+        echo ""
+        echo "✅ All gamestate system files present!"
+        echo "🎮 Ready for: just gamestate-help"
+    else
+        echo ""
+        echo "❌ $MISSING_FILES files missing - implementation incomplete"
+    fi
+
+# Development helper: Show current saved states status
+gamestate-status:
+    #!/usr/bin/env bash
+    echo "📊 GameState System Status:"
+    echo "=========================="
+    
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    
+    # Check for saved states directory
+    if [ -d "$SAVED_STATES_DIR" ]; then
+        COUNT=$(ls -1 "$SAVED_STATES_DIR"/*.json 2>/dev/null | wc -l)
+        echo "📁 Saved states directory: EXISTS"
+        echo "📄 Saved state files: $COUNT"
+        
+        if [ $COUNT -gt 0 ]; then
+            echo ""
+            echo "📋 Available states:"
+            just list-saved-states
+        fi
+    else
+        echo "📁 Saved states directory: NOT FOUND"
+        echo "💡 Will be created automatically when first state is captured"
+    fi
+    
+    echo ""
+    echo "🔍 Recent gamestate captures in logs:"
+    
+    # Use existing logs-desktop-last command to search for captures
+    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    
+    if [ -n "$CAPTURE_OUTPUT" ]; then
+        RECENT_CAPTURES=$(echo "$CAPTURE_OUTPUT" | grep -c "DEBUG_GAMESTATE_CAPTURE" || echo "0")
+        echo "🎯 Total captures found: $RECENT_CAPTURES"
+        
+        if [ "$RECENT_CAPTURES" -gt 0 ]; then
+            echo "⏰ Most recent capture:"
+            LAST_CAPTURE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | tail -1 | grep -o '{.*}' | tail -1)
+            if [ -n "$LAST_CAPTURE" ]; then
+                echo "$LAST_CAPTURE" | jq -r '.capture_timestamp // "Unknown timestamp"' 2>/dev/null || echo "   (Unable to parse timestamp)"
+            else
+                echo "   (Unable to parse capture data)"
+            fi
+        fi
+    else
+        echo "📂 No DEBUG_GAMESTATE_CAPTURE entries found in recent logs"
+        echo "💡 Use debug menu 'Save State' to capture gamestate first"
+        
+        # Check if Save State action has been used recently
+        echo ""
+        echo "🔍 Save State action usage:"
+        if just logs-desktop-last 2>/dev/null | grep -q "Save State"; then
+            SAVE_STATE_COUNT=$(just logs-desktop-last 2>/dev/null | grep -c "Save State" 2>/dev/null || echo "0")
+            echo "   ✅ Save State found in recent logs ($SAVE_STATE_COUNT times)"
+        else
+            echo "   ❌ No Save State action found"
+        fi
+    fi

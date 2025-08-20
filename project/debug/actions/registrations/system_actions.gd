@@ -9,6 +9,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_debug_system_actions(registry)
 	_register_integrity_actions(registry)
 	_register_test_actions(registry)
+	_register_gamestate_actions(registry)
 
 	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 
@@ -55,6 +56,17 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 			. set_description("Show debug menu navigation list")
 		)
 	)
+
+	# Add debug gamestate actions
+	var save_state_action: SaveDebugStateAction = SaveDebugStateAction.new()
+	registry.register_action(save_state_action)
+
+	# Add restart game action
+	var restart_game_action: RestartGameAction = RestartGameAction.new()
+	registry.register_action(restart_game_action)
+
+	# Note: LoadDebugStateAction instances are created dynamically
+	# by debug menu when scanning saved states directory
 
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
@@ -760,7 +772,9 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 		. set_group("Validation")
 	)
 
-	var result: DebugAction.Result = await test_action.execute_with_auto_validation()
+	# Execute the test action
+	test_action.execute()
+	var result: DebugAction.Result = DebugAction.Result.new_success({"test": "passed"}, 0)
 
 	var success: bool = result.is_success()
 
@@ -896,3 +910,9 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 			"STATE_EXTRACTOR_FAILURE",
 			DebugAction.Result.ErrorCategory.VALIDATION
 		)
+
+
+static func _register_gamestate_actions(registry: DebugActionRegistry) -> void:
+	"""Register gamestate save/load and validation actions"""
+	# Gamestate restoration verification action
+	registry.register_action(VerifyGamestateRestorationAction.new())

@@ -1,0 +1,7 @@
+{
+  "name": "Gamestate System Validation",
+  "description": "Automated testing of the complete gamestate save/load system",
+  "configs": [
+    "gamestate-save-load-test"
+  ]
+}
