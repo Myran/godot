@@ -33,7 +33,17 @@ func deep_duplicate() -> Ability:
 
 
 func serialize_to_dict() -> Dictionary:
-	return {"type": get_class(), "persistence_type": persistence_type}
+	var class_name_result: String = get_script().get_global_name()
+	Log.debug(
+		"Ability serialization - class name detected",
+		{
+			"detected_class_name": class_name_result,
+			"get_class_result": get_class(),
+			"persistence_type": persistence_type
+		},
+		["serialization", "ability", "debug"]
+	)
+	return {"type": class_name_result, "persistence_type": persistence_type}
 
 
 func debug_trigger_effect(_target_card: Card) -> bool:

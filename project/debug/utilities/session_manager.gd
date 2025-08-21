@@ -158,7 +158,7 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 			"action_type": action_type,
 			"sequence": sequence,
 			"game_state_content": game_state,
-			"draft_area_count": game_state.get("board", {}).get("draft_area", []).size(),
+			"draft_area_count": game_state.get("board", {}).get("draft_area", {}).size(),
 			"lineup_allies_count": game_state.get("lineup", {}).get("allies", {}).size(),
 			"current_game_state": game_state.get("lineup", {}).get("current_game_state", "UNKNOWN"),
 			"ui_state": game_state.get("lineup", {}).get("ui_state", "UNKNOWN")

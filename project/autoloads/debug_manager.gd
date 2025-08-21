@@ -14,8 +14,7 @@ enum DebugEventType {
 	EVENT_CLOSE_DB_DEBUG_MENU,  # Preserved from original debug.gd
 	EVENT_QUIT,
 	EVENT_TOGGLE_DEBUG_MENU_LIST,
-	EVENT_RESTART_GAME,  # Restart the current game scene cleanly
-	EVENT_RESTART_WITH_GAMESTATE  # Restart game with saved gamestate data
+	EVENT_RESTART_GAME  # Restart the current game scene cleanly
 }
 
 @export var popup_debug: Control  # Assign in editor

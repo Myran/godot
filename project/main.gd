@@ -130,14 +130,6 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 		DebugManager.DebugEventType.EVENT_RESTART_GAME:
 			Log.info("Restart event received, restarting game scene", {}, ["debug", "system"])
 			_restart_game_scene()
-		DebugManager.DebugEventType.EVENT_RESTART_WITH_GAMESTATE:
-			var gamestate_data: Dictionary = _args[0] if _args.size() > 0 else {}
-			Log.info(
-				"Restart with gamestate event received",
-				{"has_gamestate": not gamestate_data.is_empty()},
-				["debug", "system", "gamestate"]
-			)
-			_restart_game_scene_with_gamestate(gamestate_data)
 
 
 func _restart_game_scene() -> void:
@@ -164,52 +156,6 @@ func _restart_game_scene() -> void:
 	get_tree().change_scene_to_file(current_scene_path)
 
 
-func _restart_game_scene_with_gamestate(gamestate_data: Dictionary) -> void:
-	"""Restart the game scene with saved gamestate data"""
-	Log.info(
-		"Restarting game scene with gamestate",
-		{"has_data": not gamestate_data.is_empty()},
-		["system", "restart", "gamestate"]
-	)
-
-	# Store gamestate data for game initialization to pick up
-	if not gamestate_data.is_empty() and get_tree():
-		# Use a temporary autoload variable that game.gd can check during initialization
-		get_tree().set_meta("pending_gamestate", gamestate_data)
-		Log.debug("Gamestate stored for initialization", {}, ["system", "restart", "gamestate"])
-	elif not gamestate_data.is_empty():
-		Log.warning(
-			"Cannot store gamestate - tree unavailable", {}, ["system", "restart", "gamestate"]
-		)
-
-	# End any active session cleanly
-	if SessionManager.has_active_session():
-		SessionManager.end_current_session("gamestate_restart")
-		Log.debug("Active session ended for gamestate restart", {}, ["system", "restart"])
-
-	# Reload current scene - the new instance will check for pending_gamestate
-	if get_tree() and get_tree().current_scene:
-		var current_scene_path: String = get_tree().current_scene.scene_file_path
-		if current_scene_path.is_empty():
-			current_scene_path = "res://main.tscn"
-			Log.warning(
-				"Current scene path empty for gamestate restart, using fallback",
-				{"fallback": current_scene_path},
-				["system", "restart", "gamestate"]
-			)
-
-		Log.debug(
-			"Reloading scene with gamestate",
-			{"path": current_scene_path},
-			["system", "restart", "gamestate"]
-		)
-		get_tree().change_scene_to_file(current_scene_path)
-	else:
-		Log.warning(
-			"Cannot restart scene - tree or current scene unavailable",
-			{},
-			["system", "restart", "gamestate"]
-		)
 
 
 func _input(event: InputEvent) -> void:

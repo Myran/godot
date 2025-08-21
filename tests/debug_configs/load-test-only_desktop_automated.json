@@ -1,0 +1,13 @@
+{
+  "description": "Test only gamestate loading to isolate timeout issue",
+  "actions": [
+    "system.debug.load_gamestate"
+  ],
+  "metadata": {
+    "gamestate_file": "cycle_test_first.json",
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "load-test-only_desktop_1755777613"
+  }
+}
