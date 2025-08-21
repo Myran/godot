@@ -32,6 +32,10 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	return {"type": get_class(), "persistence_type": persistence_type}
+
+
 func debug_trigger_effect(_target_card: Card) -> bool:
 	Log.warning(
 		"debug_trigger_effect not implemented for ability type",

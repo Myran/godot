@@ -16,6 +16,13 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	var base_data: Dictionary = super.serialize_to_dict()
+	base_data["base_health_bonus"] = base_health_bonus
+	base_data["base_attack_bonus"] = base_attack_bonus
+	return base_data
+
+
 @warning_ignore("unused_parameter")
 
 

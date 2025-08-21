@@ -13,6 +13,12 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	var base_data: Dictionary = super.serialize_to_dict()
+	base_data["health_bonus"] = health_bonus
+	return base_data
+
+
 func handle_battle_event(event: BattleAbilityEvent) -> void:
 	if event.phase == core.Tempus.POST and event.event is BattleContext.DeathEvent:
 		var stat_event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(

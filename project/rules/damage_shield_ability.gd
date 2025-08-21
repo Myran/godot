@@ -10,6 +10,12 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	var base_data: Dictionary = super.serialize_to_dict()
+	base_data["shield_used"] = shield_used
+	return base_data
+
+
 func handle_battle_event(event: BattleAbilityEvent) -> void:
 	if shield_used:
 		return

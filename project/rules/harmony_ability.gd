@@ -15,6 +15,13 @@ func deep_duplicate() -> Ability:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	var base_data: Dictionary = super.serialize_to_dict()
+	base_data["health_bonus"] = health_bonus
+	base_data["attack_bonus"] = attack_bonus
+	return base_data
+
+
 @warning_ignore("unused_parameter")
 
 
@@ -49,7 +56,7 @@ func apply_tribal_bonus(event: DraftAbilityEvent, tribe: String) -> void:
 	var tribal_units: Array[Card] = AbilityHelper.get_units_with_tag_in_lineup(
 		event.draft_context.lineup, tribe, event.unit
 	)
-	
+
 	if tribal_units.is_empty():
 		return
 

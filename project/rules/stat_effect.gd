@@ -16,6 +16,15 @@ func deep_duplicate() -> StatEffect:
 	return copy
 
 
+func serialize_to_dict() -> Dictionary:
+	return {
+		"type": "StatEffect",
+		"health_bonus": health_bonus,
+		"attack_bonus": attack_bonus,
+		"source": source
+	}
+
+
 func get_description() -> String:
 	var parts: Array[String] = []
 	if health_bonus != 0:

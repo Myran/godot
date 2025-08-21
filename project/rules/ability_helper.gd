@@ -438,15 +438,15 @@ static func get_units_with_tag_in_lineup(
 ) -> Array[Card]:
 	"""Get all units in lineup that have the specified tag, optionally excluding one unit"""
 	var units: Array[Card] = []
-	
+
 	for position: int in lineup:
 		var card: Card = lineup[position]
 		if card == exclude_unit:
 			continue
-		
+
 		if has_any_tag(card, [tag]):
 			units.append(card)
-	
+
 	return units
 
 

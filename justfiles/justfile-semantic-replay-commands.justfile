@@ -1253,6 +1253,18 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     DEBUG_ACTIONS+=("game.lineup.populate_enemy")
                     DEBUG_ACTIONS+=("game.battle.start_player")
                     ;;
+                "system.debug.load_gamestate")
+                    # Extract file path from load gamestate action data using jq
+                    FILE_NAME=$(echo "$JSON_PART" | jq -r '.data.file // null')
+                    
+                    if [ -n "$FILE_NAME" ] && [ "$FILE_NAME" != "null" ]; then
+                        DEBUG_ACTIONS+=("{ \"action\": \"system.debug.load_gamestate\", \"params\": { \"file\": \"$FILE_NAME\" } }")
+                        echo "   🔄 Load gamestate action: $FILE_NAME"
+                    else
+                        DEBUG_ACTIONS+=("system.debug.load_gamestate")
+                        echo "   🔄 Load gamestate action (no file specified)"
+                    fi
+                    ;;
                 "card.move")
                     # Extract complete move operation parameters using jq
                     CARD_ID=$(echo "$JSON_PART" | jq -r '.data.card_id // null')
@@ -1270,6 +1282,30 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
                     else
                         echo "   Warning: Incomplete or unknown move operation data"
                         DEBUG_ACTIONS+=("game.draft.move_card_to_lineup_player")
+                    fi
+                    ;;
+                system.debug.save_gamestate|system.debug.load_gamestate)
+                    # Handle gamestate save/load debug actions - already implemented above
+                    echo "   🔄 Gamestate action: $ACTION_TYPE (handled by specific case)"
+                    ;;
+                *.debug.*)
+                    # 🚨 CRITICAL: Generic debug action handler - implements general system
+                    # This handles ALL debug actions automatically without case-by-case handling
+                    # as requested: "if we perform a debug action, they should be logged and performed in replay"
+                    
+                    echo "   🔧 Generic debug action: $ACTION_TYPE"
+                    
+                    # Extract parameters if present
+                    PARAMS_JSON=$(echo "$JSON_PART" | jq -c '.data.params // {}')
+                    
+                    if [ "$PARAMS_JSON" != "{}" ] && [ "$PARAMS_JSON" != "null" ]; then
+                        # Debug action with parameters
+                        DEBUG_ACTIONS+=("{ \"action\": \"$ACTION_TYPE\", \"params\": $PARAMS_JSON }")
+                        echo "   🔧 Debug action with params: $ACTION_TYPE"
+                    else
+                        # Debug action without parameters
+                        DEBUG_ACTIONS+=("$ACTION_TYPE")
+                        echo "   🔧 Debug action: $ACTION_TYPE"
                     fi
                     ;;
                 *)
@@ -2369,8 +2405,8 @@ logs-desktop-last:
     echo ""
     
     if [ -d "$LOGS_DIR" ]; then
-        # Get latest log file
-        LATEST_LOG=$(ls -t "$LOGS_DIR"/*.log 2>/dev/null | head -1)
+        # Get latest Godot desktop log file (not Android test logs)
+        LATEST_LOG=$(ls -t "$LOGS_DIR"/godot*.log 2>/dev/null | head -1)
         if [ -n "$LATEST_LOG" ]; then
             echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

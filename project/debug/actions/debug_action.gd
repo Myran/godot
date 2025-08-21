@@ -559,6 +559,7 @@ class Result:
 @export_multiline var description: String = "No description."
 @export var requires_confirmation: bool = false
 @export var keyboard_shortcut: String = ""
+@export var use_auto_semantic_logging: bool = true  # Actions can opt out to handle their own semantic logging
 
 signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
@@ -678,6 +679,9 @@ func execute() -> void:
 
 	_update_status("Executing " + action_name + "...")
 
+	# 🚨 CRITICAL: Log as SEMANTIC_ACTION before execution for replay generation
+	_log_debug_action_as_semantic()
+
 	if action_callable.is_valid():
 		result = await action_callable.call()
 
@@ -755,6 +759,9 @@ func execute_with_params(params: Dictionary = {}) -> void:
 	var result: Variant = null
 
 	_update_status("Executing " + action_name + " with params...")
+
+	# 🚨 CRITICAL: Log as SEMANTIC_ACTION before execution for replay generation
+	_log_debug_action_as_semantic(params)
 
 	if action_callable.is_valid():
 		if params.is_empty():
@@ -930,6 +937,9 @@ func execute_with_state_validation(
 	var error_message: String = ""
 
 	_update_status("Executing " + action_name + " with validation...")
+
+	# 🚨 CRITICAL: Log as SEMANTIC_ACTION before execution for replay generation
+	_log_debug_action_as_semantic()
 
 	if action_callable.is_valid():
 		execution_result = await action_callable.call()
@@ -1107,4 +1117,66 @@ func _process_validation_result_for_legacy_execution(validation_result: DebugAct
 			"validation_used": true
 		},
 		["debug", "validation", "legacy_conversion"]
+	)
+
+
+func _log_debug_action_as_semantic(params: Dictionary = {}) -> void:
+	"""🚨 CRITICAL: Log debug actions as SEMANTIC_ACTION for automatic replay generation
+
+	This ensures debug menu actions are automatically logged as semantic actions and can be
+	replayed without individual case-by-case handling. Actions can opt out to handle their
+	own specialized logging (e.g., gamestate actions that need domain-specific metadata).
+	"""
+
+	# Check if action opted out of generic logging
+	if not use_auto_semantic_logging:
+		Log.debug(
+			"Action opted out of generic semantic logging",
+			{"action_name": action_name, "category": category, "group": group},
+			["debug", "semantic", "opt_out"]
+		)
+		return
+
+	# Check for active session, create fallback session if needed
+	var current_session_id: String = SessionManager.get_current_session_id()
+	if current_session_id.is_empty():
+		# For development/testing: create temporary session for debug actions
+		Log.debug(
+			"No active session - creating temporary debug session",
+			{"action_name": action_name, "category": category, "group": group},
+			["debug", "semantic", "temp_session"]
+		)
+		current_session_id = SessionManager.start_new_session(
+			"debug_action_temp", {"trigger_action": action_name, "session_type": "debug_temporary"}
+		)
+
+	# Prepare semantic action data with proper structure for parser extraction
+	var semantic_data: Dictionary = {
+		"debug_action": action_name,
+		"category": category,
+		"group": group,
+		"description": description,
+		"data": {}  # Add data wrapper to match parser extraction path
+	}
+
+	# Include parameters in data wrapper if provided
+	if not params.is_empty():
+		semantic_data["data"]["params"] = params  # Match parser: '.data.params'
+
+	# Domain-specific data is handled by individual actions that opt out of generic logging
+
+	# Log as semantic action using SessionManager
+	# This ensures proper checksum capture and session tracking
+	SessionManager.log_semantic_action(action_name, semantic_data)
+
+	Log.debug(
+		"Debug action logged as SEMANTIC_ACTION",
+		{
+			"action_name": action_name,
+			"session_id": current_session_id,
+			"has_params": not params.is_empty(),
+			"category": category,
+			"group": group
+		},
+		["debug", "semantic", "logged"]
 	)

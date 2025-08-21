@@ -31,6 +31,12 @@ func get_card_from_pool() -> Card:  # Returns the card scene instance
 	return ret_unit
 
 
+func get_specific_card_block(card_id: String, card_level: int) -> Card:
+	"""Create a card with specific ID and level for gamestate restoration"""
+	var card: Card = await create_unit_from_id(card_id, card_level)
+	return card
+
+
 func get_random_id_from_pool(_level: int) -> String:
 	var sel_level: int = select_recruited_unit_level(_level)
 	var unit_id: String = await select_id_from_level(sel_level)
