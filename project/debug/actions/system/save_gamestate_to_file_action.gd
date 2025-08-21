@@ -41,11 +41,11 @@ func _execute_save_gamestate_to_file() -> DebugAction.Result:
 		"format_version": "1.0"
 	}
 
-	# Save directly to file
-	var saved_states_dir: String = "user://debug/saved_states/"
-	var file_path: String = saved_states_dir + actual_filename
-	
+	# Save directly to file using centralized path management
+	var file_path: String = DebugConfigReader.get_saved_state_path(actual_filename)
+
 	# Ensure directory exists
+	var saved_states_dir: String = DebugConfigReader.get_saved_states_dir()
 	if not DirAccess.dir_exists_absolute(saved_states_dir):
 		DirAccess.make_dir_absolute(saved_states_dir)
 

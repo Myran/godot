@@ -564,8 +564,8 @@ func _populate_saved_states_view() -> void:
 	var save_action: SaveDebugStateAction = SaveDebugStateAction.new()
 	_add_action_item(save_action, "System", "Debug", "")
 
-	# Scan for saved states in user data directory (cross-platform compatible)
-	var saved_states_dir: String = "user://debug/saved_states"
+	# Scan for saved states using centralized path management
+	var saved_states_dir: String = DebugConfigReader.get_saved_states_dir()
 	_scan_and_add_saved_states(saved_states_dir)
 
 

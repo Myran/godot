@@ -1,0 +1,283 @@
+{
+  "gamestate": {
+    "board": {
+      "battle_active": false,
+      "current_level": 0,
+      "draft_area": {
+        "(0, 0)": {
+          "block_context": 1,
+          "card_id": "12",
+          "card_info": {
+            "abilities": "attacktarget:backrow",
+            "attack": "4",
+            "card_name": "Rhino Man",
+            "description": "Attack back row first",
+            "health": "2",
+            "id": "12",
+            "name": "rhino",
+            "tags": "",
+            "tribe": "evil",
+            "upgrade_level": "1"
+          },
+          "card_name": "Rhino Man",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "bb84690a80d28ab6ea54ff17db07d0d38f093be28eb970ac748a4e0b1a37d8bb",
+          "unit_state": {
+            "abilities": [
+              {
+                "attack_per_evil": 1,
+                "health_per_evil": 1,
+                "persistence_type": 0,
+                "type": "EvilSynergyAbility"
+              }
+            ],
+            "base_attack": 4,
+            "base_health": 2,
+            "current_attack": 4,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 4,
+            "max_health": 2
+          }
+        },
+        "(0, 1)": {
+          "block_context": 1,
+          "object_type": 4
+        },
+        "(0, 2)": {
+          "block_context": 1,
+          "object_type": 4
+        },
+        "(0, 3)": {
+          "block_context": 1,
+          "object_type": 4
+        },
+        "(1, 0)": {
+          "block_context": 1,
+          "card_id": "0",
+          "card_info": {
+            "abilities": "guard:1;1",
+            "attack": "1",
+            "card_name": "Brettonian Guard",
+            "description": "Gain +1/+1 for each unique soldier in play.",
+            "health": "1",
+            "id": "0",
+            "name": "guard",
+            "tags": "",
+            "tribe": "soldier",
+            "upgrade_level": "1"
+          },
+          "card_name": "Brettonian Guard",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2d9287e02ca94a332ff886dd9e9733e0b2973602608c5fa8d8ff0e7157ea47f1",
+          "unit_state": {
+            "abilities": [
+              {
+                "attack_per_soldier": 1,
+                "health_per_soldier": 1,
+                "persistence_type": 0,
+                "type": "SoldierBonusAbility"
+              }
+            ],
+            "base_attack": 1,
+            "base_health": 1,
+            "current_attack": 1,
+            "current_health": 1,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 1
+          }
+        },
+        "(1, 1)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(1, 2)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(1, 3)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(2, 0)": {
+          "block_context": 1,
+          "card_id": "12",
+          "card_info": {
+            "abilities": "attacktarget:backrow",
+            "attack": "4",
+            "card_name": "Rhino Man",
+            "description": "Attack back row first",
+            "health": "2",
+            "id": "12",
+            "name": "rhino",
+            "tags": "",
+            "tribe": "evil",
+            "upgrade_level": "1"
+          },
+          "card_name": "Rhino Man",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "bb84690a80d28ab6ea54ff17db07d0d38f093be28eb970ac748a4e0b1a37d8bb",
+          "unit_state": {
+            "abilities": [
+              {
+                "attack_per_evil": 1,
+                "health_per_evil": 1,
+                "persistence_type": 0,
+                "type": "EvilSynergyAbility"
+              }
+            ],
+            "base_attack": 4,
+            "base_health": 2,
+            "current_attack": 4,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 4,
+            "max_health": 2
+          }
+        },
+        "(2, 1)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(2, 2)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(2, 3)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(3, 0)": {
+          "block_context": 1,
+          "card_id": "4",
+          "card_info": {
+            "abilities": "dwarf:1;1",
+            "attack": "1",
+            "card_name": "Dwarf",
+            "description": "Gives +1/+1 per dwarf level to each unique soldier in play",
+            "health": "1",
+            "id": "4",
+            "name": "dwarf",
+            "tags": "",
+            "tribe": "soldier",
+            "upgrade_level": "1"
+          },
+          "card_name": "Dwarf",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2fe88c2cad3b877d01a692728d2cd398d7c09773577fabc6293c0eecee2eb460",
+          "unit_state": {
+            "abilities": [
+              {
+                "base_attack_bonus": 1,
+                "base_health_bonus": 1,
+                "persistence_type": 0,
+                "type": "MergeBonusAbility"
+              }
+            ],
+            "base_attack": 1,
+            "base_health": 1,
+            "current_attack": 1,
+            "current_health": 1,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 1
+          }
+        },
+        "(3, 1)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(3, 2)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(3, 3)": {
+          "block_context": 1,
+          "object_type": 5
+        },
+        "(4, 0)": {
+          "block_context": 1,
+          "card_id": "13",
+          "card_info": {
+            "abilities": "damage:frontandbackrow",
+            "attack": "1",
+            "card_name": "Spearman",
+            "description": "Deal damage to front and back row enemies at once",
+            "health": "3",
+            "id": "13",
+            "name": "spearman",
+            "tags": "soldier",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Spearman",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 3,
+            "current_attack": 1,
+            "current_health": 3,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 3
+          }
+        },
+        "(4, 1)": {
+          "block_context": 1,
+          "object_type": 4
+        },
+        "(4, 2)": {
+          "block_context": 1,
+          "object_type": 4
+        },
+        "(4, 3)": {
+          "block_context": 1,
+          "object_type": 4
+        }
+      },
+      "extraction_type": "board_state",
+      "game_available": true,
+      "input_locked": false
+    },
+    "lineup": {
+      "allies": {},
+      "current_game_state": "PREPARE",
+      "enemies": {},
+      "extraction_type": "lineup_state",
+      "game_available": true,
+      "ui_state": "WAITING"
+    },
+    "metadata": {
+      "extractor_version": "1.0.0"
+    }
+  },
+  "rng_state": "{\"current_state\":5164996630973372811,\"initial_seed\":12345}",
+  "capture_timestamp": "2025-08-21T22:11:45",
+  "session_id": "session_20250821_221145_2560569f",
+  "platform": "macOS",
+  "capture_id": "capture_1755807105.47373_166",
+  "format_version": "1.0"
+}

@@ -19,11 +19,10 @@ func _execute_load_gamestate() -> DebugAction.Result:
 	if actual_file_path.is_empty():
 		var metadata: Dictionary = DebugConfigReader.get_metadata()
 		var gamestate_filename: String = metadata.get("gamestate_file", "")
-		
+
 		if not gamestate_filename.is_empty():
-			# Construct full path from filename
-			var saved_states_dir: String = "user://debug/saved_states/"
-			actual_file_path = saved_states_dir + gamestate_filename
+			# Construct full path from filename using centralized path management
+			actual_file_path = DebugConfigReader.get_saved_state_path(gamestate_filename)
 			Log.info(
 				"Using gamestate file from config metadata",
 				{"filename": gamestate_filename, "full_path": actual_file_path},
@@ -72,7 +71,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 		return DebugAction.Result.new_failure("Game instance not found")
 
 	var restoration_success: bool = await game_instance.load_state_from_file(actual_file_path)
-	
+
 	if not restoration_success:
 		return DebugAction.Result.new_failure("Failed to load gamestate from file")
 
@@ -84,7 +83,8 @@ func _execute_load_gamestate() -> DebugAction.Result:
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
 			"original_timestamp": capture_dict.get("capture_timestamp", "unknown"),
 			"load_method": "in_place_restoration",
-			"restored_state": capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
+			"restored_state":
+			capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
 		}
 	)
 
@@ -95,7 +95,10 @@ func _execute_load_gamestate() -> DebugAction.Result:
 			"message": "Gamestate restored in current session",
 			"gamestate_file": actual_file_path.get_file(),
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
-			"restored_state": capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN"),
+			"restored_state":
+			capture_dict.get("gamestate", {}).get("lineup", {}).get(
+				"current_game_state", "UNKNOWN"
+			),
 			"load_method": "in_place_restoration"
 		},
 		duration
@@ -127,7 +130,7 @@ func _get_game_instance() -> Game:
 
 func _find_most_recent_saved_state() -> String:
 	"""Find the most recently created saved state file"""
-	var saved_states_dir: String = "user://debug/saved_states/"
+	var saved_states_dir: String = DebugConfigReader.get_saved_states_dir()
 	var dir: DirAccess = DirAccess.open(saved_states_dir)
 
 	if not dir:

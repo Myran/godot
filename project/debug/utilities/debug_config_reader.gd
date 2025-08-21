@@ -64,6 +64,22 @@ static func get_metadata() -> Dictionary:
 	return {}
 
 
+# ================================
+# PATH MANAGEMENT
+# ================================
+
+static func get_saved_states_dir() -> String:
+	"""Get the saved states directory path. Centralized path management for all gamestate files."""
+	return "res://debug/saved_states/"
+
+static func get_saved_state_path(filename: String) -> String:
+	"""Get full path for a saved state file. Automatically adds .json extension if missing."""
+	var clean_filename: String = filename
+	if not clean_filename.ends_with(".json"):
+		clean_filename += ".json"
+	return get_saved_states_dir() + clean_filename
+
+
 static func _read_config_file() -> Dictionary:
 	"""Internal method to read and parse debug config file."""
 	var config_path: String = _get_config_path()
