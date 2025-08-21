@@ -960,6 +960,9 @@ func _restore_board_content(gamestate: Dictionary) -> void:
 		[Log.TAG_INITIALIZATION, "gamestate", "board"]
 	)
 	
+	# Clear all existing blocks before restoring gamestate
+	level_controller.clear_all_blocks()
+	
 	var blocks_restored: int = 0
 	var cards_restored: int = 0
 	
@@ -1068,6 +1071,30 @@ func _deserialize_block_by_type(object_type: int, block_data: Dictionary) -> Blo
 		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
 			# Use existing item block deserialization system (synchronous)  
 			return ItemBlock.deserialize_from_dict(block_data)
+		core.ObjectType.BLOCK_UPGRADE:
+			# Use block factory to create upgrade blocks with proper level
+			var upgrade_level: int = block_data.get("level", 1)
+			Log.debug(
+				"Deserializing upgrade block", 
+				{"requested_level": upgrade_level, "block_data": block_data}, 
+				["deserialization", "upgrade_block"]
+			)
+			var created_block: Block = level_controller.create_upgrade_block(upgrade_level)
+			Log.debug(
+				"Created upgrade block", 
+				{"created_level": created_block.level if created_block.has_property("level") else "unknown"}, 
+				["deserialization", "upgrade_block"]
+			)
+			return created_block
+		core.ObjectType.BLOCK_LOCKED:
+			# Use block factory to create locked blocks
+			return level_controller._block_factory.create_locked_block()
+		core.ObjectType.BLOCK_NOSPACE:
+			# Use block factory to create nospace blocks
+			return level_controller._block_factory.create_nospace_block()
+		core.ObjectType.BLOCK_PASSTROUGH:
+			# Use block factory to create passthrough blocks
+			return level_controller._block_factory.create_passtrough_block()
 		_:
 			Log.warning(
 				"Deserialization not implemented for object type",

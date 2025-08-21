@@ -193,3 +193,33 @@ func remove_from_grid(block: Block, destroy: bool = true) -> void:
 		if block.get_parent():
 			block.get_parent().remove_child(block)
 		block.block_kill()
+
+
+func clear_all_blocks() -> void:
+	"""Clear all blocks from grid and scene tree for gamestate restoration"""
+	Log.info(
+		"Clearing all blocks from grid for gamestate restoration",
+		{"current_block_count": block_grid.size()},
+		[Log.TAG_LEVEL, Log.TAG_GRID, "gamestate"]
+	)
+	
+	var blocks_cleared: int = 0
+	var blocks_to_clear: Array[Block] = all_blocks()
+	
+	for block: Block in blocks_to_clear:
+		if block:
+			# Remove from scene tree
+			if block.get_parent():
+				block.get_parent().remove_child(block)
+			# Destroy the block
+			block.block_kill()
+			blocks_cleared += 1
+	
+	# Clear the grid tracking dictionary
+	block_grid.clear()
+	
+	Log.info(
+		"All blocks cleared successfully",
+		{"blocks_cleared": blocks_cleared, "grid_size": block_grid.size()},
+		[Log.TAG_LEVEL, Log.TAG_GRID, "gamestate"]
+	)
