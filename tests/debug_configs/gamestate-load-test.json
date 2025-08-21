@@ -1,0 +1,17 @@
+{
+  "description": "Test loading gamestate from saved file",
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "load_test",
+    "expected_checksums": [
+      "4f5fffaf94cb2435c8ea91bce6f6aca5ae5e13b9027d0e8ebaf69f9d36cdc7ce",
+      "3fbe9406d49e06df5fbdb9e1d89fd6f8c4c62c89a076fe41d95ed787e413823b"
+    ]
+  },
+  "actions": [
+    "system.debug.load_gamestate"
+  ],
+  "metadata": {
+    "gamestate_file": "cycle_test_first.json"
+  }
+}

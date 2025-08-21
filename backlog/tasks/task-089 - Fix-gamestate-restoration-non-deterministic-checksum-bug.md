@@ -1,10 +1,10 @@
 ---
 id: task-089
 title: Fix gamestate restoration non-deterministic checksum bug
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-08-21 06:58'
-updated_date: '2025-08-21 06:58'
+updated_date: '2025-08-21 07:45'
 labels:
   - bug
   - gamestate

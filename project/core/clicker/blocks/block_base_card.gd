@@ -209,15 +209,8 @@ static func _create_card_from_id(card_id: String, card_level: int) -> Card:
 	Create a card using the existing card controller system.
 	This maintains compatibility with existing card creation logic.
 	"""
-	if card_controller and card_controller.has_method("create_unit_from_id"):
-		return await card_controller.create_unit_from_id(card_id, card_level)
-
-	Log.error(
-		"CardController not available for card creation during deserialization",
-		{"card_id": card_id, "level": card_level},
-		["serialization", "error"]
-	)
-	return null
+	# Fail-fast: Access card_controller autoload singleton directly
+	return await card_controller.create_unit_from_id(card_id, card_level)
 
 
 static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
