@@ -2,7 +2,12 @@
   "description": "Load gamestate and save it again for cycle testing",
   "checksum_config": {
     "initial_seed": 12345,
-    "state_type": "load_and_save_cycle"
+    "state_type": "load_and_save_cycle",
+    "expected_checksums": [
+      "1e36636b14970abb676d3d2e059462f55c1342df5acb67a8c4a4772f3802977c",
+      "8892264bb5540a9c278daf0d260e82c3162872ddae3098c8d84ff1675b5cfc19",
+      "9c2c31505440ffde75c9f72197286bded7ccafe46b8a95306189b5abf95fad05"
+    ]
   },
   "actions": [
     "system.debug.load_gamestate",

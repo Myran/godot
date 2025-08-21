@@ -137,7 +137,7 @@ static func extract_board_state() -> Dictionary:
 		)
 	else:
 		board_state["game_available"] = false
-		board_state["draft_area"] = []
+		board_state["draft_area"] = {}
 		board_state["current_level"] = 0
 		board_state["battle_active"] = false
 		board_state["input_locked"] = false
@@ -297,29 +297,41 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 	return lineup_data
 
 
-static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
-	var draft_data: Array = []
-
-	for i: int in range(draft_blocks.size()):
-		var block: Block = draft_blocks[i]
+static func _extract_draft_data(draft_blocks: Array[Block]) -> Dictionary:
+	# ARCHITECTURAL FIX: Use grid position as key for direct location mapping
+	var draft_data: Dictionary = {}
+	
+	var game: Game = _get_game_instance()
+	if not game or not game.clicker or not game.clicker.level:
+		return draft_data
+	
+	var level_controller = game.clicker.level
+	
+	# Iterate through all grid positions and extract blocks by location
+	for grid_pos: Vector2i in level_controller.block_grid.keys():
+		var block: Block = level_controller.block_grid[grid_pos]
 		if block:
-			# Use new distributed block-level serialization
+			# Use distributed block-level serialization
 			var block_data: Dictionary = block.serialize_to_dict()
 
-			# Ensure draft_position is set correctly (override block's own calculation if needed)
-			block_data["draft_position"] = i
+			# CRITICAL: Remove draft_position from block data - grid position is now the dictionary key
+			if block_data.has("draft_position"):
+				block_data.erase("draft_position")
 
-			# Log serialization for debugging (can be removed in production)
+			# Convert Vector2i to string for JSON compatibility while preserving exact position mapping
+			var grid_pos_str: String = "(%d, %d)" % [grid_pos.x, grid_pos.y]
+			draft_data[grid_pos_str] = block_data
+
+			# Log serialization for debugging
 			Log.debug(
-				"Block serialized via distributed method",
+				"Block serialized with Vector2i grid position as string dictionary key",
 				{
-					"position": i,
+					"grid_pos": grid_pos,
+					"grid_pos_str": grid_pos_str,
 					"object_type": block_data.get("object_type", "unknown"),
 					"serialization_method": "block.serialize_to_dict()"
 				},
 				["state_extractor", "serialization", "distributed"]
 			)
-
-			draft_data.append(block_data)
 
 	return draft_data

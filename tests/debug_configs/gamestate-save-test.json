@@ -4,8 +4,8 @@
     "initial_seed": 12345,
     "state_type": "save_test",
     "expected_checksums": [
-      "f4a8c26d97728fecf1dd3f39c64aa5de1c6d7f35b584d5796241e6b8eaeff966",
-      "9319c429a64c3f0eb508a9f5ada04c7cec4531d8ba0c2cbf6009d179a02d5be6"
+      "a5f41a30d2d3f8f39ee0d12b523b6fac071baf6f45394cee91a4a25e26f80073",
+      "293ae4c2635056c21fa5482b303e1e7113b7ee3f555d5cd7d86f668a31cbd5e3"
     ]
   },
   "actions": [
