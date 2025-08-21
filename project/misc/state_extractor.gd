@@ -303,19 +303,22 @@ static func _extract_draft_data(draft_blocks: Array[Block]) -> Array:
 	for i: int in range(draft_blocks.size()):
 		var block: Block = draft_blocks[i]
 		if block:
-			var block_data: Dictionary = {"object_type": block.object_type, "draft_position": i}
+			# Use new distributed block-level serialization
+			var block_data: Dictionary = block.serialize_to_dict()
 
-			if block.object_type == core.ObjectType.CARD:
-				var card: Card = block as Card
-				block_data["card_id"] = card.card_info.id if card.card_info else ""
-				block_data["level"] = card.level
-				block_data["unit_checksum"] = (
-					card.unit_info.get_state_checksum() if card.unit_info else ""
-				)
-			elif block.object_type == core.ObjectType.BLOCK_ITEM:
-				block_data["level"] = block.level if "level" in block else 0
-			else:
-				block_data["level"] = block.level if "level" in block else 0
+			# Ensure draft_position is set correctly (override block's own calculation if needed)
+			block_data["draft_position"] = i
+
+			# Log serialization for debugging (can be removed in production)
+			Log.debug(
+				"Block serialized via distributed method",
+				{
+					"position": i,
+					"object_type": block_data.get("object_type", "unknown"),
+					"serialization_method": "block.serialize_to_dict()"
+				},
+				["state_extractor", "serialization", "distributed"]
+			)
 
 			draft_data.append(block_data)
 

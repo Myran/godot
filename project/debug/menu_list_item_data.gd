@@ -1,7 +1,7 @@
 class_name MenuListItemData
 extends RefCounted
 
-enum ItemType { CATEGORY, GROUP, ACTION, BACK_TO_MAIN, BACK_TO_GROUPS }
+enum ItemType { CATEGORY, GROUP, ACTION, BACK_TO_MAIN, BACK_TO_GROUPS, SAVED_STATES }
 
 @export var type: ItemType
 @export var display_name: String = ""
@@ -55,4 +55,10 @@ static func create_back_to_groups(category: String) -> MenuListItemData:
 	data.display_name = "< Back to Groups"
 	data.category_name = category
 	data.prefix = ""
+	return data
+
+
+static func create_saved_states() -> MenuListItemData:
+	var data: MenuListItemData = MenuListItemData.new(ItemType.SAVED_STATES)
+	data.category_name = "Saved States"
 	return data

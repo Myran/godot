@@ -1,7 +1,9 @@
 extends Control
-enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST }
+enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST, SAVED_STATES }
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
+const SaveDebugStateAction = preload("res://debug/actions/system/save_debug_state_action.gd")
+const LoadDebugStateAction = preload("res://debug/actions/system/load_debug_state_action.gd")
 
 const FONT_SIZE_XXL: int = 34
 const FONT_SIZE_XL: int = 32
@@ -327,6 +329,13 @@ func _populate_main_categories_view() -> void:
 		var category_name: String = sorted_categories[i]
 		_add_category_item_to_list(category_name, i)
 
+	# Add saved states category after existing categories
+	_add_list_item(
+		"Saved States",
+		MenuListItemData.create_saved_states(),
+		"Load captured gamestate for replay testing"
+	)
+
 	Log.info(
 		"Main categories populated",
 		{
@@ -541,6 +550,71 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		item_index += 1
 
 
+func _populate_saved_states_view() -> void:
+	"""Show available saved debug states with load options"""
+	_current_view_level = ViewLevel.SAVED_STATES
+	_current_category_name = "Saved States"
+	_current_group_name = ""
+	item_list_navigator.clear()
+
+	# Add back navigation
+	_add_navigation_item("< Back to Main Menu", MenuListItemData.create_back_to_main())
+
+	# Add save current state option
+	var save_action: SaveDebugStateAction = SaveDebugStateAction.new()
+	_add_action_item(save_action, "System", "Debug", "")
+
+	# Scan for saved states in user data directory (cross-platform compatible)
+	var saved_states_dir: String = "user://debug/saved_states"
+	_scan_and_add_saved_states(saved_states_dir)
+
+
+func _scan_and_add_saved_states(directory_path: String) -> void:
+	"""Scan directory and add load buttons for each JSON file"""
+	var dir: DirAccess = DirAccess.open(directory_path)
+	if not dir:
+		_add_list_item(
+			"📁 No saved states found",
+			null,
+			"Create saved states by using 'Save State' during gameplay",
+			true
+		)
+		return
+
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+	var state_files: Array[String] = []
+
+	while file_name != "":
+		if file_name.ends_with(".json") and not file_name.begins_with("."):
+			state_files.append(file_name)
+		file_name = dir.get_next()
+
+	if state_files.is_empty():
+		_add_list_item(
+			"📁 No saved states found",
+			null,
+			"Use 'just capture-gamestate NAME' to create saved states",
+			true
+		)
+		return
+
+	state_files.sort()
+
+	# Add load option for each saved state
+	for state_file: String in state_files:
+		var display_name: String = "Load: " + state_file.get_basename()
+		var full_path: String = directory_path + "/" + state_file
+		var load_action: LoadDebugStateAction = LoadDebugStateAction.create_for_file(full_path)
+		var metadata: MenuListItemData = MenuListItemData.create_action(
+			load_action, "System", "Debug"
+		)
+		var tooltip: String = (
+			"Load '" + state_file.get_basename() + "' as starting point for new recording session"
+		)
+		_add_list_item(display_name, metadata, tooltip)
+
+
 func _abort_current_execution_if_needed() -> void:
 	"""Abort current action execution or Run All operation"""
 	if not _is_executing_all:
@@ -632,6 +706,9 @@ func _on_navigator_item_selected(index: int) -> void:
 		MenuListItemData.ItemType.BACK_TO_GROUPS:
 			_abort_current_execution_if_needed()
 			_populate_groups_view(_current_category_name)
+		MenuListItemData.ItemType.SAVED_STATES:
+			_abort_current_execution_if_needed()
+			_populate_saved_states_view()
 
 
 func _on_run_all_pressed() -> void:
@@ -727,6 +804,9 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 
 	DebugOutputServiceClass.output_action_result(action, success, payload)
 	_update_toggle_button_state()
+
+	# Restart handling is now done through central event system (EVENT_RESTART_GAME)
+	# No special restart handling needed here anymore
 
 	_current_executing_action = null
 	_set_ui_for_execution(false)

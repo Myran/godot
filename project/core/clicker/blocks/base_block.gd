@@ -119,3 +119,61 @@ func _on_area_2d_input_event(_viewport: Node, _event: InputEvent, _shape_idx: in
 		ui.action(ui.TouchEvent.new(self, _event))
 	elif _event is InputEventScreenDrag:
 		ui.action(ui.DragEvent.new(self, _event))
+
+
+# Serialization Interface for Distributed Block-Level State Management
+func serialize_to_dict() -> Dictionary:
+	"""
+	Virtual method for block-level serialization.
+	Override in subclasses to include block-specific data.
+	
+	Returns basic block properties that all blocks need for restoration.
+	"""
+	return {
+		"object_type": int(object_type),
+		"draft_position": get_draft_position() if has_method("get_draft_position") else -1,
+		"block_context": int(block_context) if block_context != Cards.CONTEXT.NOT_SET else 0
+	}
+
+
+static func deserialize_from_dict(data: Dictionary) -> Block:
+	"""
+	Virtual static method for block-level deserialization.
+	Override in subclasses to handle block-specific restoration.
+	
+	Base implementation creates a generic block with basic properties.
+	"""
+	# This should be overridden in specific block classes
+	# Base implementation returns null to force proper subclass implementation
+	Log.warning(
+		"Base Block.deserialize_from_dict called - should be overridden in subclasses",
+		{"data": data},
+		["serialization", "warning"]
+	)
+	return null
+
+
+func get_draft_position() -> int:
+	"""
+	Helper method to get the current draft position of this block.
+	Used by serialization to preserve block positioning.
+	"""
+	# Try to get position from parent clicker system
+	var game: Game = _get_game_instance()
+	if game and game.clicker and game.clicker.has_method("get_all_cards"):
+		var all_blocks: Array[Block] = game.clicker.get_all_cards()
+		for i: int in range(all_blocks.size()):
+			if all_blocks[i] == self:
+				return i
+	return -1
+
+
+static func _get_game_instance() -> Game:
+	"""Helper method to get current Game instance"""
+	var main_loop: SceneTree = Engine.get_main_loop()
+	if not main_loop:
+		return null
+	var current_scene: Node = main_loop.current_scene
+	if current_scene and current_scene is Game:
+		return current_scene as Game
+	return null

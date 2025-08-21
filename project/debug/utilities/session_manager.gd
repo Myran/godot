@@ -49,6 +49,11 @@ static func get_current_session_id() -> String:
 	return current_session_id
 
 
+static func has_active_session() -> bool:
+	"""Check if there is an active session"""
+	return not current_session_id.is_empty()
+
+
 static func end_current_session(reason: String = "manual") -> void:
 	"""End the current session"""
 	if current_session_id.is_empty():
@@ -327,3 +332,284 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 			return [Log.TAG_GAME, Log.TAG_BATTLE, Log.TAG_SEMANTIC_ACTION]
 		_:
 			return [Log.TAG_SEMANTIC_ACTION]
+
+
+static func start_new_session_with_loaded_state(capture_data: Dictionary) -> String:
+	"""Start new recording session with loaded gamestate as starting point"""
+
+	# End any existing session
+	if not current_session_id.is_empty():
+		end_current_session("loaded_state_override")
+
+	# Start new session
+	var session_id: String = start_new_session(
+		"loaded_state_start",
+		{
+			"session_type": "loaded_state_recording",
+			"original_capture_id": capture_data.get("capture_id", "unknown"),
+			"original_timestamp": capture_data.get("capture_timestamp", "unknown")
+		}
+	)
+
+	# Reset game to clean state before applying loaded gamestate
+	var reset_success: bool = _reset_game_to_clean_state()
+	if not reset_success:
+		Log.error(
+			"Failed to reset game state before loading",
+			{"session_id": session_id},
+			[Log.TAG_SESSION, Log.TAG_ERROR]
+		)
+		return ""
+
+	# Apply loaded state to game
+	var success: bool = await _apply_loaded_gamestate(capture_data)
+
+	if not success:
+		Log.error(
+			"Failed to apply loaded gamestate",
+			{"session_id": session_id, "capture_id": capture_data.get("capture_id", "unknown")},
+			[Log.TAG_SESSION, Log.TAG_ERROR]
+		)
+		return ""
+
+	# Log session start with loaded state context
+	Log.info(
+		"SESSION_STARTED_WITH_LOADED_STATE",
+		{
+			"session_id": session_id,
+			"loaded_capture_id": capture_data.get("capture_id", "unknown"),
+			"loaded_timestamp": capture_data.get("capture_timestamp", "unknown"),
+			"original_session": capture_data.get("session_id", "unknown"),
+			"ready_for_actions": true
+		},
+		[Log.TAG_SESSION, Log.TAG_DEBUG, Log.TAG_DEBUG]
+	)
+
+	return session_id
+
+
+static func _apply_loaded_gamestate(capture_data: Dictionary) -> bool:
+	"""Apply captured gamestate to current game"""
+	var game_state: Dictionary = capture_data.get("gamestate", {})
+	var rng_state: String = capture_data.get("rng_state", "")
+
+	# Restore RNG state first (affects subsequent game state application)
+	if not rng_state.is_empty() and rng.seeded_rng:
+		rng.seeded_rng.load_state(rng_state)
+		Log.debug(
+			"RNG state restored from loaded gamestate",
+			{"rng_state_length": rng_state.length()},
+			[Log.TAG_DEBUG, Log.TAG_RNG]
+		)
+
+	# Apply game state using existing systems
+	# This will restore lineup, board state, and metadata
+	return await _restore_game_state_from_extracted_data(game_state)
+
+
+static func _restore_game_state_from_extracted_data(game_state: Dictionary) -> bool:
+	"""Restore game state using StateExtractor format"""
+
+	# Get game instance
+	var game: Game = _get_game_instance()
+	if not game:
+		Log.error("Cannot restore gamestate - Game instance not found", {}, [Log.TAG_ERROR])
+		return false
+
+	# Restore lineup
+	var lineup_state: Dictionary = game_state.get("lineup", {})
+	if not lineup_state.is_empty():
+		var success: bool = await _restore_lineup_state(game, lineup_state)
+		if not success:
+			Log.error("Failed to restore lineup state", {}, [Log.TAG_ERROR])
+			return false
+
+	# Restore board state
+	var board_state: Dictionary = game_state.get("board", {})
+	if not board_state.is_empty():
+		var success: bool = _restore_board_state(game, board_state)
+		if not success:
+			Log.error("Failed to restore board state", {}, [Log.TAG_ERROR])
+			return false
+
+	Log.info(
+		"Gamestate restored successfully",
+		{
+			"lineup_restored": not lineup_state.is_empty(),
+			"board_restored": not board_state.is_empty()
+		},
+		[Log.TAG_DEBUG, Log.TAG_DEBUG]
+	)
+
+	return true
+
+
+static func _restore_lineup_state(game: Game, lineup_state: Dictionary) -> bool:
+	"""Restore lineup state from extracted data"""
+	if not game.lineup_handler:
+		Log.error("Cannot restore lineup - LineupHandler not available", {}, [Log.TAG_DEBUG])
+		return false
+
+	# Clear existing lineup
+	_clear_current_lineup(game)
+
+	# Restore allies lineup
+	var allies_data: Dictionary = lineup_state.get("allies", {})
+	await _restore_position_data(game, allies_data, "allies")
+
+	# Restore enemies lineup (if saved)
+	var enemies_data: Dictionary = lineup_state.get("enemies", {})
+	await _restore_position_data(game, enemies_data, "enemies")
+
+	Log.debug(
+		"Lineup state restored",
+		{"allies_count": allies_data.size(), "enemies_count": enemies_data.size()},
+		[Log.TAG_DEBUG]
+	)
+
+	return true
+
+
+static func _restore_position_data(
+	game: Game, position_data: Dictionary, lineup_type: String
+) -> void:
+	"""Restore position data for lineup"""
+	for position_str: String in position_data.keys():
+		var position: int = int(position_str)
+		var card_data: Dictionary = position_data[position_str]
+
+		var card_id: String = card_data.get("card_id", "")
+		var level: int = card_data.get("level", 1)
+
+		if card_id.is_empty():
+			continue
+
+		Log.debug(
+			"Attempting to restore card",
+			{"card_id": card_id, "level": level, "position": position, "lineup": lineup_type},
+			[Log.TAG_DEBUG]
+		)
+
+		# Recreate card using existing systems (following CLAUDE.md conventions)
+		var card: Card = await _create_unit_from_id(card_id, level)
+		if card:
+			game.lineup_handler.add_card(card, position)
+			Log.debug(
+				"Card restored",
+				{"card_id": card_id, "level": level, "position": position, "lineup": lineup_type},
+				[Log.TAG_DEBUG]
+			)
+		else:
+			Log.warning(
+				"Failed to recreate card",
+				{"card_id": card_id, "position": position},
+				[Log.TAG_DEBUG]
+			)
+
+
+static func _reset_game_to_clean_state() -> bool:
+	"""Reset game to clean state before loading gamestate"""
+	var game: Game = _get_game_instance()
+	if not game:
+		Log.error("Cannot reset game - Game instance not found", {}, [Log.TAG_ERROR])
+		return false
+
+	Log.info("Resetting game to clean state before loading gamestate", {}, [Log.TAG_DEBUG])
+
+	var reset_successful: bool = true
+
+	# Reset allied lineup
+	if game.holder_allies:
+		if game.holder_allies.has_method("reset"):
+			game.holder_allies.reset()
+		Log.debug("Allied lineup reset", {}, [Log.TAG_DEBUG])
+	else:
+		Log.warning("Allied lineup not found for reset", {}, [Log.TAG_DEBUG])
+		reset_successful = false
+
+	# Reset enemy lineup
+	if game.holder_enemy:
+		if game.holder_enemy.has_method("reset"):
+			game.holder_enemy.reset()
+		Log.debug("Enemy lineup reset", {}, [Log.TAG_DEBUG])
+	else:
+		Log.warning("Enemy lineup not found for reset", {}, [Log.TAG_DEBUG])
+		reset_successful = false
+
+	# Reset game state
+	if game.has_method("set_current_game_state"):
+		game.set_current_game_state(game.GAME_STATE.DRAFT)
+		Log.debug("Game state reset to DRAFT", {}, [Log.TAG_DEBUG])
+
+	# Reset UI state
+	if game.has_method("set_ui_state"):
+		game.set_ui_state(game.UI_STATE.WAITING)
+		Log.debug("UI state reset to WAITING", {}, [Log.TAG_DEBUG])
+
+	if reset_successful:
+		Log.info("Game reset completed successfully", {}, [Log.TAG_DEBUG])
+	else:
+		Log.warning("Game reset completed with warnings", {}, [Log.TAG_DEBUG])
+
+	return reset_successful
+
+
+static func _restore_board_state(game: Game, board_state: Dictionary) -> bool:
+	"""Restore board state from extracted data"""
+	# Restore current level
+	var target_level: int = board_state.get("current_level", 1)
+	if game.level_controller and target_level > 0:
+		if game.level_controller.has_method("setup_level"):
+			game.level_controller.setup_level("level_%d" % target_level)
+
+	# Restore battle status and input state will be handled naturally by game flow
+	Log.debug("Board state restored", {"level": target_level}, [Log.TAG_DEBUG])
+	return true
+
+
+static func _create_unit_from_id(card_id: String, level: int) -> Card:
+	"""Create unit from ID using card controller"""
+	Log.debug(
+		"Creating unit from ID - START", {"card_id": card_id, "level": level}, [Log.TAG_DEBUG]
+	)
+
+	# Use card controller to create unit from ID
+	if card_controller and card_controller.has_method("create_unit_from_id"):
+		var card: Card = await card_controller.create_unit_from_id(card_id, level)
+
+		Log.debug(
+			"Creating unit from ID - COMPLETE",
+			{"card_id": card_id, "level": level, "success": card != null},
+			[Log.TAG_DEBUG]
+		)
+
+		return card
+
+	Log.error(
+		"CardController not available for unit creation",
+		{"card_id": card_id, "level": level},
+		[Log.TAG_DEBUG]
+	)
+	return null
+
+
+static func _clear_current_lineup(game: Game) -> void:
+	"""Clear existing lineup safely using existing systems"""
+	if game.holder_allies and game.holder_allies.has_method("get_current_lineup"):
+		var current_lineup: Dictionary = game.holder_allies.get_current_lineup()
+		for position: int in current_lineup.keys():
+			if game.holder_allies.has_method("get_holder"):
+				var holder: Variant = game.holder_allies.get_holder(position)
+				if holder and holder.has_method("set_card"):
+					holder.set_card(null)  # Clear the position
+
+
+static func _get_game_instance() -> Game:
+	"""Get current game instance"""
+	var main_loop: SceneTree = Engine.get_main_loop()
+	if not main_loop:
+		return null
+	var current_scene: Node = main_loop.current_scene
+	if current_scene and current_scene is Game:
+		return current_scene as Game
+	return null

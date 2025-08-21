@@ -36,3 +36,19 @@ func create_upgrade_block(upgrade_level: int) -> Block:
 func create_empty_space() -> Block:
 	var empty_space: Block = empty_block_scene.instantiate()
 	return empty_space
+
+
+func supports_distributed_deserialization() -> bool:
+	"""
+	Indicates that this factory is compatible with the new distributed 
+	block-level serialization system.
+	"""
+	return true
+
+
+func get_supported_object_types() -> Array[int]:
+	"""
+	Returns array of object types that this factory can create.
+	Used by the distributed deserialization system for validation.
+	"""
+	return [4, 5, 6, 7, 8, 9]  # LOCKED, UPGRADE, EMPTY_SPACE, NOSPACE, PASSTROUGH, BLOCK_ITEM
