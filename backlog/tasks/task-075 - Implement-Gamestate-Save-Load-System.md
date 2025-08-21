@@ -1475,6 +1475,113 @@ if ability_type == "HarmonyAbility":
 
 ---
 
+## 🐛 **CRITICAL BUG IDENTIFIED - RESTORATION LOGIC (Priority: P1-High)**
+
+**Status**: ❌ **BLOCKING PERFECT DETERMINISM** - Needs immediate investigation
+
+**Discovered**: August 21, 2025 during validation testing
+**Impact**: Save/Load cycle produces different checksums for identical game states
+
+### **Bug Description**
+
+The gamestate restoration process is **not perfectly deterministic**, causing save-load-save cycles to produce different checksums even when the functional game state is correctly preserved.
+
+### **Evidence Gathered**
+
+**✅ Save Process is Deterministic (Confirmed)**
+- Two identical test runs produce identical gamestate data
+- Checksums match perfectly: `3a3887d403f7359f0cc2ee0c6c812bb5e420aee83e45d9a6ade47934a5c7fbb6`
+- No timing data in saved gamestate (timestamps properly excluded)
+
+**❌ Load Process Creates Non-Deterministic State**
+- Original checksum: `6b7187d0e197cb0bc66f245479abdbeaee299e0ca74be2b6dee3a1ba622c0eb7`
+- After load+save: `61143e42642e8fd00428e7855e0819c51ab6ccae09f39ce849bce0d7161c8535`
+- **Consistent pattern**: Load process always produces different state than original
+
+### **Root Cause Analysis**
+
+**Potential Issues Identified:**
+
+1. **Async Card Recreation Order** (High Probability)
+   - Card restoration uses `await` operations: `await _deserialize_block_by_type()`
+   - Async timing might affect final state ordering or properties
+   - File: `project/core/game.gd:1049-1076` - `_restore_board_content()`
+
+2. **Game State Transition Side Effects** (Medium Probability)
+   - Load process triggers state transitions: `game_handler.current_gamestate = target_state`
+   - State changes might affect subsequent state extraction
+   - File: `project/core/game.gd:1194-1195` - `load_state_from_file()`
+
+3. **UI State Differences** (Medium Probability)
+   - Restored state might have different UI context than original save point
+   - Lineup handler restoration: `lineup_handler.restore_from_saved_state(lineup_data)`
+   - File: `project/core/game.gd:1198-1199`
+
+4. **RNG State Timing** (Low Probability)
+   - RNG restoration happens before board content restoration
+   - Timing of RNG calls during restoration might affect final state
+   - File: `project/core/game.gd:1161-1172`
+
+### **Technical Investigation Required**
+
+**Priority Actions:**
+
+1. **Compare State Extraction Before/After Load** (30 minutes)
+   - Add detailed logging to identify exactly what data changes
+   - Compare field-by-field differences between original and restored states
+
+2. **Investigate Card Recreation Order** (1-2 hours)
+   - Make card restoration synchronous or ensure deterministic ordering
+   - Verify that `draft_position` ordering is preserved during restoration
+
+3. **Isolate State Transition Effects** (1 hour)
+   - Test restoration without state transitions
+   - Verify game state changes don't affect StateExtractor output
+
+4. **Add Restoration Checksum Validation** (30 minutes)
+   - Calculate checksum immediately after restoration
+   - Compare with expected checksum before any game actions
+
+### **Files Requiring Investigation**
+
+**Primary Files:**
+- `project/core/game.gd:1116-1212` - `load_state_from_file()` method
+- `project/core/game.gd:1010-1087` - `_restore_board_content()` method  
+- `project/core/game.gd:1089+` - `_deserialize_block_by_type()` method
+- `project/misc/state_extractor.gd` - State extraction logic
+
+**Secondary Files:**
+- `project/core/clicker/blocks/block_base_card.gd:160-185` - Card deserialization
+- `project/debug/utilities/session_manager.gd:390+` - Session-based restoration
+- `project/debug/actions/system/verify_gamestate_restoration_action.gd` - Validation logic
+
+### **Business Impact**
+
+**Functional Impact**: ✅ **NONE** - System works perfectly for intended use cases
+- Scenario reproduction: ✅ Working
+- Replay starting points: ✅ Working  
+- Game state preservation: ✅ Working
+
+**Technical Impact**: ❌ **BLOCKING** - Prevents perfect validation
+- Automated testing reliability affected
+- Checksum-based validation fails
+- Non-deterministic behavior in test pipeline
+
+### **Acceptance Criteria for Fix**
+
+- [ ] Save-Load-Save cycle produces identical checksums
+- [ ] Restoration preserves exact field-by-field state data
+- [ ] Async operations don't affect final state determinism
+- [ ] All existing functionality continues to work
+
+### **Timeline Estimate**
+
+**Investigation + Fix**: 4-6 hours
+**Testing + Validation**: 2 hours
+**Total**: 6-8 hours
+
+---
+
 ## 🎯 EXECUTIVE DECISION RECORD
 
 **Decision Date**: August 17, 2025 (Initial) | August 19, 2025 (Completion) | **August 20, 2025 (COMPLETED)**
