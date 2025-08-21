@@ -65,7 +65,11 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	var restart_game_action: RestartGameAction = RestartGameAction.new()
 	registry.register_action(restart_game_action)
 
-	# Note: LoadDebugStateAction instances are created dynamically
+	# Add load debug state action (automatically finds most recent saved state)
+	var load_state_action: LoadDebugStateAction = LoadDebugStateAction.new()
+	registry.register_action(load_state_action)
+
+	# Note: Additional LoadDebugStateAction instances are created dynamically
 	# by debug menu when scanning saved states directory
 
 
