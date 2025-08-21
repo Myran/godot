@@ -1,0 +1,14 @@
+{
+  "description": "Load gamestate and save it again for cycle testing",
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "load_and_save_cycle"
+  },
+  "actions": [
+    "system.debug.load_gamestate",
+    "system.debug.save_gamestate"
+  ],
+  "metadata": {
+    "gamestate_file": "cycle_test_first.json"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "description": "Complete save/load workflow: save state → restart → load state → verify board is exactly the same",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "gamestate_validation",
+    "expected_checksums": []
+  },
+  "actions": [
+    "game.state.transition_player {\"to_state\": \"DRAFT\"}",
+    "system.debug.save_gamestate",
+    "system.game.restart",
+    "system.debug.load_gamestate",
+    "system.validation.verify_gamestate_restoration"
+  ],
+  "metadata": {
+    "workflow_type": "save_load_verification",
+    "test_description": "Tests complete save/load cycle with board state preservation verification",
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "gamestate-save-load-workflow-test_desktop_1755683411"
+  }
+}

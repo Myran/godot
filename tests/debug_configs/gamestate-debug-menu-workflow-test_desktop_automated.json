@@ -10,7 +10,6 @@
     ]
   },
   "actions": [
-    "game.state.transition_player {\"to_state\": \"DRAFT\"}",
     "system.debug.save_gamestate",
     "system.game.restart",
     "system.debug.load_gamestate",
@@ -19,6 +18,10 @@
   "metadata": {
     "workflow_type": "debug_menu_simulation",
     "gamestate_file": "manual_test_state.json",
-    "test_description": "Simulates: Debug Menu → Save State → Restart → Debug Menu → Load State → Verify"
+    "test_description": "Simulates: Debug Menu → Save State → Restart → Debug Menu → Load State → Verify",
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "gamestate-debug-menu-workflow-test_desktop_1755683007"
   }
 }

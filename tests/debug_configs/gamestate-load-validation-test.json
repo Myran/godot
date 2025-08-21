@@ -1,0 +1,11 @@
+{
+  "description": "Test gamestate loading and validation using pre-saved state",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "gamestate_validation",
+    "expected_checksums": []
+  },
+  "actions": [
+    "system.validation.verify_gamestate_restoration"
+  ]
+}

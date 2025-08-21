@@ -1,0 +1,22 @@
+{
+  "description": "Test gamestate workflow exactly as user would: save via debug menu, extract via command line, load via debug menu",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "gamestate_validation",
+    "expected_checksums": [
+      "3d2685173c5cb513fd59f8daabae922382cce47ce182d34262a9950b3cc77542",
+      "bb70d5d3e5becb30975ffaa8b1a6c77dde3ed9da371c963a66af677b69b81e91"
+    ]
+  },
+  "actions": [
+    "transition.change_state DRAFT",
+    "system.debug.save_gamestate"
+  ],
+  "metadata": {
+    "workflow_step": "save",
+    "next_steps": [
+      "Extract with: just capture-gamestate user-workflow-test",
+      "Load test with: just test-desktop-target gamestate-load-user-workflow-test"
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "description": "Test complete gamestate save/load workflow using debug menu - same as manual user workflow",
+  "description": "Complete gamestate save/load cycle test - saves state and then tests loading with all block types",
   "checksum_config": {
     "initial_seed": 42,
     "state_type": "gamestate_validation",
@@ -10,15 +10,14 @@
     ]
   },
   "actions": [
-    "game.state.transition_player {\"to_state\": \"DRAFT\"}",
+    "transition.change_state DRAFT",
     "system.debug.save_gamestate",
-    "system.game.restart",
-    "system.debug.load_gamestate",
+    "system.debug.save_captured_gamestate test_complete_cycle.json",
+    "transition.restart_with_gamestate test_complete_cycle.json",
     "system.validation.verify_gamestate_restoration"
   ],
   "metadata": {
-    "workflow_type": "debug_menu_simulation",
-    "gamestate_file": "manual_test_state.json",
-    "test_description": "Simulates: Debug Menu → Save State → Restart → Debug Menu → Load State → Verify"
+    "create_gamestate_file": "test_complete_cycle.json",
+    "test_all_block_types": true
   }
 }

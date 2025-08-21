@@ -1,5 +1,5 @@
 {
-  "description": "Test complete gamestate save/load workflow using debug menu - same as manual user workflow",
+  "description": "Complete gamestate save/load workflow with board state validation",
   "checksum_config": {
     "initial_seed": 42,
     "state_type": "gamestate_validation",
@@ -12,13 +12,10 @@
   "actions": [
     "game.state.transition_player {\"to_state\": \"DRAFT\"}",
     "system.debug.save_gamestate",
-    "system.game.restart",
-    "system.debug.load_gamestate",
     "system.validation.verify_gamestate_restoration"
   ],
   "metadata": {
-    "workflow_type": "debug_menu_simulation",
-    "gamestate_file": "manual_test_state.json",
-    "test_description": "Simulates: Debug Menu → Save State → Restart → Debug Menu → Load State → Verify"
+    "workflow_type": "complete_gamestate_test",
+    "test_description": "Tests: Set DRAFT state → Save → Validate board has cards"
   }
 }

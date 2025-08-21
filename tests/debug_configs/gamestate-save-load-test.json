@@ -1,0 +1,15 @@
+{
+  "description": "Automated gamestate save system test - saves state for later restoration testing",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "gamestate_validation",
+    "expected_checksums": [
+      "7abf14e001ae95cf291e2c2f5f5d6293bfb1c99051e2158f971f578b2ba12804",
+      "aa76e25f5dc06fb7694c79cef744fbbb208bd1678932d2ce33b937456542b7e8"
+    ]
+  },
+  "actions": [
+    "transition.change_state DRAFT",
+    "system.debug.save_gamestate"
+  ]
+}

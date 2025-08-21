@@ -1,0 +1,18 @@
+{
+  "description": "Load gamestate from user workflow test and verify restoration (step 2 of workflow)",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "gamestate_validation",
+    "expected_checksums": [
+      "3d2685173c5cb513fd59f8daabae922382cce47ce182d34262a9950b3cc77542",
+      "bb70d5d3e5becb30975ffaa8b1a6c77dde3ed9da371c963a66af677b69b81e91"
+    ]
+  },
+  "actions": [
+    "system.validation.verify_gamestate_restoration"
+  ],
+  "metadata": {
+    "gamestate_file": "user-workflow-test.json",
+    "workflow_step": "load_and_verify"
+  }
+}
