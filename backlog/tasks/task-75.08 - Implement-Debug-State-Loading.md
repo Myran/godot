@@ -1,0 +1,24 @@
+---
+id: task-75.08
+title: Implement Debug State Loading
+status: To Do
+assignee: []
+created_date: '2025-08-21 06:49'
+labels:
+  - gamestate
+  - debug
+  - loading
+dependencies:
+  - task-75.07
+parent_task_id: task-75
+priority: high
+---
+
+## Description
+
+Create LoadDebugStateAction and debug menu integration for loading saved states as recording starting points. Complete the developer workflow for scenario reproduction.
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 LoadDebugStateAction implemented and functional,Debug menu integration for state loading working,Loaded states work as recording starting points,State discovery and selection interface working,Developer workflow for scenario reproduction complete
+<!-- AC:END -->
