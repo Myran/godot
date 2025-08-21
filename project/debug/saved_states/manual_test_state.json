@@ -1,0 +1,19 @@
+{
+  "gamestate": {
+    "lineup": {
+      "current_game_state": "DRAFT",
+      "game_available": true
+    },
+    "board": {
+      "game_available": true,
+      "clicker_cards": {},
+      "board_positions": {}
+    }
+  },
+  "rng_state": "",
+  "capture_timestamp": "2025-08-20T11:30:00",
+  "session_id": "test_session",
+  "platform": "macOS",
+  "capture_id": "test_capture",
+  "format_version": "1.0"
+}

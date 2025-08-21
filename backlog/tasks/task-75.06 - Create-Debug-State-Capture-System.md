@@ -1,9 +1,10 @@
 ---
 id: task-75.06
 title: Create Debug State Capture System
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-21 06:49'
+updated_date: '2025-08-21 07:42'
 labels:
   - gamestate
   - debug

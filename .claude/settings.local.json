@@ -172,7 +172,8 @@
       "Bash(git stash:*)",
       "mcp__repomix__read_repomix_output",
       "Bash(backlog:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "mcp__godot__update_project_uids"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

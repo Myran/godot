@@ -1,10 +1,10 @@
 ---
 id: task-75.01
 title: Create GameStateSaveManager Class
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-21 06:49'
-updated_date: '2025-08-21 06:51'
+updated_date: '2025-08-21 07:42'
 labels:
   - gamestate
   - save-load
