@@ -2,8 +2,8 @@ extends Control
 enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST, SAVED_STATES }
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
-const SaveDebugStateAction = preload("res://debug/actions/system/save_debug_state_action.gd")
-const LoadDebugStateAction = preload("res://debug/actions/system/load_debug_state_action.gd")
+const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
+const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
 
 const FONT_SIZE_XXL: int = 34
 const FONT_SIZE_XL: int = 32
@@ -561,7 +561,7 @@ func _populate_saved_states_view() -> void:
 	_add_navigation_item("< Back to Main Menu", MenuListItemData.create_back_to_main())
 
 	# Add save current state option
-	var save_action: SaveDebugStateAction = SaveDebugStateAction.new()
+	var save_action: SaveDebugStateActionClass = SaveDebugStateActionClass.new()
 	_add_action_item(save_action, "System", "Debug", "")
 
 	# Scan for saved states using centralized path management
@@ -605,7 +605,7 @@ func _scan_and_add_saved_states(directory_path: String) -> void:
 	for state_file: String in state_files:
 		var display_name: String = "Load: " + state_file.get_basename()
 		var full_path: String = directory_path + "/" + state_file
-		var load_action: LoadDebugStateAction = LoadDebugStateAction.create_for_file(full_path)
+		var load_action: LoadDebugStateActionClass = LoadDebugStateActionClass.create_for_file(full_path)
 		var metadata: MenuListItemData = MenuListItemData.create_action(
 			load_action, "System", "Debug"
 		)

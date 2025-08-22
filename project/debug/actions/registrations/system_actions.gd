@@ -916,7 +916,7 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 		)
 
 
-static func _register_gamestate_actions(registry: DebugActionRegistry) -> void:
+static func _register_gamestate_actions(_registry: DebugActionRegistry) -> void:
 	"""Register gamestate save/load actions (validation done via just commands)"""
 	# Note: Gamestate validation is handled by just commands (test-save-load-cycle)
 	# which use proper bash checksum comparison, not GDScript comparison

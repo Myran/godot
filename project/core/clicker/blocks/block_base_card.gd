@@ -379,15 +379,19 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 	return restoration_success
 
 
-static func _deserialize_effect(effect_data: Dictionary) -> Variant:
+static func _deserialize_effect(effect_data: Variant) -> Variant:
 	"""
 	Deserialize effect from saved data.
 	Supports StatEffect and other effect types in the system.
 	"""
-	var effect_type: String = effect_data.get("type", "")
+	if not effect_data is Dictionary:
+		return null
+	
+	var effect_dict: Dictionary = effect_data as Dictionary
+	var effect_type: String = effect_dict.get("type", "")
 
 	# Handle legacy serialization format
-	if effect_data.get("data") == "serialization_not_supported":
+	if effect_dict.get("data") == "serialization_not_supported":
 		Log.info(
 			"Effect deserialization not supported for legacy format",
 			{"effect_type": effect_type},
@@ -398,9 +402,9 @@ static func _deserialize_effect(effect_data: Dictionary) -> Variant:
 	# Deserialize StatEffect
 	if effect_type == "StatEffect":
 		var stat_effect: StatEffect = StatEffect.new()
-		stat_effect.health_bonus = effect_data.get("health_bonus", 0)
-		stat_effect.attack_bonus = effect_data.get("attack_bonus", 0)
-		stat_effect.source = effect_data.get("source", "")
+		stat_effect.health_bonus = effect_dict.get("health_bonus", 0)
+		stat_effect.attack_bonus = effect_dict.get("attack_bonus", 0)
+		stat_effect.source = effect_dict.get("source", "")
 
 		Log.debug(
 			"StatEffect deserialized",
@@ -425,25 +429,29 @@ static func _deserialize_effect(effect_data: Dictionary) -> Variant:
 	return null
 
 
-static func _deserialize_ability(ability_data: Dictionary) -> Variant:
+static func _deserialize_ability(ability_data: Variant) -> Variant:
 	"""
 	Deserialize ability from saved data.
 	Supports all ability types in the system.
 	"""
-	var ability_type: String = ability_data.get("type", "")
+	if not ability_data is Dictionary:
+		return null
+	
+	var ability_dict: Dictionary = ability_data as Dictionary
+	var ability_type: String = ability_dict.get("type", "")
 
 	Log.debug(
 		"Ability deserialization - attempting to restore ability",
 		{
 			"ability_type": ability_type,
-			"available_keys": ability_data.keys(),
-			"persistence_type": ability_data.get("persistence_type", -1)
+			"available_keys": ability_dict.keys(),
+			"persistence_type": ability_dict.get("persistence_type", -1)
 		},
 		["serialization", "ability_restore", "debug"]
 	)
 
 	# Handle legacy serialization format
-	if ability_data.get("data") == "requires_ability_serialization":
+	if ability_dict.get("data") == "requires_ability_serialization":
 		Log.info(
 			"Ability deserialization not supported for legacy format",
 			{"ability_type": ability_type},
@@ -451,7 +459,7 @@ static func _deserialize_ability(ability_data: Dictionary) -> Variant:
 		)
 		return null
 
-	var persistence_type: int = ability_data.get(
+	var persistence_type: int = ability_dict.get(
 		"persistence_type", Ability.PersistenceType.TEMPLATE
 	)
 	var ability: Ability = null
@@ -459,37 +467,37 @@ static func _deserialize_ability(ability_data: Dictionary) -> Variant:
 	# Deserialize specific ability types
 	match ability_type:
 		"HarmonyAbility":
-			var health_bonus: int = ability_data.get("health_bonus", 2)
-			var attack_bonus: int = ability_data.get("attack_bonus", 2)
+			var health_bonus: int = ability_dict.get("health_bonus", 2)
+			var attack_bonus: int = ability_dict.get("attack_bonus", 2)
 			ability = HarmonyAbility.new(health_bonus, attack_bonus)
 
 		"AbilityDamage":
-			var damage_type: String = ability_data.get("damage_type", "")
+			var damage_type: String = ability_dict.get("damage_type", "")
 			ability = AbilityDamage.new(damage_type)
 
 		"DeathTriggerHealthAbility":
-			var health_bonus: int = ability_data.get("health_bonus", 1)
+			var health_bonus: int = ability_dict.get("health_bonus", 1)
 			ability = DeathTriggerHealthAbility.new(health_bonus)
 
 		"SoldierBonusAbility":
-			var health_per_soldier: int = ability_data.get("health_per_soldier", 1)
-			var attack_per_soldier: int = ability_data.get("attack_per_soldier", 1)
+			var health_per_soldier: int = ability_dict.get("health_per_soldier", 1)
+			var attack_per_soldier: int = ability_dict.get("attack_per_soldier", 1)
 			ability = SoldierBonusAbility.new(health_per_soldier, attack_per_soldier)
 
 		"MergeBonusAbility":
-			var base_health_bonus: int = ability_data.get("base_health_bonus", 1)
-			var base_attack_bonus: int = ability_data.get("base_attack_bonus", 1)
+			var base_health_bonus: int = ability_dict.get("base_health_bonus", 1)
+			var base_attack_bonus: int = ability_dict.get("base_attack_bonus", 1)
 			ability = MergeBonusAbility.new(base_health_bonus, base_attack_bonus)
 
 		"EvilSynergyAbility":
-			var health_per_evil: int = ability_data.get("health_per_evil", 1)
-			var attack_per_evil: int = ability_data.get("attack_per_evil", 1)
+			var health_per_evil: int = ability_dict.get("health_per_evil", 1)
+			var attack_per_evil: int = ability_dict.get("attack_per_evil", 1)
 			ability = EvilSynergyAbility.new(health_per_evil, attack_per_evil)
 
 		"DamageShieldAbility":
 			ability = DamageShieldAbility.new()
-			if ability_data.has("shield_used"):
-				(ability as DamageShieldAbility).shield_used = ability_data.get(
+			if ability_dict.has("shield_used"):
+				(ability as DamageShieldAbility).shield_used = ability_dict.get(
 					"shield_used", false
 				)
 
@@ -500,14 +508,14 @@ static func _deserialize_ability(ability_data: Dictionary) -> Variant:
 		_:
 			Log.warning(
 				"Ability deserialization not implemented for type",
-				{"ability_type": ability_type, "available_keys": ability_data.keys()},
+				{"ability_type": ability_type, "available_keys": ability_dict.keys()},
 				["serialization", "ability_restore", "not_implemented"]
 			)
 			return null
 
 	# Set persistence type for all abilities
 	if ability:
-		ability.persistence_type = persistence_type
+		ability.persistence_type = persistence_type as Ability.PersistenceType
 
 		Log.debug(
 			"Ability deserialized",

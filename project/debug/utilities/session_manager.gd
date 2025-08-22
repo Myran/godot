@@ -554,7 +554,7 @@ static func _reset_game_to_clean_state() -> bool:
 	return reset_successful
 
 
-static func _restore_board_state(game: Game, board_state: Dictionary) -> bool:
+static func _restore_board_state(_game: Game, board_state: Dictionary) -> bool:
 	"""Restore board state from extracted data"""
 	# LEGACY: This method is unused - game.load_state_from_file() is the active restoration path
 	# Restore current level

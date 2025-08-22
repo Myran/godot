@@ -740,7 +740,6 @@ func mode_pre_battle() -> void:
 	top_bar.visible = false
 	bottom_bar_draft.visible = false
 	bottom_bar_prepare.visible = false
-	await get_tree().create_timer(0.5).timeout
 	core.action(core.TransitionEvent.new(core.GameState.BATTLE))
 
 
@@ -972,10 +971,10 @@ func _restore_board_content(gamestate: Dictionary) -> void:
 		# Handle both Vector2i keys (in memory) and string keys (from JSON deserialization)
 		var grid_pos: Vector2i
 		if key is Vector2i:
-			grid_pos = key as Vector2i
+			grid_pos = key
 		elif key is String:
 			# Parse string representation like "(0, 0)" back to Vector2i
-			var key_str: String = key as String
+			var key_str: String = key
 			# Remove parentheses and split by comma
 			key_str = key_str.replace("(", "").replace(")", "").replace(" ", "")
 			var coords: PackedStringArray = key_str.split(",")
@@ -1011,10 +1010,10 @@ func _restore_board_content(gamestate: Dictionary) -> void:
 	for key: Variant in draft_area.keys():
 		var grid_pos: Vector2i
 		if key is Vector2i:
-			grid_pos = key as Vector2i
+			grid_pos = key
 			pos_to_key[grid_pos] = key
 		elif key is String:
-			var key_str: String = key as String
+			var key_str: String = key
 			key_str = key_str.replace("(", "").replace(")", "").replace(" ", "")
 			var coords: PackedStringArray = key_str.split(",")
 			if coords.size() == 2:
@@ -1031,7 +1030,7 @@ func _restore_board_content(gamestate: Dictionary) -> void:
 		if not block_data is Dictionary:
 			continue
 
-		var block_dict: Dictionary = block_data as Dictionary
+		var block_dict: Dictionary = block_data
 		var object_type: int = block_dict.get("object_type", 0)
 
 		# Route to appropriate deserializer based on object_type
@@ -1118,7 +1117,7 @@ func _draft_position_to_grid(draft_position: int) -> Vector2i:
 	# Assuming standard grid layout (20 positions in 4 rows x 5 columns)
 	var grid_width: int = 5
 	var grid_x: int = draft_position % grid_width
-	var grid_y: int = draft_position / grid_width
+	var grid_y: int = draft_position // grid_width
 	return Vector2i(grid_x, grid_y)
 
 
