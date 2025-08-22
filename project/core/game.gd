@@ -1129,7 +1129,7 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 		{"file_path": gamestate_file_path},
 		[Log.TAG_DEBUG, "gamestate", "load"]
 	)
-	
+
 	# CRITICAL: Enable gamestate loading mode IMMEDIATELY to prevent any tilemap block creation
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(true)
@@ -1219,7 +1219,7 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 	# CRITICAL: Disable gamestate loading mode after restoration complete
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(false)
-		
+
 	Log.info(
 		"Gamestate loaded and transitioned successfully",
 		{
@@ -1279,7 +1279,7 @@ func _reset_all_game_state_for_loading() -> void:
 	# 5. Reset all game handlers to clean state
 	_reset_all_handlers()
 	components_reset.append("game_handlers")
-	
+
 	# 6. Clear any queued actions that might interfere
 	_idle_action_queue.clear()
 	_processing_idle_action = false
@@ -1332,45 +1332,45 @@ func _reset_all_handlers() -> void:
 		{},
 		[Log.TAG_DEBUG, "gamestate", "handlers"]
 	)
-	
+
 	var handlers_reset: Array[String] = []
-	
+
 	# 1. Reset GameHandler state
 	if game_handler:
 		# GameHandler will be set to the correct state during restoration
 		# For now, reset to a clean initial state
 		game_handler.set_gamestate(core.GameState.START)
 		handlers_reset.append("game_handler")
-	
+
 	# 2. Reset InputHandler state
 	if input_handler:
 		# Reset input state (touch positions, drag state, etc.)
 		input_handler.reset_inputs()
 		handlers_reset.append("input_handler")
-	
-	# 3. Reset CardHandler state  
+
+	# 3. Reset CardHandler state
 	if card_handler:
 		# CardHandler is typically stateless, no reset needed
 		handlers_reset.append("card_handler")
-	
+
 	# 4. Reset DraftHandler state
 	if draft_handler:
 		# Reset draft upgrade level to default
 		draft_handler.current_draft_upgrade_level = 0
 		handlers_reset.append("draft_handler")
-	
+
 	# 5. Reset LineupHandler state
 	if lineup_handler:
 		# LineupHandler works with holder_container which we've already cleared
 		# No additional state to reset
 		handlers_reset.append("lineup_handler")
-	
+
 	# 6. Reset BattleHandler state
 	if battle_handler:
 		# BattleHandler is typically stateless for battle creation
 		# No persistent state to reset
 		handlers_reset.append("battle_handler")
-	
+
 	Log.debug(
 		"Game handlers reset complete",
 		{"handlers_reset": handlers_reset},

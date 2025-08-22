@@ -68,7 +68,7 @@ static func has_gamestate_loading_action() -> bool:
 	"""Check if debug config contains gamestate loading action to prevent tilemap block creation."""
 	var config_data: Dictionary = _read_config_file()
 	var actions: Array = config_data.get("actions", [])
-	
+
 	for action in actions:
 		if action == "system.debug.load_gamestate":
 			if Log:
@@ -78,7 +78,7 @@ static func has_gamestate_loading_action() -> bool:
 					["debug", "gamestate", "initialization"]
 				)
 			return true
-	
+
 	return false
 
 

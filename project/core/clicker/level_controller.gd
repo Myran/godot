@@ -13,7 +13,7 @@ var _gamestate_loading_mode: bool = false
 func _ready() -> void:
 	Log.debug("Level controller initializing", {}, [Log.TAG_INITIALIZATION, Log.TAG_LEVEL])
 	DebugManager.debug_event.connect(_on_debug_event)
-	
+
 	# CRITICAL: Check if we're going to load gamestate and enable loading mode early
 	if DebugConfigReader.has_gamestate_loading_action():
 		_gamestate_loading_mode = true
@@ -63,7 +63,7 @@ func setup_level(level_name: String = "default") -> void:
 		{"distance": refill_distance, "level": level_name},
 		[Log.TAG_CLICKER, Log.TAG_GAME_STATE]
 	)
-	
+
 	# Skip tilemap block creation during gamestate loading - blocks will come from saved state
 	if not _gamestate_loading_mode:
 		create_blocks_from_level()
@@ -142,7 +142,7 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 	current_level.add_child(block)
 	var refill_pos: Vector2 = refill_distance * refill
 	block.position = grid_to_world_pos(grid_pos) - refill_pos
-	
+
 	# Debug upgrade blocks specifically
 	if block.object_type == core.ObjectType.BLOCK_UPGRADE:
 		Log.debug(
@@ -237,18 +237,18 @@ func clear_all_blocks() -> void:
 		{"current_block_count": block_grid.size()},
 		[Log.TAG_LEVEL, Log.TAG_GRID, "gamestate"]
 	)
-	
+
 	var blocks_cleared: int = 0
 	var blocks_to_clear: Array[Block] = all_blocks()
-	
+
 	for block: Block in blocks_to_clear:
 		if block:
 			_force_remove_block_silent(block)
 			blocks_cleared += 1
-	
+
 	# Clear the grid tracking dictionary
 	block_grid.clear()
-	
+
 	# Also clear any remaining children from the current level to prevent conflicts
 	var scene_children_cleared: int = 0
 	if current_level:
@@ -257,11 +257,11 @@ func clear_all_blocks() -> void:
 				current_level.remove_child(child)
 				child.queue_free()
 				scene_children_cleared += 1
-	
+
 	Log.info(
 		"All blocks cleared successfully (silent mode - no events triggered)",
 		{
-			"blocks_cleared": blocks_cleared, 
+			"blocks_cleared": blocks_cleared,
 			"scene_children_cleared": scene_children_cleared,
 			"grid_size": block_grid.size()
 		},
@@ -277,7 +277,7 @@ func _force_remove_block_silent(block: Block) -> void:
 	# Remove from scene tree first
 	if block.get_parent():
 		block.get_parent().remove_child(block)
-	
+
 	# Use the silent destruction method
 	block.block_force_destroy_silent()
 
@@ -285,7 +285,7 @@ func _force_remove_block_silent(block: Block) -> void:
 func set_gamestate_loading_mode(enabled: bool) -> void:
 	"""
 	Enable/disable gamestate loading mode to skip tilemap block creation.
-	When enabled, setup_level() will skip create_blocks_from_level() since 
+	When enabled, setup_level() will skip create_blocks_from_level() since
 	blocks will be restored from saved gamestate.
 	"""
 	_gamestate_loading_mode = enabled

@@ -49,7 +49,7 @@ func force_clear_silent() -> void:
 			attach_point.remove_child(_content)
 		elif _content.get_parent():
 			_content.get_parent().remove_child(_content)
-		
+
 		# Clear references on the card
 		if _content.has_method("block_force_destroy_silent"):
 			_content.block_force_destroy_silent()
@@ -57,7 +57,7 @@ func force_clear_silent() -> void:
 			# Fallback for cards without silent destroy
 			_content.holder = null
 			_content.queue_free()
-		
+
 		# Clear our reference
 		_content = null
 
