@@ -95,11 +95,7 @@ static func _create_item_block_instance() -> ItemBlock:
 	return item_block
 
 
-static var _block_factory: RefCounted:
-	get:
-		# Static variables can't use instance methods, so we'll handle factory access differently
-		# The factory access will be handled in the level_controller which is the calling context
-		return null
+# NOTE: Block factory access is handled in the level_controller which is the calling context
 
 
 func get_level() -> int:

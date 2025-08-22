@@ -172,14 +172,14 @@ func _get_available_action_names(registry: DebugActionRegistry) -> Array[String]
 	"""Get list of available action names for error reporting"""
 	var names: Array[String] = []
 	var all_actions := registry.get_all_actions()
-	for action in all_actions:
+	for action: DebugAction in all_actions:
 		names.append(action.action_name)
 	return names
 
 
 func _get_action_by_name(registry: DebugActionRegistry, action_name: String) -> DebugAction:
 	var all_actions := registry.get_all_actions()
-	for action in all_actions:
+	for action: DebugAction in all_actions:
 		if action.action_name == action_name:
 			return action
 	return null
@@ -192,7 +192,7 @@ func _parse_command_line() -> Array[String]:
 	for i in range(args.size()):
 		if args[i] == "--debug-actions" and i + 1 < args.size():
 			var action_list := args[i + 1].split(",")
-			for action in action_list:
+			for action: String in action_list:
 				actions.append(action.strip_edges())
 		elif args[i] == "--debug-action" and i + 1 < args.size():
 			actions.append(args[i + 1].strip_edges())
@@ -258,7 +258,7 @@ func _parse_config_file(path: String) -> Array:
 		var raw_actions := data.actions as Array
 		var actions: Array = []
 
-		for action in raw_actions:
+		for action: Variant in raw_actions:
 			var action_type = typeof(action)
 			var type_name = ""
 			match action_type:
@@ -274,7 +274,7 @@ func _parse_config_file(path: String) -> Array:
 				_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
 				if action_str.contains("*"):
 					var expanded_actions := _expand_wildcard_pattern(action_str)
-					for expanded_action in expanded_actions:
+					for expanded_action: String in expanded_actions:
 						actions.append({"action": expanded_action, "params": {}})
 					Log.debug("Expanded wildcard pattern", {
 						"pattern": action_str,
@@ -292,7 +292,7 @@ func _parse_config_file(path: String) -> Array:
 
 					if action_name.contains("*"):
 						var expanded_actions := _expand_wildcard_pattern(action_name)
-						for expanded_action in expanded_actions:
+						for expanded_action: String in expanded_actions:
 							actions.append({"action": expanded_action, "params": params})
 						Log.debug("Expanded parameterized wildcard", {
 							"pattern": action_name,

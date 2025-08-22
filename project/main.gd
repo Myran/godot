@@ -126,7 +126,10 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 				Log.warning(
 					"Tree not available during quit, using fallback", {}, ["debug", "system"]
 				)
-				get_tree().quit(0) if get_tree() else print("Force quit: tree unavailable")
+				if get_tree():
+					get_tree().quit(0)
+				else:
+					print("Force quit: tree unavailable")
 		DebugManager.DebugEventType.EVENT_RESTART_GAME:
 			Log.info("Restart event received, restarting game scene", {}, ["debug", "system"])
 			_restart_game_scene()

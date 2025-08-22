@@ -69,7 +69,7 @@ static func has_gamestate_loading_action() -> bool:
 	var config_data: Dictionary = _read_config_file()
 	var actions: Array = config_data.get("actions", [])
 
-	for action in actions:
+	for action: String in actions:
 		if action == "system.debug.load_gamestate":
 			if Log:
 				Log.debug(

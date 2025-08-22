@@ -154,7 +154,7 @@ static func _apply_game_state(game_state: Dictionary) -> bool:
 	return true
 
 
-static func _restore_board_state(game: Game, board_state: Dictionary) -> void:
+static func _restore_board_state(_game: Game, board_state: Dictionary) -> void:
 	# LEGACY: This method is unused - game.load_state_from_file() is the active restoration path
 	# Restore current level
 	var target_level: int = board_state.get("current_level", 1)

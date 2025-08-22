@@ -1,0 +1,481 @@
+{
+  "gamestate": {
+    "board": {
+      "battle_active": false,
+      "current_level": 0,
+      "draft_area": {
+        "(0, 0)": {
+          "block_context": 1,
+          "card_id": "0",
+          "card_info": {
+            "abilities": "guard:1;1",
+            "attack": "1",
+            "card_name": "Brettonian Guard",
+            "description": "Gain +1/+1 for each unique soldier in play.",
+            "health": "1",
+            "id": "0",
+            "name": "guard",
+            "tags": "",
+            "tribe": "soldier",
+            "upgrade_level": "1"
+          },
+          "card_name": "Brettonian Guard",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2d9287e02ca94a332ff886dd9e9733e0b2973602608c5fa8d8ff0e7157ea47f1",
+          "unit_state": {
+            "abilities": [
+              {
+                "attack_per_soldier": 1,
+                "health_per_soldier": 1,
+                "persistence_type": 0,
+                "type": "SoldierBonusAbility"
+              }
+            ],
+            "base_attack": 1,
+            "base_health": 1,
+            "current_attack": 1,
+            "current_health": 1,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 1
+          }
+        },
+        "(0, 1)": {
+          "block_context": 1,
+          "card_id": "1",
+          "card_info": {
+            "abilities": "archer:1",
+            "attack": "1",
+            "card_name": "Archer",
+            "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+            "health": "2",
+            "id": "1",
+            "name": "archer",
+            "tags": "",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Archer",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "ccd4cef163b5e0e5a6b79a46cec51e692ce2c54c467a00e5434f883e1d0b3892",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 2,
+            "current_attack": 1,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 2
+          }
+        },
+        "(0, 2)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(0, 3)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(1, 0)": {
+          "block_context": 1,
+          "card_id": "13",
+          "card_info": {
+            "abilities": "damage:frontandbackrow",
+            "attack": "1",
+            "card_name": "Spearman",
+            "description": "Deal damage to front and back row enemies at once",
+            "health": "3",
+            "id": "13",
+            "name": "spearman",
+            "tags": "soldier",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Spearman",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 3,
+            "current_attack": 1,
+            "current_health": 3,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 3
+          }
+        },
+        "(1, 1)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(1, 2)": {
+          "block_context": 1,
+          "card_id": "1",
+          "card_info": {
+            "abilities": "archer:1",
+            "attack": "1",
+            "card_name": "Archer",
+            "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+            "health": "2",
+            "id": "1",
+            "name": "archer",
+            "tags": "",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Archer",
+          "level": 2,
+          "object_type": 1,
+          "unit_checksum": "503f4983dc4f896bf7c0acebb974b3254e1704acf43b5498b3d9463eba2bdf01",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 2,
+            "base_health": 4,
+            "current_attack": 2,
+            "current_health": 4,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 2,
+            "max_attack": 2,
+            "max_health": 4
+          }
+        },
+        "(1, 3)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(2, 0)": {
+          "block_context": 1,
+          "card_id": "1",
+          "card_info": {
+            "abilities": "archer:1",
+            "attack": "1",
+            "card_name": "Archer",
+            "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+            "health": "2",
+            "id": "1",
+            "name": "archer",
+            "tags": "",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Archer",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "ccd4cef163b5e0e5a6b79a46cec51e692ce2c54c467a00e5434f883e1d0b3892",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 2,
+            "current_attack": 1,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 2
+          }
+        },
+        "(2, 1)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(2, 2)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(2, 3)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(3, 0)": {
+          "block_context": 1,
+          "card_id": "12",
+          "card_info": {
+            "abilities": "attacktarget:backrow",
+            "attack": "4",
+            "card_name": "Rhino Man",
+            "description": "Attack back row first",
+            "health": "2",
+            "id": "12",
+            "name": "rhino",
+            "tags": "",
+            "tribe": "evil",
+            "upgrade_level": "1"
+          },
+          "card_name": "Rhino Man",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "bb84690a80d28ab6ea54ff17db07d0d38f093be28eb970ac748a4e0b1a37d8bb",
+          "unit_state": {
+            "abilities": [
+              {
+                "attack_per_evil": 1,
+                "health_per_evil": 1,
+                "persistence_type": 0,
+                "type": "EvilSynergyAbility"
+              }
+            ],
+            "base_attack": 4,
+            "base_health": 2,
+            "current_attack": 4,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 4,
+            "max_health": 2
+          }
+        },
+        "(3, 1)": {
+          "block_context": 1,
+          "card_id": "4",
+          "card_info": {
+            "abilities": "dwarf:1;1",
+            "attack": "1",
+            "card_name": "Dwarf",
+            "description": "Gives +1/+1 per dwarf level to each unique soldier in play",
+            "health": "1",
+            "id": "4",
+            "name": "dwarf",
+            "tags": "",
+            "tribe": "soldier",
+            "upgrade_level": "1"
+          },
+          "card_name": "Dwarf",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2fe88c2cad3b877d01a692728d2cd398d7c09773577fabc6293c0eecee2eb460",
+          "unit_state": {
+            "abilities": [
+              {
+                "base_attack_bonus": 1,
+                "base_health_bonus": 1,
+                "persistence_type": 0,
+                "type": "MergeBonusAbility"
+              }
+            ],
+            "base_attack": 1,
+            "base_health": 1,
+            "current_attack": 1,
+            "current_health": 1,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 1
+          }
+        },
+        "(3, 2)": {
+          "block_context": 1,
+          "card_id": "13",
+          "card_info": {
+            "abilities": "damage:frontandbackrow",
+            "attack": "1",
+            "card_name": "Spearman",
+            "description": "Deal damage to front and back row enemies at once",
+            "health": "3",
+            "id": "13",
+            "name": "spearman",
+            "tags": "soldier",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Spearman",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 3,
+            "current_attack": 1,
+            "current_health": 3,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 3
+          }
+        },
+        "(3, 3)": {
+          "block_context": 1,
+          "card_id": "1",
+          "card_info": {
+            "abilities": "archer:1",
+            "attack": "1",
+            "card_name": "Archer",
+            "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+            "health": "2",
+            "id": "1",
+            "name": "archer",
+            "tags": "",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Archer",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "ccd4cef163b5e0e5a6b79a46cec51e692ce2c54c467a00e5434f883e1d0b3892",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 2,
+            "current_attack": 1,
+            "current_health": 2,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 2
+          }
+        },
+        "(4, 0)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(4, 1)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(4, 2)": {
+          "block_context": 1,
+          "effect_data": {},
+          "item_level": 1,
+          "item_type": "",
+          "level": 1,
+          "object_type": 9
+        },
+        "(4, 3)": {
+          "block_context": 1,
+          "card_id": "4",
+          "card_info": {
+            "abilities": "dwarf:1;1",
+            "attack": "1",
+            "card_name": "Dwarf",
+            "description": "Gives +1/+1 per dwarf level to each unique soldier in play",
+            "health": "1",
+            "id": "4",
+            "name": "dwarf",
+            "tags": "",
+            "tribe": "soldier",
+            "upgrade_level": "1"
+          },
+          "card_name": "Dwarf",
+          "level": 1,
+          "object_type": 1,
+          "unit_checksum": "2fe88c2cad3b877d01a692728d2cd398d7c09773577fabc6293c0eecee2eb460",
+          "unit_state": {
+            "abilities": [
+              {
+                "base_attack_bonus": 1,
+                "base_health_bonus": 1,
+                "persistence_type": 0,
+                "type": "MergeBonusAbility"
+              }
+            ],
+            "base_attack": 1,
+            "base_health": 1,
+            "current_attack": 1,
+            "current_health": 1,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 1
+          }
+        }
+      },
+      "extraction_type": "board_state",
+      "game_available": true,
+      "input_locked": false
+    },
+    "lineup": {
+      "allies": {
+        "6": {
+          "card_id": "4",
+          "level": 2,
+          "position": 6,
+          "unit_checksum": "15361a1e809312d7c08826c60bef4fed3e3b67542e54d956540cc39beaae1546"
+        },
+        "7": {
+          "card_id": "4",
+          "level": 1,
+          "position": 7,
+          "unit_checksum": "b66908cf9dfc5bf363e42d2cf33924d7a71b6204323883d59caab4c0db55bc6d"
+        }
+      },
+      "current_game_state": "DRAFT",
+      "enemies": {},
+      "extraction_type": "lineup_state",
+      "game_available": true,
+      "ui_state": "WAITING"
+    },
+    "metadata": {
+      "extractor_version": "1.0.0"
+    }
+  },
+  "rng_state": "{\"current_state\":-6601621430933965922,\"initial_seed\":1}",
+  "capture_timestamp": "2025-08-22T11:22:15",
+  "session_id": "session_20250822_111949_8e09ad0d",
+  "platform": "macOS",
+  "capture_id": "capture_1755854535.73469_853",
+  "format_version": "1.0"
+}
