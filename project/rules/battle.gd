@@ -364,8 +364,7 @@ static func solve_win_conditions(context: BattleContext) -> void:
 static func duplicate_resource(res: Variant) -> Variant:
 	if res is Resource:
 		return res.duplicate(true)  # true = deep copy
-	else:
-		return str_to_var(var_to_str(res))
+	return str_to_var(var_to_str(res))
 
 
 static func duplicate_lineup_with_references(

@@ -90,10 +90,10 @@ func as_int(default_int: int = 0) -> int:
 		if value is int:
 			var int_value: int = value
 			return int_value
-		elif value is float:
+		if value is float:
 			var float_value: float = value
 			return int(float_value)
-		elif value is String:
+		if value is String:
 			var string_value: String = value
 			if string_value.is_valid_int():
 				return string_value.to_int()
@@ -144,5 +144,4 @@ func get_formatted_string() -> String:
 			ResultType.VALUE:
 				type_name = "Value"
 		return "NavigationResult[Found %s at %s: %s]" % [type_name, path, value]
-	else:
-		return "NavigationResult[Not Found at %s: %s (%s)]" % [path, error_message, context]
+	return "NavigationResult[Not Found at %s: %s (%s)]" % [path, error_message, context]

@@ -60,8 +60,7 @@ static func _create_result_for_type(data: Variant, path: Array) -> NavigationRes
 	if data is Array:
 		var array_data: Array = data
 		return NavigationResult.new_array(array_data, path)
-	else:
-		return NavigationResult.new_value(data, path)
+	return NavigationResult.new_value(data, path)
 
 
 static func _get_available_keys(data: Dictionary) -> Dictionary:
@@ -108,8 +107,7 @@ static func get_string(
 	if result.found:
 		if result.value is String:
 			return result.value
-		else:
-			return str(result.value)
+		return str(result.value)
 	return default_str
 
 

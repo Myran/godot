@@ -31,12 +31,11 @@ func get_all() -> Array[Dictionary]:
 					[Log.TAG_DB, Log.TAG_WARNING]
 				)
 		return typed_result
-	else:
-		Log.error(
-			"Expected Array but got different type",
-			{"type": typeof(result)},
-			[Log.TAG_DB, Log.TAG_ERROR]
-		)
+	Log.error(
+		"Expected Array but got different type",
+		{"type": typeof(result)},
+		[Log.TAG_DB, Log.TAG_ERROR]
+	)
 		return []
 
 

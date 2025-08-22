@@ -162,12 +162,10 @@ static func create_backend() -> DataBackend:
 				[Log.TAG_DB]
 			)
 			return backend_instance
-		else:
-			Log.error("Backend initialization failed", {}, [Log.TAG_DB, Log.TAG_ERROR])
-			return null
-	else:
-		Log.error("Could not create backend instance", {}, [Log.TAG_DB, Log.TAG_ERROR])
+		Log.error("Backend initialization failed", {}, [Log.TAG_DB, Log.TAG_ERROR])
 		return null
+	Log.error("Could not create backend instance", {}, [Log.TAG_DB, Log.TAG_ERROR])
+	return null
 
 
 static func create_firebase_backend() -> FirebaseBackend:
