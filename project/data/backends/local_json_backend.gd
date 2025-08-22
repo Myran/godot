@@ -133,18 +133,17 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 
 		call_deferred("emit_signal", "value_received", {"key": p_key, "value": nav_result.value})
 		return nav_result.value
-	else:
-		Log.error(
-			"Failed to navigate to data",
-			{
-				"path": p_path,
-				"key": p_key,
-				"error": nav_result.error_message,
-				"context": nav_result.context,
-				"backend_id": get_instance_id(),
-				"call_stack": _get_simple_stack_trace()
-			},
-			[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
+	Log.error(
+		"Failed to navigate to data",
+		{
+			"path": p_path,
+			"key": p_key,
+			"error": nav_result.error_message,
+			"context": nav_result.context,
+			"backend_id": get_instance_id(),
+			"call_stack": _get_simple_stack_trace()
+		},
+		[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
 		)
 
 		push_error(
@@ -388,7 +387,6 @@ func _get_file_error_string(error_code: int) -> String:
 func _get_value_type_info(p_value: Variant) -> Dictionary:
 	if p_value is Dictionary:
 		return {"type": "Dictionary", "keys": p_value.keys()}
-	elif p_value is Array:
+	if p_value is Array:
 		return {"type": "Array", "size": p_value.size()}
-	else:
-		return {"type": typeof(p_value)}
+	return {"type": typeof(p_value)}

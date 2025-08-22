@@ -105,10 +105,10 @@ func as_float(default_float: float = 0.0) -> float:
 		if value is float:
 			var float_value: float = value
 			return float_value
-		elif value is int:
+		if value is int:
 			var int_value: int = value
 			return float(int_value)
-		elif value is String:
+		if value is String:
 			var string_value: String = value
 			if string_value.is_valid_float():
 				return string_value.to_float()
@@ -120,15 +120,15 @@ func as_bool(default_bool: bool = false) -> bool:
 		if value is bool:
 			var bool_value: bool = value
 			return bool_value
-		elif value is int:
+		if value is int:
 			var int_value: int = value
 			return int_value != 0
-		elif value is String:
+		if value is String:
 			var string_value: String = value
 			var lower_str: String = string_value.to_lower()
 			if lower_str == "true" or lower_str == "yes" or lower_str == "1":
 				return true
-			elif lower_str == "false" or lower_str == "no" or lower_str == "0":
+			if lower_str == "false" or lower_str == "no" or lower_str == "0":
 				return false
 	return default_bool
 

@@ -82,8 +82,7 @@ func output_formatted_text(formatted_text: String) -> void:
 func _format_status_message(_action: DebugAction, text: String, is_error: bool) -> String:
 	if is_error:
 		return "[color=%s]⚠ %s[/color]" % [UI_COLORS.danger, text]
-	else:
-		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, text]
+	return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, text]
 
 
 func _build_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
@@ -314,19 +313,18 @@ func _pretty_print_value_no_truncation(
 	if value is Dictionary:
 		var val_dic: Dictionary = value
 		return _format_dictionary_no_truncation(val_dic, indent_level, max_depth)
-	elif value is Array:
+	if value is Array:
 		var val_array: Array = value
 		return _format_array_no_truncation(val_array, indent_level, max_depth)
-	elif value is String:
+	if value is String:
 		var str_val: String = value
 		var escaped_str: String = str_val.replace("\n", "\\n").replace("\t", "\\t")
 		return '[color=%s]"%s"[/color]' % [UI_COLORS.string, escaped_str]
-	elif value is bool:
+	if value is bool:
 		return "[color=%s]%s[/color]" % [UI_COLORS.boolean, str(value)]
-	elif value is int or value is float:
+	if value is int or value is float:
 		return "[color=%s]%s[/color]" % [UI_COLORS.number, str(value)]
-	else:
-		return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
+	return "[color=%s]%s[/color]" % [UI_COLORS.text_primary, str(value)]
 
 
 func _format_dictionary_no_truncation(
@@ -463,11 +461,10 @@ func _format_payload_summary(payload: Variant) -> String:
 
 			return summary
 
-		else:
-			return (
-				"Result:\n  %s"
-				% _pretty_print_value_no_truncation(dict_payload, 1, 5).replace("\n", "\n  ")
-			)
+		return (
+			"Result:\n  %s"
+			% _pretty_print_value_no_truncation(dict_payload, 1, 5).replace("\n", "\n  ")
+		)
 
 	return "Result: %s" % _pretty_print_value_no_truncation(payload, 0, 5)
 
@@ -488,28 +485,27 @@ func _format_error_message(payload: Variant) -> String:
 					"[color=%s]Permission denied[/color] - check Firebase rules\n[color=%s]Full error:[/color] %s"
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
-			elif error_str.contains("NETWORK_ERROR"):
+			if error_str.contains("NETWORK_ERROR"):
 				return (
 					"[color=%s]Network connection issue[/color]\n[color=%s]Full error:[/color] %s"
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
-			elif error_str.contains("DATABASE_ERROR"):
+			if error_str.contains("DATABASE_ERROR"):
 				return (
 					"[color=%s]Database operation failed[/color]\n[color=%s]Full error:[/color] %s"
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
-			elif error_str.contains("timeout") or error_str.contains("TIMEOUT"):
+			if error_str.contains("timeout") or error_str.contains("TIMEOUT"):
 				return (
 					"[color=%s]Operation timed out[/color]\n[color=%s]Full error:[/color] %s"
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
-			elif error_str.contains("not found") or error_str.contains("NOT_FOUND"):
+			if error_str.contains("not found") or error_str.contains("NOT_FOUND"):
 				return (
 					"[color=%s]Resource not found[/color]\n[color=%s]Full error:[/color] %s"
 					% [UI_COLORS.danger, UI_COLORS.text_secondary, error_str]
 				)
-			else:
-				return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
+			return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
 
 		else:
 			return (
@@ -524,23 +520,22 @@ func _format_error_message(payload: Variant) -> String:
 			"[color=%s]Firebase connection issue[/color]\n[color=%s]Details:[/color] %s"
 			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
 		)
-	elif payload_str.contains("timeout"):
+	if payload_str.contains("timeout"):
 		return (
 			"[color=%s]Operation timed out[/color]\n[color=%s]Details:[/color] %s"
 			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
 		)
-	elif payload_str.contains("permission"):
+	if payload_str.contains("permission"):
 		return (
 			"[color=%s]Permission denied[/color]\n[color=%s]Details:[/color] %s"
 			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
 		)
-	elif payload_str.contains("not found"):
+	if payload_str.contains("not found"):
 		return (
 			"[color=%s]Resource not found[/color]\n[color=%s]Details:[/color] %s"
 			% [UI_COLORS.danger, UI_COLORS.text_secondary, payload_str]
 		)
-	else:
-		return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
+	return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, payload_str]
 
 
 func _strip_bbcode_tags(text: String) -> String:

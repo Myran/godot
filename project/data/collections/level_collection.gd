@@ -62,7 +62,7 @@ func get_by_number(level_nr: int) -> Dictionary:
 		if id is int and id == level_nr:
 			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 			return level
-		elif id is String and id.is_valid_int() and id.to_int() == level_nr:
+		if id is String and id.is_valid_int() and id.to_int() == level_nr:
 			Log.debug("Level data found", {"level": level_nr}, [Log.TAG_DB])
 			return level
 
