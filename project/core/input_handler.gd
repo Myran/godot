@@ -10,6 +10,7 @@ var empty_item: Empty = Empty.new()
 var holding_item: Object = null  # Can't type more specifically due to polymorphic nature
 var tap_state: core.TapState = core.TapState.IDLE
 var dragging_cargo: Object = null  # Can't type more specifically due to polymorphic nature
+var _input_locked: bool = false
 
 
 class Empty:
@@ -28,6 +29,24 @@ func reset_inputs() -> void:
 	holding_item = empty_item
 	tap_state = core.TapState.IDLE
 	dragging_cargo = empty_item
+
+
+func lock_input() -> void:
+	"""Lock input during gamestate loading to prevent user interaction"""
+	_input_locked = true
+	reset_inputs()  # Clear any ongoing interactions
+	Log.debug("Input locked", {}, [Log.TAG_UI, "input_lock"])
+
+
+func unlock_input() -> void:
+	"""Unlock input after gamestate loading is complete"""
+	_input_locked = false
+	Log.debug("Input unlocked", {}, [Log.TAG_UI, "input_lock"])
+
+
+func is_locked() -> bool:
+	"""Check if input is currently locked"""
+	return _input_locked
 
 
 func input(event: InputEvent) -> void:
@@ -69,6 +88,10 @@ func holding() -> void:
 
 
 func touch_handler(event: InputEvent, interacted_object: Object, current_context: Context) -> bool:
+	# Block all input if locked (e.g., during gamestate loading)
+	if _input_locked:
+		return false
+		
 	var update_draft: bool = false
 
 	if event.pressed == true:

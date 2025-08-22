@@ -12,6 +12,10 @@
     "system.debug.load_gamestate"
   ],
   "metadata": {
-    "gamestate_file": "test-capture-23.json"
+    "gamestate_file": "test-capture-23.json",
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "gamestate-load-test_desktop_1755874785"
   }
 }

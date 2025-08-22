@@ -1133,6 +1133,10 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 	# CRITICAL: Enable gamestate loading mode IMMEDIATELY to prevent any tilemap block creation
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(true)
+	
+	# Lock input during gamestate loading to prevent user interaction
+	if input_handler:
+		input_handler.lock_input()
 
 	# Read and parse JSON file
 	var file: FileAccess = FileAccess.open(gamestate_file_path, FileAccess.READ)
@@ -1219,6 +1223,10 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 	# CRITICAL: Disable gamestate loading mode after restoration complete
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(false)
+	
+	# Unlock input now that gamestate loading is complete
+	if input_handler:
+		input_handler.unlock_input()
 
 	Log.info(
 		"Gamestate loaded and transitioned successfully",

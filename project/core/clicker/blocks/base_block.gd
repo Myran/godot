@@ -138,7 +138,7 @@ func serialize_to_dict() -> Dictionary:
 	"""
 	Virtual method for block-level serialization.
 	Override in subclasses to include block-specific data.
-	
+
 	Returns basic block properties that all blocks need for restoration.
 	"""
 	return {
@@ -152,7 +152,7 @@ static func deserialize_from_dict(data: Dictionary) -> Block:
 	"""
 	Virtual static method for block-level deserialization.
 	Override in subclasses to handle block-specific restoration.
-	
+
 	Base implementation creates a generic block with basic properties.
 	"""
 	# This should be overridden in specific block classes
