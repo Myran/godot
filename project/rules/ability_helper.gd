@@ -75,7 +75,7 @@ static func grant_health_bonus(unit: BattleAbilityEvent, bonus: int) -> void:
 	if bonus <= 0:
 		return
 
-	var event = BattleContext.StatChangeEvent.new(
+	var event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 		Battle.UNIT_HEALTH, unit.position, unit.is_allied, bonus
 	)
 	unit.battle_context.add_event(event)
@@ -86,7 +86,7 @@ static func grant_attack_bonus(unit: BattleAbilityEvent, bonus: int) -> void:
 	if bonus <= 0:
 		return
 
-	var event = BattleContext.StatChangeEvent.new(
+	var event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
 		Battle.UNIT_ATTACK, unit.position, unit.is_allied, bonus
 	)
 	unit.battle_context.add_event(event)
@@ -97,13 +97,13 @@ static func deal_damage_to_unit(unit: BattleAbilityEvent, damage: int) -> void:
 	if damage <= 0:
 		return
 
-	var event = BattleContext.DamageEvent.new(damage, unit.position, unit.is_allied)
+	var event: BattleContext.DamageEvent = BattleContext.DamageEvent.new(damage, unit.position, unit.is_allied)
 	unit.battle_context.add_event(event)
 
 
 static func activate_shield(unit: BattleAbilityEvent, is_active: bool = true) -> void:
 	"""Activate or deactivate shield for the unit"""
-	var event = BattleContext.ShieldEvent.new(unit.position, unit.is_allied, is_active)
+	var event: BattleContext.ShieldEvent = BattleContext.ShieldEvent.new(unit.position, unit.is_allied, is_active)
 	unit.battle_context.add_event(event)
 
 
@@ -112,7 +112,7 @@ static func grant_stat_bonus(unit: BattleAbilityEvent, stat_name: StringName, bo
 	if bonus <= 0:
 		return
 
-	var event = BattleContext.StatChangeEvent.new(stat_name, unit.position, unit.is_allied, bonus)
+	var event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(stat_name, unit.position, unit.is_allied, bonus)
 	unit.battle_context.add_event(event)
 
 
@@ -144,7 +144,7 @@ static func grant_ally_bonuses(
 
 static func deal_damage_to_all_enemies(unit: BattleAbilityEvent, damage: int) -> void:
 	"""Deal damage to all enemy units (delegates to BattleRules)"""
-	var enemy_positions = unit.get_enemy_positions()
+	var enemy_positions: Array[int] = unit.get_enemy_positions()
 	BattleRules.deal_damage_to_random_enemies(
 		unit.battle_context, unit.is_allied, damage, enemy_positions.size()
 	)
@@ -172,12 +172,12 @@ static func should_process_event(ability: Ability, event: Context.Event) -> bool
 	if not ability:
 		return false
 
-	var handled_event_classes = ability.get_handled_event_classes()
+	var handled_event_classes: Array = ability.get_handled_event_classes()
 	if handled_event_classes.is_empty():
 		return true  # Process all events if no filtering specified
 
 	# Check if event is instance of any handled class
-	for event_class in handled_event_classes:
+	for event_class: Variant in handled_event_classes:
 		if is_instance_of(event, event_class):
 			return true
 
@@ -200,7 +200,7 @@ static func is_event_from_unit(unit: BattleAbilityEvent) -> bool:
 static func get_target_unit(unit: BattleAbilityEvent) -> UnitData:
 	"""Get the unit being targeted by the current event, if applicable"""
 	if unit.event is BattleContext.DamageEvent:
-		var damage_event = unit.event as BattleContext.DamageEvent
+		var damage_event: BattleContext.DamageEvent = unit.event as BattleContext.DamageEvent
 		return unit.battle_context.get_unit_at_position(
 			damage_event.target_position, damage_event.is_allied_side
 		)
@@ -238,11 +238,11 @@ static func is_unit_at_low_health(
 	unit: BattleAbilityEvent, threshold_percent: float = 0.25
 ) -> bool:
 	"""Check if the unit is at low health (default: 25% or below)"""
-	var unit_data = unit.get_self_unit()
+	var unit_data: UnitData = unit.get_self_unit()
 	if not unit_data:
 		return false
 
-	var health_ratio = float(unit_data.current_health) / float(unit_data.max_health)
+	var health_ratio: float = float(unit_data.current_health) / float(unit_data.max_health)
 	return health_ratio <= threshold_percent
 
 
@@ -250,21 +250,21 @@ static func is_unit_at_high_health(
 	unit: BattleAbilityEvent, threshold_percent: float = 0.75
 ) -> bool:
 	"""Check if the unit is at high health (default: 75% or above)"""
-	var unit_data = unit.get_self_unit()
+	var unit_data: UnitData = unit.get_self_unit()
 	if not unit_data:
 		return false
 
-	var health_ratio = float(unit_data.current_health) / float(unit_data.max_health)
+	var health_ratio: float = float(unit_data.current_health) / float(unit_data.max_health)
 	return health_ratio >= threshold_percent
 
 
 static func count_allies_with_condition(unit: BattleAbilityEvent, condition_func: Callable) -> int:
 	"""Count allied units that meet a specific condition"""
-	var count = 0
-	var ally_positions = unit.get_ally_positions()
+	var count: int = 0
+	var ally_positions: Array[int] = unit.get_ally_positions()
 
-	for pos in ally_positions:
-		var ally_unit = unit.battle_context.get_unit_at_position(pos, unit.is_allied)
+	for pos: int in ally_positions:
+		var ally_unit: UnitData = unit.battle_context.get_unit_at_position(pos, unit.is_allied)
 		if ally_unit and condition_func.call(ally_unit):
 			count += 1
 
@@ -273,11 +273,11 @@ static func count_allies_with_condition(unit: BattleAbilityEvent, condition_func
 
 static func count_enemies_with_condition(unit: BattleAbilityEvent, condition_func: Callable) -> int:
 	"""Count enemy units that meet a specific condition"""
-	var count = 0
-	var enemy_positions = unit.get_enemy_positions()
+	var count: int = 0
+	var enemy_positions: Array[int] = unit.get_enemy_positions()
 
-	for pos in enemy_positions:
-		var enemy_unit = unit.battle_context.get_unit_at_position(pos, not unit.is_allied)
+	for pos: int in enemy_positions:
+		var enemy_unit: UnitData = unit.battle_context.get_unit_at_position(pos, not unit.is_allied)
 		if enemy_unit and condition_func.call(enemy_unit):
 			count += 1
 
@@ -456,7 +456,7 @@ static func get_units_with_tag_in_lineup(
 static func get_damage_from_event(unit: BattleAbilityEvent) -> int:
 	"""Extract damage amount from damage event, if applicable"""
 	if unit.event is BattleContext.DamageEvent:
-		var damage_event = unit.event as BattleContext.DamageEvent
+		var damage_event: BattleContext.DamageEvent = unit.event as BattleContext.DamageEvent
 		return damage_event.damage_amount
 
 	return 0
@@ -465,7 +465,7 @@ static func get_damage_from_event(unit: BattleAbilityEvent) -> int:
 static func get_stat_change_from_event(unit: BattleAbilityEvent) -> Dictionary:
 	"""Extract stat change information from stat change event"""
 	if unit.event is BattleContext.StatChangeEvent:
-		var stat_event = unit.event as BattleContext.StatChangeEvent
+		var stat_event: BattleContext.StatChangeEvent = unit.event as BattleContext.StatChangeEvent
 		return {
 			"stat_name": stat_event.stat_name,
 			"change_value": stat_event.change_value,

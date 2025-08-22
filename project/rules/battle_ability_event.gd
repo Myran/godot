@@ -16,7 +16,7 @@ func _init(
 	context: BattleContext = null,
 	evt: Context.Event = null,
 	ph: core.Tempus = core.Tempus.PRE
-):
+) -> void:
 	position = pos
 	is_allied = allied
 	battle_context = context
@@ -37,19 +37,19 @@ static func create(
 func is_event_targeting_this_unit() -> bool:
 	"""Check if the current event is targeting this specific unit"""
 	if event is BattleContext.DamageEvent:
-		var dmg_event = event as BattleContext.DamageEvent
+		var dmg_event: BattleContext.DamageEvent = event as BattleContext.DamageEvent
 		return dmg_event.target_position == position and dmg_event.is_allied_side == is_allied
 
 	if event is BattleContext.StatChangeEvent:
-		var stat_event = event as BattleContext.StatChangeEvent
+		var stat_event: BattleContext.StatChangeEvent = event as BattleContext.StatChangeEvent
 		return stat_event.target_position == position and stat_event.is_allied_side == is_allied
 
 	if event is BattleContext.ShieldEvent:
-		var shield_event = event as BattleContext.ShieldEvent
+		var shield_event: BattleContext.ShieldEvent = event as BattleContext.ShieldEvent
 		return shield_event.target_position == position and shield_event.is_allied_side == is_allied
 
 	if event is BattleContext.DeathEvent:
-		var death_event = event as BattleContext.DeathEvent
+		var death_event: BattleContext.DeathEvent = event as BattleContext.DeathEvent
 		return death_event.unit_position == position and death_event.is_allied_side == is_allied
 	return false
 
@@ -57,14 +57,14 @@ func is_event_targeting_this_unit() -> bool:
 func is_event_from_this_unit() -> bool:
 	"""Check if the current event originated from this specific unit"""
 	if event is BattleContext.CombatEvent:
-		var combat_event = event as BattleContext.CombatEvent
+		var combat_event: BattleContext.CombatEvent = event as BattleContext.CombatEvent
 		return (
 			combat_event.attacker_position == position
 			and combat_event.is_allied_attack == is_allied
 		)
 
 	if event is BattleContext.SelectActiveUnitEvent:
-		var select_event = event as BattleContext.SelectActiveUnitEvent
+		var select_event: BattleContext.SelectActiveUnitEvent = event as BattleContext.SelectActiveUnitEvent
 		return (
 			select_event.selected_unit_position == position
 			and select_event.is_allied_side == is_allied
@@ -103,7 +103,7 @@ func get_random_enemy_position() -> int:
 
 func get_random_ally_position(exclude_self: bool = true) -> int:
 	"""Get a random ally position, optionally excluding self (delegates to BattleRules)"""
-	var exclude_pos = position if exclude_self else -1
+	var exclude_pos: int = position if exclude_self else -1
 	return BattleRules.get_random_ally_position(battle_context, is_allied, exclude_pos)
 
 
