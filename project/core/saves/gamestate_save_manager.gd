@@ -271,10 +271,9 @@ static func delete_save(slot: int = 0) -> bool:
 			if result == OK:
 				Log.info("Save file deleted", {"slot": slot}, [Log.TAG_DEBUG])
 				return true
-			else:
-				Log.error(
-					"Failed to delete save file", {"slot": slot, "error": result}, [Log.TAG_DEBUG]
-				)
+			Log.error(
+				"Failed to delete save file", {"slot": slot, "error": result}, [Log.TAG_DEBUG]
+			)
 	return false
 
 

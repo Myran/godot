@@ -48,7 +48,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	}
 
 	_update_status("Adding test child to trigger listener...")
-	var _set_success: bool = await execute_simple_operation(
+	var set_success: bool = await execute_simple_operation(
 		"set_value_async", child_path, child_data, "Add Child for Listener Test"
 	)
 

@@ -1,5 +1,5 @@
 {
-  "description": "System layer - Core system utilities (safe actions only)",
+  "description": "System layer - Safe system utilities (excluding interactive/problematic actions)",
   "actions": [
     "system.debug.registry_stats",
     "system.debug.hide_menu",

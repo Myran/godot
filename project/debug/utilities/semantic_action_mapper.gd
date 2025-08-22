@@ -1,6 +1,6 @@
 class_name SemanticActionMapper
 
-static var ACTION_MAPPINGS: Dictionary = {
+static var action_mappings: Dictionary = {
 	"draft.reroll": "game.draft.reroll_player",
 	"draft.upgrade": "game.draft.upgrade_player",
 	"draft.toggle_line": "game.draft.toggle_column_player",
@@ -13,7 +13,7 @@ static var ACTION_MAPPINGS: Dictionary = {
 
 static func map_semantic_action_to_debug_action(semantic_type: String) -> String:
 	"""Map a semantic action type to its corresponding debug action name"""
-	return ACTION_MAPPINGS.get(semantic_type, "system.debug.unknown_semantic_action")
+	return action_mappings.get(semantic_type, "system.debug.unknown_semantic_action")
 
 
 static func generate_debug_action_sequence(semantic_actions: Array) -> Array[Dictionary]:
@@ -35,7 +35,6 @@ static func create_replay_config(
 	mode: String = "automated"
 ) -> Dictionary:
 	"""Create a complete replay configuration from debug action sequence with automatic menu hiding
-	
 	Args:
 		session_id: Unique identifier for the semantic session
 		debug_sequence: Array of debug actions to include
@@ -87,13 +86,13 @@ static func _generate_metadata(
 
 static func validate_debug_action_mapping(semantic_type: String) -> bool:
 	"""Check if a semantic action type has a valid debug action mapping"""
-	return ACTION_MAPPINGS.has(semantic_type)
+	return action_mappings.has(semantic_type)
 
 
 static func get_supported_semantic_types() -> Array[String]:
 	"""Get list of all supported semantic action types"""
 	var types: Array[String] = []
-	for type: String in ACTION_MAPPINGS:
+	for type: String in action_mappings:
 		types.append(type)
 	return types
 

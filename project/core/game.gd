@@ -1115,10 +1115,11 @@ func _deserialize_block_by_type(object_type: int, block_data: Dictionary) -> Blo
 
 func _draft_position_to_grid(draft_position: int) -> Vector2i:
 	"""Convert draft position to grid coordinates"""
-	# Assuming standard grid layout (20 positions in 4 rows x 5 columns)
+	# Standard grid layout: 20 positions in 4 rows x 5 columns
+	# Position 0-4 = row 0, position 5-9 = row 1, etc.
 	var grid_width: int = 5
-	var grid_x: int = draft_position % grid_width
-	var grid_y: int = draft_position // grid_width
+	var grid_x: int = draft_position % grid_width  # Column: remainder when divided by width
+	var grid_y: int = int(draft_position / grid_width)  # Row: how many complete rows fit
 	return Vector2i(grid_x, grid_y)
 
 
@@ -1133,7 +1134,6 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 	# CRITICAL: Enable gamestate loading mode IMMEDIATELY to prevent any tilemap block creation
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(true)
-	
 	# Lock input during gamestate loading to prevent user interaction
 	if input_handler:
 		input_handler.lock_input()
@@ -1223,7 +1223,6 @@ func load_state_from_file(gamestate_file_path: String) -> bool:
 	# CRITICAL: Disable gamestate loading mode after restoration complete
 	if level_controller:
 		level_controller.set_gamestate_loading_mode(false)
-	
 	# Unlock input now that gamestate loading is complete
 	if input_handler:
 		input_handler.unlock_input()

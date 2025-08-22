@@ -22,7 +22,7 @@ func handle_battle_event(_event: BattleAbilityEvent) -> void:
 @warning_ignore("unused_parameter")
 
 
-func handle_draft_event(event: DraftAbilityEvent) -> void:
+func handle_draft_event(_event: DraftAbilityEvent) -> void:
 	pass
 
 

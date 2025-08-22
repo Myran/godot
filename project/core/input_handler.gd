@@ -91,7 +91,6 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 	# Block all input if locked (e.g., during gamestate loading)
 	if _input_locked:
 		return false
-		
 	var update_draft: bool = false
 
 	if event.pressed == true:

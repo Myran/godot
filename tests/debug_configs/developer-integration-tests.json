@@ -1,0 +1,9 @@
+{
+  "description": "Developer - Internal integration tests and validation (may hang in automated mode)",
+  "actions": [
+    "developer.test.*"
+  ],
+  "metadata": {
+    "warning": "These tests are for development/debugging only - may not work in automated mode"
+  }
+}

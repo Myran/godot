@@ -40,7 +40,7 @@ func create_empty_space() -> Block:
 
 func supports_distributed_deserialization() -> bool:
 	"""
-	Indicates that this factory is compatible with the new distributed 
+	Indicates that this factory is compatible with the new distributed
 	block-level serialization system.
 	"""
 	return true

@@ -48,14 +48,14 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	}
 
 	_update_status("Creating test child...")
-	var _set_success: bool = await execute_simple_operation(
+	var set_success: bool = await execute_simple_operation(
 		"set_value_async", child_path, child_data, "Create Child for Removal Test"
 	)
 
 	await Engine.get_main_loop().create_timer(0.5).timeout
 
 	_update_status("Removing child to trigger listener...")
-	var _remove_success: bool = await execute_simple_operation(
+	var remove_success: bool = await execute_simple_operation(
 		"remove_value_async", child_path, null, "Remove Child to Trigger Listener"
 	)
 

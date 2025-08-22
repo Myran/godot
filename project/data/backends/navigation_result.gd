@@ -81,8 +81,7 @@ func as_string(default_str: String = "") -> String:
 		if value is String:
 			var string_value: String = value
 			return string_value
-		else:
-			return str(value)
+		return str(value)
 	return default_str
 
 

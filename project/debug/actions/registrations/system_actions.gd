@@ -187,11 +187,11 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_replay_generation_no_quit",
+				"developer.test.replay_generation_no_quit",
 				func() -> bool: return _test_replay_generation_no_quit()
 			)
-			. set_category("System")
-			. set_group("Debug")
+			. set_category("Developer")
+			. set_group("Internal Tests")
 			. set_description("Test replay config generation without quit action")
 		)
 	)
@@ -212,11 +212,11 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.finalize_replay_validation",
+				"developer.test.finalize_replay_validation",
 				func() -> bool: return _finalize_replay_validation()
 			)
-			. set_category("System")
-			. set_group("Debug")
+			. set_category("Developer")
+			. set_group("Internal Tests")
 			. set_description("Finalize replay validation and output checksum summary")
 		)
 	)
@@ -228,10 +228,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			(
 				DebugAction
 				. create(
-					"system.debug.test_state_validation_integration",
+					"developer.test.state_validation_integration",
 					_test_state_validation_integration
 				)
-				. set_category("System")
+				. set_category("Developer")
 				. set_group("Integration Tests")
 				. set_description(
 					"CRITICAL: Test complete state validation integration - Company survival depends on this"
@@ -244,9 +244,9 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_debug_action_with_validation", _test_debug_action_with_validation
+				"developer.test.debug_action_with_validation", _test_debug_action_with_validation
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Integration Tests")
 			. set_description("Test DebugAction execute_with_state_validation method")
 		)
@@ -256,9 +256,9 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_semantic_mapper_integration", _test_semantic_mapper_integration
+				"developer.test.semantic_mapper_integration", _test_semantic_mapper_integration
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Integration Tests")
 			. set_description("Test SemanticActionMapper validation injection")
 		)
@@ -268,9 +268,9 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_state_extractor_integration", _test_state_extractor_integration
+				"developer.test.state_extractor_integration", _test_state_extractor_integration
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Integration Tests")
 			. set_description("Test StateExtractor checksum generation and deterministic behavior")
 		)
@@ -280,10 +280,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_desktop_functionality",
+				"developer.test.desktop_functionality",
 				func() -> bool: return _test_desktop_functionality()
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Debug")
 			. set_description("TDD RED: Test desktop functionality (should FAIL)")
 		)
@@ -293,10 +293,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_desktop_log_access",
+				"developer.test.desktop_log_access",
 				func() -> bool: return _test_desktop_log_access()
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Debug")
 			. set_description("TDD RED: Test desktop log access (should FAIL)")
 		)
@@ -306,10 +306,10 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"system.debug.test_platform_agnostic_replay",
+				"developer.test.platform_agnostic_replay",
 				func() -> bool: return _test_platform_agnostic_replay()
 			)
-			. set_category("System")
+			. set_category("Developer")
 			. set_group("Debug")
 			. set_description("TDD RED: Test platform-agnostic replay (should FAIL)")
 		)

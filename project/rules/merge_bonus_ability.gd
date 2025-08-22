@@ -26,7 +26,7 @@ func serialize_to_dict() -> Dictionary:
 @warning_ignore("unused_parameter")
 
 
-func handle_battle_event(event: BattleAbilityEvent) -> void:
+func handle_battle_event(_event: BattleAbilityEvent) -> void:
 	pass
 
 

@@ -14,7 +14,7 @@ func execute_rtdb_action() -> bool:
 
 	var db: Object = get_firebase_database()
 	if not db:
-		var _error_result: Array = get_last_error_result()
+		var error_result: Array = get_last_error_result()
 		return false
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)

@@ -14,7 +14,7 @@ func execute_rtdb_action() -> bool:
 
 	var db: Object = get_firebase_database()
 	if not db:
-		var _error_result: Array = get_last_error_result()
+		var error_result: Array = get_last_error_result()
 		return false
 
 	_update_status("Validating various RTDB paths...")
@@ -48,7 +48,7 @@ func execute_rtdb_action() -> bool:
 			var test_data: Dictionary = {
 				"timestamp": Time.get_ticks_msec(), "path_name": test_name, "validation_test": true
 			}
-			var _result: bool = await execute_simple_operation(
+			var result: bool = await execute_simple_operation(
 				"set_value_async", test_path, test_data, "Path Setup: " + test_name
 			)
 
