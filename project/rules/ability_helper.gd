@@ -112,7 +112,9 @@ static func grant_stat_bonus(unit: BattleAbilityEvent, stat_name: StringName, bo
 	if bonus <= 0:
 		return
 
-	var event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(stat_name, unit.position, unit.is_allied, bonus)
+	var event: BattleContext.StatChangeEvent = BattleContext.StatChangeEvent.new(
+		stat_name, unit.position, unit.is_allied, bonus
+	)
 	unit.battle_context.add_event(event)
 
 
