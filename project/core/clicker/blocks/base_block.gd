@@ -114,6 +114,18 @@ func block_kill() -> void:
 	queue_free()
 
 
+func block_force_destroy_silent() -> void:
+	"""
+	Silent forceful block destruction for gamestate restoration.
+	Does NOT emit any signals or trigger events - purely cleanup.
+	"""
+	# Clear any references without emitting signals
+	holder = null
+	block_context = Cards.CONTEXT.NOT_SET
+	# Direct cleanup without events
+	queue_free()
+
+
 func _on_area_2d_input_event(_viewport: Node, _event: InputEvent, _shape_idx: int) -> void:
 	if _event is InputEventScreenTouch:
 		ui.action(ui.TouchEvent.new(self, _event))

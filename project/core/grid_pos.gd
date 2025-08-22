@@ -36,6 +36,32 @@ func remove_card() -> void:
 	_content = null
 
 
+func force_clear_silent() -> void:
+	"""
+	Silent forceful holder cleanup for gamestate restoration.
+	Properly removes card from scene tree and clears all references.
+	Does NOT trigger any gameplay events.
+	"""
+	if _content:
+		# Remove from scene tree properly
+		var attach_point: Node = get_node_or_null("%attach_point")
+		if attach_point and _content.get_parent() == attach_point:
+			attach_point.remove_child(_content)
+		elif _content.get_parent():
+			_content.get_parent().remove_child(_content)
+		
+		# Clear references on the card
+		if _content.has_method("block_force_destroy_silent"):
+			_content.block_force_destroy_silent()
+		else:
+			# Fallback for cards without silent destroy
+			_content.holder = null
+			_content.queue_free()
+		
+		# Clear our reference
+		_content = null
+
+
 func _on_area_2d_input_event(_viewport: Node, _event: InputEvent, _shape_idx: int) -> void:
 	if _event is InputEventScreenTouch:
 		ui.action(ui.TouchEvent.new(self, _event))

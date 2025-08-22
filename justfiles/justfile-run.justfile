@@ -99,6 +99,15 @@ run-desktop: _validate-godot-editor
     
     echo "Running project on desktop..."
     
+    # Clear any leftover debug config to ensure clean startup
+    USER_DIR="${HOME}/Library/Application Support/Godot/app_userdata/gametwo"
+    STARTUP_CONFIG="$USER_DIR/debug_startup_actions.json"
+    
+    if [ -f "$STARTUP_CONFIG" ]; then
+        echo "🧹 Removing leftover debug config for clean startup..."
+        rm -f "$STARTUP_CONFIG"
+    fi
+    
     # Start the Godot process in background to capture session ID
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} &
     GODOT_PID=$!

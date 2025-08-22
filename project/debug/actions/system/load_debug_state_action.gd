@@ -63,7 +63,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 	if not _validate_capture_data(capture_data):
 		return DebugAction.Result.new_failure("Invalid capture data format")
 
-	var capture_dict: Dictionary = capture_data as Dictionary
+	var capture_dict: Dictionary = capture_data
 
 	# Load gamestate using Game's direct loading method
 	var game_instance: Game = _get_game_instance()
@@ -109,7 +109,7 @@ func _validate_capture_data(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 
-	var data_dict: Dictionary = data as Dictionary
+	var data_dict: Dictionary = data
 	return (
 		data_dict.has("gamestate")
 		and data_dict.has("rng_state")

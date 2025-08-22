@@ -155,14 +155,16 @@ static func _apply_game_state(game_state: Dictionary) -> bool:
 
 
 static func _restore_board_state(game: Game, board_state: Dictionary) -> void:
+	# LEGACY: This method is unused - game.load_state_from_file() is the active restoration path
 	# Restore current level
 	var target_level: int = board_state.get("current_level", 1)
-	if game.level_controller and target_level > 0:
-		if game.level_controller.has_method("setup_level"):
-			game.level_controller.setup_level("level_%d" % target_level)
+	# REMOVED: Problematic setup_level() call that creates duplicate upgrade blocks
+	# if game.level_controller and target_level > 0:
+	#	if game.level_controller.has_method("setup_level"):
+	#		game.level_controller.setup_level("level_%d" % target_level)
 
 	# Restore battle status and input state will be handled naturally by game flow
-	Log.debug("Board state restored", {"level": target_level}, [Log.TAG_DEBUG])
+	Log.debug("Board state restored (legacy path - unused)", {"level": target_level}, [Log.TAG_DEBUG])
 
 
 static func _restore_lineup_state(game: Game, lineup_state: Dictionary) -> void:
