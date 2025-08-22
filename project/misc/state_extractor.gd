@@ -287,7 +287,7 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 		var card: Card = item.value
 
 		if card:
-			lineup_data[position] = {
+			lineup_data[str(position)] = {
 				"card_id": card.card_info.id if card.card_info else "",
 				"level": card.level,
 				"position": position,
