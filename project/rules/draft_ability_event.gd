@@ -16,7 +16,7 @@ func _init(
 	context: DraftContext = null,
 	evt: core.CoreEvent = null,
 	ph: core.Tempus = core.Tempus.PRE
-):
+) -> void:
 	position = pos
 	unit = unit_block
 	draft_context = context

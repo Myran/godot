@@ -75,7 +75,7 @@ static func has_gamestate_loading_action() -> bool:
 			action_name = action_item.get("action", "")
 		else:
 			action_name = str(action_item)
-		
+
 		if action_name == "system.debug.load_gamestate":
 			if Log:
 				Log.debug(
@@ -92,9 +92,11 @@ static func has_gamestate_loading_action() -> bool:
 # PATH MANAGEMENT
 # ================================
 
+
 static func get_saved_states_dir() -> String:
 	"""Get the saved states directory path. Centralized path management for all gamestate files."""
 	return "res://debug/saved_states/"
+
 
 static func get_saved_state_path(filename: String) -> String:
 	"""Get full path for a saved state file. Automatically adds .json extension if missing."""

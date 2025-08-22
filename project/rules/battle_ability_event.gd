@@ -64,7 +64,9 @@ func is_event_from_this_unit() -> bool:
 		)
 
 	if event is BattleContext.SelectActiveUnitEvent:
-		var select_event: BattleContext.SelectActiveUnitEvent = event as BattleContext.SelectActiveUnitEvent
+		var select_event: BattleContext.SelectActiveUnitEvent = (
+			event as BattleContext.SelectActiveUnitEvent
+		)
 		return (
 			select_event.selected_unit_position == position
 			and select_event.is_allied_side == is_allied

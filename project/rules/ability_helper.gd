@@ -97,13 +97,17 @@ static func deal_damage_to_unit(unit: BattleAbilityEvent, damage: int) -> void:
 	if damage <= 0:
 		return
 
-	var event: BattleContext.DamageEvent = BattleContext.DamageEvent.new(damage, unit.position, unit.is_allied)
+	var event: BattleContext.DamageEvent = BattleContext.DamageEvent.new(
+		damage, unit.position, unit.is_allied
+	)
 	unit.battle_context.add_event(event)
 
 
 static func activate_shield(unit: BattleAbilityEvent, is_active: bool = true) -> void:
 	"""Activate or deactivate shield for the unit"""
-	var event: BattleContext.ShieldEvent = BattleContext.ShieldEvent.new(unit.position, unit.is_allied, is_active)
+	var event: BattleContext.ShieldEvent = BattleContext.ShieldEvent.new(
+		unit.position, unit.is_allied, is_active
+	)
 	unit.battle_context.add_event(event)
 
 
@@ -208,15 +212,15 @@ static func get_target_unit(unit: BattleAbilityEvent) -> UnitData:
 		)
 
 	if unit.event is BattleContext.StatChangeEvent:
-		var stat_event = unit.event as BattleContext.StatChangeEvent
+		var stat_event: BattleContext.StatChangeEvent = unit.event as BattleContext.StatChangeEvent
 		return unit.battle_context.get_unit_at_position(
-			stat_event.target_position, stat_event.is_allied_side
+			stat_event.target_position as int, stat_event.is_allied_side as bool
 		)
 
 	if unit.event is BattleContext.ShieldEvent:
-		var shield_event = unit.event as BattleContext.ShieldEvent
+		var shield_event: BattleContext.ShieldEvent = unit.event as BattleContext.ShieldEvent
 		return unit.battle_context.get_unit_at_position(
-			shield_event.target_position, shield_event.is_allied_side
+			shield_event.target_position as int, shield_event.is_allied_side as bool
 		)
 
 	return null
@@ -225,9 +229,9 @@ static func get_target_unit(unit: BattleAbilityEvent) -> UnitData:
 static func get_attacker_unit(unit: BattleAbilityEvent) -> UnitData:
 	"""Get the unit that initiated the current combat event, if applicable"""
 	if unit.event is BattleContext.CombatEvent:
-		var combat_event = unit.event as BattleContext.CombatEvent
+		var combat_event: BattleContext.CombatEvent = unit.event as BattleContext.CombatEvent
 		return unit.battle_context.get_unit_at_position(
-			combat_event.attacker_position, combat_event.is_allied_attack
+			combat_event.attacker_position as int, combat_event.is_allied_attack as bool
 		)
 
 	return null

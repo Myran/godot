@@ -15,7 +15,7 @@ func get_handled_event_classes() -> Array:
 	return []
 
 
-func handle_battle_event(event: BattleAbilityEvent) -> void:
+func handle_battle_event(_event: BattleAbilityEvent) -> void:
 	pass
 
 

@@ -45,7 +45,9 @@ func _on_debug_event(event: DebugManager.DebugEventType, _data: Array) -> void:
 
 func setup_level(level_name: String = "default") -> void:
 	Log.info(
-		"Setting up level", {"level_name": level_name, "gamestate_loading": _gamestate_loading_mode}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
+		"Setting up level",
+		{"level_name": level_name, "gamestate_loading": _gamestate_loading_mode},
+		[Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
 	)
 	var new_level: TileMapLayer = _level_factory.create_level(level_name)
 	if new_level == null:
@@ -149,7 +151,8 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 			"Upgrade block added to grid - checking properties",
 			{
 				"grid_pos": grid_pos,
-				"level": block.level if block.has_method("get") and "level" in block else "unknown",
+				"level":
+				str(block.level) if block.has_method("get") and "level" in block else "unknown",
 				"visible": block.visible,
 				"position": block.position,
 				"parent": block.get_parent().name if block.get_parent() else "no parent",
@@ -252,7 +255,7 @@ func clear_all_blocks() -> void:
 	# Also clear any remaining children from the current level to prevent conflicts
 	var scene_children_cleared: int = 0
 	if current_level:
-		for child in current_level.get_children():
+		for child: Node in current_level.get_children():
 			if child is Block:
 				current_level.remove_child(child)
 				child.queue_free()
@@ -289,8 +292,4 @@ func set_gamestate_loading_mode(enabled: bool) -> void:
 	blocks will be restored from saved gamestate.
 	"""
 	_gamestate_loading_mode = enabled
-	Log.debug(
-		"Gamestate loading mode changed",
-		{"enabled": enabled},
-		[Log.TAG_LEVEL, "gamestate"]
-	)
+	Log.debug("Gamestate loading mode changed", {"enabled": enabled}, [Log.TAG_LEVEL, "gamestate"])

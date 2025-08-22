@@ -50,11 +50,11 @@ func load_state(json_state: String) -> void:
 		if data is Dictionary:
 			_initial_seed = data.get("initial_seed", 0)
 			var loaded_state: int = data.get("current_state", 0)
-			
+
 			# Fail-fast: Direct state assignment for deterministic restoration
 			_initial_seed = _initial_seed
 			_current_state = loaded_state
-			
+
 			Log.info(
 				"RNG state restored directly",
 				{"initial_seed": _initial_seed, "restored_state": loaded_state},

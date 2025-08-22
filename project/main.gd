@@ -159,8 +159,6 @@ func _restart_game_scene() -> void:
 	get_tree().change_scene_to_file(current_scene_path)
 
 
-
-
 func _input(event: InputEvent) -> void:
 	if event.as_text() == "Escape" and event.is_pressed():
 		%PopupDebug.show()

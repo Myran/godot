@@ -234,7 +234,7 @@ static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
 
 	# Serialize permanent effects
 	var effects_perm_data: Array[Dictionary] = []
-	for effect in unit_data.effects_perm:
+	for effect: Variant in unit_data.effects_perm:
 		if effect and effect.has_method("serialize_to_dict"):
 			effects_perm_data.append(effect.serialize_to_dict())
 		elif effect:
@@ -246,7 +246,7 @@ static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
 
 	# Serialize temporary effects (for in-battle saves)
 	var effects_temp_data: Array[Dictionary] = []
-	for effect in unit_data.effects_temp:
+	for effect: Variant in unit_data.effects_temp:
 		if effect and effect.has_method("serialize_to_dict"):
 			effects_temp_data.append(effect.serialize_to_dict())
 		elif effect:
@@ -258,7 +258,7 @@ static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
 
 	# Serialize abilities
 	var abilities_data: Array[Dictionary] = []
-	for ability in unit_data.abilities:
+	for ability: Ability in unit_data.abilities:
 		if ability and ability.has_method("serialize_to_dict"):
 			abilities_data.append(ability.serialize_to_dict())
 		elif ability:
@@ -318,7 +318,7 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 
 	# Restore permanent effects
 	var effects_perm_data: Array = unit_state.get("effects_perm", [])
-	for effect_data in effects_perm_data:
+	for effect_data: Variant in effects_perm_data:
 		if effect_data is Dictionary and effect_data.has("type"):
 			var effect: Variant = _deserialize_effect(effect_data)
 			if effect:
@@ -333,7 +333,7 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 
 	# Restore temporary effects
 	var effects_temp_data: Array = unit_state.get("effects_temp", [])
-	for effect_data in effects_temp_data:
+	for effect_data: Variant in effects_temp_data:
 		if effect_data is Dictionary and effect_data.has("type"):
 			var effect: Variant = _deserialize_effect(effect_data)
 			if effect:
@@ -348,7 +348,7 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 
 	# Restore abilities
 	var abilities_data: Array = unit_state.get("abilities", [])
-	for ability_data in abilities_data:
+	for ability_data: Variant in abilities_data:
 		if ability_data is Dictionary and ability_data.has("type"):
 			var ability: Variant = _deserialize_ability(ability_data)
 			if ability:

@@ -300,13 +300,13 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 static func _extract_draft_data(_draft_blocks: Array[Block]) -> Dictionary:
 	# ARCHITECTURAL FIX: Use grid position as key for direct location mapping
 	var draft_data: Dictionary = {}
-	
+
 	var game: Game = _get_game_instance()
 	if not game or not game.clicker or not game.clicker.level:
 		return draft_data
-	
+
 	var level_controller: LevelController = game.clicker.level
-	
+
 	# Iterate through all grid positions and extract blocks by location
 	for grid_pos: Vector2i in level_controller.block_grid.keys():
 		var block: Block = level_controller.block_grid[grid_pos]

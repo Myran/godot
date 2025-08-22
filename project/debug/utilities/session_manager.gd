@@ -565,7 +565,9 @@ static func _restore_board_state(game: Game, board_state: Dictionary) -> bool:
 	#		game.level_controller.setup_level("level_%d" % target_level)
 
 	# Restore battle status and input state will be handled naturally by game flow
-	Log.debug("Board state restored (legacy path - unused)", {"level": target_level}, [Log.TAG_DEBUG])
+	Log.debug(
+		"Board state restored (legacy path - unused)", {"level": target_level}, [Log.TAG_DEBUG]
+	)
 	return true
 
 
