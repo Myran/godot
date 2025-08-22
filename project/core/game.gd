@@ -740,6 +740,7 @@ func mode_pre_battle() -> void:
 	top_bar.visible = false
 	bottom_bar_draft.visible = false
 	bottom_bar_prepare.visible = false
+	await get_tree().create_timer(0.5).timeout
 	core.action(core.TransitionEvent.new(core.GameState.BATTLE))
 
 
