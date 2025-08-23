@@ -360,19 +360,19 @@ class Result:
 		"""Returns [success: bool, data: Variant] for current completion system"""
 		if _success:
 			return [true, _payload]
-		else:
-			var error_data: Dictionary = {"error": _error_message}
-			if not _error_code.is_empty():
-				error_data["error_code"] = _error_code
-			if _error_category != ErrorCategory.NONE:
-				error_data["error_category"] = ErrorCategory.keys()[_error_category]
-			if _duration_ms > 0:
-				error_data["duration_ms"] = _duration_ms
-			if not _operation.is_empty():
-				error_data["operation"] = _operation
-			if not _metadata.is_empty():
-				error_data["metadata"] = _metadata
-			return [false, error_data]
+
+		var error_data: Dictionary = {"error": _error_message}
+		if not _error_code.is_empty():
+			error_data["error_code"] = _error_code
+		if _error_category != ErrorCategory.NONE:
+			error_data["error_category"] = ErrorCategory.keys()[_error_category]
+		if _duration_ms > 0:
+			error_data["duration_ms"] = _duration_ms
+		if not _operation.is_empty():
+			error_data["operation"] = _operation
+		if not _metadata.is_empty():
+			error_data["metadata"] = _metadata
+		return [false, error_data]
 
 	func to_dict() -> Dictionary:
 		var result: Dictionary = {
