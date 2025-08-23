@@ -103,5 +103,5 @@ func _execute_semantic_coverage_test() -> DebugAction.Result:
 
 	if success_count == total_tests:
 		return DebugAction.Result.new_success(summary)
-	else:
+
 		return DebugAction.Result.new_failure(summary, "COVERAGE_TEST_FAILED")

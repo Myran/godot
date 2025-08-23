@@ -66,8 +66,7 @@ static func _generate_description(session_id: String, mode: String) -> String:
 	var base_desc: String = "Generated replay from semantic session: %s" % session_id
 	if mode == "manual":
 		return base_desc + " (Manual verification - no auto-quit)"
-	else:
-		return base_desc + " (Automated testing - auto-quit)"
+	return base_desc + " (Automated testing - auto-quit)"
 
 
 static func _generate_metadata(
@@ -265,8 +264,7 @@ static func _generate_validation_description(
 
 	if mode == "manual":
 		return base_desc + validation_status + " - Manual verification mode"
-	else:
-		return base_desc + validation_status + " - Automated testing mode"
+	return base_desc + validation_status + " - Automated testing mode"
 
 
 static func _generate_validation_metadata(

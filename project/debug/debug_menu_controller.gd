@@ -605,7 +605,9 @@ func _scan_and_add_saved_states(directory_path: String) -> void:
 	for state_file: String in state_files:
 		var display_name: String = "Load: " + state_file.get_basename()
 		var full_path: String = directory_path + "/" + state_file
-		var load_action: LoadDebugStateActionClass = LoadDebugStateActionClass.create_for_file(full_path)
+		var load_action: LoadDebugStateActionClass = LoadDebugStateActionClass.create_for_file(
+			full_path
+		)
 		var metadata: MenuListItemData = MenuListItemData.create_action(
 			load_action, "System", "Debug"
 		)

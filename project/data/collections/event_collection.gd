@@ -36,7 +36,7 @@ func get_all() -> Array[Dictionary]:
 		{"type": typeof(result)},
 		[Log.TAG_DB, Log.TAG_ERROR]
 	)
-		return []
+	return []
 
 
 func get_lineup_data(event: String) -> Dictionary:

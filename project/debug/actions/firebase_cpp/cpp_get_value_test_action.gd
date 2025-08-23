@@ -58,22 +58,22 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"retrieved_result": str(get_result)
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"C++ get value operation failed",
-			"GET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "cpp_get_value",
-				"path": test_path,
-				"set_duration_ms": set_duration,
-				"get_duration_ms": get_duration,
-				"test_value": test_value
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"C++ get value operation failed",
+		"GET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "cpp_get_value",
+			"path": test_path,
+			"set_duration_ms": set_duration,
+			"get_duration_ms": get_duration,
+			"test_value": test_value
+		}
+	)
 
 
 func execute_cpp_action() -> bool:

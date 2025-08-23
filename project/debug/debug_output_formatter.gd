@@ -507,11 +507,10 @@ func _format_error_message(payload: Variant) -> String:
 				)
 			return "[color=%s]Error:[/color] %s" % [UI_COLORS.danger, error_str]
 
-		else:
-			return (
-				"[color=%s]Structured error:[/color]\n%s"
-				% [UI_COLORS.danger, _pretty_print_value_no_truncation(dict_payload)]
-			)
+		return (
+			"[color=%s]Structured error:[/color]\n%s"
+			% [UI_COLORS.danger, _pretty_print_value_no_truncation(dict_payload)]
+		)
 
 	var payload_str: String = str(payload)
 
@@ -772,14 +771,13 @@ func _categorize_performance(duration_ms: int) -> String:
 	"""Categorize performance based on duration"""
 	if duration_ms < 100:
 		return "EXCELLENT"
-	elif duration_ms < 500:
+	if duration_ms < 500:
 		return "GOOD"
-	elif duration_ms < 1000:
+	if duration_ms < 1000:
 		return "ACCEPTABLE"
-	elif duration_ms < 3000:
+	if duration_ms < 3000:
 		return "SLOW"
-	else:
-		return "VERY_SLOW"
+	return "VERY_SLOW"
 
 
 func _get_performance_color(category: String) -> String:

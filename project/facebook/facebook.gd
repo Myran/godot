@@ -1,7 +1,5 @@
 extends Node
 
-const _APP_ID: int = 914537337160544
-
 signal fb_inited
 signal fb_login_success(token: String)
 signal fb_login_cancelled
@@ -10,6 +8,8 @@ signal fb_request_success(result: Dictionary)
 signal fb_request_cancelled
 signal fb_request_failed(error: String)
 signal fb_logged_out
+
+const _APP_ID: int = 914537337160544
 
 var _fb: Object = null
 var token: String = ""

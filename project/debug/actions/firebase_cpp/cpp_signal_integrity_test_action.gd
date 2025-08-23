@@ -73,29 +73,27 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			"C++ signal integrity test passed", total_test_duration, action_name, test_result
 		)
-	else:
-		_update_status(
-			(
-				"Signal integrity test FAILED ("
-				+ str(successful_operations)
-				+ "/"
-				+ str(operations_count)
-				+ ")"
-			),
-			true
-		)
-		Log.error(
-			"C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"]
-		)
-		return DebugAction.Result.new_failure(
-			"C++ signal integrity test failed",
-			"SIGNAL_INTEGRITY_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			total_test_duration,
-			action_name,
-			test_result
-		)
+
+	_update_status(
+		(
+			"Signal integrity test FAILED ("
+			+ str(successful_operations)
+			+ "/"
+			+ str(operations_count)
+			+ ")"
+		),
+		true
+	)
+	Log.error("C++ Signal integrity test failed", test_result, ["debug", "cpp_firebase", "error"])
+	return DebugAction.Result.new_failure(
+		"C++ signal integrity test failed",
+		"SIGNAL_INTEGRITY_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		total_test_duration,
+		action_name,
+		test_result
+	)
 
 
 func execute_cpp_action() -> bool:

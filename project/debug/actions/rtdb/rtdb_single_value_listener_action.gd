@@ -11,8 +11,10 @@ func _init() -> void:
 	super._init()  # Call parent to set category = "RTDB"
 	action_name = "rtdb.listeners.single_value"
 	group = "Listeners"
-	description = "Sets up a listener for changes on a specific RTDB path using child listeners " + \
-		"(C++ module limitation) and verifies it works."
+	description = (
+		"Sets up a listener for changes on a specific RTDB path using child listeners "
+		+ "(C++ module limitation) and verifies it works."
+	)
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:

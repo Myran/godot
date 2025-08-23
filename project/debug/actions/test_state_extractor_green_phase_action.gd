@@ -60,11 +60,10 @@ func _execute_green_phase_test() -> DebugAction.Result:
 			. with_metadata("component", "StateExtractor")
 			. with_metadata("tdd_transition", "RED_TO_GREEN_SUCCESS")
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"GREEN Phase tests failed - StateExtractor implementation has issues",
-			"GREEN_PHASE_IMPLEMENTATION_FAILURE"
-		)
+	return DebugAction.Result.new_failure(
+		"GREEN Phase tests failed - StateExtractor implementation has issues",
+		"GREEN_PHASE_IMPLEMENTATION_FAILURE"
+	)
 
 
 func _test_state_extractor_implementation() -> Dictionary:

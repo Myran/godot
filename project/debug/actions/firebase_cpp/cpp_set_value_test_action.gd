@@ -35,21 +35,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"result": str(result)
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"C++ set value operation failed",
-			"SET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "cpp_set_value",
-				"path": test_path,
-				"attempted_value": test_value,
-				"operation_duration_ms": operation_duration
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"C++ set value operation failed",
+		"SET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "cpp_set_value",
+			"path": test_path,
+			"attempted_value": test_value,
+			"operation_duration_ms": operation_duration
+		}
+	)
 
 
 func execute_cpp_action() -> bool:

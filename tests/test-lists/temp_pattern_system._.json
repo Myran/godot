@@ -1,0 +1,11 @@
+{
+  "name": "Config Pattern: system.*",
+  "description": "Auto-generated test list for config pattern: system.*",
+  "configs": [
+    "system-error-handling",
+    "system-layer-all_desktop_automated",
+    "system-layer-all",
+    "system-layer-safe",
+    "system-performance"
+  ]
+}

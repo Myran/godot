@@ -7,7 +7,10 @@ func _init() -> void:
 	set_category("System")
 	set_group("Test")
 	set_description(
-		"Comprehensive validation of semantic logging system including all 9 player event types, session management, and log format verification"
+		(
+			"Comprehensive validation of semantic logging system including all 9 player event types, "
+			+ "session management, and log format verification"
+		)
 	)
 
 
@@ -61,7 +64,7 @@ func _execute_comprehensive_test() -> DebugAction.Result:
 
 	if overall_success:
 		return DebugAction.Result.new_success(report, 0, "comprehensive_semantic_test")
-	else:
+
 		return DebugAction.Result.new_failure(report, "COMPREHENSIVE_TEST_FAILED")
 
 

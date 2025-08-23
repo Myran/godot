@@ -193,21 +193,21 @@ func execute_with_state_validation(
 		return DebugAction.Result.new_success(
 			success, duration, action_name, {"session_id": session_id, "sequence": sequence}
 		)
-	else:
-		Log.error(
-			"C++ Firebase action failed",
-			{"action_name": action_name, "duration_ms": duration},
-			["debug", "cpp_firebase", "error"]
-		)
-		return DebugAction.Result.new_failure(
-			"C++ Firebase action failed",
-			"C++_FIREBASE_FAILURE",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			duration,
-			action_name,
-			{"session_id": session_id, "sequence": sequence}
-		)
+
+	Log.error(
+		"C++ Firebase action failed",
+		{"action_name": action_name, "duration_ms": duration},
+		["debug", "cpp_firebase", "error"]
+	)
+	return DebugAction.Result.new_failure(
+		"C++ Firebase action failed",
+		"C++_FIREBASE_FAILURE",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		duration,
+		action_name,
+		{"session_id": session_id, "sequence": sequence}
+	)
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:

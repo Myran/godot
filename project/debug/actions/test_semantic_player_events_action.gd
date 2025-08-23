@@ -100,8 +100,7 @@ func _execute_player_events_test() -> DebugAction.Result:
 
 	if overall_success:
 		return DebugAction.Result.new_success(summary, 0, "player_events_test")
-	else:
-		return DebugAction.Result.new_failure(summary, "PLAYER_EVENTS_TEST_FAILED")
+	return DebugAction.Result.new_failure(summary, "PLAYER_EVENTS_TEST_FAILED")
 
 
 func _test_reroll_event() -> bool:

@@ -749,13 +749,13 @@ func get_data(p_path: Array[Variant], key: String) -> Variant:
 			}
 		)
 		return result_dict.get("payload")
-	else:  # Error or Timeout
-		Log.error(
-			"FB_Backend: get_data (DirectAwait) failed.",
-			{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
-		)
-		return null
+	# Error or Timeout
+	Log.error(
+		"FB_Backend: get_data (DirectAwait) failed.",
+		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return null
 
 
 func set_data(p_path: Array[Variant], key: String, data_to_set: Variant) -> bool:
@@ -782,14 +782,13 @@ func set_data(p_path: Array[Variant], key: String, data_to_set: Variant) -> bool
 		var payload: Variant = result_dict.get("payload")
 		if payload is bool:
 			return payload
-		elif payload is int:
+		if payload is int:
 			var payload_int: int = payload
 			return bool(payload_int)
-		elif payload is float:
+		if payload is float:
 			var payload_float: float = payload
 			return bool(payload_float)
-		else:
-			return false
+		return false
 	Log.error(
 		"FB_Backend: set_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -837,14 +836,13 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 		var payload: Variant = result_dict.get("payload")
 		if payload is bool:
 			return payload
-		elif payload is int:
+		if payload is int:
 			var payload_int: int = payload
 			return bool(payload_int)
-		elif payload is float:
+		if payload is float:
 			var payload_float: float = payload
 			return bool(payload_float)
-		else:
-			return false
+		return false
 	Log.error(
 		"FB_Backend: remove_data (DirectAwait) failed.",
 		{"path": full_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},
@@ -903,14 +901,13 @@ func set_server_timestamp(p_path: Array[Variant]) -> bool:
 		var payload: Variant = result_dict.get("payload")
 		if payload is bool:
 			return payload
-		elif payload is int:
+		if payload is int:
 			var payload_int: int = payload
 			return bool(payload_int)
-		elif payload is float:
+		if payload is float:
 			var payload_float: float = payload
 			return bool(payload_float)
-		else:
-			return false
+		return false
 	Log.error(
 		"FB_Backend: set_server_timestamp (DirectAwait) failed.",
 		{"path": p_path, "error_info": result_dict, "backend_id": _backend_instance_id_str},

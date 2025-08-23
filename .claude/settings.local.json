@@ -173,9 +173,16 @@
       "mcp__repomix__read_repomix_output",
       "Bash(backlog:*)",
       "Bash(git log:*)",
-      "mcp__godot__update_project_uids"
+      "mcp__godot__update_project_uids",
+      "Bash(gdlint:*)",
+      "Bash(./comprehensive_lint_fix.sh)",
+      "Bash(for:*)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat debug/actions/debug_action.gd)"
     ],
     "deny": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "/Users/mattiasmyhrman/repos"
+    ]
   }
 }

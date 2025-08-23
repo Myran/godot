@@ -144,21 +144,21 @@ func get_data(p_path: Array[Variant], p_key: String) -> Variant:
 			"call_stack": _get_simple_stack_trace()
 		},
 		[Log.TAG_DB, Log.TAG_LOCAL, Log.TAG_ERROR]
-		)
+	)
 
-		push_error(
-			(
-				"Data not found: path="
-				+ str(p_path)
-				+ ", key="
-				+ p_key
-				+ ". Error: "
-				+ nav_result.error_message
-				+ ". Context: "
-				+ str(nav_result.context)
-			)
+	push_error(
+		(
+			"Data not found: path="
+			+ str(p_path)
+			+ ", key="
+			+ p_key
+			+ ". Error: "
+			+ nav_result.error_message
+			+ ". Context: "
+			+ str(nav_result.context)
 		)
-		return null
+	)
+	return null
 
 
 func _get_value_info(value: Variant) -> Dictionary:

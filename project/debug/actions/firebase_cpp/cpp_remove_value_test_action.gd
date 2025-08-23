@@ -58,22 +58,22 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"remove_result": str(remove_result)
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"C++ remove value operation failed",
-			"REMOVE_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "cpp_remove_value",
-				"path": test_path,
-				"set_duration_ms": set_duration,
-				"remove_duration_ms": remove_duration,
-				"test_value": test_value
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"C++ remove value operation failed",
+		"REMOVE_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "cpp_remove_value",
+			"path": test_path,
+			"set_duration_ms": set_duration,
+			"remove_duration_ms": remove_duration,
+			"test_value": test_value
+		}
+	)
 
 
 func execute_cpp_action() -> bool:
