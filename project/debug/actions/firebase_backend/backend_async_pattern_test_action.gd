@@ -59,21 +59,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"get_success": get_success
 			}
 		)
-	else:
-		_update_status("Backend async pattern test FAILED", true)
-		return DebugAction.Result.new_failure(
-			"Backend async pattern test failed during get operation",
-			"GET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_async_pattern",
-				"failed_operation": "get_data",
-				"test_path": test_path,
-				"test_key": test_key,
-				"set_success": set_success,
-				"get_success": get_success
-			}
-		)
+
+	_update_status("Backend async pattern test FAILED", true)
+	return DebugAction.Result.new_failure(
+		"Backend async pattern test failed during get operation",
+		"GET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.DATABASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_async_pattern",
+			"failed_operation": "get_data",
+			"test_path": test_path,
+			"test_key": test_key,
+			"set_success": set_success,
+			"get_success": get_success
+		}
+	)

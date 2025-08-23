@@ -39,13 +39,13 @@ func get_firebase_backend_for_testing() -> FirebaseBackend:
 			["debug", "backend_firebase"]
 		)
 		return firebase_backend
-	else:
-		Log.error(
-			"Backend is not Firebase type or is null",
-			{"backend_type": backend_instance.get_class() if backend_instance else "null"},
-			["debug", "backend_firebase", "error"]
-		)
-		return null
+
+	Log.error(
+		"Backend is not Firebase type or is null",
+		{"backend_type": backend_instance.get_class() if backend_instance else "null"},
+		["debug", "backend_firebase", "error"]
+	)
+	return null
 
 
 func test_backend_async_pattern(
@@ -131,7 +131,7 @@ func execute_backend_action() -> bool:
 		@warning_ignore("redundant_await")
 		var result: DebugAction.Result = await _execute_action_logic({})
 		return result.is_success()
-	else:
-		push_error("execute_backend_action() not implemented in " + get_script().get_path())
-		_update_status("ERROR: execute_backend_action() not implemented", true)
-		return false
+
+	push_error("execute_backend_action() not implemented in " + get_script().get_path())
+	_update_status("ERROR: execute_backend_action() not implemented", true)
+	return false
