@@ -142,9 +142,9 @@ func _wait_for_completion(request_id: int, timeout_sec: float) -> DebugAction.Re
 			duration_ms,
 			operation_str
 		)
-	else:
-		var result_variant: Variant = op_data.get("result")
-		return DebugAction.Result.new_success(result_variant, duration_ms, operation_str)
+
+	var result_variant: Variant = op_data.get("result")
+	return DebugAction.Result.new_success(result_variant, duration_ms, operation_str)
 
 
 func _connect_signals() -> void:

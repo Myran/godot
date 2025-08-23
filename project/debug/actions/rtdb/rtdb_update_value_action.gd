@@ -44,21 +44,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"operation_duration_ms": operation_duration
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Failed to update value",
-			"UPDATE_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "rtdb_update_value",
-				"path": test_path,
-				"attempted_value": test_value,
-				"operation_duration_ms": operation_duration
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"Failed to update value",
+		"UPDATE_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.DATABASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "rtdb_update_value",
+			"path": test_path,
+			"attempted_value": test_value,
+			"operation_duration_ms": operation_duration
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:

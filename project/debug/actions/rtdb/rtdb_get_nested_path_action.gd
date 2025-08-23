@@ -68,21 +68,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"data_structure": nested_data.keys()
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Failed to retrieve nested path data",
-			"GET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "rtdb_get_nested_path",
-				"path": nested_path,
-				"setup_duration_ms": setup_duration,
-				"get_duration_ms": get_duration
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"Failed to retrieve nested path data",
+		"GET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.DATABASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "rtdb_get_nested_path",
+			"path": nested_path,
+			"setup_duration_ms": setup_duration,
+			"get_duration_ms": get_duration
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:
