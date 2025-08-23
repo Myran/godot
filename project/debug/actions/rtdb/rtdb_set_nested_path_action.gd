@@ -56,21 +56,21 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"data_size_bytes": str(nested_data).length()
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Failed to set nested path data",
-			"SET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "rtdb_set_nested_path",
-				"path": nested_path,
-				"operation_duration_ms": operation_duration,
-				"attempted_data_size_bytes": str(nested_data).length()
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"Failed to set nested path data",
+		"SET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.DATABASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "rtdb_set_nested_path",
+			"path": nested_path,
+			"operation_duration_ms": operation_duration,
+			"attempted_data_size_bytes": str(nested_data).length()
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:

@@ -34,12 +34,12 @@ func wait_for_callback(timeout_sec: float = 5.0) -> Dictionary:
 
 	if _received:
 		return {"success": true, "data": _callback_data}
-	else:
-		return {
-			"success": false,
-			"error": "Timeout waiting for callback after %.1f seconds" % timeout_sec,
-			"elapsed_ms": TimeUtils.elapsed_ms(_start_time_ms)
-		}
+
+	return {
+		"success": false,
+		"error": "Timeout waiting for callback after %.1f seconds" % timeout_sec,
+		"elapsed_ms": TimeUtils.elapsed_ms(_start_time_ms)
+	}
 
 
 func is_callback_received() -> bool:

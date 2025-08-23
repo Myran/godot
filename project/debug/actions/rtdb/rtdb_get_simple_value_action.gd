@@ -50,20 +50,20 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"operation_duration_ms": operation_duration
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Failed to retrieve value from simple path",
-			"GET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "rtdb_get_simple_value",
-				"path": path.as_variants(),
-				"operation_duration_ms": operation_duration
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"Failed to retrieve value from simple path",
+		"GET_OPERATION_FAILED",
+		DebugAction.Result.ErrorCategory.DATABASE,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "rtdb_get_simple_value",
+			"path": path.as_variants(),
+			"operation_duration_ms": operation_duration
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:

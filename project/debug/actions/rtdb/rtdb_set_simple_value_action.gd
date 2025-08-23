@@ -46,15 +46,15 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			action_name,
 			{"test_type": "simple_value", "backend": "firebase"}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Set operation failed",
-			"SET_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			{"attempted_value": test_value, "path": path_variants},
-			duration_ms,
-			action_name
-		)
+
+	return DebugAction.Result.new_failure(
+		"Set operation failed",
+		"SET_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		{"attempted_value": test_value, "path": path_variants},
+		duration_ms,
+		action_name
+	)
 
 
 func execute_rtdb_action() -> bool:
