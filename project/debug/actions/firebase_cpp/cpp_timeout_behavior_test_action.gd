@@ -94,24 +94,24 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			success_message, total_duration, action_name, test_result
 		)
-	else:
-		var failure_message: String = (
-			"Basic operations test FAILED ("
-			+ str(passed_tests)
-			+ "/"
-			+ str(total_tests)
-			+ " operations worked)"
-		)
-		_update_status(failure_message, true)
-		return DebugAction.Result.new_failure(
-			failure_message,
-			"TIMEOUT_BEHAVIOR_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
-			null,
-			total_duration,
-			action_name,
-			test_result
-		)
+
+	var failure_message: String = (
+		"Basic operations test FAILED ("
+		+ str(passed_tests)
+		+ "/"
+		+ str(total_tests)
+		+ " operations worked)"
+	)
+	_update_status(failure_message, true)
+	return DebugAction.Result.new_failure(
+		failure_message,
+		"TIMEOUT_BEHAVIOR_FAILED",
+		DebugAction.Result.ErrorCategory.FIREBASE,
+		null,
+		total_duration,
+		action_name,
+		test_result
+	)
 
 
 func execute_cpp_action() -> bool:
