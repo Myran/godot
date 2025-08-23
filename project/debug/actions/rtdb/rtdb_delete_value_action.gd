@@ -45,6 +45,6 @@ func execute_rtdb_action() -> bool:
 	if validation_result == null:
 		_update_status("Delete validation successful - data confirmed removed")
 		return true
-	else:
-		_update_status("ERROR: Delete validation failed - data still exists", true)
-		return false
+
+	_update_status("ERROR: Delete validation failed - data still exists", true)
+	return false
