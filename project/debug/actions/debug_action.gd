@@ -182,17 +182,17 @@ class Result:
 			return DebugAction.Result.new(
 				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
 			)
-		else:
-			return DebugAction.Result.new(
-				false,
-				payload,
-				"Performance thresholds not met",
-				"PERFORMANCE_FAILURE",
-				ErrorCategory.PERFORMANCE,
-				duration_ms,
-				operation,
-				enhanced_metadata
-			)
+
+		return DebugAction.Result.new(
+			false,
+			payload,
+			"Performance thresholds not met",
+			"PERFORMANCE_FAILURE",
+			ErrorCategory.PERFORMANCE,
+			duration_ms,
+			operation,
+			enhanced_metadata
+		)
 
 	static func new_batch_result(
 		individual_results: Array,
@@ -262,20 +262,20 @@ class Result:
 			return DebugAction.Result.new(
 				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
 			)
-		else:
-			var error_message: String = "Listener callback not received"
-			if timeout_ms > 0:
-				error_message += " within " + str(timeout_ms) + "ms timeout"
-			return DebugAction.Result.new(
-				false,
-				payload,
-				error_message,
-				"LISTENER_TIMEOUT",
-				ErrorCategory.LISTENER,
-				duration_ms,
-				operation,
-				enhanced_metadata
-			)
+
+		var error_message: String = "Listener callback not received"
+		if timeout_ms > 0:
+			error_message += " within " + str(timeout_ms) + "ms timeout"
+		return DebugAction.Result.new(
+			false,
+			payload,
+			error_message,
+			"LISTENER_TIMEOUT",
+			ErrorCategory.LISTENER,
+			duration_ms,
+			operation,
+			enhanced_metadata
+		)
 
 	static func new_concurrent_result(
 		operation_results: Array,
@@ -300,17 +300,17 @@ class Result:
 			return DebugAction.Result.new(
 				true, payload, "", "", ErrorCategory.NONE, duration_ms, operation, enhanced_metadata
 			)
-		else:
-			return DebugAction.Result.new(
-				false,
-				payload,
-				"Concurrent operations did not meet success criteria",
-				"CONCURRENT_FAILURE",
-				ErrorCategory.CONCURRENT,
-				duration_ms,
-				operation,
-				enhanced_metadata
-			)
+
+		return DebugAction.Result.new(
+			false,
+			payload,
+			"Concurrent operations did not meet success criteria",
+			"CONCURRENT_FAILURE",
+			ErrorCategory.CONCURRENT,
+			duration_ms,
+			operation,
+			enhanced_metadata
+		)
 
 	func is_success() -> bool:
 		return _success
