@@ -96,26 +96,26 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"backend_state": {"available": backend.is_available()}
 			}
 		)
-	else:
-		_update_status("Timer Manager test FAILED", true)
-		Log.error(
-			"Backend TimerManager validation failed",
-			test_results,
-			["debug", "backend_firebase", "error"]
-		)
 
-		return DebugAction.Result.new_failure(
-			"Backend timer manager test failed - timeout handling insufficient",
-			"TIMER_MANAGER_INSUFFICIENT",
-			DebugAction.Result.ErrorCategory.TIMEOUT,
-			test_results,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_timer_manager",
-				"normal_test": test_results["normal_test"],
-				"rapid_test": test_results["rapid_test"],
-				"normal_ok": normal_ok,
-				"rapid_ok": rapid_ok
-			}
-		)
+	_update_status("Timer Manager test FAILED", true)
+	Log.error(
+		"Backend TimerManager validation failed",
+		test_results,
+		["debug", "backend_firebase", "error"]
+	)
+
+	return DebugAction.Result.new_failure(
+		"Backend timer manager test failed - timeout handling insufficient",
+		"TIMER_MANAGER_INSUFFICIENT",
+		DebugAction.Result.ErrorCategory.TIMEOUT,
+		test_results,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_timer_manager",
+			"normal_test": test_results["normal_test"],
+			"rapid_test": test_results["rapid_test"],
+			"normal_ok": normal_ok,
+			"rapid_ok": rapid_ok
+		}
+	)

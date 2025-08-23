@@ -138,36 +138,36 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"successful_tests": successful_error_handling
 			}
 		)
-	else:
-		_update_status(
-			(
-				"Error Handling test FAILED ("
-				+ str(successful_error_handling)
-				+ "/"
-				+ str(total_error_tests)
-				+ ")"
-			),
-			true
-		)
-		Log.error(
-			"Backend error handling validation failed",
-			test_results,
-			["debug", "backend_firebase", "error"]
-		)
 
-		return DebugAction.Result.new_failure(
-			"Backend error handling test failed - insufficient error handling",
-			"ERROR_HANDLING_INSUFFICIENT",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_results,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_error_handling",
-				"error_scenarios": error_tests,
-				"success_rate": error_success_rate,
-				"total_tests": total_error_tests,
-				"successful_tests": successful_error_handling,
-				"minimum_required_rate": 0.75
-			}
-		)
+	_update_status(
+		(
+			"Error Handling test FAILED ("
+			+ str(successful_error_handling)
+			+ "/"
+			+ str(total_error_tests)
+			+ ")"
+		),
+		true
+	)
+	Log.error(
+		"Backend error handling validation failed",
+		test_results,
+		["debug", "backend_firebase", "error"]
+	)
+
+	return DebugAction.Result.new_failure(
+		"Backend error handling test failed - insufficient error handling",
+		"ERROR_HANDLING_INSUFFICIENT",
+		DebugAction.Result.ErrorCategory.VALIDATION,
+		test_results,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_error_handling",
+			"error_scenarios": error_tests,
+			"success_rate": error_success_rate,
+			"total_tests": total_error_tests,
+			"successful_tests": successful_error_handling,
+			"minimum_required_rate": 0.75
+		}
+	)
