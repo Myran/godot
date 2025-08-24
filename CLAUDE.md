@@ -864,3 +864,4 @@ just generate-claude-context      # Generate optimized project context (250k tok
 - **Structured format** - XML with clear file boundaries for AI parsing
 
 This three-tier approach maximizes both AI efficiency and human usability.
+- Use OODA framework as main framework for outer loop of execution of tasks
