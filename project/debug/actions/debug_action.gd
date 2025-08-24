@@ -5,8 +5,10 @@ signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
+const DebugActionResult = preload("res://debug/debug_action_result.gd")
 
-
+# Type alias for compatibility with old DebugAction.Result usage
+const Result = DebugActionResult
 
 static var current_test_id: String = ""
 static var test_action_count: int = 0
@@ -189,7 +191,6 @@ func execute() -> void:
 
 
 func execute_with_params(params: Dictionary = {}) -> void:
-
 	Log.debug(
 		"TEMP DEBUG: execute_with_params called",
 		{"action": action_name, "count": test_action_count},
@@ -593,7 +594,6 @@ func _log_debug_action_as_semantic(params: Dictionary = {}) -> void:
 
 	if not params.is_empty():
 		semantic_data["data"]["params"] = params  # Match parser: '.data.params'
-
 
 	SessionManager.log_semantic_action(action_name, semantic_data)
 
