@@ -248,7 +248,9 @@ static func _restore_board_content(game: Game, gamestate: Dictionary) -> void:
 	)
 
 
-static func _deserialize_block_by_type(game: Game, object_type: int, block_data: Dictionary) -> Block:
+static func _deserialize_block_by_type(
+	game: Game, object_type: int, block_data: Dictionary
+) -> Block:
 	"""Route to appropriate deserializer based on object_type"""
 	match object_type:
 		core.ObjectType.CARD:
