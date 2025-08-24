@@ -292,7 +292,11 @@ static func _start_battle() -> DebugAction.Result:
 	if not game:
 		return DebugAction.Result.new_failure("Game node not available")
 
-	core.action(core.SystemIdleActionEvent.new(Callable(GameActionImplementations, "_trigger_start_battle")))
+	core.action(
+		core.SystemIdleActionEvent.new(
+			Callable(GameActionImplementations, "_trigger_start_battle")
+		)
+	)
 
 	return DebugAction.Result.new_success({"battle_queued": true})
 
@@ -308,9 +312,15 @@ static func _populate_enemy_and_start_battle() -> DebugAction.Result:
 		return DebugAction.Result.new_failure("Game node not available")
 
 	core.action(
-		core.SystemIdleActionEvent.new(Callable(GameActionImplementations, "_trigger_populate_enemy_lineup"))
+		core.SystemIdleActionEvent.new(
+			Callable(GameActionImplementations, "_trigger_populate_enemy_lineup")
+		)
 	)
-	core.action(core.SystemIdleActionEvent.new(Callable(GameActionImplementations, "_trigger_start_battle")))
+	core.action(
+		core.SystemIdleActionEvent.new(
+			Callable(GameActionImplementations, "_trigger_start_battle")
+		)
+	)
 
 	return DebugAction.Result.new_success({"populate_and_battle_queued": true})
 
@@ -1488,7 +1498,8 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 
 static func _transition_player(params: Dictionary = {}) -> bool:
 	"""Simulate player state transition action with parameters"""
-	var from_state: String = params.get("from_state", "")  # Expected starting state (empty = skip validation)
+	# Expected starting state (empty = skip validation)
+	var from_state: String = params.get("from_state", "")
 	var to_state: String = params.get("to_state", "PREPARE")  # Target state
 
 	if to_state.is_empty():
@@ -1647,7 +1658,10 @@ static func _start_battle_player(params: Dictionary = {}) -> bool:
 
 
 static func _validate_required_params(params: Dictionary, required_keys: Array[String]) -> String:
-	"""Validate that all required parameters are present. Returns empty string if valid, error message if invalid."""
+	"""
+	Validate that all required parameters are present.
+	Returns empty string if valid, error message if invalid.
+	"""
 	for key: String in required_keys:
 		if not params.has(key):
 			return "Missing required parameter: " + key
@@ -1674,7 +1688,10 @@ static func _validate_range(value: int, min_val: int, max_val: int, param_name: 
 
 
 static func _validate_position_dict(position: Dictionary, param_name: String) -> String:
-	"""Validate position dictionary has x,y coordinates within clicker bounds. Returns empty string if valid."""
+	"""
+	Validate position dictionary has x,y coordinates within clicker bounds.
+	Returns empty string if valid.
+	"""
 	if not position.has("x") or not position.has("y"):
 		return param_name + " must have 'x' and 'y' coordinates"
 
