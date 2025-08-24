@@ -5,42 +5,15 @@ const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
 const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
 
-const FONT_SIZE_XXL: int = 34
-const FONT_SIZE_XL: int = 32
-const FONT_SIZE_L: int = 30
-const FONT_SIZE_M: int = 24
-
-const UI_COLORS: Dictionary = {
-	"background": "#37474F",  # Maintain existing background
-	"surface": "#455A64",  # Maintain existing surface
-	"muted": "#9E9E9E",  # Muted gray
-	"primary": "#64B5F6",  # Soft blue - primary actions
-	"secondary": "#81C784",  # Muted green - secondary elements
-	"accent": "#FFB74D",  # Amber - used for highlights, warnings, and booleans
-	"success": "#81C784",  # Success green - matches secondary
-	"warning": "#FFB74D",  # Warning - matches accent
-	"danger": "#E57373",  # Soft red - errors
-	"info": "#4FC3F7",  # Light blue - informational
-	"text_primary": "#FFFFFF",  # Pure white - main content
-	"text_secondary": "#CFD8DC",  # Light gray - secondary text
-	"text_tertiary": "#90A4AE",  # Muted blue-gray - less important info
-	"key": "#FFB74D",  # Property key - matches accent
-	"string": "#81C784",  # String value - matches success
-	"number": "#4FC3F7",  # Number value - matches info
-	"boolean": "#FFB74D",  # Boolean value - matches accent
-	"null_value": "#90A4AE",  # Null value - matches text_tertiary
-	"border": "#546E7A",  # Border color - subtle separation
-	"highlight": "#FFECB3",  # Highlight color - light version of accent
-}
 const ITEM_TYPE_CATEGORY: String = "category_item"
 const ITEM_TYPE_GROUP: String = "group_item"
-const ITEM_TYPE_ACTION: String = "action_item"  # Was TEST_ITEM
+const ITEM_TYPE_ACTION: String = "action_item"
 const ITEM_TYPE_BACK_TO_MAIN: String = "back_to_main"
 const ITEM_TYPE_BACK_TO_GROUPS: String = "back_to_groups"
-const ITEM_TYPE_CATEGORY_WITH_ACTIONS: String = "category_with_actions"  # Category that has direct actions
+const ITEM_TYPE_CATEGORY_WITH_ACTIONS: String = "category_with_actions"
 
 const BACK_TO_MAIN_MENU_TEXT: String = "< Back to Main Menu"
-const BACK_TO_GROUPS_TEXT: String = "< Back to Categories"  # Or "Back to Test Groups"
+const BACK_TO_GROUPS_TEXT: String = "< Back to Categories"
 
 var _current_view_level: ViewLevel = ViewLevel.MAIN_CATEGORIES
 var _current_category_name: String = ""
@@ -61,7 +34,7 @@ var _is_test_mode_active: bool = false  # Track if automated test is running
 var _ui_hidden_by_test: bool = false  # Track if UI was hidden by test mode (not user)
 @onready var status_label: RichTextLabel = %DebugRichTextLabel
 @onready var item_list_navigator: ItemList = %DebugItemList
-@onready var run_all_button: Button = %RunAllButton  # Add this button to your scene if not already present
+@onready var run_all_button: Button = %RunAllButton
 @onready var text_toggle_button: Button = %TextToggleButton
 @onready var exit_button: Button = %ExitButton
 
@@ -78,7 +51,6 @@ class ActionExecutionResult:
 func _add_list_item(
 	text: String, metadata: MenuListItemData = null, tooltip: String = "", disabled: bool = false
 ) -> int:
-	"""Add an item to the navigation list with optional metadata and tooltip"""
 	var index: int = item_list_navigator.get_item_count()
 	item_list_navigator.add_item(text)
 
@@ -95,39 +67,33 @@ func _add_list_item(
 
 
 func _add_navigation_item(text: String, metadata: MenuListItemData) -> void:
-	"""Add a navigation item (back button) to the list"""
 	_add_list_item(text, metadata)
 
 
 func _add_action_item(
 	action: DebugAction, category: String, group: String = "", prefix: String = ""
 ) -> void:
-	"""Add a debug action item to the list"""
-	var display_text: String = prefix + action.action_name
+	var display_text: String = DebugMenuUtilities.generate_action_display_name(
+		action.action_name, prefix
+	)
 	var metadata: MenuListItemData = MenuListItemData.create_action(action, category, group)
 	_add_list_item(display_text, metadata, action.description)
 
 
 func _add_group_item(group_name: String, category: String, prefix: String = "▸ ") -> void:
-	"""Add a group item to the list"""
-	var display_text: String = prefix + group_name
+	var display_text: String = DebugMenuUtilities.generate_group_display_name(group_name, prefix)
 	var metadata: MenuListItemData = MenuListItemData.create_group(category, group_name)
 	_add_list_item(display_text, metadata)
 
 
 func _clear_navigation_state() -> void:
-	"""Clear navigation state and reset UI visibility"""
 	_last_action_data.clear()
 	_is_list_hidden = false
-	if is_instance_valid(item_list_navigator):
-		item_list_navigator.visible = true
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = true
+	DebugMenuUtilities.setup_navigation_ui_visibility(item_list_navigator, run_all_button)
 	_update_toggle_button_state()
 
 
 func _set_run_all_button_text(text: String, _is_visible: bool = true) -> void:
-	"""Update the run all button text and visibility"""
 	if is_instance_valid(run_all_button):
 		run_all_button.text = text
 		run_all_button.visible = _is_visible
@@ -228,55 +194,19 @@ func _update_status_label_text(text: String, is_error: bool = false) -> void:
 		status_label.scroll_following = true
 		status_label.fit_content = true
 
-		var header: String = _build_styled_header()
+		var header: String = DebugMenuUtilities.build_styled_header()
 
 		var styled_content: String = ""
 		if is_error:
-			styled_content = _apply_error_styling(text)
+			styled_content = DebugMenuUtilities.apply_error_styling(text)
 		else:
-			styled_content = _apply_success_styling(text)
+			styled_content = DebugMenuUtilities.apply_success_styling(text)
 
 		status_label.text = header + "\n" + styled_content
 
 		await get_tree().process_frame
 		if status_label.get_v_scroll_bar():
 			status_label.get_v_scroll_bar().value = status_label.get_v_scroll_bar().max_value
-
-
-func _build_styled_header() -> String:
-	var build_type: String = "Debug" if OS.is_debug_build() else "Release"
-	var commit_hash: String = Engine.get_version_info().get("hash", "unknown")
-	var shortened_hash: String = (
-		commit_hash.substr(0, 8) if commit_hash.length() > 8 else commit_hash
-	)
-
-	return (
-		(
-			"[font_size=%s][color=%s]━━━ DEBUG CONSOLE ━━━[/color][/font_size]\n"
-			% [FONT_SIZE_XL, UI_COLORS.info]
-		)
-		+ (
-			"[font_size=%s][color=%s]%s • %s • %s[/color][/font_size]"
-			% [FONT_SIZE_M, UI_COLORS.text_secondary, OS.get_name(), build_type, shortened_hash]
-		)
-	)
-
-
-func _apply_error_styling(text: String) -> String:
-	return (
-		"[font_size=%s][color=%s]⚠ ERROR[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.danger]
-		+ (
-			"[font_size=%s][color=%s]%s[/color][/font_size]"
-			% [FONT_SIZE_L, UI_COLORS.text_primary, text]
-		)
-	)
-
-
-func _apply_success_styling(text: String) -> String:
-	return (
-		"[font_size=%s][color=%s]%s[/color][/font_size]"
-		% [FONT_SIZE_L, UI_COLORS.text_primary, text]
-	)
 
 
 func _populate_main_categories_view() -> void:
@@ -309,20 +239,8 @@ func _populate_main_categories_view() -> void:
 		_add_list_item("No debug actions registered.", null, "", true)
 		return
 
-	var categories_with_direct_actions: Array[String] = []
-	var categories_with_only_groups: Array[String] = []
-
-	for category_name: String in categories:
-		if DebugRegistry.has_ungrouped_actions(category_name):
-			categories_with_direct_actions.append(category_name)
-		else:
-			categories_with_only_groups.append(category_name)
-
-	categories_with_direct_actions.sort()
-	categories_with_only_groups.sort()
-
-	var sorted_categories: Array[String] = (
-		categories_with_direct_actions + categories_with_only_groups
+	var sorted_categories: Array[String] = DebugMenuUtilities.organize_categories_by_type(
+		categories
 	)
 
 	for i: int in range(sorted_categories.size()):
@@ -338,11 +256,7 @@ func _populate_main_categories_view() -> void:
 
 	Log.info(
 		"Main categories populated",
-		{
-			"total_categories": sorted_categories.size(),
-			"direct_actions": categories_with_direct_actions.size(),
-			"submenus": categories_with_only_groups.size()
-		},
+		{"total_categories": sorted_categories.size()},
 		[Log.TAG_DEBUG_UI]
 	)
 
@@ -355,10 +269,7 @@ func _populate_groups_view(category_name: String) -> void:
 
 	_last_action_data.clear()
 	_is_list_hidden = false
-	if is_instance_valid(item_list_navigator):
-		item_list_navigator.visible = true
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = true
+	DebugMenuUtilities.setup_navigation_ui_visibility(item_list_navigator, run_all_button)
 	_update_toggle_button_state()
 
 	if is_instance_valid(run_all_button):
@@ -432,7 +343,6 @@ func _populate_groups_view(category_name: String) -> void:
 
 
 func _populate_category_with_actions_view(category_name: String) -> void:
-	"""Show a category that has both direct actions and groups"""
 	_current_view_level = ViewLevel.GROUP_LIST
 	_current_category_name = category_name
 	_current_group_name = ""
@@ -440,10 +350,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 
 	_last_action_data.clear()
 	_is_list_hidden = false
-	if is_instance_valid(item_list_navigator):
-		item_list_navigator.visible = true
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = true
+	DebugMenuUtilities.setup_navigation_ui_visibility(item_list_navigator, run_all_button)
 	_update_toggle_button_state()
 
 	if is_instance_valid(run_all_button):
@@ -464,7 +371,9 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 
 	if ungrouped_actions.size() > 0:
 		for action: DebugAction in ungrouped_actions:
-			item_list_navigator.add_item("• " + action.action_name)  # Bullet to show it's an action
+			item_list_navigator.add_item(
+				DebugMenuUtilities.generate_action_display_name(action.action_name, "• ")
+			)
 			item_list_navigator.set_item_tooltip(item_index, action.description)
 			item_list_navigator.set_item_metadata(
 				item_index, MenuListItemData.create_action(action, category_name, "")
@@ -477,7 +386,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 		all_groups = DebugRegistry.get_groups_for_category(category_name)
 
 	for group_name: String in all_groups:
-		item_list_navigator.add_item("▸ " + group_name)  # Arrow to show it's expandable
+		item_list_navigator.add_item(DebugMenuUtilities.generate_group_display_name(group_name))
 		item_list_navigator.set_item_metadata(
 			item_index, MenuListItemData.create_group(category_name, group_name)
 		)
@@ -502,10 +411,7 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 
 	_last_action_data.clear()
 	_is_list_hidden = false
-	if is_instance_valid(item_list_navigator):
-		item_list_navigator.visible = true
-	if is_instance_valid(run_all_button):
-		run_all_button.visible = true
+	DebugMenuUtilities.setup_navigation_ui_visibility(item_list_navigator, run_all_button)
 	_update_toggle_button_state()
 
 	if is_instance_valid(run_all_button):
@@ -551,7 +457,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 
 
 func _populate_saved_states_view() -> void:
-	"""Show available saved debug states with load options"""
 	_current_view_level = ViewLevel.SAVED_STATES
 	_current_category_name = "Saved States"
 	_current_group_name = ""
@@ -570,7 +475,6 @@ func _populate_saved_states_view() -> void:
 
 
 func _scan_and_add_saved_states(directory_path: String) -> void:
-	"""Scan directory and add load buttons for each JSON file"""
 	var dir: DirAccess = DirAccess.open(directory_path)
 	if not dir:
 		_add_list_item(
@@ -618,7 +522,6 @@ func _scan_and_add_saved_states(directory_path: String) -> void:
 
 
 func _abort_current_execution_if_needed() -> void:
-	"""Abort current action execution or Run All operation"""
 	if not _is_executing_all:
 		return
 
@@ -636,7 +539,6 @@ func _abort_current_execution_if_needed() -> void:
 
 
 func _abort_single_action(action: DebugAction) -> void:
-	"""Abort a single action execution"""
 	Log.debug(
 		"Aborting single action: %s" % action.action_name, {}, [Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
 	)
@@ -650,7 +552,6 @@ func _abort_single_action(action: DebugAction) -> void:
 
 
 func _abort_run_all_execution() -> void:
-	"""Abort Run All execution"""
 	Log.debug(
 		"Aborting Run All execution with %d actions" % _run_all_actions.size(),
 		{},
@@ -668,7 +569,6 @@ func _abort_run_all_execution() -> void:
 
 
 func _reset_execution_state() -> void:
-	"""Reset all execution state variables"""
 	_is_executing_all = false
 	_current_executing_action = null
 	_run_all_actions.clear()
@@ -953,98 +853,7 @@ func _complete_run_all_execution(results: Array[Dictionary], scope_description: 
 func _build_run_all_summary(
 	results: Array[Dictionary], scope_description: String, successful: int, failed: int
 ) -> String:
-	var total: int = results.size()
-	var summary: String = ""
-
-	summary += "[font_size=%s][b]RUN ALL COMPLETE[/b][/font_size]\n" % FONT_SIZE_XXL
-	summary += (
-		"[font_size=%s][color=%s]%s[/color][/font_size]\n\n"
-		% [FONT_SIZE_XL, UI_COLORS.accent, scope_description]
-	)
-
-	summary += (
-		"[font_size=%s][color=%s]SUMMARY[/color][/font_size]\n" % [FONT_SIZE_XL, UI_COLORS.info]
-	)
-	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(30) + "[/color]\n"
-	summary += (
-		"[color=%s]Total Actions:[/color] [color=%s]%d[/color]\n"
-		% [UI_COLORS.text_secondary, UI_COLORS.number, total]
-	)
-	summary += (
-		"[color=%s]Successful:[/color] [color=%s]%d[/color]\n"
-		% [UI_COLORS.text_secondary, UI_COLORS.success, successful]
-	)
-	summary += (
-		"[color=%s]Failed:[/color] [color=%s]%d[/color]\n\n"
-		% [UI_COLORS.text_secondary, UI_COLORS.danger if failed > 0 else UI_COLORS.muted, failed]
-	)
-
-	var success_rate: float = (float(successful) / float(total)) * 100.0 if total > 0 else 0.0
-	var rate_color: String = (
-		UI_COLORS.success
-		if success_rate >= 80.0
-		else (UI_COLORS.warning if success_rate >= 50.0 else UI_COLORS.danger)
-	)
-	summary += (
-		"[color=%s]Success Rate:[/color] [color=%s]%.1f%%[/color]\n\n"
-		% [UI_COLORS.text_secondary, rate_color, success_rate]
-	)
-
-	summary += (
-		"[font_size=%s][color=%s]DETAILED RESULTS[/color][/font_size]\n"
-		% [FONT_SIZE_XL, UI_COLORS.info]
-	)
-	summary += "[color=%s]" % UI_COLORS.surface + "─".repeat(40) + "[/color]\n"
-
-	for i: int in range(results.size()):
-		var result: Dictionary = results[i]
-		var action_name: String = result.get("action_name", "Unknown Action")
-		var success: bool = result.get("success", false)
-		var payload: Variant = result.get("payload", null)
-
-		var status_icon: String = "✓" if success else "✗"
-		var status_color: String = UI_COLORS.success if success else UI_COLORS.danger
-		var index_str: String = "[color=%s][%02d][/color]" % [UI_COLORS.number, i + 1]
-
-		summary += (
-			"%s [color=%s]%s[/color] [color=%s]%s[/color]"
-			% [index_str, status_color, status_icon, UI_COLORS.text_primary, action_name]
-		)
-
-		if not success and payload != null:
-			var error_summary: String = _extract_concise_error(payload)
-			if not error_summary.is_empty():
-				summary += " [color=%s]- %s[/color]" % [UI_COLORS.danger, error_summary]
-
-		summary += "\n"
-
-	summary += (
-		"\n[color=%s]Execution completed at %s[/color]"
-		% [UI_COLORS.text_secondary, Time.get_datetime_string_from_system()]
-	)
-
-	return summary
-
-
-func _extract_concise_error(payload: Variant) -> String:
-	if payload == null:
-		return ""
-
-	var payload_str: String = str(payload)
-
-	if payload_str.contains("PERMISSION_DENIED"):
-		return "Permission denied"
-	if payload_str.contains("NETWORK_ERROR"):
-		return "Network error"
-	if payload_str.contains("timeout"):
-		return "Timeout"
-	if payload_str.contains("not found"):
-		return "Not found"
-	if payload_str.contains("Firebase"):
-		return "Firebase error"
-	if payload_str.length() > 50:
-		return payload_str.substr(0, 50) + "..."
-	return payload_str
+	return DebugMenuUtilities.build_run_all_summary(results, scope_description, successful, failed)
 
 
 func _set_ui_for_execution(is_executing: bool) -> void:
@@ -1078,7 +887,6 @@ func show_menu_content() -> void:
 
 
 func clear_output_for_new_action(_action: DebugAction) -> void:
-	"""Clear output display when a new action starts"""
 	if is_instance_valid(status_label):
 		status_label.text = ""
 		status_label.bbcode_enabled = true
@@ -1111,13 +919,7 @@ func display_output_from_service(text: String, _is_error: bool = false) -> void:
 
 
 func _validate_navigation_state(context: String) -> bool:
-	"""Validate that DebugRegistry is available and functional"""
-	if not DebugRegistry:
-		Log.error(
-			"DebugRegistry not available in context: " + context,
-			{},
-			[Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_ERROR]
-		)
+	if not DebugMenuUtilities.validate_registry_with_error_logging(context):
 		_update_status_label_text("ERROR: Debug system not properly initialized.", true)
 		return false
 	return true
@@ -1125,12 +927,9 @@ func _validate_navigation_state(context: String) -> bool:
 
 func _add_category_item_to_list(category_name: String, index: int) -> void:
 	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
-	var display_name: String = ""
-
-	if has_ungrouped:
-		display_name = "• " + category_name  # Bullet indicates direct actions available
-	else:
-		display_name = "▸ " + category_name  # Arrow indicates submenu only
+	var display_name: String = DebugMenuUtilities.generate_category_display_name(
+		category_name, has_ungrouped
+	)
 
 	item_list_navigator.add_item(display_name)
 	item_list_navigator.set_item_metadata(
@@ -1138,13 +937,7 @@ func _add_category_item_to_list(category_name: String, index: int) -> void:
 	)
 
 
-func _build_single_action_report(action: DebugAction, success: bool, payload: Variant) -> String:
-	"""Generate a comprehensive, beautifully formatted report for a single action execution"""
-	return DebugOutputService.format_completion_report(action, success, payload)
-
-
 func _start_test_mode_monitoring() -> void:
-	"""Start monitoring for test mode changes to auto-hide UI during tests"""
 	var timer: Timer = Timer.new()
 	timer.wait_time = 0.5
 	timer.timeout.connect(_check_test_mode_status)
@@ -1153,7 +946,6 @@ func _start_test_mode_monitoring() -> void:
 
 
 func _check_test_mode_status() -> void:
-	"""Check if test mode status has changed and update UI accordingly"""
 	var current_test_active: bool = DebugAction.is_test_active()
 
 	if current_test_active != _is_test_mode_active:
@@ -1166,7 +958,6 @@ func _check_test_mode_status() -> void:
 
 
 func _enter_test_mode() -> void:
-	"""Automatically hide UI elements when entering test mode"""
 	if not _is_list_hidden:
 		_ui_hidden_by_test = true
 		_toggle_result_expansion()
@@ -1181,7 +972,6 @@ func _enter_test_mode() -> void:
 
 
 func _exit_test_mode() -> void:
-	"""Restore UI elements when exiting test mode"""
 	if _ui_hidden_by_test and _is_list_hidden:
 		_ui_hidden_by_test = false
 		_toggle_result_expansion()

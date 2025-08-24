@@ -5,7 +5,6 @@ extends RefCounted
 static func _reset_match_level() -> bool:
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
-		Log.info("Match level reset", {}, ["debug", "gameplay"])
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
@@ -16,7 +15,6 @@ static func _load_match_level(level_num: int) -> bool:
 		DebugManager.action(
 			DebugManager.DebugEventType.EVENT_FORCE_LOAD_MATCH_LEVEL, ["level_%02d" % level_num]
 		)
-		Log.info("Loading match level %d" % level_num, {}, ["debug", "gameplay"])
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
@@ -34,25 +32,23 @@ static func _populate_enemy_lineup() -> bool:
 
 	core.action(core.LineupOperationStartEvent.new())
 
-	Log.info("Populating enemy lineup with test cards", {}, ["debug", "gameplay"])
-
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
-			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			var typed_card: Card = new_card
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
 
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
-			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			var typed_card: Card = new_card
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
 	var dwarf_card: Variant = await card_controller.create_unit_from_id(str(4), 1)
 	if dwarf_card and is_instance_valid(dwarf_card):
-		var typed_dwarf: Card = dwarf_card  # Fail fast if not actually a Card
+		var typed_dwarf: Card = dwarf_card
 		typed_dwarf.block_context = Cards.CONTEXT.LINEUP
 
 		Log.info(
@@ -80,11 +76,9 @@ static func _populate_enemy_lineup() -> bool:
 				},
 				["debug", "gameplay", "ability", "stats"]
 			)
-		if not merge_ability:
+		else:
 			Log.warning("MergeBonusAbility not found on dwarf", {}, ["debug", "gameplay"])
-
 		core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
-		Log.info("Enemy lineup populated", {}, ["debug", "gameplay"])
 
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
@@ -93,7 +87,6 @@ static func _populate_enemy_lineup() -> bool:
 static func _clear_card_cache() -> bool:
 	if data_source and data_source.has_method("clear_card_cache"):
 		data_source.clear_card_cache()
-		Log.info("Card cache cleared", {}, ["debug", "database"])
 		return true
 	Log.warning(
 		"data_source not available or doesn't support clear_card_cache", {}, ["debug", "database"]
@@ -104,9 +97,6 @@ static func _clear_card_cache() -> bool:
 static func _toggle_local_battle_db() -> bool:
 	if DebugManager:
 		DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
-		Log.info(
-			"Local battle DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "database"]
-		)
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
@@ -115,14 +105,12 @@ static func _toggle_local_battle_db() -> bool:
 static func _cycle_asset_variant() -> bool:
 	if DebugManager:
 		DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
-		Log.info("Asset variant set to: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
 
 
 static func _print_debug_info() -> bool:
-	Log.info("=== Debug Info ===", {}, ["debug", "quick"])
 	if DebugManager:
 		Log.info("Local DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "quick"])
 		Log.info("Asset Variant: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
@@ -163,7 +151,7 @@ static func _populate_enemy_lineup_as_player() -> bool:
 	for n: int in 3:
 		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
-			var typed_card: Card = new_card  # Fail fast if not actually a Card
+			var typed_card: Card = new_card
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
 			Log.info(
@@ -426,7 +414,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		return DebugAction.Result.new_failure(
 			"Logic-only determinism test failed - hash mismatch", "DETERMINISM_LOGIC_ONLY_FAILED"
 		)
-	# Recording mode
 	Log.info(
 		"=== RECORDING MODE ===",
 		{
@@ -479,7 +466,6 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 			duration,
 			"hash_recorded_logic_only_restart_pending"
 		)
-	# Hash recording had issues
 	Log.info(
 		"Hash recording had issues but continuing with restart",
 		{
@@ -892,7 +878,6 @@ static func _battle_test_determinism() -> DebugAction.Result:
 		return DebugAction.Result.new_failure(
 			"Determinism test failed - hash mismatch", "DETERMINISM_FAILED"
 		)
-	# Recording mode
 	var update_success: bool = _update_config_with_hash(actual_hash)
 
 	if update_success:
@@ -949,7 +934,6 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			duration,
 			"hash_recorded_restart_pending"
 		)
-	# Config update failed but continuing
 	Log.warning(
 		"Hash recorded but config update failed - test still passed",
 		{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
@@ -974,12 +958,6 @@ static func _reset_board_state() -> bool:
 			"Game node not found - cannot reset battle state", {}, ["debug", "board", "error"]
 		)
 		return false
-
-	Log.debug(
-		"Board state reset - RNG already deterministically initialized",
-		{"rng_available": rng != null and rng.seeded_rng != null},
-		["debug", "board", "reset"]
-	)
 
 	var reset_successful: bool = true
 
