@@ -1,6 +1,9 @@
 class_name DebugAction
 extends Resource
 
+signal status_updated(text: String, is_error: bool)
+signal execution_completed(success: bool, result: Variant)
+
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 
 
@@ -396,22 +399,18 @@ class Result:
 			if not _metadata.is_empty():
 				base += " [metadata: %s]" % str(_metadata)
 			return base
-		else:
-			var base: String = (
-				"FAILURE: %s - %s (%dms)"
-				% [
-					_operation if not _operation.is_empty() else "Unknown",
-					_error_message,
-					_duration_ms
-				]
-			)
-			if not _error_code.is_empty():
-				base += " [code: %s]" % _error_code
-			if _error_category != ErrorCategory.NONE:
-				base += " [category: %s]" % ErrorCategory.keys()[_error_category]
-			if not _metadata.is_empty():
-				base += " [metadata: %s]" % str(_metadata)
-			return base
+
+		var base: String = (
+			"FAILURE: %s - %s (%dms)"
+			% [_operation if not _operation.is_empty() else "Unknown", _error_message, _duration_ms]
+		)
+		if not _error_code.is_empty():
+			base += " [code: %s]" % _error_code
+		if _error_category != ErrorCategory.NONE:
+			base += " [category: %s]" % ErrorCategory.keys()[_error_category]
+		if not _metadata.is_empty():
+			base += " [metadata: %s]" % str(_metadata)
+		return base
 
 	func is_network_error() -> bool:
 		return _error_category == ErrorCategory.NETWORK
@@ -434,10 +433,9 @@ class Result:
 	func get_performance_category() -> String:
 		if _duration_ms < 500:
 			return "FAST"
-		elif _duration_ms < 2000:
+		if _duration_ms < 2000:
 			return "NORMAL"
-		else:
-			return "SLOW"
+		return "SLOW"
 
 	func get_performance_metrics() -> Dictionary:
 		"""Get performance metrics if this is a performance result"""
@@ -553,6 +551,11 @@ class Result:
 		return _error_category == ErrorCategory.PERFORMANCE
 
 
+static var current_test_id: String = ""
+static var test_action_count: int = 0
+static var test_success_count: int = 0
+static var test_failure_count: int = 0
+
 @export var action_name: String = "Unnamed Action"
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"
 @export var group: String = ""  # e.g., "Basic", "Listeners", "Connectivity"
@@ -561,15 +564,7 @@ class Result:
 @export var keyboard_shortcut: String = ""
 @export var use_auto_semantic_logging: bool = true  # Actions can opt out to handle their own semantic logging
 
-signal status_updated(text: String, is_error: bool)
-signal execution_completed(success: bool, result: Variant)
-
 var action_callable: Callable
-
-static var current_test_id: String = ""
-static var test_action_count: int = 0
-static var test_success_count: int = 0
-static var test_failure_count: int = 0
 
 
 func _init(p_name: String = "", p_callable: Callable = Callable()) -> void:
@@ -864,8 +859,7 @@ func _extract_error_message(result: Variant) -> String:
 	if result is DebugAction.Result:
 		if result.is_failure():
 			return result.get_error_message()
-		else:
-			return "Action succeeded but error message requested"
+		return "Action succeeded but error message requested"
 
 	if result == false:
 		return "Action returned false"
@@ -874,10 +868,9 @@ func _extract_error_message(result: Variant) -> String:
 		var error_data: Variant = result[1]
 		if error_data is String:
 			return error_data
-		elif error_data is Dictionary and error_data.has("error"):
+		if error_data is Dictionary and error_data.has("error"):
 			return str(error_data["error"])
-		else:
-			return str(error_data)
+		return str(error_data)
 
 	if result is Dictionary and result.has("error"):
 		return str(result["error"])
@@ -1075,16 +1068,16 @@ func execute_with_auto_validation() -> DebugAction.Result:
 
 	if not current_session_id.is_empty():
 		return await execute_with_state_validation(current_session_id, current_sequence)
-	else:
-		Log.debug(
-			"No session context available, using standard execution",
-			{"action_name": action_name},
-			["debug", "validation", "no_session"]
-		)
-		execute()
-		return DebugAction.Result.new_success(
-			null, 0, action_name, {"validation_mode": "none", "reason": "no_session_context"}
-		)
+
+	Log.debug(
+		"No session context available, using standard execution",
+		{"action_name": action_name},
+		["debug", "validation", "no_session"]
+	)
+	execute()
+	return DebugAction.Result.new_success(
+		null, 0, action_name, {"validation_mode": "none", "reason": "no_session_context"}
+	)
 
 
 func _execute_with_validation_async(session_id: String, sequence: int) -> void:

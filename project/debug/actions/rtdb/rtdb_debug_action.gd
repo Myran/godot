@@ -1,6 +1,8 @@
 class_name RTDBDebugAction
 extends DebugAction
 
+static var _next_request_id: int = 1
+
 
 func _init() -> void:
 	category = "RTDB"
@@ -39,19 +41,19 @@ func get_firebase_database() -> Object:
 				["debug", "rtdb"]
 			)
 			return backend
-		else:
-			Log.warning(
-				"Backend is not Firebase type",
-				{
-					"backend_type":
-					backend.get_script().get_path() if backend.get_script() else backend.get_class()
-				},
-				["debug", "rtdb", "warning"]
-			)
-			return null
-	else:
-		Log.error("Backend is null in DataSource", {}, ["debug", "rtdb", "error"])
+
+		Log.warning(
+			"Backend is not Firebase type",
+			{
+				"backend_type":
+				backend.get_script().get_path() if backend.get_script() else backend.get_class()
+			},
+			["debug", "rtdb", "warning"]
+		)
 		return null
+
+	Log.error("Backend is null in DataSource", {}, ["debug", "rtdb", "error"])
+	return null
 
 
 func execute_simple_operation(
@@ -143,14 +145,14 @@ func execute_simple_operation(
 		)
 		_update_status(operation_name + " completed successfully (" + str(duration_ms) + "ms)")
 		return true
-	else:
-		Log.warning(
-			"RTDB operation returned null",
-			{"operation": operation_name, "method": method, "duration_ms": duration_ms},
-			["debug", "rtdb", "warning"]
-		)
-		_update_status(operation_name + " completed (null result, " + str(duration_ms) + "ms)")
-		return true
+
+	Log.warning(
+		"RTDB operation returned null",
+		{"operation": operation_name, "method": method, "duration_ms": duration_ms},
+		["debug", "rtdb", "warning"]
+	)
+	_update_status(operation_name + " completed (null result, " + str(duration_ms) + "ms)")
+	return true
 
 
 func get_last_error_result() -> Array:
@@ -166,9 +168,6 @@ func create_test_path(path_suffix: Array = []) -> Array[Variant]:
 func execute_firebase_operation(_db: Object, _operation: String, _args: Array) -> Dictionary:
 	push_error("execute_firebase_operation() not implemented in base RTDBDebugAction")
 	return {"success": false, "error": "execute_firebase_operation not implemented"}
-
-
-static var _next_request_id: int = 1
 
 
 static func generate_request_id() -> int:

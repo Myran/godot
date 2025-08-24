@@ -12,8 +12,8 @@ signal fb_logged_out
 const _APP_ID: int = 914537337160544
 
 var _fb: Object = null
-var token: String = ""
-var user: Dictionary = {}
+var _token: String = ""
+var _user: Dictionary = {}
 
 
 func _ready() -> void:
@@ -134,21 +134,21 @@ func set_advertiser_tracking(enabled: bool) -> void:
 
 
 func login_success(tkn: String) -> void:
-	token = tkn
+	_token = tkn
 	print("Facebook login success: %s" % tkn)
 	fb_login_success.emit(tkn)
 
 
 func login_cancelled() -> void:
-	token = ""
-	user = {}
+	_token = ""
+	_user = {}
 	print("Facebook login cancelled")
 	fb_login_cancelled.emit()
 
 
 func login_failed(error: String) -> void:
-	token = ""
-	user = {}
+	_token = ""
+	_user = {}
 	print("Facebook login failed: %s" % error)
 	fb_login_failed.emit(error)
 
