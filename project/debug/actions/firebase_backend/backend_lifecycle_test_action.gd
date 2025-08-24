@@ -180,29 +180,27 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"backend_state": test_results["backend_final_state"]
 			}
 		)
-	else:
-		_update_status(
-			"Lifecycle test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true
-		)
-		Log.error(
-			"Backend lifecycle validation failed",
-			test_results,
-			["debug", "backend_firebase", "error"]
-		)
 
-		return DebugAction.Result.new_failure(
-			"Backend lifecycle test failed - insufficient success rate",
-			"LIFECYCLE_INSUFFICIENT",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_results,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_lifecycle",
-				"lifecycle_tests": lifecycle_tests,
-				"success_rate": success_rate,
-				"total_tests": total_tests,
-				"successful_tests": successful_tests,
-				"minimum_required_rate": 0.8
-			}
-		)
+	_update_status(
+		"Lifecycle test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true
+	)
+	Log.error(
+		"Backend lifecycle validation failed", test_results, ["debug", "backend_firebase", "error"]
+	)
+
+	return DebugAction.Result.new_failure(
+		"Backend lifecycle test failed - insufficient success rate",
+		"LIFECYCLE_INSUFFICIENT",
+		DebugAction.Result.ErrorCategory.VALIDATION,
+		test_results,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_lifecycle",
+			"lifecycle_tests": lifecycle_tests,
+			"success_rate": success_rate,
+			"total_tests": total_tests,
+			"successful_tests": successful_tests,
+			"minimum_required_rate": 0.8
+		}
+	)

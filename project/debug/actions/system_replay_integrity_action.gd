@@ -275,10 +275,9 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 	if failures == 0 and warnings == 0:
 		return "PASS"
-	elif failures > 3:
+	if failures > 3:
 		return "FAIL"
-	else:
-		return "WARN"
+	return "WARN"
 
 
 func _log_validation_summary(results: Dictionary) -> void:

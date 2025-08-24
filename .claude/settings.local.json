@@ -177,7 +177,10 @@
       "Bash(gdlint:*)",
       "Bash(./comprehensive_lint_fix.sh)",
       "Bash(for:*)",
-      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat debug/actions/debug_action.gd)"
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat debug/actions/debug_action.gd)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --diff ./debug/actions/registrations/game_actions.gd)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat ./debug/actions/registrations/game_actions.gd)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --check ./debug/actions/registrations/game_actions.gd)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

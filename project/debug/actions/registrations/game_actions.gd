@@ -291,9 +291,8 @@ static func _reset_match_level() -> bool:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
 		Log.info("Match level reset", {}, ["debug", "gameplay"])
 		return true
-	else:
-		Log.error("DebugManager not available", {}, ["debug", "error"])
-		return false
+	Log.error("DebugManager not available", {}, ["debug", "error"])
+	return false
 
 
 static func _load_match_level(level_num: int) -> bool:
@@ -303,9 +302,8 @@ static func _load_match_level(level_num: int) -> bool:
 		)
 		Log.info("Loading match level %d" % level_num, {}, ["debug", "gameplay"])
 		return true
-	else:
-		Log.error("DebugManager not available", {}, ["debug", "error"])
-		return false
+	Log.error("DebugManager not available", {}, ["debug", "error"])
+	return false
 
 
 static func _populate_enemy_lineup() -> bool:
@@ -366,7 +364,7 @@ static func _populate_enemy_lineup() -> bool:
 				},
 				["debug", "gameplay", "ability", "stats"]
 			)
-		else:
+		if not merge_ability:
 			Log.warning("MergeBonusAbility not found on dwarf", {}, ["debug", "gameplay"])
 
 		core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
@@ -381,13 +379,10 @@ static func _clear_card_cache() -> bool:
 		data_source.clear_card_cache()
 		Log.info("Card cache cleared", {}, ["debug", "database"])
 		return true
-	else:
-		Log.warning(
-			"data_source not available or doesn't support clear_card_cache",
-			{},
-			["debug", "database"]
-		)
-		return false
+	Log.warning(
+		"data_source not available or doesn't support clear_card_cache", {}, ["debug", "database"]
+	)
+	return false
 
 
 static func _toggle_local_battle_db() -> bool:
@@ -397,9 +392,8 @@ static func _toggle_local_battle_db() -> bool:
 			"Local battle DB: %s" % DebugManager.use_local_battle_db, {}, ["debug", "database"]
 		)
 		return true
-	else:
-		Log.error("DebugManager not available", {}, ["debug", "error"])
-		return false
+	Log.error("DebugManager not available", {}, ["debug", "error"])
+	return false
 
 
 static func _cycle_asset_variant() -> bool:
@@ -407,9 +401,8 @@ static func _cycle_asset_variant() -> bool:
 		DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
 		Log.info("Asset variant set to: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
 		return true
-	else:
-		Log.error("DebugManager not available", {}, ["debug", "error"])
-		return false
+	Log.error("DebugManager not available", {}, ["debug", "error"])
+	return false
 
 
 static func _print_debug_info() -> bool:
@@ -419,10 +412,9 @@ static func _print_debug_info() -> bool:
 		Log.info("Asset Variant: %d" % DebugManager.asset_variant, {}, ["debug", "quick"])
 		Log.info("==================", {}, ["debug", "quick"])
 		return true
-	else:
-		Log.warning("DebugManager not available", {}, ["debug", "quick"])
-		Log.info("==================", {}, ["debug", "quick"])
-		return false
+	Log.warning("DebugManager not available", {}, ["debug", "quick"])
+	Log.info("==================", {}, ["debug", "quick"])
+	return false
 
 
 static func _test_simple_player_events() -> bool:
@@ -524,9 +516,8 @@ static func _hide_debug_menu() -> bool:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 		Log.info("Debug menu hidden", {}, ["debug", "ui"])
 		return true
-	else:
-		Log.warning("DebugManager not available", {}, ["debug", "ui"])
-		return false
+	Log.warning("DebugManager not available", {}, ["debug", "ui"])
+	return false
 
 
 static func _get_game_node() -> Game:
@@ -705,99 +696,97 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 				duration,
 				"determinism_logic_only_passed"
 			)
-		else:
-			Log.error(
-				"Logic-only battle determinism test FAILED",
-				{
-					"seed": current_seed,
-					"expected": expected_hash,
-					"actual": actual_hash,
-					"pid": process_id,
-					"test_id": current_test_id
-				},
-				["debug", "battle", "determinism", "pid"]
-			)
-			return DebugAction.Result.new_failure(
-				"Logic-only determinism test failed - hash mismatch",
-				"DETERMINISM_LOGIC_ONLY_FAILED"
-			)
-	else:
-		Log.info(
-			"=== RECORDING MODE ===",
+		Log.error(
+			"Logic-only battle determinism test FAILED",
 			{
-				"pid": process_id,
-				"test_id": current_test_id,
-				"generated_hash": actual_hash,
 				"seed": current_seed,
-				"phase": "recording"
+				"expected": expected_hash,
+				"actual": actual_hash,
+				"pid": process_id,
+				"test_id": current_test_id
 			},
-			["debug", "battle", "determinism", "pid", "phase"]
+			["debug", "battle", "determinism", "pid"]
+		)
+		return DebugAction.Result.new_failure(
+			"Logic-only determinism test failed - hash mismatch", "DETERMINISM_LOGIC_ONLY_FAILED"
+		)
+	# Recording mode
+	Log.info(
+		"=== RECORDING MODE ===",
+		{
+			"pid": process_id,
+			"test_id": current_test_id,
+			"generated_hash": actual_hash,
+			"seed": current_seed,
+			"phase": "recording"
+		},
+		["debug", "battle", "determinism", "pid", "phase"]
+	)
+
+	var update_success: bool = _update_config_with_hash(actual_hash)
+
+	if update_success:
+		Log.info(
+			"DEBUG_TEST_RESTART_NEEDED",
+			{
+				"test_id": current_test_id,
+				"reason": "config_updated",
+				"phase": "validation_needed",
+				"seed": current_seed,
+				"hash": actual_hash,
+				"logic_only": true,
+				"pid": process_id
+			},
+			["debug", "test", "restart", "pid"]
 		)
 
-		var update_success: bool = _update_config_with_hash(actual_hash)
-
-		if update_success:
-			Log.info(
-				"DEBUG_TEST_RESTART_NEEDED",
-				{
-					"test_id": current_test_id,
-					"reason": "config_updated",
-					"phase": "validation_needed",
-					"seed": current_seed,
-					"hash": actual_hash,
-					"logic_only": true,
-					"pid": process_id
-				},
-				["debug", "test", "restart", "pid"]
-			)
-
-			Log.info(
-				"Logic-only battle determinism recorded and saved to config",
-				{
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration,
-					"pid": process_id,
-					"test_id": current_test_id
-				},
-				["debug", "battle", "determinism", "pid"]
-			)
-			return DebugAction.Result.new_restart_pending(
-				{
-					"determinism_test": "RECORDED",
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration,
-					"logic_only": true,
-					"pid": process_id
-				},
-				duration,
-				"hash_recorded_logic_only_restart_pending"
-			)
-		else:
-			Log.info(
-				"Hash recording had issues but continuing with restart",
-				{
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration,
-					"pid": process_id,
-					"test_id": current_test_id
-				},
-				["debug", "battle", "determinism", "pid"]
-			)
-			return DebugAction.Result.new_restart_pending(
-				{
-					"determinism_test": "RECORDED_PARTIAL",
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration,
-					"logic_only": true,
-					"pid": process_id
-				},
-				duration,
-				"hash_recorded_logic_only_partial_restart_pending"
-			)
+		Log.info(
+			"Logic-only battle determinism recorded and saved to config",
+			{
+				"seed": current_seed,
+				"hash": actual_hash,
+				"duration_ms": duration,
+				"pid": process_id,
+				"test_id": current_test_id
+			},
+			["debug", "battle", "determinism", "pid"]
+		)
+		return DebugAction.Result.new_restart_pending(
+			{
+				"determinism_test": "RECORDED",
+				"seed": current_seed,
+				"hash": actual_hash,
+				"duration_ms": duration,
+				"logic_only": true,
+				"pid": process_id
+			},
+			duration,
+			"hash_recorded_logic_only_restart_pending"
+		)
+	# Hash recording had issues
+	Log.info(
+		"Hash recording had issues but continuing with restart",
+		{
+			"seed": current_seed,
+			"hash": actual_hash,
+			"duration_ms": duration,
+			"pid": process_id,
+			"test_id": current_test_id
+		},
+		["debug", "battle", "determinism", "pid"]
+	)
+	return DebugAction.Result.new_restart_pending(
+		{
+			"determinism_test": "RECORDED_PARTIAL",
+			"seed": current_seed,
+			"hash": actual_hash,
+			"duration_ms": duration,
+			"logic_only": true,
+			"pid": process_id
+		},
+		duration,
+		"hash_recorded_logic_only_partial_restart_pending"
+	)
 
 
 static func _battle_execute_logic_only() -> Dictionary:
@@ -1179,96 +1168,87 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				duration,
 				"determinism_passed"
 			)
+		Log.error(
+			"Battle determinism test FAILED",
+			{"seed": current_seed, "expected": expected_hash, "actual": actual_hash},
+			["debug", "battle", "determinism"]
+		)
+		return DebugAction.Result.new_failure(
+			"Determinism test failed - hash mismatch", "DETERMINISM_FAILED"
+		)
+	# Recording mode
+	var update_success: bool = _update_config_with_hash(actual_hash)
+
+	if update_success:
+		Log.info(
+			"Attempting to read back written hash for validation...",
+			{},
+			["debug", "battle", "determinism"]
+		)
+		var verification_config: Dictionary = _get_determinism_config()
+		var read_back_hash: String = (
+			verification_config.expectedHash if verification_config.expectedHash != null else ""
+		)
+		var read_back_mode: String = verification_config.mode
+
+		if read_back_hash == actual_hash:
+			Log.info(
+				"VERIFICATION SUCCESS: Hash read back correctly",
+				{"written_hash": actual_hash, "read_hash": read_back_hash, "mode": read_back_mode},
+				["debug", "battle", "determinism"]
+			)
 		else:
 			Log.error(
-				"Battle determinism test FAILED",
-				{"seed": current_seed, "expected": expected_hash, "actual": actual_hash},
+				"VERIFICATION FAILED: Hash not read back correctly",
+				{"written_hash": actual_hash, "read_hash": read_back_hash, "mode": read_back_mode},
 				["debug", "battle", "determinism"]
 			)
-			return DebugAction.Result.new_failure(
-				"Determinism test failed - hash mismatch", "DETERMINISM_FAILED"
-			)
-	else:
-		var update_success: bool = _update_config_with_hash(actual_hash)
 
-		if update_success:
-			Log.info(
-				"Attempting to read back written hash for validation...",
-				{},
-				["debug", "battle", "determinism"]
-			)
-			var verification_config: Dictionary = _get_determinism_config()
-			var read_back_hash: String = (
-				verification_config.expectedHash if verification_config.expectedHash != null else ""
-			)
-			var read_back_mode: String = verification_config.mode
+	if update_success:
+		var current_test_id: String = DebugAction.get_current_test_id()
+		Log.info(
+			"DEBUG_TEST_RESTART_NEEDED",
+			{
+				"test_id": current_test_id,
+				"reason": "config_updated",
+				"phase": "validation_needed",
+				"seed": current_seed,
+				"hash": actual_hash
+			},
+			["debug", "test", "restart"]
+		)
 
-			if read_back_hash == actual_hash:
-				Log.info(
-					"VERIFICATION SUCCESS: Hash read back correctly",
-					{
-						"written_hash": actual_hash,
-						"read_hash": read_back_hash,
-						"mode": read_back_mode
-					},
-					["debug", "battle", "determinism"]
-				)
-			else:
-				Log.error(
-					"VERIFICATION FAILED: Hash not read back correctly",
-					{
-						"written_hash": actual_hash,
-						"read_hash": read_back_hash,
-						"mode": read_back_mode
-					},
-					["debug", "battle", "determinism"]
-				)
-
-		if update_success:
-			var current_test_id: String = DebugAction.get_current_test_id()
-			Log.info(
-				"DEBUG_TEST_RESTART_NEEDED",
-				{
-					"test_id": current_test_id,
-					"reason": "config_updated",
-					"phase": "validation_needed",
-					"seed": current_seed,
-					"hash": actual_hash
-				},
-				["debug", "test", "restart"]
-			)
-
-			Log.info(
-				"Battle determinism recorded and saved to config",
-				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
-				["debug", "battle", "determinism"]
-			)
-			return DebugAction.Result.new_restart_pending(
-				{
-					"determinism_test": "RECORDED",
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration
-				},
-				duration,
-				"hash_recorded_restart_pending"
-			)
-		else:
-			Log.warning(
-				"Hash recorded but config update failed - test still passed",
-				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
-				["debug", "battle", "determinism"]
-			)
-			return DebugAction.Result.new_restart_pending(
-				{
-					"determinism_test": "RECORDED_PARTIAL",
-					"seed": current_seed,
-					"hash": actual_hash,
-					"duration_ms": duration
-				},
-				duration,
-				"hash_recorded_partial_restart_pending"
-			)
+		Log.info(
+			"Battle determinism recorded and saved to config",
+			{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
+			["debug", "battle", "determinism"]
+		)
+		return DebugAction.Result.new_restart_pending(
+			{
+				"determinism_test": "RECORDED",
+				"seed": current_seed,
+				"hash": actual_hash,
+				"duration_ms": duration
+			},
+			duration,
+			"hash_recorded_restart_pending"
+		)
+	# Config update failed but continuing
+	Log.warning(
+		"Hash recorded but config update failed - test still passed",
+		{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
+		["debug", "battle", "determinism"]
+	)
+	return DebugAction.Result.new_restart_pending(
+		{
+			"determinism_test": "RECORDED_PARTIAL",
+			"seed": current_seed,
+			"hash": actual_hash,
+			"duration_ms": duration
+		},
+		duration,
+		"hash_recorded_partial_restart_pending"
+	)
 
 
 static func _reset_board_state() -> bool:

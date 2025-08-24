@@ -102,23 +102,23 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"operation_duration_ms": total_duration
 			}
 		)
-	else:
-		return DebugAction.Result.new_failure(
-			"Error handling test failed (%d/%d tests passed)" % [passed_tests, total_tests],
-			"ERROR_HANDLING_TEST_FAILED",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			null,
-			total_duration,
-			action_name,
-			{
-				"test_type": "error_handling_simplified",
-				"total_tests": total_tests,
-				"passed_tests": passed_tests,
-				"success_rate": success_rate,
-				"test_results": test_results,
-				"minimum_required_passed": 2
-			}
-		)
+
+	return DebugAction.Result.new_failure(
+		"Error handling test failed (%d/%d tests passed)" % [passed_tests, total_tests],
+		"ERROR_HANDLING_TEST_FAILED",
+		DebugAction.Result.ErrorCategory.VALIDATION,
+		null,
+		total_duration,
+		action_name,
+		{
+			"test_type": "error_handling_simplified",
+			"total_tests": total_tests,
+			"passed_tests": passed_tests,
+			"success_rate": success_rate,
+			"test_results": test_results,
+			"minimum_required_passed": 2
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:

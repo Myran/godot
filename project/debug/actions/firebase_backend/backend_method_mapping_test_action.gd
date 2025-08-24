@@ -115,37 +115,31 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"successful_methods": successful_methods
 			}
 		)
-	else:
-		_update_status(
-			(
-				"Method Mapping test FAILED ("
-				+ str(successful_methods)
-				+ "/"
-				+ str(total_methods)
-				+ ")"
-			),
-			true
-		)
-		Log.error(
-			"Backend method mapping validation failed",
-			test_results,
-			["debug", "backend_firebase", "error"]
-		)
 
-		return DebugAction.Result.new_failure(
-			"Backend method mapping test failed - insufficient success rate",
-			"METHOD_MAPPING_INSUFFICIENT",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_results,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_method_mapping",
-				"methods_tested": ["set_data", "get_data", "push_data", "remove_data"],
-				"method_results": method_results,
-				"success_rate": success_rate,
-				"total_methods": total_methods,
-				"successful_methods": successful_methods,
-				"minimum_required_rate": 0.75
-			}
-		)
+	_update_status(
+		"Method Mapping test FAILED (" + str(successful_methods) + "/" + str(total_methods) + ")",
+		true
+	)
+	Log.error(
+		"Backend method mapping validation failed",
+		test_results,
+		["debug", "backend_firebase", "error"]
+	)
+
+	return DebugAction.Result.new_failure(
+		"Backend method mapping test failed - insufficient success rate",
+		"METHOD_MAPPING_INSUFFICIENT",
+		DebugAction.Result.ErrorCategory.VALIDATION,
+		test_results,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_method_mapping",
+			"methods_tested": ["set_data", "get_data", "push_data", "remove_data"],
+			"method_results": method_results,
+			"success_rate": success_rate,
+			"total_methods": total_methods,
+			"successful_methods": successful_methods,
+			"minimum_required_rate": 0.75
+		}
+	)

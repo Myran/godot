@@ -182,10 +182,9 @@ func _determine_overall_status(validation_results: Dictionary) -> String:
 
 	if component_failures == 0 and integration_failures == 0 and workflow_failures == 0:
 		return "PASS"
-	elif component_failures > 2 or integration_failures > 2:
+	if component_failures > 2 or integration_failures > 2:
 		return "FAIL"
-	else:
-		return "WARN"
+	return "WARN"
 
 
 func _log_validation_summary(results: Dictionary) -> void:

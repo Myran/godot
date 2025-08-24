@@ -1034,18 +1034,17 @@ func _extract_concise_error(payload: Variant) -> String:
 
 	if payload_str.contains("PERMISSION_DENIED"):
 		return "Permission denied"
-	elif payload_str.contains("NETWORK_ERROR"):
+	if payload_str.contains("NETWORK_ERROR"):
 		return "Network error"
-	elif payload_str.contains("timeout"):
+	if payload_str.contains("timeout"):
 		return "Timeout"
-	elif payload_str.contains("not found"):
+	if payload_str.contains("not found"):
 		return "Not found"
-	elif payload_str.contains("Firebase"):
+	if payload_str.contains("Firebase"):
 		return "Firebase error"
-	elif payload_str.length() > 50:
+	if payload_str.length() > 50:
 		return payload_str.substr(0, 50) + "..."
-	else:
-		return payload_str
+	return payload_str
 
 
 func _set_ui_for_execution(is_executing: bool) -> void:

@@ -80,23 +80,23 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"listener_result": result
 			}
 		)
-	else:
-		_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
-		return DebugAction.Result.new_listener_result(
-			false,
-			result,
-			5000,
-			"child_changed_listener_test",
-			total_duration,
-			{
-				"test_type": "rtdb_child_changed_listener",
-				"path": _active_path,
-				"child_key": child_key,
-				"attempted_initial_data": initial_data,
-				"attempted_updated_data": updated_data,
-				"error_details": result.get("error", "unknown error")
-			}
-		)
+
+	_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
+	return DebugAction.Result.new_listener_result(
+		false,
+		result,
+		5000,
+		"child_changed_listener_test",
+		total_duration,
+		{
+			"test_type": "rtdb_child_changed_listener",
+			"path": _active_path,
+			"child_key": child_key,
+			"attempted_initial_data": initial_data,
+			"attempted_updated_data": updated_data,
+			"error_details": result.get("error", "unknown error")
+		}
+	)
 
 
 func execute_rtdb_action() -> bool:

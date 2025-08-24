@@ -222,30 +222,30 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				"backend_state": {"available": backend.is_available()}
 			}
 		)
-	else:
-		_update_status(
-			"Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")",
-			true
-		)
-		Log.error(
-			"Backend request tracking validation failed",
-			test_results,
-			["debug", "backend_firebase", "error"]
-		)
 
-		return DebugAction.Result.new_failure(
-			"Backend request tracking test failed - insufficient success rate",
-			"REQUEST_TRACKING_INSUFFICIENT",
-			DebugAction.Result.ErrorCategory.VALIDATION,
-			test_results,
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_request_tracking",
-				"tracking_tests": tracking_tests,
-				"success_rate": success_rate,
-				"total_tests": total_tests,
-				"successful_tests": successful_tests,
-				"minimum_required_rate": 0.8
-			}
-		)
+	_update_status(
+		"Request Tracking test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")",
+		true
+	)
+	Log.error(
+		"Backend request tracking validation failed",
+		test_results,
+		["debug", "backend_firebase", "error"]
+	)
+
+	return DebugAction.Result.new_failure(
+		"Backend request tracking test failed - insufficient success rate",
+		"REQUEST_TRACKING_INSUFFICIENT",
+		DebugAction.Result.ErrorCategory.VALIDATION,
+		test_results,
+		total_duration,
+		action_name,
+		{
+			"test_type": "backend_request_tracking",
+			"tracking_tests": tracking_tests,
+			"success_rate": success_rate,
+			"total_tests": total_tests,
+			"successful_tests": successful_tests,
+			"minimum_required_rate": 0.8
+		}
+	)

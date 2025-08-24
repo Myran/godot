@@ -417,30 +417,30 @@ static func _replay_complete() -> bool:
 			)
 
 		return _quit_application()
-	else:
-		Log.info(
-			"Manual mode detected - staying open for verification and screenshots",
-			{
-				"manual_verification": true,
-				"interactive_mode": true,
-				"stay_open": true,
-				"note": "App remains open - user can verify results and take screenshots"
-			},
-			["debug", "replay", "manual", "interactive"]
-		)
 
-		Log.info(
-			"SEMANTIC_ACTION",
-			{
-				"action": "replay.complete",
-				"timestamp": Time.get_unix_time_from_system(),
-				"execution_mode": execution_context.mode,
-				"user_verification_mode": true
-			},
-			["semantic", "replay", "complete"]
-		)
+	Log.info(
+		"Manual mode detected - staying open for verification and screenshots",
+		{
+			"manual_verification": true,
+			"interactive_mode": true,
+			"stay_open": true,
+			"note": "App remains open - user can verify results and take screenshots"
+		},
+		["debug", "replay", "manual", "interactive"]
+	)
 
-		return true
+	Log.info(
+		"SEMANTIC_ACTION",
+		{
+			"action": "replay.complete",
+			"timestamp": Time.get_unix_time_from_system(),
+			"execution_mode": execution_context.mode,
+			"user_verification_mode": true
+		},
+		["semantic", "replay", "complete"]
+	)
+
+	return true
 
 
 static func _log_lineup_final_state() -> void:
@@ -742,23 +742,23 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 			0,
 			"state_validation_integration"
 		)
-	else:
-		Log.error(
-			"INTEGRATION TEST FAILED: State validation integration broken - COMPANY AT RISK",
-			{
-				"checksum_generation_failed": not checksum_valid,
-				"validation_config_empty": validation_config.is_empty(),
-				"validation_enabled":
-				validation_config.get("metadata", {}).get("state_validation_enabled", false),
-				"company_survival": "AT RISK"
-			},
-			["debug", "test", "integration", "failure"]
-		)
-		return DebugAction.Result.new_failure(
-			"State validation integration test failed",
-			"INTEGRATION_FAILURE",
-			DebugAction.Result.ErrorCategory.VALIDATION
-		)
+
+	Log.error(
+		"INTEGRATION TEST FAILED: State validation integration broken - COMPANY AT RISK",
+		{
+			"checksum_generation_failed": not checksum_valid,
+			"validation_config_empty": validation_config.is_empty(),
+			"validation_enabled":
+			validation_config.get("metadata", {}).get("state_validation_enabled", false),
+			"company_survival": "AT RISK"
+		},
+		["debug", "test", "integration", "failure"]
+	)
+	return DebugAction.Result.new_failure(
+		"State validation integration test failed",
+		"INTEGRATION_FAILURE",
+		DebugAction.Result.ErrorCategory.VALIDATION
+	)
 
 
 static func _test_debug_action_with_validation() -> DebugAction.Result:
@@ -791,13 +791,13 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			{"debug_action_validation": "passed"}, 0, "debug_action_with_validation"
 		)
-	else:
-		Log.error(
-			"DebugAction validation execution test FAILED",
-			{"result_success": success, "error": result.get_error_message()},
-			["debug", "test", "integration", "debug_action", "failure"]
-		)
-		return result
+
+	Log.error(
+		"DebugAction validation execution test FAILED",
+		{"result_success": success, "error": result.get_error_message()},
+		["debug", "test", "integration", "debug_action", "failure"]
+	)
+	return result
 
 
 static func _test_semantic_mapper_integration() -> DebugAction.Result:
@@ -844,20 +844,20 @@ static func _test_semantic_mapper_integration() -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			{"semantic_mapper_integration": "passed"}, 0, "semantic_mapper_integration"
 		)
-	else:
-		Log.error(
-			"SemanticActionMapper integration test FAILED",
-			{
-				"with_validation": with_validation_enabled,
-				"without_validation": without_validation_enabled
-			},
-			["debug", "test", "integration", "semantic_mapper", "failure"]
-		)
-		return DebugAction.Result.new_failure(
-			"SemanticActionMapper validation injection failed",
-			"SEMANTIC_MAPPER_FAILURE",
-			DebugAction.Result.ErrorCategory.VALIDATION
-		)
+
+	Log.error(
+		"SemanticActionMapper integration test FAILED",
+		{
+			"with_validation": with_validation_enabled,
+			"without_validation": without_validation_enabled
+		},
+		["debug", "test", "integration", "semantic_mapper", "failure"]
+	)
+	return DebugAction.Result.new_failure(
+		"SemanticActionMapper validation injection failed",
+		"SEMANTIC_MAPPER_FAILURE",
+		DebugAction.Result.ErrorCategory.VALIDATION
+	)
 
 
 static func _test_state_extractor_integration() -> DebugAction.Result:
@@ -898,22 +898,22 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 		return DebugAction.Result.new_success(
 			{"state_extractor_integration": "passed"}, 0, "state_extractor_integration"
 		)
-	else:
-		Log.error(
-			"StateExtractor integration test FAILED",
-			{
-				"checksum1_empty": checksum1.is_empty(),
-				"checksum2_empty": checksum2.is_empty(),
-				"checksums_same_for_different_states": checksum1 == checksum2,
-				"not_deterministic": checksum1 != checksum1_repeat
-			},
-			["debug", "test", "integration", "state_extractor", "failure"]
-		)
-		return DebugAction.Result.new_failure(
-			"StateExtractor integration test failed",
-			"STATE_EXTRACTOR_FAILURE",
-			DebugAction.Result.ErrorCategory.VALIDATION
-		)
+
+	Log.error(
+		"StateExtractor integration test FAILED",
+		{
+			"checksum1_empty": checksum1.is_empty(),
+			"checksum2_empty": checksum2.is_empty(),
+			"checksums_same_for_different_states": checksum1 == checksum2,
+			"not_deterministic": checksum1 != checksum1_repeat
+		},
+		["debug", "test", "integration", "state_extractor", "failure"]
+	)
+	return DebugAction.Result.new_failure(
+		"StateExtractor integration test failed",
+		"STATE_EXTRACTOR_FAILURE",
+		DebugAction.Result.ErrorCategory.VALIDATION
+	)
 
 
 static func _register_gamestate_actions(_registry: DebugActionRegistry) -> void:
