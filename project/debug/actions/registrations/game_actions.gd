@@ -19,7 +19,7 @@ static func _register_gameplay_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.match.reset_level",
-				GameActionImplementations._reset_match_level
+				GameActionCore._reset_match_level
 			)
 			. set_category("Gameplay")
 			. set_description("Reset the current match level")
@@ -33,7 +33,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 			DebugAction
 			. create(
 				"game.match.load_level_1",
-				func() -> bool: return GameActionImplementations._load_match_level(1)
+				func() -> bool: return GameActionCore._load_match_level(1)
 			)
 			. set_category("Gameplay")
 			. set_group("Match Levels")
@@ -45,7 +45,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 			DebugAction
 			. create(
 				"game.match.load_level_2",
-				func() -> bool: return GameActionImplementations._load_match_level(2)
+				func() -> bool: return GameActionCore._load_match_level(2)
 			)
 			. set_category("Gameplay")
 			. set_group("Match Levels")
@@ -57,7 +57,7 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 			DebugAction
 			. create(
 				"game.match.load_level_3",
-				func() -> bool: return GameActionImplementations._load_match_level(3)
+				func() -> bool: return GameActionCore._load_match_level(3)
 			)
 			. set_category("Gameplay")
 			. set_group("Match Levels")
@@ -90,7 +90,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.lineup.populate_enemy",
-				GameActionImplementations._populate_enemy_lineup
+				GameActionCore._populate_enemy_lineup
 			)
 			. set_category("Gameplay")
 			. set_group("Preset Lineups")
@@ -103,7 +103,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.test.simple_player_events",
-				GameActionImplementations._test_simple_player_events
+				GameActionCore._test_simple_player_events
 			)
 			. set_category("Gameplay")
 			. set_group("Test")
@@ -116,7 +116,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.lineup.populate_enemy_as_player",
-				GameActionImplementations._populate_enemy_lineup_as_player
+				GameActionCore._populate_enemy_lineup_as_player
 			)
 			. set_category("Gameplay")
 			. set_group("Test")
@@ -129,7 +129,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.board.reset_state",
-				GameActionImplementations._reset_board_state
+				GameActionCore._reset_board_state
 			)
 			. set_category("Gameplay")
 			. set_group("Board State")
@@ -142,7 +142,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.draft.reroll_player",
-				GameActionImplementations._reroll_player
+				GameActionPlayer._reroll_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -155,7 +155,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.draft.upgrade_player",
-				GameActionImplementations._upgrade_player
+				GameActionPlayer._upgrade_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -168,7 +168,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.draft.toggle_column_player",
-				GameActionImplementations._toggle_column_player
+				GameActionPlayer._toggle_column_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -181,7 +181,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.lineup.move_card_player",
-				GameActionImplementations._move_card_player
+				GameActionPlayer._move_card_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -194,7 +194,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.draft.move_card_to_lineup_player",
-				GameActionImplementations._move_card_to_lineup_player
+				GameActionPlayer._move_card_to_lineup_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -207,7 +207,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.state.transition_player",
-				GameActionImplementations._transition_player
+				GameActionPlayer._transition_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -220,7 +220,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.battle.start_player",
-				GameActionImplementations._start_battle_player
+				GameActionPlayer._start_battle_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -233,7 +233,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.draft.remove_block_player",
-				GameActionImplementations._remove_block_player
+				GameActionPlayer._remove_block_player
 			)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
@@ -248,7 +248,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.battle.start",
-				GameActionImplementations._start_battle
+				GameActionCore._start_battle
 			)
 			. set_category("Gameplay")
 			. set_group("Battle")
@@ -261,7 +261,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.battle.populate_enemy_and_start",
-				GameActionImplementations._populate_enemy_and_start_battle
+				GameActionCore._populate_enemy_and_start_battle
 			)
 			. set_category("Gameplay")
 			. set_group("Battle")
@@ -274,7 +274,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.battle.test_determinism_animated",
-				GameActionImplementations._battle_test_determinism
+				GameActionCore._battle_test_determinism
 			)
 			. set_category("Gameplay")
 			. set_group("Battle")
@@ -287,7 +287,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.battle.test_determinism_logic_only",
-				GameActionImplementations._battle_test_determinism_logic_only
+				GameActionCore._battle_test_determinism_logic_only
 			)
 			. set_category("Gameplay")
 			. set_group("Battle")
@@ -302,7 +302,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.cache.clear_cards",
-				GameActionImplementations._clear_card_cache
+				GameActionCore._clear_card_cache
 			)
 			. set_category("Database")
 			. set_group("Cache")
@@ -315,7 +315,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.database.toggle_local_battle",
-				GameActionImplementations._toggle_local_battle_db
+				GameActionCore._toggle_local_battle_db
 			)
 			. set_category("Database")
 			. set_description("Toggle between local and remote battle database")
@@ -329,7 +329,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.debug.cycle_asset_variant",
-				GameActionImplementations._cycle_asset_variant
+				GameActionCore._cycle_asset_variant
 			)
 			. set_category("Quick Actions")
 			. set_description("Cycle through asset variants (1-3)")
@@ -341,7 +341,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.debug.print_info",
-				GameActionImplementations._print_debug_info
+				GameActionCore._print_debug_info
 			)
 			. set_category("Quick Actions")
 			. set_description("Print current debug settings")
@@ -353,7 +353,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.debug.hide_debug_menu",
-				GameActionImplementations._hide_debug_menu
+				GameActionCore._hide_debug_menu
 			)
 			. set_category("Quick Actions")
 			. set_description("Hide the debug menu interface")
