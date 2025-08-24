@@ -1,6 +1,10 @@
 class_name GameDebugActions
 extends RefCounted
 
+# Preload the split implementation classes
+const GameActionCore = preload("res://debug/actions/registrations/game_action_core.gd")
+const GameActionPlayer = preload("res://debug/actions/registrations/game_action_player.gd")
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_gameplay_actions(registry)
@@ -17,10 +21,7 @@ static func _register_gameplay_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.match.reset_level",
-				GameActionCore._reset_match_level
-			)
+			. create("game.match.reset_level", GameActionCore._reset_match_level)
 			. set_category("Gameplay")
 			. set_description("Reset the current match level")
 		)
@@ -67,7 +68,10 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("game.match.load_level_4", func() -> bool: return _load_match_level(4))
+			. create(
+				"game.match.load_level_4",
+				func() -> bool: return GameActionCore._load_match_level(4)
+			)
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 4")
@@ -76,7 +80,10 @@ static func _register_match_level_actions(registry: DebugActionRegistry) -> void
 	registry.register_action(
 		(
 			DebugAction
-			. create("game.match.load_level_5", func() -> bool: return _load_match_level(5))
+			. create(
+				"game.match.load_level_5",
+				func() -> bool: return GameActionCore._load_match_level(5)
+			)
 			. set_category("Gameplay")
 			. set_group("Match Levels")
 			. set_description("Force load match level 5")
@@ -88,10 +95,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.lineup.populate_enemy",
-				GameActionCore._populate_enemy_lineup
-			)
+			. create("game.lineup.populate_enemy", GameActionCore._populate_enemy_lineup)
 			. set_category("Gameplay")
 			. set_group("Preset Lineups")
 			. set_description("Add test cards to enemy lineup")
@@ -101,10 +105,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.test.simple_player_events",
-				GameActionCore._test_simple_player_events
-			)
+			. create("game.test.simple_player_events", GameActionCore._test_simple_player_events)
 			. set_category("Gameplay")
 			. set_group("Test")
 			. set_description("Simple test to validate action registration")
@@ -127,10 +128,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.board.reset_state",
-				GameActionCore._reset_board_state
-			)
+			. create("game.board.reset_state", GameActionCore._reset_board_state)
 			. set_category("Gameplay")
 			. set_group("Board State")
 			. set_description("Reset board to initial state for deterministic testing")
@@ -140,10 +138,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.draft.reroll_player",
-				GameActionPlayer._reroll_player
-			)
+			. create("game.draft.reroll_player", GameActionPlayer._reroll_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player reroll action")
@@ -153,10 +148,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.draft.upgrade_player",
-				GameActionPlayer._upgrade_player
-			)
+			. create("game.draft.upgrade_player", GameActionPlayer._upgrade_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player upgrade action")
@@ -166,10 +158,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.draft.toggle_column_player",
-				GameActionPlayer._toggle_column_player
-			)
+			. create("game.draft.toggle_column_player", GameActionPlayer._toggle_column_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player column toggle action")
@@ -179,10 +168,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.lineup.move_card_player",
-				GameActionPlayer._move_card_player
-			)
+			. create("game.lineup.move_card_player", GameActionPlayer._move_card_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player card move action")
@@ -205,10 +191,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.state.transition_player",
-				GameActionPlayer._transition_player
-			)
+			. create("game.state.transition_player", GameActionPlayer._transition_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player state transition action")
@@ -218,10 +201,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.battle.start_player",
-				GameActionPlayer._start_battle_player
-			)
+			. create("game.battle.start_player", GameActionPlayer._start_battle_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player battle start action")
@@ -231,10 +211,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.draft.remove_block_player",
-				GameActionPlayer._remove_block_player
-			)
+			. create("game.draft.remove_block_player", GameActionPlayer._remove_block_player)
 			. set_category("Gameplay")
 			. set_group("Player Actions")
 			. set_description("Simulate player block removal action")
@@ -246,10 +223,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.battle.start",
-				GameActionCore._start_battle
-			)
+			. create("game.battle.start", GameActionCore._start_battle)
 			. set_category("Gameplay")
 			. set_group("Battle")
 			. set_description("Start battle and wait for completion")
@@ -273,8 +247,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 		(
 			DebugAction
 			. create(
-				"game.battle.test_determinism_animated",
-				GameActionCore._battle_test_determinism
+				"game.battle.test_determinism_animated", GameActionCore._battle_test_determinism
 			)
 			. set_category("Gameplay")
 			. set_group("Battle")
@@ -300,10 +273,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.cache.clear_cards",
-				GameActionCore._clear_card_cache
-			)
+			. create("game.cache.clear_cards", GameActionCore._clear_card_cache)
 			. set_category("Database")
 			. set_group("Cache")
 			. set_description("Clear the card data cache")
@@ -313,10 +283,7 @@ static func _register_database_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.database.toggle_local_battle",
-				GameActionCore._toggle_local_battle_db
-			)
+			. create("game.database.toggle_local_battle", GameActionCore._toggle_local_battle_db)
 			. set_category("Database")
 			. set_description("Toggle between local and remote battle database")
 		)
@@ -327,10 +294,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.debug.cycle_asset_variant",
-				GameActionCore._cycle_asset_variant
-			)
+			. create("game.debug.cycle_asset_variant", GameActionCore._cycle_asset_variant)
 			. set_category("Quick Actions")
 			. set_description("Cycle through asset variants (1-3)")
 		)
@@ -339,10 +303,7 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.debug.print_info",
-				GameActionCore._print_debug_info
-			)
+			. create("game.debug.print_info", GameActionCore._print_debug_info)
 			. set_category("Quick Actions")
 			. set_description("Print current debug settings")
 		)
@@ -351,12 +312,8 @@ static func _register_quick_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create(
-				"game.debug.hide_debug_menu",
-				GameActionCore._hide_debug_menu
-			)
+			. create("game.debug.hide_debug_menu", GameActionCore._hide_debug_menu)
 			. set_category("Quick Actions")
 			. set_description("Hide the debug menu interface")
 		)
 	)
-

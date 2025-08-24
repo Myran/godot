@@ -1,5 +1,7 @@
 class_name GameActionCore
 extends RefCounted
+
+
 static func _reset_match_level() -> bool:
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
@@ -7,6 +9,8 @@ static func _reset_match_level() -> bool:
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
+
+
 static func _load_match_level(level_num: int) -> bool:
 	if DebugManager:
 		DebugManager.action(
@@ -16,6 +20,8 @@ static func _load_match_level(level_num: int) -> bool:
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
+
+
 static func _populate_enemy_lineup() -> bool:
 	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		Log.error(
@@ -82,6 +88,8 @@ static func _populate_enemy_lineup() -> bool:
 
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
+
+
 static func _clear_card_cache() -> bool:
 	if data_source and data_source.has_method("clear_card_cache"):
 		data_source.clear_card_cache()
@@ -91,6 +99,8 @@ static func _clear_card_cache() -> bool:
 		"data_source not available or doesn't support clear_card_cache", {}, ["debug", "database"]
 	)
 	return false
+
+
 static func _toggle_local_battle_db() -> bool:
 	if DebugManager:
 		DebugManager.use_local_battle_db = not DebugManager.use_local_battle_db
@@ -100,6 +110,8 @@ static func _toggle_local_battle_db() -> bool:
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
+
+
 static func _cycle_asset_variant() -> bool:
 	if DebugManager:
 		DebugManager.asset_variant = (DebugManager.asset_variant % 3) + 1
@@ -107,6 +119,8 @@ static func _cycle_asset_variant() -> bool:
 		return true
 	Log.error("DebugManager not available", {}, ["debug", "error"])
 	return false
+
+
 static func _print_debug_info() -> bool:
 	Log.info("=== Debug Info ===", {}, ["debug", "quick"])
 	if DebugManager:
@@ -117,9 +131,13 @@ static func _print_debug_info() -> bool:
 	Log.warning("DebugManager not available", {}, ["debug", "quick"])
 	Log.info("==================", {}, ["debug", "quick"])
 	return false
+
+
 static func _test_simple_player_events() -> bool:
 	Log.info("Simple test function executed successfully", {}, ["debug", "test"])
 	return true
+
+
 static func _populate_enemy_lineup_as_player() -> bool:
 	Log.info(
 		"Populating enemy lineup with fake PLAYER events for testing",
@@ -207,6 +225,8 @@ static func _populate_enemy_lineup_as_player() -> bool:
 
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
+
+
 static func _hide_debug_menu() -> bool:
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
@@ -214,12 +234,16 @@ static func _hide_debug_menu() -> bool:
 		return true
 	Log.warning("DebugManager not available", {}, ["debug", "ui"])
 	return false
+
+
 static func _get_game_node() -> Game:
 	var root: Node = Engine.get_main_loop().current_scene
 	if root and root.has_method("find_child"):
 		var game_node: Game = root.find_child("Game", true, false) as Game
 		return game_node
 	return null
+
+
 static func _wait_for_game_systems_ready() -> bool:
 	Log.info("Waiting for game systems to be ready...", {}, ["debug", "battle", "initialization"])
 
@@ -261,42 +285,42 @@ static func _wait_for_game_systems_ready() -> bool:
 		["debug", "battle", "initialization"]
 	)
 	return false
+
+
 static func _start_battle() -> DebugAction.Result:
 	var game: Game = _get_game_node()
 	if not game:
 		return DebugAction.Result.new_failure("Game node not available")
 
-	core.action(
-		core.SystemIdleActionEvent.new(
-			Callable(GameActionCore, "_trigger_start_battle")
-		)
-	)
+	core.action(core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_start_battle")))
 
 	return DebugAction.Result.new_success({"battle_queued": true})
+
+
 static func _trigger_start_battle() -> void:
 	Log.info("Starting battle via idle action", {}, ["debug", "battle"])
 	ui.action(ui.StartBattleEvent.new())
+
+
 static func _populate_enemy_and_start_battle() -> DebugAction.Result:
 	var game: Game = _get_game_node()
 	if not game:
 		return DebugAction.Result.new_failure("Game node not available")
 
 	core.action(
-		core.SystemIdleActionEvent.new(
-			Callable(GameActionCore, "_trigger_populate_enemy_lineup")
-		)
+		core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_populate_enemy_lineup"))
 	)
-	core.action(
-		core.SystemIdleActionEvent.new(
-			Callable(GameActionCore, "_trigger_start_battle")
-		)
-	)
+	core.action(core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_start_battle")))
 
 	return DebugAction.Result.new_success({"populate_and_battle_queued": true})
+
+
 static func _trigger_populate_enemy_lineup() -> void:
 	Log.info("Populating enemy lineup via idle action", {}, ["debug", "battle"])
 	var populate_task: Callable = func() -> void: await _populate_enemy_lineup()
 	populate_task.call()
+
+
 static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 	if not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("RNG singleton not available")
@@ -479,6 +503,8 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		duration,
 		"hash_recorded_logic_only_partial_restart_pending"
 	)
+
+
 static func _battle_execute_logic_only() -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 
@@ -552,6 +578,8 @@ static func _battle_execute_logic_only() -> Dictionary:
 	)
 
 	return {"success": true, "error": "", "duration_ms": duration, "event_count": event_count}
+
+
 static func _get_determinism_config() -> Dictionary:
 	var config_path: String = "user://debug_startup_actions.json"
 	var default_config: Dictionary = {
@@ -674,6 +702,8 @@ static func _get_determinism_config() -> Dictionary:
 		["debug", "battle", "determinism"]
 	)
 	return config
+
+
 static func _update_config_with_hash(hash_value: String) -> bool:
 	var config_path: String = "user://debug_startup_actions.json"
 	var process_id: int = OS.get_process_id()
@@ -770,6 +800,8 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 			)
 
 	return true
+
+
 static func _battle_test_determinism() -> DebugAction.Result:
 	if not is_instance_valid(ui) or not is_instance_valid(rng):
 		return DebugAction.Result.new_failure("Required systems not available")
@@ -933,6 +965,8 @@ static func _battle_test_determinism() -> DebugAction.Result:
 		duration,
 		"hash_recorded_partial_restart_pending"
 	)
+
+
 static func _reset_board_state() -> bool:
 	var game: Game = _get_game_node()
 	if not game:
