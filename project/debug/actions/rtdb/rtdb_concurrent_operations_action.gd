@@ -76,7 +76,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var success_rates: Dictionary = {
 		"overall": success_rate,
-		"set_operations": success_rate  # All operations are sets in this test
+		"set_operations": success_rate
 	}
 
 	return DebugAction.Result.new_concurrent_result(
