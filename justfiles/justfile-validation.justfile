@@ -118,3 +118,105 @@ check-android-debug-status:
     adb -s {{ANDROID_DEVICE_ID}} shell getprop ro.debuggable 2>/dev/null || echo "  Debug property not accessible"
     
     echo "✅ Android debug status check complete"
+
+# Extract all Godot engine warnings by running project and capturing output
+warnings OUTPUT="console":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "Extracting Godot Engine Warnings..."
+    echo "======================================"
+    
+    cd {{PROJECT_PATH}}
+    
+    echo "Running Godot project to capture warnings..."
+    echo "This will take 10-15 seconds..."
+    
+    # Run Godot and capture full output, then extract warnings with context
+    temp_log="/tmp/godot_full_output.log"
+    warnings_log="/tmp/godot_warnings.log"
+    
+    # Use debug mode to get runtime warnings (check-only doesn't show these)
+    {{GODOT_EXECUTABLE}} --headless --debug --path . 2>&1 > "$temp_log" || true
+    
+    # Parse the log to extract warnings with better file attribution
+    current_file="Unknown"
+    > "$warnings_log"
+    
+    while IFS= read -r line; do
+        if [[ $line =~ ^Loading\ resource:\ res:// ]]; then
+            # Extract file path from loading message
+            file_path=$(echo "$line" | sed 's/Loading resource: res:\/\///' | sed 's/[[:space:]]*$//')
+            if [[ $file_path =~ \.gd$ ]]; then
+                current_file="$file_path"
+            fi
+        elif [[ $line =~ ^ERROR: ]]; then
+            # Try to extract file name from the error message itself
+            if [[ $line =~ \"([^\"]*\.gd)\" ]]; then
+                # Extract filename from error message (e.g., "defined in \"debug_action_result.gd\"")
+                extracted_file="${BASH_REMATCH[1]}"
+                echo "$extracted_file: $line" >> "$warnings_log"
+            # Pattern matching for known error signatures
+            elif [[ $line =~ (new_success|new_failure|new_timeout|new_performance_result|new_listener_result|new_batch_result|new_concurrent_result|new_restart_pending|get_error_category) ]]; then
+                # These functions are from debug_action_result.gd
+                echo "debug/debug_action_result.gd: $line" >> "$warnings_log"
+            elif [[ $line =~ (\"seed\".*built-in function) ]]; then
+                # Seed variable issues - likely from deterministic_rng or related files
+                echo "Unknown (likely RNG-related): $line" >> "$warnings_log"
+            else
+                # Fall back to current file context (accurate for some cases)
+                echo "$current_file: $line" >> "$warnings_log"
+            fi
+        fi
+    done < "$temp_log"
+    
+    # Count warnings
+    warning_count=$(wc -l < "$warnings_log" 2>/dev/null || echo "0")
+    
+    if [[ "{{OUTPUT}}" == "console" ]]; then
+        echo ""
+        echo "Found $warning_count Godot engine warnings:"
+        echo "=============================================="
+        
+        if [[ $warning_count -gt 0 ]]; then
+            cat "$warnings_log" | nl
+            
+            echo ""
+            echo "Most problematic files:"
+            cut -d: -f1 "$warnings_log" | sort | uniq -c | sort -nr | head -5
+        else
+            echo "No warnings found!"
+        fi
+        
+        echo ""
+        echo "Warning Summary: $warning_count total warnings"
+        
+    elif [[ "{{OUTPUT}}" == "file" ]]; then
+        timestamp=$(date +%Y%m%d_%H%M%S)
+        output_file="godot_warnings_$timestamp.md"
+        
+        echo "# Godot Engine Warnings" > "$output_file"
+        echo "" >> "$output_file"
+        echo "Total warnings found: $warning_count" >> "$output_file"
+        echo "" >> "$output_file"
+        echo "## All Warnings:" >> "$output_file"
+        echo "" >> "$output_file"
+        cat "$warnings_log" | nl >> "$output_file"
+        
+        echo "Warnings saved to: $output_file"
+        
+    elif [[ "{{OUTPUT}}" == "count" ]]; then
+        echo "$warning_count"
+    fi
+    
+    # Clean up temp files
+    rm -f "$temp_log" "$warnings_log"
+
+# Show warnings in console (default)
+show-warnings: (warnings "console")
+
+# Save warnings to markdown file
+save-warnings: (warnings "file") 
+
+# Get warning count only
+count-warnings: (warnings "count")

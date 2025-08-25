@@ -487,6 +487,9 @@ var data = {}                            # No type
 ```bash
 just validate                             # Complete pipeline (format + syntax + runtime)
 just validate-gdscript                  # Fast syntax check (3 sec)
+just show-warnings                      # Show all Godot engine warnings (same as editor)
+just count-warnings                     # Get warning count only (58 warnings)
+just save-warnings                      # Save warnings to timestamped markdown file
 ```
 
 ## 🎬 Replay Testing (Automated from Gameplay)
