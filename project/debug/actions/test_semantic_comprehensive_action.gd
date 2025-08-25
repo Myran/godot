@@ -14,7 +14,7 @@ func _init() -> void:
 	)
 
 
-func _execute_comprehensive_test() -> DebugAction.Result:
+func _execute_comprehensive_test() -> DebugActionResult:
 	Log.info(
 		"=== STARTING COMPREHENSIVE SEMANTIC LOGGING TEST ===",
 		{},
@@ -63,9 +63,9 @@ func _execute_comprehensive_test() -> DebugAction.Result:
 	)
 
 	if overall_success:
-		return DebugAction.Result.new_success(report, 0, "comprehensive_semantic_test")
+		return DebugActionResult.new_success(report, 0, "comprehensive_semantic_test")
 
-		return DebugAction.Result.new_failure(report, "COMPREHENSIVE_TEST_FAILED")
+	return DebugActionResult.new_failure(report, "COMPREHENSIVE_TEST_FAILED")
 
 
 func _test_basic_api() -> Dictionary:
