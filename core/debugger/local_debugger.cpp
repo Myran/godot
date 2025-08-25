@@ -362,7 +362,18 @@ void LocalDebugger::send_message(const String &p_message, const Array &p_args) {
 }
 
 void LocalDebugger::send_error(const String &p_func, const String &p_file, int p_line, const String &p_err, const String &p_descr, bool p_editor_notify, ErrorHandlerType p_type) {
-	_err_print_error(p_func.utf8().get_data(), p_file.utf8().get_data(), p_line, p_err, p_descr, p_editor_notify, p_type);
+	String message = p_descr.is_empty() ? p_err : p_descr;
+	
+	// Include file and line information for GDScript warnings/errors
+	if (!p_file.is_empty() && p_line > 0) {
+		String relative_file = p_file;
+		if (relative_file.begins_with("res://")) {
+			relative_file = relative_file.substr(6); // Remove "res://" prefix
+		}
+		print_line("ERROR: '" + relative_file + ":" + itos(p_line) + ": " + message + "'");
+	} else {
+		print_line("ERROR: '" + message + "'");
+	}
 }
 
 LocalDebugger::LocalDebugger() {
