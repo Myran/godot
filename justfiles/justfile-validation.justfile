@@ -211,7 +211,7 @@ warnings OUTPUT="console":
     # Clean up temp files
     rm -f "$temp_log" "$warnings_log"
 
-# Show warnings - combines Godot engine warnings + static analysis
+# Show GDScript warnings with file:line attribution
 show-warnings:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -224,5 +224,3 @@ show-warnings:
 # Save warnings to markdown file
 save-warnings: (warnings "file") 
 
-# Get warning count only
-count-warnings: (warnings "count")
