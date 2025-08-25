@@ -218,8 +218,8 @@ show-warnings:
     
     cd {{PROJECT_PATH}}
     
-    # Show GDScript warnings only - direct output with exact working command, no colors
-    {{GODOT_EXECUTABLE}} --headless --verbose --debug --quit --path . project/project.godot 2>&1 | sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' | rg "ERROR: '([^']+)'" -o --replace '$1' || true
+    # Show GDScript warnings only - minimal parameters for maximum efficiency
+    {{GODOT_EXECUTABLE}} --headless --debug --quit --path . project/project.godot 2>&1 | rg "ERROR: '(.*)'" -o --replace '$1' || true
 
 # Save warnings to markdown file
 save-warnings: (warnings "file") 
