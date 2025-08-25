@@ -177,14 +177,31 @@ void GDScriptParser::clear() {
 }
 
 void GDScriptParser::push_error(const String &p_message, const Node *p_origin) {
-	// TODO: Improve error reporting by pointing at source code.
-	// TODO: Errors might point at more than one place at once (e.g. show previous declaration).
+	// TODO: Improve error reporting by pointing at more than one place at once (e.g. show previous declaration).
 	panic_mode = true;
-	// TODO: Improve positional information.
-	if (p_origin == nullptr) {
-		errors.push_back({ p_message, previous.start_line, previous.start_column });
+	
+	// Include script path and line information for console output
+	String enhanced_message = p_message;
+	if (!script_path.is_empty()) {
+		String relative_path = script_path;
+		if (relative_path.begins_with("res://")) {
+			relative_path = relative_path.substr(6); // Remove "res://" prefix
+		}
+		
+		if (p_origin == nullptr) {
+			enhanced_message = vformat("%s:%d: %s", relative_path, previous.start_line, p_message);
+			errors.push_back({ enhanced_message, previous.start_line, previous.start_column });
+		} else {
+			enhanced_message = vformat("%s:%d: %s", relative_path, p_origin->start_line, p_message);
+			errors.push_back({ enhanced_message, p_origin->start_line, p_origin->leftmost_column });
+		}
 	} else {
-		errors.push_back({ p_message, p_origin->start_line, p_origin->leftmost_column });
+		// Fallback to original behavior if no script_path available
+		if (p_origin == nullptr) {
+			errors.push_back({ p_message, previous.start_line, previous.start_column });
+		} else {
+			errors.push_back({ p_message, p_origin->start_line, p_origin->leftmost_column });
+		}
 	}
 }
 
