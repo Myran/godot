@@ -12,7 +12,7 @@ func _init(file_path: String = "") -> void:
 	use_auto_semantic_logging = false  # Opt out - we handle specialized logging with domain-specific data
 
 
-func _execute_load_gamestate() -> DebugAction.Result:
+func _execute_load_gamestate() -> DebugActionResult:
 	var actual_file_path: String = _file_path
 
 	# If no specific file path provided, check debug config metadata first
@@ -32,7 +32,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 			# Fall back to finding most recent saved state
 			actual_file_path = _find_most_recent_saved_state()
 			if actual_file_path.is_empty():
-				return DebugAction.Result.new_failure(
+				return DebugActionResult.new_failure(
 					"No saved state files found and no file path provided"
 				)
 
@@ -47,7 +47,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 	# Read and validate JSON file
 	var file: FileAccess = FileAccess.open(actual_file_path, FileAccess.READ)
 	if not file:
-		return DebugAction.Result.new_failure("Cannot open file: " + actual_file_path)
+		return DebugActionResult.new_failure("Cannot open file: " + actual_file_path)
 
 	var json_text: String = file.get_as_text()
 	file.close()
@@ -55,25 +55,25 @@ func _execute_load_gamestate() -> DebugAction.Result:
 	var json: JSON = JSON.new()
 	var parse_result: Error = json.parse(json_text)
 	if parse_result != OK:
-		return DebugAction.Result.new_failure("Invalid JSON in file: " + _file_path)
+		return DebugActionResult.new_failure("Invalid JSON in file: " + _file_path)
 
 	var capture_data: Variant = json.data
 
 	# Validate capture data structure
 	if not _validate_capture_data(capture_data):
-		return DebugAction.Result.new_failure("Invalid capture data format")
+		return DebugActionResult.new_failure("Invalid capture data format")
 
 	var capture_dict: Dictionary = capture_data
 
 	# Load gamestate using Game's direct loading method
 	var game_instance: Game = _get_game_instance()
 	if not game_instance:
-		return DebugAction.Result.new_failure("Game instance not found")
+		return DebugActionResult.new_failure("Game instance not found")
 
 	var restoration_success: bool = await game_instance.load_state_from_file(actual_file_path)
 
 	if not restoration_success:
-		return DebugAction.Result.new_failure("Failed to load gamestate from file")
+		return DebugActionResult.new_failure("Failed to load gamestate from file")
 
 	# Log the load request
 	SessionManager.log_semantic_action(
@@ -90,7 +90,7 @@ func _execute_load_gamestate() -> DebugAction.Result:
 
 	var duration: int = Time.get_ticks_msec() - start_time
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		{
 			"message": "Gamestate restored in current session",
 			"gamestate_file": actual_file_path.get_file(),

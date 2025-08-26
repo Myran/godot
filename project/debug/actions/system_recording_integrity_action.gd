@@ -8,7 +8,7 @@ func _init() -> void:
 	set_description("Validates core recording system components and their integration")
 
 
-func _execute_integrity_validation() -> DebugAction.Result:
+func _execute_integrity_validation() -> DebugActionResult:
 	Log.info(
 		"🔍 Starting recording system integrity validation...",
 		{},
@@ -32,7 +32,7 @@ func _execute_integrity_validation() -> DebugAction.Result:
 
 	_log_validation_summary(validation_results)
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		validation_results,
 		0,
 		"recording_integrity_validation",

@@ -8,7 +8,7 @@ func _init() -> void:
 	set_description("Capture current gamestate for later loading and replay generation")
 
 
-func _execute_save_gamestate() -> DebugAction.Result:
+func _execute_save_gamestate() -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	Log.info("Capturing debug gamestate...", {}, [Log.TAG_DEBUG])
@@ -45,7 +45,7 @@ func _execute_save_gamestate() -> DebugAction.Result:
 		[Log.TAG_DEBUG]
 	)
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		{
 			"capture_id": capture_data.capture_id,
 			"instructions": "Use 'just capture-gamestate NAME' to extract this state"

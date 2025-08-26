@@ -8,7 +8,7 @@ func _init() -> void:
 	set_description("Restart the current game scene cleanly")
 
 
-func _execute_restart() -> DebugAction.Result:
+func _execute_restart() -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	Log.info("User requested game restart via debug action", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
@@ -19,7 +19,7 @@ func _execute_restart() -> DebugAction.Result:
 	var duration: int = Time.get_ticks_msec() - start_time
 
 	# Return success - the restart will happen through the main game system
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		{
 			"message": "Game restart initiated",
 			"restart_triggered": true,

@@ -11,7 +11,7 @@ func _init(filename: String = "") -> void:
 	set_description("Save current gamestate directly to a specific file")
 
 
-func _execute_save_gamestate_to_file() -> DebugAction.Result:
+func _execute_save_gamestate_to_file() -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	# Get filename from parameter or metadata
@@ -52,7 +52,7 @@ func _execute_save_gamestate_to_file() -> DebugAction.Result:
 	# Write to file
 	var file: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
 	if not file:
-		return DebugAction.Result.new_failure("Cannot create save file: " + actual_filename)
+		return DebugActionResult.new_failure("Cannot create save file: " + actual_filename)
 
 	var json_text: String = JSON.stringify(capture_data, "\t")
 	file.store_string(json_text)
@@ -72,7 +72,7 @@ func _execute_save_gamestate_to_file() -> DebugAction.Result:
 		[Log.TAG_DEBUG, "gamestate", "save"]
 	)
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		{
 			"filename": actual_filename,
 			"file_path": file_path,

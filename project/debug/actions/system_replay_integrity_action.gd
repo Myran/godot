@@ -8,7 +8,7 @@ func _init() -> void:
 	set_description("Validates replay system integrity and end-to-end workflow capabilities")
 
 
-func _execute_integrity_validation() -> DebugAction.Result:
+func _execute_integrity_validation() -> DebugActionResult:
 	Log.info(
 		"🎬 Starting replay system integrity validation...", {}, ["debug", "replay", "integrity"]
 	)
@@ -33,7 +33,7 @@ func _execute_integrity_validation() -> DebugAction.Result:
 
 	_log_validation_summary(validation_results)
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		validation_results, 0, "replay_integrity_validation", {"validation_type": "replay_system"}
 	)
 
