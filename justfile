@@ -84,6 +84,49 @@ validate:
 # Alias for backward compatibility
 pre-commit: validate
 
+# CI validation pipeline - format, lint, Godot validation, warnings (fail-fast)
+ci-validate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🚀 Running CI validation pipeline..."
+    echo ""
+
+    # Step 1: Format code (auto-fix formatting issues)
+    echo "1️⃣ Running code formatting..."
+    if ! just format; then
+        echo "❌ Code formatting failed"
+        exit 1
+    fi
+    echo "✅ Code formatting completed"
+    echo ""
+
+    # Step 2: Lint code quality and style  
+    echo "2️⃣ Running code linting..."
+    if ! just lint; then
+        echo "❌ Code linting failed"
+        exit 1
+    fi
+    echo "✅ Code linting passed"
+    echo ""
+
+    # Step 3: Godot engine validation
+    echo "3️⃣ Running Godot runtime validation..."
+    if ! just validate-godot; then
+        echo "❌ Godot runtime validation failed"
+        exit 1
+    fi
+    echo "✅ Godot runtime validation passed"
+    echo ""
+
+    # Step 4: Show warnings (informational, non-blocking)
+    echo "4️⃣ Checking for warnings..."
+    just show-warnings || true
+    echo "✅ Warning check completed"
+    echo ""
+
+    echo "🎉 All CI validation checks passed!"
+
 # ================================
 # VALIDATION FUNCTIONS
 # ================================
