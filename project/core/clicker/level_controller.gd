@@ -147,6 +147,10 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 
 	# Debug upgrade blocks specifically
 	if block.object_type == core.ObjectType.BLOCK_UPGRADE:
+		var parent_node: Node = block.get_parent()
+		var parent_name: String = "no parent"
+		if parent_node != null:
+			parent_name = parent_node.name
 		Log.debug(
 			"Upgrade block added to grid - checking properties",
 			{
@@ -155,7 +159,7 @@ func add_to_grid(grid_pos: Vector2i, block: Block, refill: int = 0) -> void:
 				str(block.level) if block.has_method("get") and "level" in block else "unknown",
 				"visible": block.visible,
 				"position": block.position,
-				"parent": block.get_parent().name if block.get_parent() else "no parent",
+				"parent": parent_name,
 				"children_count": block.get_child_count(),
 				"scene_file": block.scene_file_path if "scene_file_path" in block else "unknown"
 			},

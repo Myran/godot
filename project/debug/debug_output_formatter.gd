@@ -31,9 +31,9 @@ func format_completion_report(action: DebugAction, success: bool, result: Varian
 
 
 func format_completion_report_structured(
-	action: DebugAction, action_result: DebugAction.Result
+	action: DebugAction, action_result: DebugActionResult
 ) -> String:
-	"""Enhanced formatting for DebugAction.Result with richer error information"""
+	"""Enhanced formatting for DebugActionResult with richer error information"""
 	return _build_action_report_structured(action, action_result)
 
 
@@ -141,9 +141,9 @@ func _build_action_report(action: DebugAction, success: bool, payload: Variant) 
 
 
 func _build_action_report_structured(
-	action: DebugAction, action_result: DebugAction.Result
+	action: DebugAction, action_result: DebugActionResult
 ) -> String:
-	"""Generate enhanced report for DebugAction.Result with richer error categorization"""
+	"""Generate enhanced report for DebugActionResult with richer error categorization"""
 	var report: String = ""
 
 	report += (
@@ -290,9 +290,9 @@ func _build_action_report_structured(
 				]
 			)
 
-		var error_category: DebugAction.Result.ErrorCategory = action_result.get_error_category()
-		if error_category != DebugAction.Result.ErrorCategory.NONE:
-			var category_name: String = DebugAction.Result.ErrorCategory.keys()[error_category]
+		var error_category: DebugActionResult.ErrorCategory = action_result.get_error_category()
+		if error_category != DebugActionResult.ErrorCategory.NONE:
+			var category_name: String = DebugActionResult.ErrorCategory.keys()[error_category]
 			report += (
 				"[color=%s]Category:[/color] [color=%s]%s[/color]\n"
 				% [

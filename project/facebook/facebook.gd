@@ -91,9 +91,9 @@ func get_invitable_friends(object: Object, method: String) -> void:
 			_fb.callApi("/me/invitable_friends", params, object.get_instance_id(), method)
 
 
-func set_push_token(_token: String) -> void:
+func set_push_token(push_token: String) -> void:
 	if _fb != null:
-		_fb.set_push_token(_token)
+		_fb.set_push_token(push_token)
 
 
 func log_event(event: String, value: float = 0.0, params: Dictionary = {}) -> void:

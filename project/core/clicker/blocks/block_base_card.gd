@@ -386,7 +386,7 @@ static func _deserialize_effect(effect_data: Variant) -> Variant:
 	"""
 	if not effect_data is Dictionary:
 		return null
-	var effect_dict: Dictionary = effect_data as Dictionary
+	var effect_dict: Dictionary = effect_data
 	var effect_type: String = effect_dict.get("type", "")
 
 	# Handle legacy serialization format
@@ -435,7 +435,7 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 	"""
 	if not ability_data is Dictionary:
 		return null
-	var ability_dict: Dictionary = ability_data as Dictionary
+	var ability_dict: Dictionary = ability_data
 	var ability_type: String = ability_dict.get("type", "")
 
 	Log.debug(

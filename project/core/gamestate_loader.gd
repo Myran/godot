@@ -60,6 +60,7 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 			Log.info("RNG state restored successfully", {}, [Log.TAG_DEBUG, "gamestate", "rng"])
 
 	# Reset all game state before restoration
+	@warning_ignore("redundant_await")
 	await _reset_all_game_state_for_loading(game)
 
 	# Restore board content
@@ -298,6 +299,7 @@ static func _draft_position_to_grid(draft_position: int) -> Vector2i:
 	# Position 0-4 = row 0, position 5-9 = row 1, etc.
 	var grid_width: int = 5
 	var grid_x: int = draft_position % grid_width  # Column: remainder when divided by width
+	@warning_ignore("integer_division")
 	var grid_y: int = int(draft_position / grid_width)  # Row: how many complete rows fit
 	return Vector2i(grid_x, grid_y)
 
@@ -382,12 +384,12 @@ static func _clear_holder_container(holder_container: HolderContainer) -> int:
 			holder.force_clear_silent()
 			cards_cleared += 1
 
+	var container_name: String = "unnamed"
+	if holder_container.name and holder_container.name != "":
+		container_name = holder_container.name
 	Log.debug(
 		"Holder container cleared",
-		{
-			"container": holder_container.name if holder_container.name else "unnamed",
-			"cards_cleared": cards_cleared
-		},
+		{"container": container_name, "cards_cleared": cards_cleared},
 		[Log.TAG_DEBUG, "gamestate", "reset"]
 	)
 
@@ -445,3 +447,4 @@ static func _reset_all_handlers(game: Game) -> void:
 		{"handlers_reset": handlers_reset},
 		[Log.TAG_DEBUG, "gamestate", "handlers"]
 	)
+

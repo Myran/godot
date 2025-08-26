@@ -11,24 +11,24 @@ static func get_debug_seed() -> int:
 	if config_data.has("checksum_config"):
 		var checksum_config: Dictionary = config_data.checksum_config
 		if checksum_config.has("initial_seed"):
-			var seed: int = checksum_config.initial_seed
+			var initial_seed: int = checksum_config.initial_seed
 			if Log:
 				Log.info(
 					"Debug seed loaded from checksum_config.initial_seed",
-					{"seed": seed},
+					{"seed": initial_seed},
 					["debug", "rng", "config", "seed"]
 				)
-			return seed
+			return initial_seed
 
 	if config_data.has("seed"):
-		var seed: int = config_data.seed
+		var legacy_seed: int = config_data.seed
 		if Log:
 			Log.info(
 				"Debug seed loaded from legacy seed field",
-				{"seed": seed},
+				{"seed": legacy_seed},
 				["debug", "rng", "config", "seed"]
 			)
-		return seed
+		return legacy_seed
 
 	var default_seed: int = GameConstants.RandomSystem.DEFAULT_SEED
 	if Log:

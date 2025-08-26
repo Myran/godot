@@ -63,9 +63,9 @@ static func output_action_result(action: DebugAction, success: bool, result: Var
 
 
 static func output_action_result_structured(
-	action: DebugAction, action_result: DebugAction.Result
+	action: DebugAction, action_result: DebugActionResult
 ) -> void:
-	"""Enhanced output method for DebugAction.Result - provides richer information"""
+	"""Enhanced output method for DebugActionResult - provides richer information"""
 	if not _ensure_initialized():
 		return
 
