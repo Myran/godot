@@ -1,6 +1,6 @@
 # project/debug/debug_action_result.gd.template
-# Future enhancement: Unified result class for debug action completion
-# This template documents the planned DebugActionResult class design
+# Template for the unified DebugActionResult class
+# Shows the current clean implementation structure
 # for consistent completion handling across all debug actions.
 
 @tool
@@ -10,78 +10,89 @@ extends RefCounted
 ## Unified result class for debug action completion
 ## Provides type-safe, consistent handling of action results across all debug action categories
 
-var success: bool
-var data: Variant
-var error_message: String 
-var duration_ms: int
-var operation: String
+enum State { SUCCESS, FAILURE, RESTART_NEEDED }
 
-func _init(p_success: bool = false, p_data: Variant = null, p_error: String = "", p_duration: int = 0, p_operation: String = ""):
-	success = p_success
+var state: State
+var data: Variant
+var message: String
+var duration_ms: int
+
+func _init(p_state: State, p_data: Variant = null, p_message: String = "", p_duration: int = 0):
+	state = p_state
 	data = p_data
-	error_message = p_error
+	message = p_message
 	duration_ms = p_duration
-	operation = p_operation
 
 ## Static factory methods for clean result creation
-static func success(p_data: Variant = null, p_duration_ms: int = 0, p_operation: String = "") -> DebugActionResult:
-	return DebugActionResult.new(true, p_data, "", p_duration_ms, p_operation)
+static func success(data: Variant = null, duration: int = 0) -> DebugActionResult:
+	return DebugActionResult.new(State.SUCCESS, data, "", duration)
 
-static func failure(p_error: String, p_data: Variant = null, p_duration_ms: int = 0, p_operation: String = "") -> DebugActionResult:
-	return DebugActionResult.new(false, p_data, p_error, p_duration_ms, p_operation)
+static func failure(error_message: String, duration: int = 0) -> DebugActionResult:
+	return DebugActionResult.new(State.FAILURE, null, error_message, duration)
+
+static func restart_needed(data: Variant = null, duration: int = 0) -> DebugActionResult:
+	return DebugActionResult.new(State.RESTART_NEEDED, data, "Restart required for validation", duration)
 
 ## Query methods
 func is_success() -> bool:
-	return success
+	return state == State.SUCCESS
 
 func is_failure() -> bool:
-	return not success
+	return state == State.FAILURE
+
+func needs_restart() -> bool:
+	return state == State.RESTART_NEEDED
 
 func get_data() -> Variant:
 	return data
 
-func get_error() -> String:
-	return error_message
+func get_message() -> String:
+	return message
 
-func get_duration() -> int:
+func get_duration_ms() -> int:
 	return duration_ms
 
-## Compatibility method for existing DebugOutputService
-func to_completion_args() -> Array:
-	"""Returns [success: bool, data: Variant] for current completion system"""
-	if success:
-		return [true, data]
-	else:
-		var error_data = {"error": error_message}
-		if duration_ms > 0:
-			error_data["duration_ms"] = duration_ms
-		if operation != "":
-			error_data["operation"] = operation
-		return [false, error_data]
+## Debug output
+func to_debug_string() -> String:
+	match state:
+		State.SUCCESS:
+			var msg = "SUCCESS (%dms)" % duration_ms
+			if data != null:
+				msg += " - " + str(data)
+			return msg
+		State.FAILURE:
+			return "FAILURE: %s (%dms)" % [message, duration_ms]
+		State.RESTART_NEEDED:
+			return "RESTART_NEEDED (%dms)" % duration_ms
+		_:
+			return "UNKNOWN"
 
-## Serialization for logging and debugging
-func to_dict() -> Dictionary:
-	return {
-		"success": success,
-		"data": data,
-		"error_message": error_message,
-		"duration_ms": duration_ms,
-		"operation": operation
-	}
+## Compatibility methods for legacy usage
+func get_payload() -> Variant:
+	return data
 
-func to_string() -> String:
-	if success:
-		return "SUCCESS: %s (%dms)" % [operation, duration_ms]
-	else:
-		return "FAILURE: %s - %s (%dms)" % [operation, error_message, duration_ms]
+func get_error_message() -> String:
+	return message if is_failure() else ""
+
+func get_error_code() -> String:
+	match state:
+		State.RESTART_NEEDED:
+			return "RESTART_NEEDED"
+		State.FAILURE:
+			return "FAILED"
+		_:
+			return ""
 
 ## Usage Examples:
 ## 
 ## # Success case:
-## return DebugActionResult.success({"user_count": 42}, 150, "Get User Count")
+## return DebugActionResult.success({"user_count": 42}, 150)
 ##
 ## # Failure case: 
-## return DebugActionResult.failure("Network timeout", null, 5000, "Get User Data")
+## return DebugActionResult.failure("Network timeout", 5000)
+##
+## # Restart needed:
+## return DebugActionResult.restart_needed({"config": "updated"}, 100)
 ##
 ## # In action execute method:
 ## func execute_action() -> DebugActionResult:
@@ -89,6 +100,6 @@ func to_string() -> String:
 ##     # ... perform operation ...
 ##     var duration = Time.get_ticks_msec() - start_time
 ##     if operation_successful:
-##         return DebugActionResult.success(result_data, duration, action_name)
+##         return DebugActionResult.success(result_data, duration)
 ##     else:
-##         return DebugActionResult.failure(error_message, null, duration, action_name)
+##         return DebugActionResult.failure(error_message, duration)
