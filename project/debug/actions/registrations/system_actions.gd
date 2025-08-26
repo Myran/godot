@@ -679,7 +679,7 @@ static func _test_platform_agnostic_replay() -> bool:
 	return true  # TDD GREEN phase - functionality implemented and working
 
 
-static func _test_state_validation_integration() -> DebugAction.Result:
+static func _test_state_validation_integration() -> DebugActionResult:
 	"""CRITICAL: Test complete state validation integration - Company survival depends on this"""
 	Log.info(
 		"CRITICAL INTEGRATION TEST: Testing complete state validation integration",
@@ -737,7 +737,7 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 			},
 			["debug", "test", "integration", "success"]
 		)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			{"integration_test": "passed", "all_components": "functional"},
 			0,
 			"state_validation_integration"
@@ -754,14 +754,14 @@ static func _test_state_validation_integration() -> DebugAction.Result:
 		},
 		["debug", "test", "integration", "failure"]
 	)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"State validation integration test failed",
 		"INTEGRATION_FAILURE",
-		DebugAction.Result.ErrorCategory.VALIDATION
+		DebugActionResult.ErrorCategory.VALIDATION
 	)
 
 
-static func _test_debug_action_with_validation() -> DebugAction.Result:
+static func _test_debug_action_with_validation() -> DebugActionResult:
 	"""Test DebugAction execute_with_state_validation method"""
 	Log.info(
 		"Testing DebugAction state validation execution",
@@ -778,7 +778,7 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 
 	# Execute the test action
 	test_action.execute()
-	var result: DebugAction.Result = DebugAction.Result.new_success({"test": "passed"}, 0)
+	var result: DebugActionResult = DebugActionResult.new_success({"test": "passed"}, 0)
 
 	var success: bool = result.is_success()
 
@@ -788,7 +788,7 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 			{"result_success": success},
 			["debug", "test", "integration", "debug_action", "success"]
 		)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			{"debug_action_validation": "passed"}, 0, "debug_action_with_validation"
 		)
 
@@ -800,7 +800,7 @@ static func _test_debug_action_with_validation() -> DebugAction.Result:
 	return result
 
 
-static func _test_semantic_mapper_integration() -> DebugAction.Result:
+static func _test_semantic_mapper_integration() -> DebugActionResult:
 	"""Test SemanticActionMapper validation injection"""
 	Log.info(
 		"Testing SemanticActionMapper validation injection",
@@ -841,7 +841,7 @@ static func _test_semantic_mapper_integration() -> DebugAction.Result:
 			},
 			["debug", "test", "integration", "semantic_mapper", "success"]
 		)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			{"semantic_mapper_integration": "passed"}, 0, "semantic_mapper_integration"
 		)
 
@@ -853,14 +853,14 @@ static func _test_semantic_mapper_integration() -> DebugAction.Result:
 		},
 		["debug", "test", "integration", "semantic_mapper", "failure"]
 	)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"SemanticActionMapper validation injection failed",
 		"SEMANTIC_MAPPER_FAILURE",
-		DebugAction.Result.ErrorCategory.VALIDATION
+		DebugActionResult.ErrorCategory.VALIDATION
 	)
 
 
-static func _test_state_extractor_integration() -> DebugAction.Result:
+static func _test_state_extractor_integration() -> DebugActionResult:
 	"""Test StateExtractor checksum functionality"""
 	Log.info(
 		"Testing StateExtractor checksum functionality",
@@ -895,7 +895,7 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 			},
 			["debug", "test", "integration", "state_extractor", "success"]
 		)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			{"state_extractor_integration": "passed"}, 0, "state_extractor_integration"
 		)
 
@@ -909,10 +909,10 @@ static func _test_state_extractor_integration() -> DebugAction.Result:
 		},
 		["debug", "test", "integration", "state_extractor", "failure"]
 	)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"StateExtractor integration test failed",
 		"STATE_EXTRACTOR_FAILURE",
-		DebugAction.Result.ErrorCategory.VALIDATION
+		DebugActionResult.ErrorCategory.VALIDATION
 	)
 
 

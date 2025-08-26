@@ -1,9 +1,7 @@
 class_name GameDebugActions
 extends RefCounted
 
-# Preload the split implementation classes
-const GameActionCore = preload("res://debug/actions/registrations/game_action_core.gd")
-const GameActionPlayer = preload("res://debug/actions/registrations/game_action_player.gd")
+# Direct class references (no preload needed since they have class_name)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:

@@ -275,14 +275,14 @@ static func _wait_for_game_systems_ready() -> bool:
 	return false
 
 
-static func _start_battle() -> DebugAction.Result:
+static func _start_battle() -> DebugActionResult:
 	var game: Game = _get_game_node()
 	if not game:
-		return DebugAction.Result.new_failure("Game node not available")
+		return DebugActionResult.new_failure("Game node not available")
 
 	core.action(core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_start_battle")))
 
-	return DebugAction.Result.new_success({"battle_queued": true})
+	return DebugActionResult.new_success({"battle_queued": true})
 
 
 static func _trigger_start_battle() -> void:
@@ -290,17 +290,17 @@ static func _trigger_start_battle() -> void:
 	ui.action(ui.StartBattleEvent.new())
 
 
-static func _populate_enemy_and_start_battle() -> DebugAction.Result:
+static func _populate_enemy_and_start_battle() -> DebugActionResult:
 	var game: Game = _get_game_node()
 	if not game:
-		return DebugAction.Result.new_failure("Game node not available")
+		return DebugActionResult.new_failure("Game node not available")
 
 	core.action(
 		core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_populate_enemy_lineup"))
 	)
 	core.action(core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_start_battle")))
 
-	return DebugAction.Result.new_success({"populate_and_battle_queued": true})
+	return DebugActionResult.new_success({"populate_and_battle_queued": true})
 
 
 static func _trigger_populate_enemy_lineup() -> void:
@@ -309,9 +309,9 @@ static func _trigger_populate_enemy_lineup() -> void:
 	populate_task.call()
 
 
-static func _battle_test_determinism_logic_only() -> DebugAction.Result:
+static func _battle_test_determinism_logic_only() -> DebugActionResult:
 	if not is_instance_valid(rng):
-		return DebugAction.Result.new_failure("RNG singleton not available")
+		return DebugActionResult.new_failure("RNG singleton not available")
 
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
@@ -350,7 +350,7 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 
 	if not logic_result.success:
 		var error_msg: String = logic_result.error
-		return DebugAction.Result.new_failure("Logic-only battle execution failed: " + error_msg)
+		return DebugActionResult.new_failure("Logic-only battle execution failed: " + error_msg)
 
 	duration = logic_result.duration_ms
 	Log.info(
@@ -388,7 +388,7 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 				},
 				["debug", "battle", "determinism", "pid"]
 			)
-			return DebugAction.Result.new_success(
+			return DebugActionResult.new_success(
 				{
 					"determinism_test": "PASSED",
 					"seed": current_seed,
@@ -411,7 +411,7 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 			},
 			["debug", "battle", "determinism", "pid"]
 		)
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Logic-only determinism test failed - hash mismatch", "DETERMINISM_LOGIC_ONLY_FAILED"
 		)
 	Log.info(
@@ -454,7 +454,7 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 			},
 			["debug", "battle", "determinism", "pid"]
 		)
-		return DebugAction.Result.new_restart_pending(
+		return DebugActionResult.new_restart_pending(
 			{
 				"determinism_test": "RECORDED",
 				"seed": current_seed,
@@ -477,7 +477,7 @@ static func _battle_test_determinism_logic_only() -> DebugAction.Result:
 		},
 		["debug", "battle", "determinism", "pid"]
 	)
-	return DebugAction.Result.new_restart_pending(
+	return DebugActionResult.new_restart_pending(
 		{
 			"determinism_test": "RECORDED_PARTIAL",
 			"seed": current_seed,
@@ -788,9 +788,9 @@ static func _update_config_with_hash(hash_value: String) -> bool:
 	return true
 
 
-static func _battle_test_determinism() -> DebugAction.Result:
+static func _battle_test_determinism() -> DebugActionResult:
 	if not is_instance_valid(ui) or not is_instance_valid(rng):
-		return DebugAction.Result.new_failure("Required systems not available")
+		return DebugActionResult.new_failure("Required systems not available")
 
 	var config: Dictionary = _get_determinism_config()
 	var current_seed: int = config.seed
@@ -816,7 +816,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 
 		if not logic_result.success:
 			var error_msg: String = logic_result.error
-			return DebugAction.Result.new_failure("Logic-only battle failed: " + error_msg)
+			return DebugActionResult.new_failure("Logic-only battle failed: " + error_msg)
 
 		duration = logic_result.duration_ms
 		Log.info(
@@ -830,7 +830,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 
 		var game: Game = _get_game_node()
 		if not game:
-			return DebugAction.Result.new_failure("Game node not available")
+			return DebugActionResult.new_failure("Game node not available")
 
 		var initial_state: core.GameState = game.game_handler.current_gamestate
 		core.action(
@@ -860,7 +860,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 				{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
 				["debug", "battle", "determinism"]
 			)
-			return DebugAction.Result.new_success(
+			return DebugActionResult.new_success(
 				{
 					"determinism_test": "PASSED",
 					"seed": current_seed,
@@ -875,7 +875,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			{"seed": current_seed, "expected": expected_hash, "actual": actual_hash},
 			["debug", "battle", "determinism"]
 		)
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Determinism test failed - hash mismatch", "DETERMINISM_FAILED"
 		)
 	var update_success: bool = _update_config_with_hash(actual_hash)
@@ -924,7 +924,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 			{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
 			["debug", "battle", "determinism"]
 		)
-		return DebugAction.Result.new_restart_pending(
+		return DebugActionResult.new_restart_pending(
 			{
 				"determinism_test": "RECORDED",
 				"seed": current_seed,
@@ -939,7 +939,7 @@ static func _battle_test_determinism() -> DebugAction.Result:
 		{"seed": current_seed, "hash": actual_hash, "duration_ms": duration},
 		["debug", "battle", "determinism"]
 	)
-	return DebugAction.Result.new_restart_pending(
+	return DebugActionResult.new_restart_pending(
 		{
 			"determinism_test": "RECORDED_PARTIAL",
 			"seed": current_seed,
