@@ -171,7 +171,7 @@ func _create_set_value_state_handler(
 
 func execute_with_state_validation(
 	session_id: String = "", sequence: int = -1
-) -> DebugAction.Result:
+) -> DebugActionResult:
 	"""Execute C++ Firebase action with state validation integration"""
 	var start_time: int = Time.get_ticks_msec()
 
@@ -190,7 +190,7 @@ func execute_with_state_validation(
 			{"action_name": action_name, "duration_ms": duration},
 			["debug", "cpp_firebase", "success"]
 		)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			success, duration, action_name, {"session_id": session_id, "sequence": sequence}
 		)
 
@@ -199,10 +199,10 @@ func execute_with_state_validation(
 		{"action_name": action_name, "duration_ms": duration},
 		["debug", "cpp_firebase", "error"]
 	)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"C++ Firebase action failed",
 		"C++_FIREBASE_FAILURE",
-		DebugAction.Result.ErrorCategory.FIREBASE,
+		DebugActionResult.ErrorCategory.FIREBASE,
 		null,
 		duration,
 		action_name,
@@ -210,13 +210,13 @@ func execute_with_state_validation(
 	)
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	push_error("_execute_action_logic() not implemented in " + get_script().get_path())
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		str("_execute_action_logic() not implemented in " + get_script().get_path()),
 		"NOT_IMPLEMENTED",
-		DebugAction.Result.ErrorCategory.SYSTEM,
+		DebugActionResult.ErrorCategory.SYSTEM,
 		{"error": "missing_implementation"},
 		0,
 		action_name,

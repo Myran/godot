@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "cpp.firebase.database_availability"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var firebase_db_available: bool = ClassDB.class_exists("FirebaseDatabase")
@@ -29,7 +29,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		"Firebase class availability check completed",
 		total_duration,
 		action_name,
@@ -38,5 +38,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugAction.Result = _execute_action_logic({})
+	var result: DebugActionResult = _execute_action_logic({})
 	return result.is_success()

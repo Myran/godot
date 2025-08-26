@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "cpp.firebase.timeout_behavior"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ basic operations (timeout method removed)...")
 
@@ -91,7 +91,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			+ " operations succeeded)"
 		)
 		_update_status(success_message)
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			success_message, total_duration, action_name, test_result
 		)
 
@@ -103,10 +103,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		+ " operations worked)"
 	)
 	_update_status(failure_message, true)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		failure_message,
 		"TIMEOUT_BEHAVIOR_FAILED",
-		DebugAction.Result.ErrorCategory.FIREBASE,
+		DebugActionResult.ErrorCategory.FIREBASE,
 		null,
 		total_duration,
 		action_name,
@@ -115,5 +115,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

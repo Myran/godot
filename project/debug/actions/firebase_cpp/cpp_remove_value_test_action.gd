@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "cpp.firebase.remove_value"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var test_path: Array = ["cpp_tests", "direct", "remove_value", str(Time.get_ticks_msec())]
@@ -20,10 +20,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var set_duration: int = Time.get_ticks_msec() - set_start
 
 	if not set_result:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Failed to set test value for C++ remove operation",
 			"SET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.FIREBASE,
+			DebugActionResult.ErrorCategory.FIREBASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name,
@@ -45,7 +45,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var success: bool = remove_result != null
 
 	if success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"C++ remove value operation successful",
 			total_duration,
 			action_name,
@@ -59,10 +59,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"C++ remove value operation failed",
 		"REMOVE_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.FIREBASE,
+		DebugActionResult.ErrorCategory.FIREBASE,
 		null,
 		total_duration,
 		action_name,
@@ -77,5 +77,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

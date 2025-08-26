@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "cpp.firebase.concurrent_ops"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var concurrent_count: int = _params.get("concurrent_count", 4)
@@ -107,7 +107,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	return DebugAction.Result.new_concurrent_result(
+	return DebugActionResult.new_concurrent_result(
 		all_operation_results,
 		success_rates,
 		overall_success,
@@ -125,5 +125,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

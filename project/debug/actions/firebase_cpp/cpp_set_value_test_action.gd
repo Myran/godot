@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "cpp.firebase.set_value"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var test_path: Array[String] = ["cpp_tests", "direct", "set_value", str(Time.get_ticks_msec())]
@@ -23,7 +23,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var success: bool = result != null
 
 	if success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"C++ set value operation successful",
 			total_duration,
 			action_name,
@@ -36,10 +36,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"C++ set value operation failed",
 		"SET_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.FIREBASE,
+		DebugActionResult.ErrorCategory.FIREBASE,
 		null,
 		total_duration,
 		action_name,
@@ -53,5 +53,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
