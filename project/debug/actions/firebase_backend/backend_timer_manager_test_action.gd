@@ -7,16 +7,16 @@ func _init() -> void:
 	action_name = "backend.firebase.timer_manager"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend timer management...")
 
 	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not available for testing",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -85,7 +85,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			["debug", "backend_firebase"]
 		)
 
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Backend timer manager test completed successfully",
 			total_duration,
 			action_name,
@@ -104,10 +104,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		["debug", "backend_firebase", "error"]
 	)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Backend timer manager test failed - timeout handling insufficient",
 		"TIMER_MANAGER_INSUFFICIENT",
-		DebugAction.Result.ErrorCategory.TIMEOUT,
+		DebugActionResult.ErrorCategory.TIMEOUT,
 		test_results,
 		total_duration,
 		action_name,

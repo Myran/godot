@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "backend.firebase.async_pattern"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
 
@@ -20,10 +20,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 
 	if not set_success:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Backend async pattern test failed during set operation",
 			"SET_OPERATION_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name,
@@ -45,7 +45,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	if overall_success:
 		_update_status("Backend async pattern test PASSED")
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Backend async pattern test completed successfully",
 			total_duration,
 			action_name,
@@ -61,10 +61,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 	_update_status("Backend async pattern test FAILED", true)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Backend async pattern test failed during get operation",
 		"GET_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.DATABASE,
+		DebugActionResult.ErrorCategory.DATABASE,
 		null,
 		total_duration,
 		action_name,

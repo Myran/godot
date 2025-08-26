@@ -7,15 +7,15 @@ func _init() -> void:
 	action_name = "backend.firebase.performance"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Failed to get Firebase backend for testing",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.FIREBASE,
+			DebugActionResult.ErrorCategory.FIREBASE,
 			{"backend_available": false},
 			0,
 			action_name
@@ -141,7 +141,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"max_avg_latency_ms": 6000
 	}
 
-	return DebugAction.Result.new_performance_result(
+	return DebugActionResult.new_performance_result(
 		performance_tests,  # Array of performance test results
 		overall_success,
 		performance_thresholds,

@@ -7,7 +7,7 @@ func _init() -> void:
 	action_name = "backend.firebase.lifecycle"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend lifecycle...")
 
@@ -38,10 +38,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			"lifecycle_tests": lifecycle_tests,
 			"lifecycle_validation": false
 		}
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Backend lifecycle test failed - backend not available",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			failure_results,
 			Time.get_ticks_msec() - start_time,
 			action_name,
@@ -167,7 +167,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			"Backend lifecycle validation successful", test_results, ["debug", "backend_firebase"]
 		)
 
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Backend lifecycle test completed successfully",
 			total_duration,
 			action_name,
@@ -188,10 +188,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		"Backend lifecycle validation failed", test_results, ["debug", "backend_firebase", "error"]
 	)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Backend lifecycle test failed - insufficient success rate",
 		"LIFECYCLE_INSUFFICIENT",
-		DebugAction.Result.ErrorCategory.VALIDATION,
+		DebugActionResult.ErrorCategory.VALIDATION,
 		test_results,
 		total_duration,
 		action_name,

@@ -109,17 +109,17 @@ func test_backend_async_pattern(
 	return success
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var error_message: String = (
 		"_execute_action_logic() not implemented in " + get_script().get_path()
 	)
 	push_error(error_message)
 	_update_status("ERROR: _execute_action_logic() not implemented", true)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		error_message,
 		"NOT_IMPLEMENTED",
-		DebugAction.Result.ErrorCategory.SYSTEM,
+		DebugActionResult.ErrorCategory.SYSTEM,
 		{"script_path": get_script().get_path()},
 		0,
 		action_name
@@ -129,7 +129,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 func execute_backend_action() -> bool:
 	if has_method("_execute_action_logic"):
 		@warning_ignore("redundant_await")
-		var result: DebugAction.Result = await _execute_action_logic({})
+		var result: DebugActionResult = await _execute_action_logic({})
 		return result.is_success()
 
 	push_error("execute_backend_action() not implemented in " + get_script().get_path())

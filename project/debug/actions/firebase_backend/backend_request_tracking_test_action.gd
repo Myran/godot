@@ -7,16 +7,16 @@ func _init() -> void:
 	action_name = "backend.firebase.request_tracking"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend request tracking...")
 
 	var backend: FirebaseBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not available for testing",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -209,7 +209,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			["debug", "backend_firebase"]
 		)
 
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Backend request tracking test completed successfully",
 			total_duration,
 			action_name,
@@ -233,10 +233,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		["debug", "backend_firebase", "error"]
 	)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Backend request tracking test failed - insufficient success rate",
 		"REQUEST_TRACKING_INSUFFICIENT",
-		DebugAction.Result.ErrorCategory.VALIDATION,
+		DebugActionResult.ErrorCategory.VALIDATION,
 		test_results,
 		total_duration,
 		action_name,
