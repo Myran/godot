@@ -447,4 +447,3 @@ static func _reset_all_handlers(game: Game) -> void:
 		{"handlers_reset": handlers_reset},
 		[Log.TAG_DEBUG, "gamestate", "handlers"]
 	)
-
