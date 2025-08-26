@@ -180,7 +180,16 @@
       "Bash(/Users/mattiasmyhrman/.local/bin/gdformat debug/actions/debug_action.gd)",
       "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --diff ./debug/actions/registrations/game_actions.gd)",
       "Bash(/Users/mattiasmyhrman/.local/bin/gdformat ./debug/actions/registrations/game_actions.gd)",
-      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --check ./debug/actions/registrations/game_actions.gd)"
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat --check ./debug/actions/registrations/game_actions.gd)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(time just:*)",
+      "Bash(DEBUG_KEEP_TEMP=1 just show-warnings)",
+      "Read(//Users/mattiasmyhrman/**)",
+      "Bash(export RIPGREP_CONFIG_PATH=~/.ripgreprc)",
+      "Bash(/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64 --headless --check-only --path .)",
+      "Bash(/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64 --headless --script-test-errors --path .)",
+      "Bash(/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64 --help)",
+      "Bash(/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64 --headless --editor --quit --path .)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
