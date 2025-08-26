@@ -11,7 +11,7 @@ func _init() -> void:
 	)
 
 
-func _execute_semantic_integration_test() -> DebugAction.Result:
+func _execute_semantic_integration_test() -> DebugActionResult:
 	var session_id: String = SessionManager.get_current_session_id()
 	var initial_count: int = SemanticActionLogger.get_session_info().action_count
 
@@ -75,5 +75,5 @@ func _execute_semantic_integration_test() -> DebugAction.Result:
 	)
 
 	if success_count == total_tests:
-		return DebugAction.Result.new_success(summary)
-	return DebugAction.Result.new_failure(summary, "INTEGRATION_TEST_FAILED")
+		return DebugActionResult.new_success(summary)
+	return DebugActionResult.new_failure(summary, "INTEGRATION_TEST_FAILED")

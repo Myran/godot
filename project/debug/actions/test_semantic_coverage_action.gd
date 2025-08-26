@@ -11,7 +11,7 @@ func _init() -> void:
 	)
 
 
-func _execute_semantic_coverage_test() -> DebugAction.Result:
+func _execute_semantic_coverage_test() -> DebugActionResult:
 	var expected_events: Array[String] = [
 		"lineup.move_card",
 		"lineup.add_card",
@@ -102,6 +102,5 @@ func _execute_semantic_coverage_test() -> DebugAction.Result:
 	)
 
 	if success_count == total_tests:
-		return DebugAction.Result.new_success(summary)
-
-		return DebugAction.Result.new_failure(summary, "COVERAGE_TEST_FAILED")
+		return DebugActionResult.new_success(summary)
+	return DebugActionResult.new_failure(summary, "COVERAGE_TEST_FAILED")

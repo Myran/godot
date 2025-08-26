@@ -11,7 +11,7 @@ func _init() -> void:
 	)
 
 
-func _execute_green_phase_test() -> DebugAction.Result:
+func _execute_green_phase_test() -> DebugActionResult:
 	Log.info(
 		"=== STARTING TDD GREEN PHASE: StateExtractor Tests ===",
 		{},
@@ -53,14 +53,13 @@ func _execute_green_phase_test() -> DebugAction.Result:
 
 	if overall_success:
 		return (
-			DebugAction
-			. Result
+			DebugActionResult
 			. new_success(report, 0, "green_phase_validation")
 			. with_metadata("phase", "GREEN")
 			. with_metadata("component", "StateExtractor")
 			. with_metadata("tdd_transition", "RED_TO_GREEN_SUCCESS")
 		)
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"GREEN Phase tests failed - StateExtractor implementation has issues",
 		"GREEN_PHASE_IMPLEMENTATION_FAILURE"
 	)

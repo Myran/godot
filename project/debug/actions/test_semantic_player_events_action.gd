@@ -11,7 +11,7 @@ func _init() -> void:
 	)
 
 
-func _execute_player_events_test() -> DebugAction.Result:
+func _execute_player_events_test() -> DebugActionResult:
 	Log.info(
 		"=== TESTING SEMANTIC LOGGING WITH REAL PLAYER EVENTS ===",
 		{},
@@ -99,8 +99,8 @@ func _execute_player_events_test() -> DebugAction.Result:
 	)
 
 	if overall_success:
-		return DebugAction.Result.new_success(summary, 0, "player_events_test")
-	return DebugAction.Result.new_failure(summary, "PLAYER_EVENTS_TEST_FAILED")
+		return DebugActionResult.new_success(summary, 0, "player_events_test")
+	return DebugActionResult.new_failure(summary, "PLAYER_EVENTS_TEST_FAILED")
 
 
 func _test_reroll_event() -> bool:

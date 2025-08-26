@@ -11,7 +11,7 @@ func _init() -> void:
 	)
 
 
-func _execute_semantic_logging_test() -> DebugAction.Result:
+func _execute_semantic_logging_test() -> DebugActionResult:
 	var session_id: String = SessionManager.get_current_session_id()
 
 	Log.info(
@@ -34,7 +34,7 @@ func _execute_semantic_logging_test() -> DebugAction.Result:
 		["semantic_action", "test"]
 	)
 
-	return DebugAction.Result.new_success(
+	return DebugActionResult.new_success(
 		(
 			"Semantic logging test completed successfully. Session ID: %s, Actions logged: %d"
 			% [session_id, session_info.action_count]
