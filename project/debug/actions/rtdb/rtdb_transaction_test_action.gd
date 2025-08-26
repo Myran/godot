@@ -90,7 +90,7 @@ func _perform_counter_transaction(
 
 	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
 
-	var get_result: DebugAction.Result = await op_manager.execute("get_value_async", [path])
+	var get_result: DebugActionResult = await op_manager.execute("get_value_async", [path])
 	if not get_result.is_success():
 		return {
 			"transaction_number": transaction_number,
@@ -111,7 +111,7 @@ func _perform_counter_transaction(
 		"transaction_number": transaction_number
 	}
 
-	var set_result: DebugAction.Result = await op_manager.execute(
+	var set_result: DebugActionResult = await op_manager.execute(
 		"set_value_async", [path, updated_data]
 	)
 

@@ -9,15 +9,15 @@ func _init() -> void:
 	description = "Deliberately triggers various error conditions to test error handling and recovery."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Failed to get Firebase database instance",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.FIREBASE,
+			DebugActionResult.ErrorCategory.FIREBASE,
 			{"database_available": false},
 			0,
 			action_name
@@ -86,7 +86,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if test_success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			(
 				"Error handling test completed successfully (%d/%d tests passed)"
 				% [passed_tests, total_tests]
@@ -103,10 +103,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Error handling test failed (%d/%d tests passed)" % [passed_tests, total_tests],
 		"ERROR_HANDLING_TEST_FAILED",
-		DebugAction.Result.ErrorCategory.VALIDATION,
+		DebugActionResult.ErrorCategory.VALIDATION,
 		null,
 		total_duration,
 		action_name,
@@ -122,5 +122,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

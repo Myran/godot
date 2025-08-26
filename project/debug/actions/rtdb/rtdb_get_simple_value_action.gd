@@ -7,25 +7,25 @@ func _init() -> void:
 	action_name = "rtdb.database.get_value"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not available",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.SYSTEM,
+			DebugActionResult.ErrorCategory.SYSTEM,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
 		)
 
 	if not firebase_backend.is_available():
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not initialized",
 			"BACKEND_NOT_INITIALIZED",
-			DebugAction.Result.ErrorCategory.SYSTEM,
+			DebugActionResult.ErrorCategory.SYSTEM,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -40,7 +40,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Successfully retrieved value from simple path",
 			total_duration,
 			action_name,
@@ -51,10 +51,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Failed to retrieve value from simple path",
 		"GET_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.DATABASE,
+		DebugActionResult.ErrorCategory.DATABASE,
 		null,
 		total_duration,
 		action_name,
@@ -67,5 +67,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

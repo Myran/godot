@@ -9,15 +9,15 @@ func _init() -> void:
 	description = "Creates/updates a nested JSON structure at a test path in RTDB."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase database not available",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -44,7 +44,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Successfully set nested path data",
 			total_duration,
 			action_name,
@@ -57,10 +57,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Failed to set nested path data",
 		"SET_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.DATABASE,
+		DebugActionResult.ErrorCategory.DATABASE,
 		null,
 		total_duration,
 		action_name,
@@ -74,5 +74,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

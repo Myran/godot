@@ -12,16 +12,16 @@ func _init() -> void:
 	description = "Sets up a listener for when children are added to a specific RTDB path and verifies it works."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase database not available",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -59,7 +59,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	if result.success:
 		_update_status("✅ Listener test PASSED")
-		return DebugAction.Result.new_listener_result(
+		return DebugActionResult.new_listener_result(
 			true,
 			result,
 			5000,
@@ -75,7 +75,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		)
 
 	_update_status("❌ Listener test FAILED: " + str(result.get("error", "unknown error")), true)
-	return DebugAction.Result.new_listener_result(
+	return DebugActionResult.new_listener_result(
 		false,
 		result,
 		5000,
@@ -92,7 +92,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
 
 

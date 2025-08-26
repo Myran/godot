@@ -17,16 +17,16 @@ func _init() -> void:
 	)
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Executing " + action_name + "...")
 
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase database not available",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -85,7 +85,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 				["test", "rtdb", "listeners", "failure"]
 			)
 
-			return DebugAction.Result.new_listener_result(
+			return DebugActionResult.new_listener_result(
 				false,
 				{},
 				timeout_ms,
@@ -116,7 +116,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 		["test", "rtdb", "listeners", "success"]
 	)
 
-	return DebugAction.Result.new_listener_result(
+	return DebugActionResult.new_listener_result(
 		true,
 		callback_data,
 		timeout_ms,
@@ -133,7 +133,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
 
 

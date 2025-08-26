@@ -7,26 +7,26 @@ func _init() -> void:
 	action_name = "rtdb.database.set_value"
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	var test_value: String = _params.get("value_to_set", "Test Value: " + str(TimeUtils.now_ms()))
 
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not available",
 			"BACKEND_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.SYSTEM,
+			DebugActionResult.ErrorCategory.SYSTEM,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
 		)
 
 	if not firebase_backend.is_available():
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase backend not initialized",
 			"BACKEND_NOT_INITIALIZED",
-			DebugAction.Result.ErrorCategory.SYSTEM,
+			DebugActionResult.ErrorCategory.SYSTEM,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -40,17 +40,17 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
 	if result_success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			{"value_set": test_value, "path": path_variants},
 			duration_ms,
 			action_name,
 			{"test_type": "simple_value", "backend": "firebase"}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Set operation failed",
 		"SET_FAILED",
-		DebugAction.Result.ErrorCategory.FIREBASE,
+		DebugActionResult.ErrorCategory.FIREBASE,
 		{"attempted_value": test_value, "path": path_variants},
 		duration_ms,
 		action_name
@@ -58,5 +58,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

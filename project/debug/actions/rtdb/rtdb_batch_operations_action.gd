@@ -9,15 +9,15 @@ func _init() -> void:
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase database not available",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.FIREBASE,
+			DebugActionResult.ErrorCategory.FIREBASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -69,7 +69,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	)
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	return DebugAction.Result.new_batch_result(
+	return DebugActionResult.new_batch_result(
 		batch_operations,
 		success_rate,
 		action_name,
@@ -83,7 +83,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
 
 

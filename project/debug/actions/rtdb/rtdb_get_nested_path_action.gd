@@ -9,15 +9,15 @@ func _init() -> void:
 	description = "Retrieves data from nested paths in RTDB structure."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Firebase database not available",
 			"DATABASE_UNAVAILABLE",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name
@@ -33,10 +33,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var setup_duration: int = Time.get_ticks_msec() - setup_start
 
 	if not setup_success:
-		return DebugAction.Result.new_failure(
+		return DebugActionResult.new_failure(
 			"Failed to set up nested test data",
 			"SETUP_FAILED",
-			DebugAction.Result.ErrorCategory.DATABASE,
+			DebugActionResult.ErrorCategory.DATABASE,
 			null,
 			Time.get_ticks_msec() - start_time,
 			action_name,
@@ -56,7 +56,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	if get_success:
-		return DebugAction.Result.new_success(
+		return DebugActionResult.new_success(
 			"Successfully retrieved nested path data",
 			total_duration,
 			action_name,
@@ -69,10 +69,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 			}
 		)
 
-	return DebugAction.Result.new_failure(
+	return DebugActionResult.new_failure(
 		"Failed to retrieve nested path data",
 		"GET_OPERATION_FAILED",
-		DebugAction.Result.ErrorCategory.DATABASE,
+		DebugActionResult.ErrorCategory.DATABASE,
 		null,
 		total_duration,
 		action_name,
@@ -86,7 +86,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
 
 

@@ -9,7 +9,7 @@ func _init() -> void:
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
 
 
-func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
+func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 
 	var path_suffix: Array[Variant] = ["concurrent_test"]
@@ -76,7 +76,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 	var success_rates: Dictionary = {"overall": success_rate, "set_operations": success_rate}
 
-	return DebugAction.Result.new_concurrent_result(
+	return DebugActionResult.new_concurrent_result(
 		operation_results,
 		success_rates,
 		overall_success,
@@ -92,5 +92,5 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugAction.Result:
 
 
 func execute_rtdb_action() -> bool:
-	var result: DebugAction.Result = await _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
