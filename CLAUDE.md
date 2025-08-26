@@ -78,6 +78,12 @@ just gamestate-help                      # Complete workflow guide
 - **Performance**: ripgrep is 2-10x faster than grep with superior regex engine
 - **Features**: Better Unicode support, JSON output, automatic gitignore respect, SIMD optimizations
 
+**CRITICAL: Leverage Repomix MCP for architectural analysis**
+- **Use Repomix MCP** for comprehensive codebase analysis and pattern discovery
+- **10x more efficient** than individual file reads for understanding system relationships
+- **Persistent analysis** - pack once, search multiple times with grep_repomix_output
+- **Token optimization** - strategic use of compression and filtering for different analysis types
+
 ### **Ripgrep Migration Guide**
 | Old grep command | New ripgrep equivalent | Notes |
 |------------------|------------------------|-------|
@@ -866,4 +872,123 @@ just generate-claude-context      # Generate optimized project context (250k tok
 - **Structured format** - XML with clear file boundaries for AI parsing
 
 This three-tier approach maximizes both AI efficiency and human usability.
+
+## 🔬 Repomix MCP Best Practices for GameTwo
+
+**Strategic use of Repomix MCP for GameTwo's 248-file, 420k+ token codebase:**
+
+### **🎯 Optimal Pack Strategy**
+
+**1. Strategic Use of `compress` Parameter**
+```javascript
+// For large GameTwo analysis - use compression (70% token reduction)
+pack_codebase({
+  directory: "/Users/mattiasmyhrman/repos/gametwo",
+  compress: true,  
+  includePatterns: "project/**/*.gd,justfiles/**/*.justfile"
+})
+
+// For focused analysis - skip compression (keep implementation details)
+pack_codebase({
+  directory: "/Users/mattiasmyhrman/repos/gametwo", 
+  compress: false,  
+  includePatterns: "project/debug/actions/**/*.gd"
+})
+```
+
+**2. Smart Pattern Filtering for GameTwo Systems**
+```javascript
+// Focus on Firebase integration layers
+{
+  "includePatterns": "project/debug/actions/firebase_*/**/*.gd,project/data/backends/*.gd",
+  "ignorePatterns": "**/*test*.gd,**/*.log,project/addons/**"
+}
+
+// Justfile testing system analysis
+{
+  "includePatterns": "justfiles/justfile-*testing*.justfile,justfiles/justfile-*validation*.justfile",
+  "ignorePatterns": "justfiles/justfile-help.justfile"
+}
+```
+
+**3. Incremental Analysis Workflow**
+```javascript
+// Step 1: Pack once with optimal patterns
+const outputId = await pack_codebase({
+  directory: "/Users/mattiasmyhrman/repos/gametwo",
+  includePatterns: "project/**/*.gd,justfiles/**/*.justfile"
+})
+
+// Step 2: Multiple focused searches on same packed output
+await grep_repomix_output(outputId, "extends DebugAction", {contextLines: 2})
+await grep_repomix_output(outputId, "Firebase.*Backend", {contextLines: 1}) 
+await grep_repomix_output(outputId, "just.*test-android", {ignoreCase: true})
+```
+
+### **🚀 GameTwo-Specific Prompts**
+
+**Architecture Analysis:**
+```text
+This Repomix file contains GameTwo, a Godot 4.3 mobile game with Firebase integration.
+
+Context: 248 GDScript files, 55 debug actions across 5 layers (cpp/backend/rtdb/system/game)
+
+Analyze the debug action architecture:
+1. How are the 16 debug actions organized by layer?
+2. What patterns ensure consistent FirebaseBackend integration?
+3. Which justfile commands provide the most efficient testing workflow?
+4. Identify architectural improvements for the sophisticated testing infrastructure
+
+Focus on maintainability and the 420k+ token codebase optimization.
+```
+
+**Performance Analysis:**
+```text
+Analyze GameTwo's performance bottlenecks in this Repomix file:
+- Firebase async patterns and DirectAwait implementations
+- Debug action execution efficiency across 5 layers
+- Justfile build system optimization opportunities  
+- GDScript strong typing and memory management patterns
+
+Provide specific optimizations with before/after code examples.
+```
+
+### **🔧 Token Optimization Strategy**
+
+**Your GameTwo heavy files (from our analysis):**
+- `justfile-validation-enhanced-testing.justfile` (31.4k tokens) 
+- `justfile-semantic-replay-commands.justfile` (24.8k tokens)
+- `justfile-testing-core.justfile` (14.8k tokens)
+
+**Optimization approaches:**
+```javascript
+// For justfile analysis - target specific heavy files
+{
+  "includePatterns": "justfiles/justfile-testing-core.justfile,justfiles/justfile-validation*.justfile"
+}
+
+// For GDScript analysis - exclude heavy justfiles 
+{
+  "includePatterns": "project/**/*.gd",
+  "ignorePatterns": "justfiles/**"
+}
+```
+
+### **📈 Productivity Benefits**
+
+**Repomix vs Traditional File Reading:**
+- **Architecture Understanding**: 10x faster than individual file reads
+- **Pattern Discovery**: Instant cross-system relationships 
+- **Debug Action Analysis**: Find all 16 actions + relationships in one search
+- **Firebase Integration**: Map 38 Firebase Backend references instantly
+- **Testing System**: Discover 58+ test command patterns systematically
+
+**Daily Development Workflow:**
+1. **Pack focused subsystem** (debug actions, Firebase backend, specific justfiles)
+2. **Use grep_repomix_output** for pattern discovery across packed content
+3. **Leverage compressed packs** for high-level architectural decisions
+4. **Incremental analysis** - avoid re-packing, maximize search efficiency
+
+**Bottom Line**: For GameTwo's complexity, Repomix MCP provides **systematic pattern analysis** and **architectural understanding** impossible with traditional file-by-file exploration. Use it for all major codebase analysis tasks.
+
 - Use OODA framework as main framework for outer loop of execution of tasks
