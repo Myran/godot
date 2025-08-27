@@ -22,7 +22,7 @@ signal initialization_complete
 @export var draft_handler: DraftHandler
 @export var lineup_handler: LineupHandler
 @export var battle_handler: BattleHandler
-@export var card_controller: Node
+@export var card_controller: CardController
 
 var ui_state: core.UIState = core.UIState.INITIALIZING
 var _idle_action_queue: Array[Dictionary] = []
