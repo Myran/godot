@@ -295,6 +295,8 @@ static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
 	return unit_state
 
 
+
+
 static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary) -> bool:
 	"""
 	Restore complete UnitData state including effects and abilities.

@@ -12,10 +12,20 @@ func _init(file_path: String = "") -> void:
 	use_auto_semantic_logging = false  # Opt out - we handle specialized logging with domain-specific data
 
 
-func _execute_load_gamestate() -> DebugActionResult:
+func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 	var actual_file_path: String = _file_path
 
-	# If no specific file path provided, check debug config metadata first
+	# Check for file parameter in params first
+	if params.has("file") and not params["file"].is_empty():
+		var filename: String = params["file"]
+		actual_file_path = DebugConfigReader.get_saved_state_path(filename)
+		Log.info(
+			"Using gamestate file from action parameters",
+			{"filename": filename, "full_path": actual_file_path},
+			[Log.TAG_DEBUG, "gamestate"]
+		)
+
+	# If no specific file path provided, check debug config metadata next
 	if actual_file_path.is_empty():
 		var metadata: Dictionary = DebugConfigReader.get_metadata()
 		var gamestate_filename: String = metadata.get("gamestate_file", "")
@@ -70,14 +80,17 @@ func _execute_load_gamestate() -> DebugActionResult:
 	if not game_instance:
 		return DebugActionResult.new_failure("Game instance not found")
 
+	# Load gamestate using Game's direct loading method
+	Log.debug("About to call load_state_from_file", {"file": actual_file_path}, [Log.TAG_DEBUG, "gamestate", "load_action"])
 	var restoration_success: bool = await game_instance.load_state_from_file(actual_file_path)
+	Log.debug("load_state_from_file returned", {"success": restoration_success}, [Log.TAG_DEBUG, "gamestate", "load_action"])
 
 	if not restoration_success:
 		return DebugActionResult.new_failure("Failed to load gamestate from file")
 
-	# Log the load request
-	SessionManager.log_semantic_action(
-		"system.debug.load_gamestate",
+	# Log the load request (skip semantic action logging for now to avoid StateExtractor hang)
+	Log.info(
+		"Gamestate loaded successfully - skipping semantic action due to StateExtractor hang",
 		{
 			"file": actual_file_path.get_file(),
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
@@ -85,7 +98,8 @@ func _execute_load_gamestate() -> DebugActionResult:
 			"load_method": "in_place_restoration",
 			"restored_state":
 			capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
-		}
+		},
+		[Log.TAG_DEBUG, "gamestate", "load_action"]
 	)
 
 	var duration: int = Time.get_ticks_msec() - start_time

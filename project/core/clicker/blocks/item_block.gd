@@ -87,10 +87,28 @@ static func deserialize_from_dict(data: Dictionary) -> Block:
 static func _create_item_block_instance() -> ItemBlock:
 	"""
 	Create a new ITEM block instance.
-	Simplified version that doesn't rely on factory access from static context.
+	Uses proper scene instantiation to ensure all UI components are initialized.
 	"""
-	# Manual creation since static context can't access factory easily
-	var item_block: ItemBlock = ItemBlock.new()
+	# Use scene instantiation to ensure proper TouchScreenButton initialization
+	const ITEM_BLOCK_SCENE: String = "res://core/clicker/blocks/block_items.tscn"
+	var item_block_scene: PackedScene = load(ITEM_BLOCK_SCENE)
+	if not item_block_scene:
+		Log.error(
+			"Failed to load ItemBlock scene",
+			{"scene_path": ITEM_BLOCK_SCENE},
+			["serialization", "error"]
+		)
+		return null
+	
+	var item_block: ItemBlock = item_block_scene.instantiate() as ItemBlock
+	if not item_block:
+		Log.error(
+			"Failed to instantiate ItemBlock from scene",
+			{"scene_path": ITEM_BLOCK_SCENE},
+			["serialization", "error"]
+		)
+		return null
+	
 	item_block.object_type = core.ObjectType.BLOCK_ITEM
 	return item_block
 
