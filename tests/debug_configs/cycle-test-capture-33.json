@@ -1,0 +1,19 @@
+{
+  "name": "Cycle Test with test-capture-33",
+  "description": "Load test-capture-33, save it again, and load the new save to verify ability bonuses survive the save/load cycle",
+  "actions": [
+    "system.debug.load_gamestate",
+    "system.debug.save_gamestate",
+    "system.debug.load_gamestate"
+  ],
+  "metadata": {
+    "gamestate_file": "test-capture-33.json"
+  },
+  "checksum_config": {
+    "state_type": "cycle_test_validation",
+    "expected_checksums": [
+      "3782904a9a5db0ba9c487ade5306ac806164d52233306f3d23d0aba1b61fe5c4",
+      "3782904a9a5db0ba9c487ade5306ac806164d52233306f3d23d0aba1b61fe5c4"
+    ]
+  }
+}
