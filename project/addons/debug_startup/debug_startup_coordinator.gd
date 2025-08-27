@@ -391,7 +391,7 @@ func _wait_for_game_instance_ready() -> void:
 	if not main_node:
 		Log.error("Main node not available for game instance check", {}, ["debug", "startup", "error"])
 		return
-	
+
 	var game_node: Game = main_node.get_node("Game") as Game
 	if not game_node:
 		Log.error("Game node not found under Main", {}, ["debug", "startup", "error"])
@@ -401,7 +401,7 @@ func _wait_for_game_instance_ready() -> void:
 	if game_node.ui_state != core.UIState.INITIALIZING:
 		Log.info("Game instance already initialized", {"ui_state": core.UIState.keys()[game_node.ui_state]}, ["debug", "startup"])
 		return
-	
+
 	if game_node.has_signal("initialization_complete"):
 		Log.info("Waiting for Game initialization_complete signal...", {}, ["debug", "startup"])
 		await game_node.initialization_complete
@@ -600,12 +600,12 @@ func _ensure_card_cache_ready() -> void:
 	if not has_node("/root/data_source"):
 		Log.warning("DataSource not found, skipping card cache activation", {}, ["debug", "startup", "cache"])
 		return
-		
+
 	var data_source_node: Node = get_node("/root/data_source")
 	if not data_source_node or not data_source_node.has_method("activate_card_cache"):
 		Log.warning("DataSource activate_card_cache method not available", {}, ["debug", "startup", "cache"])
 		return
-	
+
 	Log.info("Activating card cache for debug actions", {}, ["debug", "startup", "cache"])
 	await data_source_node.activate_card_cache()
 	Log.info("Card cache activation complete", {}, ["debug", "startup", "cache"])

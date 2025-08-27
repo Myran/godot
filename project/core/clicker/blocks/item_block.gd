@@ -99,7 +99,7 @@ static func _create_item_block_instance() -> ItemBlock:
 			["serialization", "error"]
 		)
 		return null
-	
+
 	var item_block: ItemBlock = item_block_scene.instantiate() as ItemBlock
 	if not item_block:
 		Log.error(
@@ -108,7 +108,7 @@ static func _create_item_block_instance() -> ItemBlock:
 			["serialization", "error"]
 		)
 		return null
-	
+
 	item_block.object_type = core.ObjectType.BLOCK_ITEM
 	return item_block
 

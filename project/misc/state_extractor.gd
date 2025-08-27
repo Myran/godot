@@ -289,10 +289,10 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 		if card:
 			# Use the card's own serialization method to get complete data
 			var card_data: Dictionary = card.serialize_to_dict()
-			
+
 			# Add lineup-specific position data
 			card_data["position"] = position
-			
+
 			Log.debug(
 				"Lineup card serialized using card's own serialization",
 				{
@@ -304,12 +304,10 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 				},
 				["state_extractor", "lineup", "card_serialization"]
 			)
-			
+
 			lineup_data[str(position)] = card_data
 
 	return lineup_data
-
-
 
 
 static func _extract_draft_data(_draft_blocks: Array[Block]) -> Dictionary:

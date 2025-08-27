@@ -81,9 +81,17 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 		return DebugActionResult.new_failure("Game instance not found")
 
 	# Load gamestate using Game's direct loading method
-	Log.debug("About to call load_state_from_file", {"file": actual_file_path}, [Log.TAG_DEBUG, "gamestate", "load_action"])
+	Log.debug(
+		"About to call load_state_from_file",
+		{"file": actual_file_path},
+		[Log.TAG_DEBUG, "gamestate", "load_action"]
+	)
 	var restoration_success: bool = await game_instance.load_state_from_file(actual_file_path)
-	Log.debug("load_state_from_file returned", {"success": restoration_success}, [Log.TAG_DEBUG, "gamestate", "load_action"])
+	Log.debug(
+		"load_state_from_file returned",
+		{"success": restoration_success},
+		[Log.TAG_DEBUG, "gamestate", "load_action"]
+	)
 
 	if not restoration_success:
 		return DebugActionResult.new_failure("Failed to load gamestate from file")
