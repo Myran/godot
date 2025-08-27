@@ -89,12 +89,11 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 	# Apply the restored game state
 	game.game_handler.current_gamestate = target_state
 
-	# Let LineupHandler restore lineup state if needed
+	# Restore lineup state
 	if not lineup_data.is_empty():
-		# TODO: Implement lineup_handler.restore_from_saved_state(lineup_data)
-		# For now, skip lineup restoration to focus on board determinism fix
+		await _restore_lineup_state(game, lineup_data)
 		Log.info(
-			"Lineup restoration skipped - method not implemented yet",
+			"Lineup restoration completed",
 			{"lineup_data_size": lineup_data.size()},
 			[Log.TAG_DEBUG, "gamestate", "lineup"]
 		)
@@ -351,10 +350,10 @@ static func _reset_all_game_state_for_loading(game: Game) -> void:
 	_reset_all_handlers(game)
 	components_reset.append("game_handlers")
 
-	# 6. Clear any queued actions that might interfere
-	game._idle_action_queue.clear()
-	game._processing_idle_action = false
-	components_reset.append("action_queue")
+	# 6. Clear any queued actions that might interfere - TEMPORARILY DISABLED FOR TESTING
+	# _clear_non_debug_actions(game)
+	# game._processing_idle_action = false
+	# components_reset.append("action_queue")
 
 	var reset_duration: int = Time.get_ticks_msec() - reset_start_time
 
@@ -446,4 +445,174 @@ static func _reset_all_handlers(game: Game) -> void:
 		"Game handlers reset complete",
 		{"handlers_reset": handlers_reset},
 		[Log.TAG_DEBUG, "gamestate", "handlers"]
+	)
+
+
+static func _restore_lineup_state(game: Game, lineup_data: Dictionary) -> void:
+	"""Restore lineup state from extracted data"""
+	if not game.holder_allies or not game.holder_enemy:
+		Log.error("Cannot restore lineup - holder containers not available", {}, [Log.TAG_DEBUG, "gamestate", "lineup"])
+		return
+
+	Log.info(
+		"Restoring lineup state from saved data",
+		{
+			"allies_count": lineup_data.get("allies", {}).size(),
+			"enemies_count": lineup_data.get("enemies", {}).size(),
+			"game_state": lineup_data.get("current_game_state", "unknown")
+		},
+		[Log.TAG_DEBUG, "gamestate", "lineup"]
+	)
+
+	# Restore allies lineup
+	var allies_data: Dictionary = lineup_data.get("allies", {})
+	if not allies_data.is_empty():
+		await _restore_lineup_positions(game, allies_data, game.holder_allies, "allies")
+
+	# Restore enemies lineup (if saved)
+	var enemies_data: Dictionary = lineup_data.get("enemies", {})
+	if not enemies_data.is_empty():
+		await _restore_lineup_positions(game, enemies_data, game.holder_enemy, "enemies")
+
+
+static func _restore_lineup_positions(game: Game, positions_data: Dictionary, holder_container: HolderContainer, container_name: String) -> void:
+	"""Restore position data for lineup"""
+	Log.debug(
+		"Restoring lineup positions",
+		{"container": container_name, "positions_count": positions_data.size()},
+		[Log.TAG_DEBUG, "gamestate", "lineup"]
+	)
+
+	var restored_cards: int = 0
+
+	# Process positions in sorted order for deterministic restoration
+	var position_keys: Array = positions_data.keys()
+	position_keys.sort()
+
+	for position_key: Variant in position_keys:
+		var position: int = position_key as int
+		var card_data: Dictionary = positions_data[position_key]
+		
+		# Extract card information
+		var card_id: String = card_data.get("card_id", "")
+		var level: int = card_data.get("level", 1)
+		
+		if card_id.is_empty():
+			Log.warning(
+				"Empty card_id in lineup position",
+				{"position": position, "container": container_name},
+				[Log.TAG_DEBUG, "gamestate", "lineup"]
+			)
+			continue
+
+		# Get the holder for this position
+		var holder: Holder = holder_container.get_holder(position)
+		if not holder:
+			Log.warning(
+				"No holder found for position",
+				{"position": position, "container": container_name},
+				[Log.TAG_DEBUG, "gamestate", "lineup"]
+			)
+			continue
+
+		# CRITICAL: Use Card deserialization if complete card data is available
+		# This preserves abilities, effects, and upgrade bonuses
+		var card: Card = null
+		if card_data.has("unit_state") and card_data.has("object_type"):
+			Log.debug("Using Card deserialization for complete restoration", {"card_id": card_id, "level": level, "position": position}, [Log.TAG_DEBUG, "gamestate", "lineup"])
+			card = await Card.deserialize_from_dict(card_data)
+		else:
+			# Fallback to basic card creation for legacy save files
+			Log.debug("Using basic card creation (legacy format)", {"card_id": card_id, "level": level, "position": position}, [Log.TAG_DEBUG, "gamestate", "lineup"])
+			card = await card_controller.create_unit_from_id(card_id, level)
+		
+		if not card:
+			Log.error(
+				"Failed to create/deserialize card for lineup",
+				{"card_id": card_id, "level": level, "position": position, "container": container_name},
+				[Log.TAG_DEBUG, "gamestate", "lineup"]
+			)
+			continue
+
+		# Place the card in the holder
+		Log.debug("About to place card in holder", {"card_id": card_id, "position": position}, [Log.TAG_DEBUG, "gamestate", "lineup"])
+		holder.set_card(card)
+		Log.debug("Card placed in holder successfully", {"card_id": card_id, "position": position}, [Log.TAG_DEBUG, "gamestate", "lineup"])
+		restored_cards += 1
+
+		Log.debug(
+			"Card restored to lineup position with complete state",
+			{
+				"card_id": card_id,
+				"level": level,
+				"position": position,
+				"container": container_name,
+				"abilities_count": card.unit_info.abilities.size() if card.unit_info else 0,
+				"effects_count": card.unit_info.effects_perm.size() if card.unit_info else 0
+			},
+			[Log.TAG_DEBUG, "gamestate", "lineup"]
+		)
+
+	Log.info(
+		"Lineup position restoration complete",
+		{"container": container_name, "cards_restored": restored_cards},
+		[Log.TAG_DEBUG, "gamestate", "lineup"]
+	)
+
+
+static func _clear_non_debug_actions(game: Game) -> void:
+	"""Clear gameplay actions from queue while preserving debug actions during gamestate loading"""
+	if not game._idle_action_queue:
+		return
+		
+	var original_size: int = game._idle_action_queue.size()
+	var debug_actions: Array = []
+	
+	# Filter out debug actions to preserve them
+	for action_item in game._idle_action_queue:
+		if _is_debug_action(action_item):
+			debug_actions.append(action_item)
+	
+	# Clear the entire queue
+	game._idle_action_queue.clear()
+	
+	# Restore debug actions
+	for debug_action in debug_actions:
+		game._idle_action_queue.append(debug_action)
+	
+	var preserved_count: int = debug_actions.size()
+	var cleared_count: int = original_size - preserved_count
+	
+	Log.info(
+		"Action queue filtered for gamestate loading",
+		{
+			"original_actions": original_size,
+			"debug_actions_preserved": preserved_count, 
+			"gameplay_actions_cleared": cleared_count
+		},
+		[Log.TAG_DEBUG, "gamestate", "action_queue"]
+	)
+
+
+static func _is_debug_action(action_item: Variant) -> bool:
+	"""Check if an action item is a debug action that should be preserved during gamestate loading"""
+	# Action items might be dictionaries with action names, or other structures
+	# Need to handle different possible formats
+	
+	var action_name: String = ""
+	
+	if action_item is Dictionary:
+		if action_item.has("action"):
+			action_name = str(action_item["action"])
+		elif action_item.has("name"):
+			action_name = str(action_item["name"])
+	elif action_item is String:
+		action_name = action_item
+	
+	# Preserve debug actions
+	return (
+		action_name.begins_with("system.debug.") or
+		action_name.begins_with("app.") or
+		action_name.begins_with("developer.") or
+		action_name == "system.debug.replay_complete"
 	)
