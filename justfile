@@ -103,10 +103,22 @@ ci-validate:
 
     # Step 2: Lint code quality and style  
     echo "2️⃣ Running code linting..."
-    if ! just lint; then
-        echo "❌ Code linting failed"
+    if ! just lint > /tmp/lint_output.txt 2>&1; then
+        echo "❌ Code linting failed with problems:"
+        cat /tmp/lint_output.txt
+        rm -f /tmp/lint_output.txt
         exit 1
     fi
+    
+    # Check if any problems were reported (but exclude success messages)
+    if grep -q "Failure:.*problem found\|Failure:.*problems found" /tmp/lint_output.txt; then
+        echo "❌ Linting problems found:"
+        cat /tmp/lint_output.txt
+        rm -f /tmp/lint_output.txt
+        exit 1
+    fi
+    
+    rm -f /tmp/lint_output.txt
     echo "✅ Code linting passed"
     echo ""
 
@@ -119,10 +131,23 @@ ci-validate:
     echo "✅ Godot runtime validation passed"
     echo ""
 
-    # Step 4: Show warnings (informational, non-blocking)
+    # Step 4: Check for warnings (fail if any warnings found)
     echo "4️⃣ Checking for warnings..."
-    just show-warnings || true
-    echo "✅ Warning check completed"
+    if ! just show-warnings > /tmp/warnings_output.txt 2>&1; then
+        echo "❌ Failed to check warnings"
+        exit 1
+    fi
+    
+    # Check if any warnings were found
+    if [ -s /tmp/warnings_output.txt ]; then
+        echo "❌ Warnings found:"
+        cat /tmp/warnings_output.txt
+        rm -f /tmp/warnings_output.txt
+        exit 1
+    fi
+    
+    rm -f /tmp/warnings_output.txt
+    echo "✅ No warnings found"
     echo ""
 
     echo "🎉 All CI validation checks passed!"
