@@ -179,14 +179,14 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 	# CRITICAL: Exclude variable metadata from checksum calculation
 	# This ensures identical game states always produce identical checksums
 	checksum_state.erase("action_sequence")
-	checksum_state.erase("session_id") 
+	checksum_state.erase("session_id")
 	checksum_state.erase("platform")
 	checksum_state.erase("capture_timestamp")
 	checksum_state.erase("capture_id")
 	checksum_state.erase("format_version")
-	
+
 	var checksum: String = StateExtractor.generate_checksum(checksum_state)
-	
+
 	# Add sequence to original state for logging purposes only
 	game_state["action_sequence"] = sequence
 	Log.debug(
@@ -503,7 +503,7 @@ static func _restore_position_data(
 		)
 
 		# Recreate card using existing systems (following CLAUDE.md conventions)
-		var card: Card = await _create_unit_from_id(card_id, level)
+		var card: Card = await _create_unit_from_id(card_id, level, game)
 		if card:
 			game.lineup_handler.add_card(card, position)
 			Log.debug(
@@ -583,15 +583,15 @@ static func _restore_board_state(_game: Game, board_state: Dictionary) -> bool:
 	return true
 
 
-static func _create_unit_from_id(card_id: String, level: int) -> Card:
+static func _create_unit_from_id(card_id: String, level: int, game: Game) -> Card:
 	"""Create unit from ID using card controller"""
 	Log.debug(
 		"Creating unit from ID - START", {"card_id": card_id, "level": level}, [Log.TAG_DEBUG]
 	)
 
 	# Use card controller to create unit from ID
-	if card_controller and card_controller.has_method("create_unit_from_id"):
-		var card: Card = await card_controller.create_unit_from_id(card_id, level)
+	if game and game.card_controller and game.card_controller.has_method("create_unit_from_id"):
+		var card: Card = await game.card_controller.create_unit_from_id(card_id, level)
 
 		Log.debug(
 			"Creating unit from ID - COMPLETE",

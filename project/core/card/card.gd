@@ -1,5 +1,7 @@
 class_name CardFullView extends AspectRatioContainer
 
+const CardUtilsClass = preload("res://misc/card_utils.gd")
+
 @export var card_info: CardInfoContainer
 @export var card_image: TextureRect
 @export var anim_player: AnimationPlayer
@@ -18,7 +20,7 @@ func setup_card(card: Card) -> void:
 
 	var info: UnitData = card.unit_info
 	var id: String = info.card_info.id
-	var img_string: String = card_controller.get_card_image_name(id)
+	var img_string: String = CardUtilsClass.get_card_image_name(id)
 	card_image.texture = load(img_string)
 	card_info.set_attack(info.current_attack)
 	card_info.set_health(info.current_health)

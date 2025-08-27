@@ -1,10 +1,12 @@
 class_name LineupHandler extends Node
 
 var holder_container: HolderContainer
+var game: Game
 
 
-func setup(holder: HolderContainer) -> void:
+func setup(holder: HolderContainer, game_instance: Game) -> void:
 	holder_container = holder
+	game = game_instance
 
 
 func add_card(card: Card, pos: int) -> void:
@@ -158,7 +160,7 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 
 
 func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
-	var new_card: Card = await card_controller.create_unit_from_id(
+	var new_card: Card = await game.card_controller.create_unit_from_id(
 		base_card.card_info.id, base_card.level + 1
 	)
 	new_card.block_context = Cards.CONTEXT.LINEUP

@@ -1,5 +1,6 @@
 class_name Card extends Block
 
+const CardUtilsClass = preload("res://misc/card_utils.gd")
 const CARD_IMAGE_PREFIX: String = "card_image_"
 @export_dir var card_image_folder: String
 @export var base: SmallBase
@@ -35,7 +36,7 @@ func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
 	else:
 		Log.warning("Card info missing 'id' field", {"card_info": _card_info}, ["debug"])
 
-	var img_string: String = card_controller.get_card_image_name(id)
+	var img_string: String = CardUtilsClass.get_card_image_name(id)
 	var upgrade_level: String = unit_info.card_info.upgrade_level
 	base.set_card_img(img_string)
 
@@ -56,7 +57,7 @@ func init_battle_reenactment(source_card: Card) -> void:
 
 	var card_id: String = source_card.unit_info.card_info.id
 
-	var img_string: String = card_controller.get_card_image_name(card_id)
+	var img_string: String = CardUtilsClass.get_card_image_name(card_id)
 	base.set_card_img(img_string)
 	base.set_card_attack(source_card.unit_info.current_attack)
 	base.set_card_health(source_card.unit_info.current_health)
@@ -120,7 +121,7 @@ func serialize_to_dict() -> Dictionary:
 	return base_data
 
 
-static func deserialize_from_dict(data: Dictionary) -> Block:
+static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 	"""
 	Card block specialized deserialization.
 	Restores card-specific state from serialized data.
@@ -135,7 +136,7 @@ static func deserialize_from_dict(data: Dictionary) -> Block:
 		return null
 
 	# Create card using existing card creation system
-	var card: Card = await _create_card_from_id(card_id, card_level)
+	var card: Card = await _create_card_from_id(card_id, card_level, game)
 	if not card:
 		Log.error(
 			"Failed to create Card from ID during deserialization",
@@ -207,13 +208,19 @@ static func deserialize_from_dict(data: Dictionary) -> Block:
 	return card
 
 
-static func _create_card_from_id(card_id: String, card_level: int) -> Card:
+static func _create_card_from_id(card_id: String, card_level: int, game: Game) -> Card:
 	"""
-	Create a card using the existing card controller system.
+	Create a card using the game's card controller system.
 	This maintains compatibility with existing card creation logic.
 	"""
-	# Fail-fast: Access card_controller autoload singleton directly
-	return await card_controller.create_unit_from_id(card_id, card_level)
+	if not game or not game.card_controller:
+		Log.error(
+			"Cannot create card - game or card_controller not available",
+			{"card_id": card_id},
+			["serialization", "error"]
+		)
+		return null
+	return await game.card_controller.create_unit_from_id(card_id, card_level)
 
 
 static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
@@ -293,8 +300,6 @@ static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:
 	)
 
 	return unit_state
-
-
 
 
 static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary) -> bool:

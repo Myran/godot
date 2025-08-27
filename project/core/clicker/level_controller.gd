@@ -7,6 +7,7 @@ var current_level: TileMapLayer
 var current_level_name: String
 var block_grid: Dictionary[Vector2i, Block] = {}
 var refill_distance: Vector2
+var game: Game
 var _gamestate_loading_mode: bool = false
 
 
@@ -43,7 +44,9 @@ func _on_debug_event(event: DebugManager.DebugEventType, _data: Array) -> void:
 			setup_level(lvl_name)
 
 
-func setup_level(level_name: String = "default") -> void:
+func setup_level(level_name: String = "default", game_instance: Game = null) -> void:
+	if game_instance:
+		game = game_instance
 	Log.info(
 		"Setting up level",
 		{"level_name": level_name, "gamestate_loading": _gamestate_loading_mode},
@@ -129,7 +132,7 @@ func create_block() -> Block:
 		random_block = _block_factory.create_item_block()
 	else:
 		Log.debug("Getting card from pool", {}, [Log.TAG_LEVEL, Log.TAG_CARD])
-		random_block = await card_controller.get_card_from_pool()
+		random_block = await game.card_controller.get_card_from_pool()
 	random_block.block_context = Cards.CONTEXT.DRAFT
 	return random_block
 

@@ -1,3 +1,4 @@
+class_name CardController
 extends Node
 
 const CARD_IMAGE_PREFIX: String = "card_image_"
@@ -7,7 +8,7 @@ var current_level: int = 1
 var _rules: Dictionary = {}
 
 
-func get_card_image_name(card_id: String) -> String:
+static func get_card_image_name(card_id: String) -> String:
 	var asset_variant_value: int = 0  # Default value
 
 	if (
@@ -17,7 +18,9 @@ func get_card_image_name(card_id: String) -> String:
 	):
 		asset_variant_value = DebugManager.asset_variant
 
-	return str(card_image_folder, CARD_IMAGE_PREFIX, asset_variant_value, "_", card_id, ".png")
+	# Use constant path instead of instance variable
+	const CARD_IMAGE_FOLDER: String = "res://assets/card_images/"
+	return str(CARD_IMAGE_FOLDER, CARD_IMAGE_PREFIX, asset_variant_value, "_", card_id, ".png")
 
 
 func setup() -> void:
@@ -44,20 +47,36 @@ func get_random_id_from_pool(_level: int) -> String:
 
 
 func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
-	Log.debug("Starting card creation", {"card_id": id, "level": unit_level}, [Log.TAG_DEBUG, "card_creation"])
-	
+	Log.debug(
+		"Starting card creation",
+		{"card_id": id, "level": unit_level},
+		[Log.TAG_DEBUG, "card_creation"]
+	)
+
 	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
-	Log.debug("Card info retrieved", {"card_id": id, "has_info": !card_info.is_empty()}, [Log.TAG_DEBUG, "card_creation"])
-	
+	Log.debug(
+		"Card info retrieved",
+		{"card_id": id, "has_info": !card_info.is_empty()},
+		[Log.TAG_DEBUG, "card_creation"]
+	)
+
 	var card_scene: PackedScene = load(card_scene_name)
-	Log.debug("Card scene loaded", {"scene_name": card_scene_name, "scene_valid": card_scene != null}, [Log.TAG_DEBUG, "card_creation"])
-	
+	Log.debug(
+		"Card scene loaded",
+		{"scene_name": card_scene_name, "scene_valid": card_scene != null},
+		[Log.TAG_DEBUG, "card_creation"]
+	)
+
 	var card_instanced: Card = card_scene.instantiate() as Card
-	Log.debug("Card scene instantiated", {"card_id": id, "instance_valid": card_instanced != null}, [Log.TAG_DEBUG, "card_creation"])
-	
+	Log.debug(
+		"Card scene instantiated",
+		{"card_id": id, "instance_valid": card_instanced != null},
+		[Log.TAG_DEBUG, "card_creation"]
+	)
+
 	card_instanced.init_card(card_info, unit_level)
 	Log.debug("Card initialization complete", {"card_id": id}, [Log.TAG_DEBUG, "card_creation"])
-	
+
 	return card_instanced
 
 

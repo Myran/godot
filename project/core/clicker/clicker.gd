@@ -9,12 +9,14 @@ const DIRECTIONS: Array[Vector2i] = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP,
 var level: LevelController
 var refill_counter: Array[int] = []
 var columns_locked: Array[int] = []
+var game: Game
 
 
-func setup(_level_controller: LevelController) -> void:
-	await card_controller.setup()
+func setup(_level_controller: LevelController, game_instance: Game) -> void:
+	game = game_instance
+	await game.card_controller.setup()
 	level = _level_controller
-	level.setup_level()
+	level.setup_level("default", game)
 
 
 func has_card(card: Card) -> bool:
@@ -241,7 +243,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 			continue
 		source_units.append(card.unit_info)
 
-	var new_card: Card = await card_controller.create_unit_from_id(card_id, new_level)
+	var new_card: Card = await game.card_controller.create_unit_from_id(card_id, new_level)
 	if not new_card or not new_card.unit_info:
 		Log.error(
 			"Failed to create new merged card",

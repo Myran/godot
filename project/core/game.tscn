@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="6_3jr07"]
 [ext_resource type="Script" uid="uid://b6y8ese5263q0" path="res://core/battle_handler.gd" id="6_8cr3l"]
 [ext_resource type="Script" uid="uid://c2fpavcf3efds" path="res://core/clicker/clicker.gd" id="6_mq18b"]
+[ext_resource type="Script" uid="uid://mkyc8orrfmfe" path="res://autoloads/card_controller.gd" id="6_card"]
 [ext_resource type="FontFile" path="res://assets/font_card_text.tres" id="7_8b5nu"]
 [ext_resource type="Script" uid="uid://cp0af1aghupwk" path="res://core/clicker/level_controller.gd" id="7_e68m3"]
 [ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="8_h0xc7"]
@@ -76,7 +77,7 @@ _data = {
 &"show": SubResource("Animation_bktm3")
 }
 
-[node name="Game" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "top_bar", "battle_layer", "unhandled_layer", "clicker", "level_controller", "game_handler", "input_handler", "card_handler", "draft_handler", "lineup_handler", "battle_handler")]
+[node name="Game" type="Control" node_paths=PackedStringArray("card_pop", "holder_draft", "holder_allies", "holder_enemy", "bottom_bar_draft", "bottom_bar_prepare", "top_bar", "battle_layer", "unhandled_layer", "clicker", "level_controller", "game_handler", "input_handler", "card_handler", "draft_handler", "lineup_handler", "battle_handler", "card_controller")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -102,6 +103,7 @@ card_handler = NodePath("card_handler")
 draft_handler = NodePath("draft_handler")
 lineup_handler = NodePath("lineup_handler")
 battle_handler = NodePath("battle_handler")
+card_controller = NodePath("card_controller")
 
 [node name="input_handler" type="Node" parent="."]
 script = ExtResource("2_e2gk4")
@@ -117,6 +119,11 @@ script = ExtResource("5_jukdk")
 
 [node name="battle_handler" type="Node" parent="."]
 script = ExtResource("6_8cr3l")
+
+[node name="card_controller" type="Node" parent="."]
+script = ExtResource("6_card")
+card_scene_name = "res://core/clicker/blocks/block_base_card.tscn"
+card_image_folder = "res://assets/card_images/"
 
 [node name="game_handler" type="Node" parent="."]
 script = ExtResource("2_q5x7q")

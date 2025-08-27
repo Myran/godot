@@ -22,6 +22,7 @@ signal initialization_complete
 @export var draft_handler: DraftHandler
 @export var lineup_handler: LineupHandler
 @export var battle_handler: BattleHandler
+@export var card_controller: Node
 
 var ui_state: core.UIState = core.UIState.INITIALIZING
 var _idle_action_queue: Array[Dictionary] = []
@@ -55,9 +56,9 @@ func setup_signals() -> void:
 func setup_systems() -> void:
 	Log.debug("Setting up game systems", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
 	input_handler.setup(clicker)
-	lineup_handler.setup(holder_allies)
+	lineup_handler.setup(holder_allies, self)
 	battle_handler.setup(holder_allies, holder_enemy)
-	await clicker.setup(level_controller)
+	await clicker.setup(level_controller, self)
 
 
 func intitialize_game() -> void:
