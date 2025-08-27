@@ -255,7 +255,7 @@ static func _deserialize_block_by_type(
 	match object_type:
 		core.ObjectType.CARD:
 			# Use existing card deserialization system (async because it loads from database)
-			return await Card.deserialize_from_dict(block_data)
+			return await Card.deserialize_from_dict(block_data, game)
 		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
 			# Use existing item block deserialization system (synchronous)
 			return ItemBlock.deserialize_from_dict(block_data)
@@ -499,7 +499,11 @@ static func _restore_lineup_positions(
 	position_keys.sort()
 
 	for position_key: Variant in position_keys:
-		var position: int = position_key as int
+		var position: int = 0
+		if position_key is String:
+			position = str(position_key).to_int()
+		elif position_key is int:
+			position = position_key
 		var card_data: Dictionary = positions_data[position_key]
 
 		# Extract card information
@@ -533,7 +537,7 @@ static func _restore_lineup_positions(
 				{"card_id": card_id, "level": level, "position": position},
 				[Log.TAG_DEBUG, "gamestate", "lineup"]
 			)
-			card = await Card.deserialize_from_dict(card_data)
+			card = await Card.deserialize_from_dict(card_data, game)
 		else:
 			# Fallback to basic card creation for legacy save files
 			Log.debug(
@@ -599,7 +603,7 @@ static func _clear_non_debug_actions(game: Game) -> void:
 	var debug_actions: Array = []
 
 	# Filter out debug actions to preserve them
-	for action_item in game._idle_action_queue:
+	for action_item: Variant in game._idle_action_queue:
 		if _is_debug_action(action_item):
 			debug_actions.append(action_item)
 
@@ -607,7 +611,7 @@ static func _clear_non_debug_actions(game: Game) -> void:
 	game._idle_action_queue.clear()
 
 	# Restore debug actions
-	for debug_action in debug_actions:
+	for debug_action: Variant in debug_actions:
 		game._idle_action_queue.append(debug_action)
 
 	var preserved_count: int = debug_actions.size()

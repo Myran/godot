@@ -5,7 +5,7 @@ signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
-const DebugActionResult = preload("res://debug/debug_action_result.gd")
+const DebugActionResultClass = preload("res://debug/debug_action_result.gd")
 
 static var current_test_id: String = ""
 static var test_action_count: int = 0
@@ -444,7 +444,9 @@ func execute_with_state_validation(
 
 	var overall_success: bool = execution_success
 	var final_error_message: String = error_message
-	var error_category: DebugActionResult.ErrorCategory = DebugActionResult.ErrorCategory.NONE
+	var error_category: DebugActionResultClass.ErrorCategory = (
+		DebugActionResultClass.ErrorCategory.NONE
+	)
 
 	if execution_success and not state_validation_result.is_empty():
 		var validation_success: bool = state_validation_result.get("action_valid", true)
@@ -454,7 +456,7 @@ func execute_with_state_validation(
 				"State validation failed: "
 				+ state_validation_result.get("error_message", "Unknown validation error")
 			)
-			error_category = DebugActionResult.ErrorCategory.VALIDATION
+			error_category = DebugActionResultClass.ErrorCategory.VALIDATION
 
 			Log.error(
 				"Action execution succeeded but state validation failed",
@@ -474,11 +476,11 @@ func execute_with_state_validation(
 
 	var final_result: DebugActionResult
 	if overall_success:
-		final_result = DebugActionResult.new_success(
+		final_result = DebugActionResultClass.new_success(
 			execution_result, total_duration_ms, action_name, result_metadata
 		)
 	else:
-		final_result = DebugActionResult.new_failure(
+		final_result = DebugActionResultClass.new_failure(
 			final_error_message,
 			"",
 			error_category,
@@ -518,7 +520,7 @@ func execute_with_auto_validation() -> DebugActionResult:
 		["debug", "validation", "no_session"]
 	)
 	execute()
-	return DebugActionResult.new_success(
+	return DebugActionResultClass.new_success(
 		null, 0, action_name, {"validation_mode": "none", "reason": "no_session_context"}
 	)
 
