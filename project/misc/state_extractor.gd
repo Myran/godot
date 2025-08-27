@@ -287,14 +287,29 @@ static func _extract_lineup_data(lineup: Dictionary[int, Card]) -> Dictionary:
 		var card: Card = item.value
 
 		if card:
-			lineup_data[str(position)] = {
-				"card_id": card.card_info.id if card.card_info else "",
-				"level": card.level,
-				"position": position,
-				"unit_checksum": card.unit_info.get_state_checksum() if card.unit_info else ""
-			}
+			# Use the card's own serialization method to get complete data
+			var card_data: Dictionary = card.serialize_to_dict()
+			
+			# Add lineup-specific position data
+			card_data["position"] = position
+			
+			Log.debug(
+				"Lineup card serialized using card's own serialization",
+				{
+					"card_id": card_data.get("card_id", "unknown"),
+					"level": card_data.get("level", 0),
+					"position": position,
+					"has_unit_state": card_data.has("unit_state"),
+					"unit_checksum": card_data.get("unit_checksum", "")
+				},
+				["state_extractor", "lineup", "card_serialization"]
+			)
+			
+			lineup_data[str(position)] = card_data
 
 	return lineup_data
+
+
 
 
 static func _extract_draft_data(_draft_blocks: Array[Block]) -> Dictionary:
