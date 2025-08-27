@@ -1,0 +1,17 @@
+{
+  "description": "Regression test for multi-action queue processing (prevents Task-102 type issues)",
+  "test_metadata": {
+    "test_id": "multi-action-queue-regression", 
+    "purpose": "Validate that action queue processes ALL actions in sequence",
+    "regression_protection": "task-102-debug-action-result-preload"
+  },
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.hide_menu",
+    "system.debug.show_menu"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_description": "Three-action test ensuring complete action queue execution"
+  }
+}

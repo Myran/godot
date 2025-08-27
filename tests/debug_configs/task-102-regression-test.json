@@ -1,0 +1,15 @@
+{
+  "description": "Task-102 regression test: Multi-action execution validation",
+  "test_metadata": {
+    "test_id": "task-102-regression",
+    "purpose": "Validate multi-action execution after DebugActionResult preload fix"
+  },
+  "actions": [
+    "system.debug.registry_stats",
+    "system.debug.system_info"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_description": "Simple 2-action test to verify action queue processing works"
+  }
+}

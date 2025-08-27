@@ -5,7 +5,7 @@ signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
-# Use DebugActionResult directly instead of DebugActionResult alias
+const DebugActionResult = preload("res://debug/debug_action_result.gd")
 
 static var current_test_id: String = ""
 static var test_action_count: int = 0
