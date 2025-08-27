@@ -30,9 +30,6 @@ func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String
 func startDebugCoordinator() -> void:
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
-	# Check for pending gamestate load first
-	await _check_and_load_pending_gamestate()
-
 	if not has_node("/root/DebugRegistry"):
 		Log.error("DebugRegistry missing", {"path": "/root/DebugRegistry"}, ["debug", "startup", "fatal"])
 		return
@@ -58,6 +55,12 @@ func startDebugCoordinator() -> void:
 
 	_log_verbose("Waiting for DataSource initialization...", {}, ["debug", "startup"])
 	await _wait_for_data_source_ready()
+
+	_log_verbose("Activating card cache for debug actions...", {}, ["debug", "startup", "cache"])
+	await _ensure_card_cache_ready()
+
+	# Check for pending gamestate load AFTER data_source is ready
+	await _check_and_load_pending_gamestate()
 
 	var dispatch_start_time := Time.get_unix_time_from_system()
 	var dispatch_start_frame := Engine.get_process_frames()
@@ -382,6 +385,31 @@ func _wait_for_game_ready() -> void:
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
 
 
+func _wait_for_game_instance_ready() -> void:
+	"""Wait for Game node to be fully initialized with completed signal"""
+	var main_node: Node = get_node("/root/Main")
+	if not main_node:
+		Log.error("Main node not available for game instance check", {}, ["debug", "startup", "error"])
+		return
+	
+	var game_node: Game = main_node.get_node("Game") as Game
+	if not game_node:
+		Log.error("Game node not found under Main", {}, ["debug", "startup", "error"])
+		return
+
+	# Check if game is already initialized by looking at its UI state
+	if game_node.ui_state != core.UIState.INITIALIZING:
+		Log.info("Game instance already initialized", {"ui_state": core.UIState.keys()[game_node.ui_state]}, ["debug", "startup"])
+		return
+	
+	if game_node.has_signal("initialization_complete"):
+		Log.info("Waiting for Game initialization_complete signal...", {}, ["debug", "startup"])
+		await game_node.initialization_complete
+		Log.info("Game instance fully initialized", {}, ["debug", "startup"])
+	else:
+		Log.info("Game instance ready (no initialization signal)", {}, ["debug", "startup"])
+
+
 func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
 	if not registry:
 		Log.error("Registry not available", {}, ["debug", "startup", "error"])
@@ -530,7 +558,7 @@ func _check_and_load_pending_gamestate() -> void:
 
 
 func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
-	"""Apply gamestate during clean startup initialization"""
+	"""Apply gamestate during clean startup initialization - RNG only"""
 	# Start new session for loaded state
 	var session_id: String = SessionManager.start_new_session(
 		"loaded_state_start",
@@ -548,11 +576,15 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 		# Note: RNG state will be handled by DeterministicRNG system during game initialization
 		Log.debug("RNG state available for restoration", {"rng_state_length": rng_state.length()}, ["debug", "startup", "gamestate"])
 
-	# Basic game state will be applied naturally during game initialization
-	# No need to force complex lineup/board restoration - the loaded RNG state is the critical part
+	# Store full gamestate data for explicit loading via debug action
+	var gamestate_file: FileAccess = FileAccess.open("user://pending_gamestate_load.json", FileAccess.WRITE)
+	if gamestate_file:
+		gamestate_file.store_string(JSON.stringify(gamestate_data))
+		gamestate_file.close()
+		Log.info("Full gamestate data saved for debug action loading", {"file": "pending_gamestate_load.json"}, ["debug", "startup", "gamestate"])
 
 	Log.info(
-		"Startup gamestate loading completed",
+		"Startup gamestate loading completed - RNG applied, data ready for debug action",
 		{
 			"session_id": session_id,
 			"original_capture_id": gamestate_data.get("capture_id", "unknown")
@@ -561,6 +593,22 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 	)
 
 	return true
+
+
+func _ensure_card_cache_ready() -> void:
+	"""Ensure card cache is activated before debug actions that depend on card creation"""
+	if not has_node("/root/data_source"):
+		Log.warning("DataSource not found, skipping card cache activation", {}, ["debug", "startup", "cache"])
+		return
+		
+	var data_source_node: Node = get_node("/root/data_source")
+	if not data_source_node or not data_source_node.has_method("activate_card_cache"):
+		Log.warning("DataSource activate_card_cache method not available", {}, ["debug", "startup", "cache"])
+		return
+	
+	Log.info("Activating card cache for debug actions", {}, ["debug", "startup", "cache"])
+	await data_source_node.activate_card_cache()
+	Log.info("Card cache activation complete", {}, ["debug", "startup", "cache"])
 
 
 func _cleanup_gamestate_loading_config() -> void:

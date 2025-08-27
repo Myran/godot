@@ -44,10 +44,20 @@ func get_random_id_from_pool(_level: int) -> String:
 
 
 func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
+	Log.debug("Starting card creation", {"card_id": id, "level": unit_level}, [Log.TAG_DEBUG, "card_creation"])
+	
 	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
+	Log.debug("Card info retrieved", {"card_id": id, "has_info": !card_info.is_empty()}, [Log.TAG_DEBUG, "card_creation"])
+	
 	var card_scene: PackedScene = load(card_scene_name)
+	Log.debug("Card scene loaded", {"scene_name": card_scene_name, "scene_valid": card_scene != null}, [Log.TAG_DEBUG, "card_creation"])
+	
 	var card_instanced: Card = card_scene.instantiate() as Card
+	Log.debug("Card scene instantiated", {"card_id": id, "instance_valid": card_instanced != null}, [Log.TAG_DEBUG, "card_creation"])
+	
 	card_instanced.init_card(card_info, unit_level)
+	Log.debug("Card initialization complete", {"card_id": id}, [Log.TAG_DEBUG, "card_creation"])
+	
 	return card_instanced
 
 
