@@ -174,9 +174,21 @@ static func _capture_pre_action_checksum(action_type: String, sequence: int) -> 
 		)
 		return ""
 
+	# Create a copy for checksum calculation without variable metadata
+	var checksum_state: Dictionary = game_state.duplicate(true)
+	# CRITICAL: Exclude variable metadata from checksum calculation
+	# This ensures identical game states always produce identical checksums
+	checksum_state.erase("action_sequence")
+	checksum_state.erase("session_id") 
+	checksum_state.erase("platform")
+	checksum_state.erase("capture_timestamp")
+	checksum_state.erase("capture_id")
+	checksum_state.erase("format_version")
+	
+	var checksum: String = StateExtractor.generate_checksum(checksum_state)
+	
+	# Add sequence to original state for logging purposes only
 	game_state["action_sequence"] = sequence
-
-	var checksum: String = StateExtractor.generate_checksum(game_state)
 	Log.debug(
 		"Generated checksum",
 		{
