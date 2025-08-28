@@ -1,6 +1,72 @@
 # GameState Debug Capture & Load System
 # Enables complete developer workflow for scenario testing
 
+# Helper function to compare two gamestate files (shared by save-load cycle tests)
+_compare-gamestates FIRST_FILE SECOND_FILE FIRST_LABEL SECOND_LABEL:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    if [[ ! -f "{{FIRST_FILE}}" ]]; then
+        echo "❌ First save file not found: {{FIRST_FILE}}"
+        exit 1
+    fi
+    
+    if [[ ! -f "{{SECOND_FILE}}" ]]; then
+        echo "❌ Second save file not found: {{SECOND_FILE}}"
+        exit 1
+    fi
+    
+    echo "📊 Calculating checksums..."
+    FIRST_CHECKSUM=$(jq -r '.gamestate' "{{FIRST_FILE}}" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
+    SECOND_CHECKSUM=$(jq -r '.gamestate' "{{SECOND_FILE}}" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
+    
+    echo "🔍 {{FIRST_LABEL}} checksum:  $FIRST_CHECKSUM"
+    echo "🔍 {{SECOND_LABEL}} checksum: $SECOND_CHECKSUM"
+    echo ""
+    
+    if [[ "$FIRST_CHECKSUM" == "$SECOND_CHECKSUM" ]]; then
+        echo "✅ SUCCESS: Save/Load cycle preserves gamestate perfectly!"
+        echo "🎉 Checksums match - the system works correctly"
+        exit 0
+    else
+        echo "❌ FAILURE: Save/Load cycle does not preserve gamestate"
+        echo "💥 Checksums differ - there may be a state consistency issue"
+        exit 1
+    fi
+
+# Helper function to create load-and-save config (shared by save-load cycle tests)
+_create-load-save-config AUTO_QUIT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    if [[ "{{AUTO_QUIT}}" == "true" ]]; then
+        METADATA_SECTION='"metadata": {
+        "auto_quit": true
+      },'
+    else
+        METADATA_SECTION=""
+    fi
+    
+    cat > tests/debug_configs/gamestate-load-and-save-test.json << EOF
+    {
+      "description": "Load pending gamestate then save for cycle testing",
+      $METADATA_SECTION
+      "checksum_config": {
+        "initial_seed": 12345,
+        "state_type": "load_and_save_cycle"
+      },
+      "actions": [
+        {
+          "action": "system.debug.load_gamestate",
+          "params": {
+            "filepath": "pending_gamestate_load.json"
+          }
+        },
+        "system.debug.save_gamestate"
+      ]
+    }
+    EOF
+
 # Extract captured gamestate from logs and create debug save file
 capture-gamestate NAME:
     #!/usr/bin/env bash
@@ -347,24 +413,7 @@ test-save-load-cycle:
     EOF
     
     # Create load and save config for deterministic testing
-    cat > tests/debug_configs/gamestate-load-and-save-test.json << 'EOF'
-    {
-      "description": "Load pending gamestate then save for cycle testing",
-      "checksum_config": {
-        "initial_seed": 12345,
-        "state_type": "load_and_save_cycle"
-      },
-      "actions": [
-        {
-          "action": "system.debug.load_gamestate",
-          "params": {
-            "filepath": "pending_gamestate_load.json"
-          }
-        },
-        "system.debug.save_gamestate"
-      ]
-    }
-    EOF
+    just _create-load-save-config false
     
     just test-desktop-target gamestate-load-and-save-test || {
         echo "❌ Load and save test failed"
@@ -386,28 +435,7 @@ test-save-load-cycle:
     FIRST_FILE="{{SAVED_STATES_DIR}}/cycle_test_first.json"
     SECOND_FILE="{{SAVED_STATES_DIR}}/cycle_test_second.json"
     
-    if [[ ! -f "$FIRST_FILE" ]]; then
-        echo "❌ First save file not found: $FIRST_FILE"
-        exit 1
-    fi
-    
-    if [[ ! -f "$SECOND_FILE" ]]; then
-        echo "❌ Second save file not found: $SECOND_FILE"
-        exit 1
-    fi
-    
-    echo "📊 Calculating checksums..."
-    FIRST_CHECKSUM=$(jq -r '.gamestate' "$FIRST_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
-    SECOND_CHECKSUM=$(jq -r '.gamestate' "$SECOND_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
-    
-    echo "🔍 First save checksum:  $FIRST_CHECKSUM"
-    echo "🔍 Second save checksum: $SECOND_CHECKSUM"
-    echo ""
-    
-    if [[ "$FIRST_CHECKSUM" == "$SECOND_CHECKSUM" ]]; then
-        echo "✅ SUCCESS: Save/Load cycle preserves gamestate perfectly!"
-        echo "🎉 Checksums match - the system works correctly"
-        
+    if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "First save" "Second save"; then
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f tests/debug_configs/gamestate-initial-save-test.json
@@ -491,45 +519,21 @@ test-save-load-cycle-with-state STATE_NAME:
     }
     EOF
     
-    # Create load and save config for deterministic testing
-    cat > tests/debug_configs/gamestate-load-and-save-test.json << 'EOF'
-    {
-      "description": "Load pending gamestate then save for cycle testing",
-      "metadata": {
-        "auto_quit": true
-      },
-      "checksum_config": {
-        "initial_seed": 12345,
-        "state_type": "load_and_save_cycle"
-      },
-      "actions": [
-        {
-          "action": "system.debug.load_gamestate",
-          "params": {
-            "filepath": "pending_gamestate_load.json"
-          }
-        },
-        "system.debug.save_gamestate"
-      ]
+    # Create load and save config for deterministic testing  
+    just _create-load-save-config true
+    
+    just test-desktop-target gamestate-load-and-save-test || {
+        echo "❌ Load and save test failed"
+        exit 1
     }
-    EOF
-    
-    # WORKAROUND: Use manual approach since DebugActionResult refactor broke automated testing
-    echo "🖥️  Using simplified load-only approach to avoid refactor issues..."
-    echo "💡 Loading state via startup mechanism (bypasses broken debug coordinator)"
-    
-    # Just verify the state loads correctly via startup gamestate
-    # This bypasses the broken debug coordinator but still validates state loading works
-    echo "✅ State loading via startup mechanism completed"
-    echo "💡 Creating synthetic saved state for comparison (bypasses broken save action)"
-    
-    # Copy the original state as our "saved" state since load works correctly
-    cp "$STATE_FILE" "{{SAVED_STATES_DIR}}/cycle_test_second.json"
     
     echo ""
     echo "📋 Step 2: Extract saved state"
     echo "-----------------------------"
-    echo "✅ Using synthetic saved state (workaround for broken debug coordinator)"
+    just capture-gamestate cycle_test_second || {
+        echo "❌ Failed to extract second gamestate"
+        exit 1
+    }
     
     echo ""
     echo "📋 Step 3: Compare gamestate files"
@@ -538,28 +542,7 @@ test-save-load-cycle-with-state STATE_NAME:
     FIRST_FILE="{{SAVED_STATES_DIR}}/{{STATE_NAME}}.json"
     SECOND_FILE="{{SAVED_STATES_DIR}}/cycle_test_second.json"
     
-    if [[ ! -f "$FIRST_FILE" ]]; then
-        echo "❌ First save file not found: $FIRST_FILE"
-        exit 1
-    fi
-    
-    if [[ ! -f "$SECOND_FILE" ]]; then
-        echo "❌ Second save file not found: $SECOND_FILE"
-        exit 1
-    fi
-    
-    echo "📊 Calculating checksums..."
-    FIRST_CHECKSUM=$(jq -r '.gamestate' "$FIRST_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
-    SECOND_CHECKSUM=$(jq -r '.gamestate' "$SECOND_FILE" | jq -S -c '{board, lineup}' | shasum -a 256 | cut -d' ' -f1)
-    
-    echo "🔍 Original state checksum: $FIRST_CHECKSUM"
-    echo "🔍 Load/save checksum:      $SECOND_CHECKSUM"
-    echo ""
-    
-    if [[ "$FIRST_CHECKSUM" == "$SECOND_CHECKSUM" ]]; then
-        echo "✅ SUCCESS: Save/Load cycle preserves gamestate perfectly!"
-        echo "🎉 Checksums match - the system works correctly"
-        
+    if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "Original state" "Load/save cycle"; then
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
@@ -567,7 +550,7 @@ test-save-load-cycle-with-state STATE_NAME:
         echo ""
         echo "📊 Test Summary:"
         echo "• Using provided state: ✅ Success ({{STATE_NAME}})"
-        echo "• Startup load + re-save: ✅ Success"
+        echo "• Actual load + save cycle: ✅ Success"
         echo "• State extraction: ✅ Success"
         echo "• Checksum comparison: ✅ MATCH"
         echo ""
