@@ -368,6 +368,23 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 				)
 				restoration_success = false
 
+	# CRITICAL: Apply permanent effects to current stats after restoration
+	# Without this call, effects exist in arrays but aren't applied to current_attack/current_health
+	if unit_data.effects_perm.size() > 0:
+		unit_data.apply_permanent_effects_to_current_stats()
+		Log.debug(
+			"Applied permanent effects to current stats after deserialization",
+			{
+				"card_id": unit_data.card_info.get("id", "unknown"),
+				"effects_applied": unit_data.effects_perm.size(),
+				"final_current_attack": unit_data.current_attack,
+				"final_current_health": unit_data.current_health,
+				"final_max_attack": unit_data.max_attack,
+				"final_max_health": unit_data.max_health
+			},
+			["serialization", "unit_data", "effects_applied"]
+		)
+
 	# Note: battle_original_reference restoration is complex and might not be needed
 	# for most save/load scenarios since it's primarily used during battle
 
@@ -378,7 +395,8 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 			"effects_perm_restored": unit_data.effects_perm.size(),
 			"effects_temp_restored": unit_data.effects_temp.size(),
 			"abilities_restored": unit_data.abilities.size(),
-			"stats_updated": true
+			"stats_updated": true,
+			"effects_applied_to_stats": unit_data.effects_perm.size() > 0
 		},
 		["serialization", "unit_data", "restoration"]
 	)
