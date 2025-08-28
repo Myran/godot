@@ -251,38 +251,30 @@ static func _restore_board_content(game: Game, gamestate: Dictionary) -> void:
 static func _deserialize_block_by_type(
 	game: Game, object_type: int, block_data: Dictionary
 ) -> Block:
-	"""Route to appropriate deserializer based on object_type"""
+	"""Route to appropriate deserializer based on object_type using proper OOP approach"""
 	match object_type:
 		core.ObjectType.CARD:
-			# Use existing card deserialization system (async because it loads from database)
+			# Use Card's deserialization method
 			return await Card.deserialize_from_dict(block_data, game)
 		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
-			# Use existing item block deserialization system (synchronous)
+			# Use ItemBlock's deserialization method 
 			return ItemBlock.deserialize_from_dict(block_data)
 		core.ObjectType.BLOCK_UPGRADE:
-			# Use block factory to create upgrade blocks with proper level
-			var upgrade_level: int = block_data.get("level", 1)
-			Log.debug(
-				"Deserializing upgrade block",
-				{"requested_level": upgrade_level, "block_data": block_data},
-				["deserialization", "upgrade_block"]
-			)
-			var created_block: Block = game.level_controller.create_upgrade_block(upgrade_level)
-			Log.debug(
-				"Created upgrade block",
-				{"created_level": created_block.level},
-				["deserialization", "upgrade_block"]
-			)
-			return created_block
+			# Use upgrade block's deserialization method (block_progress.gd)
+			var block_progress_script: Script = load("res://core/clicker/blocks/block_progress.gd")
+			return await block_progress_script.deserialize_from_dict(block_data, game)
 		core.ObjectType.BLOCK_LOCKED:
-			# Use block factory to create locked blocks
-			return game.level_controller._block_factory.create_locked_block()
+			# Use locked block's deserialization method
+			var locked_block_script: Script = load("res://core/clicker/blocks/locked_block.gd")
+			return locked_block_script.deserialize_from_dict(block_data, game)
 		core.ObjectType.BLOCK_NOSPACE:
-			# Use block factory to create nospace blocks
-			return game.level_controller._block_factory.create_nospace_block()
+			# Use nospace block's deserialization method
+			var nospace_block_script: Script = load("res://core/clicker/blocks/nospace_block.gd")
+			return nospace_block_script.deserialize_from_dict(block_data, game)
 		core.ObjectType.BLOCK_PASSTROUGH:
-			# Use block factory to create passthrough blocks
-			return game.level_controller._block_factory.create_passtrough_block()
+			# Use passthrough block's deserialization method
+			var passtrough_block_script: Script = load("res://core/clicker/blocks/passtrough_block.gd")
+			return passtrough_block_script.deserialize_from_dict(block_data, game)
 		_:
 			Log.warning(
 				"Deserialization not implemented for object type",
