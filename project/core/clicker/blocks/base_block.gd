@@ -156,11 +156,11 @@ func _restore_base_properties(data: Dictionary) -> void:
 	var object_type_value: int = data.get("object_type", 0)
 	if object_type_value > 0:
 		object_type = object_type_value as core.ObjectType
-	
+
 	var block_context_value: int = data.get("block_context", 0)
 	if block_context_value > 0:
 		block_context = block_context_value as Cards.CONTEXT
-	
+
 	Log.debug(
 		"Restored base block properties",
 		{"object_type": object_type, "block_context": block_context},

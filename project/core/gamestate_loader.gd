@@ -261,7 +261,7 @@ static func _deserialize_block_by_type(
 			# Use Card's deserialization method
 			return await Card.deserialize_from_dict(block_data, game)
 		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
-			# Use ItemBlock's deserialization method 
+			# Use ItemBlock's deserialization method
 			return ItemBlock.deserialize_from_dict(block_data)
 		core.ObjectType.BLOCK_UPGRADE:
 			# Use upgrade block's deserialization method (block_progress.gd)
@@ -277,7 +277,9 @@ static func _deserialize_block_by_type(
 			return nospace_block_script.deserialize_from_dict(block_data, game)
 		core.ObjectType.BLOCK_PASSTROUGH:
 			# Use passthrough block's deserialization method
-			var passtrough_block_script: Script = load("res://core/clicker/blocks/passtrough_block.gd")
+			var passtrough_block_script: Script = load(
+				"res://core/clicker/blocks/passtrough_block.gd"
+			)
 			return passtrough_block_script.deserialize_from_dict(block_data, game)
 		_:
 			Log.warning(

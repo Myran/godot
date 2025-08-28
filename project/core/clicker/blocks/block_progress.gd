@@ -17,7 +17,7 @@ func serialize_to_dict() -> Dictionary:
 static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 	"""Upgrade block deserialization - creates block with proper level and restores all properties"""
 	var upgrade_level: int = data.get("level", 1)
-	
+
 	# Create upgrade block using the game's level controller (proper factory approach)
 	if not game or not game.level_controller:
 		Log.error(
@@ -26,7 +26,7 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 			["serialization", "error"]
 		)
 		return null
-	
+
 	var upgrade_block: Block = game.level_controller.create_upgrade_block(upgrade_level)
 	if not upgrade_block:
 		Log.error(
@@ -35,14 +35,18 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 			["serialization", "error"]
 		)
 		return null
-	
+
 	# Restore base properties using helper method
 	upgrade_block._restore_base_properties(data)
-	
+
 	Log.debug(
 		"Upgrade block deserialized",
-		{"level": upgrade_block.level, "object_type": upgrade_block.object_type, "block_context": upgrade_block.block_context},
+		{
+			"level": upgrade_block.level,
+			"object_type": upgrade_block.object_type,
+			"block_context": upgrade_block.block_context
+		},
 		["serialization", "upgrade_block"]
 	)
-	
+
 	return upgrade_block

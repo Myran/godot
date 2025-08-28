@@ -13,11 +13,7 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 
 	var locked_block: Block = game.level_controller._block_factory.create_locked_block()
 	if not locked_block:
-		Log.error(
-			"Failed to create locked block from factory",
-			{},
-			["serialization", "error"]
-		)
+		Log.error("Failed to create locked block from factory", {}, ["serialization", "error"])
 		return null
 
 	# Restore base properties using helper method

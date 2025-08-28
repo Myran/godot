@@ -13,11 +13,7 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 
 	var nospace_block: Block = game.level_controller._block_factory.create_nospace_block()
 	if not nospace_block:
-		Log.error(
-			"Failed to create nospace block from factory",
-			{},
-			["serialization", "error"]
-		)
+		Log.error("Failed to create nospace block from factory", {}, ["serialization", "error"])
 		return null
 
 	# Restore base properties using helper method
