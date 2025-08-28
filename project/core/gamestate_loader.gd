@@ -266,7 +266,7 @@ static func _deserialize_block_by_type(
 		core.ObjectType.BLOCK_UPGRADE:
 			# Use upgrade block's deserialization method (block_progress.gd)
 			var block_progress_script: Script = load("res://core/clicker/blocks/block_progress.gd")
-			return await block_progress_script.deserialize_from_dict(block_data, game)
+			return block_progress_script.deserialize_from_dict(block_data, game)
 		core.ObjectType.BLOCK_LOCKED:
 			# Use locked block's deserialization method
 			var locked_block_script: Script = load("res://core/clicker/blocks/locked_block.gd")

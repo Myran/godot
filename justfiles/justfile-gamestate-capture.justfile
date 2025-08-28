@@ -249,12 +249,14 @@ help-gamestate:
     @echo "  just help-gamestate                   # Show this help"
     @echo "  just gamestate-status                 # System status and diagnostics"
     @echo "  just test-gamestate-system            # Validate system files"
-    @echo "  just test-save-load-cycle             # Complete save/load cycle validation"
-    @echo "  just test-save-load-cycle-with-state STATE # Enhanced test with provided state"
+    @echo "  just test-save-load-cycle-desktop     # Complete save/load cycle validation"
+    @echo "  just test-save-load-cycle-with-state-desktop STATE # Enhanced test with provided state"
     @echo ""
     @echo "🧪 Save/Load Cycle Testing:"
-    @echo "  just test-save-load-cycle              # Standard test: create → save → load → compare"
-    @echo "  just test-save-load-cycle-with-state STATE_NAME  # Enhanced test: load STATE → save → load → compare"
+    @echo "  just test-save-load-cycle-desktop      # Standard test: create → save → load → compare"
+    @echo "  just test-save-load-cycle-with-state-desktop STATE_NAME  # Enhanced test: load STATE → save → load → compare"
+    @echo "  just test-save-load-cycle-android       # Android: standard test: create → save → load → compare"
+    @echo "  just test-save-load-cycle-with-state-android STATE_NAME  # Android: enhanced test: load STATE → save → load → compare"
     @echo ""
     @echo "📁 Files created in: {{SAVED_STATES_DIR}}"
 
@@ -357,7 +359,7 @@ gamestate-status:
 
 
 # 🧪 Save Consistency Test (Note: Load functionality has blocking issues)
-test-save-load-cycle:
+test-save-load-cycle-desktop:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -473,7 +475,7 @@ test-save-load-cycle:
     fi
 
 # 🧪 Enhanced Save Consistency Test with Provided State
-test-save-load-cycle-with-state STATE_NAME:
+test-save-load-cycle-with-state-desktop STATE_NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -555,6 +557,226 @@ test-save-load-cycle-with-state STATE_NAME:
         echo "• Checksum comparison: ✅ MATCH"
         echo ""
         echo "🎯 The gamestate save/load system is working perfectly!"
+        
+    else
+        echo "❌ FAILURE: Save/Load cycle does not preserve gamestate"
+        echo "💡 Checksums differ - there may be an issue with the restoration logic"
+        echo ""
+        echo "🔍 Debug Information:"
+        echo "First file size:  $(wc -c < "$FIRST_FILE") bytes"
+        echo "Second file size: $(wc -c < "$SECOND_FILE") bytes"
+        echo ""
+        echo "🔧 Compare files manually:"
+        echo "diff '$FIRST_FILE' '$SECOND_FILE'"
+        echo ""
+        echo "🔧 Compare gamestate sections only:"
+        echo "diff <(jq -S '.gamestate' '$FIRST_FILE') <(jq -S '.gamestate' '$SECOND_FILE')"
+        
+        # Clean up temporary test files but keep gamestate files for debugging
+        rm -f tests/debug_configs/gamestate-load-and-save-test.json
+        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        exit 1
+    fi
+
+# 🧪 Save Consistency Test - Android Version
+test-save-load-cycle-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🧪 Starting Save Consistency Test (Android)"
+    echo "==========================================="
+    echo ""
+    
+    # Clean up any previous test files
+    echo "🧹 Cleaning up previous test files..."
+    rm -f "{{SAVED_STATES_DIR}}"/cycle_test_*.json
+    
+    echo "📋 Step 1: Create initial save and extract it"
+    echo "--------------------------------------------"
+    
+    # Create a simple save config without checksum validation
+    cat > tests/debug_configs/gamestate-initial-save-test.json << 'EOF'
+    {
+      "description": "Initial gamestate save for cycle testing",
+      "checksum_config": {
+        "initial_seed": 12345,
+        "state_type": "cycle_test_initial"
+      },
+      "actions": [
+        "system.debug.save_gamestate"
+      ]
+    }
+    EOF
+    
+    just test-android-target gamestate-initial-save-test || {
+        echo "❌ Initial save test failed"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 2: Extract first saved state"
+    echo "-----------------------------------"
+    just capture-gamestate cycle_test_first || {
+        echo "❌ Failed to extract first gamestate"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 3: Load first save via startup mechanism and save again"
+    echo "------------------------------------------------------------"
+    echo "💡 Using startup gamestate loading to avoid automated mode issues"
+    
+    # Create startup gamestate load config
+    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << 'EOF'
+    {
+      "gamestate_file": "cycle_test_first.json",
+      "source": "save_load_cycle_test"
+    }
+    EOF
+    
+    # Create load and save config for deterministic testing
+    just _create-load-save-config false
+    
+    just test-android-target gamestate-load-and-save-test || {
+        echo "❌ Load and save test failed"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 4: Extract second saved state"
+    echo "------------------------------------"
+    just capture-gamestate cycle_test_second || {
+        echo "❌ Failed to extract second gamestate"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 5: Compare gamestate files"
+    echo "---------------------------------"
+    
+    FIRST_FILE="{{SAVED_STATES_DIR}}/cycle_test_first.json"
+    SECOND_FILE="{{SAVED_STATES_DIR}}/cycle_test_second.json"
+    
+    if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "First save" "Second save"; then
+        # Clean up temporary test files
+        rm -f tests/debug_configs/gamestate-load-and-save-test.json
+        rm -f tests/debug_configs/gamestate-initial-save-test.json
+        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        
+        echo ""
+        echo "📊 Test Summary:"
+        echo "• Initial save: ✅ Success"
+        echo "• State extraction: ✅ Success" 
+        echo "• Startup load + re-save: ✅ Success"
+        echo "• Second extraction: ✅ Success"
+        echo "• Checksum comparison: ✅ MATCH"
+        echo ""
+        echo "🎯 The gamestate save/load system is working perfectly on Android!"
+        
+    else
+        echo "❌ FAILURE: Save/Load cycle does not preserve gamestate"
+        echo "💡 Checksums differ - there may be an issue with the restoration logic"
+        echo ""
+        echo "🔍 Debug Information:"
+        echo "First file size:  $(wc -c < "$FIRST_FILE") bytes"
+        echo "Second file size: $(wc -c < "$SECOND_FILE") bytes"
+        echo ""
+        echo "🔧 Compare files manually:"
+        echo "diff '$FIRST_FILE' '$SECOND_FILE'"
+        echo ""
+        echo "🔧 Compare gamestate sections only:"
+        echo "diff <(jq -S '.gamestate' '$FIRST_FILE') <(jq -S '.gamestate' '$SECOND_FILE')"
+        
+        # Clean up temporary test files but keep gamestate files for debugging
+        rm -f tests/debug_configs/gamestate-load-and-save-test.json
+        rm -f tests/debug_configs/gamestate-initial-save-test.json
+        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        exit 1
+    fi
+
+# 🧪 Enhanced Save Consistency Test with Provided State - Android Version
+test-save-load-cycle-with-state-android STATE_NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🧪 Starting Enhanced Save Consistency Test (Android)"
+    echo "===================================================="
+    echo "🎯 Using provided state: {{STATE_NAME}}"
+    echo ""
+    
+    # Verify the state exists
+    STATE_FILE="{{SAVED_STATES_DIR}}/{{STATE_NAME}}.json"
+    if [[ ! -f "$STATE_FILE" ]]; then
+        echo "❌ Specified state not found: $STATE_FILE"
+        echo ""
+        echo "🔍 Available states:"
+        just list-saved-states
+        exit 1
+    fi
+    
+    echo "✅ Found state file: $STATE_FILE"
+    echo ""
+    echo "📋 Enhanced Workflow: Load → Save → Load → Compare"
+    echo "=================================================="
+    echo ""
+    
+    # Clean up any previous test files
+    echo "🧹 Cleaning up previous test files..."
+    rm -f "{{SAVED_STATES_DIR}}"/cycle_test_*.json
+    
+    echo "📋 Step 1: Load provided state via startup mechanism and save"
+    echo "-----------------------------------------------------------"
+    echo "💡 Using startup gamestate loading to avoid automated mode issues"
+    
+    # Load the actual gamestate data and embed it in the startup config
+    echo "📄 Reading gamestate data from $STATE_FILE..."
+    GAMESTATE_DATA=$(cat "$STATE_FILE")
+    
+    # Create startup gamestate load config with embedded data
+    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << EOF
+    {
+      "gamestate_data": $GAMESTATE_DATA,
+      "source": "save_load_cycle_test",
+      "requested_at": "$(date -Iseconds)"
+    }
+    EOF
+    
+    # Create load and save config for deterministic testing  
+    just _create-load-save-config true
+    
+    just test-android-target gamestate-load-and-save-test || {
+        echo "❌ Load and save test failed"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 2: Extract saved state"
+    echo "-----------------------------"
+    just capture-gamestate cycle_test_second || {
+        echo "❌ Failed to extract second gamestate"
+        exit 1
+    }
+    
+    echo ""
+    echo "📋 Step 3: Compare gamestate files"
+    echo "---------------------------------"
+    
+    FIRST_FILE="{{SAVED_STATES_DIR}}/{{STATE_NAME}}.json"
+    SECOND_FILE="{{SAVED_STATES_DIR}}/cycle_test_second.json"
+    
+    if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "Original state" "Load/save cycle"; then
+        # Clean up temporary test files
+        rm -f tests/debug_configs/gamestate-load-and-save-test.json
+        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        
+        echo ""
+        echo "📊 Test Summary:"
+        echo "• Using provided state: ✅ Success ({{STATE_NAME}})"
+        echo "• Actual load + save cycle: ✅ Success"
+        echo "• State extraction: ✅ Success"
+        echo "• Checksum comparison: ✅ MATCH"
+        echo ""
+        echo "🎯 The gamestate save/load system is working perfectly on Android!"
         
     else
         echo "❌ FAILURE: Save/Load cycle does not preserve gamestate"
