@@ -86,8 +86,8 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 		_:
 			target_state = core.GameState.START
 
-	# Apply the restored game state
-	game.game_handler.current_gamestate = target_state
+	# Apply the restored game state (will trigger proper UI transition after loading completes)
+	# For now, just store the target state without triggering UI changes
 
 	# Restore lineup state
 	if not lineup_data.is_empty():
@@ -104,6 +104,10 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 	# Unlock input now that gamestate loading is complete
 	if game.input_handler:
 		game.input_handler.unlock_input()
+
+	# FINAL STEP: Trigger proper UI transition to match the loaded gamestate
+	# This ensures both state variable AND UI elements are correctly synchronized
+	game.game_handler.set_gamestate(target_state)
 
 	Log.info(
 		"Gamestate loaded and transitioned successfully",
@@ -400,8 +404,7 @@ static func _reset_all_handlers(game: Game) -> void:
 	# 1. Reset GameHandler state
 	if game.game_handler:
 		# GameHandler will be set to the correct state during restoration
-		# For now, reset to a clean initial state
-		game.game_handler.set_gamestate(core.GameState.START)
+		# Skip setting state here to avoid unwanted UI transitions during loading
 		handlers_reset.append("game_handler")
 
 	# 2. Reset InputHandler state
