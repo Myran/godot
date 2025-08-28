@@ -162,7 +162,7 @@ clean-saved-states:
     fi
 
 # Show comprehensive gamestate workflow help
-gamestate-help:
+help-gamestate:
     @echo "🎮 GameState Debug Workflow Commands:"
     @echo "===================================="
     @echo ""
@@ -180,7 +180,7 @@ gamestate-help:
     @echo "  just capture-gamestate NAME           # Extract last captured state from logs"
     @echo "  just list-saved-states                # Show all available saved states"
     @echo "  just clean-saved-states               # Remove all saved state files"
-    @echo "  just gamestate-help                   # Show this help"
+    @echo "  just help-gamestate                   # Show this help"
     @echo "  just gamestate-status                 # System status and diagnostics"
     @echo "  just test-gamestate-system            # Validate system files"
     @echo "  just test-save-load-cycle             # Complete save/load cycle validation"
@@ -225,7 +225,7 @@ test-gamestate-system:
     if [ $MISSING_FILES -eq 0 ]; then
         echo ""
         echo "✅ All gamestate system files present!"
-        echo "🎮 Ready for: just gamestate-help"
+        echo "🎮 Ready for: just help-gamestate"
     else
         echo ""
         echo "❌ $MISSING_FILES files missing - implementation incomplete"

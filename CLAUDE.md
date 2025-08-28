@@ -37,7 +37,7 @@ just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 # 🎮 NEW: Gamestate Save/Load System (Instant Scenario Reproduction)
 just capture-gamestate NAME               # Extract captured state from logs → JSON file
 just list-saved-states                   # Show all available saved states
-just gamestate-help                      # Complete workflow guide
+just help-gamestate                      # Complete workflow guide
 # Usage: Debug menu → "Save State" → Exit → capture-gamestate → Load via debug menu
 
 # Debug Decision Tree: logs-tree → logs-pattern → logs-text → logs-exclude → logs-errors (traditional backup)
@@ -569,7 +569,7 @@ just run-desktop                    # Start fresh session
 # Management commands
 just list-saved-states             # Show all available saved states
 just clean-saved-states            # Remove all saved state files  
-just gamestate-help               # Complete workflow guide
+just help-gamestate               # Complete workflow guide
 just gamestate-status             # System status and diagnostics
 ```
 

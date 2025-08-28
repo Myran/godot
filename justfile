@@ -317,6 +317,17 @@ help-debug:
     @echo "just run-desktop-debug               # Debug mode (normal output)"
     @echo "just run-desktop-debug verbose      # Debug mode with ObjectDB leak details"
     @echo ""
+    @echo "🎮 GAMESTATE SAVE/LOAD WORKFLOW"
+    @echo "==============================="
+    @echo "just help-gamestate                  # Complete workflow guide"
+    @echo "just capture-gamestate NAME          # Extract captured state from logs"
+    @echo "just list-saved-states               # Show available saved states"
+    @echo "just test-save-load-cycle            # Validate save/load consistency"
+    @echo "just test-gamestate-cycle            # Complete gamestate test cycle"
+    @echo ""
+    @echo "📋 Common Usage:"
+    @echo "  play → save state → capture-gamestate → load state → test"
+    @echo ""
 
 # Build system architecture and timing help
 help-build:
