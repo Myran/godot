@@ -107,6 +107,16 @@ func _persistence_type_name(persistence_type: int) -> String:
 			return "UNKNOWN"
 
 
+func _is_combat_only_ability(ability: Ability) -> bool:
+	"""Check if this ability should only apply during combat and not persist between battles"""
+	var combat_only_classes: Array[String] = [
+		"DeathTriggerHealthAbility",  # Axe man's ondeath health bonus - should be combat-only
+		# Add other combat-only ability classes here as needed
+	]
+	
+	return ability.get_class() in combat_only_classes
+
+
 func remove_ability(_ability: Ability) -> void:
 	abilities.erase(_ability)
 
@@ -571,6 +581,7 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 		if (
 			battle_ability.persistence_type == Ability.PersistenceType.ACQUIRED
 			and not battle_ability.get_class() in current_ability_classes
+			and not _is_combat_only_ability(battle_ability)
 		):
 			var enhanced_ability: Ability = battle_ability.deep_duplicate()
 			enhanced_ability.persistence_type = Ability.PersistenceType.ENHANCEMENT
@@ -582,6 +593,16 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 					"ability": enhanced_ability.get_class(),
 					"unit_died": battle_died,
 					"converted_from": "ACQUIRED"
+				},
+				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ABILITY]
+			)
+		elif _is_combat_only_ability(battle_ability):
+			Log.debug(
+				"Skipped combat-only ability from becoming permanent",
+				{
+					"ability": battle_ability.get_class(),
+					"unit_died": battle_died,
+					"reason": "combat_only_exclusion"
 				},
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ABILITY]
 			)
