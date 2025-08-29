@@ -378,3 +378,63 @@ android-logs-status:
     else
         echo "  ❌ App not installed"
     fi
+
+# Get the latest Android TEST_ID from recent logs
+android-latest-test-id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔍 Finding latest Android TEST_ID..."
+    echo ""
+    
+    # Check Android device prerequisites
+    just _check-android-prerequisites >/dev/null
+    
+    # Use the same approach as logs-last for Android logs
+    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -200 || echo "")
+    
+    if [ -z "$ANDROID_LOGS" ]; then
+        echo "❌ No Android logs available"
+        echo ""
+        echo "💡 Try running a test first:"
+        echo "   just test-android-manual CONFIG"
+        exit 1
+    fi
+    
+    # Extract the most recent TEST_ID using the established pattern
+    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | grep '"test_id"' | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+    
+    if [ -z "$LATEST_TEST_ID" ]; then
+        echo "❌ No TEST_ID found in recent Android logs"
+        echo ""
+        echo "🔍 Checking for any test-related activity..."
+        TEST_ACTIVITY=$(echo "$ANDROID_LOGS" | grep -E "DEBUG_TEST_START|TEST_COMPLETE|SEMANTIC_ACTION" | wc -l)
+        if [ "$TEST_ACTIVITY" -gt 0 ]; then
+            echo "   ✅ Found $TEST_ACTIVITY test-related log entries"
+            echo "   ❌ But no valid TEST_ID extracted"
+            echo ""
+            echo "💡 Recent test activity found, but TEST_ID format may be different"
+            echo "   Try: just logs-last | grep test_id"
+        else
+            echo "   ❌ No test activity found in recent logs"
+            echo ""
+            echo "💡 Run a test to generate a TEST_ID:"
+            echo "   just test-android-manual CONFIG"
+        fi
+        exit 1
+    fi
+    
+    echo "✅ Latest Android TEST_ID found:"
+    echo ""
+    echo "📋 TEST_ID: $LATEST_TEST_ID"
+    echo ""
+    echo "🎮 Usage examples:"
+    echo "   just capture-gamestate-android $LATEST_TEST_ID my_state_name"
+    echo "   just logs-android $LATEST_TEST_ID"
+    echo "   just logs-android-errors $LATEST_TEST_ID"
+    echo ""
+    
+    # Also output just the TEST_ID for easy command substitution
+    echo "💡 For command substitution use:"
+    echo "   TEST_ID=\$(just android-latest-test-id | grep 'TEST_ID:' | cut -d' ' -f3)"
+    echo "   just capture-gamestate-android \$TEST_ID my_state"

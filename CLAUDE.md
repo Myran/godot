@@ -34,11 +34,13 @@ just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
-# 🎮 NEW: Gamestate Save/Load System (Instant Scenario Reproduction)
-just capture-gamestate NAME               # Extract captured state from logs → JSON file
+# 🎮 NEW: Cross-Platform Gamestate Save/Load System (Instant Scenario Reproduction)
+just capture-gamestate-desktop NAME      # Desktop-specific extraction from logs
+just capture-gamestate-android NAME      # Android-specific extraction from logs (auto-detects TEST_ID)
 just list-saved-states                   # Show all available saved states
-just help-gamestate                      # Complete workflow guide
-# Usage: Debug menu → "Save State" → Exit → capture-gamestate → Load via debug menu
+just help-gamestate                      # Complete cross-platform workflow guide
+# Desktop: Debug menu → "Save State" → Exit → capture-gamestate-desktop NAME → Load via debug menu
+# Android: Manual test → Debug menu → "Save State" → Exit → capture-gamestate-android NAME
 
 # Debug Decision Tree: logs-tree → logs-pattern → logs-text → logs-exclude → logs-errors (traditional backup)
 ```
@@ -549,16 +551,22 @@ When creating deterministic tests, add seeds using the `checksum_config` structu
 **Never use:** `"game.battle.set_seed"` action (obsolete - causes timing issues)  
 **Always use:** `checksum_config.initial_seed` field (autonomous - no timing dependencies)
 
-## 🎮 NEW: Debug Gamestate Capture & Load System
+## 🎮 NEW: Cross-Platform Debug Gamestate Capture & Load System
 
 **Complete Developer Workflow for Scenario Testing:**
 
 ```bash
-# Capture any gamestate during gameplay
+# Desktop: Capture any gamestate during gameplay
 just run-desktop                    # Start game
 # → Debug menu → "Save State"       # Capture current state
 # → Exit game
-just capture-gamestate "boss_fight" # Extract from logs → JSON file
+just capture-gamestate-desktop "boss_fight" # Extract from desktop logs → JSON file
+
+# Android: Capture gamestate during testing
+just test-android-manual CONFIG     # Start manual test (note TEST_ID)
+# → Debug menu → "Save State"       # Capture current state  
+# → Exit app/complete test
+just capture-gamestate-android "boss_fight" # Extract from Android logs → JSON file (auto-detects TEST_ID)
 
 # Load saved state as recording starting point  
 just run-desktop                    # Start fresh session
@@ -566,18 +574,22 @@ just run-desktop                    # Start fresh session
 # → Click "Load: boss_fight"        # Loads state, starts recording session
 # → Continue with actions           # All actions recorded from loaded state
 
-# Management commands
-just list-saved-states             # Show all available saved states
-just clean-saved-states            # Remove all saved state files  
-just help-gamestate               # Complete workflow guide
-just gamestate-status             # System status and diagnostics
+# Cross-platform management commands
+just capture-gamestate-desktop NAME        # Desktop-specific extraction
+just capture-gamestate-android NAME         # Android-specific extraction (auto-detects TEST_ID)
+just list-saved-states                     # Show all available saved states
+just clean-saved-states                    # Remove all saved state files  
+just help-gamestate                        # Complete cross-platform workflow guide
+just gamestate-status                      # System status and diagnostics
 ```
 
 ### **Key Benefits for Development:**
 - **90% faster scenario reproduction** (minutes → seconds)
-- **Instant access** to any captured game state
+- **Cross-platform support** - capture from Android, load on desktop or vice versa
+- **Instant access** to any captured game state from any platform
 - **Perfect replay integration** - loaded states work as recording starting points
 - **Zero setup** - leverages existing StateExtractor + DeterministicRNG systems
+- **Platform-specific commands** - explicit control over desktop vs Android workflows
 
 ### **Common Use Cases:**
 ```bash

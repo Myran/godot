@@ -24,7 +24,7 @@ test-gamestate-cycle:
     echo ""
     echo "🎯 Step 2: Extract gamestate using command line tool"
     echo "===================================================="
-    just capture-gamestate "$TEST_NAME"
+    just capture-gamestate-desktop "$TEST_NAME"
     
     if [ $? -ne 0 ]; then
         echo "❌ Extract step failed"
@@ -137,7 +137,7 @@ test-gamestate-quick:
     # Extract gamestate
     echo "2. Extracting gamestate..."
     TEST_NAME="quick-$(date +%s)"
-    just capture-gamestate "$TEST_NAME" > /tmp/extract_result.log 2>&1
+    just capture-gamestate-desktop "$TEST_NAME" > /tmp/extract_result.log 2>&1
     
     if grep -q "✅ Gamestate saved successfully" /tmp/extract_result.log; then
         echo "✅ Extract successful"
