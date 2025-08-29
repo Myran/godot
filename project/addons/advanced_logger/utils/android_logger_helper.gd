@@ -70,8 +70,8 @@ static func _process_chunked_message(level: int, message: String, context: Dicti
 		var chunk_number = i + 1
 		var chunk_content = chunks[i]
 
-		# Add chunk header to the formatted content
-		var chunked_message = "[CHUNK %d/%d] [MSG_ID: %s] %s" % [chunk_number, total_chunks, msg_id, chunk_content]
+		# Add chunk header with explicit boundary markers
+		var chunked_message = "[CHUNK %d/%d] [MSG_ID: %s] <START>%s<END>" % [chunk_number, total_chunks, msg_id, chunk_content]
 		result_lines.append(chunked_message)
 
 	return "\n".join(result_lines)
@@ -80,8 +80,10 @@ static func _chunk_formatted_message(formatted_content: String) -> Array[String]
 	var chunks: Array[String] = []
 	var current_content = formatted_content
 
-	# Leave room for chunk headers: "[CHUNK X/Y] [MSG_ID: abc123] " = ~30 bytes
-	var safe_chunk_size = ANDROID_EFFECTIVE_LIMIT - 50  # 3950 bytes per chunk
+	# Android logcat line limit is 1066 bytes total
+	# Logcat overhead: ~74 bytes (timestamp, PID, TID, level, tag, chunk header, <START>)
+	# Available content: 1066 - 74 - 5 (<END>) = 987 bytes
+	var safe_chunk_size = 950  # Conservative 950 bytes per chunk to ensure <END> marker fits
 
 	while current_content.length() > safe_chunk_size:
 		var chunk_size = safe_chunk_size
@@ -108,7 +110,7 @@ static func _chunk_formatted_message(formatted_content: String) -> Array[String]
 	if not current_content.is_empty():
 		chunks.append(current_content)
 
-	print("[AndroidLoggerHelper] DEBUG: Split %d byte formatted message into %d chunks (max chunk size: %d)" % [formatted_content.length(), chunks.size(), safe_chunk_size])
+	print("[AndroidLoggerHelper] DEBUG: Split %d byte formatted message into %d chunks (max chunk size: %d, with boundary markers)" % [formatted_content.length(), chunks.size(), safe_chunk_size])
 	return chunks
 
 static func _chunk_message(message: String) -> Array[String]:

@@ -597,9 +597,14 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 
 			# Handle potentially chunked messages (multiple lines)
 			var lines = processed_message.split('\n')
-			for line in lines:
+			for i in range(lines.size()):
+				var line = lines[i]
 				if not line.is_empty():
 					print(line)
+					# Add delay between chunks to avoid Android rate limiting
+					if i < lines.size() - 1 and line.contains("[CHUNK"):
+						# Only delay between chunks, not after the last one
+						OS.delay_msec(100)  # 100ms delay between chunks to ensure delivery
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
 			var regex = RegEx.new()

@@ -37,9 +37,22 @@ _reassemble-android-chunks:
     REASSEMBLED_JSON=""
     
     while IFS= read -r chunk_line; do
-        # Extract the JSON part after the chunk header
-        # Pattern: [LEVEL] [CHUNK X/Y] [MSG_ID: ...] {JSON_CONTENT}
-        CHUNK_JSON=$(echo "$chunk_line" | grep -o '{.*}' | head -1)
+        # Extract content using explicit boundary markers
+        # Pattern: [CHUNK X/Y] [MSG_ID: ...] <START>CONTENT<END>
+        
+        # Use boundary markers for precise extraction
+        if echo "$chunk_line" | grep -q "<START>.*<END>"; then
+            CHUNK_JSON=$(echo "$chunk_line" | sed -n 's/.*<START>\(.*\)<END>.*/\1/p')
+        else
+            # Fallback for chunks without boundary markers (legacy support)
+            if echo "$chunk_line" | grep -q "DEBUG_GAMESTATE_CAPTURE"; then
+                # First chunk - extract JSON starting from {
+                CHUNK_JSON=$(echo "$chunk_line" | sed 's/.*DEBUG_GAMESTATE_CAPTURE //')
+            else
+                # Subsequent chunks - extract everything after MSG_ID header
+                CHUNK_JSON=$(echo "$chunk_line" | sed 's/.*\[MSG_ID: [^]]*\] //')
+            fi
+        fi
         
         if [ -n "$CHUNK_JSON" ]; then
             REASSEMBLED_JSON="$REASSEMBLED_JSON$CHUNK_JSON"
