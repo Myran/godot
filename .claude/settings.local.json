@@ -192,7 +192,8 @@
       "Bash(/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64 --headless --editor --quit --path .)",
       "Bash(uvx:*)",
       "mcp__time__get_current_time",
-      "WebSearch"
+      "WebSearch",
+      "Read(/tmp/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
