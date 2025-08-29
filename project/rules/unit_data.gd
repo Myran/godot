@@ -62,8 +62,8 @@ func init_with_info(_card_info: Dictionary) -> void:
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 		Log.info(
-			"Archer scaffolding: Added DamageShieldAbility for testing", 
-			{"card_id": card_info.id, "card_name": card_info.get("card_name", "unknown")}, 
+			"Archer scaffolding: Added DamageShieldAbility for testing",
+			{"card_id": card_info.id, "card_name": card_info.get("card_name", "unknown")},
 			["ability", "scaffolding", "archer", "shield", "testing"]
 		)
 	if card_info.id == str(2):
