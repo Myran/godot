@@ -37,6 +37,10 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 			new_ability = EvilSynergyAbility.new(health_bonus, attack_bonus)
 		"shield":
 			new_ability = DamageShieldAbility.new()
+		"onanyupgrade":
+			# Handle onanyupgrade:shield format
+			if params.size() > 0 and params[0] == "shield":
+				new_ability = DamageShieldAbility.new()
 		"merge_bonus":
 			var health_bonus: int = int(params[0])
 			var attack_bonus: int = int(params[1])
