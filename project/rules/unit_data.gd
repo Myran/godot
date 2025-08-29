@@ -54,6 +54,18 @@ func init_with_info(_card_info: Dictionary) -> void:
 			add_ability(_ab)
 
 	var ability: Ability
+	# TESTING SCAFFOLDING: Give archer (ID 1) a shield ability for testing shield mechanics
+	# This is temporary scaffolding to test DamageShieldAbility functionality
+	# The archer will not have this ability in the final game
+	if card_info.id == str(1):
+		ability = DamageShieldAbility.new()
+		ability.persistence_type = Ability.PersistenceType.TEMPLATE
+		add_ability(ability)
+		Log.info(
+			"Archer scaffolding: Added DamageShieldAbility for testing", 
+			{"card_id": card_info.id, "card_name": card_info.get("card_name", "unknown")}, 
+			["ability", "scaffolding", "archer", "shield", "testing"]
+		)
 	if card_info.id == str(2):
 		ability = DeathTriggerHealthAbility.new(2)
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
