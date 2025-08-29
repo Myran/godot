@@ -42,19 +42,19 @@ static func _should_chunk_message(message: String, context: Dictionary, tags: Ar
 	# Calculate the FINAL formatted message size that will be sent to Android logcat
 	var test_formatted = MobileFormatter.format_log_message(1, message, context, tags)
 	var final_message_size = test_formatted.length()
-	
+
 	# Check if FINAL formatted message exceeds Android's effective limit
 	var should_chunk = final_message_size > ANDROID_EFFECTIVE_LIMIT
-	
+
 	if should_chunk:
 		print("[AndroidLoggerHelper] CHUNK: Final formatted size: %d bytes, Android limit: %d, chunking required" % [final_message_size, ANDROID_EFFECTIVE_LIMIT])
-	
+
 	return should_chunk
 
 static func _process_chunked_message(level: int, message: String, context: Dictionary, tags: Array[String]) -> String:
 	# Generate unique message ID for chunk correlation
 	var msg_id = _generate_message_id()
-	
+
 	# First create the fully formatted message (this is what actually gets sent to logcat)
 	var full_formatted = MobileFormatter.format_log_message(level, message, context, tags)
 	var full_formatted_stripped = strip_formatting(full_formatted)
@@ -79,42 +79,42 @@ static func _process_chunked_message(level: int, message: String, context: Dicti
 static func _chunk_formatted_message(formatted_content: String) -> Array[String]:
 	var chunks: Array[String] = []
 	var current_content = formatted_content
-	
+
 	# Leave room for chunk headers: "[CHUNK X/Y] [MSG_ID: abc123] " = ~30 bytes
 	var safe_chunk_size = ANDROID_EFFECTIVE_LIMIT - 50  # 3950 bytes per chunk
-	
+
 	while current_content.length() > safe_chunk_size:
 		var chunk_size = safe_chunk_size
 		var substring = current_content.substr(0, chunk_size)
-		
+
 		# Try to find a good break point at a newline to avoid splitting JSON
 		var newline_index = substring.rfind('\n')
 		if newline_index >= MIN_CHUNK_SIZE:
 			# Found a good newline break point
 			substring = substring.substr(0, newline_index)
 			chunk_size = newline_index
-		
+
 		# Add this chunk
 		chunks.append(substring)
-		
+
 		# Remove the processed part
 		current_content = current_content.substr(chunk_size)
-		
+
 		# Skip the newline character if we split at one
 		if newline_index >= MIN_CHUNK_SIZE and current_content.begins_with('\n'):
 			current_content = current_content.substr(1)
-	
+
 	# Add the remaining content as the final chunk
 	if not current_content.is_empty():
 		chunks.append(current_content)
-	
+
 	print("[AndroidLoggerHelper] DEBUG: Split %d byte formatted message into %d chunks (max chunk size: %d)" % [formatted_content.length(), chunks.size(), safe_chunk_size])
 	return chunks
 
 static func _chunk_message(message: String) -> Array[String]:
 	var chunks: Array[String] = []
 	var current_message = message
-	
+
 	# Use a smaller raw chunk size to account for chunk headers + MobileFormatter overhead
 	# Format: "[CHUNK X/Y] [MSG_ID: abc123] " = ~30 bytes + MobileFormatter overhead ~500 bytes
 	var safe_raw_chunk_size = ANDROID_EFFECTIVE_LIMIT - 600  # 3400 bytes for raw content
