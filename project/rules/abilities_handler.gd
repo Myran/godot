@@ -47,4 +47,11 @@ static func create_ability_from_type(ability_type: String, params: PackedStringA
 			new_ability = MergeBonusAbility.new(health_bonus, attack_bonus)
 		"harmony":
 			new_ability = HarmonyAbility.new()
+		_:
+			if not ability_type.is_empty():
+				Log.warning(
+					"Unknown ability type in create_ability_from_type",
+					{"ability_type": ability_type, "params": params},
+					["ability", "parsing", "warning"]
+				)
 	return new_ability
