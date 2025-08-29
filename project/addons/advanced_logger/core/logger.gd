@@ -579,20 +579,27 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 
 	if platform == "Android":
 		if AndroidLoggerHelper:
+			var processed_message: String
 			if is_buffer_dump_entry:
-				print(AndroidLoggerHelper.process_log_message(
+				processed_message = AndroidLoggerHelper.process_log_message(
 					level,
 					"[BUFFER] " + message,
 					context,
 					tags
-				))
+				)
 			else:
-				print(AndroidLoggerHelper.process_log_message(
+				processed_message = AndroidLoggerHelper.process_log_message(
 					level,
 					message,
 					context,
 					tags
-				))
+				)
+
+			# Handle potentially chunked messages (multiple lines)
+			var lines = processed_message.split('\n')
+			for line in lines:
+				if not line.is_empty():
+					print(line)
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
 			var regex = RegEx.new()

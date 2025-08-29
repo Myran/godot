@@ -1,6 +1,59 @@
 # GameState Debug Capture & Load System
 # Enables complete developer workflow for scenario testing
 
+# Helper function to reassemble chunked Android log messages
+_reassemble-android-chunks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Read Android logs from stdin instead of parameter to avoid shell escaping issues
+    LOG_CONTENT=$(cat)
+    
+    # Extract all CHUNK lines for DEBUG_GAMESTATE_CAPTURE
+    CHUNK_LINES=$(echo "$LOG_CONTENT" | grep "DEBUG_GAMESTATE_CAPTURE" | grep "\[CHUNK")
+    
+    if [ -z "$CHUNK_LINES" ]; then
+        echo "❌ No chunk lines found" >&2
+        exit 1
+    fi
+    
+    # Find the most recent message ID (in case there are multiple chunked messages)
+    LATEST_MSG_ID=$(echo "$CHUNK_LINES" | grep -o "\[MSG_ID: [^]]*\]" | sed 's/.*MSG_ID: \([^]]*\).*/\1/' | tail -1)
+    
+    if [ -z "$LATEST_MSG_ID" ]; then
+        echo "❌ No message ID found in chunk lines" >&2
+        exit 1
+    fi
+    
+    # Get all chunks for this message ID, sorted by chunk number
+    MSG_CHUNKS=$(echo "$CHUNK_LINES" | grep "MSG_ID: $LATEST_MSG_ID" | sort -t'/' -k1.8n)
+    
+    if [ -z "$MSG_CHUNKS" ]; then
+        echo "❌ No chunks found for message ID $LATEST_MSG_ID" >&2
+        exit 1
+    fi
+    
+    # Extract and reassemble the JSON content from each chunk
+    REASSEMBLED_JSON=""
+    
+    while IFS= read -r chunk_line; do
+        # Extract the JSON part after the chunk header
+        # Pattern: [LEVEL] [CHUNK X/Y] [MSG_ID: ...] {JSON_CONTENT}
+        CHUNK_JSON=$(echo "$chunk_line" | grep -o '{.*}' | head -1)
+        
+        if [ -n "$CHUNK_JSON" ]; then
+            REASSEMBLED_JSON="$REASSEMBLED_JSON$CHUNK_JSON"
+        fi
+    done <<< "$MSG_CHUNKS"
+    
+    if [ -z "$REASSEMBLED_JSON" ]; then
+        echo "❌ No JSON content extracted from chunks" >&2
+        exit 1
+    fi
+    
+    # Output the reassembled JSON
+    echo "$REASSEMBLED_JSON"
+
 # Helper function to compare two gamestate files (shared by save-load cycle tests)
 _compare-gamestates FIRST_FILE SECOND_FILE FIRST_LABEL SECOND_LABEL:
     #!/usr/bin/env bash
@@ -67,8 +120,8 @@ _create-load-save-config AUTO_QUIT:
     }
     EOF
 
-# Extract captured gamestate from logs and create debug save file
-capture-gamestate NAME:
+# Extract captured gamestate from desktop logs and create debug save file
+capture-gamestate-desktop NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
@@ -88,7 +141,7 @@ capture-gamestate NAME:
         echo "   2. Open debug menu (press D key)"
         echo "   3. Click 'Save State' button"
         echo "   4. Exit game"
-        echo "   5. Run: just capture-gamestate NAME"
+        echo "   5. Run: just capture-gamestate-desktop NAME"
         echo ""
         echo "🔍 Check if Save State action was used:"
         if just logs-desktop-last 2>/dev/null | grep -q "Save State\|DEBUG_GAMESTATE_CAPTURE"; then
@@ -168,6 +221,198 @@ capture-gamestate NAME:
         exit 1
     fi
 
+# Extract captured gamestate from Android logs and create debug save file
+capture-gamestate-android NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting gamestate '{{NAME}}' from Android logs..."
+    echo ""
+    
+    # Automatically get the latest Android TEST_ID
+    echo "1️⃣ Getting latest Android TEST_ID..."
+    
+    # Extract latest TEST_ID using the same logic as android-latest-test-id
+    just _check-android-prerequisites >/dev/null
+    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | grep '"test_id"' | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+    
+    if [ -z "$LATEST_TEST_ID" ]; then
+        echo "⚠️  No TEST_ID found - checking for manual gamestate captures..."
+        echo ""
+        
+        # For manual captures (not from test sessions), get logs directly
+        echo "2️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in recent Android logs..."
+        ANDROID_LOG_CONTENT=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+        
+        if [ -z "$ANDROID_LOG_CONTENT" ]; then
+            echo "❌ No Android logs available"
+            exit 1
+        fi
+    else
+        echo "✅ Using TEST_ID: $LATEST_TEST_ID"
+        echo ""
+        
+        # Use Android log system to get test results for test sessions
+        echo "2️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in Android logs..."
+        
+        # Use the established Android log infrastructure
+        ANDROID_LOG_CONTENT=$(just _find-android-log-with-test-id $LATEST_TEST_ID 2>/dev/null || echo "")
+        
+        if [ -z "$ANDROID_LOG_CONTENT" ]; then
+            echo "❌ No Android log found for test $LATEST_TEST_ID"
+            echo ""
+            echo "💡 Falling back to manual capture search..."
+            ANDROID_LOG_CONTENT=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+        fi
+    fi
+    
+    if [ -z "$ANDROID_LOG_CONTENT" ]; then
+        echo "❌ No Android logs available at all"
+        echo ""
+        echo "💡 To capture a gamestate on Android:"
+        echo "   1. Start test: just test-android-manual CONFIG (for test sessions)"
+        echo "   OR"
+        echo "   1. Start app normally"
+        echo "   2. Open debug menu (press back button or tap screen corner)"
+        echo "   3. Click 'Save State' button"
+        echo "   4. Exit app"
+        echo "   5. Run: just capture-gamestate-android NAME"
+        exit 1
+    fi
+    
+    # Extract DEBUG_GAMESTATE_CAPTURE lines from Android log content
+    CAPTURE_OUTPUT=$(echo "$ANDROID_LOG_CONTENT" | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    
+    if [ -z "$CAPTURE_OUTPUT" ]; then
+        if [ -z "$LATEST_TEST_ID" ]; then
+            echo "❌ No DEBUG_GAMESTATE_CAPTURE found in recent Android logs"
+        else
+            echo "❌ No DEBUG_GAMESTATE_CAPTURE found in Android logs for test $LATEST_TEST_ID"
+        fi
+        echo ""
+        echo "🔍 Check if Save State action was used:"
+        if echo "$ANDROID_LOG_CONTENT" | grep -q "Save State"; then
+            SAVE_STATE_COUNT=$(echo "$ANDROID_LOG_CONTENT" | grep -c "Save State" || echo "0")
+            echo "   ✅ Save State action found in Android logs ($SAVE_STATE_COUNT occurrences)"
+            echo "   ❌ But no DEBUG_GAMESTATE_CAPTURE log entries were generated"
+        else
+            if [ -z "$LATEST_TEST_ID" ]; then
+                echo "   ❌ No Save State action found in recent Android logs"
+            else
+                echo "   ❌ No Save State action found in Android logs for test $LATEST_TEST_ID"
+            fi
+        fi
+        exit 1
+    fi
+    
+    # Create debug saves directory in user data location (cross-platform compatible)
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    mkdir -p "$SAVED_STATES_DIR"
+    
+    # Extract JSON data from Android capture with chunk reassembly support
+    echo "3️⃣ Extracting and reassembling JSON data from Android capture..."
+    
+    # Check if this is a chunked message (new chunk-aware system)
+    CHUNK_LINES=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | grep "\[CHUNK")
+    
+    if [ -n "$CHUNK_LINES" ]; then
+        echo "📦 Detected chunked message - reassembling..."
+        JSON_DATA=$(echo "$CAPTURE_OUTPUT" | just _reassemble-android-chunks)
+        
+        if [ $? -ne 0 ] || [ -z "$JSON_DATA" ]; then
+            echo "❌ Failed to reassemble chunked gamestate data"
+            exit 1
+        fi
+        
+        echo "✅ Successfully reassembled chunked message"
+    else
+        # Legacy single-message handling (backward compatibility)
+        echo "📄 Using legacy single-message extraction..."
+        CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | tail -1)
+        
+        if [ -z "$CAPTURE_LINE" ]; then
+            echo "❌ No valid DEBUG_GAMESTATE_CAPTURE entry found"
+            exit 1
+        fi
+        
+        JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+        
+        if [ -z "$JSON_DATA" ]; then
+            echo "❌ No valid JSON data found in capture line"
+            echo "Debug info: $CAPTURE_LINE"
+            exit 1
+        fi
+        
+        # Check if JSON is complete (Android logs often truncate long lines)
+        if [[ ! "$JSON_DATA" =~ "}$" ]]; then
+            echo "⚠️  JSON appears truncated by Android logging system"
+            echo "💡 Consider updating to chunk-aware logger for reliable large message handling"
+            echo ""
+            echo "🔄 Attempting to use partial JSON data..."
+            # For truncated JSON, we'll try to salvage what we can
+            JSON_DATA="$JSON_DATA}"  # Add closing brace
+        fi
+    fi
+    
+    # Validate and save JSON data
+    echo "$JSON_DATA" | jq '.' > /tmp/gamestate_temp.json 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Invalid/truncated JSON in captured Android gamestate"
+        echo ""
+        echo "🚨 Android Logging Limitation:"
+        echo "   Android kernel imposes ~4KB limit on log entries (LOGGER_ENTRY_MAX_PAYLOAD)"
+        echo "   Gamestate JSON is likely >4KB and gets truncated by Android logcat"
+        echo "   This is a fundamental Android limitation, not a bug in our code"
+        echo ""
+        echo "💡 Recommended Solutions:"
+        echo "   1. 🥇 Use desktop platform for gamestate captures (recommended)"
+        echo "   2. Capture simpler gamestates (fewer cards/units) on Android"  
+        echo "   3. Use Android captures only for small test scenarios"
+        echo ""
+        echo "Raw data (first 200 chars): ${JSON_DATA:0:200}..."
+        exit 1
+    fi
+    
+    # Move to final location
+    mv /tmp/gamestate_temp.json "$SAVED_STATES_DIR/{{NAME}}.json"
+    
+    # Verify file creation and show info
+    if [ -f "$SAVED_STATES_DIR/{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/{{NAME}}.json")
+        
+        echo "✅ Android gamestate '{{NAME}}' captured successfully!"
+        echo ""
+        echo "📄 File: $SAVED_STATES_DIR/{{NAME}}.json"
+        if [ -n "$LATEST_TEST_ID" ]; then
+            echo "🔗 Test ID: $LATEST_TEST_ID"
+        else
+            echo "🔗 Test ID: Manual capture (no test session)"
+        fi
+        echo "🆔 Capture ID: $CAPTURE_ID"
+        echo "⏰ Timestamp: $TIMESTAMP"
+        echo "📺 Session: $SESSION_ID"
+        echo "📏 Size: ${FILE_SIZE} bytes"
+        echo ""
+        echo "🎮 Next steps:"
+        echo "   1. Start test: just test-android-manual CONFIG (or desktop: just run-desktop)"
+        echo "   2. Open debug menu"
+        echo "   3. Navigate to 'Saved States'"
+        echo "   4. Click 'Load: {{NAME}}'"
+        echo "   5. Continue with new actions for recording"
+        echo ""
+        echo "🔄 Integration with existing recording system:"
+        echo "   After loading and performing new actions, you'll get a fresh session ID for replay generation."
+    else
+        echo "❌ Failed to create Android gamestate file"
+        exit 1
+    fi
+
+
 # List all available saved states
 list-saved-states:
     #!/usr/bin/env bash
@@ -178,7 +423,7 @@ list-saved-states:
     
     if [ ! -d "$SAVED_STATES_DIR" ]; then
         echo "📁 No saved states directory found"
-        echo "💡 Use 'just capture-gamestate NAME' to create saved states"
+        echo "💡 Use 'just capture-gamestate-desktop NAME' to create saved states"
         exit 0
     fi
     
@@ -186,7 +431,7 @@ list-saved-states:
     
     if [ -z "$(ls -A . 2>/dev/null)" ]; then
         echo "📁 No saved states found"
-        echo "💡 Use debug menu 'Save State' + 'just capture-gamestate NAME'"
+        echo "💡 Use debug menu 'Save State' + 'just capture-gamestate-desktop NAME'"
         exit 0
     fi
     
@@ -229,28 +474,34 @@ clean-saved-states:
 
 # Show comprehensive gamestate workflow help
 help-gamestate:
-    @echo "🎮 GameState Debug Workflow Commands:"
-    @echo "===================================="
+    @echo "🎮 Cross-Platform GameState Debug Workflow Commands:"
+    @echo "=================================================="
     @echo ""
-    @echo "📋 Complete Workflow:"
-    @echo "  1. just run-desktop                    # Start game"
-    @echo "  2. Debug menu → 'Save State'           # Capture state during gameplay"  
+    @echo "📋 Complete Workflow - Desktop:"
+    @echo "  1. just run-desktop                       # Start game"
+    @echo "  2. Debug menu → 'Save State'              # Capture state during gameplay"  
     @echo "  3. Exit game"
-    @echo "  4. just capture-gamestate NAME         # Extract from logs → JSON file"
-    @echo "  5. just run-desktop                    # Start again"
-    @echo "  6. Debug menu → 'Saved States'         # Navigate to saved states"
-    @echo "  7. Click 'Load: NAME'                  # Load as recording starting point"
+    @echo "  4. just capture-gamestate-desktop NAME    # Extract from desktop logs → JSON file"
+    @echo "  5. just run-desktop                       # Start again"
+    @echo "  6. Debug menu → 'Saved States'            # Navigate to saved states"
+    @echo "  7. Click 'Load: NAME'                     # Load as recording starting point"
     @echo "  8. Continue with new actions/recording"
     @echo ""
-    @echo "🔧 Commands:"
-    @echo "  just capture-gamestate NAME           # Extract last captured state from logs"
-    @echo "  just list-saved-states                # Show all available saved states"
-    @echo "  just clean-saved-states               # Remove all saved state files"
-    @echo "  just help-gamestate                   # Show this help"
-    @echo "  just gamestate-status                 # System status and diagnostics"
-    @echo "  just test-gamestate-system            # Validate system files"
-    @echo "  just test-save-load-cycle-desktop     # Complete save/load cycle validation"
-    @echo "  just test-save-load-cycle-with-state-desktop STATE # Enhanced test with provided state"
+    @echo "📋 Complete Workflow - Android:"
+    @echo "  1. just test-android-manual CONFIG        # Start manual test (note TEST_ID)"
+    @echo "  2. Debug menu → 'Save State'              # Capture state during testing"  
+    @echo "  3. Exit app/complete test"
+    @echo "  4. just capture-gamestate-android NAME     # Extract from Android logs → JSON file (auto-detects TEST_ID)"
+    @echo "  5. Load saved state in any platform       # Cross-platform compatibility"
+    @echo ""
+    @echo "🔧 Platform-Specific Commands:"
+    @echo "  just capture-gamestate-desktop NAME        # Desktop-specific extraction"
+    @echo "  just capture-gamestate-android NAME        # Android-specific extraction (auto-detects TEST_ID)"
+    @echo "  just list-saved-states                     # Show all available saved states"
+    @echo "  just clean-saved-states                    # Remove all saved state files"
+    @echo "  just help-gamestate                        # Show this help"
+    @echo "  just gamestate-status                      # System status and diagnostics"
+    @echo "  just test-gamestate-system                 # Validate system files"
     @echo ""
     @echo "🧪 Save/Load Cycle Testing:"
     @echo "  just test-save-load-cycle-desktop      # Standard test: create → save → load → compare"
@@ -396,7 +647,7 @@ test-save-load-cycle-desktop:
     echo ""
     echo "📋 Step 2: Extract first saved state"
     echo "-----------------------------------"
-    just capture-gamestate cycle_test_first || {
+    just capture-gamestate-desktop cycle_test_first || {
         echo "❌ Failed to extract first gamestate"
         exit 1
     }
@@ -425,7 +676,7 @@ test-save-load-cycle-desktop:
     echo ""
     echo "📋 Step 4: Extract second saved state"
     echo "------------------------------------"
-    just capture-gamestate cycle_test_second || {
+    just capture-gamestate-desktop cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -532,7 +783,7 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     echo ""
     echo "📋 Step 2: Extract saved state"
     echo "-----------------------------"
-    just capture-gamestate cycle_test_second || {
+    just capture-gamestate-desktop cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -616,7 +867,7 @@ test-save-load-cycle-android:
     echo ""
     echo "📋 Step 2: Extract first saved state"
     echo "-----------------------------------"
-    just capture-gamestate cycle_test_first || {
+    just capture-gamestate-desktop cycle_test_first || {
         echo "❌ Failed to extract first gamestate"
         exit 1
     }
@@ -645,7 +896,7 @@ test-save-load-cycle-android:
     echo ""
     echo "📋 Step 4: Extract second saved state"
     echo "------------------------------------"
-    just capture-gamestate cycle_test_second || {
+    just capture-gamestate-desktop cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }
@@ -752,7 +1003,7 @@ test-save-load-cycle-with-state-android STATE_NAME:
     echo ""
     echo "📋 Step 2: Extract saved state"
     echo "-----------------------------"
-    just capture-gamestate cycle_test_second || {
+    just capture-gamestate-desktop cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }

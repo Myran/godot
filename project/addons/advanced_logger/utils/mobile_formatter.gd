@@ -15,6 +15,8 @@ static func get_level_string(level: int) -> String:
 static func format_log_message(level: int, message: String, context: Dictionary, tags: Array[String] = []) -> String:
 	if message.begins_with("[BUFFER]"):
 		return _format_buffer_entry(message, context, tags)
+	elif message.begins_with("[CHUNK"):
+		return _format_chunk_entry(level, message, context, tags)
 	else:
 		return _format_standard_entry(level, message, context, tags)
 
@@ -29,6 +31,18 @@ static func _format_buffer_entry(message: String, context: Dictionary, tags: Arr
 		formatted += tag_part + " " + str(context)
 	else:
 		formatted += tag_part
+
+	return formatted
+
+static func _format_chunk_entry(level: int, message: String, context: Dictionary, tags: Array[String]) -> String:
+	# For chunked messages, preserve the chunk header and add level/tags
+	var formatted = "[%s] %s" % [get_level_string(level), message]
+
+	if not tags.is_empty():
+		formatted += " [" + ", ".join(tags) + "]"
+
+	if not context.is_empty():
+		formatted += " " + str(context)
 
 	return formatted
 
