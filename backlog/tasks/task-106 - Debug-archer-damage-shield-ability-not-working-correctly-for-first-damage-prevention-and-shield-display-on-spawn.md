@@ -3,10 +3,10 @@ id: task-106
 title: >-
   Debug archer damage shield ability - not working correctly for first damage
   prevention and shield display on spawn
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-29 09:17'
-updated_date: '2025-08-29 09:17'
+updated_date: '2025-08-30 11:51'
 labels:
   - debugging
   - abilities

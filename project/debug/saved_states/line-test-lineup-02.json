@@ -1,0 +1,181 @@
+{
+  "lineup_data": {
+    "allies": {
+      "0": {
+        "block_context": 2,
+        "card_id": "13",
+        "card_info": {
+          "abilities": "damage:frontandbackrow",
+          "attack": "1",
+          "card_name": "Spearman",
+          "description": "Deal damage to front and back row enemies at once",
+          "health": "3",
+          "id": "13",
+          "name": "spearman",
+          "tags": "soldier",
+          "tribe": "forest",
+          "upgrade_level": "1"
+        },
+        "card_name": "Spearman",
+        "draft_position": -1,
+        "level": 1,
+        "object_type": 1,
+        "position": 0,
+        "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+        "unit_state": {
+          "abilities": [],
+          "base_attack": 1,
+          "base_health": 3,
+          "current_attack": 1,
+          "current_health": 3,
+          "effects_perm": [],
+          "effects_temp": [],
+          "has_battle_reference": false,
+          "level": 1,
+          "max_attack": 1,
+          "max_health": 3
+        }
+      },
+      "1": {
+        "block_context": 2,
+        "card_id": "1",
+        "card_info": {
+          "abilities": "archer:1",
+          "attack": "1",
+          "card_name": "Archer",
+          "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+          "health": "2",
+          "id": "1",
+          "name": "archer",
+          "tags": "",
+          "tribe": "forest",
+          "upgrade_level": "1"
+        },
+        "card_name": "Archer",
+        "draft_position": -1,
+        "level": 1,
+        "object_type": 1,
+        "position": 1,
+        "unit_checksum": "ef3fe91b345a55766cc73f1e29fa2a9aa5d9839d3754ba3c059a8ed890786dc5",
+        "unit_state": {
+          "abilities": [
+            {
+              "persistence_type": 0,
+              "shield_used": false,
+              "type": "DamageShieldAbility"
+            }
+          ],
+          "base_attack": 1,
+          "base_health": 2,
+          "current_attack": 1,
+          "current_health": 2,
+          "effects_perm": [],
+          "effects_temp": [],
+          "has_battle_reference": false,
+          "level": 1,
+          "max_attack": 1,
+          "max_health": 2
+        }
+      },
+      "2": {
+        "block_context": 2,
+        "card_id": "12",
+        "card_info": {
+          "abilities": "attacktarget:backrow",
+          "attack": "4",
+          "card_name": "Rhino Man",
+          "description": "Attack back row first",
+          "health": "2",
+          "id": "12",
+          "name": "rhino",
+          "tags": "",
+          "tribe": "evil",
+          "upgrade_level": "1"
+        },
+        "card_name": "Rhino Man",
+        "draft_position": -1,
+        "level": 1,
+        "object_type": 1,
+        "position": 2,
+        "unit_checksum": "bb84690a80d28ab6ea54ff17db07d0d38f093be28eb970ac748a4e0b1a37d8bb",
+        "unit_state": {
+          "abilities": [
+            {
+              "attack_per_evil": 1,
+              "health_per_evil": 1,
+              "persistence_type": 0,
+              "type": "EvilSynergyAbility"
+            }
+          ],
+          "base_attack": 4,
+          "base_health": 2,
+          "current_attack": 4,
+          "current_health": 2,
+          "effects_perm": [],
+          "effects_temp": [],
+          "has_battle_reference": false,
+          "level": 1,
+          "max_attack": 4,
+          "max_health": 2
+        }
+      },
+      "5": {
+        "block_context": 2,
+        "card_id": "10",
+        "card_info": {
+          "abilities": "onanyupgrade:shield",
+          "attack": "2",
+          "card_name": "Moose Guy",
+          "description": "Gain shield when unit upgrades",
+          "health": "3",
+          "id": "10",
+          "name": "mooseman",
+          "tags": "forest",
+          "tribe": "evil",
+          "upgrade_level": "1"
+        },
+        "card_name": "Moose Guy",
+        "draft_position": -1,
+        "level": 1,
+        "object_type": 1,
+        "position": 5,
+        "unit_checksum": "dcb6bc8b6c4899e293ea1165c45982ea70711f579cac74bedad6877249adb5ce",
+        "unit_state": {
+          "abilities": [
+            {
+              "persistence_type": 0,
+              "shield_used": false,
+              "type": "DamageShieldAbility"
+            }
+          ],
+          "base_attack": 2,
+          "base_health": 3,
+          "current_attack": 2,
+          "current_health": 3,
+          "effects_perm": [],
+          "effects_temp": [],
+          "has_battle_reference": false,
+          "level": 1,
+          "max_attack": 2,
+          "max_health": 3
+        }
+      }
+    },
+    "current_game_state": "DRAFT",
+    "extraction_type": "allied_lineup_state",
+    "game_available": true,
+    "lineup_type": "allied_only",
+    "metadata": {
+      "extractor_version": "1.0.0"
+    },
+    "ui_state": "WAITING"
+  },
+  "rng_state": "{\"current_state\":-8789219471688713149,\"initial_seed\":1}",
+  "capture_timestamp": "2025-08-30T12:38:37",
+  "session_id": "session_20250830_123813_398e4d5d",
+  "platform": "macOS",
+  "capture_id": "lineup_allied_1756550317.97086_239",
+  "format_version": "1.0",
+  "lineup_type": "allied",
+  "debug_only": true
+}
