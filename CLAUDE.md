@@ -205,9 +205,21 @@ await Engine.get_main_loop().process_frame
 await Engine.get_main_loop().create_timer(0.3).timeout
 await get_tree().create_timer(1.0).timeout
 
-# ✅ Use proper async completion instead
+# ✅ Use proper signal-based completion instead
 await some_operation_completed
-await async_function_call()
+await signal_emitted
+```
+
+**CRITICAL: GDScript doesn't have `async` keyword:**
+
+```gdscript
+# ❌ FORBIDDEN - async keyword doesn't exist in GDScript
+async func my_function() -> void:
+
+# ✅ CORRECT - Functions that await are automatically async
+func my_function() -> void:
+    await some_signal
+    # Function becomes async when it contains await
 ```
 
 ## 💪 Strong Typing Requirements
