@@ -102,16 +102,16 @@ static func extract_lineup_state() -> Dictionary:
 
 static func extract_allied_lineup_only() -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
-	
+
 	var lineup_data: Dictionary = {}
-	
+
 	var game: Game = _get_game_instance()
 	if game:
 		lineup_data["game_available"] = true
-		
+
 		var allies_lineup: Dictionary[int, Card] = game.holder_allies.get_current_lineup()
 		lineup_data["allies"] = _extract_lineup_data(allies_lineup)
-		
+
 		# Include game state context for validation
 		lineup_data["current_game_state"] = core.GameState.keys()[
 			game.game_handler.current_gamestate
@@ -120,13 +120,13 @@ static func extract_allied_lineup_only() -> Dictionary:
 	else:
 		lineup_data["game_available"] = false
 		lineup_data["allies"] = {}
-	
+
 	lineup_data["lineup_type"] = "allied_only"
 	lineup_data["extraction_type"] = "allied_lineup_state"
 	lineup_data["metadata"] = _extract_metadata()
-	
+
 	var execution_time: int = Time.get_ticks_msec() - start_time
-	
+
 	Log.debug(
 		"StateExtractor: Allied lineup extracted",
 		{
@@ -136,22 +136,22 @@ static func extract_allied_lineup_only() -> Dictionary:
 		},
 		["state_extractor", "lineup", "allied"]
 	)
-	
+
 	return normalize_data(lineup_data)
 
 
 static func extract_enemy_lineup_only() -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
-	
+
 	var lineup_data: Dictionary = {}
-	
+
 	var game: Game = _get_game_instance()
 	if game:
 		lineup_data["game_available"] = true
-		
+
 		var enemy_lineup: Dictionary[int, Card] = game.holder_enemy.get_current_lineup()
 		lineup_data["enemies"] = _extract_lineup_data(enemy_lineup)
-		
+
 		# Include game state context for validation
 		lineup_data["current_game_state"] = core.GameState.keys()[
 			game.game_handler.current_gamestate
@@ -160,13 +160,13 @@ static func extract_enemy_lineup_only() -> Dictionary:
 	else:
 		lineup_data["game_available"] = false
 		lineup_data["enemies"] = {}
-	
+
 	lineup_data["lineup_type"] = "enemy_only"
 	lineup_data["extraction_type"] = "enemy_lineup_state"
 	lineup_data["metadata"] = _extract_metadata()
-	
+
 	var execution_time: int = Time.get_ticks_msec() - start_time
-	
+
 	Log.debug(
 		"StateExtractor: Enemy lineup extracted",
 		{
@@ -176,7 +176,7 @@ static func extract_enemy_lineup_only() -> Dictionary:
 		},
 		["state_extractor", "lineup", "enemy"]
 	)
-	
+
 	return normalize_data(lineup_data)
 
 

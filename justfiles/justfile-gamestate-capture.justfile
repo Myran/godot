@@ -1,5 +1,6 @@
 # GameState Debug Capture & Load System
 # Enables complete developer workflow for scenario testing
+# Includes lineup-specific capture for designer battle testing
 
 # Helper function to reassemble chunked Android log messages
 _reassemble-android-chunks:
@@ -1061,3 +1062,213 @@ test-save-load-cycle-with-state-android STATE_NAME:
         rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
         exit 1
     fi
+
+# ================================
+# LINEUP-SPECIFIC CAPTURE COMMANDS  
+# ================================
+
+# Extract captured allied lineup from desktop logs and create debug save file
+capture-lineup-allied NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting allied lineup '{{NAME}}' from logs..."
+    echo ""
+    
+    # Use shared log command for DRY compliance
+    echo "1️⃣ Searching for DEBUG_LINEUP_ALLIED_CAPTURE in desktop logs..."
+    
+    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_LINEUP_ALLIED_CAPTURE" || echo "")
+    
+    if [ -z "$CAPTURE_OUTPUT" ]; then
+        echo "❌ No allied lineup capture found in recent desktop logs"
+        echo ""
+        echo "💡 To capture an allied lineup:"
+        echo "   1. Start game: just run-desktop"
+        echo "   2. Open debug menu (press D key)"
+        echo "   3. Click 'Save Allied Lineup' button"
+        echo "   4. Exit game"
+        echo "   5. Run: just capture-lineup-allied NAME"
+        exit 1
+    fi
+    
+    # Extract the most recent capture line from the search results
+    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_LINEUP_ALLIED_CAPTURE" | tail -1)
+    
+    if [ -z "$CAPTURE_LINE" ]; then
+        echo "❌ No valid DEBUG_LINEUP_ALLIED_CAPTURE entry found"
+        exit 1
+    fi
+    
+    # Create debug saves directory in user data location (cross-platform compatible)
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    mkdir -p "$SAVED_STATES_DIR"
+    
+    # Extract JSON data from the capture line
+    echo "2️⃣ Extracting JSON data from capture..."
+    JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+    
+    if [ -z "$JSON_DATA" ]; then
+        echo "❌ No valid JSON data found in capture line"
+        echo "Debug info: $CAPTURE_LINE"
+        exit 1
+    fi
+    
+    # Validate and save JSON data
+    echo "$JSON_DATA" | jq '.' > /tmp/lineup_temp.json
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Invalid JSON in captured allied lineup"
+        echo "Raw data: $JSON_DATA"
+        exit 1
+    fi
+    
+    # Move to final location with line- prefix
+    mv /tmp/lineup_temp.json "$SAVED_STATES_DIR/line-{{NAME}}.json"
+    
+    # Verify file creation and show info
+    if [ -f "$SAVED_STATES_DIR/line-{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        
+        echo ""
+        echo "✅ Allied lineup saved successfully!"
+        echo "📄 File: $SAVED_STATES_DIR/line-{{NAME}}.json"
+        echo "🆔 Capture ID: $CAPTURE_ID"  
+        echo "⏰ Captured: $TIMESTAMP"
+        echo "📏 Size: ${FILE_SIZE} bytes"
+        echo "🔄 Can be loaded as allied or enemy lineup"
+    else
+        echo "❌ Failed to create allied lineup file"
+        exit 1
+    fi
+
+# Extract captured enemy lineup from desktop logs and create debug save file
+capture-lineup-enemy NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting enemy lineup '{{NAME}}' from logs..."
+    echo ""
+    
+    echo "1️⃣ Searching for DEBUG_LINEUP_ENEMY_CAPTURE in desktop logs..."
+    
+    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_LINEUP_ENEMY_CAPTURE" || echo "")
+    
+    if [ -z "$CAPTURE_OUTPUT" ]; then
+        echo "❌ No enemy lineup capture found in recent desktop logs"
+        echo ""
+        echo "💡 To capture an enemy lineup:"
+        echo "   1. Start game: just run-desktop"
+        echo "   2. Open debug menu (press D key)"
+        echo "   3. Click 'Save Enemy Lineup' button"
+        echo "   4. Exit game"
+        echo "   5. Run: just capture-lineup-enemy NAME"
+        exit 1
+    fi
+    
+    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_LINEUP_ENEMY_CAPTURE" | tail -1)
+    
+    if [ -z "$CAPTURE_LINE" ]; then
+        echo "❌ No valid DEBUG_LINEUP_ENEMY_CAPTURE entry found"
+        exit 1
+    fi
+    
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    mkdir -p "$SAVED_STATES_DIR"
+    
+    echo "2️⃣ Extracting JSON data from capture..."
+    JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+    
+    if [ -z "$JSON_DATA" ]; then
+        echo "❌ No valid JSON data found in capture line"
+        exit 1
+    fi
+    
+    echo "$JSON_DATA" | jq '.' > /tmp/lineup_temp.json
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Invalid JSON in captured enemy lineup"
+        exit 1
+    fi
+    
+    mv /tmp/lineup_temp.json "$SAVED_STATES_DIR/line-{{NAME}}.json"
+    
+    if [ -f "$SAVED_STATES_DIR/line-{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/line-{{NAME}}.json")
+        
+        echo ""
+        echo "✅ Enemy lineup saved successfully!"
+        echo "📄 File: $SAVED_STATES_DIR/line-{{NAME}}.json"
+        echo "🆔 Capture ID: $CAPTURE_ID"
+        echo "⏰ Captured: $TIMESTAMP" 
+        echo "📏 Size: ${FILE_SIZE} bytes"
+        echo "🔄 Can be loaded as allied or enemy lineup"
+    else
+        echo "❌ Failed to create enemy lineup file"
+        exit 1
+    fi
+
+# List lineup saves (line-* files)
+list-lineup-saves:
+    #!/usr/bin/env bash
+    echo "🔄 Available Lineup Saves:"
+    echo "=========================="
+    
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    
+    if [ ! -d "$SAVED_STATES_DIR" ]; then
+        echo "📁 No saved states directory found"
+        exit 0
+    fi
+    
+    cd "$SAVED_STATES_DIR"
+    
+    LINEUP_FILES=$(ls line-*.json 2>/dev/null || echo "")
+    
+    if [ -z "$LINEUP_FILES" ]; then
+        echo "📁 No lineup saves found (line-*.json)"
+        echo "💡 Use debug menu 'Save Allied/Enemy Lineup' + capture commands"
+        exit 0
+    fi
+    
+    for file in line-*.json; do
+        if [ -f "$file" ]; then
+            NAME=$(basename "$file" .json | sed 's/^line-//')
+            CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$file" 2>/dev/null)
+            TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$file" 2>/dev/null)
+            SIZE=$(wc -c < "$file")
+            
+            echo "🎯 $NAME"
+            echo "   📄 File: $file"
+            echo "   🆔 Capture ID: $CAPTURE_ID"
+            echo "   ⏰ Captured: $TIMESTAMP"
+            echo "   📏 Size: ${SIZE} bytes"
+            echo ""
+        fi
+    done
+
+# Show lineup-specific help
+help-lineup:
+    @echo "🎯 Lineup Save/Load Commands for Designer Testing:"
+    @echo "================================================"
+    @echo ""
+    @echo "📋 Workflow:"
+    @echo "  1. just run-desktop                    # Start game"
+    @echo "  2. Debug menu → Save Allied/Enemy Lineup"
+    @echo "  3. Exit game"
+    @echo "  4. just capture-lineup-allied NAME     # Extract allied lineup"
+    @echo "  5. just capture-lineup-enemy NAME      # Extract enemy lineup"
+    @echo "  6. just run-desktop                    # Start for testing"
+    @echo "  7. Debug menu → Load lineups in either slot"
+    @echo ""
+    @echo "🎯 Commands:"
+    @echo "  just capture-lineup-allied NAME        # Extract allied lineup"
+    @echo "  just capture-lineup-enemy NAME         # Extract enemy lineup"
+    @echo "  just list-lineup-saves                 # Show all lineup saves"
+    @echo ""
+    @echo "🔄 Any lineup can load into allied or enemy slot"
+    @echo "📁 Files: {{SAVED_STATES_DIR}}/line-NAME.json"

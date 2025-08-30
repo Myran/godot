@@ -20,7 +20,7 @@ func _execute_load_allied_lineup(params: Dictionary = {}) -> DebugActionResult:
 	if params.has("file") and not params["file"].is_empty():
 		var filename: String = params["file"]
 		actual_file_path = DebugConfigReader.get_saved_state_path(filename)
-	
+
 	if actual_file_path.is_empty():
 		return DebugActionResult.new_failure("No lineup file path provided")
 
@@ -41,7 +41,9 @@ func _execute_load_allied_lineup(params: Dictionary = {}) -> DebugActionResult:
 		return DebugActionResult.new_failure("Game instance not found")
 
 	# Perform surgical allied lineup replacement
-	var replacement_success: bool = await _replace_allied_lineup_surgical(game_instance, lineup_data)
+	var replacement_success: bool = await _replace_allied_lineup_surgical(
+		game_instance, lineup_data
+	)
 	if not replacement_success:
 		return DebugActionResult.new_failure("Failed to replace allied lineup")
 
@@ -103,7 +105,7 @@ func _load_lineup_file(file_path: String) -> Dictionary:
 		# This is a full gamestate save, extract lineup data
 		var gamestate: Dictionary = file_data.gamestate
 		return gamestate.get("lineup", {})
-	
+
 	Log.error(
 		"Invalid lineup file format - no lineup data found",
 		{"file_path": file_path},
@@ -139,14 +141,14 @@ func _replace_allied_lineup_surgical(game: Game, lineup_data: Dictionary) -> boo
 	# Step 2: Determine which lineup data to use (flexible loading)
 	var source_data: Dictionary = {}
 	var data_source: String = ""
-	
+
 	if lineup_data.has("allies") and not lineup_data.allies.is_empty():
 		source_data = lineup_data.allies
 		data_source = "allied_data"
 	elif lineup_data.has("enemies") and not lineup_data.enemies.is_empty():
 		source_data = lineup_data.enemies
 		data_source = "enemy_data_as_allied"
-	
+
 	if source_data.is_empty():
 		Log.warning(
 			"No lineup data found to load as allied",
@@ -157,7 +159,7 @@ func _replace_allied_lineup_surgical(game: Game, lineup_data: Dictionary) -> boo
 
 	# Step 3: Restore lineup data into allied positions (reuse GamestateLoader logic)
 	await GamestateLoader._restore_lineup_positions(game, source_data, game.holder_allies, "allies")
-	
+
 	Log.info(
 		"Allied lineup surgical replacement completed",
 		{

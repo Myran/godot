@@ -1,7 +1,16 @@
 class_name MenuListItemData
 extends RefCounted
 
-enum ItemType { CATEGORY, GROUP, ACTION, BACK_TO_MAIN, BACK_TO_GROUPS, SAVED_STATES, ALLIED_LINEUPS, ENEMY_LINEUPS }
+enum ItemType {
+	CATEGORY,
+	GROUP,
+	ACTION,
+	BACK_TO_MAIN,
+	BACK_TO_GROUPS,
+	SAVED_STATES,
+	ALLIED_LINEUPS,
+	ENEMY_LINEUPS
+}
 
 @export var type: ItemType
 @export var display_name: String = ""

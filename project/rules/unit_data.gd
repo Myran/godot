@@ -113,7 +113,7 @@ func _is_combat_only_ability(ability: Ability) -> bool:
 		"DeathTriggerHealthAbility",  # Axe man's ondeath health bonus - should be combat-only
 		# Add other combat-only ability classes here as needed
 	]
-	
+
 	return ability.get_class() in combat_only_classes
 
 

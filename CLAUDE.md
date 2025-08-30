@@ -18,6 +18,7 @@ just logs-tree TEST_ID                     # Explore log structure (2 sec)
 just logs-pattern TEST_ID "*.error"        # All errors with precision
 just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
 just help-wildcards                        # Complete pattern guide
+just help                                  # Interactive command browser (Claude can read directly)
 
 # Enhanced Testing with Automatic Validation (NEW)
 just test-android-target CONFIG            # Automated testing with built-in error analysis & checksum validation
@@ -45,439 +46,173 @@ just help-gamestate                      # Complete cross-platform workflow guid
 # Debug Decision Tree: logs-tree → logs-pattern → logs-text → logs-exclude → logs-errors (traditional backup)
 ```
 
-## 🎯 Command System Overview
+## 🎯 GameTwo Daily Workflow
 
-**Three-tier command structure: `test` (analysis) → `config` (iteration) → `logs` (debugging)**
-
-### **Primary Commands (Daily Use)**
-- `just validate` - Complete validation pipeline
-- `just test-android TARGET` - Main testing interface (auto-detects patterns/configs/folders)
-- `just test-android-target CONFIG` - ⭐ **NEW: Enhanced automated testing with built-in validation**
-- `just test-desktop-target CONFIG` - ⭐ **NEW: Desktop automated testing with comprehensive validation**
-- `just test-android test-all` - ⭐ **NEW: Run ALL test suites automatically using @ symbol expansion**
-- `just test-android '/archive/generated-replays/'` - 🚀 **NEW: All battle replays (25+ configs)**
-- `just config-restart-android ACTION` - 5-second iteration cycles
-- `just logs-errors TEST_ID` - Token-efficient error detection
-
-### **Secondary Commands (Weekly Use)**  
-- `just test-android-target CONFIG` - Automated testing (quits after completion)
-- `just replay-generate-desktop SESSION_ID NAME` - Create tests from gameplay
-- `just fastbuild-android` - Smart rebuild system
-
-### **Advanced Commands (As Needed)**
-- `just build` - Complete source-to-device pipeline (46 min)
-
-## 🤖 Claude Code Tool Preferences
-
-**CRITICAL: Always link backlog tasks with implementations**
-- **Use bidirectional linking**: Reference task in commit, reference commit in task
-- **Use `git commit --amend`**: For including documentation updates in the same logical commit
-- **Follow commit format**: Include "Closes: task-XXX" and "Related: backlog/tasks/..." references
-
-**CRITICAL: Always use ripgrep instead of grep**
-- **Use `rg` command** instead of `grep` for all text searching operations
-- **Use `rg` command** instead of the built-in Grep tool when practical
-- **Performance**: ripgrep is 2-10x faster than grep with superior regex engine
-- **Features**: Better Unicode support, JSON output, automatic gitignore respect, SIMD optimizations
-
-**CRITICAL: Leverage Repomix MCP for architectural analysis**
-- **Use Repomix MCP** for comprehensive codebase analysis and pattern discovery
-- **10x more efficient** than individual file reads for understanding system relationships
-- **Persistent analysis** - pack once, search multiple times with grep_repomix_output
-- **Token optimization** - strategic use of compression and filtering for different analysis types
-
-### **Ripgrep Migration Guide**
-| Old grep command | New ripgrep equivalent | Notes |
-|------------------|------------------------|-------|
-| `grep -r "pattern" /path` | `rg "pattern" /path` | Recursive by default |
-| `grep -o "pattern" file` | `rg -o "pattern" file` | Extract matches only |
-| `grep -l "pattern" files` | `rg -l "pattern" files` | List matching files |
-| `grep -c "pattern" file` | `rg -c "pattern" file` | Count matches |
-| `grep -E "regex" file` | `rg "regex" file` | Extended regex default |
-| `grep -i "pattern" file` | `rg -i "pattern" file` | Case insensitive |
-| `grep -v "pattern" file` | `rg -v "pattern" file` | Invert match |
-| `grep -A5 -B5 "pattern"` | `rg -A5 -B5 "pattern"` | Context lines |
-
-### **Ripgrep Advanced Features**
+**Essential Development Pattern:**
 ```bash
-# Compressed file search (not possible with grep)
-rg -z "pattern" logs.gz
-
-# JSON-structured output  
-rg --json "pattern" file.log
-
-# Smart case (case-insensitive unless uppercase in pattern)
-rg -S "pattern" files
-
-# File type filtering
-rg "pattern" -t rust -t javascript
-
-# Multiline pattern matching
-rg -U "function.*{.*}" src/
+# Code Changes → Testing Pipeline
+just fastbuild-android          # REQUIRED after any GDScript/C++ changes  
+just test-android-target CONFIG # Automated testing with validation
+just logs-errors TEST_ID        # If tests fail - start here (98% token savings)
 ```
 
-**Exception**: Only use `grep` when required for exact compatibility with existing pipeline scripts that depend on specific grep behavior.
+**Debug Decision Tree:**
+`logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
 
-## 🔧 Debugging Workflow
+## 📋 Command Quick Reference
 
-**🚀 NEW: Wildcard Pattern Debugging (10x Faster & More Precise)**
-1. `just logs-tree TEST_ID` (2 sec, explore structure)
-2. `just logs-discover TEST_ID firebase` (3 sec, find domain tags)
-3. `just logs-pattern TEST_ID "firebase.*"` (5 sec, precise filtering)
-4. `just logs-exclude TEST_ID "firebase.*" "firebase.debug"` (refine results)
+**Testing Commands:**
+- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` - Enhanced automated testing
+- `just test-android TARGET` | `just test-desktop TARGET` - Manual testing (stays open)
+- `just validate` - Complete validation (format + syntax + runtime)
 
-**Traditional Progressive debugging sequence (still available):**
-1. `just logs-errors TEST_ID` (5 sec, <10 tokens)
-2. `just logs-android TEST_ID [component]` or `just logs-desktop TEST_ID [component]` (15 sec, <100 tokens) 
-3. `just logs-android TEST_ID [component] [operation]` or `just logs-desktop TEST_ID [component] [operation]` (<200 tokens)
+**Debugging Commands:**
+- `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
+- `just logs-tree TEST_ID` - Explore log structure (2 sec)
+- `just logs-pattern TEST_ID "firebase.*"` - Pattern matching
+- `just logs-text TEST_ID "search_term"` - Simple text search
 
-### **🎯 Enhanced Failure Pattern Quick Reference (Wildcard + Text Search + Traditional)**
-| Symptom | Best Debug Command | Alternative Commands | Fix Command |
-|---------|-------------------|---------------------|-------------|
-| Firebase timeout/auth | `logs-text TEST_ID "firebase"` | `logs-pattern TEST_ID "firebase.*"` | `test-android 'system.network.*'` |
-| All error types | `logs-text TEST_ID "error"` | `logs-pattern TEST_ID "*.error"` or `logs-errors TEST_ID` | Investigate specific errors |
-| Hash mismatch/validation | `logs-text TEST_ID "checksum"` | `logs-pattern TEST_ID "*.checksum"` | `test-android 'game.match.reset_level'` |
-| Performance/timeouts | `logs-text TEST_ID "timeout"` | `logs-pattern TEST_ID "performance.*"` | `test-android '*.*.performance'` |
-| Integration failures | `logs-text TEST_ID "integration"` | `logs-pattern TEST_ID "*.integrity"` | Fix specific integration issue |
-| System warnings | `logs-text TEST_ID "warning"` | `logs-pattern TEST_ID "*.warning"` | Investigate warnings |
-| Database issues | `logs-text TEST_ID "database"` | `logs-pattern TEST_ID "database.*"` | `test-android 'database.*'` |
-| Network problems | `logs-text TEST_ID "network"` | `logs-multi TEST_ID "*.timeout" "*.error"` | `test-android 'network.*'` |
-| Specific text search | `logs-text TEST_ID "any string"` | N/A | Context-dependent |
+**Build Commands:**
+- `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
+- `just build` - Complete pipeline (46 min)
+- `just build-status` - Check what would be rebuilt
 
-## 📋 Log Commands (Two Distinct Types)
+**Config Commands:**
+- `just config-restart-android ACTION` - Deploy + restart (5 sec)
+- `just config-push-android CONFIG` - Deploy config only (2 sec)
+- `just config-list` - List available configs
 
-### **📱 Real-Time Android Device Logs (Live adb logcat, Token-Efficient)**
-```bash
-just android-logs-errors 30               # Live device error monitoring (filtered)
-just android-logs-status                  # Device & app status check  
-just android-logs-tagged "firebase" 30 50 # Live tag-filtered monitoring (30s, max 50 lines)
-just android-logs-performance 60 30       # Live performance monitoring (60s, max 30 lines)
-just android-logs-live 60 "*:I" 100       # Live monitoring (60s, INFO level, max 100 lines)
-```
+**Gamestate Commands:**
+- `just capture-gamestate-desktop NAME` | `just capture-gamestate-android NAME`
+- `just list-saved-states` | `just clean-saved-states`
 
-**💡 All Android device log commands include smart filtering:**
-- **Filter out noise**: OpenGL, font loading, VSYNC, touch events
-- **Focus on relevance**: Firebase, debug, errors, tests, performance data
-- **Configurable limits**: Default 20-50 lines, but adjustable as last parameter
+> 📚 **For detailed command help**: Use `just help` and `just help-[topic]` - Claude can read these outputs directly for comprehensive explanations and examples.
 
-### **📄 Saved Test Result Analysis (Token-Efficient)**
+## 🤖 Claude Code Preferences
 
-**🚀 NEW: Wildcard Pattern System (10x Productivity Boost)**
-```bash
-# Pattern Discovery & Structure Exploration  
-just logs-tree TEST_ID                     # Show hierarchical tag structure (most efficient start)
-just logs-discover TEST_ID PREFIX          # Find all tags with prefix (e.g., firebase)
-just logs-suggest TEST_ID PARTIAL          # Auto-complete suggestions
+**Essential GameTwo patterns:**
+- **Always use `rg` instead of `grep`** - 10x faster, better regex engine
+- **REQUIRED: `just fastbuild-android`** after ANY GDScript/C++ changes before Android testing
+- **Link tasks bidirectionally**: Reference task in commit, commit in task
 
-# Advanced Pattern Matching (Ultra-Precise)
-just logs-pattern TEST_ID PATTERN          # Single pattern: firebase.*, *.error, game.*.start
-just logs-multi TEST_ID PATTERN1 PATTERN2  # Multiple patterns (OR logic)
-just logs-exclude TEST_ID PATTERN EXCLUDE  # Include/exclude: firebase.* but not firebase.debug
+**MCP Tools for GameTwo Development:**
+- **Repomix MCP**: Pack codebase once, search multiple times - ideal for architectural analysis
+- **Godot MCP**: Launch editor, run project, get debug output - direct Godot 4.3 integration  
+- **Context7 MCP**: Get up-to-date docs for any library - resolve library patterns and fetch documentation
 
-# Pattern Examples (Copy-Paste Ready)
-just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
-just logs-pattern TEST_ID "*.error"        # All error operations  
-just logs-pattern TEST_ID "game.*.start"   # All start events
-just logs-pattern TEST_ID "database.query" # Exact match
-just logs-exclude TEST_ID "firebase.*" "firebase.debug" # Firebase without debug noise
+**Git workflow:**
+- Use `git commit --amend` for related documentation updates
+- Include "Closes: task-XXX" and "Related: backlog/tasks/..." in commits
 
-# Pattern Help
-just help-wildcards                        # Complete pattern system guide
-just help-wildcard-quick                   # Quick reference
-```
+**Exception**: Use `grep` only for pipeline scripts requiring exact compatibility.
 
-**Traditional Commands (Still Available)**
-```bash
-# Primary (Use First)
-just logs-errors TEST_ID                   # Error-focused (98% savings)
-just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search (case-insensitive, token-efficient)
-just logs-last                             # Latest run (99% savings)
-just logs-android TEST_ID [component] or just logs-desktop TEST_ID [component]  # Component analysis (87-95% savings)
+## 🔧 Common Issues Quick Fix
 
-# Performance & Specialized  
-just logs-performance TEST_ID              # Performance data
-just logs-desktop-errors TEST_ID           # Desktop errors only
-just logs-lifecycle TEST_ID                # App lifecycle events
+**Debugging pattern (token-efficient):**
+1. `just logs-errors TEST_ID` (98% token savings - start here)
+2. `just logs-text TEST_ID "firebase"` (specific search)
+3. `just logs-pattern TEST_ID "firebase.*"` (pattern matching)
 
-# Full logs (avoid unless necessary)
-just logs-android TEST_ID or just logs-desktop TEST_ID  # Complete logs (high token cost)
-```
+**Common fixes:**
+- Firebase issues: `just test-android 'system.network.*'`
+- Checksum failures: `just test-android 'game.match.reset_level'`
+- Performance issues: `just test-android '*.*.performance'`
 
-## ⚡ Core Commands Reference
+## 📋 Android Device Logs
 
-### **Testing Commands**
-```bash
-just test-android TARGET                   # Main interface - AUTOMATIC MODE (auto-detects patterns/configs/lists)
-just test-desktop TARGET                   # Desktop interface - AUTOMATIC MODE (auto-detects patterns/configs/lists)
-just test-android-target CONFIG            # ⭐ Enhanced automated mode with built-in validation
-just test-desktop-target CONFIG            # ⭐ Enhanced desktop automated testing
-just test-android-enhanced TARGET          # Enhanced error analysis
+**Live device monitoring:**
+- `just android-logs-errors 30` - Live error monitoring (30s, filtered)
+- `just android-logs-tagged "firebase" 30 50` - Tag filtering (30s, 50 lines)
+- `just android-logs-status` - Device & app status
 
-# Manual testing (stays open for inspection)
-just test-android-manual CONFIG            # Android manual mode (app stays open)
-just test-desktop-manual CONFIG            # Desktop manual mode (app stays open)
+**All commands filter out noise and focus on Firebase, debug, errors, performance.**
 
-# Standard workflows
-just test-android development-workflow     # Daily development
-just test-android pre-commit               # Pre-commit validation
+## 🔧 Testing Modes
 
-# ⭐ NEW: Enhanced Timeout Support
-just test-android TARGET DURATION          # Custom timeout (e.g., just test-android config 300)
-just test-android-target CONFIG DURATION   # Custom timeout for automated tests
-just test-desktop-target CONFIG DURATION   # Custom timeout for desktop tests
+**Automated (quits after completion):**
+- `just test-android-target CONFIG` - Enhanced with validation
+- `just test-desktop-target CONFIG` - Cross-platform testing
 
-# Environment Variables for Timeout Control
-# ANDROID_TEST_MAX_TIMEOUT=300              # Max timeout (default: 120s)
-# ANDROID_TEST_ACTIVITY_TIMEOUT=90          # Activity timeout (default: 60s)
-# DESKTOP_TEST_MAX_TIMEOUT=180              # Desktop max timeout (default: 120s)
-```
+**Manual (stays open):**
+- `just test-android-manual CONFIG` - Android inspection mode
+- `just test-desktop-manual CONFIG` - Desktop inspection mode
 
-### **Config Commands (5-second iterations)**
-```bash
-just config-restart-android ACTION         # Deploy + restart (5 sec)
-just config-push-android CONFIG            # Deploy config only (2 sec)
-just config-list                           # List available configs
-just config-android-tags "active" "ignored" # Runtime log filtering
-```
+**Workflows:**
+- `just test-android development-workflow` - Daily development
+- `just test-android pre-commit` - Pre-commit validation
 
-### **Wildcard Patterns (Hierarchical: layer.domain.operation)**
+## 🎯 Pattern Examples
 
-```bash
-# Layer wildcards
-just test-android 'cpp.*'                 # C++ Firebase SDK
-just test-android 'backend.*'             # Backend Firebase  
-just test-android 'rtdb.*'                # RTDB API
-just test-android 'system.*'              # System utilities
-just test-android 'game.*'                # Game logic
+**Layer patterns:**
+- `'cpp.*'` - C++ Firebase SDK
+- `'system.*'` - System utilities  
+- `'game.*'` - Game logic
 
-# Domain wildcards (cross-layer)
-just test-android '*.firebase.*'          # All Firebase operations
-just test-android '*.debug.*'             # All debug utilities
+**Cross-layer patterns:**
+- `'*.firebase.*'` - All Firebase operations
+- `'*.*.error_handling'` - All error handling
 
-# Operation wildcards (cross-layer + domain)
-just test-android '*.*.error_handling'    # All error handling
-just test-android '*.*.performance'       # All performance tests
-```
+## 📁 Test Organization
 
-### **⭐ NEW: @ Symbol Test List References**
+**@ Symbol references:**
+- `"@system-all"` - Include all configs from system-all.json
+- `"@*-all"` - Include ALL test lists ending with "-all"
 
-**Automatically include configs from other test lists using @ symbol references:**
+**Folder references:**
+- `"/archive/generated-replays/"` - All 25+ battle replay configs
+- `"/archive/generated-replays/merge-*"` - Specific replay patterns
 
-```bash
-# Direct test list references
-"@system-all"              # Include all configs from system-all.json
-"@firebase-all"            # Include all configs from firebase-all.json  
-"@battle-all"              # Include all configs from battle-all.json
+**Input auto-detection:**
+- Actions: `'system.debug.registry_stats'` → Direct execution
+- Wildcards: `'cpp.*'` → Auto-discovery  
+- Configs: `system-testing` → Load configuration
 
-# Wildcard test list references  
-"@*-all"                   # Include configs from ALL test lists ending with "-all"
-"@firebase-*"              # Include configs from ALL test lists starting with "firebase-"
-"@*-validation"            # Include configs from ALL test lists ending with "-validation"
-```
+## 🚨 Critical Safety Rules
 
-**Example Test List with @ References:**
-```json
-{
-  "name": "All Test Suites",
-  "description": "Run all *-all test suites automatically",
-  "configs": [
-    "@*-all"
-  ]
-}
-```
+**Debug Actions:**
+- ✅ Use `just test-*` commands (enables debug coordinator)
+- ❌ Never use `just run-desktop` (skips state capture, validation)
 
-**Built-in Test Lists Using @ References:**
-- `test-all` - Automatically runs ALL `*-all` test suites using `@*-all` pattern
-- Automatically prevents circular references and deduplicates configs
-- Supports unlimited nesting depth with cycle detection
-
-**Key Benefits:**
-- ✅ **Automatic Discovery**: New `*-all` lists are automatically included
-- ✅ **No Duplication**: Configs appearing in multiple lists are deduplicated  
-- ✅ **Circular Protection**: Built-in circular dependency detection
-- ✅ **Easy Maintenance**: Add new test suites without updating master lists
-
-### **🚀 NEW: /folder/ Syntax for Battle Replay Integration**
-
-**Automatically include configs from folders using /folder/ syntax:**
-
-```bash
-# Folder references
-"/archive/generated-replays/"         # Include ALL replay configs from folder
-"/archive/generated-replays/merge-*"  # Wildcard pattern within folder  
-"/archive/experimental/firebase-*"    # Subfolder with pattern
-"/templates/"                         # All configs in templates folder
-```
-
-**Example Test List with /folder/ Syntax:**
-```json
-{
-  "name": "Comprehensive Testing with Battle Replays", 
-  "description": "Daily regression enhanced with replay validation",
-  "configs": [
-    "battle-logic-only",              // Traditional config
-    "@firebase-all",                  // @ reference
-    "/archive/generated-replays/",    // All replay configs  
-    "/archive/generated-replays/merge-*"  // Specific replay pattern
-  ]
-}
-```
-
-**Available Folders (Relative to /tests/debug_configs/):**
-- `/archive/generated-replays/` - 25+ battle replay configs (merge-*, draft-*, locked-*, etc.)
-- `/archive/experimental/` - Experimental test configurations  
-- `/templates/` - Config templates and examples
-- `/` - Direct debug_configs folder access
-
-**Folder Pattern Examples:**
-```bash
-# All generated battle replays (25+ configs)
-just test-android "/archive/generated-replays/"
-
-# Just merge scenarios (merge-20 through merge-25) 
-just test-android "/archive/generated-replays/merge-*"
-
-# Draft scenarios 10-14
-just test-android "/archive/generated-replays/draft-1*"
-
-# Mix patterns in test-lists
-just test-android replay-testing  # Uses folder + @ + direct configs
-```
-
-**Key Benefits:**
-- ✅ **Instant Replay Access**: All 25+ existing replays immediately available
-- ✅ **Auto-Discovery**: New replay configs automatically included
-- ✅ **Pattern Matching**: Powerful wildcard support within folders
-- ✅ **Mixed Syntax**: Combine `/folder/`, `@symbols`, and direct configs
-- ✅ **Error Handling**: Clear messages for missing folders/patterns
-
-### **Input Auto-Detection**
-Commands automatically detect input type:
-- **Actions**: `'system.debug.registry_stats'` → Direct execution
-- **Wildcards**: `'cpp.*'` → Auto-discovery
-- **Configs**: `system-testing` → Load configuration  
-- **Test Lists**: `development-workflow` → Execute suite
-- **Folder Patterns**: `'/archive/generated-replays/merge-*'` → Folder expansion ⭐ NEW
-
-## 🚨 CRITICAL: Debug Action Execution
-
-**ALWAYS use `test-*` commands for debug actions:**
-- ✅ `just test-desktop CONFIG` - Enables debug coordinator (AUTOMATIC MODE - quits after completion)
-- ✅ `just test-desktop-manual CONFIG` - Enables debug coordinator (MANUAL MODE - stays open)
-- ❌ `just run-desktop` - Skips debug coordinator (editor mode)
-
-**Impact**: State capture, checksum validation, semantic logging require debug actions.
-
-## 🚨 CRITICAL: Android Development Workflow
-
-**MANDATORY STEP: Always rebuild after code changes before Android testing**
-```bash
-# After ANY code changes (GDScript, C++, config):
-just fastbuild-android                     # Deploy updated code to Android
-# Then proceed with testing:
-just test-android-target CONFIG            # Test with updated code
-```
-
-**Why this is critical:**
-- Android uses compiled/cached code that doesn't auto-update
-- Code changes don't take effect until rebuild and deployment
-- Failing to fastbuild leads to testing old code versions
-- Results in false negatives and debugging the wrong code
+**Android Development:**
+- **MANDATORY**: `just fastbuild-android` after ANY code changes before testing
+- **Why**: Android uses compiled/cached code that doesn't auto-update
 
 ## 📱 Android Configuration
 
-### **⭐ FIXED: Android Checksum Validation**
-Resolved critical environment variable propagation issue that was causing Android checksum validation to silently fail. Tests now properly validate all checksums on both Android and desktop platforms.
+**Core debug configs (9 active):**
+- `battle-logic-only` - Battle without visual effects
+- `firebase-cpp-layer` - C++ Firebase SDK  
+- `system-layer-all` - Complete system utilities
+- `production-ready` - Release validation
+- Use `just config-list` for complete list
 
-**⭐ NEW: Streamlined Configuration Management**
-After comprehensive cleanup, only 9 core debug configs remain (46 archived) organized by layer:
+**Logger control:**
+- `just config-android-tags "firebase,battle" "cache"` - Focus/filter
+- `just config-android-level DEBUG` - Set verbosity
+- `just config-android-reset` - Reset defaults
 
-**Core Debug Configs (9 active):**
-- `battle-animated` - Battle system with full animations
-- `battle-logic-only` - Battle logic without visual effects  
-- `firebase-backend-layer` - Backend Firebase operations
-- `firebase-cpp-layer` - C++ Firebase SDK layer
-- `firebase-network-connectivity` - Network connectivity testing
-- `firebase-rtdb-layer` - Real-time Database layer
-- `system-error-handling` - Error handling validation
-- `system-layer-all` - Complete system utilities (system.*)
-- `system-performance` - Performance monitoring
-
-**Test Lists (13 active workflows):**
-- `production-ready` - Release readiness validation
-- `pre-commit` - Essential pre-commit checks
-- `firebase-all` - Complete Firebase testing
-- `battle-all` - Battle system comprehensive testing
-- `system-all` - System layer validation
-- `comprehensive-with-determinism` - Full deterministic testing
-- `recording-system-integrity` - Replay system validation
-- `wildcard-discovery` - Pattern discovery workflow
-
-### **Logger Control (Runtime)**
-```bash
-just config-android-tags "firebase,battle" "cache,animation" # Focus/filter components
-just config-android-level DEBUG                             # Set log verbosity  
-just config-android-reset                                   # Reset to defaults
-just restart-android-app                                    # Apply changes
-```
-
-### **Real-Time Android Device Log Monitoring (Token-Efficient)**
-```bash
-# Live device monitoring (actual adb logcat, smart filtered)
-just android-logs-errors 30             # Live error monitoring (filtered, 30s)
-just android-logs-live 60 "*:I" 100     # Live log monitoring (60s, INFO level, max 100 lines)
-just android-logs-status                # Device & app status check
-just android-logs-recent 50             # Recent device logs (filtered, max 50 lines)
-
-# Tag-based filtering (noise filtered, configurable limits)
-just android-logs-tagged "firebase" 30 50  # Custom tag monitoring (30s, max 50 lines)
-just android-logs-performance 60 30     # Performance monitoring (60s, max 30 lines)
-just android-logs-monitor-restart 120 20 # App restart monitoring (120s, max 20 lines)
-
-# Device management
-just android-logs-clear                 # Clear device log buffer
-```
-
-**🎯 Smart Filtering + Configurable Limits:**
-- **Filters out**: OpenGL, fonts, VSYNC, touch events, buffer dumps
-- **Focuses on**: Firebase, debug, errors, tests, performance, startup events
-- **Flexible limits**: Default sensible limits, adjustable as final parameter
-
-### **Screenshots (AI Analysis)**
-```bash
-just screenshot-android                  # Quick screenshot (/tmp/screenshot.png)
-just screenshot-android error-state      # Named screenshot (/tmp/error-state.png)
-```
+**Screenshots:**
+- `just screenshot-android` - Quick screenshot
+- `just screenshot-android error-state` - Named screenshot
 
 ## 🚫 FORBIDDEN PATTERNS (GDScript Anti-Patterns)
 
-**NEVER use timing-based waits or delays - they create race conditions and non-deterministic behavior:**
+**NEVER use timing-based waits - they create race conditions:**
 
 ```gdscript
 # ❌ FORBIDDEN - Never use these patterns
 await Engine.get_main_loop().process_frame
 await Engine.get_main_loop().create_timer(0.3).timeout
 await get_tree().create_timer(1.0).timeout
-await get_tree().process_frame
 
-# ❌ These cause:
-# - Non-deterministic test results
-# - Race conditions between actions  
-# - Checksum validation failures
-# - Unreliable async synchronization
-```
-
-**✅ Use proper async completion instead:**
-```gdscript
-# ✅ Wait for actual completion signals
+# ✅ Use proper async completion instead
 await some_operation_completed
 await async_function_call()
-# ✅ Use proper state-based synchronization
 ```
 
 ## 💪 Strong Typing Requirements
 
-**CRITICAL: Always use fail-fast typing to catch errors at compile time**
+**Always use fail-fast typing:**
 
 ```gdscript
 # ✅ Required patterns
@@ -486,521 +221,88 @@ var cards: Array[Card] = []
 func create_card(id: String, level: int = 1) -> Card:
     return card_scene.instantiate() as Card
 
-# ❌ Never use these  
-if backend is FirebaseBackend:           # Runtime checking
-var data = {}                            # No type
+# ❌ Never use runtime checking or untyped variables
+if backend is FirebaseBackend: # Runtime checking
+var data = {}                  # No type
 ```
 
-**Validation commands:**
-```bash
-just validate                             # Complete pipeline (format + syntax + runtime)
-just validate-gdscript                  # Fast syntax check (3 sec)
-just show-warnings                      # Show GDScript warnings with file:line attribution
-just save-warnings                      # Save warnings to timestamped markdown file
-```
+**Validation:**
+- `just validate` - Complete pipeline (format + syntax + runtime)
+- `just show-warnings` - GDScript warnings with file:line
 
-## 🎬 Replay Testing (Automated from Gameplay)
+## 🎬 Replay Testing
 
-### **Simple Workflow: Play → Generate → Test**
-```bash
-# 1. Play normally (automatic session tracking)
-just run-desktop                    # Shows session ID when finished
+**Simple workflow: Play → Generate → Test**
+1. `just run-desktop` (shows session ID when finished)
+2. `just replay-generate-desktop SESSION_ID my-test`
+3. `just test-android-target my-test` (automated with validation)
 
-# 2. Create test with one command
-just replay-generate-desktop SESSION_ID my-test
+## 🧪 Checksum Testing
 
-# 3. Test with validation
-just test-android-target my-test    # Automated mode (quits after validation)
-just test-android my-test          # Automated mode (quits after validation) - NEW DEFAULT
-just test-android-manual my-test   # Manual mode (stays open for inspection)
-```
+**Automatic validation:**
+- `just test-android-target CONFIG` - Auto-creates baseline + validates  
+- `just test-android-update CONFIG` - Update baseline (legitimate changes)
+- `just logs-errors TEST_ID` - Debug checksum failures
 
-## 🧪 Checksum Testing (State Validation)
+**RNG Determinism:** Seeds auto-initialize from debug configs during autoload.
 
-**⭐ NEW: Automatic baseline management in enhanced testing:**
-```bash
-# Enhanced testing commands now include automatic checksum validation
-just test-android-target lineup-checksum-test    # Auto-creates baseline on first run + validates
-just test-desktop-target semantic-action-simple-test  # Cross-platform checksum validation
-just test-android-update CONFIG                 # Update baseline (legitimate changes)
-just test-desktop-update CONFIG                 # Update baseline (legitimate changes)
-just logs-android-errors TEST_ID checksum       # Debug checksum failures
-```
-
-**Key improvements:**
-- Automatic baseline creation and validation
-- Cross-platform checksum extraction (Android + Desktop)
-- Built-in error analysis with checksum validation
-- Progressive failure detection and reporting
-
-**🎲 RNG Determinism**: The RNG system autonomously initializes seeds from debug configs during autoload phase, ensuring cross-platform deterministic behavior without explicit seed actions.
-
-### **Adding Seeds to Debug Configs**
-When creating deterministic tests, add seeds using the `checksum_config` structure:
+**Adding seeds to configs:**
 ```json
 {
-  "description": "Test description",
-  "actions": ["action1", "action2"],
   "checksum_config": {
     "initial_seed": 12345,
-    "state_type": "seed_validation",
-    "expected_checksums": []
+    "state_type": "seed_validation"
   }
 }
 ```
-**Never use:** `"game.battle.set_seed"` action (obsolete - causes timing issues)  
-**Always use:** `checksum_config.initial_seed` field (autonomous - no timing dependencies)
+**Never use:** `"game.battle.set_seed"` action (causes timing issues)
 
-## 🎮 NEW: Cross-Platform Debug Gamestate Capture & Load System
+## 🎮 Cross-Platform Gamestate System
 
-**Complete Developer Workflow for Scenario Testing:**
+**Quick workflow for scenario reproduction:**
+1. Play game → Debug menu → "Save State" → Exit  
+2. `just capture-gamestate-desktop "scenario_name"`
+3. `just run-desktop` → Debug menu → "Saved States" → Load scenario
 
-```bash
-# Desktop: Capture any gamestate during gameplay
-just run-desktop                    # Start game
-# → Debug menu → "Save State"       # Capture current state
-# → Exit game
-just capture-gamestate-desktop "boss_fight" # Extract from desktop logs → JSON file
+**Management:**
+- `just list-saved-states` - Show available states
+- `just clean-saved-states` - Remove all states  
+- `just capture-gamestate-android NAME` - Android extraction (auto-detects TEST_ID)
 
-# Android: Capture gamestate during testing
-just test-android-manual CONFIG     # Start manual test (note TEST_ID)
-# → Debug menu → "Save State"       # Capture current state  
-# → Exit app/complete test
-just capture-gamestate-android "boss_fight" # Extract from Android logs → JSON file (auto-detects TEST_ID)
-
-# Load saved state as recording starting point  
-just run-desktop                    # Start fresh session
-# → Debug menu → "Saved States"     # Auto-discovers all saved states
-# → Click "Load: boss_fight"        # Loads state, starts recording session
-# → Continue with actions           # All actions recorded from loaded state
-
-# Cross-platform management commands
-just capture-gamestate-desktop NAME        # Desktop-specific extraction
-just capture-gamestate-android NAME         # Android-specific extraction (auto-detects TEST_ID)
-just list-saved-states                     # Show all available saved states
-just clean-saved-states                    # Remove all saved state files  
-just help-gamestate                        # Complete cross-platform workflow guide
-just gamestate-status                      # System status and diagnostics
-```
-
-### **Key Benefits for Development:**
-- **90% faster scenario reproduction** (minutes → seconds)
-- **Cross-platform support** - capture from Android, load on desktop or vice versa
-- **Instant access** to any captured game state from any platform
-- **Perfect replay integration** - loaded states work as recording starting points
-- **Zero setup** - leverages existing StateExtractor + DeterministicRNG systems
-- **Platform-specific commands** - explicit control over desktop vs Android workflows
-
-### **Common Use Cases:**
-```bash
-# Complex bug reproduction
-just run-desktop → reproduce bug → save state → capture-gamestate "bug_scenario" 
-# → Load state repeatedly for testing different fixes
-
-# Feature testing from specific conditions
-just run-desktop → set up scenario → save state → capture-gamestate "feature_test"
-# → Load state → test different feature variations
-
-# Battle testing from exact lineup
-just run-desktop → configure lineup → save state → capture-gamestate "battle_setup"
-# → Load state → test battle scenarios with deterministic RNG
-```
-
-### **Implementation Details:**
-- **Captures**: Complete game state (units, lineup, level, RNG) via existing StateExtractor
-- **Storage**: JSON files in `project/debug/saved_states/` 
-- **Loading**: Restores RNG state + recreates cards + applies board state
-- **Integration**: Works seamlessly with existing debug action system
-- **Performance**: Save <100ms, Load <50ms on target platforms
-
-## 🏗️ Build System
-
-**Smart three-tier build system:**
-```bash
-just build                        # Complete pipeline: source to device (46 min)
-just fastbuild-android            # Smart rebuild (15-60 sec depending on changes)
-just build-status                 # Check what would be rebuilt
-```
+**90% faster scenario reproduction - capture from Android, load on desktop or vice versa.**
 
 ## 🔧 Advanced Features
 
-**Desktop debugging with ObjectDB leak detection:**
-```bash
-just run-desktop-debug                      # Normal debug mode
-just run-desktop-debug verbose             # Verbose mode (shows ObjectDB leak details)
-```
-
-**Performance analysis:**
-```bash
-just logs-performance TEST_ID               # Performance analysis
-```
-
-**For detailed help on any topic:**
-```bash
-just help                         # Main help with clickable commands
-just help-debug                   # Debug & testing workflows  
-just help-logs                    # Log analysis & token efficiency
-just help-build                   # Build system architecture
-## 🚀 Wildcard Pattern System Deep Dive
-
-**Transform your debugging with hierarchical pattern matching - providing 10x productivity improvement over traditional log analysis.**
-
-### **🎯 Pattern Types & Examples**
-
-**1. Prefix Patterns (`domain.*`)**
-```bash
-just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
-just logs-pattern TEST_ID "database.*"     # All database operations  
-just logs-pattern TEST_ID "performance.*"  # All performance monitoring
-```
-
-**2. Suffix Patterns (`*.operation`)**
-```bash
-just logs-pattern TEST_ID "*.error"        # All error operations
-just logs-pattern TEST_ID "*.timeout"      # All timeout events
-just logs-pattern TEST_ID "*.start"        # All start operations
-```
-
-**3. Middle Wildcards (`layer.*.operation`)**
-```bash
-just logs-pattern TEST_ID "game.*.start"   # All game start events
-just logs-pattern TEST_ID "system.*.init"  # All system initialization
-just logs-pattern TEST_ID "firebase.*.error" # All Firebase errors
-```
-
-**4. Exact Matches (`specific.tag`)**
-```bash
-just logs-pattern TEST_ID "firebase.auth"      # Firebase authentication only
-just logs-pattern TEST_ID "database.query"     # Database queries only
-just logs-pattern TEST_ID "game.battle.end"    # Battle end events only
-```
-
-### **🔍 Discovery Workflow Examples**
-
-**Scenario: Investigating Firebase Issues**
-```bash
-# 1. Explore what Firebase tags exist
-just logs-tree TEST_ID                          # See full hierarchy
-
-# 2. Discover Firebase-specific tags  
-just logs-discover TEST_ID firebase             # Find all firebase.* tags
-
-# 3. Get broad Firebase overview
-just logs-pattern TEST_ID "firebase.*"          # All Firebase operations
-
-# 4. Focus on Firebase errors only
-just logs-pattern TEST_ID "firebase.*.error"    # Firebase errors across all modules
-
-# 5. Exclude noisy debug logs
-just logs-exclude TEST_ID "firebase.*" "firebase.debug"  # Firebase without debug noise
-```
-
-**Scenario: Game System Debugging**
-```bash
-# 1. See all game-related activity
-just logs-pattern TEST_ID "game.*"              # All game operations
-
-# 2. Focus on battle system
-just logs-pattern TEST_ID "game.battle.*"       # Battle system only
-
-# 3. Find all start/end events across game systems
-just logs-multi TEST_ID "game.*.start" "game.*.end"  # All game lifecycle events
-
-# 4. Investigate specific battle phases
-just logs-pattern TEST_ID "game.battle.phase"   # Battle phase transitions
-```
-
-**Scenario: Performance Analysis**
-```bash
-# 1. All performance data
-just logs-pattern TEST_ID "performance.*"       # All performance monitoring
-
-# 2. Memory-specific issues
-just logs-pattern TEST_ID "*.memory"            # Memory-related logs across all systems
-
-# 3. Multi-system performance view
-just logs-multi TEST_ID "performance.*" "*.timeout" "*.slow"  # Performance + issues
-
-# 4. Exclude low-priority performance logs
-just logs-exclude TEST_ID "performance.*" "performance.debug"  # Performance without debug
-```
-
-### **⚡ Productivity Comparison**
-
-| Task | Traditional Method | Wildcard Pattern Method | Time Savings |
-|------|-------------------|-------------------------|--------------|
-| Find Firebase errors | `logs-android TEST_ID firebase` → manual scan | `logs-pattern TEST_ID "firebase.*.error"` | **90% faster** |
-| All error types | Multiple `logs-android/logs-desktop` commands | `logs-pattern TEST_ID "*.error"` | **95% faster** |
-| System exploration | Manual browsing | `logs-tree TEST_ID` | **98% faster** |
-| Cross-system patterns | Multiple separate commands | `logs-multi TEST_ID pattern1 pattern2` | **85% faster** |
-| Noise filtering | Manual filtering | `logs-exclude TEST_ID include exclude` | **90% faster** |
-
-### **💡 Advanced Tips**
-
-**Pattern Testing Before Use:**
-```bash
-# Test your pattern against sample tags first
-just logs-test-pattern "firebase.*" firebase.auth firebase.connect database.error
-# ✅ firebase.auth  ✅ firebase.connect  ❌ database.error
-```
-
-**Performance Optimization:**
-```bash
-# Benchmark pattern performance
-just logs-benchmark TEST_ID "firebase.*"
-# See timing and optimization suggestions
-```
-
-**Auto-completion:**
-```bash
-# Get suggestions for partial matches
-just logs-suggest TEST_ID fire
-# Suggests: firebase.auth, firebase.connect, firebase.timeout...
-```
-
-**Pattern Caching:**
-- Patterns are automatically cached for faster repeated use
-- Complex patterns are compiled once and reused
-- Cache is persistent across sessions
-
-## 📋 Git Workflow & Backlog Integration
-
-**CRITICAL: Always create bidirectional links between backlog tasks and their implementation commits.**
-
-### **Backlog Task → Commit Workflow**
-
-1. **Reference task in commit message:**
-```bash
-git commit -m "$(cat <<'EOF'
-feat: implement user authentication system
-
-Add Firebase Auth integration with email/password and OAuth providers.
-Includes user session management and profile synchronization.
-
-Closes: task-045
-Related: backlog/tasks/task-045 - Implement-user-authentication-system.md
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)"
-```
-
-2. **Update backlog task with commit reference:**
-```markdown
-## Completion Summary
-
-**Completed 2025-08-11**: Successfully implemented user authentication system.
-
-**Commit**: `abc123def` - [feat: implement user authentication system](../../commit/abc123def)
-```
-
-### **Git Best Practices**
-
-**Use `git commit --amend` for related updates:**
-- When you forgot to include documentation updates
-- When backlog task updates are part of the same logical change
-- Before pushing to remote (clean history is better than preserving wrong hashes)
-
-**Commit message format:**
-```
-type(scope): brief description
-
-Detailed explanation of what was changed and why.
-Include business context and technical decisions.
-
-Closes: task-XXX
-Related: backlog/tasks/task-XXX - Task-Title.md
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**Benefits of bidirectional linking:**
-- ✅ **Full traceability** between requirements and implementation
-- ✅ **Historical context** - understand why changes were made
-- ✅ **Code review efficiency** - reviewers can quickly understand the business context
-- ✅ **Debugging assistance** - trace bugs back to original requirements
-- ✅ **Knowledge transfer** - new team members can understand project evolution
-
-## 🗂️ Project Architecture
-
-**⭐ FIXED: Enhanced Testing System:**
-- **Unified Test Execution**: Cross-platform test wrapper with automatic validation ✅ **WORKING**
-- **Built-in Error Analysis**: Automatic log parsing and failure detection (98% token savings) ✅ **WORKING**
-- **Automatic Checksum Management**: Baseline creation and validation ✅ **FIXED - Android validation working**
-- **Progressive Debugging**: Token-efficient error analysis workflow ✅ **WORKING**
-- **Manual Test Modes**: Both Android and desktop support manual inspection modes
-
-**Core Systems:**
-- **DataSource Pattern**: Unified Firebase RTDB + local storage backends
-- **Debug Framework**: 55 debug actions across 7 categories  
-- **Custom Engine**: Modified Godot 4.3 with Firebase/Facebook integration
-
-**Key Directories:**
-- `project/debug/actions/` - Debug actions by layer (cpp, backend, rtdb, system, game)
-- `tests/debug_configs/` - ⭐ **NEW LOCATION: 9 core configs** (moved from project/, organized by layer)
-- `tests/test-lists/` - ⭐ **NEW LOCATION: 13+ workflow configurations** (moved from project/)
-- `tests/debug_configs/archive/generated-replays/` - ⭐ **25+ battle replay configs** (accessible via /folder/ syntax)
-- `justfiles/justfile-validation-enhanced-testing.justfile` - ⭐ **NEW: Enhanced testing system**
-
-## 📖 Integration with Just Help System
-
-**CLAUDE.md focuses on AI-optimized quick reference. For comprehensive details, use:**
-
-```bash
-just help                         # Interactive command browser with clickable links
-just help-debug                   # Complete debug & testing workflows
-just help-logs                    # Full log analysis guide with examples  
-just help-build                   # Build system architecture & timing
-just help-workflows               # Detailed workflow patterns & best practices
-```
-
-## 🤖 Project Context for Claude Code
-
-**For complex development tasks requiring deep codebase understanding:**
-
-```bash
-just generate-claude-context      # Generate optimized project context (250k tokens)
-# Creates: claude-project-context.xml
-```
-
-**Generated context includes:**
-- **CLAUDE.md** - This instruction file
-- **Core GDScript files** - Main game logic and systems
-- **Debug configurations** - Test configs and workflows
-- **Firebase integration** - C++/Objective-C++ backend code
-- **Build configurations** - Platform export settings
-
-**Usage with Claude Code:**
-1. **CLAUDE.md** - Daily reference (this file)
-2. **`just help-[topic]`** - Detailed human-readable workflows  
-3. **`claude-project-context.xml`** - Full codebase context for complex analysis
-
-**Context file benefits:**
-- **Token-optimized** (250k vs 1M+ tokens) with compression and comment removal
-- **Security-checked** - No credentials or sensitive data included
-- **Filtered content** - Excludes test files, logs, and build artifacts
-- **Structured format** - XML with clear file boundaries for AI parsing
-
-This three-tier approach maximizes both AI efficiency and human usability.
-
-## 🔬 Repomix MCP Best Practices for GameTwo
-
-**Strategic use of Repomix MCP for GameTwo's 248-file, 420k+ token codebase:**
-
-### **🎯 Optimal Pack Strategy**
-
-**1. Strategic Use of `compress` Parameter**
-```javascript
-// For large GameTwo analysis - use compression (70% token reduction)
-pack_codebase({
-  directory: "/Users/mattiasmyhrman/repos/gametwo",
-  compress: true,  
-  includePatterns: "project/**/*.gd,justfiles/**/*.justfile"
-})
-
-// For focused analysis - skip compression (keep implementation details)
-pack_codebase({
-  directory: "/Users/mattiasmyhrman/repos/gametwo", 
-  compress: false,  
-  includePatterns: "project/debug/actions/**/*.gd"
-})
-```
-
-**2. Smart Pattern Filtering for GameTwo Systems**
-```javascript
-// Focus on Firebase integration layers
-{
-  "includePatterns": "project/debug/actions/firebase_*/**/*.gd,project/data/backends/*.gd",
-  "ignorePatterns": "**/*test*.gd,**/*.log,project/addons/**"
-}
-
-// Justfile testing system analysis
-{
-  "includePatterns": "justfiles/justfile-*testing*.justfile,justfiles/justfile-*validation*.justfile",
-  "ignorePatterns": "justfiles/justfile-help.justfile"
-}
-```
-
-**3. Incremental Analysis Workflow**
-```javascript
-// Step 1: Pack once with optimal patterns
-const outputId = await pack_codebase({
-  directory: "/Users/mattiasmyhrman/repos/gametwo",
-  includePatterns: "project/**/*.gd,justfiles/**/*.justfile"
-})
-
-// Step 2: Multiple focused searches on same packed output
-await grep_repomix_output(outputId, "extends DebugAction", {contextLines: 2})
-await grep_repomix_output(outputId, "Firebase.*Backend", {contextLines: 1}) 
-await grep_repomix_output(outputId, "just.*test-android", {ignoreCase: true})
-```
-
-### **🚀 GameTwo-Specific Prompts**
-
-**Architecture Analysis:**
-```text
-This Repomix file contains GameTwo, a Godot 4.3 mobile game with Firebase integration.
-
-Context: 248 GDScript files, 55 debug actions across 5 layers (cpp/backend/rtdb/system/game)
-
-Analyze the debug action architecture:
-1. How are the 16 debug actions organized by layer?
-2. What patterns ensure consistent FirebaseBackend integration?
-3. Which justfile commands provide the most efficient testing workflow?
-4. Identify architectural improvements for the sophisticated testing infrastructure
-
-Focus on maintainability and the 420k+ token codebase optimization.
-```
-
-**Performance Analysis:**
-```text
-Analyze GameTwo's performance bottlenecks in this Repomix file:
-- Firebase async patterns and DirectAwait implementations
-- Debug action execution efficiency across 5 layers
-- Justfile build system optimization opportunities  
-- GDScript strong typing and memory management patterns
-
-Provide specific optimizations with before/after code examples.
-```
-
-### **🔧 Token Optimization Strategy**
-
-**Your GameTwo heavy files (from our analysis):**
-- `justfile-validation-enhanced-testing.justfile` (31.4k tokens) 
-- `justfile-semantic-replay-commands.justfile` (24.8k tokens)
-- `justfile-testing-core.justfile` (14.8k tokens)
-
-**Optimization approaches:**
-```javascript
-// For justfile analysis - target specific heavy files
-{
-  "includePatterns": "justfiles/justfile-testing-core.justfile,justfiles/justfile-validation*.justfile"
-}
-
-// For GDScript analysis - exclude heavy justfiles 
-{
-  "includePatterns": "project/**/*.gd",
-  "ignorePatterns": "justfiles/**"
-}
-```
-
-### **📈 Productivity Benefits**
-
-**Repomix vs Traditional File Reading:**
-- **Architecture Understanding**: 10x faster than individual file reads
-- **Pattern Discovery**: Instant cross-system relationships 
-- **Debug Action Analysis**: Find all 16 actions + relationships in one search
-- **Firebase Integration**: Map 38 Firebase Backend references instantly
-- **Testing System**: Discover 58+ test command patterns systematically
-
-**Daily Development Workflow:**
-1. **Pack focused subsystem** (debug actions, Firebase backend, specific justfiles)
-2. **Use grep_repomix_output** for pattern discovery across packed content
-3. **Leverage compressed packs** for high-level architectural decisions
-4. **Incremental analysis** - avoid re-packing, maximize search efficiency
-
-**Bottom Line**: For GameTwo's complexity, Repomix MCP provides **systematic pattern analysis** and **architectural understanding** impossible with traditional file-by-file exploration. Use it for all major codebase analysis tasks.
-
-- Use OODA framework as main framework for outer loop of execution of tasks
+**Desktop debugging:**
+- `just run-desktop-debug` - Normal debug mode
+- `just run-desktop-debug verbose` - ObjectDB leak detection
+
+**For comprehensive command details:**
+- `just help` - **Interactive command browser with clickable links**
+- `just help-debug` - Complete debug & testing workflows  
+- `just help-logs` - Token efficiency & log analysis guide
+- `just help-build` - Build system architecture & timing
+- `just help-workflows` - Detailed workflow patterns & best practices
+
+> 💡 **Claude can read `just help` output directly** - use these commands to get detailed explanations and examples for any GameTwo workflow.
+
+## 📖 Advanced Topics
+
+**See [CLAUDE-ADVANCED.md](CLAUDE-ADVANCED.md) for detailed information on:**
+- Wildcard pattern system deep dive & examples
+- Git workflow & backlog integration patterns  
+- Repomix MCP best practices for GameTwo
+- Project architecture & directory structure
+- Performance optimization strategies
+- Complete command reference with examples
+
+**MCP Tools Integration:**
+- **Repomix MCP**: Strategic codebase analysis patterns for GameTwo's 248-file architecture
+- **Godot MCP**: Direct Godot 4.3 engine integration and project management
+- **Context7 MCP**: Library documentation for Firebase, GDScript, and mobile development patterns
+
+**For complex development tasks:**
+- `just generate-claude-context` - Generate optimized project context (250k tokens)
+- Creates `claude-project-context.xml` for full codebase analysis
+
+**This CLAUDE.md focuses on daily GameTwo development essentials.**
