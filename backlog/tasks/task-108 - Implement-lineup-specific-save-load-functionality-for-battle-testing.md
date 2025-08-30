@@ -4,7 +4,7 @@ title: Implement lineup-specific save/load functionality for battle testing
 status: To Do
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-08-30 08:24'
+updated_date: '2025-08-30 08:40'
 labels:
   - battle
   - debug

@@ -14,7 +14,9 @@
       "Bash(git commit:*)",
       "Bash(just help-lineup:*)",
       "Bash(just validate)",
-      "Bash(just help:*)"
+      "Bash(just help:*)",
+      "Bash(backlog help:*)",
+      "Bash(just:*)"
     ],
     "deny": [],
     "ask": [],

@@ -1,1 +1,2 @@
 ./debug/actions/registrations/game_action_core.gd
+./debug/debug_menu_controller.gd

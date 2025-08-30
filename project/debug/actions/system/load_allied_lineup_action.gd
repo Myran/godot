@@ -101,7 +101,8 @@ func _load_lineup_file(file_path: String) -> Dictionary:
 	if file_data.has("lineup_data"):
 		# This is a lineup-specific save
 		return file_data.lineup_data
-	elif file_data.has("gamestate"):
+
+	if file_data.has("gamestate"):
 		# This is a full gamestate save, extract lineup data
 		var gamestate: Dictionary = file_data.gamestate
 		return gamestate.get("lineup", {})
@@ -176,9 +177,11 @@ func _get_allied_unit_count(lineup_data: Dictionary) -> int:
 	"""Get count of available units for allied loading (handles both allied/enemy saves)"""
 	if lineup_data.has("allies"):
 		return lineup_data.allies.size()
-	elif lineup_data.has("enemies"):
+
+	if lineup_data.has("enemies"):
 		# This is an enemy save being loaded as allied
 		return lineup_data.enemies.size()
+
 	return 0
 
 
