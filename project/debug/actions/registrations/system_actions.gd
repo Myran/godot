@@ -69,8 +69,16 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	var load_state_action: LoadDebugStateAction = LoadDebugStateAction.new()
 	registry.register_action(load_state_action)
 
+	# Add lineup-specific save actions for designer testing
+	var save_allied_lineup_action: SaveAlliedLineupAction = SaveAlliedLineupAction.new()
+	registry.register_action(save_allied_lineup_action)
+
+	var save_enemy_lineup_action: SaveEnemyLineupAction = SaveEnemyLineupAction.new()
+	registry.register_action(save_enemy_lineup_action)
+
 	# Note: Additional LoadDebugStateAction instances are created dynamically
 	# by debug menu when scanning saved states directory
+	# Note: Lineup load actions will be created dynamically when lineup files are discovered
 
 
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
