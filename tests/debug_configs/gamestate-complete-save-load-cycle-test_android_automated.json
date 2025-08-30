@@ -1,0 +1,27 @@
+{
+  "description": "Complete save/load cycle test: Start game → Save state → Load state → Save again → Compare checksums",
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "save_load_cycle_validation",
+    "expected_checksums": [
+      "a5f41a30d2d3f8f39ee0d12b523b6fac071baf6f45394cee91a4a25e26f80073",
+      "5627e4f7a8b5f1d2813da8c2ca2ad6dbcbd8f6afb10a0b05bc7125614dbd019e",
+      "9a8065eab938b00f50b5bee76c432a64c632596040d61dce8ff61c2663fd5a08",
+      "54c8023987e129eff7bf1362ab87753894f8bd998acc330f183d0fd39736dfcf"
+    ]
+  },
+  "actions": [
+    "system.debug.save_gamestate",
+    "system.debug.load_gamestate",
+    "system.debug.save_gamestate"
+  ],
+  "metadata": {
+    "test_type": "save_load_cycle",
+    "first_save_file": "cycle_test_first.json",
+    "second_save_file": "cycle_test_second.json",
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "gamestate-complete-save-load-cycle-test_android_1756555487"
+  }
+}
