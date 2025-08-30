@@ -1,9 +1,13 @@
 extends Control
-enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST, SAVED_STATES }
+enum ViewLevel { MAIN_CATEGORIES, GROUP_LIST, TEST_LIST, SAVED_STATES, ALLIED_LINEUPS, ENEMY_LINEUPS }
 
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
 const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
+const SaveAlliedLineupActionClass = preload("res://debug/actions/system/save_allied_lineup_action.gd")
+const SaveEnemyLineupActionClass = preload("res://debug/actions/system/save_enemy_lineup_action.gd")
+const LoadAlliedLineupActionClass = preload("res://debug/actions/system/load_allied_lineup_action.gd")
+const LoadEnemyLineupActionClass = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
 
 const ITEM_TYPE_CATEGORY: String = "category_item"
 const ITEM_TYPE_GROUP: String = "group_item"
@@ -252,6 +256,18 @@ func _populate_main_categories_view() -> void:
 		"Saved States",
 		MenuListItemData.create_saved_states(),
 		"Load captured gamestate for replay testing"
+	)
+	
+	# Add lineup categories for designer testing
+	_add_list_item(
+		"Allied Lineups",
+		MenuListItemData.create_allied_lineups(),
+		"Save and load allied lineups for battle testing"
+	)
+	_add_list_item(
+		"Enemy Lineups",
+		MenuListItemData.create_enemy_lineups(),
+		"Save and load enemy lineups for battle testing"
 	)
 
 	Log.info(
@@ -521,6 +537,93 @@ func _scan_and_add_saved_states(directory_path: String) -> void:
 		_add_list_item(display_name, metadata, tooltip)
 
 
+func _populate_allied_lineups_view() -> void:
+	_current_view_level = ViewLevel.ALLIED_LINEUPS
+	_current_category_name = "Allied Lineups"
+	_current_group_name = ""
+	item_list_navigator.clear()
+
+	# Add back navigation
+	_add_navigation_item("< Back to Main Menu", MenuListItemData.create_back_to_main())
+
+	# Add save current allied lineup option
+	var save_action: SaveAlliedLineupActionClass = SaveAlliedLineupActionClass.new()
+	_add_action_item(save_action, "System", "Lineup", "")
+
+	# Scan for lineup saves using centralized path management
+	var saved_states_dir: String = DebugConfigReader.get_saved_states_dir()
+	_scan_and_add_lineup_saves(saved_states_dir, "line-", "allied")
+
+
+func _populate_enemy_lineups_view() -> void:
+	_current_view_level = ViewLevel.ENEMY_LINEUPS
+	_current_category_name = "Enemy Lineups"
+	_current_group_name = ""
+	item_list_navigator.clear()
+
+	# Add back navigation
+	_add_navigation_item("< Back to Main Menu", MenuListItemData.create_back_to_main())
+
+	# Add save current enemy lineup option
+	var save_action: SaveEnemyLineupActionClass = SaveEnemyLineupActionClass.new()
+	_add_action_item(save_action, "System", "Lineup", "")
+
+	# Scan for lineup saves using centralized path management
+	var saved_states_dir: String = DebugConfigReader.get_saved_states_dir()
+	_scan_and_add_lineup_saves(saved_states_dir, "line-", "enemy")
+
+
+func _scan_and_add_lineup_saves(directory_path: String, prefix: String, lineup_type: String) -> void:
+	var dir: DirAccess = DirAccess.open(directory_path)
+	if not dir:
+		_add_list_item(
+			"📁 No lineup saves found",
+			null,
+			"Create lineup saves by using 'Save %s Lineup' during gameplay" % lineup_type.capitalize(),
+			true
+		)
+		return
+
+	dir.list_dir_begin()
+	var file_name: String = dir.get_next()
+	var lineup_files: Array[String] = []
+
+	while file_name != "":
+		if file_name.ends_with(".json") and file_name.begins_with(prefix) and not file_name.begins_with("."):
+			lineup_files.append(file_name)
+		file_name = dir.get_next()
+
+	if lineup_files.is_empty():
+		_add_list_item(
+			"📁 No %s lineup saves found" % lineup_type,
+			null,
+			"Use 'just capture-lineup-%s NAME' to create lineup saves" % lineup_type,
+			true
+		)
+		return
+
+	lineup_files.sort()
+
+	# Add load option for each lineup save
+	for lineup_file: String in lineup_files:
+		var display_name: String = "Load: " + lineup_file.get_basename()
+		var full_path: String = directory_path + "/" + lineup_file
+		var load_action: DebugAction
+		
+		if lineup_type == "allied":
+			load_action = LoadAlliedLineupActionClass.create_for_file(full_path)
+		else:
+			load_action = LoadEnemyLineupActionClass.create_for_file(full_path)
+		
+		var metadata: MenuListItemData = MenuListItemData.create_action(
+			load_action, "System", "Lineup"
+		)
+		var tooltip: String = (
+			"Load '%s' as %s lineup for battle testing (flexible loading)" % [lineup_file.get_basename(), lineup_type]
+		)
+		_add_list_item(display_name, metadata, tooltip)
+
+
 func _abort_current_execution_if_needed() -> void:
 	if not _is_executing_all:
 		return
@@ -611,6 +714,12 @@ func _on_navigator_item_selected(index: int) -> void:
 		MenuListItemData.ItemType.SAVED_STATES:
 			_abort_current_execution_if_needed()
 			_populate_saved_states_view()
+		MenuListItemData.ItemType.ALLIED_LINEUPS:
+			_abort_current_execution_if_needed()
+			_populate_allied_lineups_view()
+		MenuListItemData.ItemType.ENEMY_LINEUPS:
+			_abort_current_execution_if_needed()
+			_populate_enemy_lineups_view()
 
 
 func _on_run_all_pressed() -> void:
