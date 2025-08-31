@@ -168,28 +168,29 @@ static func create_backend() -> DataBackend:
 	return null
 
 
-static func create_firebase_backend() -> FirebaseBackend:
-	Log.debug("Creating FirebaseBackend instance", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
+static func create_firebase_backend() -> FirebaseServiceBackend:
+	Log.debug("Creating FirebaseServiceBackend instance", {}, [Log.TAG_DB, Log.TAG_FIREBASE])
 
-	if not ClassDB.class_exists("FirebaseDatabase"):
+	# Check if FirebaseService autoload is available
+	if not is_instance_valid(FirebaseService):
 		Log.error(
-			"FirebaseDatabase C++ module not available",
+			"FirebaseService autoload not available",
 			{},
 			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return null
 
-	var firebase_backend: FirebaseBackend = FirebaseBackend.new()
+	var firebase_backend: FirebaseServiceBackend = FirebaseServiceBackend.new()
 	if firebase_backend == null:
 		Log.error(
-			"Failed to create FirebaseBackend instance",
+			"Failed to create FirebaseServiceBackend instance",
 			{},
 			[Log.TAG_DB, Log.TAG_FIREBASE, Log.TAG_ERROR]
 		)
 		return null
 
 	Log.info(
-		"FirebaseBackend created successfully",
+		"FirebaseServiceBackend created successfully",
 		{"instance_id": firebase_backend.get_instance_id()},
 		[Log.TAG_DB, Log.TAG_FIREBASE]
 	)
