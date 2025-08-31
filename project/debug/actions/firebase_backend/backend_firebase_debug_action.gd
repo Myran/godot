@@ -1,7 +1,7 @@
 class_name BackendFirebaseDebugAction
 extends DebugAction
 
-var firebase_backend: FirebaseBackend = null
+var firebase_backend: DataBackend = null  # Changed to support both backend types
 
 
 func _init() -> void:
@@ -10,7 +10,7 @@ func _init() -> void:
 	action_callable = Callable(self, "execute_backend_action")
 
 
-func get_firebase_backend_for_testing() -> FirebaseBackend:
+func get_firebase_backend_for_testing() -> DataBackend:
 	if firebase_backend != null and is_instance_valid(firebase_backend):
 		return firebase_backend
 
@@ -30,19 +30,33 @@ func get_firebase_backend_for_testing() -> FirebaseBackend:
 		)
 		return null
 
-	var backend_instance: FirebaseBackend = data_source._backend
-	if backend_instance and is_instance_valid(backend_instance):
+	var backend_instance: DataBackend = data_source._backend
+
+	# Support both FirebaseBackend and FirebaseServiceBackend
+	var backend_class_name: String = backend_instance.get_class() if backend_instance else "null"
+	var is_firebase_backend: bool = (
+		backend_class_name == "FirebaseBackend" or backend_class_name == "FirebaseServiceBackend"
+	)
+
+	if backend_instance and is_instance_valid(backend_instance) and is_firebase_backend:
 		firebase_backend = backend_instance
 		Log.debug(
 			"Firebase backend acquired for testing",
-			{"backend_type": firebase_backend.get_script().get_path()},
+			{
+				"backend_type": firebase_backend.get_class(),
+				"script_path": firebase_backend.get_script().get_path()
+			},
 			["debug", "backend_firebase"]
 		)
 		return firebase_backend
 
 	Log.error(
 		"Backend is not Firebase type or is null",
-		{"backend_type": backend_instance.get_class() if backend_instance else "null"},
+		{
+			"backend_type": backend_class_name,
+			"expected_types": ["FirebaseBackend", "FirebaseServiceBackend"],
+			"is_firebase": is_firebase_backend
+		},
 		["debug", "backend_firebase", "error"]
 	)
 	return null
@@ -56,7 +70,7 @@ func test_backend_async_pattern(
 	operation_name: String = ""
 ) -> bool:
 	var start_time: int = Time.get_ticks_msec()
-	var backend: FirebaseBackend = get_firebase_backend_for_testing()
+	var backend: DataBackend = get_firebase_backend_for_testing()
 
 	if not backend:
 		_update_status("ERROR: Backend not available", true)

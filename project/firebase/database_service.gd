@@ -1,0 +1,313 @@
+class_name DatabaseService
+extends RefCounted
+
+# Firebase Database Service - Extracted from FirebaseBackend
+# Handles all RTDB operations using FirebaseRequest pattern for async operations
+# Integrates with Anti-Corruption Layer for clean service boundaries
+
+@warning_ignore("unused_signal")
+signal value_received(data: Dictionary)  # Emitted for backward compatibility - used by external consumers
+
+var _firebase_service: Node
+var _is_initialized: bool = false
+
+
+func _init(firebase_service: Node) -> void:
+	_firebase_service = firebase_service
+	_is_initialized = true
+	Log.info(
+		"DatabaseService initialized",
+		{"service_id": get_instance_id()},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
+
+
+func is_available() -> bool:
+	return (
+		_is_initialized
+		and is_instance_valid(_firebase_service)
+		and _firebase_service.is_available()
+	)
+
+
+func get_data(path: Array[Variant], key: String = "") -> Variant:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for get_data",
+			{"path": path, "key": key},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return null
+
+	var request: FirebaseRequest = _firebase_service.get_value(path, key)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var payload: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: get_data completed successfully",
+			{"path": path, "key": key, "value_type": typeof(payload)},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+
+		# Emit legacy signal for backward compatibility
+		call_deferred(
+			"emit_signal",
+			"value_received",
+			{
+				"key": key if not key.is_empty() else (path[-1] if not path.is_empty() else ""),
+				"value": payload
+			}
+		)
+		return payload
+
+	Log.error(
+		"DatabaseService: get_data failed",
+		{"path": path, "key": key, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return null
+
+
+func set_data(path: Array[Variant], key: String, data_to_set: Variant) -> bool:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for set_data",
+			{"path": path, "key": key},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return false
+
+	var request: FirebaseRequest = _firebase_service.set_value(path, key, data_to_set)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var payload: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: set_data completed successfully",
+			{"path": path, "key": key},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return _convert_to_bool(payload)
+
+	Log.error(
+		"DatabaseService: set_data failed",
+		{"path": path, "key": key, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return false
+
+
+func push_data(path: Array[Variant], data_to_push: Variant) -> String:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for push_data",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return ""
+
+	if not data_to_push is Dictionary:
+		Log.warning(
+			"DatabaseService: push_data usually expects Dictionary",
+			{"path": path, "type": typeof(data_to_push)},
+			[Log.TAG_FIREBASE]
+		)
+
+	var request: FirebaseRequest = _firebase_service.push_data(path, data_to_push)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var push_id: String = str(result.get("payload"))
+		Log.debug(
+			"DatabaseService: push_data completed successfully",
+			{"path": path, "push_id": push_id},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return push_id
+
+	Log.error(
+		"DatabaseService: push_data failed",
+		{"path": path, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return ""
+
+
+func remove_data(path: Array[Variant], key: String = "") -> bool:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for remove_data",
+			{"path": path, "key": key},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return false
+
+	var request: FirebaseRequest = _firebase_service.remove_value(path, key)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var payload: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: remove_data completed successfully",
+			{"path": path, "key": key},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return _convert_to_bool(payload)
+
+	Log.error(
+		"DatabaseService: remove_data failed",
+		{"path": path, "key": key, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return false
+
+
+func query_data(path: Array[Variant], query_params: Dictionary) -> Variant:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for query_data",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return null
+
+	var request: FirebaseRequest = _firebase_service.query_data(path, query_params)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var payload: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: query_data completed successfully",
+			{"path": path, "query_params": query_params, "result_type": typeof(payload)},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return payload
+
+	Log.error(
+		"DatabaseService: query_data failed",
+		{"path": path, "query_params": query_params, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return null
+
+
+func run_increment_transaction(path: Array[Variant], increment_by: int = 1) -> Variant:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for run_increment_transaction",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return null
+
+	var request: FirebaseRequest = _firebase_service.run_transaction(path, increment_by)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var final_value: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: run_increment_transaction completed successfully",
+			{"path": path, "increment_by": increment_by, "final_value": final_value},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return final_value
+
+	Log.error(
+		"DatabaseService: run_increment_transaction failed",
+		{"path": path, "increment_by": increment_by, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return null
+
+
+func set_server_timestamp(path: Array[Variant]) -> bool:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for set_server_timestamp",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return false
+
+	if path.is_empty():
+		Log.error(
+			"DatabaseService: set_server_timestamp requires non-empty path",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return false
+
+	var request: FirebaseRequest = _firebase_service.set_server_timestamp(path)
+	var result: Dictionary = await request.await_completion()
+
+	if result.get("status") == "ok":
+		var payload: Variant = result.get("payload")
+		Log.debug(
+			"DatabaseService: set_server_timestamp completed successfully",
+			{"path": path},
+			[Log.TAG_DB, Log.TAG_FIREBASE]
+		)
+		return _convert_to_bool(payload)
+
+	Log.error(
+		"DatabaseService: set_server_timestamp failed",
+		{"path": path, "error": result},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return false
+
+
+func start_listening(path: Array[Variant]) -> void:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for start_listening",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return
+
+	if path.is_empty():
+		Log.error(
+			"DatabaseService: Invalid path for start_listening",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return
+
+	Log.info("DatabaseService: Starting listener", {"path": path}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	_firebase_service.start_listening(path)
+
+
+func stop_listening(path: Array[Variant]) -> void:
+	if not is_available():
+		Log.error(
+			"DatabaseService: Not available for stop_listening",
+			{"path": path},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return
+
+	if path.is_empty():
+		Log.error(
+			"DatabaseService: Invalid path for stop_listening",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		return
+
+	Log.info("DatabaseService: Stopping listener", {"path": path}, [Log.TAG_DB, Log.TAG_FIREBASE])
+	_firebase_service.stop_listening(path)
+
+
+# Helper function to convert various types to bool consistently
+func _convert_to_bool(value: Variant) -> bool:
+	if value is bool:
+		return value
+	if value is int:
+		@warning_ignore("unsafe_cast")
+		return bool(value as int)
+	if value is float:
+		@warning_ignore("unsafe_cast")
+		return bool(value as float)
+	return false

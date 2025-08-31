@@ -11,7 +11,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend method mappings...")
 
-	var backend: FirebaseBackend = get_firebase_backend_for_testing()
+	var backend: DataBackend = get_firebase_backend_for_testing()
 	if not backend:
 		return DebugActionResult.new_failure(
 			"Firebase backend not available for testing",

@@ -17,7 +17,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing backend availability...")
 	total_tests += 1
-	var backend: FirebaseBackend = get_firebase_backend_for_testing()
+	var backend: DataBackend = get_firebase_backend_for_testing()
 	var availability_success: bool = backend != null and is_instance_valid(backend)
 
 	if availability_success:

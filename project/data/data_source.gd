@@ -170,6 +170,9 @@ func is_firebase_available() -> bool:
 	if _backend.get_class() == "FirebaseBackend":
 		var firebase_backend: FirebaseBackend = _backend
 		available = firebase_backend.is_available()
+	elif _backend.get_class() == "FirebaseServiceBackend":
+		var firebase_service_backend: FirebaseServiceBackend = _backend
+		available = firebase_service_backend.is_available()
 
 	Log.debug(
 		"Firebase availability check",
