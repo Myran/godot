@@ -14,47 +14,43 @@ func get_firebase_backend_for_testing() -> DataBackend:
 	if firebase_backend != null and is_instance_valid(firebase_backend):
 		return firebase_backend
 
-	if not data_source:
-		Log.error(
-			"DataSource singleton not available for backend testing",
-			{},
-			["debug", "backend_firebase", "error"]
-		)
-		return null
+	# Try to get FirebaseServiceBackend from DataSource first
+	if data_source and data_source.is_initialized():
+		var backend_instance: DataBackend = data_source._backend
+		var backend_class_name: String = backend_instance.get_class() if backend_instance else "null"
+		
+		if backend_class_name == "FirebaseServiceBackend":
+			firebase_backend = backend_instance
+			Log.debug(
+				"Firebase backend acquired from DataSource",
+				{
+					"backend_type": firebase_backend.get_class(),
+					"script_path": firebase_backend.get_script().get_path()
+				},
+				["debug", "backend_firebase"]
+			)
+			return firebase_backend
 
-	if not data_source.is_initialized():
-		Log.error(
-			"DataSource not yet initialized for backend testing",
-			{},
-			["debug", "backend_firebase", "error"]
-		)
-		return null
-
-	var backend_instance: DataBackend = data_source._backend
-
-	# Only support FirebaseServiceBackend (service-oriented architecture)
-	var backend_class_name: String = backend_instance.get_class() if backend_instance else "null"
-	var is_firebase_backend: bool = backend_class_name == "FirebaseServiceBackend"
-
-	if backend_instance and is_instance_valid(backend_instance) and is_firebase_backend:
-		firebase_backend = backend_instance
+	# If DataSource doesn't have FirebaseServiceBackend (e.g., in editor mode),
+	# create a test instance directly for Firebase service testing
+	firebase_backend = FirebaseServiceBackend.new()
+	if firebase_backend and is_instance_valid(firebase_backend):
+		# Initialize the backend for testing
+		var init_success: bool = firebase_backend.initialize()
 		Log.debug(
-			"Firebase backend acquired for testing",
+			"Firebase backend created directly for testing",
 			{
 				"backend_type": firebase_backend.get_class(),
-				"script_path": firebase_backend.get_script().get_path()
+				"script_path": firebase_backend.get_script().get_path(),
+				"initialized": init_success
 			},
 			["debug", "backend_firebase"]
 		)
 		return firebase_backend
 
 	Log.error(
-		"Backend is not Firebase type or is null",
-		{
-			"backend_type": backend_class_name,
-			"expected_type": "FirebaseServiceBackend",
-			"is_firebase": is_firebase_backend
-		},
+		"Failed to acquire or create Firebase backend for testing",
+		{},
 		["debug", "backend_firebase", "error"]
 	)
 	return null
