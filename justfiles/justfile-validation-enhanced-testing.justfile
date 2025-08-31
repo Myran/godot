@@ -1253,6 +1253,14 @@ _generate-action-summary-from-file test_id config_name platform session="":
     echo "**✅ Actions Passed**: **$PASSED_ACTIONS/$TOTAL_ACTIONS ($((PASSED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
     echo "**❌ Actions Failed**: **$FAILED_ACTIONS/$TOTAL_ACTIONS ($((FAILED_ACTIONS * 100 / TOTAL_ACTIONS))%)**"
     
+    # CRITICAL: Fail the test if not 100% of actions passed
+    if [[ "$FAILED_ACTIONS" -gt 0 ]]; then
+        echo ""
+        echo "❌ TEST FAILED: Not all actions passed ($FAILED_ACTIONS/$TOTAL_ACTIONS failed)"
+        echo "💡 All tests require 100% action success rate"
+        exit 1
+    fi
+    
     # Keep results file for comprehensive breakdown - it will be cleaned up later
 
 # Hook that can be called after any test execution to add error analysis
