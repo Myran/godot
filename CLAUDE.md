@@ -30,8 +30,9 @@ just test-android '/archive/generated-replays/merge-*' # Merge scenarios (merge-
 just test-android comprehensive-with-replays           # Full regression + replay validation
 
 # Daily Workflow (Primary Commands)
+just ci-validate                           # 🚨 CRITICAL: CI validation pipeline (format + lint + syntax)
 just validate                              # Complete validation (format + syntax + runtime)
-just fastbuild-android                     # Smart rebuild & deploy (15-60 sec)
+just fastbuild-android                     # 🚨 CRITICAL: Smart rebuild & deploy (15-60 sec) - REQUIRED after code changes
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
 
@@ -48,13 +49,23 @@ just help-gamestate                      # Complete cross-platform workflow guid
 
 ## 🎯 GameTwo Daily Workflow
 
-**Essential Development Pattern:**
+**Essential Development Pattern (OODA Loop Integration):**
 ```bash
-# Code Changes → Testing Pipeline
-just fastbuild-android          # REQUIRED after any GDScript/C++ changes  
-just test-android-target CONFIG # Automated testing with validation
-just logs-errors TEST_ID        # If tests fail - start here (98% token savings)
+# 🔄 OBSERVE → ORIENT → DECIDE → ACT Cycle
+just ci-validate                # OBSERVE: Code quality, formatting, linting issues  
+just test                       # OBSERVE: Cross-platform functional behavior
+just logs-errors TEST_ID        # ORIENT: 98% token-efficient issue analysis
+# → DECIDE: Strategic fixes based on feedback
+just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes  
+just test-android-target CONFIG # ACT: Automated testing with validation
+# → Repeat cycle for continuous improvement
 ```
+
+**🚨 CRITICAL CI/Build Rules:**
+- **`just ci-validate`** - MANDATORY before commits (prevents technical debt)
+- **`just fastbuild-android`** - MANDATORY after ANY code changes before Android testing
+- **Failure in CI** → Fix immediately → Re-validate → Proceed
+- **CI success** → Proceed to testing phase with confidence
 
 **Debug Decision Tree:**
 `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
@@ -73,6 +84,7 @@ just logs-errors TEST_ID        # If tests fail - start here (98% token savings)
 - `just logs-text TEST_ID "search_term"` - Simple text search
 
 **Build Commands:**
+- `just ci-validate` - **🚨 CI validation pipeline (format + lint + syntax) - MANDATORY before commits**
 - `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
 - `just build` - Complete pipeline (46 min)
 - `just build-status` - Check what would be rebuilt
@@ -105,6 +117,38 @@ just logs-errors TEST_ID        # If tests fail - start here (98% token savings)
 - Include "Closes: task-XXX" and "Related: backlog/tasks/..." in commits
 
 **Exception**: Use `grep` only for pipeline scripts requiring exact compatibility.
+
+## 🔄 OODA Loop Integration (Critical for GameTwo Development)
+
+**Why `just ci-validate` and `just test` are Essential:**
+
+### **🔍 OBSERVE Phase**
+- **`just ci-validate`** - Observes code quality, formatting, and linting issues in real-time
+- **`just test`** - Observes functional behavior across desktop/Android platforms  
+- **`just logs-errors TEST_ID`** - Observes runtime issues with 98% token efficiency
+
+### **🧠 ORIENT Phase**  
+- **CI validation results** - Orient to code standards and maintainability requirements
+- **Cross-platform test results** - Orient to Android/desktop compatibility requirements
+- **Error analysis** - Orient to specific technical issues requiring fixes
+
+### **⚡ DECIDE Phase**
+- **CI pass/fail** - Drives immediate decisions on code quality and commit readiness
+- **Test pass/fail** - Informs decisions about feature stability and deployment  
+- **Performance metrics** - Guides architectural decisions and optimization priorities
+
+### **🚀 ACT Phase**
+- **Failed CI** → Immediate code fixes → `just ci-validate` → Repeat until pass
+- **Failed tests** → `just logs-errors TEST_ID` → Debug → Fix → `just fastbuild-android` → Re-test
+- **All validation passes** → Proceed confidently to next development phase
+
+**🎯 Critical Success Pattern:**
+```bash
+just ci-validate           # ✅ Must pass before proceeding
+just fastbuild-android     # ✅ Required after any code changes  
+just test-android CONFIG   # ✅ Validates changes work on target platform
+just logs-errors TEST_ID   # 🔧 If issues found - 98% token-efficient debugging
+```
 
 ## 🔧 Common Issues Quick Fix
 

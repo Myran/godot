@@ -37,7 +37,7 @@ func _initialize_firebase() -> void:
 		firebase_error.emit("Failed to instantiate FirebaseDatabase C++ module")
 		return
 
-	# Create wrapper exactly like old FirebaseBackend
+	# Create Firebase database wrapper
 	db = FirebaseDatabaseWrapper.new(cpp_db_instance)
 	_cpp_database = cpp_db_instance  # Keep for backward compatibility
 	Log.debug(
@@ -72,7 +72,7 @@ func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:
 	if not key.is_empty():
 		full_path.append(key)
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("get_value_async", [request_id, full_path])
 	return request
 
@@ -93,7 +93,7 @@ func set_value(path: Array[Variant], key: String, value: Variant) -> FirebaseReq
 	if not key.is_empty():
 		full_path.append(key)
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("set_value_async", [request_id, full_path, value])
 	return request
 
@@ -110,7 +110,7 @@ func push_data(path: Array[Variant], data: Variant) -> FirebaseRequest:
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("push_and_update_async", [request_id, path, data])
 	return request
 
@@ -131,7 +131,7 @@ func remove_value(path: Array[Variant], key: String = "") -> FirebaseRequest:
 	if not key.is_empty():
 		full_path.append(key)
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("remove_value_async", [request_id, full_path])
 	return request
 
@@ -148,7 +148,7 @@ func run_transaction(path: Array[Variant], increment_by: int = 1) -> FirebaseReq
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("run_transaction_async", [request_id, path, increment_by])
 	return request
 
@@ -165,7 +165,7 @@ func set_server_timestamp(path: Array[Variant]) -> FirebaseRequest:
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("set_server_timestamp_async", [request_id, path])
 	return request
 
@@ -174,7 +174,7 @@ func start_listening(path: Array[Variant]) -> void:
 	if not is_available():
 		return
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("add_listener_at_path", [path])
 
 
@@ -190,7 +190,7 @@ func query_data(path: Array[Variant], query_params: Dictionary) -> FirebaseReque
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("query_ordered_data_async", [request_id, path, query_params])
 	return request
 
@@ -199,7 +199,7 @@ func stop_listening(path: Array[Variant]) -> void:
 	if not is_available():
 		return
 
-	# Use exact same method call as old FirebaseBackend
+	# Use Firebase C++ method call
 	db.call_method("remove_listener_at_path", [path])
 
 
@@ -312,7 +312,7 @@ func _on_server_timestamp_completed(req_id: int, success: bool, error_msg: Strin
 	_resolve_pending_request(req_id, payload)
 
 
-# FirebaseDatabaseWrapper - Same as used in old FirebaseBackend
+# FirebaseDatabaseWrapper - Wraps Firebase C++ instance for GDScript
 class FirebaseDatabaseWrapper:
 	var _cpp_instance: Object
 	var _instance_id: int

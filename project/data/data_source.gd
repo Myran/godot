@@ -167,10 +167,7 @@ func set_test_group(group: int) -> void:
 
 func is_firebase_available() -> bool:
 	var available: bool = false
-	if _backend.get_class() == "FirebaseBackend":
-		var firebase_backend: FirebaseBackend = _backend
-		available = firebase_backend.is_available()
-	elif _backend.get_class() == "FirebaseServiceBackend":
+	if _backend.get_class() == "FirebaseServiceBackend":
 		var firebase_service_backend: FirebaseServiceBackend = _backend
 		available = firebase_service_backend.is_available()
 

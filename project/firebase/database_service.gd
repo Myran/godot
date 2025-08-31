@@ -1,7 +1,7 @@
 class_name DatabaseService
 extends RefCounted
 
-# Firebase Database Service - Extracted from FirebaseBackend
+# Firebase Database Service - Handles RTDB operations
 # Handles all RTDB operations using FirebaseRequest pattern for async operations
 # Integrates with Anti-Corruption Layer for clean service boundaries
 

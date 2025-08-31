@@ -32,11 +32,9 @@ func get_firebase_backend_for_testing() -> DataBackend:
 
 	var backend_instance: DataBackend = data_source._backend
 
-	# Support both FirebaseBackend and FirebaseServiceBackend
+	# Only support FirebaseServiceBackend (service-oriented architecture)
 	var backend_class_name: String = backend_instance.get_class() if backend_instance else "null"
-	var is_firebase_backend: bool = (
-		backend_class_name == "FirebaseBackend" or backend_class_name == "FirebaseServiceBackend"
-	)
+	var is_firebase_backend: bool = backend_class_name == "FirebaseServiceBackend"
 
 	if backend_instance and is_instance_valid(backend_instance) and is_firebase_backend:
 		firebase_backend = backend_instance
@@ -54,7 +52,7 @@ func get_firebase_backend_for_testing() -> DataBackend:
 		"Backend is not Firebase type or is null",
 		{
 			"backend_type": backend_class_name,
-			"expected_types": ["FirebaseBackend", "FirebaseServiceBackend"],
+			"expected_type": "FirebaseServiceBackend",
 			"is_firebase": is_firebase_backend
 		},
 		["debug", "backend_firebase", "error"]

@@ -16,7 +16,19 @@
       "Bash(just validate)",
       "Bash(just help:*)",
       "Bash(backlog help:*)",
-      "Bash(just:*)"
+      "Bash(just:*)",
+      "mcp__repomix__pack_codebase",
+      "mcp__repomix__grep_repomix_output",
+      "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
+      "Read(/private/tmp/**)",
+      "Bash(adb devices:*)",
+      "Bash(adb shell:*)",
+      "mcp__godot__get_godot_version",
+      "Bash(adb logcat:*)",
+      "Read(/private/tmp/**)",
+      "Read(/tmp/**)",
+      "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
+      "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)"
     ],
     "deny": [],
     "ask": [],
@@ -25,8 +37,8 @@
       "/Users/mattiasmyhrman/repos"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "firebase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
