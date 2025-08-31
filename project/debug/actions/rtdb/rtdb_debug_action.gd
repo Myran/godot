@@ -31,7 +31,8 @@ func get_firebase_database() -> Object:
 
 	var backend: Variant = data_source._backend
 	if backend:
-		if backend is FirebaseBackend:
+		# Support both old FirebaseBackend and new FirebaseServiceBackend
+		if backend is FirebaseBackend or backend.get_class() == "FirebaseServiceBackend":
 			Log.debug(
 				"Found Firebase backend for RTDB operations",
 				{
