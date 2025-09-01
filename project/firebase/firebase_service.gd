@@ -3,11 +3,11 @@ extends Node
 signal firebase_initialized
 signal firebase_error(error: String)
 
+var db: FirebaseDatabaseWrapper  # FirebaseDatabaseWrapper instance
 var _cpp_database: Object
-var db: FirebaseDatabaseWrapper  # Use same wrapper as old backend
-var _pending_requests: Dictionary = {}
-var _next_request_id: int = 1
 var _is_initialized: bool = false
+var _next_request_id: int = 1
+var _pending_requests: Dictionary[int, FirebaseRequest] = {}
 
 
 func _ready() -> void:
@@ -38,7 +38,7 @@ func _initialize_firebase() -> void:
 		return
 
 	# Create Firebase database wrapper
-	db = FirebaseDatabaseWrapper.new(cpp_db_instance)
+	db = FirebaseDatabaseWrapper.new(cpp_db_instance) as FirebaseDatabaseWrapper
 	_cpp_database = cpp_db_instance  # Keep for backward compatibility
 	Log.debug(
 		"FirebaseDatabase wrapper created",
@@ -178,7 +178,7 @@ func start_listening(path: Array[Variant]) -> void:
 	db.call_method("add_listener_at_path", [path])
 
 
-func query_data(path: Array[Variant], query_params: Dictionary) -> FirebaseRequest:
+func query_data(path: Array[Variant], query_params: Dictionary[String, Variant]) -> FirebaseRequest:
 	if not is_available():
 		var error_request: FirebaseRequest = FirebaseRequest.new(-1)
 		error_request.complete_with_error(
@@ -209,7 +209,7 @@ func _get_next_request_id() -> int:
 	return id
 
 
-func _resolve_pending_request(request_id: int, result: Dictionary) -> void:
+func _resolve_pending_request(request_id: int, result: Dictionary[String, Variant]) -> void:
 	if request_id in _pending_requests:
 		var request: FirebaseRequest = _pending_requests[request_id]
 		_pending_requests.erase(request_id)
@@ -224,7 +224,7 @@ func _resolve_pending_request(request_id: int, result: Dictionary) -> void:
 
 
 func _connect_cpp_signals() -> void:
-	var signals_to_connect: Dictionary = {
+	var signals_to_connect: Dictionary[String, Callable] = {
 		"get_value_completed": _on_get_value_completed,
 		"get_value_error": _on_get_value_error,
 		"set_value_completed": _on_set_value_completed,
@@ -233,7 +233,6 @@ func _connect_cpp_signals() -> void:
 		"query_completed": _on_query_completed,
 		"query_error": _on_query_error,
 		"transaction_completed": _on_transaction_completed,
-		"set_server_timestamp_completed": _on_server_timestamp_completed,
 	}
 
 	for signal_name: String in signals_to_connect:
@@ -256,7 +255,7 @@ func _on_get_value_error(req_id: int, _key: String, code: String, msg: String) -
 
 
 func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> void:
-	var payload: Dictionary = (
+	var payload: Dictionary[String, Variant] = (
 		{"status": "ok", "payload": success}
 		if success
 		else {"status": "error", "code": "SET_FAILED", "message": error_msg}
@@ -267,7 +266,7 @@ func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> v
 func _on_push_and_update_completed(
 	req_id: int, push_id: String, success: bool, error_msg: String
 ) -> void:
-	var payload: Dictionary = (
+	var payload: Dictionary[String, Variant] = (
 		{"status": "ok", "payload": push_id}
 		if success
 		else {"status": "error", "code": "PUSH_FAILED", "message": error_msg}
@@ -276,7 +275,7 @@ func _on_push_and_update_completed(
 
 
 func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -> void:
-	var payload: Dictionary = (
+	var payload: Dictionary[String, Variant] = (
 		{"status": "ok", "payload": success}
 		if success
 		else {"status": "error", "code": "REMOVE_FAILED", "message": error_msg}
@@ -295,7 +294,7 @@ func _on_query_error(req_id: int, _key: String, code: String, msg: String) -> vo
 func _on_transaction_completed(
 	req_id: int, _key: String, value: Variant, success: bool, error_msg: String
 ) -> void:
-	var payload: Dictionary = (
+	var payload: Dictionary[String, Variant] = (
 		{"status": "ok", "payload": value}
 		if success
 		else {"status": "error", "code": "TRANSACTION_FAILED", "message": error_msg}
@@ -304,7 +303,7 @@ func _on_transaction_completed(
 
 
 func _on_server_timestamp_completed(req_id: int, success: bool, error_msg: String) -> void:
-	var payload: Dictionary = (
+	var payload: Dictionary[String, Variant] = (
 		{"status": "ok", "payload": success}
 		if success
 		else {"status": "error", "code": "TIMESTAMP_FAILED", "message": error_msg}
@@ -335,7 +334,7 @@ class FirebaseDatabaseWrapper:
 	func is_signal_connected(signal_name: String, callable: Callable) -> bool:
 		return is_valid() and _cpp_instance.is_connected(signal_name, callable)
 
-	func call_method(method_name: String, args: Array) -> Variant:
+	func call_method(method_name: String, args: Array[Variant]) -> Variant:
 		if not is_valid():
 			return null
 		return _cpp_instance.callv(method_name, args)

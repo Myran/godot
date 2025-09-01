@@ -464,6 +464,9 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.ProcessQueueEvent:
+		# Return early if not ready - preserves queue for later processing
+		if ui_state != core.UIState.WAITING or _processing_idle_action:
+			return
 		_process_one_queue_item()
 
 	clicker.on_core_event(event, current_context)
