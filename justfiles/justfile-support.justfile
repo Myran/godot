@@ -221,15 +221,10 @@ test:
         if DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just "test-${PLATFORM}-target" "$TEST_CONFIG" 2>/dev/null; then
             PLATFORM_RESULT=0
         else
-            # Check if command exists by trying a help/list call
-            if just "test-${PLATFORM}-target" --help >/dev/null 2>&1 || just "test-${PLATFORM}-target" "" >/dev/null 2>&1; then
-                # Command exists but failed - real failure
-                PLATFORM_RESULT=1
-            else
-                # Command doesn't exist - skip
-                echo "⚠️ Platform $PLATFORM not supported - skipping"
-                PLATFORM_RESULT=2
-            fi
+            # Always treat as real failure for known platforms (desktop, android)
+            # The commands exist, so any failure is a real test failure
+            PLATFORM_RESULT=1
+            echo "❌ $PLATFORM test failed"
         fi
         
         # Store result and find hierarchy file (bash 3.2 compatible)
