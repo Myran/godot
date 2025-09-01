@@ -84,6 +84,23 @@ validate:
 # Alias for backward compatibility
 pre-commit: validate
 
+# Reimport all project assets using Godot CLI --import flag
+# Useful after editing GDScript files externally or modifying autoloads
+godot-import:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔄 Reimporting project assets via Godot CLI..."
+    echo ""
+    
+    if ! ./editor/{{GODOT_EXECUTABLE}} --headless --quit --import --path {{PROJECT_PATH}} 2>&1; then
+        echo "❌ Godot import failed"
+        exit 1
+    fi
+    
+    echo "✅ Project assets reimported successfully"
+    echo "💡 Use this command after editing GDScript files externally or changing autoloads"
+
 # CI validation pipeline - format, lint, Godot validation, warnings (fail-fast)
 ci-validate:
     #!/usr/bin/env bash
