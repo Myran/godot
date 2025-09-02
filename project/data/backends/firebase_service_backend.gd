@@ -8,6 +8,13 @@ var _firebase_service: Node
 var _database_service: DatabaseService
 var _initialized: bool = false
 var _backend_instance_id_str: String
+var _db_interface: Object
+
+# Public properties for test compatibility
+# gdlint: disable=class-definitions-order
+var db: Object:
+	get:
+		return _get_database_interface()
 
 
 func _init() -> void:
@@ -35,62 +42,35 @@ func initialize() -> bool:
 		call_deferred("emit_signal", "startup_completed")
 		return true
 
-	# Use the global FirebaseService autoload
+	# Use the global FirebaseService autoload - never create direct instances
 	_firebase_service = FirebaseService
 
 	if not is_instance_valid(_firebase_service):
 		Log.error(
 			"FirebaseServiceBackend: Global FirebaseService autoload not available",
-			{"instance_id": _backend_instance_id_str},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			{
+				"instance_id": _backend_instance_id_str,
+				"platform": OS.get_name(),
+				"firebase_service_node": FirebaseService
+			},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
 		)
 		return false
 
-	# Wait for Firebase service initialization if not already available
+	# Ensure Firebase service is available
 	if not _firebase_service.is_available():
-		Log.debug(
-			"FirebaseServiceBackend: Waiting for Firebase service initialization...",
+		Log.info(
+			"FirebaseServiceBackend: Firebase service not available, initialization will proceed without it",
 			{"instance_id": _backend_instance_id_str},
 			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
 		)
-
-		# Create a signal completion tracker using a reference type
-		var completion_state: Dictionary = {"complete": false, "error": ""}
-
-		var firebase_initialized_handler: Callable = func() -> void:
-			completion_state["complete"] = true
-		var firebase_error_handler: Callable = func(error: String) -> void:
-			completion_state["error"] = error
-			completion_state["complete"] = true
-			Log.error(
-				"FirebaseServiceBackend: Firebase service initialization failed",
-				{"error": error, "instance_id": _backend_instance_id_str},
-				[Log.TAG_FIREBASE, Log.TAG_ERROR]
-			)
-
-		_firebase_service.firebase_initialized.connect(
-			firebase_initialized_handler, CONNECT_ONE_SHOT
+		# Don't block backend initialization - Firebase may be unavailable in some contexts
+	else:
+		Log.debug(
+			"FirebaseServiceBackend: Firebase service is available",
+			{"instance_id": _backend_instance_id_str},
+			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
 		)
-		_firebase_service.firebase_error.connect(firebase_error_handler, CONNECT_ONE_SHOT)
-
-		# Wait for either success or error signal
-		while not completion_state["complete"]:
-			await Engine.get_main_loop().process_frame
-
-		# Clean up handlers
-		if _firebase_service.firebase_initialized.is_connected(firebase_initialized_handler):
-			_firebase_service.firebase_initialized.disconnect(firebase_initialized_handler)
-		if _firebase_service.firebase_error.is_connected(firebase_error_handler):
-			_firebase_service.firebase_error.disconnect(firebase_error_handler)
-
-		# If there was an error, fail the backend initialization
-		if completion_state["error"] != "":
-			Log.error(
-				"FirebaseServiceBackend initialization failed due to Firebase service error",
-				{"error": completion_state["error"], "instance_id": _backend_instance_id_str},
-				[Log.TAG_FIREBASE, Log.TAG_ERROR]
-			)
-			return false
 
 	# Initialize Database service
 	_database_service = DatabaseService.new(_firebase_service)
@@ -118,6 +98,15 @@ func is_available() -> bool:
 	return (
 		_initialized and is_instance_valid(_database_service) and _database_service.is_available()
 	)
+
+
+# Get database interface for backward compatibility
+func _get_database_interface() -> Object:
+	if not is_available():
+		return null
+	if not _db_interface:
+		_db_interface = DatabaseSignalInterface.new(_database_service)
+	return _db_interface
 
 
 # Public API methods - maintain backward compatibility
@@ -171,7 +160,7 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 	return await _database_service.remove_data(p_path, key)
 
 
-func query_data(p_path: Array[Variant], query_params: Dictionary) -> Variant:
+func query_data(p_path: Array[Variant], query_params: Dictionary[String, Variant]) -> Variant:
 	if not is_available():
 		Log.error(
 			"FirebaseServiceBackend: Not available for query_data.",
@@ -234,8 +223,8 @@ func stop_listening(path_array: Array[Variant]) -> void:
 # Signal handlers
 
 
-func _on_database_value_received(data: Dictionary) -> void:
-	# Forward the signal to maintain backward compatibility
+func _on_database_value_received(data: Dictionary[String, Variant]) -> void:
+	# Forward the signal to maintain DataBackend interface compatibility
 	value_received.emit(data)
 
 
@@ -256,3 +245,58 @@ func _notification(what: int) -> void:
 		# Don't queue_free the global FirebaseService autoload
 		_database_service = null
 		_firebase_service = null
+
+
+# Database Signal Interface - Provides backward compatibility for test actions
+# Supports the test pattern: db.db.connect_signal("child_added", callback)
+class DatabaseSignalInterface:
+	var _database_service: Object
+	# gdlint: disable=class-definitions-order
+	var db: DatabaseSignalWrapper
+
+	func _init(database_service: Object) -> void:
+		_database_service = database_service
+		db = DatabaseSignalWrapper.new(database_service)
+
+
+# Database Signal Wrapper - The "db.db" part of the interface
+class DatabaseSignalWrapper:
+	var _database_service: Object
+
+	func _init(database_service: Object) -> void:
+		_database_service = database_service
+
+	func connect_signal(signal_name: String, callable: Callable, flags: int = 0) -> Error:
+		if not is_instance_valid(_database_service):
+			return ERR_INVALID_DATA
+
+		# Connect to DatabaseService signals that forward from C++ Firebase SDK
+		match signal_name:
+			"child_added":
+				return _database_service.child_added.connect(callable, flags)
+			"child_changed":
+				return _database_service.child_changed.connect(callable, flags)
+			"child_removed":
+				return _database_service.child_removed.connect(callable, flags)
+			_:
+				Log.warning(
+					"DatabaseSignalWrapper: Unknown signal name",
+					{"signal": signal_name},
+					[Log.TAG_FIREBASE]
+				)
+				return ERR_INVALID_PARAMETER
+
+	func is_signal_connected(signal_name: String, callable: Callable) -> bool:
+		if not is_instance_valid(_database_service):
+			return false
+
+		# Check if signal is connected to DatabaseService
+		match signal_name:
+			"child_added":
+				return _database_service.child_added.is_connected(callable)
+			"child_changed":
+				return _database_service.child_changed.is_connected(callable)
+			"child_removed":
+				return _database_service.child_removed.is_connected(callable)
+			_:
+				return false

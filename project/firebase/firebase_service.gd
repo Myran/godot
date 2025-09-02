@@ -11,49 +11,125 @@ var _pending_requests: Dictionary[int, FirebaseRequest] = {}
 
 
 func _ready() -> void:
-	_initialize_firebase()
+	Log.info(
+		"FirebaseService _ready() called - using LAZY INITIALIZATION",
+		{"platform": OS.get_name(), "node_name": name},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
+	# NOTE: Firebase will be initialized on first use instead of immediately
 
 
 func _initialize_firebase() -> void:
-	# Check if the FirebaseDatabase C++ class exists first (same as original backend)
+	Log.debug(
+		"Firebase service initialization started",
+		{"platform": OS.get_name(), "time": Time.get_ticks_msec()},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
+
+	# Step 1: Check if the FirebaseDatabase C++ class exists
+	Log.debug("Step 1: Checking ClassDB.class_exists('FirebaseDatabase')", {}, [Log.TAG_FIREBASE])
 	if not ClassDB.class_exists("FirebaseDatabase"):
 		Log.error(
-			"FirebaseDatabase C++ module class not available. Cannot initialize Firebase service.",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			"INITIALIZATION FAILED: FirebaseDatabase C++ module class not available",
+			{"platform": OS.get_name()},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
 		)
 		firebase_error.emit("FirebaseDatabase C++ module class not available")
 		return
 
-	# Use the same method as the original Firebase backend
+	Log.info("Step 1 SUCCESS: FirebaseDatabase class found in ClassDB", {}, [Log.TAG_FIREBASE])
+
+	# Step 2: Instantiate the FirebaseDatabase C++ module
+	Log.debug("Step 2: Attempting ClassDB.instantiate('FirebaseDatabase')", {}, [Log.TAG_FIREBASE])
 	var cpp_db_instance: Object = ClassDB.instantiate("FirebaseDatabase")
 
 	if not is_instance_valid(cpp_db_instance):
 		Log.error(
-			"Failed to instantiate FirebaseDatabase C++ module",
-			{},
-			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			"INITIALIZATION FAILED: Failed to instantiate FirebaseDatabase C++ module",
+			{
+				"platform": OS.get_name(),
+				"instance_valid": is_instance_valid(cpp_db_instance),
+				"instance_value": cpp_db_instance
+			},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
 		)
 		firebase_error.emit("Failed to instantiate FirebaseDatabase C++ module")
 		return
 
-	# Create Firebase database wrapper
-	db = FirebaseDatabaseWrapper.new(cpp_db_instance) as FirebaseDatabaseWrapper
-	_cpp_database = cpp_db_instance  # Keep for backward compatibility
-	Log.debug(
-		"FirebaseDatabase wrapper created",
-		{"db_instance_id": db.get_cpp_instance_id()},
+	Log.info(
+		"Step 2 SUCCESS: FirebaseDatabase C++ instance created",
+		{"instance_id": cpp_db_instance.get_instance_id()},
 		[Log.TAG_FIREBASE]
 	)
 
-	_connect_cpp_signals()
+	# Step 3: Create Firebase database wrapper
+	Log.debug("Step 3: Creating FirebaseDatabaseWrapper", {}, [Log.TAG_FIREBASE])
+	db = FirebaseDatabaseWrapper.new(cpp_db_instance) as FirebaseDatabaseWrapper
+	_cpp_database = cpp_db_instance  # Keep for backward compatibility
+
+	if not is_instance_valid(db):
+		Log.error(
+			"INITIALIZATION FAILED: FirebaseDatabaseWrapper creation failed",
+			{
+				"db_valid": is_instance_valid(db),
+				"cpp_instance_valid": is_instance_valid(cpp_db_instance)
+			},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
+		)
+		firebase_error.emit("FirebaseDatabaseWrapper creation failed")
+		return
+
+	Log.info(
+		"Step 3 SUCCESS: FirebaseDatabaseWrapper created",
+		{"db_instance_id": db.get_cpp_instance_id(), "wrapper_valid": db.is_valid()},
+		[Log.TAG_FIREBASE]
+	)
+
+	# Step 4: Connect C++ signals
+	Log.debug("Step 4: Connecting C++ signals", {}, [Log.TAG_FIREBASE])
+	var signal_connect_result: bool = _connect_cpp_signals()
+	if not signal_connect_result:
+		Log.error(
+			"INITIALIZATION FAILED: Signal connection failed",
+			{"cpp_instance_valid": is_instance_valid(cpp_db_instance)},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
+		)
+		firebase_error.emit("Signal connection failed")
+		return
+
+	Log.info("Step 4 SUCCESS: C++ signals connected", {}, [Log.TAG_FIREBASE])
+
+	# Step 5: Mark as initialized and emit success signal
 	_is_initialized = true
-	Log.info("Firebase service initialized successfully", {}, [Log.TAG_FIREBASE])
+	Log.info(
+		"INITIALIZATION COMPLETE: Firebase service initialized successfully",
+		{
+			"platform": OS.get_name(),
+			"total_time_ms": Time.get_ticks_msec(),
+			"is_available": is_available()
+		},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
 	firebase_initialized.emit()
 
 
 func is_available() -> bool:
+	# Lazy initialization - initialize on first availability check if not already done
+	if not _is_initialized:
+		Log.info(
+			"LAZY INITIALIZATION: Initializing Firebase on first use",
+			{"platform": OS.get_name()},
+			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		)
+		_initialize_firebase()
+
 	return _is_initialized and db != null and db.is_valid()
+
+
+func get_database_wrapper() -> Object:
+	if not is_available():
+		return null
+	return db
 
 
 func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:
@@ -94,7 +170,22 @@ func set_value(path: Array[Variant], key: String, value: Variant) -> FirebaseReq
 		full_path.append(key)
 
 	# Use Firebase C++ method call
+	Log.debug(
+		"About to call db.call_method set_value_async",
+		{
+			"request_id": request_id, 
+			"db_valid": db != null and db.is_valid(),
+			"path": full_path, 
+			"value": value
+		},
+		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+	)
 	db.call_method("set_value_async", [request_id, full_path, value])
+	Log.debug(
+		"set_value_async call completed",
+		{"request_id": request_id},
+		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+	)
 	return request
 
 
@@ -210,20 +301,46 @@ func _get_next_request_id() -> int:
 
 
 func _resolve_pending_request(request_id: int, result: Dictionary[String, Variant]) -> void:
+	Log.debug(
+		"_resolve_pending_request called",
+		{
+			"request_id": request_id, 
+			"result_status": result.get("status", "unknown"),
+			"pending_requests": _pending_requests.keys()
+		},
+		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+	)
+	
 	if request_id in _pending_requests:
 		var request: FirebaseRequest = _pending_requests[request_id]
 		_pending_requests.erase(request_id)
 
 		if result.status == "ok":
+			Log.debug(
+				"Completing request with success",
+				{"request_id": request_id, "payload": result.payload},
+				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+			)
 			request.complete_with_success(result.payload)
 		else:
+			Log.debug(
+				"Completing request with error",
+				{"request_id": request_id, "error": result},
+				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+			)
 			request.complete_with_error(
 				str(result.get("code", "UNKNOWN_ERROR")),
 				str(result.get("message", "Unknown error occurred"))
 			)
+	else:
+		Log.warning(
+			"Received completion for unknown request",
+			{"request_id": request_id, "pending_requests": _pending_requests.keys()},
+			[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+		)
 
 
-func _connect_cpp_signals() -> void:
+func _connect_cpp_signals() -> bool:
 	var signals_to_connect: Dictionary[String, Callable] = {
 		"get_value_completed": _on_get_value_completed,
 		"get_value_error": _on_get_value_error,
@@ -235,6 +352,9 @@ func _connect_cpp_signals() -> void:
 		"transaction_completed": _on_transaction_completed,
 	}
 
+	var failed_signals: Array[String] = []
+	var connected_count: int = 0
+
 	for signal_name: String in signals_to_connect:
 		var handler: Callable = signals_to_connect[signal_name]
 		var err: int = db.connect_signal(signal_name, handler, CONNECT_DEFERRED)
@@ -242,16 +362,40 @@ func _connect_cpp_signals() -> void:
 			Log.error(
 				"Failed to connect C++ signal",
 				{"signal": signal_name, "error": error_string(err as Error)},
-				[Log.TAG_FIREBASE]
+				[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
 			)
+			failed_signals.append(signal_name)
+		else:
+			connected_count += 1
+			Log.debug(
+				"Successfully connected C++ signal", {"signal": signal_name}, [Log.TAG_FIREBASE]
+			)
+
+	var total_signals: int = signals_to_connect.size()
+	var success: bool = failed_signals.size() == 0
+
+	Log.info(
+		"C++ signal connection complete",
+		{
+			"connected": connected_count,
+			"total": total_signals,
+			"failed": failed_signals.size(),
+			"success": success
+		},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
+
+	return success
 
 
 func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
-	_resolve_pending_request(req_id, {"status": "ok", "payload": value})
+	var payload: Dictionary[String, Variant] = {"status": "ok", "payload": value}
+	_resolve_pending_request(req_id, payload)
 
 
 func _on_get_value_error(req_id: int, _key: String, code: String, msg: String) -> void:
-	_resolve_pending_request(req_id, {"status": "error", "code": code, "message": msg})
+	var payload: Dictionary[String, Variant] = {"status": "error", "code": code, "message": msg}
+	_resolve_pending_request(req_id, payload)
 
 
 func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> void:
@@ -284,11 +428,13 @@ func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -
 
 
 func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
-	_resolve_pending_request(req_id, {"status": "ok", "payload": value})
+	var payload: Dictionary[String, Variant] = {"status": "ok", "payload": value}
+	_resolve_pending_request(req_id, payload)
 
 
 func _on_query_error(req_id: int, _key: String, code: String, msg: String) -> void:
-	_resolve_pending_request(req_id, {"status": "error", "code": code, "message": msg})
+	var payload: Dictionary[String, Variant] = {"status": "error", "code": code, "message": msg}
+	_resolve_pending_request(req_id, payload)
 
 
 func _on_transaction_completed(
