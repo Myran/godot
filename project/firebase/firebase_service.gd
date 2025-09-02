@@ -169,6 +169,16 @@ func set_value(path: Array[Variant], key: String, value: Variant) -> FirebaseReq
 	var request_id: int = _get_next_request_id()
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
+	
+	Log.debug(
+		"Added request to pending requests",
+		{
+			"request_id": request_id,
+			"request_valid": is_instance_valid(request),
+			"pending_count": _pending_requests.size()
+		},
+		[Log.TAG_FIREBASE, "signal_debug"]
+	)
 
 	var full_path: Array[Variant] = path.duplicate()
 	if not key.is_empty():
@@ -311,14 +321,25 @@ func _resolve_pending_request(request_id: int, result: Dictionary[String, Varian
 		{
 			"request_id": request_id,
 			"result_status": result.get("status", "unknown"),
-			"pending_requests": _pending_requests.keys()
+			"pending_requests": _pending_requests.keys(),
+			"request_in_pending": request_id in _pending_requests
 		},
-		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+		[Log.TAG_FIREBASE, "signal_debug"]
 	)
 
 	if request_id in _pending_requests:
 		var request: FirebaseRequest = _pending_requests[request_id]
 		_pending_requests.erase(request_id)
+		
+		Log.debug(
+			"Found pending request, processing completion",
+			{
+				"request_id": request_id,
+				"request_valid": is_instance_valid(request),
+				"result_status": result.status
+			},
+			[Log.TAG_FIREBASE, "signal_debug"]
+		)
 
 		if result.status == "ok":
 			Log.debug(
@@ -404,11 +425,33 @@ func _on_get_value_error(req_id: int, _key: String, code: String, msg: String) -
 
 
 func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> void:
-	var payload: Dictionary[String, Variant] = (
-		{"status": "ok", "payload": success}
-		if success
-		else {"status": "error", "code": "SET_FAILED", "message": error_msg}
+	Log.debug(
+		"_on_set_value_completed called",
+		{
+			"request_id": req_id,
+			"success": success, 
+			"error_msg": error_msg,
+			"pending_requests": _pending_requests.keys()
+		},
+		[Log.TAG_FIREBASE, "signal_debug"]
 	)
+	
+	var payload: Dictionary[String, Variant]
+	if success:
+		payload = {"status": "ok", "payload": success}
+	else:
+		payload = {"status": "error", "code": "SET_FAILED", "message": error_msg}
+	
+	Log.debug(
+		"About to call _resolve_pending_request",
+		{
+			"request_id": req_id,
+			"payload": payload,
+			"payload_valid": payload != null
+		},
+		[Log.TAG_FIREBASE, "signal_debug"]
+	)
+	
 	_resolve_pending_request(req_id, payload)
 
 

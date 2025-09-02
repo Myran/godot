@@ -6,7 +6,15 @@ extends RefCounted
 # Integrates with Anti-Corruption Layer for clean service boundaries
 
 @warning_ignore("unused_signal")
-signal value_received(data: Dictionary)  # Emitted for backward compatibility - used by external consumers
+signal value_received(data: Dictionary[String, Variant])
+
+# Firebase RTDB Listener signals - forwarded from C++ Firebase SDK
+@warning_ignore("unused_signal")
+signal child_added(key: String, value: Variant)
+@warning_ignore("unused_signal")
+signal child_changed(key: String, value: Variant)
+@warning_ignore("unused_signal")
+signal child_removed(key: String, value: Variant)
 
 var _firebase_service: Node
 var _is_initialized: bool = false
@@ -15,6 +23,16 @@ var _is_initialized: bool = false
 func _init(firebase_service: Node) -> void:
 	_firebase_service = firebase_service
 	_is_initialized = true
+
+	# Connect to Firebase service listener signals to forward them up the service stack
+	if (
+		is_instance_valid(_firebase_service)
+		and _firebase_service.has_method("get_database_wrapper")
+	):
+		var db_wrapper: Object = _firebase_service.get_database_wrapper()
+		if is_instance_valid(db_wrapper):
+			_connect_listener_signals(db_wrapper)
+
 	Log.info(
 		"DatabaseService initialized",
 		{"service_id": get_instance_id()},
@@ -40,7 +58,7 @@ func get_data(path: Array[Variant], key: String = "") -> Variant:
 		return null
 
 	var request: FirebaseRequest = _firebase_service.get_value(path, key)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -50,15 +68,12 @@ func get_data(path: Array[Variant], key: String = "") -> Variant:
 			[Log.TAG_DB, Log.TAG_FIREBASE]
 		)
 
-		# Emit legacy signal for backward compatibility
-		call_deferred(
-			"emit_signal",
-			"value_received",
-			{
-				"key": key if not key.is_empty() else (path[-1] if not path.is_empty() else ""),
-				"value": payload
-			}
-		)
+		# Emit value_received signal with proper typing
+		var signal_data: Dictionary[String, Variant] = {
+			"key": key if not key.is_empty() else (path[-1] if not path.is_empty() else ""),
+			"value": payload
+		}
+		call_deferred("emit_signal", "value_received", signal_data)
 		return payload
 
 	Log.error(
@@ -79,7 +94,31 @@ func set_data(path: Array[Variant], key: String, data_to_set: Variant) -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.set_value(path, key, data_to_set)
-	var result: Dictionary = await request.await_completion()
+	
+	Log.debug(
+		"DatabaseService: About to await request completion",
+		{
+			"path": path, 
+			"key": key, 
+			"request_id": request.request_id if request else "null",
+			"request_valid": is_instance_valid(request)
+		},
+		[Log.TAG_DB, Log.TAG_FIREBASE, "await_debug"]
+	)
+	
+	var result: Dictionary[String, Variant] = await request.await_completion()
+	
+	Log.debug(
+		"DatabaseService: Request await completed",
+		{
+			"path": path, 
+			"key": key, 
+			"request_id": request.request_id if request else "null",
+			"result_status": result.get("status", "missing"),
+			"result_keys": result.keys()
+		},
+		[Log.TAG_DB, Log.TAG_FIREBASE, "await_debug"]
+	)
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -115,7 +154,7 @@ func push_data(path: Array[Variant], data_to_push: Variant) -> String:
 		)
 
 	var request: FirebaseRequest = _firebase_service.push_data(path, data_to_push)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var push_id: String = str(result.get("payload"))
@@ -144,7 +183,7 @@ func remove_data(path: Array[Variant], key: String = "") -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.remove_value(path, key)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -163,7 +202,7 @@ func remove_data(path: Array[Variant], key: String = "") -> bool:
 	return false
 
 
-func query_data(path: Array[Variant], query_params: Dictionary) -> Variant:
+func query_data(path: Array[Variant], query_params: Dictionary[String, Variant]) -> Variant:
 	if not is_available():
 		Log.error(
 			"DatabaseService: Not available for query_data",
@@ -173,7 +212,7 @@ func query_data(path: Array[Variant], query_params: Dictionary) -> Variant:
 		return null
 
 	var request: FirebaseRequest = _firebase_service.query_data(path, query_params)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -202,7 +241,7 @@ func run_increment_transaction(path: Array[Variant], increment_by: int = 1) -> V
 		return null
 
 	var request: FirebaseRequest = _firebase_service.run_transaction(path, increment_by)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var final_value: Variant = result.get("payload")
@@ -239,7 +278,7 @@ func set_server_timestamp(path: Array[Variant]) -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.set_server_timestamp(path)
-	var result: Dictionary = await request.await_completion()
+	var result: Dictionary[String, Variant] = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -311,3 +350,78 @@ func _convert_to_bool(value: Variant) -> bool:
 		@warning_ignore("unsafe_cast")
 		return bool(value as float)
 	return false
+
+
+# Connect to Firebase C++ listener signals and forward them up the service stack
+func _connect_listener_signals(db_wrapper: Object) -> void:
+	if not is_instance_valid(db_wrapper):
+		Log.warning(
+			"DatabaseService: Invalid database wrapper for listener signal connection",
+			{},
+			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		)
+		return
+
+	# Connect to C++ Firebase SDK listener signals through the database wrapper
+	var signals_to_connect: Array[String] = ["child_added", "child_changed", "child_removed"]
+	var connected_count: int = 0
+
+	for signal_name: String in signals_to_connect:
+		var handler: Callable
+		match signal_name:
+			"child_added":
+				handler = _on_child_added
+			"child_changed":
+				handler = _on_child_changed
+			"child_removed":
+				handler = _on_child_removed
+
+		if db_wrapper.has_method("connect_signal"):
+			var err: Error = db_wrapper.connect_signal(signal_name, handler, CONNECT_DEFERRED)
+			if err == OK:
+				connected_count += 1
+				Log.debug(
+					"DatabaseService: Connected listener signal",
+					{"signal": signal_name},
+					[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+				)
+			else:
+				Log.error(
+					"DatabaseService: Failed to connect listener signal",
+					{"signal": signal_name, "error": error_string(err)},
+					[Log.TAG_FIREBASE, Log.TAG_ERROR, Log.TAG_INITIALIZATION]
+				)
+
+	Log.info(
+		"DatabaseService: Listener signal connection complete",
+		{"connected": connected_count, "total": signals_to_connect.size()},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
+
+
+# Signal handlers - forward C++ Firebase listener signals up the service stack
+func _on_child_added(key: String, value: Variant) -> void:
+	Log.debug(
+		"DatabaseService: Forwarding child_added signal",
+		{"key": key, "value_type": typeof(value)},
+		[Log.TAG_FIREBASE, Log.TAG_DB]
+	)
+	child_added.emit(key, value)
+
+
+func _on_child_changed(key: String, value: Variant) -> void:
+	Log.debug(
+		"DatabaseService: Forwarding child_changed signal",
+		{"key": key, "value_type": typeof(value)},
+		[Log.TAG_FIREBASE, Log.TAG_DB]
+	)
+	child_changed.emit(key, value)
+
+
+func _on_child_removed(key: String, value: Variant) -> void:
+	Log.debug(
+		"DatabaseService: Forwarding child_removed signal",
+		{"key": key, "value_type": typeof(value)},
+		[Log.TAG_FIREBASE, Log.TAG_DB]
+	)
+	child_removed.emit(key, value)
