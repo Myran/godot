@@ -1,7 +1,13 @@
 {
-  "description": "Backend Firebase layer - All application backend and DataSource tests",
+  "description": "Firebase Backend Layer - All Firebase backend service integration tests",
   "actions": [
-	"backend.*"
+    "backend.firebase.async_pattern",
+    "backend.firebase.lifecycle", 
+    "backend.firebase.method_mapping",
+    "backend.firebase.error_handling",
+    "backend.firebase.performance",
+    "backend.firebase.request_tracking",
+    "backend.firebase.timer_manager"
   ],
   "platforms": ["android"]
 }

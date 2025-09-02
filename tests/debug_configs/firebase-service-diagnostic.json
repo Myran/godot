@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Service Diagnostic - Comprehensive Firebase initialization testing",
+  "actions": [
+    "firebase.service.diagnostic"
+  ],
+  "platforms": ["android"]
+}
