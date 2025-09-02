@@ -10,6 +10,15 @@ just logs-errors TEST_ID                   # Find errors fast (98% token savings
 just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search - any string (99% token savings)
 just logs-last                             # Latest test results (99% token savings)
 
+# 🚨 CRITICAL: Full Android Log Inspection (Not Test Results)
+just android-logs-search "search_term"    # ⭐ FULL Android logs - sees EVERYTHING including initialization
+adb logcat -d | rg "search_term" -i       # Alternative direct approach for full log access
+
+# ⚠️  IMPORTANT LOG DISTINCTION:
+# - just logs-* TEST_ID          → FILTERED test results only (missing app initialization logs)
+# - just android-logs-search     → FULL device logs (sees all app activity including startup)
+# - When logs don't appear in test results, ALWAYS use android-logs-search for complete view
+
 # 🚨 CRITICAL: Android Development Rule
 just fastbuild-android                     # REQUIRED after ANY code changes before Android testing
 
@@ -68,7 +77,14 @@ just test-android-target CONFIG # ACT: Automated testing with validation
 - **CI success** → Proceed to testing phase with confidence
 
 **Debug Decision Tree:**
-`logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
+1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
+2. **Full Android Logs**: `android-logs-search "term"` → `adb logcat -d | rg "term" -i`
+
+**🚨 CRITICAL: When to Use Full Android Logs vs Test Results**
+- **Missing initialization logs?** → Use `android-logs-search` (sees app startup, game._ready(), etc.)
+- **Testing validation/fastbuild?** → Use `android-logs-search` (test results filter out non-debug logs)
+- **Debugging specific test actions?** → Use `logs-text TEST_ID` (focused on test actions only)
+- **General app debugging?** → Use `android-logs-search` (complete device log view)
 
 ## 📋 Command Quick Reference
 
@@ -154,13 +170,20 @@ just logs-errors TEST_ID   # 🔧 If issues found - 98% token-efficient debuggin
 
 **Debugging pattern (token-efficient):**
 1. `just logs-errors TEST_ID` (98% token savings - start here)
-2. `just logs-text TEST_ID "firebase"` (specific search)
+2. `just logs-text TEST_ID "firebase"` (specific search)  
 3. `just logs-pattern TEST_ID "firebase.*"` (pattern matching)
+
+**⚠️  If logs are missing or incomplete:**
+4. `just android-logs-search "search_term"` (FULL device logs - sees initialization, startup, everything)
+5. `adb logcat -d | rg "search_term" -i` (direct approach for complete log access)
+
+**🎯 Quick Rule**: Missing logs in test results? → Use `android-logs-search` for complete view
 
 **Common fixes:**
 - Firebase issues: `just test-android 'system.network.*'`
 - Checksum failures: `just test-android 'game.match.reset_level'`
 - Performance issues: `just test-android '*.*.performance'`
+- **Fastbuild validation**: `just android-logs-search "FASTBUILD_VALIDATION_TEST"`
 
 ## 📋 Android Device Logs
 

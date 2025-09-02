@@ -39,6 +39,7 @@ func _process(delta: float) -> void:
 
 func _ready() -> void:
 	Log.debug("Game initializing", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
+	Log.info("FASTBUILD_VALIDATION_TEST: This message confirms code changes are deployed properly", {"timestamp": Time.get_unix_time_from_system()}, [Log.TAG_SYSTEM, "fastbuild_validation"])
 	setup_signals()
 	if !data_source.is_initialized():
 		await data_source.startup_completed
@@ -458,6 +459,17 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 				Log.TAG_DIAGNOSTIC
 			]
 		)
+
+		Log.info(
+			"TRACE: Adding action to queue",
+			{
+				"action_valid": event.action_callable.is_valid(),
+				"action_name": str(event.action_callable),
+				"auto_continue": event.auto_continue
+			},
+			["debug", "trace", "queue"]
+		)
+
 		_idle_action_queue.append(
 			{"action": event.action_callable, "auto_continue": event.auto_continue}
 		)
@@ -597,6 +609,8 @@ func _process_one_queue_item() -> void:
 
 	var current_game_state: String = core.GameState.keys()[game_handler.current_gamestate]
 
+	print("SIMPLE_TRACE: About to log action start")
+
 	Log.info(
 		"=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTION ===",
 		{
@@ -611,7 +625,13 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_start", Log.TAG_DIAGNOSTIC]
 	)
 
+	print("SIMPLE_TRACE: Logged action start")
+
+	print("SIMPLE_TRACE: About to call action - valid: ", action.is_valid(), " name: ", str(action))
+
 	action.call()
+
+	print("SIMPLE_TRACE: Action call completed - name: ", str(action))
 
 	var action_end_time: float = Time.get_unix_time_from_system()
 	var action_end_frame: int = Engine.get_process_frames()

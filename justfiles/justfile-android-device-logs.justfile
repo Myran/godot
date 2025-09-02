@@ -438,3 +438,56 @@ android-latest-test-id:
     echo "💡 For command substitution use:"
     echo "   TEST_ID=\$(just android-latest-test-id | grep 'TEST_ID:' | cut -d' ' -f3)"
     echo "   just capture-gamestate-android \$TEST_ID my_state"
+
+# Search Android device logs for specific terms (full log inspection)
+android-logs-search SEARCH_TERM LINES="100":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🔍 Searching Android logs for: {{SEARCH_TERM}}"
+    echo "📱 Device: {{ANDROID_DEVICE_ID}}"
+    echo "📊 Lines to search: {{LINES}}"
+    echo ""
+    
+    # Check device connectivity
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "connected" >/dev/null 2>&1; then
+        echo "❌ Device {{ANDROID_DEVICE_ID}} not connected"
+        echo "💡 Run 'adb devices' to check connected devices"
+        exit 1
+    fi
+    
+    # Search buffered logs (most recent entries)
+    echo "🔍 Searching recent buffered logs..."
+    RECENT_RESULTS=$(adb -s {{ANDROID_DEVICE_ID}} logcat -t {{LINES}} | rg "{{SEARCH_TERM}}" -i || echo "")
+    
+    if [[ -n "$RECENT_RESULTS" ]]; then
+        echo "✅ Found matches in recent logs:"
+        echo ""
+        echo "$RECENT_RESULTS"
+        echo ""
+        echo "📊 Total matches: $(echo "$RECENT_RESULTS" | wc -l)"
+    else
+        echo "❌ No matches found in recent {{LINES}} log entries"
+        echo ""
+        echo "🔍 Searching all buffered logs (may take longer)..."
+        ALL_RESULTS=$(adb -s {{ANDROID_DEVICE_ID}} logcat -d | rg "{{SEARCH_TERM}}" -i || echo "")
+        
+        if [[ -n "$ALL_RESULTS" ]]; then
+            echo "✅ Found matches in full log buffer:"
+            echo ""
+            echo "$ALL_RESULTS" | tail -20  # Show last 20 matches to avoid overwhelming output
+            echo ""
+            TOTAL_MATCHES=$(echo "$ALL_RESULTS" | wc -l)
+            echo "📊 Total matches: $TOTAL_MATCHES"
+            if [[ $TOTAL_MATCHES -gt 20 ]]; then
+                echo "💡 Showing last 20 matches. Use 'adb logcat -d | rg \"{{SEARCH_TERM}}\" -i' for all results"
+            fi
+        else
+            echo "❌ No matches found in any buffered logs"
+            echo ""
+            echo "💡 Try:"
+            echo "   - Check if the term appears in live logs: just android-logs-search \"{{SEARCH_TERM}}\" (while app is running)"
+            echo "   - Verify spelling and capitalization"
+            echo "   - Run app/test to generate fresh logs"
+        fi
+    fi

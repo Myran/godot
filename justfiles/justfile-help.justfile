@@ -161,6 +161,7 @@ help:
     echo ""
     echo "📱 REAL-TIME ANDROID MONITORING"
     echo "  just android-logs-errors 30      # Live device error monitoring"
+    echo "  just android-logs-search \"term\" # Search Android logs for specific terms (full inspection)"
     echo "  just android-logs-status         # Check device & app status"
     echo "  just android-latest-test-id      # Get latest Android TEST_ID for capture-gamestate"
     echo ""
