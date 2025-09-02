@@ -307,7 +307,8 @@ func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[Str
 	if not _should_output_log(level, validated_tags):
 		return
 
-	_print_formatted_log(log_entry_data)
+	# Fire and forget async logging to avoid blocking main thread
+	_print_formatted_log_async(log_entry_data)
 
 func _create_log_entry_data(level: LogLevel, message: String, context: Dictionary, validated_tags: Array[String]) -> Dictionary:
 	return {
@@ -323,7 +324,7 @@ func _handle_buffering(log_entry_data: Dictionary) -> void:
 
 	var level = log_entry_data.level
 	if level >= LogLevel.ERROR and _enable_buffer_dump and not _buffer_dumped_recently:
-		_dump_buffer()
+		_dump_buffer_async()  # Fire and forget async buffer dump
 		_buffer_dumped_recently = true # Prevent immediate re-dumping
 	elif level < LogLevel.ERROR:
 		_buffer_dumped_recently = false # Reset dump flag if not high severity
@@ -438,7 +439,7 @@ func _trim_buffer() -> void:
 		print_rich("[color=#%s]DEBUG: Buffer trimmed from %d to %d entries (max: %d)[/color]" %
 			[LoggerColors.DEBUG_HTML, original_size, _log_buffer.size(), _buffer_size])
 
-func _dump_buffer() -> void:
+func _dump_buffer_async() -> void:
 	var header_footer_color = LoggerColors.WARNING_HTML # Yellow for visibility
 	var separator = "═".repeat(80) # Use double lines for more emphasis
 
@@ -469,7 +470,7 @@ func _dump_buffer() -> void:
 			var data_to_print = entry_data.duplicate(true)
 			data_to_print["is_buffer_dump"] = true
 
-			_print_formatted_log(data_to_print)
+			await _print_formatted_log_async(data_to_print)
 
 	if use_plain_formatting:
 		print(separator)
@@ -550,7 +551,7 @@ func _configure_for_platform() -> void:
 				_use_colors = false
 				print("[Advanced Logger] Running on iOS - colors disabled")
 
-func _print_formatted_log(log_data: Dictionary) -> void:
+func _print_formatted_log_async(log_data: Dictionary) -> void:
 	var level: int = log_data.level
 	var message: String = log_data.message
 	var context: Dictionary = log_data.context
@@ -601,10 +602,10 @@ func _print_formatted_log(log_data: Dictionary) -> void:
 				var line = lines[i]
 				if not line.is_empty():
 					print(line)
-					# Add delay between chunks to avoid Android rate limiting
+					# Add async delay between chunks to avoid Android rate limiting
 					if i < lines.size() - 1 and line.contains("[CHUNK"):
 						# Only delay between chunks, not after the last one
-						OS.delay_msec(100)  # 100ms delay between chunks to ensure delivery
+						await get_tree().create_timer(0.1).timeout  # 100ms async delay between chunks
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
 			var regex = RegEx.new()
