@@ -930,16 +930,16 @@ _analyze-test-errors test_id platform:
         RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
     fi
     
-    # Count critical errors in relevant logs only
-    CRITICAL_ERRORS=$(echo "$RELEVANT_LOGS" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" 2>/dev/null || echo "0")
+    # Count critical errors in relevant logs only (exclude SEMANTIC_ACTION descriptive text)
+    CRITICAL_ERRORS=$(echo "$RELEVANT_LOGS" | grep -v "SEMANTIC_ACTION" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" 2>/dev/null || echo "0")
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Filter out intentional test errors (error handling validation actions)
     # These actions deliberately generate errors to test error handling
     ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout)" || echo "")
     
-    # Count all errors in filtered relevant logs
-    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
+    # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text)
+    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Count warnings in relevant logs only
@@ -967,13 +967,13 @@ _analyze-test-errors test_id platform:
     if [[ $CRITICAL_ERRORS -gt 0 ]]; then
         echo ""
         echo "🚨 Critical Errors Found:"
-        echo "$RELEVANT_LOGS" | grep -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" | head -3 | sed 's/^/   /'
+        echo "$RELEVANT_LOGS" | grep -v "SEMANTIC_ACTION" | grep -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Test-Related Errors Found:"
-        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
@@ -1838,9 +1838,21 @@ _generate-comprehensive-breakdown hierarchy_file:
         echo "⚠️ No platform information found in hierarchy file"
     fi
     
-    # Action-level analysis (may not find files if already cleaned up)
+    # Action-level analysis (only process files from current test session)
+    SESSION_PATTERN=""
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        # Use session-specific pattern to avoid including stale results
+        SESSION_PATTERN="_${MULTI_PLATFORM_SESSION}_"
+        echo "🔍 Filtering action results to session: $MULTI_PLATFORM_SESSION"
+    fi
+    
     for results_file in /tmp/test_action_results_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
+            # Skip files that don't belong to current session
+            if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then
+                continue
+            fi
+            
             # Check if this config was part of our test list with error handling
             CONFIG_FROM_FILE=$(jq -r '.[0].config_name // ""' "$results_file" 2>/dev/null)
             PLATFORM_FROM_FILE=$(jq -r '.[0].platform // ""' "$results_file" 2>/dev/null)

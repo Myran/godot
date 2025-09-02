@@ -188,10 +188,10 @@ test:
     echo "🔍 Multi-platform session: $MULTI_SESSION"
     echo ""
     
-    # Clean up any old test files first
+    # Clean up any old test files first (older than 1 hour)
     echo "🧹 Cleaning up old test result files..."
-    find /tmp -name "test_action_results_*.json" -mtime +1h -delete 2>/dev/null || true
-    find /tmp -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
+    find /tmp -name "test_action_results_*.json" -amin +60 -delete 2>/dev/null || true
+    find /tmp -name "test_hierarchy_*.json" -amin +60 -delete 2>/dev/null || true
     
     # Get all supported platforms dynamically
     SUPPORTED_PLATFORMS=$(just _get-all-platforms)
