@@ -3,14 +3,19 @@ extends Node
 signal firebase_initialized
 signal firebase_error(error: String)
 
-var db: FirebaseDatabaseWrapper  # FirebaseDatabaseWrapper instance
+var db: Object  # FirebaseDatabaseWrapper instance (using Object to avoid forward reference)
 var _cpp_database: Object
 var _is_initialized: bool = false
 var _next_request_id: int = 1
-var _pending_requests: Dictionary[int, FirebaseRequest] = {}
+var _pending_requests: Dictionary = {}
 
 
 func _ready() -> void:
+	# Wrap in try-catch to prevent autoload crashes
+	if Log == null:
+		print("ERROR: Log not available in FirebaseService _ready()")
+		return
+
 	Log.info(
 		"FirebaseService _ready() called - using LAZY INITIALIZATION",
 		{"platform": OS.get_name(), "node_name": name},
@@ -173,9 +178,9 @@ func set_value(path: Array[Variant], key: String, value: Variant) -> FirebaseReq
 	Log.debug(
 		"About to call db.call_method set_value_async",
 		{
-			"request_id": request_id, 
+			"request_id": request_id,
 			"db_valid": db != null and db.is_valid(),
-			"path": full_path, 
+			"path": full_path,
 			"value": value
 		},
 		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
@@ -304,13 +309,13 @@ func _resolve_pending_request(request_id: int, result: Dictionary[String, Varian
 	Log.debug(
 		"_resolve_pending_request called",
 		{
-			"request_id": request_id, 
+			"request_id": request_id,
 			"result_status": result.get("status", "unknown"),
 			"pending_requests": _pending_requests.keys()
 		},
 		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 	)
-	
+
 	if request_id in _pending_requests:
 		var request: FirebaseRequest = _pending_requests[request_id]
 		_pending_requests.erase(request_id)
