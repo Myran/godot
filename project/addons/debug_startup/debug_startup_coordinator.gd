@@ -385,30 +385,6 @@ func _wait_for_game_ready() -> void:
 	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
 
 
-func _wait_for_game_instance_ready() -> void:
-	"""Wait for Game node to be fully initialized with completed signal"""
-	var main_node: Node = get_node("/root/Main")
-	if not main_node:
-		Log.error("Main node not available for game instance check", {}, ["debug", "startup", "error"])
-		return
-
-	var game_node: Game = main_node.get_node("Game") as Game
-	if not game_node:
-		Log.error("Game node not found under Main", {}, ["debug", "startup", "error"])
-		return
-
-	# Check if game is already initialized by looking at its UI state
-	if game_node.ui_state != core.UIState.INITIALIZING:
-		Log.info("Game instance already initialized", {"ui_state": core.UIState.keys()[game_node.ui_state]}, ["debug", "startup"])
-		return
-
-	if game_node.has_signal("initialization_complete"):
-		Log.info("Waiting for Game initialization_complete signal...", {}, ["debug", "startup"])
-		await game_node.initialization_complete
-		Log.info("Game instance fully initialized", {}, ["debug", "startup"])
-	else:
-		Log.info("Game instance ready (no initialization signal)", {}, ["debug", "startup"])
-
 
 func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
 	if not registry:

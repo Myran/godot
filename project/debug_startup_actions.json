@@ -1,9 +1,0 @@
-{
-  "description": "Test battle determinism with full animation (comprehensive, slower)",
-  "seed": 55555,
-  "actions": [
-	"game.debug.hide_debug_menu",
-	"game.lineup.populate_enemy",
-	"game.battle.test_determinism_animated"
-  ]
-}

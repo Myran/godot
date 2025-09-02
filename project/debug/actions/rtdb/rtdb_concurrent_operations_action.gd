@@ -44,7 +44,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	for operation: Dictionary in operations:
 		var operation_start_time: int = Time.get_ticks_msec()
 		var method_str: String = operation["method"]
-		var path_array: Array = operation["path"]
+		var path_array: Array[Variant] = operation["path"]
 		var data_variant: Variant = operation["data"]
 		var name_str: String = operation["name"]
 		var success: bool = await execute_simple_operation(

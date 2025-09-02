@@ -59,10 +59,13 @@ func initialize() -> bool:
 
 	# Ensure Firebase service is available
 	if not _firebase_service.is_available():
-		Log.info(
-			"FirebaseServiceBackend: Firebase service not available, initialization will proceed without it",
-			{"instance_id": _backend_instance_id_str},
-			[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+		(
+			Log
+			. info(
+				"FirebaseServiceBackend: Firebase service not available, initialization will proceed without it",
+				{"instance_id": _backend_instance_id_str},
+				[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+			)
 		)
 		# Don't block backend initialization - Firebase may be unavailable in some contexts
 	else:

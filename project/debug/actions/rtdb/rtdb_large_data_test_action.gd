@@ -166,9 +166,9 @@ func _generate_large_test_data() -> Dictionary:
 	return data
 
 
-func _generate_achievements(user_index: int) -> Array[String]:
-	var achievements: Array[String] = []
-	var possible_achievements: Array[String] = [
+func _generate_achievements(user_index: int) -> Array[Variant]:
+	var achievements: Array[Variant] = []
+	var possible_achievements: Array[Variant] = [
 		"first_game",
 		"ten_games",
 		"hundred_games",

@@ -23,7 +23,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		)
 
 	_update_status("Testing normal timeout handling...")
-	var test_path: Array = ["backend_tests", "timer_manager", "normal"]
+	var test_path: Array[Variant] = ["backend_tests", "timer_manager", "normal"]
 	var test_key: String = "timer_test_" + str(Time.get_ticks_msec())
 	var test_value: String = "Timer Test: " + str(Time.get_ticks_msec())
 
@@ -39,7 +39,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var total_rapid_duration: int = 0
 
 	for i: int in range(rapid_requests):
-		var rapid_path: Array = ["backend_tests", "timer_manager", "rapid", str(i)]
+		var rapid_path: Array[Variant] = ["backend_tests", "timer_manager", "rapid", str(i)]
 		var rapid_key: String = "rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var rapid_value: String = "Rapid Test " + str(i)
 

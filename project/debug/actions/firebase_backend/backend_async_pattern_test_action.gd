@@ -8,15 +8,33 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
+	Log.info(
+		"TRACE: _execute_action_logic started",
+		{"action": action_name},
+		["debug", "backend_firebase", "trace"]
+	)
+
 	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
 
-	var test_path: Array = ["backend_tests", "async_pattern"]
+	Log.debug(
+		"TRACE: About to call test_backend_async_pattern for set_data",
+		{"action": action_name},
+		["debug", "backend_firebase", "trace"]
+	)
+
+	var test_path: Array[Variant] = ["backend_tests", "async_pattern"]
 	var test_key: String = "test_" + str(Time.get_ticks_msec())
 	var test_value: String = "Backend Async Test: " + str(Time.get_ticks_msec())
 
 	var set_success: bool = await test_backend_async_pattern(
 		"set_data", test_path, test_key, test_value, "Backend Set Data"
+	)
+
+	Log.debug(
+		"TRACE: test_backend_async_pattern set_data completed",
+		{"action": action_name, "set_success": set_success},
+		["debug", "backend_firebase", "trace"]
 	)
 
 	if not set_success:

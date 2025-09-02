@@ -10,7 +10,7 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	var unique_path: Array[String] = RTDBTestPaths.with_timestamp(RTDBTestPaths.SIMPLE_VALUE)
+	var unique_path: Array[Variant] = RTDBTestPaths.with_timestamp(RTDBTestPaths.SIMPLE_VALUE)
 	var test_path: Array[Variant] = RTDBTestPaths.to_variant_array(unique_path)
 
 	_update_status("Setting up test data for deletion...")
@@ -39,7 +39,7 @@ func execute_rtdb_action() -> bool:
 		return false
 
 	var key: String = test_path[-1] if test_path.size() > 0 else ""
-	var path: Array = test_path.slice(0, -1) if test_path.size() > 1 else []
+	var path: Array[Variant] = test_path.slice(0, -1) if test_path.size() > 1 else []
 	var validation_result: Variant = await firebase_backend.get_data(path, key)
 
 	if validation_result == null:

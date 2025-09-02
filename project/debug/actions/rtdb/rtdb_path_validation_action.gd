@@ -41,7 +41,7 @@ func execute_rtdb_action() -> bool:
 	]
 
 	for test_case: Dictionary in test_paths:
-		var test_path: Array = test_case["path"]
+		var test_path: Array[Variant] = test_case["path"]
 		var test_name: String = test_case["name"]
 		var should_exist: bool = test_case["should_exist"]
 		if should_exist:

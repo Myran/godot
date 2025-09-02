@@ -33,7 +33,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var sequential_success: int = 0
 
 	for i: int in range(sequential_count):
-		var seq_path: Array[String] = ["backend_tests", "request_tracking", "sequential", str(i)]
+		var seq_path: Array[Variant] = ["backend_tests", "request_tracking", "sequential", str(i)]
 		var seq_key: String = "req_track_seq_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var seq_value: String = "Sequential request " + str(i)
 
@@ -78,7 +78,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var rapid_success: int = 0
 
 	for i: int in range(rapid_count):
-		var rapid_path: Array[String] = ["backend_tests", "request_tracking", "rapid", str(i)]
+		var rapid_path: Array[Variant] = ["backend_tests", "request_tracking", "rapid", str(i)]
 		var rapid_key: String = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
 		var rapid_value: String = "Rapid request " + str(i)
 
@@ -149,7 +149,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	for op: Dictionary in pattern_operations:
 		var pattern_start: int = Time.get_ticks_msec()
 		var method_str: String = op["method"]
-		var path_array: Array = op["path"]
+		var path_array: Array[Variant] = op["path"]
 		var key_str: String = op["key"]
 		var value_variant: Variant = op["value"]
 		var pattern_result: bool = await test_backend_async_pattern(

@@ -111,6 +111,9 @@ static func create_backend() -> DataBackend:
 	elif force_local:
 		Log.info("Debug flag forcing local data source", {}, [Log.TAG_DB])
 		selected_backend_type = BackendSelection.LOCAL
+	elif OS.get_name() == "Android":
+		Log.info("Android platform detected, forcing Firebase backend", {}, [Log.TAG_DB])
+		selected_backend_type = BackendSelection.FIREBASE
 	else:
 		Log.info("Checking internet for Firebase backend selection", {}, [Log.TAG_DB])
 		var internet_check_start: int = Time.get_ticks_msec()

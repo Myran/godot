@@ -33,7 +33,7 @@ func _initialize() -> void:
 	@warning_ignore("redundant_await")
 	_backend = await BackendFactory.create_backend()
 
-	using_local_data = _backend.get_class() == "LocalJSONBackend"
+	using_local_data = _backend is LocalJSONBackend
 
 	Log.debug(
 		"Backend created",
@@ -167,8 +167,8 @@ func set_test_group(group: int) -> void:
 
 func is_firebase_available() -> bool:
 	var available: bool = false
-	if _backend.get_class() == "FirebaseServiceBackend":
-		var firebase_service_backend: FirebaseServiceBackend = _backend
+	if _backend is FirebaseServiceBackend:
+		var firebase_service_backend: FirebaseServiceBackend = _backend as FirebaseServiceBackend
 		available = firebase_service_backend.is_available()
 
 	Log.debug(

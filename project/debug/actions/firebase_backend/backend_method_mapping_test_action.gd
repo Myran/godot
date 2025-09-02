@@ -22,7 +22,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			action_name
 		)
 
-	var test_base_path: Array[String] = ["backend_tests", "method_mapping"]
+	var test_base_path: Array[Variant] = ["backend_tests", "method_mapping"]
 	var test_timestamp: String = str(Time.get_ticks_msec())
 	var method_results: Dictionary = {}
 	var total_methods: int = 0
@@ -30,7 +30,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing set_data method mapping...")
 	total_methods += 1
-	var set_test_path: Array[String] = []
+	var set_test_path: Array[Variant] = []
 	set_test_path.assign(test_base_path + ["set_test"])
 	var set_key: String = "set_" + test_timestamp
 	var set_value: String = "Set method test value"
@@ -53,7 +53,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing push_data method mapping...")
 	total_methods += 1
-	var push_path: Array[String] = []
+	var push_path: Array[Variant] = []
 	push_path.assign(test_base_path + ["push_test"])
 	var push_value: Dictionary = {"message": "Push method test", "timestamp": test_timestamp}
 

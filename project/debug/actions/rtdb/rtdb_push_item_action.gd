@@ -10,7 +10,7 @@ func _init() -> void:
 func execute_rtdb_action() -> bool:
 	_update_status("Executing " + action_name + "...")
 
-	var base_path: Array[String] = ["debug_tests", "rtdb", "push_test"]
+	var base_path: Array[Variant] = ["debug_tests", "rtdb", "push_test"]
 	var test_path: Array[Variant] = RTDBTestPaths.to_variant_array(base_path)
 
 	var push_data: Dictionary = {

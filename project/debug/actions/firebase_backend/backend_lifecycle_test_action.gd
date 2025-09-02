@@ -103,7 +103,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing basic operation functionality...")
 	total_tests += 1
-	var test_path: Array[String] = ["backend_tests", "lifecycle", "basic_op"]
+	var test_path: Array[Variant] = ["backend_tests", "lifecycle", "basic_op"]
 	var test_key: String = "lifecycle_" + str(Time.get_ticks_msec())
 	var test_value: String = "Lifecycle test value"
 

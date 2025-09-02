@@ -29,9 +29,9 @@ func get_firebase_database() -> Object:
 		)
 		return null
 
-	var backend: Variant = data_source._backend
+	var backend: DataBackend = data_source._backend
 	if backend:
-		if backend.get_class() == "FirebaseServiceBackend":
+		if backend is FirebaseServiceBackend:
 			Log.debug(
 				"Found Firebase backend for RTDB operations",
 				{
@@ -75,7 +75,7 @@ func execute_simple_operation(
 
 	var error_msg: String = ""
 	var key: String = ""
-	var path: Array = []
+	var path: Array[Variant] = []
 	var duration_ms: int = 0
 
 	if not firebase_backend:

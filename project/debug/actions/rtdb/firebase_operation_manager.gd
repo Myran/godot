@@ -48,20 +48,20 @@ func execute(operation: String, args: Array, timeout_sec: float = 10.0) -> Debug
 func _execute_operation(request_id: int, operation: String, args: Array) -> bool:
 	match operation:
 		"get_value_async":
-			var path: Array = args[0] if args.size() > 0 else []
+			var path: Array[Variant] = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var result: Variant = await _db.get_data(path, key)
 			_simulate_async_completion.call_deferred(request_id, "get", result, "")
 			return true
 		"set_value_async":
-			var path: Array = args[0] if args.size() > 0 else []
+			var path: Array[Variant] = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var data: Variant = args[2] if args.size() > 2 else null
 			var result: Variant = await _db.set_data(path, key, data)
 			_simulate_async_completion.call_deferred(request_id, "set", result, "")
 			return true
 		"remove_value_async":
-			var path: Array = args[0] if args.size() > 0 else []
+			var path: Array[Variant] = args[0] if args.size() > 0 else []
 			var key: Variant = args[1] if args.size() > 1 else ""
 			var result: Variant = await _db.remove_data(path, key)
 			_simulate_async_completion.call_deferred(request_id, "remove", result, "")

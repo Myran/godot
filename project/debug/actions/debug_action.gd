@@ -128,8 +128,25 @@ func execute() -> void:
 
 	_log_debug_action_as_semantic()
 
+	Log.info(
+		"TRACE: About to check action_callable validity",
+		{"action": action_name, "callable_valid": action_callable.is_valid()},
+		["debug", "trace", "callable"]
+	)
+
 	if action_callable.is_valid():
+		Log.info(
+			"TRACE: Calling action_callable",
+			{"action": action_name},
+			["debug", "trace", "callable"]
+		)
 		result = await action_callable.call()
+
+		Log.info(
+			"TRACE: action_callable completed",
+			{"action": action_name, "result_type": typeof(result)},
+			["debug", "trace", "callable"]
+		)
 
 		success = _evaluate_action_result(result)
 		if success:
@@ -138,6 +155,11 @@ func execute() -> void:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
+		Log.error(
+			"TRACE: action_callable invalid",
+			{"action": action_name},
+			["debug", "trace", "callable"]
+		)
 		success = false
 		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)
@@ -206,7 +228,19 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 	_log_debug_action_as_semantic(params)
 
+	Log.info(
+		"TRACE: execute_with_params - checking action_callable validity",
+		{"action": action_name, "callable_valid": action_callable.is_valid()},
+		["debug", "trace", "callable"]
+	)
+
 	if action_callable.is_valid():
+		Log.info(
+			"TRACE: execute_with_params - calling action_callable",
+			{"action": action_name, "has_params": not params.is_empty()},
+			["debug", "trace", "callable"]
+		)
+
 		if params.is_empty():
 			result = await action_callable.call()
 		else:
@@ -217,6 +251,12 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			)
 			result = await action_callable.call(params)
 
+		Log.info(
+			"TRACE: execute_with_params - action_callable completed",
+			{"action": action_name, "result_type": typeof(result)},
+			["debug", "trace", "callable"]
+		)
+
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
@@ -224,6 +264,11 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
+		Log.error(
+			"TRACE: execute_with_params - action_callable invalid",
+			{"action": action_name},
+			["debug", "trace", "callable"]
+		)
 		success = false
 		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)

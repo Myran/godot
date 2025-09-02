@@ -22,10 +22,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		)
 
 	var performance_tests: Array[Dictionary] = []
-	var test_base_path: Array[String] = ["backend_tests", "performance"]
+	var test_base_path: Array[Variant] = ["backend_tests", "performance"]
 	var test_timestamp: String = str(Time.get_ticks_msec())
 
-	var single_path: Array = test_base_path + ["single", test_timestamp]
+	var single_path: Array[Variant] = test_base_path + ["single", test_timestamp]
 	var single_key: String = "perf_single_" + test_timestamp
 	var single_value: String = "Performance test single operation"
 
@@ -49,7 +49,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var sequential_successes: int = 0
 
 	for i: int in range(sequential_operations):
-		var seq_path: Array = test_base_path + ["sequential", str(i), test_timestamp]
+		var seq_path: Array[Variant] = test_base_path + ["sequential", str(i), test_timestamp]
 		var seq_key: String = "perf_seq_" + str(i) + "_" + test_timestamp
 		var seq_value: String = "Sequential operation " + str(i)
 
@@ -84,7 +84,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		}
 	)
 
-	var overhead_path: Array = test_base_path + ["overhead", test_timestamp]
+	var overhead_path: Array[Variant] = test_base_path + ["overhead", test_timestamp]
 	var overhead_key: String = "perf_overhead_" + test_timestamp
 	var overhead_value: String = "RequestSignalHelper overhead test"
 

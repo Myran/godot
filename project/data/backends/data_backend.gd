@@ -2,7 +2,7 @@ class_name DataBackend
 extends RefCounted
 
 @warning_ignore("unused_signal")
-signal value_received(data: Dictionary)
+signal value_received(data: Dictionary[String, Variant])
 @warning_ignore("unused_signal")
 signal startup_completed
 

@@ -59,6 +59,12 @@ func _register_all_actions() -> void:
 	if game_actions_script:
 		game_actions_script.register_all(self)
 
+	var firebase_debug_actions_script: GDScript = load(
+		"res://debug/actions/registrations/firebase_debug_actions.gd"
+	)
+	if firebase_debug_actions_script:
+		firebase_debug_actions_script.register_all(self)
+
 
 func register_action(action: DebugAction) -> bool:
 	if not action:

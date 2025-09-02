@@ -34,7 +34,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var path_variants: Array = RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE)
 	var key: String = path_variants[-1] if path_variants.size() > 0 else ""
-	var path: Array = path_variants.slice(0, -1) if path_variants.size() > 1 else []
+	var path: Array[Variant] = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 
 	var result_success: bool = await firebase_backend.set_data(path, key, test_value)
 	var duration_ms: int = Time.get_ticks_msec() - start_time

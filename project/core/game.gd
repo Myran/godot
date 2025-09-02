@@ -39,7 +39,11 @@ func _process(delta: float) -> void:
 
 func _ready() -> void:
 	Log.debug("Game initializing", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM])
-	Log.info("FASTBUILD_VALIDATION_TEST: This message confirms code changes are deployed properly", {"timestamp": Time.get_unix_time_from_system()}, [Log.TAG_SYSTEM, "fastbuild_validation"])
+	Log.info(
+		"FASTBUILD_VALIDATION_TEST: This message confirms code changes are deployed properly",
+		{"timestamp": Time.get_unix_time_from_system()},
+		[Log.TAG_SYSTEM, "fastbuild_validation"]
+	)
 	setup_signals()
 	if !data_source.is_initialized():
 		await data_source.startup_completed
