@@ -47,7 +47,8 @@
       "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
       "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
       "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
-      "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)"
+      "Read(/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
+      "Read(/private/tmp/**)"
     ],
     "deny": [],
     "ask": [],
