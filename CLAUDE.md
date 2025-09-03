@@ -93,6 +93,13 @@ just test-android-target CONFIG # ACT: Automated testing with validation
 - `just test-android TARGET` | `just test-desktop TARGET` - Manual testing (stays open)
 - `just validate` - Complete validation (format + syntax + runtime)
 
+**🚀 Command Integration in Test Lists (NEW):**
+- Test lists now support `commands` array for just command execution
+- Commands run after configs with platform filtering (desktop/android)
+- Context inheritance: TEST_ID and session data passed to commands  
+- `just test-command-integration` - Demo with platform filtering
+- `just help-command-integration` - Complete integration guide
+
 **Debugging Commands:**
 - `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
 - `just logs-tree TEST_ID` - Explore log structure (2 sec)
@@ -364,6 +371,38 @@ var data = {}                  # No type
 - `just help-workflows` - Detailed workflow patterns & best practices
 
 > 💡 **Claude can read `just help` output directly** - use these commands to get detailed explanations and examples for any GameTwo workflow.
+
+## 🚀 Test List Command Integration Example
+
+**Enhanced test lists now support command execution:**
+
+```json
+{
+  "name": "Gamestate Validation with Commands",
+  "description": "Config testing + command validation",
+  "configs": [
+    "gamestate-save-load-test"
+  ],
+  "commands": [
+    {
+      "command": "test-save-load-cycle-desktop",
+      "platforms": ["desktop"],
+      "description": "Desktop save/load consistency"
+    },
+    {
+      "command": "test-save-load-cycle-android", 
+      "platforms": ["android"],
+      "description": "Android save/load consistency"
+    }
+  ]
+}
+```
+
+**Usage:**
+- `just test-desktop-target my-enhanced-test` - Runs configs + desktop commands
+- `just test-android-target my-enhanced-test` - Runs configs + android commands
+- Platform filtering: Only compatible commands execute automatically
+- Context inheritance: Commands receive TEST_ID and session data
 
 ## 📖 Advanced Topics
 

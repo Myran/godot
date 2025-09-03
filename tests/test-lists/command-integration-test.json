@@ -1,0 +1,19 @@
+{
+  "name": "Command Integration Test",
+  "description": "TDD test for just command integration functionality - should fail initially",
+  "configs": [
+    "gamestate-save-load-test"
+  ],
+  "commands": [
+    {
+      "command": "test-save-load-cycle-desktop",
+      "platforms": ["desktop"],
+      "description": "Desktop save/load consistency validation"
+    },
+    {
+      "command": "test-save-load-cycle-android",
+      "platforms": ["android"], 
+      "description": "Android save/load consistency validation"
+    }
+  ]
+}
