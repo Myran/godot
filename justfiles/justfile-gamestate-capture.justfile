@@ -683,12 +683,16 @@ test-save-load-cycle-desktop:
     echo "💡 Using startup gamestate loading to avoid automated mode issues"
     
     # Create startup gamestate load config
-    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << 'EOF'
+    cat > "{{USER_DATA_DIR}}/startup_gamestate_load.json" << 'EOF'
     {
       "gamestate_file": "cycle_test_first.json",
       "source": "save_load_cycle_test"
     }
     EOF
+    
+    # CRITICAL: Copy the first save to the pending load location for test isolation
+    echo "📋 Copying first save to pending load location for test isolation..."
+    cp "{{SAVED_STATES_DIR}}/cycle_test_first.json" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
     
     # Create load and save config for deterministic testing
     just _create-load-save-config false
@@ -717,7 +721,7 @@ test-save-load-cycle-desktop:
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f tests/debug_configs/gamestate-initial-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         
         echo ""
         echo "📊 Test Summary:"
@@ -746,7 +750,7 @@ test-save-load-cycle-desktop:
         # Clean up temporary test files but keep gamestate files for debugging
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f tests/debug_configs/gamestate-initial-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         exit 1
     fi
 
@@ -789,7 +793,7 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     GAMESTATE_DATA=$(cat "$STATE_FILE")
     
     # Create startup gamestate load config with embedded data
-    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << EOF
+    cat > "{{USER_DATA_DIR}}/startup_gamestate_load.json" << EOF
     {
       "gamestate_data": $GAMESTATE_DATA,
       "source": "save_load_cycle_test",
@@ -823,7 +827,7 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "Original state" "Load/save cycle"; then
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         
         echo ""
         echo "📊 Test Summary:"
@@ -850,7 +854,7 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
         
         # Clean up temporary test files but keep gamestate files for debugging
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         exit 1
     fi
 
@@ -903,12 +907,16 @@ test-save-load-cycle-android:
     echo "💡 Using startup gamestate loading to avoid automated mode issues"
     
     # Create startup gamestate load config
-    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << 'EOF'
+    cat > "{{USER_DATA_DIR}}/startup_gamestate_load.json" << 'EOF'
     {
       "gamestate_file": "cycle_test_first.json",
       "source": "save_load_cycle_test"
     }
     EOF
+    
+    # CRITICAL: Copy the first save to the pending load location for test isolation
+    echo "📋 Copying first save to pending load location for test isolation..."
+    cp "{{SAVED_STATES_DIR}}/cycle_test_first.json" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
     
     # Create load and save config for deterministic testing
     just _create-load-save-config false
@@ -937,7 +945,7 @@ test-save-load-cycle-android:
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f tests/debug_configs/gamestate-initial-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         
         echo ""
         echo "📊 Test Summary:"
@@ -966,7 +974,7 @@ test-save-load-cycle-android:
         # Clean up temporary test files but keep gamestate files for debugging
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
         rm -f tests/debug_configs/gamestate-initial-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         exit 1
     fi
 
@@ -1009,7 +1017,7 @@ test-save-load-cycle-with-state-android STATE_NAME:
     GAMESTATE_DATA=$(cat "$STATE_FILE")
     
     # Create startup gamestate load config with embedded data
-    cat > "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json" << EOF
+    cat > "{{USER_DATA_DIR}}/startup_gamestate_load.json" << EOF
     {
       "gamestate_data": $GAMESTATE_DATA,
       "source": "save_load_cycle_test",
@@ -1043,7 +1051,7 @@ test-save-load-cycle-with-state-android STATE_NAME:
     if just _compare-gamestates "$FIRST_FILE" "$SECOND_FILE" "Original state" "Load/save cycle"; then
         # Clean up temporary test files
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         
         echo ""
         echo "📊 Test Summary:"
@@ -1070,7 +1078,7 @@ test-save-load-cycle-with-state-android STATE_NAME:
         
         # Clean up temporary test files but keep gamestate files for debugging
         rm -f tests/debug_configs/gamestate-load-and-save-test.json
-        rm -f "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/startup_gamestate_load.json"
+        rm -f "{{USER_DATA_DIR}}/startup_gamestate_load.json"
         exit 1
     fi
 
