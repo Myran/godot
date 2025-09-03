@@ -94,26 +94,26 @@ func set_data(path: Array[Variant], key: String, data_to_set: Variant) -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.set_value(path, key, data_to_set)
-	
+
 	Log.debug(
 		"DatabaseService: About to await request completion",
 		{
-			"path": path, 
-			"key": key, 
-			"request_id": request.request_id if request else "null",
+			"path": path,
+			"key": key,
+			"request_id": request.get_request_id() if request else -1,
 			"request_valid": is_instance_valid(request)
 		},
 		[Log.TAG_DB, Log.TAG_FIREBASE, "await_debug"]
 	)
-	
+
 	var result: Dictionary[String, Variant] = await request.await_completion()
-	
+
 	Log.debug(
 		"DatabaseService: Request await completed",
 		{
-			"path": path, 
-			"key": key, 
-			"request_id": request.request_id if request else "null",
+			"path": path,
+			"key": key,
+			"request_id": request.get_request_id() if request else -1,
 			"result_status": result.get("status", "missing"),
 			"result_keys": result.keys()
 		},

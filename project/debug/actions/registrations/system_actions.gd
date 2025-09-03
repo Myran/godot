@@ -5,13 +5,17 @@ const StateExtractorGreenPhaseScript = preload(
 )
 
 # Save/Load action classes
-const SaveDebugStateAction = preload("res://debug/actions/system/save_debug_state_action.gd")
-const LoadDebugStateAction = preload("res://debug/actions/system/load_debug_state_action.gd")
-const SaveAlliedLineupAction = preload("res://debug/actions/system/save_allied_lineup_action.gd")
-const SaveEnemyLineupAction = preload("res://debug/actions/system/save_enemy_lineup_action.gd")
-const LoadAlliedLineupAction = preload("res://debug/actions/system/load_allied_lineup_action.gd")
-const LoadEnemyLineupAction = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
-const RestartGameAction = preload("res://debug/actions/system/restart_game_action.gd")
+const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
+const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
+const SaveAlliedLineupActionClass = preload(
+	"res://debug/actions/system/save_allied_lineup_action.gd"
+)
+const SaveEnemyLineupActionClass = preload("res://debug/actions/system/save_enemy_lineup_action.gd")
+const LoadAlliedLineupActionClass = preload(
+	"res://debug/actions/system/load_allied_lineup_action.gd"
+)
+const LoadEnemyLineupActionClass = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
+const RestartGameActionClass = preload("res://debug/actions/system/restart_game_action.gd")
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -67,22 +71,22 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	)
 
 	# Add debug gamestate actions
-	var save_state_action: SaveDebugStateAction = SaveDebugStateAction.new()
+	var save_state_action: SaveDebugStateAction = SaveDebugStateActionClass.new()
 	registry.register_action(save_state_action)
 
 	# Add restart game action
-	var restart_game_action: RestartGameAction = RestartGameAction.new()
+	var restart_game_action: RestartGameAction = RestartGameActionClass.new()
 	registry.register_action(restart_game_action)
 
 	# Add load debug state action (automatically finds most recent saved state)
-	var load_state_action: LoadDebugStateAction = LoadDebugStateAction.new()
+	var load_state_action: LoadDebugStateAction = LoadDebugStateActionClass.new()
 	registry.register_action(load_state_action)
 
 	# Add lineup-specific save actions for designer testing
-	var save_allied_lineup_action: SaveAlliedLineupAction = SaveAlliedLineupAction.new()
+	var save_allied_lineup_action: SaveAlliedLineupAction = SaveAlliedLineupActionClass.new()
 	registry.register_action(save_allied_lineup_action)
 
-	var save_enemy_lineup_action: SaveEnemyLineupAction = SaveEnemyLineupAction.new()
+	var save_enemy_lineup_action: SaveEnemyLineupAction = SaveEnemyLineupActionClass.new()
 	registry.register_action(save_enemy_lineup_action)
 
 	# Note: Additional LoadDebugStateAction instances are created dynamically
