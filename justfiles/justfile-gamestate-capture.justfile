@@ -134,48 +134,92 @@ _create-load-save-config AUTO_QUIT:
     }
     EOF
 
-# Extract captured gamestate from desktop logs and create debug save file
-capture-gamestate-desktop NAME:
+# Shared log source functions for DRY compliance
+_get-desktop-logs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just logs-desktop-last 2>/dev/null || echo ""
+
+_get-android-logs:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🎯 Extracting gamestate '{{NAME}}' from logs..."
+    # Automatically get the latest Android TEST_ID
+    just _check-android-prerequisites >/dev/null
+    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | grep '"test_id"' | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
+    
+    if [ -z "$LATEST_TEST_ID" ]; then
+        # For manual captures (not from test sessions), get logs directly
+        adb logcat -d 2>/dev/null | tail -20000 || echo ""
+    else
+        # Use Android log system to get test results for test sessions
+        ANDROID_LOG_CONTENT=$(just _find-android-log-with-test-id $LATEST_TEST_ID 2>/dev/null || echo "")
+        
+        if [ -z "$ANDROID_LOG_CONTENT" ]; then
+            # Fallback to manual capture search
+            adb logcat -d 2>/dev/null | tail -20000 || echo ""
+        else
+            echo "$ANDROID_LOG_CONTENT"
+        fi
+    fi
+
+# Shared capture function - eliminates 95% code duplication
+_capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting {{SEARCH_PATTERN}} '{{NAME}}' from logs..."
     echo ""
     
-    # Use shared log command for DRY compliance
-    echo "1️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in desktop logs..."
+    # Get logs from specified source
+    echo "1️⃣ Searching for {{SEARCH_PATTERN}} in logs..."
     
-    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    LOG_CONTENT=$(just {{LOG_SOURCE_CMD}} || echo "")
+    CAPTURE_OUTPUT=$(echo "$LOG_CONTENT" | grep "{{SEARCH_PATTERN}}" || echo "")
     
     if [ -z "$CAPTURE_OUTPUT" ]; then
-        echo "❌ No gamestate capture found in recent desktop logs"
+        echo "❌ No {{SEARCH_PATTERN}} found in recent logs"
         echo ""
-        echo "💡 To capture a gamestate:"
-        echo "   1. Start game: just run-desktop"
-        echo "   2. Open debug menu (press D key)"
-        echo "   3. Click 'Save State' button"
-        echo "   4. Exit game"
-        echo "   5. Run: just capture-gamestate-desktop NAME"
-        echo ""
-        echo "🔍 Check if Save State action was used:"
-        if just logs-desktop-last 2>/dev/null | grep -q "Save State\|DEBUG_GAMESTATE_CAPTURE"; then
-            SAVE_STATE_COUNT=$(just logs-desktop-last 2>/dev/null | grep -c "DEBUG_GAMESTATE_CAPTURE" || echo "0")
-            echo "   ✅ Save State action found in logs ($SAVE_STATE_COUNT captures)"
+        echo "💡 To capture:"
+        if [ "{{LOG_SOURCE_CMD}}" = "_get-desktop-logs" ]; then
+            echo "   1. Start game: just run-desktop"
+            echo "   2. Open debug menu (press D key)"
+            if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
+                echo "   3. Click 'Save State' button"
+            elif [ "{{SEARCH_PATTERN}}" = "DEBUG_LINEUP_ALLIED_CAPTURE" ]; then
+                echo "   3. Click 'Save Allied Lineup' button"
+            elif [ "{{SEARCH_PATTERN}}" = "DEBUG_LINEUP_ENEMY_CAPTURE" ]; then
+                echo "   3. Click 'Save Enemy Lineup' button"
+            fi
+            echo "   4. Exit game"
+            echo "   5. Run capture command"
         else
-            echo "   ❌ No Save State action found"
+            echo "   1. Start test: just test-android-manual CONFIG (for test sessions)"
+            echo "   OR start app normally"
+            echo "   2. Open debug menu (press back button or tap screen corner)"
+            if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
+                echo "   3. Click 'Save State' button"
+            elif [ "{{SEARCH_PATTERN}}" = "DEBUG_LINEUP_ALLIED_CAPTURE" ]; then
+                echo "   3. Click 'Save Allied Lineup' button"
+            elif [ "{{SEARCH_PATTERN}}" = "DEBUG_LINEUP_ENEMY_CAPTURE" ]; then
+                echo "   3. Click 'Save Enemy Lineup' button"
+            fi
+            echo "   4. Exit app"
+            echo "   5. Run capture command"
         fi
         exit 1
     fi
     
-    # Extract the most recent capture line from the search results
-    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | tail -1)
+    # Extract the most recent capture line
+    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | tail -1)
     
     if [ -z "$CAPTURE_LINE" ]; then
-        echo "❌ No valid DEBUG_GAMESTATE_CAPTURE entry found"
+        echo "❌ No valid {{SEARCH_PATTERN}} entry found"
         exit 1
     fi
     
-    # Create debug saves directory in user data location (cross-platform compatible)
+    # Create debug saves directory
     SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
     mkdir -p "$SAVED_STATES_DIR"
     
@@ -190,31 +234,50 @@ capture-gamestate-desktop NAME:
     fi
     
     # Validate and save JSON data
-    echo "$JSON_DATA" | jq '.' > /tmp/gamestate_temp.json
+    echo "$JSON_DATA" | jq '.' > /tmp/capture_temp.json
     
     if [ $? -ne 0 ]; then
-        echo "❌ Invalid JSON in captured gamestate"
+        echo "❌ Invalid JSON in captured data"
         echo "Raw data: $JSON_DATA"
         exit 1
     fi
     
-    # Move to final location
-    mv /tmp/gamestate_temp.json "$SAVED_STATES_DIR/{{NAME}}.json"
+    # Move to final location with specified prefix
+    mv /tmp/capture_temp.json "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json"
     
     # Verify file creation and show info
-    if [ -f "$SAVED_STATES_DIR/{{NAME}}.json" ]; then
-        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/{{NAME}}.json")
+    if [ -f "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json")
         
         echo ""
-        echo "✅ Gamestate saved successfully!"
-        echo "📄 File: $SAVED_STATES_DIR/{{NAME}}.json"
-        echo "🆔 Capture ID: $CAPTURE_ID"
-        echo "📱 Session ID: $SESSION_ID"
+        echo "✅ Capture saved successfully!"
+        echo "📄 File: $SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json"
+        echo "🆔 Capture ID: $CAPTURE_ID"  
         echo "⏰ Captured: $TIMESTAMP"
         echo "📏 Size: ${FILE_SIZE} bytes"
+        if [ "{{FILE_PREFIX}}" = "line-" ]; then
+            echo "🔄 Can be loaded as allied or enemy lineup"
+        fi
+    else
+        echo "❌ Failed to create capture file"
+        exit 1
+    fi
+
+# Extract captured gamestate from desktop logs and create debug save file
+capture-gamestate-desktop NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Use shared capture infrastructure
+    just _capture-from-logs "DEBUG_GAMESTATE_CAPTURE" "game-" "_get-desktop-logs" "{{NAME}}"
+    
+    # Add gamestate-specific post-processing
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    if [ -f "$SAVED_STATES_DIR/game-{{NAME}}.json" ]; then
+        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/game-{{NAME}}.json")
+        
         echo ""
         echo "🎮 Next steps:"
         echo "   1. Start game: just run-desktop"
@@ -230,8 +293,110 @@ capture-gamestate-desktop NAME:
         echo ""
         echo "💡 The captured session ID ($SESSION_ID) is from when this state was originally saved."
         echo "   After loading and performing new actions, you'll get a fresh session ID for replay generation."
+        
+        # Rename file from game-NAME.json to NAME.json for backward compatibility
+        mv "$SAVED_STATES_DIR/game-{{NAME}}.json" "$SAVED_STATES_DIR/{{NAME}}.json"
+    fi
+
+# Android-specific capture function with chunk handling
+_capture-from-android-logs SEARCH_PATTERN FILE_PREFIX NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎯 Extracting {{SEARCH_PATTERN}} '{{NAME}}' from Android logs..."
+    echo ""
+    
+    # Get logs from Android source
+    echo "1️⃣ Getting Android logs..."
+    LOG_CONTENT=$(just _get-android-logs || echo "")
+    
+    if [ -z "$LOG_CONTENT" ]; then
+        echo "❌ No Android logs available"
+        exit 1
+    fi
+    
+    # Extract capture lines
+    CAPTURE_OUTPUT=$(echo "$LOG_CONTENT" | grep "{{SEARCH_PATTERN}}" || echo "")
+    
+    if [ -z "$CAPTURE_OUTPUT" ]; then
+        echo "❌ No {{SEARCH_PATTERN}} found in Android logs"
+        exit 1
+    fi
+    
+    # Create debug saves directory
+    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
+    mkdir -p "$SAVED_STATES_DIR"
+    
+    # Extract JSON data with chunk reassembly support (gamestate-specific)
+    if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
+        echo "2️⃣ Extracting and reassembling JSON data from Android capture..."
+        
+        # Check if this is a chunked message (new chunk-aware system)
+        CHUNK_LINES=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | grep "\[CHUNK")
+        
+        if [ -n "$CHUNK_LINES" ]; then
+            echo "📦 Detected chunked message - reassembling..."
+            JSON_DATA=$(echo "$CAPTURE_OUTPUT" | just _reassemble-android-chunks)
+            
+            if [ $? -ne 0 ] || [ -z "$JSON_DATA" ]; then
+                echo "❌ Failed to reassemble chunked gamestate data"
+                exit 1
+            fi
+            
+            echo "✅ Successfully reassembled chunked message"
+        else
+            # Legacy single-message handling (backward compatibility)
+            echo "📄 Using legacy single-message extraction..."
+            CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | tail -1)
+            JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+            
+            # Check if JSON is complete (Android logs often truncate long lines)
+            if [[ ! "$JSON_DATA" =~ "}$" ]]; then
+                echo "⚠️  JSON appears truncated by Android logging system"
+                JSON_DATA="$JSON_DATA}"  # Add closing brace
+            fi
+        fi
     else
-        echo "❌ Failed to create gamestate file"
+        # Simple extraction for non-gamestate captures (lineups)
+        echo "2️⃣ Extracting JSON data from capture..."
+        CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | tail -1)
+        JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
+    fi
+    
+    if [ -z "$JSON_DATA" ]; then
+        echo "❌ No valid JSON data found in capture"
+        exit 1
+    fi
+    
+    # Validate and save JSON data
+    echo "$JSON_DATA" | jq '.' > /tmp/android_capture_temp.json 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Invalid JSON in captured Android data"
+        if [ "{{SEARCH_PATTERN}}" = "DEBUG_GAMESTATE_CAPTURE" ]; then
+            echo ""
+            echo "🚨 Android Logging Limitation:"
+            echo "   Android kernel imposes ~4KB limit on log entries"
+            echo "   Large gamestate JSON gets truncated by Android logcat"
+            echo ""
+            echo "💡 Recommended Solutions:"
+            echo "   1. 🥇 Use desktop platform for gamestate captures"
+            echo "   2. Capture simpler gamestates on Android"
+            echo "   3. Use Android captures only for small test scenarios"
+        fi
+        echo ""
+        echo "Raw data (first 200 chars): ${JSON_DATA:0:200}..."
+        exit 1
+    fi
+    
+    # Move to final location with specified prefix
+    mv /tmp/android_capture_temp.json "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json"
+    
+    # Return success - let caller handle final output
+    if [ -f "$SAVED_STATES_DIR/{{FILE_PREFIX}}{{NAME}}.json" ]; then
+        echo "✅ Android capture saved successfully!"
+    else
+        echo "❌ Failed to create Android capture file"
         exit 1
     fi
 
@@ -240,173 +405,19 @@ capture-gamestate-android NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🎯 Extracting gamestate '{{NAME}}' from Android logs..."
-    echo ""
+    # Use shared Android capture infrastructure
+    just _capture-from-android-logs "DEBUG_GAMESTATE_CAPTURE" "game-" "{{NAME}}"
     
-    # Automatically get the latest Android TEST_ID
-    echo "1️⃣ Getting latest Android TEST_ID..."
-    
-    # Extract latest TEST_ID using the same logic as android-latest-test-id
-    just _check-android-prerequisites >/dev/null
-    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
-    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | grep '"test_id"' | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-    
-    if [ -z "$LATEST_TEST_ID" ]; then
-        echo "⚠️  No TEST_ID found - checking for manual gamestate captures..."
-        echo ""
-        
-        # For manual captures (not from test sessions), get logs directly
-        echo "2️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in recent Android logs..."
-        ANDROID_LOG_CONTENT=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
-        
-        if [ -z "$ANDROID_LOG_CONTENT" ]; then
-            echo "❌ No Android logs available"
-            exit 1
-        fi
-    else
-        echo "✅ Using TEST_ID: $LATEST_TEST_ID"
-        echo ""
-        
-        # Use Android log system to get test results for test sessions
-        echo "2️⃣ Searching for DEBUG_GAMESTATE_CAPTURE in Android logs..."
-        
-        # Use the established Android log infrastructure
-        ANDROID_LOG_CONTENT=$(just _find-android-log-with-test-id $LATEST_TEST_ID 2>/dev/null || echo "")
-        
-        if [ -z "$ANDROID_LOG_CONTENT" ]; then
-            echo "❌ No Android log found for test $LATEST_TEST_ID"
-            echo ""
-            echo "💡 Falling back to manual capture search..."
-            ANDROID_LOG_CONTENT=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
-        fi
-    fi
-    
-    if [ -z "$ANDROID_LOG_CONTENT" ]; then
-        echo "❌ No Android logs available at all"
-        echo ""
-        echo "💡 To capture a gamestate on Android:"
-        echo "   1. Start test: just test-android-manual CONFIG (for test sessions)"
-        echo "   OR"
-        echo "   1. Start app normally"
-        echo "   2. Open debug menu (press back button or tap screen corner)"
-        echo "   3. Click 'Save State' button"
-        echo "   4. Exit app"
-        echo "   5. Run: just capture-gamestate-android NAME"
-        exit 1
-    fi
-    
-    # Extract DEBUG_GAMESTATE_CAPTURE lines from Android log content
-    CAPTURE_OUTPUT=$(echo "$ANDROID_LOG_CONTENT" | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
-    
-    if [ -z "$CAPTURE_OUTPUT" ]; then
-        if [ -z "$LATEST_TEST_ID" ]; then
-            echo "❌ No DEBUG_GAMESTATE_CAPTURE found in recent Android logs"
-        else
-            echo "❌ No DEBUG_GAMESTATE_CAPTURE found in Android logs for test $LATEST_TEST_ID"
-        fi
-        echo ""
-        echo "🔍 Check if Save State action was used:"
-        if echo "$ANDROID_LOG_CONTENT" | grep -q "Save State"; then
-            SAVE_STATE_COUNT=$(echo "$ANDROID_LOG_CONTENT" | grep -c "Save State" || echo "0")
-            echo "   ✅ Save State action found in Android logs ($SAVE_STATE_COUNT occurrences)"
-            echo "   ❌ But no DEBUG_GAMESTATE_CAPTURE log entries were generated"
-        else
-            if [ -z "$LATEST_TEST_ID" ]; then
-                echo "   ❌ No Save State action found in recent Android logs"
-            else
-                echo "   ❌ No Save State action found in Android logs for test $LATEST_TEST_ID"
-            fi
-        fi
-        exit 1
-    fi
-    
-    # Create debug saves directory in user data location (cross-platform compatible)
+    # Add gamestate-specific post-processing
     SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
-    mkdir -p "$SAVED_STATES_DIR"
-    
-    # Extract JSON data from Android capture with chunk reassembly support
-    echo "3️⃣ Extracting and reassembling JSON data from Android capture..."
-    
-    # Check if this is a chunked message (new chunk-aware system)
-    CHUNK_LINES=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | grep "\[CHUNK")
-    
-    if [ -n "$CHUNK_LINES" ]; then
-        echo "📦 Detected chunked message - reassembling..."
-        JSON_DATA=$(echo "$CAPTURE_OUTPUT" | just _reassemble-android-chunks)
+    if [ -f "$SAVED_STATES_DIR/game-{{NAME}}.json" ]; then
+        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/game-{{NAME}}.json")
+        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/game-{{NAME}}.json")
+        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/game-{{NAME}}.json")
+        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/game-{{NAME}}.json")
         
-        if [ $? -ne 0 ] || [ -z "$JSON_DATA" ]; then
-            echo "❌ Failed to reassemble chunked gamestate data"
-            exit 1
-        fi
-        
-        echo "✅ Successfully reassembled chunked message"
-    else
-        # Legacy single-message handling (backward compatibility)
-        echo "📄 Using legacy single-message extraction..."
-        CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_GAMESTATE_CAPTURE" | tail -1)
-        
-        if [ -z "$CAPTURE_LINE" ]; then
-            echo "❌ No valid DEBUG_GAMESTATE_CAPTURE entry found"
-            exit 1
-        fi
-        
-        JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
-        
-        if [ -z "$JSON_DATA" ]; then
-            echo "❌ No valid JSON data found in capture line"
-            echo "Debug info: $CAPTURE_LINE"
-            exit 1
-        fi
-        
-        # Check if JSON is complete (Android logs often truncate long lines)
-        if [[ ! "$JSON_DATA" =~ "}$" ]]; then
-            echo "⚠️  JSON appears truncated by Android logging system"
-            echo "💡 Consider updating to chunk-aware logger for reliable large message handling"
-            echo ""
-            echo "🔄 Attempting to use partial JSON data..."
-            # For truncated JSON, we'll try to salvage what we can
-            JSON_DATA="$JSON_DATA}"  # Add closing brace
-        fi
-    fi
-    
-    # Validate and save JSON data
-    echo "$JSON_DATA" | jq '.' > /tmp/gamestate_temp.json 2>/dev/null
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Invalid/truncated JSON in captured Android gamestate"
         echo ""
-        echo "🚨 Android Logging Limitation:"
-        echo "   Android kernel imposes ~4KB limit on log entries (LOGGER_ENTRY_MAX_PAYLOAD)"
-        echo "   Gamestate JSON is likely >4KB and gets truncated by Android logcat"
-        echo "   This is a fundamental Android limitation, not a bug in our code"
-        echo ""
-        echo "💡 Recommended Solutions:"
-        echo "   1. 🥇 Use desktop platform for gamestate captures (recommended)"
-        echo "   2. Capture simpler gamestates (fewer cards/units) on Android"  
-        echo "   3. Use Android captures only for small test scenarios"
-        echo ""
-        echo "Raw data (first 200 chars): ${JSON_DATA:0:200}..."
-        exit 1
-    fi
-    
-    # Move to final location
-    mv /tmp/gamestate_temp.json "$SAVED_STATES_DIR/{{NAME}}.json"
-    
-    # Verify file creation and show info
-    if [ -f "$SAVED_STATES_DIR/{{NAME}}.json" ]; then
-        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        SESSION_ID=$(jq -r '.session_id // "unknown"' "$SAVED_STATES_DIR/{{NAME}}.json")
-        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/{{NAME}}.json")
-        
-        echo "✅ Android gamestate '{{NAME}}' captured successfully!"
-        echo ""
-        echo "📄 File: $SAVED_STATES_DIR/{{NAME}}.json"
-        if [ -n "$LATEST_TEST_ID" ]; then
-            echo "🔗 Test ID: $LATEST_TEST_ID"
-        else
-            echo "🔗 Test ID: Manual capture (no test session)"
-        fi
+        echo "📄 File: $SAVED_STATES_DIR/game-{{NAME}}.json"
         echo "🆔 Capture ID: $CAPTURE_ID"
         echo "⏰ Timestamp: $TIMESTAMP"
         echo "📺 Session: $SESSION_ID"
@@ -421,9 +432,9 @@ capture-gamestate-android NAME:
         echo ""
         echo "🔄 Integration with existing recording system:"
         echo "   After loading and performing new actions, you'll get a fresh session ID for replay generation."
-    else
-        echo "❌ Failed to create Android gamestate file"
-        exit 1
+        
+        # Rename file from game-NAME.json to NAME.json for backward compatibility
+        mv "$SAVED_STATES_DIR/game-{{NAME}}.json" "$SAVED_STATES_DIR/{{NAME}}.json"
     fi
 
 
@@ -1068,149 +1079,36 @@ test-save-load-cycle-with-state-android STATE_NAME:
 # ================================
 
 # Extract captured allied lineup from desktop logs and create debug save file
-capture-lineup-allied NAME:
+capture-lineup-allied-desktop NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🎯 Extracting allied lineup '{{NAME}}' from logs..."
-    echo ""
-    
-    # Use shared log command for DRY compliance
-    echo "1️⃣ Searching for DEBUG_LINEUP_ALLIED_CAPTURE in desktop logs..."
-    
-    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_LINEUP_ALLIED_CAPTURE" || echo "")
-    
-    if [ -z "$CAPTURE_OUTPUT" ]; then
-        echo "❌ No allied lineup capture found in recent desktop logs"
-        echo ""
-        echo "💡 To capture an allied lineup:"
-        echo "   1. Start game: just run-desktop"
-        echo "   2. Open debug menu (press D key)"
-        echo "   3. Click 'Save Allied Lineup' button"
-        echo "   4. Exit game"
-        echo "   5. Run: just capture-lineup-allied NAME"
-        exit 1
-    fi
-    
-    # Extract the most recent capture line from the search results
-    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_LINEUP_ALLIED_CAPTURE" | tail -1)
-    
-    if [ -z "$CAPTURE_LINE" ]; then
-        echo "❌ No valid DEBUG_LINEUP_ALLIED_CAPTURE entry found"
-        exit 1
-    fi
-    
-    # Create debug saves directory in user data location (cross-platform compatible)
-    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
-    mkdir -p "$SAVED_STATES_DIR"
-    
-    # Extract JSON data from the capture line
-    echo "2️⃣ Extracting JSON data from capture..."
-    JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
-    
-    if [ -z "$JSON_DATA" ]; then
-        echo "❌ No valid JSON data found in capture line"
-        echo "Debug info: $CAPTURE_LINE"
-        exit 1
-    fi
-    
-    # Validate and save JSON data
-    echo "$JSON_DATA" | jq '.' > /tmp/lineup_temp.json
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Invalid JSON in captured allied lineup"
-        echo "Raw data: $JSON_DATA"
-        exit 1
-    fi
-    
-    # Move to final location with line- prefix
-    mv /tmp/lineup_temp.json "$SAVED_STATES_DIR/line-{{NAME}}.json"
-    
-    # Verify file creation and show info
-    if [ -f "$SAVED_STATES_DIR/line-{{NAME}}.json" ]; then
-        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        
-        echo ""
-        echo "✅ Allied lineup saved successfully!"
-        echo "📄 File: $SAVED_STATES_DIR/line-{{NAME}}.json"
-        echo "🆔 Capture ID: $CAPTURE_ID"  
-        echo "⏰ Captured: $TIMESTAMP"
-        echo "📏 Size: ${FILE_SIZE} bytes"
-        echo "🔄 Can be loaded as allied or enemy lineup"
-    else
-        echo "❌ Failed to create allied lineup file"
-        exit 1
-    fi
+    # Use shared capture infrastructure
+    just _capture-from-logs "DEBUG_LINEUP_ALLIED_CAPTURE" "line-" "_get-desktop-logs" "{{NAME}}"
 
 # Extract captured enemy lineup from desktop logs and create debug save file
-capture-lineup-enemy NAME:
+capture-lineup-enemy-desktop NAME:
     #!/usr/bin/env bash
     set -euo pipefail
     
-    echo "🎯 Extracting enemy lineup '{{NAME}}' from logs..."
-    echo ""
+    # Use shared capture infrastructure
+    just _capture-from-logs "DEBUG_LINEUP_ENEMY_CAPTURE" "line-" "_get-desktop-logs" "{{NAME}}"
+
+# Extract captured allied lineup from Android logs and create debug save file
+capture-lineup-allied-android NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
     
-    echo "1️⃣ Searching for DEBUG_LINEUP_ENEMY_CAPTURE in desktop logs..."
+    # Use shared Android capture infrastructure
+    just _capture-from-android-logs "DEBUG_LINEUP_ALLIED_CAPTURE" "line-" "{{NAME}}"
+
+# Extract captured enemy lineup from Android logs and create debug save file
+capture-lineup-enemy-android NAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
     
-    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_LINEUP_ENEMY_CAPTURE" || echo "")
-    
-    if [ -z "$CAPTURE_OUTPUT" ]; then
-        echo "❌ No enemy lineup capture found in recent desktop logs"
-        echo ""
-        echo "💡 To capture an enemy lineup:"
-        echo "   1. Start game: just run-desktop"
-        echo "   2. Open debug menu (press D key)"
-        echo "   3. Click 'Save Enemy Lineup' button"
-        echo "   4. Exit game"
-        echo "   5. Run: just capture-lineup-enemy NAME"
-        exit 1
-    fi
-    
-    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "DEBUG_LINEUP_ENEMY_CAPTURE" | tail -1)
-    
-    if [ -z "$CAPTURE_LINE" ]; then
-        echo "❌ No valid DEBUG_LINEUP_ENEMY_CAPTURE entry found"
-        exit 1
-    fi
-    
-    SAVED_STATES_DIR="{{SAVED_STATES_DIR}}"
-    mkdir -p "$SAVED_STATES_DIR"
-    
-    echo "2️⃣ Extracting JSON data from capture..."
-    JSON_DATA=$(echo "$CAPTURE_LINE" | grep -o '{.*}' | tail -1)
-    
-    if [ -z "$JSON_DATA" ]; then
-        echo "❌ No valid JSON data found in capture line"
-        exit 1
-    fi
-    
-    echo "$JSON_DATA" | jq '.' > /tmp/lineup_temp.json
-    
-    if [ $? -ne 0 ]; then
-        echo "❌ Invalid JSON in captured enemy lineup"
-        exit 1
-    fi
-    
-    mv /tmp/lineup_temp.json "$SAVED_STATES_DIR/line-{{NAME}}.json"
-    
-    if [ -f "$SAVED_STATES_DIR/line-{{NAME}}.json" ]; then
-        CAPTURE_ID=$(jq -r '.capture_id // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        TIMESTAMP=$(jq -r '.capture_timestamp // "unknown"' "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        FILE_SIZE=$(wc -c < "$SAVED_STATES_DIR/line-{{NAME}}.json")
-        
-        echo ""
-        echo "✅ Enemy lineup saved successfully!"
-        echo "📄 File: $SAVED_STATES_DIR/line-{{NAME}}.json"
-        echo "🆔 Capture ID: $CAPTURE_ID"
-        echo "⏰ Captured: $TIMESTAMP" 
-        echo "📏 Size: ${FILE_SIZE} bytes"
-        echo "🔄 Can be loaded as allied or enemy lineup"
-    else
-        echo "❌ Failed to create enemy lineup file"
-        exit 1
-    fi
+    # Use shared Android capture infrastructure
+    just _capture-from-android-logs "DEBUG_LINEUP_ENEMY_CAPTURE" "line-" "{{NAME}}"
 
 # List lineup saves (line-* files)
 list-lineup-saves:
@@ -1260,14 +1158,16 @@ help-lineup:
     @echo "  1. just run-desktop                    # Start game"
     @echo "  2. Debug menu → Save Allied/Enemy Lineup"
     @echo "  3. Exit game"
-    @echo "  4. just capture-lineup-allied NAME     # Extract allied lineup"
-    @echo "  5. just capture-lineup-enemy NAME      # Extract enemy lineup"
+    @echo "  4. just capture-lineup-allied-desktop NAME     # Extract allied lineup"
+    @echo "  5. just capture-lineup-enemy-desktop NAME      # Extract enemy lineup"
     @echo "  6. just run-desktop                    # Start for testing"
     @echo "  7. Debug menu → Load lineups in either slot"
     @echo ""
     @echo "🎯 Commands:"
-    @echo "  just capture-lineup-allied NAME        # Extract allied lineup"
-    @echo "  just capture-lineup-enemy NAME         # Extract enemy lineup"
+    @echo "  just capture-lineup-allied-desktop NAME # Extract allied lineup (desktop)"
+    @echo "  just capture-lineup-enemy-desktop NAME  # Extract enemy lineup (desktop)"
+    @echo "  just capture-lineup-allied-android NAME # Extract allied lineup (Android)"
+    @echo "  just capture-lineup-enemy-android NAME  # Extract enemy lineup (Android)"
     @echo "  just list-lineup-saves                 # Show all lineup saves"
     @echo ""
     @echo "🔄 Any lineup can load into allied or enemy slot"

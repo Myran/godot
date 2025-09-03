@@ -4,6 +4,15 @@ const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
 
+# Save/Load action classes
+const SaveDebugStateAction = preload("res://debug/actions/system/save_debug_state_action.gd")
+const LoadDebugStateAction = preload("res://debug/actions/system/load_debug_state_action.gd")
+const SaveAlliedLineupAction = preload("res://debug/actions/system/save_allied_lineup_action.gd")
+const SaveEnemyLineupAction = preload("res://debug/actions/system/save_enemy_lineup_action.gd")
+const LoadAlliedLineupAction = preload("res://debug/actions/system/load_allied_lineup_action.gd")
+const LoadEnemyLineupAction = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
+const RestartGameAction = preload("res://debug/actions/system/restart_game_action.gd")
+
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_debug_system_actions(registry)
