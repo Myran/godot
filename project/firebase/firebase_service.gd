@@ -169,7 +169,7 @@ func set_value(path: Array[Variant], key: String, value: Variant) -> FirebaseReq
 	var request_id: int = _get_next_request_id()
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
-	
+
 	Log.debug(
 		"Added request to pending requests",
 		{
@@ -330,7 +330,7 @@ func _resolve_pending_request(request_id: int, result: Dictionary[String, Varian
 	if request_id in _pending_requests:
 		var request: FirebaseRequest = _pending_requests[request_id]
 		_pending_requests.erase(request_id)
-		
+
 		Log.debug(
 			"Found pending request, processing completion",
 			{
@@ -429,29 +429,25 @@ func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> v
 		"_on_set_value_completed called",
 		{
 			"request_id": req_id,
-			"success": success, 
+			"success": success,
 			"error_msg": error_msg,
 			"pending_requests": _pending_requests.keys()
 		},
 		[Log.TAG_FIREBASE, "signal_debug"]
 	)
-	
+
 	var payload: Dictionary[String, Variant]
 	if success:
 		payload = {"status": "ok", "payload": success}
 	else:
 		payload = {"status": "error", "code": "SET_FAILED", "message": error_msg}
-	
+
 	Log.debug(
 		"About to call _resolve_pending_request",
-		{
-			"request_id": req_id,
-			"payload": payload,
-			"payload_valid": payload != null
-		},
+		{"request_id": req_id, "payload": payload, "payload_valid": payload != null},
 		[Log.TAG_FIREBASE, "signal_debug"]
 	)
-	
+
 	_resolve_pending_request(req_id, payload)
 
 

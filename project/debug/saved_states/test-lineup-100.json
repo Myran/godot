@@ -58,42 +58,41 @@
         },
         "(1, 0)": {
           "block_context": 1,
-          "card_id": "0",
+          "card_id": "1",
           "card_info": {
-            "abilities": "guard:1;1",
+            "abilities": "archer:1",
             "attack": "1",
-            "card_name": "Brettonian Guard",
-            "description": "Gain +1/+1 for each unique soldier in play.",
-            "health": "1",
-            "id": "0",
-            "name": "guard",
+            "card_name": "Archer",
+            "description": "Attack fires 1 arrow per unique forest unit. Arrow deals damage equal to archers level. Attack before battle",
+            "health": "2",
+            "id": "1",
+            "name": "archer",
             "tags": "",
-            "tribe": "soldier",
+            "tribe": "forest",
             "upgrade_level": "1"
           },
-          "card_name": "Brettonian Guard",
+          "card_name": "Archer",
           "level": 1,
           "object_type": 1,
-          "unit_checksum": "2d9287e02ca94a332ff886dd9e9733e0b2973602608c5fa8d8ff0e7157ea47f1",
+          "unit_checksum": "ef3fe91b345a55766cc73f1e29fa2a9aa5d9839d3754ba3c059a8ed890786dc5",
           "unit_state": {
             "abilities": [
               {
-                "attack_per_soldier": 1,
-                "health_per_soldier": 1,
                 "persistence_type": 0,
-                "type": "SoldierBonusAbility"
+                "shield_used": false,
+                "type": "DamageShieldAbility"
               }
             ],
             "base_attack": 1,
-            "base_health": 1,
+            "base_health": 2,
             "current_attack": 1,
-            "current_health": 1,
+            "current_health": 2,
             "effects_perm": [],
             "effects_temp": [],
             "has_battle_reference": false,
             "level": 1,
             "max_attack": 1,
-            "max_health": 1
+            "max_health": 2
           }
         },
         "(1, 1)": {
@@ -168,42 +167,41 @@
         },
         "(3, 0)": {
           "block_context": 1,
-          "card_id": "4",
+          "card_id": "10",
           "card_info": {
-            "abilities": "dwarf:1;1",
-            "attack": "1",
-            "card_name": "Dwarf",
-            "description": "Gives +1/+1 per dwarf level to each unique soldier in play",
-            "health": "1",
-            "id": "4",
-            "name": "dwarf",
-            "tags": "",
-            "tribe": "soldier",
+            "abilities": "onanyupgrade:shield",
+            "attack": "2",
+            "card_name": "Moose Guy",
+            "description": "Gain shield when unit upgrades",
+            "health": "3",
+            "id": "10",
+            "name": "mooseman",
+            "tags": "forest",
+            "tribe": "evil",
             "upgrade_level": "1"
           },
-          "card_name": "Dwarf",
+          "card_name": "Moose Guy",
           "level": 1,
           "object_type": 1,
-          "unit_checksum": "2fe88c2cad3b877d01a692728d2cd398d7c09773577fabc6293c0eecee2eb460",
+          "unit_checksum": "dcb6bc8b6c4899e293ea1165c45982ea70711f579cac74bedad6877249adb5ce",
           "unit_state": {
             "abilities": [
               {
-                "base_attack_bonus": 1,
-                "base_health_bonus": 1,
                 "persistence_type": 0,
-                "type": "MergeBonusAbility"
+                "shield_used": false,
+                "type": "DamageShieldAbility"
               }
             ],
-            "base_attack": 1,
-            "base_health": 1,
-            "current_attack": 1,
-            "current_health": 1,
+            "base_attack": 2,
+            "base_health": 3,
+            "current_attack": 2,
+            "current_health": 3,
             "effects_perm": [],
             "effects_temp": [],
             "has_battle_reference": false,
             "level": 1,
-            "max_attack": 1,
-            "max_health": 1
+            "max_attack": 2,
+            "max_health": 3
           }
         },
         "(3, 1)": {
@@ -223,34 +221,40 @@
         },
         "(4, 0)": {
           "block_context": 1,
-          "card_id": "13",
+          "card_id": "10",
           "card_info": {
-            "abilities": "damage:frontandbackrow",
-            "attack": "1",
-            "card_name": "Spearman",
-            "description": "Deal damage to front and back row enemies at once",
+            "abilities": "onanyupgrade:shield",
+            "attack": "2",
+            "card_name": "Moose Guy",
+            "description": "Gain shield when unit upgrades",
             "health": "3",
-            "id": "13",
-            "name": "spearman",
-            "tags": "soldier",
-            "tribe": "forest",
+            "id": "10",
+            "name": "mooseman",
+            "tags": "forest",
+            "tribe": "evil",
             "upgrade_level": "1"
           },
-          "card_name": "Spearman",
+          "card_name": "Moose Guy",
           "level": 1,
           "object_type": 1,
-          "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+          "unit_checksum": "dcb6bc8b6c4899e293ea1165c45982ea70711f579cac74bedad6877249adb5ce",
           "unit_state": {
-            "abilities": [],
-            "base_attack": 1,
+            "abilities": [
+              {
+                "persistence_type": 0,
+                "shield_used": false,
+                "type": "DamageShieldAbility"
+              }
+            ],
+            "base_attack": 2,
             "base_health": 3,
-            "current_attack": 1,
+            "current_attack": 2,
             "current_health": 3,
             "effects_perm": [],
             "effects_temp": [],
             "has_battle_reference": false,
             "level": 1,
-            "max_attack": 1,
+            "max_attack": 2,
             "max_health": 3
           }
         },
@@ -272,8 +276,44 @@
       "input_locked": false
     },
     "lineup": {
-      "allies": {},
-      "current_game_state": "PREPARE",
+      "allies": {
+        "6": {
+          "block_context": 2,
+          "card_id": "13",
+          "card_info": {
+            "abilities": "damage:frontandbackrow",
+            "attack": "1",
+            "card_name": "Spearman",
+            "description": "Deal damage to front and back row enemies at once",
+            "health": "3",
+            "id": "13",
+            "name": "spearman",
+            "tags": "soldier",
+            "tribe": "forest",
+            "upgrade_level": "1"
+          },
+          "card_name": "Spearman",
+          "draft_position": -1,
+          "level": 1,
+          "object_type": 1,
+          "position": 6,
+          "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+          "unit_state": {
+            "abilities": [],
+            "base_attack": 1,
+            "base_health": 3,
+            "current_attack": 1,
+            "current_health": 3,
+            "effects_perm": [],
+            "effects_temp": [],
+            "has_battle_reference": false,
+            "level": 1,
+            "max_attack": 1,
+            "max_health": 3
+          }
+        }
+      },
+      "current_game_state": "DRAFT",
       "enemies": {},
       "extraction_type": "lineup_state",
       "game_available": true,
@@ -283,10 +323,10 @@
       "extractor_version": "1.0.0"
     }
   },
-  "rng_state": "{\"current_state\":5164996630973372416,\"initial_seed\":12345}",
-  "capture_timestamp": "2025-08-30T14:06:07",
-  "session_id": "session_20250830_140606_6e6759e2",
+  "rng_state": "{\"current_state\":9037474382452337367,\"initial_seed\":1}",
+  "capture_timestamp": "2025-09-03T09:30:43",
+  "session_id": "session_20250903_093031_2458ebef",
   "platform": "macOS",
-  "capture_id": "capture_1756555567.01407_098",
+  "capture_id": "capture_1756884643.50334_164",
   "format_version": "1.0"
 }

@@ -735,10 +735,10 @@
       "extractor_version": "1.0.0"
     }
   },
-  "rng_state": "{\"current_state\":-8933994098925850624,\"initial_seed\":1}",
-  "capture_timestamp": "2025-09-03T17:34:29",
-  "session_id": "session_20250903_173428_8629703c",
+  "rng_state": "{\"current_state\":-8933994098925850514,\"initial_seed\":1}",
+  "capture_timestamp": "2025-09-03T17:31:44",
+  "session_id": "session_20250903_173106_944e6078",
   "platform": "macOS",
-  "capture_id": "capture_1756913669.14812_079",
+  "capture_id": "capture_1756913504.20919_180",
   "format_version": "1.0"
 }

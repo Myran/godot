@@ -824,7 +824,7 @@ func _print_android_chunks_deferred(lines: Array, index: int) -> void:
 		var line = lines[i]
 		if not line.is_empty():
 			_android_chunk_queue.append(line)
-	
+
 	# Start processing queue if not already running
 	if _chunk_timer == null:
 		_start_android_chunk_timer()
@@ -833,7 +833,7 @@ func _print_android_chunks_deferred(lines: Array, index: int) -> void:
 func _start_android_chunk_timer() -> void:
 	if _chunk_timer != null:
 		return
-		
+
 	_chunk_timer = Timer.new()
 	_chunk_timer.wait_time = 0.0  # Process immediately each frame
 	_chunk_timer.timeout.connect(_process_next_android_chunk)
@@ -848,9 +848,9 @@ func _process_next_android_chunk() -> void:
 			_chunk_timer.queue_free()
 			_chunk_timer = null
 		return
-	
+
 	# Print next chunk
 	var line = _android_chunk_queue.pop_front()
 	print(line)
-	
+
 	# Timer will automatically call this again next frame

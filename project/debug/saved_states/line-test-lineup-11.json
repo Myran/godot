@@ -1,0 +1,57 @@
+{
+  "lineup_data": {
+    "current_game_state": "PREPARE",
+    "enemies": {
+      "2": {
+        "block_context": 2,
+        "card_id": "13",
+        "card_info": {
+          "abilities": "damage:frontandbackrow",
+          "attack": "1",
+          "card_name": "Spearman",
+          "description": "Deal damage to front and back row enemies at once",
+          "health": "3",
+          "id": "13",
+          "name": "spearman",
+          "tags": "soldier",
+          "tribe": "forest",
+          "upgrade_level": "1"
+        },
+        "card_name": "Spearman",
+        "draft_position": -1,
+        "level": 1,
+        "object_type": 1,
+        "position": 2,
+        "unit_checksum": "2c35f7109bc91b1b31b92bd905a20e8479f7158337005541efe4b7e0203782cd",
+        "unit_state": {
+          "abilities": [],
+          "base_attack": 1,
+          "base_health": 3,
+          "current_attack": 1,
+          "current_health": 3,
+          "effects_perm": [],
+          "effects_temp": [],
+          "has_battle_reference": false,
+          "level": 1,
+          "max_attack": 1,
+          "max_health": 3
+        }
+      }
+    },
+    "extraction_type": "enemy_lineup_state",
+    "game_available": true,
+    "lineup_type": "enemy_only",
+    "metadata": {
+      "extractor_version": "1.0.0"
+    },
+    "ui_state": "WAITING"
+  },
+  "rng_state": "{\"current_state\":2154328060774843443,\"initial_seed\":1}",
+  "capture_timestamp": "2025-09-03T09:34:10",
+  "session_id": "session_20250903_093356_1cdaae45",
+  "platform": "macOS",
+  "capture_id": "lineup_enemy_1756884850.61901_485",
+  "format_version": "1.0",
+  "lineup_type": "enemy",
+  "debug_only": true
+}

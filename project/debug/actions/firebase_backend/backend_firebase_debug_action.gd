@@ -120,8 +120,8 @@ func test_backend_async_pattern(
 	Log.debug(
 		"TRACE: About to call backend method",
 		{
-			"method": method_name, 
-			"path": path, 
+			"method": method_name,
+			"path": path,
 			"key": key,
 			"backend_available": backend.is_available() if backend else false
 		},
@@ -137,11 +137,7 @@ func test_backend_async_pattern(
 			result = await backend.set_data(path, key, value)
 			Log.debug(
 				"TRACE: backend.set_data returned",
-				{
-					"method": method_name,
-					"result": result,
-					"result_type": typeof(result)
-				},
+				{"method": method_name, "result": result, "result_type": typeof(result)},
 				["debug", "backend_firebase", "trace"]
 			)
 		"remove_data":
@@ -196,7 +192,7 @@ func execute_backend_action() -> bool:
 	if has_method("_execute_action_logic"):
 		@warning_ignore("redundant_await")
 		var result: DebugActionResult = await _execute_action_logic({})
-		
+
 		# Add null safety check for stronger typing enforcement
 		if result == null:
 			Log.error(
@@ -206,7 +202,7 @@ func execute_backend_action() -> bool:
 			)
 			_update_status("ERROR: Action returned null result", true)
 			return false
-		
+
 		return result.is_success()
 
 	push_error("execute_backend_action() not implemented in " + get_script().get_path())

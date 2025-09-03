@@ -1,10 +1,10 @@
 ---
 id: task-108.01
 title: Add lineup data extraction and serialization system
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-08-30 08:00'
+updated_date: '2025-09-03 07:05'
 labels:
   - battle
   - serialization
