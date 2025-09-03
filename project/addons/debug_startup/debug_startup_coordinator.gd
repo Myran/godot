@@ -1,5 +1,6 @@
 extends Node
 
+const DebugConfigReader = preload("res://debug/utilities/debug_config_reader.gd")
 const VERBOSE_LOGGING := true
 
 var _current_config_is_test_recipe: bool = false
@@ -553,7 +554,8 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 		Log.debug("RNG state available for restoration", {"rng_state_length": rng_state.length()}, ["debug", "startup", "gamestate"])
 
 	# Store full gamestate data for explicit loading via debug action
-	var gamestate_file: FileAccess = FileAccess.open("user://pending_gamestate_load.json", FileAccess.WRITE)
+	var temp_path: String = DebugConfigReader.get_temp_gamestate_path("pending_gamestate_load")
+	var gamestate_file: FileAccess = FileAccess.open(temp_path, FileAccess.WRITE)
 	if gamestate_file:
 		gamestate_file.store_string(JSON.stringify(gamestate_data))
 		gamestate_file.close()

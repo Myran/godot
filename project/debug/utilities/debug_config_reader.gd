@@ -106,6 +106,19 @@ static func get_saved_state_path(filename: String) -> String:
 	return get_saved_states_dir() + clean_filename
 
 
+static func get_temp_gamestate_dir() -> String:
+	"""Get temporary gamestate directory (user:// for cross-platform compatibility)"""
+	return "user://"
+
+
+static func get_temp_gamestate_path(filename: String) -> String:
+	"""Get full path for temporary gamestate files. Used for pending files created by startup system."""
+	var clean_filename: String = filename
+	if not clean_filename.ends_with(".json"):
+		clean_filename += ".json"
+	return get_temp_gamestate_dir() + clean_filename
+
+
 static func _read_config_file() -> Dictionary:
 	"""Internal method to read and parse debug config file."""
 	var config_path: String = _get_config_path()

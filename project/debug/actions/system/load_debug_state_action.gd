@@ -15,15 +15,31 @@ func _init(file_path: String = "") -> void:
 func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 	var actual_file_path: String = _file_path
 
-	# Check for file parameter in params first
+	# Check for file parameter in params first (support both "file" and "filepath")
+	var filename: String = ""
 	if params.has("file") and not params["file"].is_empty():
-		var filename: String = params["file"]
-		actual_file_path = DebugConfigReader.get_saved_state_path(filename)
-		Log.info(
-			"Using gamestate file from action parameters",
-			{"filename": filename, "full_path": actual_file_path},
-			[Log.TAG_DEBUG, "gamestate"]
-		)
+		filename = params["file"]
+	elif params.has("filepath") and not params["filepath"].is_empty():
+		filename = params["filepath"]
+
+	if not filename.is_empty():
+		# Use appropriate path resolution based on file type
+		if filename.begins_with("pending_"):
+			# Temporary files created by startup system go to user:// directory
+			actual_file_path = DebugConfigReader.get_temp_gamestate_path(filename)
+			Log.info(
+				"Using temporary gamestate file from action parameters",
+				{"filename": filename, "full_path": actual_file_path, "file_type": "temporary"},
+				[Log.TAG_DEBUG, "gamestate"]
+			)
+		else:
+			# Regular saved states go to res://debug/saved_states/ directory
+			actual_file_path = DebugConfigReader.get_saved_state_path(filename)
+			Log.info(
+				"Using permanent gamestate file from action parameters",
+				{"filename": filename, "full_path": actual_file_path, "file_type": "permanent"},
+				[Log.TAG_DEBUG, "gamestate"]
+			)
 
 	# If no specific file path provided, check debug config metadata next
 	if actual_file_path.is_empty():
@@ -132,6 +148,17 @@ func _validate_capture_data(data: Variant) -> bool:
 		return false
 
 	var data_dict: Dictionary = data
+
+	# Only accept full gamestate saves, not lineup-only saves
+	if not data_dict.has("gamestate"):
+		if data_dict.has("lineup_data"):
+			Log.error(
+				"Attempted to load lineup-only save as full gamestate",
+				{"save_type": "lineup_only", "expected": "full_gamestate"},
+				[Log.TAG_DEBUG, "gamestate", "validation"]
+			)
+		return false
+
 	return (
 		data_dict.has("gamestate")
 		and data_dict.has("rng_state")
