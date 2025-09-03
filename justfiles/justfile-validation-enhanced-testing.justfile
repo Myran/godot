@@ -322,13 +322,13 @@ _extract-checksums-unified log_file test_id:
         LOG_CONTENT=$(adb logcat -d 2>/dev/null || echo "")
         if [[ -z "$LOG_CONTENT" ]]; then
             echo "No logcat output available" >&2
-            return 0
+            exit 0
         fi
     else
         # Desktop: Read from log file
         if [[ ! -f "$LOG_FILE" ]]; then
             echo "Log file not found: $LOG_FILE" >&2
-            return 0
+            exit 0
         fi
         LOG_CONTENT=$(cat "$LOG_FILE")
     fi
@@ -389,7 +389,7 @@ _extract-checksums-from-logcat test_id:
     
     if [[ -z "$LOGCAT_OUTPUT" ]]; then
         echo "No logcat output available" >&2
-        return 0
+        exit 0
     fi
     
     # Extract checksums from the actual log format
@@ -764,7 +764,7 @@ _filter-desktop-logs-safely temp_file_path:
     
     if [[ ! -f "$TEMP_FILE" ]]; then
         echo "❌ Temp file not found: $TEMP_FILE"
-        return 1
+        exit 1
     fi
     
     # CRITICAL ERROR DETECTION FIRST - Whitelist approach for maximum safety
@@ -1077,7 +1077,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
         echo "   TEST_ID: $TEST_ID"
         echo "   CONFIG_NAME: $CONFIG_NAME" 
         echo "   PLATFORM: $PLATFORM"
-        return 0
+        exit 0
     fi
     
     LOG_LINE_COUNT=$(echo "$LOGS" | wc -l | tr -d ' ')
