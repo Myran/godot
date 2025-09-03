@@ -598,14 +598,7 @@ func _print_formatted_log_async(log_data: Dictionary) -> void:
 
 			# Handle potentially chunked messages (multiple lines)
 			var lines = processed_message.split('\n')
-			for i in range(lines.size()):
-				var line = lines[i]
-				if not line.is_empty():
-					print(line)
-					# Add async delay between chunks to avoid Android rate limiting
-					if i < lines.size() - 1 and line.contains("[CHUNK"):
-						# Only delay between chunks, not after the last one
-						await get_tree().create_timer(0.1).timeout  # 100ms async delay between chunks
+			_print_android_chunks_deferred(lines, 0)
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
 			var regex = RegEx.new()
@@ -819,3 +812,45 @@ func _notification(what: int) -> void:
 				if _config.config_changed.is_connected(_on_config_changed):
 					_config.config_changed.disconnect(_on_config_changed)
 			_config = null
+
+# Android chunk processing queue - stores chunks to be printed across frames
+var _android_chunk_queue: Array = []
+var _chunk_timer: Timer = null
+
+# Process Android chunks with frame spacing to avoid rate limiting (non-blocking)
+func _print_android_chunks_deferred(lines: Array, index: int) -> void:
+	# Add all remaining chunks to queue
+	for i in range(index, lines.size()):
+		var line = lines[i]
+		if not line.is_empty():
+			_android_chunk_queue.append(line)
+	
+	# Start processing queue if not already running
+	if _chunk_timer == null:
+		_start_android_chunk_timer()
+
+# Start timer-based chunk processing (one chunk per frame)
+func _start_android_chunk_timer() -> void:
+	if _chunk_timer != null:
+		return
+		
+	_chunk_timer = Timer.new()
+	_chunk_timer.wait_time = 0.0  # Process immediately each frame
+	_chunk_timer.timeout.connect(_process_next_android_chunk)
+	add_child(_chunk_timer)
+	_chunk_timer.start()
+
+# Process one chunk from queue per timer tick (non-blocking)
+func _process_next_android_chunk() -> void:
+	if _android_chunk_queue.is_empty():
+		# Queue empty - stop timer and cleanup
+		if _chunk_timer != null:
+			_chunk_timer.queue_free()
+			_chunk_timer = null
+		return
+	
+	# Print next chunk
+	var line = _android_chunk_queue.pop_front()
+	print(line)
+	
+	# Timer will automatically call this again next frame
