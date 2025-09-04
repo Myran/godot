@@ -835,7 +835,7 @@ func _start_android_chunk_timer() -> void:
 		return
 
 	_chunk_timer = Timer.new()
-	_chunk_timer.wait_time = 0.0  # Process immediately each frame
+	_chunk_timer.wait_time = 0.01  # Minimum valid timer duration for Android compatibility
 	_chunk_timer.timeout.connect(_process_next_android_chunk)
 	add_child(_chunk_timer)
 	_chunk_timer.start()
