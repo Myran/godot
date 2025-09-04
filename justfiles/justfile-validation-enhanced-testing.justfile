@@ -2211,7 +2211,7 @@ _execute-test-android config_name:
         fi
         
         # Force stop app if still running (emergency cleanup)
-        local current_pid=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
+        current_pid=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
         if [[ -n "$current_pid" && "$current_pid" != "0" ]]; then
             echo "🛑 Force stopping app (PID: $current_pid) during cleanup..."
             adb shell am force-stop {{ANDROID_PACKAGE_NAME}} 2>/dev/null || true
@@ -2303,7 +2303,7 @@ _execute-test-android config_name:
         kill "$BACKGROUND_LOGCAT_PID" 2>/dev/null || true
         
         # Wait for process to actually terminate (max 5 seconds)
-        local wait_count=0
+        wait_count=0
         while kill -0 "$BACKGROUND_LOGCAT_PID" 2>/dev/null && [[ $wait_count -lt 5 ]]; do
             sleep 1
             wait_count=$((wait_count + 1))
