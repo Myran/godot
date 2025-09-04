@@ -170,7 +170,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		if pattern_result:
 			pattern_success += 1
 
-		await get_tree().create_timer(0.1).timeout
+		await Engine.get_main_loop().create_timer(0.1).timeout
 
 	var pattern_test_success: bool = pattern_success >= (pattern_operations.size() * 0.75)  # 75% success rate
 	if pattern_test_success:

@@ -65,7 +65,7 @@ func shake(left: bool = true) -> void:
 
 
 func move_to_position(new_position: Vector2) -> void:
-	var time: float = abs(((new_position - position).y / texture_normal.get_height()) * MOVE_SPEED)
+	var time: float = max(0.01, abs(((new_position - position).y / texture_normal.get_height()) * MOVE_SPEED))
 
 	var scene_tween: Tween = create_tween()
 
