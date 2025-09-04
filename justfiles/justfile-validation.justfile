@@ -221,6 +221,32 @@ show-warnings:
     # Show GDScript warnings only - minimal parameters for maximum efficiency
     {{GODOT_EXECUTABLE}} --headless --debug --quit --path . project/project.godot 2>&1 | rg "ERROR: '(.*)'" -o --replace '$1' || true
 
+# Show Android-specific GDScript warnings with compilation errors
+show-warnings-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    cd {{PROJECT_PATH}}
+    
+    echo "🔍 Validating GDScript for Android platform..."
+    echo "⚠️  This performs Android export validation to catch platform-specific issues"
+    echo ""
+    
+    # Perform Android export validation to catch platform-specific warnings/errors
+    temp_export="/tmp/android_warnings_export.apk"
+    
+    echo "🚨 Android Platform Warnings & Errors:"
+    echo "=============================="
+    
+    {{GODOT_EXECUTABLE}} --headless --export-debug "Android apk" "$temp_export" --path . project/project.godot 2>&1 | \
+    rg -i "(WARNING|ERROR|SCRIPT ERROR|Parse Error|Failed to|deprecated|experimental).*" || echo "✅ No Android-specific warnings found"
+    
+    # Clean up
+    rm -f "$temp_export"
+    
+    echo ""
+    echo "💡 Use 'just show-warnings' for desktop-only warnings"
+
 # Save warnings to markdown file
 save-warnings: (warnings "file") 
 

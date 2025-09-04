@@ -177,6 +177,7 @@ help:
     echo "  just validate-gdscript           # Fast syntax validation (3 seconds)"
     echo "  just validate-godot              # Runtime validation (10-15 sec)"
     echo "  just show-warnings               # 🔍 Show GDScript warnings with file:line attribution"
+    echo "  just show-warnings-android       # 🤖 Show Android-specific warnings and compilation errors"
     echo "  just save-warnings               # Save warnings to markdown file"
     echo ""
     echo ""
