@@ -455,37 +455,23 @@ func _on_push_and_update_completed(
 	req_id: int, push_id: String, success: bool, error_msg: String
 ) -> void:
 	var payload: Dictionary[String, Variant]
-	
+
 	if success:
-		payload = {
-			"status": "ok", 
-			"payload": push_id
-		}
+		payload = {"status": "ok", "payload": push_id}
 	else:
-		payload = {
-			"status": "error", 
-			"code": "PUSH_FAILED", 
-			"message": error_msg
-		}
-	
+		payload = {"status": "error", "code": "PUSH_FAILED", "message": error_msg}
+
 	_resolve_pending_request(req_id, payload)
 
 
 func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -> void:
 	var payload: Dictionary[String, Variant]
-	
+
 	if success:
-		payload = {
-			"status": "ok", 
-			"payload": success
-		}
+		payload = {"status": "ok", "payload": success}
 	else:
-		payload = {
-			"status": "error", 
-			"code": "REMOVE_FAILED", 
-			"message": error_msg
-		}
-	
+		payload = {"status": "error", "code": "REMOVE_FAILED", "message": error_msg}
+
 	_resolve_pending_request(req_id, payload)
 
 
