@@ -220,7 +220,7 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.replay_complete", func() -> bool: return _replay_complete())
+			. create("system.debug.replay_complete", func() -> bool: return _replay_complete_sync())
 			. set_category("System")
 			. set_group("Debug")
 			. set_description(
@@ -372,7 +372,13 @@ static func _test_replay_generation_no_quit() -> bool:
 	return true
 
 
-static func _replay_complete() -> bool:
+static func _replay_complete_sync() -> bool:
+	"""Synchronous wrapper for replay completion that handles async chunk processing"""
+	_replay_complete_async()
+	return true
+
+
+static func _replay_complete_async() -> void:
 	"""Context-aware replay completion - auto-detects manual vs automated execution"""
 	var execution_context: Dictionary = _detect_execution_context()
 
@@ -399,6 +405,16 @@ static func _replay_complete() -> bool:
 			},
 			["debug", "replay", "automated", "quit"]
 		)
+
+		# CRITICAL: Wait for Android chunk processing to complete before quitting
+		# This ensures DEBUG_TEST_SUCCESS logs are not lost during automated test termination
+		if OS.get_name() == "Android":
+			Log.info(
+				"Android platform detected - waiting for chunk processing to complete",
+				{"platform": "Android", "chunk_processing_wait": true, "automated_mode": true},
+				["debug", "android", "automated", "chunk_processing"]
+			)
+			await Log.wait_for_chunk_processing_complete(2.0)
 
 		var current_test_id: String = DebugAction.get_current_test_id()
 		Log.info(
@@ -437,7 +453,8 @@ static func _replay_complete() -> bool:
 				["debug", "test", "complete", "automated"]
 			)
 
-		return _quit_application()
+		_quit_application()
+		return
 
 	Log.info(
 		"Manual mode detected - staying open for verification and screenshots",
@@ -461,7 +478,7 @@ static func _replay_complete() -> bool:
 		["semantic", "replay", "complete"]
 	)
 
-	return true
+	return
 
 
 static func _log_lineup_final_state() -> void:

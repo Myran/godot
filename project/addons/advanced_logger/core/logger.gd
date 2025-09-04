@@ -854,3 +854,82 @@ func _process_next_android_chunk() -> void:
 	print(line)
 
 	# Timer will automatically call this again next frame
+
+# Chunk processing status methods for automated test logging
+func has_pending_android_chunks() -> bool:
+	"""Check if there are pending Android chunks waiting to be processed"""
+	return not _android_chunk_queue.is_empty() or _chunk_timer != null
+
+func get_android_chunk_count() -> int:
+	"""Get the number of pending Android chunks in the processing queue"""
+	return _android_chunk_queue.size()
+
+func wait_for_chunk_processing_complete(timeout_seconds: float = 2.0) -> void:
+	"""Wait for Android chunk processing queue to complete with timeout
+
+	This function blocks execution until all Android chunks have been processed,
+	ensuring DEBUG_TEST_SUCCESS logs are not lost during automated test termination.
+	Only waits if chunks are pending to avoid unnecessary delays in manual testing.
+	"""
+	if not has_pending_android_chunks():
+		# No chunks pending - immediate return
+		return
+
+	var start_time: float = Time.get_ticks_msec() / 1000.0
+	var timeout_reached: bool = false
+
+	debug(
+		"Waiting for Android chunk processing to complete",
+		{
+			"initial_chunk_count": get_android_chunk_count(),
+			"timeout_seconds": timeout_seconds,
+			"start_time": start_time
+		},
+		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
+	)
+
+	# Wait for chunk processing to complete
+	while has_pending_android_chunks() and not timeout_reached:
+		# Process one frame to allow chunk timer to execute
+		await Engine.get_main_loop().process_frame
+
+		# Check timeout
+		var elapsed_time: float = (Time.get_ticks_msec() / 1000.0) - start_time
+		timeout_reached = elapsed_time >= timeout_seconds
+
+		if timeout_reached:
+			warning(
+				"Android chunk processing timeout reached",
+				{
+					"remaining_chunks": get_android_chunk_count(),
+					"elapsed_seconds": elapsed_time,
+					"timeout_seconds": timeout_seconds
+				},
+				[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
+			)
+			break
+
+	var final_elapsed: float = (Time.get_ticks_msec() / 1000.0) - start_time
+
+	if not timeout_reached:
+		debug(
+			"Android chunk processing completed successfully",
+			{
+				"elapsed_seconds": final_elapsed,
+				"all_chunks_processed": not has_pending_android_chunks()
+			},
+			[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
+		)
+	else:
+		error(
+			"Android chunk processing incomplete due to timeout",
+			{
+				"elapsed_seconds": final_elapsed,
+				"remaining_chunks": get_android_chunk_count(),
+				"chunks_still_pending": has_pending_android_chunks()
+			},
+			[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED, TAG_ERROR]
+		)
+
+# Add missing TAG constants for new functionality
+const TAG_ANDROID: String = "android"
