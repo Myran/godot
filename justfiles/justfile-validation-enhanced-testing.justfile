@@ -708,11 +708,22 @@ _extract-logs test_id platform temp_output_file="":
                 APP_PID=$(adb shell pidof com.primaryhive.gametwo 2>/dev/null || echo "")
                 
                 if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
-                    echo "📱 App PID found: $APP_PID - using PID filtering with main buffer"
-                    adb logcat -b main -d --pid="$APP_PID" 2>/dev/null > "$LOG_FILE" || true
+                    echo "📱 App PID found: $APP_PID - using PID filtering with all buffers"
+                    # Use all buffers and increase capture size significantly with verbose logging
+                    adb logcat -b main,system,crash -d --pid="$APP_PID" -t 10000 "*:V" 2>/dev/null > "$LOG_FILE" || true
                 else
-                    echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering for session isolation"
-                    adb logcat -b main -d 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION)" > "$LOG_FILE" || true
+                    echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering with extended capture"
+                    # Capture from all buffers, get more history, then filter with verbose logging including all godot logs
+                    adb logcat -b main,system,crash -d -t 20000 "*:V" 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION|gametwo|godot.*:)" > "$LOG_FILE" || true
+                    
+                    # If that produces no results, try a broader time-based approach
+                    if [[ ! -s "$LOG_FILE" ]]; then
+                        echo "📱 No filtered logs found - trying time-based approach (last 10 minutes)"
+                        TIME_THRESHOLD=$(date -d '10 minutes ago' '+%m-%d %H:%M:%S' 2>/dev/null || date -v-10M '+%m-%d %H:%M:%S' 2>/dev/null || echo "")
+                        if [[ -n "$TIME_THRESHOLD" ]]; then
+                            adb logcat -b main,system -d -t 30000 2>/dev/null | grep -A1 -B1 "gametwo\|com\.primaryhive" > "$LOG_FILE" || true
+                        fi
+                    fi
                 fi
             else
                 echo "📱 Real-time logs found - using captured logs"
@@ -2182,6 +2193,69 @@ _execute-test-android config_name:
     echo "🧹 Clearing Android logcat buffer for clean test monitoring..."
     just android-logs-clear-lightweight
     
+    # Set up cleanup trap for guaranteed resource cleanup
+    _cleanup_android_test() {
+        echo "🧹 Cleanup triggered - stopping background processes..."
+        
+        # Stop background log capture
+        if [[ -n "${BACKGROUND_LOGCAT_PID:-}" ]]; then
+            echo "📡 Stopping background log capture (PID: $BACKGROUND_LOGCAT_PID)..."
+            kill "$BACKGROUND_LOGCAT_PID" 2>/dev/null || true
+            wait "$BACKGROUND_LOGCAT_PID" 2>/dev/null || true
+        fi
+        
+        # Clean up temporary files
+        if [[ -n "${BACKGROUND_LOG_FILE:-}" && -f "$BACKGROUND_LOG_FILE" ]]; then
+            echo "🗑️  Removing temporary log file: $BACKGROUND_LOG_FILE"
+            rm -f "$BACKGROUND_LOG_FILE" 2>/dev/null || true
+        fi
+        
+        # Force stop app if still running (emergency cleanup)
+        local current_pid=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
+        if [[ -n "$current_pid" && "$current_pid" != "0" ]]; then
+            echo "🛑 Force stopping app (PID: $current_pid) during cleanup..."
+            adb shell am force-stop {{ANDROID_PACKAGE_NAME}} 2>/dev/null || true
+        fi
+        
+        echo "✅ Cleanup completed"
+    }
+    
+    # Register cleanup trap for EXIT, SIGINT, SIGTERM
+    trap '_cleanup_android_test' EXIT INT TERM
+    
+    # Start background log capture immediately to prevent log loss
+    echo "📡 Starting background log capture for test isolation..."
+    BACKGROUND_LOG_FILE="/tmp/android_live_capture_${TEST_ID}.log"
+    
+    # Check available disk space before starting capture
+    AVAILABLE_SPACE=$(df /tmp | tail -1 | awk '{print $4}')
+    MIN_REQUIRED_SPACE=102400  # 100MB in KB
+    
+    if [[ $AVAILABLE_SPACE -lt $MIN_REQUIRED_SPACE ]]; then
+        echo "⚠️  WARNING: Low disk space in /tmp (${AVAILABLE_SPACE}KB available, ${MIN_REQUIRED_SPACE}KB required)"
+        echo "🧹 Cleaning old Android log capture files..."
+        find /tmp -name "android_live_capture_*.log" -mtime +1 -delete 2>/dev/null || true
+        
+        # Re-check space after cleanup
+        AVAILABLE_SPACE=$(df /tmp | tail -1 | awk '{print $4}')
+        if [[ $AVAILABLE_SPACE -lt $MIN_REQUIRED_SPACE ]]; then
+            echo "❌ ERROR: Insufficient disk space for log capture (${AVAILABLE_SPACE}KB available)"
+            return 1
+        fi
+    fi
+    
+    # Capture all log levels (*:V = verbose) to get GDScript debug logs
+    adb logcat -b main,system "*:V" 2>/dev/null > "$BACKGROUND_LOG_FILE" &
+    BACKGROUND_LOGCAT_PID=$!
+    
+    # Validate background process started successfully
+    if ! kill -0 "$BACKGROUND_LOGCAT_PID" 2>/dev/null; then
+        echo "❌ ERROR: Failed to start background log capture"
+        return 1
+    fi
+    
+    echo "📡 Background capture PID: $BACKGROUND_LOGCAT_PID (validated)"
+    
     echo "🔍 App is running with fresh configuration - waiting for test completion..."
     
     # Simple monitoring - wait for app to quit
@@ -2190,15 +2264,17 @@ _execute-test-android config_name:
     # Wait for test completion without timeout - single monitoring loop
     echo "🔍 Waiting for test completion..."
     
-    echo "🔍 DEBUG: Starting monitoring loop (no timeout)"
+    echo "🔍 DEBUG: Starting monitoring loop with 10-minute timeout protection"
     MONITOR_ITERATIONS=0
-    while true; do
+    MAX_ITERATIONS=300  # 10 minutes (300 * 2s = 600s)
+    
+    while [[ $MONITOR_ITERATIONS -lt $MAX_ITERATIONS ]]; do
         MONITOR_ITERATIONS=$((MONITOR_ITERATIONS + 1))
         CURRENT_PID=$(adb shell pidof {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "")
         
         # Debug output every 10 iterations
         if [[ $((MONITOR_ITERATIONS % 10)) -eq 0 ]]; then
-            echo "🐛 DEBUG: Monitor iteration $MONITOR_ITERATIONS - APP_PID: $CURRENT_PID"
+            echo "🐛 DEBUG: Monitor iteration $MONITOR_ITERATIONS/$MAX_ITERATIONS - APP_PID: $CURRENT_PID"
         fi
         
         if [[ -z "$CURRENT_PID" || "$CURRENT_PID" == "0" ]]; then
@@ -2211,14 +2287,62 @@ _execute-test-android config_name:
         sleep 2
     done
     
+    # Timeout protection
+    if [[ $MONITOR_ITERATIONS -eq $MAX_ITERATIONS ]]; then
+        echo "⚠️  TIMEOUT: Test monitoring reached 10-minute limit - force stopping"
+        echo "🐛 DEBUG: Attempting to force stop app due to timeout"
+        adb shell am force-stop {{ANDROID_PACKAGE_NAME}} 2>/dev/null || true
+        echo "⚠️  Test may have failed or hung - check logs for issues"
+    fi
+    
     echo "🐛 DEBUG: Monitoring loop ended - app quit detected"
+    
+    # Stop background log capture and use captured logs
+    if [[ -n "${BACKGROUND_LOGCAT_PID:-}" ]]; then
+        echo "📡 Stopping background log capture (PID: $BACKGROUND_LOGCAT_PID)..."
+        kill "$BACKGROUND_LOGCAT_PID" 2>/dev/null || true
+        
+        # Wait for process to actually terminate (max 5 seconds)
+        local wait_count=0
+        while kill -0 "$BACKGROUND_LOGCAT_PID" 2>/dev/null && [[ $wait_count -lt 5 ]]; do
+            sleep 1
+            wait_count=$((wait_count + 1))
+            echo "📡 Waiting for background capture to stop... ($wait_count/5)"
+        done
+        
+        # Force kill if still running
+        if kill -0 "$BACKGROUND_LOGCAT_PID" 2>/dev/null; then
+            echo "⚠️  Force killing stuck background process..."
+            kill -9 "$BACKGROUND_LOGCAT_PID" 2>/dev/null || true
+        fi
+        
+        echo "✅ Background log capture stopped"
+    fi
     
     # Extract logs from Android device using proper log extraction
     echo "🔍 Extracting logs from Android device after test completion..."
     sleep 2  # Give device time to flush logs
     
-    # Use the unified log extraction function
-    just _extract-logs "$TEST_ID" "android"
+    # Check if we have background captured logs to use
+    if [[ -f "$BACKGROUND_LOG_FILE" && -s "$BACKGROUND_LOG_FILE" ]]; then
+        echo "📡 Using background captured logs for better accuracy..."
+        # Filter background logs for our test and copy to main log file
+        mkdir -p "$LOGS_DIR"
+        # Include all godot logs and chunk patterns to capture chunked debug logs
+        grep -E "($TEST_ID|SEMANTIC_ACTION|gametwo|com\.primaryhive|godot.*:)" "$BACKGROUND_LOG_FILE" > "$ANDROID_LOG_FILE" 2>/dev/null || true
+        # Clean up background file
+        rm -f "$BACKGROUND_LOG_FILE" 2>/dev/null || true
+        
+        if [[ -s "$ANDROID_LOG_FILE" ]]; then
+            echo "📡 Background capture successful - found $(wc -l < "$ANDROID_LOG_FILE") log lines"
+        else
+            echo "📡 Background capture had no relevant logs - falling back to standard extraction"
+            just _extract-logs "$TEST_ID" "android"
+        fi
+    else
+        echo "📡 No background capture available - using standard extraction"
+        just _extract-logs "$TEST_ID" "android"
+    fi
     
     if [[ -f "$ANDROID_LOG_FILE" && -s "$ANDROID_LOG_FILE" ]]; then
         LOG_LINES=$(wc -l < "$ANDROID_LOG_FILE")
@@ -2633,6 +2757,8 @@ _test-android-target-original config_name:
         if [[ -z "$CURRENT_PID" ]]; then
             echo ""
             echo "✅ App quit - test completed"
+            echo "🐛 DEBUG: App quit detected"
+            
             TEST_COMPLETED=true
             break
         fi
