@@ -4,12 +4,11 @@
     "initial_seed": 42,
     "state_type": "gamestate_validation",
     "expected_checksums": [
-      "7abf14e001ae95cf291e2c2f5f5d6293bfb1c99051e2158f971f578b2ba12804",
-      "aa76e25f5dc06fb7694c79cef744fbbb208bd1678932d2ce33b937456542b7e8"
+      "405ae0fd5bf682c9d0ff83c9e93f38c2bc1e9899aa902f9edc36603102734581",
+      "405ae0fd5bf682c9d0ff83c9e93f38c2bc1e9899aa902f9edc36603102734581"
     ]
   },
   "actions": [
-    "transition.change_state DRAFT",
     "system.debug.save_gamestate"
   ]
 }

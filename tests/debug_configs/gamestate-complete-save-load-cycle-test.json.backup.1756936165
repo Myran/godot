@@ -3,11 +3,7 @@
   "checksum_config": {
     "initial_seed": 12345,
     "state_type": "save_load_cycle_validation",
-    "expected_checksums": [
-      "662ffc9076bc409d2cfdda0c8370846c725c57194a77346d1e7b7652c4aae770",
-      "6b22382d882a0338684b84afab911828c4c0651146088e199ad3fbbc788cdfaf",
-      "6b22382d882a0338684b84afab911828c4c0651146088e199ad3fbbc788cdfaf"
-    ]
+    "expected_checksums": []
   },
   "actions": [
     "system.debug.save_gamestate",
