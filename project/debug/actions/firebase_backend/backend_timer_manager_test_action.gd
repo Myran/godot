@@ -53,7 +53,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			rapid_success += 1
 		total_rapid_duration += rapid_duration
 
-		await Engine.get_main_loop().create_timer(0.05).timeout
+		await get_tree().create_timer(0.05).timeout
 
 	var rapid_success_rate: float = float(rapid_success) / float(rapid_requests)
 	var avg_rapid_duration: int = int(float(total_rapid_duration) / float(rapid_requests))
