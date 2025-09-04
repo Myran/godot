@@ -1028,13 +1028,15 @@ _collect-action-results test_id platform config_name="unknown" session="":
     CONFIG_NAME="{{config_name}}"
     SESSION="{{session}}"
     
-    # Create persistent results file that includes session for proper cleanup
+    # Create persistent results file alongside log files for consistency
     # Each test creates a unique file using session timestamp to avoid conflicts
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
     fi
     echo "[]" > "$RESULTS_FILE"
     
@@ -1175,11 +1177,13 @@ _generate-action-summary-from-file test_id config_name platform session="":
     SESSION="{{session}}"
     
     # Use session-aware file naming to match the file created by _collect-action-results
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="/tmp/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
     fi
     
     echo ""
