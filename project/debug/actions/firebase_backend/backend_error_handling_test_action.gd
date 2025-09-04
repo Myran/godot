@@ -29,7 +29,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_update_status("Testing invalid path error handling...")
 	total_error_tests += 1
 	var invalid_path: Array[Variant] = []  # Empty path should be handled gracefully
-	var invalid_result: Variant = await test_backend_async_pattern(
+	var invalid_result: Variant
+	invalid_result = await test_backend_async_pattern(
 		"get_data", invalid_path, "", null, "Error: Invalid Path"
 	)
 
@@ -47,7 +48,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	]
 
 	var timeout_start_time: int = Time.get_ticks_msec()
-	var timeout_result: Variant = await test_backend_async_pattern(
+	var timeout_result: Variant
+	timeout_result = await test_backend_async_pattern(
 		"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test"
 	)
 	var timeout_duration: int = Time.get_ticks_msec() - timeout_start_time
@@ -68,7 +70,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	total_error_tests += 1
 	var unsupported_path: Array[Variant] = ["backend_tests", "error_handling", "unsupported"]
 
-	var unsupported_result: Variant = await test_backend_async_pattern(
+	var unsupported_result: Variant
+	unsupported_result = await test_backend_async_pattern(
 		"unsupported_method", unsupported_path, "test", "value", "Error: Unsupported Method"
 	)
 
