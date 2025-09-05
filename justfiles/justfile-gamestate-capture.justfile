@@ -101,6 +101,33 @@ _compare-gamestates FIRST_FILE SECOND_FILE FIRST_LABEL SECOND_LABEL:
         exit 1
     fi
 
+# Helper function to create save-only config (for with-state tests - startup coordinator handles loading)
+_create-save-only-config AUTO_QUIT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    if [[ "{{AUTO_QUIT}}" == "true" ]]; then
+        METADATA_SECTION='"metadata": {
+        "auto_quit": true
+      },'
+    else
+        METADATA_SECTION=""
+    fi
+    
+    cat > tests/debug_configs/gamestate-load-and-save-test.json << EOF
+    {
+      "description": "Save gamestate after startup coordinator loading (with-state tests)",
+      $METADATA_SECTION
+      "checksum_config": {
+        "initial_seed": 12345,
+        "state_type": "load_and_save_cycle"
+      },
+      "actions": [
+        "system.debug.save_gamestate"
+      ]
+    }
+    EOF
+
 # Helper function to create load-and-save config (shared by save-load cycle tests)
 _create-load-save-config AUTO_QUIT:
     #!/usr/bin/env bash
@@ -819,6 +846,9 @@ test-save-load-cycle-with-state-desktop STATE_NAME:
     }
     EOF
     
+    # CRITICAL: Copy the state file for debug action (same as standard cycle tests)
+    just _place-gamestate-for-loading "desktop" "$STATE_FILE"
+    
     # Create load and save config for deterministic testing  
     just _create-load-save-config true
     
@@ -1041,6 +1071,9 @@ test-save-load-cycle-with-state-android STATE_NAME:
       "requested_at": "$(date -Iseconds)"
     }
     EOF
+    
+    # CRITICAL: Copy the state file for debug action (same as standard cycle tests)
+    just _place-gamestate-for-loading "android" "$STATE_FILE"
     
     # Create load and save config for deterministic testing  
     just _create-load-save-config true
