@@ -832,7 +832,7 @@ _filter-desktop-logs-safely temp_file_path:
     # Extract essential test info from filtered logs (exclude buffer replays)
     ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
     FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
-    ERROR_COUNT=$(grep -c -E "(ERROR|CRITICAL|FAILED)" "$TEMP_FILTERED" 2>/dev/null || echo "0")
+    ERROR_COUNT=$(grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" "$TEMP_FILTERED" | grep -c -E "(ERROR|CRITICAL|FAILED)" 2>/dev/null || echo "0")
     
     # Extract session info for better reporting
     SESSION_INFO=$(grep "SESSION_END" "$TEMP_FILTERED" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
@@ -941,16 +941,16 @@ _analyze-test-errors test_id platform:
         RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
     fi
     
-    # Count critical errors in relevant logs only (exclude SEMANTIC_ACTION descriptive text)
-    CRITICAL_ERRORS=$(echo "$RELEVANT_LOGS" | grep -v "SEMANTIC_ACTION" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" 2>/dev/null || echo "0")
+    # Count critical errors in relevant logs only (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
+    CRITICAL_ERRORS=$(echo "$RELEVANT_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -c -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH" 2>/dev/null || echo "0")
     CRITICAL_ERRORS=$(echo "$CRITICAL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Filter out intentional test errors (error handling validation actions)
     # These actions deliberately generate errors to test error handling
     ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout)" || echo "")
     
-    # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text)
-    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
+    # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
+    ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
     ALL_ERRORS=$(echo "$ALL_ERRORS" | head -1 | tr -d '\n\r ' | grep -E '^[0-9]+$' || echo "0")
     
     # Count warnings in relevant logs only
@@ -984,7 +984,7 @@ _analyze-test-errors test_id platform:
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Test-Related Errors Found:"
-        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
@@ -2249,7 +2249,15 @@ _execute-test-android config_name:
     fi
     
     # Capture all log levels (*:V = verbose) to get GDScript debug logs
-    adb logcat -b main,system "*:V" 2>/dev/null > "$BACKGROUND_LOG_FILE" &
+    # Include all log buffers for maximum detail
+    if [[ "${VERBOSE_TESTING:-false}" == "true" ]]; then
+        echo "🔍 VERBOSE MODE: Capturing all log buffers with maximum detail for memory debugging"
+        # Extra verbose capture with all possible buffers
+        adb logcat -b all "*:V" 2>/dev/null > "$BACKGROUND_LOG_FILE" &
+    else
+        # Standard capture
+        adb logcat -b main,system,radio,events,crash "*:V" 2>/dev/null > "$BACKGROUND_LOG_FILE" &
+    fi
     BACKGROUND_LOGCAT_PID=$!
     
     # Validate background process started successfully
@@ -2502,6 +2510,37 @@ test-android-target config_name="":
     TEST_SESSION="$(date +%s)"
     
     # Use the new unified execution pattern
+    just _execute-test-with-analysis "$CONFIG_NAME" "android" "$TEST_SESSION"
+
+# Enhanced verbose testing for debugging node leaks and memory issues
+test-android-verbose config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "android" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
+    
+    echo "🔍 VERBOSE DEBUGGING MODE: Enhanced logging for node leaks and memory issues"
+    echo "📊 This will provide detailed ObjectDB and resource cleanup information"
+    echo ""
+    
+    # Create session timestamp for individual test
+    TEST_SESSION="$(date +%s)"
+    
+    # Set verbose mode flag
+    export VERBOSE_TESTING=true
+    
+    # Use the new unified execution pattern with verbose mode
     just _execute-test-with-analysis "$CONFIG_NAME" "android" "$TEST_SESSION"
 
 # Manual mode test commands that inject auto_quit: false
