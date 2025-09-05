@@ -1,9 +1,10 @@
 {
   "name": "System Infrastructure Testing", 
-  "description": "Core system utilities testing - performance monitoring, error handling, and system layer validation (non-Firebase)",
+  "description": "Core system utilities testing - performance monitoring, error handling, gamestate validation, and system layer validation (non-Firebase)",
   "configs": [
     "system-layer-all",
     "system-performance",
-    "system-error-handling"
+    "system-error-handling",
+    "@gamestate-system-validation"
   ]
 }
