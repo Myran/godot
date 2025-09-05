@@ -123,7 +123,14 @@ _find-desktop-log-with-test-id TEST_ID:
     search_logs_for_test_id() {
         local log_dir="$1"
         if [ -d "$log_dir" ]; then
-            # Find all .log files and search for test ID
+            # First, check if test ID is in any filename (for Android logs stored on desktop)
+            local filename_match=$(find "$log_dir" -name "*${TEST_ID}*.log" -type f | head -1)
+            if [ -n "$filename_match" ]; then
+                echo "$filename_match"
+                return 0
+            fi
+            
+            # Fall back to searching file contents (for desktop logs)
             find "$log_dir" -name "*.log" -type f -exec grep -l "$TEST_ID" {} \; 2>/dev/null | head -1
         fi
     }
