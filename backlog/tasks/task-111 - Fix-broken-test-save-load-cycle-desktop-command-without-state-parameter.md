@@ -1,7 +1,7 @@
 ---
 id: task-111
 title: Fix broken test-save-load-cycle-desktop command without state parameter
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-09-03 13:39'
 updated_date: '2025-09-05 17:22'
