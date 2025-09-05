@@ -396,6 +396,69 @@ iterate-android CONFIG="current":
     just config-restart-android "{{CONFIG}}"
     @echo "🎯 Ready for testing on Android device"
 
+# Internal helper: Push any file to Android app private directory
+_push-file-android SOURCE_FILE TARGET_FILENAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📱 Pushing file to Android app private directory..."
+    echo "   📄 Source: {{SOURCE_FILE}}"
+    echo "   🎯 Target: {{TARGET_FILENAME}}"
+    
+    # Ensure app is running so private directory is accessible
+    APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+    if [[ -z "$APP_RUNNING" ]]; then
+        echo "🚀 App not running - starting app to create private directory..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
+        sleep 2
+    fi
+    
+    # Test if private directory is accessible
+    if ! adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/{{TARGET_FILENAME}}" 2>/dev/null; then
+        echo "❌ App private directory not accessible"
+        echo "💡 Make sure app is installed and has been run at least once"
+        echo "💡 Try: adb shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp"
+        exit 1
+    fi
+    
+    echo "📁 App private directory accessible - pushing file..."
+    
+    # Use temporary location first, then copy to private directory
+    TEMP_FILE="/sdcard/temp_$(basename {{TARGET_FILENAME}})"
+    
+    if adb -s {{ANDROID_DEVICE_ID}} push "{{SOURCE_FILE}}" "$TEMP_FILE"; then
+        if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_FILE files/{{TARGET_FILENAME}}" 2>/dev/null; then
+            echo "✅ File copied to app private directory"
+            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_FILE" 2>/dev/null || true
+            echo "✅ File push complete"
+        else
+            echo "❌ Failed to copy to app private directory"
+            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_FILE" 2>/dev/null || true
+            exit 1
+        fi
+    else
+        echo "❌ Failed to upload file to temp location"
+        exit 1
+    fi
+
+# Push gamestate file to Android device for save-load cycle testing
+push-gamestate-android GAMESTATE_FILE: _validate-android-workflow
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "🎮 Pushing gamestate file to Android device..."
+    
+    if [[ ! -f "{{GAMESTATE_FILE}}" ]]; then
+        echo "❌ Gamestate file not found: {{GAMESTATE_FILE}}"
+        exit 1
+    fi
+    
+    echo "📄 Gamestate file: {{GAMESTATE_FILE}}"
+    echo "📏 Size: $(wc -c < "{{GAMESTATE_FILE}}") bytes"
+    
+    # Use the reusable file push helper
+    just _push-file-android "{{GAMESTATE_FILE}}" "pending_gamestate_load.json"
+
 # Push configuration to Android device
 config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     #!/usr/bin/env bash
@@ -409,47 +472,23 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
     cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
     echo ""
     
-    # Try app private directory first, fall back to public storage
-    USER_DIR="/data/data/{{ANDROID_PACKAGE_NAME}}/files"
-    PRIVATE_CONFIG="$USER_DIR/debug_startup_actions.json"
-    PUBLIC_CONFIG="/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/debug_startup_actions.json"
+    # Use the reusable file push helper for config
+    just _push-file-android "$CONFIG_FILE" "debug_startup_actions.json"
     
-    echo "🔧 Pushing to device storage..."
-    
-    # Ensure app is running so private directory is accessible
-    APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
-    if [[ -z "$APP_RUNNING" ]]; then
-        echo "🚀 App not running - starting app to create private directory..."
-        adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
-        sleep 2
-    fi
-    
-    # Test if private directory is accessible
-    if ! adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/debug_startup_actions.json" 2>/dev/null; then
-        echo "❌ App private directory not accessible"
-        echo "💡 Make sure app is installed and has been run at least once"
-        echo "💡 Try: adb shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp"
-        exit 1
-    fi
-    
-    echo "📁 App private directory accessible - pushing config..."
-    
-    # Use temporary location first, then copy to private directory
-    TEMP_CONFIG="/sdcard/temp_debug_config.json"
-    
-    if adb -s {{ANDROID_DEVICE_ID}} push "$CONFIG_FILE" "$TEMP_CONFIG"; then
-        if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_CONFIG files/debug_startup_actions.json" 2>/dev/null; then
-            echo "✅ Config copied to app private directory"
-            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
-            echo "✅ Config push complete"
+    # Check for and push any pending gamestate files (timing-critical for save-load cycle tests)
+    if [[ -f "/tmp/android_gamestate_embed_file.txt" ]]; then
+        GAMESTATE_FILE=$(cat /tmp/android_gamestate_embed_file.txt)
+        echo ""
+        echo "📋 Pushing pending gamestate file as part of config deployment..."
+        if [[ -f "$GAMESTATE_FILE" ]]; then
+            just _push-file-android "$GAMESTATE_FILE" "pending_gamestate_load.json"
+            rm -f /tmp/android_gamestate_embed_file.txt
+            echo "✅ Gamestate file pushed successfully with config"
         else
-            echo "❌ Failed to copy to app private directory"
-            adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_CONFIG" 2>/dev/null || true
+            echo "❌ Gamestate file not found: $GAMESTATE_FILE"
+            rm -f /tmp/android_gamestate_embed_file.txt
             exit 1
         fi
-    else
-        echo "❌ Failed to upload config to temp location"
-        exit 1
     fi
 
 # Deploy config and restart Android app (5-second iteration)

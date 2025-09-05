@@ -134,6 +134,25 @@ _create-load-save-config AUTO_QUIT:
     }
     EOF
 
+# Platform-specific gamestate file placement for save-load cycle testing
+_place-gamestate-for-loading PLATFORM GAMESTATE_FILE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    echo "📋 Preparing gamestate file for {{PLATFORM}} loading..."
+    
+    if [[ "{{PLATFORM}}" == "android" ]]; then
+        # Android: Store the gamestate data to embed in config (avoids all timing issues)
+        echo "{{GAMESTATE_FILE}}" > /tmp/android_gamestate_embed_file.txt
+        echo "✅ Gamestate file marked for config embedding on Android"
+        echo "💡 Data will be embedded in debug config to avoid file transfer timing issues"
+    else
+        # Desktop: Copy to local USER_DATA_DIR immediately
+        cp "{{GAMESTATE_FILE}}" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
+        echo "✅ Gamestate copied to desktop location"
+    fi
+
+
 # Shared log source functions for DRY compliance
 _get-desktop-logs:
     #!/usr/bin/env bash
@@ -691,8 +710,7 @@ test-save-load-cycle-desktop:
     EOF
     
     # CRITICAL: Copy the first save to the pending load location for test isolation
-    echo "📋 Copying first save to pending load location for test isolation..."
-    cp "{{SAVED_STATES_DIR}}/cycle_test_first.json" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
+    just _place-gamestate-for-loading "desktop" "{{SAVED_STATES_DIR}}/cycle_test_first.json"
     
     # Create load and save config for deterministic testing
     just _create-load-save-config false
@@ -915,8 +933,7 @@ test-save-load-cycle-android:
     EOF
     
     # CRITICAL: Copy the first save to the pending load location for test isolation
-    echo "📋 Copying first save to pending load location for test isolation..."
-    cp "{{SAVED_STATES_DIR}}/cycle_test_first.json" "{{USER_DATA_DIR}}/pending_gamestate_load.json"
+    just _place-gamestate-for-loading "android" "{{SAVED_STATES_DIR}}/cycle_test_first.json"
     
     # Create load and save config for deterministic testing
     just _create-load-save-config false
