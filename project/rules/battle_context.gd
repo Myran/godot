@@ -185,6 +185,8 @@ func switch_turn() -> void:
 
 func end_battle() -> void:
 	battle_state = BattleState.POST_BATTLE
+	# Clear battle_solver reference to prevent node leak during cleanup
+	battle_solver = null
 
 
 func is_battle_ongoing() -> bool:
