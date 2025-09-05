@@ -3,5 +3,17 @@
   "description": "Automated testing of the complete gamestate save/load system",
   "configs": [
     "gamestate-save-load-test"
+  ],
+  "commands": [
+    {
+      "command": "test-save-load-cycle-with-test-capture-50-desktop",
+      "platforms": ["desktop"],
+      "description": "Desktop save/load cycle with test-capture-50 state validation"
+    },
+    {
+      "command": "test-save-load-cycle-with-test-capture-50-android",
+      "platforms": ["android"],
+      "description": "Android save/load cycle with test-capture-50 state validation"
+    }
   ]
 }
