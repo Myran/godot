@@ -1230,3 +1230,15 @@ help-lineup:
     @echo ""
     @echo "🔄 Any lineup can load into allied or enemy slot"
     @echo "📁 Files: {{SAVED_STATES_DIR}}/line-NAME.json"
+
+# ================================
+# TEST LIST INTEGRATION WRAPPERS
+# ================================
+
+# 🧪 Desktop save-load cycle with test-capture-50 state (for test list integration)
+test-save-load-cycle-with-test-capture-50-desktop:
+    just test-save-load-cycle-with-state-desktop test-capture-50
+
+# 🧪 Android save-load cycle with test-capture-50 state (for test list integration)  
+test-save-load-cycle-with-test-capture-50-android:
+    just test-save-load-cycle-with-state-android test-capture-50
