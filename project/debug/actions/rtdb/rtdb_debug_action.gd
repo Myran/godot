@@ -160,7 +160,9 @@ func get_last_error_result() -> Array:
 
 
 func create_test_path(path_suffix: Array = []) -> Array[Variant]:
-	var base_path: Array[Variant] = ["debug_tests", "rtdb", str(int(Time.get_unix_time_from_system()))]
+	var base_path: Array[Variant] = [
+		"debug_tests", "rtdb", str(int(Time.get_unix_time_from_system()))
+	]
 	base_path.append_array(path_suffix)
 	return base_path
 
