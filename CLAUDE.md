@@ -22,6 +22,10 @@ adb logcat -d | rg "search_term" -i       # Alternative direct approach for full
 # 🚨 CRITICAL: Android Development Rule
 just fastbuild-android                     # REQUIRED after ANY code changes before Android testing
 
+# 📝 NEW: Complete Command Logging (Long-Running Commands)
+just log-run test                          # Save complete test output to timestamped logs/ files
+just log-run test-android firebase-all    # Log comprehensive testing with automatic timestamped filenames
+
 # 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
 just logs-tree TEST_ID                     # Explore log structure (2 sec)
 just logs-pattern TEST_ID "*.error"        # All errors with precision
@@ -62,12 +66,17 @@ just help-gamestate                      # Complete cross-platform workflow guid
 ```bash
 # 🔄 OBSERVE → ORIENT → DECIDE → ACT Cycle
 just ci-validate                # OBSERVE: Code quality, formatting, linting issues  
-just test                       # OBSERVE: Cross-platform functional behavior
+just log-run test               # OBSERVE: Complete test run with full logging (saves to logs/)
 just logs-errors TEST_ID        # ORIENT: 98% token-efficient issue analysis
 # → DECIDE: Strategic fixes based on feedback
 just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes  
-just test-android-target CONFIG # ACT: Automated testing with validation
+just log-run test-android-target CONFIG # ACT: Automated testing with complete logging
 # → Repeat cycle for continuous improvement
+
+# 📝 LOGGING WORKFLOW: Use log-run for long commands that might break partway
+just log-run test-android firebase-all    # Complete Firebase testing with timestamped logs
+just log-run test-android test-all        # Comprehensive testing (15+ configs) with full capture
+# Results saved to: logs/YYYYMMDD_HHMMSS_command-name.log
 ```
 
 **🚨 CRITICAL CI/Build Rules:**
@@ -101,6 +110,7 @@ just test-android-target CONFIG # ACT: Automated testing with validation
 - `just help-command-integration` - Complete integration guide
 
 **Debugging Commands:**
+- `just log-run COMMAND` - **📝 NEW: Run any command with timestamped logging (saves to logs/)**
 - `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
 - `just logs-tree TEST_ID` - Explore log structure (2 sec)
 - `just logs-pattern TEST_ID "firebase.*"` - Pattern matching

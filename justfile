@@ -170,6 +170,33 @@ ci-validate:
     echo "🎉 All CI validation checks passed!"
 
 # ================================
+# LOGGING UTILITIES
+# ================================
+
+# Run any just command with automatic timestamped logging
+log-run +ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Create logs directory if it doesn't exist
+    mkdir -p logs
+    
+    # Generate timestamp and clean command name for filename
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    COMMAND_NAME=$(echo "{{ARGS}}" | tr ' ' '_' | tr -d '"' | sed 's/[^a-zA-Z0-9_-]/_/g')
+    LOG_FILE="logs/${TIMESTAMP}_${COMMAND_NAME}.log"
+    
+    echo "🚀 Running: just {{ARGS}}"
+    echo "📝 Saving output to: $LOG_FILE"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    
+    # Run the command with tee to show output and save to file
+    just {{ARGS}} 2>&1 | tee "$LOG_FILE"
+    
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ Log saved to: $LOG_FILE"
+
+# ================================
 # VALIDATION FUNCTIONS
 # ================================
 

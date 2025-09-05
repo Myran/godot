@@ -186,6 +186,7 @@ help:
     echo "  just build-editor                # Build custom Godot editor"
     echo ""
     echo "🔧 ADVANCED LOGGING"
+    echo "  just log-run COMMAND             # 📝 Run any command with timestamped logging (saves to logs/)"
     echo "  just runtime-filter-reset        # Reset log filters to defaults"
     echo ""
     echo "📖 DETAILED HELP"
