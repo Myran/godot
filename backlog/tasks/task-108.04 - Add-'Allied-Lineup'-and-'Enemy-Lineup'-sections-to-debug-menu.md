@@ -1,10 +1,10 @@
 ---
 id: task-108.04
 title: Add 'Allied Lineup' and 'Enemy Lineup' sections to debug menu
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 07:19'
-updated_date: '2025-08-30 08:01'
+updated_date: '2025-09-04 20:44'
 labels:
   - debug
   - ui

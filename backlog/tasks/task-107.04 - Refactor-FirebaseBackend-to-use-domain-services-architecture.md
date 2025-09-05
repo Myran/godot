@@ -1,9 +1,10 @@
 ---
 id: task-107.04
 title: Refactor FirebaseBackend to use domain services architecture
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 16:10'
+updated_date: '2025-09-04 20:44'
 labels:
   - firebase
   - architecture

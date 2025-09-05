@@ -1,10 +1,10 @@
 ---
 id: task-107.06.01
 title: Remove Firebase minimal service stub and activate real Firebase service
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 21:32'
-updated_date: '2025-08-30 21:37'
+updated_date: '2025-09-04 20:43'
 labels:
   - firebase
   - configuration

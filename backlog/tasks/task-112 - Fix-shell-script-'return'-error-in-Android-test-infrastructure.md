@@ -1,9 +1,10 @@
 ---
 id: task-112
 title: Fix shell script 'return' error in Android test infrastructure
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-09-03 13:39'
+updated_date: '2025-09-04 20:42'
 labels:
   - testing
   - android

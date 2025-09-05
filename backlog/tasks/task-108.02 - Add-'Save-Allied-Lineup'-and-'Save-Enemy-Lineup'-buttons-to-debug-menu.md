@@ -1,10 +1,10 @@
 ---
 id: task-108.02
 title: Add 'Save Allied Lineup' and 'Save Enemy Lineup' buttons to debug menu
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-08-30 08:00'
+updated_date: '2025-09-04 20:45'
 labels:
   - debug
   - ui

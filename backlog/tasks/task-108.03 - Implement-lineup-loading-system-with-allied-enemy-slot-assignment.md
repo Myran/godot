@@ -1,10 +1,10 @@
 ---
 id: task-108.03
 title: Implement lineup loading system with allied/enemy slot assignment
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-08-30 08:00'
+updated_date: '2025-09-04 20:45'
 labels:
   - battle
   - loading

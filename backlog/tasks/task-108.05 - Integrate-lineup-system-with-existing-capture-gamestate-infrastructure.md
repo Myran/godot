@@ -1,10 +1,10 @@
 ---
 id: task-108.05
 title: Integrate lineup system with existing capture-gamestate infrastructure
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 07:19'
-updated_date: '2025-08-30 08:02'
+updated_date: '2025-09-04 20:44'
 labels:
   - integration
   - infrastructure
