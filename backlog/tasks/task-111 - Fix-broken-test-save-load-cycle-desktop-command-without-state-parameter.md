@@ -4,7 +4,7 @@ title: Fix broken test-save-load-cycle-desktop command without state parameter
 status: In Progress
 assignee: []
 created_date: '2025-09-03 13:39'
-updated_date: '2025-09-04 20:42'
+updated_date: '2025-09-05 17:22'
 labels:
   - bug
   - testing
