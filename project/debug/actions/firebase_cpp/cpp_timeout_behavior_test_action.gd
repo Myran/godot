@@ -32,11 +32,16 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	total_tests += 1
 
 	_update_status("Testing basic get operation...")
+	# First write test data, then read it back
+	var get_test_path: Array = ["cpp_tests", "basic", "get_test", str(Time.get_ticks_msec())]
+	var get_test_data: String = "Test data for get operation"
+
+	await execute_cpp_operation(
+		"set_value_async", [get_test_path, get_test_data], "Basic Get Test Setup", "set_value"
+	)
+
 	var get_result: Variant = await execute_cpp_operation(
-		"get_value_async",
-		[["cpp_tests", "basic", "get_test", str(Time.get_ticks_msec())]],
-		"Basic Get Test",
-		"get_value"
+		"get_value_async", [get_test_path], "Basic Get Test", "get_value"
 	)
 
 	var get_worked: bool = get_result != null

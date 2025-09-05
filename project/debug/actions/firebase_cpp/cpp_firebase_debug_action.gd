@@ -78,8 +78,8 @@ func execute_cpp_operation(
 
 	db.callv(method_name, full_args)
 
-	while not op_data.completed:
-		await Engine.get_main_loop().process_frame
+	# Use SignalAwaiter to properly await the signal without blocking the event loop
+	await db[signal_string_name]
 
 	var duration: int = Time.get_ticks_msec() - start_time
 
