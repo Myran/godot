@@ -121,28 +121,21 @@ func _create_get_value_state_handler(
 	return func(recv_request_id: int, rtdb_key: String, value: Variant) -> void:
 		if recv_request_id == request_id:
 			var duration: int = Time.get_ticks_msec() - start_time
-			var success: bool = value != null
 
 			op_data.completed = true
-			if success:
-				op_data.result = value
-				Log.info(
-					"C++ get_value operation completed",
-					{
-						"method": method_name,
-						"duration_ms": duration,
-						"rtdb_key": rtdb_key,
-						"value_type": typeof(value)
-					},
-					["debug", "cpp_firebase"]
-				)
-			else:
-				op_data.error = "Operation returned null"
-				Log.error(
-					"C++ get_value operation returned null",
-					{"method": method_name, "duration_ms": duration, "rtdb_key": rtdb_key},
-					["debug", "cpp_firebase", "error"]
-				)
+			# Firebase operation completed successfully - null means no data at path, which is valid
+			op_data.result = value
+			Log.info(
+				"C++ get_value operation completed",
+				{
+					"method": method_name,
+					"duration_ms": duration,
+					"rtdb_key": rtdb_key,
+					"value_type": typeof(value),
+					"data_exists": value != null
+				},
+				["debug", "cpp_firebase"]
+			)
 
 
 func _create_set_value_state_handler(
