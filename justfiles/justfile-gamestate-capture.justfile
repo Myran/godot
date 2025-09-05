@@ -580,7 +580,21 @@ help-gamestate:
     @echo "  just test-save-load-cycle-android       # Android: standard test: create → save → load → compare"
     @echo "  just test-save-load-cycle-with-state-android STATE_NAME  # Android: enhanced test: load STATE → save → load → compare"
     @echo ""
-    @echo "📁 Files created in: {{SAVED_STATES_DIR}}"
+    @echo "🚀 Test List Integration (NEW):"
+    @echo "  just test-save-load-cycle-with-test-capture-50-desktop   # Wrapper for test list integration"
+    @echo "  just test-save-load-cycle-with-test-capture-50-android   # Wrapper for test list integration"
+    @echo "  just test-desktop-target gamestate-system-validation     # Run gamestate validation via test list"
+    @echo "  just test-android-target gamestate-system-validation     # Run gamestate validation via test list"
+    @echo ""
+    @echo "📁 File Organization:"
+    @echo "  {{SAVED_STATES_DIR}}                   # User-created gamestate saves"
+    @echo "  tests/test-states/                     # Dedicated test gamestate files"
+    @echo "  tests/test-states/test-capture-50.json # Reference test state for validation"
+    @echo ""
+    @echo "🎯 Integration with Main Test Suite:"
+    @echo "  just test                              # Now includes gamestate validation via system-infrastructure"
+    @echo "  just test-desktop-target system-infrastructure  # Includes gamestate testing"
+    @echo "  just test-android-target system-infrastructure  # Includes gamestate testing"
 
 # Quick test of gamestate system (for development validation)
 test-gamestate-system:

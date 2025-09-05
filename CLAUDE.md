@@ -67,6 +67,7 @@ just help-gamestate                      # Complete cross-platform workflow guid
 # 🔄 OBSERVE → ORIENT → DECIDE → ACT Cycle
 just ci-validate                # OBSERVE: Code quality, formatting, linting issues  
 just log-run test               # OBSERVE: Complete test run with full logging (saves to logs/)
+                               # 🚀 NOW INCLUDES: Gamestate validation as part of system-infrastructure
 just logs-errors TEST_ID        # ORIENT: 98% token-efficient issue analysis
 # → DECIDE: Strategic fixes based on feedback
 just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes  
@@ -109,6 +110,13 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 - `just test-command-integration` - Demo with platform filtering
 - `just help-command-integration` - Complete integration guide
 
+**🎯 Test List Structure & @ References:**
+- `configs` array: Individual test configurations or @ references
+- `commands` array: Platform-filtered just command execution  
+- `@gamestate-system-validation` - Reference to gamestate test list
+- `@system-infrastructure` - Now includes gamestate validation
+- `just help-at-symbols` - Complete @ reference and /folder/ pattern guide
+
 **Debugging Commands:**
 - `just log-run COMMAND` - **📝 NEW: Run any command with timestamped logging (saves to logs/)**
 - `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
@@ -130,6 +138,8 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 **Gamestate Commands:**
 - `just capture-gamestate-desktop NAME` | `just capture-gamestate-android NAME`
 - `just list-saved-states` | `just clean-saved-states`
+- `just test-save-load-cycle-with-test-capture-50-desktop` - CLI wrapper for testing
+- `just test-save-load-cycle-with-test-capture-50-android` - Android CLI wrapper
 
 > 📚 **For detailed command help**: Use `just help` and `just help-[topic]` - Claude can read these outputs directly for comprehensive explanations and examples.
 
@@ -364,6 +374,21 @@ var data = {}                  # No type
 - `just list-saved-states` - Show available states
 - `just clean-saved-states` - Remove all states  
 - `just capture-gamestate-android NAME` - Android extraction (auto-detects TEST_ID)
+
+**🚀 NEW: Test List Integration & Validation:**
+- `just test-save-load-cycle-with-test-capture-50-desktop` - CLI wrapper for testing
+- `just test-save-load-cycle-with-test-capture-50-android` - Android CLI wrapper
+- `just test-desktop-target gamestate-system-validation` - Complete gamestate validation via test lists
+- `just test-android-target gamestate-system-validation` - Cross-platform consistency testing
+
+**📁 File Organization:**
+- `./project/debug/saved_states/` - User-created gamestate saves (runtime)
+- `tests/test-states/` - **NEW**: Dedicated directory for test gamestate files
+- `tests/test-states/test-capture-50.json` - Reference test state for validation
+
+**🎯 Main Test Suite Integration:**
+- `just test` - **NOW INCLUDES** gamestate validation as part of system-infrastructure testing
+- Automatic save-load cycle validation ensures gamestate integrity in daily development
 
 **90% faster scenario reproduction - capture from Android, load on desktop or vice versa.**
 
