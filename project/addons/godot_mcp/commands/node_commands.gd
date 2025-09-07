@@ -22,28 +22,28 @@ func process_command(client_id: int, command_type: String, params: Dictionary, c
 	return false  # Command not handled
 
 func _create_node(client_id: int, params: Dictionary, command_id: String) -> void:
-	var parent_path = params.get("parent_path", "/root")
-	var node_type = params.get("node_type", "Node")
-	var node_name = params.get("node_name", "NewNode")
+	var parent_path: String = params.get("parent_path", "/root")
+	var node_type: String = params.get("node_type", "Node")
+	var node_name: String = params.get("node_name", "NewNode")
 	
 	if not ClassDB.class_exists(node_type):
 		return _send_error(client_id, "Invalid node type: %s" % node_type, command_id)
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
-	var edited_scene_root = editor_interface.get_edited_scene_root()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
+	var edited_scene_root: Node = editor_interface.get_edited_scene_root()
 	
 	if not edited_scene_root:
 		return _send_error(client_id, "No scene is currently being edited", command_id)
 	
-	var parent = _get_editor_node(parent_path)
+	var parent: Node = _get_editor_node(parent_path)
 	if not parent:
 		return _send_error(client_id, "Parent node not found: %s" % parent_path, command_id)
 	
-	var node
+	var node: Node
 	if ClassDB.can_instantiate(node_type):
 		node = ClassDB.instantiate(node_type)
 	else:
@@ -65,29 +65,29 @@ func _create_node(client_id: int, params: Dictionary, command_id: String) -> voi
 	}, command_id)
 
 func _delete_node(client_id: int, params: Dictionary, command_id: String) -> void:
-	var node_path = params.get("node_path", "")
+	var node_path: String = params.get("node_path", "")
 	
 	if node_path.is_empty():
 		return _send_error(client_id, "Node path cannot be empty", command_id)
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
-	var edited_scene_root = editor_interface.get_edited_scene_root()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
+	var edited_scene_root: Node = editor_interface.get_edited_scene_root()
 	
 	if not edited_scene_root:
 		return _send_error(client_id, "No scene is currently being edited", command_id)
 	
-	var node = _get_editor_node(node_path)
+	var node: Node = _get_editor_node(node_path)
 	if not node:
 		return _send_error(client_id, "Node not found: %s" % node_path, command_id)
 	
 	if node == edited_scene_root:
 		return _send_error(client_id, "Cannot delete the root node", command_id)
 	
-	var parent = node.get_parent()
+	var parent: Node = node.get_parent()
 	if not parent:
 		return _send_error(client_id, "Node has no parent: %s" % node_path, command_id)
 	
@@ -101,9 +101,9 @@ func _delete_node(client_id: int, params: Dictionary, command_id: String) -> voi
 	}, command_id)
 
 func _update_node_property(client_id: int, params: Dictionary, command_id: String) -> void:
-	var node_path = params.get("node_path", "")
-	var property_name = params.get("property", "")
-	var property_value = params.get("value")
+	var node_path: String = params.get("node_path", "")
+	var property_name: String = params.get("property", "")
+	var property_value: Variant = params.get("value")
 	
 	if node_path.is_empty():
 		return _send_error(client_id, "Node path cannot be empty", command_id)
@@ -114,22 +114,22 @@ func _update_node_property(client_id: int, params: Dictionary, command_id: Strin
 	if property_value == null:
 		return _send_error(client_id, "Property value cannot be null", command_id)
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var node = _get_editor_node(node_path)
+	var node: Node = _get_editor_node(node_path)
 	if not node:
 		return _send_error(client_id, "Node not found: %s" % node_path, command_id)
 	
 	if not property_name in node:
 		return _send_error(client_id, "Property %s does not exist on node %s" % [property_name, node_path], command_id)
 	
-	var parsed_value = _parse_property_value(property_value)
+	var parsed_value: Variant = _parse_property_value(property_value)
 	
-	var old_value = node.get(property_name)
+	var old_value: Variant = node.get(property_name)
 	
-	var undo_redo = _get_undo_redo()
+	var undo_redo: EditorUndoRedoManager = _get_undo_redo()
 	if not undo_redo:
 		node.set(property_name, parsed_value)
 		_mark_scene_modified()
@@ -149,20 +149,20 @@ func _update_node_property(client_id: int, params: Dictionary, command_id: Strin
 	}, command_id)
 
 func _get_node_properties(client_id: int, params: Dictionary, command_id: String) -> void:
-	var node_path = params.get("node_path", "")
+	var node_path: String = params.get("node_path", "")
 	
 	if node_path.is_empty():
 		return _send_error(client_id, "Node path cannot be empty", command_id)
 	
-	var node = _get_editor_node(node_path)
+	var node: Node = _get_editor_node(node_path)
 	if not node:
 		return _send_error(client_id, "Node not found: %s" % node_path, command_id)
 	
-	var properties = {}
-	var property_list = node.get_property_list()
+	var properties: Dictionary = {}
+	var property_list: Array[Dictionary] = node.get_property_list()
 	
 	for prop in property_list:
-		var name = prop["name"]
+		var name: String = prop["name"]
 		if not name.begins_with("_"):  # Skip internal properties
 			properties[name] = node.get(name)
 	
@@ -172,13 +172,13 @@ func _get_node_properties(client_id: int, params: Dictionary, command_id: String
 	}, command_id)
 
 func _list_nodes(client_id: int, params: Dictionary, command_id: String) -> void:
-	var parent_path = params.get("parent_path", "/root")
+	var parent_path: String = params.get("parent_path", "/root")
 	
-	var parent = _get_editor_node(parent_path)
+	var parent: Node = _get_editor_node(parent_path)
 	if not parent:
 		return _send_error(client_id, "Parent node not found: %s" % parent_path, command_id)
 	
-	var children = []
+	var children: Array[Dictionary] = []
 	for child in parent.get_children():
 		children.append({
 			"name": child.name,

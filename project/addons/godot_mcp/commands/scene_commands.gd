@@ -22,14 +22,14 @@ func process_command(client_id: int, command_type: String, params: Dictionary, c
 	return false  # Command not handled
 
 func _save_scene(client_id: int, params: Dictionary, command_id: String) -> void:
-	var path = params.get("path", "")
+	var path: String = params.get("path", "")
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
-	var edited_scene_root = editor_interface.get_edited_scene_root()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
+	var edited_scene_root: Node = editor_interface.get_edited_scene_root()
 	
 	if path.is_empty() and edited_scene_root:
 		path = edited_scene_root.scene_file_path
@@ -46,8 +46,8 @@ func _save_scene(client_id: int, params: Dictionary, command_id: String) -> void
 	if not edited_scene_root:
 		return _send_error(client_id, "No scene is currently being edited", command_id)
 	
-	var packed_scene = PackedScene.new()
-	var result = packed_scene.pack(edited_scene_root)
+	var packed_scene: PackedScene = PackedScene.new()
+	var result: int = packed_scene.pack(edited_scene_root)
 	if result != OK:
 		return _send_error(client_id, "Failed to pack scene: %d" % result, command_id)
 	
@@ -60,7 +60,7 @@ func _save_scene(client_id: int, params: Dictionary, command_id: String) -> void
 	}, command_id)
 
 func _open_scene(client_id: int, params: Dictionary, command_id: String) -> void:
-	var path = params.get("path", "")
+	var path: String = params.get("path", "")
 	
 	if path.is_empty():
 		return _send_error(client_id, "Scene path cannot be empty", command_id)
@@ -71,10 +71,10 @@ func _open_scene(client_id: int, params: Dictionary, command_id: String) -> void
 	if not FileAccess.file_exists(path):
 		return _send_error(client_id, "Scene file not found: %s" % path, command_id)
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin") if Engine.has_meta("GodotMCPPlugin") else null
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin") if Engine.has_meta("GodotMCPPlugin") else null
 	
 	if plugin and plugin.has_method("get_editor_interface"):
-		var editor_interface = plugin.get_editor_interface()
+		var editor_interface: EditorInterface = plugin.get_editor_interface()
 		editor_interface.open_scene_from_path(path)
 		_send_success(client_id, {
 			"scene_path": path
@@ -83,12 +83,12 @@ func _open_scene(client_id: int, params: Dictionary, command_id: String) -> void
 		_send_error(client_id, "Cannot access EditorInterface. Please open the scene manually: %s" % path, command_id)
 
 func _get_current_scene(client_id: int, _params: Dictionary, command_id: String) -> void:
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
-	var edited_scene_root = editor_interface.get_edited_scene_root()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
+	var edited_scene_root: Node = editor_interface.get_edited_scene_root()
 	
 	if not edited_scene_root:
 		print("No scene is currently being edited")
@@ -99,7 +99,7 @@ func _get_current_scene(client_id: int, _params: Dictionary, command_id: String)
 		}, command_id)
 		return
 	
-	var scene_path = edited_scene_root.scene_file_path
+	var scene_path: String = edited_scene_root.scene_file_path
 	if scene_path.is_empty():
 		scene_path = "Untitled"
 	
@@ -114,7 +114,7 @@ func _get_current_scene(client_id: int, _params: Dictionary, command_id: String)
 	}, command_id)
 
 func _get_scene_structure(client_id: int, params: Dictionary, command_id: String) -> void:
-	var path = params.get("path", "")
+	var path: String = params.get("path", "")
 	
 	if path.is_empty():
 		return _send_error(client_id, "Scene path cannot be empty", command_id)
@@ -125,15 +125,15 @@ func _get_scene_structure(client_id: int, params: Dictionary, command_id: String
 	if not FileAccess.file_exists(path):
 		return _send_error(client_id, "Scene file not found: " + path, command_id)
 	
-	var packed_scene = load(path)
+	var packed_scene: PackedScene = load(path)
 	if not packed_scene:
 		return _send_error(client_id, "Failed to load scene: " + path, command_id)
 	
-	var scene_instance = packed_scene.instantiate()
+	var scene_instance: Node = packed_scene.instantiate()
 	if not scene_instance:
 		return _send_error(client_id, "Failed to instantiate scene: " + path, command_id)
 	
-	var structure = _get_node_structure(scene_instance)
+	var structure: Dictionary = _get_node_structure(scene_instance)
 	
 	scene_instance.queue_free()
 	
@@ -143,21 +143,21 @@ func _get_scene_structure(client_id: int, params: Dictionary, command_id: String
 	}, command_id)
 
 func _get_node_structure(node: Node) -> Dictionary:
-	var structure = {
+	var structure: Dictionary = {
 		"name": node.name,
 		"type": node.get_class(),
 		"path": node.get_path()
 	}
 	
-	var script = node.get_script()
+	var script: Script = node.get_script()
 	if script:
 		structure["script"] = script.resource_path
 	
-	var properties = {}
-	var property_list = node.get_property_list()
+	var properties: Dictionary = {}
+	var property_list: Array = node.get_property_list()
 	
 	for prop in property_list:
-		var name = prop["name"]
+		var name: String = prop["name"]
 		if not name.begins_with("_") and name not in ["script", "children", "position", "rotation", "scale"]:
 			continue
 		
@@ -172,7 +172,7 @@ func _get_node_structure(node: Node) -> Dictionary:
 	
 	structure["properties"] = properties
 	
-	var children = []
+	var children: Array = []
 	for child in node.get_children():
 		children.append(_get_node_structure(child))
 	
@@ -181,8 +181,8 @@ func _get_node_structure(node: Node) -> Dictionary:
 	return structure
 
 func _create_scene(client_id: int, params: Dictionary, command_id: String) -> void:
-	var path = params.get("path", "")
-	var root_node_type = params.get("root_node_type", "Node")
+	var path: String = params.get("path", "")
+	var root_node_type: String = params.get("root_node_type", "Node")
 	
 	if path.is_empty():
 		return _send_error(client_id, "Scene path cannot be empty", command_id)
@@ -193,16 +193,16 @@ func _create_scene(client_id: int, params: Dictionary, command_id: String) -> vo
 	if not path.ends_with(".tscn"):
 		path += ".tscn"
 	
-	var dir_path = path.get_base_dir()
+	var dir_path: String = path.get_base_dir()
 	if not DirAccess.dir_exists_absolute(dir_path):
-		var dir = DirAccess.open("res://")
+		var dir: DirAccess = DirAccess.open("res://")
 		if dir:
 			dir.make_dir_recursive(dir_path.trim_prefix("res://"))
 	
 	if FileAccess.file_exists(path):
 		return _send_error(client_id, "Scene file already exists: %s" % path, command_id)
 	
-	var root_node = null
+	var root_node: Node = null
 	
 	match root_node_type:
 		"Node":
@@ -223,11 +223,11 @@ func _create_scene(client_id: int, params: Dictionary, command_id: String) -> vo
 			else:
 				return _send_error(client_id, "Invalid root node type: %s" % root_node_type, command_id)
 	
-	var file_name = path.get_file().get_basename()
+	var file_name: String = path.get_file().get_basename()
 	root_node.name = file_name
 	
-	var packed_scene = PackedScene.new()
-	var result = packed_scene.pack(root_node)
+	var packed_scene: PackedScene = PackedScene.new()
+	var result: int = packed_scene.pack(root_node)
 	if result != OK:
 		root_node.free()
 		return _send_error(client_id, "Failed to pack scene: %d" % result, command_id)
@@ -239,9 +239,9 @@ func _create_scene(client_id: int, params: Dictionary, command_id: String) -> vo
 	
 	root_node.free()
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin") if Engine.has_meta("GodotMCPPlugin") else null
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin") if Engine.has_meta("GodotMCPPlugin") else null
 	if plugin and plugin.has_method("get_editor_interface"):
-		var editor_interface = plugin.get_editor_interface()
+		var editor_interface: EditorInterface = plugin.get_editor_interface()
 		editor_interface.open_scene_from_path(path)
 	
 	_send_success(client_id, {

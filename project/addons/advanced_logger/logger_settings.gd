@@ -28,21 +28,21 @@ static func load_settings(logger_instance: Logger) -> Error:
 		push_error("Cannot load settings: logger instance is null")
 		return Error.FAILED
 
-	var config = ConfigManager.get_instance()
+	var config: ConfigManager = ConfigManager.get_instance()
 
-	var level = config.get_log_level()
+	var level: int = config.get_log_level()
 	if level >= 0 and level < ALogger.LogLevel.size():
 		logger_instance.set_level(level)
 
 	logger_instance.clear_tags()
 	logger_instance.clear_ignored_tags()
 
-	var active_tags = config.get_active_tags()
+	var active_tags: Array[String] = config.get_active_tags()
 	for tag in active_tags:
 		if TagManager.is_valid_tag(tag):
 			logger_instance.add_tag(tag)
 
-	var ignored_tags = config.get_ignored_tags()
+	var ignored_tags: Array[String] = config.get_ignored_tags()
 	for tag in ignored_tags:
 		if TagManager.is_valid_tag(tag):
 			logger_instance.add_ignored_tag(tag)
@@ -60,7 +60,7 @@ static func save_settings(logger_instance: Logger) -> Error:
 		push_error("Cannot save settings: logger instance is null")
 		return Error.FAILED
 
-	var config = ConfigManager.get_instance()
+	var config: ConfigManager = ConfigManager.get_instance()
 
 	config.set_log_level(logger_instance.get_level())
 

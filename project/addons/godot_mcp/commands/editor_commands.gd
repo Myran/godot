@@ -16,11 +16,11 @@ func process_command(client_id: int, command_type: String, params: Dictionary, c
 	return false  # Command not handled
 
 func _get_editor_state(client_id: int, params: Dictionary, command_id: String) -> void:
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
 	
 	var state = {
 		"current_scene": "",
@@ -29,7 +29,7 @@ func _get_editor_state(client_id: int, params: Dictionary, command_id: String) -
 		"is_playing": editor_interface.is_playing_scene()
 	}
 	
-	var edited_scene_root = editor_interface.get_edited_scene_root()
+	var edited_scene_root: Node = editor_interface.get_edited_scene_root()
 	if edited_scene_root:
 		state["current_scene"] = edited_scene_root.scene_file_path
 	
@@ -50,11 +50,11 @@ func _get_editor_state(client_id: int, params: Dictionary, command_id: String) -
 	_send_success(client_id, state, command_id)
 
 func _get_selected_node(client_id: int, params: Dictionary, command_id: String) -> void:
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
 	var selection = editor_interface.get_selection()
 	var selected_nodes = selection.get_selected_nodes()
 	
@@ -73,7 +73,7 @@ func _get_selected_node(client_id: int, params: Dictionary, command_id: String) 
 		"path": str(node.get_path())
 	}
 	
-	var script = node.get_script()
+	var script: Script = node.get_script()
 	if script:
 		node_data["script_path"] = script.resource_path
 	
@@ -91,8 +91,8 @@ func _get_selected_node(client_id: int, params: Dictionary, command_id: String) 
 	_send_success(client_id, node_data, command_id)
 
 func _create_resource(client_id: int, params: Dictionary, command_id: String) -> void:
-	var resource_type = params.get("resource_type", "")
-	var resource_path = params.get("resource_path", "")
+	var resource_type: String = params.get("resource_type", "")
+	var resource_path: String = params.get("resource_path", "")
 	var properties = params.get("properties", {})
 	
 	if resource_type.is_empty():
@@ -104,11 +104,11 @@ func _create_resource(client_id: int, params: Dictionary, command_id: String) ->
 	if not resource_path.begins_with("res://"):
 		resource_path = "res://" + resource_path
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
 	
 	var resource
 	
@@ -131,7 +131,7 @@ func _create_resource(client_id: int, params: Dictionary, command_id: String) ->
 		if err != OK:
 			return _send_error(client_id, "Failed to create directory: %s (Error code: %d)" % [dir, err], command_id)
 	
-	var result = ResourceSaver.save(resource, resource_path)
+	var result: int = ResourceSaver.save(resource, resource_path)
 	if result != OK:
 		return _send_error(client_id, "Failed to save resource: %d" % result, command_id)
 	

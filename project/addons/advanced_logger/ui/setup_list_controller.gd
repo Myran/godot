@@ -128,7 +128,7 @@ func refresh_setups_list() -> void:
 			[LoggerColors.DEBUG_HTML, _setups_list.item_count])
 
 func save_setup(setup_name: String, active_tags: Array[String], ignored_tags: Array[String]) -> Error:
-	var result = _setup_manager.save_setup(setup_name, active_tags, ignored_tags)
+	var result: int = _setup_manager.save_setup(setup_name, active_tags, ignored_tags)
 	if result == OK:
 		refresh_setups_list()
 	return result

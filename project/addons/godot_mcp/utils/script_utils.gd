@@ -3,7 +3,7 @@ class_name ScriptUtils
 extends RefCounted
 
 static func create_new_script(class_name_str: String = "", extends_type: String = "Node") -> GDScript:
-	var script = GDScript.new()
+	var script: Script = GDScript.new()
 	var content = ""
 	
 	if not class_name_str.is_empty():
@@ -33,7 +33,7 @@ static func create_script_file(path: String, class_name_str: String = "", extend
 	content += "func _ready():\n"
 	content += "\tpass\n"
 	
-	var file = FileAccess.open(path, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		push_error("Failed to open file for writing: " + path)
 		return false
@@ -44,13 +44,13 @@ static func create_script_file(path: String, class_name_str: String = "", extend
 	return true
 
 static func get_script_info(path: String) -> Dictionary:
-	var result = {
+	var result: Dictionary = {
 		"class_name": "",
 		"extends": "",
 		"path": path
 	}
 	
-	var file = FileAccess.open(path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open file for reading: " + path)
 		return result
@@ -75,7 +75,7 @@ static func get_script_info(path: String) -> Dictionary:
 static func get_script_methods(path: String) -> Array:
 	var methods = []
 	
-	var file = FileAccess.open(path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		push_error("Failed to open file for reading: " + path)
 		return methods
@@ -97,7 +97,7 @@ static func apply_script_to_node(node: Node, script_path: String) -> bool:
 		push_error("Node is null")
 		return false
 	
-	var script = ResourceLoader.load(script_path)
+	var script: Script = ResourceLoader.load(script_path)
 	if not script:
 		push_error("Failed to load script: " + script_path)
 		return false

@@ -62,7 +62,7 @@ func _ready() -> void:
 	call_deferred("_initial_tag_scan")
 
 func _initialize_controllers() -> void:
-	var setup_manager = TagSetupManager.new(_config)
+	var setup_manager: TagSetupManager = TagSetupManager.new(_config)
 	_drag_drop_helper = DragDropHelper.new(TagManager)
 	_tag_list_controller = TagListController.new(TagManager, _config)
 	_setup_list_controller = SetupListController.new(setup_manager)
@@ -123,12 +123,12 @@ func _initialize_controllers() -> void:
 	_settings_tab_controller.tags_scanned.connect(_on_tags_scanned)
 
 func _get_drag_data(at_position: Vector2) -> Variant:
-	var available_pos = _available_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
-	var active_pos = _tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
-	var ignored_pos = _ignored_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
+	var available_pos: Vector2 = _available_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
+	var active_pos: Vector2 = _tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
+	var ignored_pos: Vector2 = _ignored_tags_list.get_global_transform().affine_inverse() * get_global_transform() * at_position
 
 	if _available_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _available_tags_list.size).has_point(available_pos):
-		var drag_data = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, TagCategories.category_to_string(TagCategories.Category.AVAILABLE))
+		var drag_data: Variant = _drag_drop_helper.get_drag_data_for_list(_available_tags_list, TagCategories.category_to_string(TagCategories.Category.AVAILABLE))
 		if drag_data:
 			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Dragging tag from available: %s[/color]" %
@@ -138,7 +138,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		return drag_data
 
 	if _tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _tags_list.size).has_point(active_pos):
-		var drag_data = _drag_drop_helper.get_drag_data_for_list(_tags_list, TagCategories.category_to_string(TagCategories.Category.ACTIVE))
+		var drag_data: Variant = _drag_drop_helper.get_drag_data_for_list(_tags_list, TagCategories.category_to_string(TagCategories.Category.ACTIVE))
 		if drag_data:
 			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Dragging tag from active: %s[/color]" %
@@ -148,7 +148,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		return drag_data
 
 	if _ignored_tags_list.is_visible_in_tree() and Rect2(Vector2.ZERO, _ignored_tags_list.size).has_point(ignored_pos):
-		var drag_data = _drag_drop_helper.get_drag_data_for_list(_ignored_tags_list, TagCategories.category_to_string(TagCategories.Category.IGNORED))
+		var drag_data: Variant = _drag_drop_helper.get_drag_data_for_list(_ignored_tags_list, TagCategories.category_to_string(TagCategories.Category.IGNORED))
 		if drag_data:
 			if OS.is_debug_build() and _show_editor_debug:
 				print_rich("[color=#%s]DEBUG: Dragging tag from ignored: %s[/color]" %
@@ -217,8 +217,8 @@ func _on_config_changed(section: String, key: String, value: Variant) -> void:
 		_show_editor_debug = value
 
 func _update_startup_message() -> void:
-	var active_tags = _config.get_active_tags()
-	var ignored_tags = _config.get_ignored_tags()
+	var active_tags: Array[String] = _config.get_active_tags()
+	var ignored_tags: Array[String] = _config.get_ignored_tags()
 
 	var message: String = ""
 
@@ -252,9 +252,9 @@ func _update_tooltip_for_tag_list(list: ItemList) -> void:
 		return
 
 	for i in range(list.get_item_count()):
-		var tag = list.get_item_metadata(i)
+		var tag: Variant = list.get_item_metadata(i)
 		if tag is String and tag.begins_with("level:"):
-			var tooltip = "Level Tag: Overrides the log level dropdown when active.\n"
+			var tooltip: String = "Level Tag: Overrides the log level dropdown when active.\n"
 			match tag:
 				"level:debug":
 					tooltip += "Shows DEBUG level messages."
@@ -269,7 +269,7 @@ func _update_tooltip_for_tag_list(list: ItemList) -> void:
 			list.set_item_tooltip(i, tooltip)
 
 func _initial_tag_scan() -> void:
-	var tag_lists = _tag_list_controller.get_tag_lists()
+	var tag_lists: Dictionary = _tag_list_controller.get_tag_lists()
 	if tag_lists.available_tags.size() <= 1: # Accounting for possible example tag
 		_on_scan_tags()
 
@@ -314,10 +314,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 			print_rich("[color=#%s]DEBUG: Invalid drag data for drop validation[/color]" % [LoggerColors.DEBUG_HTML])
 		return false
 
-	var tag = data["tag"]
-	var source = data.get("source", "")
+	var tag: Variant = data["tag"]
+	var source: String = data.get("source", "")
 
-	var target_category = _get_target_category_at_position(at_position)
+	var target_category: int = _get_target_category_at_position(at_position)
 
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: Can drop check - Tag: %s, Source: %s, Target: %s[/color]" % [
@@ -330,10 +330,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if target_category < 0:
 		return false
 
-	var tag_lists = _tag_list_controller.get_tag_lists()
+	var tag_lists: Dictionary = _tag_list_controller.get_tag_lists()
 
-	var source_category = TagCategories.from_string(source)
-	var can_drop = _drag_drop_helper.can_drop_tag(
+	var source_category: int = TagCategories.from_string(source)
+	var can_drop: bool = _drag_drop_helper.can_drop_tag(
 		tag,
 		source_category,
 		target_category,
@@ -352,10 +352,10 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			print_rich("[color=#%s]DEBUG: Invalid drag data for drop[/color]" % [LoggerColors.ERROR_HTML])
 		return
 
-	var tag = data["tag"]
-	var source = data.get("source", "")
+	var tag: Variant = data["tag"]
+	var source: String = data.get("source", "")
 
-	var target_category = _get_target_category_at_position(at_position)
+	var target_category: int = _get_target_category_at_position(at_position)
 
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: Drop data - Tag: %s, Source: %s, Target: %s[/color]" % [
@@ -368,14 +368,14 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if target_category < 0:
 		return
 
-	var target_list = _get_list_for_category(target_category)
+	var target_list: ItemList = _get_list_for_category(target_category)
 
 	if target_list:
 		target_list.add_theme_color_override("font_selected_color", Color.GREEN)
 		await get_tree().create_timer(0.2).timeout
 		target_list.add_theme_color_override("font_selected_color", Color.WHITE)
 
-	var source_category = TagCategories.from_string(source)
+	var source_category: int = TagCategories.from_string(source)
 
 	if OS.is_debug_build() and _show_editor_debug:
 		print_rich("[color=#%s]DEBUG: Moving tag '%s' from %s to %s[/color]" % [

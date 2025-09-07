@@ -56,7 +56,7 @@ func save_setup(name: String, active_tags: Array[String], ignored_tags: Array[St
 
 	var is_new = !get_all_setups().has(name)
 	_config.set_tag_setup(name, setup_data)
-	var result = _config.save()
+	var result: int = _config.save()
 
 	if result == OK:
 		setup_changed.emit(name, is_new)
@@ -73,7 +73,7 @@ func rename_setup(old_name: String, new_name: String) -> Error:
 
 	_config.set_value(_config.SECTION_SETUPS, old_name, null)
 	_config.set_tag_setup(new_name, setup)
-	var result = _config.save()
+	var result: int = _config.save()
 
 	if result == OK:
 		setup_renamed.emit(old_name, new_name)
@@ -88,7 +88,7 @@ func delete_setup(name: String) -> Error:
 		return ERR_DOES_NOT_EXIST
 
 	_config.set_value(_config.SECTION_SETUPS, name, null)
-	var result = _config.save()
+	var result: int = _config.save()
 
 	if result == OK:
 		setup_deleted.emit(name)

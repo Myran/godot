@@ -2,6 +2,8 @@
 class_name AndroidLoggerHelper
 extends RefCounted
 
+const MobileFormatter = preload("res://addons/advanced_logger/utils/mobile_formatter.gd")
+
 # Android kernel log entry size limits - CORRECTED WITH ACTUAL KERNEL LIMITS
 const ANDROID_KERNEL_LIMIT: int = 4076     # LOGGER_ENTRY_MAX_PAYLOAD - absolute Android kernel limit
 const ANDROID_EFFECTIVE_LIMIT: int = 4000  # Effective limit accounting for Android logcat formatting

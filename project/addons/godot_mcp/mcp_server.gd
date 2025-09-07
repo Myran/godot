@@ -6,7 +6,7 @@ var port := 9080
 var handshake_timeout := 3000 # ms
 var debug_mode := true
 var log_detailed := true  # Enable detailed logging
-var command_handler = null  # Command handler reference
+var command_handler: Variant = null  # Command handler reference
 
 signal client_connected(id)
 signal client_disconnected(id)
@@ -27,7 +27,7 @@ class WebSocketClient:
 	
 	func upgrade_to_websocket() -> bool:
 		ws = WebSocketPeer.new()
-		var err = ws.accept_stream(tcp)
+		var err: Error = ws.accept_stream(tcp)
 		return err == OK
 
 var clients := {}
@@ -46,7 +46,7 @@ func _enter_tree() -> void:
 	print("Connecting command handler signals...")
 	self.connect("command_received", Callable(command_handler, "_handle_command"))
 	
-	var err = tcp_server.listen(port)
+	var err: Error = tcp_server.listen(port)
 	if err == OK:
 		print("Listening on port", port)
 		set_process(true)
@@ -75,11 +75,11 @@ func _process(_delta: float) -> void:
 		return
 	
 	if tcp_server.is_connection_available():
-		var tcp = tcp_server.take_connection()
-		var id = next_client_id
+		var tcp: StreamPeerTCP = tcp_server.take_connection()
+		var id: int = next_client_id
 		next_client_id += 1
 		
-		var client = WebSocketClient.new(tcp, id)
+		var client: WebSocketClient = WebSocketClient.new(tcp, id)
 		clients[id] = client
 		
 		print("[Client ", id, "] New TCP connection")
@@ -90,18 +90,18 @@ func _process(_delta: float) -> void:
 			print("[Client ", id, "] Failed to start WebSocket handshake")
 			clients.erase(id)
 	
-	var current_time = Time.get_ticks_msec()
+	var current_time: int = Time.get_ticks_msec()
 	var ids_to_remove := []
 	
 	for id in clients:
-		var client = clients[id]
+		var client: WebSocketClient = clients[id]
 		client.last_poll_time = current_time
 		
 		if client.state == -1: # Handshaking
 			if client.ws != null:
 				client.ws.poll()
 				
-				var ws_state = client.ws.get_ready_state()
+				var ws_state: WebSocketPeer.State = client.ws.get_ready_state()
 				if debug_mode:
 					_log(id, "State: " + str(ws_state))
 					
@@ -151,7 +151,7 @@ func _process(_delta: float) -> void:
 				
 				print("[Client ", id, "] RECEIVED RAW DATA: ", text)
 				
-				var json = JSON.new()
+				var json: JSON = JSON.new()
 				var parse_result = json.parse(text)
 				_log(id, "JSON parse result: " + str(parse_result))
 				
@@ -219,7 +219,7 @@ func send_response(client_id: int, response: Dictionary) -> int:
 		print("Error: Client %d connection not open" % client_id)
 		return ERR_UNAVAILABLE
 	
-	var result = client.ws.send_text(json_text)
+	var result: int = client.ws.send_text(json_text)
 	if result != OK:
 		print("Error sending response to client %d: %d" % [client_id, result])
 	

@@ -145,7 +145,7 @@ func _save_settings_to_config() -> Error:
 
 	_config.set_show_editor_debug(_show_editor_debug)
 
-	var result = _config.save()
+	var result: int = _config.save()
 
 	if result == OK:
 		print_rich(

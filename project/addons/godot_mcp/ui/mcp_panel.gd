@@ -54,7 +54,7 @@ func _update_ui() -> void:
 
 func _on_start_button_pressed() -> void:
 	if websocket_server:
-		var result = websocket_server.start_server()
+		var result: int = websocket_server.start_server()
 		if result == OK:
 			_log_message("Server started on port " + str(websocket_server.get_port()))
 		else:

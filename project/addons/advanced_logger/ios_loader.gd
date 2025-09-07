@@ -26,7 +26,7 @@ func _prepare_for_ios() -> void:
 
 	var loaded_count = 0
 	for file_path in CORE_FILES:
-		var resource = load(file_path)
+		var resource: Resource = load(file_path)
 		if resource:
 			loaded_count += 1
 

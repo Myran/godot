@@ -118,7 +118,7 @@ func parse_exec_flags(flags: String) -> PackedStringArray:
 	if text_edit == null:
 		printerr("Couldn't get TextEdit node")
 		return PackedStringArray()
-	var script = script_editor.get_current_script()
+	var script: Script = script_editor.get_current_script()
 	if script == null:
 		return PackedStringArray()
 	var project_path = ProjectSettings.globalize_path("res://")

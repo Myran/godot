@@ -25,9 +25,9 @@ func process_command(client_id: int, command_type: String, params: Dictionary, c
 	return false  # Command not handled
 
 func _create_script(client_id: int, params: Dictionary, command_id: String) -> void:
-	var script_path = params.get("script_path", "")
-	var content = params.get("content", "")
-	var node_path = params.get("node_path", "")
+	var script_path: String = params.get("script_path", "")
+	var content: String = params.get("content", "")
+	var node_path: String = params.get("node_path", "")
 	
 	if script_path.is_empty():
 		return _send_error(client_id, "Script path cannot be empty", command_id)
@@ -38,11 +38,11 @@ func _create_script(client_id: int, params: Dictionary, command_id: String) -> v
 	if not script_path.ends_with(".gd"):
 		script_path += ".gd"
 	
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
 	var script_editor = editor_interface.get_script_editor()
 	
 	var dir = script_path.get_base_dir()
@@ -51,7 +51,7 @@ func _create_script(client_id: int, params: Dictionary, command_id: String) -> v
 		if err != OK:
 			return _send_error(client_id, "Failed to create directory: %s (Error code: %d)" % [dir, err], command_id)
 	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
 	if file == null:
 		return _send_error(client_id, "Failed to create script file: %s" % script_path, command_id)
 	
@@ -61,13 +61,13 @@ func _create_script(client_id: int, params: Dictionary, command_id: String) -> v
 	editor_interface.get_resource_filesystem().scan()
 	
 	if not node_path.is_empty():
-		var node = _get_editor_node(node_path)
+		var node: Node = _get_editor_node(node_path)
 		if not node:
 			return _send_error(client_id, "Node not found: %s" % node_path, command_id)
 		
 		await get_tree().create_timer(0.5).timeout
 		
-		var script = load(script_path)
+		var script: Script = load(script_path)
 		if not script:
 			return _send_error(client_id, "Failed to load script: %s" % script_path, command_id)
 		
@@ -93,8 +93,8 @@ func _create_script(client_id: int, params: Dictionary, command_id: String) -> v
 	}, command_id)
 
 func _edit_script(client_id: int, params: Dictionary, command_id: String) -> void:
-	var script_path = params.get("script_path", "")
-	var content = params.get("content", "")
+	var script_path: String = params.get("script_path", "")
+	var content: String = params.get("content", "")
 	
 	if script_path.is_empty():
 		return _send_error(client_id, "Script path cannot be empty", command_id)
@@ -108,7 +108,7 @@ func _edit_script(client_id: int, params: Dictionary, command_id: String) -> voi
 	if not FileAccess.file_exists(script_path):
 		return _send_error(client_id, "Script file not found: %s" % script_path, command_id)
 	
-	var file = FileAccess.open(script_path, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
 	if file == null:
 		return _send_error(client_id, "Failed to open script file: %s" % script_path, command_id)
 	
@@ -120,18 +120,18 @@ func _edit_script(client_id: int, params: Dictionary, command_id: String) -> voi
 	}, command_id)
 
 func _get_script(client_id: int, params: Dictionary, command_id: String) -> void:
-	var script_path = params.get("script_path", "")
-	var node_path = params.get("node_path", "")
+	var script_path: String = params.get("script_path", "")
+	var node_path: String = params.get("node_path", "")
 	
 	if script_path.is_empty() and node_path.is_empty():
 		return _send_error(client_id, "Either script_path or node_path must be provided", command_id)
 	
 	if not node_path.is_empty():
-		var node = _get_editor_node(node_path)
+		var node: Node = _get_editor_node(node_path)
 		if not node:
 			return _send_error(client_id, "Node not found: %s" % node_path, command_id)
 		
-		var script = node.get_script()
+		var script: Script = node.get_script()
 		if not script:
 			return _send_error(client_id, "Node does not have a script: %s" % node_path, command_id)
 		
@@ -143,7 +143,7 @@ func _get_script(client_id: int, params: Dictionary, command_id: String) -> void
 	if not FileAccess.file_exists(script_path):
 		return _send_error(client_id, "Script file not found: %s" % script_path, command_id)
 	
-	var file = FileAccess.open(script_path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
 	if file == null:
 		return _send_error(client_id, "Failed to open script file: %s" % script_path, command_id)
 	
@@ -156,7 +156,7 @@ func _get_script(client_id: int, params: Dictionary, command_id: String) -> void
 	}, command_id)
 
 func _get_script_metadata(client_id: int, params: Dictionary, command_id: String) -> void:
-	var path = params.get("path", "")
+	var path: String = params.get("path", "")
 	
 	if path.is_empty():
 		return _send_error(client_id, "Script path cannot be empty", command_id)
@@ -167,7 +167,7 @@ func _get_script_metadata(client_id: int, params: Dictionary, command_id: String
 	if not FileAccess.file_exists(path):
 		return _send_error(client_id, "Script file not found: " + path, command_id)
 	
-	var script = load(path)
+	var script: Script = load(path)
 	if not script:
 		return _send_error(client_id, "Failed to load script: " + path, command_id)
 	
@@ -179,13 +179,13 @@ func _get_script_metadata(client_id: int, params: Dictionary, command_id: String
 	var class_name_str = ""
 	var extends_class = ""
 	
-	var file = FileAccess.open(path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var content = file.get_as_text()
 		
 		var class_regex = RegEx.new()
 		class_regex.compile("class_name\\s+([a-zA-Z_][a-zA-Z0-9_]*)")
-		var result = class_regex.search(content)
+		var result: RegExMatch = class_regex.search(content)
 		if result:
 			class_name_str = result.get_string(1)
 		
@@ -221,11 +221,11 @@ func _get_script_metadata(client_id: int, params: Dictionary, command_id: String
 	_send_success(client_id, metadata, command_id)
 
 func _get_current_script(client_id: int, params: Dictionary, command_id: String) -> void:
-	var plugin = Engine.get_meta("GodotMCPPlugin")
+	var plugin: EditorPlugin = Engine.get_meta("GodotMCPPlugin")
 	if not plugin:
 		return _send_error(client_id, "GodotMCPPlugin not found in Engine metadata", command_id)
 	
-	var editor_interface = plugin.get_editor_interface()
+	var editor_interface: EditorInterface = plugin.get_editor_interface()
 	var script_editor = editor_interface.get_script_editor()
 	var current_script = script_editor.get_current_script()
 	
@@ -237,7 +237,7 @@ func _get_current_script(client_id: int, params: Dictionary, command_id: String)
 	
 	var script_path = current_script.resource_path
 	
-	var file = FileAccess.open(script_path, FileAccess.READ)
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
 	if not file:
 		return _send_error(client_id, "Failed to open script file: %s" % script_path, command_id)
 	

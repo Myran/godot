@@ -205,7 +205,7 @@ func move_tag(tag: String, from_category: Variant, to_category: Variant) -> void
 			)
 		)
 
-	var result = TagManager.move_tag(
+	var result: Dictionary = TagManager.move_tag(
 		tag, from_cat, to_cat, _available_tags, _active_tags, _ignored_tags
 	)
 
@@ -330,7 +330,7 @@ func save_tags_to_config() -> void:
 	_config_manager.set_ignored_tags(_ignored_tags)
 	_config_manager.set_available_tags(_available_tags)
 
-	var result = _config_manager.save()
+	var result: int = _config_manager.save()
 	if OS.is_debug_build() and _config_manager.get_show_editor_debug():
 		print_rich(
 			(

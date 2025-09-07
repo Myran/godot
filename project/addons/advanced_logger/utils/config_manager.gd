@@ -53,7 +53,7 @@ static func cleanup() -> void:
 			if _instance._config:
 				_instance._config = null
 
-			var temp_instance = _instance
+			var temp_instance: ConfigManager = _instance
 			_instance = null
 
 			if temp_instance is Object and not temp_instance is RefCounted:
@@ -65,8 +65,8 @@ func _init() -> void:
 	_load_config()
 
 func _load_config() -> Error:
-	var config_path = _get_platform_config_path()
-	var result = Error.FAILED
+	var config_path: String = _get_platform_config_path()
+	var result: int = Error.FAILED
 
 	print("[ConfigManager] Attempting to load config from: %s" % config_path)
 	print("[ConfigManager] File exists: %s" % FileAccess.file_exists(config_path))
@@ -78,9 +78,9 @@ func _load_config() -> Error:
 		print("[ConfigManager] Standard load failed on mobile, trying FileAccess method")
 		if FileAccess.file_exists(config_path):
 			print("[ConfigManager] Config file exists, reading with FileAccess")
-			var file = FileAccess.open(config_path, FileAccess.READ)
+			var file: FileAccess = FileAccess.open(config_path, FileAccess.READ)
 			if file:
-				var content = file.get_as_text()
+				var content: String = file.get_as_text()
 				print("[ConfigManager] File content length: %d chars" % content.length())
 				result = _config.parse(content)
 				print("[ConfigManager] Parse result: %s (%d)" % [error_string(result), result])
@@ -102,7 +102,7 @@ func _load_config() -> Error:
 		print("[ConfigManager] Config load failed, final result: %s" % error_string(result))
 
 	if _config_loaded:
-		var loaded_log_level = get_log_level()
+		var loaded_log_level: int = get_log_level()
 		print("[ConfigManager] Loaded log level: %d (%s)" % [loaded_log_level, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][loaded_log_level]])
 
 	return result
@@ -127,18 +127,18 @@ func _create_default_config() -> void:
 	_config.set_value("meta", "version", 1)
 
 	if _is_mobile_platform():
-		var save_result = save()
+		var save_result: Error = save()
 		if save_result == OK:
 			print("[ConfigManager] Successfully saved migrated config to user:// storage")
 		else:
 			print("[ConfigManager] Failed to save migrated config: %s" % error_string(save_result))
 
 func _migrate_from_res_config() -> bool:
-	var res_config = ConfigFile.new()
+	var res_config: ConfigFile = ConfigFile.new()
 	print("[ConfigManager] Attempting to migrate config from res:// path: %s" % CONFIG_PATH)
 	print("[ConfigManager] res:// config file exists: %s" % FileAccess.file_exists(CONFIG_PATH))
 
-	var result = res_config.load(CONFIG_PATH)
+	var result: int = res_config.load(CONFIG_PATH)
 
 	if result != OK:
 		print("[ConfigManager] Failed to load res:// config for migration: %s" % error_string(result))
@@ -147,51 +147,51 @@ func _migrate_from_res_config() -> bool:
 	print("[ConfigManager] Successfully loaded res:// config, migrating settings to mobile platform")
 
 	if res_config.has_section(SECTION_LOGGER):
-		var log_level = res_config.get_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
+		var log_level: int = res_config.get_value(SECTION_LOGGER, KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL)
 		_config.set_value(SECTION_LOGGER, KEY_LOG_LEVEL, log_level)
 		print("[ConfigManager] Migrated log_level: %d" % log_level)
 
-		var active_tags = res_config.get_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
+		var active_tags: Array = res_config.get_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
 		_config.set_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, active_tags)
 
-		var ignored_tags = res_config.get_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
+		var ignored_tags: Array = res_config.get_value(SECTION_LOGGER, KEY_IGNORED_TAGS, [])
 		_config.set_value(SECTION_LOGGER, KEY_IGNORED_TAGS, ignored_tags)
 
-		var available_tags = res_config.get_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
+		var available_tags: Array = res_config.get_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, [])
 		_config.set_value(SECTION_LOGGER, KEY_AVAILABLE_TAGS, available_tags)
 
-		var buffer_size = res_config.get_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
+		var buffer_size: int = res_config.get_value(SECTION_LOGGER, KEY_BUFFER_SIZE, DEFAULT_BUFFER_SIZE)
 		_config.set_value(SECTION_LOGGER, KEY_BUFFER_SIZE, buffer_size)
 
-		var enable_buffer_dump = res_config.get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
+		var enable_buffer_dump: bool = res_config.get_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, DEFAULT_ENABLE_BUFFER_DUMP)
 		_config.set_value(SECTION_LOGGER, KEY_ENABLE_BUFFER_DUMP, enable_buffer_dump)
 
 	if res_config.has_section(SECTION_FORMAT):
-		var show_timestamp = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
+		var show_timestamp: bool = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, DEFAULT_SHOW_TIMESTAMP)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_TIMESTAMP, show_timestamp)
 
-		var show_tags = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
+		var show_tags: bool = res_config.get_value(SECTION_FORMAT, KEY_SHOW_TAGS, DEFAULT_SHOW_TAGS)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_TAGS, show_tags)
 
-		var use_colors = res_config.get_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
+		var use_colors: bool = res_config.get_value(SECTION_FORMAT, KEY_USE_COLORS, DEFAULT_USE_COLORS)
 		_config.set_value(SECTION_FORMAT, KEY_USE_COLORS, use_colors)
 
-		var show_source = res_config.get_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
+		var show_source: bool = res_config.get_value(SECTION_FORMAT, KEY_SHOW_SOURCE, DEFAULT_SHOW_SOURCE)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_SOURCE, show_source)
 
-		var show_editor_debug = res_config.get_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
+		var show_editor_debug: bool = res_config.get_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, DEFAULT_SHOW_EDITOR_DEBUG)
 		_config.set_value(SECTION_FORMAT, KEY_SHOW_EDITOR_DEBUG, show_editor_debug)
 
 	if res_config.has_section(SECTION_SETUPS):
 		print("[ConfigManager] Migrating tag_setups section")
-		var setup_keys = res_config.get_section_keys(SECTION_SETUPS)
+		var setup_keys: PackedStringArray = res_config.get_section_keys(SECTION_SETUPS)
 		for key in setup_keys:
-			var value = res_config.get_value(SECTION_SETUPS, key)
+			var value: Variant = res_config.get_value(SECTION_SETUPS, key)
 			_config.set_value(SECTION_SETUPS, key, value)
 
 	if res_config.has_section("setups"):
 		print("[ConfigManager] Migrating legacy setups section")
-		var legacy_keys = res_config.get_section_keys("setups")
+		var legacy_keys: PackedStringArray = res_config.get_section_keys("setups")
 		for key in legacy_keys:
 			var value = res_config.get_value("setups", key)
 			_config.set_value(SECTION_SETUPS, key, value)
@@ -203,9 +203,9 @@ func _upgrade_config_if_needed() -> void:
 	if not _config.has_section_key("meta", "version"):
 
 		if _config.has_section("setups") and not _config.has_section(SECTION_SETUPS):
-			var keys = _config.get_section_keys("setups")
+			var keys: PackedStringArray = _config.get_section_keys("setups")
 			for key in keys:
-				var value = _config.get_value("setups", key)
+				var value: Variant = _config.get_value("setups", key)
 				_config.set_value(SECTION_SETUPS, key, value)
 
 		_config.set_value("meta", "version", 1)
@@ -250,13 +250,13 @@ func set_value(section: String, key: String, value: Variant) -> void:
 	config_changed.emit(section, key, value)
 
 func _get_platform_config_path() -> String:
-	var platform = OS.get_name()
+	var platform: String = OS.get_name()
 	print("[ConfigManager] Platform detected: %s" % platform)
 
 	if platform == "Android":
 		var android_helper: Script = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
 		if android_helper:
-			var config_path = android_helper.get_config_path()
+			var config_path: String = android_helper.get_config_path()
 			print("[ConfigManager] Android helper loaded, config path: %s" % config_path)
 			return config_path
 		else:
@@ -266,7 +266,7 @@ func _get_platform_config_path() -> String:
 	elif platform == "iOS":
 		var ios_helper: Script = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 		if ios_helper:
-			var config_path = ios_helper.get_config_path()
+			var config_path: String = ios_helper.get_config_path()
 			print("[ConfigManager] iOS helper loaded, config path: %s" % config_path)
 			return config_path
 		else:
@@ -277,21 +277,21 @@ func _get_platform_config_path() -> String:
 	return CONFIG_PATH
 
 func _is_mobile_platform() -> bool:
-	var platform = OS.get_name()
+	var platform: String = OS.get_name()
 	return platform == "Android" or platform == "iOS"
 
 func save() -> Error:
 	if _is_mobile_platform():
-		var user_config_path = "user://advanced_logger_settings.cfg"
+		var user_config_path: String = "user://advanced_logger_settings.cfg"
 		return _config.save(user_config_path)
 
-	var dir_path = CONFIG_PATH.get_base_dir()
-	var dir = DirAccess.open("res://")
+	var dir_path: String = CONFIG_PATH.get_base_dir()
+	var dir: DirAccess = DirAccess.open("res://")
 	if not dir:
 		return FileAccess.get_open_error()
 
 	if not dir.dir_exists(dir_path):
-		var current_path = "res://"
+		var current_path: String = "res://"
 		for path_part in dir_path.trim_prefix("res://").split("/"):
 			if path_part.is_empty():
 				continue
@@ -315,7 +315,7 @@ func clear_section(section: String) -> bool:
 	if not _config.has_section(section):
 		return false
 
-	var keys = _config.get_section_keys(section)
+	var keys: PackedStringArray = _config.get_section_keys(section)
 
 	for key in keys:
 		_config.set_value(section, key, null)
@@ -330,7 +330,7 @@ func set_log_level(level: int) -> void:
 	set_value(SECTION_LOGGER, KEY_LOG_LEVEL, level)
 
 func get_active_tags() -> Array[String]:
-	var tags = get_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
+	var tags: Array = get_value(SECTION_LOGGER, KEY_ACTIVE_TAGS, [])
 	if tags is Array:
 		var result: Array[String] = []
 		for tag in tags:
@@ -442,7 +442,7 @@ func get_all_tag_setups() -> Dictionary:
 	if not _config_loaded:
 		_load_config()
 
-	var result = {}
+	var result: Dictionary = {}
 	if _config.has_section(SECTION_SETUPS):
 		var setup_keys = _config.get_section_keys(SECTION_SETUPS)
 		for setup_name in setup_keys:

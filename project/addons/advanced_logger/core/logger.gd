@@ -4,8 +4,8 @@ enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 const LogFormatter = preload("res://addons/advanced_logger/core/log_formatter.gd")
-var AndroidLoggerHelper = null
-var IosLoggerHelper = null
+var AndroidLoggerHelper: Variant = null
+var IosLoggerHelper: Variant = null
 
 
 
@@ -322,7 +322,7 @@ func _create_log_entry_data(level: LogLevel, message: String, context: Dictionar
 func _handle_buffering(log_entry_data: Dictionary) -> void:
 	_add_to_buffer(log_entry_data)
 
-	var level = log_entry_data.level
+	var level: int = log_entry_data.level
 	if level >= LogLevel.ERROR and _enable_buffer_dump and not _buffer_dumped_recently:
 		_dump_buffer_async()  # Fire and forget async buffer dump
 		_buffer_dumped_recently = true # Prevent immediate re-dumping
@@ -351,15 +351,15 @@ func _should_show_level(level: LogLevel) -> bool:
 		_debug_print_filter_result(level_tag, "Ignored Level Tag", false)
 		return false
 
-	var active_level_tags = _get_active_level_tags()
-	var has_active_level_filter = not active_level_tags.is_empty()
+	var active_level_tags: Array[String] = _get_active_level_tags()
+	var has_active_level_filter: bool = not active_level_tags.is_empty()
 
 	if has_active_level_filter:
-		var show_based_on_active_level = _active_tags.has(level_tag) # Exact match required
+		var show_based_on_active_level: bool = _active_tags.has(level_tag) # Exact match required
 		_debug_print_filter_result(level_tag, "Active Level Tag Filter", show_based_on_active_level)
 		return show_based_on_active_level
 	else:
-		var show_based_on_threshold = level >= _current_level
+		var show_based_on_threshold: bool = level >= _current_level
 		_debug_print_filter_result(LogLevel.keys()[level], "Standard Level Threshold", show_based_on_threshold)
 		return show_based_on_threshold
 
@@ -371,7 +371,7 @@ func _should_show_tags(log_tags: Array[String]) -> bool:
 			_debug_print_tag_result(log_tags, "Ignored Topic Tag", false)
 			return false
 
-	var active_topic_tags = _get_active_topic_tags()
+	var active_topic_tags: Array[String] = _get_active_topic_tags()
 
 	if active_topic_tags.is_empty():
 		_debug_print_tag_result(log_tags, "No Active Topic Tags", true)
@@ -431,7 +431,7 @@ func _add_to_buffer(log_data: Dictionary) -> void:
 		_log_buffer.pop_front()
 
 func _trim_buffer() -> void:
-	var original_size = _log_buffer.size()
+	var original_size: int = _log_buffer.size()
 	while _log_buffer.size() > _buffer_size:
 		_log_buffer.pop_front()
 
@@ -440,14 +440,14 @@ func _trim_buffer() -> void:
 			[LoggerColors.DEBUG_HTML, original_size, _log_buffer.size(), _buffer_size])
 
 func _dump_buffer_async() -> void:
-	var header_footer_color = LoggerColors.WARNING_HTML # Yellow for visibility
-	var separator = "═".repeat(80) # Use double lines for more emphasis
+	var header_footer_color: String = LoggerColors.WARNING_HTML # Yellow for visibility
+	var separator: String = "═".repeat(80) # Use double lines for more emphasis
 
-	var platform = OS.get_name()
-	var use_plain_formatting = platform == "iOS" or platform == "Android"
+	var platform: String = OS.get_name()
+	var use_plain_formatting: bool = platform == "iOS" or platform == "Android"
 
-	var dt = Time.get_datetime_dict_from_system()
-	var dump_timestamp = "%02d:%02d:%02d" % [dt.hour, dt.minute, dt.second]
+	var dt: Dictionary = Time.get_datetime_dict_from_system()
+	var dump_timestamp: String = "%02d:%02d:%02d" % [dt.hour, dt.minute, dt.second]
 
 	if use_plain_formatting:
 		print("\n" + separator)
@@ -459,7 +459,7 @@ func _dump_buffer_async() -> void:
 			[header_footer_color, dump_timestamp, _log_buffer.size()])
 		print_rich("[color=#%s]%s[/color]" % [header_footer_color, separator])
 
-	var buffer_copy = _log_buffer.duplicate(true) # Use deep copy for safety
+	var buffer_copy: Array = _log_buffer.duplicate(true) # Use deep copy for safety
 	if buffer_copy.is_empty():
 		if use_plain_formatting:
 			print("  (Buffer is empty)")
@@ -467,7 +467,7 @@ func _dump_buffer_async() -> void:
 			print_rich("[color=#%s]  (Buffer is empty)[/color]" % LoggerColors.TIMESTAMP_HTML)
 	else:
 		for entry_data in buffer_copy:
-			var data_to_print = entry_data.duplicate(true)
+			var data_to_print: Dictionary = entry_data.duplicate(true)
 			data_to_print["is_buffer_dump"] = true
 
 			await _print_formatted_log_async(data_to_print)
@@ -535,7 +535,7 @@ func _update_source_info_from_frame(source_info: Dictionary, frame: Dictionary) 
 
 
 func _configure_for_platform() -> void:
-	var platform = OS.get_name()
+	var platform: String = OS.get_name()
 
 	if platform == "Android":
 		AndroidLoggerHelper = load("res://addons/advanced_logger/utils/android_logger_helper.gd")
@@ -563,7 +563,7 @@ func _print_formatted_log_async(log_data: Dictionary) -> void:
 	if is_buffer_dump_entry:
 		timestamp_color_override = LoggerColors.WARNING_HTML # Use the header/footer color
 
-	var formatted_log = LogFormatter.format_log(
+	var formatted_log: String = LogFormatter.format_log(
 		level,
 		message,
 		context,
@@ -576,7 +576,7 @@ func _print_formatted_log_async(log_data: Dictionary) -> void:
 		timestamp_color_override # Pass the override color
 	)
 
-	var platform = OS.get_name()
+	var platform: String = OS.get_name()
 
 	if platform == "Android":
 		if AndroidLoggerHelper:
@@ -597,11 +597,11 @@ func _print_formatted_log_async(log_data: Dictionary) -> void:
 				)
 
 			# Handle potentially chunked messages (multiple lines)
-			var lines = processed_message.split('\n')
+			var lines: PackedStringArray = processed_message.split('\n')
 			_print_android_chunks_deferred(lines, 0)
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
-			var regex = RegEx.new()
+			var regex: RegEx = RegEx.new()
 			regex.compile("\\[color=#[0-9a-fA-F]+\\]")
 			plain_text = regex.sub(plain_text, "", true)
 			print(plain_text)
@@ -617,7 +617,7 @@ func _print_formatted_log_async(log_data: Dictionary) -> void:
 			print(ios_formatted)
 		else:
 			var plain_text = formatted_log.replace("[/color]", "").replace("[color=#", ">[")
-			var regex = RegEx.new()
+			var regex: RegEx = RegEx.new()
 			regex.compile("\\[color=#[0-9a-fA-F]+\\]")
 			plain_text = regex.sub(plain_text, "", true)
 			regex.compile("\\[(\\d+;)*\\d+m")

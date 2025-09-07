@@ -2,8 +2,8 @@
 class_name MCPCommandHandler
 extends Node
 
-var _websocket_server
-var _command_processors = []
+var _websocket_server: EditorPlugin = null
+var _command_processors: Array[MCPBaseCommandProcessor] = []
 
 func _ready() -> void:
 	print("Command handler initializing...")

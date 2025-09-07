@@ -3,7 +3,7 @@ class_name MobileFormatter
 extends RefCounted
 
 static func get_level_string(level: int) -> String:
-	var level_str = "INFO"
+	var level_str: String = "INFO"
 	match level:
 		0: level_str = "DEBUG"
 		1: level_str = "INFO"
@@ -21,9 +21,9 @@ static func format_log_message(level: int, message: String, context: Dictionary,
 		return _format_standard_entry(level, message, context, tags)
 
 static func _format_buffer_entry(message: String, context: Dictionary, tags: Array[String]) -> String:
-	var formatted = message
+	var formatted: String = message
 
-	var tag_part = ""
+	var tag_part: String = ""
 	if not tags.is_empty():
 		tag_part = " [" + ", ".join(tags) + "]"
 
@@ -36,7 +36,7 @@ static func _format_buffer_entry(message: String, context: Dictionary, tags: Arr
 
 static func _format_chunk_entry(level: int, message: String, context: Dictionary, tags: Array[String]) -> String:
 	# For chunked messages, preserve the chunk header and add level/tags
-	var formatted = "[%s] %s" % [get_level_string(level), message]
+	var formatted: String = "[%s] %s" % [get_level_string(level), message]
 
 	if not tags.is_empty():
 		formatted += " [" + ", ".join(tags) + "]"
@@ -47,7 +47,7 @@ static func _format_chunk_entry(level: int, message: String, context: Dictionary
 	return formatted
 
 static func _format_standard_entry(level: int, message: String, context: Dictionary, tags: Array[String]) -> String:
-	var formatted = "[%s]" % get_level_string(level)
+	var formatted: String = "[%s]" % get_level_string(level)
 
 	if not tags.is_empty():
 		formatted += " [" + ", ".join(tags) + "]"
@@ -61,19 +61,19 @@ static func _format_standard_entry(level: int, message: String, context: Diction
 
 static func strip_formatting(message: String) -> String:
 
-	var level_pattern = "^\\[(DEBUG|INFO|WARNING|ERROR|CRITICAL|BUFFER)\\]"
-	var has_level_prefix = false
-	var level_prefix = ""
+	var level_pattern: String = "^\\[(DEBUG|INFO|WARNING|ERROR|CRITICAL|BUFFER)\\]"
+	var has_level_prefix: bool = false
+	var level_prefix: String = ""
 
-	var regex = RegEx.new()
+	var regex: RegEx = RegEx.new()
 	regex.compile(level_pattern)
-	var result = regex.search(message)
+	var result: RegExMatch = regex.search(message)
 
 	if result:
 		has_level_prefix = true
 		level_prefix = result.get_string()
 
-	var cleaned = message
+	var cleaned: String = message
 
 	cleaned = cleaned.replace("[/color]", "")
 

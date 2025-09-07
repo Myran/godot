@@ -2,13 +2,13 @@
 class_name IosLoggerTest
 extends RefCounted
 
-static func test_ios_formatting():
+static func test_ios_formatting() -> String:
 	print("\n=== iOS LOGGER FORMATTING TEST ===")
 
 	var ios_helper = load("res://addons/advanced_logger/utils/ios_logger_helper.gd")
 	if not ios_helper:
 		print("ERROR: Could not load iOS helper")
-		return
+		return "ERROR: Could not load iOS helper"
 
 	var test_messages = [
 		"[color=#ff0000]This has BBCode formatting[/color]",
@@ -44,6 +44,6 @@ static func test_ios_formatting():
 
 	return "Test completed successfully"
 
-static func run_tests():
-	var result = test_ios_formatting()
+static func run_tests() -> String:
+	var result: String = test_ios_formatting()
 	return result

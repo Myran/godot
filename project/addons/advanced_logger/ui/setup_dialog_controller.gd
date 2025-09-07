@@ -62,7 +62,7 @@ func _on_setup_name_dialog_confirmed() -> void:
 
 	if _is_renaming:
 		if setup_name != _rename_old_name:
-			var result = _setup_list_controller.rename_setup(_rename_old_name, setup_name)
+			var result: int = _setup_list_controller.rename_setup(_rename_old_name, setup_name)
 			if result != OK:
 				push_error("Failed to rename setup: %s" % error_string(result))
 			else:
@@ -75,7 +75,7 @@ func _on_setup_name_dialog_confirmed() -> void:
 	else:
 		var tag_lists = _tag_list_controller.get_tag_lists()
 
-		var result = _setup_list_controller.save_setup(
+		var result: int = _setup_list_controller.save_setup(
 			setup_name,
 			tag_lists.active_tags,
 			tag_lists.ignored_tags

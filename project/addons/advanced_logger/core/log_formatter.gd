@@ -15,7 +15,7 @@ static func format_log(
 	show_source: bool,
 	timestamp_color_override: String = "" # Add new optional parameter
 ) -> String:
-	var platform = OS.get_name()
+	var platform: String = OS.get_name()
 	if (platform == "Android" or platform == "iOS") and use_colors:
 		use_colors = false
 	var parts: Array[String] = []
@@ -34,14 +34,14 @@ static func format_log(
 		)
 
 		if use_colors:
-			var color_to_use = LoggerColors.TIMESTAMP_HTML
+			var color_to_use: String = LoggerColors.TIMESTAMP_HTML
 			if not timestamp_color_override.is_empty():
 				color_to_use = timestamp_color_override
 			parts.append("[color=#%s]%s[/color]" % [color_to_use, timestamp])
 		else:
 			parts.append(timestamp)
 
-	var LoggerScript = load("res://addons/advanced_logger/core/logger.gd")
+	var LoggerScript: GDScript = load("res://addons/advanced_logger/core/logger.gd")
 	if not LoggerScript:
 		push_error("Failed to load Logger script in LogFormatter.format_log")
 		return "ERROR: Could not format log message (Logger script load failed)."
@@ -57,7 +57,7 @@ static func format_log(
 	else:
 		parts.append(padded_level)
 
-	var tags_part = ""
+	var tags_part: String = ""
 	if show_tags:
 		if not tags.is_empty():
 			var tags_text: String = "[%s]" % ", ".join(tags)
@@ -108,7 +108,7 @@ static func _get_level_html_color(level: int) -> String:
 	return ""
 
 static func _pad_right(text: String, width: int) -> String:
-	var len = text.length()
+	var len: int = text.length()
 	if len >= width:
 		return text # Return original if already wider or equal
 	return text + " ".repeat(width - len)

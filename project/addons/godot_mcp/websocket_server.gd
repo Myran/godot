@@ -6,12 +6,12 @@ signal client_connected(id)
 signal client_disconnected(id)
 signal command_received(client_id, command)
 
-var tcp_server = TCPServer.new()
-var peers = {}
-var pending_peers = []
-var _port = 9080
-var refuse_new_connections = false
-var handshake_timeout = 3000 # ms
+var tcp_server: TCPServer = TCPServer.new()
+var peers: Dictionary = {}
+var pending_peers: Array[PendingPeer] = []
+var _port: int = 9080
+var refuse_new_connections: bool = false
+var handshake_timeout: int = 3000 # ms
 
 class PendingPeer:
 	var tcp: StreamPeerTCP
@@ -37,7 +37,7 @@ func start_server() -> int:
 	if is_server_active():
 		return ERR_ALREADY_IN_USE
 	
-	var err = tcp_server.listen(_port)
+	var err: int = tcp_server.listen(_port)
 	if err == OK:
 		set_process(true)
 		print("MCP WebSocket server started on port %d" % _port)
@@ -63,7 +63,7 @@ func poll() -> void:
 		return
 		
 	while not refuse_new_connections and tcp_server.is_connection_available():
-		var conn = tcp_server.take_connection()
+		var conn: StreamPeerTCP = tcp_server.take_connection()
 		assert(conn != null)
 		print("New TCP connection, starting WebSocket handshake...")
 		pending_peers.append(PendingPeer.new(conn))
@@ -84,7 +84,7 @@ func poll() -> void:
 		var p: WebSocketPeer = peers[id]
 		p.poll()
 		
-		var state = p.get_ready_state()
+		var state: WebSocketPeer.State = p.get_ready_state()
 		if state == WebSocketPeer.STATE_CLOSING or state == WebSocketPeer.STATE_CLOSED:
 			print("Client %d disconnected (state: %d)" % [id, state])
 			emit_signal("client_disconnected", id)
@@ -92,14 +92,14 @@ func poll() -> void:
 			continue
 		
 		while p.get_available_packet_count() > 0:
-			var packet = p.get_packet()
-			var text = packet.get_string_from_utf8()
+			var packet: PackedByteArray = p.get_packet()
+			var text: String = packet.get_string_from_utf8()
 			
-			var json = JSON.new()
-			var parse_result = json.parse(text)
+			var json: JSON = JSON.new()
+			var parse_result: int = json.parse(text)
 			
 			if parse_result == OK:
-				var command = json.get_data()
+				var command: Variant = json.get_data()
 				print("Received command from client %d: %s" % [id, command])
 				emit_signal("command_received", id, command)
 			else:
@@ -112,10 +112,10 @@ func poll() -> void:
 func _connect_pending(p: PendingPeer) -> bool:
 	if p.ws != null:
 		p.ws.poll()
-		var state = p.ws.get_ready_state()
+		var state: WebSocketPeer.State = p.ws.get_ready_state()
 		
 		if state == WebSocketPeer.STATE_OPEN:
-			var id = randi() % (1 << 30) + 1 # Generate a random ID
+			var id: int = randi() % (1 << 30) + 1 # Generate a random ID
 			peers[id] = p.ws
 			print("Client %d WebSocket connection established" % id)
 			emit_signal("client_connected", id)
@@ -139,14 +139,14 @@ func send_response(client_id: int, response: Dictionary) -> int:
 		print("Error: Client %d not found" % client_id)
 		return ERR_DOES_NOT_EXIST
 	
-	var peer = peers[client_id]
-	var json_text = JSON.stringify(response)
+	var peer: WebSocketPeer = peers[client_id]
+	var json_text: String = JSON.stringify(response)
 	
 	if peer.get_ready_state() != WebSocketPeer.STATE_OPEN:
 		print("Error: Client %d connection not open" % client_id)
 		return ERR_UNAVAILABLE
 	
-	var result = peer.send_text(json_text)
+	var result: int = peer.send_text(json_text)
 	if result != OK:
 		print("Error sending response to client %d: %d" % [client_id, result])
 	

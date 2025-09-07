@@ -8,7 +8,7 @@ const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager
 static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[String]:
 	var found_tags: Array[String] = []
 
-	var Logger = load("res://addons/advanced_logger/core/logger.gd")
+	var Logger: GDScript = load("res://addons/advanced_logger/core/logger.gd")
 
 	if ALogger:
 		found_tags.append(ALogger.TAG_LEVEL_DEBUG)
@@ -17,7 +17,7 @@ static func scan_project_for_tags(exclude_dirs: Array[String] = []) -> Array[Str
 		found_tags.append(ALogger.TAG_LEVEL_ERROR)
 		found_tags.append(ALogger.TAG_LEVEL_CRITICAL)
 	else:
-		var config = ConfigManager.get_instance()
+		var config: ConfigManager = ConfigManager.get_instance()
 		if config.get_show_editor_debug():
 			print_rich("[color=#ea6962]WARNING: Could not load Logger class, using hardcoded level tags[/color]")
 		found_tags.append("level:debug")
@@ -61,17 +61,17 @@ static func extract_tag_constants_from_logger() -> Array[String]:
 
 static func get_unique_tags(tags: Array[String]) -> Array[String]:
 	var filtered_tags: Array[String] = []
-	var category_names = ["available", "active", "ignored"]
+	var category_names: Array[String] = ["available", "active", "ignored"]
 
 	for tag in tags:
 		if category_names.has(tag.to_lower()):
-			var config = ConfigManager.get_instance()
+			var config: ConfigManager = ConfigManager.get_instance()
 			if config.get_show_editor_debug():
 				print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found during tag scanning[/color]" % tag)
 			continue
 
 		if tag.length() < 3:  # Too short to be meaningful
-			var config = ConfigManager.get_instance()
+			var config: ConfigManager = ConfigManager.get_instance()
 			if config.get_show_editor_debug():
 				print_rich("[color=#d8a657]WARNING: Skipping too short tag '%s'[/color]" % tag)
 			continue
@@ -82,7 +82,7 @@ static func get_unique_tags(tags: Array[String]) -> Array[String]:
 
 static func scan_directory(path: String, found_tags: Array[String], exclude_dirs: Array[String] = []) -> void:
 	for exclude in exclude_dirs:
-		var normalized_exclude = exclude
+		var normalized_exclude: String = exclude
 		if normalized_exclude.ends_with("/"):
 			normalized_exclude = normalized_exclude.substr(0, normalized_exclude.length() - 1)
 
@@ -140,7 +140,7 @@ static func scan_file_for_tags(file_path: String, found_tags: Array[String]) -> 
 
 	var const_matches := tag_const_regex.search_all(content)
 	if const_matches.size() > 0:
-		var config = ConfigManager.get_instance()
+		var config: ConfigManager = ConfigManager.get_instance()
 		if config.get_show_editor_debug():
 			print_rich("[color=#7daea3]Found %d TAG constant usages in %s[/color]" %
 					[const_matches.size(), file_path.get_file()])
@@ -155,7 +155,7 @@ static func extract_tags_from_string(tags_str: String, found_tags: Array[String]
 
 		if TagManager.is_valid_tag(tag) and not found_tags.has(tag):
 			if tag.to_lower() == "active" or tag.to_lower() == "available" or tag.to_lower() == "ignored":
-				var config = ConfigManager.get_instance()
+				var config: ConfigManager = ConfigManager.get_instance()
 				if config.get_show_editor_debug():
 					print_rich("[color=#d8a657]WARNING: Skipping category name '%s' found in file[/color]" % tag)
 				continue

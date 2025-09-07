@@ -2,6 +2,8 @@
 class_name IosLoggerHelper
 extends RefCounted
 
+const MobileFormatter = preload("res://addons/advanced_logger/utils/mobile_formatter.gd")
+
 static func is_ios() -> bool:
 	return OS.get_name() == "iOS"
 

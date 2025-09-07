@@ -5,8 +5,9 @@ extends RefCounted
 static func _get_game_node() -> Game:
 	var root: Node = Engine.get_main_loop().current_scene
 	if root and root.has_method("find_child"):
-		var game_node: Game = root.find_child("Game", true, false) as Game
-		return game_node
+		var found_node: Node = root.find_child("Game", true, false)
+		if found_node is Game:
+			return found_node as Game
 	return null
 
 
@@ -438,7 +439,10 @@ static func _move_card_to_lineup_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_to_lineup_player: invalid game state")
 		return false
 
-	var card_to_move: Card = Clicker.find_block_at_position(game.clicker, grid_pos) as Card
+	var found_block: Variant = Clicker.find_block_at_position(game.clicker, grid_pos)
+	var card_to_move: Card = null
+	if found_block is Card:
+		card_to_move = found_block
 	if not card_to_move:
 		Log.error(
 			"No card found at position",

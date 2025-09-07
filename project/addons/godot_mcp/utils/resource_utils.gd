@@ -26,7 +26,7 @@ static func safe_save(resource: Resource, path: String) -> bool:
 			push_error("Failed to create directory: " + dir_path)
 			return false
 	
-	var result = ResourceSaver.save(resource, path)
+	var result: int = ResourceSaver.save(resource, path)
 	if result != OK:
 		push_error("Failed to save resource: " + path)
 		return false
@@ -58,7 +58,7 @@ static func get_resource_types(base_class: String = "Resource") -> Array[String]
 	return result
 
 static func resource_to_dict(resource: Resource) -> Dictionary:
-	var result = {
+	var result: Dictionary = {
 		"resource_path": resource.resource_path,
 		"resource_name": resource.resource_name,
 		"type": resource.get_class(),

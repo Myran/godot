@@ -233,8 +233,9 @@ static func _hide_debug_menu() -> bool:
 static func _get_game_node() -> Game:
 	var root: Node = Engine.get_main_loop().current_scene
 	if root and root.has_method("find_child"):
-		var game_node: Game = root.find_child("Game", true, false) as Game
-		return game_node
+		var found_node: Node = root.find_child("Game", true, false)
+		if found_node is Game:
+			return found_node as Game
 	return null
 
 
@@ -500,7 +501,10 @@ static func _battle_test_determinism_logic_only() -> DebugActionResult:
 static func _battle_execute_logic_only() -> Dictionary:
 	var start_time: int = Time.get_ticks_msec()
 
-	var scene_tree: SceneTree = Engine.get_main_loop() as SceneTree
+	var main_loop: MainLoop = Engine.get_main_loop()
+	var scene_tree: SceneTree = null
+	if main_loop is SceneTree:
+		scene_tree = main_loop as SceneTree
 	if not scene_tree:
 		Log.error(
 			"Cannot access scene tree for logic-only battle", {}, ["debug", "battle", "determinism"]
@@ -524,9 +528,13 @@ static func _battle_execute_logic_only() -> Dictionary:
 			"event_count": 0
 		}
 
-	var game_node: Game = main_scene as Game
-	if not game_node:
-		game_node = main_scene.find_child("Game", true, false) as Game
+	var game_node: Game = null
+	if main_scene is Game:
+		game_node = main_scene as Game
+	else:
+		var found_game: Node = main_scene.find_child("Game", true, false)
+		if found_game is Game:
+			game_node = found_game as Game
 
 	if not game_node:
 		Log.error(

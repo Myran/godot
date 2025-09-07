@@ -47,7 +47,7 @@ func _list_project_files(client_id: int, params: Dictionary, command_id: String)
 	var extensions = params.get("extensions", [])
 	var files = []
 	
-	var dir = DirAccess.open("res://")
+	var dir: DirAccess = DirAccess.open("res://")
 	if dir:
 		_scan_directory(dir, "", extensions, files)
 	else:
@@ -89,7 +89,7 @@ func _get_project_structure(client_id: int, params: Dictionary, command_id: Stri
 		"total_files": 0
 	}
 	
-	var dir = DirAccess.open("res://")
+	var dir: DirAccess = DirAccess.open("res://")
 	if dir:
 		_analyze_project_structure(dir, "", structure)
 	else:
@@ -164,7 +164,7 @@ func _list_project_resources(client_id: int, params: Dictionary, command_id: Str
 		"resources": []
 	}
 	
-	var dir = DirAccess.open("res://")
+	var dir: DirAccess = DirAccess.open("res://")
 	if dir:
 		_scan_resources(dir, "", resources)
 	else:

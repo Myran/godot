@@ -37,7 +37,7 @@ static func find_node_by_path(root_node: Node, path: String) -> Node:
 	return current_node
 
 static func node_to_dict(node: Node) -> Dictionary:
-	var result = {
+	var result: Dictionary = {
 		"name": node.name,
 		"type": node.get_class(),
 		"path": str(node.get_path()),

@@ -46,7 +46,7 @@ func reset_problem_num() -> void:
 
 
 func create_item(line: int, name: String) -> void:
-	var regex = RegEx.new()
+	var regex: RegEx = RegEx.new()
 	regex.compile("(?<=\\()[^\\)]+")
 	var result := regex.search_all(name)
 	var error_type := result[-1].strings[0]
@@ -93,7 +93,7 @@ func str_dash_to_underscore(string: String) -> String:
 
 
 func is_error_ignored(name: String) -> bool:
-	var regex = RegEx.new()
+	var regex: RegEx = RegEx.new()
 	regex.compile("(?<=\\()[^\\)]+")
 	var result := regex.search_all(name)
 	var error_type := result[-1].strings[0]

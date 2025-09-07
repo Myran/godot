@@ -85,7 +85,7 @@ func read_gdlintignore() -> Array:
 	return ignored_files
 
 func _ready() -> void:
-	var ignored = read_gdlintignore()
+	var ignored: Array = read_gdlintignore()
 	for pattern in ignored:
 		print("Ignore pattern: ", pattern)
 func on_resource_saved(resource: Resource) -> void:
@@ -103,7 +103,7 @@ func on_resource_saved(resource: Resource) -> void:
 	var filepath: String = ProjectSettings.globalize_path(resource.resource_path)
 	var gdlint_output: Array = []
 	var output_array: PackedStringArray
-	var exit_code = OS.execute(_gdlint_path, [filepath], gdlint_output, true)
+	var exit_code: int = OS.execute(_gdlint_path, [filepath], gdlint_output, true)
 	if not exit_code == -1:
 		var output_string: String = gdlint_output[0]
 		output_array = output_string.replace(filepath + ":", "Line ").split("\n")
