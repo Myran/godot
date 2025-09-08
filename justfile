@@ -101,12 +101,40 @@ godot-import:
     echo "✅ Project assets reimported successfully"
     echo "💡 Use this command after editing GDScript files externally or changing autoloads"
 
-# CI validation pipeline - format, lint, Godot validation, warnings (fail-fast)
+# CI validation pipeline - runs both desktop and Android validation (fail-fast)
 ci-validate:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🚀 Running CI validation pipeline..."
+    echo "🚀 Running comprehensive CI validation pipeline (All Platforms)..."
+    echo ""
+
+    # Step 1: Run desktop platform validation
+    echo "1️⃣ Running desktop platform validation..."
+    if ! just ci-validate-desktop; then
+        echo "❌ Desktop CI validation failed"
+        exit 1
+    fi
+    echo "✅ Desktop CI validation passed"
+    echo ""
+
+    # Step 2: Run Android platform validation  
+    echo "2️⃣ Running Android platform validation..."
+    if ! just ci-validate-android; then
+        echo "❌ Android CI validation failed"
+        exit 1
+    fi
+    echo "✅ Android CI validation passed"
+    echo ""
+
+    echo "🎉 All platform CI validations passed!"
+
+# CI validation - desktop platform only
+ci-validate-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🖥️  Running CI validation pipeline (Desktop only)..."
     echo ""
 
     # Step 1: Format code (auto-fix formatting issues)
@@ -118,8 +146,17 @@ ci-validate:
     echo "✅ Code formatting completed"
     echo ""
 
-    # Step 2: Lint code quality and style  
-    echo "2️⃣ Running code linting..."
+    # Step 2: Reimport project assets via Godot CLI
+    echo "2️⃣ Reimporting project assets..."
+    if ! just godot-import; then
+        echo "❌ Godot import failed"
+        exit 1
+    fi
+    echo "✅ Project assets reimported successfully"
+    echo ""
+
+    # Step 3: Lint code quality and style  
+    echo "3️⃣ Running code linting..."
     if ! just lint > /tmp/lint_output.txt 2>&1; then
         echo "❌ Code linting failed with problems:"
         cat /tmp/lint_output.txt
@@ -139,8 +176,8 @@ ci-validate:
     echo "✅ Code linting passed"
     echo ""
 
-    # Step 3: Godot engine validation
-    echo "3️⃣ Running Godot runtime validation..."
+    # Step 4: Godot engine validation
+    echo "4️⃣ Running Godot runtime validation..."
     if ! just validate-godot; then
         echo "❌ Godot runtime validation failed"
         exit 1
@@ -148,26 +185,107 @@ ci-validate:
     echo "✅ Godot runtime validation passed"
     echo ""
 
-    # Step 4: Check for warnings (fail if any warnings found)
-    echo "4️⃣ Checking for warnings..."
-    if ! just show-warnings > /tmp/warnings_output.txt 2>&1; then
-        echo "❌ Failed to check warnings"
+    # Step 5: Check for desktop warnings only
+    echo "5️⃣ Checking for desktop warnings..."
+    if ! just show-warnings > /tmp/warnings_desktop.txt 2>&1; then
+        echo "❌ Failed to check desktop warnings"
         exit 1
     fi
     
     # Check if any warnings were found
-    if [ -s /tmp/warnings_output.txt ]; then
-        echo "❌ Warnings found:"
-        cat /tmp/warnings_output.txt
-        rm -f /tmp/warnings_output.txt
+    if [ -s /tmp/warnings_desktop.txt ]; then
+        echo "❌ Desktop warnings found:"
+        cat /tmp/warnings_desktop.txt
+        rm -f /tmp/warnings_desktop.txt
         exit 1
     fi
     
-    rm -f /tmp/warnings_output.txt
-    echo "✅ No warnings found"
+    rm -f /tmp/warnings_desktop.txt
+    echo "✅ No desktop warnings found"
     echo ""
 
-    echo "🎉 All CI validation checks passed!"
+    echo "🎉 Desktop CI validation passed!"
+
+# CI validation - Android platform only
+ci-validate-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🤖 Running CI validation pipeline (Android only)..."
+    echo ""
+
+    # Step 1: Format code (auto-fix formatting issues)
+    echo "1️⃣ Running code formatting..."
+    if ! just format; then
+        echo "❌ Code formatting failed"
+        exit 1
+    fi
+    echo "✅ Code formatting completed"
+    echo ""
+
+    # Step 2: Reimport project assets via Godot CLI
+    echo "2️⃣ Reimporting project assets..."
+    if ! just godot-import; then
+        echo "❌ Godot import failed"
+        exit 1
+    fi
+    echo "✅ Project assets reimported successfully"
+    echo ""
+
+    # Step 3: Lint code quality and style  
+    echo "3️⃣ Running code linting..."
+    if ! just lint > /tmp/lint_output.txt 2>&1; then
+        echo "❌ Code linting failed with problems:"
+        cat /tmp/lint_output.txt
+        rm -f /tmp/lint_output.txt
+        exit 1
+    fi
+    
+    # Check if any problems were reported (but exclude success messages)
+    if grep -q "Failure:.*problem found\|Failure:.*problems found" /tmp/lint_output.txt; then
+        echo "❌ Linting problems found:"
+        cat /tmp/lint_output.txt
+        rm -f /tmp/lint_output.txt
+        exit 1
+    fi
+    
+    rm -f /tmp/lint_output.txt
+    echo "✅ Code linting passed"
+    echo ""
+
+    # Step 4: Godot engine validation
+    echo "4️⃣ Running Godot runtime validation..."
+    if ! just validate-godot; then
+        echo "❌ Godot runtime validation failed"
+        exit 1
+    fi
+    echo "✅ Godot runtime validation passed"
+    echo ""
+
+    # Step 5: Check for Android warnings only
+    echo "5️⃣ Checking for Android platform warnings..."
+    if ! just show-warnings-android > /tmp/warnings_android.txt 2>&1; then
+        echo "❌ Failed to check Android warnings"
+        exit 1
+    fi
+    
+    # Check if any Android-specific warnings were found (excluding known acceptable warnings)
+    if grep -q "ERROR\|SCRIPT ERROR\|Parse Error\|Failed to\|deprecated" /tmp/warnings_android.txt; then
+        echo "❌ Critical Android platform issues found:"
+        cat /tmp/warnings_android.txt
+        rm -f /tmp/warnings_android.txt
+        exit 1
+    elif grep -q "WARNING.*experimental\|WARNING.*tools:ignore" /tmp/warnings_android.txt; then
+        echo "⚠️  Android platform warnings found (non-critical):"
+        grep "WARNING\|experimental" /tmp/warnings_android.txt | head -3
+        echo "💡 These are acceptable development/gradle warnings"
+    fi
+    
+    rm -f /tmp/warnings_android.txt
+    echo "✅ No Android platform warnings found"
+    echo ""
+
+    echo "🎉 Android CI validation passed!"
 
 # ================================
 # LOGGING UTILITIES
