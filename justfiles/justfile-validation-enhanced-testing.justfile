@@ -1086,11 +1086,13 @@ _collect-action-results test_id platform config_name="unknown" session="":
     esac
     
     if [[ -z "$LOGS" ]]; then
-        echo "📝 No logs found - creating empty results file: $RESULTS_FILE"
+        echo "❌ CRITICAL TEST FAILURE: No logs found for action collection"
+        echo "💡 This indicates the test execution did not produce logs properly"
+        echo "🔧 Expected: Valid log content for action extraction, Actual: Empty/missing logs"
         echo "   TEST_ID: $TEST_ID"
         echo "   CONFIG_NAME: $CONFIG_NAME" 
         echo "   PLATFORM: $PLATFORM"
-        exit 0
+        exit 1
     fi
     
     LOG_LINE_COUNT=$(echo "$LOGS" | wc -l | tr -d ' ')
@@ -1195,8 +1197,10 @@ _generate-action-summary-from-file test_id config_name platform session="":
     echo ""
     
     if [[ ! -f "$RESULTS_FILE" ]] || [[ ! -s "$RESULTS_FILE" ]]; then
-        echo "⚠️  No action execution data collected"
-        exit 0
+        echo "❌ CRITICAL TEST FAILURE: No action execution data collected"
+        echo "💡 Results file missing or empty - indicates test infrastructure failure"
+        echo "🔧 Expected: Valid results file with action data, Actual: Missing/empty file"
+        exit 1
     fi
     
     # Parse results and group by category
@@ -1205,8 +1209,10 @@ _generate-action-summary-from-file test_id config_name platform session="":
     FAILED_ACTIONS=$(jq '[.[] | select(.success == false)] | length' "$RESULTS_FILE")
     
     if [[ "$TOTAL_ACTIONS" == "0" ]]; then
-        echo "⚠️  No actions found in results file"
-        exit 0
+        echo "❌ CRITICAL TEST FAILURE: No actions found in results file"
+        echo "💡 This indicates debug coordinator or test context initialization issues"
+        echo "🔧 Expected: Actions collected > 0, Actual: Actions collected = 0"
+        exit 1
     fi
     
     echo "## **📊 Action Execution Results**"
