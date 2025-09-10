@@ -189,10 +189,10 @@ func execute() -> void:
 			)
 
 			# CRITICAL: Wait for Android chunk processing to complete in automated mode
-			# This ensures DEBUG_TEST_SUCCESS logs are not lost during automated test termination
+			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
 			var metadata: Dictionary = DebugConfigReader.get_metadata()
 			if OS.get_name() == "Android" and metadata.get("auto_quit", false):
-				await Log.wait_for_chunk_processing_complete(2.0)
+				await Log.wait_for_chunk_processing_complete_signal()
 		else:
 			test_failure_count += 1
 			Log.error(
@@ -304,10 +304,10 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			)
 
 			# CRITICAL: Wait for Android chunk processing to complete in automated mode
-			# This ensures DEBUG_TEST_SUCCESS logs are not lost during automated test termination
+			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
 			var metadata: Dictionary = DebugConfigReader.get_metadata()
 			if OS.get_name() == "Android" and metadata.get("auto_quit", false):
-				await Log.wait_for_chunk_processing_complete(2.0)
+				await Log.wait_for_chunk_processing_complete_signal()
 		else:
 			test_failure_count += 1
 			Log.error(
