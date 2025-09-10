@@ -1,11 +1,11 @@
 class_name FirebaseRequest
 extends RefCounted
 
-signal completed(result: Dictionary[String, Variant])
+signal completed(result)
 
 var _request_id: int
 var _is_completed: bool = false
-var _result: Dictionary[String, Variant] = {}
+var _result = {}
 
 
 func _init(request_id: int) -> void:
@@ -40,7 +40,7 @@ func complete_with_success(payload: Variant) -> void:
 		)
 		return
 
-	var typed_result: Dictionary[String, Variant] = {"status": "ok", "payload": payload}
+	var typed_result = {"status": "ok", "payload": payload}
 	_result = typed_result
 	_is_completed = true
 
@@ -83,7 +83,7 @@ func complete_with_error(error_code: String, error_message: String) -> void:
 		)
 		return
 
-	var typed_result: Dictionary[String, Variant] = {
+	var typed_result = {
 		"status": "error", "code": error_code, "message": error_message
 	}
 	_result = typed_result
@@ -104,11 +104,11 @@ func complete_with_error(error_code: String, error_message: String) -> void:
 	)
 
 
-func get_result() -> Dictionary[String, Variant]:
+func get_result():
 	return _result
 
 
-func await_completion() -> Dictionary[String, Variant]:
+func await_completion():
 	Log.debug(
 		"FirebaseRequest: await_completion called",
 		{
