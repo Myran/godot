@@ -410,11 +410,11 @@ static func _replay_complete_async() -> void:
 		# This ensures DEBUG_TEST_SUCCESS logs are not lost during automated test termination
 		if OS.get_name() == "Android":
 			Log.info(
-				"Android platform detected - waiting for chunk processing to complete",
-				{"platform": "Android", "chunk_processing_wait": true, "automated_mode": true},
+				"Android platform detected - waiting for chunk processing to complete via signal",
+				{"platform": "Android", "chunk_processing_wait": true, "automated_mode": true, "signal_based": true},
 				["debug", "android", "automated", "chunk_processing"]
 			)
-			await Log.wait_for_chunk_processing_complete(2.0)
+			await Log.wait_for_chunk_processing_complete_signal()
 
 		var current_test_id: String = DebugAction.get_current_test_id()
 		Log.info(

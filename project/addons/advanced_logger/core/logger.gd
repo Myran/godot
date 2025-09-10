@@ -1,6 +1,9 @@
 @tool
 class_name ALogger extends Node
 enum LogLevel { DEBUG, INFO, WARNING, ERROR, CRITICAL }
+
+# Signal emitted when Android chunk processing is complete
+signal android_chunks_processing_complete
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 const LogFormatter = preload("res://addons/advanced_logger/core/log_formatter.gd")
@@ -836,6 +839,8 @@ func _process_next_android_chunk() -> void:
 	if _android_chunk_queue.is_empty():
 		# Queue empty - clear processing flag
 		_chunk_timer = null
+		# Emit completion signal when all chunks are processed
+		android_chunks_processing_complete.emit()
 		return
 
 	# Print next chunk
@@ -848,6 +853,8 @@ func _process_next_android_chunk() -> void:
 	else:
 		# Queue empty - clear processing flag
 		_chunk_timer = null
+		# Emit completion signal when all chunks are processed
+		android_chunks_processing_complete.emit()
 
 # Chunk processing status methods for automated test logging
 func has_pending_android_chunks() -> bool:
@@ -858,8 +865,36 @@ func get_android_chunk_count() -> int:
 	"""Get the number of pending Android chunks in the processing queue"""
 	return _android_chunk_queue.size()
 
+func wait_for_chunk_processing_complete_signal() -> void:
+	"""Wait for Android chunk processing to complete using signal - no timeout"""
+	if not has_pending_android_chunks():
+		# No chunks pending - immediate return
+		return
+		
+	info(
+		"Waiting for Android chunk processing to complete via signal",
+		{
+			"initial_chunk_count": get_android_chunk_count(),
+			"platform": "Android",
+			"signal_based": true
+		},
+		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
+	)
+	
+	# Wait for the completion signal
+	await android_chunks_processing_complete
+	
+	info(
+		"Android chunk processing completed via signal",
+		{
+			"final_chunk_count": get_android_chunk_count(),
+			"all_chunks_processed": not has_pending_android_chunks()
+		},
+		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
+	)
+
 func wait_for_chunk_processing_complete(timeout_seconds: float = 2.0) -> void:
-	"""Wait for Android chunk processing queue to complete with timeout
+	"""Wait for Android chunk processing queue to complete with timeout (DEPRECATED - use signal version)
 
 	This function blocks execution until all Android chunks have been processed,
 	ensuring DEBUG_TEST_SUCCESS logs are not lost during automated test termination.
