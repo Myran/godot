@@ -815,7 +815,7 @@ func _notification(what: int) -> void:
 
 # Android chunk processing queue - stores chunks to be printed across frames
 var _android_chunk_queue: Array = []
-var _chunk_timer: Timer = null
+var _chunk_timer = null  # Processing flag - null when idle, non-null when processing chunks
 
 # Process Android chunks with frame spacing to avoid rate limiting (non-blocking)
 func _print_android_chunks_deferred(lines: Array, index: int) -> void:
@@ -825,35 +825,29 @@ func _print_android_chunks_deferred(lines: Array, index: int) -> void:
 		if not line.is_empty():
 			_android_chunk_queue.append(line)
 
-	# Start processing queue if not already running
-	if _chunk_timer == null:
-		_start_android_chunk_timer()
+	# Start processing first chunk if queue isn't already being processed
+	if not _android_chunk_queue.is_empty() and _chunk_timer == null:
+		# Use a flag to prevent multiple concurrent processing chains
+		_chunk_timer = self  # Use as a processing flag
+		call_deferred("_process_next_android_chunk")
 
-# Start timer-based chunk processing (one chunk per frame)
-func _start_android_chunk_timer() -> void:
-	if _chunk_timer != null:
-		return
-
-	_chunk_timer = Timer.new()
-	_chunk_timer.wait_time = 0.01  # Minimum valid timer duration for Android compatibility
-	_chunk_timer.timeout.connect(_process_next_android_chunk)
-	add_child(_chunk_timer)
-	_chunk_timer.start()
-
-# Process one chunk from queue per timer tick (non-blocking)
+# Process one chunk from queue per frame using call_deferred (non-blocking)
 func _process_next_android_chunk() -> void:
 	if _android_chunk_queue.is_empty():
-		# Queue empty - stop timer and cleanup
-		if _chunk_timer != null:
-			_chunk_timer.queue_free()
-			_chunk_timer = null
+		# Queue empty - clear processing flag
+		_chunk_timer = null
 		return
 
 	# Print next chunk
 	var line = _android_chunk_queue.pop_front()
 	print(line)
 
-	# Timer will automatically call this again next frame
+	# Process next chunk on next frame if queue isn't empty
+	if not _android_chunk_queue.is_empty():
+		call_deferred("_process_next_android_chunk")
+	else:
+		# Queue empty - clear processing flag
+		_chunk_timer = null
 
 # Chunk processing status methods for automated test logging
 func has_pending_android_chunks() -> bool:
