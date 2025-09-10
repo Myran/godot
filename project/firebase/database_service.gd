@@ -58,7 +58,7 @@ func get_data(path: Array[Variant], key: String = "") -> Variant:
 		return null
 
 	var request: FirebaseRequest = _firebase_service.get_value(path, key)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -106,7 +106,7 @@ func set_data(path: Array[Variant], key: String, data_to_set: Variant) -> bool:
 		[Log.TAG_DB, Log.TAG_FIREBASE, "await_debug"]
 	)
 
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	Log.debug(
 		"DatabaseService: Request await completed",
@@ -154,7 +154,7 @@ func push_data(path: Array[Variant], data_to_push: Variant) -> String:
 		)
 
 	var request: FirebaseRequest = _firebase_service.push_data(path, data_to_push)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var push_id: String = str(result.get("payload"))
@@ -183,7 +183,7 @@ func remove_data(path: Array[Variant], key: String = "") -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.remove_value(path, key)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -212,7 +212,7 @@ func query_data(path: Array[Variant], query_params: Dictionary[String, Variant])
 		return null
 
 	var request: FirebaseRequest = _firebase_service.query_data(path, query_params)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
@@ -241,7 +241,7 @@ func run_increment_transaction(path: Array[Variant], increment_by: int = 1) -> V
 		return null
 
 	var request: FirebaseRequest = _firebase_service.run_transaction(path, increment_by)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var final_value: Variant = result.get("payload")
@@ -278,7 +278,7 @@ func set_server_timestamp(path: Array[Variant]) -> bool:
 		return false
 
 	var request: FirebaseRequest = _firebase_service.set_server_timestamp(path)
-	var result: Dictionary[String, Variant] = await request.await_completion()
+	var result = await request.await_completion()
 
 	if result.get("status") == "ok":
 		var payload: Variant = result.get("payload")
