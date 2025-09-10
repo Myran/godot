@@ -64,6 +64,25 @@ static func get_metadata() -> Dictionary:
 	return {}
 
 
+static func get_test_metadata() -> Dictionary:
+	"""Get test_metadata section from debug configuration. Returns empty dict if not found."""
+	var config_data: Dictionary = _read_config_file()
+	
+	if config_data.has("test_metadata"):
+		var test_metadata: Dictionary = config_data.test_metadata
+		if Log:
+			Log.debug(
+				"Debug config test_metadata accessed",
+				{"test_metadata_keys": test_metadata.keys(), "size": test_metadata.size()},
+				["debug", "config", "test_metadata"]
+			)
+		return test_metadata
+	
+	if Log:
+		Log.debug("No test_metadata found in debug config", {}, ["debug", "config", "test_metadata"])
+	return {}
+
+
 static func has_gamestate_loading_action() -> bool:
 	"""Check if debug config contains gamestate loading action to prevent tilemap block creation."""
 	var config_data: Dictionary = _read_config_file()

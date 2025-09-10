@@ -166,7 +166,11 @@ func execute() -> void:
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	if current_test_id != "":
+	# Get test_id from config instead of static variable (Android static variable reset fix)
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = test_metadata.get("test_id", "")
+	
+	if config_test_id != "":
 		var process_id: int = OS.get_process_id()
 		if success:
 			test_success_count += 1
@@ -175,7 +179,7 @@ func execute() -> void:
 				. info(
 					"DEBUG_TEST_SUCCESS",
 					{
-						"test_id": current_test_id,
+						"test_id": config_test_id,
 						"action": action_name,
 						"category": category,
 						"group": group,
@@ -198,7 +202,7 @@ func execute() -> void:
 			Log.error(
 				"DEBUG_TEST_FAILURE",
 				{
-					"test_id": current_test_id,
+					"test_id": config_test_id,
 					"action": action_name,
 					"category": category,
 					"group": group,
@@ -281,7 +285,11 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	if current_test_id != "":
+	# Get test_id from config instead of static variable (Android static variable reset fix)
+	var test_metadata_params: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id_params: String = test_metadata_params.get("test_id", "")
+	
+	if config_test_id_params != "":
 		if success:
 			test_success_count += 1
 			(
@@ -289,7 +297,7 @@ func execute_with_params(params: Dictionary = {}) -> void:
 				. info(  # Using Log.info for proper semantic logging level
 					"DEBUG_TEST_SUCCESS",
 					{
-						"test_id": current_test_id,
+						"test_id": config_test_id_params,
 						"action": action_name,
 						"category": category,
 						"group": group,
@@ -313,7 +321,7 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			Log.error(
 				"DEBUG_TEST_FAILURE",
 				{
-					"test_id": current_test_id,
+					"test_id": config_test_id_params,
 					"action": action_name,
 					"category": category,
 					"group": group,
