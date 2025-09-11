@@ -19,7 +19,7 @@ func finish() -> void:  # Added return type
 	queue_free()
 
 
-func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
+func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 	Log.error(
 		"Method not implemented in SignalAwaiter base class",
 		{"method": "_on_signal_received"},
@@ -31,7 +31,7 @@ func _on_signal_received(_signal: Signal) -> void:  # Added param and return typ
 class Any:
 	extends SignalAwaiter
 
-	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
+	func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 		finish()
 
 
@@ -43,7 +43,7 @@ class Count:
 		super()
 		_connections = count
 
-	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
+	func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 		if get_incoming_connections().size() == _connections:
 			finish()
 
@@ -63,7 +63,7 @@ class SequenceBreak:
 		super()
 		_signals = signals
 
-	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
+	func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 		if _signal != _signals[0]:
 			finish()
 
@@ -71,7 +71,7 @@ class SequenceBreak:
 class SequenceMatch:
 	extends SequenceBreak
 
-	func _on_signal_received(_signal: Signal) -> void:  # Added param and return type
+	func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 		if _signal == _signals[0]:
 			_signals.remove_at(0)
 			if _signals.is_empty():
@@ -87,6 +87,6 @@ class Timeout:
 		_timer = Engine.get_main_loop().create_timer(timeout_seconds)
 		add(_timer.timeout)
 
-	func _on_signal_received(_signal: Signal) -> void:
+	func _on_signal_received(signal_param = null, _signal: Signal = Signal()) -> void:
 		# Timer expired - finish the awaiter
 		finish()
