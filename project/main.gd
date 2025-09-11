@@ -2,7 +2,7 @@ extends Node
 
 @export var use_actions_in_editor: bool = false
 
-@export var game : Game
+@export var game: Game
 # Main scene for game coordination
 
 
@@ -98,9 +98,7 @@ func _ready() -> void:
 func _wait_for_game_initialization() -> void:
 	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
 
-
 	await game.initialization_complete
-
 
 	Log.info(
 		"Game initialization complete (signal received), starting debug coordinator",
