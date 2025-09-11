@@ -83,9 +83,7 @@ func complete_with_error(error_code: String, error_message: String) -> void:
 		)
 		return
 
-	var typed_result = {
-		"status": "error", "code": error_code, "message": error_message
-	}
+	var typed_result = {"status": "error", "code": error_code, "message": error_message}
 	_result = typed_result
 	_is_completed = true
 
@@ -134,12 +132,39 @@ func await_completion():
 		[Log.TAG_FIREBASE, "await_debug"]
 	)
 
-	await completed
+	# Use SignalAwaiter.Timeout to prevent indefinite hangs
+	var timeout_seconds: float = 10.0
+	var timeout_awaiter = SignalAwaiter.Timeout.new(timeout_seconds)
+	var race_result = await SignalAwaiter.Any.new().add(completed).add(timeout_awaiter.finished)
 
 	Log.debug(
-		"FirebaseRequest: completed signal received",
-		{"request_id": _request_id, "result": _result, "is_completed": _is_completed},
+		"FirebaseRequest: timeout race completed",
+		{
+			"request_id": _request_id,
+			"timed_out": not _is_completed,
+			"timeout_seconds": timeout_seconds
+		},
 		[Log.TAG_FIREBASE, "await_debug"]
 	)
 
-	return _result
+	if _is_completed:
+		# Normal completion - clean up timeout awaiter
+		timeout_awaiter.queue_free()
+		Log.debug(
+			"FirebaseRequest: completed normally",
+			{"request_id": _request_id, "result": _result},
+			[Log.TAG_FIREBASE, "await_debug"]
+		)
+		return _result
+
+	# Timeout occurred - return timeout result
+	Log.warning(
+		"FirebaseRequest: Operation timed out",
+		{
+			"request_id": _request_id,
+			"timeout_seconds": timeout_seconds,
+			"operation": "firebase_request"
+		},
+		[Log.TAG_FIREBASE, Log.TAG_ERROR]
+	)
+	return {"status": "timeout", "error": "operation_timed_out"}

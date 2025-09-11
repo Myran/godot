@@ -76,3 +76,17 @@ class SequenceMatch:
 			_signals.remove_at(0)
 			if _signals.is_empty():
 				finish()
+
+
+class Timeout:
+	extends SignalAwaiter
+	var _timer: SceneTreeTimer
+
+	func _init(timeout_seconds: float) -> void:
+		super()
+		_timer = Engine.get_main_loop().create_timer(timeout_seconds)
+		add(_timer.timeout)
+
+	func _on_signal_received(_signal: Signal) -> void:
+		# Timer expired - finish the awaiter
+		finish()
