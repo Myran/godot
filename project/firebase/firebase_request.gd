@@ -135,7 +135,10 @@ func await_completion():
 	# Use SignalAwaiter.Timeout to prevent indefinite hangs
 	var timeout_seconds: float = 10.0
 	var timeout_awaiter = SignalAwaiter.Timeout.new(timeout_seconds)
-	var race_result = await SignalAwaiter.Any.new().add(completed).add(timeout_awaiter.finished)
+	var racer = SignalAwaiter.Any.new()
+	racer.add(completed)
+	racer.add(timeout_awaiter.finished)
+	await racer.finished
 
 	Log.debug(
 		"FirebaseRequest: timeout race completed",
