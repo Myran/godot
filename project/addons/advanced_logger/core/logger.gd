@@ -870,7 +870,7 @@ func wait_for_chunk_processing_complete_signal() -> void:
 	if not has_pending_android_chunks():
 		# No chunks pending - immediate return
 		return
-		
+
 	info(
 		"Waiting for Android chunk processing to complete via signal",
 		{
@@ -880,10 +880,10 @@ func wait_for_chunk_processing_complete_signal() -> void:
 		},
 		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
 	)
-	
+
 	# Wait for the completion signal
 	await android_chunks_processing_complete
-	
+
 	info(
 		"Android chunk processing completed via signal",
 		{

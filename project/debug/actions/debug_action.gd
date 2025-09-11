@@ -169,7 +169,7 @@ func execute() -> void:
 	# Get test_id from config instead of static variable (Android static variable reset fix)
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id: String = test_metadata.get("test_id", "")
-	
+
 	if config_test_id != "":
 		var process_id: int = OS.get_process_id()
 		if success:
@@ -288,7 +288,7 @@ func execute_with_params(params: Dictionary = {}) -> void:
 	# Get test_id from config instead of static variable (Android static variable reset fix)
 	var test_metadata_params: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id_params: String = test_metadata_params.get("test_id", "")
-	
+
 	if config_test_id_params != "":
 		if success:
 			test_success_count += 1

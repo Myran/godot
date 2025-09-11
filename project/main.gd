@@ -2,6 +2,7 @@ extends Node
 
 @export var use_actions_in_editor: bool = false
 
+@export var game : Game
 # Main scene for game coordination
 
 
@@ -97,12 +98,23 @@ func _ready() -> void:
 func _wait_for_game_initialization() -> void:
 	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
 
+<<<<<<< Updated upstream
 	var game_node: Game = get_node("Game")
 	if game_node == null:
 		Log.error("Game node not found in main scene", {}, ["system", "initialization", "error"])
 		return
 
 	await game_node.initialization_complete
+||||||| Stash base
+	var game_node = get_node("Game")
+	if game_node == null:
+		Log.error("Game node not found in main scene", {}, ["system", "initialization", "error"])
+		return
+
+	await game_node.initialization_complete
+=======
+	await game.initialization_complete
+>>>>>>> Stashed changes
 
 	Log.info(
 		"Game initialization complete (signal received), starting debug coordinator",

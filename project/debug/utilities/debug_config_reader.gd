@@ -67,7 +67,7 @@ static func get_metadata() -> Dictionary:
 static func get_test_metadata() -> Dictionary:
 	"""Get test_metadata section from debug configuration. Returns empty dict if not found."""
 	var config_data: Dictionary = _read_config_file()
-	
+
 	if config_data.has("test_metadata"):
 		var test_metadata: Dictionary = config_data.test_metadata
 		if Log:
@@ -77,7 +77,7 @@ static func get_test_metadata() -> Dictionary:
 				["debug", "config", "test_metadata"]
 			)
 		return test_metadata
-	
+
 	if Log:
 		Log.debug("No test_metadata found in debug config", {}, ["debug", "config", "test_metadata"])
 	return {}
