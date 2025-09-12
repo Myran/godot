@@ -7,6 +7,7 @@ func _init() -> void:
 	action_name = "rtdb.advanced.transaction"
 	group = "Advanced"
 	description = "Tests atomic updates using RTDB transactions for concurrent-safe operations."
+	auto_continue = false  # Sequential execution required - transactions need isolation
 
 
 func execute_rtdb_action() -> bool:
@@ -88,19 +89,20 @@ func _perform_counter_transaction(
 ) -> Dictionary:
 	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
 
-	var op_manager: FirebaseOperationManager = FirebaseOperationManager.new(db)
+	# Get current value using direct backend call to get the actual data
+	var firebase_backend: Object = get_firebase_database()
+	var key: String = path[-1] if path.size() > 0 else ""
+	var parent_path: Array[Variant] = path.slice(0, -1) if path.size() > 1 else []
 
-	var get_result: DebugActionResult = await op_manager.execute("get_value_async", [path])
-	if not get_result.is_success():
+	var current_data_result: Variant = await firebase_backend.get_data(parent_path, key)
+	if current_data_result == null:
 		return {
 			"transaction_number": transaction_number,
 			"success": false,
 			"error": "Failed to read current value"
 		}
 
-	var current_data: Dictionary = (
-		get_result.get_payload() if get_result.get_payload() is Dictionary else {}
-	)
+	var current_data: Dictionary = current_data_result if current_data_result is Dictionary else {}
 	var current_counter: int = current_data.get("counter") if current_data.has("counter") else 0
 
 	var new_counter: int = current_counter + 1
@@ -111,14 +113,14 @@ func _perform_counter_transaction(
 		"transaction_number": transaction_number
 	}
 
-	var set_result: DebugActionResult = await op_manager.execute(
-		"set_value_async", [path, updated_data]
+	var set_success: bool = await execute_simple_operation(
+		"set_value_async", path, updated_data, "Transaction Update " + str(transaction_number)
 	)
 
 	return {
 		"transaction_number": transaction_number,
 		"previous_value": current_counter,
 		"new_value": new_counter,
-		"success": set_result.is_success(),
-		"error": set_result.get_error_message() if set_result.is_failure() else ""
+		"success": set_success,
+		"error": "" if set_success else "Failed to update counter value"
 	}

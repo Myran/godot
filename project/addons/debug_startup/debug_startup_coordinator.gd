@@ -101,7 +101,7 @@ func startDebugCoordinator() -> void:
 			}, ["debug", "startup", "dispatch", "diagnostic"])
 			var callable := func(): action.execute_with_params(params)
 
-			var auto_continue: bool = _should_action_auto_continue(action_name)
+			var auto_continue: bool = _should_action_auto_continue(action)
 
 			core.action(core.SystemIdleActionEvent.new(callable, auto_continue))
 		else:
@@ -170,6 +170,11 @@ func _get_action_names() -> Array:
 
 
 
+
+
+func _get_debug_action_registry() -> DebugActionRegistry:
+	"""Get the debug action registry autoload"""
+	return get_node("/root/DebugRegistry") as DebugActionRegistry
 
 
 func _get_available_action_names(registry: DebugActionRegistry) -> Array[String]:
@@ -375,7 +380,25 @@ func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_ac
 		}, ["debug", "startup", "auto_completion", "test_recipe"])
 
 		var completion_callable := func(): completion_action.execute_with_params({})
-		var auto_continue: bool = _should_action_auto_continue(DEFAULT_COMPLETION_ACTION)
+
+		# CRITICAL FIX: Completion action should always use auto_continue=true
+		# The sequential processing is handled by Firebase actions themselves having auto_continue=false
+		# Setting completion action to auto_continue=false creates a deadlock
+		var has_firebase_backend_actions: bool = _check_for_firebase_backend_actions()
+		var auto_continue: bool = _should_action_auto_continue(completion_action)  # Always use original value (true)
+
+		if has_firebase_backend_actions:
+			Log.info(
+				"Sequential actions detected - completion action will execute after all sequential actions complete",
+				{
+					"completion_action": DEFAULT_COMPLETION_ACTION,
+					"sequential_actions_use_auto_continue": false,
+					"completion_action_auto_continue": auto_continue,
+					"sequential_processing": "enabled"
+				},
+				["debug", "startup", "auto_completion", "sequential_fix"]
+			)
+
 		core.action(core.SystemIdleActionEvent.new(completion_callable, auto_continue))
 
 
@@ -466,32 +489,47 @@ func _cleanup_mobile_config() -> void:
 		Log.debug("No external config file to clean up", {}, ["debug", "startup"])
 
 
-func _should_action_auto_continue(action_name: String) -> bool:
+func _should_action_auto_continue(action: DebugAction) -> bool:
 	"""
 	Determine if an action should automatically continue to the next queued action
 	or wait for natural completion events (DraftSteadyEvent, LineupOperationCompleteEvent, etc.)
 
-	DEFAULT: Auto-continue (immediate continuation) for all actions
-	EXCEPTION: Complex operations that need time for animations/cascades to complete
+	Uses the action's auto_continue property instead of hardcoded patterns.
+	This allows each action to declare its own continuation behavior.
 	"""
 
-	var wait_for_completion_patterns: Array[String] = [
-		"game.state.transition_player",
-		"game.draft.upgrade_player",
-		"game.draft.reroll_player",
-		"game.draft.remove_block_player",
-		"game.draft.move_card_to_lineup_player",
-		"game.lineup.move_card_player",
-		"game.battle.start_player",
-		"game.battle.start",
-		"game.battle.populate_enemy_and_start"
-	]
+	if action == null:
+		Log.warning(
+			"Null action passed to _should_action_auto_continue, defaulting to auto_continue",
+			{},
+			["debug", "startup", "coordinator"]
+		)
+		return true
 
-	for pattern: String in wait_for_completion_patterns:
-		if action_name.begins_with(pattern):
-			return false
+	return action.auto_continue
 
-	return true
+
+func _check_for_firebase_backend_actions() -> bool:
+	"""
+	Check if the current action list contains actions that require sequential processing.
+	Actions with auto_continue=false need proper completion event handling.
+	"""
+	var actions := _get_action_names()
+	var registry := _get_debug_action_registry()
+
+	for action_item in actions:
+		var action_name: String
+		if action_item is Dictionary:
+			action_name = action_item.action
+		else:
+			action_name = str(action_item)
+
+		# Get the actual action instance to check its auto_continue property
+		var action := _get_action_by_name(registry, action_name)
+		if action and not action.auto_continue:
+			return true
+
+	return false
 
 
 func _check_and_load_pending_gamestate() -> void:
