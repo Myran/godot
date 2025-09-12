@@ -7,6 +7,7 @@ func _init() -> void:
 	action_name = "rtdb.testing.large_data"
 	group = "Advanced"
 	description = "Tests RTDB with a substantial data payload to verify performance and limits."
+	auto_continue = false  # Sequential execution required - large data operations need isolation
 
 
 func execute_rtdb_action() -> bool:

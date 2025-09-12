@@ -5,6 +5,7 @@ extends CPPFirebaseDebugAction
 func _init() -> void:
 	super._init()
 	action_name = "cpp.firebase.concurrent_ops"
+	auto_continue = false  # Sequential execution required - concurrent ops need isolation
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:

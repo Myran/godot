@@ -5,6 +5,7 @@ extends CPPFirebaseDebugAction
 func _init() -> void:
 	super._init()
 	action_name = "cpp.firebase.large_data"
+	auto_continue = false  # Sequential execution required - large data operations need isolation
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:

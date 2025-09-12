@@ -7,6 +7,7 @@ func _init() -> void:
 	action_name = "rtdb.advanced.concurrent_ops"
 	group = "Advanced"
 	description = "Tests multiple simultaneous RTDB operations to verify concurrent handling."
+	auto_continue = false  # Sequential execution required - concurrent ops need isolation
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:

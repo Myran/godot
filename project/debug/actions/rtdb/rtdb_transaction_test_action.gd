@@ -36,9 +36,7 @@ func execute_rtdb_action() -> bool:
 	var transaction_results: Array[Dictionary] = []
 
 	for i: int in range(3):
-		var transaction_result: Dictionary = await _perform_counter_transaction(
-			full_path, i + 1
-		)
+		var transaction_result: Dictionary = await _perform_counter_transaction(full_path, i + 1)
 		transaction_results.append(transaction_result)
 
 	var verify_success: bool = await execute_simple_operation(
@@ -84,9 +82,7 @@ func execute_rtdb_action() -> bool:
 	return true
 
 
-func _perform_counter_transaction(
-	path: Array[Variant], transaction_number: int
-) -> Dictionary:
+func _perform_counter_transaction(path: Array[Variant], transaction_number: int) -> Dictionary:
 	push_warning("Transaction test using simulation - C++ module doesn't support transactions yet")
 
 	# Get current value using direct backend call to get the actual data

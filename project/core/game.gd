@@ -437,6 +437,18 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 		ui_state = core.UIState.WAITING
 		core.action(core.ProcessQueueEvent.new())
 
+	elif event is core.FirebaseBackendCompleteEvent:
+		Log.info(
+			"Firebase backend action completed - continuing queue processing",
+			{
+				"action_name": event.action_name,
+				"success": event.success,
+				"trigger_reason": "firebase_backend_sequential_processing"
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "firebase_backend_complete"]
+		)
+		core.action(core.ProcessQueueEvent.new())
+
 	elif event is core.SystemIdleActionEvent:
 		var state_name: String = ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state]
 		var current_test_id: String = DebugAction.get_current_test_id()

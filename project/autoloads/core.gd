@@ -253,6 +253,16 @@ class LineupOperationCompleteEvent:
 	extends CoreEvent
 
 
+class FirebaseBackendCompleteEvent:
+	extends CoreEvent
+	var action_name: String
+	var success: bool
+
+	func _init(p_action_name: String, p_success: bool) -> void:
+		action_name = p_action_name
+		success = p_success
+
+
 class SystemIdleActionEvent:
 	extends CoreEvent
 	var action_callable: Callable

@@ -19,6 +19,7 @@ static var test_failure_count: int = 0
 @export var requires_confirmation: bool = false
 @export var keyboard_shortcut: String = ""
 @export var use_auto_semantic_logging: bool = true  # Actions can opt out to handle their own semantic logging
+@export var auto_continue: bool = true  # Actions can set this to false to wait for completion events
 
 var action_callable: Callable
 
@@ -270,6 +271,21 @@ func execute_with_params(params: Dictionary = {}) -> void:
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
+
+			# CRITICAL FIX: Emit FirebaseBackendCompleteEvent for actions with auto_continue=false
+			# This enables sequential processing for actions that need it
+			if not auto_continue:
+				Log.info(
+					"Sequential action completed - emitting completion event",
+					{
+						"action": action_name,
+						"success": success,
+						"auto_continue": auto_continue,
+						"completion_event": "FirebaseBackendCompleteEvent"
+					},
+					["debug", "sequential", "completion"]
+				)
+				core.action(core.FirebaseBackendCompleteEvent.new(action_name, success))
 		else:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)

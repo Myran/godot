@@ -5,6 +5,7 @@ extends BackendFirebaseDebugAction
 func _init() -> void:
 	super._init()
 	action_name = "backend.firebase.timer_manager"
+	auto_continue = false  # Sequential execution required for Firebase operations
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
