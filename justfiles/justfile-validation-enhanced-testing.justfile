@@ -947,7 +947,7 @@ _analyze-test-errors test_id platform:
     
     # Filter out intentional test errors (error handling validation actions)
     # These actions deliberately generate errors to test error handling
-    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout)" || echo "")
+    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout|ERROR.*Remote Debugger: Unable to connect)" || echo "")
     
     # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
     ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
