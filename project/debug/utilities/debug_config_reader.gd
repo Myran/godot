@@ -79,7 +79,9 @@ static func get_test_metadata() -> Dictionary:
 		return test_metadata
 
 	if Log:
-		Log.debug("No test_metadata found in debug config", {}, ["debug", "config", "test_metadata"])
+		Log.debug(
+			"No test_metadata found in debug config", {}, ["debug", "config", "test_metadata"]
+		)
 	return {}
 
 

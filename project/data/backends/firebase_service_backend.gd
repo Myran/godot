@@ -163,7 +163,7 @@ func remove_data(p_path: Array[Variant], key: String) -> bool:
 	return await _database_service.remove_data(p_path, key)
 
 
-func query_data(p_path: Array[Variant], query_params) -> Variant:
+func query_data(p_path: Array[Variant], query_params: Dictionary[String, Variant]) -> Variant:
 	if not is_available():
 		Log.error(
 			"FirebaseServiceBackend: Not available for query_data.",
@@ -226,7 +226,7 @@ func stop_listening(path_array: Array[Variant]) -> void:
 # Signal handlers
 
 
-func _on_database_value_received(data) -> void:
+func _on_database_value_received(data: Variant) -> void:
 	# Forward the signal to maintain DataBackend interface compatibility
 	value_received.emit(data)
 

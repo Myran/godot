@@ -411,7 +411,12 @@ static func _replay_complete_async() -> void:
 		if OS.get_name() == "Android":
 			Log.info(
 				"Android platform detected - waiting for chunk processing to complete via signal",
-				{"platform": "Android", "chunk_processing_wait": true, "automated_mode": true, "signal_based": true},
+				{
+					"platform": "Android",
+					"chunk_processing_wait": true,
+					"automated_mode": true,
+					"signal_based": true
+				},
 				["debug", "android", "automated", "chunk_processing"]
 			)
 			await Log.wait_for_chunk_processing_complete_signal()
