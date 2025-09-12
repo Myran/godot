@@ -37,6 +37,7 @@ DebugStartupCoordinator="*res://addons/debug_startup/debug_startup_coordinator.g
 
 settings/stdout/verbose_stdout=true
 file_logging/enable_file_logging=true
+file_logging/max_log_files=10
 gdscript/warnings/unused_variable=0
 gdscript/warnings/untyped_declaration=1
 gdscript/warnings/inferred_declaration=1
