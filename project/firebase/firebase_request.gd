@@ -1,11 +1,11 @@
 class_name FirebaseRequest
 extends RefCounted
 
-signal completed(result)
+signal completed(result: Variant)
 
 var _request_id: int
 var _is_completed: bool = false
-var _result = {}
+var _result: Variant = {}
 
 
 func _init(request_id: int) -> void:
@@ -40,7 +40,7 @@ func complete_with_success(payload: Variant) -> void:
 		)
 		return
 
-	var typed_result = {"status": "ok", "payload": payload}
+	var typed_result: Dictionary = {"status": "ok", "payload": payload}
 	_result = typed_result
 	_is_completed = true
 
@@ -83,7 +83,7 @@ func complete_with_error(error_code: String, error_message: String) -> void:
 		)
 		return
 
-	var typed_result = {"status": "error", "code": error_code, "message": error_message}
+	var typed_result: Dictionary = {"status": "error", "code": error_code, "message": error_message}
 	_result = typed_result
 	_is_completed = true
 
@@ -102,11 +102,11 @@ func complete_with_error(error_code: String, error_message: String) -> void:
 	)
 
 
-func get_result():
+func get_result() -> Variant:
 	return _result
 
 
-func await_completion():
+func await_completion() -> Variant:
 	Log.debug(
 		"FirebaseRequest: await_completion called",
 		{
@@ -134,8 +134,8 @@ func await_completion():
 
 	# Use SignalAwaiter.Timeout to prevent indefinite hangs
 	var timeout_seconds: float = 10.0
-	var timeout_awaiter = SignalAwaiter.Timeout.new(timeout_seconds)
-	var racer = SignalAwaiter.Any.new()
+	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(timeout_seconds)
+	var racer: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	racer.add(completed)
 	racer.add(timeout_awaiter.finished)
 	await racer.finished

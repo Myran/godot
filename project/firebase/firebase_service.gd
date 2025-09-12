@@ -284,7 +284,7 @@ func start_listening(path: Array[Variant]) -> void:
 	db.call_method("add_listener_at_path", [path])
 
 
-func query_data(path: Array[Variant], query_params) -> FirebaseRequest:
+func query_data(path: Array[Variant], query_params: Dictionary[String, Variant]) -> FirebaseRequest:
 	if not is_available():
 		var error_request: FirebaseRequest = FirebaseRequest.new(-1)
 		error_request.complete_with_error(
@@ -315,7 +315,7 @@ func _get_next_request_id() -> int:
 	return id
 
 
-func _resolve_pending_request(request_id: int, result) -> void:
+func _resolve_pending_request(request_id: int, result: Variant) -> void:
 	Log.debug(
 		"_resolve_pending_request called",
 		{
@@ -414,17 +414,17 @@ func _connect_cpp_signals() -> bool:
 	return success
 
 
-func _on_get_value_completed(req_id, _key, value) -> void:
-	var payload = {"status": "ok", "payload": value}
+func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
+	var payload: Dictionary = {"status": "ok", "payload": value}
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_get_value_error(req_id, _key, code, msg) -> void:
-	var payload = {"status": "error", "code": code, "message": msg}
+func _on_get_value_error(req_id: int, _key: String, code: int, msg: String) -> void:
+	var payload: Dictionary = {"status": "error", "code": code, "message": msg}
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_set_value_completed(req_id, success, error_msg) -> void:
+func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> void:
 	Log.debug(
 		"_on_set_value_completed called",
 		{
@@ -436,7 +436,7 @@ func _on_set_value_completed(req_id, success, error_msg) -> void:
 		[Log.TAG_FIREBASE, "signal_debug"]
 	)
 
-	var payload
+	var payload: Dictionary
 	if success:
 		payload = {"status": "ok", "payload": success}
 	else:
@@ -454,7 +454,7 @@ func _on_set_value_completed(req_id, success, error_msg) -> void:
 func _on_push_and_update_completed(
 	req_id: int, push_id: String, success: bool, error_msg: String
 ) -> void:
-	var payload
+	var payload: Dictionary
 
 	if success:
 		payload = {"status": "ok", "payload": push_id}
@@ -464,8 +464,8 @@ func _on_push_and_update_completed(
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_remove_value_completed(req_id, success, error_msg) -> void:
-	var payload
+func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -> void:
+	var payload: Dictionary
 
 	if success:
 		payload = {"status": "ok", "payload": success}
@@ -475,20 +475,20 @@ func _on_remove_value_completed(req_id, success, error_msg) -> void:
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_query_completed(req_id, _key, value) -> void:
-	var payload = {"status": "ok", "payload": value}
+func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
+	var payload: Dictionary = {"status": "ok", "payload": value}
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_query_error(req_id, _key, code, msg) -> void:
-	var payload = {"status": "error", "code": code, "message": msg}
+func _on_query_error(req_id: int, _key: String, code: int, msg: String) -> void:
+	var payload: Dictionary = {"status": "error", "code": code, "message": msg}
 	_resolve_pending_request(req_id, payload)
 
 
 func _on_transaction_completed(
 	req_id: int, _key: String, value: Variant, success: bool, error_msg: String
 ) -> void:
-	var payload = (
+	var payload: Dictionary = (
 		{"status": "ok", "payload": value}
 		if success
 		else {"status": "error", "code": "TRANSACTION_FAILED", "message": error_msg}
@@ -496,8 +496,8 @@ func _on_transaction_completed(
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_server_timestamp_completed(req_id, success, error_msg) -> void:
-	var payload = (
+func _on_server_timestamp_completed(req_id: int, success: bool, error_msg: String) -> void:
+	var payload: Dictionary = (
 		{"status": "ok", "payload": success}
 		if success
 		else {"status": "error", "code": "TIMESTAMP_FAILED", "message": error_msg}
