@@ -51,7 +51,11 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 
 	if raw_result != null and raw_result is Array:
 		var array_result: Array = raw_result
-		result.assign(array_result)
+		# Type-safe assignment for strongly typed Array[Dictionary]
+		for item: Variant in array_result:
+			if item is Dictionary:
+				var dict_item: Dictionary = item
+				result.append(dict_item)
 
 		Log.debug(
 			"Retrieved card data array directly",
@@ -67,7 +71,12 @@ func get_all(use_cache: bool = true) -> Array[Dictionary]:
 		var nav_result: NavigationResult = JSONPathNavigator.navigate(raw_result, [])
 
 		if nav_result.found and nav_result.is_array():
-			result = nav_result.as_array()
+			var nav_array: Array = nav_result.as_array()
+			# Type-safe assignment for strongly typed Array[Dictionary]
+			for item: Variant in nav_array:
+				if item is Dictionary:
+					var dict_item: Dictionary = item
+					result.append(dict_item)
 
 			Log.debug(
 				"Retrieved card data via JSONPathNavigator",
