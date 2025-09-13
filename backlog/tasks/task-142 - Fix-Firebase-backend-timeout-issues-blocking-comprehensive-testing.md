@@ -29,6 +29,23 @@ Firebase backend actions are experiencing systematic timeout failures during com
 - **Affected Methods**: `get_data`, `set_data`, `remove_data` operations
 - **Error Pattern**: `{ "status": "timeout", "error": "operation_timed_out" }`
 
+### Latest Evidence (2025-09-13 Comprehensive Test)
+**Multiple test configs experiencing Firebase backend timeouts:**
+
+1. **firebase-backend-layer**:
+   - `get_data failed (10104ms)` - 10.1 second timeout
+   - `Backend async pattern test failed { "method": "get_data", "duration_ms": 10116 }`
+
+2. **system-error-handling**:  
+   - `get_data failed` - timeout errors (9953ms, 7725ms)
+   - Multiple backend async pattern failures
+
+3. **system-performance**:
+   - `Perf: Overhead Test failed (247ms)` - Performance degradation  
+   - `Backend async pattern test failed { "method": "get_data", "duration_ms": 247 }`
+
+**Pattern**: All failures involve `DatabaseService: get_data` operations timing out consistently across different test configurations, indicating systemic Firebase connectivity or initialization issues.
+
 ### Evidence from Testing
 **Test ID**: `firebase-backend-layer_android_1757710501`
 

@@ -17,6 +17,13 @@ The gamestate serialization system currently suffers from non-deterministic beha
 - Card recreation timing affects final gamestate checksums
 - Battle system depends on deterministic card positioning
 
+**Latest Evidence (2025-09-13 Comprehensive Test)**:
+- `gamestate-save-load-test` checksum validation failed
+- Expected checksums: `405ae0fd5bf682c9d0ff83c9e93f38c2bc1e9899aa902f9edc36603102734581` (2 entries)  
+- Actual checksums: `405ae0fd5bf682c9d0ff83c9e93f38c2bc1e9899aa902f9edc36603102734581` (1 entry) + MISSING
+- Checksum table shows: `| 2 | checksum_validation | 405ae0fd5bf6... | MISSING... | ❌ |`
+- Issue: Second checkpoint missing, indicating non-deterministic state progression
+
 ## Technical Goals
 
 ### Primary Objectives
