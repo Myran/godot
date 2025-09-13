@@ -1,0 +1,7 @@
+{
+  "description": "RTDB transaction action test",
+  "actions": [
+    "rtdb.advanced.transaction"
+  ],
+  "platforms": ["android"]
+}

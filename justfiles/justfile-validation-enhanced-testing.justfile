@@ -748,11 +748,71 @@ _extract-logs test_id platform temp_output_file="":
             ;;
     esac
     
+    # ================================
+    # SEQUENTIAL ACTION WAIT MECHANISM - Fix for task-143
+    # ================================
+    # Wait for sequential actions (auto_continue=false) to complete their logging
+    # This ensures DEBUG_TEST_SUCCESS logs from sequential actions are captured
+    # before result collection begins
+    
+    if [[ -f "$LOG_FILE" ]]; then
+        echo "🔄 Checking for sequential actions needing completion..."
+        
+        # Detect sequential actions by looking for FirebaseBackendCompleteEvent dispatches
+        # Sequential actions emit these events after completing, followed by DEBUG_TEST_SUCCESS
+        SEQUENTIAL_DISPATCHES=$(grep -c "Dispatching action to idle queue.*auto_continue.*false\|Sequential action completed" "$LOG_FILE" 2>/dev/null || echo "0")
+        COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
+        
+        if [[ "$SEQUENTIAL_DISPATCHES" -gt 0 ]]; then
+            echo "📋 Found $SEQUENTIAL_DISPATCHES sequential action(s), $COMPLETION_EVENTS completion event(s)"
+            
+            # Wait for completion events to match dispatches (with timeout safety)
+            WAIT_COUNT=0
+            MAX_WAIT_SECONDS=30
+            WAIT_INTERVAL=1
+            
+            while [[ $COMPLETION_EVENTS -lt $SEQUENTIAL_DISPATCHES && $WAIT_COUNT -lt $MAX_WAIT_SECONDS ]]; do
+                echo "⏳ Waiting for sequential action completion... ($WAIT_COUNT/$MAX_WAIT_SECONDS) - $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES events"
+                sleep $WAIT_INTERVAL
+                WAIT_COUNT=$((WAIT_COUNT + WAIT_INTERVAL))
+                
+                # Re-check completion events (logs might be updating)
+                COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
+            done
+            
+            if [[ $COMPLETION_EVENTS -ge $SEQUENTIAL_DISPATCHES ]]; then
+                echo "✅ All sequential actions completed ($COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES)"
+            elif [[ $WAIT_COUNT -ge $MAX_WAIT_SECONDS ]]; then
+                echo "⚠️  Timeout waiting for sequential actions (after ${MAX_WAIT_SECONDS}s)"
+                echo "   Completed: $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES"
+                echo "   Proceeding with available logs (timeout safety)"
+            fi
+            
+            # Give a small additional buffer for DEBUG_TEST_SUCCESS logging
+            echo "⏲️  Brief wait for final DEBUG_TEST_SUCCESS logs..."
+            sleep 2
+        else
+            echo "✅ No sequential actions detected - proceeding normally"
+        fi
+    fi
+    
     # Verify and report results
     if [[ -f "$LOG_FILE" ]]; then
         LINE_COUNT=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
         echo "📄 ${PLATFORM} logs saved to: $(basename "$LOG_FILE")"
         echo "📊 Log lines captured: $LINE_COUNT"
+        
+        # Enhanced reporting for sequential action coverage
+        if [[ -f "$LOG_FILE" ]]; then
+            DEBUG_SUCCESS_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+            echo "🎯 DEBUG_TEST_SUCCESS entries: $DEBUG_SUCCESS_COUNT"
+            
+            # Report on sequential actions specifically
+            SEQUENTIAL_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -E "(rtdb\.advanced\.transaction|rtdb\.advanced\.concurrent_ops|rtdb\.testing\.large_data|cpp\.firebase\.|backend\.firebase\.)" | wc -l || echo "0")
+            if [[ "$SEQUENTIAL_SUCCESS_COUNT" -gt 0 ]]; then
+                echo "⚡ Sequential action successes: $SEQUENTIAL_SUCCESS_COUNT"
+            fi
+        fi
     else
         echo "⚠️  Failed to save ${PLATFORM} logs"
         exit 1
