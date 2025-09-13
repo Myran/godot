@@ -1,7 +1,7 @@
 ---
 id: task-142
 title: Fix Firebase backend timeout issues blocking comprehensive testing
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-09-12 21:06'
 labels:

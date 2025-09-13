@@ -1,7 +1,7 @@
 ---
 id: task-144
 title: Fix firebase-network-connectivity test action collection failure
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-09-13 00:35'
 labels:
