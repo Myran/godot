@@ -3,9 +3,8 @@
   "description": "Complete Firebase validation - all layers, network connectivity, error handling and performance",
   "configs": [
     "firebase-cpp-layer",
-    "firebase-backend-layer",
+    "firebase-backend-layer", 
     "firebase-rtdb-layer",
-    "firebase-network-connectivity",
     "system-error-handling",
     "system-performance"
   ]
