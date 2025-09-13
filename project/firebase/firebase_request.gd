@@ -133,7 +133,8 @@ func await_completion() -> Variant:
 	)
 
 	# Use SignalAwaiter.Timeout to prevent indefinite hangs
-	var timeout_seconds: float = 10.0
+	# Production-ready timeout: Firebase SDK (30s) + processing buffer (15s)
+	var timeout_seconds: float = 45.0
 	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(timeout_seconds)
 	var racer: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	racer.add(completed)
