@@ -116,6 +116,27 @@ static func create_from_callable(
 	return action
 
 
+# SOLUTION 1: Unified logging architecture to eliminate race condition
+# Single function consolidates duplicate success logging code paths
+func _log_test_success(action_name: String, category: String, group: String, duration_ms: int, params: Dictionary = {}) -> void:
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = test_metadata.get("test_id", "")
+	
+	if config_test_id != "":
+		test_success_count += 1
+		Log.info("DEBUG_TEST_SUCCESS", {
+			"test_id": config_test_id,
+			"action": action_name,
+			"category": category,
+			"group": group,
+			"duration_ms": duration_ms,
+			"params": params,
+			"pid": OS.get_process_id(),
+			"sequence": test_success_count,
+			"timestamp": Time.get_datetime_string_from_system(),
+		}, ["debug", "test", "success", "pid", "sequence"])
+
+
 func execute() -> void:
 	if current_test_id != "":
 		test_action_count += 1
@@ -172,26 +193,9 @@ func execute() -> void:
 	var config_test_id: String = test_metadata.get("test_id", "")
 
 	if config_test_id != "":
-		var process_id: int = OS.get_process_id()
 		if success:
-			test_success_count += 1
-			(
-				Log
-				. info(
-					"DEBUG_TEST_SUCCESS",
-					{
-						"test_id": config_test_id,
-						"action": action_name,
-						"category": category,
-						"group": group,
-						"duration_ms": duration_ms,
-						"pid": OS.get_process_id(),
-						"sequence": test_success_count,
-						"timestamp": Time.get_datetime_string_from_system(),
-					},
-					["debug", "test", "success", "pid", "sequence"]
-				)
-			)
+			# Use unified logging function to eliminate race condition
+			_log_test_success(action_name, category, group, duration_ms)
 
 			# CRITICAL: Wait for Android chunk processing to complete in automated mode
 			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
@@ -307,25 +311,8 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 	if config_test_id_params != "":
 		if success:
-			test_success_count += 1
-			(
-				Log
-				. info(  # Using Log.info for proper semantic logging level
-					"DEBUG_TEST_SUCCESS",
-					{
-						"test_id": config_test_id_params,
-						"action": action_name,
-						"category": category,
-						"group": group,
-						"duration_ms": duration_ms,
-						"params": params,
-						"pid": OS.get_process_id(),
-						"sequence": test_success_count,
-						"timestamp": Time.get_datetime_string_from_system(),
-					},
-					["debug", "test", "success", "pid", "sequence"]
-				)
-			)
+			# Use unified logging function to eliminate race condition
+			_log_test_success(action_name, category, group, duration_ms, params)
 
 			# CRITICAL: Wait for Android chunk processing to complete in automated mode
 			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
