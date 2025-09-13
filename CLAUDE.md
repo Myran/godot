@@ -149,6 +149,7 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 - **Always use `rg` instead of `grep`** - 10x faster, better regex engine
 - **REQUIRED: `just fastbuild-android`** after ANY GDScript/C++ changes before Android testing
 - **Link tasks bidirectionally**: Reference task in commit, commit in task
+- **🎯 CRITICAL: Use Advanced OODA Loop Debugging Methodology** - Investigation-first approach with expert panel evaluation (see below)
 
 **MCP Tools for GameTwo Development:**
 - **Repomix MCP**: Pack codebase once, search multiple times - ideal for architectural analysis
@@ -192,6 +193,85 @@ just fastbuild-android     # ✅ Required after any code changes
 just test-android CONFIG   # ✅ Validates changes work on target platform
 just logs-errors TEST_ID   # 🔧 If issues found - 98% token-efficient debugging
 ```
+
+## 🎯 Advanced OODA Loop Debugging Methodology
+
+**Critical GameTwo debugging approach discovered through TASK-132/131 resolution:**
+
+### **🔍 OBSERVE Phase - Evidence-First Investigation**
+```bash
+# Step 1: Gather empirical evidence before forming theories
+just android-logs-search "SEARCH_TERM"     # Full device logs - sees everything
+just logs-errors TEST_ID                   # 98% token-efficient issue analysis  
+just logs-text TEST_ID "specific_term"     # Targeted search with context
+```
+
+**🚨 CRITICAL**: Always gather actual current evidence, not rely on stale documentation or assumptions.
+
+### **🧠 ORIENT Phase - Expert Panel Evaluation**
+
+**Assemble Virtual Expert Panel** for complex issues:
+- **Senior Systems Architect** - Mobile/game engine expertise
+- **Platform Integration Specialist** - Android/Firebase/GDScript  
+- **Test Infrastructure Lead** - Testing patterns and validation
+- **Performance Engineer** - Timing, race conditions, threading
+- **Technical Debt Reviewer** - Architecture decisions and intent
+
+**Panel Evaluation Framework**:
+1. **Historical Context Analysis** - `git log --oneline --grep="PATTERN" -n 20`
+2. **Architectural Intent Review** - Recent commits show design decisions
+3. **Cross-Option Impact Assessment** - Each solution's effect on existing systems
+4. **Risk vs Benefit Analysis** - Preserve working functionality
+
+### **⚡ DECIDE Phase - Investigation-First Approach** 
+
+**NEVER fix without investigation**:
+
+❌ **Avoid**: Symptom-based fixes that might break working systems
+✅ **Prefer**: Evidence-gathering that reveals true current state
+
+**Decision Priority**:
+1. **Option 1: Investigation** - Always start here for complex issues
+2. **Option 2: Targeted Fix** - Only after understanding root cause  
+3. **Option 3: Architecture Review** - Last resort for systemic issues
+4. **Option 4: Platform Workarounds** - Avoid - creates technical debt
+
+### **🚀 ACT Phase - Minimal Risk Implementation**
+
+**Critical Success Pattern**:
+```bash
+# 1. Add targeted logging (investigation code)
+# 2. Test and gather evidence  
+# 3. Analyze results with expert panel mindset
+# 4. Apply minimal fix based on evidence
+# 5. Remove investigation code
+# 6. Document resolution with evidence
+```
+
+### **💡 Key Methodology Insights**
+
+**From TASK-132/131 Resolution**:
+- ✅ **Investigation revealed both issues already resolved** by previous architectural improvements
+- ✅ **Expert panel prevented destructive "fixes"** to working systems
+- ✅ **Evidence-based conclusions** contradicted stale task documentation  
+- ✅ **Timeout architecture improvements** (commits 51090009, 2ff19647) had resolved underlying causes
+- ✅ **Android platform achieved 100% parity** with Desktop functionality
+
+**Critical Learning**: 
+> *"Sometimes the best debugging reveals that systematic architectural improvements have already solved the problems. Investigation-first methodology prevents fixing working code."*
+
+**Time Investment**: 4-6 hours investigation vs 20-40+ hours architectural changes that risk breaking proven systems.
+
+### **🏆 Expert Panel Validation Checklist**
+
+Before implementing any complex fix, ask:
+- [ ] **Systems Architect**: Does this align with recent architectural decisions?
+- [ ] **Integration Specialist**: Will this break platform compatibility patterns?  
+- [ ] **Test Lead**: Does this preserve existing test infrastructure?
+- [ ] **Performance Engineer**: Are we solving the actual bottleneck?
+- [ ] **Debt Reviewer**: Does this contradict recent architectural investments?
+
+**Unanimous expert agreement required** for architectural changes.
 
 ## 🔧 Common Issues Quick Fix
 
