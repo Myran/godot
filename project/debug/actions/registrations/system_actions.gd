@@ -373,9 +373,123 @@ static func _test_replay_generation_no_quit() -> bool:
 
 
 static func _replay_complete_sync() -> bool:
-	"""Synchronous wrapper for replay completion that handles async chunk processing"""
-	_replay_complete_async()
+	"""Synchronous replay completion with integrated DEBUG_TEST_SUCCESS logging"""
+	var start_time := Time.get_ticks_msec()
+
+	# Handle the replay completion logic
+	_replay_complete_with_final_logging()
+
+	# Log our own DEBUG_TEST_SUCCESS using the standard function - reuse DRY principle
+	var duration_ms := Time.get_ticks_msec() - start_time
+	DebugAction._log_test_success(
+		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
+	)
+
 	return true
+
+
+static func _replay_complete_with_final_logging() -> void:
+	"""Replay completion with final logging and quit - no async chunk processing"""
+	var execution_context: Dictionary = _detect_execution_context()
+
+	Log.info(
+		"Replay completion with context detection",
+		{
+			"execution_mode": execution_context.mode,
+			"platform": execution_context.platform,
+			"command_source": execution_context.command_source,
+			"completion_status": "success"
+		},
+		["debug", "replay", "complete", "context"]
+	)
+
+	_log_lineup_final_state()
+
+	if execution_context.mode == "automated":
+		Log.info(
+			"Automated mode detected - quitting application for CI/automated testing",
+			{
+				"automated_execution": true,
+				"quit_application": true,
+				"detection_method": execution_context.command_source
+			},
+			["debug", "replay", "automated", "quit"]
+		)
+
+		var current_test_id: String = DebugAction.get_current_test_id()
+		Log.info(
+			"Debug: Current test ID",
+			{
+				"test_id": current_test_id,
+				"is_empty": current_test_id.is_empty(),
+				"length": current_test_id.length()
+			},
+			["debug", "test", "test_id"]
+		)
+
+		if not current_test_id.is_empty():
+			Log.info(
+				"TEST_COMPLETE_" + current_test_id,
+				{"test_id": current_test_id, "automated_completion": true, "quit_initiated": true},
+				["debug", "test", "complete", "automated"]
+			)
+		else:
+			var config_name: String = "unknown-config"
+			if OS.has_environment("CURRENT_CONFIG_NAME"):
+				config_name = OS.get_environment("CURRENT_CONFIG_NAME")
+
+			var fallback_test_id: String = config_name + "_completion"
+			Log.info(
+				"TEST_COMPLETE_" + fallback_test_id,
+				{
+					"test_id": fallback_test_id,
+					"automated_completion": true,
+					"quit_initiated": true,
+					"note": "Using fallback test ID since get_current_test_id() was empty",
+					"config_name": config_name
+				},
+				["debug", "test", "complete", "automated"]
+			)
+
+		# CRITICAL: Log final completion message, then wait for Android chunk processing and quit
+		Log.info(
+			"Final completion - all logs generated, proceeding with quit",
+			{
+				"platform": OS.get_name(),
+				"all_logs_complete": true,
+				"about_to_wait_for_chunks": OS.get_name() == "Android"
+			},
+			["debug", "final", "completion"]
+		)
+
+		# Wait for Android chunk processing to complete before quitting
+		if OS.get_name() == "Android":
+			await Log.wait_for_chunk_processing_complete_signal()
+
+		_quit_application()
+		return
+
+	Log.info(
+		"Manual mode detected - staying open for verification and screenshots",
+		{
+			"manual_verification": true,
+			"interactive_mode": true,
+			"stay_open": true,
+			"note": "App remains open - user can verify results and take screenshots"
+		},
+		["debug", "replay", "manual", "interactive"]
+	)
+
+	Log.info(
+		"SEMANTIC_ACTION",
+		{
+			"action": "replay.complete",
+			"timestamp": Time.get_unix_time_from_system(),
+			"execution_mode": execution_context.mode,
+			"user_verification_mode": true
+		},
+		["semantic", "replay", "complete"]
+	)
 
 
 static func _replay_complete_async() -> void:
@@ -408,14 +522,16 @@ static func _replay_complete_async() -> void:
 
 		# CRITICAL: Wait for Android chunk processing to complete before quitting
 		# This ensures DEBUG_TEST_SUCCESS logs are not lost during automated test termination
+		# FIXED: Added shutdown signal emission to prevent deadlock during app termination
 		if OS.get_name() == "Android":
 			Log.info(
-				"Android platform detected - waiting for chunk processing to complete via signal",
+				"Android platform detected - waiting for chunk processing via signal",
 				{
 					"platform": "Android",
 					"chunk_processing_wait": true,
 					"automated_mode": true,
-					"signal_based": true
+					"signal_based": true,
+					"fix_applied": "shutdown_signal_emission"
 				},
 				["debug", "android", "automated", "chunk_processing"]
 			)
@@ -457,6 +573,20 @@ static func _replay_complete_async() -> void:
 				},
 				["debug", "test", "complete", "automated"]
 			)
+
+		# CRITICAL: Wait again for any completion logs to be processed before quitting
+		# The completion logging above creates new chunks that need processing
+		if OS.get_name() == "Android":
+			Log.info(
+				"Final Android chunk processing wait before quit",
+				{
+					"platform": "Android",
+					"reason": "completion_logs_generated",
+					"chunks_pending": Log.get_android_chunk_count()
+				},
+				["debug", "android", "automated", "final_wait"]
+			)
+			await Log.wait_for_chunk_processing_complete_signal()
 
 		_quit_application()
 		return

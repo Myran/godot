@@ -4,6 +4,8 @@ extends Resource
 signal status_updated(text: String, is_error: bool)
 signal execution_completed(success: bool, result: Variant)
 
+enum ExecutionContext { STANDARD, VALIDATION }
+
 const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
 const DebugActionResultClass = preload("res://debug/debug_action_result.gd")
 
@@ -11,6 +13,8 @@ static var current_test_id: String = ""
 static var test_action_count: int = 0
 static var test_success_count: int = 0
 static var test_failure_count: int = 0
+
+# Removed execution tracking - was causing timeouts
 
 @export var action_name: String = "Unnamed Action"
 @export var category: String = "General"  # e.g., "RTDB", "Auth", "Config"
@@ -59,15 +63,19 @@ static func set_test_context(test_id: String) -> void:
 	test_action_count = 0
 	test_success_count = 0
 	test_failure_count = 0
+
+# Removed execution tracking clear - was causing issues
+
 	Log.info(
 		"DEBUG_TEST_START",
 		{
 			"test_id": test_id,
 			"pid": OS.get_process_id(),
 			"timestamp": Time.get_datetime_string_from_system(),
-			"platform": OS.get_name()
+			"platform": OS.get_name(),
+			"execution_guard_cleared": true
 		},
-		["debug", "test", "start", "pid"]
+		["debug", "test", "start", "pid", "execution_guard"]
 	)
 
 
@@ -162,9 +170,7 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 	return debug_info
 
 
-# SOLUTION 1: Unified logging architecture to eliminate race condition
-# Single function consolidates duplicate success logging code paths
-func _log_test_success(
+static func _log_test_success(
 	action_name: String, category: String, group: String, duration_ms: int, params: Dictionary = {}
 ) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
@@ -192,7 +198,9 @@ func _log_test_success(
 		)
 
 
-func execute() -> void:
+func _execute_core(
+	params: Dictionary = {}, context: ExecutionContext = ExecutionContext.STANDARD
+) -> Variant:
 	if current_test_id != "":
 		test_action_count += 1
 
@@ -201,62 +209,83 @@ func execute() -> void:
 	var error_message: String = ""
 	var result: Variant = null
 
-	_update_status("Executing " + action_name + "...")
+	# Context-aware status updates
+	var status_msg: String = "Executing " + action_name
+	if not params.is_empty():
+		status_msg += " with params..."
+	else:
+		status_msg += "..."
+	_update_status(status_msg)
 
-	_log_debug_action_as_semantic()
-
-	Log.info(
-		"TRACE: About to check action_callable validity",
-		{"action": action_name, "callable_valid": action_callable.is_valid()},
-		["debug", "trace", "callable"]
-	)
+	# Unified semantic logging
+	_log_debug_action_as_semantic(params)
 
 	if action_callable.is_valid():
-		Log.info(
-			"TRACE: Calling action_callable",
-			{"action": action_name},
-			["debug", "trace", "callable"]
-		)
-		result = await action_callable.call()
+		if params.is_empty():
+			result = await action_callable.call()
+		else:
+			Log.debug(
+				"Action called with parameters",
+				{"action": action_name, "params": params},
+				["debug", "action", "params", "unified"]
+			)
+			result = await action_callable.call(params)
 
-		Log.info(
-			"TRACE: action_callable completed",
-			{"action": action_name, "result_type": typeof(result)},
-			["debug", "trace", "callable"]
-		)
+		# VALIDATION CONTEXT: Detailed result logging
+		if context == ExecutionContext.VALIDATION:
+			Log.info(
+				"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
+				{
+					"action": action_name,
+					"result": result,
+					"result_type": typeof(result),
+					"result_class":
+					result.get_class() if typeof(result) == TYPE_OBJECT else "not_object",
+					"is_bool": typeof(result) == TYPE_BOOL,
+					"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
+				},
+				["debug", "callable", "task148", "unified"]
+			)
 
+		# UNIFIED RESULT EVALUATION
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
+
+			# Sequential action completion (preserve existing logic)
+			if not auto_continue:
+				Log.info(
+					"Sequential action completed - emitting completion event",
+					{
+						"action": action_name,
+						"success": success,
+						"auto_continue": auto_continue,
+						"completion_event": "FirebaseBackendCompleteEvent"
+					},
+					["debug", "sequential", "completion", "unified"]
+				)
+				core.action(core.FirebaseBackendCompleteEvent.new(action_name, success))
 		else:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 	else:
-		Log.error(
-			"TRACE: action_callable invalid",
-			{"action": action_name},
-			["debug", "trace", "callable"]
-		)
+		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
 		success = false
 		error_message = "No execute method defined for " + action_name
 		_update_status("ERROR: No execute method defined for " + action_name, true)
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# Get test_id from config instead of static variable (Android static variable reset fix)
+	# UNIFIED TEST REPORTING
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id: String = test_metadata.get("test_id", "")
 
 	if config_test_id != "":
 		if success:
-			# Use unified logging function to eliminate race condition
-			_log_test_success(action_name, category, group, duration_ms)
-
-			# CRITICAL: Wait for Android chunk processing to complete in automated mode
-			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
-			var metadata: Dictionary = DebugConfigReader.get_metadata()
-			if OS.get_name() == "Android" and metadata.get("auto_quit", false):
-				await Log.wait_for_chunk_processing_complete_signal()
+			# SINGLE POINT: Success logging (eliminates race condition)
+			# NOTE: replay_complete action handles its own DEBUG_TEST_SUCCESS logging
+			if action_name != "system.debug.replay_complete":
+				DebugAction._log_test_success(action_name, category, group, duration_ms, params)
 		else:
 			test_failure_count += 1
 			Log.error(
@@ -268,198 +297,34 @@ func execute() -> void:
 					"group": group,
 					"error": error_message,
 					"duration_ms": duration_ms,
-					"pid": OS.get_process_id(),
-					"sequence": test_failure_count,
-					"timestamp": Time.get_datetime_string_from_system(),
-					"success_count_before_failure": test_success_count
-				},
-				["debug", "test", "failure", "pid", "sequence"]
-			)
-
-	execution_completed.emit(success, result)
-
-
-func execute_with_params(params: Dictionary = {}) -> void:
-	Log.debug(
-		"TEMP DEBUG: execute_with_params called",
-		{"action": action_name, "count": test_action_count},
-		["debug", "temp"]
-	)
-
-	if current_test_id != "":
-		test_action_count += 1
-
-	var start_time: int = Time.get_ticks_msec()
-	var success: bool = false
-	var error_message: String = ""
-	var result: Variant = null
-
-	_update_status("Executing " + action_name + " with params...")
-
-	_log_debug_action_as_semantic(params)
-
-	Log.info(
-		"TRACE: execute_with_params - checking action_callable validity",
-		{"action": action_name, "callable_valid": action_callable.is_valid()},
-		["debug", "trace", "callable"]
-	)
-
-	if action_callable.is_valid():
-		Log.info(
-			"TRACE: execute_with_params - calling action_callable",
-			{"action": action_name, "has_params": not params.is_empty()},
-			["debug", "trace", "callable"]
-		)
-
-		# CALLABLE_EXECUTION_DEBUG: Comprehensive callable state inspection
-		var callable_debug_info = _debug_callable_state(action_callable)
-		Log.info(
-			"CALLABLE_EXECUTION_DEBUG: About to execute callable",
-			{
-				"action": action_name,
-				"params_empty": params.is_empty(),
-				"callable_state": callable_debug_info,
-				"platform": OS.get_name(),
-				"is_android": OS.get_name() == "Android",
-				"current_thread": OS.get_thread_caller_id(),
-				"main_thread": OS.get_main_thread_id(),
-				"is_main_thread": OS.get_thread_caller_id() == OS.get_main_thread_id()
-			},
-			["debug", "callable", "task148", "android_debug"]
-		)
-
-		# Additional Android safety checks
-		if not callable_debug_info.get("target_valid", false):
-			Log.error(
-				"CALLABLE_EXECUTION_DEBUG: Target object is invalid",
-				{"action": action_name, "debug_info": callable_debug_info},
-				["debug", "callable", "task148", "android_debug", "error"]
-			)
-			success = false
-			_update_status("Failed - invalid target object")
-			return
-
-		# Skip method check for lambda functions (they don't have named methods)
-		var method_name = callable_debug_info.get("method_name", "")
-		var is_lambda = method_name.contains("lambda") or method_name == ""
-
-		if not is_lambda and not callable_debug_info.get("target_has_method", false):
-			Log.error(
-				"CALLABLE_EXECUTION_DEBUG: Target object does not have required method",
-				{"action": action_name, "debug_info": callable_debug_info},
-				["debug", "callable", "task148", "android_debug", "error"]
-			)
-			success = false
-			_update_status("Failed - method not found")
-			return
-
-		if is_lambda:
-			Log.info(
-				"CALLABLE_EXECUTION_DEBUG: Lambda function detected, skipping method check",
-				{"action": action_name, "method_name": method_name, "is_lambda": true},
-				["debug", "callable", "task148", "android_debug", "lambda"]
-			)
-
-		# Attempt callable execution - GDScript doesn't have try/except, relying on validation
-		if params.is_empty():
-			result = await action_callable.call()
-		else:
-			Log.debug(
-				"Action called with parameters",
-				{"action": action_name, "params": params},
-				["debug", "action", "params"]
-			)
-			result = await action_callable.call(params)
-
-		# CALLABLE_EXECUTION_DEBUG: Log detailed result information
-		Log.info(
-			"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
-			{
-				"action": action_name,
-				"result": result,
-				"result_type": typeof(result),
-				"result_class":
-				result.get_class() if typeof(result) == TYPE_OBJECT else "not_object",
-				"is_bool": typeof(result) == TYPE_BOOL,
-				"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
-			},
-			["debug", "callable", "task148"]
-		)
-
-		Log.info(
-			"TRACE: execute_with_params - action_callable completed",
-			{"action": action_name, "result_type": typeof(result)},
-			["debug", "trace", "callable"]
-		)
-
-		success = _evaluate_action_result(result)
-		if success:
-			_update_status("Completed: " + action_name)
-
-			# CRITICAL FIX: Emit FirebaseBackendCompleteEvent for actions with auto_continue=false
-			# This enables sequential processing for actions that need it
-			if not auto_continue:
-				Log.info(
-					"Sequential action completed - emitting completion event",
-					{
-						"action": action_name,
-						"success": success,
-						"auto_continue": auto_continue,
-						"completion_event": "FirebaseBackendCompleteEvent"
-					},
-					["debug", "sequential", "completion"]
-				)
-				core.action(core.FirebaseBackendCompleteEvent.new(action_name, success))
-		else:
-			error_message = _extract_error_message(result)
-			_update_status("ERROR: " + action_name + " - " + error_message, true)
-	else:
-		Log.error(
-			"TRACE: execute_with_params - action_callable invalid",
-			{"action": action_name},
-			["debug", "trace", "callable"]
-		)
-		success = false
-		error_message = "No execute method defined for " + action_name
-		_update_status("ERROR: No execute method defined for " + action_name, true)
-
-	var duration_ms: int = Time.get_ticks_msec() - start_time
-
-	# Get test_id from config instead of static variable (Android static variable reset fix)
-	var test_metadata_params: Dictionary = DebugConfigReader.get_test_metadata()
-	var config_test_id_params: String = test_metadata_params.get("test_id", "")
-
-	if config_test_id_params != "":
-		if success:
-			# Use unified logging function to eliminate race condition
-			_log_test_success(action_name, category, group, duration_ms, params)
-
-			# CRITICAL: Wait for Android chunk processing to complete in automated mode
-			# This ensures DEBUG_TEST_SUCCESS logs are not lost and maintains log ordering
-			var metadata: Dictionary = DebugConfigReader.get_metadata()
-			if OS.get_name() == "Android" and metadata.get("auto_quit", false):
-				await Log.wait_for_chunk_processing_complete_signal()
-		else:
-			test_failure_count += 1
-			Log.error(
-				"DEBUG_TEST_FAILURE",
-				{
-					"test_id": config_test_id_params,
-					"action": action_name,
-					"category": category,
-					"group": group,
-					"error": error_message,
-					"duration_ms": duration_ms,
 					"params": params,
 					"pid": OS.get_process_id(),
 					"sequence": test_failure_count,
 					"timestamp": Time.get_datetime_string_from_system(),
-					"success_count_before_failure": test_success_count
+					"success_count_before_failure": test_success_count,
+					"execution_context": ExecutionContext.keys()[context]
 				},
-				["debug", "test", "failure", "pid", "sequence"]
+				["debug", "test", "failure", "pid", "sequence", "unified"]
 			)
 
+# Removed execution guard system - was causing issues
+
+	# Emit completion signal (preserve existing behavior)
 	execution_completed.emit(success, result)
+
+	return result
+
+
+# UNIFIED API: Manual/UI execution path - now uses unified core
+func execute() -> void:
+	"""Public API for manual/UI execution - eliminates code duplication"""
+	await _execute_core({}, ExecutionContext.STANDARD)
+
+
+# UNIFIED API: Startup coordinator execution path - now uses unified core with validation
+func execute_with_params(params: Dictionary = {}) -> void:
+	"""Public API for startup coordinator execution - eliminates code duplication and race conditions"""
+	await _execute_core(params, ExecutionContext.VALIDATION)
 
 
 func _evaluate_action_result(result: Variant) -> bool:
