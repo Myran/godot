@@ -116,25 +116,80 @@ static func create_from_callable(
 	return action
 
 
+func _debug_callable_state(callable: Callable) -> Dictionary:
+	"""Comprehensive callable state inspection for Android debugging"""
+	var debug_info = {}
+
+	# Basic validation using correct GDScript 4.x APIs
+	debug_info["is_null"] = callable.is_null()
+	debug_info["is_valid"] = callable.is_valid()
+	debug_info["callable_type"] = typeof(callable)
+	debug_info["hash"] = callable.hash()
+
+	if not callable.is_null() and callable.is_valid():
+		var target = callable.get_object()
+		debug_info["has_object"] = target != null
+		debug_info["target_object"] = str(target) if target else "null"
+		debug_info["target_valid"] = is_instance_valid(target) if target else false
+		debug_info["method_name"] = str(callable.get_method())
+
+		# Additional object state checks
+		if target and is_instance_valid(target):
+			debug_info["target_class"] = target.get_class()
+			debug_info["target_script"] = (
+				str(target.get_script()) if target.get_script() else "none"
+			)
+
+			# Safe deletion check
+			if target.has_method("is_queued_for_deletion"):
+				debug_info["target_queued_for_deletion"] = target.is_queued_for_deletion()
+			else:
+				debug_info["target_queued_for_deletion"] = false
+
+			# Check if target has the method
+			var method_name = callable.get_method()
+			debug_info["target_has_method"] = (
+				target.has_method(method_name) if method_name != &"" else false
+			)
+		else:
+			debug_info["target_class"] = "invalid"
+			debug_info["target_has_method"] = false
+	else:
+		debug_info["has_object"] = false
+		debug_info["target_valid"] = false
+		debug_info["target_has_method"] = false
+
+	return debug_info
+
+
 # SOLUTION 1: Unified logging architecture to eliminate race condition
 # Single function consolidates duplicate success logging code paths
-func _log_test_success(action_name: String, category: String, group: String, duration_ms: int, params: Dictionary = {}) -> void:
+func _log_test_success(
+	action_name: String, category: String, group: String, duration_ms: int, params: Dictionary = {}
+) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id: String = test_metadata.get("test_id", "")
-	
+
 	if config_test_id != "":
 		test_success_count += 1
-		Log.info("DEBUG_TEST_SUCCESS", {
-			"test_id": config_test_id,
-			"action": action_name,
-			"category": category,
-			"group": group,
-			"duration_ms": duration_ms,
-			"params": params,
-			"pid": OS.get_process_id(),
-			"sequence": test_success_count,
-			"timestamp": Time.get_datetime_string_from_system(),
-		}, ["debug", "test", "success", "pid", "sequence"])
+		(
+			Log
+			. info(
+				"DEBUG_TEST_SUCCESS",
+				{
+					"test_id": config_test_id,
+					"action": action_name,
+					"category": category,
+					"group": group,
+					"duration_ms": duration_ms,
+					"params": params,
+					"pid": OS.get_process_id(),
+					"sequence": test_success_count,
+					"timestamp": Time.get_datetime_string_from_system(),
+				},
+				["debug", "test", "success", "pid", "sequence"]
+			)
+		)
 
 
 func execute() -> void:
@@ -256,6 +311,56 @@ func execute_with_params(params: Dictionary = {}) -> void:
 			["debug", "trace", "callable"]
 		)
 
+		# CALLABLE_EXECUTION_DEBUG: Comprehensive callable state inspection
+		var callable_debug_info = _debug_callable_state(action_callable)
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: About to execute callable",
+			{
+				"action": action_name,
+				"params_empty": params.is_empty(),
+				"callable_state": callable_debug_info,
+				"platform": OS.get_name(),
+				"is_android": OS.get_name() == "Android",
+				"current_thread": OS.get_thread_caller_id(),
+				"main_thread": OS.get_main_thread_id(),
+				"is_main_thread": OS.get_thread_caller_id() == OS.get_main_thread_id()
+			},
+			["debug", "callable", "task148", "android_debug"]
+		)
+
+		# Additional Android safety checks
+		if not callable_debug_info.get("target_valid", false):
+			Log.error(
+				"CALLABLE_EXECUTION_DEBUG: Target object is invalid",
+				{"action": action_name, "debug_info": callable_debug_info},
+				["debug", "callable", "task148", "android_debug", "error"]
+			)
+			success = false
+			_update_status("Failed - invalid target object")
+			return
+
+		# Skip method check for lambda functions (they don't have named methods)
+		var method_name = callable_debug_info.get("method_name", "")
+		var is_lambda = method_name.contains("lambda") or method_name == ""
+
+		if not is_lambda and not callable_debug_info.get("target_has_method", false):
+			Log.error(
+				"CALLABLE_EXECUTION_DEBUG: Target object does not have required method",
+				{"action": action_name, "debug_info": callable_debug_info},
+				["debug", "callable", "task148", "android_debug", "error"]
+			)
+			success = false
+			_update_status("Failed - method not found")
+			return
+
+		if is_lambda:
+			Log.info(
+				"CALLABLE_EXECUTION_DEBUG: Lambda function detected, skipping method check",
+				{"action": action_name, "method_name": method_name, "is_lambda": true},
+				["debug", "callable", "task148", "android_debug", "lambda"]
+			)
+
+		# Attempt callable execution - GDScript doesn't have try/except, relying on validation
 		if params.is_empty():
 			result = await action_callable.call()
 		else:
@@ -265,6 +370,21 @@ func execute_with_params(params: Dictionary = {}) -> void:
 				["debug", "action", "params"]
 			)
 			result = await action_callable.call(params)
+
+		# CALLABLE_EXECUTION_DEBUG: Log detailed result information
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
+			{
+				"action": action_name,
+				"result": result,
+				"result_type": typeof(result),
+				"result_class":
+				result.get_class() if typeof(result) == TYPE_OBJECT else "not_object",
+				"is_bool": typeof(result) == TYPE_BOOL,
+				"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
+			},
+			["debug", "callable", "task148"]
+		)
 
 		Log.info(
 			"TRACE: execute_with_params - action_callable completed",
@@ -343,19 +463,64 @@ func execute_with_params(params: Dictionary = {}) -> void:
 
 
 func _evaluate_action_result(result: Variant) -> bool:
+	# CALLABLE_EXECUTION_DEBUG: Add detailed result evaluation logging for TASK-148
+	Log.info(
+		"CALLABLE_EXECUTION_DEBUG: Evaluating action result",
+		{
+			"action": action_name,
+			"result_is_null": result == null,
+			"result_type": typeof(result),
+			"result_value": str(result) if result != null else "null"
+		},
+		["debug", "callable", "task148", "evaluation"]
+	)
+
 	if result == null:
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Result is null - returning false",
+			{"action": action_name},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		return false
 
 	if result is DebugActionResult:
-		if result.get_error_code() == "RESTART_NEEDED":
+		var is_success: bool = result.is_success()
+		var error_code: String = result.get_error_code()
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: DebugActionResult evaluation",
+			{
+				"action": action_name,
+				"is_success": is_success,
+				"error_code": error_code,
+				"restart_needed": error_code == "RESTART_NEEDED"
+			},
+			["debug", "callable", "task148", "evaluation"]
+		)
+		if error_code == "RESTART_NEEDED":
 			return true  # Treat restart pending as success to avoid test failure
-		return result.is_success()
+		return is_success
 
 	if result is bool:
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Boolean result evaluation",
+			{"action": action_name, "bool_result": result, "returning": result},
+			["debug", "callable", "task148", "evaluation"]
+		)
 		return result
 
 	if result is Array and result.size() >= 1:
-		return result[0] == true
+		var array_result: bool = result[0] == true
+		Log.info(
+			"CALLABLE_EXECUTION_DEBUG: Array result evaluation",
+			{
+				"action": action_name,
+				"array_size": result.size(),
+				"first_element": result[0],
+				"returning": array_result
+			},
+			["debug", "callable", "task148", "evaluation"]
+		)
+		return array_result
 
 	if result is Dictionary and result.has("error"):
 		return false
@@ -407,6 +572,13 @@ func _update_status(text: String, is_error: bool = false) -> void:
 func execute_with_state_validation(
 	session_id: String = "", sequence: int = -1
 ) -> DebugActionResult:
+	# EXECUTION PATH DEBUG: Track which execution function is called
+	Log.info(
+		"EXEC_PATH_DEBUG: execute_with_state_validation() called",
+		{"action": action_name, "session_id": session_id, "sequence": sequence},
+		["debug", "execution_path"]
+	)
+
 	var start_time: int = Time.get_ticks_msec()
 
 	Log.info(
@@ -576,6 +748,13 @@ func execute_with_state_validation(
 
 
 func execute_with_auto_validation() -> DebugActionResult:
+	# EXECUTION PATH DEBUG: Track which execution function is called
+	Log.info(
+		"EXEC_PATH_DEBUG: execute_with_auto_validation() called",
+		{"action": action_name},
+		["debug", "execution_path"]
+	)
+
 	var current_session_id: String = SessionManager.get_current_session_id()
 	var current_sequence: int = SessionManager.session_action_count + 1
 
@@ -594,6 +773,13 @@ func execute_with_auto_validation() -> DebugActionResult:
 
 
 func _execute_with_validation_async(session_id: String, sequence: int) -> void:
+	# EXECUTION PATH DEBUG: Track which execution function is called
+	Log.info(
+		"EXEC_PATH_DEBUG: _execute_with_validation_async() called",
+		{"action": action_name, "session_id": session_id, "sequence": sequence},
+		["debug", "execution_path"]
+	)
+
 	var validation_result: DebugActionResult = await execute_with_state_validation(
 		session_id, sequence
 	)

@@ -99,7 +99,10 @@ func startDebugCoordinator() -> void:
 				"total_actions": actions.size(),
 				"dispatch_timestamp": Time.get_unix_time_from_system()
 			}, ["debug", "startup", "dispatch", "diagnostic"])
-			var callable := func(): action.execute_with_params(params)
+			# CRITICAL FIX: Capture action and params by value to prevent stale references in queue
+			var captured_action := action
+			var captured_params := params.duplicate(true)  # Deep copy to prevent reference issues
+			var callable := func(): captured_action.execute_with_params(captured_params)
 
 			var auto_continue: bool = _should_action_auto_continue(action)
 
