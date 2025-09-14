@@ -143,6 +143,42 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 
 > 📚 **For detailed command help**: Use `just help` and `just help-[topic]` - Claude can read these outputs directly for comprehensive explanations and examples.
 
+## 📝 Backlog Task Management
+
+**Essential Backlog Commands:**
+- `backlog tasks list --plain` - List all tasks grouped by status (plain text format)
+- `backlog tasks view task-XXX --plain` - View specific task details in plain text
+- `backlog doc list` - List all project documents
+- `backlog doc view DOC_ID` - View a specific document
+- `backlog board` - Display tasks in Kanban board view
+- `backlog overview` - Show project statistics and metrics
+
+**Task Management Workflow:**
+```bash
+# List all tasks to see current state
+backlog tasks list --plain
+
+# View a specific task for details
+backlog tasks view task-021 --plain
+
+# Check project status
+backlog overview
+
+# Browse tasks interactively (Ctrl+C to exit)
+backlog browser
+```
+
+**Key Sections from Backlog:**
+- **To Do**: High-priority architectural refactoring, ability implementation
+- **Done**: Completed validation consolidation, code cleanup, Firebase refactoring
+- **Open**: Active issues requiring investigation
+- **Completed**: Successfully resolved tasks
+
+**Document Access:**
+- Use `backlog doc list` to find available documentation
+- Use `backlog doc view DOC_ID` to read specific documents
+- Documents contain technical specifications, implementation plans, and decision records
+
 ## 🤖 Claude Code Preferences
 
 **Essential GameTwo patterns:**
