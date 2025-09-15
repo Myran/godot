@@ -145,13 +145,25 @@ func get_value(path: Array[Variant], key: String = "") -> FirebaseRequest:
 		)
 		return error_request
 
-	var request_id: int = _get_next_request_id()
-	var request: FirebaseRequest = FirebaseRequest.new(request_id)
-	_pending_requests[request_id] = request
-
+	# Path validation to prevent Firebase C++ SDK crashes
 	var full_path: Array[Variant] = path.duplicate()
 	if not key.is_empty():
 		full_path.append(key)
+
+	# Validate path before passing to Firebase C++ SDK
+	if full_path.is_empty():
+		Log.debug(
+			"FirebaseService: Invalid empty path detected, returning null gracefully",
+			{"original_path": path, "key": key},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+		var error_request: FirebaseRequest = FirebaseRequest.new(-1)
+		error_request.complete_with_success(null)  # Return null for invalid paths
+		return error_request
+
+	var request_id: int = _get_next_request_id()
+	var request: FirebaseRequest = FirebaseRequest.new(request_id)
+	_pending_requests[request_id] = request
 
 	# Use Firebase C++ method call
 	db.call_method("get_value_async", [request_id, full_path])

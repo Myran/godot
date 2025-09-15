@@ -4,7 +4,7 @@ title: Fix system-error-handling action collection failure on Android
 status: Done
 assignee: []
 created_date: '2025-09-13 13:18'
-updated_date: '2025-09-15 11:42'
+updated_date: '2025-09-15 22:35'
 labels:
   - critical
   - android
@@ -18,9 +18,11 @@ priority: high
 
 ## Description
 
-**✅ RESOLVED: Action collection issue fixed** - Actions now collected successfully (2/2)
+**⚠️ SUPERSEDED BY TASK-150: Root cause identified as Firebase C++ SDK native crash**
 
-UPDATE 2025-09-15: The original action collection failure has been resolved by the fix from task-149 (adding proper await signal in replay_complete action). Now system-error-handling collects actions successfully on Android with the wildcard pattern `*.*.error_handling` expanding correctly to find multiple actions. All acceptance criteria have been met.
+UPDATE 2025-09-15: Investigation revealed the real issue is not action collection but a Firebase C++ SDK native crash (SIGABRT in QueryInternal::GetValue). The "action collection failure" was a symptom - actions start properly but crash prevents completion. See task-150 for the actual Firebase SDK stability issue.
+
+**SUPERSEDED**: This task's original scope (action collection) was based on symptoms, not root cause. Task-150 addresses the Firebase native crash that prevents action completion.
 
 ## Problem Analysis
 
