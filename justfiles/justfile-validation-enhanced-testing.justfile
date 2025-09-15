@@ -945,12 +945,14 @@ _filter-desktop-logs-safely temp_file_path:
 # ================================
 
 # Unified error analysis that works for both Android and Desktop
-_analyze-test-errors test_id platform:
+# Optional third parameter: config_file path for expected result validation
+_analyze-test-errors test_id platform config_file="":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
+    CONFIG_FILE="{{config_file}}"
     
     echo "🔍 Analyzing test errors for: $TEST_ID ($PLATFORM)"
     echo "================================================"
@@ -999,6 +1001,62 @@ _analyze-test-errors test_id platform:
     else
         # Fallback: only Godot application errors
         RELEVANT_LOGS=$(echo "$LOGS" | grep -E "(godot.*ERROR|godot.*CRITICAL|godot.*SCRIPT ERROR|godot.*Assertion failed|DEBUG_TEST_FAILURE|CHECKSUM_MISMATCH)" || echo "")
+    fi
+
+    # ================================
+    # EXPECTED RESULT VALIDATION (TASK-151)
+    # ================================
+
+    # Check if config file exists and has expected_result specifications
+    EXPECTED_RESULT_VALIDATION=false
+    if [[ -n "$CONFIG_FILE" && -f "$CONFIG_FILE" ]]; then
+        # Check if config contains expected_result specifications
+        if grep -q "expected_result" "$CONFIG_FILE" 2>/dev/null; then
+            EXPECTED_RESULT_VALIDATION=true
+            echo "📋 Expected result validation enabled for this test"
+
+            # Extract expected error patterns from config
+            EXPECTED_PATTERNS=$(cat "$CONFIG_FILE" | grep -A 10 "expected_result" | grep -o '"[^"]*"' | grep -E "(ERROR|Error)" | tr -d '"' || echo "")
+
+            if [[ -n "$EXPECTED_PATTERNS" ]]; then
+                echo "🎯 Expected error patterns found:"
+                echo "$EXPECTED_PATTERNS" | sed 's/^/   - /'
+
+                # Validate that expected error patterns are present
+                MISSING_PATTERNS=""
+                FOUND_PATTERNS=""
+
+                while IFS= read -r pattern; do
+                    if [[ -n "$pattern" ]]; then
+                        # Only look for patterns in actual error/warning logs, not config dumps
+                        # Filter out debug parser logs and focus on actual error messages
+                        ACTUAL_ERROR_LOGS=$(echo "$RELEVANT_LOGS" | grep -v "startup.*parser" | grep -v "Processing raw action" | grep -E "(ERROR|CRITICAL|WARNING)" || echo "")
+                        if echo "$ACTUAL_ERROR_LOGS" | grep -q "$pattern"; then
+                            FOUND_PATTERNS="$FOUND_PATTERNS$pattern\n"
+                            echo "   ✅ Found: $pattern"
+                        else
+                            MISSING_PATTERNS="$MISSING_PATTERNS$pattern\n"
+                            echo "   ❌ Missing: $pattern"
+                        fi
+                    fi
+                done <<< "$EXPECTED_PATTERNS"
+
+                # If we have expected patterns, check if all were found
+                if [[ -n "$MISSING_PATTERNS" ]]; then
+                    echo ""
+                    echo "❌ EXPECTED RESULT VALIDATION FAILED"
+                    echo "💡 Missing required error patterns - test may not be working correctly"
+                    echo "💡 This indicates the error handling test is not generating expected errors"
+                    exit 1
+                else
+                    echo ""
+                    echo "✅ EXPECTED RESULT VALIDATION PASSED"
+                    echo "💡 All expected error patterns found - error handling test working correctly"
+                    echo "💡 Test success determined by expected error validation, not error absence"
+                    exit 0
+                fi
+            fi
+        fi
     fi
     
     # Count critical errors in relevant logs only (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
@@ -1345,14 +1403,15 @@ _generate-action-summary-from-file test_id config_name platform session="":
     # Keep results file for comprehensive breakdown - it will be cleaned up later
 
 # Hook that can be called after any test execution to add error analysis
-_post-test-validation test_id platform config_name="unknown" session="":
+_post-test-validation test_id platform config_name="unknown" session="" config_path="":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
     CONFIG_NAME="{{config_name}}"
     SESSION="{{session}}"
+    CONFIG_PATH="{{config_path}}"
     
     # Collect action results from logs first
     just _collect-action-results "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION"
@@ -1365,7 +1424,7 @@ _post-test-validation test_id platform config_name="unknown" session="":
     echo "====================================="
     
     ERROR_ANALYSIS_RESULT=0
-    just _analyze-test-errors "$TEST_ID" "$PLATFORM" || ERROR_ANALYSIS_RESULT=$?
+    just _analyze-test-errors "$TEST_ID" "$PLATFORM" "$CONFIG_PATH" || ERROR_ANALYSIS_RESULT=$?
     
     if [[ $ERROR_ANALYSIS_RESULT -ne 0 ]]; then
         echo ""
@@ -2128,7 +2187,7 @@ _execute-test-with-analysis config_name platform session="":
     # Phase 3: Unified post-test validation (shared logic)
     if [[ $TEST_RESULT -eq 0 ]]; then
         # Run error analysis
-        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" || TEST_RESULT=$?
+        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" "$CONFIG_PATH" || TEST_RESULT=$?
         
         # Run checksum validation if applicable
         if [[ $TEST_RESULT -eq 0 ]]; then

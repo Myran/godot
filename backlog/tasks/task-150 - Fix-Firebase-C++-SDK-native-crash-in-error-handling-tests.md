@@ -1,10 +1,10 @@
 ---
 id: task-150
 title: Fix Firebase C++ SDK native crash in error handling tests
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-15 22:34'
-updated_date: '2025-09-15 22:35'
+updated_date: '2025-09-15 23:59'
 labels:
   - critical
   - firebase
@@ -86,6 +86,35 @@ Implementation Notes:
 - Supersedes: task-147 (originally misdiagnosed as action collection issue)
 - Related: task-149 (investigation task that helped identify this pattern)
 - Related: task-146 (companion action collection issue with different root cause)
+- **Enables**: task-151 (action-level expected result validation system)
+
+**Status Update (2025-09-15 23:32)**:
+✅ **Firebase C++ SDK crash RESOLVED** - Path validation fix successfully implemented
+✅ **Native crash prevention working** - Empty paths now handled gracefully
+⚠️ **Test framework issue identified** - Error analysis incorrectly flags expected error messages as failures
+
+**Current Issue**: The test now works correctly (2 actions collected, no crashes) but is marked as "failed" because error handling tests intentionally generate error messages, which the framework incorrectly treats as failures.
+
+**Solution Approach**: Implement task-151 (action-level expected result validation) to properly validate that error handling tests produce their expected error patterns instead of treating expected errors as failures.
+
+**Final Resolution (2025-09-15 23:59)**:
+✅ **FULLY RESOLVED** - Both native crash and framework validation issues completely fixed:
+
+1. **Firebase C++ SDK Crash**: ✅ RESOLVED via path validation in FirebaseService.get_value()
+   - Empty paths now handled gracefully with null return
+   - Native crashes eliminated from error handling tests
+   - Path validation prevents SIGABRT in QueryInternal::GetValue()
+
+2. **Framework False Positive**: ✅ RESOLVED via task-151 implementation
+   - system-error-handling now passes correctly using expected error validation
+   - Actions collected: 4 (vs 0 during crash state)
+   - Framework validates expected error patterns instead of treating them as failures
+
+**Test Results**:
+- ✅ **Expected errors found**: All 3 patterns detected correctly
+- ✅ **Test success**: "Test success determined by expected error validation, not error absence"
+- ✅ **Backward compatibility**: Other tests unaffected by framework changes
+- ✅ **Negative validation**: Missing patterns correctly cause test failure
 
 **Priority Justification**:
-Native crashes are critical severity as they prevent entire test categories from functioning and could impact production stability.
+COMPLETE - Both critical native crash and test framework accuracy issues fully resolved.

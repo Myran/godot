@@ -1,7 +1,17 @@
 {
   "description": "Error handling across ALL systems - Tests resilience and error recovery",
   "actions": [
-    "*.*.error_handling"
+    {
+      "action": "*.*.error_handling",
+      "expected_result": {
+        "type": "expected_errors",
+        "patterns": [
+          "ERROR: Error: Invalid Path failed",
+          "ERROR: Error: Timeout Test failed",
+          "ERROR: Unsupported backend method"
+        ]
+      }
+    }
   ],
   "platforms": ["android"]
 }
