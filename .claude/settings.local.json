@@ -62,7 +62,12 @@
       "Read(/private/tmp/**)",
       "Read(/private/tmp/**)",
       "Read(//Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/**)",
-      "Read(//Users/mattiasmyhrman/Library/Application/**)"
+      "Read(//Users/mattiasmyhrman/Library/Application/**)",
+      "WebSearch",
+      "WebFetch(domain:docs.godotengine.org)",
+      "WebFetch(domain:stackoverflow.com)",
+      "Bash(xargs rg:*)",
+      "Bash(backlog board:*)"
     ],
     "deny": [],
     "ask": [],
