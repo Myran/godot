@@ -246,18 +246,27 @@ just logs-text TEST_ID "specific_term"     # Targeted search with context
 
 ### **🧠 ORIENT Phase - Expert Panel Evaluation**
 
+**🚨 CRITICAL: Virtual Expert Panel is the most important debugging step**
+
 **Assemble Virtual Expert Panel** for complex issues:
-- **Senior Systems Architect** - Mobile/game engine expertise
-- **Platform Integration Specialist** - Android/Firebase/GDScript  
-- **Test Infrastructure Lead** - Testing patterns and validation
-- **Performance Engineer** - Timing, race conditions, threading
-- **Technical Debt Reviewer** - Architecture decisions and intent
+- **Senior Systems Architect** - Mobile/game engine expertise, architectural coherence
+- **Platform Integration Specialist** - Android/Firebase/GDScript, cross-platform compatibility
+- **Test Infrastructure Lead** - Testing patterns, validation frameworks, CI/CD impact
+- **Performance Engineer** - Timing, race conditions, threading, optimization trade-offs
+- **Technical Debt Reviewer** - Architecture decisions, long-term maintainability, intent preservation
+
+**🎯 Expert Panel Core Questions** (Ask each perspective):
+1. **"What would this expert think is the REAL problem here?"**
+2. **"What would this expert warn against fixing?"**
+3. **"What evidence would this expert demand before acting?"**
+4. **"What would this expert consider a dangerous oversimplification?"**
 
 **Panel Evaluation Framework**:
 1. **Historical Context Analysis** - `git log --oneline --grep="PATTERN" -n 20`
 2. **Architectural Intent Review** - Recent commits show design decisions
 3. **Cross-Option Impact Assessment** - Each solution's effect on existing systems
 4. **Risk vs Benefit Analysis** - Preserve working functionality
+5. **Error Message Skepticism** - Challenge what error messages actually mean vs what they imply
 
 ### **⚡ DECIDE Phase - Investigation-First Approach** 
 
@@ -298,11 +307,31 @@ just logs-text TEST_ID "specific_term"     # Targeted search with context
 
 **Time Investment**: 4-6 hours investigation vs 20-40+ hours architectural changes that risk breaking proven systems.
 
+### **💡 Advanced Methodology Insights**
+
+**From TASK-145 Firebase Performance Investigation**:
+- ✅ **Error Message Skepticism**: "Perf: Overhead Test failed (137ms)" implied performance issue, actually functional failure
+- ✅ **Expert Panel Prevented Threshold Adjustment**: Would have masked real functional bug
+- ✅ **Investigation-First Mentality**: Revealed 137ms was actually good performance, not slow
+- ✅ **Evidence Over Assumptions**: Firebase `null` return for missing data is expected, not failure
+- ✅ **Pattern Recognition**: Other operations (127ms, 77ms, 71ms) succeeded - timing wasn't the issue
+
+**🎯 Key Breakthrough Pattern**:
+> *"Systematic skepticism of error messages. Error messages describe symptoms, not always root causes. The OODA Loop's evidence-gathering phase reveals the difference between 'what the message implies' vs 'what is actually happening'."*
+
+**Error Message Analysis Framework**:
+1. **What the error implies** (surface meaning)
+2. **What is actually happening** (technical reality)
+3. **Why the disconnect exists** (system design vs user expectations)
+4. **What evidence contradicts the implication** (deeper investigation)
+
+**Meta-Learning**: Investigation-first methodology transforms "performance tuning" into "functional logic" fixes, preventing masking solutions.
+
 ### **🏆 Expert Panel Validation Checklist**
 
 Before implementing any complex fix, ask:
 - [ ] **Systems Architect**: Does this align with recent architectural decisions?
-- [ ] **Integration Specialist**: Will this break platform compatibility patterns?  
+- [ ] **Integration Specialist**: Will this break platform compatibility patterns?
 - [ ] **Test Lead**: Does this preserve existing test infrastructure?
 - [ ] **Performance Engineer**: Are we solving the actual bottleneck?
 - [ ] **Debt Reviewer**: Does this contradict recent architectural investments?
