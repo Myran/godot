@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Backend Batch 3 - Timer management (safe concurrency limit)",
+  "actions": [
+    "backend.firebase.timer_manager"
+  ],
+  "platforms": ["android"]
+}

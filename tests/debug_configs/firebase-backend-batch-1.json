@@ -1,0 +1,9 @@
+{
+  "description": "Firebase Backend Batch 1 - Core operations (safe concurrency limit)",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.lifecycle",
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"]
+}

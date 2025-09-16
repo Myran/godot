@@ -1,10 +1,17 @@
 {
   "name": "Firebase All Testing",
-  "description": "Complete Firebase validation - all layers, network connectivity, error handling and performance",
+  "description": "Complete Firebase validation - all layers, network connectivity, error handling and performance with enhanced granular backend testing",
   "configs": [
     "firebase-cpp-layer",
-    "firebase-backend-layer", 
+    "firebase-backend-layer",
     "firebase-rtdb-layer",
+    "backend.firebase.async_pattern",
+    "backend.firebase.error_handling",
+    "firebase-backend-batch-1",
+    "firebase-backend-batch-2",
+    "firebase-backend-batch-3",
+    "firebase-two-actions-test",
+    "firebase-three-actions-test",
     "system-error-handling",
     "system-performance"
   ]

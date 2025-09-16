@@ -1,0 +1,11 @@
+{
+  "description": "Test 3 Firebase actions to determine Bus error crash threshold",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.performance",
+    "backend.firebase.lifecycle"
+  ],
+  "metadata": {
+    "auto_quit": true
+  }
+}

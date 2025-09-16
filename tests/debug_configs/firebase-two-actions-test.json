@@ -1,0 +1,10 @@
+{
+  "description": "Test 2 Firebase actions to determine concurrency limits for Bus error investigation",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.performance"
+  ],
+  "metadata": {
+    "auto_quit": true
+  }
+}

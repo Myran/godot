@@ -1,0 +1,9 @@
+{
+  "description": "Firebase Backend Batch 2 - Error handling and performance (safe concurrency limit)",
+  "actions": [
+    "backend.firebase.error_handling",
+    "backend.firebase.performance",
+    "backend.firebase.request_tracking"
+  ],
+  "platforms": ["android"]
+}
