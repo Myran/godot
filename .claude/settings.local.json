@@ -67,7 +67,17 @@
       "WebFetch(domain:docs.godotengine.org)",
       "WebFetch(domain:stackoverflow.com)",
       "Bash(xargs rg:*)",
-      "Bash(backlog board:*)"
+      "Bash(backlog board:*)",
+      "Bash(for i in {1..3})",
+      "Bash(do echo \"=== Test Run $i ===\")",
+      "Bash(done)",
+      "Bash(git checkout:*)",
+      "Bash(for:*)",
+      "Bash(if [ -f \"tests/debug_configs/$config.json\" ])",
+      "Bash(then jq -r '.description' tests/debug_configs/$config.json)",
+      "Bash(else echo \"File not found\")",
+      "Bash(fi)",
+      "Bash(git submodule:*)"
     ],
     "deny": [],
     "ask": [],

@@ -295,23 +295,44 @@ ci-validate-android:
 log-run +ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     # Create logs directory if it doesn't exist
     mkdir -p logs
-    
+
     # Generate timestamp and clean command name for filename
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     COMMAND_NAME=$(echo "{{ARGS}}" | tr ' ' '_' | tr -d '"' | sed 's/[^a-zA-Z0-9_-]/_/g')
     LOG_FILE="logs/${TIMESTAMP}_${COMMAND_NAME}.log"
-    
+
     echo "🚀 Running: just {{ARGS}}"
     echo "📝 Saving output to: $LOG_FILE"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # Run the command with tee to show output and save to file
     just {{ARGS}} 2>&1 | tee "$LOG_FILE"
-    
+
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ Log saved to: $LOG_FILE"
+
+# Run any just command with automatic timestamped logging (SILENT - output only to file)
+log-run-silent +ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Create logs directory if it doesn't exist
+    mkdir -p logs
+
+    # Generate timestamp and clean command name for filename
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    COMMAND_NAME=$(echo "{{ARGS}}" | tr ' ' '_' | tr -d '"' | sed 's/[^a-zA-Z0-9_-]/_/g')
+    LOG_FILE="logs/${TIMESTAMP}_${COMMAND_NAME}.log"
+
+    echo "🚀 Running: just {{ARGS}} (silent)"
+    echo "📝 Saving output to: $LOG_FILE"
+
+    # Run the command and redirect ALL output directly to file (no display)
+    just {{ARGS}} > "$LOG_FILE" 2>&1
+
     echo "✅ Log saved to: $LOG_FILE"
 
 # ================================
