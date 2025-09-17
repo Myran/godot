@@ -62,6 +62,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var overall_success: bool = set_success and get_success
 	var total_duration: int = Time.get_ticks_msec() - start_time
 
+	# UNIFIED TEST REPORTING: Generate DEBUG_TEST_SUCCESS marker
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = test_metadata.get("test_id", "")
+	if config_test_id != "" and overall_success:
+		DebugAction._log_test_success(action_name, category, group, total_duration, {})
+
 	if overall_success:
 		_update_status("Backend async pattern test PASSED")
 		return DebugActionResult.new_success(

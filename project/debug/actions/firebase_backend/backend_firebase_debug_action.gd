@@ -189,9 +189,38 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 
 func execute_backend_action() -> bool:
+	# TRACE: Add comprehensive logging to understand execution path
+	Log.info(
+		"EXECUTION_PATH_TRACE: execute_backend_action called",
+		{
+			"action": action_name,
+			"has_execute_action_logic": has_method("_execute_action_logic"),
+			"action_callable": str(action_callable),
+			"category": category,
+			"group": group
+		},
+		["debug", "backend_firebase", "execution_trace"]
+	)
+
 	if has_method("_execute_action_logic"):
+		Log.info(
+			"EXECUTION_PATH_TRACE: About to call _execute_action_logic",
+			{"action": action_name},
+			["debug", "backend_firebase", "execution_trace"]
+		)
+
 		@warning_ignore("redundant_await")
 		var result: DebugActionResult = await _execute_action_logic({})
+
+		Log.info(
+			"EXECUTION_PATH_TRACE: _execute_action_logic returned",
+			{
+				"action": action_name,
+				"result_null": result == null,
+				"result_success": result.is_success() if result else false
+			},
+			["debug", "backend_firebase", "execution_trace"]
+		)
 
 		# Add null safety check for stronger typing enforcement
 		if result == null:
@@ -204,6 +233,31 @@ func execute_backend_action() -> bool:
 			return false
 
 		var success: bool = result.is_success()
+
+		# UNIFIED TEST REPORTING: Add missing DEBUG_TEST_SUCCESS logging
+		# This ensures Firebase backend actions are properly collected in test results
+		var duration_ms: int = result.duration_ms if result else 0
+		var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+		var config_test_id: String = test_metadata.get("test_id", "")
+
+		if config_test_id != "":
+			if success:
+				# Generate DEBUG_TEST_SUCCESS marker (was missing in Firebase backend actions)
+				DebugAction._log_test_success(action_name, category, group, duration_ms, {})
+			else:
+				# Generate DEBUG_TEST_FAILURE marker for consistency
+				Log.error(
+					"DEBUG_TEST_FAILURE",
+					{
+						"test_id": config_test_id,
+						"action": action_name,
+						"category": category,
+						"group": group,
+						"duration_ms": duration_ms,
+						"error_message": result.error_message if result else "Unknown error"
+					},
+					["debug", "test", "failure"]
+				)
 
 		# CRITICAL: Emit completion event for Firebase backend actions with auto_continue=false
 		# This allows sequential execution without waiting for game state events
