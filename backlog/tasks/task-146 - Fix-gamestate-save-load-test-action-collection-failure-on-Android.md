@@ -1,10 +1,10 @@
 ---
 id: task-146
 title: Fix gamestate-save-load-test action collection failure on Android
-status: Done
+status: To Do
 assignee: []
 created_date: '2025-09-13 13:15'
-updated_date: '2025-09-15 13:16'
+updated_date: '2025-09-16 09:30'
 labels:
   - critical
   - android
@@ -12,7 +12,8 @@ labels:
   - testing
   - action-collection
   - checksum-validation
-dependencies: []
+dependencies:
+  - task-152
 priority: high
 ---
 
@@ -21,13 +22,26 @@ priority: high
 **✅ RESOLVED: Action collection issue fixed** - Actions now collected successfully (2/2)
 **🔍 NEW ISSUE: Checksum validation failure** - Getting `SKIP_SYSTEM_DEBUG_CHECKSUM` instead of expected checksums
 
-**FINAL UPDATE 2025-09-15**: ✅ **TASK COMPLETED SUCCESSFULLY**
+**REGRESSION UPDATE 2025-09-16**: ❌ **TASK REOPENED - INTERMITTENT FAILURE RETURNED**
 
+**Previous Resolution (2025-09-15)**:
 1. **Action Collection Issue**: ✅ RESOLVED by task-149 fix (proper await signal in replay_complete action)
 2. **Checksum Validation Issue**: ✅ RESOLVED by removing inappropriate checksum validation from debug utility test
 3. **Design Correction**: Debug actions (`system.debug.*`) correctly skip checksum generation as intended
 
-**Key Insight**: The `SKIP_SYSTEM_DEBUG_CHECKSUM` behavior is correct design - gamestate save operations should NOT validate themselves through checksums. The test was incorrectly designed and has been corrected.
+**Current Status (2025-09-16)**:
+❌ **REGRESSION DETECTED**: Same "Actions collected: 0" pattern has returned in latest test runs
+- **Evidence**: logs/20250916_090146_test.log (line 1459: "❌ Configuration failed: gamestate-save-load-test")
+- **Pattern**: Identical to other Android initialization failures (task-152 root cause)
+- **Timeline**: Was working → Now failing again (intermittent nature)
+
+**Root Cause Analysis**:
+The original task-149 fix is still in place and working correctly. The current failure is due to the broader Android initialization stability issue (task-152) where the debug coordinator fails to start intermittently, resulting in 0 actions collected before any gamestate code can execute.
+
+**Dependencies Added**:
+- **Blocked by**: task-152 (Android initialization stability - ROOT CAUSE)
+
+This task needs to remain OPEN until the underlying Android initialization stability is resolved, at which point the original fixes should resume working correctly.
 
 ## Problem Analysis
 
