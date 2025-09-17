@@ -187,6 +187,11 @@ backlog browser
 - **Link tasks bidirectionally**: Reference task in commit, commit in task
 - **🎯 CRITICAL: Use Advanced OODA Loop Debugging Methodology** - Investigation-first approach with expert panel evaluation (see below)
 
+**🚨 CRITICAL FILE SAFETY RULE:**
+- **NEVER remove, delete, or clean up files without explicit user permission**
+- **ALWAYS ask before removing any files, even temporary ones like `*_automated.json`**
+- **File removal is a destructive operation that requires user consent**
+
 **MCP Tools for GameTwo Development:**
 - **Repomix MCP**: Pack codebase once, search multiple times - ideal for architectural analysis
 - **Godot MCP**: Launch editor, run project, get debug output - direct Godot 4.3 integration  

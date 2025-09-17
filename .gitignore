@@ -50,3 +50,6 @@ project/Godot/app_userdata/gametwo/logs
 logs/
 *.apk
 *.aab
+
+# Temporary automated test configs
+tests/debug_configs/*_automated.json
