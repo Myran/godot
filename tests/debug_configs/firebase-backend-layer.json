@@ -2,7 +2,7 @@
   "description": "Firebase Backend Layer - All Firebase backend service integration tests",
   "actions": [
     "backend.firebase.async_pattern",
-    "backend.firebase.lifecycle", 
+    "backend.firebase.lifecycle",
     "backend.firebase.method_mapping",
     "backend.firebase.error_handling",
     "backend.firebase.performance",

@@ -126,7 +126,7 @@ static func create_from_callable(
 
 func _debug_callable_state(callable: Callable) -> Dictionary:
 	"""Comprehensive callable state inspection for Android debugging"""
-	var debug_info = {}
+	var debug_info: Dictionary = {}
 
 	# Basic validation using correct GDScript 4.x APIs
 	debug_info["is_null"] = callable.is_null()
@@ -135,7 +135,7 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 	debug_info["hash"] = callable.hash()
 
 	if not callable.is_null() and callable.is_valid():
-		var target = callable.get_object()
+		var target: Object = callable.get_object()
 		debug_info["has_object"] = target != null
 		debug_info["target_object"] = str(target) if target else "null"
 		debug_info["target_valid"] = is_instance_valid(target) if target else false
@@ -155,7 +155,7 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 				debug_info["target_queued_for_deletion"] = false
 
 			# Check if target has the method
-			var method_name = callable.get_method()
+			var method_name: StringName = callable.get_method()
 			debug_info["target_has_method"] = (
 				target.has_method(method_name) if method_name != &"" else false
 			)
@@ -171,7 +171,11 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 
 
 static func _log_test_success(
-	action_name: String, category: String, group: String, duration_ms: int, params: Dictionary = {}
+	test_action_name: String,
+	test_category: String,
+	test_group: String,
+	duration_ms: int,
+	params: Dictionary = {}
 ) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id: String = test_metadata.get("test_id", "")
@@ -184,9 +188,9 @@ static func _log_test_success(
 				"DEBUG_TEST_SUCCESS",
 				{
 					"test_id": config_test_id,
-					"action": action_name,
-					"category": category,
-					"group": group,
+					"action": test_action_name,
+					"category": test_category,
+					"group": test_group,
 					"duration_ms": duration_ms,
 					"params": params,
 					"pid": OS.get_process_id(),

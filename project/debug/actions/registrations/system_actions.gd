@@ -14,12 +14,16 @@ const LoadAlliedLineupActionClass = preload(
 )
 const LoadEnemyLineupActionClass = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
 const RestartGameActionClass = preload("res://debug/actions/system/restart_game_action.gd")
+
+
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_debug_system_actions(registry)
 	_register_integrity_actions(registry)
 	_register_test_actions(registry)
 	_register_gamestate_actions(registry)
 	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
+
+
 static func _register_debug_system_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
@@ -76,6 +80,8 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	# Note: Additional LoadDebugStateAction instances are created dynamically
 	# by debug menu when scanning saved states directory
 	# Note: Lineup load actions will be created dynamically when lineup files are discovered
+
+
 static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 	var stats: Dictionary = {
 		"total_actions": registry.get_all_actions().size(),
@@ -96,11 +102,15 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 		"Debug Action Registry Statistics", stats, [Log.TAG_DEBUG, Log.TAG_REGISTRY, Log.TAG_STATS]
 	)
 	return true
+
+
 static func _quit_application() -> bool:
 	_capture_final_state()
 	SessionManager.end_gameplay_session()
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
 	return true
+
+
 static func _capture_final_state() -> void:
 	var final_state: Dictionary = StateExtractor.extract_game_state()
 	if final_state.is_empty():
@@ -148,12 +158,16 @@ static func _capture_final_state() -> void:
 		},
 		[Log.TAG_FINAL_STATE, Log.TAG_DEBUG, Log.TAG_QUIT]
 	)
+
+
 static func _register_integrity_actions(registry: DebugActionRegistry) -> void:
 	Log.info("Registering integrity validation actions", {}, ["debug", "integrity", "registration"])
 	var recording_integrity: SystemRecordingIntegrityAction = SystemRecordingIntegrityAction.new()
 	registry.register_action(recording_integrity)
 	var replay_integrity: SystemReplayIntegrityAction = SystemReplayIntegrityAction.new()
 	registry.register_action(replay_integrity)
+
+
 static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	Log.info("Registering test actions", {}, ["debug", "test", "registration"])
 	var semantic_logging_test: TestSemanticLoggingAction = TestSemanticLoggingAction.new()
@@ -198,21 +212,15 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 		)
 	)
 	# Integration tests
-	(
-		registry
-		. register_action(
-			(
-				DebugAction
-				. create(
-					"developer.test.state_validation_integration",
-					_test_state_validation_integration
-				)
-				. set_category("Developer")
-				. set_group("Integration Tests")
-				. set_description(
-					"Test complete state validation integration"
-				)
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"developer.test.state_validation_integration", _test_state_validation_integration
 			)
+			. set_category("Developer")
+			. set_group("Integration Tests")
+			. set_description("Test complete state validation integration")
 		)
 	)
 	registry.register_action(
@@ -284,14 +292,20 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. set_description("TDD RED: Test platform-agnostic replay (should FAIL)")
 		)
 	)
+
+
 static func _hide_debug_menu() -> bool:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
 	Log.info("Debug interface hidden for clean output view", {}, ["debug", "ui", "menu"])
 	return true
+
+
 static func _show_debug_menu() -> bool:
 	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	Log.info("Debug interface shown", {}, ["debug", "ui", "menu"])
 	return true
+
+
 static func _test_replay_generation_no_quit() -> bool:
 	Log.info(
 		"Testing replay generation without quit action",
@@ -308,16 +322,20 @@ static func _test_replay_generation_no_quit() -> bool:
 		["debug", "test", "replay", "interactive"]
 	)
 	return true
+
+
 static func _replay_complete_sync() -> bool:
-	var start_time := Time.get_ticks_msec()
+	var start_time: int = Time.get_ticks_msec()
 	# Handle the replay completion logic
 	_replay_complete_with_final_logging()
 	# Log our own DEBUG_TEST_SUCCESS using the standard function - reuse DRY principle
-	var duration_ms := Time.get_ticks_msec() - start_time
+	var duration_ms: int = Time.get_ticks_msec() - start_time
 	DebugAction._log_test_success(
 		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
 	)
 	return true
+
+
 static func _replay_complete_with_final_logging() -> void:
 	var execution_context: Dictionary = _detect_execution_context()
 	Log.info(
@@ -408,6 +426,8 @@ static func _replay_complete_with_final_logging() -> void:
 		},
 		["semantic", "replay", "complete"]
 	)
+
+
 static func _replay_complete_async() -> void:
 	var execution_context: Dictionary = _detect_execution_context()
 	Log.info(
@@ -513,6 +533,8 @@ static func _replay_complete_async() -> void:
 		["semantic", "replay", "complete"]
 	)
 	return
+
+
 static func _log_lineup_final_state() -> void:
 	var main_node: Node = Engine.get_main_loop().current_scene
 	if not main_node:
@@ -586,6 +608,8 @@ static func _log_lineup_final_state() -> void:
 		},
 		["debug", "replay", "complete", "lineup", "final_state"]
 	)
+
+
 static func _detect_execution_context() -> Dictionary:
 	var context: Dictionary = {
 		"mode": "manual", "platform": OS.get_name(), "command_source": "default_manual"  # Default to manual mode
@@ -608,6 +632,8 @@ static func _detect_execution_context() -> Dictionary:
 		context.command_source = "ci_environment"
 		return context
 	return context
+
+
 static func _capture_rng_state() -> bool:
 	if not is_instance_valid(rng) or not rng.seeded_rng:
 		Log.error("RNG system not available for state capture", {}, ["debug", "rng", "error"])
@@ -636,6 +662,8 @@ static func _capture_rng_state() -> bool:
 		["debug", "rng", "state"]
 	)
 	return true
+
+
 static func _finalize_replay_validation() -> bool:
 	Log.info("Finalizing replay validation...", {}, ["debug", "replay", "validation", "finalize"])
 	var validation_summary: Dictionary = SessionManager.finalize_replay_validation()
@@ -671,6 +699,8 @@ static func _finalize_replay_validation() -> bool:
 			["replay", "validation", "failure"]
 		)
 	return validation_summary.replay_deterministic
+
+
 static func _test_desktop_functionality() -> bool:
 	Log.info(
 		"TDD GREEN: Desktop test execution working correctly",
@@ -683,6 +713,8 @@ static func _test_desktop_functionality() -> bool:
 		["debug", "test", "tdd", "desktop", "green_phase"]
 	)
 	return true  # TDD GREEN phase - functionality implemented and working
+
+
 static func _test_desktop_log_access() -> bool:
 	Log.info(
 		"TDD GREEN: Desktop log access working correctly",
@@ -695,6 +727,8 @@ static func _test_desktop_log_access() -> bool:
 		["debug", "test", "tdd", "desktop", "green_phase"]
 	)
 	return true  # TDD GREEN phase - functionality implemented and working
+
+
 static func _test_platform_agnostic_replay() -> bool:
 	Log.info(
 		"TDD GREEN: Platform-agnostic replay working correctly",
@@ -708,6 +742,8 @@ static func _test_platform_agnostic_replay() -> bool:
 		["debug", "test", "tdd", "desktop", "green_phase"]
 	)
 	return true  # TDD GREEN phase - functionality implemented and working
+
+
 static func _test_state_validation_integration() -> DebugActionResult:
 	Log.info(
 		"Integration test: complete state validation",
@@ -778,6 +814,8 @@ static func _test_state_validation_integration() -> DebugActionResult:
 		"INTEGRATION_FAILURE",
 		DebugActionResult.ErrorCategory.VALIDATION
 	)
+
+
 static func _test_debug_action_with_validation() -> DebugActionResult:
 	Log.info(
 		"Testing DebugAction state validation execution",
@@ -809,6 +847,8 @@ static func _test_debug_action_with_validation() -> DebugActionResult:
 		["debug", "test", "integration", "debug_action", "failure"]
 	)
 	return result
+
+
 static func _test_semantic_mapper_integration() -> DebugActionResult:
 	Log.info(
 		"Testing SemanticActionMapper validation injection",
@@ -859,6 +899,8 @@ static func _test_semantic_mapper_integration() -> DebugActionResult:
 		"SEMANTIC_MAPPER_FAILURE",
 		DebugActionResult.ErrorCategory.VALIDATION
 	)
+
+
 static func _test_state_extractor_integration() -> DebugActionResult:
 	Log.info(
 		"Testing StateExtractor checksum functionality",
@@ -905,6 +947,8 @@ static func _test_state_extractor_integration() -> DebugActionResult:
 		"STATE_EXTRACTOR_FAILURE",
 		DebugActionResult.ErrorCategory.VALIDATION
 	)
+
+
 static func _register_gamestate_actions(_registry: DebugActionRegistry) -> void:
 	# Note: Gamestate validation is handled by just commands (test-save-load-cycle)
 	# which use proper bash checksum comparison, not GDScript comparison
