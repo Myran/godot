@@ -5,6 +5,7 @@
     "backend.firebase.performance",
     "backend.firebase.lifecycle"
   ],
+  "platforms": ["android"],
   "metadata": {
     "auto_quit": true
   }
