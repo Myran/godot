@@ -6,6 +6,8 @@
 #include "core/string/ustring.h"
 #include "core/templates/vector.h"
 #include "core/variant/variant.h"
+#include "core/os/mutex.h"
+#include "core/os/memory.h"
 
 // Forward declare Firebase SDK types where possible
 namespace firebase {
@@ -27,6 +29,9 @@ class Future;
 
 #include "firebase.h"
 #include <map>
+#include <memory>
+#include <atomic>
+#include <mutex>
 
 // Include REQUIRED Firebase SDK headers
 #include "firebase/database.h"
@@ -40,12 +45,18 @@ class Future;
 
 class FirebaseDatabase;
 
+// --- Weak Reference Handle for Lambda Safety ---
+struct FirebaseDatabaseWeakHandle {
+	std::weak_ptr<FirebaseDatabase> weak_ptr;
+	FirebaseDatabaseWeakHandle(std::weak_ptr<FirebaseDatabase> ptr) : weak_ptr(ptr) {}
+};
+
 // --- Listener Definitions ---
 class FirebaseChildListener : public firebase::database::ChildListener {
-	FirebaseDatabase *database_instance_ptr;
+	std::weak_ptr<FirebaseDatabase> database_instance_weak;
 
 public:
-	FirebaseChildListener(FirebaseDatabase *db);
+	FirebaseChildListener(std::weak_ptr<FirebaseDatabase> db);
 	virtual ~FirebaseChildListener() {}
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
 	void OnChildAdded(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
@@ -55,11 +66,10 @@ public:
 };
 
 class ConnectionStateListener : public firebase::database::ValueListener {
-public: // Made public
-	FirebaseDatabase *database_instance_ptr;
+	std::weak_ptr<FirebaseDatabase> database_instance_weak;
 
 public:
-	ConnectionStateListener(FirebaseDatabase *db);
+	ConnectionStateListener(std::weak_ptr<FirebaseDatabase> db);
 	virtual ~ConnectionStateListener() {}
 	void OnValueChanged(const firebase::database::DataSnapshot &snapshot) override;
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
@@ -69,24 +79,37 @@ public:
 struct TransactionData {
 	int request_id;
 	int increment_by;
-	FirebaseDatabase *database_ptr;
+	std::weak_ptr<FirebaseDatabase> database_weak;
 };
 
 // --- Main Database Class ---
-class FirebaseDatabase : public RefCounted {
+class FirebaseDatabase : public RefCounted, public std::enable_shared_from_this<FirebaseDatabase> {
 	GDCLASS(FirebaseDatabase, RefCounted);
 
-protected:
-	static bool is_initialized;
-	static firebase::database::Database *database_instance;
-	static FirebaseChildListener *child_listener_instance;
-	static ConnectionStateListener *connection_listener_instance; // Static pointer declaration
-	static void _bind_methods();
-	static uint64_t _listener_path_ref_count;
-	static firebase::database::DatabaseReference _active_child_listener_ref;
+private:
+	// Thread-safe singleton implementation
+	static std::mutex initialization_mutex;
+	static std::mutex instance_mutex;
+	static std::atomic<bool> is_initialized;
+	static std::shared_ptr<FirebaseDatabase> instance;
 
+	// Instance members (no longer static)
+	firebase::database::Database *database_instance;
+	std::unique_ptr<FirebaseChildListener> child_listener_instance;
+	std::unique_ptr<ConnectionStateListener> connection_listener_instance;
+	uint64_t _listener_path_ref_count;
+	firebase::database::DatabaseReference _active_child_listener_ref;
+
+	// Private constructor for singleton
+	FirebaseDatabase();
+
+protected:
+	static void _bind_methods();
+
+	// Helper methods
 	firebase::database::DatabaseReference get_reference_to_path(const Array &keys);
 	firebase::database::Query get_query_from_reference(const firebase::database::DatabaseReference &ref, const Dictionary &query_params);
+	FirebaseDatabaseWeakHandle create_weak_handle();
 
 	static firebase::database::TransactionResult increment_transaction_function(
 			firebase::database::MutableData *data, void *transaction_data);
@@ -94,7 +117,13 @@ protected:
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
 public:
-	FirebaseDatabase();
+	// Thread-safe singleton access
+	static std::shared_ptr<FirebaseDatabase> get_instance();
+	static void cleanup();
+
+	// Delete copy constructor
+	FirebaseDatabase(const FirebaseDatabase&) = delete;
+
 	~FirebaseDatabase();
 
 	void get_value_async(int p_request_id, const Array &keys);
