@@ -1,5 +1,5 @@
 {
-  "description": "Firebase Rate Limiter Validation - Tests burst limits, circuit breaker, and adaptive delays",
+  "description": "Firebase Rate Limiter Validation (Android-specific) - Tests Firebase C++ SDK resource exhaustion protection, burst limits, and adaptive delays",
   "actions": [
     "system.debug.firebase_rate_limiter_status",
     "backend.firebase.async_pattern",
@@ -12,7 +12,7 @@
     "backend.firebase.lifecycle",
     "system.debug.firebase_rate_limiter_status"
   ],
-  "platforms": ["android", "desktop"],
+  "platforms": ["android"],
   "metadata": {
     "test_type": "rate_limiter_validation",
     "expected_rate_limits": 3,
