@@ -5,6 +5,7 @@
     "firebase-cpp-layer",
     "firebase-backend-layer",
     "firebase-rtdb-layer",
+    "firebase-rate-limiter-validation",
     "backend.firebase.async_pattern",
     "backend.firebase.error_handling",
     "firebase-backend-batch-1",

@@ -6,7 +6,7 @@ extends RefCounted
 # Integrates with Anti-Corruption Layer for clean service boundaries
 
 @warning_ignore("unused_signal")
-signal value_received(data: Dictionary[String, Variant])
+signal value_received(data: Dictionary)
 
 # Firebase RTDB Listener signals - forwarded from C++ Firebase SDK
 @warning_ignore("unused_signal")
@@ -68,8 +68,8 @@ func get_data(path: Array[Variant], key: String = "") -> Variant:
 			[Log.TAG_DB, Log.TAG_FIREBASE]
 		)
 
-		# Emit value_received signal with proper typing
-		var signal_data: Dictionary[String, Variant] = {
+		# Emit value_received signal - using basic Dictionary type for Firebase C++ compatibility
+		var signal_data: Dictionary = {
 			"key": key if not key.is_empty() else (path[-1] if not path.is_empty() else ""),
 			"value": payload
 		}
@@ -202,7 +202,7 @@ func remove_data(path: Array[Variant], key: String = "") -> bool:
 	return false
 
 
-func query_data(path: Array[Variant], query_params: Dictionary[String, Variant]) -> Variant:
+func query_data(path: Array[Variant], query_params: Dictionary) -> Variant:
 	if not is_available():
 		Log.error(
 			"DatabaseService: Not available for query_data",

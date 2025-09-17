@@ -70,7 +70,8 @@ func test_backend_async_pattern(
 	path: Array[Variant],
 	key: String,
 	value: Variant = null,
-	operation_name: String = ""
+	operation_name: String = "",
+	expect_error: bool = false
 ) -> bool:
 	Log.info(
 		"TRACE: test_backend_async_pattern called",
@@ -151,7 +152,20 @@ func test_backend_async_pattern(
 			return false
 
 	var duration_ms: int = Time.get_ticks_msec() - start_time
-	var success: bool = result != null
+	var success: bool
+
+	if expect_error:
+		# For error handling tests, null/false results indicate graceful error handling
+		success = result == null or result == false
+	else:
+		# For normal tests, non-null results indicate success
+		success = result != null
+
+	# CRITICAL: Add small delay between Firebase operations to prevent C++ SDK resource exhaustion
+	# This prevents Bus error crashes in multi-operation Firebase tests (task-152)
+	var delay_start: int = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - delay_start < 100:
+		await Engine.get_main_loop().process_frame
 
 	if success:
 		Log.info(

@@ -14,10 +14,12 @@ const LoadAlliedLineupActionClass = preload(
 )
 const LoadEnemyLineupActionClass = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
 const RestartGameActionClass = preload("res://debug/actions/system/restart_game_action.gd")
+# Firebase rate limiter status action implemented as lambda function below
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
 	_register_debug_system_actions(registry)
+	_register_firebase_rate_limiter_actions(registry)
 	_register_integrity_actions(registry)
 	_register_test_actions(registry)
 	_register_gamestate_actions(registry)
@@ -946,6 +948,86 @@ static func _test_state_extractor_integration() -> DebugActionResult:
 		"StateExtractor integration test failed",
 		"STATE_EXTRACTOR_FAILURE",
 		DebugActionResult.ErrorCategory.VALIDATION
+	)
+
+
+static func _check_firebase_rate_limiter_status() -> bool:
+	# Get rate limiter status from Firebase service
+	if not FirebaseService:
+		Log.error(
+			"Firebase rate limiter status check failed",
+			{"error": "FirebaseService not available"},
+			["debug", "firebase", "rate_limiter"]
+		)
+		return false
+
+	var status: Dictionary = FirebaseService.get_rate_limiter_status()
+
+	if status.has("error"):
+		Log.error(
+			"Firebase rate limiter status check failed",
+			{"error": "Rate limiter not initialized", "details": status.error},
+			["debug", "firebase", "rate_limiter"]
+		)
+		return false
+
+	# Log detailed status for monitoring
+	Log.info(
+		"Firebase Rate Limiter Status Check",
+		{
+			"circuit_breaker_active": status.circuit_breaker_active,
+			"operations_in_burst": status.operations_in_burst,
+			"pending_requests": status.pending_requests,
+			"consecutive_failures": status.consecutive_failures,
+			"average_delay_ms": status.average_delay_ms,
+			"total_operations": status.total_operations
+		},
+		["debug", "firebase", "rate_limiter"]
+	)
+
+	# Check for health issues
+	var health_issues: Array[String] = []
+
+	if status.circuit_breaker_active:
+		health_issues.append("Circuit breaker is active")
+
+	if status.consecutive_failures > 3:
+		health_issues.append("High consecutive failure count: " + str(status.consecutive_failures))
+
+	if status.pending_requests > 5:
+		health_issues.append("High pending request count: " + str(status.pending_requests))
+
+	if status.average_delay_ms > 500:
+		health_issues.append("High average delay: " + str(status.average_delay_ms) + "ms")
+
+	if health_issues.size() > 0:
+		Log.warning(
+			"Firebase rate limiter health issues detected",
+			{"health_issues": health_issues, "status": status},
+			["debug", "firebase", "rate_limiter"]
+		)
+		return false
+
+	Log.info(
+		"Firebase rate limiter is healthy",
+		{"status": "healthy", "total_operations": status.total_operations},
+		["debug", "firebase", "rate_limiter"]
+	)
+	return true
+
+
+static func _register_firebase_rate_limiter_actions(registry: DebugActionRegistry) -> void:
+	registry.register_action(
+		(
+			DebugAction
+			. create(
+				"system.debug.firebase_rate_limiter_status",
+				func() -> bool: return _check_firebase_rate_limiter_status()
+			)
+			. set_category("System")
+			. set_group("Firebase")
+			. set_description("Check Firebase rate limiter status and health")
+		)
 	)
 
 

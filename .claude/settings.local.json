@@ -77,7 +77,8 @@
       "Bash(then jq -r '.description' tests/debug_configs/$config.json)",
       "Bash(else echo \"File not found\")",
       "Bash(fi)",
-      "Bash(git submodule:*)"
+      "Bash(git submodule:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": [],

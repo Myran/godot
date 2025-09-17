@@ -32,7 +32,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var invalid_path: Array[Variant] = []  # Empty path should be handled gracefully
 	var invalid_result: Variant
 	invalid_result = await test_backend_async_pattern(
-		"get_data", invalid_path, "", null, "Error: Invalid Path"
+		"get_data", invalid_path, "", null, "Error: Invalid Path", true
 	)
 
 	var invalid_handled: bool = invalid_result == false or invalid_result == null
@@ -51,7 +51,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var timeout_start_time: int = Time.get_ticks_msec()
 	var timeout_result: Variant
 	timeout_result = await test_backend_async_pattern(
-		"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test"
+		"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test", true
 	)
 	var timeout_duration: int = Time.get_ticks_msec() - timeout_start_time
 
@@ -73,7 +73,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var unsupported_result: Variant
 	unsupported_result = await test_backend_async_pattern(
-		"unsupported_method", unsupported_path, "test", "value", "Error: Unsupported Method"
+		"unsupported_method", unsupported_path, "test", "value", "Error: Unsupported Method", true
 	)
 
 	var unsupported_handled: bool = unsupported_result == false

@@ -161,9 +161,9 @@ func await_completion() -> Variant:
 		)
 		return _result
 
-	# Timeout occurred - return timeout result
+	# Timeout occurred - clean up pending request and return timeout result
 	Log.warning(
-		"FirebaseRequest: Operation timed out",
+		"FirebaseRequest: Operation timed out - cleaning up to prevent memory leak",
 		{
 			"request_id": _request_id,
 			"timeout_seconds": timeout_seconds,
@@ -171,4 +171,10 @@ func await_completion() -> Variant:
 		},
 		[Log.TAG_FIREBASE, Log.TAG_ERROR]
 	)
+
+	# Critical fix: Clean up timed-out request from FirebaseService._pending_requests
+	# to prevent memory leaks when GDScript strong typing silently drops Firebase C++ callbacks
+	if FirebaseService != null:
+		FirebaseService.cleanup_timed_out_request(_request_id)
+
 	return {"status": "timeout", "error": "operation_timed_out"}

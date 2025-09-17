@@ -8,6 +8,7 @@ var _cpp_database: Object
 var _is_initialized: bool = false
 var _next_request_id: int = 1
 var _pending_requests: Dictionary = {}
+var _rate_limiter: RefCounted
 
 
 func _ready() -> void:
@@ -15,6 +16,10 @@ func _ready() -> void:
 	if Log == null:
 		print("ERROR: Log not available in FirebaseService _ready()")
 		return
+
+	# Initialize rate limiter
+	var firebase_rate_limiter_script: GDScript = load("res://firebase/firebase_rate_limiter.gd")
+	_rate_limiter = firebase_rate_limiter_script.new()
 
 	Log.info(
 		"FirebaseService _ready() called - using LAZY INITIALIZATION",
@@ -296,7 +301,7 @@ func start_listening(path: Array[Variant]) -> void:
 	db.call_method("add_listener_at_path", [path])
 
 
-func query_data(path: Array[Variant], query_params: Dictionary[String, Variant]) -> FirebaseRequest:
+func query_data(path: Array[Variant], query_params: Dictionary) -> FirebaseRequest:
 	if not is_available():
 		var error_request: FirebaseRequest = FirebaseRequest.new(-1)
 		error_request.complete_with_error(
@@ -304,9 +309,22 @@ func query_data(path: Array[Variant], query_params: Dictionary[String, Variant])
 		)
 		return error_request
 
+	# Apply Firebase C++ SDK rate limiting to prevent resource exhaustion
+	var rate_limit_info: Dictionary = _rate_limiter.should_rate_limit()
+	if rate_limit_info.should_limit:
+		Log.debug(
+			"Firebase operation rate limited",
+			{"delay_ms": rate_limit_info.delay_ms, "reason": rate_limit_info.reason, "path": path},
+			[Log.TAG_FIREBASE, "rate_limiter"]
+		)
+		await _rate_limiter.apply_rate_limit(rate_limit_info.delay_ms, rate_limit_info.reason)
+
 	var request_id: int = _get_next_request_id()
 	var request: FirebaseRequest = FirebaseRequest.new(request_id)
 	_pending_requests[request_id] = request
+
+	# Record operation start for rate limiting
+	_rate_limiter.record_operation_start()
 
 	# Use Firebase C++ method call
 	db.call_method("query_ordered_data_async", [request_id, path, query_params])
@@ -353,7 +371,15 @@ func _resolve_pending_request(request_id: int, result: Variant) -> void:
 			[Log.TAG_FIREBASE, "signal_debug"]
 		)
 
-		if result.status == "ok":
+		var success: bool = result.status == "ok"
+		var duration_ms: int = 0
+		if request.has_method("get_duration_ms"):
+			duration_ms = request.get_duration_ms()
+
+		# Record operation completion for rate limiting
+		_rate_limiter.record_operation_complete(success, duration_ms)
+
+		if success:
 			Log.debug(
 				"Completing request with success",
 				{"request_id": request_id, "payload": result.payload},
@@ -376,6 +402,34 @@ func _resolve_pending_request(request_id: int, result: Variant) -> void:
 			{"request_id": request_id, "pending_requests": _pending_requests.keys()},
 			[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 		)
+
+
+func cleanup_timed_out_request(request_id: int) -> void:
+	"""Remove timed-out requests from pending dictionary to prevent memory leaks.
+	Called by FirebaseRequest when timeout occurs but C++ SDK fails to emit callback."""
+
+	if request_id in _pending_requests:
+		_pending_requests.erase(request_id)
+
+		# Record timeout as failure for rate limiting
+		_rate_limiter.record_operation_complete(false, 45000)  # 45s timeout duration
+
+		Log.warning(
+			"Cleaned up timed-out Firebase request to prevent memory leak",
+			{
+				"request_id": request_id,
+				"remaining_pending": _pending_requests.size(),
+				"pending_requests": _pending_requests.keys()
+			},
+			[Log.TAG_FIREBASE, Log.TAG_ERROR]
+		)
+
+
+func get_rate_limiter_status() -> Dictionary:
+	"""Get current Firebase rate limiter status for monitoring and debugging."""
+	if _rate_limiter != null:
+		return _rate_limiter.get_status()
+	return {"error": "rate_limiter_not_initialized"}
 
 
 func _connect_cpp_signals() -> bool:
