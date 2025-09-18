@@ -761,9 +761,11 @@ _extract-logs test_id platform temp_output_file="":
         # Detect sequential actions by looking for FirebaseBackendCompleteEvent dispatches
         # Sequential actions emit these events after completing, followed by DEBUG_TEST_SUCCESS
         SEQUENTIAL_DISPATCHES=$(grep -c "Dispatching action to idle queue.*auto_continue.*false\|Sequential action completed" "$LOG_FILE" 2>/dev/null || echo "0")
+        SEQUENTIAL_DISPATCHES=$(echo "$SEQUENTIAL_DISPATCHES" | tr -d ' \t\n\r' | head -1)
         COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
-        
-        if [[ "$SEQUENTIAL_DISPATCHES" -gt 0 ]]; then
+        COMPLETION_EVENTS=$(echo "$COMPLETION_EVENTS" | tr -d ' \t\n\r' | head -1)
+
+        if [[ "${SEQUENTIAL_DISPATCHES:-0}" -gt 0 ]]; then
             echo "📋 Found $SEQUENTIAL_DISPATCHES sequential action(s), $COMPLETION_EVENTS completion event(s)"
             
             # Wait for completion events to match dispatches (with timeout safety)
@@ -771,13 +773,14 @@ _extract-logs test_id platform temp_output_file="":
             MAX_WAIT_SECONDS=30
             WAIT_INTERVAL=1
             
-            while [[ $COMPLETION_EVENTS -lt $SEQUENTIAL_DISPATCHES && $WAIT_COUNT -lt $MAX_WAIT_SECONDS ]]; do
+            while [[ ${COMPLETION_EVENTS:-0} -lt ${SEQUENTIAL_DISPATCHES:-0} && $WAIT_COUNT -lt $MAX_WAIT_SECONDS ]]; do
                 echo "⏳ Waiting for sequential action completion... ($WAIT_COUNT/$MAX_WAIT_SECONDS) - $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES events"
                 sleep $WAIT_INTERVAL
                 WAIT_COUNT=$((WAIT_COUNT + WAIT_INTERVAL))
-                
+
                 # Re-check completion events (logs might be updating)
                 COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
+                COMPLETION_EVENTS=$(echo "$COMPLETION_EVENTS" | tr -d ' \t\n\r' | head -1)
             done
             
             if [[ $COMPLETION_EVENTS -ge $SEQUENTIAL_DISPATCHES ]]; then
@@ -799,17 +802,20 @@ _extract-logs test_id platform temp_output_file="":
     # Verify and report results
     if [[ -f "$LOG_FILE" ]]; then
         LINE_COUNT=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+        LINE_COUNT=$(echo "$LINE_COUNT" | tr -d ' \t\n\r' | head -1)
         echo "📄 ${PLATFORM} logs saved to: $(basename "$LOG_FILE")"
         echo "📊 Log lines captured: $LINE_COUNT"
         
         # Enhanced reporting for sequential action coverage
         if [[ -f "$LOG_FILE" ]]; then
             DEBUG_SUCCESS_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+            DEBUG_SUCCESS_COUNT=$(echo "$DEBUG_SUCCESS_COUNT" | tr -d ' \t\n\r' | head -1)
             echo "🎯 DEBUG_TEST_SUCCESS entries: $DEBUG_SUCCESS_COUNT"
             
             # Report on sequential actions specifically
-            SEQUENTIAL_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -E "(rtdb\.advanced\.transaction|rtdb\.advanced\.concurrent_ops|rtdb\.testing\.large_data|cpp\.firebase\.|backend\.firebase\.)" | wc -l || echo "0")
-            if [[ "$SEQUENTIAL_SUCCESS_COUNT" -gt 0 ]]; then
+            SEQUENTIAL_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -E "(rtdb\.advanced\.transaction|rtdb\.advanced\.concurrent_ops|rtdb\.testing\.large_data|cpp\.firebase\.|backend\.firebase\.)" | wc -l 2>/dev/null || echo "0")
+            SEQUENTIAL_SUCCESS_COUNT=$(echo "$SEQUENTIAL_SUCCESS_COUNT" | tr -d ' \t\n\r' | head -1)
+            if [[ "${SEQUENTIAL_SUCCESS_COUNT:-0}" -gt 0 ]]; then
                 echo "⚡ Sequential action successes: $SEQUENTIAL_SUCCESS_COUNT"
             fi
         fi
@@ -890,9 +896,9 @@ _filter-desktop-logs-safely temp_file_path:
     echo ""
     
     # Extract essential test info from filtered logs (exclude buffer replays)
-    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
-    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' ' || echo "0")
-    ERROR_COUNT=$(grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" "$TEMP_FILTERED" | grep -c -E "(ERROR|CRITICAL|FAILED)" 2>/dev/null || echo "0")
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \t\n\r' | head -1 || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \t\n\r' | head -1 || echo "0")
+    ERROR_COUNT=$(grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" "$TEMP_FILTERED" | grep -c -E "(ERROR|CRITICAL|FAILED)" 2>/dev/null | tr -d ' \t\n\r' | head -1 || echo "0")
     
     # Extract session info for better reporting
     SESSION_INFO=$(grep "SESSION_END" "$TEMP_FILTERED" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
@@ -2139,7 +2145,11 @@ _execute-test-with-analysis config_name platform session="":
     
     # Platform compatibility check
     echo "🔍 Checking platform compatibility..."
-    if [[ "$(just _is-platform-supported "$CONFIG_PATH" "$PLATFORM")" == "false" ]]; then
+    set +e  # Temporarily disable exit on error for controlled exit handling
+    PLATFORM_SUPPORTED=$(just _is-platform-supported "$CONFIG_PATH" "$PLATFORM")
+    set -e  # Re-enable exit on error
+
+    if [[ "$PLATFORM_SUPPORTED" == "false" ]]; then
         SUPPORTED_PLATFORMS=$(just _get-supported-platforms "$CONFIG_PATH")
         echo "⏭️ SKIPPED: $CONFIG_NAME (requires $SUPPORTED_PLATFORMS - not supported on $PLATFORM)"
         echo ""
@@ -3496,7 +3506,7 @@ _execute-test-list-commands test_list_path current_platform test_id:
     
     if [[ "$COMMANDS_COUNT" == "null" || "$COMMANDS_COUNT" == "0" ]]; then
         echo "📋 No commands to execute in test list"
-        return 0
+        exit 0
     fi
     
     echo ""
@@ -3564,7 +3574,7 @@ _execute-single-test-command command current_platform test_id:
     else
         echo "  ❌ Command not found: $COMMAND"
         echo "  Available commands: $(just --list | grep test-save-load-cycle | head -2)"
-        return 1
+        exit 1
     fi
 
 # ================================

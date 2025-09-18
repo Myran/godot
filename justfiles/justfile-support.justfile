@@ -334,7 +334,84 @@ test:
             echo "   $PLATFORM_ICON $PLATFORM: ❌ ERROR (no results available)"
         fi
     done
-    
+
+    # Add comprehensive test map showing individual config results across platforms
+    echo ""
+    echo "📋 Comprehensive Test Map"
+    echo "========================="
+    echo ""
+
+    # Collect all unique configs across all hierarchy files
+    TEMP_ALL_CONFIGS="/tmp/all_configs_$$"
+    > "$TEMP_ALL_CONFIGS"
+
+    for PLATFORM in $TEST_PLATFORMS; do
+        RESULT=$(get_platform_result "$PLATFORM")
+        HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
+
+        if [[ "$RESULT" == "2" ]]; then
+            continue  # Skip unsupported platforms
+        fi
+
+        if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+            jq -r '.config_results[].config' "$HIERARCHY_FILE" 2>/dev/null >> "$TEMP_ALL_CONFIGS"
+        fi
+    done
+
+    # Get unique configs and sort them
+    UNIQUE_CONFIGS=$(sort "$TEMP_ALL_CONFIGS" | uniq)
+    rm -f "$TEMP_ALL_CONFIGS"
+
+    if [[ -n "$UNIQUE_CONFIGS" ]]; then
+        # Display each config with its status across all platforms
+        echo "$UNIQUE_CONFIGS" | while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                echo "🔧 $config"
+
+                # Show status for each platform
+                for PLATFORM in $TEST_PLATFORMS; do
+                    RESULT=$(get_platform_result "$PLATFORM")
+                    HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
+
+                    if [[ "$RESULT" == "2" ]]; then
+                        continue  # Skip unsupported platforms
+                    fi
+
+                    PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM" 2>/dev/null || echo "📟")
+
+                    if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+                        CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+
+                        case "$CONFIG_STATUS" in
+                            "passed")
+                                echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
+                                ;;
+                            "failed")
+                                echo "   ├── $PLATFORM_ICON $PLATFORM: ❌ FAILED"
+                                ;;
+                            "skipped")
+                                SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                echo "   ├── $PLATFORM_ICON $PLATFORM: ⏭️  SKIPPED ($SKIP_REASON)"
+                                ;;
+                            "")
+                                echo "   ├── $PLATFORM_ICON $PLATFORM: ⚫ NOT RUN"
+                                ;;
+                            *)
+                                echo "   ├── $PLATFORM_ICON $PLATFORM: ❓ UNKNOWN ($CONFIG_STATUS)"
+                                ;;
+                        esac
+                    else
+                        echo "   ├── $PLATFORM_ICON $PLATFORM: ⚫ NO DATA"
+                    fi
+                done
+                echo ""
+            fi
+        done
+    else
+        echo "⚠️  No configuration results found across any platform"
+        echo ""
+    fi
+
     echo ""
     echo "Combined Results:"
     echo "✅ Passed: $TOTAL_PASSED"

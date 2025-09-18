@@ -78,7 +78,8 @@
       "Bash(else echo \"File not found\")",
       "Bash(fi)",
       "Bash(git submodule:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(MULTI_PLATFORM_MODE=true just test battle-animated)"
     ],
     "deny": [],
     "ask": [],
