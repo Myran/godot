@@ -290,6 +290,14 @@ func _execute_core(
 			# NOTE: replay_complete action handles its own DEBUG_TEST_SUCCESS logging
 			if action_name != "system.debug.replay_complete":
 				DebugAction._log_test_success(action_name, category, group, duration_ms, params)
+				# CRITICAL FIX: Ensure DEBUG_TEST_SUCCESS logging completes before automated quit
+				# Android automated mode can quit immediately after action execution, interrupting
+				# the success logging. Force immediate log processing to ensure write completes.
+				var metadata: Dictionary = DebugConfigReader.get_metadata()
+				if OS.get_name() == "Android" and metadata.get("auto_quit", false) == true:
+					# Force immediate chunk processing to ensure DEBUG_TEST_SUCCESS is written
+					if Log.has_method("_process_next_android_chunk"):
+						Log._process_next_android_chunk()
 		else:
 			test_failure_count += 1
 			Log.error(
