@@ -1,16 +1,7 @@
 {
-  "name": "Battle All Testing",
-  "description": "Complete battle system testing - determinism, animations, Firebase integration, wildcards and performance",
-  "wildcards": [
-    "game.draft.*",
-    "game.battle.*",
-    "game.lineup.*",
-    "game.state.*",
-    "game.debug.*"
-  ],
+  "name": "Battle Integration Testing",
+  "description": "Battle system integration with Firebase services and external dependencies",
   "configs": [
-    "battle-logic-only",
-    "battle-animated",
     "firebase-cpp-layer",
     "firebase-backend-layer",
     "firebase-rtdb-layer",

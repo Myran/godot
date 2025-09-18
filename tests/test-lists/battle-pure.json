@@ -1,0 +1,8 @@
+{
+  "name": "Pure Battle Testing",
+  "description": "Core battle system testing - logic-only determinism and animated battle validation (isolated from external services)",
+  "configs": [
+    "battle-logic-only",
+    "battle-animated"
+  ]
+}

@@ -24,6 +24,15 @@ func _ready() -> void:
 		["system", "initialization"]
 	)
 
+	# Check for --minimized flag and set window mode accordingly
+	if "--minimized" in cmdline_args or "--minimized" in cmdline_user_args:
+		Log.info(
+			"Minimized flag detected, setting window to minimized mode",
+			{},
+			["system", "initialization"]
+		)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
+
 	DebugManager.debug_event.connect(_on_debug_event)
 
 	# Gamestate loading is now handled by debug actions directly

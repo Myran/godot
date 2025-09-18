@@ -1,9 +1,9 @@
 {
   "name": "Main Test Suite",
-  "description": "Essential test suite for daily development - runs core system validation and battle logic",
+  "description": "Essential test suite for daily development - runs core system validation, Firebase services, and pure battle testing",
   "configs": [
     "@system-infrastructure",
     "@firebase-all",
-    "@battle-all"
+    "@battle-pure"
   ]
 }
