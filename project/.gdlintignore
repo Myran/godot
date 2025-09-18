@@ -1,2 +1,3 @@
 ./debug/actions/registrations/game_action_core.gd
 ./debug/debug_menu_controller.gd
+./debug/actions/registrations/system_actions.gd

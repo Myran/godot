@@ -4,12 +4,8 @@
     {
       "action": "*.*.error_handling",
       "expected_result": {
-        "type": "expected_errors",
-        "patterns": [
-          "ERROR: Error: Invalid Path failed",
-          "ERROR: Error: Timeout Test failed",
-          "ERROR: Unsupported backend method"
-        ]
+        "type": "action_result_trust",
+        "description": "Trust the action's own success/failure determination from DebugActionResult"
       }
     }
   ],

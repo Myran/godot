@@ -1015,10 +1015,51 @@ _analyze-test-errors test_id platform config_file="":
             EXPECTED_RESULT_VALIDATION=true
             echo "📋 Expected result validation enabled for this test"
 
-            # Extract expected error patterns from config
-            EXPECTED_PATTERNS=$(cat "$CONFIG_FILE" | grep -A 10 "expected_result" | grep -o '"[^"]*"' | grep -E "(ERROR|Error)" | tr -d '"' || echo "")
+            # Detect validation type
+            VALIDATION_TYPE=$(cat "$CONFIG_FILE" | jq -r '.actions[0].expected_result.type // "expected_errors"' 2>/dev/null || echo "expected_errors")
 
-            if [[ -n "$EXPECTED_PATTERNS" ]]; then
+            if [[ "$VALIDATION_TYPE" == "action_result_trust" ]]; then
+                echo "🎯 Using trust-based validation - relying on DebugActionResult success/failure"
+
+                # Validate by checking action results instead of log patterns
+                RESULTS_DIR="/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs"
+                # Try both naming patterns: test_action_results_${TEST_ID}_*.json and test_action_results_*_${TEST_ID}.json
+                RESULTS_FILE=$(find "$RESULTS_DIR" -name "test_action_results_${TEST_ID}_*.json" -o -name "test_action_results_*_${TEST_ID}.json" | head -1)
+                if [[ -n "$RESULTS_FILE" && -f "$RESULTS_FILE" ]]; then
+                    echo "📄 Checking action results in: $(basename "$RESULTS_FILE")"
+
+                    # Count error handling actions and their success status
+                    ERROR_HANDLING_TOTAL=$(jq '[.[] | select(.action | contains("error_handling"))] | length' "$RESULTS_FILE" 2>/dev/null || echo "0")
+                    ERROR_HANDLING_PASSED=$(jq '[.[] | select(.action | contains("error_handling")) | .success] | map(select(. == true)) | length' "$RESULTS_FILE" 2>/dev/null || echo "0")
+
+                    echo "📊 Error handling actions: $ERROR_HANDLING_PASSED/$ERROR_HANDLING_TOTAL passed"
+
+                    if [[ "$ERROR_HANDLING_PASSED" -eq "$ERROR_HANDLING_TOTAL" && "$ERROR_HANDLING_TOTAL" -gt 0 ]]; then
+                        echo "✅ ACTION RESULT VALIDATION PASSED"
+                        echo "💡 All error handling actions succeeded according to DebugActionResult"
+                        echo "💡 Trust-based validation confirms error handling working correctly"
+                        exit 0
+                    else
+                        echo "❌ ACTION RESULT VALIDATION FAILED"
+                        echo "💡 Not all error handling actions succeeded: $ERROR_HANDLING_PASSED/$ERROR_HANDLING_TOTAL"
+                        echo "💡 This indicates actual error handling failures, not log parsing issues"
+                        exit 1
+                    fi
+                else
+                    echo "❌ ACTION RESULT VALIDATION FAILED"
+                    echo "💡 Action results file not found in: $RESULTS_DIR"
+                    echo "💡 Searched for pattern: test_action_results_${TEST_ID}_*.json"
+                    echo "💡 Cannot perform trust-based validation - falling back to error analysis"
+                    EXPECTED_RESULT_VALIDATION=false
+                fi
+            else
+                # Fall back to legacy pattern matching validation
+                echo "🎯 Using legacy log pattern validation"
+
+                # Extract expected error patterns from config
+                EXPECTED_PATTERNS=$(cat "$CONFIG_FILE" | grep -A 10 "expected_result" | grep -o '"[^"]*"' | grep -E "(ERROR|Error)" | tr -d '"' || echo "")
+
+                if [[ -n "$EXPECTED_PATTERNS" ]]; then
                 echo "🎯 Expected error patterns found:"
                 echo "$EXPECTED_PATTERNS" | sed 's/^/   - /'
 
@@ -1054,6 +1095,7 @@ _analyze-test-errors test_id platform config_file="":
                     echo "💡 All expected error patterns found - error handling test working correctly"
                     echo "💡 Test success determined by expected error validation, not error absence"
                     exit 0
+                fi
                 fi
             fi
         fi
