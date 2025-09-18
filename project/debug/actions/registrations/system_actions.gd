@@ -328,13 +328,17 @@ static func _test_replay_generation_no_quit() -> bool:
 
 static func _replay_complete_sync() -> bool:
 	var start_time: int = Time.get_ticks_msec()
-	# Handle the replay completion logic
-	_replay_complete_with_final_logging()
-	# Log our own DEBUG_TEST_SUCCESS using the standard function - reuse DRY principle
+
+	# CRITICAL FIX: Log success BEFORE calling _replay_complete_with_final_logging()
+	# because automated mode calls _quit_application() which terminates execution
+	# and prevents the success logging from happening
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 	DebugAction._log_test_success(
 		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
 	)
+
+	# Handle the replay completion logic (this may call _quit_application())
+	_replay_complete_with_final_logging()
 	return true
 
 
