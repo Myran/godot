@@ -294,10 +294,33 @@ func _execute_core(
 				# Android automated mode can quit immediately after action execution, interrupting
 				# the success logging. Force immediate log processing to ensure write completes.
 				var metadata: Dictionary = DebugConfigReader.get_metadata()
-				if OS.get_name() == "Android" and metadata.get("auto_quit", false) == true:
-					# Force immediate chunk processing to ensure DEBUG_TEST_SUCCESS is written
-					if Log.has_method("_process_next_android_chunk"):
-						Log._process_next_android_chunk()
+				var is_android: bool = OS.get_name() == "Android"
+				var is_auto_quit: bool = metadata.get("auto_quit", false) == true
+				if is_android and is_auto_quit:
+					Log.info(
+						"ANDROID_FIX_DEBUG: Forcing chunk processing for automated mode",
+						{
+							"action": action_name,
+							"platform": OS.get_name(),
+							"auto_quit": is_auto_quit
+						},
+						["debug", "android", "fix"]
+					)
+					# Process all pending chunks until queue is empty
+					if (
+						Log.has_method("_process_next_android_chunk")
+						and Log.has_method("has_pending_android_chunks")
+					):
+						while Log.has_pending_android_chunks():
+							Log._process_next_android_chunk()
+							# Yield to prevent infinite loop if chunks aren't being processed
+							await Engine.get_main_loop().process_frame
+					else:
+						Log.warning(
+							"Android chunk processing methods not available",
+							{},
+							["debug", "android"]
+						)
 		else:
 			test_failure_count += 1
 			Log.error(
