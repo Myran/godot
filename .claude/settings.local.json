@@ -79,7 +79,12 @@
       "Bash(fi)",
       "Bash(git submodule:*)",
       "WebFetch(domain:github.com)",
-      "Bash(MULTI_PLATFORM_MODE=true just test battle-animated)"
+      "Bash(MULTI_PLATFORM_MODE=true just test battle-animated)",
+      "Bash(timeout:*)",
+      "Bash(HIERARCHY_FILE=\"/tmp/test_hierarchy_validation/test_hierarchy_validation_123456.json\")",
+      "Bash(__NEW_LINE__ echo \"Testing action details extraction:\")",
+      "Read(//private/tmp/**)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": [],
