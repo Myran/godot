@@ -1,7 +1,7 @@
 ---
 id: task-147
 title: Fix system-error-handling action collection failure on Android
-status: Done
+status: Completed
 assignee: []
 created_date: '2025-09-13 13:18'
 updated_date: '2025-09-15 22:35'
