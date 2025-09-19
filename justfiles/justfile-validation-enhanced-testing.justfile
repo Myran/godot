@@ -2615,7 +2615,7 @@ _execute-test-desktop config_name:
     # Execute test with reduced logging but preserve essential test information
     # Use --verbose to override quiet mode and get test logs, but filter output
     {
-        ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode 2>&1
+        ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode --minimized 2>&1
         TEST_EXIT_CODE=$?
     } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
     
@@ -3213,7 +3213,7 @@ _test-desktop-target-original config_name:
     # Run desktop Godot with debug actions (automated mode with quit)
     # CRITICAL: --test-mode flag enables debug coordinator (without it, debug actions are skipped)
     echo "🚀 Starting desktop test in automated mode with --test-mode flag..."
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode \
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --test-mode --minimized \
         && echo "✅ Desktop test completed successfully" \
         || echo "⚠️  Desktop test completed with exit code $?"
     
