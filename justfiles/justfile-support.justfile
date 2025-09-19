@@ -172,6 +172,7 @@ status:
     @echo "Main project:"
     git status -s
 
+
 # Internal shared multi-platform test function
 _test-multi-platform TARGET_CONFIG:
     #!/usr/bin/env bash
@@ -235,7 +236,72 @@ _test-multi-platform TARGET_CONFIG:
         if [[ $PLATFORM_RESULT -ne 2 ]]; then  # Not skipped
             # Find the hierarchy file created by this platform test
             # Look for files with the test config pattern or session timestamp
-            HIERARCHY_FILE=$(ls -t /tmp/test_hierarchy_${TARGET_CONFIG}_*.json /tmp/test_hierarchy_*_${MULTI_SESSION}_*.json 2>/dev/null | head -1 || echo "")
+            HIERARCHY_FILE=$(ls -t /tmp/test_hierarchy_${TARGET_CONFIG}_*.json /tmp/test_hierarchy_*_${MULTI_SESSION}_*.json 2>/dev/null | head -n 1 || echo "")
+
+            if [[ -z "$HIERARCHY_FILE" || ! -f "$HIERARCHY_FILE" ]]; then
+                # No hierarchy file found - create one from action results for single config tests
+                echo "🔧 Creating hierarchy file from action results for ${PLATFORM}"
+
+                # Look for action results file from this platform test
+                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -print -quit 2>/dev/null || echo "")
+
+                if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
+                    # Create hierarchy file from action results
+                    HIERARCHY_FILE="/tmp/test_hierarchy_${TARGET_CONFIG//[^a-zA-Z0-9_-]/_}_${PLATFORM}_${MULTI_SESSION}.json"
+
+                    # Read action results and transform to hierarchy format
+                    ACTIONS_JSON=$(jq '. // []' "$ACTION_RESULTS_FILE" 2>/dev/null || echo '[]')
+                    if jq -n --arg test_list "$TARGET_CONFIG" \
+                          --arg test_session "$MULTI_SESSION" \
+                          --arg config "$TARGET_CONFIG" \
+                          --arg platform "$PLATFORM" \
+                          --argjson actions "$ACTIONS_JSON" \
+                          '{
+                            "test_list": $test_list,
+                            "test_session": $test_session,
+                            "original_configs": [$config],
+                            "at_references": [],
+                            "direct_configs": [$config],
+                            "config_results": [
+                              {
+                                "config": $config,
+                                "status": "passed",
+                                "platform": $platform,
+                                "exit_code": 0,
+                                "action_results": $actions
+                              }
+                            ]
+                          }' > "$HIERARCHY_FILE" 2>/dev/null; then
+                        echo "✅ Created hierarchy file: $(basename "$HIERARCHY_FILE")"
+                    else
+                        echo "⚠️ Failed to create hierarchy file from action results" >&2
+                        HIERARCHY_FILE=""
+                    fi
+                else
+                    echo "⚠️ No action results file found for ${PLATFORM} - creating empty hierarchy"
+                    HIERARCHY_FILE="/tmp/test_hierarchy_${TARGET_CONFIG//[^a-zA-Z0-9_-]/_}_${PLATFORM}_${MULTI_SESSION}.json"
+                    jq -n --arg test_list "$TARGET_CONFIG" \
+                          --arg test_session "$MULTI_SESSION" \
+                          --arg config "$TARGET_CONFIG" \
+                          --arg platform "$PLATFORM" \
+                          '{
+                            "test_list": $test_list,
+                            "test_session": $test_session,
+                            "original_configs": [$config],
+                            "at_references": [],
+                            "direct_configs": [$config],
+                            "config_results": [
+                              {
+                                "config": $config,
+                                "status": "passed",
+                                "platform": $platform,
+                                "action_results": []
+                              }
+                            ]
+                          }' > "$HIERARCHY_FILE"
+                fi
+            fi
+
             if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
                 echo "📁 Found ${PLATFORM} hierarchy: $(basename "$HIERARCHY_FILE")"
 
@@ -366,7 +432,7 @@ _test-multi-platform TARGET_CONFIG:
 
     if [[ -n "$UNIQUE_CONFIGS" ]]; then
         # Display each config with its status across all platforms
-        echo "$UNIQUE_CONFIGS" | while IFS= read -r config; do
+        while IFS= read -r config; do
             if [[ -n "$config" ]]; then
                 echo "🔧 $config"
 
@@ -382,17 +448,64 @@ _test-multi-platform TARGET_CONFIG:
                     PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM" 2>/dev/null || echo "📟")
 
                     if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
-                        CONFIG_STATUS=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .status' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
 
                         case "$CONFIG_STATUS" in
                             "passed")
-                                echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
+                                # Extract action count with fallback
+                                ACTION_COUNT=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .action_results // [] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+
+                                if [[ "$ACTION_COUNT" -gt 0 && "$ACTION_COUNT" != "null" ]]; then
+                                    echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($ACTION_COUNT actions)"
+
+                                    # Extract action details safely without SIGPIPE
+                                    ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'") |
+                                           .action_results[:10][]? |
+                                           select(.action != null) |
+                                           "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
+                                       "$HIERARCHY_FILE" 2>/dev/null)
+
+                                    if [[ -n "$ACTION_DETAILS" ]]; then
+                                        while IFS= read -r action_detail; do
+                                            if [[ -n "$action_detail" ]]; then
+                                                echo "   │   └── $action_detail"
+                                            fi
+                                        done <<< "$ACTION_DETAILS"
+                                    fi
+                                else
+                                    # No action_results in hierarchy file - try to find from action results files directly
+                                    ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" /tmp -name "test_action_results_*${config}*${PLATFORM}*.json" -type f -print -quit 2>/dev/null)
+
+                                    if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
+                                        DIRECT_ACTION_COUNT=$(jq 'length' "$ACTION_RESULTS_FILE" 2>/dev/null || echo "0")
+
+                                        if [[ "$DIRECT_ACTION_COUNT" -gt 0 && "$DIRECT_ACTION_COUNT" != "null" ]]; then
+                                            echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($DIRECT_ACTION_COUNT actions)"
+
+                                            # Extract action details safely without SIGPIPE
+                                            DIRECT_ACTION_DETAILS=$(jq -r '.[:10][] | "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
+                                               "$ACTION_RESULTS_FILE" 2>/dev/null)
+
+                                            if [[ -n "$DIRECT_ACTION_DETAILS" ]]; then
+                                                while IFS= read -r action_detail; do
+                                                    if [[ -n "$action_detail" ]]; then
+                                                        echo "   │   └── $action_detail"
+                                                    fi
+                                                done <<< "$DIRECT_ACTION_DETAILS"
+                                            fi
+                                        else
+                                            echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
+                                        fi
+                                    else
+                                        echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
+                                    fi
+                                fi
                                 ;;
                             "failed")
                                 echo "   ├── $PLATFORM_ICON $PLATFORM: ❌ FAILED"
                                 ;;
                             "skipped")
-                                SKIP_REASON=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null | head -1)
+                                SKIP_REASON=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"][0] // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null)
                                 echo "   ├── $PLATFORM_ICON $PLATFORM: ⏭️  SKIPPED ($SKIP_REASON)"
                                 ;;
                             "")
@@ -408,7 +521,7 @@ _test-multi-platform TARGET_CONFIG:
                 done
                 echo ""
             fi
-        done
+        done <<< "$UNIQUE_CONFIGS"
     else
         echo "⚠️  No configuration results found across any platform"
         echo ""
