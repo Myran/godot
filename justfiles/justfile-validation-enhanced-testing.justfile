@@ -1188,21 +1188,19 @@ _analyze-test-errors test_id platform config_file="":
 _collect-action-results test_id platform config_name="unknown" session="":
     #!/usr/bin/env bash
     set -eo pipefail
-    
+
     TEST_ID="{{test_id}}"
     PLATFORM="{{platform}}"
     CONFIG_NAME="{{config_name}}"
     SESSION="{{session}}"
-    
+
     # Create persistent results file alongside log files for consistency
     # Each test creates a unique file using session timestamp to avoid conflicts
-    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
-    LOGS_DIR="$USER_DATA_DIR/logs"
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
     fi
     echo "[]" > "$RESULTS_FILE"
     
@@ -1348,10 +1346,10 @@ _generate-action-summary-from-file test_id config_name platform session="":
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="$LOGS_DIR/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
     fi
     
     echo ""
@@ -1493,7 +1491,7 @@ _post-test-validation test_id platform config_name="unknown" session="" config_p
 _test-list-generic test_list platform:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_LIST="{{test_list}}"
     PLATFORM="{{platform}}"
     # Using centralized TEST_LIST_DIR variable
@@ -1525,15 +1523,22 @@ _test-list-generic test_list platform:
     HAS_AT_REFERENCES=$(echo "$HAS_AT_REFERENCES" | tail -1)  # Get only the last line to avoid multi-line issues
     
     # Create session timestamp for consistent file naming and cleanup
-    TEST_SESSION="$(date +%s)"
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+        echo "🔗 Using multi-platform session: $TEST_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+        echo "🆕 Created new session: $TEST_SESSION"
+    fi
     
     # Clean up old test result files from previous sessions (older than 1 hour)
     echo "🧹 Cleaning up old test result files..."
-    find /tmp -name "test_action_results_*.json" -mtime +1h -delete 2>/dev/null || true
-    find /tmp -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
-    
+    find "{{TEMP_DIR}}" -name "test_action_results_*.json" -mtime +1h -delete 2>/dev/null || true
+    find "{{TEMP_DIR}}" -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
+
     # Create hierarchical mapping data structure for comprehensive breakdown
-    HIERARCHY_FILE="/tmp/test_hierarchy_${TEST_LIST}_${TEST_SESSION}.json"
+    HIERARCHY_FILE="{{TEMP_DIR}}/test_hierarchy_${TEST_LIST}_${TEST_SESSION}.json"
     echo '{"test_list": "'$TEST_LIST'", "test_session": "'$TEST_SESSION'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
     
     # Store original config structure from test list
@@ -1637,11 +1642,30 @@ _test-list-generic test_list platform:
         if [[ $exit_code -eq 0 ]]; then
             echo "✅ Configuration passed: $config"
             PASSED_CONFIGS=$((PASSED_CONFIGS + 1))
-            # Store success result
+
+            # Store success result with action details
             TEMP_FILE=$(mktemp)
             jq --arg config "$config" --arg status "passed" --arg platform "$PLATFORM" \
-               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": 0}]' \
+               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": 0, "action_results": []}]' \
                "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
+
+            # Try to extract action results if available (robust fallback)
+            # Support both multi-platform session and individual platform sessions
+            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*.json"
+            ACTION_RESULTS_FILE=$(ls -t $ACTION_RESULTS_PATTERN 2>/dev/null | head -1 || echo "")
+
+            if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
+                # Extract action results array directly and update hierarchy file in one operation
+                ACTIONS_JSON=$(cat "$ACTION_RESULTS_FILE" | jq 'map({action: .action, duration_ms: (.duration_ms // 0), status: (if .success then "passed" else "failed" end)})' 2>/dev/null || echo "[]")
+
+                if [[ "$ACTIONS_JSON" != "[]" && "$ACTIONS_JSON" != "null" ]]; then
+                    # Update hierarchy file with action results in single operation
+                    TEMP_FILE2=$(mktemp)
+                    jq --arg config "$config" --arg platform "$PLATFORM" --argjson actions "$ACTIONS_JSON" \
+                       '(.config_results[] | select(.config == $config and .platform == $platform) | .action_results) = $actions' \
+                       "$HIERARCHY_FILE" > "$TEMP_FILE2" && mv "$TEMP_FILE2" "$HIERARCHY_FILE" || true
+                fi
+            fi
         elif [[ $exit_code -eq 2 ]]; then
             # Platform skip - extract supported platforms for summary
             CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${config}.json"
@@ -1663,11 +1687,30 @@ _test-list-generic test_list platform:
         else
             echo "❌ Configuration failed: $config"
             FAILED_CONFIGS=$((FAILED_CONFIGS + 1))
-            # Store failure result
+
+            # Store failure result with action details
             TEMP_FILE=$(mktemp)
             jq --arg config "$config" --arg status "failed" --arg platform "$PLATFORM" --argjson exit_code "$exit_code" \
-               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": $exit_code}]' \
+               '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": $exit_code, "action_results": []}]' \
                "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
+
+            # Try to extract action results for failed tests too (show what was attempted)
+            # Support both multi-platform session and individual platform sessions
+            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*.json"
+            ACTION_RESULTS_FILE=$(ls -t $ACTION_RESULTS_PATTERN 2>/dev/null | head -1 || echo "")
+
+            if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
+                # Extract action results array directly and update hierarchy file in one operation
+                ACTIONS_JSON=$(cat "$ACTION_RESULTS_FILE" | jq 'map({action: .action, duration_ms: (.duration_ms // 0), status: (if .success then "passed" else "failed" end)})' 2>/dev/null || echo "[]")
+
+                if [[ "$ACTIONS_JSON" != "[]" && "$ACTIONS_JSON" != "null" ]]; then
+                    # Update hierarchy file with action results in single operation
+                    TEMP_FILE2=$(mktemp)
+                    jq --arg config "$config" --arg platform "$PLATFORM" --argjson actions "$ACTIONS_JSON" \
+                       '(.config_results[] | select(.config == $config and .platform == $platform) | .action_results) = $actions' \
+                       "$HIERARCHY_FILE" > "$TEMP_FILE2" && mv "$TEMP_FILE2" "$HIERARCHY_FILE" || true
+                fi
+            fi
         fi
         
         # Small delay between tests
@@ -1727,10 +1770,11 @@ _test-list-generic test_list platform:
     # Skip cleanup if we're in multi-platform mode (files will be preserved for final summary)
     if [[ "${MULTI_PLATFORM_MODE:-false}" != "true" ]]; then
         echo "🧹 Cleaning up session test result files..."
-        rm -f /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null || true
+        # Clean up action results files from the standardized locations
+        rm -f "{{STANDARD_LOGS_DIR}}/test_action_results_*_${TEST_SESSION}_*.json" 2>/dev/null || true
         rm -f "$HIERARCHY_FILE" 2>/dev/null || true
     else
-        echo "🔄 Preserving files for multi-platform final summary..."
+        echo "🔄 Preserving action results and hierarchy files for multi-platform final summary..."
     fi
     
     if [[ $FAILED_CONFIGS -gt 0 ]]; then
@@ -2040,7 +2084,7 @@ _generate-comprehensive-breakdown hierarchy_file:
         echo "🔍 Filtering action results to session: $MULTI_PLATFORM_SESSION"
     fi
     
-    for results_file in /tmp/test_action_results_*.json; do
+    for results_file in /tmp/test_action_results_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
             # Skip files that don't belong to current session
             if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then
@@ -2163,8 +2207,12 @@ _execute-test-with-analysis config_name platform session="":
     fi
     echo "✅ Platform compatible: $PLATFORM"
     
-    # Generate test ID directly
-    TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"
+    # Generate test ID using session for coordination in multi-platform mode
+    if [[ -n "${SESSION:-}" ]]; then
+        TEST_ID="${CONFIG_NAME}_${PLATFORM}_${SESSION}"
+    else
+        TEST_ID="${CONFIG_NAME}_${PLATFORM}_$(date +%s)"
+    fi
     export TEST_ID
     export CURRENT_CONFIG_NAME="$CONFIG_NAME"
     
@@ -2682,10 +2730,15 @@ test-android-target config_name="":
     else
         CONFIG_NAME="{{config_name}}"
     fi
-    
+
     # Create session timestamp for individual test
-    TEST_SESSION="$(date +%s)"
-    
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
+
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "android" "$TEST_SESSION"
 
@@ -2710,9 +2763,14 @@ test-android-verbose config_name="":
     echo "🔍 VERBOSE DEBUGGING MODE: Enhanced logging for node leaks and memory issues"
     echo "📊 This will provide detailed ObjectDB and resource cleanup information"
     echo ""
-    
+
     # Create session timestamp for individual test
-    TEST_SESSION="$(date +%s)"
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
     
     # Set verbose mode flag
     export VERBOSE_TESTING=true
@@ -2796,10 +2854,15 @@ test-desktop-target config_name="":
     else
         CONFIG_NAME="{{config_name}}"
     fi
-    
+
     # Create session timestamp for individual test
-    TEST_SESSION="$(date +%s)"
-    
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
+
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "desktop" "$TEST_SESSION"
 

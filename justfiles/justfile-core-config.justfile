@@ -57,6 +57,9 @@ USER_DATA_DIR := "$HOME/Library/Application Support/Godot/app_userdata/gametwo"
 STANDARD_LOGS_DIR := USER_DATA_DIR + "/logs"
 SAVED_STATES_DIR := "./project/debug/saved_states"
 
+# Temporary files directory for test and build artifacts
+TEMP_DIR := "/tmp"
+
 # ================================
 # SHARED UTILITY FUNCTIONS
 # ================================
