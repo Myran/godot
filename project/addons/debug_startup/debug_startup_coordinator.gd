@@ -31,11 +31,7 @@ func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String
 func startDebugCoordinator() -> void:
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
-	if not has_node("/root/DebugRegistry"):
-		Log.error("DebugRegistry missing", {"path": "/root/DebugRegistry"}, ["debug", "startup", "fatal"])
-		return
-
-	_log_verbose("DebugRegistry found, getting actions...", {}, ["debug", "startup"])
+	_log_verbose("Getting DebugRegistry actions...", {}, ["debug", "startup"])
 
 	var actions := _get_action_names()
 	Log.info(
@@ -51,7 +47,7 @@ func startDebugCoordinator() -> void:
 	await _wait_for_game_ready()
 
 	_log_verbose("Waiting for action registry initialization...", {}, ["debug", "startup"])
-	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
+	var registry := DebugRegistry as DebugActionRegistry
 	await _wait_for_registry_ready(registry)
 
 	_log_verbose("Waiting for DataSource initialization...", {}, ["debug", "startup"])
@@ -177,7 +173,7 @@ func _get_action_names() -> Array:
 
 func _get_debug_action_registry() -> DebugActionRegistry:
 	"""Get the debug action registry autoload"""
-	return get_node("/root/DebugRegistry") as DebugActionRegistry
+	return DebugRegistry as DebugActionRegistry
 
 
 func _get_available_action_names(registry: DebugActionRegistry) -> Array[String]:
@@ -428,14 +424,7 @@ func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
 
 
 func _wait_for_data_source_ready() -> void:
-	if not has_node("/root/data_source"):
-		Log.warning("DataSource autoload not found, skipping DataSource wait", {}, ["debug", "startup"])
-		return
-
-	var data_source_node: Node = get_node("/root/data_source")
-	if not data_source_node:
-		Log.warning("DataSource node not available, skipping DataSource wait", {}, ["debug", "startup"])
-		return
+	var data_source_node: Node = data_source
 
 	if data_source_node.has_method("is_initialized") and data_source_node.is_initialized():
 		Log.info("DataSource already initialized", {}, ["debug", "startup"])
@@ -456,7 +445,7 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 	"""
 	var expanded_actions: Array[String] = []
 
-	var registry := get_node("/root/DebugRegistry") as DebugActionRegistry
+	var registry := DebugRegistry as DebugActionRegistry
 	if not registry:
 		Log.warning("Registry not available for wildcard expansion", {"pattern": pattern}, ["debug", "startup", "wildcard"])
 		return expanded_actions
@@ -616,12 +605,8 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 
 func _ensure_card_cache_ready() -> void:
 	"""Ensure card cache is activated before debug actions that depend on card creation"""
-	if not has_node("/root/data_source"):
-		Log.warning("DataSource not found, skipping card cache activation", {}, ["debug", "startup", "cache"])
-		return
-
-	var data_source_node: Node = get_node("/root/data_source")
-	if not data_source_node or not data_source_node.has_method("activate_card_cache"):
+	var data_source_node: Node = data_source
+	if not data_source_node.has_method("activate_card_cache"):
 		Log.warning("DataSource activate_card_cache method not available", {}, ["debug", "startup", "cache"])
 		return
 

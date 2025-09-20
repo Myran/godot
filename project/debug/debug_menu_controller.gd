@@ -231,17 +231,12 @@ func _populate_main_categories_view() -> void:
 	if not _validate_navigation_state("_populate_main_categories_view"):
 		return
 
-	var categories: Array[String] = []
-	if DebugRegistry:
-		categories = DebugRegistry.get_categories()
-		Log.debug(
-			"Retrieved categories from DebugRegistry",
-			{"categories": categories, "count": categories.size()},
-			[Log.TAG_DEBUG_UI]
-		)
-	else:
-		Log.error("DebugRegistry autoload not found", {}, [Log.TAG_DEBUG_UI, Log.TAG_ERROR])
-		return
+	var categories: Array[String] = DebugRegistry.get_categories()
+	Log.debug(
+		"Retrieved categories from DebugRegistry",
+		{"categories": categories, "count": categories.size()},
+		[Log.TAG_DEBUG_UI]
+	)
 
 	if categories.is_empty():
 		_add_list_item("No debug actions registered.", null, "", true)
@@ -302,13 +297,8 @@ func _populate_groups_view(category_name: String) -> void:
 		_update_status_label_text("ERROR: Invalid navigation state.", true)
 		return
 
-	var category_exists: bool = false
-
-	if DebugRegistry:
-		var debug_categories: Array[String] = DebugRegistry.get_categories()
-		var category_found: bool = debug_categories.has(category_name)
-		if category_found:
-			category_exists = true
+	var debug_categories: Array[String] = DebugRegistry.get_categories()
+	var category_exists: bool = debug_categories.has(category_name)
 
 	if not category_exists:
 		_update_status_label_text(
@@ -336,12 +326,7 @@ func _populate_groups_view(category_name: String) -> void:
 		_populate_category_with_actions_view(category_name)
 		return
 
-	var groups: Array[String] = []
-	if DebugRegistry:
-		groups = DebugRegistry.get_groups_for_category(category_name)
-	else:
-		Log.error("DebugRegistry autoload not found", {}, [Log.TAG_DEBUG_UI, Log.TAG_ERROR])
-		return
+	var groups: Array[String] = DebugRegistry.get_groups_for_category(category_name)
 
 	if groups.is_empty():
 		item_list_navigator.add_item("No groups in this category.")
@@ -400,10 +385,7 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 			)
 			item_index += 1
 
-	var all_groups: Array[String] = []
-
-	if DebugRegistry:
-		all_groups = DebugRegistry.get_groups_for_category(category_name)
+	var all_groups: Array[String] = DebugRegistry.get_groups_for_category(category_name)
 
 	for group_name: String in all_groups:
 		item_list_navigator.add_item(DebugMenuUtilities.generate_group_display_name(group_name))
@@ -449,11 +431,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 		0, MenuListItemData.create_back_to_groups(_current_category_name)
 	)
 
-	if not DebugRegistry:
-		_update_status_label_text(
-			"ERROR: DebugRegistry autoload not found while accessing group actions.", true
-		)
-		return
 	var registry: DebugActionRegistry = DebugRegistry
 
 	var actions_in_group: Array[DebugAction] = registry.get_actions_for_group(
@@ -739,11 +716,6 @@ func _on_navigator_item_selected(index: int) -> void:
 func _on_run_all_pressed() -> void:
 	_abort_current_execution_if_needed()
 
-	if not DebugRegistry:
-		_update_status_label_text(
-			"ERROR: DebugRegistry autoload not found while running group actions.", true
-		)
-		return
 	var registry: DebugActionRegistry = DebugRegistry
 
 	var actions_to_run: Array[ActionExecutionResult] = []
@@ -1041,10 +1013,7 @@ func display_output_from_service(text: String, _is_error: bool = false) -> void:
 		Log.debug("Debug menu opened to display execution results", {}, [Log.TAG_DEBUG, Log.TAG_UI])
 
 
-func _validate_navigation_state(context: String) -> bool:
-	if not DebugMenuUtilities.validate_registry_with_error_logging(context):
-		_update_status_label_text("ERROR: Debug system not properly initialized.", true)
-		return false
+func _validate_navigation_state(_context: String) -> bool:
 	return true
 
 

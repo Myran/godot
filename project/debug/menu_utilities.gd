@@ -180,18 +180,6 @@ static func generate_group_display_name(group_name: String, prefix: String = "â–
 	return prefix + group_name
 
 
-static func validate_registry_with_error_logging(context: String) -> bool:
-	"""Validate DebugRegistry availability with proper error logging"""
-	if not DebugRegistry:
-		Log.error(
-			"DebugRegistry not available in context: " + context,
-			{},
-			[Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_ERROR]
-		)
-		return false
-	return true
-
-
 static func organize_categories_by_type(categories: Array[String]) -> Array[String]:
 	"""Organize categories by type: direct actions first, then submenu-only"""
 	var categories_with_direct_actions: Array[String] = []
