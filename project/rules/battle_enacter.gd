@@ -278,7 +278,6 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			target.shake(is_allied)
 
 		elif event is BattleContext.StartOfTurnEvent:
-			await get_tree().create_timer(0.1).timeout
 			Log.debug(
 				"Start of turn event",
 				{},

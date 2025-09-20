@@ -1,7 +1,7 @@
 ---
 id: task-118
 title: Eliminate Timer Abuse Patterns
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-05 21:27'
 labels:

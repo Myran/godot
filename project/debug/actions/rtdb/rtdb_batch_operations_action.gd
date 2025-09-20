@@ -56,8 +56,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		var operation_result: Dictionary = await _execute_single_operation(db, operation, i)
 		batch_operations.append(operation_result)
 
-		await Engine.get_main_loop().create_timer(0.1).timeout
-
 	var successful_operations: int = 0
 	for result: Dictionary in batch_operations:
 		if result.get("success", false):

@@ -52,8 +52,6 @@ func execute_rtdb_action() -> bool:
 				"set_value_async", test_path, test_data, "Path Setup: " + test_name
 			)
 
-	await Engine.get_main_loop().create_timer(0.3).timeout
-
 	for test_case: Dictionary in test_paths:
 		var path_result: Dictionary = await _validate_single_path(db, test_case)
 		validation_results.append(path_result)
@@ -96,8 +94,6 @@ func _validate_single_path(_db: Variant, test_case: Dictionary) -> Dictionary:
 	var result: bool = await execute_simple_operation(
 		"get_value_async", path, null, "Path Validation: " + path_name
 	)
-
-	await Engine.get_main_loop().create_timer(0.2).timeout
 
 	var path_accessible: bool = result
 	var validation_success: bool = path_accessible == should_exist

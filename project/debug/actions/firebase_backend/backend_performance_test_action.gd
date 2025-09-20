@@ -64,8 +64,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		if seq_result:
 			sequential_successes += 1
 
-		await Engine.get_main_loop().create_timer(0.1).timeout
-
 	var avg_sequential_duration: int = 0
 	for duration: int in sequential_durations:
 		avg_sequential_duration += duration
