@@ -12,11 +12,7 @@ static func get_card_image_name(card_id: String) -> String:
 	"""Generate card image path from card ID with debug variant support"""
 	var asset_variant_value: int = 0  # Default value
 
-	if (
-		DebugManager
-		and DebugManager.has_method("get")
-		and DebugManager.get("asset_variant") != null
-	):
+	if DebugManager.get("asset_variant") != null:
 		asset_variant_value = DebugManager.asset_variant
 
 	return str(CARD_IMAGE_FOLDER, CARD_IMAGE_PREFIX, asset_variant_value, "_", card_id, ".png")

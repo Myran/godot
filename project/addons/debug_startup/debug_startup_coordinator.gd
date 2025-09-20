@@ -426,7 +426,7 @@ func _wait_for_registry_ready(registry: DebugActionRegistry) -> void:
 func _wait_for_data_source_ready() -> void:
 	var data_source_node: Node = data_source
 
-	if data_source_node.has_method("is_initialized") and data_source_node.is_initialized():
+	if data_source_node.is_initialized():
 		Log.info("DataSource already initialized", {}, ["debug", "startup"])
 		return
 
@@ -606,9 +606,6 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 func _ensure_card_cache_ready() -> void:
 	"""Ensure card cache is activated before debug actions that depend on card creation"""
 	var data_source_node: Node = data_source
-	if not data_source_node.has_method("activate_card_cache"):
-		Log.warning("DataSource activate_card_cache method not available", {}, ["debug", "startup", "cache"])
-		return
 
 	Log.info("Activating card cache for debug actions", {}, ["debug", "startup", "cache"])
 	await data_source_node.activate_card_cache()

@@ -11,11 +11,7 @@ var _rules: Dictionary = {}
 static func get_card_image_name(card_id: String) -> String:
 	var asset_variant_value: int = 0  # Default value
 
-	if (
-		DebugManager
-		and DebugManager.has_method("get")
-		and DebugManager.get("asset_variant") != null
-	):
+	if DebugManager.get("asset_variant") != null:
 		asset_variant_value = DebugManager.asset_variant
 
 	# Use constant path instead of instance variable
