@@ -1,7 +1,7 @@
 ---
 id: task-129
 title: Replace manual root path checking with direct autoload access
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-07 08:24'
 labels:

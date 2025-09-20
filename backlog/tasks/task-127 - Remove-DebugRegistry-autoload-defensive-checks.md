@@ -1,7 +1,7 @@
 ---
 id: task-127
 title: Remove DebugRegistry autoload defensive checks
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-07 08:24'
 labels:
