@@ -1,7 +1,7 @@
 ---
 id: task-139
 title: Audit-Firebase-Strong-Typing-Compatibility-Issues
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-10 15:02'
 labels:

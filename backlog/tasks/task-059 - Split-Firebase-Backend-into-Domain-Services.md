@@ -1,7 +1,7 @@
 ---
 id: task-059
 title: Split Firebase Backend into Domain Services
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-17 08:09'
 updated_date: '2025-08-17 08:21'

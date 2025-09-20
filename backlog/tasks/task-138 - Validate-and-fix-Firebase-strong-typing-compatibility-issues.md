@@ -1,7 +1,7 @@
 ---
 id: task-138
 title: Validate and fix Firebase strong typing compatibility issues
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-10 13:28'
 labels:

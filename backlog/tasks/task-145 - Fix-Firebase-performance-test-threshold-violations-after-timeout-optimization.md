@@ -1,7 +1,7 @@
 ---
 id: task-145
 title: Fix Firebase performance test threshold violations after timeout optimization
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-09-13 10:12'
 updated_date: '2025-09-14 22:06'

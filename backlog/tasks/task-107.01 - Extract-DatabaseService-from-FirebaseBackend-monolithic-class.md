@@ -1,7 +1,7 @@
 ---
 id: task-107.01
 title: Extract DatabaseService from FirebaseBackend monolithic class
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-30 16:09'
 updated_date: '2025-08-30 21:26'

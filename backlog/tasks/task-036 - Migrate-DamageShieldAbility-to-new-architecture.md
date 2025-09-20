@@ -1,7 +1,7 @@
 ---
 id: task-036
 title: Migrate DamageShieldAbility to new architecture
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-12 12:19'
 updated_date: '2025-08-12 13:56'
