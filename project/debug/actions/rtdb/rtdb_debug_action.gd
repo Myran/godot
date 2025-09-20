@@ -17,12 +17,6 @@ func execute_rtdb_action() -> bool:
 
 
 func get_firebase_database() -> Object:
-	if not data_source:
-		Log.error(
-			"DataSource singleton not available for RTDB operations", {}, ["debug", "rtdb", "error"]
-		)
-		return null
-
 	if not data_source.is_initialized():
 		Log.error(
 			"DataSource not yet initialized for RTDB operations", {}, ["debug", "rtdb", "error"]

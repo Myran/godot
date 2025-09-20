@@ -65,7 +65,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing DataSource integration...")
 	total_tests += 1
-	var datasource_integration: bool = data_source != null and data_source.is_initialized()
+	var datasource_integration: bool = data_source.is_initialized()
 
 	if datasource_integration:
 		successful_tests += 1
@@ -73,8 +73,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		{
 			"test": "datasource_integration",
 			"success": datasource_integration,
-			"datasource_exists": data_source != null,
-			"datasource_initialized": data_source.is_initialized() if data_source else false
+			"datasource_exists": true,
+			"datasource_initialized": data_source.is_initialized()
 		}
 	)
 
@@ -128,7 +128,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	total_tests += 1
 	var state_consistent: bool = (
 		backend.is_available() == initialization_success  # State should be consistent
-		and datasource_integration == (data_source != null and data_source.is_initialized())
+		and datasource_integration == data_source.is_initialized()
 	)  # Integration should be stable
 
 	if state_consistent:
@@ -138,8 +138,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			"test": "state_consistency",
 			"success": state_consistent,
 			"availability_consistent": backend.is_available() == initialization_success,
-			"integration_stable":
-			datasource_integration == (data_source != null and data_source.is_initialized())
+			"integration_stable": datasource_integration == data_source.is_initialized()
 		}
 	)
 
@@ -156,7 +155,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		"backend_final_state":
 		{
 			"available": backend.is_available() if backend else false,
-			"datasource_initialized": data_source.is_initialized() if data_source else false
+			"datasource_initialized": data_source.is_initialized()
 		}
 	}
 

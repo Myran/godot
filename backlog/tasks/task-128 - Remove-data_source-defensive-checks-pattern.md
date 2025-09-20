@@ -1,7 +1,7 @@
 ---
 id: task-128
 title: Remove data_source defensive checks pattern
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-07 08:24'
 labels:

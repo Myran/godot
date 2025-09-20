@@ -15,13 +15,6 @@ func get_firebase_backend_for_testing() -> DataBackend:
 		return firebase_backend
 
 	# Only use the backend from DataSource - never create alternate instances
-	if not data_source:
-		Log.error(
-			"DataSource singleton not available for Firebase backend testing",
-			{},
-			["debug", "backend_firebase", "error"]
-		)
-		return null
 
 	if not data_source.is_initialized():
 		Log.error(
