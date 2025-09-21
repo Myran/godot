@@ -645,7 +645,7 @@ func _process_one_queue_item() -> void:
 
 	print("SIMPLE_TRACE: About to call action - valid: ", action.is_valid(), " name: ", str(action))
 
-	action.call()
+	await action.call()
 
 	print("SIMPLE_TRACE: Action call completed - name: ", str(action))
 

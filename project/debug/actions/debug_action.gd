@@ -297,24 +297,35 @@ func _execute_core(
 				var is_android: bool = OS.get_name() == "Android"
 				var is_auto_quit: bool = metadata.get("auto_quit", false) == true
 				if is_android and is_auto_quit:
-					Log.info(
-						"ANDROID_FIX_DEBUG: Forcing chunk processing for automated mode",
-						{
-							"action": action_name,
-							"platform": OS.get_name(),
-							"auto_quit": is_auto_quit
-						},
-						["debug", "android", "fix"]
+					(
+						Log
+						. info(
+							"ANDROID_FIX_DEBUG: Using proper signal-based chunk processing for automated mode",
+							{
+								"action": action_name,
+								"platform": OS.get_name(),
+								"auto_quit": is_auto_quit
+							},
+							["debug", "android", "fix"]
+						)
 					)
-					# Process all pending chunks until queue is empty
-					if (
-						Log.has_method("_process_next_android_chunk")
-						and Log.has_method("has_pending_android_chunks")
-					):
-						while Log.has_pending_android_chunks():
-							Log._process_next_android_chunk()
-							# Yield to prevent infinite loop if chunks aren't being processed
-							await Engine.get_main_loop().process_frame
+					# Use the proper signal-based chunk processing method
+					if Log.has_method("wait_for_chunk_processing_complete_signal"):
+						await Log.wait_for_chunk_processing_complete_signal()
+						Log.info(
+							"ANDROID_FIX_DEBUG: Chunk processing completed via signal",
+							{"action": action_name, "platform": OS.get_name()},
+							["debug", "android", "fix"]
+						)
+					elif Log.has_method("has_pending_android_chunks"):
+						# Fallback to timeout-based approach if signal method not available
+						Log.warning(
+							"Signal-based method not available, using timeout fallback",
+							{"action": action_name},
+							["debug", "android", "fallback"]
+						)
+						if Log.has_method("wait_for_chunk_processing_complete"):
+							await Log.wait_for_chunk_processing_complete(3.0)
 					else:
 						Log.warning(
 							"Android chunk processing methods not available",

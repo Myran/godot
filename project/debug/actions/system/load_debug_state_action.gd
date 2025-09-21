@@ -96,16 +96,37 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 	if not game_instance:
 		return DebugActionResult.new_failure("Game instance not found")
 
-	# Load gamestate using Game's direct loading method
+	# Determine the appropriate loading method based on save type
+	var restoration_success: bool = false
+
+	if capture_dict.has("gamestate"):
+		# Full gamestate save - use the standard loading method
+		Log.debug(
+			"Loading full gamestate via Game.load_state_from_file",
+			{"file": actual_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load_action"]
+		)
+		restoration_success = await game_instance.load_state_from_file(actual_file_path)
+	elif capture_dict.has("lineup_data"):
+		# Lineup-only save - use the lineup loading method (following LoadAlliedLineupAction pattern)
+		Log.debug(
+			"Loading lineup-only save via lineup restoration",
+			{"file": actual_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load_action"]
+		)
+		var lineup_data_dict: Dictionary = capture_dict.lineup_data
+		restoration_success = await _load_lineup_only_data(game_instance, lineup_data_dict)
+	else:
+		return DebugActionResult.new_failure(
+			"Unknown save format - neither gamestate nor lineup_data found"
+		)
+
 	Log.debug(
-		"About to call load_state_from_file",
-		{"file": actual_file_path},
-		[Log.TAG_DEBUG, "gamestate", "load_action"]
-	)
-	var restoration_success: bool = await game_instance.load_state_from_file(actual_file_path)
-	Log.debug(
-		"load_state_from_file returned",
-		{"success": restoration_success},
+		"Gamestate/lineup load completed",
+		{
+			"success": restoration_success,
+			"save_type": "full_gamestate" if capture_dict.has("gamestate") else "lineup_only"
+		},
 		[Log.TAG_DEBUG, "gamestate", "load_action"]
 	)
 
@@ -149,21 +170,107 @@ func _validate_capture_data(data: Variant) -> bool:
 
 	var data_dict: Dictionary = data
 
-	# Only accept full gamestate saves, not lineup-only saves
-	if not data_dict.has("gamestate"):
-		if data_dict.has("lineup_data"):
-			Log.error(
-				"Attempted to load lineup-only save as full gamestate",
-				{"save_type": "lineup_only", "expected": "full_gamestate"},
-				[Log.TAG_DEBUG, "gamestate", "validation"]
-			)
-		return false
-
-	return (
+	# Handle both lineup-specific saves and full gamestate saves (following proven pattern from LoadAlliedLineupAction)
+	var has_full_gamestate: bool = (
 		data_dict.has("gamestate")
 		and data_dict.has("rng_state")
 		and data_dict.has("capture_timestamp")
 	)
+
+	var has_lineup_only: bool = data_dict.has("lineup_data") and data_dict.has("capture_timestamp")
+
+	if has_full_gamestate:
+		Log.debug(
+			"Validated full gamestate format",
+			{"save_type": "full_gamestate"},
+			[Log.TAG_DEBUG, "gamestate", "validation"]
+		)
+		return true
+
+	if has_lineup_only:
+		Log.debug(
+			"Validated lineup-only format - will load using lineup data",
+			{"save_type": "lineup_only"},
+			[Log.TAG_DEBUG, "gamestate", "validation"]
+		)
+		return true
+
+	Log.error(
+		"Invalid capture data format - missing required fields",
+		{
+			"has_gamestate": data_dict.has("gamestate"),
+			"has_lineup_data": data_dict.has("lineup_data"),
+			"has_rng_state": data_dict.has("rng_state"),
+			"has_capture_timestamp": data_dict.has("capture_timestamp")
+		},
+		[Log.TAG_DEBUG, "gamestate", "validation"]
+	)
+	return false
+
+
+func _load_lineup_only_data(game: Game, lineup_data: Dictionary) -> bool:
+	"""Load lineup-only data using proven lineup loading methods"""
+	Log.info(
+		"Loading lineup-only data as partial gamestate restoration",
+		{"lineup_data_keys": lineup_data.keys()},
+		[Log.TAG_DEBUG, "gamestate", "lineup_only"]
+	)
+
+	# Use the same surgical replacement approach as LoadAlliedLineupAction
+	if not game.holder_allies or not game.holder_enemy:
+		Log.error(
+			"Holder containers not available for lineup loading",
+			{"has_allies": game.holder_allies != null, "has_enemies": game.holder_enemy != null},
+			[Log.TAG_DEBUG, "gamestate", "lineup_only", "error"]
+		)
+		return false
+
+	# Clear existing lineups (following LoadAlliedLineupAction pattern)
+	var allies_cleared: int = GamestateLoader._clear_holder_container(game.holder_allies)
+	var enemies_cleared: int = GamestateLoader._clear_holder_container(game.holder_enemy)
+
+	Log.debug(
+		"Cleared existing lineups for lineup-only restoration",
+		{"allies_cleared": allies_cleared, "enemies_cleared": enemies_cleared},
+		[Log.TAG_DEBUG, "gamestate", "lineup_only"]
+	)
+
+	# Restore lineup data (following LoadAlliedLineupAction pattern)
+	var restoration_success: bool = true
+
+	if lineup_data.has("allies") and not lineup_data.allies.is_empty():
+		var allies_dict: Dictionary = lineup_data.allies
+		await GamestateLoader._restore_lineup_positions(
+			game, allies_dict, game.holder_allies, "allies"
+		)
+		Log.debug(
+			"Restored allied lineup from lineup-only save",
+			{"units_restored": lineup_data.allies.size()},
+			[Log.TAG_DEBUG, "gamestate", "lineup_only"]
+		)
+
+	if lineup_data.has("enemies") and not lineup_data.enemies.is_empty():
+		var enemies_dict: Dictionary = lineup_data.enemies
+		await GamestateLoader._restore_lineup_positions(
+			game, enemies_dict, game.holder_enemy, "enemies"
+		)
+		Log.debug(
+			"Restored enemy lineup from lineup-only save",
+			{"units_restored": lineup_data.enemies.size()},
+			[Log.TAG_DEBUG, "gamestate", "lineup_only"]
+		)
+
+	Log.info(
+		"Lineup-only data restoration completed",
+		{
+			"allies_loaded": lineup_data.get("allies", {}).size(),
+			"enemies_loaded": lineup_data.get("enemies", {}).size(),
+			"success": restoration_success
+		},
+		[Log.TAG_DEBUG, "gamestate", "lineup_only"]
+	)
+
+	return restoration_success
 
 
 func _get_game_instance() -> Game:

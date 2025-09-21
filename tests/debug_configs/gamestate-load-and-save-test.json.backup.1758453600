@@ -5,11 +5,7 @@
   },
   "checksum_config": {
     "initial_seed": 12345,
-    "state_type": "load_and_save_cycle",
-    "expected_checksums": [
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM"
-    ]
+    "state_type": "load_and_save_cycle"
   },
   "actions": [
     {

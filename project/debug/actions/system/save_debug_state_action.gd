@@ -13,8 +13,20 @@ func _execute_save_gamestate() -> DebugActionResult:
 
 	Log.info("Capturing debug gamestate...", {}, [Log.TAG_DEBUG])
 
-	# Use existing proven systems
+	# Use existing proven systems with error handling
+	Log.info("Starting StateExtractor.extract_game_state()...", {}, [Log.TAG_DEBUG])
 	var game_state: Dictionary = StateExtractor.extract_game_state()
+	Log.info(
+		"StateExtractor.extract_game_state() completed",
+		{"state_size": game_state.size()},
+		[Log.TAG_DEBUG]
+	)
+
+	# Check if extraction failed
+	if game_state.is_empty():
+		Log.error("StateExtractor returned empty state", {}, [Log.TAG_DEBUG])
+		return DebugActionResult.new_failure("StateExtractor returned empty state")
+
 	var rng_state: String = rng.seeded_rng.save_state() if rng.seeded_rng else ""
 
 	# Create capture data with metadata

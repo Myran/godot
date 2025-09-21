@@ -85,7 +85,8 @@
       "Bash(__NEW_LINE__ echo \"Testing action details extraction:\")",
       "Read(//private/tmp/**)",
       "Bash(xargs cat:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Read(///**)"
     ],
     "deny": [],
     "ask": [],

@@ -3,11 +3,7 @@
   "checksum_config": {
     "initial_seed": 12345,
     "state_type": "save_load_cycle_validation",
-    "expected_checksums": [
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM"
-    ]
+    "expected_checksums": []
   },
   "actions": [
     "system.debug.save_gamestate",
