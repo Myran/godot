@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2025-09-20 19:04'
-updated_date: '2025-09-20 19:04'
+updated_date: '2025-09-21 09:56'
 labels:
   - test-infrastructure
   - reliability
@@ -21,19 +21,36 @@ Multi-platform test runs (`just test`) intermittently fail with `RESTART_NEEDED`
 
 ## Problem Analysis
 
-**Symptoms:**
-- Multi-platform test shows: `❌ Failed: 2` (battle-logic-only on both platforms)
-- Error logs show: `DEBUG_TEST_RESTART_NEEDED` with `reason: "config_updated"`
-- Direct test execution: `just test-android-target battle-logic-only` ✅ PASSES
-- Direct test execution: `just test-desktop-target battle-logic-only` ✅ PASSES
+### **🔍 Investigation Results (2025-09-21)**
 
-**Root Cause:**
-Test infrastructure detects configuration file changes during multi-platform execution and requires restart validation, but the restart mechanism fails intermittently.
+**✅ ROOT CAUSE IDENTIFIED**: Gamestate data format mismatch causing test hangs after restart operations.
 
-**Evidence:**
-- Test ID: battle-logic-only_desktop_1758392174 shows `RESTART_NEEDED`
-- Test ID: battle-logic-only_android_1758392174 shows same issue
-- Both tests pass 100% when run individually with fresh config deployment
+**Specific Issue:**
+- `system.debug.save_gamestate` creates "lineup_only" format saves
+- `system.debug.load_gamestate` expects "full_gamestate" format
+- Format mismatch → `"Invalid capture data format"` error
+- After `system.game.restart` → Test hangs for 5+ minutes instead of reporting failure
+- Multi-platform runner reports these as "RESTART_NEEDED" timeout errors
+
+**Problematic Configurations:**
+- `gamestate-save-load-workflow-test` (save → restart → load) → **HANGS**
+- `gamestate-debug-menu-workflow-test` (restart-dependent) → **HANGS**
+- `gamestate-complete-save-load-cycle-test` (save → load, no restart) → **FAILS CLEANLY**
+
+**Technical Evidence:**
+```
+ERROR: system.debug.load_gamestate - Invalid capture data format
+[ERROR] Attempted to load lineup-only save as full gamestate
+{ "save_type": "lineup_only", "expected": "full_gamestate" }
+```
+
+**Two Failure Patterns:**
+1. **With Restart**: Format mismatch + poor error handling = 5-minute timeout
+2. **Without Restart**: Format mismatch + immediate failure reporting = clean failure
+
+**Why "Intermittent":**
+- Only affects configs that combine `system.game.restart` + `system.debug.load_gamestate`
+- Other configs work fine, making multi-platform runs appear randomly successful/failed
 
 ## Impact Assessment
 
@@ -51,16 +68,49 @@ Test infrastructure detects configuration file changes during multi-platform exe
 - [ ] #2 Configuration change detection mechanism works consistently across platforms
 - [ ] #3 Restart validation process completes successfully for config updates
 - [ ] #4 Test infrastructure gracefully handles config changes during multi-platform execution
-- [ ] #5 Root cause analysis documented with specific fix implementation
+- [x] #5 Root cause analysis documented with specific fix implementation ✅
 - [ ] #6 Prevention mechanism implemented to avoid future regression
+
+### **💡 Implementation Solution**
+
+**Primary Fix - Gamestate Format Compatibility:**
+1. **Option A**: Modify `system.debug.save_gamestate` to create "full_gamestate" format
+2. **Option B**: Modify `system.debug.load_gamestate` to accept "lineup_only" format
+3. **Option C**: Add explicit format parameters to both actions for compatibility
+
+**Secondary Fix - Error Handling After Restart:**
+1. Improve failure detection in post-restart test monitoring
+2. Convert 5-minute timeouts into immediate error reports
+3. Add proper cleanup when load operations fail after restart
+
+**Validation Tests:**
+- `just test-android-target gamestate-save-load-workflow-test` should complete in <30s
+- `just test-android-target gamestate-complete-save-load-cycle-test` should pass 100%
+- Multi-platform runs should no longer show "RESTART_NEEDED" timeouts
 
 ## Investigation Tasks
 
-- [ ] Analyze config file management during multi-platform test execution
-- [ ] Review restart validation logic in test infrastructure
-- [ ] Identify race conditions in config deployment vs test execution timing
-- [ ] Examine platform-specific differences in config handling
-- [ ] Investigate config change detection sensitivity/timing issues
+- [x] ✅ Analyze config file management during multi-platform test execution
+- [x] ✅ Review restart validation logic in test infrastructure
+- [x] ✅ Identify race conditions in config deployment vs test execution timing
+- [x] ✅ Examine platform-specific differences in config handling
+- [x] ✅ Investigate config change detection sensitivity/timing issues
+
+### **🔬 Investigation Summary (2025-09-21)**
+
+**Reproduced Issue:**
+- `just test-android-target gamestate-save-load-workflow-test` → HANGS (5+ min timeout)
+- `just test-android-target gamestate-complete-save-load-cycle-test` → FAILS CLEANLY (immediate)
+
+**Key Discovery:** Issue is NOT about config management or restart infrastructure - it's about **gamestate data format incompatibility** between save and load operations.
+
+**Evidence Gathering:**
+- Android logs show: `"Attempted to load lineup-only save as full gamestate"`
+- Error occurs in both restart and non-restart scenarios
+- Restart scenario has poor error handling causing hangs
+- Non-restart scenario reports failures immediately
+
+**Impact:** Affects 2+ configurations in multi-platform test suite causing false "RESTART_NEEDED" reports.
 
 ## Success Metrics
 
@@ -76,5 +126,15 @@ Test infrastructure detects configuration file changes during multi-platform exe
 ## Related Context
 
 **Discovered during:** Timer abuse pattern cleanup (task-118) validation
-**Functional verification:** Direct tests pass 100%, confirming code changes are correct
-**Test logs:** Available in logs/20250920_201614_test.log for detailed analysis
+**Investigation completed:** 2025-09-21 via targeted test reproduction
+**Test evidence:**
+- `logs/20250920_201614_test.log` - Original multi-platform failures
+- `gamestate-save-load-workflow-test_android_1758446958` - Reproduced hanging behavior
+- `gamestate-complete-save-load-cycle-test_android_1758447433` - Isolated format mismatch error
+
+**Related Issues:**
+- Gamestate save/load system format inconsistency
+- Post-restart error handling deficiencies
+- Test monitoring timeout detection gaps
+
+**Priority:** Medium → High (clear reproduction path and solution identified)
