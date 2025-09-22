@@ -460,7 +460,7 @@ _test-multi-platform TARGET_CONFIG:
 
                                     # Extract action details safely without SIGPIPE
                                     ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'") |
-                                           .action_results[:10][]? |
+                                           (.action_results // []) | sort_by(.sequence // 0)[:10][]? |
                                            select(.action != null) |
                                            "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
                                        "$HIERARCHY_FILE" 2>/dev/null)
@@ -483,7 +483,7 @@ _test-multi-platform TARGET_CONFIG:
                                             echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($DIRECT_ACTION_COUNT actions)"
 
                                             # Extract action details safely without SIGPIPE
-                                            DIRECT_ACTION_DETAILS=$(jq -r '.[:10][] | "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
+                                            DIRECT_ACTION_DETAILS=$(jq -r 'sort_by(.sequence // 0)[:10][] | "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
                                                "$ACTION_RESULTS_FILE" 2>/dev/null)
 
                                             if [[ -n "$DIRECT_ACTION_DETAILS" ]]; then
