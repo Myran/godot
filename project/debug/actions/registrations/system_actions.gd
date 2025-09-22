@@ -199,7 +199,8 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 			. set_description(
 				"Context-aware replay completion - manual mode stays open, automated mode quits"
 			)
-		)
+			. set_use_auto_success_logging(false)
+		)  # Handles its own success logging due to quit timing
 	)
 	registry.register_action(
 		(

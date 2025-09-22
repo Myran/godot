@@ -23,6 +23,7 @@ static var test_failure_count: int = 0
 @export var requires_confirmation: bool = false
 @export var keyboard_shortcut: String = ""
 @export var use_auto_semantic_logging: bool = true  # Actions can opt out to handle their own semantic logging
+@export var use_auto_success_logging: bool = true  # Actions can opt out to handle their own success logging
 @export var auto_continue: bool = true  # Actions can set this to false to wait for completion events
 
 var action_callable: Callable
@@ -55,6 +56,11 @@ func set_requires_confirmation(p_requires_confirmation: bool) -> DebugAction:
 
 func set_keyboard_shortcut(p_shortcut: String) -> DebugAction:
 	keyboard_shortcut = p_shortcut
+	return self
+
+
+func set_use_auto_success_logging(p_use_auto: bool) -> DebugAction:
+	use_auto_success_logging = p_use_auto
 	return self
 
 
@@ -287,8 +293,8 @@ func _execute_core(
 	if config_test_id != "":
 		if success:
 			# SINGLE POINT: Success logging (eliminates race condition)
-			# NOTE: replay_complete action handles its own DEBUG_TEST_SUCCESS logging
-			if action_name != "system.debug.replay_complete":
+			# Actions can opt out of automatic success logging via use_auto_success_logging property
+			if use_auto_success_logging:
 				DebugAction._log_test_success(action_name, category, group, duration_ms, params)
 				# CRITICAL FIX: Ensure DEBUG_TEST_SUCCESS logging completes before automated quit
 				# Android automated mode can quit immediately after action execution, interrupting
@@ -485,7 +491,7 @@ func execute_with_state_validation(
 ) -> DebugActionResult:
 	# EXECUTION PATH DEBUG: Track which execution function is called
 	Log.info(
-		"EXEC_PATH_DEBUG: execute_with_state_validation() called",
+		"EXEC_PATH_DEBUG: execute_with_state_validation() called - UNIFIED ROUTING",
 		{"action": action_name, "session_id": session_id, "sequence": sequence},
 		["debug", "execution_path"]
 	)
@@ -521,36 +527,23 @@ func execute_with_state_validation(
 			)
 		)
 
-	var execution_result: Variant = null
-	var execution_success: bool = false
+	# UNIFIED EXECUTION: Route through _execute_core() to eliminate duplication
+	# This ensures consistent success logging, debug output, and Android fixes
+	var execution_result: Variant = await _execute_core({}, ExecutionContext.VALIDATION)
+	var execution_success: bool = execution_result != null
 	var error_message: String = ""
 
-	_update_status("Executing " + action_name + " with validation...")
-
-	_log_debug_action_as_semantic()
-
-	if action_callable.is_valid():
-		execution_result = await action_callable.call()
-		execution_success = _evaluate_action_result(execution_result)
-
-		if not execution_success:
-			error_message = _extract_error_message(execution_result)
-			Log.error(
-				"Action execution failed",
-				{
-					"action_name": action_name,
-					"error_message": error_message,
-					"result_type": typeof(execution_result)
-				},
-				["debug", "validation", "execution_error"]
-			)
-	else:
-		execution_success = false
-		error_message = "No callable defined for action: " + action_name
+	# Extract error message if execution failed
+	if not execution_success:
+		error_message = _extract_error_message(execution_result)
 		Log.error(
-			"Action has no callable defined",
-			{"action_name": action_name},
-			["debug", "validation", "configuration_error"]
+			"Action execution failed via unified path",
+			{
+				"action_name": action_name,
+				"error_message": error_message,
+				"result_type": typeof(execution_result)
+			},
+			["debug", "validation", "execution_error"]
 		)
 
 	var post_action_state: Dictionary = {}

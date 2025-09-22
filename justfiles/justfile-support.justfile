@@ -242,8 +242,8 @@ _test-multi-platform TARGET_CONFIG:
                 # No hierarchy file found - create one from action results for single config tests
                 echo "🔧 Creating hierarchy file from action results for ${PLATFORM}"
 
-                # Look for action results file from this platform test
-                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -print -quit 2>/dev/null || echo "")
+                # Look for action results file from this platform test (prioritize most recent)
+                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1)
 
                 if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
                     # Create hierarchy file from action results
@@ -474,7 +474,7 @@ _test-multi-platform TARGET_CONFIG:
                                     fi
                                 else
                                     # No action_results in hierarchy file - try to find from action results files directly
-                                    ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" /tmp -name "test_action_results_*${config}*${PLATFORM}*.json" -type f -print -quit 2>/dev/null)
+                                    ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" /tmp -name "test_action_results_*${config}*${PLATFORM}*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1)
 
                                     if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
                                         DIRECT_ACTION_COUNT=$(jq 'length' "$ACTION_RESULTS_FILE" 2>/dev/null || echo "0")

@@ -6,6 +6,7 @@ func _init() -> void:
 	set_category("System")
 	set_group("Debug")
 	set_description("Capture current gamestate for later loading and replay generation")
+	set_use_auto_success_logging(false)  # Handles its own success logging for batch execution
 
 
 func _execute_save_gamestate() -> DebugActionResult:
@@ -46,6 +47,11 @@ func _execute_save_gamestate() -> DebugActionResult:
 	)
 
 	var duration: int = Time.get_ticks_msec() - start_time
+
+	# CRITICAL FIX: Log success BEFORE returning DebugActionResult
+	# because batch execution may terminate app before normal completion callbacks fire
+	# (same pattern as system.debug.replay_complete)
+	_log_test_success("system.debug.save_gamestate", "System", "Debug", duration, {})
 
 	Log.info(
 		"Debug gamestate captured successfully",

@@ -1,0 +1,8 @@
+{
+  "name": "summary-test",
+  "description": "Test summary display fix for action counts",
+  "configs": [
+    "gamestate-save-load-test",
+    "system-layer-all"
+  ]
+}
