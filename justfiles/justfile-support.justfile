@@ -250,7 +250,7 @@ _test-multi-platform TARGET_CONFIG:
                     HIERARCHY_FILE="/tmp/test_hierarchy_${TARGET_CONFIG//[^a-zA-Z0-9_-]/_}_${PLATFORM}_${MULTI_SESSION}.json"
 
                     # Read action results and transform to hierarchy format
-                    ACTIONS_JSON=$(jq '. // []' "$ACTION_RESULTS_FILE" 2>/dev/null || echo '[]')
+                    ACTIONS_JSON=$(jq -c '. // []' "$ACTION_RESULTS_FILE" 2>/dev/null || echo '[]')
                     if jq -n --arg test_list "$TARGET_CONFIG" \
                           --arg test_session "$MULTI_SESSION" \
                           --arg config "$TARGET_CONFIG" \
@@ -300,14 +300,20 @@ _test-multi-platform TARGET_CONFIG:
                             ]
                           }' > "$HIERARCHY_FILE"
                 fi
+
             fi
 
             if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
                 echo "📁 Found ${PLATFORM} hierarchy: $(basename "$HIERARCHY_FILE")"
 
-                # Update platform info in hierarchy file
+                # Update platform info in hierarchy file with defensive error handling
                 TEMP_FILE=$(mktemp)
-                jq --arg platform "$PLATFORM" '.config_results[].platform = $platform' "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
+                if jq --arg platform "$PLATFORM" '.config_results[].platform = $platform' "$HIERARCHY_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                    mv "$TEMP_FILE" "$HIERARCHY_FILE"
+                else
+                    echo "⚠️ Failed to update platform info in hierarchy file, keeping original" >&2
+                    rm -f "$TEMP_FILE"
+                fi
 
                 PLATFORM_HIERARCHIES="$PLATFORM_HIERARCHIES${PLATFORM}:${HIERARCHY_FILE};"
                 HIERARCHY_FILES="$HIERARCHY_FILES $HIERARCHY_FILE"
@@ -409,6 +415,7 @@ _test-multi-platform TARGET_CONFIG:
     echo "========================="
     echo ""
 
+
     # Collect all unique configs across all hierarchy files
     TEMP_ALL_CONFIGS="/tmp/all_configs_$$"
     > "$TEMP_ALL_CONFIGS"
@@ -458,19 +465,19 @@ _test-multi-platform TARGET_CONFIG:
                                 if [[ "$ACTION_COUNT" -gt 0 && "$ACTION_COUNT" != "null" ]]; then
                                     echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($ACTION_COUNT actions)"
 
-                                    # Extract action details safely without SIGPIPE
+                                    # Extract action details safely without SIGPIPE - with defensive empty check
                                     ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'") |
                                            (.action_results // []) | sort_by(.sequence // 0)[:10][]? |
                                            select(.action != null) |
                                            "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
-                                       "$HIERARCHY_FILE" 2>/dev/null)
+                                       "$HIERARCHY_FILE" 2>/dev/null || true)
 
-                                    if [[ -n "$ACTION_DETAILS" ]]; then
+                                    if [[ -n "$ACTION_DETAILS" && "$ACTION_DETAILS" != "" ]]; then
                                         while IFS= read -r action_detail; do
-                                            if [[ -n "$action_detail" ]]; then
+                                            if [[ -n "$action_detail" && "$action_detail" != "" ]]; then
                                                 echo "   │   └── $action_detail"
                                             fi
-                                        done <<< "$ACTION_DETAILS"
+                                        done <<< "$ACTION_DETAILS" || true
                                     fi
                                 else
                                     # No action_results in hierarchy file - try to find from action results files directly
@@ -482,16 +489,16 @@ _test-multi-platform TARGET_CONFIG:
                                         if [[ "$DIRECT_ACTION_COUNT" -gt 0 && "$DIRECT_ACTION_COUNT" != "null" ]]; then
                                             echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($DIRECT_ACTION_COUNT actions)"
 
-                                            # Extract action details safely without SIGPIPE
+                                            # Extract action details safely without SIGPIPE - with defensive empty check
                                             DIRECT_ACTION_DETAILS=$(jq -r 'sort_by(.sequence // 0)[:10][] | "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
-                                               "$ACTION_RESULTS_FILE" 2>/dev/null)
+                                               "$ACTION_RESULTS_FILE" 2>/dev/null || true)
 
-                                            if [[ -n "$DIRECT_ACTION_DETAILS" ]]; then
+                                            if [[ -n "$DIRECT_ACTION_DETAILS" && "$DIRECT_ACTION_DETAILS" != "" ]]; then
                                                 while IFS= read -r action_detail; do
-                                                    if [[ -n "$action_detail" ]]; then
+                                                    if [[ -n "$action_detail" && "$action_detail" != "" ]]; then
                                                         echo "   │   └── $action_detail"
                                                     fi
-                                                done <<< "$DIRECT_ACTION_DETAILS"
+                                                done <<< "$DIRECT_ACTION_DETAILS" || true
                                             fi
                                         else
                                             echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
@@ -526,6 +533,7 @@ _test-multi-platform TARGET_CONFIG:
         echo "⚠️  No configuration results found across any platform"
         echo ""
     fi
+
 
     echo ""
     echo "Combined Results:"
