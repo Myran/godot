@@ -176,6 +176,40 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 	return debug_info
 
 
+## Shared Android protection for all success logging paths
+static func _ensure_android_log_completion(test_action_name: String) -> void:
+	var metadata: Dictionary = DebugConfigReader.get_metadata()
+	var is_android: bool = OS.get_name() == "Android"
+	var is_auto_quit: bool = metadata.get("auto_quit", false) == true
+
+	if is_android and is_auto_quit:
+		Log.info(
+			"ANDROID_FIX_DEBUG: Using proper signal-based chunk processing for automated mode",
+			{"action": test_action_name, "platform": OS.get_name(), "auto_quit": is_auto_quit},
+			["debug", "android", "fix"]
+		)
+
+		# Use the proper signal-based chunk processing method
+		if Log.has_method("wait_for_chunk_processing_complete_signal"):
+			await Log.wait_for_chunk_processing_complete_signal()
+			Log.info(
+				"ANDROID_FIX_DEBUG: Chunk processing completed via signal",
+				{"action": test_action_name, "platform": OS.get_name()},
+				["debug", "android", "fix"]
+			)
+		elif Log.has_method("has_pending_android_chunks"):
+			# Fallback to timeout-based approach if signal method not available
+			Log.warning(
+				"Signal-based method not available, using timeout fallback",
+				{"action": test_action_name},
+				["debug", "android", "fallback"]
+			)
+			if Log.has_method("wait_for_chunk_processing_complete"):
+				await Log.wait_for_chunk_processing_complete(3.0)
+		else:
+			Log.warning("Android chunk processing methods not available", {}, ["debug", "android"])
+
+
 static func _log_test_success(
 	test_action_name: String,
 	test_category: String,
@@ -206,6 +240,10 @@ static func _log_test_success(
 				["debug", "test", "success", "pid", "sequence"]
 			)
 		)
+
+		# CRITICAL FIX: Ensure Android protection for ALL success logging paths
+		# Custom-logged actions (use_auto_success_logging=false) were bypassing this protection
+		await _ensure_android_log_completion(test_action_name)
 
 
 func _execute_core(
@@ -296,48 +334,7 @@ func _execute_core(
 			# Actions can opt out of automatic success logging via use_auto_success_logging property
 			if use_auto_success_logging:
 				DebugAction._log_test_success(action_name, category, group, duration_ms, params)
-				# CRITICAL FIX: Ensure DEBUG_TEST_SUCCESS logging completes before automated quit
-				# Android automated mode can quit immediately after action execution, interrupting
-				# the success logging. Force immediate log processing to ensure write completes.
-				var metadata: Dictionary = DebugConfigReader.get_metadata()
-				var is_android: bool = OS.get_name() == "Android"
-				var is_auto_quit: bool = metadata.get("auto_quit", false) == true
-				if is_android and is_auto_quit:
-					(
-						Log
-						. info(
-							"ANDROID_FIX_DEBUG: Using proper signal-based chunk processing for automated mode",
-							{
-								"action": action_name,
-								"platform": OS.get_name(),
-								"auto_quit": is_auto_quit
-							},
-							["debug", "android", "fix"]
-						)
-					)
-					# Use the proper signal-based chunk processing method
-					if Log.has_method("wait_for_chunk_processing_complete_signal"):
-						await Log.wait_for_chunk_processing_complete_signal()
-						Log.info(
-							"ANDROID_FIX_DEBUG: Chunk processing completed via signal",
-							{"action": action_name, "platform": OS.get_name()},
-							["debug", "android", "fix"]
-						)
-					elif Log.has_method("has_pending_android_chunks"):
-						# Fallback to timeout-based approach if signal method not available
-						Log.warning(
-							"Signal-based method not available, using timeout fallback",
-							{"action": action_name},
-							["debug", "android", "fallback"]
-						)
-						if Log.has_method("wait_for_chunk_processing_complete"):
-							await Log.wait_for_chunk_processing_complete(3.0)
-					else:
-						Log.warning(
-							"Android chunk processing methods not available",
-							{},
-							["debug", "android"]
-						)
+				# Note: Android protection is now handled inside _log_test_success via shared function
 		else:
 			test_failure_count += 1
 			Log.error(
