@@ -166,6 +166,40 @@ Added explicit system.debug.replay_complete to gamestate-save-load-test.json to 
 
 **Next Step**: Full test suite validation to confirm complete stability.
 
+## 🔄 REOPENED INVESTIGATION - Sept 22, 2025
+
+**ISSUE**: User reported that test output "seems to be missing completed actions" and requested focus on platform inconsistency in auto-append `replay_complete` behavior.
+
+### 🔍 CURRENT INVESTIGATION STATUS
+
+**HYPOTHESIS**: Platform inconsistency in auto-append mechanism, not the manual addition approach.
+
+**DISCOVERY**: Auto-append logic in `debug_startup_coordinator.gd` works correctly:
+- ✅ Auto-appends `replay_complete` when config has `test_metadata` (test recipe detection)
+- ✅ Logic: `not has_completion && action_count > 0 && is_test_recipe`
+- ✅ Both platforms show 4 actions when tested individually
+
+**KEY FINDINGS**:
+1. **Individual Tests**: Both Desktop and Android correctly show 4 actions (auto-append working)
+2. **Batch/Multi-platform Tests**: May have different behavior due to timing/race conditions
+3. **Test Framework**: Justfile adds `test_metadata` → triggers `is_test_recipe = true` → enables auto-append
+
+### 🧪 ACTIVE TESTING (Background)
+Running comprehensive test suite analysis:
+- `just log-run test` - Full test suite with complete logging
+- `just log-run test-all gamestate-complete-save-load-cycle-test` - Cross-platform specific test
+- Multiple other test combinations to identify timing patterns
+
+### 🎯 NEXT INVESTIGATION STEPS
+1. **Analyze batch vs individual test results** - Check if race conditions occur in multi-platform context
+2. **Compare timing between desktop-first vs android-first execution**
+3. **Examine startup coordinator auto-append logs** in multi-platform scenarios
+4. **Verify test_metadata presence consistency** across all execution modes
+
+**CORRECTED APPROACH**: Focus on auto-append mechanism reliability rather than manual config changes.
+
+**STATUS**: Investigation in progress - analyzing timing-dependent auto-append behavior in batch execution contexts.
+
 ## ✅ FINAL SOLUTION - ANDROID QUEUE FIX COMPLETED
 
 ### 🎯 Root Cause Analysis
@@ -200,6 +234,26 @@ if Log.has_method("wait_for_chunk_processing_complete_signal"):
 
 **Files Modified**: `project/debug/actions/debug_action.gd`
 **Test Results**: Validated with `gamestate-complete-save-load-cycle-test_android_1758476737`
+
+## 🔍 ADDITIONAL DISCOVERY - SUMMARY DISPLAY BUG
+
+During investigation, discovered a **separate cosmetic issue** in test summary tree view:
+
+### Issue Identified:
+- **Display Bug**: Multi-platform test summaries inconsistently show `replay_complete` actions in tree view
+- **Examples**: Android shows "(3 actions)" while Desktop shows "(4 actions)" for same test
+- **Root Cause**: Summary generation filtering logic, not execution issue
+- **Impact**: Cosmetic only - all actions execute and are collected correctly
+
+### Evidence:
+- **Raw logs**: Both platforms show `DEBUG_TEST_SUCCESS` for `replay_complete`
+- **Action files**: Both contain complete action lists including `replay_complete`
+- **Summary display**: Inconsistently filters `replay_complete` from tree view
+
+### Resolution:
+- **Created**: task-173 to address summary display bug separately
+- **Confirmed**: This is cosmetic only and doesn't affect functionality
+- **Queue fix**: Remains valid and working correctly
 
 
 ## 🎯 COMPLETE ROOT CAUSE ANALYSIS 
