@@ -443,9 +443,10 @@ _test-multi-platform TARGET_CONFIG:
             if [[ -n "$config" ]]; then
                 echo "🔧 $config"
 
-                # Process this config with error handling to prevent script termination
+                # Process this config with comprehensive error tracking
                 process_config_safely() {
                     local config="$1"
+                    local config_errors=0
                     set +e  # Temporarily disable exit on error for this config
 
                 # Show status for each platform
@@ -515,6 +516,7 @@ _test-multi-platform TARGET_CONFIG:
                                 ;;
                             "failed")
                                 echo "   ├── $PLATFORM_ICON $PLATFORM: ❌ FAILED"
+                                config_errors=$((config_errors + 1))
                                 ;;
                             "skipped")
                                 SKIP_REASON=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"][0] // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null)
@@ -525,6 +527,7 @@ _test-multi-platform TARGET_CONFIG:
                                 ;;
                             *)
                                 echo "   ├── $PLATFORM_ICON $PLATFORM: ❓ UNKNOWN ($CONFIG_STATUS)"
+                                config_errors=$((config_errors + 1))
                                 ;;
                         esac
                     else
@@ -534,9 +537,10 @@ _test-multi-platform TARGET_CONFIG:
                 echo ""
 
                     set -e  # Re-enable exit on error
+                    return $config_errors  # Return error count for this config
                 }
 
-                # Call the function safely and continue even if it fails
+                # Call the function and track processing errors
                 if ! process_config_safely "$config"; then
                     echo "   ⚠️  WARNING: Error processing config '$config' - continuing with remaining configs"
                     echo ""
@@ -564,33 +568,88 @@ _test-multi-platform TARGET_CONFIG:
         [[ -n "$HIERARCHY_FILE" ]] && rm -f "$HIERARCHY_FILE" 2>/dev/null || true
     done
 
-    # Determine final result
+    # Comprehensive error collection and analysis
     OVERALL_RESULT=0
     FAILED_PLATFORMS=""
+    FAILED_CONFIGS=""
+    CONFIG_FAILURES=0
+    PLATFORM_FAILURES=0
+
+    # Track platform-level failures
     for PLATFORM in $TEST_PLATFORMS; do
         RESULT=$(get_platform_result "$PLATFORM")
         if [[ "$RESULT" != "0" && "$RESULT" != "2" ]]; then  # Not success and not skipped
             OVERALL_RESULT=1
+            PLATFORM_FAILURES=$((PLATFORM_FAILURES + 1))
             PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM")
             FAILED_PLATFORMS="$FAILED_PLATFORMS\n   $PLATFORM_ICON $PLATFORM: FAILED (exit code: $RESULT)"
         fi
     done
 
-    # Final result
+    # Track config-level failures by analyzing hierarchy files
+    if [[ -n "$UNIQUE_CONFIGS" ]]; then
+        while IFS= read -r config; do
+            if [[ -n "$config" ]]; then
+                CONFIG_HAS_FAILURE=false
+                for PLATFORM in $TEST_PLATFORMS; do
+                    HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
+                    if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
+                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
+                        if [[ "$CONFIG_STATUS" == "failed" ]]; then
+                            CONFIG_HAS_FAILURE=true
+                            break
+                        fi
+                    fi
+                done
+
+                if [[ "$CONFIG_HAS_FAILURE" == "true" ]]; then
+                    OVERALL_RESULT=1
+                    CONFIG_FAILURES=$((CONFIG_FAILURES + 1))
+                    FAILED_CONFIGS="$FAILED_CONFIGS\n   🔧 $config: FAILED"
+                fi
+            fi
+        done <<< "$UNIQUE_CONFIGS"
+    fi
+
+    # Final result with comprehensive error reporting
     echo ""
     if [[ $OVERALL_RESULT -eq 0 ]]; then
         echo "✅ Multi-platform test suite completed successfully!"
+        echo "   📊 All $TOTAL_PASSED configs passed across all platforms"
     else
-        echo "⚠️  Some platforms had failures:"
-        echo -e "$FAILED_PLATFORMS"
+        echo "❌ Multi-platform test suite completed with failures!"
         echo ""
-        echo "💡 Multi-platform summary completed with comprehensive issue visibility"
-        echo "   Use the detailed breakdown above to address individual config failures"
+        echo "📊 Failure Summary:"
+        echo "   🔧 Failed Configs: $CONFIG_FAILURES"
+        echo "   📱 Failed Platforms: $PLATFORM_FAILURES"
+        echo "   ✅ Passed Configs: $TOTAL_PASSED"
+        echo "   ⏭️  Skipped Configs: $TOTAL_SKIPPED"
+        echo ""
+
+        if [[ -n "$FAILED_CONFIGS" && "$FAILED_CONFIGS" != "" ]]; then
+            echo "🔧 Failed Configurations:"
+            echo -e "$FAILED_CONFIGS"
+            echo ""
+        fi
+
+        if [[ -n "$FAILED_PLATFORMS" && "$FAILED_PLATFORMS" != "" ]]; then
+            echo "📱 Failed Platforms:"
+            echo -e "$FAILED_PLATFORMS"
+            echo ""
+        fi
+
+        echo "💡 Comprehensive analysis completed - use details above to prioritize fixes"
     fi
 
     echo ""
     echo "✅ Multi-platform analysis complete - all configs processed"
-    exit 0  # Always exit successfully for comprehensive analysis
+
+    # PROPER EXIT BEHAVIOR: Fail if any failures detected, succeed otherwise
+    if [[ $OVERALL_RESULT -eq 0 ]]; then
+        exit 0  # Success: no failures detected
+    else
+        exit 1  # Failure: proper error reporting restored
+    fi
 
 # Run tests across multiple platforms with unified summary (fixed config)
 test:
