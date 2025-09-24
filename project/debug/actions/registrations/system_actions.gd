@@ -193,7 +193,7 @@ static func _register_test_actions(registry: DebugActionRegistry) -> void:
 	registry.register_action(
 		(
 			DebugAction
-			. create("system.debug.replay_complete", _replay_complete_unified)
+			. create("system.debug.replay_complete", _replay_complete)
 			. set_category("System")
 			. set_group("Debug")
 			. set_description(
@@ -327,10 +327,10 @@ static func _test_replay_generation_no_quit() -> bool:
 	return true
 
 
-## Unified async-compatible replay completion function
-## This function properly handles both sync and async execution contexts
+## Main replay completion function with fire-and-forget async pattern
+## This function handles both sync and async execution contexts
 ## by ensuring success logging happens before any await operations
-static func _replay_complete_unified() -> bool:
+static func _replay_complete() -> bool:
 	var start_time: int = Time.get_ticks_msec()
 
 	# CRITICAL: Log success BEFORE any async operations
@@ -341,14 +341,14 @@ static func _replay_complete_unified() -> bool:
 	)
 
 	# Fire-and-forget async execution - this prevents blocking while ensuring proper async handling
-	_replay_complete_with_unified_logging()
+	_replay_complete_async_worker()
 
 	# Return true immediately to satisfy the sync caller expectation
 	return true
 
 
-## Unified replay completion logic with proper async handling
-static func _replay_complete_with_unified_logging() -> void:
+## Async worker function that handles replay completion logic
+static func _replay_complete_async_worker() -> void:
 	var execution_context: Dictionary = _detect_execution_context()
 	Log.info(
 		"Replay completion with context detection",
