@@ -460,21 +460,39 @@ push-gamestate-android GAMESTATE_FILE: _validate-android-workflow
     just _push-file-android "{{GAMESTATE_FILE}}" "pending_gamestate_load.json"
 
 # Push configuration to Android device
-config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
+config-push-android CONFIG_NAME_OR_PATH:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
+    CONFIG_INPUT="{{CONFIG_NAME_OR_PATH}}"
+
     echo "📱 Pushing config to Android device..."
-    
-    CONFIG_FILE=$(just _get-safe-config-file "{{CONFIG_NAME}}")
-    
+
+    # Auto-detect: file path vs config name
+    if [[ -f "$CONFIG_INPUT" ]]; then
+        # File path provided - use directly (for temp configs with injected metadata)
+        CONFIG_FILE="$CONFIG_INPUT"
+        echo "📄 Using file path: $CONFIG_FILE"
+    else
+        # Config name provided - resolve to file and validate
+        just _validate-android-config-workflow "$CONFIG_INPUT"
+        CONFIG_FILE=$(just _get-safe-config-file "$CONFIG_INPUT")
+        echo "📄 Resolved config name '$CONFIG_INPUT' to: $CONFIG_FILE"
+    fi
+
+    # Validate resolved file exists
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        exit 1
+    fi
+
     echo "📄 Config content to push:"
     cat "$CONFIG_FILE" | jq . || cat "$CONFIG_FILE"
     echo ""
-    
+
     # Use the reusable file push helper for config
     just _push-file-android "$CONFIG_FILE" "debug_startup_actions.json"
-    
+
     # Check for and push any pending gamestate files (timing-critical for save-load cycle tests)
     if [[ -f "/tmp/android_gamestate_embed_file.txt" ]]; then
         GAMESTATE_FILE=$(cat /tmp/android_gamestate_embed_file.txt)
@@ -490,6 +508,7 @@ config-push-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
             exit 1
         fi
     fi
+
 
 # Deploy config and restart Android app (5-second iteration)
 config-restart-android CONFIG_NAME: (_validate-android-config-workflow CONFIG_NAME)
