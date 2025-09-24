@@ -376,15 +376,6 @@ static func _replay_complete_with_unified_logging() -> void:
 		)
 
 		var current_test_id: String = DebugAction.get_current_test_id()
-		Log.info(
-			"Debug: Current test ID",
-			{
-				"test_id": current_test_id,
-				"is_empty": current_test_id.is_empty(),
-				"length": current_test_id.length()
-			},
-			["debug", "test", "test_id"]
-		)
 
 		if not current_test_id.is_empty():
 			Log.info(
@@ -423,26 +414,15 @@ static func _replay_complete_with_unified_logging() -> void:
 		# CRITICAL: Proper async handling for Android chunk processing
 		if OS.get_name() == "Android":
 			Log.info(
-				"Android platform detected - waiting for chunk processing via signal",
+				"Android: Waiting for log chunk processing before quit",
 				{
 					"platform": "Android",
-					"chunk_processing_wait": true,
-					"automated_mode": true,
-					"signal_based": true,
-					"fix_applied": "unified_async_handling"
+					"chunks_pending": Log.get_android_chunk_count(),
+					"automated_mode": true
 				},
 				["debug", "android", "automated", "chunk_processing"]
 			)
 			await Log.wait_for_chunk_processing_complete_signal()
-			Log.info(
-				"Final Android chunk processing wait before quit",
-				{
-					"platform": "Android",
-					"reason": "completion_logs_generated",
-					"chunks_pending": Log.get_android_chunk_count()
-				},
-				["debug", "android", "automated", "final_wait"]
-			)
 			# Additional wait to ensure all logs are flushed
 			await Log.wait_for_chunk_processing_complete_signal()
 
