@@ -423,7 +423,8 @@ static func _replay_complete_with_unified_logging() -> void:
 				["debug", "android", "automated", "chunk_processing"]
 			)
 			await Log.wait_for_chunk_processing_complete_signal()
-			# Additional wait to ensure all logs are flushed
+			# Additional wait handles race condition: chunks added after first signal completes
+			# This is necessary because multiple concurrent actions can queue chunks simultaneously
 			await Log.wait_for_chunk_processing_complete_signal()
 
 		_quit_application()
