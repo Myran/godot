@@ -327,28 +327,12 @@ static func _test_replay_generation_no_quit() -> bool:
 	return true
 
 
-## Main replay completion function with fire-and-forget async pattern
-## This function handles both sync and async execution contexts
-## by ensuring success logging happens before any await operations
+## Simplified replay completion function with true async pattern
+## Queue now properly awaits async functions, enabling single-function architecture
+## Success logging happens after actual work completion for accurate timing
 static func _replay_complete() -> bool:
 	var start_time: int = Time.get_ticks_msec()
-
-	# CRITICAL: Log success BEFORE any async operations
-	# This ensures the success log is captured even if the function quits during await
-	var duration_ms: int = Time.get_ticks_msec() - start_time
-	DebugAction._log_test_success(
-		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
-	)
-
-	# Fire-and-forget async execution - this prevents blocking while ensuring proper async handling
-	_replay_complete_async_worker()
-
-	# Return true immediately to satisfy the sync caller expectation
-	return true
-
-
-## Async worker function that handles replay completion logic
-static func _replay_complete_async_worker() -> void:
+	var duration_ms: int  # Declare once at function scope
 	var execution_context: Dictionary = _detect_execution_context()
 	Log.info(
 		"Replay completion with context detection",
@@ -427,8 +411,14 @@ static func _replay_complete_async_worker() -> void:
 			# This is necessary because multiple concurrent actions can queue chunks simultaneously
 			await Log.wait_for_chunk_processing_complete_signal()
 
+		# CRITICAL: Log success BEFORE quit (safety net - app may not return after quit)
+		duration_ms = Time.get_ticks_msec() - start_time
+		DebugAction._log_test_success(
+			"system.debug.replay_complete", "System", "Debug", duration_ms, {}
+		)
+
 		_quit_application()
-		return
+		return true
 
 	# Manual mode handling
 	Log.info(
@@ -452,6 +442,14 @@ static func _replay_complete_async_worker() -> void:
 		},
 		["semantic", "replay", "complete"]
 	)
+
+	# Manual mode: Log success AFTER all work completed (real timing measurement)
+	duration_ms = Time.get_ticks_msec() - start_time
+	DebugAction._log_test_success(
+		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
+	)
+
+	return true
 
 
 static func _log_lineup_final_state() -> void:
