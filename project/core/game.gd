@@ -649,6 +649,32 @@ func _process_one_queue_item() -> void:
 
 	print("SIMPLE_TRACE: Action call completed - name: ", str(action))
 
+	# CRITICAL FIX: Wait for Android logging completion before queue progression
+	# Prevents race condition where auto-continue starts next action while
+	# previous action's DEBUG_TEST_SUCCESS logging is still async processing
+	var metadata: Dictionary = DebugConfigReader.get_metadata() if DebugConfigReader != null else {}
+	var is_auto_quit: bool = metadata.get("auto_quit", false) == true
+
+	if OS.get_name() == "Android" and is_auto_quit and Log.has_pending_android_chunks():
+		Log.info(
+			"QUEUE_SYNC: Waiting for Android logging completion before queue progression",
+			{
+				"pending_chunks": Log.get_android_chunk_count(),
+				"auto_continue": auto_continue,
+				"test_id": DebugAction.get_current_test_id()
+			},
+			["debug", "queue", "android", "sync"]
+		)
+		await Log.wait_for_chunk_processing_complete_signal()
+		Log.info(
+			"QUEUE_SYNC: Android logging completed, queue can proceed",
+			{
+				"auto_continue": auto_continue,
+				"test_id": DebugAction.get_current_test_id()
+			},
+			["debug", "queue", "android", "sync"]
+		)
+
 	var action_end_time: float = Time.get_unix_time_from_system()
 	var action_end_frame: int = Engine.get_process_frames()
 	var execution_time_ms: float = (action_end_time - action_start_time) * 1000.0
@@ -673,14 +699,31 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_complete", Log.TAG_DIAGNOSTIC]
 	)
 
-	if auto_continue and not _idle_action_queue.is_empty():
+	# Check if we should override auto_continue=false in automated mode
+	var should_force_continue: bool = false
+	if not auto_continue and not _idle_action_queue.is_empty() and is_auto_quit:
+		should_force_continue = true
+		Log.info(
+			"AUTOMATED_MODE_OVERRIDE: Forcing auto-continue for automated test execution",
+			{
+				"original_auto_continue": auto_continue,
+				"forced_auto_continue": true,
+				"remaining_queue_size": _idle_action_queue.size(),
+				"test_id": DebugAction.get_current_test_id()
+			},
+			["debug", "automated", "override", "queue"]
+		)
+
+	if (auto_continue or should_force_continue) and not _idle_action_queue.is_empty():
 		Log.info(
 			"Auto-continuing to next queue item (action requested immediate continuation)",
 			{
 				"remaining_queue_size": _idle_action_queue.size(),
 				"trigger_timestamp": Time.get_unix_time_from_system(),
 				"trigger_frame": Engine.get_process_frames(),
-				"test_id": DebugAction.get_current_test_id()
+				"test_id": DebugAction.get_current_test_id(),
+				"original_auto_continue": auto_continue,
+				"forced_continue": should_force_continue
 			},
 			[
 				Log.TAG_SYSTEM,
