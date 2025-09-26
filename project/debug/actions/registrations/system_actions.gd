@@ -2,6 +2,7 @@ class_name SystemActions
 const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
+const QuitEventClass = preload("res://core/events/quit_application_event.gd")
 # Save/Load action classes
 const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
 const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
@@ -107,9 +108,18 @@ static func _show_registry_stats(registry: DebugActionRegistry) -> bool:
 
 
 static func _quit_application() -> bool:
+	# Capture final state before initiating quit sequence
 	_capture_final_state()
+
+	# End gameplay session
 	SessionManager.end_gameplay_session()
+
+	# Emit debug manager quit event for compatibility
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
+
+	# Use new core quit event for centralized quit handling
+	core.action(QuitEventClass.new())
+
 	return true
 
 
@@ -327,20 +337,19 @@ static func _test_replay_generation_no_quit() -> bool:
 	return true
 
 
-## Simplified replay completion function with true async pattern
-## Queue now properly awaits async functions, enabling single-function architecture
-## Success logging happens after actual work completion for accurate timing
+## Simplified replay completion function with centralized quit handling
+## All async quit logic moved to QuitApplicationEvent core event
+## Focus on pure completion responsibilities: session end, state logging, test completion
 static func _replay_complete() -> bool:
 	var start_time: int = Time.get_ticks_msec()
-	var duration_ms: int  # Declare once at function scope
 	var execution_context: Dictionary = _detect_execution_context()
+
 	Log.info(
-		"Replay completion with context detection",
+		"Replay completion started",
 		{
 			"execution_mode": execution_context.mode,
 			"platform": execution_context.platform,
-			"command_source": execution_context.command_source,
-			"completion_status": "success"
+			"command_source": execution_context.command_source
 		},
 		["debug", "replay", "complete", "context"]
 	)
@@ -348,23 +357,14 @@ static func _replay_complete() -> bool:
 	# Log final lineup state for both manual and automated modes
 	_log_lineup_final_state()
 
+	# Handle test completion logging for automated mode
 	if execution_context.mode == "automated":
-		Log.info(
-			"Automated mode detected - quitting application for CI/automated testing",
-			{
-				"automated_execution": true,
-				"quit_application": true,
-				"detection_method": execution_context.command_source
-			},
-			["debug", "replay", "automated", "quit"]
-		)
-
 		var current_test_id: String = DebugAction.get_current_test_id()
 
 		if not current_test_id.is_empty():
 			Log.info(
 				"TEST_COMPLETE_" + current_test_id,
-				{"test_id": current_test_id, "automated_completion": true, "quit_initiated": true},
+				{"test_id": current_test_id, "automated_completion": true},
 				["debug", "test", "complete", "automated"]
 			)
 		else:
@@ -377,77 +377,68 @@ static func _replay_complete() -> bool:
 				{
 					"test_id": fallback_test_id,
 					"automated_completion": true,
-					"quit_initiated": true,
-					"note": "Using fallback test ID since get_current_test_id() was empty",
 					"config_name": config_name
 				},
 				["debug", "test", "complete", "automated"]
 			)
-
-		# Log final completion, wait for Android chunk processing, then quit
+	else:
+		# Manual mode - log semantic action for verification
 		Log.info(
-			"Final completion - all logs generated, proceeding with quit",
+			"SEMANTIC_ACTION",
 			{
-				"platform": OS.get_name(),
-				"all_logs_complete": true,
-				"about_to_wait_for_chunks": OS.get_name() == "Android"
+				"action": "replay.complete",
+				"timestamp": Time.get_unix_time_from_system(),
+				"execution_mode": execution_context.mode,
+				"user_verification_mode": true
 			},
-			["debug", "final", "completion"]
+			["semantic", "replay", "complete"]
 		)
 
-		# CRITICAL: Proper async handling for Android chunk processing
-		if OS.get_name() == "Android":
-			Log.info(
-				"Android: Waiting for log chunk processing before quit",
-				{
-					"platform": "Android",
-					"chunks_pending": Log.get_android_chunk_count(),
-					"automated_mode": true
-				},
-				["debug", "android", "automated", "chunk_processing"]
-			)
-			await Log.wait_for_chunk_processing_complete_signal()
-			# Additional wait handles race condition: chunks added after first signal completes
-			# This is necessary because multiple concurrent actions can queue chunks simultaneously
-			await Log.wait_for_chunk_processing_complete_signal()
-
-		# CRITICAL: Log success BEFORE quit (safety net - app may not return after quit)
-		duration_ms = Time.get_ticks_msec() - start_time
-		DebugAction._log_test_success(
-			"system.debug.replay_complete", "System", "Debug", duration_ms, {}
-		)
-
-		_quit_application()
-		return true
-
-	# Manual mode handling
-	Log.info(
-		"Manual mode detected - staying open for verification and screenshots",
-		{
-			"manual_verification": true,
-			"interactive_mode": true,
-			"stay_open": true,
-			"note": "App remains open - user can verify results and take screenshots"
-		},
-		["debug", "replay", "manual", "interactive"]
-	)
-
-	Log.info(
-		"SEMANTIC_ACTION",
-		{
-			"action": "replay.complete",
-			"timestamp": Time.get_unix_time_from_system(),
-			"execution_mode": execution_context.mode,
-			"user_verification_mode": true
-		},
-		["semantic", "replay", "complete"]
-	)
-
-	# Manual mode: Log success AFTER all work completed (real timing measurement)
-	duration_ms = Time.get_ticks_msec() - start_time
+	# Log completion success with timing
+	var duration_ms: int = Time.get_ticks_msec() - start_time
 	DebugAction._log_test_success(
 		"system.debug.replay_complete", "System", "Debug", duration_ms, {}
 	)
+
+	Log.info(
+		"Replay completion finished",
+		{
+			"execution_mode": execution_context.mode,
+			"duration_ms": duration_ms,
+			"will_quit": execution_context.mode == "automated"
+		},
+		["debug", "replay", "complete", "finished"]
+	)
+
+	# For automated mode: wait for action completion, then trigger quit
+	if execution_context.mode == "automated":
+		# CRITICAL: Ensure all queued actions complete before quit
+		# This prevents success logging interruption (fixes missing registry_stats DEBUG_TEST_SUCCESS)
+		var main_node: Node = Engine.get_main_loop().current_scene
+		var game_node: Game = main_node.get_node_or_null("Game") if main_node else null
+		var queue_empty: bool = true
+
+		if game_node:
+			queue_empty = game_node._idle_action_queue.size() == 0
+
+		Log.info(
+			"Waiting for all queued actions to complete before quit",
+			{"queue_empty": queue_empty},
+			["debug", "replay", "automated", "queue_sync"]
+		)
+
+		# Wait for queue to empty (all actions including registry_stats complete their success logging)
+		if game_node:
+			while game_node._idle_action_queue.size() > 0:
+				await Engine.get_main_loop().process_frame
+
+		Log.info(
+			"All actions completed - proceeding with quit",
+			{"actions_completed": true},
+			["debug", "replay", "automated", "quit_ready"]
+		)
+
+		_quit_application()
 
 	return true
 
