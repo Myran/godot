@@ -87,9 +87,9 @@ static func format_completion_report(action: DebugAction, success: bool, result:
 
 static func _log_to_system(action: DebugAction, text: String, is_error: bool) -> void:
 	if is_error:
-		Log.error(text, {"action": action.action_name}, ["debug", "test"])
+		Log.error(text, {"action": action.action_name}, [Log.TAG_DEBUG, Log.TAG_TEST])
 	else:
-		Log.info(text, {"action": action.action_name}, ["debug", "test"])
+		Log.info(text, {"action": action.action_name}, [Log.TAG_DEBUG, Log.TAG_TEST])
 
 
 static func _send_to_debug_menu_if_available(text: String, is_error: bool = false) -> void:

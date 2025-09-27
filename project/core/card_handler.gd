@@ -15,7 +15,7 @@ func change_health(card: Card, health_amount: int) -> void:
 			"effects_perm_count": card.unit_info.effects_perm.size(),
 			"bypass_warning": "This bypasses apply_permanent_effects_to_current_stats()"
 		},
-		[Log.TAG_CARD, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh", "bypass_warning"]
+		[Log.TAG_CARD, Log.TAG_STAT, Log.TAG_EFFECT, Log.TAG_STAT_REFRESH, Log.TAG_BYPASS_WARNING]
 	)
 
 	card.unit_info.current_health = new_health
@@ -36,7 +36,7 @@ func change_attack(card: Card, attack_amount: int) -> void:
 			"effects_perm_count": card.unit_info.effects_perm.size(),
 			"bypass_warning": "This bypasses apply_permanent_effects_to_current_stats()"
 		},
-		[Log.TAG_CARD, Log.TAG_STAT, Log.TAG_EFFECT, "stat_refresh", "bypass_warning"]
+		[Log.TAG_CARD, Log.TAG_STAT, Log.TAG_EFFECT, Log.TAG_STAT_REFRESH, Log.TAG_BYPASS_WARNING]
 	)
 
 	card.unit_info.current_attack = new_attack

@@ -7,7 +7,7 @@ extends Node
 
 
 func _ready() -> void:
-	Log.info("Main scene initialized", {}, ["system", "initialization"])
+	Log.info("Main scene initialized", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 	Log.set_debug_filter_logging(false)
 
 	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
@@ -21,7 +21,7 @@ func _ready() -> void:
 			"cmdline_args_size": cmdline_args.size(),
 			"cmdline_user_args_size": cmdline_user_args.size()
 		},
-		["system", "initialization"]
+		[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
 	)
 
 	# Check for --minimized flag and set window mode accordingly
@@ -29,7 +29,7 @@ func _ready() -> void:
 		Log.info(
 			"Minimized flag detected, setting window to minimized mode",
 			{},
-			["system", "initialization"]
+			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
 		)
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
 
@@ -38,17 +38,17 @@ func _ready() -> void:
 	# Gamestate loading is now handled by debug actions directly
 	match OS.get_name():
 		"Windows":
-			Log.info("Running on Windows platform", {}, ["system", "initialization"])
+			Log.info("Running on Windows platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 		"macOS":
-			Log.info("Running on macOS platform", {}, ["system", "initialization"])
+			Log.info("Running on macOS platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 		"Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD":
-			Log.info("Running on Linux/BSD platform", {}, ["system", "initialization"])
+			Log.info("Running on Linux/BSD platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 		"Android":
-			Log.info("Running on Android platform", {}, ["system", "initialization"])
+			Log.info("Running on Android platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 		"iOS":
-			Log.info("Running on iOS platform", {}, ["system", "initialization"])
+			Log.info("Running on iOS platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 		"Web":
-			Log.info("Running on Web platform", {}, ["system", "initialization"])
+			Log.info("Running on Web platform", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 
 	var is_test_mode: bool = false
 	if OS.has_feature("android"):
@@ -56,7 +56,7 @@ func _ready() -> void:
 		Log.info(
 			"Android test mode detection",
 			{"is_test_mode": is_test_mode},
-			["system", "initialization", "test_mode"]
+			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST]
 		)
 	elif OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
 		is_test_mode = "--test-mode" in cmdline_args
@@ -67,7 +67,7 @@ func _ready() -> void:
 				"cmdline_args": cmdline_args,
 				"platform_name": OS.get_name()
 			},
-			["system", "initialization", "test_mode"]
+			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST]
 		)
 	else:
 		Log.info(
@@ -79,7 +79,7 @@ func _ready() -> void:
 				"has_desktop": OS.has_feature("desktop"),
 				"has_editor": OS.has_feature("editor")
 			},
-			["system", "initialization", "test_mode"]
+			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION, Log.TAG_TEST]
 		)
 
 	if (
@@ -96,7 +96,7 @@ func _ready() -> void:
 				"is_headless": DisplayServer.get_name() == "headless",
 				"is_test_mode": is_test_mode
 			},
-			["system", "initialization"]
+			[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
 		)
 		return
 
@@ -105,14 +105,16 @@ func _ready() -> void:
 
 
 func _wait_for_game_initialization() -> void:
-	Log.info("Waiting for game initialization to complete", {}, ["system", "initialization"])
+	Log.info(
+		"Waiting for game initialization to complete", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
+	)
 
 	await game.initialization_complete
 
 	Log.info(
 		"Game initialization complete (signal received), starting debug coordinator",
 		{},
-		["system", "initialization"]
+		[Log.TAG_SYSTEM, Log.TAG_INITIALIZATION]
 	)
 
 
@@ -123,31 +125,37 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()
 		DebugManager.DebugEventType.EVENT_QUIT:
-			Log.info("Quit event received, exiting application", {}, ["debug", "system"])
+			Log.info(
+				"Quit event received, exiting application", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
+			)
 			SessionManager.end_gameplay_session()
 			if get_tree():
 				get_tree().quit(0)
 			else:
 				Log.warning(
-					"Tree not available during quit, using fallback", {}, ["debug", "system"]
+					"Tree not available during quit, using fallback",
+					{},
+					[Log.TAG_DEBUG, Log.TAG_SYSTEM]
 				)
 				if get_tree():
 					get_tree().quit(0)
 				else:
-					print("Force quit: tree unavailable")
+					Log.error("Force quit: tree unavailable", {}, [Log.TAG_QUIT, Log.TAG_ERROR])
 		DebugManager.DebugEventType.EVENT_RESTART_GAME:
-			Log.info("Restart event received, restarting game scene", {}, ["debug", "system"])
+			Log.info(
+				"Restart event received, restarting game scene", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
+			)
 			_restart_game_scene()
 
 
 func _restart_game_scene() -> void:
 	"""Restart the current game scene cleanly"""
-	Log.info("Restarting game scene", {}, ["system", "restart"])
+	Log.info("Restarting game scene", {}, [Log.TAG_SYSTEM, Log.TAG_WORKFLOW])
 
 	# End any active session cleanly
 	if SessionManager.has_active_session():
 		SessionManager.end_current_session("game_restart")
-		Log.debug("Active session ended for restart", {}, ["system", "restart"])
+		Log.debug("Active session ended for restart", {}, [Log.TAG_SYSTEM, Log.TAG_WORKFLOW])
 
 	# Reload current scene
 	var current_scene_path: String = get_tree().current_scene.scene_file_path
@@ -157,10 +165,10 @@ func _restart_game_scene() -> void:
 		Log.warning(
 			"Current scene path empty, using fallback",
 			{"fallback": current_scene_path},
-			["system", "restart"]
+			[Log.TAG_SYSTEM, Log.TAG_WORKFLOW]
 		)
 
-	Log.debug("Reloading scene", {"path": current_scene_path}, ["system", "restart"])
+	Log.debug("Reloading scene", {"path": current_scene_path}, [Log.TAG_SYSTEM, Log.TAG_WORKFLOW])
 	get_tree().change_scene_to_file(current_scene_path)
 
 

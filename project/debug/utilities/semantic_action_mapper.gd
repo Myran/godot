@@ -208,7 +208,7 @@ static func _inject_validation_actions(
 	Log.debug(
 		"Injecting validation actions",
 		{"session_id": session_id, "original_actions": debug_sequence.size()},
-		["replay", "validation", "injection"]
+		[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_INJECTION]
 	)
 
 	enhanced_actions.append("system.debug.capture_initial_state")
@@ -229,7 +229,7 @@ static func _inject_validation_actions(
 		Log.debug(
 			"Injected validation for action",
 			{"action_name": action_name, "sequence": sequence, "session_id": session_id},
-			["replay", "validation", "action_injection"]
+			[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_ACTION_INJECTION]
 		)
 
 	enhanced_actions.append("system.debug.validate_final_state")
@@ -334,7 +334,7 @@ static func generate_production_replay_config(session_id: String) -> Dictionary:
 		Log.error(
 			"No semantic actions found for session",
 			{"session_id": session_id},
-			["replay", "validation", "generation_error"]
+			[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_GENERATION_ERROR]
 		)
 		return {}
 
@@ -354,6 +354,6 @@ static func _extract_semantic_actions_from_session(session_id: String) -> Array:
 	Log.warning(
 		"Semantic action extraction not yet implemented - using placeholder",
 		{"session_id": session_id},
-		["replay", "validation", "placeholder"]
+		[Log.TAG_REPLAY, Log.TAG_VALIDATION, Log.TAG_PLACEHOLDER]
 	)
 	return []

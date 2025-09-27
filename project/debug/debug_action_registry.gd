@@ -170,7 +170,7 @@ func find_actions_matching(pattern: String) -> Array[String]:
 		Log.warning(
 			"Invalid wildcard pattern",
 			{"pattern": pattern, "regex": regex_pattern, "error": compile_result},
-			["debug", "wildcard"]
+			[Log.TAG_DEBUG, Log.TAG_WILDCARD]
 		)
 		return matching_names
 
@@ -184,7 +184,7 @@ func find_actions_matching(pattern: String) -> Array[String]:
 	Log.debug(
 		"Wildcard pattern match completed",
 		{"pattern": pattern, "matches_found": matching_names.size(), "matches": matching_names},
-		["debug", "wildcard"]
+		[Log.TAG_DEBUG, Log.TAG_WILDCARD]
 	)
 
 	return matching_names

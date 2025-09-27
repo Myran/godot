@@ -21,16 +21,16 @@ func _ready() -> void:
 		_fb = Engine.get_singleton("GodotFacebook")
 		_fb.init(_APP_ID)
 		_fb.setFacebookCallbackId(get_instance_id())
-		print("Facebook plugin Android inited")
+		Log.info("Facebook plugin Android inited", {}, [Log.TAG_FACEBOOK, Log.TAG_INITIALIZATION])
 		fb_inited.emit()
 	elif Engine.has_singleton("Facebook"):  # iOS
 		_fb = Engine.get_singleton("Facebook")
 		_fb.init(_APP_ID)
 		_fb.setFacebookCallbackId(self)
-		print("Facebook plugin iOS inited")
+		Log.info("Facebook plugin iOS inited", {}, [Log.TAG_FACEBOOK, Log.TAG_INITIALIZATION])
 		fb_inited.emit()
 	else:
-		print("Facebook plugin not found!")
+		Log.warning("Facebook plugin not found!", {}, [Log.TAG_FACEBOOK, Log.TAG_ERROR])
 
 
 func login(permissions: Array[String] = ["public_profile", "email"]) -> bool:
@@ -56,7 +56,7 @@ func game_requests(object: Object, method: String) -> void:
 func logout() -> void:
 	if _fb != null:
 		_fb.logout()
-		print("_fb logout sent")
+		Log.info("Facebook logout sent", {}, [Log.TAG_FACEBOOK, Log.TAG_AUTH])
 		fb_logged_out.emit()
 
 
@@ -135,21 +135,27 @@ func set_advertiser_tracking(enabled: bool) -> void:
 
 func login_success(tkn: String) -> void:
 	_token = tkn
-	print("Facebook login success: %s" % tkn)
+	Log.info(
+		"Facebook login success",
+		{"token_length": tkn.length()},
+		[Log.TAG_FACEBOOK, Log.TAG_AUTH_LOGIN]
+	)
 	fb_login_success.emit(tkn)
 
 
 func login_cancelled() -> void:
 	_token = ""
 	_user = {}
-	print("Facebook login cancelled")
+	Log.info("Facebook login cancelled", {}, [Log.TAG_FACEBOOK, Log.TAG_AUTH])
 	fb_login_cancelled.emit()
 
 
 func login_failed(error: String) -> void:
 	_token = ""
 	_user = {}
-	print("Facebook login failed: %s" % error)
+	Log.error(
+		"Facebook login failed", {"error": error}, [Log.TAG_FACEBOOK, Log.TAG_AUTH, Log.TAG_ERROR]
+	)
 	fb_login_failed.emit(error)
 
 

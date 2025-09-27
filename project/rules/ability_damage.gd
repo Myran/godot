@@ -30,4 +30,4 @@ func handle_battle_event(_event: BattleAbilityEvent) -> void:
 
 
 func handle_draft_event(_event: DraftAbilityEvent) -> void:
-	print("Draft action processing")
+	Log.debug("Draft action processing", {}, [Log.TAG_DRAFT, Log.TAG_ABILITY])

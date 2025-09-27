@@ -253,8 +253,6 @@ func _process_one_queue_item() -> void:
 
 	var current_game_state: String = core.GameState.keys()[game_handler.current_gamestate]
 
-	print("SIMPLE_TRACE: About to log action start")
-
 	Log.info(
 		"=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTION ===",
 		{
@@ -269,13 +267,7 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_start", Log.TAG_DIAGNOSTIC]
 	)
 
-	print("SIMPLE_TRACE: Logged action start")
-
-	print("SIMPLE_TRACE: About to call action - valid: ", action.is_valid(), " name: ", str(action))
-
 	await action.call()
-
-	print("SIMPLE_TRACE: Action call completed - name: ", str(action))
 
 	# CRITICAL FIX: Wait for Android logging completion before queue progression
 	# Prevents race condition where auto-continue starts next action while

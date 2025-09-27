@@ -152,6 +152,21 @@ const TAG_CARD_MOVE: String = "card.move"
 const TAG_TRANSITION_CHANGE_STATE: String = "transition.change_state"
 const TAG_BATTLE_START: String = "battle.start"
 
+# Platform and system tags
+const TAG_ANDROID: String = "android"
+
+# Debug and validation tags
+const TAG_INJECTION: String = "injection"
+const TAG_ACTION_INJECTION: String = "action_injection"
+const TAG_GENERATION_ERROR: String = "generation_error"
+const TAG_PLACEHOLDER: String = "placeholder"
+const TAG_WILDCARD: String = "wildcard"
+const TAG_ABORTION: String = "abortion"
+const TAG_RUN_ALL: String = "run_all"
+const TAG_WARNING: String = "warning"
+const TAG_STAT_REFRESH: String = "stat_refresh"
+const TAG_BYPASS_WARNING: String = "bypass_warning"
+
 const TAG_LEVEL_PREFIX: String = "level:"
 const TAG_LEVEL_DEBUG: String = "level:debug"
 const TAG_LEVEL_INFO: String = "level:info"
@@ -960,8 +975,6 @@ func wait_for_chunk_processing_complete(timeout_seconds: float = 2.0) -> void:
 			[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED, TAG_ERROR]
 		)
 
-# Add missing TAG constants for new functionality
-const TAG_ANDROID: String = "android"
 
 # Graceful shutdown method that encapsulates all platform-specific logging cleanup
 func shutdown_gracefully(timeout_seconds: float = 2.0) -> void:

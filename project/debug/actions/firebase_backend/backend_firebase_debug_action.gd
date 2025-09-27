@@ -155,7 +155,7 @@ func test_backend_async_pattern(
 		success = result != null
 
 	# CRITICAL: Add small delay between Firebase operations to prevent C++ SDK resource exhaustion
-	# This prevents Bus error crashes in multi-operation Firebase tests (task-152)
+	# This prevents Bus error crashes in multi-operation Firebase tests (task-152 - RESOLVED)
 	var delay_start: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - delay_start < 100:
 		await Engine.get_main_loop().process_frame
