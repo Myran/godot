@@ -962,3 +962,75 @@ func wait_for_chunk_processing_complete(timeout_seconds: float = 2.0) -> void:
 
 # Add missing TAG constants for new functionality
 const TAG_ANDROID: String = "android"
+
+# Graceful shutdown method that encapsulates all platform-specific logging cleanup
+func shutdown_gracefully(timeout_seconds: float = 2.0) -> void:
+	"""Gracefully shutdown logger with platform-specific chunk processing completion
+
+	This method encapsulates all platform-specific logging cleanup logic, providing
+	a clean interface for quit sequences. It handles Android chunk processing
+	internally without exposing implementation details to callers.
+
+	Args:
+		timeout_seconds: Maximum time to wait for chunk processing (default: 2.0)
+	"""
+	var platform: String = OS.get_name()
+
+	info(
+		"Logger shutdown initiated",
+		{
+			"platform": platform,
+			"timeout_seconds": timeout_seconds,
+			"timestamp": Time.get_unix_time_from_system()
+		},
+		[TAG_QUIT, TAG_SYSTEM, TAG_DEBUG]
+	)
+
+	if platform == "Android":
+		info(
+			"Android platform detected - ensuring chunk processing completion",
+			{
+				"chunks_pending": get_android_chunk_count(),
+				"has_pending": has_pending_android_chunks(),
+				"platform": "Android"
+			},
+			[TAG_ANDROID, TAG_QUIT, TAG_DEBUG]
+		)
+
+		# Use existing signal-based mechanism with double-await for race conditions
+		if has_pending_android_chunks():
+			await android_chunks_processing_complete
+			# Double-await pattern to handle race condition where chunks are added after first signal
+			await android_chunks_processing_complete
+
+			info(
+				"Android chunk processing completed via signal",
+				{
+					"final_chunk_count": get_android_chunk_count(),
+					"all_chunks_processed": not has_pending_android_chunks(),
+					"platform": "Android"
+				},
+				[TAG_ANDROID, TAG_QUIT, TAG_DEBUG]
+			)
+		else:
+			info(
+				"No Android chunks pending - immediate completion",
+				{"platform": "Android"},
+				[TAG_ANDROID, TAG_QUIT, TAG_DEBUG]
+			)
+	else:
+		info(
+			"Desktop platform detected - no chunk processing required",
+			{"platform": platform},
+			[TAG_QUIT, TAG_DEBUG]
+		)
+
+	info(
+		"Logger shutdown completed gracefully",
+		{
+			"platform": platform,
+			"logging_synchronized": true,
+			"final_timestamp": Time.get_unix_time_from_system()
+		},
+		[TAG_QUIT, TAG_SYSTEM, TAG_DEBUG]
+	)
