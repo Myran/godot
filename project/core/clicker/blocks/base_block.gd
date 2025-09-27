@@ -95,7 +95,7 @@ func move_to_on_top(_pos: Vector2) -> void:
 	set_global_position(current_global_pos)
 	var scene_tween: Tween = create_tween()
 	@warning_ignore("return_value_discarded")
-	scene_tween.tween_property(self, "global_position", _pos, TOP_MOVE_SPEED)
+	scene_tween.tween_property(self, "global_position", _pos, MERGE_SPEED)
 	@warning_ignore("return_value_discarded")
 	scene_tween.tween_callback(func() -> void: movement_done.emit())
 
