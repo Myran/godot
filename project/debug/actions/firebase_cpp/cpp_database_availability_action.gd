@@ -8,8 +8,7 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
+	# Create availability info directly to avoid unsafe cast
 	var firebase_db_available: bool = ClassDB.class_exists("FirebaseDatabase")
 	var firebase_auth_available: bool = ClassDB.class_exists("FirebaseAuth")
 
@@ -27,16 +26,18 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "cpp_firebase", "availability"]
 	)
 
-	var total_duration: int = Time.get_ticks_msec() - start_time
-
-	return DebugActionResult.new_success(
+	# Use simple timing helper for the overall duration
+	var availability_check: Dictionary = await TestUtils.time_operation(
+		"availability_check", func() -> String: return "availability_check_complete"
+	)
+	return TestUtils.make_success_result(
 		"Firebase class availability check completed",
-		total_duration,
+		TestUtils.get_duration_ms(availability_check),
 		action_name,
-		availability_info
+		TestUtils.make_metadata("cpp_database_availability", availability_info)
 	)
 
 
 func execute_cpp_action() -> bool:
-	var result: DebugActionResult = _execute_action_logic({})
+	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()

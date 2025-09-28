@@ -8,71 +8,84 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
-	var test_path: Array = ["cpp_tests", "direct", "get_value", str(Time.get_ticks_msec())]
-	var test_value: String = "CPP Get Test Value: " + str(Time.get_ticks_msec())
-
-	var set_start: int = Time.get_ticks_msec()
-	var set_result: Variant = await execute_cpp_operation(
-		"set_value_async", [test_path, test_value], "C++ Set (for Get test)", "set_value"
+	var test_path: Array[String] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_CPP_PREFIX, "get_value"
 	)
-	var set_duration: int = Time.get_ticks_msec() - set_start
+	var test_value: String = TestConstants.test_value("CPP Get Test Value")
 
-	if not set_result:
-		return DebugActionResult.new_failure(
+	# Use simple timing helper for set operation
+	var set_op: Dictionary = await TestUtils.time_operation(
+		"set_operation",
+		func() -> Variant:
+			return await execute_cpp_operation(
+				TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+				[test_path, test_value],
+				TestConstants.operation_description("Set", "for Get test"),
+				"set_value"
+			)
+	)
+
+	if not TestValidation.validate_firebase_result(set_op.result, "set_for_get_test"):
+		return TestUtils.make_failure_result(
 			"Failed to set test value for C++ get operation",
-			"SET_OPERATION_FAILED",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			null,
-			Time.get_ticks_msec() - start_time,
+			TestConstants.ERROR_CODES.SET_FAILED,
+			TestUtils.get_duration_ms(set_op),
 			action_name,
-			{
-				"test_type": "cpp_get_value",
-				"step": "setup",
-				"path": test_path,
-				"set_duration_ms": set_duration
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.CPP_GET_VALUE,
+				{
+					"step": "setup",
+					"path": test_path,
+					"set_duration_ms": TestUtils.get_duration_ms(set_op)
+				}
+			)
 		)
 
-	var get_start: int = Time.get_ticks_msec()
-	var get_result: Variant = await execute_cpp_operation(
-		"get_value_async", [test_path], "C++ Get Value", "get_value"
+	# Use simple timing helper for get operation
+	var get_op: Dictionary = await TestUtils.time_operation(
+		"get_operation",
+		func() -> Variant:
+			return await execute_cpp_operation(
+				TestConstants.FIREBASE_OPERATIONS.GET_VALUE,
+				[test_path],
+				TestConstants.operation_description("Get Value"),
+				"get_value"
+			)
 	)
-	var get_duration: int = Time.get_ticks_msec() - get_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var success: bool = get_result != null
+	var total_duration: int = TestUtils.get_duration_ms(set_op) + TestUtils.get_duration_ms(get_op)
 
-	if success:
-		return DebugActionResult.new_success(
+	if TestValidation.validate_firebase_result(get_op.result, "get_test"):
+		return TestUtils.make_success_result(
 			"C++ get value operation successful",
 			total_duration,
 			action_name,
-			{
-				"test_type": "cpp_get_value",
-				"path": test_path,
-				"set_duration_ms": set_duration,
-				"get_duration_ms": get_duration,
-				"test_value": test_value,
-				"retrieved_result": str(get_result)
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.CPP_GET_VALUE,
+				{
+					"path": test_path,
+					"set_duration_ms": TestUtils.get_duration_ms(set_op),
+					"get_duration_ms": TestUtils.get_duration_ms(get_op),
+					"test_value": test_value,
+					"retrieved_result": str(get_op.result)
+				}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"C++ get value operation failed",
-		"GET_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.FIREBASE,
-		null,
+		TestConstants.ERROR_CODES.GET_FAILED,
 		total_duration,
 		action_name,
-		{
-			"test_type": "cpp_get_value",
-			"path": test_path,
-			"set_duration_ms": set_duration,
-			"get_duration_ms": get_duration,
-			"test_value": test_value
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.CPP_GET_VALUE,
+			{
+				"path": test_path,
+				"set_duration_ms": TestUtils.get_duration_ms(set_op),
+				"get_duration_ms": TestUtils.get_duration_ms(get_op),
+				"test_value": test_value
+			}
+		)
 	)
 
 

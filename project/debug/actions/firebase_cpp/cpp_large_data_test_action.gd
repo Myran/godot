@@ -9,7 +9,6 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing C++ with large data payloads...")
 
 	var test_results: Array[Dictionary] = []
@@ -30,35 +29,48 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 		var size_bytes: int = size_config.size
 		var large_data: String = _generate_test_data(size_bytes)
-		var test_path: Array[String] = [
-			"cpp_tests", "large_data", config_name.to_lower(), str(Time.get_ticks_msec())
-		]
+		var test_path: Array[String] = TestUtils.make_test_path(
+			TestConstants.FIREBASE_CPP_PREFIX, "large_data_" + config_name.to_lower()
+		)
 
 		_update_status("Setting " + size_description + " via C++...")
-		var set_start_time: int = Time.get_ticks_msec()
-		var set_result: Variant = await execute_cpp_operation(
-			"set_value_async",
-			[test_path, large_data],
-			"Large Data Set (" + config_name + ")",
-			"set_value"
+		var set_op: Dictionary = await TestUtils.time_operation(
+			"large_data_set_" + config_name.to_lower(),
+			func() -> Variant:
+				return await execute_cpp_operation(
+					TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+					[test_path, large_data],
+					TestConstants.operation_description("Set", "Large Data (" + config_name + ")"),
+					"set_value"
+				)
 		)
-		var set_duration: int = Time.get_ticks_msec() - set_start_time
 
-		var set_success: bool = set_result != null
+		var set_success: bool = TestValidation.validate_firebase_result(
+			set_op.result, "large_data_set_" + config_name
+		)
 
 		var get_success: bool = false
-		var get_duration: int = 0
+		var get_op: Dictionary = {"duration_ms": 0}
 		var data_matches: bool = false
 
 		if set_success:
 			_update_status("Getting " + size_description + " via C++...")
-			var get_start_time: int = Time.get_ticks_msec()
-			var get_result: Variant = await execute_cpp_operation(
-				"get_value_async", [test_path], "Large Data Get (" + config_name + ")", "get_value"
+			get_op = await TestUtils.time_operation(
+				"large_data_get_" + config_name.to_lower(),
+				func() -> Variant:
+					return await execute_cpp_operation(
+						TestConstants.FIREBASE_OPERATIONS.GET_VALUE,
+						[test_path],
+						TestConstants.operation_description(
+							"Get", "Large Data (" + config_name + ")"
+						),
+						"get_value"
+					)
 			)
-			get_duration = Time.get_ticks_msec() - get_start_time
 
-			get_success = get_result != null
+			get_success = TestValidation.validate_firebase_result(
+				get_op.result, "large_data_get_" + config_name
+			)
 			if get_success:
 				data_matches = true
 
@@ -79,9 +91,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				"description": size_description,
 				"data_length": large_data.length(),
 				"set_success": set_success,
-				"set_duration_ms": set_duration,
+				"set_duration_ms": TestUtils.get_duration_ms(set_op),
 				"get_success": get_success,
-				"get_duration_ms": get_duration,
+				"get_duration_ms": TestUtils.get_duration_ms(get_op),
 				"data_integrity": data_matches,
 				"overall_success": test_success
 			}
@@ -89,15 +101,22 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.75  # 75% of large data tests should pass
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var final_result: Dictionary = {
-		"successful_tests": successful_tests,
-		"total_tests": total_tests,
-		"success_rate": success_rate,
-		"overall_success": overall_success,
-		"test_details": test_results
-	}
+	# Use timing helper for overall test completion
+	var completion_timing: Dictionary = await TestUtils.time_operation(
+		"large_data_test_completion", func() -> String: return "large_data_test_complete"
+	)
+
+	var final_result: Dictionary = TestUtils.make_metadata(
+		TestConstants.TEST_TYPES.CPP_LARGE_DATA,
+		{
+			"successful_tests": successful_tests,
+			"total_tests": total_tests,
+			"success_rate": success_rate,
+			"overall_success": overall_success,
+			"test_details": test_results
+		}
+	)
 
 	if overall_success:
 		var success_message: String = (
@@ -108,20 +127,18 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			+ " data sizes handled)"
 		)
 		_update_status(success_message)
-		return DebugActionResult.new_success(
-			success_message, total_duration, action_name, final_result
+		return TestUtils.make_success_result(
+			success_message, TestUtils.get_duration_ms(completion_timing), action_name, final_result
 		)
 
 	var failure_message: String = (
 		"Large data test FAILED (" + str(successful_tests) + "/" + str(total_tests) + " succeeded)"
 	)
 	_update_status(failure_message, true)
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		failure_message,
-		"LARGE_DATA_FAILED",
-		DebugActionResult.ErrorCategory.FIREBASE,
-		null,
-		total_duration,
+		TestConstants.ERROR_CODES.LARGE_DATA_FAILED,
+		TestUtils.get_duration_ms(completion_timing),
 		action_name,
 		final_result
 	)

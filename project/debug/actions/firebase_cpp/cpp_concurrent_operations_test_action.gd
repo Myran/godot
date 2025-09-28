@@ -9,30 +9,35 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
 	var concurrent_count: int = _params.get("concurrent_count", 4)
 	var test_data: Array[Dictionary] = []
 
+	# Generate test data using utility functions
 	for i: int in range(concurrent_count):
 		test_data.append(
 			{
-				"path": ["cpp_tests", "concurrent", str(i), str(Time.get_ticks_msec())],
-				"value": "Concurrent Test " + str(i) + ": " + str(Time.get_ticks_msec()),
+				"path":
+				TestUtils.make_test_path(TestConstants.FIREBASE_CPP_PREFIX, "concurrent_" + str(i)),
+				"value": TestConstants.test_value("Concurrent Test " + str(i)),
 				"operation_id": i
 			}
 		)
 
 	var set_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
-		var operation_start: int = Time.get_ticks_msec()
-		var result: Variant = await execute_cpp_operation(
-			"set_value_async",
-			[data.path, data.value],
-			"Concurrent Set " + str(data.operation_id),
-			"set_value"
+		# Use timing helper for each set operation
+		var set_op: Dictionary = await TestUtils.time_operation(
+			"concurrent_set_" + str(data.operation_id),
+			func() -> Variant:
+				return await execute_cpp_operation(
+					TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+					[data.path, data.value],
+					TestConstants.operation_description(
+						"Set", "Concurrent " + str(data.operation_id)
+					),
+					"set_value"
+				)
 		)
-		var operation_duration: int = Time.get_ticks_msec() - operation_start
 
 		set_results.append(
 			{
@@ -40,24 +45,36 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				"operation_type": "set",
 				"path": data.path,
 				"value": data.value,
-				"result": result,
-				"success": result != null,
-				"duration_ms": operation_duration,
-				"timestamp": Time.get_ticks_msec()
+				"result": set_op.result,
+				"success": TestValidation.validate_firebase_result(set_op.result, "concurrent_set"),
+				"duration_ms": TestUtils.get_duration_ms(set_op),
+				"timestamp": set_op.timestamp
 			}
 		)
 
 	var get_results: Array[Dictionary] = []
 	for data: Dictionary in test_data:
-		var operation_start: int = Time.get_ticks_msec()
-		var result: Variant = await execute_cpp_operation(
-			"get_value_async", [data.path], "Concurrent Get " + str(data.operation_id), "get_value"
+		# Use timing helper for each get operation
+		var get_op: Dictionary = await TestUtils.time_operation(
+			"concurrent_get_" + str(data.operation_id),
+			func() -> Variant:
+				return await execute_cpp_operation(
+					TestConstants.FIREBASE_OPERATIONS.GET_VALUE,
+					[data.path],
+					TestConstants.operation_description(
+						"Get", "Concurrent " + str(data.operation_id)
+					),
+					"get_value"
+				)
 		)
-		var operation_duration: int = Time.get_ticks_msec() - operation_start
-		var value_matches: bool = result != null  # Simplified validation
+
+		var value_matches: bool = TestValidation.validate_firebase_result(
+			get_op.result, "concurrent_get"
+		)
 		var retr_val: Variant = null
-		if result != null:
+		if get_op.result != null:
 			retr_val = "Retrieved"
+
 		get_results.append(
 			{
 				"operation_id": data.operation_id,
@@ -65,11 +82,11 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				"path": data.path,
 				"expected_value": data.value,
 				"retrieved_value": retr_val,
-				"result": result,
-				"success": result != null,
+				"result": get_op.result,
+				"success": TestValidation.validate_firebase_result(get_op.result, "concurrent_get"),
 				"value_matches": value_matches,
-				"duration_ms": operation_duration,
-				"timestamp": Time.get_ticks_msec()
+				"duration_ms": TestUtils.get_duration_ms(get_op),
+				"timestamp": get_op.timestamp
 			}
 		)
 
@@ -106,7 +123,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		"value_accuracy": value_accuracy
 	}
 
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	# Calculate total duration from all operations
+	var total_duration: int = 0
+	for result_dict: Dictionary in all_operation_results:
+		total_duration += result_dict.get("duration_ms", 0)
 
 	return DebugActionResult.new_concurrent_result(
 		all_operation_results,
@@ -114,14 +134,16 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		overall_success,
 		action_name,
 		total_duration,
-		{
-			"test_type": "cpp_concurrent_operations",
-			"concurrent_count": concurrent_count,
-			"successful_sets": successful_sets,
-			"successful_gets": successful_gets,
-			"matching_values": matching_values,
-			"thresholds": {"success_rate_threshold": 0.8, "value_accuracy_threshold": 0.8}
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.CPP_CONCURRENT_OPS,
+			{
+				"concurrent_count": concurrent_count,
+				"successful_sets": successful_sets,
+				"successful_gets": successful_gets,
+				"matching_values": matching_values,
+				"thresholds": {"success_rate_threshold": 0.8, "value_accuracy_threshold": 0.8}
+			}
+		)
 	)
 
 

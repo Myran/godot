@@ -8,47 +8,52 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
-	var test_path: Array[String] = ["cpp_tests", "direct", "set_value", str(Time.get_ticks_msec())]
-	var test_value: String = "CPP Direct Value: " + str(Time.get_ticks_msec())
-
-	var operation_start: int = Time.get_ticks_msec()
-	var result: Variant = await execute_cpp_operation(
-		"set_value_async", [test_path, test_value], "C++ Set Value", "set_value"
+	var test_path: Array[String] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_CPP_PREFIX, "set_value"
 	)
-	var operation_duration: int = Time.get_ticks_msec() - operation_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	var test_value: String = TestConstants.test_value("CPP Direct Value")
 
-	var success: bool = result != null
+	# Use simple timing helper for set operation
+	var set_op: Dictionary = await TestUtils.time_operation(
+		"set_operation",
+		func() -> Variant:
+			return await execute_cpp_operation(
+				TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+				[test_path, test_value],
+				TestConstants.operation_description("Set Value"),
+				"set_value"
+			)
+	)
 
-	if success:
-		return DebugActionResult.new_success(
+	if TestValidation.validate_firebase_result(set_op.result, "set_value_test"):
+		return TestUtils.make_success_result(
 			"C++ set value operation successful",
-			total_duration,
+			TestUtils.get_duration_ms(set_op),
 			action_name,
-			{
-				"test_type": "cpp_set_value",
-				"path": test_path,
-				"set_value": test_value,
-				"operation_duration_ms": operation_duration,
-				"result": str(result)
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.CPP_SET_VALUE,
+				{
+					"path": test_path,
+					"set_value": test_value,
+					"operation_duration_ms": TestUtils.get_duration_ms(set_op),
+					"result": str(set_op.result)
+				}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"C++ set value operation failed",
-		"SET_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.FIREBASE,
-		null,
-		total_duration,
+		TestConstants.ERROR_CODES.SET_FAILED,
+		TestUtils.get_duration_ms(set_op),
 		action_name,
-		{
-			"test_type": "cpp_set_value",
-			"path": test_path,
-			"attempted_value": test_value,
-			"operation_duration_ms": operation_duration
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.CPP_SET_VALUE,
+			{
+				"path": test_path,
+				"attempted_value": test_value,
+				"operation_duration_ms": TestUtils.get_duration_ms(set_op)
+			}
+		)
 	)
 
 

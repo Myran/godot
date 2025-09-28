@@ -390,11 +390,6 @@ _gradle-build-install-android:
     echo "✅ APK installed successfully!"
     echo "💾 APK saved at: $TEMP_DIR/$EXPORT_FILENAME"
 
-# Android development iteration workflow
-iterate-android CONFIG="current":
-    @echo "⚡ Android iteration workflow..."
-    just config-restart-android "{{CONFIG}}"
-    @echo "🎯 Ready for testing on Android device"
 
 # Internal helper: Push any file to Android app private directory
 _push-file-android SOURCE_FILE TARGET_FILENAME:

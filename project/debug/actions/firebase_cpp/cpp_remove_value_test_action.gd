@@ -8,71 +8,86 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
-	var test_path: Array = ["cpp_tests", "direct", "remove_value", str(Time.get_ticks_msec())]
-	var test_value: String = "CPP Remove Test Value: " + str(Time.get_ticks_msec())
-
-	var set_start: int = Time.get_ticks_msec()
-	var set_result: Variant = await execute_cpp_operation(
-		"set_value_async", [test_path, test_value], "C++ Set (for Remove test)", "set_value"
+	var test_path: Array[String] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_CPP_PREFIX, "remove_value"
 	)
-	var set_duration: int = Time.get_ticks_msec() - set_start
+	var test_value: String = TestConstants.test_value("CPP Remove Test Value")
 
-	if not set_result:
-		return DebugActionResult.new_failure(
+	# Use simple timing helper for set operation (setup for remove test)
+	var set_op: Dictionary = await TestUtils.time_operation(
+		"set_operation",
+		func() -> Variant:
+			return await execute_cpp_operation(
+				TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+				[test_path, test_value],
+				TestConstants.operation_description("Set", "for Remove test"),
+				"set_value"
+			)
+	)
+
+	if not TestValidation.validate_firebase_result(set_op.result, "set_for_remove_test"):
+		return TestUtils.make_failure_result(
 			"Failed to set test value for C++ remove operation",
-			"SET_OPERATION_FAILED",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			null,
-			Time.get_ticks_msec() - start_time,
+			TestConstants.ERROR_CODES.SET_FAILED,
+			TestUtils.get_duration_ms(set_op),
 			action_name,
-			{
-				"test_type": "cpp_remove_value",
-				"step": "setup",
-				"path": test_path,
-				"set_duration_ms": set_duration
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.CPP_REMOVE_VALUE,
+				{
+					"step": "setup",
+					"path": test_path,
+					"set_duration_ms": TestUtils.get_duration_ms(set_op)
+				}
+			)
 		)
 
-	var remove_start: int = Time.get_ticks_msec()
-	var remove_result: Variant = await execute_cpp_operation(
-		"remove_value_async", [test_path], "C++ Remove Value", "remove_value"
+	# Use simple timing helper for remove operation
+	var remove_op: Dictionary = await TestUtils.time_operation(
+		"remove_operation",
+		func() -> Variant:
+			return await execute_cpp_operation(
+				TestConstants.FIREBASE_OPERATIONS.REMOVE_VALUE,
+				[test_path],
+				TestConstants.operation_description("Remove Value"),
+				"remove_value"
+			)
 	)
-	var remove_duration: int = Time.get_ticks_msec() - remove_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var success: bool = remove_result != null
+	var total_duration: int = (
+		TestUtils.get_duration_ms(set_op) + TestUtils.get_duration_ms(remove_op)
+	)
 
-	if success:
-		return DebugActionResult.new_success(
+	if TestValidation.validate_firebase_result(remove_op.result, "remove_value_test"):
+		return TestUtils.make_success_result(
 			"C++ remove value operation successful",
 			total_duration,
 			action_name,
-			{
-				"test_type": "cpp_remove_value",
-				"path": test_path,
-				"set_duration_ms": set_duration,
-				"remove_duration_ms": remove_duration,
-				"test_value": test_value,
-				"remove_result": str(remove_result)
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.CPP_REMOVE_VALUE,
+				{
+					"path": test_path,
+					"set_duration_ms": TestUtils.get_duration_ms(set_op),
+					"remove_duration_ms": TestUtils.get_duration_ms(remove_op),
+					"test_value": test_value,
+					"remove_result": str(remove_op.result)
+				}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"C++ remove value operation failed",
-		"REMOVE_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.FIREBASE,
-		null,
+		TestConstants.ERROR_CODES.REMOVE_FAILED,
 		total_duration,
 		action_name,
-		{
-			"test_type": "cpp_remove_value",
-			"path": test_path,
-			"set_duration_ms": set_duration,
-			"remove_duration_ms": remove_duration,
-			"test_value": test_value
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.CPP_REMOVE_VALUE,
+			{
+				"path": test_path,
+				"set_duration_ms": TestUtils.get_duration_ms(set_op),
+				"remove_duration_ms": TestUtils.get_duration_ms(remove_op),
+				"test_value": test_value
+			}
+		)
 	)
 
 
