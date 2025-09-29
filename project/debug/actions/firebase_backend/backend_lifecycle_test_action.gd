@@ -63,7 +63,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			)
 		)
 
-	var success_rate: float = float(result.successful_tests) / float(result.total_tests)
+	var successful: int = result.successful_tests
+	var total: int = result.total_tests
+	var success_rate: float = float(successful) / float(total)
 	var overall_success: bool = result.lifecycle_validation
 
 	if overall_success:

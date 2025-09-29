@@ -94,15 +94,16 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		)
 
 	_update_status("Backend async pattern test FAILED", true)
+	var failed_op: String = result.failed_operation
 	return TestUtils.make_failure_result(
-		"Backend async pattern test failed during " + result.failed_operation + " operation",
+		"Backend async pattern test failed during " + failed_op + " operation",
 		TestConstants.ERROR_OPERATION_FAILED,
 		duration,
 		action_name,
 		TestUtils.make_metadata(
 			"backend_async_pattern",
 			{
-				"failed_operation": result.failed_operation,
+				"failed_operation": failed_op,
 				"test_path": result.test_path,
 				"test_key": result.test_key,
 				"set_success": result.get("set_success", false),

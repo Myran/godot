@@ -89,7 +89,26 @@
       "Read(///**)",
       "Bash(backlog tasks view:*)",
       "Bash(backlog overview)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(backlog tasks list:*)",
+      "Bash(xargs dirname:*)",
+      "Bash(while read file)",
+      "Bash(do if ! grep -q \"TestUtils\" \"$file\")",
+      "Bash(then echo \"$file\")",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then echo \"Processing $file\")",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat misc/test_constants.gd)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat misc/test_validation.gd)",
+      "Bash(gdformat:*)",
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdformat:*)",
+      "Bash(xargs:*)",
+      "Bash(do if ! rg -q \"TestUtils\" \"$file\")",
+      "Bash(do if grep -q \"TestUtils\" \"$file\")",
+      "Bash(then basename \"$file\")",
+      "Bash(do if rg -q \"TestUtils\" \"$file\")",
+      "Bash(while read f)",
+      "Bash(do if ! rg -q \"TestUtils\" \"$f\")",
+      "Bash(then basename \"$f\")"
     ],
     "deny": [],
     "ask": [],
@@ -101,5 +120,6 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "firebase"
-  ]
+  ],
+  "outputStyle": "default"
 }
