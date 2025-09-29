@@ -24,7 +24,9 @@ const ERROR_CODES: Dictionary = {
 	"CONCURRENT_FAILED": "CONCURRENT_OPERATION_FAILED",
 	"SIGNAL_INTEGRITY_FAILED": "SIGNAL_INTEGRITY_FAILED",
 	"TIMEOUT_BEHAVIOR_FAILED": "TIMEOUT_BEHAVIOR_FAILED",
-	"LARGE_DATA_FAILED": "LARGE_DATA_FAILED"
+	"LARGE_DATA_FAILED": "LARGE_DATA_FAILED",
+	"FILE_WRITE_FAILED": "FILE_WRITE_FAILED",
+	"FILE_READ_FAILED": "FILE_READ_FAILED"
 }
 
 # Firebase operation names (repeated patterns)
@@ -52,6 +54,9 @@ const TEST_TYPES: Dictionary = {
 	"RTDB_GET_NESTED": "rtdb_get_nested",
 	"BACKEND_PERFORMANCE": "backend_performance",
 	"BACKEND_ERROR_HANDLING": "backend_error_handling",
+	"SYSTEM_SAVE_GAMESTATE": "system_save_gamestate",
+	"SYSTEM_LOAD_GAMESTATE": "system_load_gamestate",
+	"SYSTEM_RESTART_GAME": "system_restart_game",
 	"SYSTEM_VALIDATION": "system_validation"
 }
 

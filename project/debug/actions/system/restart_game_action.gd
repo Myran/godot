@@ -9,21 +9,29 @@ func _init() -> void:
 
 
 func _execute_restart() -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
+	# Use timing helper for the restart operation
+	var restart_op: Dictionary = await TestUtils.time_operation(
+		"system_restart_game",
+		func() -> bool:
+			Log.info(
+				"User requested game restart via debug action", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
+			)
 
-	Log.info("User requested game restart via debug action", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
+			# Trigger restart through the central event system
+			DebugManager.action(DebugManager.DebugEventType.EVENT_RESTART_GAME)
 
-	# Trigger restart through the central event system
-	DebugManager.action(DebugManager.DebugEventType.EVENT_RESTART_GAME)
+			return true
+	)
 
-	var duration: int = Time.get_ticks_msec() - start_time
+	var total_duration: int = TestUtils.get_duration_ms(restart_op)
 
 	# Return success - the restart will happen through the main game system
-	return DebugActionResult.new_success(
-		{
-			"message": "Game restart initiated",
-			"restart_triggered": true,
-			"system": "central_event_bus"
-		},
-		duration
+	return TestUtils.make_success_result(
+		"Game restart initiated successfully",
+		total_duration,
+		action_name,
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.SYSTEM_RESTART_GAME,
+			{"restart_triggered": true, "system": "central_event_bus"}
+		)
 	)
