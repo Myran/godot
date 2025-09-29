@@ -15,7 +15,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "backend_firebase", "trace"]
 	)
 
-	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend async patterns...")
 
 	Log.debug(
@@ -25,80 +24,89 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	)
 
 	var test_path: Array[Variant] = ["backend_tests", "async_pattern"]
-	var test_key: String = "test_" + str(Time.get_ticks_msec())
-	var test_value: String = "Backend Async Test: " + str(Time.get_ticks_msec())
+	var test_key: String = TestConstants.test_value("test")
+	var test_value: String = TestConstants.test_value("Backend Async Test")
 
-	var set_success: bool = await test_backend_async_pattern(
-		"set_data", test_path, test_key, test_value, "Backend Set Data"
-	)
+	var async_test: Dictionary = await TestUtils.time_operation(
+		"async_pattern_test",
+		func() -> Dictionary:
+			var set_success: bool = await test_backend_async_pattern(
+				"set_data", test_path, test_key, test_value, "Backend Set Data"
+			)
 
-	Log.debug(
-		"TRACE: test_backend_async_pattern set_data completed",
-		{"action": action_name, "set_success": set_success},
-		["debug", "backend_firebase", "trace"]
-	)
+			Log.debug(
+				"TRACE: test_backend_async_pattern set_data completed",
+				{"action": action_name, "set_success": set_success},
+				["debug", "backend_firebase", "trace"]
+			)
 
-	if not set_success:
-		return DebugActionResult.new_failure(
-			"Backend async pattern test failed during set operation",
-			"SET_OPERATION_FAILED",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name,
-			{
-				"test_type": "backend_async_pattern",
-				"failed_operation": "set_data",
+			if not set_success:
+				return {
+					"success": false,
+					"failed_operation": "set_data",
+					"test_path": test_path,
+					"test_key": test_key,
+					"test_value": test_value
+				}
+
+			var get_success: bool = await test_backend_async_pattern(
+				"get_data", test_path, test_key, null, "Backend Get Data"
+			)
+
+			return {
+				"success": set_success and get_success,
+				"failed_operation": "get_data" if not get_success else "",
+				"set_success": set_success,
+				"get_success": get_success,
 				"test_path": test_path,
 				"test_key": test_key,
 				"test_value": test_value
 			}
-		)
-
-	var get_success: bool = await test_backend_async_pattern(
-		"get_data", test_path, test_key, null, "Backend Get Data"
 	)
 
-	var overall_success: bool = set_success and get_success
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	var duration: int = async_test.duration_ms
+	var result: Dictionary = async_test.result
+	var overall_success: bool = result.success
 
 	# UNIFIED TEST REPORTING: Generate DEBUG_TEST_SUCCESS marker
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
 	var config_test_id: String = test_metadata.get("test_id", "")
 	if config_test_id != "" and overall_success:
-		DebugAction._log_test_success(action_name, category, group, total_duration, {})
+		DebugAction._log_test_success(action_name, category, group, duration, {})
 
 	if overall_success:
 		_update_status("Backend async pattern test PASSED")
-		return DebugActionResult.new_success(
+		return TestUtils.make_success_result(
 			"Backend async pattern test completed successfully",
-			total_duration,
+			duration,
 			action_name,
-			{
-				"test_type": "backend_async_pattern",
-				"operations_tested": ["set_data", "get_data"],
-				"test_path": test_path,
-				"test_key": test_key,
-				"test_value": test_value,
-				"set_success": set_success,
-				"get_success": get_success
-			}
+			TestUtils.make_metadata(
+				"backend_async_pattern",
+				{
+					"operations_tested": ["set_data", "get_data"],
+					"test_path": result.test_path,
+					"test_key": result.test_key,
+					"test_value": result.test_value,
+					"set_success": result.set_success,
+					"get_success": result.get_success
+				}
+			)
 		)
 
 	_update_status("Backend async pattern test FAILED", true)
-	return DebugActionResult.new_failure(
-		"Backend async pattern test failed during get operation",
-		"GET_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.DATABASE,
-		null,
-		total_duration,
+	return TestUtils.make_failure_result(
+		"Backend async pattern test failed during " + result.failed_operation + " operation",
+		TestConstants.ERROR_OPERATION_FAILED,
+		duration,
 		action_name,
-		{
-			"test_type": "backend_async_pattern",
-			"failed_operation": "get_data",
-			"test_path": test_path,
-			"test_key": test_key,
-			"set_success": set_success,
-			"get_success": get_success
-		}
+		TestUtils.make_metadata(
+			"backend_async_pattern",
+			{
+				"failed_operation": result.failed_operation,
+				"test_path": result.test_path,
+				"test_key": result.test_key,
+				"set_success": result.get("set_success", false),
+				"get_success": result.get("get_success", false)
+			}
+		)
 	)
