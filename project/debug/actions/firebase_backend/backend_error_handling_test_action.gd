@@ -9,87 +9,108 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-	_update_status("Testing Firebase Backend error handling...")
-
 	var backend: DataBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Firebase backend not available for testing",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.BACKEND_ERROR_HANDLING)
 		)
 
 	var error_tests: Array[Dictionary] = []
 	var successful_error_handling: int = 0
 	var total_error_tests: int = 0
 
-	_update_status("Testing invalid path error handling...")
+	# Test 1: Invalid path error handling using timing helper
 	total_error_tests += 1
 	var invalid_path: Array[Variant] = []  # Empty path should be handled gracefully
-	var invalid_result: Variant
-	invalid_result = await test_backend_async_pattern(
-		"get_data", invalid_path, "", null, "Error: Invalid Path", true
+	var invalid_op: Dictionary = await TestUtils.time_operation(
+		"backend_invalid_path_test",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"get_data", invalid_path, "", null, "Error: Invalid Path", true
+			)
 	)
 
-	var invalid_handled: bool = invalid_result == false or invalid_result == null
+	var invalid_handled: bool = invalid_op.result == false or invalid_op.result == null
 	if invalid_handled:
 		successful_error_handling += 1
 	error_tests.append(
-		{"test": "invalid_path", "handled_gracefully": invalid_handled, "result": invalid_result}
+		{
+			"test": "invalid_path",
+			"handled_gracefully": invalid_handled,
+			"result": invalid_op.result,
+			"duration_ms": TestUtils.get_duration_ms(invalid_op)
+		}
 	)
 
-	_update_status("Testing timeout error handling...")
+	# Test 2: Timeout error handling using timing helper
 	total_error_tests += 1
-	var timeout_path: Array[Variant] = [
-		"backend_tests", "error_handling", "timeout_test", str(Time.get_ticks_msec())
-	]
-
-	var timeout_start_time: int = Time.get_ticks_msec()
-	var timeout_result: Variant
-	timeout_result = await test_backend_async_pattern(
-		"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test", true
+	var timeout_path: Array[Variant] = (
+		TestUtils.make_test_path(TestConstants.FIREBASE_BACKEND_PREFIX, "error_handling")
+		+ ["timeout_test"]
 	)
-	var timeout_duration: int = Time.get_ticks_msec() - timeout_start_time
 
-	var timeout_handled: bool = timeout_duration < 30000  # Should not hang for more than 30 seconds
+	var timeout_op: Dictionary = await TestUtils.time_operation(
+		"backend_timeout_test",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"get_data", timeout_path, "nonexistent_key", null, "Error: Timeout Test", true
+			)
+	)
+
+	var timeout_handled: bool = TestUtils.get_duration_ms(timeout_op) < 30000
 	if timeout_handled:
 		successful_error_handling += 1
 	error_tests.append(
 		{
 			"test": "timeout_handling",
 			"handled_gracefully": timeout_handled,
-			"duration_ms": timeout_duration,
-			"result": timeout_result
+			"duration_ms": TestUtils.get_duration_ms(timeout_op),
+			"result": timeout_op.result
 		}
 	)
 
-	_update_status("Testing unsupported method error handling...")
+	# Test 3: Unsupported method error handling using timing helper
 	total_error_tests += 1
-	var unsupported_path: Array[Variant] = ["backend_tests", "error_handling", "unsupported"]
-
-	var unsupported_result: Variant
-	unsupported_result = await test_backend_async_pattern(
-		"unsupported_method", unsupported_path, "test", "value", "Error: Unsupported Method", true
+	var unsupported_path: Array[Variant] = (
+		TestUtils.make_test_path(TestConstants.FIREBASE_BACKEND_PREFIX, "error_handling")
+		+ ["unsupported"]
 	)
 
-	var unsupported_handled: bool = unsupported_result == false
+	var unsupported_op: Dictionary = await TestUtils.time_operation(
+		"backend_unsupported_method_test",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"unsupported_method",
+				unsupported_path,
+				"test",
+				"value",
+				"Error: Unsupported Method",
+				true
+			)
+	)
+
+	var unsupported_handled: bool = unsupported_op.result == false
 	if unsupported_handled:
 		successful_error_handling += 1
 	error_tests.append(
 		{
 			"test": "unsupported_method",
 			"handled_gracefully": unsupported_handled,
-			"result": unsupported_result
+			"result": unsupported_op.result,
+			"duration_ms": TestUtils.get_duration_ms(unsupported_op)
 		}
 	)
 
-	_update_status("Testing backend availability error handling...")
+	# Test 4: Backend availability check using timing helper
 	total_error_tests += 1
-	var availability_check: bool = backend.is_available()
+	var availability_op: Dictionary = await TestUtils.time_operation(
+		"backend_availability_check", func() -> bool: return backend.is_available()
+	)
+
 	var availability_handled: bool = true  # Just checking this doesn't crash
 	if availability_handled:
 		successful_error_handling += 1
@@ -97,81 +118,59 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		{
 			"test": "availability_check",
 			"handled_gracefully": availability_handled,
-			"backend_available": availability_check
+			"backend_available": availability_op.result,
+			"duration_ms": TestUtils.get_duration_ms(availability_op)
 		}
 	)
 
 	var error_success_rate: float = float(successful_error_handling) / float(total_error_tests)
 	var overall_success: bool = error_success_rate >= 0.75  # 75% of error scenarios should be handled gracefully
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results: Dictionary = {
-		"total_error_tests": total_error_tests,
-		"successful_error_handling": successful_error_handling,
-		"error_success_rate": error_success_rate,
-		"error_test_details": error_tests,
-		"error_handling_validation": overall_success,
-		"backend_available": backend.is_available()
-	}
+	# Calculate total duration from all operations
+	var total_duration: int = (
+		TestUtils.get_duration_ms(invalid_op)
+		+ TestUtils.get_duration_ms(timeout_op)
+		+ TestUtils.get_duration_ms(unsupported_op)
+		+ TestUtils.get_duration_ms(availability_op)
+	)
 
 	if overall_success:
-		_update_status(
+		return TestUtils.make_success_result(
 			(
-				"Error Handling test PASSED ("
-				+ str(successful_error_handling)
-				+ "/"
-				+ str(total_error_tests)
-				+ ")"
-			)
-		)
-		Log.info(
-			"Backend error handling validation successful",
-			test_results,
-			["debug", "backend_firebase"]
-		)
-
-		return DebugActionResult.new_success(
-			"Backend error handling test completed successfully",
+				"Backend error handling test completed successfully (%d/%d)"
+				% [successful_error_handling, total_error_tests]
+			),
 			total_duration,
 			action_name,
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.BACKEND_ERROR_HANDLING,
+				{
+					"error_scenarios": error_tests,
+					"success_rate": error_success_rate,
+					"total_tests": total_error_tests,
+					"successful_tests": successful_error_handling,
+					"backend_available": backend.is_available()
+				}
+			)
+		)
+
+	return TestUtils.make_failure_result(
+		(
+			"Backend error handling test failed - insufficient error handling (%d/%d)"
+			% [successful_error_handling, total_error_tests]
+		),
+		TestConstants.ERROR_CODES.VALIDATION_FAILED,
+		total_duration,
+		action_name,
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.BACKEND_ERROR_HANDLING,
 			{
-				"test_type": "backend_error_handling",
 				"error_scenarios": error_tests,
 				"success_rate": error_success_rate,
 				"total_tests": total_error_tests,
-				"successful_tests": successful_error_handling
+				"successful_tests": successful_error_handling,
+				"minimum_required_rate": 0.75,
+				"backend_available": backend.is_available()
 			}
 		)
-
-	_update_status(
-		(
-			"Error Handling test FAILED ("
-			+ str(successful_error_handling)
-			+ "/"
-			+ str(total_error_tests)
-			+ ")"
-		),
-		true
-	)
-	Log.error(
-		"Backend error handling validation failed",
-		test_results,
-		["debug", "backend_firebase", "error"]
-	)
-
-	return DebugActionResult.new_failure(
-		"Backend error handling test failed - insufficient error handling",
-		"ERROR_HANDLING_INSUFFICIENT",
-		DebugActionResult.ErrorCategory.VALIDATION,
-		test_results,
-		total_duration,
-		action_name,
-		{
-			"test_type": "backend_error_handling",
-			"error_scenarios": error_tests,
-			"success_rate": error_success_rate,
-			"total_tests": total_error_tests,
-			"successful_tests": successful_error_handling,
-			"minimum_required_rate": 0.75
-		}
 	)

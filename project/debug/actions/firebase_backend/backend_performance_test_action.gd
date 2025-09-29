@@ -9,42 +9,45 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
 	var backend: DataBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Failed to get Firebase backend for testing",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			{"backend_available": false},
+			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
 			0,
-			action_name
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.BACKEND_PERFORMANCE)
 		)
 
 	var performance_tests: Array[Dictionary] = []
-	var test_base_path: Array[Variant] = ["backend_tests", "performance"]
+	var test_base_path: Array[Variant] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_BACKEND_PREFIX, "performance"
+	)
 	var test_timestamp: String = str(Time.get_ticks_msec())
 
 	var single_path: Array[Variant] = test_base_path + ["single", test_timestamp]
 	var single_key: String = "perf_single_" + test_timestamp
-	var single_value: String = "Performance test single operation"
+	var single_value: String = TestUtils.make_test_value("Performance test single operation")
 
-	var single_start: int = Time.get_ticks_msec()
-	var single_result: Variant = await test_backend_async_pattern(
-		"set_data", single_path, single_key, single_value, "Perf: Single Operation"
+	# Test 1: Single operation timing
+	var single_op: Dictionary = await TestUtils.time_operation(
+		"backend_single_operation",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"set_data", single_path, single_key, single_value, "Perf: Single Operation"
+			)
 	)
-	var single_duration: int = Time.get_ticks_msec() - single_start
 
 	performance_tests.append(
 		{
 			"test": "single_operation",
-			"success": single_result != null,
-			"duration_ms": single_duration,
+			"success": single_op.result != null,
+			"duration_ms": TestUtils.get_duration_ms(single_op),
 			"operation": "set_data"
 		}
 	)
 
+	# Test 2: Sequential operations timing
 	var sequential_operations: int = 3
 	var sequential_durations: Array[int] = []
 	var sequential_successes: int = 0
@@ -52,16 +55,18 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	for i: int in range(sequential_operations):
 		var seq_path: Array[Variant] = test_base_path + ["sequential", str(i), test_timestamp]
 		var seq_key: String = "perf_seq_" + str(i) + "_" + test_timestamp
-		var seq_value: String = "Sequential operation " + str(i)
+		var seq_value: String = TestUtils.make_test_value("Sequential operation " + str(i))
 
-		var seq_start: int = Time.get_ticks_msec()
-		var seq_result: Variant = await test_backend_async_pattern(
-			"set_data", seq_path, seq_key, seq_value, "Perf: Sequential " + str(i)
+		var seq_op: Dictionary = await TestUtils.time_operation(
+			"backend_sequential_" + str(i),
+			func() -> Variant:
+				return await test_backend_async_pattern(
+					"set_data", seq_path, seq_key, seq_value, "Perf: Sequential " + str(i)
+				)
 		)
-		var seq_duration: int = Time.get_ticks_msec() - seq_start
 
-		sequential_durations.append(seq_duration)
-		if seq_result:
+		sequential_durations.append(TestUtils.get_duration_ms(seq_op))
+		if seq_op.result:
 			sequential_successes += 1
 
 	var avg_sequential_duration: int = 0
@@ -83,44 +88,60 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		}
 	)
 
+	# Test 3: Overhead test timing
 	var overhead_path: Array[Variant] = test_base_path + ["overhead", test_timestamp]
 	var overhead_key: String = "perf_overhead_" + test_timestamp
-	var overhead_value: String = "RequestSignalHelper overhead test"
+	var overhead_value: String = TestUtils.make_test_value("RequestSignalHelper overhead test")
 
-	# First set the data so we can reliably get it back for overhead testing
-	await test_backend_async_pattern(
-		"set_data", overhead_path, overhead_key, overhead_value, "Perf: Overhead Setup"
+	# Setup data for overhead test
+	var setup_op: Dictionary = await TestUtils.time_operation(
+		"backend_overhead_setup",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"set_data", overhead_path, overhead_key, overhead_value, "Perf: Overhead Setup"
+			)
 	)
 
-	var overhead_start: int = Time.get_ticks_msec()
-	var overhead_result: Variant = await test_backend_async_pattern(
-		"get_data", overhead_path, overhead_key, null, "Perf: Overhead Test"
+	var overhead_op: Dictionary = await TestUtils.time_operation(
+		"backend_overhead_test",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"get_data", overhead_path, overhead_key, null, "Perf: Overhead Test"
+			)
 	)
-	var overhead_duration: int = Time.get_ticks_msec() - overhead_start
 
 	performance_tests.append(
 		{
 			"test": "request_signal_helper_overhead",
-			"success": overhead_result != null,
-			"duration_ms": overhead_duration,
+			"success": overhead_op.result != null,
+			"duration_ms": TestUtils.get_duration_ms(overhead_op),
 			"operation": "get_data"
 		}
 	)
 
 	var total_operations: int = 1 + sequential_operations + 1  # single + sequential + overhead
 	var successful_operations: int = (
-		(1 if single_result else 0) + sequential_successes + (1 if overhead_result != null else 0)
+		(1 if single_op.result else 0)
+		+ sequential_successes
+		+ (1 if overhead_op.result != null else 0)
 	)
 	var success_rate: float = float(successful_operations) / float(total_operations)
 
-	var single_acceptable: bool = single_duration < 5000  # Should be under 5 seconds
-	var avg_acceptable: bool = avg_sequential_duration < 5000  # Average should be under 5 seconds
-	var overhead_acceptable: bool = overhead_duration < 10000  # Overhead test can be slower
+	var single_duration: int = TestUtils.get_duration_ms(single_op)
+	var overhead_duration: int = TestUtils.get_duration_ms(overhead_op)
+	var total_duration: int = (
+		single_duration
+		+ avg_sequential_duration
+		+ overhead_duration
+		+ TestUtils.get_duration_ms(setup_op)
+	)
+
+	var single_acceptable: bool = single_duration < 5000
+	var avg_acceptable: bool = avg_sequential_duration < 5000
+	var overhead_acceptable: bool = overhead_duration < 10000
 
 	var performance_acceptable: bool = single_acceptable and avg_acceptable and overhead_acceptable
-	var overall_success: bool = success_rate >= 0.8 and performance_acceptable  # 80% success + acceptable performance
-
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	var overall_success: bool = success_rate >= 0.8 and performance_acceptable
 
 	var performance_metrics: Dictionary = {
 		"operations_per_second": float(total_operations) / (float(total_duration) / 1000.0),
@@ -146,23 +167,25 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	}
 
 	return DebugActionResult.new_performance_result(
-		performance_tests,  # Array of performance test results
+		performance_tests,
 		overall_success,
 		performance_thresholds,
 		action_name,
 		total_duration,
-		{
-			"test_type": "backend_performance",
-			"backend_type": "firebase_rtdb",
-			"performance_metrics": performance_metrics,
-			"thresholds_met":
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.BACKEND_PERFORMANCE,
 			{
-				"single_acceptable": single_acceptable,
-				"avg_acceptable": avg_acceptable,
-				"overhead_acceptable": overhead_acceptable
-			},
-			"test_timestamp": test_timestamp
-		}
+				"backend_type": "firebase_rtdb",
+				"performance_metrics": performance_metrics,
+				"thresholds_met":
+				{
+					"single_acceptable": single_acceptable,
+					"avg_acceptable": avg_acceptable,
+					"overhead_acceptable": overhead_acceptable
+				},
+				"test_timestamp": test_timestamp
+			}
+		)
 	)
 
 

@@ -50,6 +50,8 @@ const TEST_TYPES: Dictionary = {
 	"RTDB_SINGLE_LISTENER": "rtdb_single_value_listener",
 	"RTDB_SET_NESTED": "rtdb_set_nested",
 	"RTDB_GET_NESTED": "rtdb_get_nested",
+	"BACKEND_PERFORMANCE": "backend_performance",
+	"BACKEND_ERROR_HANDLING": "backend_error_handling",
 	"SYSTEM_VALIDATION": "system_validation"
 }
 
