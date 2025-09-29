@@ -9,46 +9,127 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend lifecycle...")
 
-	var lifecycle_tests: Array[Dictionary] = []
-	var successful_tests: int = 0
-	var total_tests: int = 0
+	var lifecycle_test: Dictionary = await TestUtils.time_operation(
+		"lifecycle_test",
+		func() -> Dictionary:
+			var lifecycle_tests: Array[Dictionary] = []
+			var successful_tests: int = 0
+			var total_tests: int = 0
 
-	_update_status("Testing backend availability...")
-	total_tests += 1
-	var backend: DataBackend = get_firebase_backend_for_testing()
-	var availability_success: bool = backend != null and is_instance_valid(backend)
+			_update_status("Testing backend availability...")
+			total_tests += 1
+			var backend: DataBackend = get_firebase_backend_for_testing()
+			var availability_success: bool = backend != null and is_instance_valid(backend)
 
-	if availability_success:
-		successful_tests += 1
-	lifecycle_tests.append(
-		{
-			"test": "backend_availability",
-			"success": availability_success,
-			"backend_exists": backend != null,
-			"backend_valid": is_instance_valid(backend) if backend else false
-		}
+			if availability_success:
+				successful_tests += 1
+			lifecycle_tests.append(
+				{
+					"test": "backend_availability",
+					"success": availability_success,
+					"backend_exists": backend != null,
+					"backend_valid": is_instance_valid(backend) if backend else false
+				}
+			)
+
+			if not backend:
+				return {
+					"success": false,
+					"total_tests": total_tests,
+					"successful_tests": successful_tests,
+					"lifecycle_tests": lifecycle_tests,
+					"lifecycle_validation": false,
+					"failed_at": "backend_availability_check"
+				}
+
+			return await _run_lifecycle_tests(
+				backend, lifecycle_tests, successful_tests, total_tests
+			)
 	)
 
-	if not backend:
-		var failure_results: Dictionary = {
-			"total_tests": total_tests,
-			"successful_tests": successful_tests,
-			"lifecycle_tests": lifecycle_tests,
-			"lifecycle_validation": false
-		}
-		return DebugActionResult.new_failure(
+	var duration: int = lifecycle_test.duration_ms
+	var result: Dictionary = lifecycle_test.result
+
+	if not result.success and result.get("failed_at") == "backend_availability_check":
+		return TestUtils.make_failure_result(
 			"Backend lifecycle test failed - backend not available",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			failure_results,
-			Time.get_ticks_msec() - start_time,
+			TestConstants.ERROR_DATABASE_UNAVAILABLE,
+			duration,
 			action_name,
-			{"test_type": "backend_lifecycle", "failed_at": "backend_availability_check"}
+			TestUtils.make_metadata(
+				"backend_lifecycle", {"failed_at": "backend_availability_check"}
+			)
 		)
 
+	var success_rate: float = float(result.successful_tests) / float(result.total_tests)
+	var overall_success: bool = result.lifecycle_validation
+
+	if overall_success:
+		_update_status(
+			(
+				"Lifecycle test PASSED ("
+				+ str(result.successful_tests)
+				+ "/"
+				+ str(result.total_tests)
+				+ ")"
+			)
+		)
+		Log.info("Backend lifecycle validation successful", result, ["debug", "backend_firebase"])
+
+		return TestUtils.make_success_result(
+			"Backend lifecycle test completed successfully",
+			duration,
+			action_name,
+			TestUtils.make_metadata(
+				"backend_lifecycle",
+				{
+					"lifecycle_tests": result.lifecycle_tests,
+					"success_rate": success_rate,
+					"total_tests": result.total_tests,
+					"successful_tests": result.successful_tests,
+					"backend_state": result.backend_final_state
+				}
+			)
+		)
+
+	_update_status(
+		(
+			"Lifecycle test FAILED ("
+			+ str(result.successful_tests)
+			+ "/"
+			+ str(result.total_tests)
+			+ ")"
+		),
+		true
+	)
+	Log.error("Backend lifecycle validation failed", result, ["debug", "backend_firebase", "error"])
+
+	return TestUtils.make_failure_result(
+		"Backend lifecycle test failed - insufficient success rate",
+		TestConstants.ERROR_OPERATION_FAILED,
+		duration,
+		action_name,
+		TestUtils.make_metadata(
+			"backend_lifecycle",
+			{
+				"lifecycle_tests": result.lifecycle_tests,
+				"success_rate": success_rate,
+				"total_tests": result.total_tests,
+				"successful_tests": result.successful_tests,
+				"minimum_required_rate": 0.8
+			}
+		)
+	)
+
+
+func _run_lifecycle_tests(
+	backend: DataBackend,
+	lifecycle_tests: Array[Dictionary],
+	successful_tests: int,
+	total_tests: int
+) -> Dictionary:
 	_update_status("Testing backend initialization state...")
 	total_tests += 1
 	var initialization_success: bool = backend.is_available()
@@ -105,7 +186,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_update_status("Testing basic operation functionality...")
 	total_tests += 1
 	var test_path: Array[Variant] = ["backend_tests", "lifecycle", "basic_op"]
-	var test_key: String = "lifecycle_" + str(Time.get_ticks_msec())
+	var test_key: String = TestConstants.test_value("lifecycle")
 	var test_value: String = "Lifecycle test value"
 
 	var basic_op_success: bool = await test_backend_async_pattern(
@@ -144,9 +225,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.8  # 80% of lifecycle tests should pass
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	var test_results: Dictionary = {
+	return {
+		"success": overall_success,
 		"total_tests": total_tests,
 		"successful_tests": successful_tests,
 		"success_rate": success_rate,
@@ -154,53 +235,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		"lifecycle_validation": overall_success,
 		"backend_final_state":
 		{
-			"available": backend.is_available() if backend else false,
+			"available": backend.is_available(),
 			"datasource_initialized": data_source.is_initialized()
 		}
 	}
-
-	if overall_success:
-		_update_status(
-			"Lifecycle test PASSED (" + str(successful_tests) + "/" + str(total_tests) + ")"
-		)
-		Log.info(
-			"Backend lifecycle validation successful", test_results, ["debug", "backend_firebase"]
-		)
-
-		return DebugActionResult.new_success(
-			"Backend lifecycle test completed successfully",
-			total_duration,
-			action_name,
-			{
-				"test_type": "backend_lifecycle",
-				"lifecycle_tests": lifecycle_tests,
-				"success_rate": success_rate,
-				"total_tests": total_tests,
-				"successful_tests": successful_tests,
-				"backend_state": test_results["backend_final_state"]
-			}
-		)
-
-	_update_status(
-		"Lifecycle test FAILED (" + str(successful_tests) + "/" + str(total_tests) + ")", true
-	)
-	Log.error(
-		"Backend lifecycle validation failed", test_results, ["debug", "backend_firebase", "error"]
-	)
-
-	return DebugActionResult.new_failure(
-		"Backend lifecycle test failed - insufficient success rate",
-		"LIFECYCLE_INSUFFICIENT",
-		DebugActionResult.ErrorCategory.VALIDATION,
-		test_results,
-		total_duration,
-		action_name,
-		{
-			"test_type": "backend_lifecycle",
-			"lifecycle_tests": lifecycle_tests,
-			"success_rate": success_rate,
-			"total_tests": total_tests,
-			"successful_tests": successful_tests,
-			"minimum_required_rate": 0.8
-		}
-	)
