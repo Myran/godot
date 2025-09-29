@@ -8,56 +8,48 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Firebase database not available",
-			"DATABASE_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+			TestConstants.ERROR_DATABASE_UNAVAILABLE,
+			0,
+			action_name,
+			TestUtils.make_metadata("rtdb_update_value")
 		)
 
 	var path_suffix: Array[Variant] = ["update_test"]
 	var test_path: Array[Variant] = create_test_path(path_suffix)
-	var test_value: String = "Updated Value: " + str(Time.get_ticks_msec())
+	var test_value: String = TestConstants.test_value("Updated Value")
 
-	var operation_start: int = Time.get_ticks_msec()
-	var success: bool = await execute_simple_operation(
-		"set_value_async", test_path, test_value, action_name
+	var update_op: Dictionary = await TestUtils.time_operation(
+		"update_operation",
+		func() -> bool:
+			return await execute_simple_operation(
+				"set_value_async", test_path, test_value, action_name
+			)
 	)
-	var operation_duration: int = Time.get_ticks_msec() - operation_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	if success:
-		return DebugActionResult.new_success(
+	var duration: int = update_op.duration_ms
+
+	if update_op.result:
+		return TestUtils.make_success_result(
 			"Successfully updated value",
-			total_duration,
+			duration,
 			action_name,
-			{
-				"test_type": "rtdb_update_value",
-				"path": test_path,
-				"updated_value": test_value,
-				"operation_duration_ms": operation_duration
-			}
+			TestUtils.make_metadata(
+				"rtdb_update_value", {"path": test_path, "updated_value": test_value}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Failed to update value",
-		"UPDATE_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.DATABASE,
-		null,
-		total_duration,
+		TestConstants.ERROR_OPERATION_FAILED,
+		duration,
 		action_name,
-		{
-			"test_type": "rtdb_update_value",
-			"path": test_path,
-			"attempted_value": test_value,
-			"operation_duration_ms": operation_duration
-		}
+		TestUtils.make_metadata(
+			"rtdb_update_value", {"path": test_path, "attempted_value": test_value}
+		)
 	)
 
 

@@ -10,17 +10,14 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
 	var firebase_backend: Object = get_firebase_database()
 	if not firebase_backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Firebase database not available",
-			"DATABASE_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+			TestConstants.ERROR_DATABASE_UNAVAILABLE,
+			0,
+			action_name,
+			TestUtils.make_metadata("rtdb_set_nested_path")
 		)
 
 	var nested_data: Dictionary = {
@@ -36,40 +33,41 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	}
 
 	var nested_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.NESTED_DATA)
-	var operation_start: int = Time.get_ticks_msec()
-	var success: bool = await execute_simple_operation(
-		"set_value_async", nested_path, nested_data, action_name
-	)
-	var operation_duration: int = Time.get_ticks_msec() - operation_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
-	if success:
-		return DebugActionResult.new_success(
+	var set_op: Dictionary = await TestUtils.time_operation(
+		"set_nested_operation",
+		func() -> bool:
+			return await execute_simple_operation(
+				"set_value_async", nested_path, nested_data, action_name
+			)
+	)
+
+	var duration: int = set_op.duration_ms
+
+	if set_op.result:
+		return TestUtils.make_success_result(
 			"Successfully set nested path data",
-			total_duration,
+			duration,
 			action_name,
-			{
-				"test_type": "rtdb_set_nested_path",
-				"path": nested_path,
-				"operation_duration_ms": operation_duration,
-				"data_structure": nested_data.keys(),
-				"data_size_bytes": str(nested_data).length()
-			}
+			TestUtils.make_metadata(
+				"rtdb_set_nested_path",
+				{
+					"path": nested_path,
+					"data_structure": nested_data.keys(),
+					"data_size_bytes": str(nested_data).length()
+				}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Failed to set nested path data",
-		"SET_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.DATABASE,
-		null,
-		total_duration,
+		TestConstants.ERROR_OPERATION_FAILED,
+		duration,
 		action_name,
-		{
-			"test_type": "rtdb_set_nested_path",
-			"path": nested_path,
-			"operation_duration_ms": operation_duration,
-			"attempted_data_size_bytes": str(nested_data).length()
-		}
+		TestUtils.make_metadata(
+			"rtdb_set_nested_path",
+			{"path": nested_path, "attempted_data_size_bytes": str(nested_data).length()}
+		)
 	)
 
 

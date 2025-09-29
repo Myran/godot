@@ -11,6 +11,10 @@ const SYSTEM_PREFIX: String = "system_tests"
 const FIREBASE_BACKEND_PREFIX: String = "backend_tests"
 
 # Common error codes (repeated across all action files)
+const ERROR_DATABASE_UNAVAILABLE: String = "DATABASE_UNAVAILABLE"
+const ERROR_OPERATION_FAILED: String = "OPERATION_FAILED"
+const ERROR_SETUP_FAILED: String = "SETUP_FAILED"
+
 const ERROR_CODES: Dictionary = {
 	"SET_FAILED": "SET_OPERATION_FAILED",
 	"GET_FAILED": "GET_OPERATION_FAILED",
