@@ -62,111 +62,127 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 					"No saved state files found and no file path provided"
 				)
 
-	# Use timing helper for the complete load operation
-	var load_op: Dictionary = await TestUtils.time_operation(
-		"system_load_gamestate",
-		func() -> Dictionary:
-			Log.info(
-				"Loading gamestate via restart system",
-				{"file_path": actual_file_path},
-				[Log.TAG_DEBUG, "gamestate"]
-			)
+	# Simple timing approach to avoid formatter issues
+	var start_time: int = Time.get_ticks_msec()
 
-			# Read and validate JSON file
-			var file: FileAccess = FileAccess.open(actual_file_path, FileAccess.READ)
-			if not file:
-				return {"success": false, "error": "Cannot open file: " + actual_file_path}
-
-			var json_text: String = file.get_as_text()
-			file.close()
-
-			var json: JSON = JSON.new()
-			var parse_result: Error = json.parse(json_text)
-			if parse_result != OK:
-				return {"success": false, "error": "Invalid JSON in file: " + _file_path}
-
-			var capture_data: Variant = json.data
-
-			# Validate capture data structure
-			if not _validate_capture_data(capture_data):
-				return {"success": false, "error": "Invalid capture data format"}
-
-			var capture_dict: Dictionary = capture_data
-
-			# Load gamestate using Game's direct loading method
-			var game_instance: Game = _get_game_instance()
-			if not game_instance:
-				return {"success": false, "error": "Game instance not found"}
-
-			# Determine the appropriate loading method based on save type
-			var restoration_success: bool = false
-
-			if capture_dict.has("gamestate"):
-				# Full gamestate save - use the standard loading method
-				Log.debug(
-					"Loading full gamestate via Game.load_state_from_file",
-					{"file": actual_file_path},
-					[Log.TAG_DEBUG, "gamestate", "load_action"]
-				)
-				restoration_success = await game_instance.load_state_from_file(actual_file_path)
-			elif capture_dict.has("lineup_data"):
-				# Lineup-only save - use the lineup loading method (following LoadAlliedLineupAction pattern)
-				Log.debug(
-					"Loading lineup-only save via lineup restoration",
-					{"file": actual_file_path},
-					[Log.TAG_DEBUG, "gamestate", "load_action"]
-				)
-				var lineup_data_dict: Dictionary = capture_dict.lineup_data
-				restoration_success = await _load_lineup_only_data(game_instance, lineup_data_dict)
-			else:
-				return {"success": false, "error": "Unknown save format - neither gamestate nor lineup_data found"}
-
-			Log.debug(
-				"Gamestate/lineup load completed",
-				{
-					"success": restoration_success,
-					"save_type": "full_gamestate" if capture_dict.has("gamestate") else "lineup_only"
-				},
-				[Log.TAG_DEBUG, "gamestate", "load_action"]
-			)
-
-			if not restoration_success:
-				return {"success": false, "error": "Failed to load gamestate from file"}
-
-			# Log the load request (skip semantic action logging for now to avoid StateExtractor hang)
-			Log.info(
-				"Gamestate loaded successfully - skipping semantic action due to StateExtractor hang",
-				{
-					"file": actual_file_path.get_file(),
-					"original_capture_id": capture_dict.get("capture_id", "unknown"),
-					"original_timestamp": capture_dict.get("capture_timestamp", "unknown"),
-					"load_method": "in_place_restoration",
-					"restored_state":
-					capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
-				},
-				[Log.TAG_DEBUG, "gamestate", "load_action"]
-			)
-
-			return {
-				"success": true,
-				"gamestate_file": actual_file_path.get_file(),
-				"original_capture_id": capture_dict.get("capture_id", "unknown"),
-				"restored_state":
-				capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN"),
-				"load_method": "in_place_restoration"
-			}
+	Log.info(
+		"Loading gamestate via restart system",
+		{"file_path": actual_file_path},
+		[Log.TAG_DEBUG, "gamestate"]
 	)
 
-	var total_duration: int = TestUtils.get_duration_ms(load_op)
-
-	if not load_op.result.success:
+	# Read and validate JSON file
+	var file: FileAccess = FileAccess.open(actual_file_path, FileAccess.READ)
+	if not file:
 		return TestUtils.make_failure_result(
-			load_op.result.get("error", "Failed to load gamestate from file"),
+			"Cannot open file: " + actual_file_path,
 			TestConstants.ERROR_CODES.FILE_READ_FAILED,
-			total_duration,
+			0,
 			action_name,
 			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
 		)
+
+	var json_text: String = file.get_as_text()
+	file.close()
+
+	var json: JSON = JSON.new()
+	var parse_result: Error = json.parse(json_text)
+	if parse_result != OK:
+		return TestUtils.make_failure_result(
+			"Invalid JSON in file: " + _file_path,
+			TestConstants.ERROR_CODES.FILE_READ_FAILED,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
+		)
+
+	var capture_data: Variant = json.data
+
+	# Validate capture data structure
+	if not _validate_capture_data(capture_data):
+		return TestUtils.make_failure_result(
+			"Invalid capture data format",
+			TestConstants.ERROR_CODES.VALIDATION_FAILED,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
+		)
+
+	var capture_dict: Dictionary = capture_data
+
+	# Load gamestate using Game's direct loading method
+	var game_instance: Game = _get_game_instance()
+	if not game_instance:
+		return TestUtils.make_failure_result(
+			"Game instance not found",
+			TestConstants.ERROR_CODES.SYSTEM_ERROR,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
+		)
+
+	# Determine the appropriate loading method based on save type
+	var restoration_success: bool = false
+
+	if capture_dict.has("gamestate"):
+		# Full gamestate save - use the standard loading method
+		Log.debug(
+			"Loading full gamestate via Game.load_state_from_file",
+			{"file": actual_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load_action"]
+		)
+		restoration_success = await game_instance.load_state_from_file(actual_file_path)
+	elif capture_dict.has("lineup_data"):
+		# Lineup-only save - use the lineup loading method
+		Log.debug(
+			"Loading lineup-only save via lineup restoration",
+			{"file": actual_file_path},
+			[Log.TAG_DEBUG, "gamestate", "load_action"]
+		)
+		var lineup_data_dict: Dictionary = capture_dict.lineup_data
+		restoration_success = await _load_lineup_only_data(game_instance, lineup_data_dict)
+	else:
+		return TestUtils.make_failure_result(
+			"Unknown save format - neither gamestate nor lineup_data found",
+			TestConstants.ERROR_CODES.VALIDATION_FAILED,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
+		)
+
+	Log.debug(
+		"Gamestate/lineup load completed",
+		{
+			"success": restoration_success,
+			"save_type": "full_gamestate" if capture_dict.has("gamestate") else "lineup_only"
+		},
+		[Log.TAG_DEBUG, "gamestate", "load_action"]
+	)
+
+	if not restoration_success:
+		return TestUtils.make_failure_result(
+			"Failed to load gamestate from file",
+			TestConstants.ERROR_CODES.FILE_READ_FAILED,
+			Time.get_ticks_msec() - start_time,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
+		)
+
+	# Log the load request (skip semantic action logging for now to avoid StateExtractor hang)
+	Log.info(
+		"Gamestate loaded successfully - skipping semantic action due to StateExtractor hang",
+		{
+			"file": actual_file_path.get_file(),
+			"original_capture_id": capture_dict.get("capture_id", "unknown"),
+			"original_timestamp": capture_dict.get("capture_timestamp", "unknown"),
+			"load_method": "in_place_restoration",
+			"restored_state":
+			capture_dict.get("gamestate", {}).get("lineup", {}).get("current_game_state", "UNKNOWN")
+		},
+		[Log.TAG_DEBUG, "gamestate", "load_action"]
+	)
+
+	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	return TestUtils.make_success_result(
 		"Gamestate restored in current session",
@@ -175,10 +191,13 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 		TestUtils.make_metadata(
 			TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE,
 			{
-				"gamestate_file": load_op.result.gamestate_file,
-				"original_capture_id": load_op.result.original_capture_id,
-				"restored_state": load_op.result.restored_state,
-				"load_method": load_op.result.load_method
+				"gamestate_file": actual_file_path.get_file(),
+				"original_capture_id": capture_dict.get("capture_id", "unknown"),
+				"restored_state":
+				capture_dict.get("gamestate", {}).get("lineup", {}).get(
+					"current_game_state", "UNKNOWN"
+				),
+				"load_method": "in_place_restoration"
 			}
 		)
 	)
