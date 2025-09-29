@@ -11,15 +11,31 @@ func _init() -> void:
 
 
 func execute_rtdb_action() -> bool:
+	var timed_op: Dictionary = await TestUtils.time_operation(
+		"RTDB Transaction Test", _execute_transaction_test
+	)
+	var test_successful: bool = timed_op.result
+	var duration_ms: int = TestUtils.get_duration_ms(timed_op)
+
+	_update_status(
+		(
+			"Transaction test completed: %s (%dms)"
+			% ["SUCCESS" if test_successful else "FAILED", duration_ms]
+		),
+		not test_successful
+	)
+
+	return test_successful
+
+
+func _execute_transaction_test() -> bool:
 	_update_status("Executing " + action_name + "...")
 
 	var db: Object = get_firebase_database()
 	if not db:
-		var error_result: Array = get_last_error_result()
 		return false
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.TRANSACTIONS)
-
 	_update_status("Starting transaction test at path '%s'..." % str(full_path))
 
 	var initial_data: Dictionary = {
@@ -27,27 +43,22 @@ func execute_rtdb_action() -> bool:
 	}
 
 	var setup_success: bool = await execute_simple_operation(
-		"set_value_async", full_path, initial_data, "Transaction Setup"
+		TestConstants.FIREBASE_OPERATIONS.SET_VALUE, full_path, initial_data, "Transaction Setup"
 	)
-
 	if not setup_success:
 		return false
 
 	var transaction_results: Array[Dictionary] = []
-
 	for i: int in range(3):
 		var transaction_result: Dictionary = await _perform_counter_transaction(full_path, i + 1)
 		transaction_results.append(transaction_result)
 
 	var verify_success: bool = await execute_simple_operation(
-		"get_value_async", full_path, null, "Transaction Verification"
+		TestConstants.FIREBASE_OPERATIONS.GET_VALUE, full_path, null, "Transaction Verification"
 	)
 
 	var expected_final_count: int = 3
-	var actual_final_count: int = 0
-
-	if verify_success:
-		actual_final_count = expected_final_count
+	var actual_final_count: int = expected_final_count if verify_success else 0
 
 	var all_transactions_successful: bool = true
 	for result: Dictionary in transaction_results:
@@ -59,27 +70,24 @@ func execute_rtdb_action() -> bool:
 		all_transactions_successful and (actual_final_count == expected_final_count)
 	)
 
-	var status_msg: String = (
-		"Transaction test completed: %s. Final counter: %d (expected: %d)"
-		% ["SUCCESS" if test_successful else "FAILED", actual_final_count, expected_final_count]
-	)
-	_update_status(status_msg, not test_successful)
-
 	Log.debug(
 		"RTDBTransactionTestAction executed",
-		{
-			"path": full_path,
-			"operation": "transaction_test",
-			"success": test_successful,
-			"transaction_count": transaction_results.size(),
-			"final_counter": actual_final_count,
-			"expected_counter": expected_final_count,
-			"transaction_results": transaction_results
-		},
+		TestUtils.make_metadata(
+			"rtdb_transaction_test",
+			{
+				"path": full_path,
+				"operation": "transaction_test",
+				"success": test_successful,
+				"transaction_count": transaction_results.size(),
+				"final_counter": actual_final_count,
+				"expected_counter": expected_final_count,
+				"transaction_results": transaction_results
+			}
+		),
 		["test", "rtdb", "advanced"]
 	)
 
-	return true
+	return test_successful
 
 
 func _perform_counter_transaction(path: Array[Variant], transaction_number: int) -> Dictionary:
@@ -110,7 +118,10 @@ func _perform_counter_transaction(path: Array[Variant], transaction_number: int)
 	}
 
 	var set_success: bool = await execute_simple_operation(
-		"set_value_async", path, updated_data, "Transaction Update " + str(transaction_number)
+		TestConstants.FIREBASE_OPERATIONS.SET_VALUE,
+		path,
+		updated_data,
+		"Transaction Update " + str(transaction_number)
 	)
 
 	return {

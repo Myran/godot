@@ -10,32 +10,77 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
+	var timed_op: Dictionary = await TestUtils.time_operation(
+		"RTDB Error Handling Test", _perform_error_tests
+	)
+	var test_results: Dictionary = timed_op.result
+	var duration_ms: int = TestUtils.get_duration_ms(timed_op)
 
+	if not TestUtils.is_valid_result(test_results):
+		return TestUtils.make_failure_result(
+			"Failed to get Firebase database instance",
+			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
+			duration_ms,
+			action_name,
+			TestUtils.make_metadata("rtdb_error_handling", {"database_available": false})
+		)
+
+	var passed_tests: int = test_results.get("passed_tests", 0)
+	var total_tests: int = test_results.get("total_tests", 3)
+	var tests_array: Array[Dictionary] = test_results.get("test_results", [])
+	var success_rate: float = float(passed_tests) / float(total_tests)
+	var test_success: bool = passed_tests >= 2  # At least 2 out of 3 tests should pass
+
+	var metadata: Dictionary = TestUtils.make_metadata(
+		"error_handling_simplified",
+		{
+			"total_tests": total_tests,
+			"passed_tests": passed_tests,
+			"success_rate": success_rate,
+			"test_results": tests_array,
+			"operation_duration_ms": duration_ms,
+			"minimum_required_passed": 2
+		}
+	)
+
+	if test_success:
+		return TestUtils.make_success_result(
+			(
+				"Error handling test completed successfully (%d/%d tests passed)"
+				% [passed_tests, total_tests]
+			),
+			duration_ms,
+			action_name,
+			metadata
+		)
+
+	return TestUtils.make_failure_result(
+		"Error handling test failed (%d/%d tests passed)" % [passed_tests, total_tests],
+		TestConstants.ERROR_CODES.VALIDATION_FAILED,
+		duration_ms,
+		action_name,
+		metadata
+	)
+
+
+func _perform_error_tests() -> Dictionary:
 	var db: Object = get_firebase_database()
 	if not db:
-		return DebugActionResult.new_failure(
-			"Failed to get Firebase database instance",
-			"DATABASE_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.FIREBASE,
-			{"database_available": false},
-			0,
-			action_name
-		)
+		return {}
 
 	var passed_tests: int = 0
 	var total_tests: int = 3
-	var test_results: Array[Dictionary] = []
+	var test_results_array: Array[Dictionary] = []
 
 	_update_status("Testing invalid path access...")
 	var invalid_path: Array[Variant] = ["invalid", "restricted", "path"]
 	var test1_result: bool = await execute_simple_operation(
-		"get_value_async", invalid_path, null, "Invalid Path Test"
+		TestConstants.FIREBASE_OPERATIONS.GET_VALUE, invalid_path, null, "Invalid Path Test"
 	)
 	var test1_passed: bool = not test1_result  # Should fail
 	if test1_passed:
 		passed_tests += 1
-	test_results.append(
+	test_results_array.append(
 		{
 			"test_name": "Invalid Path Access",
 			"operation_succeeded": test1_result,
@@ -49,12 +94,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["nonexistent", "data", str(Time.get_ticks_msec())]
 	)
 	var test2_result: bool = await execute_simple_operation(
-		"get_value_async", nonexistent_path, null, "Nonexistent Path Test"
+		TestConstants.FIREBASE_OPERATIONS.GET_VALUE, nonexistent_path, null, "Nonexistent Path Test"
 	)
 	var test2_passed: bool = true  # Any completion (success or graceful failure) is acceptable
 	if test2_passed:
 		passed_tests += 1
-	test_results.append(
+	test_results_array.append(
 		{
 			"test_name": "Nonexistent Path Access",
 			"operation_succeeded": test2_result,
@@ -65,14 +110,16 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing valid operation for comparison...")
 	var valid_path: Array[Variant] = create_test_path(["error_test", "valid_operation"])
-	var test_data: Dictionary = {"test": "data", "timestamp": Time.get_ticks_msec()}
+	var test_data: Dictionary = {
+		"test": TestConstants.test_value("data"), "timestamp": Time.get_ticks_msec()
+	}
 	var test3_result: bool = await execute_simple_operation(
-		"set_value_async", valid_path, test_data, "Valid Operation Test"
+		TestConstants.FIREBASE_OPERATIONS.SET_VALUE, valid_path, test_data, "Valid Operation Test"
 	)
 	var test3_passed: bool = test3_result
 	if test3_passed:
 		passed_tests += 1
-	test_results.append(
+	test_results_array.append(
 		{
 			"test_name": "Valid Operation",
 			"operation_succeeded": test3_result,
@@ -81,44 +128,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		}
 	)
 
-	var success_rate: float = float(passed_tests) / float(total_tests)
-	var test_success: bool = passed_tests >= 2  # At least 2 out of 3 tests should pass
-	var total_duration: int = Time.get_ticks_msec() - start_time
-
-	if test_success:
-		return DebugActionResult.new_success(
-			(
-				"Error handling test completed successfully (%d/%d tests passed)"
-				% [passed_tests, total_tests]
-			),
-			total_duration,
-			action_name,
-			{
-				"test_type": "error_handling_simplified",
-				"total_tests": total_tests,
-				"passed_tests": passed_tests,
-				"success_rate": success_rate,
-				"test_results": test_results,
-				"operation_duration_ms": total_duration
-			}
-		)
-
-	return DebugActionResult.new_failure(
-		"Error handling test failed (%d/%d tests passed)" % [passed_tests, total_tests],
-		"ERROR_HANDLING_TEST_FAILED",
-		DebugActionResult.ErrorCategory.VALIDATION,
-		null,
-		total_duration,
-		action_name,
-		{
-			"test_type": "error_handling_simplified",
-			"total_tests": total_tests,
-			"passed_tests": passed_tests,
-			"success_rate": success_rate,
-			"test_results": test_results,
-			"minimum_required_passed": 2
-		}
-	)
+	return {
+		"passed_tests": passed_tests, "total_tests": total_tests, "test_results": test_results_array
+	}
 
 
 func execute_rtdb_action() -> bool:
