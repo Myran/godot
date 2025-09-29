@@ -18,106 +18,113 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-	_update_status("Executing " + action_name + "...")
-
 	var firebase_backend: Object = get_firebase_database()
-	if not firebase_backend:
-		return DebugActionResult.new_failure(
-			"Firebase backend not available",
-			"DATABASE_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+	if not TestValidation.validate_backend_available(firebase_backend, "Firebase RTDB"):
+		return TestUtils.make_failure_result(
+			"Firebase backend not available or not initialized",
+			TestConstants.ERROR_CODES.BACKEND_NOT_INITIALIZED,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.RTDB_SINGLE_LISTENER)
 		)
-
-	if not firebase_backend.is_available():
-		return DebugActionResult.new_failure(
-			"Firebase backend not initialized",
-			"DATABASE_NOT_INITIALIZED",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
-		)
-
-	# Test single value listener functionality by:
-	# 1. Start listening to a test path
-	# 2. Add/modify test data to the path
-	# 3. Verify data operations succeed (indicating listener path is functional)
 
 	var full_path: Array[Variant] = RTDBTestPaths.to_variant_array(RTDBTestPaths.SINGLE_VALUE)
-	_update_status("Testing single value listener path: %s" % str(full_path))
-
-	firebase_backend.start_listening(full_path)
-	_update_status("Started listening to single value test path")
-
 	var test_child_key: String = "test_value"
 	var test_child_path: Array[Variant] = full_path + [test_child_key]
-	var initial_value: String = "Listener Test: " + str(Time.get_ticks_msec())
+	var initial_value: String = TestUtils.make_test_value("RTDB Listener Test")
+	var updated_value: String = TestUtils.make_test_value("Updated Listener Test")
 
-	_update_status("Adding initial test data...")
-	var set_success1: bool = await execute_simple_operation(
-		"set_value_async", test_child_path, initial_value, "Create Initial Test Data"
+	# Step 1: Start listener using timing helper
+	var listener_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_start_listener",
+		func() -> bool:
+			firebase_backend.start_listening(full_path)
+			return true
 	)
 
-	if not set_success1:
+	# Step 2: Add initial test data using timing helper
+	var initial_set_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_initial_set",
+		func() -> bool:
+			return await execute_simple_operation(
+				"set_value_async", test_child_path, initial_value, "Create Initial Test Data"
+			)
+	)
+
+	if not initial_set_op.result:
 		firebase_backend.stop_listening(full_path)
-		var failure_duration: int = Time.get_ticks_msec() - start_time
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Failed to add initial data on single value listener path",
-			"INITIAL_DATA_SET_FAILED",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			failure_duration,
-			action_name
+			TestConstants.ERROR_CODES.SET_FAILED,
+			TestUtils.get_duration_ms(listener_op) + TestUtils.get_duration_ms(initial_set_op),
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.RTDB_SINGLE_LISTENER)
 		)
 
-	_update_status("Updating test data on listener path...")
-	var updated_value: String = "Updated Listener Test: " + str(Time.get_ticks_msec())
-	var set_success2: bool = await execute_simple_operation(
-		"set_value_async", test_child_path, updated_value, "Update Data on Listener Path"
+	# Step 3: Update test data using timing helper
+	var update_set_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_update_set",
+		func() -> bool:
+			return await execute_simple_operation(
+				"set_value_async", test_child_path, updated_value, "Update Data on Listener Path"
+			)
 	)
 
-	firebase_backend.stop_listening(full_path)
-	_update_status("Stopped listening to single value test path")
+	# Step 4: Stop listener using timing helper
+	var stop_listener_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_stop_listener",
+		func() -> bool:
+			firebase_backend.stop_listening(full_path)
+			return true
+	)
 
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	var total_duration: int = (
+		TestUtils.get_duration_ms(listener_op)
+		+ TestUtils.get_duration_ms(initial_set_op)
+		+ TestUtils.get_duration_ms(update_set_op)
+		+ TestUtils.get_duration_ms(stop_listener_op)
+	)
 
-	if set_success2:
-		_update_status("✅ Single value listener path test PASSED - data operations successful")
-		return DebugActionResult.new_success(
+	if update_set_op.result:
+		return TestUtils.make_success_result(
 			"Single value listener path functional - data operations work correctly",
 			total_duration,
 			action_name,
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.RTDB_SINGLE_LISTENER,
+				{
+					"path": full_path,
+					"test_child_key": test_child_key,
+					"initial_value": initial_value,
+					"updated_value": updated_value,
+					"listener_duration_ms": TestUtils.get_duration_ms(listener_op),
+					"initial_set_duration_ms": TestUtils.get_duration_ms(initial_set_op),
+					"update_set_duration_ms": TestUtils.get_duration_ms(update_set_op),
+					"stop_listener_duration_ms": TestUtils.get_duration_ms(stop_listener_op),
+					"listener_operations":
+					["start_listening", "set_value", "update_value", "stop_listening"]
+				}
+			)
+		)
+
+	return TestUtils.make_failure_result(
+		"Single value listener path test failed - data update operations failed",
+		TestConstants.ERROR_CODES.LISTENER_FAILED,
+		total_duration,
+		action_name,
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.RTDB_SINGLE_LISTENER,
 			{
-				"test_type": "rtdb_single_value_listener_path_test",
 				"path": full_path,
 				"test_child_key": test_child_key,
 				"initial_value": initial_value,
-				"updated_value": updated_value,
-				"listener_operations":
-				["start_listening", "set_value", "update_value", "stop_listening"]
+				"attempted_updated_value": updated_value,
+				"failed_operation": "set_value_async (update)",
+				"listener_duration_ms": TestUtils.get_duration_ms(listener_op),
+				"initial_set_duration_ms": TestUtils.get_duration_ms(initial_set_op),
+				"update_set_duration_ms": TestUtils.get_duration_ms(update_set_op)
 			}
 		)
-
-	_update_status("❌ Single value listener path test FAILED - data update failed", true)
-	return DebugActionResult.new_failure(
-		"Single value listener path test failed - data update operations failed",
-		"LISTENER_PATH_UPDATE_FAILED",
-		DebugActionResult.ErrorCategory.DATABASE,
-		null,
-		total_duration,
-		action_name,
-		{
-			"test_type": "rtdb_single_value_listener_path_test",
-			"path": full_path,
-			"test_child_key": test_child_key,
-			"initial_value": initial_value,
-			"attempted_updated_value": updated_value,
-			"failed_operation": "set_value_async (update)"
-		}
 	)
 
 

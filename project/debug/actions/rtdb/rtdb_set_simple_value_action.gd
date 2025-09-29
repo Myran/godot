@@ -8,52 +8,58 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-	var test_value: String = _params.get("value_to_set", "Test Value: " + str(TimeUtils.now_ms()))
+	var test_value: String = _params.get("value_to_set", TestUtils.make_test_value("RTDB Set Test"))
 
 	var firebase_backend: Object = get_firebase_database()
-	if not firebase_backend:
-		return DebugActionResult.new_failure(
-			"Firebase backend not available",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.SYSTEM,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
-		)
-
-	if not firebase_backend.is_available():
-		return DebugActionResult.new_failure(
-			"Firebase backend not initialized",
-			"BACKEND_NOT_INITIALIZED",
-			DebugActionResult.ErrorCategory.SYSTEM,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+	if not TestValidation.validate_backend_available(firebase_backend, "Firebase RTDB"):
+		return TestUtils.make_failure_result(
+			"Firebase backend not available or not initialized",
+			TestConstants.ERROR_CODES.BACKEND_NOT_INITIALIZED,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.RTDB_SET_SIMPLE)
 		)
 
 	var path_variants: Array = RTDBTestPaths.to_variant_array(RTDBTestPaths.SIMPLE_VALUE)
 	var key: String = path_variants[-1] if path_variants.size() > 0 else ""
 	var path: Array[Variant] = path_variants.slice(0, -1) if path_variants.size() > 1 else []
 
-	var result_success: bool = await firebase_backend.set_data(path, key, test_value)
-	var duration_ms: int = Time.get_ticks_msec() - start_time
+	# Use timing helper for the set operation
+	var set_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_set_simple_value",
+		func() -> bool: return await firebase_backend.set_data(path, key, test_value)
+	)
 
-	if result_success:
-		return DebugActionResult.new_success(
-			{"value_set": test_value, "path": path_variants},
-			duration_ms,
+	var total_duration: int = TestUtils.get_duration_ms(set_op)
+
+	if set_op.result:
+		return TestUtils.make_success_result(
+			"Successfully set value at simple path",
+			total_duration,
 			action_name,
-			{"test_type": "simple_value", "backend": "firebase"}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.RTDB_SET_SIMPLE,
+				{
+					"value_set": test_value,
+					"path": path_variants,
+					"operation_duration_ms": total_duration
+				}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Set operation failed",
-		"SET_FAILED",
-		DebugActionResult.ErrorCategory.FIREBASE,
-		{"attempted_value": test_value, "path": path_variants},
-		duration_ms,
-		action_name
+		TestConstants.ERROR_CODES.SET_FAILED,
+		total_duration,
+		action_name,
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.RTDB_SET_SIMPLE,
+			{
+				"attempted_value": test_value,
+				"path": path_variants,
+				"operation_duration_ms": total_duration
+			}
+		)
 	)
 
 

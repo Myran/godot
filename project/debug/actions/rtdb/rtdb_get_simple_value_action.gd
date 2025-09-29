@@ -8,61 +8,50 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
-
 	var firebase_backend: Object = get_firebase_database()
-	if not firebase_backend:
-		return DebugActionResult.new_failure(
-			"Firebase backend not available",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.SYSTEM,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
-		)
-
-	if not firebase_backend.is_available():
-		return DebugActionResult.new_failure(
-			"Firebase backend not initialized",
-			"BACKEND_NOT_INITIALIZED",
-			DebugActionResult.ErrorCategory.SYSTEM,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+	if not TestValidation.validate_backend_available(firebase_backend, "Firebase RTDB"):
+		return TestUtils.make_failure_result(
+			"Firebase backend not available or not initialized",
+			TestConstants.ERROR_CODES.BACKEND_NOT_INITIALIZED,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.RTDB_GET_SIMPLE)
 		)
 
 	var path: RTDBTestPaths.Path = RTDBTestPaths.create_path(RTDBTestPaths.SIMPLE_VALUE)
-	var operation_start: int = Time.get_ticks_msec()
-	var success: bool = await execute_simple_operation(
-		"get_value_async", path.as_variants(), null, action_name
-	)
-	var operation_duration: int = Time.get_ticks_msec() - operation_start
-	var total_duration: int = Time.get_ticks_msec() - start_time
+	var test_path_variants: Array = path.as_variants()
 
-	if success:
-		return DebugActionResult.new_success(
+	# Use timing helper for the get operation
+	var get_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_get_simple_value",
+		func() -> bool:
+			return await execute_simple_operation(
+				"get_value_async", test_path_variants, null, action_name
+			)
+	)
+
+	var total_duration: int = TestUtils.get_duration_ms(get_op)
+
+	if get_op.result:
+		return TestUtils.make_success_result(
 			"Successfully retrieved value from simple path",
 			total_duration,
 			action_name,
-			{
-				"test_type": "rtdb_get_simple_value",
-				"path": path.as_variants(),
-				"operation_duration_ms": operation_duration
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.RTDB_GET_SIMPLE,
+				{"path": test_path_variants, "operation_duration_ms": total_duration}
+			)
 		)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Failed to retrieve value from simple path",
-		"GET_OPERATION_FAILED",
-		DebugActionResult.ErrorCategory.DATABASE,
-		null,
+		TestConstants.ERROR_CODES.GET_FAILED,
 		total_duration,
 		action_name,
-		{
-			"test_type": "rtdb_get_simple_value",
-			"path": path.as_variants(),
-			"operation_duration_ms": operation_duration
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.RTDB_GET_SIMPLE,
+			{"path": test_path_variants, "operation_duration_ms": total_duration}
+		)
 	)
 
 

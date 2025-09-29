@@ -45,7 +45,9 @@ const TEST_TYPES: Dictionary = {
 	"CPP_TIMEOUT_BEHAVIOR": "cpp_timeout_behavior",
 	"CPP_LARGE_DATA": "cpp_large_data",
 	"RTDB_SET_SIMPLE": "rtdb_set_simple",
-	"RTDB_GET_SIMPLE": "rtdb_get_simple",
+	"RTDB_GET_SIMPLE": "rtdb_get_simple_value",
+	"RTDB_REMOVE_VALUE": "rtdb_remove_value",
+	"RTDB_SINGLE_LISTENER": "rtdb_single_value_listener",
 	"RTDB_SET_NESTED": "rtdb_set_nested",
 	"RTDB_GET_NESTED": "rtdb_get_nested",
 	"SYSTEM_VALIDATION": "system_validation"
