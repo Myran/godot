@@ -115,7 +115,7 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 	if not game_instance:
 		return TestUtils.make_failure_result(
 			"Game instance not found",
-			TestConstants.ERROR_CODES.SYSTEM_ERROR,
+			TestConstants.ERROR_CODES.VALIDATION_FAILED,
 			Time.get_ticks_msec() - start_time,
 			action_name,
 			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
