@@ -108,7 +108,17 @@
       "Bash(do if rg -q \"TestUtils\" \"$file\")",
       "Bash(while read f)",
       "Bash(do if ! rg -q \"TestUtils\" \"$f\")",
-      "Bash(then basename \"$f\")"
+      "Bash(then basename \"$f\")",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(do rg -q \"TestUtils\" \"$f\")",
+      "Bash(echo \"$f\")",
+      "Bash(backlog tasks create:*)",
+      "Bash(backlog tasks edit:*)",
+      "Bash(then echo \"$f\")",
+      "Bash(do if ! grep -q \"TestUtils\" \"$f\")",
+      "Bash(do if ! grep -q 'TestUtils' \"$f\")",
+      "Bash(do if rg -q \"Time\\.get_ticks_msec\\(\\)\" \"$f\")",
+      "Bash(! rg -q \"TestUtils\" \"$f\")"
     ],
     "deny": [],
     "ask": [],
