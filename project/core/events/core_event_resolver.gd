@@ -342,27 +342,18 @@ static func resolve_core_event(
 		game.ui_state = core.UIState.WAITING
 		core.action(core.ProcessQueueEvent.new())
 
-	elif event is core.FirebaseBackendCompleteEvent:
+	elif event is core.SequentialActionCompleteEvent:
+		# Unified handler for all sequential actions (Firebase Backend, RTDB, etc.)
+		var category_label: String = event.category if event.category != "" else "Sequential"
 		Log.info(
-			"Firebase backend action completed - continuing queue processing",
+			"Sequential action completed - continuing queue processing",
 			{
 				"action_name": event.action_name,
 				"success": event.success,
-				"trigger_reason": "firebase_backend_sequential_processing"
+				"category": event.category,
+				"trigger_reason": "sequential_action_completion"
 			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "firebase_backend_complete"]
-		)
-		core.action(core.ProcessQueueEvent.new())
-
-	elif event is core.RTDBCompleteEvent:
-		Log.info(
-			"RTDB action completed - continuing queue processing",
-			{
-				"action_name": event.action_name,
-				"success": event.success,
-				"trigger_reason": "rtdb_sequential_processing"
-			},
-			[Log.TAG_SYSTEM, Log.TAG_EVENT, "rtdb_complete"]
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "sequential_action_complete"]
 		)
 		core.action(core.ProcessQueueEvent.new())
 

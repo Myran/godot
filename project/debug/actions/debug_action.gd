@@ -300,19 +300,20 @@ func _execute_core(
 		if success:
 			_update_status("Completed: " + action_name)
 
-			# Sequential action completion (preserve existing logic)
+			# Sequential action completion - unified event for all action types
 			if not auto_continue:
 				Log.info(
 					"Sequential action completed - emitting completion event",
 					{
 						"action": action_name,
 						"success": success,
+						"category": category,
 						"auto_continue": auto_continue,
-						"completion_event": "FirebaseBackendCompleteEvent"
+						"completion_event": "SequentialActionCompleteEvent"
 					},
 					["debug", "sequential", "completion", "unified"]
 				)
-				core.action(core.FirebaseBackendCompleteEvent.new(action_name, success))
+				core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
 		else:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)

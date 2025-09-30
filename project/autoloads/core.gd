@@ -253,24 +253,31 @@ class LineupOperationCompleteEvent:
 	extends CoreEvent
 
 
-class FirebaseBackendCompleteEvent:
+class SequentialActionCompleteEvent:
 	extends CoreEvent
 	var action_name: String
 	var success: bool
+	var category: String
 
-	func _init(p_action_name: String, p_success: bool) -> void:
+	func _init(p_action_name: String, p_success: bool, p_category: String = "") -> void:
 		action_name = p_action_name
 		success = p_success
+		category = p_category
+
+
+# Legacy aliases for backward compatibility
+class FirebaseBackendCompleteEvent:
+	extends SequentialActionCompleteEvent
+
+	func _init(p_action_name: String, p_success: bool) -> void:
+		super._init(p_action_name, p_success, "Firebase Backend")
 
 
 class RTDBCompleteEvent:
-	extends CoreEvent
-	var action_name: String
-	var success: bool
+	extends SequentialActionCompleteEvent
 
 	func _init(p_action_name: String, p_success: bool) -> void:
-		action_name = p_action_name
-		success = p_success
+		super._init(p_action_name, p_success, "RTDB")
 
 
 class SystemIdleActionEvent:

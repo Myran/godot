@@ -266,21 +266,8 @@ func execute_backend_action() -> bool:
 					["debug", "test", "failure"]
 				)
 
-		# CRITICAL: Emit completion event for Firebase backend actions with auto_continue=false
-		# This allows sequential execution without waiting for game state events
-		if not auto_continue:
-			Log.info(
-				"Firebase backend action completed - emitting completion event",
-				{
-					"action": action_name,
-					"success": success,
-					"auto_continue": auto_continue,
-					"completion_event": "FirebaseBackendCompleteEvent"
-				},
-				["debug", "backend_firebase", "completion"]
-			)
-			core.action(core.FirebaseBackendCompleteEvent.new(action_name, success))
-
+		# Note: Completion event emission now handled by DebugAction base class
+		# Base class emits SequentialActionCompleteEvent for all actions with auto_continue=false
 		return success
 
 	push_error("execute_backend_action() not implemented in " + get_script().get_path())
