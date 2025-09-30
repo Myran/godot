@@ -354,6 +354,18 @@ static func resolve_core_event(
 		)
 		core.action(core.ProcessQueueEvent.new())
 
+	elif event is core.RTDBCompleteEvent:
+		Log.info(
+			"RTDB action completed - continuing queue processing",
+			{
+				"action_name": event.action_name,
+				"success": event.success,
+				"trigger_reason": "rtdb_sequential_processing"
+			},
+			[Log.TAG_SYSTEM, Log.TAG_EVENT, "rtdb_complete"]
+		)
+		core.action(core.ProcessQueueEvent.new())
+
 	elif event is core.SystemIdleActionEvent:
 		var state_name: String = ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][game.ui_state]
 		var current_test_id: String = DebugAction.get_current_test_id()

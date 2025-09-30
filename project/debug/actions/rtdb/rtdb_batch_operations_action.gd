@@ -7,6 +7,7 @@ func _init() -> void:
 	action_name = "rtdb.advanced.batch_ops"
 	group = "Advanced"
 	description = "Performs multiple RTDB operations in sequence to test batch processing."
+	auto_continue = false  # Sequential execution required - batch ops need proper completion signaling
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:

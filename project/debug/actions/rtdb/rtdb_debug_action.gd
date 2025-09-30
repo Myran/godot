@@ -7,13 +7,82 @@ static var _next_request_id: int = 1
 func _init() -> void:
 	category = "RTDB"
 
-	action_callable = Callable(self, "execute_rtdb_action")
+	# Use wrapper that emits completion events for sequential processing
+	action_callable = Callable(self, "_execute_rtdb_action_with_completion")
 
 
 func execute_rtdb_action() -> bool:
+	# RTDB actions override this method to implement their specific logic
+	# This base implementation is for actions that haven't been converted yet
 	push_error("execute_rtdb_action() not implemented in " + get_script().get_path())
 	_update_status("ERROR: execute_rtdb_action() not implemented", true)
 	return false  # Return false to indicate failure
+
+
+func _execute_rtdb_action_with_completion() -> bool:
+	# Wrapper that adds completion event emission for sequential processing
+	# Mirrors the pattern from BackendFirebaseDebugAction (lines 198-288)
+	Log.info(
+		"EXECUTION_PATH_TRACE: _execute_rtdb_action_with_completion called",
+		{
+			"action": action_name,
+			"has_execute_rtdb_action": has_method("execute_rtdb_action"),
+			"category": category,
+			"group": group,
+			"auto_continue": auto_continue
+		},
+		["debug", "rtdb", "execution_trace"]
+	)
+
+	# Call the child class's execute_rtdb_action implementation
+	@warning_ignore("redundant_await")
+	var success: bool = await execute_rtdb_action()
+
+	Log.info(
+		"EXECUTION_PATH_TRACE: execute_rtdb_action returned",
+		{"action": action_name, "success": success, "auto_continue": auto_continue},
+		["debug", "rtdb", "execution_trace"]
+	)
+
+	# Emit unified test reporting (DEBUG_TEST_SUCCESS/FAILURE markers)
+	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+	var config_test_id: String = test_metadata.get("test_id", "")
+
+	if config_test_id != "":
+		if success:
+			# Generate DEBUG_TEST_SUCCESS marker for test result collection
+			var duration_ms: int = 0  # RTDB actions don't return DebugActionResult yet
+			DebugAction._log_test_success(action_name, category, group, duration_ms, {})
+		else:
+			# Generate DEBUG_TEST_FAILURE marker for consistency
+			Log.error(
+				"DEBUG_TEST_FAILURE",
+				{
+					"test_id": config_test_id,
+					"action": action_name,
+					"category": category,
+					"group": group,
+					"error_message": "RTDB action returned false"
+				},
+				["debug", "test", "failure"]
+			)
+
+	# CRITICAL: Emit completion event for RTDB actions with auto_continue=false
+	# This allows sequential execution without waiting for game state events
+	if not auto_continue:
+		Log.info(
+			"RTDB action completed - emitting completion event",
+			{
+				"action": action_name,
+				"success": success,
+				"auto_continue": auto_continue,
+				"completion_event": "RTDBCompleteEvent"
+			},
+			["debug", "rtdb", "completion"]
+		)
+		core.action(core.RTDBCompleteEvent.new(action_name, success))
+
+	return success
 
 
 func get_firebase_database() -> Object:
