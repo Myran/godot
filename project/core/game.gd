@@ -316,22 +316,9 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "action_complete", Log.TAG_DIAGNOSTIC]
 	)
 
-	# Check if we should override auto_continue=false in automated mode
-	var should_force_continue: bool = false
-	if not auto_continue and not _idle_action_queue.is_empty() and is_auto_quit:
-		should_force_continue = true
-		Log.info(
-			"AUTOMATED_MODE_OVERRIDE: Forcing auto-continue for automated test execution",
-			{
-				"original_auto_continue": auto_continue,
-				"forced_auto_continue": true,
-				"remaining_queue_size": _idle_action_queue.size(),
-				"test_id": DebugAction.get_current_test_id()
-			},
-			["debug", "automated", "override", "queue"]
-		)
-
-	if (auto_continue or should_force_continue) and not _idle_action_queue.is_empty():
+	# Check if we should continue to next queue item
+	# Removed AUTOMATED_MODE_OVERRIDE to allow proper sequential processing for Firebase actions
+	if auto_continue and not _idle_action_queue.is_empty():
 		Log.info(
 			"Auto-continuing to next queue item (action requested immediate continuation)",
 			{
@@ -339,8 +326,7 @@ func _process_one_queue_item() -> void:
 				"trigger_timestamp": Time.get_unix_time_from_system(),
 				"trigger_frame": Engine.get_process_frames(),
 				"test_id": DebugAction.get_current_test_id(),
-				"original_auto_continue": auto_continue,
-				"forced_continue": should_force_continue
+				"auto_continue": auto_continue
 			},
 			[
 				Log.TAG_SYSTEM,
