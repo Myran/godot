@@ -23,14 +23,16 @@ func execute_rtdb_action() -> bool:
 
 	_update_status("Setting large data (~%d bytes)..." % [data_size_estimate])
 
-	var start_time: int = Time.get_ticks_msec()
-
-	var write_success: bool = await execute_simple_operation(
-		"set_value_async", test_path, large_data, action_name + " (Write)"
+	var write_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_large_data_write",
+		func() -> Variant:
+			return await execute_simple_operation(
+				"set_value_async", test_path, large_data, action_name + " (Write)"
+			)
 	)
 
-	var end_time: int = Time.get_ticks_msec()
-	var write_duration: int = end_time - start_time
+	var write_duration: int = TestUtils.get_duration_ms(write_op)
+	var write_success: bool = write_op.result
 
 	if not write_success:
 		_update_status("ERROR: Failed to write large data", true)
@@ -41,41 +43,43 @@ func execute_rtdb_action() -> bool:
 	)
 
 	_update_status("Testing retrieval of large data...")
-	var retrieve_start: int = Time.get_ticks_msec()
 
-	var retrieved_data: Variant = await execute_simple_operation(
-		"get_value_async", test_path, null, action_name + " (Read)"
+	var retrieve_op: Dictionary = await TestUtils.time_operation(
+		"rtdb_large_data_read",
+		func() -> Variant:
+			return await execute_simple_operation(
+				"get_value_async", test_path, null, action_name + " (Read)"
+			)
 	)
 
-	var retrieve_end: int = Time.get_ticks_msec()
-	var retrieve_duration: int = retrieve_end - retrieve_start
+	var retrieve_duration: int = TestUtils.get_duration_ms(retrieve_op)
+	var retrieved_data: Variant = retrieve_op.result
 
 	var success_data: Dictionary = {
 		"operation": "large_data_test",
 		"data_size_bytes": data_size_estimate,
 		"write_duration_ms": write_duration,
 		"retrieve_duration_ms": retrieve_duration,
-		"timestamp": Time.get_ticks_msec()
+		"timestamp": Time.get_ticks_msec(),
+		"retrieval_success": retrieved_data != null
 	}
 
 	if retrieved_data != null:
 		_update_status(
 			"Large data test completed: Write %dms, Read %dms" % [write_duration, retrieve_duration]
 		)
-		success_data["retrieval_success"] = true
 
 		if retrieved_data is Dictionary and retrieved_data.has("metadata"):
 			success_data["data_integrity_check"] = "passed"
 		else:
 			success_data["data_integrity_check"] = "failed"
 	else:
-		success_data["retrieval_success"] = false
 		success_data["data_integrity_check"] = "not_tested"
 
 	Log.info(
 		"RTDBLargeDataTestAction executed successfully",
 		success_data,
-		["test", "rtdb", "performance"]
+		[TestConstants.LOG_TAGS.DEBUG, "test", "rtdb", "performance"]
 	)
 
 	return true

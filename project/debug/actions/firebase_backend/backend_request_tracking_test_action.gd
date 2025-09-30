@@ -9,18 +9,16 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend request tracking...")
 
 	var backend: DataBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Firebase backend not available for testing",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.BACKEND_REQUEST_TRACKING)
 		)
 
 	var tracking_tests: Array[Dictionary] = []
@@ -32,17 +30,24 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var sequential_count: int = 3
 	var sequential_results: Array[Dictionary] = []
 	var sequential_success: int = 0
+	var test_base_path: Array[Variant] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_BACKEND_PREFIX, "request_tracking"
+	)
 
 	for i: int in range(sequential_count):
-		var seq_path: Array[Variant] = ["backend_tests", "request_tracking", "sequential", str(i)]
-		var seq_key: String = "req_track_seq_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var seq_value: String = "Sequential request " + str(i)
+		var seq_path: Array[Variant] = test_base_path + ["sequential", str(i)]
+		var seq_key: String = TestUtils.make_test_key("req_track_seq_" + str(i))
+		var seq_value: String = TestUtils.make_test_value("Sequential request " + str(i))
 
-		var seq_start: int = Time.get_ticks_msec()
-		var seq_result: bool = await test_backend_async_pattern(
-			"set_data", seq_path, seq_key, seq_value, "Tracking: Seq " + str(i)
+		var seq_op: Dictionary = await TestUtils.time_operation(
+			"sequential_" + str(i),
+			func() -> Variant:
+				return await test_backend_async_pattern(
+					"set_data", seq_path, seq_key, seq_value, "Tracking: Seq " + str(i)
+				)
 		)
-		var seq_duration: int = Time.get_ticks_msec() - seq_start
+		var seq_duration: int = TestUtils.get_duration_ms(seq_op)
+		var seq_result: bool = seq_op.result
 
 		sequential_results.append(
 			{
@@ -79,15 +84,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var rapid_success: int = 0
 
 	for i: int in range(rapid_count):
-		var rapid_path: Array[Variant] = ["backend_tests", "request_tracking", "rapid", str(i)]
-		var rapid_key: String = "req_track_rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var rapid_value: String = "Rapid request " + str(i)
+		var rapid_path: Array[Variant] = test_base_path + ["rapid", str(i)]
+		var rapid_key: String = TestUtils.make_test_key("req_track_rapid_" + str(i))
+		var rapid_value: String = TestUtils.make_test_value("Rapid request " + str(i))
 
-		var rapid_start: int = Time.get_ticks_msec()
-		var rapid_result: bool = await test_backend_async_pattern(
-			"set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i)
+		var rapid_op: Dictionary = await TestUtils.time_operation(
+			"rapid_" + str(i),
+			func() -> Variant:
+				return await test_backend_async_pattern(
+					"set_data", rapid_path, rapid_key, rapid_value, "Tracking: Rapid " + str(i)
+				)
 		)
-		var rapid_duration: int = Time.get_ticks_msec() - rapid_start
+		var rapid_duration: int = TestUtils.get_duration_ms(rapid_op)
+		var rapid_result: bool = rapid_op.result
 
 		rapid_results.append(
 			{"request_index": i, "success": rapid_result, "duration_ms": rapid_duration}
@@ -116,31 +125,32 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	_update_status("Testing RequestSignalHelper pattern...")
 	total_tests += 1
 
-	var base_key: String = "pattern_test_" + str(Time.get_ticks_msec())
+	var base_key: String = TestUtils.make_test_key("pattern_test")
+	var pattern_base_path: Array[Variant] = test_base_path + ["pattern"]
 	var pattern_operations: Array[Dictionary] = [
 		{
 			"method": "set_data",
-			"path": ["backend_tests", "request_tracking", "pattern", "set"],
+			"path": pattern_base_path + ["set"],
 			"key": base_key + "_set",
-			"value": "Pattern set test"
+			"value": TestUtils.make_test_value("Pattern set test")
 		},
 		{
 			"method": "set_data",
-			"path": ["backend_tests", "request_tracking", "pattern", "get"],
+			"path": pattern_base_path + ["get"],
 			"key": base_key + "_get",
-			"value": "Pattern get test data"
+			"value": TestUtils.make_test_value("Pattern get test data")
 		},
 		{
 			"method": "get_data",
-			"path": ["backend_tests", "request_tracking", "pattern", "get"],
+			"path": pattern_base_path + ["get"],
 			"key": base_key + "_get",
 			"value": null
 		},
 		{
 			"method": "set_data",
-			"path": ["backend_tests", "request_tracking", "pattern", "set2"],
+			"path": pattern_base_path + ["set2"],
 			"key": base_key + "_set2",
-			"value": "Pattern set2 test"
+			"value": TestUtils.make_test_value("Pattern set2 test")
 		}
 	]
 
@@ -148,15 +158,20 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var pattern_results: Array[Dictionary] = []
 
 	for op: Dictionary in pattern_operations:
-		var pattern_start: int = Time.get_ticks_msec()
 		var method_str: String = op["method"]
 		var path_array: Array[Variant] = op["path"]
 		var key_str: String = op["key"]
 		var value_variant: Variant = op["value"]
-		var pattern_result: bool = await test_backend_async_pattern(
-			method_str, path_array, key_str, value_variant, "Pattern: " + method_str
+
+		var pattern_op: Dictionary = await TestUtils.time_operation(
+			"pattern_" + method_str,
+			func() -> Variant:
+				return await test_backend_async_pattern(
+					method_str, path_array, key_str, value_variant, "Pattern: " + method_str
+				)
 		)
-		var pattern_duration: int = Time.get_ticks_msec() - pattern_start
+		var pattern_duration: int = TestUtils.get_duration_ms(pattern_op)
+		var pattern_result: bool = pattern_op.result
 
 		pattern_results.append(
 			{
@@ -187,7 +202,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	var success_rate: float = float(successful_tests) / float(total_tests)
 	var overall_success: bool = success_rate >= 0.8  # 80% of tracking tests should pass
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results: Dictionary = {
 		"total_tests": total_tests,
@@ -205,21 +219,23 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		Log.info(
 			"Backend request tracking validation successful",
 			test_results,
-			["debug", "backend_firebase"]
+			[TestConstants.LOG_TAGS.DEBUG, TestConstants.LOG_TAGS.BACKEND_FIREBASE]
 		)
 
-		return DebugActionResult.new_success(
+		return TestUtils.make_success_result(
 			"Backend request tracking test completed successfully",
-			total_duration,
+			0,
 			action_name,
-			{
-				"test_type": "backend_request_tracking",
-				"tracking_tests": tracking_tests,
-				"success_rate": success_rate,
-				"total_tests": total_tests,
-				"successful_tests": successful_tests,
-				"backend_state": {"available": backend.is_available()}
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.BACKEND_REQUEST_TRACKING,
+				{
+					"tracking_tests": tracking_tests,
+					"success_rate": success_rate,
+					"total_tests": total_tests,
+					"successful_tests": successful_tests,
+					"backend_state": {"available": backend.is_available()}
+				}
+			)
 		)
 
 	_update_status(
@@ -229,22 +245,26 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	Log.error(
 		"Backend request tracking validation failed",
 		test_results,
-		["debug", "backend_firebase", "error"]
+		[
+			TestConstants.LOG_TAGS.DEBUG,
+			TestConstants.LOG_TAGS.BACKEND_FIREBASE,
+			TestConstants.LOG_TAGS.ERROR
+		]
 	)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Backend request tracking test failed - insufficient success rate",
-		"REQUEST_TRACKING_INSUFFICIENT",
-		DebugActionResult.ErrorCategory.VALIDATION,
-		test_results,
-		total_duration,
+		TestConstants.ERROR_CODES.REQUEST_TRACKING_INSUFFICIENT,
+		0,
 		action_name,
-		{
-			"test_type": "backend_request_tracking",
-			"tracking_tests": tracking_tests,
-			"success_rate": success_rate,
-			"total_tests": total_tests,
-			"successful_tests": successful_tests,
-			"minimum_required_rate": 0.8
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.BACKEND_REQUEST_TRACKING,
+			{
+				"tracking_tests": tracking_tests,
+				"success_rate": success_rate,
+				"total_tests": total_tests,
+				"successful_tests": successful_tests,
+				"minimum_required_rate": 0.8
+			}
+		)
 	)

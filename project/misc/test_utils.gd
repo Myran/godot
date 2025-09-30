@@ -34,6 +34,11 @@ static func make_test_value(prefix: String) -> String:
 	return "%s: %d" % [prefix, Time.get_ticks_msec()]
 
 
+# Simple test key generator with consistent format
+static func make_test_key(prefix: String) -> String:
+	return "%s_%d" % [prefix, Time.get_ticks_msec()]
+
+
 # Simple success result creation (eliminates 10-15 lines per action)
 static func make_success_result(
 	message: String, duration_ms: int, action_name: String, metadata: Dictionary

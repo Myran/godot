@@ -10,6 +10,15 @@ const RTDB_PREFIX: String = "rtdb_tests"
 const SYSTEM_PREFIX: String = "system_tests"
 const FIREBASE_BACKEND_PREFIX: String = "backend_tests"
 
+# Common log tags (for Log.info/error calls)
+const LOG_TAGS: Dictionary = {
+	"DEBUG": "debug",
+	"BACKEND_FIREBASE": "backend_firebase",
+	"ERROR": "error",
+	"FIREBASE": "firebase",
+	"CPP": "cpp"
+}
+
 # Common error codes (repeated across all action files)
 const ERROR_DATABASE_UNAVAILABLE: String = "DATABASE_UNAVAILABLE"
 const ERROR_OPERATION_FAILED: String = "OPERATION_FAILED"
@@ -30,7 +39,9 @@ const ERROR_CODES: Dictionary = {
 	"TIMEOUT_BEHAVIOR_FAILED": "TIMEOUT_BEHAVIOR_FAILED",
 	"LARGE_DATA_FAILED": "LARGE_DATA_FAILED",
 	"FILE_WRITE_FAILED": "FILE_WRITE_FAILED",
-	"FILE_READ_FAILED": "FILE_READ_FAILED"
+	"FILE_READ_FAILED": "FILE_READ_FAILED",
+	"REQUEST_TRACKING_INSUFFICIENT": "REQUEST_TRACKING_INSUFFICIENT",
+	"TIMER_MANAGER_INSUFFICIENT": "TIMER_MANAGER_INSUFFICIENT"
 }
 
 # Firebase operation names (repeated patterns)
@@ -58,6 +69,8 @@ const TEST_TYPES: Dictionary = {
 	"RTDB_GET_NESTED": "rtdb_get_nested",
 	"BACKEND_PERFORMANCE": "backend_performance",
 	"BACKEND_ERROR_HANDLING": "backend_error_handling",
+	"BACKEND_REQUEST_TRACKING": "backend_request_tracking",
+	"BACKEND_TIMER_MANAGER": "backend_timer_manager",
 	"SYSTEM_SAVE_GAMESTATE": "system_save_gamestate",
 	"SYSTEM_LOAD_GAMESTATE": "system_load_gamestate",
 	"SYSTEM_RESTART_GAME": "system_restart_game",

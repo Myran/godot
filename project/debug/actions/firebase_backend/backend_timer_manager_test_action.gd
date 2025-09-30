@@ -9,30 +9,35 @@ func _init() -> void:
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
-	var start_time: int = Time.get_ticks_msec()
 	_update_status("Testing Firebase Backend timer management...")
 
 	var backend: DataBackend = get_firebase_backend_for_testing()
 	if not backend:
-		return DebugActionResult.new_failure(
+		return TestUtils.make_failure_result(
 			"Firebase backend not available for testing",
-			"BACKEND_UNAVAILABLE",
-			DebugActionResult.ErrorCategory.DATABASE,
-			null,
-			Time.get_ticks_msec() - start_time,
-			action_name
+			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
+			0,
+			action_name,
+			TestUtils.make_metadata(TestConstants.TEST_TYPES.BACKEND_TIMER_MANAGER)
 		)
 
 	_update_status("Testing normal timeout handling...")
-	var test_path: Array[Variant] = ["backend_tests", "timer_manager", "normal"]
-	var test_key: String = "timer_test_" + str(Time.get_ticks_msec())
-	var test_value: String = "Timer Test: " + str(Time.get_ticks_msec())
-
-	var timer_start: int = Time.get_ticks_msec()
-	var normal_result: bool = await test_backend_async_pattern(
-		"set_data", test_path, test_key, test_value, "Timer Normal"
+	var test_base_path: Array[Variant] = TestUtils.make_test_path(
+		TestConstants.FIREBASE_BACKEND_PREFIX, "timer_manager"
 	)
-	var normal_duration: int = Time.get_ticks_msec() - timer_start
+	var test_path: Array[Variant] = test_base_path + ["normal"]
+	var test_key: String = TestUtils.make_test_key("timer_test")
+	var test_value: String = TestUtils.make_test_value("Timer Test")
+
+	var normal_op: Dictionary = await TestUtils.time_operation(
+		"timer_normal",
+		func() -> Variant:
+			return await test_backend_async_pattern(
+				"set_data", test_path, test_key, test_value, "Timer Normal"
+			)
+	)
+	var normal_duration: int = TestUtils.get_duration_ms(normal_op)
+	var normal_result: bool = normal_op.result
 
 	_update_status("Testing rapid request handling...")
 	var rapid_requests: int = 3
@@ -40,15 +45,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var total_rapid_duration: int = 0
 
 	for i: int in range(rapid_requests):
-		var rapid_path: Array[Variant] = ["backend_tests", "timer_manager", "rapid", str(i)]
-		var rapid_key: String = "rapid_" + str(i) + "_" + str(Time.get_ticks_msec())
-		var rapid_value: String = "Rapid Test " + str(i)
+		var rapid_path: Array[Variant] = test_base_path + ["rapid", str(i)]
+		var rapid_key: String = TestUtils.make_test_key("rapid_" + str(i))
+		var rapid_value: String = TestUtils.make_test_value("Rapid Test " + str(i))
 
-		timer_start = Time.get_ticks_msec()
-		var rapid_result: bool = await test_backend_async_pattern(
-			"set_data", rapid_path, rapid_key, rapid_value, "Rapid " + str(i)
+		var rapid_op: Dictionary = await TestUtils.time_operation(
+			"timer_rapid_" + str(i),
+			func() -> Variant:
+				return await test_backend_async_pattern(
+					"set_data", rapid_path, rapid_key, rapid_value, "Rapid " + str(i)
+				)
 		)
-		var rapid_duration: int = Time.get_ticks_msec() - timer_start
+		var rapid_duration: int = TestUtils.get_duration_ms(rapid_op)
+		var rapid_result: bool = rapid_op.result
 
 		if rapid_result:
 			rapid_success += 1
@@ -63,7 +72,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var normal_ok: bool = normal_result and normal_duration < 5000  # Under 5 seconds
 	var rapid_ok: bool = rapid_success_rate >= 0.8  # 80% success rate
 	var overall_success: bool = normal_ok and rapid_ok
-	var total_duration: int = Time.get_ticks_msec() - start_time
 
 	var test_results: Dictionary = {
 		"normal_test":
@@ -84,40 +92,46 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		Log.info(
 			"Backend TimerManager validation successful",
 			test_results,
-			["debug", "backend_firebase"]
+			[TestConstants.LOG_TAGS.DEBUG, TestConstants.LOG_TAGS.BACKEND_FIREBASE]
 		)
 
-		return DebugActionResult.new_success(
+		return TestUtils.make_success_result(
 			"Backend timer manager test completed successfully",
-			total_duration,
+			0,
 			action_name,
-			{
-				"test_type": "backend_timer_manager",
-				"normal_test": test_results["normal_test"],
-				"rapid_test": test_results["rapid_test"],
-				"backend_state": {"available": backend.is_available()}
-			}
+			TestUtils.make_metadata(
+				TestConstants.TEST_TYPES.BACKEND_TIMER_MANAGER,
+				{
+					"normal_test": test_results["normal_test"],
+					"rapid_test": test_results["rapid_test"],
+					"backend_state": {"available": backend.is_available()}
+				}
+			)
 		)
 
 	_update_status("Timer Manager test FAILED", true)
 	Log.error(
 		"Backend TimerManager validation failed",
 		test_results,
-		["debug", "backend_firebase", "error"]
+		[
+			TestConstants.LOG_TAGS.DEBUG,
+			TestConstants.LOG_TAGS.BACKEND_FIREBASE,
+			TestConstants.LOG_TAGS.ERROR
+		]
 	)
 
-	return DebugActionResult.new_failure(
+	return TestUtils.make_failure_result(
 		"Backend timer manager test failed - timeout handling insufficient",
-		"TIMER_MANAGER_INSUFFICIENT",
-		DebugActionResult.ErrorCategory.TIMEOUT,
-		test_results,
-		total_duration,
+		TestConstants.ERROR_CODES.TIMER_MANAGER_INSUFFICIENT,
+		0,
 		action_name,
-		{
-			"test_type": "backend_timer_manager",
-			"normal_test": test_results["normal_test"],
-			"rapid_test": test_results["rapid_test"],
-			"normal_ok": normal_ok,
-			"rapid_ok": rapid_ok
-		}
+		TestUtils.make_metadata(
+			TestConstants.TEST_TYPES.BACKEND_TIMER_MANAGER,
+			{
+				"normal_test": test_results["normal_test"],
+				"rapid_test": test_results["rapid_test"],
+				"normal_ok": normal_ok,
+				"rapid_ok": rapid_ok
+			}
+		)
 	)
