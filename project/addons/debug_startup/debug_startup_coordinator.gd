@@ -59,11 +59,20 @@ func startDebugCoordinator() -> void:
 	# Check for pending gamestate load AFTER data_source is ready
 	await _check_and_load_pending_gamestate()
 
+	# CRITICAL FIX: Expand wildcards AFTER registry is ready
+	# This fixes the race condition where wildcards were expanded during config parsing
+	# before the registry was initialized, resulting in empty action lists.
+	var expanded_actions := _expand_all_wildcards(actions, registry)
+	Log.info("Wildcard expansion complete", {
+		"original_count": actions.size(),
+		"expanded_count": expanded_actions.size()
+	}, ["debug", "startup", "wildcard"])
+
 	var dispatch_start_time := Time.get_unix_time_from_system()
 	var dispatch_start_frame := Engine.get_process_frames()
 
 	Log.info("=== BATCH DISPATCH START ===", {
-		"total_actions": actions.size(),
+		"total_actions": expanded_actions.size(),
 		"dispatch_start_time": dispatch_start_time,
 		"dispatch_start_frame": dispatch_start_frame,
 		"test_id": DebugAction.get_current_test_id()
@@ -72,8 +81,8 @@ func startDebugCoordinator() -> void:
 	var has_completion_action: bool = false
 	var is_test_recipe: bool = _is_current_config_test_recipe()
 
-	for i in range(actions.size()):
-		var action_item = actions[i]
+	for i in range(expanded_actions.size()):
+		var action_item = expanded_actions[i]
 		var action_name: String
 		var params: Dictionary = {}
 
@@ -92,7 +101,7 @@ func startDebugCoordinator() -> void:
 				"action": action_name,
 				"params": params,
 				"action_index": i + 1,
-				"total_actions": actions.size(),
+				"total_actions": expanded_actions.size(),
 				"dispatch_timestamp": Time.get_unix_time_from_system()
 			}, ["debug", "startup", "dispatch", "diagnostic"])
 			# CRITICAL FIX: Capture action and params by value to prevent stale references in queue
@@ -110,11 +119,11 @@ func startDebugCoordinator() -> void:
 				"available_actions": _get_available_action_names(registry).slice(0, 10)
 			}, ["debug", "startup", "error"])
 
-	if _should_auto_add_completion(has_completion_action, actions.size(), is_test_recipe):
-		_dispatch_auto_completion_action(registry, actions.size())
-	elif not has_completion_action and actions.size() > 0:
+	if _should_auto_add_completion(has_completion_action, expanded_actions.size(), is_test_recipe):
+		_dispatch_auto_completion_action(registry, expanded_actions.size())
+	elif not has_completion_action and expanded_actions.size() > 0:
 		Log.debug("No completion action found but not a test recipe - skipping auto-completion", {
-			"action_count": actions.size(),
+			"action_count": expanded_actions.size(),
 			"is_test_recipe": false
 		}, ["debug", "startup", "auto_completion"])
 
@@ -122,9 +131,9 @@ func startDebugCoordinator() -> void:
 	var dispatch_duration_ms := (dispatch_end_time - dispatch_start_time) * 1000.0
 
 	Log.info("=== BATCH DISPATCH COMPLETE ===", {
-		"count": actions.size(),
+		"count": expanded_actions.size(),
 		"is_test_recipe": is_test_recipe,
-		"completion_auto_added": not has_completion_action and actions.size() > 0 and is_test_recipe,
+		"completion_auto_added": not has_completion_action and expanded_actions.size() > 0 and is_test_recipe,
 		"dispatch_duration_ms": dispatch_duration_ms,
 		"dispatch_end_time": dispatch_end_time,
 		"test_id": DebugAction.get_current_test_id(),
@@ -280,35 +289,18 @@ func _parse_config_file(path: String) -> Array:
 			if action_type == TYPE_STRING:
 				var action_str := str(action)
 				_log_verbose("Processing action string", {"action": action_str}, ["startup", "parser"])
-				if action_str.contains("*"):
-					var expanded_actions := _expand_wildcard_pattern(action_str)
-					for expanded_action: String in expanded_actions:
-						actions.append({"action": expanded_action, "params": {}})
-					Log.debug("Expanded wildcard pattern", {
-						"pattern": action_str,
-						"expanded_count": expanded_actions.size(),
-						"expanded_actions": expanded_actions
-					}, ["debug", "startup", "wildcard"])
-				else:
-					actions.append({"action": action_str, "params": {}})
+				# CRITICAL FIX: Don't expand wildcards during config parsing
+				# Registry may not be ready yet. Store pattern as-is for later expansion.
+				actions.append({"action": action_str, "params": {}})
 			elif action_type == TYPE_DICTIONARY:
 				var action_dict := action as Dictionary
 				if action_dict.has("action"):
 					var action_name := str(action_dict.action)
 					var params := action_dict.get("params", {}) as Dictionary
 					_log_verbose("Processing parameterized action", {"action": action_name, "params": params}, ["startup", "parser"])
-
-					if action_name.contains("*"):
-						var expanded_actions := _expand_wildcard_pattern(action_name)
-						for expanded_action: String in expanded_actions:
-							actions.append({"action": expanded_action, "params": params})
-						Log.debug("Expanded parameterized wildcard", {
-							"pattern": action_name,
-							"params": params,
-							"expanded_count": expanded_actions.size()
-						}, ["debug", "startup", "wildcard"])
-					else:
-						actions.append({"action": action_name, "params": params})
+					# CRITICAL FIX: Don't expand wildcards during config parsing
+					# Registry may not be ready yet. Store pattern as-is for later expansion.
+					actions.append({"action": action_name, "params": params})
 				else:
 					Log.warning("Invalid action object missing 'action' key", {"action_object": action_dict}, ["debug", "startup"])
 			else:
@@ -457,6 +449,53 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 		"match_count": expanded_actions.size(),
 		"matches": expanded_actions
 	}, ["debug", "startup", "wildcard"])
+
+	return expanded_actions
+
+
+func _expand_all_wildcards(action_list: Array, registry: DebugActionRegistry) -> Array:
+	"""
+	Expand all wildcard patterns in the action list.
+	Called AFTER registry is ready to ensure patterns can be matched.
+
+	Args:
+		action_list: Array of action items (strings or dictionaries with action/params)
+		registry: The initialized DebugActionRegistry
+
+	Returns:
+		New array with all wildcard patterns expanded to concrete action names
+	"""
+	var expanded_actions: Array = []
+
+	for action_item in action_list:
+		var action_name: String
+		var params: Dictionary = {}
+
+		# Extract action name and params
+		if action_item is Dictionary:
+			action_name = action_item.action
+			params = action_item.get("params", {})
+		else:
+			action_name = str(action_item)
+
+		# Check if this is a wildcard pattern
+		if action_name.contains("*"):
+			# Expand the wildcard pattern
+			var matches := _expand_wildcard_pattern(action_name)
+
+			# Add each match as a separate action
+			for matched_action: String in matches:
+				expanded_actions.append({"action": matched_action, "params": params})
+
+			Log.debug("Expanded wildcard in action list", {
+				"pattern": action_name,
+				"params": params,
+				"expanded_count": matches.size(),
+				"matches": matches
+			}, ["debug", "startup", "wildcard"])
+		else:
+			# Not a wildcard, keep as-is
+			expanded_actions.append({"action": action_name, "params": params})
 
 	return expanded_actions
 

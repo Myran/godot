@@ -120,9 +120,9 @@ func _wait_for_game_initialization() -> void:
 
 func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Variant] = []) -> void:
 	match event_type:
-		DebugManager.DebugEventType.EVENT_OPEN_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
+		DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU:
 			%PopupDebug.show()
-		DebugManager.DebugEventType.EVENT_CLOSE_DB_DEBUG_MENU, DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
+		DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU:
 			%PopupDebug.hide()
 		DebugManager.DebugEventType.EVENT_QUIT:
 			Log.info(

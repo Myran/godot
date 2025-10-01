@@ -1,0 +1,1 @@
+{"description":"Quick test","actions":["rtdb.advanced.batch_ops","rtdb.advanced.concurrent_ops","rtdb.advanced.transaction"],"platforms":["android"],"metadata":{"auto_quit":true}}

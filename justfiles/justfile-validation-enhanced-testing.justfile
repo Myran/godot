@@ -2501,9 +2501,9 @@ _execute-test-android config_name:
     # Wait for test completion without timeout - single monitoring loop
     echo "🔍 Waiting for test completion..."
     
-    echo "🔍 DEBUG: Starting monitoring loop with 10-minute timeout protection"
+    echo "🔍 DEBUG: Starting monitoring loop with 2-minute timeout protection"
     MONITOR_ITERATIONS=0
-    MAX_ITERATIONS=300  # 10 minutes (300 * 2s = 600s)
+    MAX_ITERATIONS=60  # 2 minutes (60 * 2s = 120s)
     
     while [[ $MONITOR_ITERATIONS -lt $MAX_ITERATIONS ]]; do
         MONITOR_ITERATIONS=$((MONITOR_ITERATIONS + 1))

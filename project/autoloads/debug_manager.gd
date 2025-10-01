@@ -10,8 +10,6 @@ enum DebugEventType {
 	EVENT_OPEN_GAME_SELECTOR,  # Preserved from original debug.gd
 	EVENT_RESET_MATCH_LEVEL,  # Preserved from original debug.gd
 	EVENT_FORCE_LOAD_MATCH_LEVEL,  # Preserved from original debug.gd
-	EVENT_OPEN_DB_DEBUG_MENU,  # Preserved from original debug.gd
-	EVENT_CLOSE_DB_DEBUG_MENU,  # Preserved from original debug.gd
 	EVENT_QUIT,
 	EVENT_TOGGLE_DEBUG_MENU_LIST,
 	EVENT_RESTART_GAME  # Restart the current game scene cleanly
