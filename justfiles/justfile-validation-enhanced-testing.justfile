@@ -790,8 +790,8 @@ _extract-logs test_id platform temp_output_file="":
                 echo "   Completed: $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES"
                 echo "   Proceeding with available logs (timeout safety)"
 
-                # Track timeout for summary reporting
-                TIMEOUT_TRACKER="/tmp/test_timeout_tracker_${SESSION_ID}.txt"
+                # Track timeout for summary reporting (use test list session for aggregation)
+                TIMEOUT_TRACKER="/tmp/test_timeout_tracker_testlist.txt"
                 echo "${CONFIG_NAME}|${PLATFORM}|${COMPLETION_EVENTS}/${SEQUENTIAL_DISPATCHES}" >> "$TIMEOUT_TRACKER"
             fi
             
@@ -1782,7 +1782,7 @@ _test-list-generic test_list platform:
     fi
     
     # Check for sequential action timeouts
-    TIMEOUT_TRACKER="/tmp/test_timeout_tracker_${SESSION_ID}.txt"
+    TIMEOUT_TRACKER="/tmp/test_timeout_tracker_testlist.txt"
     TIMEOUT_COUNT=0
     if [[ -f "$TIMEOUT_TRACKER" ]]; then
         TIMEOUT_COUNT=$(wc -l < "$TIMEOUT_TRACKER" 2>/dev/null || echo "0")
