@@ -400,8 +400,12 @@ static func resolve_core_event(
 		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.ProcessQueueEvent:
-		# Return early if not ready - preserves queue for later processing
-		if game.ui_state != core.UIState.WAITING or game._processing_idle_action:
+		# If processing an action, remember the continuation request for after completion
+		if game._processing_idle_action:
+			game._queue_continuation_requested = true
+			return
+		# Return early if UI not ready - preserves queue for later processing
+		if game.ui_state != core.UIState.WAITING:
 			return
 		game._process_one_queue_item()
 

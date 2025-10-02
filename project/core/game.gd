@@ -27,6 +27,7 @@ signal initialization_complete
 var ui_state: core.UIState = core.UIState.INITIALIZING
 var _idle_action_queue: Array[Dictionary] = []
 var _processing_idle_action: bool = false
+var _queue_continuation_requested: bool = false
 
 
 func _input(event: InputEvent) -> void:
@@ -245,6 +246,7 @@ func _process_one_queue_item() -> void:
 		return
 
 	_processing_idle_action = true
+	_queue_continuation_requested = false
 	var queue_item: Dictionary = _idle_action_queue.pop_front()
 	var action: Callable = queue_item["action"]
 	var auto_continue: bool = queue_item["auto_continue"]
@@ -318,15 +320,24 @@ func _process_one_queue_item() -> void:
 
 	# Check if we should continue to next queue item
 	# Removed AUTOMATED_MODE_OVERRIDE to allow proper sequential processing for Firebase actions
-	if auto_continue and not _idle_action_queue.is_empty():
+	var should_continue: bool = (
+		(auto_continue or _queue_continuation_requested) and not _idle_action_queue.is_empty()
+	)
+
+	if should_continue:
+		var continuation_reason: String = (
+			"action_auto_continue" if auto_continue else "completion_event_received"
+		)
 		Log.info(
-			"Auto-continuing to next queue item (action requested immediate continuation)",
+			"Auto-continuing to next queue item",
 			{
 				"remaining_queue_size": _idle_action_queue.size(),
 				"trigger_timestamp": Time.get_unix_time_from_system(),
 				"trigger_frame": Engine.get_process_frames(),
 				"test_id": DebugAction.get_current_test_id(),
-				"auto_continue": auto_continue
+				"auto_continue": auto_continue,
+				"queue_continuation_requested": _queue_continuation_requested,
+				"continuation_reason": continuation_reason
 			},
 			[
 				Log.TAG_SYSTEM,
@@ -336,6 +347,7 @@ func _process_one_queue_item() -> void:
 				Log.TAG_DIAGNOSTIC
 			]
 		)
+		_queue_continuation_requested = false
 		core.action(core.ProcessQueueEvent.new())
 	else:
 		Log.info(
@@ -343,6 +355,7 @@ func _process_one_queue_item() -> void:
 			{
 				"auto_continue": auto_continue,
 				"remaining_queue_size": _idle_action_queue.size(),
+				"queue_continuation_requested": _queue_continuation_requested,
 				"wait_reason":
 				"action_requires_natural_completion" if not auto_continue else "queue_empty"
 			},
