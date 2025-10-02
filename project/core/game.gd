@@ -423,7 +423,17 @@ func mode_prepare() -> void:
 		[Log.TAG_GAME_STATE, Log.TAG_UI, "state_transition_complete"]
 	)
 	ui_state = core.UIState.WAITING
-	core.action(core.ProcessQueueEvent.new())
+
+	# CRITICAL FIX: Only process queue if not currently processing a sequential action
+	# State transitions should not bypass sequential hold mechanism (auto_continue=false)
+	if not _processing_idle_action:
+		core.action(core.ProcessQueueEvent.new())
+	else:
+		Log.info(
+			"Sequential action in progress - deferring queue processing",
+			{"processing_idle_action": _processing_idle_action},
+			[Log.TAG_SYSTEM, Log.TAG_IDLE_ACTION, "sequential_hold", Log.TAG_DIAGNOSTIC]
+		)
 
 
 func mode_pre_battle() -> void:
