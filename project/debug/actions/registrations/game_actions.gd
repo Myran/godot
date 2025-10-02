@@ -97,6 +97,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			. set_category("Gameplay")
 			. set_group("Preset Lineups")
 			. set_description("Add test cards to enemy lineup")
+			. set_auto_continue(false)
 		)
 	)
 
@@ -250,6 +251,7 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 			. set_category("Gameplay")
 			. set_group("Battle")
 			. set_description("Test battle determinism with full animation (comprehensive)")
+			. set_auto_continue(false)
 		)
 	)
 
