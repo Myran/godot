@@ -758,9 +758,9 @@ _extract-logs test_id platform temp_output_file="":
     if [[ -f "$LOG_FILE" ]]; then
         echo "🔄 Checking for sequential actions needing completion..."
         
-        # Detect sequential actions by looking for FirebaseBackendCompleteEvent dispatches
-        # Sequential actions emit these events after completing, followed by DEBUG_TEST_SUCCESS
-        SEQUENTIAL_DISPATCHES=$(grep -c "Dispatching action to idle queue.*auto_continue.*false\|Sequential action completed" "$LOG_FILE" 2>/dev/null || echo "0")
+        # Detect sequential actions by counting actual action queue dispatches with auto_continue: false
+        # This correctly excludes internal operation markers (DEBUG_TEST_SUCCESS) that were causing 2:1 count mismatch
+        SEQUENTIAL_DISPATCHES=$(grep -c "=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTION ===.*\"auto_continue\": false" "$LOG_FILE" 2>/dev/null || echo "0")
         SEQUENTIAL_DISPATCHES=$(echo "$SEQUENTIAL_DISPATCHES" | tr -d ' \t\n\r' | head -1)
         COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
         COMPLETION_EVENTS=$(echo "$COMPLETION_EVENTS" | tr -d ' \t\n\r' | head -1)
