@@ -847,9 +847,8 @@ static func _battle_test_determinism() -> DebugActionResult:
 			return DebugActionResult.new_failure("Game node not available")
 
 		var initial_state: core.GameState = game.game_handler.current_gamestate
-		core.action(
-			core.SystemIdleActionEvent.new(Callable(GameActionCore, "_trigger_start_battle"))
-		)
+		Log.info("Starting battle directly from determinism test", {}, ["debug", "battle"])
+		ui.action(ui.StartBattleEvent.new())
 
 		while game.game_handler.current_gamestate == initial_state:
 			await Engine.get_main_loop().process_frame
