@@ -293,7 +293,9 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 			if transition.new_state == target_state:
 				state_awaiter.finished.emit()
 
-	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
+	# Use CONNECT_DEFERRED for Android thread safety - ensures signal handler
+	# is fully registered before any events can fire (prevents race condition)
+	core.event.connect(transition_handler, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 	await state_awaiter.finished
 
 
@@ -306,7 +308,9 @@ static func _await_state_transition_away_from(current_state: core.GameState) -> 
 			if transition.new_state != current_state:
 				state_awaiter.finished.emit()
 
-	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
+	# Use CONNECT_DEFERRED for Android thread safety - ensures signal handler
+	# is fully registered before any events can fire (prevents race condition)
+	core.event.connect(transition_handler, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 	await state_awaiter.finished
 
 
