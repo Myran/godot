@@ -282,6 +282,34 @@ static func _wait_for_game_systems_ready() -> bool:
 	return false
 
 
+## Event-driven state transition helpers (replaces polling loops)
+## Uses existing SignalAwaiter utility for robust event-driven waiting
+static func _await_state_transition_to(target_state: core.GameState) -> void:
+	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
+
+	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
+		if event_data is core.TransitionEvent:
+			var transition: core.TransitionEvent = event_data as core.TransitionEvent
+			if transition.new_state == target_state:
+				state_awaiter.finished.emit()
+
+	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
+	await state_awaiter.finished
+
+
+static func _await_state_transition_away_from(current_state: core.GameState) -> void:
+	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
+
+	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
+		if event_data is core.TransitionEvent:
+			var transition: core.TransitionEvent = event_data as core.TransitionEvent
+			if transition.new_state != current_state:
+				state_awaiter.finished.emit()
+
+	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
+	await state_awaiter.finished
+
+
 static func _start_battle() -> DebugActionResult:
 	var game: Game = _get_game_node()
 	if not game:
@@ -850,11 +878,11 @@ static func _battle_test_determinism() -> DebugActionResult:
 		Log.info("Starting battle directly from determinism test", {}, ["debug", "battle"])
 		ui.action(ui.StartBattleEvent.new())
 
-		while game.game_handler.current_gamestate == initial_state:
-			await Engine.get_main_loop().process_frame
+		# Event-driven: Wait for state to change from initial state
+		await _await_state_transition_away_from(initial_state)
 
-		while game.game_handler.current_gamestate != core.GameState.POSTBATTLE:
-			await Engine.get_main_loop().process_frame
+		# Event-driven: Wait for POSTBATTLE state
+		await _await_state_transition_to(core.GameState.POSTBATTLE)
 
 		duration = Time.get_ticks_msec() - start_time
 		Log.info(

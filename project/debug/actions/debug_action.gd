@@ -64,6 +64,11 @@ func set_use_auto_success_logging(p_use_auto: bool) -> DebugAction:
 	return self
 
 
+func set_auto_continue(p_auto_continue: bool) -> DebugAction:
+	auto_continue = p_auto_continue
+	return self
+
+
 static func set_test_context(test_id: String) -> void:
 	current_test_id = test_id
 	test_action_count = 0
