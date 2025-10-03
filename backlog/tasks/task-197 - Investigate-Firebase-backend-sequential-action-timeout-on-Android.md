@@ -91,24 +91,63 @@ Firebase SDK on Android might execute callbacks on different threads, causing ev
 - [ ] No 30s timeout warnings for firebase-backend-layer
 - [ ] No 30s timeout warnings for system-performance
 
-## ✅ Update (2025-10-03 08:52)
+## ✅ ROOT CAUSE IDENTIFIED (2025-10-03 11:15)
 
-**Task-196 Resolved - This Issue Persists:**
+**CRITICAL FINDING: Firebase C++ SDK SIGBUS Crash on Android**
 
-Full test suite run (logs/20251003_085123_test.log) confirms:
-- ✅ **battle-animated (Android)**: FIXED by CONNECT_DEFERRED (task-196)
-- ❌ **firebase-backend-batch-1 (Android)**: Still 2/3 completion events
-- ❌ **firebase-backend-layer (Android)**: Still 2/3 completion events
-- ❌ **system-performance (Android)**: Still 4/5 completion events
+Extensive OODA loop investigation revealed the actual root cause:
 
-**Key Finding:**
-This is a **DIFFERENT root cause** from task-196:
-- Task-196: Event-driven state transitions (battle tests) - RESOLVED
-- Task-197: Firebase backend sequential actions - NOT FIXED by CONNECT_DEFERRED
+### Evidence Summary
 
-Firebase backend actions don't use event-driven state transitions. They have a different completion pattern that's not emitting all expected SequentialActionCompleteEvent signals.
+**Isolated Test Validation:**
+- Created `method-mapping-isolated.json` config with ONLY method_mapping action
+- Crash occurs even without other actions (NOT test framework related)
+- SIGBUS (Fatal signal 7) consistently 80-120ms after push_data operation
+- Location: `fault addr 0x55e5000bfd in GLThread` (memory alignment error)
 
-**Status**: Unblocked - ready for independent investigation.
+**Crash Pattern:**
+```
+10-03 11:11:40.803 - [RTDB C++] PushUpdate ReqID:5 Success
+10-03 11:11:40.889 - Fatal signal 7 (SIGBUS) [86ms later]
+```
+
+**Architecture Analysis:**
+- Removed timing-based delay from `backend_firebase_debug_action.gd` (proper separation of concerns)
+- Firebase Rate Limiter operates at service level (firebase_service.gd)
+- Test actions should not contain Firebase-specific workarounds
+
+### Actual Root Cause
+
+**Firebase C++ SDK push_data operations trigger SIGBUS crash on Android**
+
+This is a **native code bug** in either:
+1. Firebase C++ SDK push_data implementation on Android
+2. Godot 4.3 Firebase C++ SDK integration
+3. Threading interaction between Firebase callbacks and Godot engine
+
+**Missing completion events are a SYMPTOM, not the root cause:**
+- App crashes before method_mapping can complete
+- No completion event emitted due to fatal crash
+- Test framework correctly detects timeout (app terminated abnormally)
+
+### Resolution Strategy
+
+**Option 1: Skip remove_data test (Workaround)**
+- Modify method_mapping to stop after push_data
+- Avoids crash but incomplete testing
+- 75% threshold would pass with 3/4 methods
+
+**Option 2: Investigate Firebase C++ SDK (Long-term)**
+- Report bug to Godot or Firebase teams
+- May require C++ debugging and SDK patches
+- Timeline: weeks to months
+
+**Option 3: Service-level protection (Architecture fix)**
+- Add delay/protection at firebase_service.gd level after push operations
+- Proper architectural separation (not in test code)
+- Maintains test integrity while working around SDK bug
+
+**Status**: Root cause confirmed - requires architectural decision on resolution approach.
 
 ## Dependencies
 

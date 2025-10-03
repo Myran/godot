@@ -1,0 +1,7 @@
+{
+  "description": "Isolated test - method_mapping only (no other actions)",
+  "actions": [
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"]
+}
