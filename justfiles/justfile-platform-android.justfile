@@ -130,6 +130,11 @@ build-android-templates minimal="no":
     echo "📁 Copying templates to templates/ directory..."
     cp platform/android/java/app/build/outputs/apk/debug/android_debug.apk ../templates/
     cp platform/android/java/app/build/outputs/apk/release/android_release.apk ../templates/
+
+    # Return to root directory and rebuild android_source.zip
+    cd ..
+    just rebuild-android-source-zip
+
     echo "✅ Android templates built successfully"
 
 # Clean Android template artifacts
