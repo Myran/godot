@@ -179,6 +179,9 @@ backlog browser
 - Use `backlog doc view DOC_ID` to read specific documents
 - Documents contain technical specifications, implementation plans, and decision records
 
+**Key Documents:**
+- **`backlog doc view doc-002`** - Build System Architecture & Workflows (complete build flows reference)
+
 ## 🤖 Claude Code Preferences
 
 **Essential GameTwo patterns:**
@@ -593,11 +596,14 @@ var data = {}                  # No type
 
 **See [CLAUDE-ADVANCED.md](CLAUDE-ADVANCED.md) for detailed information on:**
 - Wildcard pattern system deep dive & examples
-- Git workflow & backlog integration patterns  
+- Git workflow & backlog integration patterns
 - Repomix MCP best practices for GameTwo
 - Project architecture & directory structure
 - Performance optimization strategies
 - Complete command reference with examples
+
+**See backlog documents for technical references:**
+- **Build System**: `backlog doc view doc-002` - Complete build flows, timing, and when to use each command
 
 **MCP Tools Integration:**
 - **Repomix MCP**: Strategic codebase analysis patterns for GameTwo's 248-file architecture
