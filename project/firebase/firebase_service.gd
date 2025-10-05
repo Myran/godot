@@ -485,7 +485,7 @@ func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
 	_resolve_pending_request(req_id, payload)
 
 
-func _on_get_value_error(req_id: int, _key: String, code: int, msg: String) -> void:
+func _on_get_value_error(req_id: int, _key: String, code: String, msg: String) -> void:
 	var payload: Dictionary = {"status": "error", "code": code, "message": msg}
 	_resolve_pending_request(req_id, payload)
 
