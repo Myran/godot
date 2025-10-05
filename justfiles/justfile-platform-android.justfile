@@ -117,7 +117,7 @@ build-android-templates minimal="no":
     set -euo pipefail
     echo "🔧 Building Android templates..."
     cd {{GODOT_SUBMODULE_PATH}}
-    
+
     if [[ "{{minimal}}" == "yes" ]]; then
         echo "📦 Building minimal Android templates (debug only)..."
         scons platform=android target=template_debug arch=arm64 --jobs={{jobs}}
@@ -126,7 +126,12 @@ build-android-templates minimal="no":
         scons platform=android target=template_debug arch=arm32 arch=arm64 --jobs={{jobs}}
         scons platform=android target=template_release arch=arm32 arch=arm64 --jobs={{jobs}}
     fi
-    
+
+    echo "📦 Packaging .so files into .aar with Gradle..."
+    cd platform/android/java
+    ./gradlew generateGodotTemplates
+    cd ../../..
+
     echo "📁 Copying templates to templates/ directory..."
     cp platform/android/java/app/build/outputs/apk/debug/android_debug.apk ../templates/
     cp platform/android/java/app/build/outputs/apk/release/android_release.apk ../templates/
