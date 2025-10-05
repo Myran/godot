@@ -127,6 +127,7 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 **Build Commands:**
 - `just ci-validate` - **🚨 CI validation pipeline (format + lint + syntax) - MANDATORY before commits**
 - `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
+- `just build-all-android` - Android smart rebuild (3-25 min) **Complete Android pipeline**
 - `just build` - Complete pipeline (46 min)
 - `just build-status` - Check what would be rebuilt
 
