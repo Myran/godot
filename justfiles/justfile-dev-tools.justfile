@@ -70,3 +70,40 @@ update-project-settings:
     fi
     
     echo "✅ Project settings validated"
+
+# Development workflow: fastbuild-android + ci-validate + log-run test
+development:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🚀 Running complete development workflow..."
+    echo ""
+
+    # Step 1: Fast build Android
+    echo "1️⃣ Running fastbuild-android..."
+    if ! just fastbuild-android; then
+        echo "❌ Fast build Android failed"
+        exit 1
+    fi
+    echo "✅ Fast build Android completed"
+    echo ""
+
+    # Step 2: CI validation
+    echo "2️⃣ Running ci-validate..."
+    if ! just ci-validate; then
+        echo "❌ CI validation failed"
+        exit 1
+    fi
+    echo "✅ CI validation completed"
+    echo ""
+
+    # Step 3: Run tests with logging
+    echo "3️⃣ Running tests with logging..."
+    if ! just log-run test; then
+        echo "❌ Tests failed"
+        exit 1
+    fi
+    echo "✅ Tests completed"
+    echo ""
+
+    echo "🎉 Development workflow completed successfully!"

@@ -48,6 +48,7 @@ just validate                              # Complete validation (format + synta
 just fastbuild-android                     # 🚨 CRITICAL: Smart rebuild & deploy (15-60 sec) - REQUIRED after code changes
 just test-android development-workflow     # Daily development validation
 just config-restart-android ACTION         # Ultra-fast testing (5 sec)
+just development                           # 🚀 NEW: Complete development workflow (fastbuild-android + ci-validate + log-run test)
 
 # 🎮 NEW: Cross-Platform Gamestate Save/Load System (Instant Scenario Reproduction)
 just capture-gamestate-desktop NAME      # Desktop-specific extraction from logs
@@ -85,6 +86,12 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 - **`just fastbuild-android`** - MANDATORY after ANY code changes before Android testing
 - **Failure in CI** → Fix immediately → Re-validate → Proceed
 - **CI success** → Proceed to testing phase with confidence
+
+**🚨 CRITICAL: GDScript Commit Safety Rule:**
+- **`just development`** - REQUIRED before committing ANY GDScript changes (use with long timeout)
+- **Why**: Combines fastbuild-android + ci-validate + complete testing to prevent broken commits
+- **Pattern**: Code changes → `just development` (wait for completion) → If passes, then commit
+- **Timeout**: Set long timeout (10+ minutes) as this runs the complete pipeline
 
 **Debug Decision Tree:**
 1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
@@ -125,6 +132,7 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 - `just logs-text TEST_ID "search_term"` - Simple text search
 
 **Build Commands:**
+- `just development` - **🚀 NEW: Complete development workflow (fastbuild-android + ci-validate + log-run test) - MANDATORY before GDScript commits**
 - `just ci-validate` - **🚨 CI validation pipeline (format + lint + syntax) - MANDATORY before commits**
 - `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
 - `just build-all-android` - Android smart rebuild (3-25 min) **Complete Android pipeline**
