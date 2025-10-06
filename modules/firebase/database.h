@@ -45,58 +45,53 @@ class Future;
 
 class FirebaseDatabase;
 
-// --- Weak Reference Handle for Lambda Safety ---
-struct FirebaseDatabaseWeakHandle {
-	std::weak_ptr<FirebaseDatabase> weak_ptr;
-	FirebaseDatabaseWeakHandle(std::weak_ptr<FirebaseDatabase> ptr) : weak_ptr(ptr) {}
-};
-
 // --- Listener Definitions ---
 class FirebaseChildListener : public firebase::database::ChildListener {
-	std::weak_ptr<FirebaseDatabase> database_instance_weak;
+	FirebaseDatabase* singleton;
 
 public:
-	FirebaseChildListener(std::weak_ptr<FirebaseDatabase> db);
+	FirebaseChildListener();
 	virtual ~FirebaseChildListener() {}
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
 	void OnChildAdded(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildChanged(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildMoved(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildRemoved(const firebase::database::DataSnapshot &snapshot) override;
+
+	friend class FirebaseDatabase;
 };
 
 class ConnectionStateListener : public firebase::database::ValueListener {
-	std::weak_ptr<FirebaseDatabase> database_instance_weak;
+	FirebaseDatabase* singleton;
 
 public:
-	ConnectionStateListener(std::weak_ptr<FirebaseDatabase> db);
+	ConnectionStateListener();
 	virtual ~ConnectionStateListener() {}
 	void OnValueChanged(const firebase::database::DataSnapshot &snapshot) override;
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
+
+	friend class FirebaseDatabase;
 };
 
 // --- Transaction Data ---
 struct TransactionData {
 	int request_id;
 	int increment_by;
-	std::weak_ptr<FirebaseDatabase> database_weak;
+	FirebaseDatabase* database_ptr;
 };
 
 // --- Main Database Class ---
-class FirebaseDatabase : public RefCounted, public std::enable_shared_from_this<FirebaseDatabase> {
+class FirebaseDatabase : public RefCounted {
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Thread-safe singleton implementation
-	static std::mutex initialization_mutex;
-	static std::mutex instance_mutex;
-	static std::atomic<bool> is_initialized;
-	static std::shared_ptr<FirebaseDatabase> instance;
+	// Static shared resources (simple singleton behavior)
+	static bool inited;
+	static firebase::database::Database *database_instance;
+	static FirebaseChildListener *child_listener_instance;
+	static ConnectionStateListener *connection_listener_instance;
 
-	// Instance members
-	firebase::database::Database *database_instance;
-	std::unique_ptr<FirebaseChildListener> child_listener_instance;
-	std::unique_ptr<ConnectionStateListener> connection_listener_instance;
+	// Instance-specific members
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
 
@@ -106,7 +101,6 @@ protected:
 	// Helper methods
 	firebase::database::DatabaseReference get_reference_to_path(const Array &keys);
 	firebase::database::Query get_query_from_reference(const firebase::database::DatabaseReference &ref, const Dictionary &query_params);
-	FirebaseDatabaseWeakHandle create_weak_handle();
 
 	static firebase::database::TransactionResult increment_transaction_function(
 			firebase::database::MutableData *data, void *transaction_data);
@@ -114,16 +108,8 @@ protected:
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
 public:
-	// Thread-safe singleton access
-	static std::shared_ptr<FirebaseDatabase> get_instance();
-	static void cleanup();
-
-	// Public constructor for GDScript ClassDB.instantiate() compatibility
-	// Internally delegates to get_instance() for proper initialization
+	// Simple constructor (like FirebaseMessaging pattern)
 	FirebaseDatabase();
-
-	// Delete copy constructor
-	FirebaseDatabase(const FirebaseDatabase&) = delete;
 
 	~FirebaseDatabase();
 
