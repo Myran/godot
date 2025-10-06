@@ -28,10 +28,10 @@
 // #include "firebase/database/server_value.h" // Not used in v11.1.0
 
 // --- Static Member Initialization ---
-bool FirebaseDatabase::is_initialized = false;
-firebase::database::Database* FirebaseDatabase::database_instance = nullptr;
-std::unique_ptr<FirebaseChildListener> FirebaseDatabase::child_listener_instance = nullptr;
-std::unique_ptr<ConnectionStateListener> FirebaseDatabase::connection_listener_instance = nullptr;
+std::mutex FirebaseDatabase::initialization_mutex;
+std::mutex FirebaseDatabase::instance_mutex;
+std::atomic<bool> FirebaseDatabase::is_initialized{false};
+std::shared_ptr<FirebaseDatabase> FirebaseDatabase::instance{nullptr};
 
 // --- FirebaseChildListener Implementation ---
 FirebaseChildListener::FirebaseChildListener(std::weak_ptr<FirebaseDatabase> db) :
@@ -168,75 +168,116 @@ firebase::database::TransactionResult FirebaseDatabase::increment_transaction_fu
 }
 
 // --- FirebaseDatabase Implementation ---
-FirebaseDatabase::FirebaseDatabase() {
-	print_line("[RTDB C++] FirebaseDatabase Constructor called.");
-	_listener_path_ref_count = 0;
 
-	// Initialize Firebase Database on first instantiation
-	if (!is_initialized) {
-		print_line("[RTDB C++] Initializing Firebase RTDB Module...");
+// Thread-safe singleton access
+std::shared_ptr<FirebaseDatabase> FirebaseDatabase::get_instance() {
+	std::lock_guard<std::mutex> lock(instance_mutex);
 
-		firebase::App *app = Firebase::AppId();
-		if (app == nullptr) {
-			print_error("[RTDB C++] CRITICAL: Firebase App is not initialized! RTDB cannot function.");
-			return;
+	if (!instance) {
+		instance = std::shared_ptr<FirebaseDatabase>(new FirebaseDatabase());
+
+		// Initialize the instance
+		if (!is_initialized) {
+			std::lock_guard<std::mutex> init_lock(initialization_mutex);
+			if (!is_initialized) { // Double-checked locking pattern
+				firebase::InitResult init_result_code;
+				print_line("[RTDB C++] Initializing Firebase RTDB Module...");
+
+				firebase::App *app = Firebase::AppId();
+				if (app == nullptr) {
+					print_error("[RTDB C++] CRITICAL: Firebase App is not initialized! RTDB cannot function.");
+					return instance;
+				} else {
+					print_line("[RTDB C++] Firebase App instance obtained.");
+				}
+
+				instance->database_instance = firebase::database::Database::GetInstance(app, &init_result_code);
+
+				if (init_result_code != firebase::kInitResultSuccess) {
+					print_error(String("[RTDB C++] CRITICAL: Failed to get Firebase Database instance. Init Result: ") + itos(init_result_code));
+					instance->database_instance = nullptr;
+					return instance;
+				}
+
+				if (instance->database_instance == nullptr) {
+					print_error("[RTDB C++] CRITICAL: Failed to get Firebase Database instance (GetInstance returned null).");
+					return instance;
+				} else {
+					print_line("[RTDB C++] Firebase Database instance obtained successfully.");
+				}
+
+				// Create listeners with weak references
+				instance->child_listener_instance = std::make_unique<FirebaseChildListener>(std::weak_ptr<FirebaseDatabase>(instance));
+				instance->connection_listener_instance = std::make_unique<ConnectionStateListener>(std::weak_ptr<FirebaseDatabase>(instance));
+				print_line("[RTDB C++] Listener instances created.");
+
+				is_initialized = true;
+				print_line("[RTDB C++] Firebase RTDB Module initialized successfully.");
+			}
 		}
-
-		print_line("[RTDB C++] Firebase App instance obtained.");
-
-		firebase::InitResult init_result_code;
-		database_instance = firebase::database::Database::GetInstance(app, &init_result_code);
-
-		if (init_result_code != firebase::kInitResultSuccess) {
-			print_error(String("[RTDB C++] Failed to initialize Database. Init result: ") + itos(init_result_code));
-			database_instance = nullptr;
-			return;
-		}
-
-		if (database_instance == nullptr) {
-			print_error("[RTDB C++] Database instance is null after GetInstance.");
-			return;
-		}
-
-		print_line("[RTDB C++] Database instance created successfully.");
-
-		// Create listener instances with empty weak_ptr (they don't actually use it for callbacks)
-		std::weak_ptr<FirebaseDatabase> empty_weak_ptr;
-		child_listener_instance = std::make_unique<FirebaseChildListener>(empty_weak_ptr);
-		connection_listener_instance = std::make_unique<ConnectionStateListener>(empty_weak_ptr);
-
-		print_line("[RTDB C++] Listener instances created.");
-
-		is_initialized = true;
-		print_line("[RTDB C++] Firebase RTDB Module initialized successfully.");
 	} else {
 		print_line("[RTDB C++] Firebase RTDB Module already initialized.");
 	}
+
+	return instance;
 }
 
+// Public constructor for GDScript ClassDB.instantiate() compatibility
+// Delegates to get_instance() to ensure proper singleton initialization
+FirebaseDatabase::FirebaseDatabase() {
+	print_line("[RTDB C++] FirebaseDatabase Constructor called (delegating to get_instance).");
+	database_instance = nullptr;
+	_listener_path_ref_count = 0;
+
+	// Trigger singleton initialization
+	get_instance();
+}
+
+// Thread-safe cleanup
+void FirebaseDatabase::cleanup() {
+	std::lock_guard<std::mutex> lock(instance_mutex);
+	if (instance) {
+		instance.reset();
+		is_initialized = false;
+		print_line("[RTDB C++] FirebaseDatabase instance cleaned up.");
+	}
+}
 
 FirebaseDatabase::~FirebaseDatabase() {
 	print_line("[RTDB C++] FirebaseDatabase Destructor called.");
+	std::lock_guard<std::mutex> lock(instance_mutex);
 
-	// Clean up instance-specific resources only
+	// Clean up active child listener
 	if (_listener_path_ref_count > 0 && _active_child_listener_ref.is_valid() && child_listener_instance) {
 		WARN_PRINT("[RTDB C++] Destructor: Removing active child listener due to object destruction.");
 		_active_child_listener_ref.RemoveChildListener(child_listener_instance.get());
 		_listener_path_ref_count = 0;
 	}
 
-	// NOTE: Do not cleanup static resources (database_instance, listeners)
-	// They are shared across all instances and persist for application lifetime
+	// Clean up listeners (smart pointers will auto-delete)
+	if (connection_listener_instance) {
+		connection_listener_instance.reset();
+		print_line("[RTDB C++] ConnectionStateListener instance deleted.");
+	}
+	if (child_listener_instance) {
+		child_listener_instance.reset();
+		print_line("[RTDB C++] FirebaseChildListener instance deleted.");
+	}
+
+	// Clean up database instance
+	if (database_instance) {
+		// Note: Firebase C++ SDK doesn't require explicit cleanup of Database instance
+		// It will be cleaned up when the App is destroyed
+		database_instance = nullptr;
+		print_line("[RTDB C++] Database instance reference cleared.");
+	}
 
 	print_line("[RTDB C++] FirebaseDatabase cleanup completed.");
 }
 
 // Helper method to create weak handle for lambda safety
-// NOTE: Disabled because FirebaseDatabase inherits from RefCounted, not enable_shared_from_this
-// Firebase SDK manages callback lifecycle, so we don't need manual safety checks
 FirebaseDatabaseWeakHandle FirebaseDatabase::create_weak_handle() {
-	// Return empty weak_ptr - callbacks will execute without instance checks
-	return FirebaseDatabaseWeakHandle(std::weak_ptr<FirebaseDatabase>());
+	return FirebaseDatabaseWeakHandle(shared_from_this());
 }
 
 firebase::database::DatabaseReference FirebaseDatabase::get_reference_to_path(const Array &keys) {
@@ -373,8 +414,12 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	print_line(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path (GDScript Array): " + path_str_for_logging + " -> URL: " + String(ref.url().c_str()));
 
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
-	future.OnCompletion([this, p_request_id, keys, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// Firebase SDK manages callback lifecycle - using raw 'this' is safe
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id, keys, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] GetValue callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
@@ -417,25 +462,25 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 						Variant value = Convertor::fromFirebaseVariant(snapshot->value());
 						String signal_key = snapshot_key_from_fb != "null_key_from_fb" ? snapshot_key_from_fb : "";
 						print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Success. Emitted Key='" + signal_key + "'");
-						this->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, signal_key, value);
+						strong_handle->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, signal_key, value);
 					} else {
 						print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Success, but data is null/doesn't exist at path: " + path_str_for_logging);
-						this->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, path_str_for_logging, Variant());
+						strong_handle->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, path_str_for_logging, Variant());
 					}
 				} else {
 					print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path: " + path_str_for_logging + " -> CRITICAL: Snapshot pointer is null despite no error from Future!");
-					this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
+					strong_handle->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
 				}
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
 				print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, error_code_str, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, error_code_str, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 		}
 	});
 }
@@ -455,22 +500,27 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 	firebase::Variant firebase_value = Convertor::toFirebaseVariant(value);
 	print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.SetValue(firebase_value);
-	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id](const firebase::Future<void> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 		// Firebase SDK manages callback lifecycle - using raw 'this' is safe
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
 				print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
 				print_error(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
 		}
 	});
 }
@@ -503,22 +553,26 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 	}
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + push_key_str);
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data.map());
-	future.OnCompletion([this, p_request_id, push_key_str](const firebase::Future<void> &result) {
-		
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id, push_key_str](const firebase::Future<void> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] PushUpdate callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
 				print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, true, "");
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, true, "");
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
 				print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, "Firebase Future did not complete.");
 		}
 	});
 }
@@ -537,22 +591,27 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
-	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id](const firebase::Future<void> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 		
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
 				print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, true, "");
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, true, "");
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
 				print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "Firebase Future did not complete.");
 		}
 	});
 }
@@ -572,8 +631,12 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 	firebase::database::Query query = get_query_from_reference(ref, query_params);
 	print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Params: " + String(Variant(query_params)));
 	firebase::Future<firebase::database::DataSnapshot> future = query.GetValue();
-	future.OnCompletion([this, p_request_id, keys](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id, keys](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] Query callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 		String path_str = String(Variant(keys));
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
@@ -581,17 +644,17 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 				Variant value = (snapshot && snapshot->exists()) ? Convertor::fromFirebaseVariant(snapshot->value()) : Variant();
 				String key = snapshot ? (snapshot->key() ? String(snapshot->key()) : "") : path_str;
 				print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("query_completed"), p_request_id, key, value);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("query_completed"), p_request_id, key, value);
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase query error.";
 				print_error(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, error_code_str, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, error_code_str, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 		}
 	});
 }
@@ -611,11 +674,18 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 	TransactionData *tx_data = new TransactionData();
 	tx_data->request_id = p_request_id;
 	tx_data->increment_by = increment_by;
-	tx_data->database_weak = std::weak_ptr<FirebaseDatabase>(); // Empty weak_ptr - Firebase SDK manages lifecycle
+	tx_data->database_weak = std::weak_ptr<FirebaseDatabase>(shared_from_this());
 	print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Increment: " + itos(increment_by));
 	firebase::Future<firebase::database::DataSnapshot> future = ref.RunTransaction(increment_transaction_function, tx_data);
-	future.OnCompletion([this, tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		
+	future.OnCompletion([weak_handle = create_weak_handle(), tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle || !tx_data) {
+			WARN_PRINT("[RTDB C++] Transaction callback ignored: FirebaseDatabase instance destroyed or tx_data invalid.");
+			if (tx_data) {
+				delete tx_data;
+			}
+			return;
+		}
 		int request_id = tx_data->request_id;
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
@@ -624,23 +694,23 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 					Variant value = Convertor::fromFirebaseVariant(snapshot->value());
 					String key = snapshot->key() ? String(snapshot->key()) : "";
 					print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Success. Committed: Yes.");
-					this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, key, value, true, "");
+					strong_handle->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, key, value, true, "");
 				} else {
 					print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Success (result is null/doesn't exist). Committed: Yes.");
-					this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), true, "");
+					strong_handle->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), true, "");
 				}
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Transaction failed or aborted.";
 				print_error(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, "Firebase Future did not complete.");
-			this->call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
 		}
 		delete tx_data;
 	});
@@ -666,22 +736,27 @@ void FirebaseDatabase::set_server_timestamp_async(int p_request_id, const Array 
 
 	firebase::Future<void> future = ref.SetValue(timestamp_placeholder);
 
-	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+	future.OnCompletion([weak_handle = create_weak_handle(), p_request_id](const firebase::Future<void> &result) {
+		auto strong_handle = weak_handle.weak_ptr.lock();
+		if (!strong_handle) {
+			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
+			return;
+		}
 		
 		if (result.status() == firebase::kFutureStatusComplete) {
 			if (result.error() == firebase::database::kErrorNone) {
 				print_verbose(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
 			} else {
 				String error_code_str = String::num_int64(result.error());
 				const char *sdk_msg = result.error_message();
 				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error setting timestamp.";
 				print_error(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
+				strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
 			}
 		} else {
 			print_error(String("[RTDB C++] SetServerTimestamp ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
+			strong_handle->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
 		}
 	});
 }

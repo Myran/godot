@@ -87,13 +87,16 @@ class FirebaseDatabase : public RefCounted, public std::enable_shared_from_this<
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Static shared resources
-	static bool is_initialized;
-	static firebase::database::Database* database_instance;
-	static std::unique_ptr<FirebaseChildListener> child_listener_instance;
-	static std::unique_ptr<ConnectionStateListener> connection_listener_instance;
+	// Thread-safe singleton implementation
+	static std::mutex initialization_mutex;
+	static std::mutex instance_mutex;
+	static std::atomic<bool> is_initialized;
+	static std::shared_ptr<FirebaseDatabase> instance;
 
-	// Instance-specific state
+	// Instance members
+	firebase::database::Database *database_instance;
+	std::unique_ptr<FirebaseChildListener> child_listener_instance;
+	std::unique_ptr<ConnectionStateListener> connection_listener_instance;
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
 
@@ -111,6 +114,12 @@ protected:
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
 public:
+	// Thread-safe singleton access
+	static std::shared_ptr<FirebaseDatabase> get_instance();
+	static void cleanup();
+
+	// Public constructor for GDScript ClassDB.instantiate() compatibility
+	// Internally delegates to get_instance() for proper initialization
 	FirebaseDatabase();
 
 	// Delete copy constructor
