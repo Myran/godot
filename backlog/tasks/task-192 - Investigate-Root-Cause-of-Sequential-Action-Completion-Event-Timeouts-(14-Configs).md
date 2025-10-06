@@ -257,3 +257,12 @@ SEQUENTIAL_DISPATCHES=$(grep -c "=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTIO
 - ✅ Timeout was a safety mechanism - framework proceeded after 30s
 - ✅ 50% missing events was systematic counting mismatch, not timing issue
 - ✅ Test framework now correctly distinguishes queue dispatches from internal operations
+
+## Follow-up (2025-10-06)
+
+**Current Status**: Still seeing 1 timeout in latest test run (logs/20251006_154537_test.log)
+- `firebase-backend-batch-2` (android): 2/3 completion events detected
+- All actions completed successfully (5/5 passed)
+- This is within expected range per resolution (6 configs with custom logging expected)
+
+**Conclusion**: This is expected behavior. The timeout is cosmetic and doesn't indicate a functional problem. Task remains completed.
