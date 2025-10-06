@@ -87,21 +87,15 @@ class FirebaseDatabase : public RefCounted, public std::enable_shared_from_this<
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Thread-safe singleton implementation
-	static std::mutex initialization_mutex;
-	static std::mutex instance_mutex;
-	static std::atomic<bool> is_initialized;
-	static std::shared_ptr<FirebaseDatabase> instance;
+	// Static shared resources
+	static bool is_initialized;
+	static firebase::database::Database* database_instance;
+	static std::unique_ptr<FirebaseChildListener> child_listener_instance;
+	static std::unique_ptr<ConnectionStateListener> connection_listener_instance;
 
-	// Instance members (no longer static)
-	firebase::database::Database *database_instance;
-	std::unique_ptr<FirebaseChildListener> child_listener_instance;
-	std::unique_ptr<ConnectionStateListener> connection_listener_instance;
+	// Instance-specific state
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
-
-	// Private constructor for singleton
-	FirebaseDatabase();
 
 protected:
 	static void _bind_methods();
@@ -117,9 +111,7 @@ protected:
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
 public:
-	// Thread-safe singleton access
-	static std::shared_ptr<FirebaseDatabase> get_instance();
-	static void cleanup();
+	FirebaseDatabase();
 
 	// Delete copy constructor
 	FirebaseDatabase(const FirebaseDatabase&) = delete;
