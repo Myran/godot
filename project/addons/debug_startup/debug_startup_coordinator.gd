@@ -375,20 +375,7 @@ func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_ac
 		# CRITICAL FIX: Completion action should always use auto_continue=true
 		# The sequential processing is handled by Firebase actions themselves having auto_continue=false
 		# Setting completion action to auto_continue=false creates a deadlock
-		var has_firebase_backend_actions: bool = _check_for_firebase_backend_actions()
-		var auto_continue: bool = _should_action_auto_continue(completion_action)  # Always use original value (true)
-
-		if has_firebase_backend_actions:
-			Log.info(
-				"Sequential actions detected - completion action will execute after all sequential actions complete",
-				{
-					"completion_action": DEFAULT_COMPLETION_ACTION,
-					"sequential_actions_use_auto_continue": false,
-					"completion_action_auto_continue": auto_continue,
-					"sequential_processing": "enabled"
-				},
-				["debug", "startup", "auto_completion", "sequential_fix"]
-			)
+		var auto_continue: bool = _should_action_auto_continue(completion_action)
 
 		core.action(core.SystemIdleActionEvent.new(completion_callable, auto_continue))
 
@@ -540,27 +527,6 @@ func _should_action_auto_continue(action: DebugAction) -> bool:
 	return action.auto_continue
 
 
-func _check_for_firebase_backend_actions() -> bool:
-	"""
-	Check if the current action list contains actions that require sequential processing.
-	Actions with auto_continue=false need proper completion event handling.
-	"""
-	var actions := _get_action_names()
-	var registry := _get_debug_action_registry()
-
-	for action_item in actions:
-		var action_name: String
-		if action_item is Dictionary:
-			action_name = action_item.action
-		else:
-			action_name = str(action_item)
-
-		# Get the actual action instance to check its auto_continue property
-		var action := _get_action_by_name(registry, action_name)
-		if action and not action.auto_continue:
-			return true
-
-	return false
 
 
 func _check_and_load_pending_gamestate() -> void:
