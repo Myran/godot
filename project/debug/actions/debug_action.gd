@@ -310,6 +310,7 @@ func _execute_core(
 
 		# Sequential action completion - unified event for all action types
 		# CRITICAL: Emit completion events even on failure for test framework detection
+		# CRITICAL: Include test_id for Android logcat filtering (grep requires TEST_ID match)
 		if not auto_continue:
 			Log.info(
 				"Sequential action completed - emitting completion event",
@@ -318,7 +319,8 @@ func _execute_core(
 					"success": success,
 					"category": category,
 					"auto_continue": auto_continue,
-					"completion_event": "SequentialActionCompleteEvent"
+					"completion_event": "SequentialActionCompleteEvent",
+					"test_id": current_test_id
 				},
 				["debug", "sequential", "completion", "unified"]
 			)
