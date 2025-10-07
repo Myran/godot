@@ -3,9 +3,10 @@ id: task-204
 title: >-
   Fix system-error-handling sequential action completion event detection (0/1
   timeout)
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-10-07 08:02'
+updated_date: '2025-10-07 11:10'
 labels:
   - testing
   - system

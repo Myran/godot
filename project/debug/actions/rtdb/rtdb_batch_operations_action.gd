@@ -83,7 +83,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 func execute_rtdb_action() -> bool:
 	var result: DebugActionResult = await _execute_action_logic({})
-	return result.is_success()
+	var success: bool = result.is_success()
+
+	# Emit completion event manually - base class only emits on success
+	# Note: Completion event emission handled by DebugAction base class (_execute_core)
+	# Base class emits SequentialActionCompleteEvent for all actions with auto_continue=false
+
+	return success
 
 
 func _execute_single_operation(

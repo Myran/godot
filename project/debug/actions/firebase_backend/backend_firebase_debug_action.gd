@@ -264,7 +264,7 @@ func execute_backend_action() -> bool:
 					["debug", "test", "failure"]
 				)
 
-		# Note: Completion event emission now handled by DebugAction base class
+		# Note: Completion event emission handled by DebugAction base class (_execute_core)
 		# Base class emits SequentialActionCompleteEvent for all actions with auto_continue=false
 		return success
 

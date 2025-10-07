@@ -304,24 +304,25 @@ func _execute_core(
 		success = _evaluate_action_result(result)
 		if success:
 			_update_status("Completed: " + action_name)
-
-			# Sequential action completion - unified event for all action types
-			if not auto_continue:
-				Log.info(
-					"Sequential action completed - emitting completion event",
-					{
-						"action": action_name,
-						"success": success,
-						"category": category,
-						"auto_continue": auto_continue,
-						"completion_event": "SequentialActionCompleteEvent"
-					},
-					["debug", "sequential", "completion", "unified"]
-				)
-				core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
 		else:
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
+
+		# Sequential action completion - unified event for all action types
+		# CRITICAL: Emit completion events even on failure for test framework detection
+		if not auto_continue:
+			Log.info(
+				"Sequential action completed - emitting completion event",
+				{
+					"action": action_name,
+					"success": success,
+					"category": category,
+					"auto_continue": auto_continue,
+					"completion_event": "SequentialActionCompleteEvent"
+				},
+				["debug", "sequential", "completion", "unified"]
+			)
+			core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
 	else:
 		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
 		success = false

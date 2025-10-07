@@ -762,7 +762,8 @@ _extract-logs test_id platform temp_output_file="":
         # This correctly excludes internal operation markers (DEBUG_TEST_SUCCESS) that were causing 2:1 count mismatch
         SEQUENTIAL_DISPATCHES=$(grep -c "=== PROCESSING ONE QUEUE ITEM - EXECUTING ACTION ===.*\"auto_continue\": false" "$LOG_FILE" 2>/dev/null || echo "0")
         SEQUENTIAL_DISPATCHES=$(echo "$SEQUENTIAL_DISPATCHES" | tr -d ' \t\n\r' | head -1)
-        COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
+        # Only match the unified completion event pattern from debug_action.gd base class
+        COMPLETION_EVENTS=$(grep -c "Sequential action completed - emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
         COMPLETION_EVENTS=$(echo "$COMPLETION_EVENTS" | tr -d ' \t\n\r' | head -1)
 
         if [[ "${SEQUENTIAL_DISPATCHES:-0}" -gt 0 ]]; then
@@ -779,7 +780,8 @@ _extract-logs test_id platform temp_output_file="":
                 WAIT_COUNT=$((WAIT_COUNT + WAIT_INTERVAL))
 
                 # Re-check completion events (logs might be updating)
-                COMPLETION_EVENTS=$(grep -c "FirebaseBackendCompleteEvent\|Sequential action completed.*emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
+                # Only match the unified completion event pattern from debug_action.gd base class
+                COMPLETION_EVENTS=$(grep -c "Sequential action completed - emitting completion event" "$LOG_FILE" 2>/dev/null || echo "0")
                 COMPLETION_EVENTS=$(echo "$COMPLETION_EVENTS" | tr -d ' \t\n\r' | head -1)
             done
             

@@ -82,6 +82,10 @@ func execute_rtdb_action() -> bool:
 		[TestConstants.LOG_TAGS.DEBUG, "test", "rtdb", "performance"]
 	)
 
+	# Emit completion event manually - base class only emits on success
+	# Note: Completion event emission handled by DebugAction base class (_execute_core)
+	# Base class emits SequentialActionCompleteEvent for all actions with auto_continue=false
+
 	return true
 
 
