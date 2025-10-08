@@ -1,0 +1,20 @@
+{
+  "description": "Precision test to identify exact Firebase backend concurrency crash threshold",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern"
+  ],
+  "platforms": [
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "Tests 5 concurrent backend operations to refine crash threshold between 3-7"
+  }
+}

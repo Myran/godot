@@ -9,6 +9,7 @@ var _is_initialized: bool = false
 var _next_request_id: int = 1
 var _pending_requests: Dictionary = {}
 var _rate_limiter: RefCounted
+var _request_queue: FirebaseRequestQueue
 
 
 func _ready() -> void:
@@ -20,6 +21,15 @@ func _ready() -> void:
 	# Initialize rate limiter
 	var firebase_rate_limiter_script: GDScript = load("res://firebase/firebase_rate_limiter.gd")
 	_rate_limiter = firebase_rate_limiter_script.new()
+
+	# Initialize Firebase request queue (Task-207 fix for SIGBUS crashes)
+	var firebase_request_queue_script: GDScript = load("res://firebase/firebase_request_queue.gd")
+	_request_queue = firebase_request_queue_script.new(100, 5)  # max 100 items, batch 5
+	Log.info(
+		"FirebaseRequestQueue initialized for SIGBUS crash prevention",
+		{"max_queue_size": 100, "batch_size": 5},
+		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
+	)
 
 	Log.info(
 		"FirebaseService _ready() called - using LAZY INITIALIZATION",
@@ -346,15 +356,37 @@ func _get_next_request_id() -> int:
 
 
 func _resolve_pending_request(request_id: int, result: Variant) -> void:
+	## Process all Firebase request completions through the Request Queue
+	## Task-207 SIGBUS fix: Prevents CONNECT_DEFERRED race conditions
+
 	Log.debug(
-		"_resolve_pending_request called",
+		"FirebaseRequestQueue: Enqueuing request completion",
 		{
 			"request_id": request_id,
 			"result_status": result.get("status", "unknown"),
 			"pending_requests": _pending_requests.keys(),
 			"request_in_pending": request_id in _pending_requests
 		},
-		[Log.TAG_FIREBASE, "signal_debug"]
+		[Log.TAG_FIREBASE, "queue_debug"]
+	)
+
+	# All Firebase completions MUST go through the queue - no fallback paths
+	_request_queue.enqueue_request(request_id, result)
+
+
+func _queue_process_request_completion(request_id: int, result: Variant) -> bool:
+	## Process request completion from FirebaseRequestQueue
+	## Implements the original completion logic in queue-safe manner
+
+	Log.debug(
+		"FirebaseService: Processing queued request completion",
+		{
+			"request_id": request_id,
+			"result_status": result.get("status", "unknown") if result is Dictionary else "unknown",
+			"pending_requests": _pending_requests.keys(),
+			"request_in_pending": request_id in _pending_requests
+		},
+		[Log.TAG_FIREBASE, "queue_debug"]
 	)
 
 	if request_id in _pending_requests:
@@ -362,16 +394,16 @@ func _resolve_pending_request(request_id: int, result: Variant) -> void:
 		_pending_requests.erase(request_id)
 
 		Log.debug(
-			"Found pending request, processing completion",
+			"Found pending request in queue, processing completion",
 			{
 				"request_id": request_id,
 				"request_valid": is_instance_valid(request),
-				"result_status": result.status
+				"result_status": result.status if result is Dictionary else "unknown"
 			},
-			[Log.TAG_FIREBASE, "signal_debug"]
+			[Log.TAG_FIREBASE, "queue_debug"]
 		)
 
-		var success: bool = result.status == "ok"
+		var success: bool = result.status == "ok" if result is Dictionary else false
 		var duration_ms: int = 0
 		if request.has_method("get_duration_ms"):
 			duration_ms = request.get_duration_ms()
@@ -381,27 +413,38 @@ func _resolve_pending_request(request_id: int, result: Variant) -> void:
 
 		if success:
 			Log.debug(
-				"Completing request with success",
+				"Completing queued request with success",
 				{"request_id": request_id, "payload": result.payload},
 				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 			)
 			request.complete_with_success(result.payload)
 		else:
 			Log.debug(
-				"Completing request with error",
+				"Completing queued request with error",
 				{"request_id": request_id, "error": result},
 				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 			)
 			request.complete_with_error(
-				str(result.get("code", "UNKNOWN_ERROR")),
-				str(result.get("message", "Unknown error occurred"))
+				(
+					str(result.get("code", "UNKNOWN_ERROR"))
+					if result is Dictionary
+					else "UNKNOWN_ERROR"
+				),
+				(
+					str(result.get("message", "Unknown error occurred"))
+					if result is Dictionary
+					else "Unknown error occurred"
+				)
 			)
-	else:
-		Log.warning(
-			"Received completion for unknown request",
-			{"request_id": request_id, "pending_requests": _pending_requests.keys()},
-			[Log.TAG_FIREBASE, Log.TAG_DEBUG]
-		)
+
+		return true
+
+	Log.warning(
+		"Received queued completion for unknown request",
+		{"request_id": request_id, "pending_requests": _pending_requests.keys()},
+		[Log.TAG_FIREBASE, Log.TAG_DEBUG]
+	)
+	return false
 
 
 func cleanup_timed_out_request(request_id: int) -> void:
@@ -430,6 +473,26 @@ func get_rate_limiter_status() -> Dictionary:
 	if _rate_limiter != null:
 		return _rate_limiter.get_status()
 	return {"error": "rate_limiter_not_initialized"}
+
+
+func get_firebase_request_queue_status() -> Dictionary:
+	"""Get Firebase Request Queue status for Task-207 monitoring."""
+	if _request_queue != null:
+		var stats: Dictionary = _request_queue.get_queue_stats()
+		stats["sigbus_fix_active"] = true
+		stats["connection_type"] = "CONNECT_DEFERRED + queue"
+		return stats
+	return {"error": "request_queue_not_initialized", "sigbus_fix_active": false}
+
+
+func configure_firebase_request_queue(max_size: int, batch_size: int) -> void:
+	"""Configure Firebase Request Queue parameters."""
+	_request_queue.configure_queue(max_size, batch_size)
+	Log.info(
+		"FirebaseRequestQueue configured - Task-207 SIGBUS fix",
+		{"max_size": max_size, "batch_size": batch_size},
+		[Log.TAG_FIREBASE]
+	)
 
 
 func _connect_cpp_signals() -> bool:
