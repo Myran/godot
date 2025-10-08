@@ -119,7 +119,8 @@
       "Bash(do if ! grep -q 'TestUtils' \"$f\")",
       "Bash(do if rg -q \"Time\\.get_ticks_msec\\(\\)\" \"$f\")",
       "Bash(! rg -q \"TestUtils\" \"$f\")",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": [],

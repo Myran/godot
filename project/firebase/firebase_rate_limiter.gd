@@ -70,7 +70,14 @@ func should_rate_limit() -> Dictionary:
 	var delay_ms: int = 0
 	var reason: String = ""
 
-	if _operations_in_burst >= BURST_LIMIT:
+	# CRITICAL: Always enforce minimum delay to prevent Firebase C++ SDK signal emission crashes
+	# See: task-207 SIGBUS analysis - crash occurs during C++ signal emission if operations too close
+	# This MUST be checked first, before burst/pending checks
+	if time_since_last < MIN_DELAY_MS:
+		needs_rate_limiting = true
+		delay_ms = MIN_DELAY_MS - time_since_last
+		reason = "min_delay_required_for_cpp_stability"
+	elif _operations_in_burst >= BURST_LIMIT:
 		needs_rate_limiting = true
 		delay_ms = _calculate_adaptive_delay()
 		reason = "burst_limit_exceeded"
@@ -78,10 +85,6 @@ func should_rate_limit() -> Dictionary:
 		needs_rate_limiting = true
 		delay_ms = _calculate_adaptive_delay() * 2
 		reason = "too_many_pending_requests"
-	elif time_since_last < MIN_DELAY_MS and _operations_in_burst > 3:
-		needs_rate_limiting = true
-		delay_ms = MIN_DELAY_MS - time_since_last
-		reason = "min_delay_required_during_burst"
 
 	return {
 		"should_limit": needs_rate_limiting,

@@ -377,7 +377,8 @@ func _connect_listener_signals(db_wrapper: Object) -> void:
 				handler = _on_child_removed
 
 		if db_wrapper.has_method("connect_signal"):
-			var err: Error = db_wrapper.connect_signal(signal_name, handler, CONNECT_DEFERRED)
+			# CRITICAL FIX (task-207): Remove CONNECT_DEFERRED - same fix as firebase_service.gd
+			var err: Error = db_wrapper.connect_signal(signal_name, handler, 0)
 			if err == OK:
 				connected_count += 1
 				Log.debug(

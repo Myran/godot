@@ -1185,8 +1185,43 @@ _analyze-test-errors test_id platform config_file="":
         echo ""
         echo "✅ ERROR ANALYSIS PASSED"
         echo "💡 No critical errors found in logs"
-        exit 0
     fi
+
+    # CRITICAL (task-207): Check for crash signals after app quit
+    # Test framework was reporting PASSED for crashed tests because it only checked app quit,
+    # not HOW it quit (normal exit vs crash). This detects SIGBUS/SIGSEGV crashes.
+    if [[ "$PLATFORM" == "android" ]]; then
+        echo ""
+        echo "🔍 Checking for crash signals..."
+        CRASH_SIGNALS=$(adb logcat -d 2>/dev/null | grep -E "Fatal signal|SIGBUS|SIGSEGV" | grep -i "gametwo" | tail -5 || echo "")
+
+        if [[ -n "$CRASH_SIGNALS" ]]; then
+            # Check if crash happened during this test (within last 5 minutes)
+            CRASH_TIME=$(echo "$CRASH_SIGNALS" | head -1 | awk '{print $2}' | sed 's/:.*$//' | sed 's/^0*//')
+            CURRENT_TIME=$(date +%H | sed 's/^0*//')
+            # Handle empty values (midnight hour)
+            CRASH_TIME=${CRASH_TIME:-0}
+            CURRENT_TIME=${CURRENT_TIME:-0}
+            TIME_DIFF=$((CURRENT_TIME - CRASH_TIME))
+
+            # If crash is recent (< 5 minute difference, accounting for hour rollover)
+            if [[ $TIME_DIFF -le 1 ]] || [[ $TIME_DIFF -ge 23 ]]; then
+                echo ""
+                echo "❌ CRASH DETECTED"
+                echo "💡 App crashed with fatal signal during test execution"
+                echo ""
+                echo "Crash details:"
+                echo "$CRASH_SIGNALS"
+                echo ""
+                echo "🔧 Debug: just android-logs-search SIGBUS"
+                echo "🔧 Debug: adb logcat -d | rg -i 'fatal signal'"
+                exit 1
+            fi
+        fi
+        echo "✅ No crash signals detected"
+    fi
+
+    exit 0
 
 # ================================
 # TEST COMMAND ENHANCEMENT HOOKS
