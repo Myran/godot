@@ -107,6 +107,15 @@ protected:
 	static void transaction_completion_callback(
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
+	// Main thread callback handlers (Task-207 SIGBUS fix)
+	// These methods execute on Godot's main thread via MessageQueue marshalling
+	void _handle_get_value_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+	void _handle_set_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
+	void _handle_push_and_update_on_main_thread(int req_id, String push_key, bool success, int status, int error, String error_msg);
+	void _handle_remove_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
+	void _handle_query_ordered_data_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+	void _handle_transaction_on_main_thread(int req_id, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+
 public:
 	// Simple constructor (like FirebaseMessaging pattern)
 	FirebaseDatabase();

@@ -7,6 +7,7 @@
 #include "core/config/project_settings.h"
 #include "core/error/error_macros.h" // For WARN_PRINT
 #include "core/object/class_db.h"
+#include "core/object/message_queue.h" // For thread-safe callback marshalling (Task-207)
 #include "core/os/os.h"
 #include "core/string/print_string.h"
 #include "core/variant/callable.h"
@@ -346,74 +347,37 @@ void FirebaseDatabase::get_value_async(int p_request_id, const Array &keys) {
 	print_line(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path (GDScript Array): " + path_str_for_logging + " -> URL: " + String(ref.url().c_str()));
 
 	firebase::Future<firebase::database::DataSnapshot> future = ref.GetValue();
-	future.OnCompletion([this, p_request_id, keys, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			// Callback safety handled by RefCounted
-			return;
-		}
+	future.OnCompletion([this, p_request_id, path_str_for_logging](const firebase::Future<firebase::database::DataSnapshot> &result) {
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
 
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				const firebase::database::DataSnapshot *snapshot = result.result();
+		String key = "";
+		firebase::Variant fb_value; // Default null
+		bool exists = false;
+		bool snapshot_valid = false;
 
-				if (snapshot) {
-					print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " Path: " + path_str_for_logging + " -> Snapshot exists: " + (snapshot->exists() ? "Yes" : "No"));
-					if (snapshot->exists()) {
-						const char *snapshot_key_cstr = snapshot->key();
-						String snapshot_key_from_fb = snapshot_key_cstr ? String(snapshot_key_cstr) : "null_key_from_fb";
-						print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Snapshot Key (from Firebase): " + snapshot_key_from_fb);
-
-						firebase::Variant fb_variant_val = snapshot->value();
-						// ***** CORRECTED GetTypeName to TypeName *****
-						print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Raw Firebase Variant Type: " + firebase::Variant::TypeName(fb_variant_val.type()));
-
-						if (fb_variant_val.is_map()) {
-							print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Is Map, child count: " + itos(snapshot->children_count()));
-							if (snapshot->children_count() > 0 && snapshot->children_count() < 10) {
-								std::vector<firebase::database::DataSnapshot> children = snapshot->children();
-								String children_keys_str = "Children keys: ";
-								for (size_t i = 0; i < children.size(); ++i) {
-									const auto &child_snap = children[i];
-									if (child_snap.key()) {
-										children_keys_str += String(child_snap.key()) + (i < children.size() - 1 ? ", " : "");
-									}
-								}
-								print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> " + children_keys_str);
-							}
-						} else if (fb_variant_val.is_vector()) {
-							print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Is Vector, element count: " + itos(snapshot->children_count()));
-						} else if (fb_variant_val.is_string()) {
-							print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Is String: '" + String::utf8(fb_variant_val.string_value()) + "'");
-						} else if (fb_variant_val.is_null()) {
-							print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Firebase Variant IS NULL.");
-						} else {
-							print_line(String("[RTDB C++] GetValue CB ReqID:") + itos(p_request_id) + " -> Firebase Variant is other primitive. Int64: " + String::num_int64(fb_variant_val.int64_value()) + ", Double: " + String::num(fb_variant_val.double_value()) + ", Bool: " + (fb_variant_val.bool_value() ? "true" : "false"));
-						}
-
-						Variant value = Convertor::fromFirebaseVariant(snapshot->value());
-						String signal_key = snapshot_key_from_fb != "null_key_from_fb" ? snapshot_key_from_fb : "";
-						print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Success. Emitted Key='" + signal_key + "'");
-						this->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, signal_key, value);
-					} else {
-						print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Success, but data is null/doesn't exist at path: " + path_str_for_logging);
-						this->call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), p_request_id, path_str_for_logging, Variant());
-					}
-				} else {
-					print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Path: " + path_str_for_logging + " -> CRITICAL: Snapshot pointer is null despite no error from Future!");
-					this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
+		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+			const firebase::database::DataSnapshot* snapshot = result.result();
+			if (snapshot) {
+				snapshot_valid = true;
+				key = snapshot->key() ? String(snapshot->key()) : "";
+				if (snapshot->exists()) {
+					fb_value = snapshot->value(); // Thread-safe copy
+					exists = true;
 				}
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
-				print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, error_code_str, error_message);
 			}
-		} else {
-			print_error(String("[RTDB C++] GetValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), p_request_id, path_str_for_logging, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 		}
+
+		// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
+		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_get_value_on_main_thread)
+				.bind(p_request_id, path_str_for_logging, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+		);
 	});
 }
 
@@ -433,27 +397,18 @@ void FirebaseDatabase::set_value_async(int p_request_id, const Array &keys, cons
 	print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.SetValue(firebase_value);
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
-			return;
-		}
-		// Firebase SDK manages callback lifecycle - using raw 'this' is safe
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, true, "");
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
-				print_error(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, error_message);
-			}
-		} else {
-			print_error(String("[RTDB C++] SetValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), p_request_id, false, "Firebase Future did not complete.");
-		}
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		bool success = (result.status() == firebase::kFutureStatusComplete &&
+					   result.error() == firebase::database::kErrorNone);
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_set_value_on_main_thread)
+				.bind(p_request_id, success, status, error, error_msg)
+		);
 	});
 }
 
@@ -486,26 +441,18 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + push_key_str);
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data.map());
 	future.OnCompletion([this, p_request_id, push_key_str](const firebase::Future<void> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			// Callback safety handled by RefCounted
-			return;
-		}
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, true, "");
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
-				print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, error_message);
-			}
-		} else {
-			print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, "Firebase Future did not complete.");
-		}
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		bool success = (result.status() == firebase::kFutureStatusComplete &&
+					   result.error() == firebase::database::kErrorNone);
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_push_and_update_on_main_thread)
+				.bind(p_request_id, push_key_str, success, status, error, error_msg)
+		);
 	});
 }
 
@@ -524,27 +471,18 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
 	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			WARN_PRINT("[RTDB C++] Callback ignored: FirebaseDatabase instance destroyed.");
-			return;
-		}
-		
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, true, "");
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase error.";
-				print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, error_message);
-			}
-		} else {
-			print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), p_request_id, false, "Firebase Future did not complete.");
-		}
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		bool success = (result.status() == firebase::kFutureStatusComplete &&
+					   result.error() == firebase::database::kErrorNone);
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_remove_value_on_main_thread)
+				.bind(p_request_id, success, status, error, error_msg)
+		);
 	});
 }
 
@@ -564,30 +502,37 @@ void FirebaseDatabase::query_ordered_data_async(int p_request_id, const Array &k
 	print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Params: " + String(Variant(query_params)));
 	firebase::Future<firebase::database::DataSnapshot> future = query.GetValue();
 	future.OnCompletion([this, p_request_id, keys](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// Firebase SDK manages callback lifecycle
-		if (false) { // Disabled - using this directly
-			// Callback safety handled by RefCounted
-			return;
-		}
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
 		String path_str = String(Variant(keys));
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				const firebase::database::DataSnapshot *snapshot = result.result();
-				Variant value = (snapshot && snapshot->exists()) ? Convertor::fromFirebaseVariant(snapshot->value()) : Variant();
-				String key = snapshot ? (snapshot->key() ? String(snapshot->key()) : "") : path_str;
-				print_verbose(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Success.");
-				this->call_deferred(SNAME("emit_signal"), SNAME("query_completed"), p_request_id, key, value);
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Unknown Firebase query error.";
-				print_error(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, error_code_str, error_message);
+
+		String key = "";
+		firebase::Variant fb_value; // Default null
+		bool exists = false;
+		bool snapshot_valid = false;
+
+		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+			const firebase::database::DataSnapshot* snapshot = result.result();
+			if (snapshot) {
+				snapshot_valid = true;
+				key = snapshot->key() ? String(snapshot->key()) : "";
+				if (snapshot->exists()) {
+					fb_value = snapshot->value(); // Thread-safe copy
+					exists = true;
+				}
 			}
-		} else {
-			print_error(String("[RTDB C++] Query ReqID:") + itos(p_request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("query_error"), p_request_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
 		}
+
+		// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
+		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_query_ordered_data_on_main_thread)
+				.bind(p_request_id, path_str, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+		);
 	});
 }
 
@@ -610,36 +555,42 @@ void FirebaseDatabase::run_transaction_async(int p_request_id, const Array &keys
 	print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " Increment: " + itos(increment_by));
 	firebase::Future<firebase::database::DataSnapshot> future = ref.RunTransaction(increment_transaction_function, tx_data);
 	future.OnCompletion([this, tx_data](const firebase::Future<firebase::database::DataSnapshot> &result) {
-		// Firebase SDK manages callback lifecycle
+		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		if (!tx_data) {
 			return;
 		}
+
 		int request_id = tx_data->request_id;
-		if (result.status() == firebase::kFutureStatusComplete) {
-			if (result.error() == firebase::database::kErrorNone) {
-				const firebase::database::DataSnapshot *snapshot = result.result();
-				if (snapshot && snapshot->exists()) {
-					Variant value = Convertor::fromFirebaseVariant(snapshot->value());
-					String key = snapshot->key() ? String(snapshot->key()) : "";
-					print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Success. Committed: Yes.");
-					this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, key, value, true, "");
-				} else {
-					print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Success (result is null/doesn't exist). Committed: Yes.");
-					this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), true, "");
+		int error = result.error();
+		int status = result.status();
+		String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+		String key = "";
+		firebase::Variant fb_value; // Default null
+		bool exists = false;
+		bool snapshot_valid = false;
+
+		if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+			const firebase::database::DataSnapshot* snapshot = result.result();
+			if (snapshot) {
+				snapshot_valid = true;
+				key = snapshot->key() ? String(snapshot->key()) : "";
+				if (snapshot->exists()) {
+					fb_value = snapshot->value(); // Thread-safe copy
+					exists = true;
 				}
-			} else {
-				String error_code_str = String::num_int64(result.error());
-				const char *sdk_msg = result.error_message();
-				String error_message = sdk_msg ? String(sdk_msg) : "Transaction failed or aborted.";
-				print_error(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Error: " + error_code_str + " Msg: " + error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, error_message);
-				this->call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_message);
 			}
-		} else {
-			print_error(String("[RTDB C++] Transaction ReqID:") + itos(request_id) + " Future did not complete. Status: " + itos(result.status()));
-			this->call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), request_id, "", Variant(), false, "Firebase Future did not complete.");
-			this->call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
 		}
+
+			// Convert firebase::Variant to Godot Variant on worker thread (SAFE - doesn't touch Godot internals)
+		Variant godot_value = Convertor::fromFirebaseVariant(fb_value);
+
+		// Marshal to main thread (NO Godot operations on worker thread!)
+		MessageQueue::get_singleton()->push_callable(
+			callable_mp(this, &FirebaseDatabase::_handle_transaction_on_main_thread)
+				.bind(request_id, key, godot_value, exists, snapshot_valid, status, error, error_msg)
+		);
+
 		delete tx_data;
 	});
 }
@@ -763,6 +714,186 @@ void FirebaseDatabase::on_connection_state_changed(const firebase::database::Dat
 	} else {
 		WARN_PRINT("[RTDB C++] Received unexpected value for .info/connected state.");
 		call_deferred(SNAME("emit_signal"), SNAME("connection_state_changed"), false);
+	}
+}
+
+// --- Main Thread Callback Handlers (Task-207 SIGBUS Fix) ---
+// These methods execute on Godot's main thread via MessageQueue marshalling
+// ensuring all Godot operations (Variant conversion, signal emission) are thread-safe
+
+void FirebaseDatabase::_handle_get_value_on_main_thread(
+		int req_id,
+		String path_str,
+		String key,
+		Variant godot_value,
+		bool exists,
+		bool snapshot_valid,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD - Safe for all Godot operations
+
+	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+		if (snapshot_valid && exists) {
+			// Value already converted to Godot Variant on worker thread
+			String signal_key = !key.is_empty() ? key : "";
+
+			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Success. Key='" + signal_key + "'");
+			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, signal_key, godot_value);
+		} else if (snapshot_valid) {
+			// Snapshot valid but data doesn't exist
+			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Data doesn't exist at path: " + path_str);
+			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, path_str, Variant());
+		} else {
+			// Snapshot pointer was null
+			print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - CRITICAL: Snapshot pointer null");
+			call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
+		}
+	} else if (status == firebase::kFutureStatusComplete) {
+		// Error from Firebase
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, error_code_str, error_msg);
+	} else {
+		// Future did not complete
+		print_error(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("get_value_error"), req_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
+	}
+}
+
+void FirebaseDatabase::_handle_set_value_on_main_thread(
+		int req_id,
+		bool success,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD
+
+	if (success) {
+		print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, true, "");
+	} else if (status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, error_msg);
+	} else {
+		print_error(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, false, "Firebase Future did not complete.");
+	}
+}
+
+void FirebaseDatabase::_handle_push_and_update_on_main_thread(
+		int req_id,
+		String push_key,
+		bool success,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD
+
+	if (success) {
+		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "");
+	} else if (status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, error_msg);
+	} else {
+		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, "Firebase Future did not complete.");
+	}
+}
+
+void FirebaseDatabase::_handle_remove_value_on_main_thread(
+		int req_id,
+		bool success,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD
+
+	if (success) {
+		print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, true, "");
+	} else if (status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, error_msg);
+	} else {
+		print_error(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, false, "Firebase Future did not complete.");
+	}
+}
+
+void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
+		int req_id,
+		String path_str,
+		String key,
+		Variant godot_value,
+		bool exists,
+		bool snapshot_valid,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD
+
+	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+		if (snapshot_valid) {
+			// Value already converted to Godot Variant on worker thread
+			Variant value = exists ? godot_value : Variant();
+			String result_key = !key.is_empty() ? key : path_str;
+
+			print_verbose(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Success.");
+			call_deferred(SNAME("emit_signal"), SNAME("query_completed"), req_id, result_key, value);
+		} else {
+			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Snapshot pointer null");
+			call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
+		}
+	} else if (status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, error_code_str, error_msg);
+	} else {
+		print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "FUTURE_INVALID_STATUS", "Firebase Future did not complete.");
+	}
+}
+
+void FirebaseDatabase::_handle_transaction_on_main_thread(
+		int req_id,
+		String key,
+		Variant godot_value,
+		bool exists,
+		bool snapshot_valid,
+		int status,
+		int error,
+		String error_msg) {
+	// NOW ON MAIN THREAD
+
+	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
+		if (snapshot_valid && exists) {
+			// Value already converted to Godot Variant on worker thread
+			String result_key = !key.is_empty() ? key : "";
+
+			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success. Committed: Yes.");
+			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, result_key, godot_value, true, "");
+		} else if (snapshot_valid) {
+			// Success but result is null/doesn't exist
+			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success (result null). Committed: Yes.");
+			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), true, "");
+		} else {
+			print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Snapshot pointer null");
+			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, "Snapshot pointer was null");
+		}
+	} else if (status == firebase::kFutureStatusComplete) {
+		String error_code_str = String::num_int64(error);
+		print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("db_error"), error_code_str, error_msg);
+	} else {
+		print_error(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
+		call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, "", Variant(), false, "Firebase Future did not complete.");
+		call_deferred(SNAME("emit_signal"), SNAME("db_error"), "FUTURE_INVALID_STATUS", "Transaction future failed to complete.");
 	}
 }
 
