@@ -22,9 +22,6 @@ const BackendLifecycleTestActionClass = preload(
 const BackendRequestTrackingTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_request_tracking_test_action.gd"
 )
-const BackendQueueTestActionClass = preload(
-	"res://debug/actions/firebase_backend/firebase_queue_test_action.gd"
-)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -72,9 +69,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		BackendRequestTrackingTestActionClass.new(),
 		"BackendRequestTrackingTestAction",
 		counters
-	)
-	_register_with_count(
-		registry, BackendQueueTestActionClass.new(), "BackendQueueTestAction", counters
 	)
 
 	Log.info(
