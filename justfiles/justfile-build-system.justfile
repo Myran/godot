@@ -98,6 +98,26 @@ build-pipeline: validate-env
     just build-artifacts
     just install-apk-android
     @echo "✅ Complete pipeline finished!"
+
+# ================================
+# C++ DEVELOPMENT WORKFLOW
+# ================================
+
+# Complete C++ development workflow - rebuild templates and deploy to device
+# Use this after making changes to C++ modules (Firebase, custom modules)
+cpp-dev:
+    @echo "🔧 C++ Development Workflow - Building templates and deploying..."
+    @echo ""
+    @echo "Step 1: Building Android templates (C++ → .aar)..."
+    just build-android-templates
+    @echo ""
+    @echo "Step 2: Installing Android template..."
+    just install-android-template
+    @echo ""
+    @echo "Step 3: Fast build and deploy to device..."
+    just fastbuild-android
+    @echo ""
+    @echo "✅ C++ development workflow complete - app deployed to device"
     @echo "📱 Android: Deployed to device"
     @echo "🍎 iOS: Ready for device deployment"
     @echo "💡 Use 'just launch-ios-iphone' to deploy iOS to iPhone"
