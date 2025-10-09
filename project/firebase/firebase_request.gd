@@ -36,31 +36,83 @@ func complete_with_success(payload: Variant) -> void:
 		Log.warning(
 			"FirebaseRequest: Attempt to complete already completed request",
 			{"request_id": _request_id},
-			[Log.TAG_FIREBASE, "await_debug"]
+			[Log.TAG_FIREBASE]
 		)
 		return
 
-	var typed_result: Dictionary = {"status": "ok", "payload": payload}
-	_result = typed_result
+	# CRITICAL SAFETY: Deep copy payload to prevent ARM64 alignment crashes
+	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed
+	# by GDScript. Deep copying ensures proper memory alignment before storing.
+	var safe_payload = _safe_copy_variant(payload)
+
+	_result = {"status": "ok", "payload": safe_payload}
 	_is_completed = true
 
 	Log.debug(
-		"FirebaseRequest: About to emit completed signal",
+		"FirebaseRequest: Emitting completed signal",
 		{
 			"request_id": _request_id,
-			"result": _result,
+			"result_status": _result.status,
 			"signal_connections": completed.get_connections().size()
 		},
-		[Log.TAG_FIREBASE, "await_debug"]
+		[Log.TAG_FIREBASE]
 	)
 
 	completed.emit(_result)
 
 	Log.debug(
-		"FirebaseRequest: completed signal emitted",
+		"FirebaseRequest: Completed signal emitted successfully",
 		{"request_id": _request_id},
 		[Log.TAG_FIREBASE, "await_debug"]
 	)
+
+
+# SAFETY: Deep copy Variants from Firebase to prevent ARM64 alignment crashes
+# Firebase C++ SDK can return Variants with misaligned memory addresses
+# (e.g., 0x533b000bdf mod 8 = 7) that cause SIGBUS crashes on ARM64
+# when accessed by GDScript. This function ensures proper memory alignment.
+func _safe_copy_variant(variant: Variant) -> Variant:
+	Log.debug(
+		"FirebaseRequest: _safe_copy_variant called",
+		{
+			"input_type": typeof(variant),
+			"request_id": _request_id
+		},
+		[Log.TAG_FIREBASE, "alignment_debug"]
+	)
+
+	# Handle null or empty variants safely
+	if variant == null:
+		Log.debug("FirebaseRequest: _safe_copy_variant returning null", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+		return null
+
+	match typeof(variant):
+		TYPE_DICTIONARY:
+			Log.debug("FirebaseRequest: _safe_copy_variant processing DICTIONARY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			var dict: Dictionary = variant
+			var safe_dict: Dictionary = {}
+			for key: Variant in dict.keys():
+				safe_dict[key] = _safe_copy_variant(dict[key])
+			return safe_dict
+		TYPE_ARRAY:
+			Log.debug("FirebaseRequest: _safe_copy_variant processing ARRAY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			var arr: Array = variant
+			var safe_arr: Array = []
+			for item: Variant in arr:
+				safe_arr.append(_safe_copy_variant(item))
+			return safe_arr
+		TYPE_STRING:
+			Log.debug("FirebaseRequest: _safe_copy_variant processing STRING", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			# Strings might have misaligned memory internally, create a safe copy
+			return String(variant)
+		_:
+			# Primitives (int, float, bool) are safe to return directly
+			Log.debug(
+				"FirebaseRequest: _safe_copy_variant returning primitive",
+				{"type": typeof(variant), "value": str(variant)},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
+			return variant
 
 
 func complete_with_error(error_code: String, error_message: String) -> void:

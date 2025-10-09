@@ -9,7 +9,6 @@ var _is_initialized: bool = false
 var _next_request_id: int = 1
 var _pending_requests: Dictionary = {}
 var _rate_limiter: RefCounted
-var _request_queue: FirebaseRequestQueue
 
 
 func _ready() -> void:
@@ -21,15 +20,6 @@ func _ready() -> void:
 	# Initialize rate limiter
 	var firebase_rate_limiter_script: GDScript = load("res://firebase/firebase_rate_limiter.gd")
 	_rate_limiter = firebase_rate_limiter_script.new()
-
-	# Initialize Firebase request queue (Task-207 fix for SIGBUS crashes)
-	var firebase_request_queue_script: GDScript = load("res://firebase/firebase_request_queue.gd")
-	_request_queue = firebase_request_queue_script.new(100, 5)  # max 100 items, batch 5
-	Log.info(
-		"FirebaseRequestQueue initialized for SIGBUS crash prevention",
-		{"max_queue_size": 100, "batch_size": 5},
-		[Log.TAG_FIREBASE, Log.TAG_INITIALIZATION]
-	)
 
 	Log.info(
 		"FirebaseService _ready() called - using LAZY INITIALIZATION",
@@ -355,38 +345,19 @@ func _get_next_request_id() -> int:
 	return id
 
 
-func _resolve_pending_request(request_id: int, result: Variant) -> void:
-	## Process all Firebase request completions through the Request Queue
-	## Task-207 SIGBUS fix: Prevents CONNECT_DEFERRED race conditions
+func _resolve_pending_request(request_id: int, result: Variant) -> bool:
+	## Process Firebase request completions directly (C++ MessageQueue handles threading)
+	## Task-207: C++ layer uses MessageQueue for thread safety, no GDScript queue needed
 
 	Log.debug(
-		"FirebaseRequestQueue: Enqueuing request completion",
+		"_resolve_pending_request called",
 		{
 			"request_id": request_id,
 			"result_status": result.get("status", "unknown"),
 			"pending_requests": _pending_requests.keys(),
 			"request_in_pending": request_id in _pending_requests
 		},
-		[Log.TAG_FIREBASE, "queue_debug"]
-	)
-
-	# All Firebase completions MUST go through the queue - no fallback paths
-	_request_queue.enqueue_request(request_id, result)
-
-
-func _queue_process_request_completion(request_id: int, result: Variant) -> bool:
-	## Process request completion from FirebaseRequestQueue
-	## Implements the original completion logic in queue-safe manner
-
-	Log.debug(
-		"FirebaseService: Processing queued request completion",
-		{
-			"request_id": request_id,
-			"result_status": result.get("status", "unknown") if result is Dictionary else "unknown",
-			"pending_requests": _pending_requests.keys(),
-			"request_in_pending": request_id in _pending_requests
-		},
-		[Log.TAG_FIREBASE, "queue_debug"]
+		[Log.TAG_FIREBASE, "signal_debug"]
 	)
 
 	if request_id in _pending_requests:
@@ -394,16 +365,16 @@ func _queue_process_request_completion(request_id: int, result: Variant) -> bool
 		_pending_requests.erase(request_id)
 
 		Log.debug(
-			"Found pending request in queue, processing completion",
+			"Found pending request, processing completion",
 			{
 				"request_id": request_id,
 				"request_valid": is_instance_valid(request),
-				"result_status": result.status if result is Dictionary else "unknown"
+				"result_status": result.status
 			},
-			[Log.TAG_FIREBASE, "queue_debug"]
+			[Log.TAG_FIREBASE, "signal_debug"]
 		)
 
-		var success: bool = result.status == "ok" if result is Dictionary else false
+		var success: bool = result.status == "ok"
 		var duration_ms: int = 0
 		if request.has_method("get_duration_ms"):
 			duration_ms = request.get_duration_ms()
@@ -414,10 +385,17 @@ func _queue_process_request_completion(request_id: int, result: Variant) -> bool
 		if success:
 			Log.debug(
 				"Completing queued request with success",
-				{"request_id": request_id, "payload": result.payload},
+				{
+					"request_id": request_id,
+					"payload_size": len(str(result.payload)) if result.payload else 0
+				},
 				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 			)
-			request.complete_with_success(result.payload)
+			# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+			# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
+			# This must happen BEFORE passing to FirebaseRequest to prevent crash in complete_with_success
+			var safe_payload = _safe_copy_variant(result.payload)
+			request.complete_with_success(safe_payload)
 		else:
 			Log.debug(
 				"Completing queued request with error",
@@ -475,24 +453,49 @@ func get_rate_limiter_status() -> Dictionary:
 	return {"error": "rate_limiter_not_initialized"}
 
 
-func get_firebase_request_queue_status() -> Dictionary:
-	"""Get Firebase Request Queue status for Task-207 monitoring."""
-	if _request_queue != null:
-		var stats: Dictionary = _request_queue.get_queue_stats()
-		stats["sigbus_fix_active"] = true
-		stats["connection_type"] = "CONNECT_DEFERRED + queue"
-		return stats
-	return {"error": "request_queue_not_initialized", "sigbus_fix_active": false}
-
-
-func configure_firebase_request_queue(max_size: int, batch_size: int) -> void:
-	"""Configure Firebase Request Queue parameters."""
-	_request_queue.configure_queue(max_size, batch_size)
-	Log.info(
-		"FirebaseRequestQueue configured - Task-207 SIGBUS fix",
-		{"max_size": max_size, "batch_size": batch_size},
-		[Log.TAG_FIREBASE]
+# SAFETY: Deep copy Variants from Firebase to prevent ARM64 alignment crashes
+# Firebase C++ SDK can return Variants with misaligned memory addresses
+# (e.g., 0x533b000bdf mod 8 = 7) that cause SIGBUS crashes on ARM64
+# when accessed by GDScript. This function ensures proper memory alignment.
+func _safe_copy_variant(variant: Variant) -> Variant:
+	Log.debug(
+		"FirebaseService: _safe_copy_variant called",
+		{"input_type": typeof(variant)},
+		[Log.TAG_FIREBASE, "alignment_debug"]
 	)
+
+	# Handle null or empty variants safely
+	if variant == null:
+		Log.debug("FirebaseService: _safe_copy_variant returning null", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+		return null
+
+	match typeof(variant):
+		TYPE_DICTIONARY:
+			Log.debug("FirebaseService: _safe_copy_variant processing DICTIONARY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			var dict: Dictionary = variant
+			var safe_dict: Dictionary = {}
+			for key: Variant in dict.keys():
+				safe_dict[key] = _safe_copy_variant(dict[key])
+			return safe_dict
+		TYPE_ARRAY:
+			Log.debug("FirebaseService: _safe_copy_variant processing ARRAY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			var arr: Array = variant
+			var safe_arr: Array = []
+			for item: Variant in arr:
+				safe_arr.append(_safe_copy_variant(item))
+			return safe_arr
+		TYPE_STRING:
+			Log.debug("FirebaseService: _safe_copy_variant processing STRING", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			# Strings might have misaligned memory internally, create a safe copy
+			return String(variant)
+		_:
+			# Primitives (int, float, bool) are safe to return directly
+			Log.debug(
+				"FirebaseService: _safe_copy_variant returning primitive",
+				{"type": typeof(variant), "value": str(variant)},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
+			return variant
 
 
 func _connect_cpp_signals() -> bool:
@@ -544,7 +547,10 @@ func _connect_cpp_signals() -> bool:
 
 
 func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
-	var payload: Dictionary = {"status": "ok", "payload": value}
+	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
+	var safe_value = _safe_copy_variant(value)
+	var payload: Dictionary = {"status": "ok", "payload": safe_value}
 	_resolve_pending_request(req_id, payload)
 
 
@@ -605,7 +611,9 @@ func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -
 
 
 func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
-	var payload: Dictionary = {"status": "ok", "payload": value}
+	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+	var safe_value = _safe_copy_variant(value)
+	var payload: Dictionary = {"status": "ok", "payload": safe_value}
 	_resolve_pending_request(req_id, payload)
 
 
@@ -617,11 +625,13 @@ func _on_query_error(req_id: int, _key: String, code: int, msg: String) -> void:
 func _on_transaction_completed(
 	req_id: int, _key: String, value: Variant, success: bool, error_msg: String
 ) -> void:
-	var payload: Dictionary = (
-		{"status": "ok", "payload": value}
-		if success
-		else {"status": "error", "code": "TRANSACTION_FAILED", "message": error_msg}
-	)
+	var payload: Dictionary
+	if success:
+		# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+		var safe_value = _safe_copy_variant(value)
+		payload = {"status": "ok", "payload": safe_value}
+	else:
+		payload = {"status": "error", "code": "TRANSACTION_FAILED", "message": error_msg}
 	_resolve_pending_request(req_id, payload)
 
 
