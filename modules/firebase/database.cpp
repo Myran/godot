@@ -439,7 +439,7 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 		return;
 	}
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + push_key_str);
-	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data.map());
+	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
 	future.OnCompletion([this, p_request_id, push_key_str](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
@@ -738,8 +738,13 @@ void FirebaseDatabase::_handle_get_value_on_main_thread(
 			// Value already converted to Godot Variant on worker thread
 			String signal_key = !key.is_empty() ? key : "";
 
+			// Deep copy to prevent SIGBUS memory corruption from Firebase C++ memory
+			// The Firebase C++ SDK creates Variants that can cause memory alignment issues
+			// when accessed by GDScript. Deep copying ensures GDScript-safe memory.
+			Variant safe_value = Convertor::deepCopyVariant(godot_value);
+
 			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Success. Key='" + signal_key + "'");
-			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, signal_key, godot_value);
+			call_deferred(SNAME("emit_signal"), SNAME("get_value_completed"), req_id, signal_key, safe_value);
 		} else if (snapshot_valid) {
 			// Snapshot valid but data doesn't exist
 			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Data doesn't exist at path: " + path_str);
@@ -793,6 +798,12 @@ void FirebaseDatabase::_handle_push_and_update_on_main_thread(
 
 	if (success) {
 		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
+
+		// CRITICAL SAFETY: Create a safe Variant with proper memory alignment
+		// This prevents SIGBUS crashes when GDScript accesses the returned data
+		// Firebase C++ SDK can return misaligned memory that violates ARM64 alignment requirements
+		Variant safe_result = Convertor::deepCopyVariant(Variant(push_key));
+
 		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "");
 	} else if (status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(error);

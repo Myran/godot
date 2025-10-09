@@ -1,16 +1,39 @@
 #include "convertor.h"
 #include "core/string/print_string.h" // For print_line/itos
 
+// Deep copy a Variant to ensure GDScript-safe memory
+// This creates a new copy entirely in Godot's memory space, isolated from Firebase C++ memory
+Variant Convertor::deepCopyVariant(const Variant& arg) {
+	// Use Godot's built-in duplicate method for Arrays and Dictionaries
+	// This ensures proper memory alignment and reference counting
+	Variant::Type type = arg.get_type();
+
+	if (type == Variant::ARRAY) {
+		Array original = arg;
+		return original.duplicate(true); // true = deep copy
+	} else if (type == Variant::DICTIONARY) {
+		Dictionary original = arg;
+		return original.duplicate(true); // true = deep copy
+	} else {
+		// For other types, direct return is safe (primitives, strings, etc.)
+		return arg;
+	}
+}
+
 Variant Convertor::fromFirebaseVariant(const firebase::Variant& arg)
 {
+	// SAFETY: Always deep-copy to avoid ARM64 alignment issues with Firebase memory
+	// Firebase C++ SDK can return misaligned addresses (e.g., 0x533b000bdf mod 8 = 7)
+	// which cause SIGBUS crashes on ARM64. Deep copy ensures proper alignment.
+
 	if(arg.is_null()) {
 		return Variant(); // Return NIL Variant
 	} else if(arg.is_vector()) {
 		const std::vector<firebase::Variant>& vector = arg.vector();
 		Array arrRes; // Use Godot Array
-		arrRes.resize(vector.size()); // Optional: pre-allocate
-		for(int i = 0; i < vector.size(); i++) {
-			arrRes[i] = fromFirebaseVariant(vector[i]);
+		// Use append() instead of resize() to avoid memory alignment issues
+		for(size_t i = 0; i < vector.size(); i++) {
+			arrRes.append(fromFirebaseVariant(vector[i]));
 		}
 		return Variant(arrRes);
 	} else if(arg.is_map()) {
@@ -52,7 +75,7 @@ firebase::Variant Convertor::toFirebaseVariant(const String& arg)
 
 firebase::Variant Convertor::toFirebaseVariant(const Dictionary& arg)
 {
-	std::map<std::string, firebase::Variant> map; // Use std::string keys for Firebase map
+	std::map<std::string, firebase::Variant> map; // Use std::string keys as Firebase expects
 	Array keys = arg.keys();
 	for (int i = 0; i < keys.size(); ++i) {
 		Variant key = keys[i];

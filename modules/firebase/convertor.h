@@ -16,6 +16,8 @@ public:
 	static firebase::Variant toFirebaseVariant(const Dictionary& arg);
 	// Declaration for the general Variant converter
 	static firebase::Variant toFirebaseVariant(const Variant& arg);
+	// Deep copy a Variant to ensure GDScript-safe memory
+	static Variant deepCopyVariant(const Variant& arg);
 };
 
 #endif // FirebaseConvertor_h
