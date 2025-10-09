@@ -394,7 +394,7 @@ func _resolve_pending_request(request_id: int, result: Variant) -> bool:
 			# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
 			# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
 			# This must happen BEFORE passing to FirebaseRequest to prevent crash in complete_with_success
-			var safe_payload = _safe_copy_variant(result.payload)
+			var safe_payload: Variant = _safe_copy_variant(result.payload)
 			request.complete_with_success(safe_payload)
 		else:
 			Log.debug(
@@ -466,28 +466,45 @@ func _safe_copy_variant(variant: Variant) -> Variant:
 
 	# Handle null or empty variants safely
 	if variant == null:
-		Log.debug("FirebaseService: _safe_copy_variant returning null", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+		Log.debug(
+			"FirebaseService: _safe_copy_variant returning null",
+			{},
+			[Log.TAG_FIREBASE, "alignment_debug"]
+		)
 		return null
 
 	match typeof(variant):
 		TYPE_DICTIONARY:
-			Log.debug("FirebaseService: _safe_copy_variant processing DICTIONARY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseService: _safe_copy_variant processing DICTIONARY",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var dict: Dictionary = variant
 			var safe_dict: Dictionary = {}
 			for key: Variant in dict.keys():
 				safe_dict[key] = _safe_copy_variant(dict[key])
 			return safe_dict
 		TYPE_ARRAY:
-			Log.debug("FirebaseService: _safe_copy_variant processing ARRAY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseService: _safe_copy_variant processing ARRAY",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var arr: Array = variant
 			var safe_arr: Array = []
 			for item: Variant in arr:
 				safe_arr.append(_safe_copy_variant(item))
 			return safe_arr
 		TYPE_STRING:
-			Log.debug("FirebaseService: _safe_copy_variant processing STRING", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseService: _safe_copy_variant processing STRING",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			# Strings might have misaligned memory internally, create a safe copy
-			return String(variant)
+			var str_variant: String = variant
+			return String(str_variant)
 		_:
 			# Primitives (int, float, bool) are safe to return directly
 			Log.debug(
@@ -549,7 +566,7 @@ func _connect_cpp_signals() -> bool:
 func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
 	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
 	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
-	var safe_value = _safe_copy_variant(value)
+	var safe_value: Variant = _safe_copy_variant(value)
 	var payload: Dictionary = {"status": "ok", "payload": safe_value}
 	_resolve_pending_request(req_id, payload)
 
@@ -587,12 +604,14 @@ func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> v
 
 
 func _on_push_and_update_completed(
-	req_id: int, push_id: String, success: bool, error_msg: String
+	req_id: int, push_id: Variant, success: bool, error_msg: String
 ) -> void:
 	var payload: Dictionary
 
 	if success:
-		payload = {"status": "ok", "payload": push_id}
+		# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+		var safe_push_id: Variant = _safe_copy_variant(push_id)
+		payload = {"status": "ok", "payload": safe_push_id}
 	else:
 		payload = {"status": "error", "code": "PUSH_FAILED", "message": error_msg}
 
@@ -612,7 +631,7 @@ func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -
 
 func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
 	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
-	var safe_value = _safe_copy_variant(value)
+	var safe_value: Variant = _safe_copy_variant(value)
 	var payload: Dictionary = {"status": "ok", "payload": safe_value}
 	_resolve_pending_request(req_id, payload)
 
@@ -628,7 +647,7 @@ func _on_transaction_completed(
 	var payload: Dictionary
 	if success:
 		# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
-		var safe_value = _safe_copy_variant(value)
+		var safe_value: Variant = _safe_copy_variant(value)
 		payload = {"status": "ok", "payload": safe_value}
 	else:
 		payload = {"status": "error", "code": "TRANSACTION_FAILED", "message": error_msg}
