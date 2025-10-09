@@ -133,6 +133,7 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 
 **Build Commands:**
 - `just development` - **🚀 NEW: Complete development workflow (fastbuild-android + ci-validate + log-run test) - MANDATORY before GDScript commits**
+- `just cpp-dev` - **🔧 C++ development workflow (build-android-templates + install-android-template + fastbuild-android)**
 - `just ci-validate` - **🚨 CI validation pipeline (format + lint + syntax) - MANDATORY before commits**
 - `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
 - `just build-all-android` - Android smart rebuild (3-25 min) **Complete Android pipeline**
