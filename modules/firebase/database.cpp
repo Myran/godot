@@ -796,22 +796,21 @@ void FirebaseDatabase::_handle_push_and_update_on_main_thread(
 		String error_msg) {
 	// NOW ON MAIN THREAD
 
+	// CRITICAL SAFETY: Create a safe Variant with proper memory alignment for ALL code paths
+	// This prevents SIGBUS crashes when GDScript accesses the returned data
+	// Firebase C++ SDK can return misaligned memory that violates ARM64 alignment requirements
+	Variant safe_push_key = Convertor::deepCopyVariant(Variant(push_key));
+
 	if (success) {
 		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
-
-		// CRITICAL SAFETY: Create a safe Variant with proper memory alignment
-		// This prevents SIGBUS crashes when GDScript accesses the returned data
-		// Firebase C++ SDK can return misaligned memory that violates ARM64 alignment requirements
-		Variant safe_result = Convertor::deepCopyVariant(Variant(push_key));
-
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, true, "");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, true, "");
 	} else if (status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(error);
 		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Error: " + error_code_str + " Msg: " + error_msg);
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, error_msg);
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, false, error_msg);
 	} else {
 		print_error(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Future did not complete. Status: " + itos(status));
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, push_key, false, "Firebase Future did not complete.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, false, "Firebase Future did not complete.");
 	}
 }
 
