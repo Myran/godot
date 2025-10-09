@@ -15,6 +15,9 @@ const LoadAlliedLineupActionClass = preload(
 )
 const LoadEnemyLineupActionClass = preload("res://debug/actions/system/load_enemy_lineup_action.gd")
 const RestartGameActionClass = preload("res://debug/actions/system/restart_game_action.gd")
+const GodotSignalSigbusTestActionClass = preload(
+	"res://debug/actions/system/godot_signal_sigbus_test_action.gd"
+)
 # Firebase rate limiter status action implemented as lambda function below
 
 
@@ -72,6 +75,11 @@ static func _register_debug_system_actions(registry: DebugActionRegistry) -> voi
 	# Add restart game action
 	var restart_game_action: RestartGameAction = RestartGameActionClass.new()
 	registry.register_action(restart_game_action)
+	# Add Godot signal SIGBUS test action (minimal reproduction for engine bug)
+	var godot_signal_test_action: GodotSignalSigbusTestAction = (
+		GodotSignalSigbusTestActionClass.new()
+	)
+	registry.register_action(godot_signal_test_action)
 	# Add load debug state action (automatically finds most recent saved state)
 	var load_state_action: LoadDebugStateAction = LoadDebugStateActionClass.new()
 	registry.register_action(load_state_action)

@@ -1,0 +1,15 @@
+{
+  "description": "Firebase Backend Layer - Without async_pattern to test crash isolation",
+  "actions": [
+    "backend.firebase.lifecycle",
+    "backend.firebase.method_mapping",
+    "backend.firebase.error_handling",
+    "backend.firebase.performance",
+    "backend.firebase.request_tracking",
+    "backend.firebase.timer_manager"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  }
+}

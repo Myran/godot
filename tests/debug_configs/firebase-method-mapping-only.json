@@ -1,0 +1,10 @@
+{
+  "description": "Test ONLY method_mapping action to confirm it crashes alone",
+  "actions": [
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  }
+}

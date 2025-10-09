@@ -1,0 +1,11 @@
+{
+  "description": "Test ONLY lifecycle action to confirm it crashes with just set_data",
+  "actions": [
+    "backend.firebase.lifecycle"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "Lifecycle does only set_data. If this crashes, set_data ITSELF is not the issue - something else about lifecycle is different."
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Minimal crash test - lifecycle + method_mapping (both pass alone, crash together?)",
+  "actions": [
+    "backend.firebase.lifecycle",
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "Both actions pass individually. Testing if combination triggers crash."
+}

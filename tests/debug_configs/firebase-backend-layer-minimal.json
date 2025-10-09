@@ -1,0 +1,14 @@
+{
+  "description": "Firebase Backend Layer - Minimal (no async_pattern, no lifecycle)",
+  "actions": [
+    "backend.firebase.method_mapping",
+    "backend.firebase.error_handling",
+    "backend.firebase.performance",
+    "backend.firebase.request_tracking",
+    "backend.firebase.timer_manager"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Isolate set_data + get_data (same as async_pattern but in method_mapping style)",
+  "actions": [
+    "backend.firebase.async_pattern"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  }
+}

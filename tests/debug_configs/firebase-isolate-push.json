@@ -1,0 +1,12 @@
+{
+  "description": "Isolate push_data operation to test if Dictionary payload causes SIGBUS",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.request_tracking"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "request_tracking uses push_data - if this crashes, push_data is the culprit"
+}

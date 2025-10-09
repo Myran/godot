@@ -1,0 +1,13 @@
+{
+  "description": "Test 3 Firebase backend actions to find crash threshold",
+  "actions": [
+    "backend.firebase.lifecycle",
+    "backend.firebase.method_mapping",
+    "backend.firebase.error_handling"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "Testing if 3 actions triggers the cumulative memory corruption crash"
+}

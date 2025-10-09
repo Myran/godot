@@ -1,0 +1,11 @@
+{
+  "description": "Test ONLY set_data operation to isolate crash",
+  "actions": [
+    "backend.firebase.async_pattern"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "async_pattern does set_data + get_data. If this passes, set_data is OK."
+}

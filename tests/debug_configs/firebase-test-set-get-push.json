@@ -1,0 +1,12 @@
+{
+  "description": "Test set_data + get_data + push_data to see if push_data is the issue",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.request_tracking"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "request_tracking includes push operations. If this crashes, push_data is the culprit."
+}

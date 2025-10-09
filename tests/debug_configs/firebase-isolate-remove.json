@@ -1,0 +1,12 @@
+{
+  "description": "Isolate remove_data operation to test if it causes SIGBUS",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.error_handling"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "error_handling uses remove_data - if this crashes, remove_data is the culprit"
+}

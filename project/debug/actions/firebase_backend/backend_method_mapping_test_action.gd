@@ -33,12 +33,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var metadata: Dictionary = TestUtils.make_metadata(
 		"backend_method_mapping",
 		{
-			"methods_tested": ["set_data", "get_data", "push_data", "remove_data"],
+			"methods_tested": ["push_data_single"],
 			"method_results": method_results,
 			"success_rate": success_rate,
 			"total_methods": total_methods,
 			"successful_methods": successful_methods,
-			"minimum_required_rate": 0.75
+			"minimum_required_rate": 0.75,
+			"test_sequence": "Single PushChild (validates crash in isolation)"
 		}
 	)
 
@@ -81,50 +82,28 @@ func _perform_method_mapping_tests() -> Dictionary:
 	var total_methods: int = 0
 	var successful_methods: int = 0
 
-	_update_status("Testing set_data method mapping...")
-	total_methods += 1
-	var set_test_path: Array[Variant] = []
-	set_test_path.assign(test_base_path + ["set_test"])
-	var set_key: String = "set_" + test_timestamp
-	var set_value: String = TestConstants.test_value("Set method test")
+	# Test: Single PushChild operation only
+	# Validates if PushChild alone can cause crash (without any prior operations)
 
-	var set_success: bool = await test_backend_async_pattern(
-		"set_data", set_test_path, set_key, set_value, "Method: set_data"
-	)
-	method_results["set_data"] = {"success": set_success, "tested": true}
-	if set_success:
-		successful_methods += 1
-
-	_update_status("Testing get_data method mapping...")
-	total_methods += 1
-	var get_success: bool = await test_backend_async_pattern(
-		"get_data", set_test_path, set_key, null, "Method: get_data"
-	)
-	method_results["get_data"] = {"success": get_success, "tested": true}
-	if get_success:
-		successful_methods += 1
-
-	_update_status("Testing push_data method mapping...")
+	_update_status("Testing SINGLE push_data operation (no prior operations)...")
 	total_methods += 1
 	var push_path: Array[Variant] = []
-	push_path.assign(test_base_path + ["push_test"])
-	var push_value: Dictionary = {"message": "Push method test", "timestamp": test_timestamp}
+	push_path.assign(test_base_path + ["push_test_single"])
+	var push_value: Dictionary = {
+		"message": "Single push operation test", "timestamp": test_timestamp
+	}
 
 	var push_success: bool = await test_backend_async_pattern(
-		"push_data", push_path, "", push_value, "Method: push_data"
+		"push_data", push_path, "", push_value, "Method: push_data (single)"
 	)
-	method_results["push_data"] = {"success": push_success, "tested": true}
+	method_results["push_data_single"] = {"success": push_success, "tested": true}
 	if push_success:
 		successful_methods += 1
-
-	_update_status("Testing remove_data method mapping...")
-	total_methods += 1
-	var remove_success: bool = await test_backend_async_pattern(
-		"remove_data", set_test_path, set_key, null, "Method: remove_data"
-	)
-	method_results["remove_data"] = {"success": remove_success, "tested": true}
-	if remove_success:
-		successful_methods += 1
+		_update_status("✅ SINGLE push_data SUCCEEDED - PushChild works in isolation")
+	else:
+		_update_status(
+			"❌ SINGLE push_data FAILED - PushChild crashes even without prior operations!", true
+		)
 
 	var success_rate: float = float(successful_methods) / float(total_methods)
 

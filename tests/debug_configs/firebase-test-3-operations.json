@@ -1,0 +1,13 @@
+{
+  "description": "Test 3 Firebase operations (set, get, set again) to find crash threshold",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern",
+    "backend.firebase.async_pattern"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true
+  },
+  "comment": "3x async_pattern = 6 total operations (set+get, set+get, set+get). Tests if operation COUNT matters."
+}

@@ -1,0 +1,16 @@
+{
+  "description": "Minimal test case for Godot signal emission SIGBUS crash with large Arrays",
+  "actions": [
+    "system.godot_signal_sigbus_test"
+  ],
+  "platforms": [
+    "android",
+    "desktop"
+  ],
+  "metadata": {
+    "category": "godot_engine_bug",
+    "test_type": "minimal_reproduction",
+    "expected_behavior": "Should emit signals with large Arrays without crashing",
+    "actual_behavior": "SIGBUS crash on Android when creating Dictionary with large Array"
+  }
+}
