@@ -1692,9 +1692,9 @@ _test-list-generic test_list platform:
                '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": 0, "action_results": []}]' \
                "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
 
-            # Try to extract action results if available (robust fallback)
-            # Support both multi-platform session and individual platform sessions
-            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*.json"
+            # Extract action results from current session only
+            # Pattern includes session ID to avoid picking up stale files
+            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*${TEST_SESSION}*.json"
             ACTION_RESULTS_FILE=$(ls -t $ACTION_RESULTS_PATTERN 2>/dev/null | head -1 || echo "")
 
             if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
@@ -1737,9 +1737,9 @@ _test-list-generic test_list platform:
                '.config_results += [{"config": $config, "status": $status, "platform": $platform, "exit_code": $exit_code, "action_results": []}]' \
                "$HIERARCHY_FILE" > "$TEMP_FILE" && mv "$TEMP_FILE" "$HIERARCHY_FILE"
 
-            # Try to extract action results for failed tests too (show what was attempted)
-            # Support both multi-platform session and individual platform sessions
-            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*.json"
+            # Extract action results for failed tests from current session only
+            # Pattern includes session ID to avoid picking up stale files
+            ACTION_RESULTS_PATTERN="{{STANDARD_LOGS_DIR}}/test_action_results_*${config}*${PLATFORM}*${TEST_SESSION}*.json"
             ACTION_RESULTS_FILE=$(ls -t $ACTION_RESULTS_PATTERN 2>/dev/null | head -1 || echo "")
 
             if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then

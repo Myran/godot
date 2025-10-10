@@ -486,32 +486,8 @@ _test-multi-platform TARGET_CONFIG:
                                         done <<< "$ACTION_DETAILS" || true
                                     fi
                                 else
-                                    # No action_results in hierarchy file - try to find from action results files directly
-                                    ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" /tmp -name "test_action_results_*${config}*${PLATFORM}*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1)
-
-                                    if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
-                                        DIRECT_ACTION_COUNT=$(jq 'length' "$ACTION_RESULTS_FILE" 2>/dev/null || echo "0")
-
-                                        if [[ "$DIRECT_ACTION_COUNT" -gt 0 && "$DIRECT_ACTION_COUNT" != "null" ]]; then
-                                            echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($DIRECT_ACTION_COUNT actions)"
-
-                                            # Extract action details safely without SIGPIPE - with defensive empty check
-                                            DIRECT_ACTION_DETAILS=$(jq -r 'sort_by(.sequence // 0)[:10][] | "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
-                                               "$ACTION_RESULTS_FILE" 2>/dev/null || true)
-
-                                            if [[ -n "$DIRECT_ACTION_DETAILS" && "$DIRECT_ACTION_DETAILS" != "" ]]; then
-                                                while IFS= read -r action_detail; do
-                                                    if [[ -n "$action_detail" && "$action_detail" != "" ]]; then
-                                                        echo "   │   └── $action_detail"
-                                                    fi
-                                                done <<< "$DIRECT_ACTION_DETAILS" || true
-                                            fi
-                                        else
-                                            echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
-                                        fi
-                                    else
-                                        echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
-                                    fi
+                                    # No action_results in hierarchy - show PASSED without details
+                                    echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED"
                                 fi
                                 ;;
                             "failed")
