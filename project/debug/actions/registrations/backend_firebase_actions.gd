@@ -31,9 +31,6 @@ const BackendIsolatedGetOnlyTestActionClass = preload(
 const BackendIsolatedSetValueTestActionClass = preload(
 	"res://debug/actions/firebase_backend/isolated_set_value_test_action.gd"
 )
-const PushChildCrashReproducerClass = preload(
-	"res://debug/actions/firebase_backend/pushchild_crash_reproducer.gd"
-)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -99,9 +96,6 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		BackendIsolatedSetValueTestActionClass.new(),
 		"BackendIsolatedSetValueTestAction",
 		counters
-	)
-	_register_with_count(
-		registry, PushChildCrashReproducerClass.new(), "PushChildCrashReproducer", counters
 	)
 
 	Log.info(

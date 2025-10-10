@@ -19,7 +19,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	if not test_results.get("success", false):
 		return TestUtils.make_failure_result(
-			test_results.get("error", "Isolated set value test failed"),
+			str(test_results.get("error", "Isolated set value test failed")),
 			TestConstants.ERROR_CODES.BACKEND_UNAVAILABLE,
 			duration_ms,
 			action_name,

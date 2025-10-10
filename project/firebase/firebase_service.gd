@@ -387,7 +387,7 @@ func _resolve_pending_request(request_id: int, result: Variant) -> bool:
 				"Completing queued request with success",
 				{
 					"request_id": request_id,
-					"payload_size": len(str(result.payload) if result.payload else 0)
+					"payload_size": len(str(result.payload)) if result.payload else 0
 				},
 				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 			)

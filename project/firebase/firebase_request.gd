@@ -43,7 +43,7 @@ func complete_with_success(payload: Variant) -> void:
 	# CRITICAL SAFETY: Deep copy payload to prevent ARM64 alignment crashes
 	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed
 	# by GDScript. Deep copying ensures proper memory alignment before storing.
-	var safe_payload = _safe_copy_variant(payload)
+	var safe_payload: Variant = _safe_copy_variant(payload)
 
 	_result = {"status": "ok", "payload": safe_payload}
 	_is_completed = true
@@ -117,7 +117,8 @@ func _safe_copy_variant(variant: Variant) -> Variant:
 				[Log.TAG_FIREBASE, "alignment_debug"]
 			)
 			# Strings might have misaligned memory internally, create a safe copy
-			return String(variant)
+			var str_variant: String = variant
+			return String(str_variant)
 		_:
 			# Primitives (int, float, bool) are safe to return directly
 			Log.debug(
