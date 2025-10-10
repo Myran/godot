@@ -426,27 +426,36 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 	}
 	firebase::database::DatabaseReference new_child_ref = ref.PushChild();
 	const char *push_key_cstr = new_child_ref.key();
-	String push_key_str = push_key_cstr ? String(push_key_cstr) : "";
-	if (push_key_str.is_empty()) {
+
+	// CRITICAL FIX: Copy to std::string to ensure memory is owned BEFORE DatabaseReference is destroyed
+	// This prevents use-after-free when new_child_ref goes out of scope (Task-207 SIGBUS fix)
+	std::string push_key_std = push_key_cstr ? std::string(push_key_cstr) : "";
+
+	if (push_key_std.empty()) {
 		print_error("[RTDB C++] PushUpdate failed: Could not generate push key.");
 		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "Failed to generate push key.");
 		return;
 	}
+
 	firebase::Variant firebase_data = Convertor::toFirebaseVariant(data);
 	if (!firebase_data.is_map()) {
 		print_error("[RTDB C++] PushUpdate failed: Data must be a Dictionary (converts to map).");
-		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, push_key_str, false, "Data must be a Dictionary.");
+		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, String(push_key_std.c_str()), false, "Data must be a Dictionary.");
 		return;
 	}
-	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + push_key_str);
+
+	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
-	future.OnCompletion([this, p_request_id, push_key_str](const firebase::Future<void> &result) {
+	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
 		int error = result.error();
 		int status = result.status();
 		String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+		// WORKER THREAD - Convert std::string to Godot String (safe for data conversion)
+		String push_key_str = String(push_key_std.c_str());
 
 		// Marshal to main thread (NO Godot operations on worker thread!)
 		MessageQueue::get_singleton()->push_callable(
@@ -738,9 +747,8 @@ void FirebaseDatabase::_handle_get_value_on_main_thread(
 			// Value already converted to Godot Variant on worker thread
 			String signal_key = !key.is_empty() ? key : "";
 
-			// Deep copy to prevent SIGBUS memory corruption from Firebase C++ memory
-			// The Firebase C++ SDK creates Variants that can cause memory alignment issues
-			// when accessed by GDScript. Deep copying ensures GDScript-safe memory.
+			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
+			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
 			Variant safe_value = Convertor::deepCopyVariant(godot_value);
 
 			print_verbose(String("[RTDB C++] GetValue ReqID:") + itos(req_id) + " Main thread handler - Success. Key='" + signal_key + "'");
@@ -796,13 +804,12 @@ void FirebaseDatabase::_handle_push_and_update_on_main_thread(
 		String error_msg) {
 	// NOW ON MAIN THREAD
 
-	// CRITICAL SAFETY: Create a safe Variant with proper memory alignment for ALL code paths
-	// This prevents SIGBUS crashes when GDScript accesses the returned data
-	// Firebase C++ SDK can return misaligned memory that violates ARM64 alignment requirements
+	// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
+	// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
 	Variant safe_push_key = Convertor::deepCopyVariant(Variant(push_key));
 
 	if (success) {
-		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + push_key);
+		print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(req_id) + " Main thread handler - Success. PushKey: " + String(safe_push_key));
 		call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), req_id, safe_push_key, true, "");
 	} else if (status == firebase::kFutureStatusComplete) {
 		String error_code_str = String::num_int64(error);
@@ -853,8 +860,12 @@ void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
 			Variant value = exists ? godot_value : Variant();
 			String result_key = !key.is_empty() ? key : path_str;
 
+			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
+			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
+			Variant safe_value = Convertor::deepCopyVariant(value);
+
 			print_verbose(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Success.");
-			call_deferred(SNAME("emit_signal"), SNAME("query_completed"), req_id, result_key, value);
+			call_deferred(SNAME("emit_signal"), SNAME("query_completed"), req_id, result_key, safe_value);
 		} else {
 			print_error(String("[RTDB C++] Query ReqID:") + itos(req_id) + " Main thread handler - Snapshot pointer null");
 			call_deferred(SNAME("emit_signal"), SNAME("query_error"), req_id, path_str, "SNAPSHOT_PTR_NULL", "Snapshot pointer was null");
@@ -885,8 +896,12 @@ void FirebaseDatabase::_handle_transaction_on_main_thread(
 			// Value already converted to Godot Variant on worker thread
 			String result_key = !key.is_empty() ? key : "";
 
+			// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
+			// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
+			Variant safe_transaction_value = Convertor::deepCopyVariant(godot_value);
+
 			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success. Committed: Yes.");
-			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, result_key, godot_value, true, "");
+			call_deferred(SNAME("emit_signal"), SNAME("transaction_completed"), req_id, result_key, safe_transaction_value, true, "");
 		} else if (snapshot_valid) {
 			// Success but result is null/doesn't exist
 			print_verbose(String("[RTDB C++] Transaction ReqID:") + itos(req_id) + " Main thread handler - Success (result null). Committed: Yes.");

@@ -14,8 +14,13 @@ Variant Convertor::deepCopyVariant(const Variant& arg) {
 	} else if (type == Variant::DICTIONARY) {
 		Dictionary original = arg;
 		return original.duplicate(true); // true = deep copy
+	} else if (type == Variant::STRING) {
+		// CRITICAL FIX: Create a new aligned String copy to prevent ARM64 SIGBUS crashes
+		// Firebase C++ SDK can return misaligned memory that causes crashes when accessed by GDScript
+		String original = arg;
+		return String(original);  // Force creation of new, properly aligned String
 	} else {
-		// For other types, direct return is safe (primitives, strings, etc.)
+		// For other types (primitives), direct return is safe
 		return arg;
 	}
 }
