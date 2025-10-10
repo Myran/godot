@@ -537,13 +537,6 @@ _test-multi-platform TARGET_CONFIG:
     echo ""
     echo "✅ Multi-platform breakdown complete"
 
-    # Cleanup session files after summary
-    echo "🧹 Cleaning up multi-platform session files..."
-    rm -f /tmp/test_action_results_*_${MULTI_SESSION}_*.json 2>/dev/null || true
-    for HIERARCHY_FILE in $HIERARCHY_FILES; do
-        [[ -n "$HIERARCHY_FILE" ]] && rm -f "$HIERARCHY_FILE" 2>/dev/null || true
-    done
-
     # Comprehensive error collection and analysis
     OVERALL_RESULT=0
     FAILED_PLATFORMS=""
@@ -646,6 +639,14 @@ _test-multi-platform TARGET_CONFIG:
         # Cleanup timeout tracker
         rm -f "$TIMEOUT_TRACKER" 2>/dev/null || true
     fi
+
+    # Cleanup session files - do this LAST after all analysis and summaries
+    echo ""
+    echo "🧹 Cleaning up multi-platform session files..."
+    rm -f /tmp/test_action_results_*_${MULTI_SESSION}_*.json 2>/dev/null || true
+    for HIERARCHY_FILE in $HIERARCHY_FILES; do
+        [[ -n "$HIERARCHY_FILE" ]] && rm -f "$HIERARCHY_FILE" 2>/dev/null || true
+    done
 
     # PROPER EXIT BEHAVIOR: Fail if any failures detected, succeed otherwise
     if [[ $OVERALL_RESULT -eq 0 ]]; then

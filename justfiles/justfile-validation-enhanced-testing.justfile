@@ -1581,8 +1581,9 @@ _test-list-generic test_list platform:
     find "{{TEMP_DIR}}" -name "test_hierarchy_*.json" -mtime +1h -delete 2>/dev/null || true
 
     # Create hierarchical mapping data structure for comprehensive breakdown
-    HIERARCHY_FILE="{{TEMP_DIR}}/test_hierarchy_${TEST_LIST}_${TEST_SESSION}.json"
-    echo '{"test_list": "'$TEST_LIST'", "test_session": "'$TEST_SESSION'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
+    # Include platform in filename to avoid overwriting when multiple platforms run in parallel
+    HIERARCHY_FILE="{{TEMP_DIR}}/test_hierarchy_${TEST_LIST}_${PLATFORM}_${TEST_SESSION}.json"
+    echo '{"test_list": "'$TEST_LIST'", "test_session": "'$TEST_SESSION'", "platform": "'$PLATFORM'", "original_configs": [], "at_references": [], "direct_configs": [], "config_results": []}' > "$HIERARCHY_FILE"
     
     # Store original config structure from test list
     jq -r '.configs[]?' "$TEST_LIST_PATH" 2>/dev/null | while IFS= read -r config; do
