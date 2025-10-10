@@ -461,18 +461,18 @@ _test-multi-platform TARGET_CONFIG:
                     PLATFORM_ICON=$(just _get-platform-icon "$PLATFORM" 2>/dev/null || echo "📟")
 
                     if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
-                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
+                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
 
                         case "$CONFIG_STATUS" in
                             "passed")
                                 # Extract action count with fallback
-                                ACTION_COUNT=$(jq -r '.config_results[] | select(.config == "'"$config"'") | .action_results // [] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
+                                ACTION_COUNT=$(jq -r '.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") | .action_results // [] | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
 
                                 if [[ "$ACTION_COUNT" -gt 0 && "$ACTION_COUNT" != "null" ]]; then
                                     echo "   ├── $PLATFORM_ICON $PLATFORM: ✅ PASSED ($ACTION_COUNT actions)"
 
                                     # Extract action details safely without SIGPIPE - with defensive empty check
-                                    ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'") |
+                                    ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") |
                                            (.action_results // []) | sort_by(.sequence // 0)[:10][]? |
                                            select(.action != null) |
                                            "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
@@ -519,7 +519,7 @@ _test-multi-platform TARGET_CONFIG:
                                 config_errors=$((config_errors + 1))
                                 ;;
                             "skipped")
-                                SKIP_REASON=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .skip_reason // "Platform incompatible"][0] // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null)
+                                SKIP_REASON=$(jq -r '[.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") | .skip_reason // "Platform incompatible"][0] // "Platform incompatible"' "$HIERARCHY_FILE" 2>/dev/null)
                                 echo "   ├── $PLATFORM_ICON $PLATFORM: ⏭️  SKIPPED ($SKIP_REASON)"
                                 ;;
                             "")
@@ -594,7 +594,7 @@ _test-multi-platform TARGET_CONFIG:
                 for PLATFORM in $TEST_PLATFORMS; do
                     HIERARCHY_FILE=$(get_platform_hierarchy "$PLATFORM")
                     if [[ -n "$HIERARCHY_FILE" && -f "$HIERARCHY_FILE" ]]; then
-                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
+                        CONFIG_STATUS=$(jq -r '[.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") | .status][0] // ""' "$HIERARCHY_FILE" 2>/dev/null)
                         if [[ "$CONFIG_STATUS" == "failed" ]]; then
                             CONFIG_HAS_FAILURE=true
                             break
