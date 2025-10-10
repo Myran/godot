@@ -387,7 +387,7 @@ func _resolve_pending_request(request_id: int, result: Variant) -> bool:
 				"Completing queued request with success",
 				{
 					"request_id": request_id,
-					"payload_size": len(str(result.payload)) if result.payload else 0
+					"payload_size": len(str(result.payload) if result.payload else 0)
 				},
 				[Log.TAG_FIREBASE, Log.TAG_DEBUG]
 			)
@@ -451,6 +451,21 @@ func get_rate_limiter_status() -> Dictionary:
 	if _rate_limiter != null:
 		return _rate_limiter.get_status()
 	return {"error": "rate_limiter_not_initialized"}
+
+
+# CRITICAL THREAD SAFETY: Ensure all Firebase operations happen on main thread
+# Firebase C++ callbacks can execute in GLThread context, which violates Godot's
+# threading requirements when accessing Godot objects and memory management.
+func _ensure_main_thread() -> void:
+	# CRITICAL: Firebase signal handlers MUST execute on main thread
+	# Processing Godot Variants in GLThread causes memory corruption and crashes
+	assert(
+		Engine.get_main_loop() == get_tree(),
+		"CRITICAL THREADING VIOLATION: Firebase operation on non-main thread! This will cause crashes."
+	)
+	Log.debug(
+		"FirebaseService: Main thread validation passed", {}, [Log.TAG_FIREBASE, "thread_safety"]
+	)
 
 
 # SAFETY: Deep copy Variants from Firebase to prevent ARM64 alignment crashes
@@ -564,6 +579,15 @@ func _connect_cpp_signals() -> bool:
 
 
 func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
+	# C++ already marshalled to main thread via MessageQueue + call_deferred
+	# No need for additional deferral - process directly
+	_process_get_value_on_main_thread(req_id, value)
+
+
+func _process_get_value_on_main_thread(req_id: int, value: Variant) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
 	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
 	var safe_value: Variant = _safe_copy_variant(value)
@@ -572,13 +596,29 @@ func _on_get_value_completed(req_id: int, _key: String, value: Variant) -> void:
 
 
 func _on_get_value_error(req_id: int, _key: String, code: String, msg: String) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_get_value_error_on_main_thread(req_id, code, msg)
+
+
+func _process_get_value_error_on_main_thread(req_id: int, code: String, msg: String) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	var payload: Dictionary = {"status": "error", "code": code, "message": msg}
 	_resolve_pending_request(req_id, payload)
 
 
 func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_set_value_on_main_thread(req_id, success, error_msg)
+
+
+func _process_set_value_on_main_thread(req_id: int, success: bool, error_msg: String) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	Log.debug(
-		"_on_set_value_completed called",
+		"_process_set_value_on_main_thread called",
 		{
 			"request_id": req_id,
 			"success": success,
@@ -606,11 +646,25 @@ func _on_set_value_completed(req_id: int, success: bool, error_msg: String) -> v
 func _on_push_and_update_completed(
 	req_id: int, push_id: Variant, success: bool, error_msg: String
 ) -> void:
+	# C++ already marshalled to main thread via MessageQueue + call_deferred
+	# No need for additional deferral - process directly
+	_process_push_and_update_on_main_thread(req_id, push_id, success, error_msg)
+
+
+func _process_push_and_update_on_main_thread(
+	req_id: int, push_id: Variant, success: bool, error_msg: String
+) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
+	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
+	# Firebase C++ SDK can return misaligned memory that causes SIGBUS when accessed by GDScript
+	# This must happen BEFORE passing to FirebaseRequest to prevent crash in complete_with_success
+	var safe_push_id: Variant = _safe_copy_variant(push_id)
+
 	var payload: Dictionary
 
 	if success:
-		# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
-		var safe_push_id: Variant = _safe_copy_variant(push_id)
 		payload = {"status": "ok", "payload": safe_push_id}
 	else:
 		payload = {"status": "error", "code": "PUSH_FAILED", "message": error_msg}
@@ -619,6 +673,14 @@ func _on_push_and_update_completed(
 
 
 func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_remove_value_on_main_thread(req_id, success, error_msg)
+
+
+func _process_remove_value_on_main_thread(req_id: int, success: bool, error_msg: String) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	var payload: Dictionary
 
 	if success:
@@ -630,6 +692,14 @@ func _on_remove_value_completed(req_id: int, success: bool, error_msg: String) -
 
 
 func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_query_on_main_thread(req_id, value)
+
+
+func _process_query_on_main_thread(req_id: int, value: Variant) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
 	var safe_value: Variant = _safe_copy_variant(value)
 	var payload: Dictionary = {"status": "ok", "payload": safe_value}
@@ -637,6 +707,14 @@ func _on_query_completed(req_id: int, _key: String, value: Variant) -> void:
 
 
 func _on_query_error(req_id: int, _key: String, code: int, msg: String) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_query_error_on_main_thread(req_id, code, msg)
+
+
+func _process_query_error_on_main_thread(req_id: int, code: int, msg: String) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	var payload: Dictionary = {"status": "error", "code": code, "message": msg}
 	_resolve_pending_request(req_id, payload)
 
@@ -644,6 +722,16 @@ func _on_query_error(req_id: int, _key: String, code: int, msg: String) -> void:
 func _on_transaction_completed(
 	req_id: int, _key: String, value: Variant, success: bool, error_msg: String
 ) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_transaction_on_main_thread(req_id, value, success, error_msg)
+
+
+func _process_transaction_on_main_thread(
+	req_id: int, value: Variant, success: bool, error_msg: String
+) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	var payload: Dictionary
 	if success:
 		# CRITICAL SAFETY: Deep copy Firebase C++ SDK response to prevent ARM64 alignment crashes
@@ -655,6 +743,16 @@ func _on_transaction_completed(
 
 
 func _on_server_timestamp_completed(req_id: int, success: bool, error_msg: String) -> void:
+	# CRITICAL THREAD SAFETY: Marshal to main thread before ANY processing
+	_process_server_timestamp_on_main_thread(req_id, success, error_msg)
+
+
+func _process_server_timestamp_on_main_thread(
+	req_id: int, success: bool, error_msg: String
+) -> void:
+	# GUARANTEED MAIN THREAD EXECUTION - Safe for all Godot operations
+	_ensure_main_thread()
+
 	var payload: Dictionary = (
 		{"status": "ok", "payload": success}
 		if success

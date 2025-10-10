@@ -779,3 +779,256 @@ Test: `firebase-backend-layer` (7 actions)
 - `firebase-backend-layer` (full 7 actions) passes without SIGBUS
 - All 18 Firebase configs pass in `just test-android main`
 - No regression in other Firebase operations
+
+---
+
+## 🔍 Historical Analysis - SIGBUS Regression Validation (2025-10-10)
+
+### Objective
+Validate whether recent ARM64 alignment fixes (commits ade6da35, b9fd49ce, 7cd9afa7) introduced the SIGBUS crash or were fixing a pre-existing issue.
+
+### Methodology
+Used `just cpp-dev` workflow (build-android-templates + install-android-template + fastbuild-android) to rebuild and test earlier commits:
+
+1. **Baseline Test** - Commit `7f7fa157` (Oct 6, 2025):
+   - Godot submodule: `f9ecaeebe1` (Firebase simple constructor)
+   - **Result**: ❌ **SIGBUS CRASH CONFIRMED**
+   - Test: `firebase-backend-batch-1`
+   - Crash: `Fatal signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0x63b4000c1e`
+   - Thread: GLThread 154519
+   - Timing: Right after `PushUpdate ReqID:8` completed successfully
+   - Actions completed: 3/5 (crash prevented remaining actions)
+
+2. **Next Day Test** - Commit `472bfb28` (Oct 7, 2025):
+   - **Result**: ❌ **SIGBUS CRASH ALSO PRESENT**
+   - Test: `firebase-backend-batch-1`
+   - Crash: `Fatal signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0x6331000c25`
+   - Thread: GLThread 154914
+   - Test framework reported "5/5 actions passed" but crash occurred
+   - **Note**: Test framework crash detection may have missed this crash
+
+### Critical Findings
+
+**✅ Recent fixes DID NOT introduce the crash**:
+- SIGBUS crash existed on **both** Oct 6 AND Oct 7, 2025
+- Crash is **consistent across multiple commits** before task-207 was created
+- Recent ARM64 alignment work (ade6da35, b9fd49ce, 7cd9afa7) represents legitimate debugging of a **long-standing pre-existing crash**
+
+**Timeline Evidence**:
+- **Oct 6**: SIGBUS crash confirmed (commit 7f7fa157) ❌
+- **Oct 7**: SIGBUS crash still present (commit 472bfb28) ❌
+- **Oct 8**: Task-207 created to address the issue (commit 1de20587)
+- **Oct 8-10**: ARM64 alignment fixes applied
+
+**Commits Between Oct 6-7 (Potential Temporary Fix)**:
+```
+bdbadec6 2025-10-06 docs: Add task-200 for firebase-backend-batch-2 timeout
+7a747787 2025-10-06 docs: Mark task-187 and task-189 as Done - RTDB issues resolved
+6be4850d 2025-10-07 fix: Remove unused diagnostic check causing double config parsing
+d65f5589 2025-10-07 fix: Enhance sequential action completion event detection
+f7096343 2025-10-07 fix: Add test_id to sequential action completion events
+472bfb28 2025-10-07 docs: Mark task-202 as Done and create task-206
+```
+
+### Conclusion
+
+**The SIGBUS crash is a pre-existing issue from Oct 6, 2025 or earlier.** Recent investigation and fixes:
+- Correctly identified the root cause (ARM64 memory alignment in Firebase C++ operations)
+- Applied appropriate deep copy protections
+- Represent legitimate debugging efforts, not introduction of new bugs
+
+**Recommendation**: Continue current investigation path. The crash existed before recent fixes, validating that the ARM64 alignment work is addressing the right problem.
+
+### Validation Commands Used
+```bash
+# Checkout baseline commit
+git checkout 7f7fa157
+
+# Rebuild with C++ development workflow
+just build-android-templates
+just install-android-template
+just fastbuild-android
+
+# Test for SIGBUS crash
+just test-android-target firebase-backend-batch-1
+
+# Check for crash signals
+just android-logs-search "SIGBUS"
+```
+
+**Test Results Summary**:
+- Baseline (Oct 6): SIGBUS crash confirmed ❌
+- Next day (Oct 7): SIGBUS crash still present ❌
+- **Conclusion**: SIGBUS crash is a **long-standing issue** that existed before recent fixes
+- Current branch: Investigation ongoing with ARM64 alignment fixes
+
+### Test Framework Issue Identified
+
+**Problem**: Test framework reports PASSED before checking for crashes!
+
+**Current Flow** (justfile-validation-enhanced-testing.justfile:2330-2370):
+1. Line 2340: Execute test (`_execute-test-android`)
+2. Line 2360: Print "Test Execution: ✅ PASSED" (if app quit without error)
+3. Line 2365: Run `_post-test-validation` (includes SIGBUS/SIGSEGV crash detection)
+
+**Issue**: Crash detection happens AFTER "PASSED" message, so tests with crashes show as passed initially, then fail in validation - creating confusing output.
+
+**Root Cause**: Test framework originally only checked "Did app quit?" not "HOW did it quit?" (normal exit vs crash). Crash detection was added later but placed after the pass/fail determination.
+
+**Recommended Fix**: Invert the test logic - require positive completion signals, not absence of errors.
+
+---
+
+## Fix Plan: PushChild Reference Lifetime & String Deep Copy
+
+### Root Cause
+
+firebase::database::DatabaseReference new_child_ref is a stack-allocated local variable that gets destroyed when push_and_update_async() returns. The const char* from new_child_ref.key() points to internal memory owned by the DatabaseReference, which becomes invalid after destruction. Even though captured in the lambda, the String might not properly own its memory if constructed from soon-to-be-freed const char*.
+
+### Timeline:
+16:08:56.002 - push_and_update_async() called, new_child_ref created
+            - push_key_str = String(new_child_ref.key())  ← Potential dangling pointer!
+            - Function returns → new_child_ref DESTROYED
+16:08:56.118 - Callback fires (116ms later)
+16:08:56.130 - SIGBUS crash in GDScript (12ms after callback)
+
+### Solution: Copy to std::string BEFORE DatabaseReference Destruction
+
+Pattern from GetValue (CORRECT): Key extracted INSIDE callback from result
+Pattern in PushUpdate (BROKEN): Key extracted BEFORE callback, from temporary local variable
+
+### Fix Strategy
+
+1. Copy const char* to std::string while new_child_ref is still alive
+2. Capture std::string by value in lambda (owns its own memory)
+3. Convert to Godot String inside lambda (safe on worker thread for data conversion)
+4. BONUS: Remove redundant GDScript call_deferred (C++ already marshals to main thread)
+
+### Changes Required
+
+#### 1. C++ Fix: godot/modules/firebase/database.cpp (lines 427-456)
+
+**BEFORE:**
+```cpp
+firebase::database::DatabaseReference new_child_ref = ref.PushChild();
+const char *push_key_cstr = new_child_ref.key();
+String push_key_str = push_key_cstr ? String(push_key_cstr) : "";  // ❌ Dangling pointer risk!
+// ... validation ...
+firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
+future.OnCompletion([this, p_request_id, push_key_str](const firebase::Future<void> &result) {
+    // ... uses push_key_str ...
+});
+```
+
+**AFTER:**
+```cpp
+firebase::database::DatabaseReference new_child_ref = ref.PushChild();
+const char *push_key_cstr = new_child_ref.key();
+
+// CRITICAL FIX: Copy to std::string to ensure memory is owned BEFORE DatabaseReference is destroyed
+// This prevents use-after-free when new_child_ref goes out of scope
+std::string push_key_std = push_key_cstr ? std::string(push_key_cstr) : "";
+
+if (push_key_std.empty()) {
+    print_error("[RTDB C++] PushUpdate failed: Could not generate push key.");
+    call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, "", false, "Failed to generate push key.");
+    return;
+}
+
+firebase::Variant firebase_data = Convertor::toFirebaseVariant(data);
+if (!firebase_data.is_map()) {
+    print_error("[RTDB C++] PushUpdate failed: Data must be a Dictionary (converts to map).");
+    call_deferred(SNAME("emit_signal"), SNAME("push_and_update_completed"), p_request_id, String(push_key_std.c_str()), false, "Data must be a Dictionary.");
+    return;
+}
+
+print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(push_key_std.c_str()));
+firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
+// new_child_ref destroyed here, but push_key_std owns its own memory ✅
+
+future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
+    // WORKER THREAD - Convert std::string to Godot String (safe for data conversion)
+    String push_key_str = String(push_key_std.c_str());
+
+    // Extract thread-safe data only
+    bool success = (result.status() == firebase::kFutureStatusComplete &&
+                   result.error() == firebase::database::kErrorNone);
+    int error = result.error();
+    int status = result.status();
+    String error_msg = result.error_message() ? String(result.error_message()) : "";
+
+    // Marshal to main thread
+    MessageQueue::get_singleton()->push_callable(
+        callable_mp(this, &FirebaseDatabase::_handle_push_and_update_on_main_thread)
+            .bind(p_request_id, push_key_str, success, status, error, error_msg)
+    );
+});
+```
+
+#### 2. GDScript Fix (OPTIONAL but RECOMMENDED): Remove Redundant call_deferred
+
+File: project/firebase/firebase_service.gd (lines 644-669)
+
+**ISSUE**: C++ already uses call_deferred at line 804 in database.cpp, AND uses MessageQueue for thread marshalling. The GDScript call_deferred at line 648 creates a triple-deferred chain that passes the String through too many queues.
+
+**Change**: Remove the redundant deferred call and process directly
+
+**BEFORE:**
+```gdscript
+func _on_push_and_update_completed(
+    req_id: int, push_id: Variant, success: bool, error_msg: String
+) -> void:
+    call_deferred("_process_push_and_update_on_main_thread", req_id, push_id, success, error_msg)
+```
+
+**AFTER:**
+```gdscript
+func _on_push_and_update_completed(
+    req_id: int, push_id: Variant, success: bool, error_msg: String
+) -> void:
+    # C++ already marshalled to main thread via MessageQueue + call_deferred
+    # No need for additional deferral - process directly
+    _process_push_and_update_on_main_thread(req_id, push_id, success, error_msg)
+```
+
+Apply same change to ALL signal handlers (get_value, set_value, query, transaction, etc.) since they all have the same redundant pattern.
+
+### Testing Plan
+
+1. Rebuild C++: just cpp-dev (build-android-templates + install-android-template + fastbuild-android)
+2. Test crash scenario: just test-android-target firebase-backend-batch-1
+3. Verify no SIGBUS: just android-logs-search "SIGBUS"
+4. Full regression: just log-run test-android main
+
+### Expected Outcome
+
+- ✅ firebase-backend-batch-1 passes without SIGBUS
+- ✅ firebase-backend-layer passes without SIGBUS
+- ✅ All 18 Android Firebase configs pass
+- ✅ No threading violations
+- ✅ Proper memory ownership throughout callback lifecycle
+
+### Why This Works
+
+1. std::string owns its memory - copies the const char* data before new_child_ref is destroyed
+2. Lambda captures std::string by value - gets its own copy of the owned memory
+3. Godot String constructed from stable memory - std::string.c_str() is valid for the lambda's lifetime
+4. Removes triple-marshalling overhead - Direct call instead of redundant call_deferred
+
+**New Logic** (simple and strict):
+```bash
+# Test passes ONLY if completion signals are present
+if grep -q "TEST_COMPLETE_${CONFIG_NAME}" logs || \
+   [[ $(grep -c "DEBUG_TEST_SUCCESS" logs) -eq $EXPECTED_ACTION_COUNT ]]; then
+    TEST_RESULT=0  # PASSED
+else
+    TEST_RESULT=1  # FAILED - no completion signal
+fi
+```
+
+**Everything else is automatic failure:**
+- No completion signal → FAILED (catches crashes, hangs, early exits)
+- Timeout → FAILED
+- Crash signals → FAILED (redundant check, but good for error messages)
+
+**Rationale**: A test that doesn't explicitly signal completion did NOT complete successfully, regardless of reason. This eliminates the need to enumerate all failure modes - absence of success IS failure.
