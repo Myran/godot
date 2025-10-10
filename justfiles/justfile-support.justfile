@@ -235,8 +235,8 @@ _test-multi-platform TARGET_CONFIG:
 
         if [[ $PLATFORM_RESULT -ne 2 ]]; then  # Not skipped
             # Find the hierarchy file created by this platform test
-            # Look for files with the test config pattern or session timestamp
-            HIERARCHY_FILE=$(ls -t /tmp/test_hierarchy_${TARGET_CONFIG}_*.json /tmp/test_hierarchy_*_${MULTI_SESSION}_*.json 2>/dev/null | head -n 1 || echo "")
+            # Look for platform-specific hierarchy file with config, platform, and session
+            HIERARCHY_FILE=$(ls -t /tmp/test_hierarchy_${TARGET_CONFIG}_${PLATFORM}_${MULTI_SESSION}.json /tmp/test_hierarchy_*_${PLATFORM}_${MULTI_SESSION}.json 2>/dev/null | head -n 1 || echo "")
 
             if [[ -z "$HIERARCHY_FILE" || ! -f "$HIERARCHY_FILE" ]]; then
                 # No hierarchy file found - create one from action results for single config tests
