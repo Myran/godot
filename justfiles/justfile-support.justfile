@@ -474,7 +474,7 @@ _test-multi-platform TARGET_CONFIG:
                                     # Extract action details safely without SIGPIPE - with defensive empty check
                                     ACTION_DETAILS=$(jq -r '.config_results[] | select(.config == "'"$config"'" and .platform == "'"$PLATFORM"'") |
                                            (.action_results // []) | sort_by(.sequence // 0)[:10][]? |
-                                           select(.action != null) |
+                                           select(.action) |
                                            "\(.action // "unknown") (\(.duration_ms // 0)ms)"' \
                                        "$HIERARCHY_FILE" 2>/dev/null || true)
 
