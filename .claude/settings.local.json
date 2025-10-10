@@ -123,7 +123,8 @@
       "Bash(ls:*)",
       "Bash(awk:*)",
       "WebFetch(domain:firebase.google.com)",
-      "Bash(adb:*)"
+      "Bash(adb:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": [],

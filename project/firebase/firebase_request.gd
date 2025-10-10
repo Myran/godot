@@ -74,35 +74,48 @@ func complete_with_success(payload: Variant) -> void:
 func _safe_copy_variant(variant: Variant) -> Variant:
 	Log.debug(
 		"FirebaseRequest: _safe_copy_variant called",
-		{
-			"input_type": typeof(variant),
-			"request_id": _request_id
-		},
+		{"input_type": typeof(variant), "request_id": _request_id},
 		[Log.TAG_FIREBASE, "alignment_debug"]
 	)
 
 	# Handle null or empty variants safely
 	if variant == null:
-		Log.debug("FirebaseRequest: _safe_copy_variant returning null", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+		Log.debug(
+			"FirebaseRequest: _safe_copy_variant returning null",
+			{},
+			[Log.TAG_FIREBASE, "alignment_debug"]
+		)
 		return null
 
 	match typeof(variant):
 		TYPE_DICTIONARY:
-			Log.debug("FirebaseRequest: _safe_copy_variant processing DICTIONARY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseRequest: _safe_copy_variant processing DICTIONARY",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var dict: Dictionary = variant
 			var safe_dict: Dictionary = {}
 			for key: Variant in dict.keys():
 				safe_dict[key] = _safe_copy_variant(dict[key])
 			return safe_dict
 		TYPE_ARRAY:
-			Log.debug("FirebaseRequest: _safe_copy_variant processing ARRAY", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseRequest: _safe_copy_variant processing ARRAY",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var arr: Array = variant
 			var safe_arr: Array = []
 			for item: Variant in arr:
 				safe_arr.append(_safe_copy_variant(item))
 			return safe_arr
 		TYPE_STRING:
-			Log.debug("FirebaseRequest: _safe_copy_variant processing STRING", {}, [Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"FirebaseRequest: _safe_copy_variant processing STRING",
+				{},
+				[Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			# Strings might have misaligned memory internally, create a safe copy
 			return String(variant)
 		_:

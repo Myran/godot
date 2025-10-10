@@ -1,0 +1,10 @@
+{
+  "description": "Firebase Backend Batch 1 - WITH 5 SECOND DELAY to isolate timing issues",
+  "actions": [
+    "system.debug.delay_5s",
+    "backend.firebase.async_pattern",
+    "backend.firebase.lifecycle",
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"]
+}

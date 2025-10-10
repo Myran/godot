@@ -459,19 +459,31 @@ func _safe_copy_variant(variant: Variant) -> Variant:
 
 	# Handle null or empty variants safely
 	if variant == null:
-		Log.debug("DatabaseService: _safe_copy_variant returning null", {}, [Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"])
+		Log.debug(
+			"DatabaseService: _safe_copy_variant returning null",
+			{},
+			[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
+		)
 		return null
 
 	match typeof(variant):
 		TYPE_DICTIONARY:
-			Log.debug("DatabaseService: _safe_copy_variant processing DICTIONARY", {}, [Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"DatabaseService: _safe_copy_variant processing DICTIONARY",
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var dict: Dictionary = variant
 			var safe_dict: Dictionary = {}
 			for key: Variant in dict.keys():
 				safe_dict[key] = _safe_copy_variant(dict[key])
 			return safe_dict
 		TYPE_ARRAY:
-			Log.debug("DatabaseService: _safe_copy_variant processing ARRAY", {}, [Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"])
+			Log.debug(
+				"DatabaseService: _safe_copy_variant processing ARRAY",
+				{},
+				[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
+			)
 			var arr: Array = variant
 			var safe_arr: Array = []
 			for item: Variant in arr:

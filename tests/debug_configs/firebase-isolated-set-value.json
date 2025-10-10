@@ -1,0 +1,13 @@
+{
+  "description": "Isolated Firebase operations test - ONE action at a time to identify crash source",
+  "actions": [
+    "system.debug.delay_2s",
+    "backend.firebase.isolated_set_value"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "auto_quit": true,
+    "isolated_test": true,
+    "test_sequence": "isolated_set_value"
+  }
+}

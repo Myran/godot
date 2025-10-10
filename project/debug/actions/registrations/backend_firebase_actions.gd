@@ -22,6 +22,18 @@ const BackendLifecycleTestActionClass = preload(
 const BackendRequestTrackingTestActionClass = preload(
 	"res://debug/actions/firebase_backend/backend_request_tracking_test_action.gd"
 )
+const BackendIsolatedPushOnlyTestActionClass = preload(
+	"res://debug/actions/firebase_backend/isolated_push_only_test_action.gd"
+)
+const BackendIsolatedGetOnlyTestActionClass = preload(
+	"res://debug/actions/firebase_backend/isolated_get_only_test_action.gd"
+)
+const BackendIsolatedSetValueTestActionClass = preload(
+	"res://debug/actions/firebase_backend/isolated_set_value_test_action.gd"
+)
+const PushChildCrashReproducerClass = preload(
+	"res://debug/actions/firebase_backend/pushchild_crash_reproducer.gd"
+)
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
@@ -69,6 +81,27 @@ static func register_all(registry: DebugActionRegistry) -> void:
 		BackendRequestTrackingTestActionClass.new(),
 		"BackendRequestTrackingTestAction",
 		counters
+	)
+	_register_with_count(
+		registry,
+		BackendIsolatedPushOnlyTestActionClass.new(),
+		"BackendIsolatedPushOnlyTestAction",
+		counters
+	)
+	_register_with_count(
+		registry,
+		BackendIsolatedGetOnlyTestActionClass.new(),
+		"BackendIsolatedGetOnlyTestAction",
+		counters
+	)
+	_register_with_count(
+		registry,
+		BackendIsolatedSetValueTestActionClass.new(),
+		"BackendIsolatedSetValueTestAction",
+		counters
+	)
+	_register_with_count(
+		registry, PushChildCrashReproducerClass.new(), "PushChildCrashReproducer", counters
 	)
 
 	Log.info(

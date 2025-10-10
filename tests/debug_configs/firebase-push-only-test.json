@@ -1,0 +1,7 @@
+{
+  "description": "Minimal test - ONLY push_data operation to isolate SIGBUS",
+  "actions": [
+    "backend.firebase.push_only_test"
+  ],
+  "platforms": ["android"]
+}
