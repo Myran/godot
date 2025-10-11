@@ -1,7 +1,7 @@
 ---
 id: task-131
 title: Fix gamestate testing command-line integration issues
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-07 08:39'
 updated_date: '2025-09-13 11:35'

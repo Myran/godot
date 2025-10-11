@@ -1,7 +1,7 @@
 ---
 id: task-132
 title: Fix Android DataSource initialization hang causing 100% test failures
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-08 12:26'
 updated_date: '2025-09-13 11:30'

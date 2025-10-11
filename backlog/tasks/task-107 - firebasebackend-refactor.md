@@ -1,7 +1,7 @@
 ---
 id: task-107
 title: firebasebackend refactor
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-29 22:41'
 updated_date: '2025-09-02 15:45'

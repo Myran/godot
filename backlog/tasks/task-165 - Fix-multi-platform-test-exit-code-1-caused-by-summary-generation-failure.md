@@ -1,7 +1,7 @@
 ---
 id: task-165
 title: Fix multi-platform test exit code 1 caused by summary generation failure
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-19 10:20'
 updated_date: '2025-09-19 12:30'

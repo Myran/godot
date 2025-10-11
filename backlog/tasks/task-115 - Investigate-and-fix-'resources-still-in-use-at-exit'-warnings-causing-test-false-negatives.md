@@ -3,7 +3,7 @@ id: task-115
 title: >-
   Investigate and fix 'resources still in use at exit' warnings causing test
   false negatives
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-05 07:01'
 completed_date: '2025-09-05 09:30'

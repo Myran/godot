@@ -1,7 +1,7 @@
 ---
 id: task-133
 title: Investigate Android app crash during FirebaseServiceBackend creation
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-09 06:48'
 labels:

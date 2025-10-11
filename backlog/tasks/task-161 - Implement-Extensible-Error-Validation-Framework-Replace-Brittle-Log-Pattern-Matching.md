@@ -3,7 +3,7 @@ id: task-161
 title: >-
   Implement Extensible Error Validation Framework - Replace Brittle Log Pattern
   Matching
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-17 21:12'
 updated_date: '2025-09-18 08:43'

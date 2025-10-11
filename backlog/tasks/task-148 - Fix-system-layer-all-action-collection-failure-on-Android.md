@@ -1,7 +1,7 @@
 ---
 id: task-148
 title: Fix system-layer-all action collection failure on Android
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-13 13:20'
 updated_date: '2025-09-14 22:03'

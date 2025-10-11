@@ -3,7 +3,7 @@ id: task-143
 title: >-
   Fix RTDB test action coverage gap - missing transaction action in
   comprehensive tests
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-12 21:08'
 completed_date: '2025-09-13 00:20'

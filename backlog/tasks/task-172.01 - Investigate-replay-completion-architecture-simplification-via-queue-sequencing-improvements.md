@@ -3,7 +3,7 @@ id: task-172.01
 title: >-
   Investigate replay completion architecture simplification via queue sequencing
   improvements
-status: Completed
+status: Done
 assignee: [Claude]
 created_date: '2025-09-25 05:19'
 updated_date: '2025-09-26 23:30'

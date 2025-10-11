@@ -1,7 +1,7 @@
 ---
 id: task-163
 title: Fix battle-logic-only batch test timing issue - app quit race condition
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-18 12:40'
 updated_date: '2025-09-19 06:47'

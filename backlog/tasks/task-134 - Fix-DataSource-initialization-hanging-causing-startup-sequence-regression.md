@@ -1,7 +1,7 @@
 ---
 id: task-134
 title: Fix DataSource initialization hanging causing startup sequence regression
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-09 12:20'
 labels:

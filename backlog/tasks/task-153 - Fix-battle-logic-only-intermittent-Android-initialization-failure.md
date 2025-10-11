@@ -1,7 +1,7 @@
 ---
 id: task-153
 title: Fix battle-logic-only intermittent Android initialization failure
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-16 09:20'
 updated_date: '2025-09-18 22:20'

@@ -3,7 +3,7 @@ id: task-102
 title: >-
   Fix critical DebugActionResult refactor regression breaking desktop automated
   tests
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-26 20:48'
 labels:

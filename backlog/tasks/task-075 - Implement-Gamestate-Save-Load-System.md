@@ -1,7 +1,7 @@
 ---
 id: task-075
 title: Implement Gamestate Save/Load System
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-17'
 updated_date: '2025-08-20'

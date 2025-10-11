@@ -1,7 +1,7 @@
 ---
 id: task-162
 title: Fix battle-animated test infrastructure failure - zero actions collected
-status: ✔ Done
+status: Done
 assignee: []
 created_date: '2025-09-18 11:55'
 updated_date: '2025-09-18 12:23'

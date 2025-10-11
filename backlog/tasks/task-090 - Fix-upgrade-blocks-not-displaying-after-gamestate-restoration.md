@@ -1,7 +1,7 @@
 ---
 id: task-090
 title: Fix upgrade blocks not displaying after gamestate restoration
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-22 06:24'
 completed_date: '2025-08-22 10:26'

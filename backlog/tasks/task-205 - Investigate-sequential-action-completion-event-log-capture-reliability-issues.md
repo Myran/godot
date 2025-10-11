@@ -1,7 +1,7 @@
 ---
 id: task-205
 title: Investigate sequential action completion event log capture reliability issues
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-10-07 14:54'
 updated_date: '2025-10-07 15:53'

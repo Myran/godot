@@ -1,7 +1,7 @@
 ---
 id: task-140
 title: Fix Firebase Data Integrity and Strong Typing Issues
-status: Open
+status: To Do
 assignee: []
 created_date: '2025-09-10 22:15'
 labels:

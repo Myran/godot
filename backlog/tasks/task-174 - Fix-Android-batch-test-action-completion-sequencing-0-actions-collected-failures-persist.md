@@ -3,7 +3,7 @@ id: task-174
 title: >-
   Fix Android batch test action completion sequencing - 0 actions collected
   failures persist
-status: Completed
+status: Done
 assignee: [claude]
 created_date: '2025-09-22 10:15'
 labels: [critical, android, testing, batch-execution]

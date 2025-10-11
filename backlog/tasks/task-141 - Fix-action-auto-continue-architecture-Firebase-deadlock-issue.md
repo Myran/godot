@@ -1,7 +1,7 @@
 ---
 id: task-141
 title: Fix action auto-continue architecture - Firebase deadlock issue
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-12 09:07'
 updated_date: '2025-09-12 17:30'

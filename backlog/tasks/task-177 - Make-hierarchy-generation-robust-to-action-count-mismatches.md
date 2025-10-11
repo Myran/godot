@@ -1,7 +1,7 @@
 ---
 id: task-177
 title: Make hierarchy generation robust to action count mismatches
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-23 09:22'
 completed_date: '2025-09-23 11:58'

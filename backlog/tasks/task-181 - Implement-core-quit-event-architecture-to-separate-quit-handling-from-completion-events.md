@@ -3,7 +3,7 @@ id: task-181
 title: >-
   Implement core quit event architecture to separate quit handling from
   completion events
-status: Completed
+status: Done
 assignee: [Claude]
 created_date: '2025-09-26 14:26'
 completed_date: '2025-09-26 14:30'

@@ -1,7 +1,7 @@
 ---
 id: task-054
 title: Fix critical UnitData property assignment runtime errors
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-08-13 17:43'
 updated_date: '2025-08-13 18:47'

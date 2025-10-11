@@ -3,7 +3,7 @@ id: task-164
 title: >-
   Resolve session ID mismatch preventing action details in multi-platform test
   summaries
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-19 09:19'
 updated_date: '2025-09-19 12:22'

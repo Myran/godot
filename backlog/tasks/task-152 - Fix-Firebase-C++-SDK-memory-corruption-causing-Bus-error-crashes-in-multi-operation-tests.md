@@ -3,7 +3,7 @@ id: task-152
 title: >-
   Fix Firebase C++ SDK memory corruption causing Bus error crashes in
   multi-operation tests
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-16 09:15'
 updated_date: '2025-09-19 06:43'

@@ -1,7 +1,7 @@
 ---
 id: task-146
 title: Fix gamestate-save-load-test action collection failure on Android
-status: Completed
+status: Done
 assignee: []
 created_date: '2025-09-13 13:15'
 updated_date: '2025-09-18 22:35'
