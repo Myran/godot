@@ -125,7 +125,12 @@
       "WebFetch(domain:firebase.google.com)",
       "Bash(adb:*)",
       "Read(//tmp/**)",
-      "Read(//Users/mattiasmyhrman/.claude/**)"
+      "Read(//Users/mattiasmyhrman/.claude/**)",
+      "mcp__godot__get_debug_output",
+      "Bash(backlog tasks:*)",
+      "Bash(do if ! grep -q \"^status:\" \"$file\")",
+      "Bash(backlog list:*)",
+      "Bash(do sed -i '' 's/^status: Completed$/status: Done/' \"$file\")"
     ],
     "deny": [],
     "ask": [],
