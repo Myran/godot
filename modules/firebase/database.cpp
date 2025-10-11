@@ -28,8 +28,13 @@
 #include "firebase/variant.h"
 // #include "firebase/database/server_value.h" // Not used in v11.1.0
 
-// --- Static Member Initialization ---
-bool FirebaseDatabase::inited = false;
+// --- Thread-Safe Singleton Member Initialization (Task-213 critical fix) ---
+std::mutex FirebaseDatabase::initialization_mutex;
+std::atomic<bool> FirebaseDatabase::inited(false);
+FirebaseDatabase* FirebaseDatabase::singleton_instance = nullptr;
+std::mutex FirebaseDatabase::instance_mutex;
+
+// Static Firebase resources (properly managed)
 firebase::database::Database* FirebaseDatabase::database_instance = nullptr;
 FirebaseChildListener* FirebaseDatabase::child_listener_instance = nullptr;
 ConnectionStateListener* FirebaseDatabase::connection_listener_instance = nullptr;
@@ -165,36 +170,62 @@ firebase::database::TransactionResult FirebaseDatabase::increment_transaction_fu
 
 // --- FirebaseDatabase Implementation ---
 
-// Simple constructor (like FirebaseMessaging pattern)
+// Thread-safe singleton implementation (Task-213 critical fix)
+FirebaseDatabase& FirebaseDatabase::get_instance() {
+	std::lock_guard<std::mutex> lock(instance_mutex);
+
+	if (!singleton_instance) {
+		singleton_instance = new FirebaseDatabase();
+	}
+	return *singleton_instance;
+}
+
+// Thread-safe cleanup method
+void FirebaseDatabase::cleanup() {
+	std::lock_guard<std::mutex> lock(instance_mutex);
+
+	if (singleton_instance) {
+		delete singleton_instance;
+		singleton_instance = nullptr;
+	}
+}
+
+// Private constructor (Task-213 critical fix)
 FirebaseDatabase::FirebaseDatabase() {
-	print_line("[RTDB C++] FirebaseDatabase Constructor called.");
+	print_line("[RTDB C++] FirebaseDatabase Singleton Constructor called.");
 	_listener_path_ref_count = 0;
 
-	if (!inited) {
-		print_line("[RTDB C++] Initializing Firebase RTDB Module...");
-		firebase::App *app = Firebase::AppId();
-		if (app != nullptr) {
-			firebase::InitResult init_result;
-			database_instance = firebase::database::Database::GetInstance(app, &init_result);
+	// Thread-safe double-checked locking pattern
+	if (!inited.load()) {
+		std::lock_guard<std::mutex> init_lock(initialization_mutex);
 
-			if (init_result == firebase::kInitResultSuccess && database_instance != nullptr) {
-				print_line("[RTDB C++] Firebase Database instance obtained successfully.");
+		// Check again after acquiring lock (double-checked locking)
+		if (!inited.load()) {
+			print_line("[RTDB C++] Thread-safe initializing Firebase RTDB Module...");
+			firebase::App *app = Firebase::AppId();
+			if (app != nullptr) {
+				firebase::InitResult init_result;
+				database_instance = firebase::database::Database::GetInstance(app, &init_result);
 
-				// Create listeners and set singleton pointer
-				child_listener_instance = new FirebaseChildListener();
-				child_listener_instance->singleton = this;
+				if (init_result == firebase::kInitResultSuccess && database_instance != nullptr) {
+					print_line("[RTDB C++] Firebase Database instance obtained successfully.");
 
-				connection_listener_instance = new ConnectionStateListener();
-				connection_listener_instance->singleton = this;
+					// Create listeners and set singleton pointer
+					child_listener_instance = new FirebaseChildListener();
+					child_listener_instance->singleton = this;
 
-				print_line("[RTDB C++] Listener instances created.");
-				inited = true;
-				print_line("[RTDB C++] Firebase RTDB Module initialized successfully.");
+					connection_listener_instance = new ConnectionStateListener();
+					connection_listener_instance->singleton = this;
+
+					print_line("[RTDB C++] Listener instances created.");
+					inited.store(true);
+					print_line("[RTDB C++] Firebase RTDB Module initialized successfully (thread-safe).");
+				} else {
+					print_error(String("[RTDB C++] Failed to initialize Firebase Database. Init Result: ") + itos(init_result));
+				}
 			} else {
-				print_error(String("[RTDB C++] Failed to initialize Firebase Database. Init Result: ") + itos(init_result));
+				print_error("[RTDB C++] Firebase App is not initialized!");
 			}
-		} else {
-			print_error("[RTDB C++] Firebase App is not initialized!");
 		}
 	}
 }
@@ -202,15 +233,33 @@ FirebaseDatabase::FirebaseDatabase() {
 FirebaseDatabase::~FirebaseDatabase() {
 	print_line("[RTDB C++] FirebaseDatabase Destructor called.");
 
-	// Only clean up instance-specific resources
-	// Static resources are shared across instances - don't cleanup here
+	// Clean up instance-specific resources
 	if (_listener_path_ref_count > 0 && _active_child_listener_ref.is_valid() && child_listener_instance) {
 		WARN_PRINT("[RTDB C++] Destructor: Removing active child listener due to object destruction.");
 		_active_child_listener_ref.RemoveChildListener(child_listener_instance);
 		_listener_path_ref_count = 0;
 	}
 
-	print_line("[RTDB C++] FirebaseDatabase cleanup completed.");
+	// CRITICAL: Clean up ALL static resources properly (Task-213 memory corruption fix)
+	std::lock_guard<std::mutex> cleanup_lock(instance_mutex);
+
+	if (connection_listener_instance) {
+		delete connection_listener_instance;
+		connection_listener_instance = nullptr;
+	}
+
+	if (child_listener_instance) {
+		delete child_listener_instance;
+		child_listener_instance = nullptr;
+	}
+
+	// Reset database instance reference
+	database_instance = nullptr;
+
+	// Reset initialization flag
+	inited.store(false);
+
+	print_line("[RTDB C++] FirebaseDatabase complete cleanup completed (Task-213 fix).");
 }
 
 firebase::database::DatabaseReference FirebaseDatabase::get_reference_to_path(const Array &keys) {
@@ -446,7 +495,9 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 
 	print_verbose(String("[RTDB C++] PushUpdate ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)) + " PushKey: " + String(String(push_key_std.c_str())));
 	firebase::Future<void> future = new_child_ref.UpdateChildren(firebase_data);
-	future.OnCompletion([this, p_request_id, push_key_std](const firebase::Future<void> &result) {
+	// CRITICAL FIX: Remove dangerous 'this' capture (Task-213 lambda safety)
+	// Use singleton reference instead of 'this' to prevent use-after-free
+	future.OnCompletion([p_request_id, push_key_std](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
@@ -457,11 +508,12 @@ void FirebaseDatabase::push_and_update_async(int p_request_id, const Array &keys
 		// WORKER THREAD - Convert std::string to Godot String (safe for data conversion)
 		String push_key_str = String(push_key_std.c_str());
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
-		MessageQueue::get_singleton()->push_callable(
-			callable_mp(this, &FirebaseDatabase::_handle_push_and_update_on_main_thread)
-				.bind(p_request_id, push_key_str, success, status, error, error_msg)
-		);
+		// Marshal to main thread using singleton reference (safer than 'this' capture)
+		// Get singleton reference on main thread through MessageQueue to avoid threading issues
+		MessageQueue::get_singleton()->push_callable(callable_mp(
+			&FirebaseDatabase::get_instance(),
+			&FirebaseDatabase::_handle_push_and_update_on_main_thread
+		).bind(p_request_id, push_key_str, success, status, error, error_msg));
 	});
 }
 
@@ -479,7 +531,8 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 	}
 	print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(p_request_id) + " Path: " + String(Variant(keys)));
 	firebase::Future<void> future = ref.RemoveValue();
-	future.OnCompletion([this, p_request_id](const firebase::Future<void> &result) {
+	// CRITICAL FIX: Remove dangerous 'this' capture (Task-213 lambda safety)
+	future.OnCompletion([p_request_id](const firebase::Future<void> &result) {
 		// WORKER THREAD - Extract thread-safe data only (Task-207 SIGBUS fix)
 		bool success = (result.status() == firebase::kFutureStatusComplete &&
 					   result.error() == firebase::database::kErrorNone);
@@ -487,11 +540,11 @@ void FirebaseDatabase::remove_value_async(int p_request_id, const Array &keys) {
 		int status = result.status();
 		String error_msg = result.error_message() ? String(result.error_message()) : "";
 
-		// Marshal to main thread (NO Godot operations on worker thread!)
-		MessageQueue::get_singleton()->push_callable(
-			callable_mp(this, &FirebaseDatabase::_handle_remove_value_on_main_thread)
-				.bind(p_request_id, success, status, error, error_msg)
-		);
+		// Marshal to main thread using singleton reference (safer than 'this' capture)
+		MessageQueue::get_singleton()->push_callable(callable_mp(
+			&FirebaseDatabase::get_instance(),
+			&FirebaseDatabase::_handle_remove_value_on_main_thread
+		).bind(p_request_id, success, status, error, error_msg));
 	});
 }
 

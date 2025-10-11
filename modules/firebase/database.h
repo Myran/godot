@@ -85,11 +85,19 @@ class FirebaseDatabase : public RefCounted {
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Static shared resources (simple singleton behavior)
-	static bool inited;
+	// Thread-safe singleton implementation (Task-213 critical fix)
+	static std::mutex initialization_mutex;
+	static std::atomic<bool> inited;
+	static FirebaseDatabase* singleton_instance;
+	static std::mutex instance_mutex;
+
+	// Static Firebase resources (properly managed)
 	static firebase::database::Database *database_instance;
 	static FirebaseChildListener *child_listener_instance;
 	static ConnectionStateListener *connection_listener_instance;
+
+	// Private constructor for singleton pattern
+	FirebaseDatabase();
 
 	// Instance-specific members
 	uint64_t _listener_path_ref_count;
@@ -117,8 +125,12 @@ protected:
 	void _handle_transaction_on_main_thread(int req_id, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
 
 public:
-	// Simple constructor (like FirebaseMessaging pattern)
-	FirebaseDatabase();
+	// Thread-safe singleton access methods (Task-213 critical fix)
+	static FirebaseDatabase& get_instance();
+	static void cleanup();
+
+	// Delete copy constructor for singleton pattern (assignment operator handled by GDCLASS)
+	FirebaseDatabase(const FirebaseDatabase&) = delete;
 
 	~FirebaseDatabase();
 
