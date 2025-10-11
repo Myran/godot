@@ -3,6 +3,10 @@ extends RefCounted
 
 # CRITICAL: This enables autonomous RNG seed initialization during autoload phase
 
+# Process-scoped config caching to prevent multiple file loads (Task-210 fix)
+static var _cached_config_data: Dictionary = {}
+static var _has_loaded: bool = false
+
 
 static func get_debug_seed() -> int:
 	"""Get debug seed from config file. Returns default GameConstants.RandomSystem.DEFAULT_SEED if not found or invalid."""
@@ -141,9 +145,20 @@ static func get_temp_gamestate_path(filename: String) -> String:
 
 
 static func _read_config_file() -> Dictionary:
-	"""Internal method to read and parse debug config file."""
+	"""Internal method to read and parse debug config file with process-scoped caching (Task-210 fix)."""
 	var config_path: String = _get_config_path()
 
+	# Return cached data if already loaded this process
+	if _has_loaded:
+		if Log:
+			Log.debug(
+				"Debug config from process cache",
+				{"path": config_path},
+				["debug", "config", "cache"]
+			)
+		return _cached_config_data
+
+	# First load - read from file
 	if not FileAccess.file_exists(config_path):
 		if Log:
 			Log.debug(
@@ -181,14 +196,27 @@ static func _read_config_file() -> Dictionary:
 		return {}
 
 	var data: Dictionary = json.data
+
+	# Cache for process lifetime
+	_cached_config_data = data
+	_has_loaded = true
+
 	if Log:
 		Log.debug(
-			"Debug config loaded successfully",
+			"Debug config loaded and cached for process lifetime",
 			{"path": config_path, "keys": data.keys(), "size": data.size()},
 			["debug", "config", "file"]
 		)
 
 	return data
+
+
+static func _reset_cache() -> void:
+	"""Reset the process-scoped cache. For testing purposes only."""
+	_cached_config_data.clear()
+	_has_loaded = false
+	if Log:
+		Log.debug("Debug config cache reset", {}, ["debug", "config", "cache", "testing"])
 
 
 static func _get_config_path() -> String:
