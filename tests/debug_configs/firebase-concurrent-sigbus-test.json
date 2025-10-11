@@ -1,0 +1,12 @@
+{
+  "description": "Concurrent Firebase SIGBUS trigger test - multiple actions competing for static resources",
+  "actions": [
+    "backend.firebase.async_pattern",
+    "backend.firebase.error_handling"
+  ],
+  "platforms": ["android"],
+  "metadata": {
+    "concurrent_test": true,
+    "sigbus_reproduction": true
+  }
+}
