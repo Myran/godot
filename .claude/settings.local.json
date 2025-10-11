@@ -124,7 +124,8 @@
       "Bash(awk:*)",
       "WebFetch(domain:firebase.google.com)",
       "Bash(adb:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Read(//Users/mattiasmyhrman/.claude/**)"
     ],
     "deny": [],
     "ask": [],
