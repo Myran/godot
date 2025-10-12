@@ -130,7 +130,8 @@
       "Bash(backlog tasks:*)",
       "Bash(do if ! grep -q \"^status:\" \"$file\")",
       "Bash(backlog list:*)",
-      "Bash(do sed -i '' 's/^status: Completed$/status: Done/' \"$file\")"
+      "Bash(do sed -i '' 's/^status: Completed$/status: Done/' \"$file\")",
+      "Bash(backlog:*)"
     ],
     "deny": [],
     "ask": [],
