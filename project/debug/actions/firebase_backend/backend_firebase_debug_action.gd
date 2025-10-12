@@ -7,7 +7,9 @@ var firebase_backend: DataBackend = null  # Changed to support both backend type
 func _init() -> void:
 	super._init()
 	category = "Firebase Backend"
-	action_callable = Callable(self, "execute_backend_action")
+	# CRITICAL FIX: Use _execute_action_logic as action_callable to go through base class properly
+	# This prevents recursion and ensures completion events are emitted
+	action_callable = Callable(self, "_execute_action_logic")
 
 
 func get_firebase_backend_for_testing() -> DataBackend:
@@ -200,15 +202,3 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 
 
-func execute_backend_action() -> bool:
-	# CRITICAL FIX: Route through base class _execute_core to ensure completion events (Task-217)
-	# The base class _execute_core method handles completion event logging for sequential actions
-	Log.debug(
-		"execute_backend_action routing through base class for completion events",
-		{"action": action_name},
-		["debug", "backend_firebase", "completion_event_fix"]
-	)
-
-	# Call base class execute_with_params which goes through _execute_core and emits completion events
-	var execution_result: Variant = await execute_with_params({})
-	return execution_result != null and execution_result != false
