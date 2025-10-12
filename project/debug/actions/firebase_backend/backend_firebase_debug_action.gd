@@ -177,97 +177,38 @@ func test_backend_async_pattern(
 
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
+	# This base method should never be called - specific actions must override it
+	# Return failure to identify inheritance issues quickly
 	var error_message: String = (
-		"_execute_action_logic() not implemented in " + get_script().get_path()
+		"CRITICAL: Base _execute_action_logic() called - this method MUST be overridden by specific Firebase actions.\n" +
+		"Action: " + str(action_name) + "\n" +
+		"Script: " + str(get_script().get_path()) + "\n" +
+		"This indicates a broken inheritance pattern causing missing completion events."
 	)
-	push_error(error_message)
-	_update_status("ERROR: _execute_action_logic() not implemented", true)
+
+	Log.error(error_message, {}, ["debug", "backend_firebase", "inheritance_error"])
 
 	return DebugActionResult.new_failure(
 		error_message,
-		"NOT_IMPLEMENTED",
+		"INHERITANCE_ERROR",
 		DebugActionResult.ErrorCategory.SYSTEM,
-		{"script_path": get_script().get_path()},
+		{"action": action_name, "script_path": get_script().get_path()},
 		0,
 		action_name
 	)
 
 
+
+
 func execute_backend_action() -> bool:
-	# TRACE: Add comprehensive logging to understand execution path
-	Log.info(
-		"EXECUTION_PATH_TRACE: execute_backend_action called",
-		{
-			"action": action_name,
-			"has_execute_action_logic": has_method("_execute_action_logic"),
-			"action_callable": str(action_callable),
-			"category": category,
-			"group": group
-		},
-		["debug", "backend_firebase", "execution_trace"]
+	# CRITICAL FIX: Route through base class _execute_core to ensure completion events (Task-217)
+	# The base class _execute_core method handles completion event logging for sequential actions
+	Log.debug(
+		"execute_backend_action routing through base class for completion events",
+		{"action": action_name},
+		["debug", "backend_firebase", "completion_event_fix"]
 	)
 
-	if has_method("_execute_action_logic"):
-		Log.info(
-			"EXECUTION_PATH_TRACE: About to call _execute_action_logic",
-			{"action": action_name},
-			["debug", "backend_firebase", "execution_trace"]
-		)
-
-		@warning_ignore("redundant_await")
-		var result: DebugActionResult = await _execute_action_logic({})
-
-		Log.info(
-			"EXECUTION_PATH_TRACE: _execute_action_logic returned",
-			{
-				"action": action_name,
-				"result_null": result == null,
-				"result_success": result.is_success() if result else false
-			},
-			["debug", "backend_firebase", "execution_trace"]
-		)
-
-		# Add null safety check for stronger typing enforcement
-		if result == null:
-			Log.error(
-				"_execute_action_logic returned null - action failed",
-				{"action": action_name},
-				["debug", "backend_firebase", "error"]
-			)
-			_update_status("ERROR: Action returned null result", true)
-			return false
-
-		var success: bool = result.is_success()
-
-		# UNIFIED TEST REPORTING: Add missing DEBUG_TEST_SUCCESS logging
-		# This ensures Firebase backend actions are properly collected in test results
-		var duration_ms: int = result.duration_ms if result else 0
-		var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-		var config_test_id: String = test_metadata.get("test_id", "")
-
-		if config_test_id != "":
-			if success:
-				# Generate DEBUG_TEST_SUCCESS marker (was missing in Firebase backend actions)
-				DebugAction._log_test_success(action_name, category, group, duration_ms, {})
-			else:
-				# Generate DEBUG_TEST_FAILURE marker for consistency
-				Log.error(
-					"DEBUG_TEST_FAILURE",
-					{
-						"test_id": config_test_id,
-						"action": action_name,
-						"category": category,
-						"group": group,
-						"duration_ms": duration_ms,
-						"error_message": result.error_message if result else "Unknown error"
-					},
-					["debug", "test", "failure"]
-				)
-
-		# Note: Completion event emission handled by DebugAction base class (_execute_core)
-		# Base class emits SequentialActionCompleteEvent for all actions with auto_continue=false
-		return success
-
-	push_error("execute_backend_action() not implemented in " + get_script().get_path())
-	_update_status("ERROR: execute_backend_action() not implemented", true)
-	return false
+	# Call base class execute_with_params which goes through _execute_core and emits completion events
+	var execution_result: Variant = await execute_with_params({})
+	return execution_result != null and execution_result != false
