@@ -2568,9 +2568,15 @@ _execute-test-android config_name:
     fi
     
     echo "📡 Background capture PID: $BACKGROUND_LOGCAT_PID (validated)"
-    
-    echo "🔍 App is running with fresh configuration - waiting for test completion..."
-    
+
+    # CRITICAL FIX (Task-216): Launch app AFTER log capture starts
+    # This ensures all actions are logged from the beginning
+    echo "🚀 Launching app with fresh configuration (log capture active)..."
+    adb shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp >/dev/null 2>&1
+    sleep 1  # Brief delay for app startup
+
+    echo "🔍 App launched - waiting for test completion..."
+
     # Simple monitoring - wait for app to quit
     echo "🔍 DEBUG: Starting app monitoring..."
     

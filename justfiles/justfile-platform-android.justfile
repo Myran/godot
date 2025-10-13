@@ -405,17 +405,23 @@ _gradle-build-install-android:
 _push-file-android SOURCE_FILE TARGET_FILENAME:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     echo "📱 Pushing file to Android app private directory..."
     echo "   📄 Source: {{SOURCE_FILE}}"
     echo "   🎯 Target: {{TARGET_FILENAME}}"
-    
+
     # Ensure app is running so private directory is accessible
     APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
     if [[ -z "$APP_RUNNING" ]]; then
         echo "🚀 App not running - starting app to create private directory..."
         adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
         sleep 2
+
+        # CRITICAL FIX (Task-216): Stop app immediately after directory creation
+        # This prevents first action from executing before test framework log capture starts
+        echo "🛑 Stopping app after directory creation (prevents premature action execution)..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+        sleep 1
     fi
     
     # Test if private directory is accessible

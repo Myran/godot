@@ -4,7 +4,7 @@ title: Task-214 - Fix Firebase post-completion cleanup SIGBUS crash
 status: To Do
 assignee: []
 created_date: '2025-10-11 21:03'
-updated_date: '2025-10-11 22:12'
+updated_date: '2025-10-13 10:39'
 labels: []
 dependencies: []
 priority: low
@@ -53,4 +53,41 @@ priority: low
 - [ ] Firebase cleanup process thread-safe
 - [ ] Production deployment with zero crash risk
 - [ ] Maintain 100% Firebase operational success rate
+
+## Implementation Notes
+
+INVESTIGATION COMPLETE (2025-10-13)
+==================================================
+
+Branch: task-216-firebase-sigbus-android-logging-investigation
+Investigation Document: TASK-216-INVESTIGATION.md
+Final Assessment: /tmp/task216_final_assessment.md
+
+KEY FINDINGS:
+1. ✅ Task-216 diagnosis VALIDATED - SIGBUS crashes are post-completion only
+2. ✅ NEW DISCOVERY - Android log capture race condition (first action missing)
+3. ✅ SIGBUS frequency reduced 50% (4+ crashes → 2 crashes)
+4. ⚠️  NEW ISSUE - Test suite isolation problem (app state bleeds between configs)
+
+TEST RESULTS COMPARISON:
+- Baseline (1760286575): Android 14/18 passed (77.8%)
+- After Fix (1760344898+): Android 15/19 passed (78.9%)
+- SIGBUS crashes: 50% reduction
+- Log capture: Works in isolation, fails in suite
+
+SUBTASKS CREATED:
+- task-216.01: Fix test suite isolation (app state bleeding)
+
+REMAINING WORK:
+1. Fix test suite isolation (task-216.01) - HIGH PRIORITY
+2. Implement remaining lambda capture fixes (5/7 remaining) - MEDIUM PRIORITY
+3. Improve cleanup thread safety - MEDIUM PRIORITY
+
+TEST SESSIONS:
+- 1760344860: Isolated test ✅ (both sequences captured)
+- 1760344898: Full suite run #1 ❌ (missing sequence 1)
+- 1760347321: Full suite run #2 ❌ (confirms regression)
+- 1760286575: Baseline (pre-fix)
+
+NEXT ACTION: Complete task-216.01 to achieve proper test isolation
 ## Description
