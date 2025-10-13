@@ -881,32 +881,19 @@ func get_android_chunk_count() -> int:
 	return _android_chunk_queue.size()
 
 func wait_for_chunk_processing_complete_signal() -> void:
-	"""Wait for Android chunk processing to complete using signal - no timeout"""
+	"""Wait for Android chunk processing to complete using signal - no timeout
+
+	IMPORTANT: This function must be completely silent (no logging) because:
+	1. Any logging creates new chunks in the queue
+	2. This creates a recursive problem where waiting for chunks generates more chunks
+	3. The function is called after every action, so logging here would break DEBUG_TEST_SUCCESS
+	"""
 	if not has_pending_android_chunks():
 		# No chunks pending - immediate return
 		return
 
-	info(
-		"Waiting for Android chunk processing to complete via signal",
-		{
-			"initial_chunk_count": get_android_chunk_count(),
-			"platform": "Android",
-			"signal_based": true
-		},
-		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
-	)
-
-	# Wait for the completion signal
+	# Wait for the completion signal silently
 	await android_chunks_processing_complete
-
-	info(
-		"Android chunk processing completed via signal",
-		{
-			"final_chunk_count": get_android_chunk_count(),
-			"all_chunks_processed": not has_pending_android_chunks()
-		},
-		[TAG_ANDROID, TAG_TEST, TAG_AUTOMATED]
-	)
 
 func wait_for_chunk_processing_complete(timeout_seconds: float = 2.0) -> void:
 	"""Wait for Android chunk processing queue to complete with timeout (DEPRECATED - use signal version)
@@ -1010,21 +997,12 @@ func shutdown_gracefully(timeout_seconds: float = 2.0) -> void:
 			[TAG_ANDROID, TAG_QUIT, TAG_DEBUG]
 		)
 
-		# Use existing signal-based mechanism with double-await for race conditions
+		# Use signal-based mechanism - wait for all chunks to complete
 		if has_pending_android_chunks():
 			await android_chunks_processing_complete
-			# Double-await pattern to handle race condition where chunks are added after first signal
-			await android_chunks_processing_complete
 
-			info(
-				"Android chunk processing completed via signal",
-				{
-					"final_chunk_count": get_android_chunk_count(),
-					"all_chunks_processed": not has_pending_android_chunks(),
-					"platform": "Android"
-				},
-				[TAG_ANDROID, TAG_QUIT, TAG_DEBUG]
-			)
+			# Note: Do NOT log completion here - any logging (even print) goes through chunk queue
+			# and creates a recursive problem. Silent completion is the correct approach.
 		else:
 			info(
 				"No Android chunks pending - immediate completion",
