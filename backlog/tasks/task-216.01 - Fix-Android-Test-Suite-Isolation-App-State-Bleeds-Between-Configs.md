@@ -4,7 +4,7 @@ title: Fix Android Test Suite Isolation - App State Bleeds Between Configs
 status: In Progress
 assignee: []
 created_date: '2025-10-13 10:39'
-updated_date: '2025-10-13 12:05'
+updated_date: '2025-10-13 12:22'
 labels: []
 dependencies: []
 parent_task_id: task-216
@@ -39,27 +39,220 @@ IMPACT:
 
 ## Implementation Plan
 
-Phase 1: Enhance _push-file-android function
-- File: justfiles/justfile-platform-android.justfile (lines 404-425)
-- Change: ALWAYS stop app if running before config push
-- Logic: Check if app running → force-stop → launch for directory → stop → push config
-- Estimated: 30 minutes
+## Implementation Plan - Android Test Suite Isolation Fix
 
-Phase 2: Validate Isolated Test (Baseline)
-- Command: just test-android-target gamestate-save-load-test
-- Expected: Both sequences captured (should continue working)
-- Estimated: 5 minutes
+### Overview
+Implement enhanced app stop detection in _push-file-android to clear Android log buffer 
+state before each config push, ensuring test isolation and complete DEBUG_TEST_SUCCESS logging.
 
-Phase 3: Validate Full Suite (Fix Verification)
-- Command: just log-run test-android
-- Expected: All configs capture sequence 1, match isolated behavior
-- Compare session results with baseline 1760344860
-- Estimated: 45 minutes (suite run) + 10 minutes (analysis)
+### Phase 1: Implement Enhanced Stop Logic (15 minutes)
 
-Phase 4: Performance Analysis
-- Measure added time per config (~2-3s stop/start overhead)
-- Total suite impact: ~45s for 18 configs
-- Document trade-off: correctness > speed
+**File**: `justfiles/justfile-platform-android.justfile`
+**Function**: `_push-file-android` (lines ~404-425)
+
+**Current Behavior**:
+```bash
+APP_RUNNING=$(adb shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+if [[ -z "$APP_RUNNING" ]]; then
+    # Only launches/stops if app NOT running
+    # Problem: In suite, app IS running, this block skipped
+```
+
+**New Behavior** (ALWAYS ensure clean state):
+```bash
+# ENHANCED FIX (Task-216.01): Always ensure clean app state before config push
+# This clears Android log buffer pollution that prevents DEBUG_TEST_SUCCESS logging
+APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
+
+if [[ -n "$APP_RUNNING" ]]; then
+    echo "🛑 Stopping existing app for clean config push (test isolation, clears log buffer)..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+    sleep 1
+fi
+
+# Launch app to create private directory
+echo "🚀 Starting app to create private directory..."
+adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
+sleep 2
+
+# Stop app immediately after directory creation (existing fix continues)
+echo "🛑 Stopping app after directory creation (prevents premature action execution)..."
+adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+sleep 1
+
+# Push config file
+adb -s {{ANDROID_DEVICE_ID}} push "{{SOURCE_FILE}}" \
+    "/sdcard/Android/data/{{ANDROID_PACKAGE_NAME}}/files/{{TARGET_FILENAME}}"
+```
+
+**Key Changes**:
+1. Add new block BEFORE existing logic: Check if app running → stop if yes
+2. Keep existing logic: Launch → stop → push pattern
+3. Add comments explaining Task-216.01 context and log buffer clearing
+
+**Testing**: After implementation, verify app is stopped between ALL configs in suite
+
+### Phase 2: Validate Isolated Test (5 minutes)
+
+**Command**:
+```bash
+just test-android-target gamestate-save-load-test
+```
+
+**Expected Outcome**:
+- ✅ Test passes (should continue working as before)
+- ✅ Both action sequences captured (1 and 2)
+- ✅ Sequence 1 duration >20ms (indicates fresh app launch)
+- ✅ No regression in test behavior
+
+**Success Criteria**:
+- Test result JSON contains 2 actions
+- Both actions show success: true
+- Action execution order preserved
+
+### Phase 3: Validate Full Suite (45 minutes runtime + 10 minutes analysis)
+
+**Command**:
+```bash
+just log-run test-android
+```
+
+**What to Monitor**:
+1. App stop messages between each config
+2. Log buffer state (watch for "all_chunks_processed" logs)
+3. Sequence 1 capture for all configs
+4. Overall test pass rate
+
+**Expected Outcome**:
+- ✅ All configs capture sequence 1 (NEW - currently failing)
+- ✅ No "all_chunks_processed: false" warnings
+- ✅ Android pass rate improves from 78.9% to 95%+
+- ✅ Suite behavior matches isolated test behavior
+- ⚠️ Total suite time increases by ~45s (18 configs × 2.5s overhead)
+
+**Validation Steps**:
+```bash
+# 1. Check latest test session
+TEST_ID=$(ls -t /Users/mattiasmyhrman/Library/Application\ Support/Godot/app_userdata/gametwo/logs/test_action_results_gamestate-save-load-test_android_*.json | head -1)
+
+# 2. Verify both sequences captured
+jq 'length' "$TEST_ID"  # Should be 2 (both actions)
+jq '.[0].sequence' "$TEST_ID"  # Should be 1 (not missing anymore)
+
+# 3. Check duration indicates fresh launch
+jq '.[0].duration_ms' "$TEST_ID"  # Should be >20ms (not 1ms)
+
+# 4. Compare with baseline session 1760286575
+just logs-pattern NEW_SESSION "*.sequence" 
+```
+
+**Success Criteria**:
+- All gamestate tests pass with proper checksums
+- Sequence 1 duration >20ms consistently
+- No configs show missing sequence 1
+- Firebase tests continue to pass
+
+### Phase 4: Performance Analysis (10 minutes)
+
+**Measurements**:
+1. Measure added time per config:
+   - Before: Config push time
+   - After: Config push time + stop overhead
+   - Expected: +2-3 seconds per config
+
+2. Calculate total suite impact:
+   - Current configs in suite: 18-23 configs
+   - Overhead per config: ~2.5s
+   - Total added time: ~45-57s
+
+3. Compare against baseline:
+   - Baseline suite time: ~X minutes
+   - New suite time: ~X minutes + 45-57s
+   - Percentage increase: Calculate
+
+**Trade-off Documentation**:
+```
+PERFORMANCE vs CORRECTNESS:
+- Cost: 45-57s additional suite time
+- Benefit: Test isolation guaranteed, log buffer clean
+- Decision: Correctness > Speed for test framework validity
+- Justification: False test failures cost more than 45s overhead
+```
+
+### Phase 5: Edge Cases & Rollback Plan (5 minutes)
+
+**Edge Cases to Consider**:
+1. ✅ App not running initially → Works (launches as before)
+2. ✅ App running from previous test → NEW: Now stops before proceeding
+3. ✅ App crashed/zombie state → force-stop handles this
+4. ✅ First test in suite → Works (no app running yet)
+5. ⚠️ Very fast configs → May not benefit from overhead (monitor)
+
+**Rollback Plan**:
+If implementation causes issues:
+```bash
+# Revert to previous logic
+git checkout HEAD~1 justfiles/justfile-platform-android.justfile
+
+# Or manually change:
+# Remove the new "if [[ -n "$APP_RUNNING" ]]" block
+# Keep only the existing "if [[ -z "$APP_RUNNING" ]]" block
+```
+
+**Monitoring After Deployment**:
+- Watch for any new test failures
+- Monitor total suite execution time
+- Check for configs that timeout or hang
+- Verify Android pass rate improvement
+
+### Phase 6: Documentation & Completion (5 minutes)
+
+**Update Documentation**:
+1. Add comment in justfile explaining Task-216.01 context
+2. Document performance trade-off in commit message
+3. Update task with final metrics
+
+**Completion Checklist**:
+- [ ] Code implemented with clear comments
+- [ ] Isolated test validates (no regression)
+- [ ] Full suite validates (sequence 1 captured)
+- [ ] Performance impact documented
+- [ ] Edge cases considered
+- [ ] Rollback plan documented
+- [ ] Task-216.01 marked complete with evidence
+
+**Final Validation Command**:
+```bash
+# Run complete validation
+just test-android gamestate-save-load-test && \
+just test-android gamestate-complete-save-load-cycle-test && \
+echo "✅ Both gamestate tests pass with proper isolation"
+```
+
+## Time Estimates
+
+- Phase 1 (Implementation): 15 minutes
+- Phase 2 (Isolated test): 5 minutes  
+- Phase 3 (Full suite): 55 minutes (45 min run + 10 min analysis)
+- Phase 4 (Performance): 10 minutes
+- Phase 5 (Edge cases): 5 minutes
+- Phase 6 (Documentation): 5 minutes
+
+**Total Estimated Time**: 95 minutes (~1.5 hours)
+
+## Risk Mitigation
+
+**Low Risk Implementation**:
+- Change is additive (adds stop before existing logic)
+- Isolated tests prove the stop/launch pattern works
+- No modification to test framework or Godot code
+- Easy rollback if issues arise
+
+**High Confidence**:
+- Root cause understood (Android log buffer pollution)
+- Fix directly addresses mechanism (stop clears buffer)
+- Evidence supports solution (timeline analysis)
+- Expert panel validation complete
 
 ## Implementation Notes
 
