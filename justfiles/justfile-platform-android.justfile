@@ -405,19 +405,37 @@ _gradle-build-install-android:
 _push-file-android SOURCE_FILE TARGET_FILENAME:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     echo "📱 Pushing file to Android app private directory..."
     echo "   📄 Source: {{SOURCE_FILE}}"
     echo "   🎯 Target: {{TARGET_FILENAME}}"
-    
-    # Ensure app is running so private directory is accessible
+
+    # ENHANCED FIX (Task-216.01): Always ensure clean app state before config push
+    # This clears Android log buffer pollution that prevents DEBUG_TEST_SUCCESS logging
     APP_RUNNING=$(adb -s {{ANDROID_DEVICE_ID}} shell "pidof {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
-    if [[ -z "$APP_RUNNING" ]]; then
-        echo "🚀 App not running - starting app to create private directory..."
-        adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
-        sleep 2
+
+    if [[ -n "$APP_RUNNING" ]]; then
+        echo "🛑 Stopping existing app for clean config push (test isolation, clears log buffer)..."
+        adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+        sleep 1
     fi
-    
+
+    # Launch app to create private directory
+    echo "🚀 Starting app to create private directory..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp" >/dev/null
+    sleep 2
+
+    # CRITICAL FIX (Task-216): Stop app immediately after directory creation
+    # This prevents first action from executing before test framework log capture starts
+    echo "🛑 Stopping app after directory creation (prevents premature action execution)..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop {{ANDROID_PACKAGE_NAME}}" 2>/dev/null || true
+    sleep 1
+
+    # ENHANCED FIX (Task-216.01): Clear logcat buffer to prevent pollution from directory creation
+    # The brief app launch above can pollute the log buffer, affecting DEBUG_TEST_SUCCESS logging
+    echo "🧹 Clearing logcat buffer after app stop..."
+    adb -s {{ANDROID_DEVICE_ID}} logcat -c 2>/dev/null || true
+
     # Test if private directory is accessible
     if ! adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null files/{{TARGET_FILENAME}}" 2>/dev/null; then
         echo "❌ App private directory not accessible"

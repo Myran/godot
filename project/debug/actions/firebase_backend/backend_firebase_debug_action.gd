@@ -182,10 +182,14 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# This base method should never be called - specific actions must override it
 	# Return failure to identify inheritance issues quickly
 	var error_message: String = (
-		"CRITICAL: Base _execute_action_logic() called - this method MUST be overridden by specific Firebase actions.\n" +
-		"Action: " + str(action_name) + "\n" +
-		"Script: " + str(get_script().get_path()) + "\n" +
-		"This indicates a broken inheritance pattern causing missing completion events."
+		"CRITICAL: Base _execute_action_logic() called - this method MUST be overridden by specific Firebase actions.\n"
+		+ "Action: "
+		+ str(action_name)
+		+ "\n"
+		+ "Script: "
+		+ str(get_script().get_path())
+		+ "\n"
+		+ "This indicates a broken inheritance pattern causing missing completion events."
 	)
 
 	Log.error(error_message, {}, ["debug", "backend_firebase", "inheritance_error"])
@@ -198,7 +202,3 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		0,
 		action_name
 	)
-
-
-
-

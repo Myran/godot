@@ -130,7 +130,10 @@
       "Bash(backlog tasks:*)",
       "Bash(do if ! grep -q \"^status:\" \"$file\")",
       "Bash(backlog list:*)",
-      "Bash(do sed -i '' 's/^status: Completed$/status: Done/' \"$file\")"
+      "Bash(do sed -i '' 's/^status: Completed$/status: Done/' \"$file\")",
+      "Bash(backlog:*)",
+      "Read(//Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/**)",
+      "Bash(do echo \"=== $log ===\")"
     ],
     "deny": [],
     "ask": [],

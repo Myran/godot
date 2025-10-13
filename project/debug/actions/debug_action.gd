@@ -194,14 +194,9 @@ static func _ensure_android_log_completion(test_action_name: String) -> void:
 			["debug", "android", "fix"]
 		)
 
-		# Use the proper signal-based chunk processing method
+		# Use the proper signal-based chunk processing method (silent - no logging to avoid recursion)
 		if Log.has_method("wait_for_chunk_processing_complete_signal"):
 			await Log.wait_for_chunk_processing_complete_signal()
-			Log.info(
-				"ANDROID_FIX_DEBUG: Chunk processing completed via signal",
-				{"action": test_action_name, "platform": OS.get_name()},
-				["debug", "android", "fix"]
-			)
 		elif Log.has_method("has_pending_android_chunks"):
 			# Fallback to timeout-based approach if signal method not available
 			Log.warning(
