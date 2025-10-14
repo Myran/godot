@@ -60,11 +60,22 @@ The action correctly calls `_log_test_success()` (line 54), BUT this happens dur
 ### Required Fix:
 **ALL actions must execute through the idle action queue AFTER all systems are initialized.**
 
+### NEW EVIDENCE (2025-10-14 10:04 Test):
+**CONFIRMED PREMATURE EXECUTION**:
+- **08.628ms**: First save_gamestate executes (NO test tracking, just status message)
+- **08.890ms**: Coordinator dispatches all 3 actions to idle queue
+- **08.891ms**: First save_gamestate executes AGAIN (WITH test tracking, sequence=1)
+
+**Key Finding**: First action executes 262ms BEFORE coordinator dispatches it, then executes again properly through the queue. The premature execution is NOT tracked (no DEBUG_TEST_SUCCESS), but the queued execution IS tracked.
+
+**Result**: Test appears to pass (4 actions collected including replay_complete), but first action is executing TWICE - once prematurely without tracking, once properly with tracking.
+
 Investigation needed:
-1. Find where first action is executing synchronously during startup
+1. **CRITICAL**: Find what is calling first action at 08.628ms BEFORE coordinator dispatch at 08.890ms
 2. Ensure all actions wait for queue system to be ready
 3. Verify test logging infrastructure is initialized before ANY action execution
 4. Add defensive checks to prevent premature action execution
+5. **NEW**: Prevent duplicate execution - action should execute ONLY through idle queue
 ## Description
 
 ## UPDATE (2025-10-14): Current Status After Task-216/219 Fixes
