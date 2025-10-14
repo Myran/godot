@@ -72,10 +72,27 @@ The action correctly calls `_log_test_success()` (line 54), BUT this happens dur
 
 Investigation needed:
 1. **CRITICAL**: Find what is calling first action at 08.628ms BEFORE coordinator dispatch at 08.890ms
+   - Log analysis shows execution happens during game initialization, after Firebase data load
+   - NO explicit caller visible in logs
+   - Execution goes through normal `_execute_core()` → `_update_status()` → formatter flow
+   - **Next Step**: Add stack trace logging at `_execute_core()` entry to capture caller
 2. Ensure all actions wait for queue system to be ready
 3. Verify test logging infrastructure is initialized before ANY action execution
 4. Add defensive checks to prevent premature action execution
 5. **NEW**: Prevent duplicate execution - action should execute ONLY through idle queue
+
+## Recommended Investigation Approach:
+Add diagnostic logging to `project/debug/actions/debug_action.gd` `_execute_core()`:
+```gdscript
+func _execute_core(...) -> Variant:
+    # DIAGNOSTIC: Capture who's calling us before coordinator
+    if current_test_id != "" and test_action_count == 0:
+        Log.info("PREMATURE_EXECUTION_DEBUG", {
+            "action": action_name,
+            "stack_trace": get_stack(),
+            "test_id": current_test_id
+        }, ["debug", "premature_execution"])
+```
 ## Description
 
 ## UPDATE (2025-10-14): Current Status After Task-216/219 Fixes
