@@ -445,14 +445,42 @@ _push-file-android SOURCE_FILE TARGET_FILENAME:
     fi
     
     echo "📁 App private directory accessible - pushing file..."
-    
+
+    # TASK-218 FIX: Delete old config file first to prevent stale config issues
+    echo "🗑️  Removing old config file if exists..."
+    adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} rm files/{{TARGET_FILENAME}}" 2>/dev/null || true
+
     # Use temporary location first, then copy to private directory
     TEMP_FILE="/sdcard/temp_$(basename {{TARGET_FILENAME}})"
-    
+
     if adb -s {{ANDROID_DEVICE_ID}} push "{{SOURCE_FILE}}" "$TEMP_FILE"; then
         if adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp $TEMP_FILE files/{{TARGET_FILENAME}}" 2>/dev/null; then
             echo "✅ File copied to app private directory"
             adb -s {{ANDROID_DEVICE_ID}} shell "rm $TEMP_FILE" 2>/dev/null || true
+
+            # TASK-218 FIX: Verify file content matches to prevent running wrong tests
+            echo "🔍 Verifying deployed file content..."
+            DEPLOYED_CONTENT=$(adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cat files/{{TARGET_FILENAME}}" 2>/dev/null)
+            SOURCE_CONTENT=$(cat "{{SOURCE_FILE}}")
+
+            # Compare file sizes first (fast check)
+            DEPLOYED_SIZE=$(echo "$DEPLOYED_CONTENT" | wc -c | tr -d ' ')
+            SOURCE_SIZE=$(echo "$SOURCE_CONTENT" | wc -c | tr -d ' ')
+
+            if [[ "$DEPLOYED_SIZE" != "$SOURCE_SIZE" ]]; then
+                echo "❌ File size mismatch: deployed=$DEPLOYED_SIZE bytes, source=$SOURCE_SIZE bytes"
+                echo "💡 Config deployment failed verification - file not properly written to device"
+                exit 1
+            fi
+
+            # Compare actual content (thorough check)
+            if [[ "$DEPLOYED_CONTENT" != "$SOURCE_CONTENT" ]]; then
+                echo "❌ File content mismatch after deployment"
+                echo "💡 Config deployment failed verification - content doesn't match"
+                exit 1
+            fi
+
+            echo "✅ File content verified - deployment successful"
             echo "✅ File push complete"
         else
             echo "❌ Failed to copy to app private directory"
