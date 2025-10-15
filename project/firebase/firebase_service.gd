@@ -368,6 +368,7 @@ func _resolve_pending_request(request_id: int, result: Variant) -> bool:
 			"Found pending request, processing completion",
 			{
 				"request_id": request_id,
+				"request_instance_id": request.get_instance_id(),
 				"request_valid": is_instance_valid(request),
 				"result_status": result.status
 			},
