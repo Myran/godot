@@ -158,10 +158,14 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 **Essential Backlog Commands:**
 - `backlog tasks list --plain` - List all tasks grouped by status (plain text format)
 - `backlog tasks view task-XXX --plain` - View specific task details in plain text
+- `backlog tasks create "Title"` - Create new task (opens editor)
+- `backlog tasks edit task-XXX` - Edit existing task (opens editor)
 - `backlog doc list` - List all project documents
 - `backlog doc view DOC_ID` - View a specific document
 - `backlog board` - Display tasks in Kanban board view
+- `backlog board --vertical` - Vertical Kanban layout
 - `backlog overview` - Show project statistics and metrics
+- `backlog browser` - Interactive task browser (Ctrl+C to exit)
 
 **Task Management Workflow:**
 ```bash
@@ -169,20 +173,104 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 backlog tasks list --plain
 
 # View a specific task for details
-backlog tasks view task-021 --plain
+backlog tasks view task-221 --plain
 
-# Check project status
+# Search for tasks by keyword
+backlog tasks list --plain | rg -i "firebase|sigbus"
+
+# Check project status and metrics
 backlog overview
 
-# Browse tasks interactively (Ctrl+C to exit)
+# Browse tasks interactively with Kanban view
 backlog browser
 ```
 
-**Key Sections from Backlog:**
-- **To Do**: High-priority architectural refactoring, ability implementation
-- **Done**: Completed validation consolidation, code cleanup, Firebase refactoring
+**🎯 Productivity Patterns (From Task-221 Session)**
+
+**Pattern 1: Investigation → Documentation → Task Creation**
+```bash
+# 1. Investigate issue thoroughly
+just logs-errors TEST_ID
+just logs-text TEST_ID "pattern"
+
+# 2. Document findings in /tmp/ for analysis
+# Create comprehensive analysis documents
+
+# 3. Create task with full context
+backlog tasks create "Fix discovered issue"
+# Opens editor with frontmatter template
+# Add all investigation context and analysis links
+
+# 4. Link task in commits
+git commit -m "fix: description
+
+Related: task-XXX
+Analysis: /tmp/analysis_file.md"
+```
+
+**Pattern 2: Task Status Progression**
+```bash
+# Open → In Progress → Done workflow
+backlog tasks view task-221 --plain  # Check current status
+
+# Update status by editing task file directly
+# Status: Open → In Progress → Done
+
+# Or use git to track progression
+git log --oneline --grep="task-221" -10
+```
+
+**Pattern 3: Bidirectional Linking**
+```bash
+# In task file:
+# Related: task-152, task-222, task-223
+# Analysis: /tmp/task221_analysis.md
+
+# In commit message:
+git commit -m "fix(firebase): Memory barriers
+
+Closes: task-221
+Related: backlog/tasks/task-221"
+```
+
+**Pattern 4: Multi-Issue Triage**
+```bash
+# After comprehensive test run, triage failures
+backlog tasks list --plain | rg "Open|In Progress"
+
+# Create separate tasks for distinct issues
+# task-222: Android checksum race (test framework)
+# task-223: Firebase SIGBUS crashes (production bug)
+
+# Link related tasks
+# task-221 → task-223 (SIGBUS separate from memory ordering)
+```
+
+**🎯 Task Frontmatter Best Practices**
+
+```yaml
+---
+id: task-222
+title: Fix Android Checksum Collection Race Condition
+status: Open              # Open | In Progress | Done
+priority: critical        # low | medium | high | critical
+labels:
+  - critical
+  - test-framework
+  - android
+  - race-condition
+dependencies:
+  - task-221             # Tasks this depends on
+created_date: '2025-10-15 19:45'
+updated_date: '2025-10-15 19:45'
+---
+```
+
+**Key Status Values:**
 - **Open**: Active issues requiring investigation
-- **Completed**: Successfully resolved tasks
+- **In Progress**: Currently being worked on
+- **Done**: Completed and validated
+- **Completed**: Historical archive (use backlog cleanup)
 
 **Document Access:**
 - Use `backlog doc list` to find available documentation
@@ -191,6 +279,70 @@ backlog browser
 
 **Key Documents:**
 - **`backlog doc view doc-002`** - Build System Architecture & Workflows (complete build flows reference)
+
+**🔧 Advanced Backlog Usage**
+
+**Searching Tasks:**
+```bash
+# Find all Firebase-related tasks
+backlog tasks list --plain | rg -i "firebase"
+
+# Find high-priority open tasks
+backlog tasks list --plain | rg "Priority.*high" -A 5
+
+# Find tasks with specific labels
+rg "labels:" backlog/tasks/*.md | rg "critical"
+```
+
+**Task Creation Template:**
+```bash
+# Create task with comprehensive context
+backlog tasks create "Descriptive Title"
+
+# Include in task body:
+## Description
+- Clear problem statement
+- Business impact assessment
+- Evidence from logs/tests
+
+## Root Cause Analysis
+- Hypothesis with evidence
+- Investigation steps
+- Analysis documents
+
+## Proposed Solutions
+- Multiple options with pros/cons
+- Recommended approach
+- Timeline estimates
+
+## Success Criteria
+- Acceptance criteria (checkboxes)
+- Validation tests
+- Performance metrics
+
+## Related Tasks and Documents
+- Dependencies
+- Related issues
+- Analysis files in /tmp/
+```
+
+**Linking Tasks in Git:**
+```bash
+# Commit message format
+git commit -m "fix: description
+
+Root cause explanation.
+
+Solution approach.
+
+Closes: task-XXX
+Related: task-YYY, task-ZZZ
+Analysis: /tmp/analysis.md
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
 
 ## 🤖 Claude Code Preferences
 
