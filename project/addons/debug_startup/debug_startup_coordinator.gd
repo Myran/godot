@@ -18,6 +18,15 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	Log.info(
+		"TASK218_COORDINATOR_READY_WITH_DIAGNOSTICS",
+		{
+			"version": "diagnostic_v2_rng_fix",
+			"timestamp": Time.get_unix_time_from_system(),
+			"frame": Engine.get_process_frames()
+		},
+		["task218", "coordinator", "ready", "diagnostic_deployed", "critical"]
+	)
 	Log.debug("DebugStartupCoordinator ready", {}, ["debug", "startup", "lifecycle"])
 
 
@@ -29,11 +38,26 @@ func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String
 		Log.debug(message, metadata, verbose_tags)
 
 func startDebugCoordinator() -> void:
+	Log.info(
+		"TASK218_COORDINATOR_START",
+		{
+			"timestamp": Time.get_unix_time_from_system(),
+			"frame": Engine.get_process_frames(),
+			"test_id_current": DebugAction.get_current_test_id()
+		},
+		["debug", "startup", "task218", "coordinator", "critical"]
+	)
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
 	_log_verbose("Getting DebugRegistry actions...", {}, ["debug", "startup"])
 
+	Log.info("TASK218_BEFORE_GET_ACTION_NAMES", {}, ["task218", "coordinator"])
 	var actions := _get_action_names()
+	Log.info(
+		"TASK218_AFTER_GET_ACTION_NAMES",
+		{"action_count": actions.size(), "actions": actions},
+		["task218", "coordinator"]
+	)
 	Log.info(
 		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
 	)
@@ -55,6 +79,10 @@ func startDebugCoordinator() -> void:
 
 	_log_verbose("Activating card cache for debug actions...", {}, ["debug", "startup", "cache"])
 	await _ensure_card_cache_ready()
+
+	# CRITICAL FIX (Task-218): Apply RNG seed from config AFTER coordinator starts
+	# This ensures config is loaded at the right time, not during RNG autoload initialization
+	_apply_rng_seed_from_config()
 
 	# Check for pending gamestate load AFTER data_source is ready
 	await _check_and_load_pending_gamestate()
@@ -383,8 +411,45 @@ func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_ac
 func _wait_for_game_ready() -> void:
 	Log.info("Checking tree ready state...", {}, ["debug", "startup"])
 
-	Log.debug("Tree root is ready", {}, ["debug", "startup"])
-	Log.info("Game ready for debug actions", {}, ["debug", "startup"])
+	# Wait for game node reference
+	var game_node: Node = get_tree().root.get_node_or_null("Main/Game")
+	if not game_node:
+		Log.error("Game node not found", {}, ["debug", "startup", "error", "task218"])
+		return
+
+	Log.info(
+		"Game node found, waiting for UI state WAITING",
+		{"current_ui_state_code": game_node.ui_state},
+		["debug", "startup", "sync", "task218"]
+	)
+
+	# CRITICAL FIX (Task-218): Wait for ui_state to reach WAITING
+	# This ensures all initialization and state transitions (START → PREPARE) complete
+	# before actions are dispatched, preventing the race condition where first action
+	# executes before sequence tracking is ready.
+	while game_node.ui_state != core.UIState.WAITING:
+		await get_tree().process_frame
+		Log.debug(
+			"Waiting for UI state WAITING",
+			{
+				"current_ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][game_node.ui_state],
+				"current_ui_state_code": game_node.ui_state,
+				"target_ui_state": "WAITING",
+				"frame": Engine.get_process_frames()
+			},
+			["debug", "startup", "sync", "task218"]
+		)
+
+	Log.info(
+		"Game ready for debug actions - UI state is WAITING",
+		{
+			"ui_state": "WAITING",
+			"ui_state_code": game_node.ui_state,
+			"frame": Engine.get_process_frames(),
+			"timestamp": Time.get_unix_time_from_system()
+		},
+		["debug", "startup", "sync", "task218", "critical"]
+	)
 
 
 
@@ -623,3 +688,26 @@ func _cleanup_gamestate_loading_config() -> void:
 	if dir and dir.file_exists("startup_gamestate_load.json"):
 		dir.remove("startup_gamestate_load.json")
 		Log.debug("Gamestate loading config cleaned up", {}, ["debug", "startup", "gamestate"])
+
+
+func _apply_rng_seed_from_config() -> void:
+	"""
+	Apply RNG seed from debug config if specified.
+	CRITICAL (Task-218): This must happen in coordinator, NOT in RNG autoload,
+	to prevent premature config loading during autoload initialization.
+	"""
+	var debug_seed: int = DebugConfigReader.get_debug_seed()
+
+	if debug_seed != GameConstants.RandomSystem.DEFAULT_SEED:
+		Log.info(
+			"Applying debug seed from config to RNG",
+			{"seed": debug_seed},
+			["debug", "startup", "rng", "task218"]
+		)
+		rng.set_seed_from_config(debug_seed)
+	else:
+		Log.debug(
+			"No debug seed in config, RNG will use default",
+			{"default_seed": GameConstants.RandomSystem.DEFAULT_SEED},
+			["debug", "startup", "rng", "task218"]
+		)
