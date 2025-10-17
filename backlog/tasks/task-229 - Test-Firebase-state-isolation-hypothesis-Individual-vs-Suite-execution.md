@@ -5,7 +5,7 @@ status: To Do
 priority: high
 assignee: []
 created_date: '2025-10-17 14:33'
-updated_date: '2025-10-17 14:33'
+updated_date: '2025-10-17 19:30'
 labels:
   - firebase
   - test-isolation
@@ -54,41 +54,39 @@ Systematically determine:
 
 ## Investigation Phases
 
-### Phase 1: Individual Test Execution (No Delays)
+### Phase 1: Individual Test Execution (Rapid-Fire, No Delays)
 
-**Objective**: Test if problems occur when running configs individually with no extra delays.
+**Objective**: Test if problems occur when running configs individually back-to-back.
 
-**Commands** (run back-to-back, as fast as possible):
+**Commands** (run 3 times each for reproducibility):
 ```bash
-# Record start time
-date +%s > /tmp/test_start_time
+# Test 1: firebase-three-actions-test
+just log-run test-android-target firebase-three-actions-test
+just log-run test-android-target firebase-three-actions-test
+just log-run test-android-target firebase-three-actions-test
 
-# Run 3 failing configs individually (rapid-fire)
-just test-android-target firebase-three-actions-test
-just test-android-target firebase-two-actions-test
-just test-android-target gamestate-complete-save-load-cycle-test
+# Test 2: firebase-two-actions-test
+just log-run test-android-target firebase-two-actions-test
+just log-run test-android-target firebase-two-actions-test
+just log-run test-android-target firebase-two-actions-test
 
-# Record end time
-date +%s > /tmp/test_end_time
-
-# Calculate total time
-echo "Total time: $(( $(cat /tmp/test_end_time) - $(cat /tmp/test_start_time) )) seconds"
+# Test 3: gamestate-complete-save-load-cycle-test
+just log-run test-android-target gamestate-complete-save-load-cycle-test
+just log-run test-android-target gamestate-complete-save-load-cycle-test
+just log-run test-android-target gamestate-complete-save-load-cycle-test
 ```
 
-**Expected Results**:
-- ✅ **If ALL PASS**: Problem is specific to test list execution (single bash process)
-- ❌ **If ANY FAIL**: Problem occurs even with individual test calls
+**What to Record** (keep simple):
+- Pass/Fail count for each config (e.g., "3/3 pass", "2/3 pass", "0/3 pass")
+- Any crashes (SIGSEGV)
+- Any timeouts
 
-**What to Record**:
-- Pass/Fail status for each config
-- Timing for `backend.firebase.performance` action (should be ~1s, not 27s)
-- Any SIGSEGV crashes
-- Any Firebase timeouts
-- Total execution time
+**Expected Results**:
+- ✅ **If ALL PASS (9/9)**: Problem is specific to test list execution
+- ❌ **If ANY FAIL**: Problem occurs even with individual execution → Go to Phase 2
 
 **Success Criteria**:
-- All 3 configs pass
-- Performance action completes in <3 seconds
+- All 9 test runs pass (3x each config)
 - No crashes or timeouts
 
 ---
@@ -99,38 +97,48 @@ echo "Total time: $(( $(cat /tmp/test_end_time) - $(cat /tmp/test_start_time) ))
 
 **Only run if Phase 1 had failures.**
 
-**Commands** (with 30-second delays):
+**Commands** (with 30-second delays, run 3 times):
 ```bash
-date +%s > /tmp/test_start_time
-
-just test-android-target firebase-three-actions-test
+# Run 1
+just log-run test-android-target firebase-three-actions-test
 sleep 30
-just test-android-target firebase-two-actions-test
+just log-run test-android-target firebase-two-actions-test
 sleep 30
-just test-android-target gamestate-complete-save-load-cycle-test
+just log-run test-android-target gamestate-complete-save-load-cycle-test
+sleep 30
 
-date +%s > /tmp/test_end_time
-echo "Total time: $(( $(cat /tmp/test_end_time) - $(cat /tmp/test_start_time) )) seconds"
+# Run 2
+just log-run test-android-target firebase-three-actions-test
+sleep 30
+just log-run test-android-target firebase-two-actions-test
+sleep 30
+just log-run test-android-target gamestate-complete-save-load-cycle-test
+sleep 30
+
+# Run 3
+just log-run test-android-target firebase-three-actions-test
+sleep 30
+just log-run test-android-target firebase-two-actions-test
+sleep 30
+just log-run test-android-target gamestate-complete-save-load-cycle-test
 ```
 
-**Expected Results**:
-- ✅ **If NOW PASS**: Timing is the issue - Firebase SDK needs cooldown period
-- ❌ **If STILL FAIL**: Deeper Firebase SDK issue, not timing-related
+**What to Record** (keep simple):
+- Pass/Fail count for each config (e.g., "3/3 pass")
+- Compare with Phase 1 results
 
-**What to Record**:
-- Pass/Fail status for each config
-- Compare timing vs. Phase 1
-- Firebase connection behavior during sleep periods
+**Expected Results**:
+- ✅ **If NOW PASS**: Timing is the issue - Firebase SDK needs cooldown
+- ❌ **If STILL FAIL**: Not timing-related, deeper issue
 
 **Success Criteria**:
-- All 3 configs pass with delays
-- Performance metrics return to normal
+- All 9 test runs pass (3x each config with delays)
 
 ---
 
 ### Phase 3: Minimal Test List (Single Config)
 
-**Objective**: Create minimal test list to verify test list execution works with single config.
+**Objective**: Test if single config in test list works (baseline for test list execution).
 
 **Setup**:
 ```bash
@@ -146,29 +154,33 @@ cat > tests/test_lists/diagnostic-single.json << 'EOF'
 EOF
 ```
 
-**Commands**:
+**Commands** (run 3 times):
 ```bash
-just test-android diagnostic-single
+just log-run test-android diagnostic-single
+just log-run test-android diagnostic-single
+just log-run test-android diagnostic-single
 ```
 
-**Expected Results**:
-- ✅ **Should PASS**: Single config in test list behaves like individual execution
-- ❌ **If FAILS**: Test list infrastructure itself has issues
+**What to Record** (keep simple):
+- Pass/Fail count (e.g., "3/3 pass")
+- Compare with Phase 1 results
 
-**What to Record**:
-- Pass/Fail status
-- Performance metrics
-- Compare with Phase 1 individual execution
+**Expected Results**:
+- ✅ **If PASS (3/3)**: Single config in test list works fine
+- ❌ **If FAILS**: Test list infrastructure has issues
+
+**Success Criteria**:
+- All 3 runs pass
 
 ---
 
 ### Phase 4: Two-Config Test List (Problematic Pair)
 
-**Objective**: Find minimum config count that triggers failures.
+**Objective**: Test if 2 configs in test list trigger failures.
 
 **Setup**:
 ```bash
-# Create test list with 2 configs that failed
+# Create test list with 2 configs
 cat > tests/test_lists/diagnostic-pair.json << 'EOF'
 {
   "name": "Diagnostic Config Pair",
@@ -181,25 +193,29 @@ cat > tests/test_lists/diagnostic-pair.json << 'EOF'
 EOF
 ```
 
-**Commands**:
+**Commands** (run 3 times):
 ```bash
-just test-android diagnostic-pair
+just log-run test-android diagnostic-pair
+just log-run test-android diagnostic-pair
+just log-run test-android diagnostic-pair
 ```
 
-**Expected Results**:
-- ✅ **If PASS**: Problem requires more configs to manifest
-- ❌ **If FAILS**: 2 configs sufficient to reproduce issue
+**What to Record** (keep simple):
+- Pass/Fail count (e.g., "3/3 pass", "2/3 pass")
+- If fails, which config fails (first or second)?
 
-**What to Record**:
-- Which config fails (first or second?)
-- Timing of failures
-- Resource usage patterns
+**Expected Results**:
+- ✅ **If PASS (3/3)**: Need more configs to trigger issue
+- ❌ **If FAILS**: 2 configs sufficient to reproduce
+
+**Success Criteria**:
+- Document pass/fail pattern
 
 ---
 
 ### Phase 5: Three-Config Test List (All Problematic)
 
-**Objective**: Test with all 3 originally failing configs.
+**Objective**: Test with all 3 originally failing configs (should replicate comprehensive suite failures).
 
 **Setup**:
 ```bash
@@ -216,27 +232,65 @@ cat > tests/test_lists/diagnostic-triple.json << 'EOF'
 EOF
 ```
 
-**Commands**:
+**Commands** (run 3 times):
 ```bash
-just test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
 ```
 
-**Expected Results**:
-- Should replicate original comprehensive suite failures
-- Identify which configs trigger problems for later configs
+**What to Record** (keep simple):
+- Pass/Fail count (e.g., "1/3 pass", "0/3 pass")
+- Which configs fail (first, second, third, or all?)
+- Pattern of failures
 
-**What to Record**:
-- Pass/Fail for each config
-- Order of failures
-- Cumulative resource exhaustion pattern
+**Expected Results**:
+- ❌ **Should FAIL**: Replicate comprehensive suite failures
+- Identify which configs trigger problems
+
+**Success Criteria**:
+- Document failure pattern (which configs fail consistently)
 
 ---
 
-### Phase 6: Add Firebase Process Cleanup
+### Phase 6: Test With Longer Inter-Config Delays
+
+**Objective**: Test if increasing delay between configs in test list resolves issues.
+
+**Only run if Phase 5 shows consistent failures.**
+
+**Implementation**:
+```bash
+# Modify test list loop (justfile-validation-enhanced-testing.justfile around line 1762)
+# Change from: sleep 2
+# Change to: sleep 10
+```
+
+**Commands** (run 3 times):
+```bash
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+```
+
+**What to Record** (keep simple):
+- Pass/Fail count with 10s delays
+- Compare with Phase 5 results (2s delays)
+
+**Expected Results**:
+- ✅ **If NOW PASS**: Delay duration is the issue
+- ❌ **If STILL FAIL**: Not about delay duration
+
+**Success Criteria**:
+- Document whether longer delays help
+
+---
+
+### Phase 7: Test Firebase Process Cleanup
 
 **Objective**: Test if killing Firebase system services between tests resolves issues.
 
-**Only run if previous phases showed timing helps.**
+**Only run if Phase 6 fails but Phase 2 showed delays help.**
 
 **Implementation**:
 ```bash
@@ -246,131 +300,73 @@ just test-android diagnostic-triple
 # Add after "pm clear {{ANDROID_PACKAGE_NAME}}":
 echo "🔧 Stopping Firebase system services..."
 adb -s {{ANDROID_DEVICE_ID}} shell "am force-stop com.google.android.gms" 2>/dev/null || true
-echo "⏳ Waiting for Firebase SDK to reset..."
 sleep 5
 ```
 
-**Commands**:
+**Commands** (run 3 times with modified cleanup):
 ```bash
-# Re-run comprehensive suite
-just test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
+just log-run test-android diagnostic-triple
 ```
+
+**What to Record** (keep simple):
+- Pass/Fail count with Firebase cleanup
+- Compare with Phase 5/6 results
 
 **Expected Results**:
 - ✅ **If NOW PASS**: Firebase process cleanup is the solution
-- ❌ **If STILL FAIL**: Need different approach
+- ❌ **If STILL FAIL**: Deeper Firebase SDK issue
+
+**Success Criteria**:
+- Document whether Firebase process cleanup helps
 
 ---
 
-### Phase 7: Increase Test List Inter-Config Delay
+## Analysis Commands (Use After Each Phase)
 
-**Objective**: Test if simply increasing sleep between configs in test lists resolves issues.
-
-**Implementation**:
+**Check test results** (logs saved automatically by `just log-run`):
 ```bash
-# Modify test list loop (justfile-validation-enhanced-testing.justfile line 1762)
-# Change from: sleep 2
-# Change to: sleep 10  # Or sleep 5
+# View logs in logs/ directory
+ls -lt logs/*.log | head -5
+
+# Quick analysis
+just logs-last                              # Latest test results
+just logs-errors TEST_ID                    # If failures found
 ```
 
-**Commands**:
+**Debug specific issues** (only if needed):
 ```bash
-just test-android diagnostic-triple
+# Check for crashes
+just android-logs-search "SIGSEGV|SIGBUS|fatal"
+
+# Check for timeouts
+just logs-text TEST_ID "timeout|timed out"
+
+# Check Firebase performance
+just logs-text TEST_ID "backend.firebase.performance"
 ```
-
-**Expected Results**:
-- Measure if longer delays prevent state accumulation
-- Find minimum delay needed for stability
-
----
-
-## Analysis Framework
-
-### For Each Phase, Record:
-
-1. **Test Results**:
-   ```bash
-   # Check latest test IDs
-   ls -lt ~/Library/Application\ Support/Godot/app_userdata/gametwo/logs/test_action_results_*.json | head -3
-
-   # Analyze each test
-   just logs-errors TEST_ID
-   ```
-
-2. **Performance Metrics**:
-   ```bash
-   # Check firebase-three-actions-test performance timing
-   just logs-text TEST_ID "backend.firebase.performance" | grep duration
-   ```
-
-3. **Firebase Process State**:
-   ```bash
-   # Before test
-   adb shell "ps -A | grep -E '(firebase|gms)'" > /tmp/before_firebase_ps.txt
-
-   # After test
-   adb shell "ps -A | grep -E '(firebase|gms)'" > /tmp/after_firebase_ps.txt
-
-   # Compare
-   diff /tmp/before_firebase_ps.txt /tmp/after_firebase_ps.txt
-   ```
-
-4. **Memory/Resource Usage**:
-   ```bash
-   # Check for resource exhaustion patterns
-   just android-logs-search "OutOfMemory|ResourceExhausted|TooManyConnections"
-   ```
 
 ## Acceptance Criteria
 
-- [ ] Phase 1 completed - Individual tests documented (pass/fail)
-- [ ] Phase 2 completed if Phase 1 failed - Delay effectiveness measured
-- [ ] Phase 3 completed - Single-config test list validated
-- [ ] Phase 4 completed - Two-config behavior documented
-- [ ] Phase 5 completed - Three-config failures reproduced
-- [ ] Root cause identified: Timing vs. Process isolation vs. Resource exhaustion
-- [ ] Solution proposed based on evidence
-- [ ] Solution tested and validated (18/18 configs pass)
+- [ ] Phase 1 completed - Individual rapid-fire tests (9 runs total, 3x each config)
+- [ ] Phase 2 completed if Phase 1 failed - Individual tests with delays
+- [ ] Phase 3 completed - Single-config test list (3 runs)
+- [ ] Phase 4 completed - Two-config test list (3 runs)
+- [ ] Phase 5 completed - Three-config test list (3 runs)
+- [ ] Phase 6 completed if needed - Longer delays tested (10s vs 2s)
+- [ ] Phase 7 completed if needed - Firebase process cleanup tested
+- [ ] Root cause narrowed down based on which phase shows change in behavior
+- [ ] Solution proposed and documented
 
-## Expected Outcomes
+## Expected Outcomes (Quick Reference)
 
-### Scenario A: Individual Tests Pass (Phase 1 ✅)
-**Conclusion**: Test list execution infrastructure causes issues
-**Solution**: Investigate bash process state, environment variables, test list loop
-
-### Scenario B: Individual Tests Fail, Delays Help (Phase 1 ❌, Phase 2 ✅)
-**Conclusion**: Firebase SDK needs cooldown time between tests
-**Solution**: Increase inter-test delays or add Firebase process cleanup
-
-### Scenario C: All Individual Tests Fail (Phase 1 ❌, Phase 2 ❌)
-**Conclusion**: Fundamental Firebase SDK state issue
-**Solution**: Deep Firebase SDK investigation, possibly device reboot required
-
-### Scenario D: Minimal Test Lists Pass (Phase 3-5 ✅)
-**Conclusion**: Scale/accumulation issue - needs full comprehensive suite to trigger
-**Solution**: Test with progressively larger lists to find threshold
-
-## Debug Commands
-
-```bash
-# Quick status check
-just logs-last
-
-# Detailed error analysis
-just logs-errors TEST_ID
-
-# Firebase-specific search
-just logs-text TEST_ID "firebase" | head -50
-
-# Check Firebase processes
-adb shell "dumpsys activity services | grep -i firebase" | head -20
-
-# Monitor Firebase connections
-adb shell "netstat -an | grep 443 | wc -l"  # Count active HTTPS connections
-
-# Check app memory
-adb shell "dumpsys meminfo com.primaryhive.gametwo | head -20"
-```
+**Phase 1 ✅ (all pass)**: Problem is test list execution, not Firebase itself
+**Phase 1 ❌ + Phase 2 ✅**: Firebase needs cooldown time between tests
+**Phase 1 ❌ + Phase 2 ❌**: Fundamental Firebase SDK issue (deeper investigation needed)
+**Phase 3-4 ✅ + Phase 5 ❌**: Problem needs 3+ configs to manifest
+**Phase 6 ✅ (longer delays help)**: Increase inter-config delay in test lists
+**Phase 7 ✅ (Firebase cleanup helps)**: Add Firebase process cleanup to test infrastructure
 
 ## Related Tasks
 
