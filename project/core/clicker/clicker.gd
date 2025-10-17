@@ -194,14 +194,6 @@ func update_blocks() -> void:
 
 
 func _handle_async_update_blocks() -> void:
-	# Skip update_blocks during gamestate loading to avoid movement/gravity on restored blocks
-	if level and level._gamestate_loading_mode:
-		Log.debug(
-			"Skipping update_blocks - gamestate loading mode active",
-			{},
-			[Log.TAG_LEVEL, "gamestate", "skip_update"]
-		)
-		return
 	await update_blocks()
 
 

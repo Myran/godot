@@ -8,21 +8,11 @@ var current_level_name: String
 var block_grid: Dictionary[Vector2i, Block] = {}
 var refill_distance: Vector2
 var game: Game
-var _gamestate_loading_mode: bool = false
 
 
 func _ready() -> void:
 	Log.debug("Level controller initializing", {}, [Log.TAG_INITIALIZATION, Log.TAG_LEVEL])
 	DebugManager.debug_event.connect(_on_debug_event)
-
-	# CRITICAL: Check if we're going to load gamestate and enable loading mode early
-	if DebugConfigReader.has_gamestate_loading_action():
-		_gamestate_loading_mode = true
-		Log.info(
-			"Gamestate loading mode enabled during initialization",
-			{},
-			[Log.TAG_LEVEL, "gamestate", "initialization"]
-		)
 
 
 func _on_debug_event(event: DebugManager.DebugEventType, _data: Array) -> void:
@@ -48,9 +38,7 @@ func setup_level(level_name: String = "default", game_instance: Game = null) -> 
 	if game_instance:
 		game = game_instance
 	Log.info(
-		"Setting up level",
-		{"level_name": level_name, "gamestate_loading": _gamestate_loading_mode},
-		[Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
+		"Setting up level", {"level_name": level_name}, [Log.TAG_LEVEL, Log.TAG_INITIALIZATION]
 	)
 	var new_level: TileMapLayer = _level_factory.create_level(level_name)
 	if new_level == null:
@@ -69,15 +57,8 @@ func setup_level(level_name: String = "default", game_instance: Game = null) -> 
 		[Log.TAG_CLICKER, Log.TAG_GAME_STATE]
 	)
 
-	# Skip tilemap block creation during gamestate loading - blocks will come from saved state
-	if not _gamestate_loading_mode:
-		create_blocks_from_level()
-	else:
-		Log.info(
-			"Skipping tilemap block creation - gamestate loading mode active",
-			{"level": level_name},
-			[Log.TAG_LEVEL, Log.TAG_INITIALIZATION, "gamestate"]
-		)
+	# Create blocks from tilemap layout
+	create_blocks_from_level()
 
 
 func create_blocks_from_level() -> void:
@@ -290,13 +271,3 @@ func _force_remove_block_silent(block: Block) -> void:
 
 	# Use the silent destruction method
 	block.block_force_destroy_silent()
-
-
-func set_gamestate_loading_mode(enabled: bool) -> void:
-	"""
-	Enable/disable gamestate loading mode to skip tilemap block creation.
-	When enabled, setup_level() will skip create_blocks_from_level() since
-	blocks will be restored from saved gamestate.
-	"""
-	_gamestate_loading_mode = enabled
-	Log.debug("Gamestate loading mode changed", {"enabled": enabled}, [Log.TAG_LEVEL, "gamestate"])

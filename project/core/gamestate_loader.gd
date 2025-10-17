@@ -9,9 +9,6 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 		[Log.TAG_DEBUG, "gamestate", "load"]
 	)
 
-	# CRITICAL: Enable gamestate loading mode IMMEDIATELY to prevent any tilemap block creation
-	if game.level_controller:
-		game.level_controller.set_gamestate_loading_mode(true)
 	# Lock input during gamestate loading to prevent user interaction
 	if game.input_handler:
 		game.input_handler.lock_input()
@@ -98,9 +95,6 @@ static func load_state_from_file(game: Game, gamestate_file_path: String) -> boo
 			[Log.TAG_DEBUG, "gamestate", "lineup"]
 		)
 
-	# CRITICAL: Disable gamestate loading mode after restoration complete
-	if game.level_controller:
-		game.level_controller.set_gamestate_loading_mode(false)
 	# Unlock input now that gamestate loading is complete
 	if game.input_handler:
 		game.input_handler.unlock_input()
@@ -312,8 +306,6 @@ static func _reset_all_game_state_for_loading(game: Game) -> void:
 
 	# 1. Reset board/clicker state completely
 	if game.level_controller:
-		# CRITICAL: Enable gamestate loading mode to prevent tilemap block creation
-		game.level_controller.set_gamestate_loading_mode(true)
 		game.level_controller.clear_all_blocks()  # This already exists and clears grid + scene tree
 		components_reset.append("board_blocks")
 

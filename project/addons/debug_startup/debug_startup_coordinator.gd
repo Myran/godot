@@ -692,22 +692,21 @@ func _cleanup_gamestate_loading_config() -> void:
 
 func _apply_rng_seed_from_config() -> void:
 	"""
-	Apply RNG seed from debug config if specified.
-	CRITICAL (Task-218): This must happen in coordinator, NOT in RNG autoload,
-	to prevent premature config loading during autoload initialization.
+	Verify RNG seed from debug config.
+	Note: RNG autoload already handles seed initialization in its _ready() method.
+	This function exists for logging/verification purposes only.
 	"""
 	var debug_seed: int = DebugConfigReader.get_debug_seed()
 
 	if debug_seed != GameConstants.RandomSystem.DEFAULT_SEED:
 		Log.info(
-			"Applying debug seed from config to RNG",
-			{"seed": debug_seed},
-			["debug", "startup", "rng", "task218"]
+			"RNG initialized with debug seed from config",
+			{"seed": debug_seed, "source": "autoload_ready"},
+			["debug", "startup", "rng", "verification"]
 		)
-		rng.set_seed_from_config(debug_seed)
 	else:
 		Log.debug(
-			"No debug seed in config, RNG will use default",
-			{"default_seed": GameConstants.RandomSystem.DEFAULT_SEED},
-			["debug", "startup", "rng", "task218"]
+			"RNG using default seed",
+			{"default_seed": GameConstants.RandomSystem.DEFAULT_SEED, "source": "autoload_ready"},
+			["debug", "startup", "rng", "verification"]
 		)

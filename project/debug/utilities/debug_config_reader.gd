@@ -89,30 +89,6 @@ static func get_test_metadata() -> Dictionary:
 	return {}
 
 
-static func has_gamestate_loading_action() -> bool:
-	"""Check if debug config contains gamestate loading action to prevent tilemap block creation."""
-	var config_data: Dictionary = _read_config_file()
-	var actions: Array = config_data.get("actions", [])
-
-	for action_item: Variant in actions:
-		var action_name: String
-		if action_item is Dictionary:
-			action_name = action_item.get("action", "")
-		else:
-			action_name = str(action_item)
-
-		if action_name == "system.debug.load_gamestate":
-			if Log:
-				Log.debug(
-					"Gamestate loading action detected in debug config",
-					{},
-					["debug", "gamestate", "initialization"]
-				)
-			return true
-
-	return false
-
-
 # ================================
 # PATH MANAGEMENT
 # ================================
