@@ -1,20 +1,47 @@
 ---
 id: task-226
 title: Fix gamestate-complete-save-load-cycle-test checksum validation MISMATCH
-status: To Do
+status: Done
 priority: medium
 assignee: []
 created_date: '2025-10-17 11:26'
+updated_date: '2025-10-17 13:37'
 labels:
   - gamestate
   - checksum
   - validation
   - test-framework
   - determinism
+  - duplicate
 dependencies: []
 ---
 
-## Description
+## RESOLUTION ✅
+
+**Status**: Already Fixed (Duplicate of task-218)
+**Resolution Date**: 2025-10-17 11:58 (commit eabb02f8)
+**Fixed By**: User (before task-226 was created)
+
+**Root Cause Confirmed**:
+Config had 3 expected checksums but system auto-adds `replay_complete` as 4th action, generating 4 checksums.
+
+**Fix Applied**:
+Added 4th `SKIP_SYSTEM_DEBUG_CHECKSUM` entry to expected_checksums array in config.
+
+**Verification**:
+```bash
+just test-desktop gamestate-complete-save-load-cycle-test
+# ✅ PASSED: 4/4 checksums validated successfully
+```
+
+**Note**: This task was created after investigation of test failures from logs/20251017_100644_test.log (10:06 timestamp), but the issue had already been fixed by commit eabb02f8 at 11:58, just before task creation.
+
+**Closes**: task-226 (duplicate of task-218)
+**Related**: task-218 (original issue tracking)
+
+---
+
+## Original Description
 
 **TEST FRAMEWORK ISSUE**: `gamestate-complete-save-load-cycle-test` fails checksum validation on both desktop and Android despite all actions completing successfully. The test framework extracts 4 checksums but only validates 3, causing a MISMATCH failure.
 
