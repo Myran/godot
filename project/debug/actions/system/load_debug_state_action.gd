@@ -9,7 +9,6 @@ func _init(file_path: String = "") -> void:
 	set_category("System")
 	set_group("Debug")
 	set_description("Load saved debug gamestate as recording session starting point")
-	use_auto_semantic_logging = false  # Opt out - we handle specialized logging with domain-specific data
 
 
 func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
@@ -168,9 +167,9 @@ func _execute_load_gamestate(params: Dictionary = {}) -> DebugActionResult:
 			TestUtils.make_metadata(TestConstants.TEST_TYPES.SYSTEM_LOAD_GAMESTATE)
 		)
 
-	# Log the load request (skip semantic action logging for now to avoid StateExtractor hang)
+	# Log the load request with detailed metadata
 	Log.info(
-		"Gamestate loaded successfully - skipping semantic action due to StateExtractor hang",
+		"Gamestate loaded successfully",
 		{
 			"file": actual_file_path.get_file(),
 			"original_capture_id": capture_dict.get("capture_id", "unknown"),
