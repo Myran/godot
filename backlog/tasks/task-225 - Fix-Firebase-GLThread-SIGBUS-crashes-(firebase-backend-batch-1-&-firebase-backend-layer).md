@@ -1,34 +1,40 @@
 ---
 id: task-225
 title: >-
-  Fix Firebase GLThread SIGBUS crashes (firebase-backend-batch-1 &
-  firebase-backend-layer)
+  Fix Firebase crash signals - SIGBUS (GLThread) & SIGSEGV in comprehensive test suite
 status: To Do
 priority: high
 assignee: []
 created_date: '2025-10-17 11:21'
-updated_date: '2025-10-17 11:21'
+updated_date: '2025-10-17 14:05'
 labels:
   - firebase
   - crash
   - sigbus
+  - sigsegv
   - android
   - glthread
   - production-critical
+  - test-suite
 dependencies: []
 ---
 
 ## Description
 
-**PRODUCTION CRITICAL**: Firebase backend tests crash with SIGBUS in GLThread on Android after successfully completing test actions.
+**PRODUCTION CRITICAL**: Firebase backend tests crash with multiple signal patterns (SIGBUS, SIGSEGV) on Android, occurring both during execution and after test completion.
 
 ### Crash Pattern
 
-Two Firebase backend configs crash with identical SIGBUS pattern:
-- **firebase-backend-batch-1**: SIGBUS at `10:11:31` in test run
-- **firebase-backend-layer**: SIGBUS at `10:14:07` in test run
+**Three distinct crash patterns identified:**
 
-**Critical Detail**: Tests execute successfully (all actions PASSED) but crash during or after completion.
+1. **firebase-backend-batch-1**: SIGBUS at `10:11:31` in test run (original)
+2. **firebase-backend-layer**: SIGBUS at `10:14:07` in test run (original)
+3. **firebase-two-actions-test**: SIGSEGV at `13:55:25` in comprehensive test suite (NEW)
+
+**Critical Observations:**
+- SIGBUS crashes: Tests execute successfully (all actions PASSED) but crash during or after completion
+- SIGSEGV crash: Occurs in comprehensive test suite execution (NEW pattern)
+- Different signal types suggest multiple root causes or manifestations
 
 ### Crash Details
 
@@ -44,11 +50,26 @@ Fatal signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0x8898000c19
 in tid 678 (GLThread 254707), pid 403 (aryhive.gametwo)
 ```
 
-**Common Pattern:**
+**firebase-two-actions-test crash (NEW - 2025-10-17 13:55):**
+```
+Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x40
+in tid 9488 (aryhive.gametwo), pid 9488 (aryhive.gametwo)
+```
+
+**Crash Pattern Analysis:**
+
+**SIGBUS Pattern (signals 1-2):**
 - Signal: SIGBUS (signal 7)
 - Code: BUS_ADRALN (code 1) - Unaligned memory access
 - Thread: GLThread (OpenGL rendering thread)
 - Both fault addresses in similar range (0x87/88...000c19)
+
+**SIGSEGV Pattern (signal 3 - NEW):**
+- Signal: SIGSEGV (signal 11) - Invalid memory access
+- Code: SEGV_MAPERR (code 1) - Address not mapped to object
+- Thread: Main thread (not GLThread)
+- Fault addr: 0x40 (very low address, likely null pointer + offset)
+- Context: Comprehensive test suite execution
 
 ### Test Execution Status
 
@@ -64,7 +85,17 @@ in tid 678 (GLThread 254707), pid 403 (aryhive.gametwo)
 - ✅ ERROR ANALYSIS PASSED (0 errors)
 - ❌ CRASH DETECTED during/after test completion
 
+**firebase-two-actions-test (NEW - comprehensive suite):**
+- ✅ ERROR ANALYSIS PASSED (0 errors before crash)
+- ❌ CRASH DETECTED: SIGSEGV in main thread
+- **Context**: Occurred during comprehensive test suite run
+- **Source**: `logs/20251017_134504_test.log`
+- **Historical Success**: task-154, task-207 show 100% success in individual runs
+- **Key Difference**: Only crashes in full test suite execution
+
 ## Root Cause Hypothesis
+
+### SIGBUS Pattern (GLThread crashes)
 
 **SIGBUS BUS_ADRALN** indicates unaligned memory access in GLThread (OpenGL rendering thread).
 
@@ -73,27 +104,49 @@ in tid 678 (GLThread 254707), pid 403 (aryhive.gametwo)
 2. **ARM64 alignment requirement violation** - GLThread attempting unaligned memory access (ARM64 strict alignment)
 3. **Firebase SDK memory corruption** - SDK writes to memory that GLThread later accesses in misaligned way
 
-**Critical Observation:**
+**Critical Observations:**
 - Crashes happen in **GLThread** (rendering), not Firebase thread
 - Tests using **auto_quit: true** - crash may be during shutdown sequence
 - Both crashes occur **after** Firebase operations complete successfully
+
+### SIGSEGV Pattern (Main thread crash - NEW)
+
+**SIGSEGV SEGV_MAPERR at 0x40** suggests null pointer dereference with offset.
+
+**Likely Causes:**
+1. **Test suite state accumulation** - Firebase SDK state from previous tests causes null pointer access
+2. **Object lifetime issue** - Firebase object destroyed but still referenced (dangling pointer)
+3. **Memory exhaustion** - Comprehensive suite depletes resources, causing allocation failures
+4. **Shutdown race condition** - Different manifestation of auto-quit timing issue
+
+**Critical Observations:**
+- **Only crashes in comprehensive suite**, not individual runs (test-154, test-207 showed 100% success)
+- Main thread crash (not GLThread) suggests different root cause than SIGBUS
+- Fault address 0x40 = null pointer + 64 byte offset (typical object member access)
+- Related to **task-216.01** (test suite isolation) and **task-215** (comprehensive test failures)
 
 ## Investigation Approach
 
 ### Phase 1: Evidence Gathering (30 min)
 ```bash
-# Get full crash details from latest test
-just android-logs-search "SIGBUS" | head -100
+# Get full crash details from latest test (both SIGBUS and SIGSEGV)
+just android-logs-search "SIGBUS\|SIGSEGV" | head -100
 
 # Check crash timing vs test completion
 just logs-text firebase-backend-batch-1_android_1760688404 "replay_complete\|auto_quit\|SIGBUS"
+just logs-text firebase-two-actions-test_android_1760701504 "replay_complete\|auto_quit\|SIGSEGV"
 
 # Look for similar crashes in history
-rg "Fatal signal 7.*GLThread" logs/*.log | head -20
+rg "Fatal signal (7|11).*GLThread" logs/*.log | head -20
+rg "Fatal signal 11.*SIGSEGV" logs/20251017_134504_test.log -B 10 -A 10
+
+# Compare individual vs suite execution for firebase-two-actions-test
+just test-android-target firebase-two-actions-test  # Individual run
+just test  # Full suite - check if it crashes
 
 # Check if other Firebase tests crash
 just test-android firebase-cpp-layer
-just android-logs-search "SIGBUS"
+just android-logs-search "SIGBUS\|SIGSEGV"
 ```
 
 ### Phase 2: Narrowing Down (1 hour)
@@ -144,15 +197,29 @@ just test-android firebase-backend-batch-1
 
 ## Acceptance Criteria
 
-- [ ] Firebase backend tests complete without SIGBUS crashes
-- [ ] `firebase-backend-batch-1` passes consistently (10/10 runs)
-- [ ] `firebase-backend-layer` passes consistently (10/10 runs)
+- [ ] Firebase backend tests complete without SIGBUS or SIGSEGV crashes
+- [ ] `firebase-backend-batch-1` passes consistently (10/10 runs, individual and suite)
+- [ ] `firebase-backend-layer` passes consistently (10/10 runs, individual and suite)
+- [ ] `firebase-two-actions-test` passes consistently in comprehensive suite (10/10 runs)
 - [ ] No crash signals detected in Android logcat after Firebase tests
 - [ ] Auto-quit functionality works safely with Firebase operations
+- [ ] Test suite isolation prevents state accumulation (task-216.01)
 - [ ] No regression in other Firebase test configurations
 
 ## Evidence
 
+### SIGBUS Crashes (Original)
 **Source Log:** `logs/20251017_100644_test.log`
 **Test Session:** `1760688404`
 **Date:** 2025-10-17 10:11-10:14
+**Configs:** firebase-backend-batch-1, firebase-backend-layer
+
+### SIGSEGV Crash (NEW - Comprehensive Suite)
+**Source Log:** `logs/20251017_134504_test.log`
+**Test Session:** `1760701504`
+**Date:** 2025-10-17 13:55:25
+**Config:** firebase-two-actions-test
+**Crash Details:**
+```
+10-17 13:55:25.788  9488  9488 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x40 in tid 9488 (aryhive.gametwo), pid 9488 (aryhive.gametwo)
+```

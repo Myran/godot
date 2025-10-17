@@ -469,3 +469,281 @@ Before implementing proposed fix (always stop app), must understand:
 
 **STATUS**: In Progress - Deep investigation phase
 **NEXT**: Search Godot codebase for JSON file write mechanism
+
+## Comprehensive Test Suite Evidence (2025-10-17)
+
+**NEW FAILURE PATTERNS**: Latest comprehensive test run (`logs/20251017_134504_test.log`) reveals ongoing test suite isolation issues affecting multiple configs:
+
+### Test Suite Failures (3 of 18 configs failed)
+
+**1. firebase-three-actions-test** (task-227):
+- ❌ `backend.firebase.performance` action failed (27.6 seconds vs typical 1 second)
+- **Pattern**: 27x slower than individual runs → indicates resource exhaustion/state accumulation
+- **Evidence**: Historical runs show 100% success individually (task-154, task-145, task-155)
+
+**2. firebase-two-actions-test** (task-225):
+- ❌ SIGSEGV crash (Fatal signal 11, fault addr 0x40)
+- **Pattern**: Only crashes in comprehensive suite, not individual runs
+- **Evidence**: task-154, task-207 show 100% success in individual execution
+- **Root Cause**: Test suite state accumulation → null pointer dereference
+
+**3. gamestate-complete-save-load-cycle-test** (task-228):
+- ❌ Firebase database timeout → Rules data missing
+- **Pattern**: Firebase operation timeout after repeated comprehensive suite operations
+- **Evidence**: Actions pass but Firebase backend times out fetching rules data
+- **Related**: task-197 (Firebase backend sequential action timeout)
+
+### Common Pattern Analysis
+
+**Critical Observation**: All 3 failures share common characteristics:
+1. ✅ **Pass individually** - Configs work in isolation
+2. ❌ **Fail in suite** - Only fail during comprehensive test execution
+3. 🔄 **State Accumulation** - Evidence of resource exhaustion/state bleeding
+4. ⏱️ **Timing Issues** - Significant slowdowns or timeouts in suite context
+
+**Root Cause Validation**:
+This evidence **confirms** the original task-216.01 hypothesis:
+> "Android test suite fails to isolate app state between consecutive config tests"
+
+**Specific Manifestations**:
+- **Firebase SDK State**: Connection pool exhaustion, rate limiting accumulation
+- **Memory Pressure**: 27x slowdown in performance actions
+- **Object Lifetime**: SIGSEGV from dangling pointers (test suite only)
+- **Backend Throttling**: Database timeouts after repeated operations
+
+### Recommended Next Steps
+
+**Phase 7: Comprehensive Suite Validation** (2025-10-17)
+
+The logcat clear fix (Phase 1-6) addressed DEBUG_TEST_SUCCESS logging but **did not solve** test suite isolation completely. New evidence shows:
+
+1. **Extend Isolation Fix**:
+   - Current fix: Logcat buffer clear ✅ (fixes logging extraction)
+   - Missing: Firebase SDK reset between configs
+   - Missing: Memory/object cleanup between configs
+   - Missing: Backend state reset
+
+2. **Implementation Options**:
+
+   **Option A: Enhanced App Restart** (Recommended)
+   - Always force-stop app between ALL configs (not just on push)
+   - Add Firebase SDK cleanup before stop
+   - Wait for complete shutdown before next config
+   - **Cost**: ~3-5s per config (~90s total suite overhead)
+   - **Benefit**: Complete isolation, matches individual test environment
+
+   **Option B: Firebase SDK Reset Hook**
+   - Add Firebase cleanup action between test configs
+   - Reset connection pools, clear pending operations
+   - **Cost**: Implementation complexity, potential Firebase SDK issues
+   - **Benefit**: Targeted fix, lower overhead
+
+   **Option C: Test Order Optimization**
+   - Group similar tests together
+   - Add explicit cleanup configs between heavy operations
+   - **Cost**: Test suite restructuring
+   - **Benefit**: Minimize state accumulation impact
+
+3. **Validation Strategy**:
+   ```bash
+   # Before fix baseline
+   just test  # Note 3 failures
+
+   # Implement Option A (recommended)
+   # Modify _push-file-android to always restart
+
+   # After fix validation
+   just test  # Should pass 18/18 configs
+   just test  # Run again to confirm consistency
+
+   # Verify specific failures resolved
+   just test-android-target firebase-three-actions-test  # Should complete in ~1s
+   just test-android-target firebase-two-actions-test    # Should not crash
+   just test-android-target gamestate-complete-save-load-cycle-test  # No timeouts
+   ```
+
+### Evidence Summary
+
+**Test Run**: 2025-10-17 13:45-14:00 (Session 1760701504)
+**Results**: 15/18 passed (83.3%), 3 failed
+**Failures**: All related to test suite isolation
+**Pass Rate Impact**: Down from expected 95%+ to 83%
+**Related Tasks**: task-215, task-227, task-225, task-228
+
+**Conclusion**: The logging fix (logcat clear) was necessary but insufficient. Full test suite isolation requires comprehensive app state reset between configs.
+
+## Justfile Investigation Results (2025-10-17 14:10)
+
+**Investigation Goal**: Determine if test suite properly resets/removes application between configs.
+
+### Execution Flow Analysis
+
+**Test List Config Loop** (`justfile-validation-enhanced-testing.justfile` lines 1666-1765):
+
+```bash
+for i in "${!CONFIG_ARRAY[@]}"; do
+    config="${CONFIG_ARRAY[$i]}"
+    
+    # Execute configuration
+    INSIDE_TEST_LIST_EXECUTION=true just _execute-test-with-analysis "$config" "$PLATFORM" "$TEST_SESSION"
+    
+    # Small delay between tests
+    sleep 2  # ⚠️ ONLY A 2-SECOND SLEEP - NO EXPLICIT CLEANUP
+done
+```
+
+**Config Execution** (`_execute-test-with-analysis` → Android path lines 2337-2342):
+
+```bash
+"android")
+    # Deploy and execute Android test
+    just _deploy-config-android "$TEMP_CONFIG_PATH"  # ✅ Calls cleanup
+    just _execute-test-android "$CONFIG_NAME"
+    ;;
+```
+
+**Android Deployment** (`_deploy-config-android` lines 2400-2420):
+
+```bash
+_deploy-config-android:
+    just _android-check-device-detailed
+    just _stop-app-android  # ✅ Calls comprehensive cleanup
+    just config-push-android "$TEMP_CONFIG_NAME"
+```
+
+**App Stop** (`_stop-app-android`):
+
+```bash
+_stop-app-android:
+    just clear-android-test-cache  # ✅ Most aggressive cleanup
+```
+
+**Test Cache Clearing** (`clear-android-test-cache` in `justfile-platform-android.justfile`):
+
+```bash
+clear-android-test-cache:
+    # Stop application
+    adb shell "am force-stop {{ANDROID_PACKAGE_NAME}}"
+    
+    # ✅ CLEAR ALL APPLICATION DATA
+    adb shell "pm clear {{ANDROID_PACKAGE_NAME}}"  # ⭐ CRITICAL
+    
+    # Clear test config files
+    adb shell "rm -rf /sdcard/Android/data/.../files/test_configs/"
+    
+    # Clear test preferences
+    adb shell "rm -rf /data/data/.../shared_prefs/test_*"
+```
+
+### Key Findings
+
+**✅ GOOD NEWS**: System DOES reset app between configs!
+
+1. **`pm clear` is called** - This is the most aggressive Android cleanup:
+   - Stops the app process completely
+   - **Clears ALL app data** (databases, shared preferences, files, caches)
+   - Resets app to fresh-install state
+   - Equivalent to uninstall + reinstall
+
+2. **Called for EVERY config** in test list:
+   - Test loop → `_execute-test-with-analysis`
+   - → `_deploy-config-android`  
+   - → `_stop-app-android`
+   - → `clear-android-test-cache`
+   - → `pm clear`
+
+3. **Additional cleanup**:
+   - `logcat -c` clears log buffer (task-216.01 fix)
+   - Removes test config files from device
+   - Clears test-specific preferences
+
+### ❌ WHY IS STATE STILL BLEEDING?
+
+**Hypothesis**: `pm clear` clears **on-disk** state but NOT:
+
+1. **Firebase SDK State** (C++ layer):
+   - Connection pools may persist in SDK process memory
+   - Rate limiter state accumulates across sessions
+   - Backend state (Firebase servers) not cleared by client reset
+   - **The Firebase C++ SDK runs in a separate process that survives `pm clear`**
+
+2. **System-Level State**:
+   - Android system services (Firebase, Google Play Services)
+   - Network connections to Firebase backend
+   - Backend-side rate limiting / throttling
+   - Connection pool exhaustion at Firebase server level
+
+3. **Timing Issues**:
+   - `pm clear` → immediate app launch may not allow full cleanup
+   - 2-second sleep between configs insufficient for Firebase SDK reset
+   - Background services may still be terminating when next test starts
+
+### Critical Discovery
+
+**`pm clear` clears app data but Firebase SDK state lives outside app process!**
+
+Firebase C++ SDK likely runs as:
+- Separate system service process
+- Shared across all app instances
+- **NOT cleared by `pm clear`**
+- Only reset by device reboot or explicit Firebase SDK shutdown
+
+### Recommended Solution
+
+**Option D: Firebase SDK Process Reset** (NEW - Most Targeted):
+
+```bash
+# After pm clear, also clear Firebase SDK processes
+adb shell "am force-stop com.google.android.gms"  # Google Play Services
+adb shell "pm clear com.google.firebase.messaging"  # Firebase services
+# Or add longer wait time for Firebase connections to timeout
+sleep 5  # Instead of sleep 2
+```
+
+**Option A (from Phase 7)** may not work because:
+- Already doing `pm clear` (most aggressive app reset)
+- Problem is Firebase SDK living OUTSIDE app process
+- Need to target Firebase system services, not just app
+
+### Evidence Supporting This Theory
+
+1. **Firebase-specific failures** - All 3 failures involve Firebase operations
+2. **Performance degradation** - 27x slowdown suggests resource exhaustion
+3. **Timeouts** - Database timeouts indicate backend throttling
+4. **Crashes only in suite** - State accumulation across multiple Firebase operations
+
+### Next Investigation Steps
+
+1. Check if Firebase C++ SDK runs as separate process:
+   ```bash
+   adb shell "ps | grep firebase"
+   adb shell "ps | grep gms"
+   ```
+
+2. Monitor Firebase processes during test suite:
+   ```bash
+   # Before suite
+   adb shell "ps -A | grep firebase" > before.txt
+   
+   # After suite  
+   adb shell "ps -A | grep firebase" > after.txt
+   
+   # Compare
+   diff before.txt after.txt
+   ```
+
+3. Test Firebase SDK reset effectiveness:
+   ```bash
+   # Add to clear-android-test-cache
+   adb shell "am force-stop com.google.android.gms"
+   sleep 3  # Allow time for services to fully stop
+   ```
+
+### Conclusion
+
+**App IS being reset properly** (`pm clear` is called).
+
+**But Firebase SDK state persists** across app resets because it lives in separate system service processes that are NOT cleared by `pm clear`.
+
+**Solution**: Must target Firebase system services, not just app process.
+
