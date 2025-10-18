@@ -1,12 +1,12 @@
 ---
 id: task-225
 title: >-
-  Fix Firebase crash signals - SIGBUS (GLThread) & SIGSEGV in comprehensive test suite
+  Fix Firebase crash signals - SIGBUS (GLThread) & SIGSEGV in comprehensive test
+  suite
 status: To Do
-priority: high
 assignee: []
 created_date: '2025-10-17 11:21'
-updated_date: '2025-10-17 14:05'
+updated_date: '2025-10-18 11:49'
 labels:
   - firebase
   - crash
@@ -17,6 +17,7 @@ labels:
   - production-critical
   - test-suite
 dependencies: []
+priority: high
 ---
 
 ## Description
@@ -92,6 +93,52 @@ in tid 9488 (aryhive.gametwo), pid 9488 (aryhive.gametwo)
 - **Source**: `logs/20251017_134504_test.log`
 - **Historical Success**: task-154, task-207 show 100% success in individual runs
 - **Key Difference**: Only crashes in full test suite execution
+
+### **🔍 NEW FINDINGS (2025-10-18 Task-230 Validation)**
+
+**Root Cause Precision**: Through detailed analysis of Task-230 Firebase cleanup implementation validation, identified the **exact crash point** and **impact assessment**:
+
+**Crash During Action Execution (Not Post-Completion):**
+- **Previous understanding**: Tests completed successfully then crashed during cleanup
+- **NEW EVIDENCE**: Crash occurs **DURING** `backend.firebase.method_mapping` execution
+- **Impact**: Prevents completion event emission and causes test framework to register failure
+
+**Evidence from firebase-backend-batch-1 (TEST_ID: firebase-backend-batch-1_android_1760786212):**
+```
+✅ DEBUG_TEST_SUCCESS: backend.firebase.async_pattern (2 instances) - COMPLETED
+✅ DEBUG_TEST_SUCCESS: backend.firebase.lifecycle (1 instance) - COMPLETED
+❌ NO SUCCESS ENTRY: backend.firebase.method_mapping - CRASHED DURING EXECUTION
+✅ SequentialActionCompleteEvent: Emitted for async_pattern & lifecycle
+❌ NO COMPLETION EVENT: method_mapping - CRASH PREVENTED EMISSION
+```
+
+**SIGBUS Crash Signature (Updated):**
+```
+Fatal signal 7 (SIGBUS), code 1 (BUS_ADRALN), fault addr 0x8744000c19
+Timestamp: 10-18 13:22:09.920 (during method_mapping execution)
+Thread: GLThread 254187 (consistent pattern)
+Stack trace: libgodot_android.so memory access violation
+```
+
+**Task-230 Firebase Cleanup Impact:**
+- ✅ **68% Performance Improvement**: Firebase operations significantly faster (230ms vs 728ms avg)
+- ✅ **Cleanup Implementation Working**: No issues with Firebase resource cleanup
+- ✅ **Functionally Correct**: Task-230 implementation is solid and beneficial
+- ❌ **Unrelated Memory Issue**: SIGBUS crash is separate ARM64 alignment problem
+
+**Test Framework Behavior:**
+- ✅ **Correctly Detecting Incomplete Execution**: 2/3 completion events registered accurately
+- ✅ **Proper Failure Reporting**: Test marked as FAILED due to incomplete execution
+- ❌ **Not Framework Bug**: Test framework working correctly - actual crash occurred
+
+**Technical Implications:**
+1. **Memory Alignment Issue**: ARM64-specific unaligned memory access in Firebase C++ bindings
+2. **Method-Specific Crash**: `backend.firebase.method_mapping` triggers the alignment issue
+3. **Task-230 Success**: Firebase cleanup implementation is working correctly
+4. **Separate Fix Required**: Need ARM64 memory alignment fix independent of Task-230
+
+**Analysis Source**: `logs/20251018_131652_test.log`, comparison with `logs/20251017_134504_test.log`
+**Investigation Method**: Systematic completion event analysis and crash timing correlation
 
 ## Root Cause Hypothesis
 
