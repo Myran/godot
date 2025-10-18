@@ -1,0 +1,7 @@
+{
+  "name": "Diagnostic Single Config",
+  "description": "Minimal test list - single Firebase config",
+  "configs": [
+    "firebase-three-actions-test"
+  ]
+}

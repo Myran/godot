@@ -23,8 +23,10 @@ adb logcat -d | rg "search_term" -i       # Alternative direct approach for full
 just fastbuild-android                     # REQUIRED after ANY code changes before Android testing
 
 # 📝 NEW: Complete Command Logging (Long-Running Commands)
+just log-run-silent test                   # ⭐ PREFERRED: Silent logging (saves context window tokens)
 just log-run test                          # Save complete test output to timestamped logs/ files
-just log-run test-android firebase-all    # Log comprehensive testing with automatic timestamped filenames
+just log-run-silent test-android firebase-all  # Silent comprehensive testing (token-efficient)
+# All log-run-silent commands save to: logs/YYYYMMDD_HHMMSS_command-name.log
 
 # 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
 just logs-tree TEST_ID                     # Explore log structure (2 sec)
@@ -66,19 +68,24 @@ just help-gamestate                      # Complete cross-platform workflow guid
 **Essential Development Pattern (OODA Loop Integration):**
 ```bash
 # 🔄 OBSERVE → ORIENT → DECIDE → ACT Cycle
-just ci-validate                # OBSERVE: Code quality, formatting, linting issues  
-just log-run test               # OBSERVE: Complete test run with full logging (saves to logs/)
+just ci-validate                # OBSERVE: Code quality, formatting, linting issues
+just log-run-silent test        # OBSERVE: Complete test run with silent logging (token-efficient)
                                # 🚀 NOW INCLUDES: Gamestate validation as part of system-infrastructure
 just logs-errors TEST_ID        # ORIENT: 98% token-efficient issue analysis
 # → DECIDE: Strategic fixes based on feedback
-just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes  
-just log-run test-android-target CONFIG # ACT: Automated testing with complete logging
+just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes
+just log-run-silent test-android-target CONFIG # ACT: Automated testing with silent logging (saves tokens)
 # → Repeat cycle for continuous improvement
 
-# 📝 LOGGING WORKFLOW: Use log-run for long commands that might break partway
-just log-run test-android firebase-all    # Complete Firebase testing with timestamped logs
-just log-run test-android test-all        # Comprehensive testing (15+ configs) with full capture
-# Results saved to: logs/YYYYMMDD_HHMMSS_command-name.log
+# 📝 LOGGING WORKFLOW: Use log-run-silent for long commands (token-efficient)
+just log-run-silent test-android firebase-all    # ⭐ PREFERRED: Silent logging (saves context tokens)
+just log-run test-android firebase-all            # Alternative: Verbose logging (consumes context)
+just log-run-silent test-android test-all        # Comprehensive silent testing (15+ configs)
+
+# 📁 Log File Output (Both log-run and log-run-silent):
+# - Saved to: logs/YYYYMMDD_HHMMSS_command-name.log
+# - Example: logs/20251017_143022_test-android_firebase-all.log
+# ⚡ TOKEN EFFICIENCY: log-run-silent suppresses terminal output but still saves complete logs
 ```
 
 **🚨 CRITICAL CI/Build Rules:**
@@ -125,7 +132,8 @@ just log-run test-android test-all        # Comprehensive testing (15+ configs) 
 - `just help-at-symbols` - Complete @ reference and /folder/ pattern guide
 
 **Debugging Commands:**
-- `just log-run COMMAND` - **📝 NEW: Run any command with timestamped logging (saves to logs/)**
+- `just log-run-silent COMMAND` - **⭐ PREFERRED: Silent logging (saves to logs/YYYYMMDD_HHMMSS_command-name.log, saves context tokens)**
+- `just log-run COMMAND` - Run any command with timestamped logging (verbose, uses more tokens)
 - `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
 - `just logs-tree TEST_ID` - Explore log structure (2 sec)
 - `just logs-pattern TEST_ID "firebase.*"` - Pattern matching
@@ -349,6 +357,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 **Essential GameTwo patterns:**
 - **Always use `rg` instead of `grep`** - 10x faster, better regex engine
 - **REQUIRED: `just fastbuild-android`** after ANY GDScript/C++ changes before Android testing
+- **⚡ CRITICAL: Prefix long-running commands with `just log-run-silent`** - Saves context window tokens, output saved to logs/YYYYMMDD_HHMMSS_command-name.log
 - **Link tasks bidirectionally**: Reference task in commit, commit in task
 - **🎯 CRITICAL: Use Advanced OODA Loop Debugging Methodology** - Investigation-first approach with expert panel evaluation (see below)
 

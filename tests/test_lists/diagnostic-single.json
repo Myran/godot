@@ -1,0 +1,7 @@
+{
+  "name": "Diagnostic Single Config",
+  "description": "Phase 3: Single config isolation test for Firebase state",
+  "configs": [
+    "firebase-three-actions-test"
+  ]
+}

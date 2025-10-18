@@ -1,0 +1,9 @@
+{
+  "name": "Diagnostic Triple Configs",
+  "description": "All three problematic Firebase configs",
+  "configs": [
+    "firebase-three-actions-test",
+    "firebase-two-actions-test",
+    "gamestate-complete-save-load-cycle-test"
+  ]
+}

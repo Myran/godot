@@ -1,0 +1,8 @@
+{
+  "name": "Diagnostic Pair Configs",
+  "description": "Phase 4: Two config isolation test for Firebase state",
+  "configs": [
+    "firebase-three-actions-test",
+    "firebase-two-actions-test"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Diagnostic Triple Configs",
+  "description": "Phase 5: Three config isolation test for Firebase state",
+  "configs": [
+    "firebase-three-actions-test",
+    "firebase-two-actions-test",
+    "gamestate-complete-save-load-cycle-test"
+  ]
+}

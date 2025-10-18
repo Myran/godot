@@ -1,0 +1,8 @@
+{
+  "name": "Diagnostic Config Pair",
+  "description": "Two problematic Firebase configs",
+  "configs": [
+    "firebase-three-actions-test",
+    "firebase-two-actions-test"
+  ]
+}

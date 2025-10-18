@@ -1759,7 +1759,7 @@ _test-list-generic test_list platform:
         
         # Small delay between tests
         if [[ $TOTAL_CONFIGS -lt $config_count ]]; then
-            echo "⏱️  Pausing 2 seconds before next test..."
+            echo "⏱️  Pausing 2 seconds before next test (Phase 5 validation)..."
             sleep 2
         fi
     done
