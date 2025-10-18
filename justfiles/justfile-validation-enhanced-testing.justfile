@@ -1759,8 +1759,8 @@ _test-list-generic test_list platform:
         
         # Small delay between tests
         if [[ $TOTAL_CONFIGS -lt $config_count ]]; then
-            echo "⏱️  Pausing 5 seconds before next test (Firebase resource drainage)..."
-            sleep 5
+            echo "⏱️  Pausing {{INTER_CONFIG_DELAY}} seconds before next test (Firebase resource drainage)..."
+            sleep {{INTER_CONFIG_DELAY}}
         fi
     done
     

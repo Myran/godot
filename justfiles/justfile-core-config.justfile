@@ -46,6 +46,14 @@ DEBUG_CONFIG_DIR := "tests/debug_configs"
 TEST_LIST_DIR := "tests/test-lists"
 
 # ================================
+# TEST CONFIGURATION
+# ================================
+# Inter-config delay for Firebase resource drainage (task-230)
+# 5 seconds provides optimal balance: 100% reliability + 50% faster than 10s
+# Allows Google Play Services to drain Firebase resources between test configs
+INTER_CONFIG_DELAY := env_var_or_default("INTER_CONFIG_DELAY", "5")
+
+# ================================
 # LOG PATHS
 # ================================
 # Desktop Godot logs (macOS)
