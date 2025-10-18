@@ -770,14 +770,34 @@ _extract-logs test_id platform temp_output_file="":
             echo "📋 Found $SEQUENTIAL_DISPATCHES sequential action(s), $COMPLETION_EVENTS completion event(s)"
             
             # Wait for completion events to match dispatches (with timeout safety)
+            # ENHANCED: Android-specific timeout and retry logic for task-190
             WAIT_COUNT=0
-            MAX_WAIT_SECONDS=30
+            # Platform-specific timeout: Android gets 45s (buffer delays), Desktop gets 30s
+            if [[ "$PLATFORM" == "android" ]]; then
+                MAX_WAIT_SECONDS=45
+            else
+                MAX_WAIT_SECONDS=30
+            fi
             WAIT_INTERVAL=1
-            
+            RETRY_COUNT=0
+            MAX_RETRIES=3
+
             while [[ ${COMPLETION_EVENTS:-0} -lt ${SEQUENTIAL_DISPATCHES:-0} && $WAIT_COUNT -lt $MAX_WAIT_SECONDS ]]; do
                 echo "⏳ Waiting for sequential action completion... ($WAIT_COUNT/$MAX_WAIT_SECONDS) - $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES events"
                 sleep $WAIT_INTERVAL
                 WAIT_COUNT=$((WAIT_COUNT + WAIT_INTERVAL))
+
+                # ENHANCED: Add retry logic with buffer refresh for Android (task-190)
+                if [[ "$PLATFORM" == "android" && $RETRY_COUNT -lt $MAX_RETRIES && $((WAIT_COUNT % 10)) -eq 0 ]]; then
+                    echo "🔄 Android buffer refresh attempt $((RETRY_COUNT + 1))/$MAX_RETRIES"
+                    # Force refresh logs to check for newly flushed completion events
+                    if [[ -n "$APP_PID" && "$APP_PID" != "0" ]]; then
+                        adb logcat -b main,system,crash -d --pid="$APP_PID" -t 5000 "*:V" 2>/dev/null >> "$LOG_FILE" || true
+                    else
+                        adb logcat -b main,system,crash -d -t 10000 "*:V" 2>/dev/null | grep -E "($TEST_ID|Sequential action completed)" >> "$LOG_FILE" || true
+                    fi
+                    RETRY_COUNT=$((RETRY_COUNT + 1))
+                fi
 
                 # Re-check completion events (logs might be updating)
                 # Only match the unified completion event pattern from debug_action.gd base class
@@ -3007,8 +3027,14 @@ _test-android-target-original config_name:
     # Display standardized test info
     just _display-test-info "$TEST_ID" "$CONFIG_NAME" "android" "android"
     
-    # Clear logcat buffer
+    # Clear logcat buffer with enhanced flush for task-190 timeout handling
+    echo "🔄 Enhanced Android log buffer flush for task-190..."
     adb logcat -c
+    # Additional buffer flush for different log buffers to ensure clean state
+    adb logcat -b main -c 2>/dev/null || true
+    adb logcat -b system -c 2>/dev/null || true
+    adb logcat -b crash -c 2>/dev/null || true
+    echo "✅ Android log buffers cleared"
     
     # Get current app state
     APP_PID=$(adb shell pidof "{{ANDROID_PACKAGE_NAME}}" 2>/dev/null || echo "")
