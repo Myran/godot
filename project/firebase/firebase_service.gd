@@ -772,19 +772,10 @@ func shutdown_firebase_connections() -> void:
 
 	# SAFETY: Use conditional checks instead of try-catch (GDScript doesn't have try-catch)
 	if db != null and db.is_valid():
-		# SAFETY: Only call remove_listener_at_path with safe parameters
-		# Use empty array instead of [[]] to prevent memory alignment issues
-		var cleanup_result: Variant = db.call_method("remove_listener_at_path", [])
-
-		# SAFETY: Log success if cleanup_result is not null (method executed)
-		if cleanup_result != null:
-			Log.info("✅ Firebase listeners removed", {}, [Log.TAG_FIREBASE])
-		else:
-			Log.warning(
-				"⚠️ Firebase listener cleanup returned null",
-				{"platform": OS.get_name(), "continuing": true},
-				[Log.TAG_FIREBASE, Log.TAG_ERROR]
-			)
+		# SAFETY: Call remove_listener_at_path with safe parameters
+		# Note: C++ method returns void, so we call it directly without checking return value
+		db.call_method("remove_listener_at_path", [])
+		Log.info("✅ Firebase listeners removed", {}, [Log.TAG_FIREBASE])
 
 		# SAFETY: Clear database reference after listener cleanup
 		# This prevents accessing freed memory during shutdown
