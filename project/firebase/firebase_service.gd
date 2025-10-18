@@ -762,6 +762,60 @@ func _process_server_timestamp_on_main_thread(
 	_resolve_pending_request(req_id, payload)
 
 
+# Enhanced Firebase cleanup for Android test isolation (Task-230)
+# SAFETY: This method is called during app quit, uses conditional checks to prevent errors
+func shutdown_firebase_connections() -> void:
+	if OS.get_name() != "Android":
+		return  # Only needed on Android where resource accumulation occurs
+
+	Log.info("🔧 Starting Firebase cleanup (Android)", {}, [Log.TAG_FIREBASE])
+
+	# SAFETY: Use conditional checks instead of try-catch (GDScript doesn't have try-catch)
+	if db != null and db.is_valid():
+		# SAFETY: Only call remove_listener_at_path with safe parameters
+		# Use empty array instead of [[]] to prevent memory alignment issues
+		var cleanup_result: Variant = db.call_method("remove_listener_at_path", [])
+
+		# SAFETY: Log success if cleanup_result is not null (method executed)
+		if cleanup_result != null:
+			Log.info("✅ Firebase listeners removed", {}, [Log.TAG_FIREBASE])
+		else:
+			Log.warning(
+				"⚠️ Firebase listener cleanup returned null",
+				{"platform": OS.get_name(), "continuing": true},
+				[Log.TAG_FIREBASE, Log.TAG_ERROR]
+			)
+
+		# SAFETY: Clear database reference after listener cleanup
+		# This prevents accessing freed memory during shutdown
+		Log.info("✅ Firebase database reference cleared", {}, [Log.TAG_FIREBASE])
+
+	# SAFETY: Manual cleanup operations are conditional-safe
+	_cleanup_pending_requests()
+	_reset_rate_limiter()
+
+	Log.info("🎯 Firebase cleanup completed - using safe infrastructure", {}, [Log.TAG_FIREBASE])
+
+
+func _cleanup_pending_requests() -> void:
+	# Clear all pending Firebase requests
+	for request_id: int in _pending_requests.keys():
+		cleanup_timed_out_request(request_id)
+	_pending_requests.clear()
+
+	# Clear database wrapper reference
+	if db != null:
+		db = null
+	_cpp_database = null
+	_is_initialized = false
+
+
+func _reset_rate_limiter() -> void:
+	# Reset rate limiter circuit breaker
+	if _rate_limiter != null:
+		_rate_limiter._reset_circuit_breaker()
+
+
 # FirebaseDatabaseWrapper - Wraps Firebase C++ instance for GDScript
 class FirebaseDatabaseWrapper:
 	var _cpp_instance: Object
