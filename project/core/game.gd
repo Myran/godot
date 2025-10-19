@@ -169,7 +169,14 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		for card: Card in DictUtils.values_sorted(lineup_dict):
 			if card:
 				current_lineup.append(card)
-		SemanticLogger.log_battle_start(current_lineup, [])
+
+		var enemy_lineup: Array = []
+		var enemy_dict: Dictionary = holder_enemy.get_current_lineup()
+		for card: Card in DictUtils.values_sorted(enemy_dict):
+			if card:
+				enemy_lineup.append(card)
+
+		SemanticLogger.log_battle_start(current_lineup, enemy_lineup)
 
 		var battle_result: Battle.BattleResult = battle_handler.create_battle()
 		core.action(core.BattleEvent.new(battle_result.events, battle_result))

@@ -888,6 +888,23 @@ static func _battle_test_determinism() -> DebugActionResult:
 		# Event-driven: Wait for POSTBATTLE state
 		await _await_state_transition_to(core.GameState.POSTBATTLE)
 
+		# CRITICAL FIX: Emit SequentialActionCompleteEvent for test framework completion detection
+		# This resolves the 1/2 completion events timeout issue for battle-animated config
+		var current_test_id: String = DebugAction.get_current_test_id()
+		Log.info(
+			"Emitting SequentialActionCompleteEvent for battle determinism test completion",
+			{
+				"action_name": "game.battle.test_determinism_animated",
+				"success": true,
+				"category": "Gameplay",
+				"test_id": current_test_id,
+				"battle_duration_ms": Time.get_ticks_msec() - start_time,
+				"completion_triggered": "POSTBATTLE_state_reached"
+			},
+			["debug", "sequential", "completion", "battle"]
+		)
+		core.action(core.SequentialActionCompleteEvent.new("game.battle.test_determinism_animated", true, "Gameplay"))
+
 		duration = Time.get_ticks_msec() - start_time
 		Log.info(
 			"Animated battle execution completed",
