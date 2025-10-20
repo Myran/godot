@@ -2,6 +2,7 @@ class_name SystemActions
 const StateExtractorGreenPhaseScript = preload(
 	"res://debug/actions/test_state_extractor_green_phase_action.gd"
 )
+const TestUtilGetTypeActionClass = preload("res://debug/actions/util/test_util_get_type_action.gd")
 const QuitEventClass = preload("res://core/events/quit_application_event.gd")
 # Save/Load action classes
 const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
@@ -24,6 +25,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	_register_integrity_actions(registry)
 	_register_test_actions(registry)
 	_register_gamestate_actions(registry)
+	registry.register_action(TestUtilGetTypeActionClass.new())
 	Log.info("System debug actions registered", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM])
 
 
