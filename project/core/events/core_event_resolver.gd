@@ -345,6 +345,24 @@ static func resolve_core_event(
 	elif event is core.SequentialActionCompleteEvent:
 		# Unified handler for all sequential actions (Firebase Backend, RTDB, etc.)
 		var category_label: String = event.category if event.category != "" else "Sequential"
+
+		# CRITICAL FIX: Set _processing_idle_action=false for completed async operations
+		# This allows Desktop auto_quit to work correctly after SequentialActionCompleteEvent
+		if game._processing_idle_action:
+			Log.info(
+				"SETTING _processing_idle_action=false - SequentialActionCompleteEvent processed",
+				{
+					"action_name": event.action_name,
+					"success": event.success,
+					"category": event.category,
+					"async_operation_complete": true,
+					"auto_quit_can_now_proceed": true,
+					"test_id": DebugAction.get_current_test_id()
+				},
+				[Log.TAG_SYSTEM, Log.TAG_IDLE_ACTION, "sequential_complete", "async_operation", Log.TAG_DIAGNOSTIC]
+			)
+			game._processing_idle_action = false
+
 		Log.info(
 			"Sequential action completed - continuing queue processing",
 			{

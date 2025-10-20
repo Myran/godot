@@ -1,0 +1,19 @@
+{
+  "description": "Load pending gamestate then save for cycle testing",
+  "metadata": {
+    "auto_quit": true
+  },
+  "checksum_config": {
+    "initial_seed": 12345,
+    "state_type": "load_and_save_cycle"
+  },
+  "actions": [
+    {
+      "action": "system.debug.load_gamestate",
+      "params": {
+        "filepath": "pending_gamestate_load.json"
+      }
+    },
+    "system.debug.save_gamestate"
+  ]
+}

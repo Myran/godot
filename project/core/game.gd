@@ -307,7 +307,23 @@ func _process_one_queue_item() -> void:
 
 	var current_game_state_after: String = core.GameState.keys()[game_handler.current_gamestate]
 
-	_processing_idle_action = false
+	# CRITICAL FIX: For auto_continue=false actions, keep _processing_idle_action true
+	# until SequentialActionCompleteEvent is processed. This prevents Desktop auto_quit
+	# from triggering prematurely during async operations like animated battles.
+	if not auto_continue:
+		Log.info(
+			"KEEPING _processing_idle_action=true for auto_continue=false action",
+			{
+				"action_requires_completion_event": true,
+				"sequential_action_complete_event_pending": true,
+				"auto_continue": auto_continue,
+				"test_id": current_test_id
+			},
+			[Log.TAG_SYSTEM, Log.TAG_IDLE_ACTION, "sequential_hold", "async_operation", Log.TAG_DIAGNOSTIC]
+		)
+		# Flag will be set to false in SequentialActionCompleteEvent handler (core_event_resolver.gd:345)
+	else:
+		_processing_idle_action = false
 
 	Log.info(
 		"=== ONE QUEUE ITEM PROCESSING COMPLETE ===",
