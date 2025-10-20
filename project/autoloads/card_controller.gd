@@ -43,20 +43,48 @@ func get_random_id_from_pool(_level: int) -> String:
 
 
 func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
+	# ASSERT: Input parameters must be valid
+	assert(id != null and id != "", "create_unit_from_id: Invalid card ID provided")
+	assert(unit_level > 0, "create_unit_from_id: Invalid unit level: " + str(unit_level))
+
 	Log.debug(
 		"Starting card creation",
 		{"card_id": id, "level": unit_level},
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
+	# ASSERT: Data source must be available
+	assert(data_source != null, "create_unit_from_id: Data source is null")
+	assert(data_source.cards != null, "create_unit_from_id: Data source cards is null")
+
 	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
+	# ASSERT: Card info must be found
+	assert(not card_info.is_empty(), "create_unit_from_id: No card info found for ID: " + id)
+	assert(card_info.has("id"), "create_unit_from_id: Card info missing 'id' field for ID: " + id)
+
 	Log.debug(
 		"Card info retrieved",
 		{"card_id": id, "has_info": !card_info.is_empty()},
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
+	# ASSERT: Card scene name must be valid
+	assert(
+		card_scene_name != null and card_scene_name != "",
+		"create_unit_from_id: Card scene name is empty"
+	)
+
 	var card_scene: PackedScene = load(card_scene_name)
+	# ASSERT: Card scene must load successfully
+	assert(
+		card_scene != null,
+		"create_unit_from_id: Failed to load card scene: " + str(card_scene_name)
+	)
+	assert(
+		card_scene is PackedScene,
+		"create_unit_from_id: Loaded scene is not PackedScene: " + str(card_scene_name)
+	)
+
 	Log.debug(
 		"Card scene loaded",
 		{"scene_name": card_scene_name, "scene_valid": card_scene != null},
@@ -64,15 +92,44 @@ func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	)
 
 	var card_instanced: Card = card_scene.instantiate() as Card
+	# ASSERT: Card must instantiate correctly
+	assert(
+		card_instanced != null,
+		"create_unit_from_id: Failed to instantiate card scene for ID: " + id
+	)
+	assert(
+		is_instance_valid(card_instanced),
+		"create_unit_from_id: Card instance is invalid for ID: " + id
+	)
+	assert(
+		card_instanced is Card,
+		"create_unit_from_id: Instantiated object is not Card type for ID: " + id
+	)
+
 	Log.debug(
 		"Card scene instantiated",
 		{"card_id": id, "instance_valid": card_instanced != null},
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
+	# ASSERT: Card initialization must succeed
+	assert(
+		card_instanced.has_method("init_card"),
+		"create_unit_from_id: Card missing init_card method for ID: " + id
+	)
 	card_instanced.init_card(card_info, unit_level)
-	Log.debug("Card initialization complete", {"card_id": id}, [Log.TAG_DEBUG, "card_creation"])
 
+	# ASSERT: Final validation - card must be properly initialized
+	assert(
+		is_instance_valid(card_instanced),
+		"create_unit_from_id: Card became invalid after initialization for ID: " + id
+	)
+	assert(
+		card_instanced.card_info.has("id") and card_instanced.card_info.id != "",
+		"create_unit_from_id: Card has empty ID after initialization"
+	)
+
+	Log.debug("Card initialization complete", {"card_id": id}, [Log.TAG_DEBUG, "card_creation"])
 	return card_instanced
 
 
