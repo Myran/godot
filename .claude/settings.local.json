@@ -134,7 +134,8 @@
       "Bash(backlog:*)",
       "Read(//Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/**)",
       "Bash(do echo \"=== $log ===\")",
-      "WebFetch(domain:duckduckgo.com)"
+      "WebFetch(domain:duckduckgo.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": [],
