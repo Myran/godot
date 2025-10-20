@@ -319,9 +319,16 @@ func _process_one_queue_item() -> void:
 				"auto_continue": auto_continue,
 				"test_id": current_test_id
 			},
-			[Log.TAG_SYSTEM, Log.TAG_IDLE_ACTION, "sequential_hold", "async_operation", Log.TAG_DIAGNOSTIC]
+			[
+				Log.TAG_SYSTEM,
+				Log.TAG_IDLE_ACTION,
+				"sequential_hold",
+				"async_operation",
+				Log.TAG_DIAGNOSTIC
+			]
 		)
-		# Flag will be set to false in SequentialActionCompleteEvent handler (core_event_resolver.gd:345)
+
+	# Flag will be set to false in SequentialActionCompleteEvent handler (core_event_resolver.gd:345)
 	else:
 		_processing_idle_action = false
 

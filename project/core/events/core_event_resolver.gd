@@ -359,7 +359,13 @@ static func resolve_core_event(
 					"auto_quit_can_now_proceed": true,
 					"test_id": DebugAction.get_current_test_id()
 				},
-				[Log.TAG_SYSTEM, Log.TAG_IDLE_ACTION, "sequential_complete", "async_operation", Log.TAG_DIAGNOSTIC]
+				[
+					Log.TAG_SYSTEM,
+					Log.TAG_IDLE_ACTION,
+					"sequential_complete",
+					"async_operation",
+					Log.TAG_DIAGNOSTIC
+				]
 			)
 			game._processing_idle_action = false
 
