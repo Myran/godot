@@ -1,0 +1,18 @@
+{
+  "description": "Test the new Util.get_type() function across different object types",
+  "actions": [
+    {
+      "action": "test_util_get_type",
+      "description": "Test Util.get_type() function with Node, Resource, Ability, StatEffect, String, and null objects"
+    }
+  ],
+  "auto_continue": true,
+  "platform": "android",
+  "checksum_config": {
+    "state_type": "testing",
+    "expected_checksums": [
+      "aa3023c2c0a8487c5adb70cf5c59e86dc4a5d9dbc7c2de40bf53e321be32adf3",
+      "SKIP_SYSTEM_DEBUG_CHECKSUM"
+    ]
+  }
+}

@@ -154,7 +154,7 @@ func _debug_callable_state(callable: Callable) -> Dictionary:
 
 		# Additional object state checks
 		if target and is_instance_valid(target):
-			debug_info["target_class"] = target.get_class()
+			debug_info["target_class"] = Utils.get_type(target)
 			debug_info["target_script"] = (
 				str(target.get_script()) if target.get_script() else "none"
 			)
@@ -288,7 +288,7 @@ func _execute_core(
 					"result": result,
 					"result_type": typeof(result),
 					"result_class":
-					result.get_class() if typeof(result) == TYPE_OBJECT else "not_object",
+					Utils.get_type(result) if typeof(result) == TYPE_OBJECT else "not_object",
 					"is_bool": typeof(result) == TYPE_BOOL,
 					"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
 				},
