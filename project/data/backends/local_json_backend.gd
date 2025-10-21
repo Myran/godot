@@ -206,8 +206,6 @@ func _get_simple_stack_trace() -> Array[Dictionary]:
 
 
 @warning_ignore("redundant_await")
-
-
 func set_data(p_path: Array[Variant], p_key: String, _p_data: Variant) -> bool:
 	Log.warning(
 		"LocalJSONBackend.set_data is read-only implementation",
@@ -218,8 +216,6 @@ func set_data(p_path: Array[Variant], p_key: String, _p_data: Variant) -> bool:
 
 
 @warning_ignore("redundant_await")
-
-
 func push_data(p_path: Array[Variant], _p_data: Variant) -> String:
 	Log.warning(
 		"LocalJSONBackend.push_data is read-only implementation",
@@ -230,8 +226,6 @@ func push_data(p_path: Array[Variant], _p_data: Variant) -> String:
 
 
 @warning_ignore("redundant_await")
-
-
 func remove_data(p_path: Array[Variant], p_key: String) -> bool:
 	Log.warning(
 		"LocalJSONBackend.remove_data is read-only implementation",
