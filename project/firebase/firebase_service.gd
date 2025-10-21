@@ -770,22 +770,20 @@ func shutdown_firebase_connections() -> void:
 
 	Log.info("🔧 Starting Firebase cleanup (Android)", {}, [Log.TAG_FIREBASE])
 
-	# SAFETY: Use conditional checks instead of try-catch (GDScript doesn't have try-catch)
-	if db != null and db.is_valid():
-		# SAFETY: Call remove_listener_at_path with safe parameters
-		# Note: C++ method returns void, so we call it directly without checking return value
-		db.call_method("remove_listener_at_path", [])
-		Log.info("✅ Firebase listeners removed", {}, [Log.TAG_FIREBASE])
-
-		# SAFETY: Clear database reference after listener cleanup
-		# This prevents accessing freed memory during shutdown
-		Log.info("✅ Firebase database reference cleared", {}, [Log.TAG_FIREBASE])
+	# SAFETY: Listener cleanup is handled automatically by C++ FirebaseDatabase destructor
+	# The destructor checks _listener_path_ref_count > 0 and removes active listeners
+	# Calling remove_listener_at_path here with empty array causes "Method expected 1 arguments" error
+	# because it requires a valid path array to match against _active_child_listener_ref
 
 	# SAFETY: Manual cleanup operations are conditional-safe
 	_cleanup_pending_requests()
 	_reset_rate_limiter()
 
-	Log.info("🎯 Firebase cleanup completed - using safe infrastructure", {}, [Log.TAG_FIREBASE])
+	Log.info(
+		"🎯 Firebase cleanup completed - C++ destructor handles listener cleanup",
+		{},
+		[Log.TAG_FIREBASE]
+	)
 
 
 func _cleanup_pending_requests() -> void:

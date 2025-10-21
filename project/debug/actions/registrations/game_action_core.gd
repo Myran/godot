@@ -2,6 +2,13 @@ class_name GameActionCore
 extends RefCounted
 
 
+## Helper class for state transition signal emission
+## Fixes Android null Signal() constructor issue - signals must be defined on a class
+class StateTransitionEmitter:
+	extends Node
+	signal target_reached
+
+
 static func _reset_match_level() -> bool:
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_RESET_MATCH_LEVEL)
@@ -415,17 +422,18 @@ static func _wait_for_game_systems_ready() -> bool:
 static func _await_state_transition_to(target_state: core.GameState) -> void:
 	# CRITICAL FIX: Use proper SignalAwaiter pattern with custom signal + timeout
 	# Create a custom signal emitter that only fires when target state is reached
-	var signal_emitter: Node = Node.new()
-	var target_reached_signal: Signal = Signal()
+	# NOTE: Use custom class with signal definition to avoid Android null Signal() issue
+	var signal_emitter: StateTransitionEmitter = StateTransitionEmitter.new()
+
+	# CRITICAL: Add emitter to scene tree FIRST so signals work properly
+	# Signals may not connect correctly if the node isn't in the scene tree
+	Engine.get_main_loop().root.add_child(signal_emitter)
 
 	# Create SignalAwaiter for our custom signal AND a timeout
 	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(10.0)  # 10 second timeout
-	state_awaiter.add(target_reached_signal)
+	state_awaiter.add(signal_emitter.target_reached)
 	state_awaiter.add(timeout_awaiter.finished)
-
-	# Add emitter to scene tree so signals work properly
-	Engine.get_main_loop().root.add_child(signal_emitter)
 
 	# Track which awaiter completed first
 	# Use array as mutable reference so lambda can modify it
@@ -433,33 +441,71 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 
 	# Connect core.event to monitor for the specific state transition
 	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
+		Log.info(
+			"🎯 DEEP DEBUG: Transition handler fired",
+			{
+				"event_type": type_string(typeof(event_data)),
+				"is_transition_event": event_data is core.TransitionEvent,
+				"target_state": target_state,
+				"platform": OS.get_name()
+			},
+			["debug", "state_transition", "handler", "deep_debug"]
+		)
 		if event_data is core.TransitionEvent:
 			var transition: core.TransitionEvent = event_data as core.TransitionEvent
+			Log.info(
+				"🎯 DEEP DEBUG: TransitionEvent detected",
+				{
+					"new_state": transition.new_state,
+					"target_state": target_state,
+					"match": transition.new_state == target_state,
+					"platform": OS.get_name()
+				},
+				["debug", "state_transition", "handler", "deep_debug"]
+			)
 			if transition.new_state == target_state:
-				# Fire our custom signal - SignalAwaiter will automatically complete
-				target_reached_signal.emit()
+				# CRITICAL: Set completed BEFORE emitting signal
+				# Signal emission is synchronous and will cause await to complete immediately
+				# If we set completed[0] after emit(), it won't be set when the timeout check runs
 				completed[0] = true
+				Log.info(
+					"🎯 DEEP DEBUG: Emitting target_reached signal",
+					{"target_state": target_state, "completed": completed[0], "platform": OS.get_name()},
+					["debug", "state_transition", "handler", "deep_debug"]
+				)
+				signal_emitter.target_reached.emit()
 				signal_emitter.queue_free()
 
-	# Use CONNECT_DEFERRED for Android thread safety - ensures signal handler
-	# is fully registered before any events can fire (prevents race condition)
+	# Use CONNECT_ONE_SHOT for immediate response to state transitions
+	# CONNECT_DEFERRED was causing the handler to run AFTER timeout fired
 	Log.info(
 		"🎯 DEEP DEBUG: Connecting state transition handler",
 		{"target_state": str(target_state), "platform": OS.get_name()},
 		["debug", "state_transition", "deep_debug"]
 	)
-	core.event.connect(transition_handler, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
 
 	# Wait for either our custom signal OR timeout to fire
 	Log.info(
 		"🎯 DEEP DEBUG: Starting state transition await",
-		{"target_state": str(target_state), "platform": OS.get_name()},
+		{
+			"target_state": str(target_state),
+			"timeout_seconds": 10.0,
+			"awaiter_valid": is_instance_valid(state_awaiter),
+			"platform": OS.get_name()
+		},
 		["debug", "state_transition", "deep_debug"]
 	)
 	await state_awaiter.finished
 	Log.info(
 		"🎯 DEEP DEBUG: State transition await completed",
-		{"target_state": str(target_state), "completed": completed[0], "platform": OS.get_name()},
+		{
+			"target_state": str(target_state),
+			"completed": completed[0],
+			"timeout_finished": not is_instance_valid(timeout_awaiter),
+			"state_awaiter_connections": state_awaiter.finished.get_connections().size() if is_instance_valid(state_awaiter) else -1,
+			"platform": OS.get_name()
+		},
 		["debug", "state_transition", "deep_debug"]
 	)
 
@@ -471,7 +517,7 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 				"target_state": target_state,
 				"timeout_seconds": 10.0,
 				"completed": completed[0],
-				"platform": "Desktop"
+				"platform": OS.get_name()
 			},
 			["debug", "state_transition", "signal_awaiter", "timeout", "error", "deep_debug"]
 		)
