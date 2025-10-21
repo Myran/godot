@@ -82,16 +82,47 @@ Android battle tests (battle-animated, battle-logic-only) are failing due to Fir
 - [ ] Examine test teardown sequence for proper cleanup order
 - [ ] Verify config validation logic for battle tests
 - [ ] Check if Desktop has same cleanup code (Desktop tests pass)
+- [ ] Search for `remove_listener_at_path` calls in codebase
+- [ ] Compare Android vs Desktop cleanup paths
+- [ ] Check if null parameter relates to Firebase initialization timing
+
+## Quick Reproduction
+
+```bash
+# Run Android battle test and check errors
+just test-android battle-animated
+just logs-errors <TEST_ID>
+
+# Expected errors:
+# - Parameter "obj" is null
+# - remove_listener_at_path: Method expected 1 arguments, but called with 0
+# - DEBUG_TEST_RESTART_NEEDED
+# - 1 resources still in use at exit
+```
 
 ## Affected Tests
 
 - `battle-animated` (Android) - ✅ Sequential actions work, ❌ Firebase errors
 - `battle-logic-only` (Android) - Likely same Firebase issues
 
+## Context & Discovery
+
+**Why This Was Hidden Before:**
+Prior to task-193, all battle tests timed out at 30 seconds waiting for completion events. These Firebase errors existed but were masked by the timeout failure happening first.
+
+**Post-Task-193 Behavior:**
+After fixing CONNECT_ONE_SHOT issue in task-193:
+- ✅ Sequential action completion events work on both platforms
+- ✅ Desktop tests now pass completely
+- ❌ Android tests reveal Firebase cleanup errors that were always present
+
+**Key Insight**: The sequential action timeout was the "first failure" that prevented discovering these Firebase issues. Now that sequential actions work, we can see and fix the Firebase cleanup problems.
+
 ## Related Tasks
 
 - **task-193** (Done): Fixed sequential action completion events - unblocked this issue
 - Tests now properly emit completion events, revealing underlying Firebase cleanup issues
+- Commits: `5423bbf3` (task-193 fix), `3f1b0bd5` (task-233 creation)
 
 ## Acceptance Criteria
 
