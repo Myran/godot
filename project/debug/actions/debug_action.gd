@@ -281,14 +281,17 @@ func _execute_core(
 
 		# VALIDATION CONTEXT: Detailed result logging
 		if context == ExecutionContext.VALIDATION:
+			var object_name: String = Utils.get_variant_type(result)
+			if object_name == "null":
+				object_name = "not_object"
+
 			Log.info(
 				"CALLABLE_EXECUTION_DEBUG: Callable execution completed",
 				{
 					"action": action_name,
 					"result": result,
 					"result_type": typeof(result),
-					"result_class":
-					Utils.get_type(result) if typeof(result) == TYPE_OBJECT else "not_object",
+					"result_class": object_name,
 					"is_bool": typeof(result) == TYPE_BOOL,
 					"bool_value": result if typeof(result) == TYPE_BOOL else "not_bool"
 				},

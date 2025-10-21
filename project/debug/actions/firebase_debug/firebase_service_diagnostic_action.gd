@@ -94,7 +94,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				"initialized": service_initialized,
 				"available": service_available,
 				"has_db": service_has_db,
-				"service_class": firebase_service_instance.get_class()
+				"service_class": Utils.get_type(firebase_service_instance)
 			},
 			["debug", "firebase", "diagnostic"]
 		)
@@ -131,7 +131,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	if data_source:
 		data_source_initialized = data_source.is_initialized()
 		if data_source_initialized and data_source._backend:
-			data_source_backend_type = data_source._backend.get_class()
+			data_source_backend_type = Utils.get_type(data_source._backend)
 
 		diagnostic_info["data_source_initialized"] = data_source_initialized
 		diagnostic_info["data_source_backend_type"] = data_source_backend_type

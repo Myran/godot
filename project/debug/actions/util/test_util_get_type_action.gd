@@ -99,8 +99,11 @@ func _execute_test_util_get_type(_params: Dictionary = {}) -> DebugActionResult:
 
 	# Summary
 	var successful_tests: int = 0
-	for result in test_results:
-		if not result.get("global_name_empty", true) or result.get("object_type") == "null":
+	for result_dict: Dictionary in test_results:
+		if (
+			not result_dict.get("global_name_empty", true)
+			or result_dict.get("object_type") == "null"
+		):
 			successful_tests += 1
 
 	var test_summary: Dictionary = {
@@ -113,8 +116,8 @@ func _execute_test_util_get_type(_params: Dictionary = {}) -> DebugActionResult:
 	Log.info("Utils.get_type() test completed", test_summary, ["test", "util", "summary"])
 
 	# Log individual results for debugging
-	for i in range(test_results.size()):
-		var result = test_results[i]
+	for i: int in range(test_results.size()):
+		var result: Dictionary = test_results[i]
 		Log.debug("Test %d result" % (i + 1), result, ["test", "utils", "details"])
 
 	return DebugActionResult.success({"test_results": test_results, "summary": test_summary})

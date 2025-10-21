@@ -35,7 +35,7 @@ func get_firebase_backend_for_testing() -> DataBackend:
 		Log.error(
 			"DataSource backend is not FirebaseServiceBackend",
 			{
-				"actual_backend_type": backend_instance.get_class(),
+				"actual_backend_type": Utils.get_type(backend_instance),
 				"script_path":
 				(
 					backend_instance.get_script().get_path()
@@ -51,7 +51,7 @@ func get_firebase_backend_for_testing() -> DataBackend:
 	Log.debug(
 		"Firebase backend acquired from DataSource",
 		{
-			"backend_type": firebase_backend.get_class(),
+			"backend_type": Utils.get_type(firebase_backend),
 			"script_path": firebase_backend.get_script().get_path(),
 			"is_available": firebase_backend.is_available()
 		},
@@ -95,14 +95,14 @@ func test_backend_async_pattern(
 
 	Log.debug(
 		"TRACE: Backend obtained, checking is_available()",
-		{"backend_type": backend.get_class()},
+		{"backend_type": Utils.get_type(backend)},
 		["debug", "backend_firebase", "trace"]
 	)
 
 	if not backend.is_available():
 		Log.error(
 			"TRACE: Backend not available (is_available returned false)",
-			{"backend_type": backend.get_class()},
+			{"backend_type": Utils.get_type(backend)},
 			["debug", "backend_firebase", "trace"]
 		)
 		_update_status("ERROR: Backend not initialized", true)

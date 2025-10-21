@@ -42,7 +42,7 @@ func get_firebase_database() -> Object:
 			"Backend is not Firebase type",
 			{
 				"backend_type":
-				backend.get_script().get_path() if backend.get_script() else backend.get_class()
+				backend.get_script().get_path() if backend.get_script() else Utils.get_type(backend)
 			},
 			["debug", "rtdb", "warning"]
 		)
