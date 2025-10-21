@@ -151,7 +151,7 @@ func get_debug_info() -> Dictionary:
 		"position": position,
 		"is_allied": is_allied,
 		"phase": phase,
-		"event_type": event.get_script().get_global_name() if event else "null",
+		"event_type": Utils.get_variant_type(event),
 		"battle_context_valid": battle_context != null,
 		"is_valid": is_valid()
 	}

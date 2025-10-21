@@ -500,13 +500,16 @@ static func _await_state_transition_away_from(current_state: core.GameState) -> 
 	)
 
 	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
+	# Use array as mutable reference so lambda can store callable for disconnection
+	var handler_ref: Array = [null]
 
 	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
 		Log.info(
 			"🎯 DEEP DEBUG: State transition handler called",
 			{
-				"event_type":
-				str(event_data.get_script().get_global_name()) if event_data else "null",
+				"event_type": Utils.get_variant_type(event_data),
+				"has_new_state_property": "new_state" in event_data,
+				"is_transition_event_check": event_data is core.TransitionEvent,
 				"platform": OS.get_name()
 			},
 			["debug", "state_transition", "deep_debug"]
@@ -529,16 +532,23 @@ static func _await_state_transition_away_from(current_state: core.GameState) -> 
 					{"platform": OS.get_name()},
 					["debug", "state_transition", "deep_debug", "milestone"]
 				)
+				# Disconnect handler before emitting to prevent further calls
+				if handler_ref[0]:
+					core.event.disconnect(handler_ref[0])
 				state_awaiter.finished.emit()
+
+	# Store handler reference for disconnection
+	handler_ref[0] = transition_handler
 
 	# Use CONNECT_DEFERRED for Android thread safety - ensures signal handler
 	# is fully registered before any events can fire (prevents race condition)
+	# REMOVED CONNECT_ONE_SHOT to allow handler to receive multiple events
 	Log.info(
 		"🎯 DEEP DEBUG: Connecting state transition away handler",
 		{"current_state": str(current_state), "platform": OS.get_name()},
 		["debug", "state_transition", "deep_debug"]
 	)
-	core.event.connect(transition_handler, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+	core.event.connect(transition_handler, CONNECT_DEFERRED)
 	Log.info(
 		"🎯 DEEP DEBUG: Starting await for state transition away from current",
 		{"current_state": str(current_state), "platform": OS.get_name()},

@@ -4,13 +4,12 @@ title: Fix battle-animated test to emit sequential action completion event
 status: Done
 assignee: []
 created_date: '2025-10-02 13:49'
-updated_date: '2025-10-02 15:48'
+updated_date: '2025-10-21'
 labels:
   - testing
   - battle
   - sequential-actions
   - timeout
-  - blocked
 dependencies: []
 priority: medium
 ---
@@ -21,6 +20,21 @@ The `game.battle.test_determinism_animated` action triggers a battle and waits f
 
 **⚠️ CRITICAL DISCOVERY (2025-10-02):**
 The timeout was masking a deeper issue - **the test configuration itself is broken**. The `populate_enemy` action succeeds but doesn't actually add enemy cards to the lineup, so the battle never starts and the test hangs forever waiting for POSTBATTLE gamestate.
+
+**⚠️ REOPENED (2025-10-21):**
+Task was marked as Done but the issue persists. Desktop test logs from 2025-10-21 show:
+- Test still hanging waiting for sequential action completion
+- Found 2 sequential actions, only 1/2 completion events received
+- Test times out after 30 seconds waiting for missing completion event
+- Source: `logs/20251021_133024_test.log` - battle-animated test still failing
+
+**✅ RESOLVED (2025-10-21):**
+Root cause identified and fixed:
+- **Problem**: `CONNECT_ONE_SHOT` flag on signal handler caused handler to disconnect after receiving the first non-TransitionEvent
+- **Impact**: Handler fired on first Resource event (grid blocks, etc.), failed TransitionEvent check, disconnected before actual TransitionEvent arrived
+- **Solution**: Removed `CONNECT_ONE_SHOT`, manually disconnect only when correct TransitionEvent received
+- **Files Changed**: `project/debug/actions/registrations/game_action_core.gd:542-545` (removed ONE_SHOT), added manual disconnect logic
+- **Test Results**: ✅ ALL 4 actions pass, completion event properly emitted, test completes in ~10s
 
 ## Root Cause Analysis
 
@@ -106,17 +120,25 @@ Check **task-162** (Done) - test WAS working before. What changed?
 
 ## Testing Status
 
-❌ **Test still fails with 30s timeout**
-- ✅ Detects 1 sequential action (correct)
-- ✅ Waits for completion event (correct)
-- ❌ Action never completes - battle never starts (broken config)
-- ⏱️ Timeout after 30s (expected given broken test)
+✅ **Test now passes completely (2025-10-21)**
+- ✅ All 4 actions execute successfully
+- ✅ Completion events emitted properly
+- ✅ Test completes in ~10 seconds
+- ✅ No timeouts or errors
 
-## Recommendations
+**Test Results:**
+```
+✅ Total Actions: 4/4 (100%)
+- game.debug.hide_debug_menu: ✅ 6ms
+- game.lineup.populate_enemy: ✅ 63ms
+- game.battle.test_determinism_animated: ✅ 9943ms
+- system.debug.replay_complete: ✅ 2ms
+```
 
-1. **Mark as BLOCKED** until populate_enemy resolved
-2. **Create new task**: "Fix populate_enemy - empty lineup despite success"
-3. **Review task-162**: What made test work previously?
-4. **Consider redesign**: battle-animated needs proper scenario setup
+## Resolution Summary
 
-**Infrastructure is correct, test needs fundamental fixes.**
+**Root Cause:** Signal handler with `CONNECT_ONE_SHOT` disconnected after receiving first non-TransitionEvent, missing the actual TransitionEvent that arrived later.
+
+**Solution:** Removed `CONNECT_ONE_SHOT` flag, added manual disconnect logic that only triggers when the correct TransitionEvent is detected.
+
+**Impact:** Battle-animated test now fully functional for regression testing and determinism validation.
