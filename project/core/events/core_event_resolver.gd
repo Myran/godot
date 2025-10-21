@@ -21,7 +21,7 @@ static func resolve_core_event(
 ) -> void:
 	Log.debug(
 		"Resolving core event",
-		{"event_type": event.get_class()},
+		{"event_type": Utils.get_type(event)},
 		[Log.TAG_GAME_STATE, Log.TAG_EVENT]
 	)
 	if event is core.CardStatChangeEvent:
@@ -433,7 +433,7 @@ static func resolve_core_event(
 			return
 		game._process_one_queue_item()
 
-	elif event.get_class() == "QuitApplicationEvent":
+	elif Utils.get_type(event) == "QuitApplicationEvent":
 		Log.info(
 			"QuitApplicationEvent received - starting application termination",
 			{

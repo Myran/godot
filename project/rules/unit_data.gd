@@ -88,7 +88,7 @@ func add_ability(_ability: Ability) -> void:
 
 func _has_ability_instance(new_ability: Ability) -> bool:
 	for existing_ability: Ability in abilities:
-		if existing_ability.get_class() == new_ability.get_class():
+		if Utils.get_type(existing_ability) == Utils.get_type(new_ability):
 			return true
 	return false
 
@@ -114,7 +114,7 @@ func _is_combat_only_ability(ability: Ability) -> bool:
 		# Add other combat-only ability classes here as needed
 	]
 
-	return ability.get_class() in combat_only_classes
+	return Utils.get_type(ability) in combat_only_classes
 
 
 func remove_ability(_ability: Ability) -> void:
@@ -322,7 +322,7 @@ func transfer_acquired_abilities_from(source_units: Array[UnitData]) -> void:
 			abilities.append(acquired_ability)
 			Log.debug(
 				"Transferred acquired ability from merge",
-				{"ability": acquired_ability.get_class()},
+				{"ability": Utils.get_type(acquired_ability)},
 				[Log.TAG_CARD, Log.TAG_MERGE, Log.TAG_ABILITY]
 			)
 
@@ -381,12 +381,11 @@ func transfer_stat_effects_from(source_units: Array[UnitData]) -> void:
 					[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 				)
 			else:
+				var effect_type: String = Utils.get_variant_type(effect)
+
 				Log.debug(
 					"Skipping non-StatEffect during transfer",
-					{
-						"source_card_id": source_card_id,
-						"effect_type": effect.get_class() if effect != null else "null"
-					},
+					{"source_card_id": source_card_id, "effect_type": effect_type},
 					[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
 				)
 
@@ -439,7 +438,7 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 				{
 					"source_card_id": source_card_id,
 					"ability_index": j,
-					"ability_class": source_ability.get_class(),
+					"ability_class": Utils.get_type(source_ability),
 					"persistence_type": source_ability.persistence_type,
 					"persistence_name": _persistence_type_name(source_ability.persistence_type)
 				},
@@ -471,7 +470,7 @@ func transfer_merge_effects_from(source_units: Array[UnitData]) -> void:
 				{
 					"source_card_id": source_card_id,
 					"target_card_id": card_info.get("id", ""),
-					"ability_class": ability.get_class(),
+					"ability_class": Utils.get_type(ability),
 					"persistence_type": ability.persistence_type,
 					"persistence_name": _persistence_type_name(ability.persistence_type)
 				},
@@ -574,13 +573,13 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 
 	var current_ability_classes: Array[String] = []
 	for ab: Ability in self.abilities:
-		current_ability_classes.append(ab.get_class())
+		current_ability_classes.append(Utils.get_type(ab))
 
 	var abilities_transferred: int = 0
 	for battle_ability: Ability in final_battle_state.abilities:
 		if (
 			battle_ability.persistence_type == Ability.PersistenceType.ACQUIRED
-			and not battle_ability.get_class() in current_ability_classes
+			and not Utils.get_type(battle_ability) in current_ability_classes
 			and not _is_combat_only_ability(battle_ability)
 		):
 			var enhanced_ability: Ability = battle_ability.deep_duplicate()
@@ -590,7 +589,7 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			Log.info(
 				"Unit gained new permanent ability from combat (converted to ENHANCEMENT)",
 				{
-					"ability": enhanced_ability.get_class(),
+					"ability": Utils.get_type(enhanced_ability),
 					"unit_died": battle_died,
 					"converted_from": "ACQUIRED"
 				},
@@ -600,7 +599,7 @@ func apply_permanent_changes_from(final_battle_state: UnitData) -> void:
 			Log.debug(
 				"Skipped combat-only ability from becoming permanent",
 				{
-					"ability": battle_ability.get_class(),
+					"ability": Utils.get_type(battle_ability),
 					"unit_died": battle_died,
 					"reason": "combat_only_exclusion"
 				},
@@ -650,7 +649,7 @@ func get_state_checksum() -> String:
 	var ability_types: Array[String] = []
 	for ability: Ability in abilities:
 		if ability:
-			ability_types.append(ability.get_class())
+			ability_types.append(Utils.get_type(ability))
 	ability_types.sort()
 	state_data["ability_types"] = ability_types
 

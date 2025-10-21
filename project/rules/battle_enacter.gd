@@ -35,7 +35,7 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 	for event: Context.Event in battle_events:
 		Log.debug(
 			"Processing battle event",
-			{"event_type": event.get_class()},
+			{"event_type": Utils.get_type(event)},
 			[Log.TAG_BATTLE, Log.TAG_ANIMATION, Log.TAG_STATE_TRANSITION]
 		)
 
