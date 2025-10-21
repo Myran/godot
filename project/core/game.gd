@@ -130,11 +130,13 @@ func resolve_core_event(event: core.CoreEvent, current_context: DraftContext) ->
 
 
 func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void:
-	Log.debug("Resolving UI event", {"event_type": _event.get_class()}, [Log.TAG_UI, Log.TAG_EVENT])
+	Log.debug(
+		"Resolving UI event", {"event_type": Utils.get_type(_event)}, [Log.TAG_UI, Log.TAG_EVENT]
+	)
 	if ui_state == core.UIState.LOCKED:
 		Log.debug(
 			"UI locked, ignoring event",
-			{"event_type": _event.get_class()},
+			{"event_type": Utils.get_type(_event)},
 			[Log.TAG_UI, Log.TAG_GAME_STATE]
 		)
 		return
@@ -198,7 +200,9 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		var event: InputEvent = _event.event
 		var sender: Object = _event.sender
 		Log.debug(
-			"Touch event received", {"sender": sender.get_class()}, [Log.TAG_UI, Log.TAG_UI_INPUT]
+			"Touch event received",
+			{"sender": Utils.get_type(sender)},
+			[Log.TAG_UI, Log.TAG_UI_INPUT]
 		)
 		var update_draft: bool = input_handler.touch_handler(event, sender, current_context)
 		if update_draft:
