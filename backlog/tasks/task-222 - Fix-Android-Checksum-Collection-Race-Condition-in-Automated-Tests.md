@@ -1,10 +1,10 @@
 ---
 id: task-222
 title: Fix Android Checksum Collection Race Condition in Automated Tests
-status: Open
+status: In Progress
 assignee: []
 created_date: '2025-10-15 19:45'
-updated_date: '2025-10-15 19:45'
+updated_date: '2025-10-21'
 labels:
   - critical
   - test-framework

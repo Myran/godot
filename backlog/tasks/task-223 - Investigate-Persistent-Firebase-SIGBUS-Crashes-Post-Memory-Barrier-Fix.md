@@ -1,10 +1,10 @@
 ---
 id: task-223
 title: Investigate Persistent Firebase SIGBUS Crashes Post Memory Barrier Fix
-status: Open
+status: In Progress
 assignee: []
 created_date: '2025-10-15 19:50'
-updated_date: '2025-10-15 19:50'
+updated_date: '2025-10-21'
 labels:
   - critical
   - firebase
