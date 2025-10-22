@@ -1,9 +1,8 @@
 {
-  "description": "Firebase Backend Layer - All Firebase backend service integration tests",
+  "description": "Firebase Backend Layer - All Firebase backend service integration tests - method_mapping removed (task-234: SIGBUS reproduction test)",
   "actions": [
     "backend.firebase.async_pattern",
     "backend.firebase.lifecycle",
-    "backend.firebase.method_mapping",
     "backend.firebase.error_handling",
     "backend.firebase.performance",
     "backend.firebase.request_tracking",

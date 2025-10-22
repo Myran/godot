@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Backend - Method Mapping Only (SIGBUS isolation)",
+  "actions": [
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": ["android"]
+}

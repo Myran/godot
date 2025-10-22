@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Backend - Async Pattern Only (SIGBUS isolation)",
+  "actions": [
+    "backend.firebase.async_pattern"
+  ],
+  "platforms": ["android"]
+}

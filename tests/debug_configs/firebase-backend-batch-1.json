@@ -1,9 +1,8 @@
 {
-  "description": "Firebase Backend Batch 1 - Core operations (safe concurrency limit)",
+  "description": "Firebase Backend Batch 1 - Core operations (safe concurrency limit) - method_mapping removed (task-234: SIGBUS reproduction test)",
   "actions": [
     "backend.firebase.async_pattern",
-    "backend.firebase.lifecycle",
-    "backend.firebase.method_mapping"
+    "backend.firebase.lifecycle"
   ],
   "platforms": ["android"]
 }

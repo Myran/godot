@@ -1,0 +1,7 @@
+{
+  "description": "Firebase Backend - Lifecycle Only (SIGBUS isolation)",
+  "actions": [
+    "backend.firebase.lifecycle"
+  ],
+  "platforms": ["android"]
+}
