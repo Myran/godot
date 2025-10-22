@@ -1,10 +1,11 @@
 ---
 id: task-223
 title: Investigate Persistent Firebase SIGBUS Crashes Post Memory Barrier Fix
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-10-15 19:50'
-updated_date: '2025-10-21'
+updated_date: '2025-10-22 22:30'
+resolved_date: '2025-10-22 22:30'
 labels:
   - critical
   - firebase
@@ -12,6 +13,7 @@ labels:
   - memory-alignment
   - cpp-sdk
   - glthread
+  - resolved
 dependencies:
   - task-221
 priority: high
@@ -416,3 +418,48 @@ done
 **Created**: 2025-10-15 19:50
 **Dependencies**: Task-221 (completed)
 **Status**: Open - Investigation required
+
+---
+
+## ✅ RESOLUTION (2025-10-22 22:30)
+
+### Status: RESOLVED
+
+Firebase SIGBUS crashes were resolved by the same comprehensive architectural improvements that fixed task-225. The crashes were NOT actually separate from the memory ordering issue - they were a consequence of the same underlying race conditions and synchronization problems.
+
+**Root Cause**: The SIGBUS crashes were caused by race conditions in Firebase request completion and cleanup, which created situations where misaligned or invalidated memory could be accessed. The memory barrier fix (commit a271fdb5) was necessary but not sufficient - additional synchronization and timing improvements were required.
+
+**Resolution Commits**:
+- `a271fdb5` - Memory barriers (foundation)
+- `5423bbf3` - Firebase request completion synchronization improvements
+- `092490c8` - Cleanup and timeout handling improvements
+- `56985442` - Cross-platform Firebase timing consistency
+
+### Validation
+
+Comprehensive test validation (logs/20251022_211336_test.log):
+- ✅ 23/23 configs passed (100% success rate)
+- ✅ 88/88 actions passed (100% success rate)
+- ✅ **firebase-backend-batch-1**: All actions passed, no SIGBUS crashes
+- ✅ **firebase-backend-layer**: All actions passed, no SIGBUS crashes
+- ✅ All Firebase tests: 100% pass rate across all configs
+- ✅ Android Firebase test failure rate: 0% (was 22%)
+
+### Key Insights
+
+1. **Not Separate Issues**: SIGBUS crashes and memory ordering were interconnected
+2. **Comprehensive Fix Required**: Multiple commits needed to address all aspects
+3. **Validation Critical**: Only comprehensive testing revealed full resolution
+4. **Task-152 Relationship**: Current fix supersedes and improves upon task-152 resolution
+
+### Related Tasks
+
+- Resolves via: task-225 (Firebase crash signals - comprehensive fix)
+- Related: task-221 (Memory barriers - foundation)
+- Related: task-152 (Earlier Firebase memory corruption fix)
+- Related: task-234 (Same SIGBUS issue, resolved together)
+
+### Evidence
+
+Test log: logs/20251022_211336_test.log
+Resolution analysis: Comprehensive architectural improvements resolved entire class of Firebase synchronization issues
