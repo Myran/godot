@@ -1,11 +1,13 @@
 ---
 id: task-216.01
 title: Fix Android Test Suite Isolation - App State Bleeds Between Configs
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-10-13 10:39'
-updated_date: '2025-10-13 13:36'
-labels: []
+updated_date: '2025-10-22 22:30'
+resolved_date: '2025-10-22 22:30'
+labels:
+  - resolved
 dependencies: []
 parent_task_id: task-216
 priority: high
@@ -747,3 +749,64 @@ sleep 5  # Instead of sleep 2
 
 **Solution**: Must target Firebase system services, not just app process.
 
+
+---
+
+## ✅ RESOLUTION (2025-10-22 22:30)
+
+### Status: RESOLVED
+
+Android test suite isolation issues have been fully resolved through comprehensive Firebase synchronization improvements (task-225) which addressed the root causes of state bleeding between configs.
+
+**Root Cause - Final Understanding**: The test suite isolation issues were caused by multiple interconnected factors:
+1. **Firebase SDK State Accumulation**: Connection pools and pending operations persisting across app resets
+2. **Android Log Buffer Pollution**: Chunks accumulating and preventing proper DEBUG_TEST_SUCCESS logging
+3. **Timing Race Conditions**: Firebase request completion synchronization issues
+4. **System Service State**: Firebase C++ SDK state living outside app process boundaries
+
+### Validation
+
+Comprehensive test validation (logs/20251022_211336_test.log):
+- ✅ 23/23 configs passed (100% success rate)
+- ✅ 88/88 actions passed (100% success rate)
+- ✅ **All acceptance criteria met**:
+  - [x] #1: Isolated tests capture both action sequences (maintained)
+  - [x] #2: Full suite captures all actions (FIXED - was failing)
+  - [x] #3: All gamestate tests pass with proper checksums
+  - [x] #4: Sequence 1 duration >20ms in suite runs (no timing issues)
+  - [x] #5: No regression in other test configs
+  - [x] #6: Suite behavior matches isolated test behavior exactly (100% = 100%)
+
+### Resolution Components
+
+**Phase 1-6 (Initial Fix - task-216.01 investigation)**:
+- Logcat buffer clearing after app stop
+- Enhanced stop detection in `_push-file-android`
+- Result: Fixed DEBUG_TEST_SUCCESS logging extraction
+
+**Phase 7+ (Complete Resolution - task-225 comprehensive fix)**:
+- Firebase request completion synchronization (commit 5423bbf3)
+- Cleanup and timeout handling improvements (commit 092490c8)
+- Cross-platform Firebase timing consistency (commit 56985442)
+- Memory barriers for proper synchronization (commit a271fdb5)
+- Result: Complete test suite isolation achieved
+
+### Key Insights
+
+1. **Multi-Layered Problem**: Required both local fixes (logcat clear) AND architectural improvements (Firebase sync)
+2. **Firebase SDK Complexity**: State persisting in system service processes required comprehensive synchronization fixes
+3. **Investigation-First Success**: Extensive investigation (750+ lines) correctly identified all root causes
+4. **Comprehensive Validation**: Only full suite testing (23 configs) revealed complete resolution
+
+### Related Tasks
+
+- Parent: task-216 (Firebase post-completion cleanup)
+- Complete resolution: task-225 (Firebase crash signals - comprehensive fix)
+- Related: task-215 (Test framework isolation - resolved together)
+- Related: task-227, task-228 (Suite-specific failures - all resolved)
+
+### Evidence
+
+Test log: logs/20251022_211336_test.log
+Test suite validation: 100% pass rate (23/23 configs, 88/88 actions)
+Isolation confirmed: Suite behavior matches isolated test behavior exactly
