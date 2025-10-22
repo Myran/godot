@@ -108,8 +108,6 @@ func _set_run_all_button_text(text: String, _is_visible: bool = true) -> void:
 
 
 func _ready() -> void:
-	Log.info("DebugMenuController ready.", {}, [Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_INITIALIZATION])
-
 	if (
 		not is_instance_valid(item_list_navigator)
 		or not is_instance_valid(status_label)
@@ -226,17 +224,10 @@ func _populate_main_categories_view() -> void:
 	_clear_navigation_state()
 	_set_run_all_button_text("", false)
 
-	Log.debug("Populating main categories view", {}, [Log.TAG_DEBUG_UI])
-
 	if not _validate_navigation_state("_populate_main_categories_view"):
 		return
 
 	var categories: Array[String] = DebugRegistry.get_categories()
-	Log.debug(
-		"Retrieved categories from DebugRegistry",
-		{"categories": categories, "count": categories.size()},
-		[Log.TAG_DEBUG_UI]
-	)
 
 	if categories.is_empty():
 		_add_list_item("No debug actions registered.", null, "", true)
@@ -269,12 +260,6 @@ func _populate_main_categories_view() -> void:
 		"Save and load enemy lineups for battle testing"
 	)
 
-	Log.info(
-		"Main categories populated",
-		{"total_categories": sorted_categories.size()},
-		[Log.TAG_DEBUG_UI]
-	)
-
 
 func _populate_groups_view(category_name: String) -> void:
 	_current_view_level = ViewLevel.GROUP_LIST
@@ -290,8 +275,6 @@ func _populate_groups_view(category_name: String) -> void:
 	if is_instance_valid(run_all_button):
 		run_all_button.text = "Run All in '%s'" % category_name
 		run_all_button.visible = true
-
-	Log.debug("Populating groups for category: " + category_name, {}, [Log.TAG_DEBUG_UI])
 
 	if not _validate_navigation_state("_populate_groups_view"):
 		_update_status_label_text("ERROR: Invalid navigation state.", true)
@@ -317,11 +300,6 @@ func _populate_groups_view(category_name: String) -> void:
 	var has_ungrouped: bool = DebugRegistry.has_ungrouped_actions(category_name)
 
 	if has_ungrouped:
-		Log.debug(
-			"Category has ungrouped actions, redirecting to category_with_actions view",
-			{"category": category_name},
-			[Log.TAG_DEBUG_UI]
-		)
 		item_list_navigator.clear()
 		_populate_category_with_actions_view(category_name)
 		return
@@ -340,12 +318,6 @@ func _populate_groups_view(category_name: String) -> void:
 			i + 1, MenuListItemData.create_group(category_name, group_name)
 		)
 
-	Log.info(
-		"Groups populated for category",
-		{"category": category_name, "total_groups": groups.size()},
-		[Log.TAG_DEBUG_UI]
-	)
-
 
 func _populate_category_with_actions_view(category_name: String) -> void:
 	_current_view_level = ViewLevel.GROUP_LIST
@@ -361,8 +333,6 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 	if is_instance_valid(run_all_button):
 		run_all_button.text = "Run All in '%s'" % category_name
 		run_all_button.visible = true
-
-	Log.debug("Populating category with direct actions: " + category_name, {}, [Log.TAG_DEBUG_UI])
 
 	if not _validate_navigation_state("_populate_category_with_actions_view"):
 		return
@@ -394,16 +364,6 @@ func _populate_category_with_actions_view(category_name: String) -> void:
 		)
 		item_index += 1
 
-	Log.info(
-		"Category with actions populated",
-		{
-			"category": category_name,
-			"ungrouped_actions": ungrouped_actions.size(),
-			"total_groups": all_groups.size()
-		},
-		[Log.TAG_DEBUG_UI]
-	)
-
 
 func _populate_actions_view(category_name: String, group_name: String) -> void:
 	_current_view_level = ViewLevel.TEST_LIST
@@ -419,12 +379,6 @@ func _populate_actions_view(category_name: String, group_name: String) -> void:
 	if is_instance_valid(run_all_button):
 		run_all_button.text = "Run All in Group '%s'" % group_name
 		run_all_button.visible = true
-
-	Log.debug(
-		"Populating actions for group: %s -> %s" % [category_name, group_name],
-		{},
-		[Log.TAG_DEBUG_UI]
-	)
 
 	item_list_navigator.add_item(BACK_TO_GROUPS_TEXT)
 	item_list_navigator.set_item_metadata(
@@ -619,10 +573,6 @@ func _abort_current_execution_if_needed() -> void:
 	if not _is_executing_all:
 		return
 
-	Log.info(
-		"Aborting current execution to start new action", {}, [Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
-	)
-
 	if _current_executing_action != null:
 		_abort_single_action(_current_executing_action)
 
@@ -633,10 +583,6 @@ func _abort_current_execution_if_needed() -> void:
 
 
 func _abort_single_action(action: DebugAction) -> void:
-	Log.debug(
-		"Aborting single action: %s" % action.action_name, {}, [Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
-	)
-
 	if action.status_updated.is_connected(_on_action_status_updated):
 		action.status_updated.disconnect(_on_action_status_updated)
 	if action.execution_completed.is_connected(_on_action_execution_completed):
@@ -646,12 +592,6 @@ func _abort_single_action(action: DebugAction) -> void:
 
 
 func _abort_run_all_execution() -> void:
-	Log.debug(
-		"Aborting Run All execution with %d actions" % _run_all_actions.size(),
-		{},
-		[Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
-	)
-
 	_run_all_abort_requested = true
 
 	for action_result: ActionExecutionResult in _run_all_actions:
@@ -674,10 +614,6 @@ func _reset_execution_state() -> void:
 	_set_ui_for_execution(false)
 
 	_last_action_data.clear()
-
-	Log.debug(
-		"Execution state reset - ready for new actions", {}, [Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
-	)
 
 
 func _on_navigator_item_selected(index: int) -> void:
@@ -764,7 +700,6 @@ func _execute_single_action(action: DebugAction) -> void:
 	_set_ui_for_execution(true)
 
 	DebugOutputServiceClass.start_action_execution(action)
-	Log.info("Executing single action: %s" % action.action_name, {}, [Log.TAG_DEBUG, Log.TAG_TEST])
 
 	if action.status_updated.is_connected(_on_action_status_updated):
 		action.status_updated.disconnect(_on_action_status_updated)
@@ -785,11 +720,6 @@ func _on_action_execution_completed(success: bool, payload: Variant) -> void:
 		return
 
 	if action != _current_executing_action:
-		Log.debug(
-			"Ignoring completion for aborted action: %s" % action.action_name,
-			{},
-			[Log.TAG_DEBUG_UI, Log.TAG_ABORTION]
-		)
 		return
 
 	if action.status_updated.is_connected(_on_action_status_updated):
@@ -825,12 +755,6 @@ func _execute_multiple_actions(
 	_is_executing_all = true
 	_set_ui_for_execution(true)
 
-	Log.info(
-		"Starting Run All execution",
-		{"scope": scope_description, "action_count": actions_to_run.size()},
-		[Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_RUN_ALL]
-	)
-
 	var execution_results: Array[Dictionary] = []
 	var current_action_index: int = 0
 
@@ -855,11 +779,6 @@ func _execute_next_action_in_sequence(
 	_run_all_scope = scope_description
 
 	if _run_all_abort_requested:
-		Log.info(
-			"Run All execution aborted by user",
-			{},
-			[Log.TAG_DEBUG_UI, Log.TAG_RUN_ALL, Log.TAG_ABORTION]
-		)
 		_reset_execution_state()
 		_update_status_label_text("Run All execution aborted.")
 		return
@@ -875,12 +794,6 @@ func _execute_next_action_in_sequence(
 		"Running %d/%d: %s..." % [current_index + 1, actions_to_run.size(), action.action_name]
 	)
 
-	Log.debug(
-		"Executing action in sequence",
-		{"index": current_index + 1, "total": actions_to_run.size(), "action": action.action_name},
-		[Log.TAG_DEBUG, Log.TAG_RUN_ALL]
-	)
-
 	if action.execution_completed.is_connected(_on_run_all_action_completed):
 		action.execution_completed.disconnect(_on_run_all_action_completed)
 	action.execution_completed.connect(_on_run_all_action_completed, CONNECT_ONE_SHOT)
@@ -890,11 +803,6 @@ func _execute_next_action_in_sequence(
 
 func _on_run_all_action_completed(success: bool, payload: Variant) -> void:
 	if _run_all_abort_requested:
-		Log.debug(
-			"Ignoring completion for aborted Run All action",
-			{},
-			[Log.TAG_DEBUG_UI, Log.TAG_RUN_ALL, Log.TAG_ABORTION]
-		)
 		return
 
 	var result_data: Dictionary = {
@@ -933,17 +841,6 @@ func _complete_run_all_execution(results: Array[Dictionary], scope_description: 
 
 	_update_status_label_text(summary, has_failures)
 
-	Log.info(
-		"Run All execution completed",
-		{
-			"scope": scope_description,
-			"total": total_actions,
-			"successful": successful_actions,
-			"failed": failed_actions
-		},
-		[Log.TAG_DEBUG, Log.TAG_RUN_ALL, Log.TAG_SUMMARY]
-	)
-
 
 func _build_run_all_summary(
 	results: Array[Dictionary], scope_description: String, successful: int, failed: int
@@ -978,7 +875,6 @@ func _on_global_debug_event(
 
 func show_menu_content() -> void:
 	show()
-	Log.debug("Debug menu shown via direct call.", {}, [Log.TAG_DEBUG, Log.TAG_UI])
 
 
 func clear_output_for_new_action(_action: DebugAction) -> void:
@@ -1010,7 +906,6 @@ func display_output_from_service(text: String, _is_error: bool = false) -> void:
 
 	if not visible:
 		show()
-		Log.debug("Debug menu opened to display execution results", {}, [Log.TAG_DEBUG, Log.TAG_UI])
 
 
 func _validate_navigation_state(_context: String) -> bool:
@@ -1053,23 +948,10 @@ func _enter_test_mode() -> void:
 	if not _is_list_hidden:
 		_ui_hidden_by_test = true
 		_toggle_result_expansion()
-
 		_update_status_label_text("🧪 Test Mode Active - UI Hidden for Clean Output View")
-
-		Log.debug(
-			"Entered test mode - UI hidden automatically",
-			{},
-			[Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_TEST]
-		)
 
 
 func _exit_test_mode() -> void:
 	if _ui_hidden_by_test and _is_list_hidden:
 		_ui_hidden_by_test = false
 		_toggle_result_expansion()
-
-		Log.debug(
-			"Exited test mode - UI restored automatically",
-			{},
-			[Log.TAG_DEBUG, Log.TAG_UI, Log.TAG_TEST]
-		)

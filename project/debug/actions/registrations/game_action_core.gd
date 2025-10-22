@@ -51,108 +51,49 @@ static func _populate_enemy_lineup() -> bool:
 		var card_id: String = enemy_card_ids[i]
 		var new_card: Card = await game.card_controller.create_unit_from_id(card_id, 1)
 
-		# DEBUG: Log what type we actually got
-		Log.info(
-			"Enemy card creation result",
-			{
-				"card_id": card_id,
-				"returned_value": new_card,
-				"is_null": new_card == null,
-				"type": typeof(new_card),
-				"type_string": "TYPE_" + str(typeof(new_card)),
-				"is_instance_valid": is_instance_valid(new_card) if new_card != null else false
-			},
-			["debug", "populate_enemy", "type_check"]
-		)
-
-		# ASSERT 1: Check if creation returned something
 		assert(
 			new_card != null,
 			"ASSERT 1 FAILED: create_unit_from_id returned null for ID: " + card_id
 		)
-
-		# ASSERT 2: Check if instance is valid
 		assert(
 			is_instance_valid(new_card),
 			"ASSERT 2 FAILED: Card instance is invalid for ID: " + card_id
 		)
+		assert(new_card is Card, "ASSERT 3 FAILED: Not Card type for ID: " + card_id)
 
-		# DEBUG: Check what happens during type casting
-		var type_check_result: String = "unknown"
-		if new_card is Card:
-			type_check_result = "Card type OK"
-		elif new_card is Object:
-			type_check_result = "Object but not Card"
-		else:
-			type_check_result = "Not Object type: " + str(typeof(new_card))
-
-		Log.info(
-			"Enemy type casting check",
-			{
-				"card_id": card_id,
-				"type_check_result": type_check_result,
-				"is_card": new_card is Card
-			},
-			["debug", "populate_enemy", "type_check"]
-		)
-
-		# ASSERT 3: Check if Card type
-		assert(
-			new_card is Card,
-			"ASSERT 3 FAILED: Not Card type for ID: " + card_id + ". Got: " + type_check_result
-		)
-
-		# ASSERT 4: Verify card is not null
 		var typed_card: Card = new_card
 		assert(
 			typed_card != null,
 			"ASSERT 4 FAILED: Type cast to Card returned null for ID: " + card_id
 		)
-
-		# ASSERT 5: Check cast result is valid instance
 		assert(
 			is_instance_valid(typed_card),
 			"ASSERT 5 FAILED: Cast card instance invalid for ID: " + card_id
 		)
-
-		# ASSERT 6: Check card_info exists
 		assert(
 			typed_card.card_info != null,
 			"ASSERT 6 FAILED: card_info is null for position: " + str(i)
 		)
-
-		# ASSERT 7: Check card_info has id
 		assert(
 			typed_card.card_info.has("id"),
 			"ASSERT 7 FAILED: card_info missing 'id' key for position: " + str(i)
 		)
-
-		# ASSERT 8: Check id is not empty
 		assert(
 			typed_card.card_info.id != "",
 			"ASSERT 8 FAILED: card_info['id'] is empty for position: " + str(i)
 		)
 
 		typed_card.block_context = Cards.CONTEXT.LINEUP
-
 		core.action(core.EnemyLineupAddCardEvent.new(typed_card, i))
-		Log.info(
-			"Enemy card created successfully",
-			{"card_id": typed_card.card_info.id, "position": i, "requested_id": card_id},
-			["debug", "populate_enemy", "success"]
-		)
 
-	# Second loop: Debug cards - use valid card IDs to avoid null parameter errors
-	var debug_card_ids: Array[String] = ["10", "7", "2"]  # Moose Guy, Druid, Archer (different from enemy cards)
+	var debug_card_ids: Array[String] = ["10", "7", "2"]
 	for n: int in debug_card_ids.size():
 		var card_id: String = debug_card_ids[n]
 		var new_card: Variant = await game.card_controller.create_unit_from_id(card_id, 1)
-		# ASSERT: Card creation must succeed
 		assert(new_card != null, "Debug card creation returned null for ID: " + card_id)
 		assert(is_instance_valid(new_card), "Debug card instance is invalid for ID: " + card_id)
 
 		var typed_card: Card = new_card
-		# ASSERT: Card must be valid Card type
 		assert(typed_card is Card, "Debug card is not Card type for ID: " + card_id)
 		assert(
 			is_instance_valid(typed_card),
@@ -160,39 +101,20 @@ static func _populate_enemy_lineup() -> bool:
 		)
 
 		typed_card.block_context = Cards.CONTEXT.LINEUP
-		# ASSERT: Card must have valid ID for event creation
 		assert(typed_card.card_info.id != "", "Debug card has empty ID for position: " + str(n))
-
 		core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
-		Log.info(
-			"Debug card created successfully",
-			{"card_id": typed_card.card_info.id, "position": n, "requested_id": card_id},
-			["debug", "populate_enemy", "success"]
-		)
 
-	# Dwarf card with ASSERTIONS
 	var dwarf_card: Card = await game.card_controller.create_unit_from_id(str(4), 1)
-	# ASSERT: Dwarf creation must succeed
 	assert(dwarf_card != null, "Dwarf card creation returned null")
 	assert(is_instance_valid(dwarf_card), "Dwarf card instance is invalid")
 
 	var typed_dwarf: Card = dwarf_card
-	# ASSERT: Dwarf must be valid Card type
 	assert(typed_dwarf != null, "Type cast to Card returned null for dwarf")
 	assert(typed_dwarf is Card, "Dwarf card is not Card type")
 	assert(is_instance_valid(typed_dwarf), "Dwarf card became invalid after casting")
 	assert(typed_dwarf.card_info.id != "", "Dwarf card_info['id'] is empty")
 
 	typed_dwarf.block_context = Cards.CONTEXT.LINEUP
-
-	Log.info(
-		"Dwarf initial stats",
-		{
-			"health": typed_dwarf.unit_info.current_health,
-			"attack": typed_dwarf.unit_info.current_attack
-		},
-		["debug", "gameplay", "ability", "stats"]
-	)
 
 	var merge_ability: MergeBonusAbility = null
 	for ability: Ability in typed_dwarf.unit_info.get_active_abilities():
@@ -202,25 +124,10 @@ static func _populate_enemy_lineup() -> bool:
 
 	if merge_ability:
 		merge_ability.debug_trigger_effect(typed_dwarf)
-		Log.info(
-			"Dwarf enhanced via debug trigger",
-			{
-				"health": typed_dwarf.unit_info.current_health,
-				"attack": typed_dwarf.unit_info.current_attack
-			},
-			["debug", "gameplay", "ability", "stats"]
-		)
-	else:
-		Log.warning("MergeBonusAbility not found on dwarf", {}, ["debug", "gameplay"])
 
-	# ASSERT: Final dwarf card must still be valid for event creation
 	assert(is_instance_valid(typed_dwarf), "Dwarf card became invalid before debug event")
 	core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
-
 	core.action(core.LineupOperationCompleteEvent.new())
-	Log.info(
-		"Enemy lineup population completed successfully", {}, ["debug", "populate_enemy", "success"]
-	)
 	return true
 
 
@@ -267,27 +174,15 @@ static func _test_simple_player_events() -> bool:
 
 
 static func _populate_enemy_lineup_as_player() -> bool:
-	Log.info(
-		"Populating enemy lineup with fake PLAYER events for testing",
-		{},
-		["debug", "test", "event_categorization"]
-	)
-
 	var game: Game = _get_game_node()
 	if not is_instance_valid(game) or not is_instance_valid(game.card_controller):
-		Log.error("game or card_controller not available", {}, ["debug", "error"])
 		return false
-
 	if not is_instance_valid(core):
-		Log.error("core not available", {}, ["debug", "error"])
 		return false
-
 	if not _wait_for_game_systems_ready():
 		return false
 
 	core.action(core.LineupOperationStartEvent.new())
-
-	Log.info("Creating cards for enemy lineup (like working function)", {}, ["debug", "test"])
 
 	for n: int in 3:
 		var new_card: Variant = await game.card_controller.create_unit_from_id(str(n), 1)
@@ -295,62 +190,26 @@ static func _populate_enemy_lineup_as_player() -> bool:
 			var typed_card: Card = new_card
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
-			Log.info(
-				"Added card to enemy lineup", {"card_id": str(n), "position": n}, ["debug", "test"]
-			)
 
 	var dwarf_card: Variant = await game.card_controller.create_unit_from_id(str(4), 1)
 	if not dwarf_card:
-		Log.error("Failed to create dwarf card", {}, ["debug", "error"])
 		return false
 
 	var typed_dwarf: Card = dwarf_card
-	typed_dwarf.block_context = Cards.CONTEXT.LINEUP  # COPY FROM WORKING FUNCTION
-
+	typed_dwarf.block_context = Cards.CONTEXT.LINEUP
 	core.action(core.DebugLineupAddCardEvent.new(typed_dwarf, 4))
-	Log.info(
-		"Added dwarf to debug lineup for event testing",
-		{"card_id": typed_dwarf.card_info.id},
-		["debug", "test"]
-	)
 
 	var fake_player_event1: core.LineupAddCardEvent = core.LineupAddCardEvent.new(typed_dwarf)
 	core.action(fake_player_event1)
-	Log.info(
-		"Generated fake PLAYER event: LineupAddCardEvent",
-		{"source": fake_player_event1.source},
-		["debug", "test", "event_categorization"]
-	)
 
 	var fake_player_event2: core.RerollDraftEvent = core.RerollDraftEvent.new()
 	core.action(fake_player_event2)
-	Log.info(
-		"Generated fake PLAYER event: RerollDraftEvent",
-		{"source": fake_player_event2.source},
-		["debug", "test", "event_categorization"]
-	)
 
 	var fake_player_event3: core.UpgradeEvent = core.UpgradeEvent.new(2)
 	core.action(fake_player_event3)
-	Log.info(
-		"Generated fake PLAYER event: UpgradeEvent",
-		{"source": fake_player_event3.source, "level": 2},
-		["debug", "test", "event_categorization"]
-	)
 
 	var debug_event: core.DebugLineupAddCardEvent = core.DebugLineupAddCardEvent.new(typed_dwarf, 0)
 	core.action(debug_event)
-	Log.info(
-		"Generated real DEBUG_SETUP event for comparison",
-		{"source": debug_event.source},
-		["debug", "test", "event_categorization"]
-	)
-
-	Log.info(
-		"FAKE_PLAYER_EVENTS_GENERATED",
-		{"player_events": 3, "debug_events": 1, "enemy_cards": 3, "debug_cards": 1},
-		["test", "event_categorization", "success"]
-	)
 
 	core.action(core.LineupOperationCompleteEvent.new())
 	return true
@@ -359,9 +218,7 @@ static func _populate_enemy_lineup_as_player() -> bool:
 static func _hide_debug_menu() -> bool:
 	if DebugManager:
 		DebugManager.action(DebugManager.DebugEventType.EVENT_CLOSE_DEBUG_MENU)
-		Log.info("Debug menu hidden", {}, ["debug", "ui"])
 		return true
-	Log.warning("DebugManager not available", {}, ["debug", "ui"])
 	return false
 
 
@@ -375,8 +232,6 @@ static func _get_game_node() -> Game:
 
 
 static func _wait_for_game_systems_ready() -> bool:
-	Log.info("Waiting for game systems to be ready...", {}, ["debug", "battle", "initialization"])
-
 	var game_node: Node = null
 	var root: Node = Engine.get_main_loop().current_scene
 
@@ -384,237 +239,69 @@ static func _wait_for_game_systems_ready() -> bool:
 		game_node = root.find_child("Game", true, false)
 
 	if not game_node:
-		Log.warning("Game node not found in scene tree", {}, ["debug", "battle", "initialization"])
 		return false
 
 	var clicker_node: Node = null
 	if game_node.has_method("get") and game_node.get("clicker"):
 		clicker_node = game_node.get("clicker")
-
 		if clicker_node.has_method("get") and clicker_node.get("level"):
-			Log.info(
-				"Game systems ready - clicker initialized",
-				{},
-				["debug", "battle", "initialization"]
-			)
 			return true
 
-	Log.info("Game systems not ready yet, waiting...", {}, ["debug", "battle", "initialization"])
-
 	if clicker_node:
-		Log.info(
-			"Game systems available - proceeding without timing-based waits",
-			{},
-			["debug", "battle", "initialization"]
-		)
 		return true
 
-	Log.error(
-		"Game systems not available - clicker node not found",
-		{},
-		["debug", "battle", "initialization"]
-	)
 	return false
 
 
-## Event-driven state transition helpers (replaces polling loops)
-## Uses existing SignalAwaiter utility for robust event-driven waiting
 static func _await_state_transition_to(target_state: core.GameState) -> void:
-	# CRITICAL FIX: Use proper SignalAwaiter pattern with custom signal + timeout
-	# Create a custom signal emitter that only fires when target state is reached
-	# NOTE: Use custom class with signal definition to avoid Android null Signal() issue
 	var signal_emitter: StateTransitionEmitter = StateTransitionEmitter.new()
-
-	# CRITICAL: Add emitter to scene tree FIRST so signals work properly
-	# Signals may not connect correctly if the node isn't in the scene tree
 	Engine.get_main_loop().root.add_child(signal_emitter)
 
-	# Create SignalAwaiter for our custom signal AND a timeout
 	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
-	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(10.0)  # 10 second timeout
+	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(10.0)
 	state_awaiter.add(signal_emitter.target_reached)
 	state_awaiter.add(timeout_awaiter.finished)
 
-	# Track which awaiter completed first
-	# Use array as mutable reference so lambda can modify it
 	var completed: Array = [false]
 
-	# Connect core.event to monitor for the specific state transition
 	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
-		Log.info(
-			"🎯 DEEP DEBUG: Transition handler fired",
-			{
-				"event_type": type_string(typeof(event_data)),
-				"is_transition_event": event_data is core.TransitionEvent,
-				"target_state": target_state,
-				"platform": OS.get_name()
-			},
-			["debug", "state_transition", "handler", "deep_debug"]
-		)
 		if event_data is core.TransitionEvent:
 			var transition: core.TransitionEvent = event_data as core.TransitionEvent
-			Log.info(
-				"🎯 DEEP DEBUG: TransitionEvent detected",
-				{
-					"new_state": transition.new_state,
-					"target_state": target_state,
-					"match": transition.new_state == target_state,
-					"platform": OS.get_name()
-				},
-				["debug", "state_transition", "handler", "deep_debug"]
-			)
 			if transition.new_state == target_state:
-				# CRITICAL: Set completed BEFORE emitting signal
-				# Signal emission is synchronous and will cause await to complete immediately
-				# If we set completed[0] after emit(), it won't be set when the timeout check runs
 				completed[0] = true
-				Log.info(
-					"🎯 DEEP DEBUG: Emitting target_reached signal",
-					{
-						"target_state": target_state,
-						"completed": completed[0],
-						"platform": OS.get_name()
-					},
-					["debug", "state_transition", "handler", "deep_debug"]
-				)
 				signal_emitter.target_reached.emit()
 				signal_emitter.queue_free()
 
-	# Use CONNECT_ONE_SHOT for immediate response to state transitions
-	# CONNECT_DEFERRED was causing the handler to run AFTER timeout fired
-	Log.info(
-		"🎯 DEEP DEBUG: Connecting state transition handler",
-		{"target_state": str(target_state), "platform": OS.get_name()},
-		["debug", "state_transition", "deep_debug"]
-	)
 	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
-
-	# Wait for either our custom signal OR timeout to fire
-	Log.info(
-		"🎯 DEEP DEBUG: Starting state transition await",
-		{
-			"target_state": str(target_state),
-			"timeout_seconds": 10.0,
-			"awaiter_valid": is_instance_valid(state_awaiter),
-			"platform": OS.get_name()
-		},
-		["debug", "state_transition", "deep_debug"]
-	)
 	await state_awaiter.finished
-	Log.info(
-		"🎯 DEEP DEBUG: State transition await completed",
-		{
-			"target_state": str(target_state),
-			"completed": completed[0],
-			"timeout_finished": not is_instance_valid(timeout_awaiter),
-			"state_awaiter_connections":
-			(
-				state_awaiter.finished.get_connections().size()
-				if is_instance_valid(state_awaiter)
-				else -1
-			),
-			"platform": OS.get_name()
-		},
-		["debug", "state_transition", "deep_debug"]
-	)
 
-	# Handle timeout case
 	if not completed[0]:
 		Log.error(
-			"🎯 DEEP DEBUG: SignalAwaiter timeout - target state not reached within 10 seconds",
-			{
-				"target_state": target_state,
-				"timeout_seconds": 10.0,
-				"completed": completed[0],
-				"platform": OS.get_name()
-			},
-			["debug", "state_transition", "signal_awaiter", "timeout", "error", "deep_debug"]
-		)
-	else:
-		Log.info(
-			"🎯 DEEP DEBUG: State transition completed successfully",
-			{"target_state": str(target_state), "platform": OS.get_name()},
-			["debug", "state_transition", "deep_debug"]
+			"SignalAwaiter timeout - target state not reached within 10 seconds",
+			{"target_state": target_state, "timeout_seconds": 10.0},
+			["debug", "state_transition", "signal_awaiter", "timeout", "error"]
 		)
 
-	# Clean up emitter in case of timeout
 	if signal_emitter and is_instance_valid(signal_emitter):
-		Log.info(
-			"🎯 DEEP DEBUG: Cleaning up state transition emitter",
-			{"platform": OS.get_name()},
-			["debug", "state_transition", "deep_debug"]
-		)
 		signal_emitter.queue_free()
 
 
 static func _await_state_transition_away_from(current_state: core.GameState) -> void:
-	Log.info(
-		"🎯 DEEP DEBUG: Starting _await_state_transition_away_from",
-		{"current_state": str(current_state), "platform": OS.get_name()},
-		["debug", "state_transition", "deep_debug", "milestone"]
-	)
-
 	var state_awaiter: SignalAwaiter.Any = SignalAwaiter.Any.new()
-	# Use array as mutable reference so lambda can store callable for disconnection
-	var handler_ref: Array = [null]
+	var handler_ref: Array[Callable] = []
+	handler_ref.append(Callable())
 
 	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
-		Log.info(
-			"🎯 DEEP DEBUG: State transition handler called",
-			{
-				"event_type": Utils.get_variant_type(event_data),
-				"has_new_state_property": "new_state" in event_data,
-				"is_transition_event_check": event_data is core.TransitionEvent,
-				"platform": OS.get_name()
-			},
-			["debug", "state_transition", "deep_debug"]
-		)
 		if event_data is core.TransitionEvent:
 			var transition: core.TransitionEvent = event_data as core.TransitionEvent
-			Log.info(
-				"🎯 DEEP DEBUG: TransitionEvent received",
-				{
-					"from_state": str(current_state),
-					"to_state": str(transition.new_state),
-					"away_from_current": transition.new_state != current_state,
-					"platform": OS.get_name()
-				},
-				["debug", "state_transition", "deep_debug"]
-			)
 			if transition.new_state != current_state:
-				Log.info(
-					"🎯 DEEP DEBUG: State changed away from current, emitting finished signal",
-					{"platform": OS.get_name()},
-					["debug", "state_transition", "deep_debug", "milestone"]
-				)
-				# Disconnect handler before emitting to prevent further calls
-				if handler_ref[0]:
+				if handler_ref[0].is_valid():
 					core.event.disconnect(handler_ref[0])
 				state_awaiter.finished.emit()
 
-	# Store handler reference for disconnection
 	handler_ref[0] = transition_handler
-
-	# Use CONNECT_DEFERRED for Android thread safety - ensures signal handler
-	# is fully registered before any events can fire (prevents race condition)
-	# REMOVED CONNECT_ONE_SHOT to allow handler to receive multiple events
-	Log.info(
-		"🎯 DEEP DEBUG: Connecting state transition away handler",
-		{"current_state": str(current_state), "platform": OS.get_name()},
-		["debug", "state_transition", "deep_debug"]
-	)
 	core.event.connect(transition_handler, CONNECT_DEFERRED)
-	Log.info(
-		"🎯 DEEP DEBUG: Starting await for state transition away from current",
-		{"current_state": str(current_state), "platform": OS.get_name()},
-		["debug", "state_transition", "deep_debug"]
-	)
 	await state_awaiter.finished
-	Log.info(
-		"🎯 DEEP DEBUG: State transition away from current completed!",
-		{"current_state": str(current_state), "platform": OS.get_name()},
-		["debug", "state_transition", "deep_debug", "milestone"]
-	)
 
 
 static func _start_battle() -> DebugActionResult:
@@ -658,17 +345,6 @@ static func _battle_test_determinism_logic_only() -> DebugActionResult:
 	var process_id: int = OS.get_process_id()
 	var current_test_id: String = DebugAction.get_current_test_id()
 
-	Log.info(
-		"=== DETERMINISM TEST ENTRY ===",
-		{
-			"pid": process_id,
-			"test_id": current_test_id,
-			"timestamp": Time.get_datetime_string_from_system(),
-			"phase": "unknown"
-		},
-		["debug", "battle", "determinism", "pid", "phase"]
-	)
-
 	var config: Dictionary = _get_determinism_config()
 	var current_seed: int = config.seed
 	var expected_hash: String = config.expectedHash if config.expectedHash != null else ""
@@ -705,19 +381,6 @@ static func _battle_test_determinism_logic_only() -> DebugActionResult:
 	var actual_hash: String = str(rng_sequence).md5_text()
 
 	if mode == "validation":
-		Log.info(
-			"=== VALIDATION MODE ===",
-			{
-				"pid": process_id,
-				"test_id": current_test_id,
-				"expected_hash": expected_hash,
-				"actual_hash": actual_hash,
-				"match": expected_hash == actual_hash,
-				"phase": "validation"
-			},
-			["debug", "battle", "determinism", "pid", "phase"]
-		)
-
 		if expected_hash == actual_hash:
 			Log.info(
 				"Logic-only battle determinism test PASSED",
@@ -756,18 +419,6 @@ static func _battle_test_determinism_logic_only() -> DebugActionResult:
 		return DebugActionResult.new_failure(
 			"Logic-only determinism test failed - hash mismatch", "DETERMINISM_LOGIC_ONLY_FAILED"
 		)
-	Log.info(
-		"=== RECORDING MODE ===",
-		{
-			"pid": process_id,
-			"test_id": current_test_id,
-			"generated_hash": actual_hash,
-			"seed": current_seed,
-			"phase": "recording"
-		},
-		["debug", "battle", "determinism", "pid", "phase"]
-	)
-
 	var update_success: bool = _update_config_with_hash(actual_hash)
 
 	if update_success:
@@ -1175,108 +826,22 @@ static func _battle_test_determinism() -> DebugActionResult:
 		)
 	else:
 		var start_time: int = Time.get_ticks_msec()
-		Log.info(
-			"🎯 DEEP DEBUG: Starting battle execution with comprehensive logging",
-			{
-				"platform": OS.get_name(),
-				"start_time": start_time,
-				"test_id": DebugAction.get_current_test_id()
-			},
-			["debug", "battle", "determinism", "deep_debug"]
-		)
-
 		var game: Game = _get_game_node()
 		if not game:
-			Log.error(
-				"🎯 DEEP DEBUG: Game node not available",
-				{"platform": OS.get_name()},
-				["debug", "battle", "determinism", "deep_debug", "error"]
-			)
 			return DebugActionResult.new_failure("Game node not available")
 
 		var initial_state: core.GameState = game.game_handler.current_gamestate
-		Log.info(
-			"🎯 DEEP DEBUG: About to start battle",
-			{
-				"initial_state": str(initial_state),
-				"platform": OS.get_name(),
-				"game_valid": is_instance_valid(game)
-			},
-			["debug", "battle", "determinism", "deep_debug"]
-		)
-
 		ui.action(ui.StartBattleEvent.new())
-		Log.info(
-			"🎯 DEEP DEBUG: Battle started, waiting for state transition away from initial",
-			{"initial_state": str(initial_state), "platform": OS.get_name()},
-			["debug", "battle", "determinism", "deep_debug"]
-		)
-
-		# Event-driven: Wait for state to change from initial state
 		await _await_state_transition_away_from(initial_state)
-		Log.info(
-			"🎯 DEEP DEBUG: State transition away from initial completed",
-			{"initial_state": str(initial_state), "platform": OS.get_name()},
-			["debug", "battle", "determinism", "deep_debug"]
-		)
-
-		# Event-driven: Wait for POSTBATTLE state
-		Log.info(
-			"🎯 DEEP DEBUG: Starting wait for POSTBATTLE state",
-			{"platform": OS.get_name(), "current_time": Time.get_ticks_msec() - start_time},
-			["debug", "battle", "determinism", "deep_debug"]
-		)
 		await _await_state_transition_to(core.GameState.POSTBATTLE)
-		Log.info(
-			"🎯 DEEP DEBUG: POSTBATTLE state reached!",
-			{"platform": OS.get_name(), "time_to_postbattle": Time.get_ticks_msec() - start_time},
-			["debug", "battle", "determinism", "deep_debug", "milestone"]
-		)
 
-		# CRITICAL FIX: Emit SequentialActionCompleteEvent for test framework completion detection
-		# This resolves the 1/2 completion events timeout issue for battle-animated config
-		var current_test_id: String = DebugAction.get_current_test_id()
-		Log.info(
-			"🎯 DEEP DEBUG: About to emit SequentialActionCompleteEvent",
-			{
-				"action_name": "game.battle.test_determinism_animated",
-				"success": true,
-				"category": "Gameplay",
-				"test_id": current_test_id,
-				"battle_duration_ms": Time.get_ticks_msec() - start_time,
-				"platform": OS.get_name(),
-				"completion_triggered": "POSTBATTLE_state_reached"
-			},
-			["debug", "sequential", "completion", "battle", "deep_debug", "milestone"]
-		)
-
-		Log.info(
-			"🎯 DEEP DEBUG: Emitting SequentialActionCompleteEvent NOW",
-			{"platform": OS.get_name(), "timestamp": Time.get_ticks_msec()},
-			["debug", "sequential", "completion", "battle", "deep_debug"]
-		)
 		core.action(
 			core.SequentialActionCompleteEvent.new(
 				"game.battle.test_determinism_animated", true, "Gameplay"
 			)
 		)
-		Log.info(
-			"🎯 DEEP DEBUG: SequentialActionCompleteEvent emitted, checking platform",
-			{"platform": OS.get_name(), "is_android": OS.get_name() == "Android"},
-			["debug", "sequential", "completion", "battle", "deep_debug"]
-		)
 
 		duration = Time.get_ticks_msec() - start_time
-		Log.info(
-			"🎯 DEEP DEBUG: Battle function completion reached!",
-			{
-				"duration_ms": duration,
-				"platform": OS.get_name(),
-				"total_battle_time": Time.get_ticks_msec() - start_time,
-				"about_to_return": "true"
-			},
-			["debug", "battle", "determinism", "deep_debug", "milestone"]
-		)
 		Log.info(
 			"Animated battle execution completed",
 			{"duration_ms": duration},
