@@ -470,7 +470,11 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 				completed[0] = true
 				Log.info(
 					"🎯 DEEP DEBUG: Emitting target_reached signal",
-					{"target_state": target_state, "completed": completed[0], "platform": OS.get_name()},
+					{
+						"target_state": target_state,
+						"completed": completed[0],
+						"platform": OS.get_name()
+					},
 					["debug", "state_transition", "handler", "deep_debug"]
 				)
 				signal_emitter.target_reached.emit()
@@ -503,7 +507,12 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 			"target_state": str(target_state),
 			"completed": completed[0],
 			"timeout_finished": not is_instance_valid(timeout_awaiter),
-			"state_awaiter_connections": state_awaiter.finished.get_connections().size() if is_instance_valid(state_awaiter) else -1,
+			"state_awaiter_connections":
+			(
+				state_awaiter.finished.get_connections().size()
+				if is_instance_valid(state_awaiter)
+				else -1
+			),
 			"platform": OS.get_name()
 		},
 		["debug", "state_transition", "deep_debug"]
