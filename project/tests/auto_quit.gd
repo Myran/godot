@@ -82,8 +82,15 @@ func _wait_for_logger_and_quit(quit_type: String) -> void:
 	# Quitting immediately would prevent the marker from reaching logcat
 	await get_tree().create_timer(1.0).timeout
 
-	# Now safe to quit
+	# Now safe to quit - use unified quit flow through QuitApplicationEvent
+	var QuitEventClass = preload("res://core/events/quit_application_event.gd")
+	var quit_event = QuitEventClass.new()
+
+	# Set appropriate exit code based on quit type
 	if quit_type == "failure":
-		get_tree().quit(1)
+		quit_event.exit_code = 1
 	else:
-		get_tree().quit(0)
+		quit_event.exit_code = 0
+
+	# Execute through unified quit flow
+	core.action(quit_event)

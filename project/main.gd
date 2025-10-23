@@ -174,4 +174,7 @@ func _input(event: InputEvent) -> void:
 		%PopupDebug.show()
 	if event.as_text() == "Q" and event.is_pressed():
 		if get_tree():
-			get_tree().quit(0)
+			# Use unified quit flow through QuitApplicationEvent
+			SessionManager.end_gameplay_session()
+			var QuitEventClass = preload("res://core/events/quit_application_event.gd")
+			core.action(QuitEventClass.new())
