@@ -1,5 +1,8 @@
 extends Node
 
+# Preload frequently used classes to avoid duplicated loads
+const QuitEventClass = preload("res://core/events/quit_application_event.gd")
+
 @export var use_actions_in_editor: bool = false
 
 @export var game: Game
@@ -136,7 +139,6 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 
 			# Delegate to centralized quit event system instead of handling quit directly
 			# This ensures all quit logic goes through QuitApplicationEvent with proper flushing, logging, and markers
-			var QuitEventClass = preload("res://core/events/quit_application_event.gd")
 			core.action(QuitEventClass.new())
 		DebugManager.DebugEventType.EVENT_RESTART_GAME:
 			Log.info(
@@ -176,5 +178,4 @@ func _input(event: InputEvent) -> void:
 		if get_tree():
 			# Use unified quit flow through QuitApplicationEvent
 			SessionManager.end_gameplay_session()
-			var QuitEventClass = preload("res://core/events/quit_application_event.gd")
 			core.action(QuitEventClass.new())
