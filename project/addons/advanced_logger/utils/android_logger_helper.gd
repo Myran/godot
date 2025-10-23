@@ -85,7 +85,7 @@ static func _chunk_formatted_message(formatted_content: String) -> Array[String]
 	# Android logcat line limit is 1066 bytes total
 	# Logcat overhead: ~74 bytes (timestamp, PID, TID, level, tag, chunk header, <START>)
 	# Available content: 1066 - 74 - 5 (<END>) = 987 bytes
-	var safe_chunk_size = 950  # Conservative 950 bytes per chunk to ensure <END> marker fits
+	var safe_chunk_size = 950  # Conservative chunk size with buffer for system prints
 
 	while current_content.length() > safe_chunk_size:
 		var chunk_size = safe_chunk_size
@@ -121,7 +121,7 @@ static func _chunk_message(message: String) -> Array[String]:
 
 	# Use a smaller raw chunk size to account for chunk headers + MobileFormatter overhead
 	# Format: "[CHUNK X/Y] [MSG_ID: abc123] " = ~30 bytes + MobileFormatter overhead ~500 bytes
-	var safe_raw_chunk_size = ANDROID_EFFECTIVE_LIMIT - 600  # 3400 bytes for raw content
+	var safe_raw_chunk_size = ANDROID_EFFECTIVE_LIMIT - 700  # Conservative: 3400 bytes for raw content
 
 	while current_message.length() > safe_raw_chunk_size:
 		var chunk_size = safe_raw_chunk_size

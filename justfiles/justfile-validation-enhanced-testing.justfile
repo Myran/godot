@@ -1324,67 +1324,218 @@ _collect-action-results test_id platform config_name="unknown" session="":
     
     LOG_LINE_COUNT=$(echo "$LOGS" | wc -l | tr -d ' ')
     echo "🔍 Processing $LOG_LINE_COUNT log lines for action results..."
-    
-    # Process successful actions - use process substitution to avoid subshell issues
+
+    # Enhanced chunk-aware JSON extraction for DEBUG_TEST_SUCCESS messages
+    # Use temporary files for chunk storage (compatible across shells)
+    CHUNK_DIR=$(mktemp -d)
+    SUCCESS_CHUNKS_FILE="$CHUNK_DIR/success_chunks.txt"
+    FAILURE_CHUNKS_FILE="$CHUNK_DIR/failure_chunks.txt"
+
+    # First pass: Collect all chunks from DEBUG_TEST_SUCCESS messages
     while IFS= read -r line; do
-        # Extract JSON part - look for { and } to get the JSON object
-        if [[ "$line" == *"DEBUG_TEST_SUCCESS"* && "$line" == *"{"* && "$line" == *"}"* ]]; then
-            # Extract everything from first { to last } (inclusive)
-            JSON_PART="${line#*\{}"
-            JSON_PART="{"$JSON_PART
-            JSON_PART="${JSON_PART%\}*}}"
-            
-            # Validate it's proper JSON and extract fields
-            if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
-                ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
-                CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null) 
-                GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
-                DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
-                SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
-                
-                if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
-                    # Create result entry using jq for proper JSON formatting with context
-                    TEMP_FILE=$(mktemp)
-                    if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\",\"test_id\":\"$TEST_ID\",\"config_name\":\"$CONFIG_NAME\",\"platform\":\"$PLATFORM\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
-                        mv "$TEMP_FILE" "$RESULTS_FILE"
-                    else
-                        rm -f "$TEMP_FILE"
+        if [[ "$line" == *"DEBUG_TEST_SUCCESS"* && "$line" == *"[CHUNK"* && "$line" == *"[MSG_ID:"* ]]; then
+            # Extract message ID and chunk info
+            MSG_ID=$(echo "$line" | sed -n 's/.*\[MSG_ID: \([^]]*\)\].*/\1/p')
+            CHUNK_INFO=$(echo "$line" | sed -n 's/.*\[CHUNK \([^]]*\)\].*/\1/p')
+            CHUNK_NUM=$(echo "$CHUNK_INFO" | cut -d'/' -f1)
+
+            # Extract content between <START> and <END>
+            CONTENT=$(echo "$line" | sed -n 's/.*<START>\(.*\)<END>.*/\1/p')
+
+            # Store chunk with format: MSG_ID:CHUNK_NUM:CONTENT
+            echo "$MSG_ID:$CHUNK_NUM:$CONTENT" >> "$SUCCESS_CHUNKS_FILE"
+        fi
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" || true)
+
+    # Second pass: Process unchunked DEBUG_TEST_SUCCESS messages and reconstruct chunked ones
+    while IFS= read -r line; do
+        if [[ "$line" == *"DEBUG_TEST_SUCCESS"* ]]; then
+            # Check if this is a chunked message - skip chunked ones here, they'll be processed separately
+            if [[ "$line" == *"[CHUNK"* && "$line" == *"[MSG_ID:"* ]]; then
+                continue  # Skip chunked messages, they'll be processed below
+            fi
+
+            # Unchunked message - process directly (backward compatibility)
+            if [[ "$line" == *"{"* && "$line" == *"}"* ]]; then
+                # Extract everything from first { to last } (inclusive)
+                JSON_PART="${line#*\{}"
+                JSON_PART="{"$JSON_PART
+                JSON_PART="${JSON_PART%\}*}}"
+
+                # Validate it's proper JSON and extract fields
+                if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                    ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                    CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
+                    GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                    DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                    SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+
+                    if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                        # Create result entry using jq for proper JSON formatting with context
+                        TEMP_FILE=$(mktemp)
+                        if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\",\"test_id\":\"$TEST_ID\",\"config_name\":\"$CONFIG_NAME\",\"platform\":\"$PLATFORM\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                            mv "$TEMP_FILE" "$RESULTS_FILE"
+                        else
+                            rm -f "$TEMP_FILE"
+                        fi
                     fi
                 fi
             fi
         fi
     done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" || true)
+
+    # Third pass: Process and reconstruct chunked messages
+    if [[ -f "$SUCCESS_CHUNKS_FILE" && -s "$SUCCESS_CHUNKS_FILE" ]]; then
+        # Group chunks by MSG_ID and process complete messages
+        sort -t: -k1,1 -k2,2n "$SUCCESS_CHUNKS_FILE" | while IFS=: read -r MSG_ID CHUNK_NUM CONTENT; do
+            # Count total chunks for this MSG_ID
+            TOTAL_CHUNKS=$(grep "^$MSG_ID:" "$SUCCESS_CHUNKS_FILE" | cut -d: -f2 | sort -n | tail -1)
+            CURRENT_CHUNK_COUNT=$(grep "^$MSG_ID:" "$SUCCESS_CHUNKS_FILE" | wc -l | tr -d ' ')
+
+            # If we have all chunks for this message, reconstruct it
+            if [[ "$CURRENT_CHUNK_COUNT" -eq "$TOTAL_CHUNKS" ]]; then
+                RECONSTRUCTED_MESSAGE=""
+                grep "^$MSG_ID:" "$SUCCESS_CHUNKS_FILE" | sort -t: -k2,2n | while IFS=: read -r ID NUM CONTENT_PART; do
+                    RECONSTRUCTED_MESSAGE+="$CONTENT_PART"
+                done
+
+                # Extract JSON from reconstructed message
+                if [[ "$RECONSTRUCTED_MESSAGE" == *"{"* && "$RECONSTRUCTED_MESSAGE" == *"}"* ]]; then
+                    JSON_PART="${RECONSTRUCTED_MESSAGE#*\{}"
+                    JSON_PART="{"$JSON_PART
+                    JSON_PART="${JSON_PART%\}*}}"
+
+                    # Process the JSON
+                    if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                        ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                        CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
+                        GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                        DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                        SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+
+                        if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                            TEMP_FILE=$(mktemp)
+                            if jq ". + [{\"action\":\"$ACTION\",\"category\":\"$CATEGORY\",\"group\":\"$GROUP\",\"success\":true,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\"\",\"test_id\":\"$TEST_ID\",\"config_name\":\"$CONFIG_NAME\",\"platform\":\"$PLATFORM\"}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                                mv "$TEMP_FILE" "$RESULTS_FILE"
+                            else
+                                rm -f "$TEMP_FILE"
+                            fi
+                        fi
+                    fi
+                fi
+
+                # Remove processed chunks to avoid duplicate processing
+                grep -v "^$MSG_ID:" "$SUCCESS_CHUNKS_FILE" > "${SUCCESS_CHUNKS_FILE}.tmp" || true
+                mv "${SUCCESS_CHUNKS_FILE}.tmp" "$SUCCESS_CHUNKS_FILE"
+            fi
+        done
+    fi
     
-    # Process failed actions - use process substitution to avoid subshell issues
+    # Enhanced chunk-aware JSON extraction for DEBUG_TEST_FAILURE messages
+    # First pass: Collect all chunks from DEBUG_TEST_FAILURE messages
     while IFS= read -r line; do
-        # Extract JSON part - look for { and } to get the JSON object
-        if [[ "$line" == *"DEBUG_TEST_FAILURE"* && "$line" == *"{"* && "$line" == *"}"* ]]; then
-            # Extract everything from first { to last } (inclusive)
-            JSON_PART="${line#*\{}"
-            JSON_PART="{"$JSON_PART
-            JSON_PART="${JSON_PART%\}*}}"
-            
-            # Validate it's proper JSON and extract fields
-            if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
-                ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
-                CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
-                GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
-                DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
-                SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
-                ERROR_MSG=$(echo "$JSON_PART" | jq -r '.error // ""' 2>/dev/null)
-                
-                if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
-                    # Create result entry using jq for proper JSON formatting and escaping with context
-                    TEMP_FILE=$(mktemp)
-                    if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg platform "$PLATFORM" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error,\"test_id\":\$test_id,\"config_name\":\$config_name,\"platform\":\$platform}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
-                        mv "$TEMP_FILE" "$RESULTS_FILE"
-                    else
-                        rm -f "$TEMP_FILE"
+        if [[ "$line" == *"DEBUG_TEST_FAILURE"* && "$line" == *"[CHUNK"* && "$line" == *"[MSG_ID:"* ]]; then
+            # Extract message ID and chunk info
+            MSG_ID=$(echo "$line" | sed -n 's/.*\[MSG_ID: \([^]]*\)\].*/\1/p')
+            CHUNK_INFO=$(echo "$line" | sed -n 's/.*\[CHUNK \([^]]*\)\].*/\1/p')
+            CHUNK_NUM=$(echo "$CHUNK_INFO" | cut -d'/' -f1)
+
+            # Extract content between <START> and <END>
+            CONTENT=$(echo "$line" | sed -n 's/.*<START>\(.*\)<END>.*/\1/p')
+
+            # Store chunk with format: MSG_ID:CHUNK_NUM:CONTENT
+            echo "$MSG_ID:$CHUNK_NUM:$CONTENT" >> "$FAILURE_CHUNKS_FILE"
+        fi
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
+
+    # Second pass: Process unchunked DEBUG_TEST_FAILURE messages
+    while IFS= read -r line; do
+        if [[ "$line" == *"DEBUG_TEST_FAILURE"* ]]; then
+            # Check if this is a chunked message - skip chunked ones here, they'll be processed separately
+            if [[ "$line" == *"[CHUNK"* && "$line" == *"[MSG_ID:"* ]]; then
+                continue  # Skip chunked messages, they'll be processed below
+            fi
+
+            # Unchunked message - process directly (backward compatibility)
+            if [[ "$line" == *"{"* && "$line" == *"}"* ]]; then
+                # Extract everything from first { to last } (inclusive)
+                JSON_PART="${line#*\{}"
+                JSON_PART="{"$JSON_PART
+                JSON_PART="${JSON_PART%\}*}}"
+
+                # Validate it's proper JSON and extract fields
+                if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                    ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                    CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
+                    GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                    DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                    SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+                    ERROR_MSG=$(echo "$JSON_PART" | jq -r '.error // ""' 2>/dev/null)
+
+                    if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                        # Create result entry using jq for proper JSON formatting and escaping with context
+                        TEMP_FILE=$(mktemp)
+                        if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg platform "$PLATFORM" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error,\"test_id\":\$test_id,\"config_name\":\$config_name,\"platform\":\$platform}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                            mv "$TEMP_FILE" "$RESULTS_FILE"
+                        else
+                            rm -f "$TEMP_FILE"
+                        fi
                     fi
                 fi
             fi
         fi
     done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
+
+    # Third pass: Process and reconstruct chunked failure messages
+    if [[ -f "$FAILURE_CHUNKS_FILE" && -s "$FAILURE_CHUNKS_FILE" ]]; then
+        # Group chunks by MSG_ID and process complete messages
+        sort -t: -k1,1 -k2,2n "$FAILURE_CHUNKS_FILE" | while IFS=: read -r MSG_ID CHUNK_NUM CONTENT; do
+            # Count total chunks for this MSG_ID
+            TOTAL_CHUNKS=$(grep "^$MSG_ID:" "$FAILURE_CHUNKS_FILE" | cut -d: -f2 | sort -n | tail -1)
+            CURRENT_CHUNK_COUNT=$(grep "^$MSG_ID:" "$FAILURE_CHUNKS_FILE" | wc -l | tr -d ' ')
+
+            # If we have all chunks for this message, reconstruct it
+            if [[ "$CURRENT_CHUNK_COUNT" -eq "$TOTAL_CHUNKS" ]]; then
+                RECONSTRUCTED_MESSAGE=""
+                grep "^$MSG_ID:" "$FAILURE_CHUNKS_FILE" | sort -t: -k2,2n | while IFS=: read -r ID NUM CONTENT_PART; do
+                    RECONSTRUCTED_MESSAGE+="$CONTENT_PART"
+                done
+
+                # Extract JSON from reconstructed message
+                if [[ "$RECONSTRUCTED_MESSAGE" == *"{"* && "$RECONSTRUCTED_MESSAGE" == *"}"* ]]; then
+                    JSON_PART="${RECONSTRUCTED_MESSAGE#*\{}"
+                    JSON_PART="{"$JSON_PART
+                    JSON_PART="${JSON_PART%\}*}}"
+
+                    # Process the JSON
+                    if echo "$JSON_PART" | jq -e . >/dev/null 2>&1; then
+                        ACTION=$(echo "$JSON_PART" | jq -r '.action // "unknown"' 2>/dev/null)
+                        CATEGORY=$(echo "$JSON_PART" | jq -r '.category // "unknown"' 2>/dev/null)
+                        GROUP=$(echo "$JSON_PART" | jq -r '.group // ""' 2>/dev/null)
+                        DURATION=$(echo "$JSON_PART" | jq -r '.duration_ms // 0' 2>/dev/null)
+                        SEQUENCE=$(echo "$JSON_PART" | jq -r '.sequence // 0' 2>/dev/null)
+                        ERROR_MSG=$(echo "$JSON_PART" | jq -r '.error // ""' 2>/dev/null)
+
+                        if [[ "$ACTION" != "unknown" && "$ACTION" != "null" && -n "$ACTION" ]]; then
+                            TEMP_FILE=$(mktemp)
+                            if jq --arg action "$ACTION" --arg category "$CATEGORY" --arg group "$GROUP" --arg error "$ERROR_MSG" --arg test_id "$TEST_ID" --arg config_name "$CONFIG_NAME" --arg platform "$PLATFORM" ". + [{\"action\":\$action,\"category\":\$category,\"group\":\$group,\"success\":false,\"duration_ms\":$DURATION,\"sequence\":$SEQUENCE,\"error_message\":\$error,\"test_id\":\$test_id,\"config_name\":\$config_name,\"platform\":\$platform}]" "$RESULTS_FILE" > "$TEMP_FILE" 2>/dev/null; then
+                                mv "$TEMP_FILE" "$RESULTS_FILE"
+                            else
+                                rm -f "$TEMP_FILE"
+                            fi
+                        fi
+                    fi
+                fi
+
+                # Remove processed chunks to avoid duplicate processing
+                grep -v "^$MSG_ID:" "$FAILURE_CHUNKS_FILE" > "${FAILURE_CHUNKS_FILE}.tmp" || true
+                mv "${FAILURE_CHUNKS_FILE}.tmp" "$FAILURE_CHUNKS_FILE"
+            fi
+        done
+    fi
+
+    # Clean up temporary chunk files
+    rm -rf "$CHUNK_DIR"
     
     # Log completion status
     ACTION_COUNT=$(jq 'length' "$RESULTS_FILE" 2>/dev/null || echo 0)
@@ -2660,7 +2811,30 @@ _execute-test-android config_name:
     
     # Extract logs from Android device using proper log extraction
     echo "🔍 Extracting logs from Android device after test completion..."
-    sleep 2  # Give device time to flush logs
+
+    # Smart wait for logcat flush completion using marker detection (task-236 fix)
+    # Polls for DEBUG_TEST_FLUSH_COMPLETE marker that appears after all logs flushed
+    # App emits marker from actual quit path (main.gd) after 2s wait
+    echo "⏳ Waiting for logcat flush completion marker..."
+    FLUSH_TIMEOUT=10
+    FLUSH_ELAPSED=0
+    FLUSH_DETECTED=false
+
+    while [[ $FLUSH_ELAPSED -lt $FLUSH_TIMEOUT ]]; do
+        if adb logcat -d 2>/dev/null | grep -q "DEBUG_TEST_FLUSH_COMPLETE"; then
+            echo "✅ Flush marker detected after ${FLUSH_ELAPSED}s"
+            FLUSH_DETECTED=true
+            break
+        fi
+        sleep 1
+        FLUSH_ELAPSED=$((FLUSH_ELAPSED + 1))
+    done
+
+    if [[ "$FLUSH_DETECTED" == "false" ]]; then
+        echo "❌ ERROR: Flush marker not detected after ${FLUSH_TIMEOUT}s timeout"
+        echo "💡 This indicates logcat buffer flush issue or app hung before quit"
+        # Note: We don't exit here - let post-test validation catch any issues
+    fi
     
     # Check if we have background captured logs to use
     if [[ -f "$BACKGROUND_LOG_FILE" && -s "$BACKGROUND_LOG_FILE" ]]; then

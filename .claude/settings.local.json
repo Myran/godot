@@ -136,7 +136,12 @@
       "Bash(do echo \"=== $log ===\")",
       "WebFetch(domain:duckduckgo.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(/Users/mattiasmyhrman/.local/bin/gdscript -s --check:*)"
+      "Bash(/Users/mattiasmyhrman/.local/bin/gdscript -s --check:*)",
+      "Bash(cd:*)",
+      "Bash(do echo:*)",
+      "Bash(if:*)",
+      "Bash(then:*)",
+      "Bash(else:*)"
     ],
     "deny": [],
     "ask": [],

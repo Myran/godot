@@ -34,19 +34,25 @@ func execute() -> void:
 	# Perform active Firebase cleanup before logger shutdown
 	_perform_firebase_cleanup()
 
+	# Wait for buffer processing completion before logger shutdown (task-236 fix)
+	# This ensures all pending log chunks are processed before we shut down the logger
+	if OS.get_name() == "Android" and Log.has_method("wait_for_chunk_processing_complete_signal"):
+		# Use signal-based chunk processing wait - waits exactly as long as needed
+		await Log.wait_for_chunk_processing_complete_signal()
+
 	# Use logger's encapsulated graceful shutdown - handles all platform-specific logic internally
 	await Log.shutdown_gracefully()
 
-	# Final logging before quit
-	Log.info(
-		"QuitApplicationEvent: Logger shutdown complete - executing quit",
-		{
-			"platform": OS.get_name(),
-			"final_timestamp": Time.get_unix_time_from_system(),
-			"logging_synchronized": true
-		},
-		["debug", "quit", "final"]
-	)
+	# Wait for logcat buffer flush completion after logger shutdown (task-236 fix)
+	# CRITICAL: NO print_rich() calls during chunking - they compete with chunked messages
+	# Allow chunking to complete cleanly before emitting final marker
+	if OS.get_name() == "Android":
+		# Wait 3 seconds for Android logcat buffer to flush to system AND chunking to complete
+		# This ensures all previous Log.info() messages and their chunked DEBUG_TEST_SUCCESS entries reach logcat
+		await Engine.get_main_loop().create_timer(3.0).timeout
+
+		# NOW emit the final marker - after all chunking has completed and logcat buffer is stable
+		print_rich("[DEBUG_TEST_FLUSH_COMPLETE]")
 
 	# Actual application termination
 	Engine.get_main_loop().quit()

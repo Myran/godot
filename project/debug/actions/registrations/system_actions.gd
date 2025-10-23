@@ -113,14 +113,9 @@ static func _quit_application() -> bool:
 	# Capture final state before initiating quit sequence
 	_capture_final_state()
 
-	# End gameplay session
-	SessionManager.end_gameplay_session()
-
-	# Emit debug manager quit event for compatibility
+	# Emit debug manager quit event - main.gd will delegate to QuitApplicationEvent
+	# This ensures unified quit flow through centralized QuitApplicationEvent system
 	DebugManager.action(DebugManager.DebugEventType.EVENT_QUIT)
-
-	# Use new core quit event for centralized quit handling
-	core.action(QuitEventClass.new())
 
 	return true
 

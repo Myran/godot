@@ -67,7 +67,20 @@ func _wait_for_logger_and_quit(quit_type: String) -> void:
 	else:
 		print("[AUTO_QUIT] Desktop platform - no logger wait needed")
 
-	print("[AUTO_QUIT] Logger sync complete - executing quit")
+	print_rich("[AUTO_QUIT] Logger sync complete - executing quit")
+
+	# Wait 1 second to allow print buffer to flush to logcat
+	# This prevents the final marker from being dropped due to buffer overflow
+	await get_tree().create_timer(1.0).timeout
+
+	# Emit final marker for test framework to detect flush completion
+	# This marker appears AFTER all logger chunks are processed and flushed
+	# Use print_rich() which goes through same mechanism as Log system (works on Android)
+	print_rich("[DEBUG_TEST_FLUSH_COMPLETE]")
+
+	# Wait another 1 second for the marker print to flush before quitting
+	# Quitting immediately would prevent the marker from reaching logcat
+	await get_tree().create_timer(1.0).timeout
 
 	# Now safe to quit
 	if quit_type == "failure":

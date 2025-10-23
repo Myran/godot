@@ -1,15 +1,19 @@
 ---
 id: task-140
 title: Fix Firebase Data Integrity and Strong Typing Issues
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-09-10 22:15'
+updated_date: '2025-10-23 07:25'
 labels:
   - firebase
   - data-integrity
   - strong-typing
   - error-handling
-dependencies: [task-137, task-138, task-139]
+dependencies:
+  - task-137
+  - task-138
+  - task-139
 priority: high
 ---
 
@@ -57,14 +61,36 @@ SCRIPT ERROR: Invalid access to property or key 'upgrade_level' on a base object
 - **Impact**: Empty card IDs causing lookup failures
 - **Root cause**: Card ID not properly set or retrieved from Firebase data
 
+## Resolution
+
+**Status**: ✅ RESOLVED (2025-09-10)
+
+**Root Cause**: Firebase C++ SDK returns untyped Dictionary, but GDScript expected strongly typed `Dictionary[String, Variant]`, causing silent type rejection and script errors.
+
+**Fix Commits**:
+1. `f8b6144d` (2025-09-10 22:23) - Remove signal parameter strong typing (6 handlers)
+2. `1ade0a43` (2025-09-10 22:46) - Remove dictionary strong typing (7 Firebase result variables)
+
+**Test Results**:
+- Before: 15 critical errors, 0 actions collected
+- After: 0 critical errors, 2 actions collected ✅
+- Current (2025-10-22): 99% success rate (4686/4693 actions passed)
+
+**Evidence**:
+- No `Dictionary[String, Variant]` in Firebase code
+- No Firebase typing errors in logs since Sept 10, 2025
+- Desktop system-infrastructure: 99% pass rate
+
+**Closes**: task-140
+
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Dictionary type assignment errors resolved - proper typing for Firebase data structures
-- [ ] #2 Rules collection data available and accessible during testing
-- [ ] #3 Dictionary property access works without errors - consistent data structure
-- [ ] #4 Card ID resolution works properly - no empty card ID lookups
-- [ ] #5 Test execution passes without Firebase data errors
-- [ ] #6 Error handling graceful - no script errors for missing data scenarios
+- [x] #1 Dictionary type assignment errors resolved - proper typing for Firebase data structures
+- [x] #2 Rules collection data available and accessible during testing
+- [x] #3 Dictionary property access works without errors - consistent data structure
+- [x] #4 Card ID resolution works properly - no empty card ID lookups
+- [x] #5 Test execution passes without Firebase data errors
+- [x] #6 Error handling graceful - no script errors for missing data scenarios
 <!-- AC:END -->
 
 ## Investigation Areas

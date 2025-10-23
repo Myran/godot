@@ -126,21 +126,18 @@ func _on_debug_event(event_type: DebugManager.DebugEventType, _args: Array[Varia
 			%PopupDebug.hide()
 		DebugManager.DebugEventType.EVENT_QUIT:
 			Log.info(
-				"Quit event received, exiting application", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
+				"Quit event received - delegating to QuitApplicationEvent for centralized handling",
+				{},
+				[Log.TAG_DEBUG, Log.TAG_SYSTEM]
 			)
+
+			# End session first (required for proper state capture)
 			SessionManager.end_gameplay_session()
-			if get_tree():
-				get_tree().quit(0)
-			else:
-				Log.warning(
-					"Tree not available during quit, using fallback",
-					{},
-					[Log.TAG_DEBUG, Log.TAG_SYSTEM]
-				)
-				if get_tree():
-					get_tree().quit(0)
-				else:
-					Log.error("Force quit: tree unavailable", {}, [Log.TAG_QUIT, Log.TAG_ERROR])
+
+			# Delegate to centralized quit event system instead of handling quit directly
+			# This ensures all quit logic goes through QuitApplicationEvent with proper flushing, logging, and markers
+			var QuitEventClass = preload("res://core/events/quit_application_event.gd")
+			core.action(QuitEventClass.new())
 		DebugManager.DebugEventType.EVENT_RESTART_GAME:
 			Log.info(
 				"Restart event received, restarting game scene", {}, [Log.TAG_DEBUG, Log.TAG_SYSTEM]
