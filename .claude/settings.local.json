@@ -141,7 +141,8 @@
       "Bash(do echo:*)",
       "Bash(if:*)",
       "Bash(then:*)",
-      "Bash(else:*)"
+      "Bash(else:*)",
+      "Bash(while read ability)"
     ],
     "deny": [],
     "ask": [],

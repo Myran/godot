@@ -531,7 +531,7 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		var original_unit: UnitData = battle_unit.battle_original_reference
 		var unit_survived: bool = battle_unit in battle_result.final_allied_units.values()
 
-		original_unit.apply_permanent_changes_from(battle_unit)
+		UnitBehavior.apply_permanent_changes_from_battle(original_unit, battle_unit)
 		units_processed += 1
 
 		if unit_survived:
