@@ -483,7 +483,10 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 		return null
 
 	# Assert that persistence_type field exists in JSON
-	assert(ability_dict.has("persistence_type"), "Missing required 'persistence_type' field in ability_dict")
+	assert(
+		ability_dict.has("persistence_type"),
+		"Missing required 'persistence_type' field in ability_dict"
+	)
 	var persistence_type_int: int = ability_dict.get("persistence_type")
 	# Assert that the JSON value is within valid enum range (0-3)
 	assert(
