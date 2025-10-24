@@ -482,9 +482,15 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 		)
 		return null
 
-	var persistence_type: int = ability_dict.get(
-		"persistence_type", Ability.PersistenceType.TEMPLATE
+	# Assert that persistence_type field exists in JSON
+	assert(ability_dict.has("persistence_type"), "Missing required 'persistence_type' field in ability_dict")
+	var persistence_type_int: int = ability_dict.get("persistence_type")
+	# Assert that the JSON value is within valid enum range (0-3)
+	assert(
+		persistence_type_int >= 0 and persistence_type_int < 4,
+		"Invalid persistence_type value: %d. Must be 0-3." % persistence_type_int
 	)
+	var persistence_type: Ability.PersistenceType = persistence_type_int as Ability.PersistenceType
 	var ability: Ability = null
 
 	# Deserialize specific ability types
@@ -553,8 +559,8 @@ static func _deserialize_ability(ability_data: Variant) -> Variant:
 	return ability
 
 
-static func _get_persistence_type_name(persistence_type: int) -> String:
-	"""Helper method to convert persistence type int to readable name"""
+static func _get_persistence_type_name(persistence_type: Ability.PersistenceType) -> String:
+	"""Helper method to convert persistence type enum to readable name"""
 	match persistence_type:
 		Ability.PersistenceType.TEMPLATE:
 			return "TEMPLATE"

@@ -448,7 +448,7 @@ static func is_combat_only_ability(ability: Ability) -> bool:
 
 # Get the string name for a persistence type
 # Extracted from UnitData._persistence_type_name()
-static func persistence_type_name(persistence_type: int) -> String:
+static func persistence_type_name(persistence_type: Ability.PersistenceType) -> String:
 	match persistence_type:
 		Ability.PersistenceType.TEMPLATE:
 			return "TEMPLATE"

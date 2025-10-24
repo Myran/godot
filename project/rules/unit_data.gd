@@ -93,7 +93,7 @@ func _has_ability_instance(new_ability: Ability) -> bool:
 	return false
 
 
-func _persistence_type_name(persistence_type: int) -> String:
+func _persistence_type_name(persistence_type: Ability.PersistenceType) -> String:
 	return UnitBehavior.persistence_type_name(persistence_type)
 
 
