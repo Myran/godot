@@ -1,10 +1,10 @@
 ---
 id: task-062
 title: Separate Unit Data from Unit Logic
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-17 08:10'
-updated_date: '2025-08-17 08:22'
+updated_date: '2025-10-24 11:46'
 labels:
   - architecture
   - refactoring
@@ -31,3 +31,5 @@ Extract game logic from UnitData class to UnitBehavior class to achieve proper s
 **Part of Comprehensive Refactoring Initiative (task-074)** 
 Phase 1: Critical Architecture Decoupling - UnitData Class Refactoring
 This task addresses the UnitData god object (643 lines) by separating game logic into a UnitBehavior class while keeping only data storage in UnitData.
+
+Completed by task-237 UnitData/UnitBehavior separation. Commits 0b990ed7 and 42cd7ffd successfully implemented the architectural separation with static methods and CTO panel validation. UnitData now handles data-only responsibilities while UnitBehavior contains game logic.
