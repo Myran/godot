@@ -28,10 +28,8 @@ static func _load_match_level(level_num: int) -> bool:
 
 
 static func _populate_enemy_lineup() -> bool:
-	if not is_instance_valid(core) or not is_instance_valid(card_controller):
-		Log.error(
-			"Cannot populate enemy lineup: core or card_controller missing", {}, ["debug", "error"]
-		)
+	if not is_instance_valid(core):
+		Log.error("Cannot populate enemy lineup: core system missing", {}, ["debug", "error"])
 		return false
 
 	if not _wait_for_game_systems_ready():
@@ -169,8 +167,6 @@ static func _test_simple_player_events() -> bool:
 
 
 static func _populate_enemy_lineup_as_player() -> bool:
-	if not is_instance_valid(core) or not is_instance_valid(card_controller):
-		return false
 	if not is_instance_valid(core):
 		return false
 	if not _wait_for_game_systems_ready():

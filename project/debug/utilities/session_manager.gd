@@ -606,12 +606,6 @@ static func _create_unit_from_id(card_id: String, level: int) -> Card:
 
 	return card
 
-	Log.error(
-		"CardController not available for unit creation",
-		{"card_id": card_id, "level": level},
-		[Log.TAG_DEBUG]
-	)
-	return null
 
 
 static func _clear_current_lineup(game: Game) -> void:

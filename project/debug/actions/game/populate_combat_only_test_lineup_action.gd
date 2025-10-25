@@ -6,9 +6,9 @@ extends RefCounted
 
 
 static func execute() -> bool:
-	if not is_instance_valid(core) or not is_instance_valid(card_controller):
+	if not is_instance_valid(core):
 		Log.error(
-			"Cannot populate combat-only test lineup: core or card_controller missing",
+			"Cannot populate combat-only test lineup: core system missing",
 			{},
 			["debug", "error", "test"]
 		)
