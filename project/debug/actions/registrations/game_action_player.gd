@@ -373,15 +373,6 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		["debug", "replay", "player"]
 	)
 
-	if not is_instance_valid(card_controller):
-		Log.error(
-			"card_controller not available for card move",
-			{},
-			["debug", "replay", "player", "error"]
-		)
-		assert(false, "move_card_player: card_controller not available")
-		return false
-
 	var card: Variant = await CardController.create_unit_from_id(card_id, 1)
 	if not card:
 		Log.error(

@@ -1,21 +1,5 @@
 class_name CardController
-extends Node
-
-
-static func get_card_image_name(card_id: String) -> String:
-	var asset_variant_value: int = 0  # Default value
-
-	if DebugManager.get("asset_variant") != null:
-		asset_variant_value = DebugManager.asset_variant
-
-	return str(
-		GameConstants.CardSystem.CARD_IMAGE_FOLDER,
-		GameConstants.CardSystem.CARD_IMAGE_PREFIX,
-		asset_variant_value,
-		"_",
-		card_id,
-		".png"
-	)
+extends RefCounted
 
 
 static func setup() -> void:

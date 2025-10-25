@@ -2,10 +2,7 @@ class_name CardUtils
 extends RefCounted
 
 ## Static utility functions for card image management
-## This replaces the global CardController pattern for utility functions
-
-const CARD_IMAGE_PREFIX: String = "card_image_"
-const CARD_IMAGE_FOLDER: String = "res://assets/card_images/"
+## Uses GameConstants.CardSystem for all constants
 
 
 static func get_card_image_name(card_id: String) -> String:
@@ -15,4 +12,11 @@ static func get_card_image_name(card_id: String) -> String:
 	if DebugManager.get("asset_variant") != null:
 		asset_variant_value = DebugManager.asset_variant
 
-	return str(CARD_IMAGE_FOLDER, CARD_IMAGE_PREFIX, asset_variant_value, "_", card_id, ".png")
+	return str(
+		GameConstants.CardSystem.CARD_IMAGE_FOLDER,
+		GameConstants.CardSystem.CARD_IMAGE_PREFIX,
+		asset_variant_value,
+		"_",
+		card_id,
+		".png"
+	)
