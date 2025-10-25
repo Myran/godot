@@ -607,7 +607,6 @@ static func _create_unit_from_id(card_id: String, level: int) -> Card:
 	return card
 
 
-
 static func _clear_current_lineup(game: Game) -> void:
 	"""Clear existing lineup safely using existing systems"""
 	if game.holder_allies and game.holder_allies.has_method("get_current_lineup"):
