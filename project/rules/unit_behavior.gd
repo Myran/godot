@@ -437,13 +437,12 @@ static func get_state_checksum(unit: UnitData) -> String:
 
 
 # Check if this ability should only apply during combat and not persist between battles
+# Uses the ability's persistence_type as the authoritative source
 # Extracted from UnitData._is_combat_only_ability()
 static func is_combat_only_ability(ability: Ability) -> bool:
-	var combat_only_classes: Array[String] = [
-		"DeathTriggerHealthAbility",  # Axe man's ondeath health bonus - should be combat-only
-	]
-
-	return Utils.get_type(ability) in combat_only_classes
+	# Combat-only abilities use TEMPORARY persistence type
+	# This is a general system that works for all abilities without hardcoding
+	return ability.persistence_type == Ability.PersistenceType.TEMPORARY
 
 
 # Get the string name for a persistence type

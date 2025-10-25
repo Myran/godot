@@ -1,0 +1,9 @@
+{
+  "description": "Explicit validation that combat-only abilities (TEMPORARY persistence) don't persist between battles - uses isolated test lineup",
+  "seed": 55555,
+  "actions": [
+    "game.debug.hide_debug_menu",
+    "game.lineup.populate_combat_only_test",
+    "game.battle.validate_combat_only_abilities"
+  ]
+}

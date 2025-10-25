@@ -68,7 +68,7 @@ func init_with_info(_card_info: Dictionary) -> void:
 		)
 	if card_info.id == str(2):
 		ability = DeathTriggerHealthAbility.new(2)
-		ability.persistence_type = Ability.PersistenceType.TEMPLATE
+		ability.persistence_type = Ability.PersistenceType.TEMPORARY  # Combat-only, doesn't persist
 		add_ability(ability)
 	if card_info.id == str(12):
 		ability = EvilSynergyAbility.new()
