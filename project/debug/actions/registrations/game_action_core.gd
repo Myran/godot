@@ -28,12 +28,7 @@ static func _load_match_level(level_num: int) -> bool:
 
 
 static func _populate_enemy_lineup() -> bool:
-	var game: Game = _get_game_node()
-	if (
-		not is_instance_valid(core)
-		or not is_instance_valid(game)
-		or not is_instance_valid(game.card_controller)
-	):
+	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		Log.error(
 			"Cannot populate enemy lineup: core or card_controller missing", {}, ["debug", "error"]
 		)
@@ -49,7 +44,7 @@ static func _populate_enemy_lineup() -> bool:
 	var enemy_card_ids: Array[String] = ["1", "4", "0"]  # Archer, Dwarf, Brettonian Guard
 	for i: int in enemy_card_ids.size():
 		var card_id: String = enemy_card_ids[i]
-		var new_card: Card = await game.card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Card = await card_controller.create_unit_from_id(card_id, 1)
 
 		assert(
 			new_card != null,
@@ -89,7 +84,7 @@ static func _populate_enemy_lineup() -> bool:
 	var debug_card_ids: Array[String] = ["10", "7", "2"]
 	for n: int in debug_card_ids.size():
 		var card_id: String = debug_card_ids[n]
-		var new_card: Variant = await game.card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Variant = await card_controller.create_unit_from_id(card_id, 1)
 		assert(new_card != null, "Debug card creation returned null for ID: " + card_id)
 		assert(is_instance_valid(new_card), "Debug card instance is invalid for ID: " + card_id)
 
@@ -104,7 +99,7 @@ static func _populate_enemy_lineup() -> bool:
 		assert(typed_card.card_info.id != "", "Debug card has empty ID for position: " + str(n))
 		core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
-	var dwarf_card: Card = await game.card_controller.create_unit_from_id(str(4), 1)
+	var dwarf_card: Card = await card_controller.create_unit_from_id(str(4), 1)
 	assert(dwarf_card != null, "Dwarf card creation returned null")
 	assert(is_instance_valid(dwarf_card), "Dwarf card instance is invalid")
 
@@ -174,8 +169,7 @@ static func _test_simple_player_events() -> bool:
 
 
 static func _populate_enemy_lineup_as_player() -> bool:
-	var game: Game = _get_game_node()
-	if not is_instance_valid(game) or not is_instance_valid(game.card_controller):
+	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		return false
 	if not is_instance_valid(core):
 		return false
@@ -185,13 +179,13 @@ static func _populate_enemy_lineup_as_player() -> bool:
 	core.action(core.LineupOperationStartEvent.new())
 
 	for n: int in 3:
-		var new_card: Variant = await game.card_controller.create_unit_from_id(str(n), 1)
+		var new_card: Variant = await card_controller.create_unit_from_id(str(n), 1)
 		if new_card and is_instance_valid(new_card):
 			var typed_card: Card = new_card
 			typed_card.block_context = Cards.CONTEXT.LINEUP
 			core.action(core.EnemyLineupAddCardEvent.new(typed_card, n))
 
-	var dwarf_card: Variant = await game.card_controller.create_unit_from_id(str(4), 1)
+	var dwarf_card: Variant = await card_controller.create_unit_from_id(str(4), 1)
 	if not dwarf_card:
 		return false
 

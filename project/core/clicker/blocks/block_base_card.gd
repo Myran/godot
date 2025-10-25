@@ -121,7 +121,7 @@ func serialize_to_dict() -> Dictionary:
 	return base_data
 
 
-static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
+static func deserialize_from_dict(data: Dictionary) -> Block:
 	"""
 	Card block specialized deserialization.
 	Restores card-specific state from serialized data.
@@ -136,7 +136,7 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 		return null
 
 	# Create card using existing card creation system
-	var card: Card = await _create_card_from_id(card_id, card_level, game)
+	var card: Card = await _create_card_from_id(card_id, card_level)
 	if not card:
 		Log.error(
 			"Failed to create Card from ID during deserialization",
@@ -208,19 +208,19 @@ static func deserialize_from_dict(data: Dictionary, game: Game = null) -> Block:
 	return card
 
 
-static func _create_card_from_id(card_id: String, card_level: int, game: Game) -> Card:
+static func _create_card_from_id(card_id: String, card_level: int) -> Card:
 	"""
 	Create a card using the game's card controller system.
 	This maintains compatibility with existing card creation logic.
 	"""
-	if not game or not game.card_controller:
+	if not is_instance_valid(card_controller):
 		Log.error(
-			"Cannot create card - game or card_controller not available",
+			"Cannot create card - card_controller not available",
 			{"card_id": card_id},
 			["serialization", "error"]
 		)
 		return null
-	return await game.card_controller.create_unit_from_id(card_id, card_level)
+	return await card_controller.create_unit_from_id(card_id, card_level)
 
 
 static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:

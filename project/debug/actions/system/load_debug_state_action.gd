@@ -278,9 +278,7 @@ func _load_lineup_only_data(game: Game, lineup_data: Dictionary) -> bool:
 
 	if lineup_data.has("allies") and not lineup_data.allies.is_empty():
 		var allies_dict: Dictionary = lineup_data.allies
-		await GamestateLoader._restore_lineup_positions(
-			game, allies_dict, game.holder_allies, "allies"
-		)
+		await GamestateLoader._restore_lineup_positions(allies_dict, game.holder_allies, "allies")
 		Log.debug(
 			"Restored allied lineup from lineup-only save",
 			{"units_restored": lineup_data.allies.size()},
@@ -289,9 +287,7 @@ func _load_lineup_only_data(game: Game, lineup_data: Dictionary) -> bool:
 
 	if lineup_data.has("enemies") and not lineup_data.enemies.is_empty():
 		var enemies_dict: Dictionary = lineup_data.enemies
-		await GamestateLoader._restore_lineup_positions(
-			game, enemies_dict, game.holder_enemy, "enemies"
-		)
+		await GamestateLoader._restore_lineup_positions(enemies_dict, game.holder_enemy, "enemies")
 		Log.debug(
 			"Restored enemy lineup from lineup-only save",
 			{"units_restored": lineup_data.enemies.size()},

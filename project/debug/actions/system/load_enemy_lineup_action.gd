@@ -155,7 +155,7 @@ func _replace_enemy_lineup_surgical(game: Game, lineup_data: Dictionary) -> bool
 		return false
 
 	# Step 3: Restore lineup data into enemy positions (reuse GamestateLoader logic)
-	await GamestateLoader._restore_lineup_positions(game, source_data, game.holder_enemy, "enemies")
+	await GamestateLoader._restore_lineup_positions(source_data, game.holder_enemy, "enemies")
 
 	Log.info(
 		"Enemy lineup surgical replacement completed",

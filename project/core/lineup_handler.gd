@@ -161,9 +161,7 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 
 func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
 	var card_id: String = base_card.card_info.get("id", "")
-	var new_card: Card = await game.card_controller.create_unit_from_id(
-		card_id, base_card.level + 1
-	)
+	var new_card: Card = await card_controller.create_unit_from_id(card_id, base_card.level + 1)
 	new_card.block_context = Cards.CONTEXT.LINEUP
 
 	new_card.unit_info.transfer_merge_effects_from_cards(source_cards)

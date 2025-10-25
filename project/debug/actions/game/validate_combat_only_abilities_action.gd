@@ -33,14 +33,17 @@ static func execute() -> DebugActionResult:
 	# Capture pre-battle stats for all units
 	var pre_battle_stats: Dictionary = _capture_lineup_stats(game)
 	if pre_battle_stats.is_empty():
-		return DebugActionResult.new_failure("Failed to capture pre-battle stats - no units in lineup")
+		return DebugActionResult.new_failure(
+			"Failed to capture pre-battle stats - no units in lineup"
+		)
 
 	Log.info(
 		"Captured pre-battle stats",
 		{
 			"allied_units": pre_battle_stats.allied_units.size(),
 			"enemy_units": pre_battle_stats.enemy_units.size(),
-			"total_units": pre_battle_stats.allied_units.size() + pre_battle_stats.enemy_units.size()
+			"total_units":
+			pre_battle_stats.allied_units.size() + pre_battle_stats.enemy_units.size()
 		},
 		["debug", "test", "validation", "combat_ability"]
 	)
@@ -49,14 +52,12 @@ static func execute() -> DebugActionResult:
 	var battle_result: Dictionary = _execute_battle_logic_only(game)
 	if not battle_result.success:
 		return DebugActionResult.new_failure(
-			"Battle execution failed: " + battle_result.error, "BATTLE_EXECUTION_FAILED"
+			"Battle execution failed: " + str(battle_result.error), "BATTLE_EXECUTION_FAILED"
 		)
 
 	Log.info(
 		"Battle executed successfully",
-		{
-			"duration_ms": battle_result.duration_ms, "event_count": battle_result.event_count
-		},
+		{"duration_ms": battle_result.duration_ms, "event_count": battle_result.event_count},
 		["debug", "test", "validation", "combat_ability"]
 	)
 
@@ -174,14 +175,10 @@ static func _execute_battle_logic_only(game: Game) -> Dictionary:
 	var event_count: int = events.size()
 	var duration: int = Time.get_ticks_msec() - start_time
 
-	return {
-		"success": true, "error": "", "duration_ms": duration, "event_count": event_count
-	}
+	return {"success": true, "error": "", "duration_ms": duration, "event_count": event_count}
 
 
-static func _validate_stats_unchanged(
-	pre_stats: Dictionary, post_stats: Dictionary
-) -> Dictionary:
+static func _validate_stats_unchanged(pre_stats: Dictionary, post_stats: Dictionary) -> Dictionary:
 	var failures: Array[Dictionary] = []
 	var units_validated: int = 0
 
@@ -189,11 +186,7 @@ static func _validate_stats_unchanged(
 	for i: int in range(pre_stats.allied_units.size()):
 		if i >= post_stats.allied_units.size():
 			failures.append(
-				{
-					"reason": "Allied unit missing after battle",
-					"unit_index": i,
-					"side": "allied"
-				}
+				{"reason": "Allied unit missing after battle", "unit_index": i, "side": "allied"}
 			)
 			continue
 
@@ -217,7 +210,9 @@ static func _validate_stats_unchanged(
 		_validate_single_unit(pre_unit, post_unit, failures)
 		units_validated += 1
 
-	return {"success": failures.is_empty(), "failures": failures, "units_validated": units_validated}
+	return {
+		"success": failures.is_empty(), "failures": failures, "units_validated": units_validated
+	}
 
 
 static func _validate_single_unit(

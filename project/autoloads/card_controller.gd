@@ -2,8 +2,8 @@ class_name CardController
 extends Node
 
 const CARD_IMAGE_PREFIX: String = "card_image_"
-@export_file("*.tscn") var card_scene_name: String
-@export_dir var card_image_folder: String
+var card_scene_name: String = "res://core/clicker/blocks/block_base_card.tscn"
+var card_image_folder: String = "res://assets/card_images/"
 var current_level: int = 1
 var _rules: Dictionary = {}
 

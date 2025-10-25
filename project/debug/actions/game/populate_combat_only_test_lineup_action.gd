@@ -6,12 +6,7 @@ extends RefCounted
 
 
 static func execute() -> bool:
-	var game: Game = _get_game_node()
-	if (
-		not is_instance_valid(core)
-		or not is_instance_valid(game)
-		or not is_instance_valid(game.card_controller)
-	):
+	if not is_instance_valid(core) or not is_instance_valid(card_controller):
 		Log.error(
 			"Cannot populate combat-only test lineup: core or card_controller missing",
 			{},
@@ -28,7 +23,7 @@ static func execute() -> bool:
 	var enemy_card_ids: Array[String] = ["2", "1", "0"]  # Axe Man (TEMPORARY), Archer, Brettonian Guard
 	for i: int in enemy_card_ids.size():
 		var card_id: String = enemy_card_ids[i]
-		var new_card: Card = await game.card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Card = await card_controller.create_unit_from_id(card_id, 1)
 
 		if not new_card or not is_instance_valid(new_card):
 			Log.error(
@@ -45,7 +40,7 @@ static func execute() -> bool:
 	var allied_card_ids: Array[String] = ["2", "1", "0"]  # Axe Man (TEMPORARY), Archer, Brettonian Guard
 	for n: int in allied_card_ids.size():
 		var card_id: String = allied_card_ids[n]
-		var new_card: Card = await game.card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Card = await card_controller.create_unit_from_id(card_id, 1)
 
 		if not new_card or not is_instance_valid(new_card):
 			Log.error(
@@ -72,15 +67,6 @@ static func execute() -> bool:
 	)
 
 	return true
-
-
-static func _get_game_node() -> Game:
-	var root: Node = Engine.get_main_loop().current_scene
-	if root and root.has_method("find_child"):
-		var found_node: Node = root.find_child("Game", true, false)
-		if found_node is Game:
-			return found_node as Game
-	return null
 
 
 static func _wait_for_game_systems_ready() -> bool:

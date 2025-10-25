@@ -253,7 +253,7 @@ static func _deserialize_block_by_type(
 	match object_type:
 		core.ObjectType.CARD:
 			# Use Card's deserialization method
-			return await Card.deserialize_from_dict(block_data, game)
+			return await Card.deserialize_from_dict(block_data)
 		core.ObjectType.EMPTY_SPACE, core.ObjectType.BLOCK_ITEM:
 			# Use ItemBlock's deserialization method
 			return ItemBlock.deserialize_from_dict(block_data)
@@ -460,19 +460,16 @@ static func _restore_lineup_state(game: Game, lineup_data: Dictionary) -> void:
 	# Restore allies lineup
 	var allies_data: Dictionary = lineup_data.get("allies", {})
 	if not allies_data.is_empty():
-		await _restore_lineup_positions(game, allies_data, game.holder_allies, "allies")
+		await _restore_lineup_positions(allies_data, game.holder_allies, "allies")
 
 	# Restore enemies lineup (if saved)
 	var enemies_data: Dictionary = lineup_data.get("enemies", {})
 	if not enemies_data.is_empty():
-		await _restore_lineup_positions(game, enemies_data, game.holder_enemy, "enemies")
+		await _restore_lineup_positions(enemies_data, game.holder_enemy, "enemies")
 
 
 static func _restore_lineup_positions(
-	game: Game,
-	positions_data: Dictionary,
-	holder_container: HolderContainer,
-	container_name: String
+	positions_data: Dictionary, holder_container: HolderContainer, container_name: String
 ) -> void:
 	"""Restore position data for lineup"""
 	Log.debug(
@@ -526,7 +523,7 @@ static func _restore_lineup_positions(
 				{"card_id": card_id, "level": level, "position": position},
 				[Log.TAG_DEBUG, "gamestate", "lineup"]
 			)
-			card = await Card.deserialize_from_dict(card_data, game)
+			card = await Card.deserialize_from_dict(card_data)
 		else:
 			# Fallback to basic card creation for legacy save files
 			Log.debug(
@@ -534,7 +531,7 @@ static func _restore_lineup_positions(
 				{"card_id": card_id, "level": level, "position": position},
 				[Log.TAG_DEBUG, "gamestate", "lineup"]
 			)
-			card = await game.card_controller.create_unit_from_id(card_id, level)
+			card = await card_controller.create_unit_from_id(card_id, level)
 
 		if not card:
 			Log.error(

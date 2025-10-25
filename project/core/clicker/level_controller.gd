@@ -113,7 +113,7 @@ func create_block() -> Block:
 		random_block = _block_factory.create_item_block()
 	else:
 		Log.debug("Getting card from pool", {}, [Log.TAG_LEVEL, Log.TAG_CARD])
-		random_block = await game.card_controller.get_card_from_pool()
+		random_block = await card_controller.get_card_from_pool()
 	random_block.block_context = Cards.CONTEXT.DRAFT
 	return random_block
 

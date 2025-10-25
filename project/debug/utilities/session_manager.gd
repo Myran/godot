@@ -513,7 +513,7 @@ static func _restore_position_data(
 		)
 
 		# Recreate card using existing systems (following CLAUDE.md conventions)
-		var card: Card = await _create_unit_from_id(card_id, level, game)
+		var card: Card = await _create_unit_from_id(card_id, level)
 		if card:
 			game.lineup_handler.add_card(card, position)
 			Log.debug(
@@ -589,15 +589,15 @@ static func _restore_board_state(_game: Game, board_state: Dictionary) -> bool:
 	return true
 
 
-static func _create_unit_from_id(card_id: String, level: int, game: Game) -> Card:
+static func _create_unit_from_id(card_id: String, level: int) -> Card:
 	"""Create unit from ID using card controller"""
 	Log.debug(
 		"Creating unit from ID - START", {"card_id": card_id, "level": level}, [Log.TAG_DEBUG]
 	)
 
 	# Use card controller to create unit from ID
-	if game and game.card_controller and game.card_controller.has_method("create_unit_from_id"):
-		var card: Card = await game.card_controller.create_unit_from_id(card_id, level)
+	if is_instance_valid(card_controller) and card_controller.has_method("create_unit_from_id"):
+		var card: Card = await card_controller.create_unit_from_id(card_id, level)
 
 		Log.debug(
 			"Creating unit from ID - COMPLETE",

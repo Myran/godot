@@ -109,7 +109,7 @@ static func _register_lineup_actions(registry: DebugActionRegistry) -> void:
 			DebugAction
 			. create(
 				"game.lineup.populate_combat_only_test",
-				PopulateCombatOnlyTestLineupAction.execute
+				Callable(PopulateCombatOnlyTestLineupAction, "execute")
 			)
 			. set_category("Gameplay")
 			. set_group("Test Lineups")
@@ -290,17 +290,20 @@ static func _register_battle_actions(registry: DebugActionRegistry) -> void:
 	var ValidateCombatOnlyAbilitiesAction: Script = preload(
 		"res://debug/actions/game/validate_combat_only_abilities_action.gd"
 	)
-	registry.register_action(
-		(
-			DebugAction
-			. create(
-				"game.battle.validate_combat_only_abilities",
-				ValidateCombatOnlyAbilitiesAction.execute
-			)
-			. set_category("Gameplay")
-			. set_group("Battle")
-			. set_description(
-				"Validate that combat-only abilities (TEMPORARY persistence) don't persist between battles"
+	(
+		registry
+		. register_action(
+			(
+				DebugAction
+				. create(
+					"game.battle.validate_combat_only_abilities",
+					Callable(ValidateCombatOnlyAbilitiesAction, "execute")
+				)
+				. set_category("Gameplay")
+				. set_group("Battle")
+				. set_description(
+					"Validate that combat-only abilities (TEMPORARY persistence) don't persist between battles"
+				)
 			)
 		)
 	)

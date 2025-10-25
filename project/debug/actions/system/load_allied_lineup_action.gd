@@ -159,7 +159,7 @@ func _replace_allied_lineup_surgical(game: Game, lineup_data: Dictionary) -> boo
 		return false
 
 	# Step 3: Restore lineup data into allied positions (reuse GamestateLoader logic)
-	await GamestateLoader._restore_lineup_positions(game, source_data, game.holder_allies, "allies")
+	await GamestateLoader._restore_lineup_positions(source_data, game.holder_allies, "allies")
 
 	Log.info(
 		"Allied lineup surgical replacement completed",

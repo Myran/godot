@@ -142,7 +142,9 @@
       "Bash(if:*)",
       "Bash(then:*)",
       "Bash(else:*)",
-      "Bash(while read ability)"
+      "Bash(while read ability)",
+      "Bash(open:*)",
+      "Bash(col:*)"
     ],
     "deny": [],
     "ask": [],
