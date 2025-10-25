@@ -34,6 +34,9 @@ func execute() -> void:
 	# Perform active Firebase cleanup before logger shutdown
 	_perform_firebase_cleanup()
 
+	# Perform ConfigManager cleanup (moved from singleton_cleanup autoload)
+	SingletonCleanup.cleanup_config_manager()
+
 	# Wait for buffer processing completion before logger shutdown (task-236 fix)
 	# This ensures all pending log chunks are processed before we shut down the logger
 	if OS.get_name() == "Android" and Log.has_method("wait_for_chunk_processing_complete_signal"):
