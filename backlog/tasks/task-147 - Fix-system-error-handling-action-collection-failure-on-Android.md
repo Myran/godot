@@ -1,10 +1,10 @@
 ---
 id: task-147
 title: Fix system-error-handling action collection failure on Android
-status: Done
+status: Open
 assignee: []
 created_date: '2025-09-13 13:18'
-updated_date: '2025-09-15 22:35'
+updated_date: '2025-10-25 16:08'
 labels:
   - critical
   - android
@@ -12,17 +12,50 @@ labels:
   - error-handling
   - testing
   - action-collection
+  - test-framework
 dependencies: []
 priority: high
 ---
 
 ## Description
 
-**⚠️ SUPERSEDED BY TASK-150: Root cause identified as Firebase C++ SDK native crash**
+**REOPENED: Issue persists despite previous investigation**
 
-UPDATE 2025-09-15: Investigation revealed the real issue is not action collection but a Firebase C++ SDK native crash (SIGABRT in QueryInternal::GetValue). The "action collection failure" was a symptom - actions start properly but crash prevents completion. See task-150 for the actual Firebase SDK stability issue.
+**Original Context (2025-09-13)**: The `system-error-handling` test fails on Android with "Error handling actions: 0/0 passed" when it should discover multiple error handling actions using the `*.*.error_handling` wildcard pattern.
 
-**SUPERSEDED**: This task's original scope (action collection) was based on symptoms, not root cause. Task-150 addresses the Firebase native crash that prevents action completion.
+**Current Status (2025-10-25)**: After completing CardController refactoring, the issue persists. The test shows "Error handling actions: 0/0 passed" indicating that the wildcard pattern `*.*.error_handling` is not expanding correctly on Android debug coordinator.
+
+**Root Cause**: Wildcard pattern processing failure in Android debug coordinator, preventing discovery of error handling actions across systems.
+
+## Current Failure Evidence (2025-10-25)
+
+### Latest Test Results
+- **Test ID**: system-error-handling_android_1761401655
+- **Platform**: Android
+- **Failure**: "Error handling actions: 0/0 passed"
+- **Expected**: Multiple error handling actions should be discovered
+- **Actual**: Only `system.debug.replay_complete` action detected (1 action total)
+- **Pattern**: `*.*.error_handling` should match multiple actions like:
+  - `backend.firebase.error_handling`
+  - `rtdb.testing.error_handling`
+  - `cpp.firebase.error_handling`
+
+### Test Configuration Analysis
+```json
+{
+  "description": "Error handling across ALL systems - Tests resilience and error recovery",
+  "actions": [
+    {
+      "action": "*.*.error_handling",
+      "expected_result": {
+        "type": "action_result_trust",
+        "description": "Trust the action's own success/failure determination from DebugActionResult"
+      }
+    }
+  ],
+  "platforms": ["android"]
+}
+```
 
 ## Problem Analysis
 
@@ -85,5 +118,7 @@ UPDATE 2025-09-15: Investigation revealed the real issue is not action collectio
 3. **Pattern Matching Logic**: Is there Android-specific failure in wildcard pattern processing?
 4. **Cross-System Communication**: Do error handling systems communicate properly on Android?
 5. **Debug Coordinator State**: Is Android debug coordinator in proper state to process complex patterns?
+
+**Relation to CardController Refactoring**: This issue is completely unrelated to the recent CardController refactoring (completed successfully 2025-10-25). The CardController refactoring passes all tests, and this system-error-handling failure existed before the refactoring.
 
 **Priority**: High - Error handling validation critical for production Android stability and user experience quality.
