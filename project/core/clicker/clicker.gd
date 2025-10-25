@@ -14,7 +14,7 @@ var game: Game
 
 func setup(_level_controller: LevelController, game_instance: Game) -> void:
 	game = game_instance
-	await card_controller.setup()
+	await CardController.setup()
 	level = _level_controller
 	level.setup_level("default", game)
 
@@ -235,7 +235,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 			continue
 		source_units.append(card.unit_info)
 
-	var new_card: Card = await card_controller.create_unit_from_id(card_id, new_level)
+	var new_card: Card = await CardController.create_unit_from_id(card_id, new_level)
 	if not new_card or not new_card.unit_info:
 		Log.error(
 			"Failed to create new merged card",

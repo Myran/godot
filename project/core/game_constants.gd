@@ -14,6 +14,11 @@ class CardSystem:
 	const LEVEL_THREE: int = 3
 	const DEFAULT_UNIT_LEVEL: int = 1
 
+	# Card creation constants
+	const CARD_IMAGE_PREFIX: String = "card_image_"
+	const CARD_SCENE_NAME: String = "res://core/clicker/blocks/block_base_card.tscn"
+	const CARD_IMAGE_FOLDER: String = "res://assets/card_images/"
+
 
 # ================================
 # UNIT CLASSIFICATION CONSTANTS

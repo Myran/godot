@@ -597,7 +597,7 @@ static func _create_unit_from_id(card_id: String, level: int) -> Card:
 
 	# Use card controller to create unit from ID
 	if is_instance_valid(card_controller) and card_controller.has_method("create_unit_from_id"):
-		var card: Card = await card_controller.create_unit_from_id(card_id, level)
+		var card: Card = await CardController.create_unit_from_id(card_id, level)
 
 		Log.debug(
 			"Creating unit from ID - COMPLETE",

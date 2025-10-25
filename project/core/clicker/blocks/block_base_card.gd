@@ -220,7 +220,7 @@ static func _create_card_from_id(card_id: String, card_level: int) -> Card:
 			["serialization", "error"]
 		)
 		return null
-	return await card_controller.create_unit_from_id(card_id, card_level)
+	return await CardController.create_unit_from_id(card_id, card_level)
 
 
 static func _serialize_unit_data_state(unit_data: UnitData) -> Dictionary:

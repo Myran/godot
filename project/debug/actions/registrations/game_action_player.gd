@@ -382,7 +382,7 @@ static func _move_card_player(params: Dictionary = {}) -> bool:
 		assert(false, "move_card_player: card_controller not available")
 		return false
 
-	var card: Variant = await card_controller.create_unit_from_id(card_id, 1)
+	var card: Variant = await CardController.create_unit_from_id(card_id, 1)
 	if not card:
 		Log.error(
 			"Failed to create card for move",

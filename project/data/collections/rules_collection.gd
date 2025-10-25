@@ -71,6 +71,37 @@ func get_rules() -> Dictionary:
 	return result_dict
 
 
+func get_cached_rules() -> Dictionary:
+	"""Get rules from cache without await. Returns empty dict if not cached."""
+	var cache_key: String = _get_cache_key(_get_path()) + "/" + _collection_key
+
+	if _cache.has(cache_key):
+		Log.debug(
+			"Rules cache hit",
+			{"collection": _collection_name, "cache_key": cache_key},
+			[Log.TAG_DB, Log.TAG_CACHE]
+		)
+		var cached_result: Variant = _cache[cache_key]
+
+		# Convert cached result to dictionary format (same logic as get_rules)
+		var result_dict: Dictionary = {}
+		if cached_result is Array:
+			var array_result: Array = cached_result
+			if array_result.size() > 0 and array_result[0] is Dictionary:
+				result_dict = array_result[0]
+		elif cached_result is Dictionary:
+			result_dict = cached_result
+
+		return result_dict
+
+	Log.warning(
+		"Rules not found in cache - call activate_rules_cache() first",
+		{"collection": _collection_name, "cache_key": cache_key},
+		[Log.TAG_DB, Log.TAG_CACHE, Log.TAG_WARNING]
+	)
+	return {}
+
+
 func _get_stack_trace(depth: int = 2) -> Array[Dictionary]:
 	var stack: Array = get_stack()
 	var simplified_stack: Array[Dictionary] = []

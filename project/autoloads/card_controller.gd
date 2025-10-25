@@ -1,12 +1,6 @@
 class_name CardController
 extends Node
 
-const CARD_IMAGE_PREFIX: String = "card_image_"
-var card_scene_name: String = "res://core/clicker/blocks/block_base_card.tscn"
-var card_image_folder: String = "res://assets/card_images/"
-var current_level: int = 1
-var _rules: Dictionary = {}
-
 
 static func get_card_image_name(card_id: String) -> String:
 	var asset_variant_value: int = 0  # Default value
@@ -14,35 +8,40 @@ static func get_card_image_name(card_id: String) -> String:
 	if DebugManager.get("asset_variant") != null:
 		asset_variant_value = DebugManager.asset_variant
 
-	# Use constant path instead of instance variable
-	const CARD_IMAGE_FOLDER: String = "res://assets/card_images/"
-	return str(CARD_IMAGE_FOLDER, CARD_IMAGE_PREFIX, asset_variant_value, "_", card_id, ".png")
+	return str(
+		GameConstants.CardSystem.CARD_IMAGE_FOLDER,
+		GameConstants.CardSystem.CARD_IMAGE_PREFIX,
+		asset_variant_value,
+		"_",
+		card_id,
+		".png"
+	)
 
 
-func setup() -> void:
-	_rules = await data_source.rules.get_rules()
+static func setup() -> void:
 	await data_source.activate_card_cache()
+	await data_source.activate_rules_cache()
 
 
-func get_card_from_pool() -> Card:  # Returns the card scene instance
-	var new_card_id: String = await get_random_id_from_pool(current_level)
+static func get_card_from_pool(level: int = 1) -> Card:  # Returns the card scene instance
+	var new_card_id: String = await get_random_id_from_pool(level)
 	var ret_unit: Card = await create_unit_from_id(new_card_id)
 	return ret_unit
 
 
-func get_specific_card_block(card_id: String, card_level: int) -> Card:
+static func get_specific_card_block(card_id: String, card_level: int) -> Card:
 	"""Create a card with specific ID and level for gamestate restoration"""
 	var card: Card = await create_unit_from_id(card_id, card_level)
 	return card
 
 
-func get_random_id_from_pool(_level: int) -> String:
+static func get_random_id_from_pool(_level: int) -> String:
 	var sel_level: int = select_recruited_unit_level(_level)
 	var unit_id: String = await select_id_from_level(sel_level)
 	return unit_id
 
 
-func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
+static func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	# ASSERT: Input parameters must be valid
 	assert(id != null and id != "", "create_unit_from_id: Invalid card ID provided")
 	assert(unit_level > 0, "create_unit_from_id: Invalid unit level: " + str(unit_level))
@@ -68,26 +67,26 @@ func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
-	# ASSERT: Card scene name must be valid
-	assert(
-		card_scene_name != null and card_scene_name != "",
-		"create_unit_from_id: Card scene name is empty"
-	)
-
-	var card_scene: PackedScene = load(card_scene_name)
+	var card_scene: PackedScene = load(GameConstants.CardSystem.CARD_SCENE_NAME)
 	# ASSERT: Card scene must load successfully
 	assert(
 		card_scene != null,
-		"create_unit_from_id: Failed to load card scene: " + str(card_scene_name)
+		(
+			"create_unit_from_id: Failed to load card scene: "
+			+ str(GameConstants.CardSystem.CARD_SCENE_NAME)
+		)
 	)
 	assert(
 		card_scene is PackedScene,
-		"create_unit_from_id: Loaded scene is not PackedScene: " + str(card_scene_name)
+		(
+			"create_unit_from_id: Loaded scene is not PackedScene: "
+			+ str(GameConstants.CardSystem.CARD_SCENE_NAME)
+		)
 	)
 
 	Log.debug(
 		"Card scene loaded",
-		{"scene_name": card_scene_name, "scene_valid": card_scene != null},
+		{"scene_name": GameConstants.CardSystem.CARD_SCENE_NAME, "scene_valid": card_scene != null},
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
@@ -133,7 +132,7 @@ func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	return card_instanced
 
 
-func select_id_from_level(lvl: int) -> String:
+static func select_id_from_level(lvl: int) -> String:
 	var sel_lvl: int = select_recruited_unit_level(lvl)
 	var all_cards: Array[Dictionary] = await data_source.cards.get_all(true)
 	var cards_with_level: Array[Dictionary] = []
@@ -163,8 +162,11 @@ func select_id_from_level(lvl: int) -> String:
 	return picked_card_id
 
 
-func select_recruited_unit_level(recruit_lvl: int) -> int:
+static func select_recruited_unit_level(recruit_lvl: int) -> int:
 	var roll: int = (rng.seeded_rng.next() % 99) + 1
+
+	# Get drop rate rules from cache (no await needed)
+	var rules: Dictionary = data_source.rules.get_cached_rules()
 
 	var c_lvl_2_star_1: String = "50"
 	var c_lvl_2_star_2: String = "100"
@@ -172,16 +174,16 @@ func select_recruited_unit_level(recruit_lvl: int) -> int:
 	var c_lvl_3_star_2: String = "70"
 	var c_lvl_3_star_3: String = "100"
 
-	if _rules.has("chance_lvl_2_star_1"):
-		c_lvl_2_star_1 = _rules.chance_lvl_2_star_1
-	if _rules.has("chance_lvl_2_star_2"):
-		c_lvl_2_star_2 = _rules.chance_lvl_2_star_2
-	if _rules.has("chance_lvl_3_star_1"):
-		c_lvl_3_star_1 = _rules.chance_lvl_3_star_1
-	if _rules.has("chance_lvl_3_star_2"):
-		c_lvl_3_star_2 = _rules.chance_lvl_3_star_2
-	if _rules.has("chance_lvl_3_star_3"):
-		c_lvl_3_star_3 = _rules.chance_lvl_3_star_3
+	if rules.has("chance_lvl_2_star_1"):
+		c_lvl_2_star_1 = rules.chance_lvl_2_star_1
+	if rules.has("chance_lvl_2_star_2"):
+		c_lvl_2_star_2 = rules.chance_lvl_2_star_2
+	if rules.has("chance_lvl_3_star_1"):
+		c_lvl_3_star_1 = rules.chance_lvl_3_star_1
+	if rules.has("chance_lvl_3_star_2"):
+		c_lvl_3_star_2 = rules.chance_lvl_3_star_2
+	if rules.has("chance_lvl_3_star_3"):
+		c_lvl_3_star_3 = rules.chance_lvl_3_star_3
 	match recruit_lvl:
 		GameConstants.CardSystem.DEFAULT_LEVEL:
 			return GameConstants.CardSystem.DEFAULT_LEVEL

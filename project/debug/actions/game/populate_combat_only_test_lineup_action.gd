@@ -23,7 +23,7 @@ static func execute() -> bool:
 	var enemy_card_ids: Array[String] = ["2", "1", "0"]  # Axe Man (TEMPORARY), Archer, Brettonian Guard
 	for i: int in enemy_card_ids.size():
 		var card_id: String = enemy_card_ids[i]
-		var new_card: Card = await card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Card = await CardController.create_unit_from_id(card_id, 1)
 
 		if not new_card or not is_instance_valid(new_card):
 			Log.error(
@@ -40,7 +40,7 @@ static func execute() -> bool:
 	var allied_card_ids: Array[String] = ["2", "1", "0"]  # Axe Man (TEMPORARY), Archer, Brettonian Guard
 	for n: int in allied_card_ids.size():
 		var card_id: String = allied_card_ids[n]
-		var new_card: Card = await card_controller.create_unit_from_id(card_id, 1)
+		var new_card: Card = await CardController.create_unit_from_id(card_id, 1)
 
 		if not new_card or not is_instance_valid(new_card):
 			Log.error(

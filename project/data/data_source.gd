@@ -205,6 +205,28 @@ func activate_card_cache() -> void:
 	)
 
 
+func activate_rules_cache() -> void:
+	Log.info(
+		"Activating rules cache", {"instance_id": get_instance_id()}, [Log.TAG_CACHE, Log.TAG_DB]
+	)
+
+	var request_start_time: int = Time.get_ticks_msec()
+	@warning_ignore("redundant_await")
+	var rules_data: Dictionary = await rules.get_rules()
+	var request_duration: int = Time.get_ticks_msec() - request_start_time
+
+	Log.info(
+		"Rules cache activated",
+		{
+			"rule_count": rules_data.size(),
+			"duration_ms": request_duration,
+			"data_source": "firebase" if is_firebase_available() else "local",
+			"instance_id": get_instance_id()
+		},
+		[Log.TAG_CACHE, Log.TAG_DB]
+	)
+
+
 func setup_player_data() -> bool:
 	Log.info("Setting up player data", {"instance_id": get_instance_id()}, [Log.TAG_DB])
 

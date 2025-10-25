@@ -531,7 +531,7 @@ static func _restore_lineup_positions(
 				{"card_id": card_id, "level": level, "position": position},
 				[Log.TAG_DEBUG, "gamestate", "lineup"]
 			)
-			card = await card_controller.create_unit_from_id(card_id, level)
+			card = await CardController.create_unit_from_id(card_id, level)
 
 		if not card:
 			Log.error(

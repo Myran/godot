@@ -24,6 +24,7 @@ signal initialization_complete
 @export var battle_handler: BattleHandler
 
 var ui_state: core.UIState = core.UIState.INITIALIZING
+var current_card_level: int = 1  # Progression level for randomly generated cards
 var _idle_action_queue: Array[Dictionary] = []
 var _processing_idle_action: bool = false
 var _queue_continuation_requested: bool = false
