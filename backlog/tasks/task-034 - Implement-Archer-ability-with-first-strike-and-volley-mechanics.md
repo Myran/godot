@@ -11,8 +11,9 @@ labels:
   - multi-target
 dependencies:
   - task-032
-  - task-040
 priority: low
+
+**Updated 2025-10-26**: Removed task-040 dependency (archived performance optimization) since event filtering system is already implemented and functional.
 ---
 
 ## Description

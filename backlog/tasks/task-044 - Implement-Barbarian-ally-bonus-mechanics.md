@@ -4,20 +4,30 @@ title: Implement Barbarian ally bonus mechanics
 status: To Do
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-08-12 13:58'
+updated_date: '2025-10-26 14:30'
 labels:
   - abilities
   - barbarian
   - ally-bonuses
 dependencies:
   - task-034
-  - task-040
 priority: high
 ---
 
 ## Description
 
 Implement the Barbarian ally bonus mechanics using the revolutionary three-class architecture demonstrating cross-unit state management through the AbilityHelper.grant_ally_bonuses() pattern. This ability validates the architecture's power to handle complex multi-unit interactions and area detection through BattleRules delegation while achieving dramatic code simplification from traditional 15+ line implementations to single helper calls.
+
+**Phase 1 Analysis Complete (2025-10-26)**:
+- ✅ Dependencies resolved (task-040 removed - unnecessary performance optimization)
+- ✅ Architecture ready (BattleRules, AbilityHelper, BattleAbilityEvent all functional)
+- ✅ Event system validated (DeathEvent, StatChangeEvent available)
+- ✅ Implementation ready when needed
+
+Unit Details:
+- **Card ID**: 3
+- **Ability String**: "cleave:1"
+- **Requirements**: Death-triggered ally bonuses, +1/+1 to all allies when enemies die
 ## Acceptance Criteria
 
 - [ ] Ally bonus system uses AbilityHelper.grant_ally_bonuses(unit 1 1) for +1/+1 bonuses to all allies

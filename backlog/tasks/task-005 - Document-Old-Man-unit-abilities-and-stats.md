@@ -13,14 +13,16 @@ dependencies: []
 
 ## Description
 
-Document and validate the Old Man unit (ID: 2) with Shield and Merge Bonus abilities providing defensive capabilities and growth through merging
+Document and validate the Old Man unit (ID: 11) with upgrade bonus ability providing defensive capabilities and growth through upgrades
+
+**Updated 2025-10-26**: Corrected unit ID from 2 to 11 based on current game data. Old Man has "onanyupgrade:bonus;1;1" ability, not shield/merge abilities as originally documented.
 
 ## Acceptance Criteria
 
-- [ ] Old Man unit has correct base stats (1/1, villager tribe)
-- [ ] Shield ability activates on battle start and recruitment
-- [ ] Merge Bonus ability grants +1/+1 when merged
-- [ ] Implementation for abilities_oldman.gd is accurate
+- [ ] Old Man unit has correct base stats (3/5, no tribe)
+- [ ] Upgrade bonus ability grants +1/+1 when ANY unit upgrades
+- [ ] Starts combat with shield (per description)
+- [ ] Implementation matches onanyupgrade:bonus;1;1 ability string
 
 ## Implementation Plan
 

@@ -13,14 +13,16 @@ dependencies: []
 
 ## Description
 
-Document and validate the Wizard unit (ID: 10) with Zap ability that instantly kills enemy units based on wizard level
+Document and validate the Wizard unit (ID: 16) with Zap ability that attacks one enemy per level instead of normal attack
+
+**Updated 2025-10-26**: Corrected unit ID from 10 to 16 based on current game data. Wizard has "alternateattack:zap;1" ability for multi-target damage.
 
 ## Acceptance Criteria
 
-- [ ] Wizard unit has correct base stats (2/6, magic tribe)
-- [ ] Zap ability instantly kills random enemies
-- [ ] Number of zaps equals wizard level
-- [ ] Implementation for abilities_wizard.gd and battle mechanics is accurate
+- [ ] Wizard unit has correct base stats (2/6, no tribe)
+- [ ] Zap ability attacks one enemy per level instead of normal attack
+- [ ] Each zap deals 2 damage (matches ability string "alternateattack:zap;1")
+- [ ] Implementation matches alternateattack:zap;1 ability string
 
 ## Implementation Plan
 
