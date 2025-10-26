@@ -5,16 +5,37 @@
 android-logs-errors DURATION="30":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     echo "🔥 Monitoring Android device errors for {{DURATION}} seconds..."
     echo "📱 Device: {{ANDROID_DEVICE_ID}}"
     echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
     echo "💡 Press Ctrl+C to stop early"
     echo ""
-    
+
+    # 🚨 CRITICAL: Check buffer health before monitoring
+    echo "📊 Checking buffer health before error monitoring..."
+    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+
+    # Provide buffer awareness context
+    if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
+        echo "⚠️  🚨 BUFFER CRITICAL - Error monitoring may be incomplete!"
+        echo "   💡 Historical errors may have been overwritten"
+        echo "   🎯 Cross-validate with: just android-logs-cross-validate \"ERROR\""
+        echo "   📁 Check saved logs: find logs/ -name \"*.log\" -exec grep \"ERROR\" {} +"
+        echo ""
+    elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
+        echo "⚠️  Buffer usage is high - some historical errors may be lost"
+        echo "   💡 Consider cross-validation for complete error history"
+        echo ""
+    else
+        echo "✅ Buffer health is good - error monitoring is reliable"
+        echo ""
+    fi
+
     # Clear existing logs for clean monitoring
+    echo "🧹 Clearing logs for clean error monitoring..."
     adb -s {{ANDROID_DEVICE_ID}} logcat -c
-    
+
     # Monitor errors with timeout and app filtering
     timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat \
         --pid=$(adb -s {{ANDROID_DEVICE_ID}} shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0") \
@@ -26,14 +47,34 @@ android-logs-errors DURATION="30":
 android-logs-live DURATION="60" LEVEL="*:I" LINES="50":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     echo "📱 Live Android device logs for {{DURATION}} seconds..."
     echo "📱 Device: {{ANDROID_DEVICE_ID}}"
     echo "📦 Package: {{ANDROID_PACKAGE_NAME}}"
     echo "📊 Level: {{LEVEL}}"
     echo "💡 Press Ctrl+C to stop early"
     echo ""
-    
+
+    # 🚨 CRITICAL: Check buffer health before live monitoring
+    echo "📊 Checking buffer health before live monitoring..."
+    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+
+    # Provide buffer awareness context for live monitoring
+    if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
+        echo "⚠️  🚨 BUFFER CRITICAL - Live monitoring may miss historical context!"
+        echo "   💡 Recent buffer overwrite may have occurred"
+        echo "   🎯 For complete investigation: just android-logs-cross-validate \"search_term\""
+        echo "   📁 Historical logs: find logs/ -name \"*.log\" -exec grep \"pattern\" {} +"
+        echo ""
+    elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
+        echo "⚠️  Buffer usage is high - live monitoring shows recent entries only"
+        echo "   💡 Some historical context may be missing"
+        echo ""
+    else
+        echo "✅ Buffer health is good - live monitoring is comprehensive"
+        echo ""
+    fi
+
     # Monitor live logs with app filtering + token-efficient filtering
     timeout {{DURATION}} adb -s {{ANDROID_DEVICE_ID}} logcat \
         --pid=$(adb -s {{ANDROID_DEVICE_ID}} shell pidof {{ANDROID_PACKAGE_NAME}} || echo "0") \
@@ -443,35 +484,82 @@ android-latest-test-id:
 android-logs-search SEARCH_TERM LINES="100":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     echo "🔍 Searching Android logs for: {{SEARCH_TERM}}"
     echo "📱 Device: {{ANDROID_DEVICE_ID}}"
     echo "📊 Lines to search: {{LINES}}"
     echo ""
-    
+
     # Check device connectivity
     if ! adb -s {{ANDROID_DEVICE_ID}} shell echo "connected" >/dev/null 2>&1; then
         echo "❌ Device {{ANDROID_DEVICE_ID}} not connected"
         echo "💡 Run 'adb devices' to check connected devices"
         exit 1
     fi
-    
+
+    # 🚨 CRITICAL: Analyze log buffer state before searching
+    echo "📊 Analyzing log buffer state..."
+
+    # Get buffer statistics for all relevant buffers
+    MAIN_BUFFER_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b main -d 2>/dev/null | wc -l || echo "0")
+    SYSTEM_BUFFER_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b system -d 2>/dev/null | wc -l || echo "0")
+    EVENTS_BUFFER_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b events -d 2>/dev/null | wc -l || echo "0")
+    RADIO_BUFFER_COUNT=$(adb -s {{ANDROID_DEVICE_ID}} logcat -b radio -d 2>/dev/null | wc -l || echo "0")
+    TOTAL_BUFFER_COUNT=$((MAIN_BUFFER_COUNT + SYSTEM_BUFFER_COUNT + EVENTS_BUFFER_COUNT + RADIO_BUFFER_COUNT))
+
+    echo "   📱 Main buffer: $MAIN_BUFFER_COUNT lines"
+    echo "   ⚙️  System buffer: $SYSTEM_BUFFER_COUNT lines"
+    echo "   📡 Events buffer: $EVENTS_BUFFER_COUNT lines"
+    echo "   📻 Radio buffer: $RADIO_BUFFER_COUNT lines"
+    echo "   📊 Total buffer: $TOTAL_BUFFER_COUNT lines"
+    echo ""
+
+    # 🚨 BUFFER SATURATION WARNINGS
+    BUFFER_WARNING_THRESHOLD=50000  # Android logcat typical buffer size
+    if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+        echo "⚠️  🚨 CRITICAL BUFFER SATURATION DETECTED!"
+        echo "   💡 Log buffer is >90% full (est. $((TOTAL_BUFFER_COUNT * 100 / BUFFER_WARNING_THRESHOLD))%)"
+        echo "   🔥 Older entries may be overwritten by new logs"
+        echo "   📝 Recent test runs may have overwritten historical data"
+        echo ""
+        echo "🎯 RECOMMENDED ACTIONS:"
+        echo "   ✅ Use historical log files: find logs/ -name \"*.log\" -exec grep -l \"{{SEARCH_TERM}}\" {} \\;"
+        echo "   ✅ Cross-reference with test results: just logs-last | grep \"{{SEARCH_TERM}}\""
+        echo "   ✅ Check saved Android logs: ls \"\$ANDROID_LOGS_DIR\" | head -5"
+        echo ""
+    elif [ "$TOTAL_BUFFER_COUNT" -gt 30000 ]; then
+        echo "⚠️  Buffer usage is high (est. $((TOTAL_BUFFER_COUNT * 100 / BUFFER_WARNING_THRESHOLD))%)"
+        echo "   💡 Some historical entries may have been overwritten"
+        echo ""
+    fi
+
     # Search buffered logs (most recent entries)
     echo "🔍 Searching recent buffered logs..."
     RECENT_RESULTS=$(adb -s {{ANDROID_DEVICE_ID}} logcat -t {{LINES}} | rg "{{SEARCH_TERM}}" -i || echo "")
-    
+
     if [[ -n "$RECENT_RESULTS" ]]; then
         echo "✅ Found matches in recent logs:"
         echo ""
         echo "$RECENT_RESULTS"
         echo ""
-        echo "📊 Total matches: $(echo "$RECENT_RESULTS" | wc -l)"
+        RECENT_COUNT=$(echo "$RECENT_RESULTS" | wc -l)
+        echo "📊 Recent matches: $RECENT_COUNT"
+
+        # 🚨 SUGGEST HISTORICAL CROSS-VALIDATION if buffer is saturated
+        if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+            echo ""
+            echo "⚠️  BUFFER SATURATION WARNING: Results may be incomplete!"
+            echo "   🔥 High buffer usage suggests older entries were overwritten"
+            echo "   💡 Cross-validate with historical logs for complete picture:"
+            echo "      just logs-last | grep \"{{SEARCH_TERM}}\""
+            echo "      find logs/ -name \"*.log\" -exec grep -l \"{{SEARCH_TERM}}\" {} \\;"
+        fi
     else
         echo "❌ No matches found in recent {{LINES}} log entries"
         echo ""
         echo "🔍 Searching all buffered logs (may take longer)..."
         ALL_RESULTS=$(adb -s {{ANDROID_DEVICE_ID}} logcat -d | rg "{{SEARCH_TERM}}" -i || echo "")
-        
+
         if [[ -n "$ALL_RESULTS" ]]; then
             echo "✅ Found matches in full log buffer:"
             echo ""
@@ -485,9 +573,23 @@ android-logs-search SEARCH_TERM LINES="100":
         else
             echo "❌ No matches found in any buffered logs"
             echo ""
-            echo "💡 Try:"
-            echo "   - Check if the term appears in live logs: just android-logs-search \"{{SEARCH_TERM}}\" (while app is running)"
-            echo "   - Verify spelling and capitalization"
-            echo "   - Run app/test to generate fresh logs"
+
+            # 🚨 ENHANCED TROUBLESHOOTING WITH BUFFER CONTEXT
+            if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+                echo "🚨 LIKELY CAUSE: Log buffer saturation has overwritten relevant entries"
+                echo "   💡 High buffer usage ($TOTAL_BUFFER_COUNT lines) suggests historical data loss"
+                echo ""
+                echo "🎯 IMMEDIATE ACTIONS:"
+                echo "   1️⃣  Search historical log files: find logs/ -name \"*.log\" -exec grep -l \"{{SEARCH_TERM}}\" {} \\;"
+                echo "   2️⃣  Check recent test results: just logs-last"
+                echo "   3️⃣  Clear buffer and re-run test: just android-logs-clear"
+                echo "   4️⃣  Use live monitoring during app execution: just android-logs-live 30 \"*:I\" 50"
+            else
+                echo "💡 Try:"
+                echo "   - Check if the term appears in live logs: just android-logs-search \"{{SEARCH_TERM}}\" (while app is running)"
+                echo "   - Verify spelling and capitalization"
+                echo "   - Run app/test to generate fresh logs"
+                echo "   - Search historical logs: find logs/ -name \"*.log\" -exec grep -l \"{{SEARCH_TERM}}\" {} \\;"
+            fi
         fi
     fi

@@ -1693,7 +1693,34 @@ _post-test-validation test_id platform config_name="unknown" session="" config_p
         echo "💡 This indicates issues that need to be addressed"
         exit 1
     fi
-    
+
+    # 🚨 Buffer-aware cross-validation suggestions for Android tests
+    if [ "$PLATFORM" = "android" ]; then
+        echo ""
+        echo "🔍 Running Post-Test Buffer Cross-Validation Check..."
+        echo "=================================================="
+
+        # Check if buffer health was previously critical
+        if echo "${BUFFER_HEALTH_OUTPUT:-}" | grep -q "CRITICAL"; then
+            echo "⚠️  PRE-TEST BUFFER WAS CRITICAL - Enhanced validation recommended:"
+            echo "   💡 Live buffer data may be incomplete due to saturation"
+            echo "   🎯 Cross-validate findings with saved Android logs:"
+            echo "      just android-logs-cross-validate \"search_term\""
+            echo "   📁 Check complete Android logs in:"
+            echo "      $ANDROID_LOG_FILE"
+            echo "   🔍 Use historical logs for reliable investigation:"
+            echo "      find logs/ -name \"*.log\" -exec grep \"pattern\" {} +"
+        elif echo "${BUFFER_HEALTH_OUTPUT:-}" | grep -q "CAUTION"; then
+            echo "⚠️  PRE-TEST BUFFER USAGE WAS HIGH - Consider cross-validation:"
+            echo "   💡 Some historical data may have been lost"
+            echo "   🎯 Verify critical findings across multiple sources"
+            echo "   📁 Cross-reference with: $ANDROID_LOG_FILE"
+        else
+            echo "✅ Buffer health was good - test results are reliable"
+            echo "   💡 Still consider cross-validation for critical findings"
+        fi
+    fi
+
     echo ""
     echo "✅ Test validation complete - no issues found"
 
@@ -2668,6 +2695,29 @@ _execute-test-android config_name:
     # Clear logcat buffer for clean monitoring
     echo "🧹 Clearing Android logcat buffer for clean test monitoring..."
     just android-logs-clear-lightweight
+
+    # 🚨 CRITICAL: Check buffer health to detect saturation issues
+    echo "📊 Checking buffer health to prevent misdiagnosis..."
+    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+
+    # Extract buffer status from health check
+    if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
+        echo "⚠️  🚨 CRITICAL: Buffer saturation detected before test!"
+        echo "   💡 Historical data may have been overwritten"
+        echo "   🎯 Test results will be cross-validated with saved logs"
+        echo "   📝 Buffer status documented in test metadata"
+
+        # Add buffer warning to test metadata if possible
+        if [ -n "${TEST_ID:-}" ]; then
+            echo "   📋 Buffer warning added to test metadata for: $TEST_ID"
+        fi
+    elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
+        echo "⚠️  Buffer usage is high - cross-validation recommended"
+        echo "   💡 Some historical entries may have been overwritten"
+        echo "   🎯 Test results will be verified against saved logs"
+    else
+        echo "✅ Buffer health is good - normal test monitoring"
+    fi
     
     # Set up cleanup trap for guaranteed resource cleanup
     _cleanup_android_test() {

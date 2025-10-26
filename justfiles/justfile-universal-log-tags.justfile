@@ -6,12 +6,33 @@
 logs-android TEST_ID *TAGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    
+
+    # 🚨 CRITICAL: Add buffer awareness for Android log analysis
+    echo "🔍 Analyzing Android logs with buffer awareness..."
+    echo "==============================================="
+
+    # Check current buffer health to provide context
+    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+
+    if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
+        echo "⚠️  🚨 CURRENT BUFFER IS CRITICAL - Live data unreliable!"
+        echo "   💡 These saved logs are MORE RELIABLE than current live buffer"
+        echo "   🎯 Trust this analysis over live android-logs-search results"
+        echo ""
+    elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
+        echo "⚠️  Current buffer usage is high"
+        echo "   💡 These saved logs provide reliable historical data"
+        echo ""
+    else
+        echo "✅ Current buffer is healthy - live and saved data both reliable"
+        echo ""
+    fi
+
     LOG_CONTENT=$(just _find-android-log-with-test-id "$TEST_ID")
-    
+
     echo "📋 Android Logs for Test: $TEST_ID"
     
     if [ -n "$TAGS" ]; then
@@ -74,12 +95,35 @@ logs-desktop TEST_ID *TAGS:
 logs-android-errors TEST_ID *TAGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    
+
+    # 🚨 CRITICAL: Buffer-aware error analysis for Android
+    echo "🚨 Android Error Analysis with Buffer Context"
+    echo "============================================="
+
+    # Check current buffer health to provide reliability context
+    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+
+    if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
+        echo "⚠️  🚨 LIVE BUFFER CRITICAL - This saved log analysis is ESSENTIAL!"
+        echo "   💡 Current android-logs-search would miss critical errors"
+        echo "   🎯 Trust this analysis - it contains the complete error record"
+        echo "   📁 These errors are reliably captured from test execution"
+        echo ""
+    elif echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CAUTION"; then
+        echo "⚠️  Current buffer usage is high"
+        echo "   💡 This saved log analysis is more reliable than live buffer"
+        echo "   🎯 Cross-validation with live buffer recommended for critical issues"
+        echo ""
+    else
+        echo "✅ Buffer is healthy - live and saved error analysis both reliable"
+        echo ""
+    fi
+
     LOG_CONTENT=$(just _find-android-log-with-test-id "$TEST_ID")
-    
+
     echo "🚨 Android Errors and Failures:"
     echo "==============================="
     

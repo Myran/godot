@@ -30,6 +30,7 @@ import "justfiles/justfile-config.justfile"
 import "justfiles/justfile-logs.justfile"
 import "justfiles/justfile-build-utils.justfile"
 import "justfiles/justfile-android-device-logs.justfile"
+import "justfiles/justfile-log-cross-validation.justfile"
 # Wildcard help is now integrated in justfile-wildcard-commands.justfile
 
 # Import validation-enhanced-testing LAST to override existing test commands

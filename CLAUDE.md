@@ -536,6 +536,183 @@ Before implementing any complex fix, ask:
 - Performance issues: `just test-android '*.*.performance'`
 - **Fastbuild validation**: `just android-logs-search "FASTBUILD_VALIDATION_TEST"`
 
+## 🚨 CRITICAL: Android Log Buffer Limitations
+
+### **Understanding the Root Cause of Misdiagnosis**
+
+**Android logcat uses circular buffers** that automatically overwrite older entries when full. This creates a **fundamental limitation** that can cause serious misdiagnosis during investigations.
+
+### **🚨 The Buffer Saturation Problem**
+
+**What Happens:**
+1. **Circular Overwrite**: Android maintains separate buffers (main, system, events, radio) with limited size (~50KB each)
+2. **FIFO Behavior**: New log entries overwrite the oldest entries when buffers are full
+3. **Silent Data Loss**: No warnings when historical data is overwritten
+4. **Cross-Test Contamination**: High-volume testing can overwrite logs from previous test runs
+
+**Real-World Impact (from Task-242):**
+- **Investigation**: Firebase RTDB performance analysis showed only 2/16 successful operations
+- **Reality**: 14/16 operations were actually successful (proven by historical log analysis)
+- **Root Cause**: Log buffer overwrote 12 success entries with newer test data
+- **Cost**: 4-6 hours wasted investigating non-existent regression
+
+### **📊 Buffer Saturation Detection**
+
+**Enhanced Tooling Protection:**
+```bash
+# NEW: Buffer-aware search with saturation warnings
+just android-logs-search "search_term"
+# Now shows buffer usage and cross-validation suggestions
+```
+
+**Buffer Status Indicators:**
+- **🟢 Safe**: <30,000 total lines (≤60% buffer usage)
+- **🟡 Caution**: 30,000-50,000 lines (60-90% buffer usage)
+- **🔴 Critical**: >50,000 lines (>90% buffer usage)
+
+**Critical Warning Signs:**
+```
+⚠️  🚨 CRITICAL BUFFER SATURATION DETECTED!
+   💡 Log buffer is >90% full
+   🔥 Older entries may be overwritten by new logs
+   📝 Recent test runs may have overwritten historical data
+```
+
+### **🎯 Buffer-Safe Investigation Methodology**
+
+#### **Phase 1: Buffer Assessment**
+```bash
+# Step 1: Always check buffer status first
+just android-logs-search "your_search_term"
+# Look for saturation warnings in the output
+```
+
+#### **Phase 2: Cross-Validation Strategy**
+```bash
+# If buffer saturation detected:
+# 1. Search historical log files (most reliable)
+find logs/ -name "*.log" -exec grep -l "your_search_term" {} \;
+
+# 2. Cross-reference with test results
+just logs-last | grep "your_search_term"
+
+# 3. Check saved Android logs in app userdata
+ls "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/" | head -5
+```
+
+#### **Phase 3: Fresh Data Collection**
+```bash
+# If historical search fails:
+# 1. Clear buffer for clean investigation
+just android-logs-clear
+
+# 2. Re-run test with fresh buffer
+just test-android-target CONFIG
+
+# 3. Use live monitoring during execution
+just android-logs-live 30 "*:I" 50
+```
+
+### **🔄 Decision Tree: Buffer vs Historical Logs**
+
+```
+🔍 Start Investigation
+    ↓
+📊 Check Buffer Status (android-logs-search)
+    ↓
+🟢 Buffer Safe (<60%) → 📱 Use Live Buffer Tools
+    ├── just android-logs-search "term"
+    ├── just logs-errors TEST_ID
+    └── Standard investigation workflow
+    ↓
+🟡 Buffer Caution (60-90%) → ⚠️ Cross-Validate Required
+    ├── Use live buffer + historical logs
+    ├── Verify findings across sources
+    └── Document potential data loss
+    ↓
+🔴 Buffer Critical (>90%) → 🚨 Live Buffer Unreliable
+    ├── ❌ AVOID: android-logs-search for critical data
+    ├── ✅ USE: Historical log files only
+    ├── ✅ USE: Test result files (just logs-*)
+    └── 🔄 Clear buffer + re-run test if needed
+```
+
+### **💡 Prevention Strategies**
+
+#### **Before High-Volume Testing:**
+```bash
+# Clear buffers to prevent cross-test contamination
+just android-logs-clear
+
+# Use log-run-silent to save complete output
+just log-run-silent test-android CONFIG
+```
+
+#### **During Investigation:**
+```bash
+# Always cross-validate findings
+# 1. Live buffer search (if safe)
+just android-logs-search "critical_error"
+
+# 2. Historical log verification
+find logs/ -name "*.log" -exec grep -l "critical_error" {} \;
+
+# 3. Test result confirmation
+just logs-errors TEST_ID
+```
+
+#### **After Critical Discoveries:**
+```bash
+# Document findings in multiple sources
+# 1. Save specific logs for reference
+adb logcat -d | rg "critical_pattern" > investigation_backup.log
+
+# 2. Create task with evidence
+backlog tasks create "Fix critical_issue"
+# Include log file references and cross-validation results
+```
+
+### **🚨 Red Flags That Signal Buffer Issues**
+
+**Immediate Buffer Investigation Required When:**
+- **Expected logs are missing** from recent searches
+- **Test results show fewer entries** than expected
+- **Historical patterns suddenly disappear**
+- **Performance data looks unusually poor**
+- **Error counts don't match test expectations**
+
+**Response Protocol:**
+1. **Stop current investigation** - findings may be misleading
+2. **Check buffer saturation** using enhanced `android-logs-search`
+3. **Switch to historical sources** if buffer is critical
+4. **Document buffer state** in investigation notes
+5. **Consider re-running tests** with cleared buffer
+
+### **📚 Quick Reference Commands**
+
+**Buffer Status & Health:**
+```bash
+just android-logs-search "test"          # Shows buffer status + warnings
+just android-logs-status                  # Device & app connection info
+just android-logs-clear                   # Clear all buffers safely
+```
+
+**Historical Log Access:**
+```bash
+find logs/ -name "*.log" -exec grep -l "pattern" {} \;    # Search all saved logs
+just logs-last                            # Most recent test results
+just logs-errors TEST_ID                  # Focused error analysis
+```
+
+**Live Monitoring (when buffer safe):**
+```bash
+just android-logs-live 30 "*:I" 50       # 30s live monitoring
+just android-logs-errors 30              # 30s error monitoring
+just android-logs-tagged "firebase" 30 50 # Tag-specific monitoring
+```
+
+**🎯 Golden Rule: When in doubt, cross-validate with historical logs. Live buffer data may be incomplete due to saturation.**
+
 ## 📋 Android Device Logs
 
 **Live device monitoring:**
