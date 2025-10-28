@@ -926,7 +926,7 @@ func _add_category_item_to_list(category_name: String, index: int) -> void:
 
 func _start_test_mode_monitoring() -> void:
 	var timer: Timer = Timer.new()
-	timer.wait_time = 0.5
+	timer.wait_time = GameConstants.UIConstants.DEBUG_TIMER_WAIT_TIME
 	timer.timeout.connect(_check_test_mode_status)
 	timer.autostart = true
 	add_child(timer)

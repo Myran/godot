@@ -52,7 +52,12 @@ func execute() -> void:
 	if OS.get_name() == "Android":
 		# Wait 3 seconds for Android logcat buffer to flush to system AND chunking to complete
 		# This ensures all previous Log.info() messages and their chunked DEBUG_TEST_SUCCESS entries reach logcat
-		await Engine.get_main_loop().create_timer(3.0).timeout
+		await (
+			Engine
+			. get_main_loop()
+			. create_timer(GameConstants.NetworkTiming.ANDROID_LOGCAT_FLUSH_DELAY_SEC)
+			. timeout
+		)
 
 		# NOW emit the final marker - after all chunking has completed and logcat buffer is stable
 		print_rich("[DEBUG_TEST_FLUSH_COMPLETE]")

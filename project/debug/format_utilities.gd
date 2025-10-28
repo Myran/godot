@@ -3,7 +3,9 @@ extends RefCounted
 
 
 static func pretty_print_value_no_truncation(
-	value: Variant, indent_level: int = 0, max_depth: int = 10
+	value: Variant,
+	indent_level: int = 0,
+	max_depth: int = GameConstants.DebugLimits.MAX_NESTING_DEPTH
 ) -> String:
 	if indent_level > max_depth:
 		return "[color=%s]<maximum depth reached>[/color]" % DebugUIConstants.UI_COLORS.warning
@@ -29,7 +31,9 @@ static func pretty_print_value_no_truncation(
 
 
 static func format_dictionary_no_truncation(
-	dict: Dictionary, indent_level: int = 0, max_depth: int = 10
+	dict: Dictionary,
+	indent_level: int = 0,
+	max_depth: int = GameConstants.DebugLimits.MAX_NESTING_DEPTH
 ) -> String:
 	if dict.is_empty():
 		return "[color=%s]{ }[/color]" % DebugUIConstants.UI_COLORS.muted
@@ -37,8 +41,12 @@ static func format_dictionary_no_truncation(
 	if indent_level > max_depth:
 		return "[color=%s]{ <max depth> }[/color]" % DebugUIConstants.UI_COLORS.warning
 
-	var indent: String = "  ".repeat(indent_level)
-	var child_indent: String = "  ".repeat(indent_level + 1)
+	var indent: String = " ".repeat(GameConstants.UIConstants.INDENTATION_SPACES).repeat(
+		indent_level
+	)
+	var child_indent: String = " ".repeat(GameConstants.UIConstants.INDENTATION_SPACES).repeat(
+		indent_level + 1
+	)
 	var result: String = "[color=%s]{[/color]\n" % DebugUIConstants.UI_COLORS.text_secondary
 
 	var keys: Array = dict.keys()
@@ -69,7 +77,9 @@ static func format_dictionary_no_truncation(
 
 
 static func format_array_no_truncation(
-	array: Array, indent_level: int = 0, max_depth: int = 10
+	array: Array,
+	indent_level: int = 0,
+	max_depth: int = GameConstants.DebugLimits.MAX_NESTING_DEPTH
 ) -> String:
 	if array.is_empty():
 		return "[color=%s][ ][/color]" % DebugUIConstants.UI_COLORS.muted
@@ -77,7 +87,7 @@ static func format_array_no_truncation(
 	if indent_level > max_depth:
 		return "[color=%s][ <max depth> ][/color]" % DebugUIConstants.UI_COLORS.warning
 
-	if array.size() <= 5 and indent_level > 0:
+	if array.size() <= GameConstants.UIConstants.ARRAY_INLINE_THRESHOLD and indent_level > 0:
 		var all_simple: bool = true
 		for item: Variant in array:
 			if item is Dictionary or item is Array:
@@ -97,8 +107,12 @@ static func format_array_no_truncation(
 				]
 			)
 
-	var indent: String = "  ".repeat(indent_level)
-	var child_indent: String = "  ".repeat(indent_level + 1)
+	var indent: String = " ".repeat(GameConstants.UIConstants.INDENTATION_SPACES).repeat(
+		indent_level
+	)
+	var child_indent: String = " ".repeat(GameConstants.UIConstants.INDENTATION_SPACES).repeat(
+		indent_level + 1
+	)
 	var result: String = "[color=%s][[/color]\n" % DebugUIConstants.UI_COLORS.text_secondary
 
 	for i: int in range(array.size()):
@@ -148,6 +162,6 @@ static func extract_concise_error(payload: Variant) -> String:
 		return "Not found"
 	if payload_str.contains("Firebase"):
 		return "Firebase error"
-	if payload_str.length() > 50:
-		return payload_str.substr(0, 50) + "..."
+	if payload_str.length() > GameConstants.DebugLimits.STRING_TRUNCATE_LENGTH:
+		return payload_str.substr(0, GameConstants.DebugLimits.STRING_TRUNCATE_LENGTH) + "..."
 	return payload_str

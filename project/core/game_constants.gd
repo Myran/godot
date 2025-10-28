@@ -1,5 +1,4 @@
-class_name GameConstants
-extends RefCounted
+extends Node
 
 # ================================
 # CARD SYSTEM CONSTANTS
@@ -174,3 +173,90 @@ class SystemLimits:
 	const SESSION_ID_RANDOM_LIMIT: int = 10000
 	const WEBSOCKET_RANDOM_ID_RANGE: int = 1073741824  # 1 << 30
 	const SPACE_TO_TAB_DIVISOR: int = 4
+
+
+# ================================
+# NETWORK TIMING CONSTANTS
+# ================================
+
+
+class NetworkTiming:
+	const DEFAULT_TIMEOUT_SEC: float = 10.0
+	const FIREBASE_TIMEOUT_SEC: float = 45.0
+	const INTERNET_CHECK_TIMEOUT_SEC: float = 7.0
+	const CHUNK_PROCESSING_TIMEOUT_SEC: float = 2.0
+	const LOGGER_SHUTDOWN_TIMEOUT_SEC: float = 2.0
+	const ANDROID_LOGCAT_FLUSH_DELAY_SEC: float = 3.0
+	const BATTLE_SEQUENCE_DELAY_SEC: float = 1.25
+
+
+# ================================
+# DEBUG AND TESTING LIMITS
+# ================================
+
+
+class DebugLimits:
+	const DEFAULT_OPERATION_TIMEOUT_MS: int = 5000
+	const PERFORMANCE_TARGET_MS: int = 5000
+	const MAX_NESTING_DEPTH: int = 10
+	const MAX_KEYS_DISPLAY: int = 5
+	const MAX_KEYS_EXTENDED: int = 10
+	const MIN_TEST_PATH_LENGTH: int = 3
+	const STRING_TRUNCATE_LENGTH: int = 50
+	const COMMIT_HASH_DISPLAY_LENGTH: int = 8
+
+
+# ================================
+# UI AND INTERFACE CONSTANTS
+# ================================
+
+
+class UIConstants:
+	const DEBUG_TIMER_WAIT_TIME: float = 0.5
+	const INDENTATION_SPACES: int = 2
+	const ARRAY_INLINE_THRESHOLD: int = 5
+	const SUCCESS_RATE_HIGH_THRESHOLD: float = 80.0
+	const SUCCESS_RATE_MEDIUM_THRESHOLD: float = 50.0
+	const DASHBOARD_SEPARATOR_LENGTH: int = 30
+	const SUMMARY_SEPARATOR_LENGTH: int = 40
+	const PANEL_PADDING_ADDITION: int = 20
+	const PANEL_MINIMUM_HEIGHT: int = 30
+
+
+# ================================
+# CARD CREATION CONSTANTS
+# ================================
+
+
+class CardCreation:
+	const PERCENTAGE_BASE: int = 99
+	const PERCENTAGE_OFFSET: int = 1
+	const LEVEL_2_STAR_1_THRESHOLD: String = "50"
+	const LEVEL_2_STAR_2_THRESHOLD: String = "100"
+	const LEVEL_3_STAR_1_THRESHOLD: String = "30"
+	const LEVEL_3_STAR_2_THRESHOLD: String = "70"
+	const LEVEL_3_STAR_3_THRESHOLD: String = "100"
+
+
+# ================================
+# RATE LIMITING AND PERFORMANCE
+# ================================
+
+
+class RateLimiting:
+	const BASE_DELAY_MULTIPLIER: int = 2
+	const PENDING_REQUEST_DELAY_MS: int = 20
+	const FAILURE_PENALTY_DELAY_MS: int = 50
+	const ADAPTIVE_DELAY_MULTIPLIER: float = 1.5
+	const WEBSOCKET_HANDSHAKE_TIMEOUT_MS: int = 3000
+
+
+# ================================
+# STATE EXTRACTION AND PRECISION
+# ================================
+
+
+class StateExtraction:
+	const FLOAT_PRECISION_PLACES: int = 6
+	const NORMALIZATION_FACTOR: float = 0.000001
+	const VERSION_STRING: String = "1.0.0"

@@ -18,7 +18,11 @@ static func validate_firebase_result(result: Variant, context: String) -> bool:
 
 
 # Simple timing validation with performance awareness (per CLAUDE.md)
-static func validate_timing(duration_ms: int, operation: String, max_ms: int = 5000) -> bool:
+static func validate_timing(
+	duration_ms: int,
+	operation: String,
+	max_ms: int = GameConstants.DebugLimits.DEFAULT_OPERATION_TIMEOUT_MS
+) -> bool:
 	if duration_ms > max_ms:
 		Log.warning(
 			"Operation exceeded expected duration",
@@ -65,7 +69,9 @@ static func validate_backend_available(backend: Object, backend_name: String) ->
 
 
 # Simple path validation for test paths
-static func validate_test_path(path: Array, min_length: int = 3) -> bool:
+static func validate_test_path(
+	path: Array, min_length: int = GameConstants.DebugLimits.MIN_TEST_PATH_LENGTH
+) -> bool:
 	if path.size() < min_length:
 		Log.error(
 			"Test path too short",

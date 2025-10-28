@@ -4,7 +4,9 @@ extends RefCounted
 enum BackendSelection { NONE, LOCAL, FIREBASE }
 
 
-static func _check_internet_availability(timeout_sec: float = 7.0) -> bool:
+static func _check_internet_availability(
+	timeout_sec: float = GameConstants.NetworkTiming.INTERNET_CHECK_TIMEOUT_SEC
+) -> bool:
 	if internet_status == null:
 		Log.warning("InternetStatus singleton not found, assuming connected", {}, [Log.TAG_NETWORK])
 		return true

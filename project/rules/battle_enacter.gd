@@ -292,7 +292,7 @@ func enact(battle_events: Array[Context.Event], battle_result: Battle.BattleResu
 			)
 			await return_tween.finished
 
-	await get_tree().create_timer(1.25).timeout
+	await get_tree().create_timer(GameConstants.NetworkTiming.BATTLE_SEQUENCE_DELAY_SEC).timeout
 	for side: Dictionary[int, Card] in [allied_units, enemy_units]:
 		var positions: Array[int] = DictUtils.keys_typed_sorted(side, TYPE_INT)
 		for pos: int in positions:

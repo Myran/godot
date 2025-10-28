@@ -19,6 +19,7 @@ config/icon="res://assets/frame.png"
 
 DebugManager="*res://autoloads/debug_manager.gd"
 DebugRegistry="*res://debug/debug_action_registry.gd"
+GameConstants="*res://core/game_constants.gd"
 internet_status="*res://autoloads/internet_status.gd"
 FirebaseService="*res://firebase/firebase_service.gd"
 auth="*res://firebase/auth.gd"

@@ -1,7 +1,8 @@
 extends Node
 
-var seeded_rng: DeterministicRNG = DeterministicRNG.new(1)  # Force deterministic construction
-var _seed: int = 1
+# Force deterministic construction with default seed
+var seeded_rng: DeterministicRNG = DeterministicRNG.new(GameConstants.RandomSystem.DEFAULT_SEED)
+var _seed: int = GameConstants.RandomSystem.DEFAULT_SEED
 var _seed_source: String = "default"
 
 

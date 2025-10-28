@@ -258,7 +258,7 @@ static func is_state_valid(data: Dictionary) -> bool:
 static func _extract_metadata() -> Dictionary:
 	var metadata: Dictionary = {}
 
-	metadata["extractor_version"] = "1.0.0"
+	metadata["extractor_version"] = GameConstants.StateExtraction.VERSION_STRING
 
 	return metadata
 
@@ -270,7 +270,9 @@ static func _normalize_value(value: Variant) -> Variant:
 	match typeof(value):
 		TYPE_FLOAT:
 			var float_val: float = value
-			var normalized_float: float = snappedf(float_val, 0.000001)
+			var normalized_float: float = snappedf(
+				float_val, GameConstants.StateExtraction.NORMALIZATION_FACTOR
+			)
 			return normalized_float
 
 		TYPE_DICTIONARY:
@@ -293,7 +295,7 @@ static func _normalize_value(value: Variant) -> Variant:
 
 
 static func _has_circular_references(data: Dictionary, visited: Array = []) -> bool:
-	if visited.size() > 10:  # Maximum reasonable nesting depth
+	if visited.size() > GameConstants.DebugLimits.MAX_NESTING_DEPTH:  # Maximum reasonable nesting depth
 		return true
 
 	for key: Variant in data:

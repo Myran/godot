@@ -162,15 +162,17 @@ func _calculate_adaptive_delay() -> int:
 
 	# Increase delay based on pending requests
 	if _pending_request_count > 1:
-		base_delay += (_pending_request_count - 1) * 20
+		base_delay += (
+			(_pending_request_count - 1) * GameConstants.RateLimiting.PENDING_REQUEST_DELAY_MS
+		)
 
 	# Increase delay based on consecutive failures
 	if _consecutive_failures > 0:
-		base_delay += _consecutive_failures * 50
+		base_delay += _consecutive_failures * GameConstants.RateLimiting.FAILURE_PENALTY_DELAY_MS
 
 	# Increase delay based on recent performance
 	if _average_delay_ms > MIN_DELAY_MS:
-		base_delay = int(_average_delay_ms * 1.5)
+		base_delay = int(_average_delay_ms * GameConstants.RateLimiting.ADAPTIVE_DELAY_MULTIPLIER)
 
 	return min(base_delay, MAX_DELAY_MS)
 

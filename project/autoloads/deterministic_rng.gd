@@ -9,13 +9,13 @@ var _rng: RandomNumberGenerator
 func _init(new_seed: int = 0) -> void:
 	_rng = RandomNumberGenerator.new()
 	if new_seed == 0:
-		new_seed = 12345  # Fixed deterministic fallback seed
+		new_seed = GameConstants.RandomSystem.DEFAULT_SEED  # Fixed deterministic fallback seed
 	reset(new_seed)
 
 
 func reset(new_seed: int = 0, hard: bool = false) -> void:
 	if hard:
-		new_seed = 54321  # Fixed deterministic seed for hard reset
+		new_seed = GameConstants.RandomSystem.HARD_RESET_SEED  # Fixed deterministic seed for hard reset
 	if new_seed != 0:
 		_initial_seed = new_seed
 

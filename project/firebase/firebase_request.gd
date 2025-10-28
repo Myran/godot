@@ -248,7 +248,7 @@ func await_completion() -> Variant:
 
 	# Use SignalAwaiter.Timeout to prevent indefinite hangs
 	# Production-ready timeout: Firebase SDK (30s) + processing buffer (15s)
-	var timeout_seconds: float = 45.0
+	var timeout_seconds: float = GameConstants.NetworkTiming.FIREBASE_TIMEOUT_SEC
 	var timeout_awaiter: SignalAwaiter.Timeout = SignalAwaiter.Timeout.new(timeout_seconds)
 	var racer: SignalAwaiter.Any = SignalAwaiter.Any.new()
 	racer.add(completed)

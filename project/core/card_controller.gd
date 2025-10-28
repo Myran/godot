@@ -147,16 +147,19 @@ static func select_id_from_level(lvl: int) -> String:
 
 
 static func select_recruited_unit_level(recruit_lvl: int) -> int:
-	var roll: int = (rng.seeded_rng.next() % 99) + 1
+	var roll: int = (
+		(rng.seeded_rng.next() % GameConstants.CardCreation.PERCENTAGE_BASE)
+		+ GameConstants.CardCreation.PERCENTAGE_OFFSET
+	)
 
 	# Get drop rate rules from cache (no await needed)
 	var rules: Dictionary = data_source.rules.get_cached_rules()
 
-	var c_lvl_2_star_1: String = "50"
-	var c_lvl_2_star_2: String = "100"
-	var c_lvl_3_star_1: String = "30"
-	var c_lvl_3_star_2: String = "70"
-	var c_lvl_3_star_3: String = "100"
+	var c_lvl_2_star_1: String = GameConstants.CardCreation.LEVEL_2_STAR_1_THRESHOLD
+	var c_lvl_2_star_2: String = GameConstants.CardCreation.LEVEL_2_STAR_2_THRESHOLD
+	var c_lvl_3_star_1: String = GameConstants.CardCreation.LEVEL_3_STAR_1_THRESHOLD
+	var c_lvl_3_star_2: String = GameConstants.CardCreation.LEVEL_3_STAR_2_THRESHOLD
+	var c_lvl_3_star_3: String = GameConstants.CardCreation.LEVEL_3_STAR_3_THRESHOLD
 
 	if rules.has("chance_lvl_2_star_1"):
 		c_lvl_2_star_1 = rules.chance_lvl_2_star_1
