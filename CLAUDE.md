@@ -366,9 +366,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - **ALWAYS ask before removing any files, even temporary ones like `*_automated.json`**
 - **File removal is a destructive operation that requires user consent**
 
+**🏢 Company Values:**
+- **Simplicity**: Clean, readable code that's easy to understand and maintain
+- **Robustness**: Reliable systems that work consistently and handle edge cases gracefully
+- **Every technical decision should align with these core values**
+
 **MCP Tools for GameTwo Development:**
 - **Repomix MCP**: Pack codebase once, search multiple times - ideal for architectural analysis
-- **Godot MCP**: Launch editor, run project, get debug output - direct Godot 4.3 integration  
+- **Godot MCP**: Launch editor, run project, get debug output - direct Godot 4.3 integration
 - **Context7 MCP**: Get up-to-date docs for any library - resolve library patterns and fetch documentation
 
 **Git workflow:**
