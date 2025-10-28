@@ -9,7 +9,6 @@ var _seed_source: String = "default"
 func _ready() -> void:
 	var debug_seed: int = DebugConfigReader.get_debug_seed()
 
-	# GameConstants.RandomSystem.DEFAULT_SEED is the default fallback in DebugConfigReader
 	if debug_seed != GameConstants.RandomSystem.DEFAULT_SEED:
 		_seed = debug_seed
 		_seed_source = "debug_config"

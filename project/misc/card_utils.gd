@@ -13,10 +13,5 @@ static func get_card_image_name(card_id: String) -> String:
 		asset_variant_value = DebugManager.asset_variant
 
 	return str(
-		GameConstants.CardSystem.CARD_IMAGE_FOLDER,
-		GameConstants.CardSystem.CARD_IMAGE_PREFIX,
-		asset_variant_value,
-		"_",
-		card_id,
-		".png"
-	)
+		"res://assets/card_images/", "card_image_", asset_variant_value, "_", card_id, ".png"
+	)  # CARD_IMAGE_FOLDER + CARD_IMAGE_PREFIX

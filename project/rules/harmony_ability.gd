@@ -39,12 +39,8 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 	if added_card != event.unit:
 		return
 
-	var target_tribes: Array[String] = [
-		GameConstants.UnitTags.SOLDIER,
-		GameConstants.UnitTags.FOREST,
-		GameConstants.UnitTags.EVIL,
-		GameConstants.UnitTags.MAGIC
-	]
+	# Target tribes with fallback constants
+	var target_tribes: Array[String] = ["soldier", "forest", "evil", "magic"]
 
 	for tribe: String in target_tribes:
 		apply_tribal_bonus(event, tribe)

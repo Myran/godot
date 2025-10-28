@@ -40,7 +40,7 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 		return
 
 	var evil_unit_count: int = AbilityHelper.count_units_with_tags_in_lineup(
-		event.draft_context.lineup, [GameConstants.UnitTags.EVIL], event.unit
+		event.draft_context.lineup, ["evil"], event.unit  # EVIL tag fallback
 	)
 
 	if evil_unit_count > 0:

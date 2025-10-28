@@ -20,11 +20,7 @@ static func build_run_all_summary(
 		"[font_size=%s][color=%s]SUMMARY[/color][/font_size]\n"
 		% [DebugUIConstants.FONT_SIZE_XL, DebugUIConstants.UI_COLORS.info]
 	)
-	summary += (
-		"[color=%s]" % DebugUIConstants.UI_COLORS.surface
-		+ "─".repeat(GameConstants.UIConstants.DASHBOARD_SEPARATOR_LENGTH)
-		+ "[/color]\n"
-	)
+	summary += ("[color=%s]" % DebugUIConstants.UI_COLORS.surface + "─".repeat(50) + "[/color]\n")
 	summary += (
 		"[color=%s]Total Actions:[/color] [color=%s]%d[/color]\n"
 		% [DebugUIConstants.UI_COLORS.text_secondary, DebugUIConstants.UI_COLORS.number, total]
@@ -49,10 +45,10 @@ static func build_run_all_summary(
 	var success_rate: float = (float(successful) / float(total)) * 100.0 if total > 0 else 0.0
 	var rate_color: String = (
 		DebugUIConstants.UI_COLORS.success
-		if success_rate >= GameConstants.UIConstants.SUCCESS_RATE_HIGH_THRESHOLD
+		if success_rate >= 90.0
 		else (
 			DebugUIConstants.UI_COLORS.warning
-			if success_rate >= GameConstants.UIConstants.SUCCESS_RATE_MEDIUM_THRESHOLD
+			if success_rate >= 75.0
 			else DebugUIConstants.UI_COLORS.danger
 		)
 	)
@@ -69,11 +65,7 @@ static func build_run_all_summary(
 		"[font_size=%s][color=%s]DETAILED RESULTS[/color][/font_size]\n"
 		% [DebugUIConstants.FONT_SIZE_XL, DebugUIConstants.UI_COLORS.info]
 	)
-	summary += (
-		"[color=%s]" % DebugUIConstants.UI_COLORS.surface
-		+ "─".repeat(GameConstants.UIConstants.SUMMARY_SEPARATOR_LENGTH)
-		+ "[/color]\n"
-	)
+	summary += ("[color=%s]" % DebugUIConstants.UI_COLORS.surface + "─".repeat(30) + "[/color]\n")
 
 	for i: int in range(results.size()):
 		var result: Dictionary = results[i]
@@ -141,9 +133,7 @@ static func build_styled_header() -> String:
 	var build_type: String = "Debug" if OS.is_debug_build() else "Release"
 	var commit_hash: String = Engine.get_version_info().get("hash", "unknown")
 	var shortened_hash: String = (
-		commit_hash.substr(0, GameConstants.DebugLimits.COMMIT_HASH_DISPLAY_LENGTH)
-		if commit_hash.length() > GameConstants.DebugLimits.COMMIT_HASH_DISPLAY_LENGTH
-		else commit_hash
+		commit_hash.substr(0, 8) if commit_hash.length() > 8 else commit_hash
 	)
 
 	return (

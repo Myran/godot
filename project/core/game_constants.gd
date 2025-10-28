@@ -1,4 +1,5 @@
-extends Node
+class_name GameConstants
+extends RefCounted
 
 # ================================
 # CARD SYSTEM CONSTANTS

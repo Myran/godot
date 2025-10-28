@@ -295,7 +295,7 @@ static func _normalize_value(value: Variant) -> Variant:
 
 
 static func _has_circular_references(data: Dictionary, visited: Array = []) -> bool:
-	if visited.size() > GameConstants.DebugLimits.MAX_NESTING_DEPTH:  # Maximum reasonable nesting depth
+	if visited.size() > GameConstants.DebugLimits.MAX_NESTING_DEPTH:
 		return true
 
 	for key: Variant in data:

@@ -51,26 +51,29 @@ static func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
-	var card_scene: PackedScene = load(GameConstants.CardSystem.CARD_SCENE_NAME)
+	var card_scene: PackedScene = load("res://core/clicker/blocks/block_base_card.tscn")  # CARD_SCENE_NAME
 	# ASSERT: Card scene must load successfully
 	assert(
 		card_scene != null,
 		(
 			"create_unit_from_id: Failed to load card scene: "
-			+ str(GameConstants.CardSystem.CARD_SCENE_NAME)
-		)
+			+ str("res://core/clicker/blocks/block_base_card.tscn")
+		)  # CARD_SCENE_NAME
 	)
 	assert(
 		card_scene is PackedScene,
 		(
 			"create_unit_from_id: Loaded scene is not PackedScene: "
-			+ str(GameConstants.CardSystem.CARD_SCENE_NAME)
-		)
+			+ str("res://core/clicker/blocks/block_base_card.tscn")
+		)  # CARD_SCENE_NAME
 	)
 
 	Log.debug(
 		"Card scene loaded",
-		{"scene_name": GameConstants.CardSystem.CARD_SCENE_NAME, "scene_valid": card_scene != null},
+		{
+			"scene_name": "res://core/clicker/blocks/block_base_card.tscn",
+			"scene_valid": card_scene != null
+		},  # CARD_SCENE_NAME
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 

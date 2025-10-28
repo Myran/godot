@@ -41,7 +41,7 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 		return
 
 	var soldier_unit_count: int = AbilityHelper.count_units_with_tags_in_lineup(
-		event.draft_context.lineup, [GameConstants.UnitTags.SOLDIER], event.unit
+		event.draft_context.lineup, ["soldier"], event.unit  # SOLDIER tag fallback
 	)
 
 	if soldier_unit_count > 0:

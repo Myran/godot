@@ -5,14 +5,14 @@ const PRE_EVENT_RESPONSE: String = "pre_event_response"
 const DRAFT_POST_EVENT_RESPONSE: String = "draft_post_event_response"
 const DRAFT_PRE_EVENT_RESPONSE: String = "draft_pre_event_response"
 
-var max_health: int = GameConstants.CardSystem.DEFAULT_HEALTH
-var max_attack: int = GameConstants.CardSystem.DEFAULT_ATTACK
-var base_health: int = GameConstants.CardSystem.DEFAULT_HEALTH
-var base_attack: int = GameConstants.CardSystem.DEFAULT_ATTACK
+var max_health: int = 1  # DEFAULT_HEALTH
+var max_attack: int = 1  # DEFAULT_ATTACK
+var base_health: int = 1  # DEFAULT_HEALTH
+var base_attack: int = 1  # DEFAULT_ATTACK
 
-var current_health: int = GameConstants.CardSystem.DEFAULT_HEALTH:
+var current_health: int = 1:  # DEFAULT_HEALTH
 	set = set_current_health
-var current_attack: int = GameConstants.CardSystem.DEFAULT_ATTACK:
+var current_attack: int = 1:  # DEFAULT_ATTACK
 	set = set_current_attack
 var level: int = 0
 var card_info: Dictionary
@@ -75,9 +75,7 @@ func init_with_info(_card_info: Dictionary) -> void:
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 	if card_info.id == str(4):
-		ability = MergeBonusAbility.new(
-			GameConstants.CardSystem.DEFAULT_HEALTH, GameConstants.CardSystem.DEFAULT_ATTACK
-		)
+		ability = MergeBonusAbility.new(1, 1)  # DEFAULT_HEALTH, DEFAULT_ATTACK
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 

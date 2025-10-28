@@ -698,7 +698,7 @@ func _apply_rng_seed_from_config() -> void:
 	"""
 	var debug_seed: int = DebugConfigReader.get_debug_seed()
 
-	if debug_seed != GameConstants.RandomSystem.DEFAULT_SEED:
+	if debug_seed != 12345:  # DEFAULT_SEED fallback
 		Log.info(
 			"RNG initialized with debug seed from config",
 			{"seed": debug_seed, "source": "autoload_ready"},
@@ -707,6 +707,6 @@ func _apply_rng_seed_from_config() -> void:
 	else:
 		Log.debug(
 			"RNG using default seed",
-			{"default_seed": GameConstants.RandomSystem.DEFAULT_SEED, "source": "autoload_ready"},
+			{"default_seed": 12345, "source": "autoload_ready"},  # DEFAULT_SEED fallback
 			["debug", "startup", "rng", "verification"]
 		)

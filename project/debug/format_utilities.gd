@@ -87,7 +87,7 @@ static func format_array_no_truncation(
 	if indent_level > max_depth:
 		return "[color=%s][ <max depth> ][/color]" % DebugUIConstants.UI_COLORS.warning
 
-	if array.size() <= GameConstants.UIConstants.ARRAY_INLINE_THRESHOLD and indent_level > 0:
+	if array.size() <= 5 and indent_level > 0:
 		var all_simple: bool = true
 		for item: Variant in array:
 			if item is Dictionary or item is Array:
@@ -162,6 +162,6 @@ static func extract_concise_error(payload: Variant) -> String:
 		return "Not found"
 	if payload_str.contains("Firebase"):
 		return "Firebase error"
-	if payload_str.length() > GameConstants.DebugLimits.STRING_TRUNCATE_LENGTH:
-		return payload_str.substr(0, GameConstants.DebugLimits.STRING_TRUNCATE_LENGTH) + "..."
+	if payload_str.length() > 50:
+		return payload_str.substr(0, 50) + "..."
 	return payload_str
