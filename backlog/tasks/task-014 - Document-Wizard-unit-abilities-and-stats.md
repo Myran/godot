@@ -1,9 +1,10 @@
 ---
 id: task-014
 title: Document Wizard unit abilities and stats
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
+updated_date: '2025-10-29 09:52'
 labels:
   - creature
   - documentation
