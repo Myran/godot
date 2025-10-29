@@ -4,9 +4,15 @@ title: 'Phase 3: General code cleanup and consolidation'
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:55'
-labels: [will-not-do, refactoring, maintenance, phase-3, code-quality]
-dependencies: [task-251]
+updated_date: '2025-10-29 21:52'
+labels:
+  - will-not-do
+  - refactoring
+  - maintenance
+  - phase-3
+  - code-quality
+dependencies:
+  - task-251
 ---
 
 ## Description

@@ -4,8 +4,8 @@ title: 'Phase 1: Refactor Game.gd monolithic class - extract focused managers'
 status: Done
 assignee: []
 created_date: '2025-10-29 15:58'
-updated_date: '2025-10-29 21:42'
-labels: will-not-do
+updated_date: '2025-10-29 21:52'
+labels: []
 dependencies: []
 ---
 

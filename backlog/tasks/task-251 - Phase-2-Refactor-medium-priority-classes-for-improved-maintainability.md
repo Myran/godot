@@ -4,9 +4,16 @@ title: 'Phase 2: Refactor medium-priority classes for improved maintainability'
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:53'
-labels: [will-not-do, refactoring, architecture, phase-2, ui-maintenance]
-dependencies: [task-249, task-250]
+updated_date: '2025-10-29 21:52'
+labels:
+  - will-not-do
+  - refactoring
+  - architecture
+  - phase-2
+  - ui-maintenance
+dependencies:
+  - task-249
+  - task-250
 ---
 
 ## Description

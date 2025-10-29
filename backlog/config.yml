@@ -1,6 +1,6 @@
 project_name: "gametwo"
 default_status: "To Do"
-statuses: ["Consider", "To Do", "In Progress", "Done"]
+statuses: ["Consider", "To Do", "In Progress", "Done", "Open"]
 labels: []
 milestones: []
 date_format: yyyy-mm-dd
@@ -12,5 +12,5 @@ remote_operations: true
 auto_commit: false
 zero_padded_ids: 3
 bypass_git_hooks: true
-check_active_branches: true
+check_active_branches: false
 active_branch_days: 7

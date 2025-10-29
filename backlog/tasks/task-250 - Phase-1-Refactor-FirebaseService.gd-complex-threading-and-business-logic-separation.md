@@ -1,11 +1,18 @@
 ---
 id: task-250
-title: 'Phase 1: Refactor FirebaseService.gd complex threading and business logic separation'
+title: >-
+  Phase 1: Refactor FirebaseService.gd complex threading and business logic
+  separation
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:47'
-labels: [will-not-do, refactoring, firebase, architecture, phase-1]
+updated_date: '2025-10-29 21:52'
+labels:
+  - will-not-do
+  - refactoring
+  - firebase
+  - architecture
+  - phase-1
 dependencies: []
 ---
 
