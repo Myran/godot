@@ -168,12 +168,43 @@ just log-run-silent test-android test-all        # Comprehensive silent testing 
 - `backlog tasks view task-XXX --plain` - View specific task details in plain text
 - `backlog tasks create "Title"` - Create new task (opens editor)
 - `backlog tasks edit task-XXX` - Edit existing task (opens editor)
+- `backlog tasks edit task-XXX --status Done` - **Update task status via CLI (REQUIRED for proper sync)**
 - `backlog doc list` - List all project documents
 - `backlog doc view DOC_ID` - View a specific document
 - `backlog board` - Display tasks in Kanban board view
 - `backlog board --vertical` - Vertical Kanban layout
 - `backlog overview` - Show project statistics and metrics
 - `backlog browser` - Interactive task browser (Ctrl+C to exit)
+
+**🚨 CRITICAL INSIGHT: Use Backlog CLI Commands, Not Direct File Editing**
+
+**Lesson Learned from Tasks 248-252:**
+The backlog system maintains its own database/index that doesn't automatically sync with direct markdown file edits.
+
+**❌ WRONG APPROACH (What we tried first):**
+```bash
+# Direct file editing - DOES NOT sync with backlog system
+vim backlog/tasks/task-XXX.md  # Edit status: Done
+# Result: File shows Done, but backlog board still shows To Do
+```
+
+**✅ CORRECT APPROACH (What actually works):**
+```bash
+# Use backlog CLI commands for status changes
+backlog tasks edit task-XXX --status Done
+# Result: Both file AND backlog system properly synchronized
+```
+
+**Critical Workflow:**
+1. **For Content Changes**: Use `backlog tasks edit task-XXX` (opens editor) or direct file editing
+2. **For Status Changes**: ALWAYS use `backlog tasks edit task-XXX --status Done`
+3. **For Bulk Updates**: Use CLI commands in loops: `for task in 248 249 250; do backlog tasks edit task-$task --status Done; done`
+
+**Why This Matters:**
+- The backlog system reads from remote branches and maintains its own indexing
+- Direct file edits only change the markdown, not the backlog's internal state
+- CLI commands update both the file AND the backlog system's database
+- Without CLI commands, tasks remain in original status in board/overview views
 
 **Task Management Workflow:**
 ```bash
