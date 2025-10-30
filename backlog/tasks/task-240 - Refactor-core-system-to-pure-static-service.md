@@ -4,7 +4,7 @@ title: Refactor core system to pure static service
 status: Done
 assignee: []
 created_date: '2025-10-26 09:57'
-updated_date: '2025-10-29 22:18'
+updated_date: '2025-10-29 22:15'
 labels:
   - will-not-do
   - refactoring
