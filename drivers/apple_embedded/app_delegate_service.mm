@@ -40,8 +40,10 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import <AudioToolbox/AudioServices.h>
+#ifdef FIREBASE_ENABLED
 #include "firebase/app.h"
 #import <FirebaseCore.h>
+#endif
 #define kRenderingFrequency 60
 
 extern int gargc;
@@ -131,7 +133,9 @@ static GDTViewController *mainViewController = nil;
 	}
 
 	[[AVAudioSession sharedInstance] setCategory:category withOptions:options error:nil];
+#ifdef FIREBASE_ENABLED
 	[FIRApp configure];
+#endif
 	return YES;
 }
 

@@ -2,7 +2,7 @@
 #include "firebase/auth.h"
 #include "firebase/auth/user.h"
 #if defined(__APPLE__)
-#import "app_delegate.h"
+#import "drivers/apple_embedded/godot_app_delegate.h"
 #endif
 #include "core/object/object.h"
 

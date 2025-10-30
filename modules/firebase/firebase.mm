@@ -7,7 +7,9 @@
 //extern jobject _godot_instance;
 #endif
 #if defined(__APPLE__)
-#import "app_delegate.h"
+#import "drivers/apple_embedded/godot_app_delegate.h"
+#import "drivers/apple_embedded/app_delegate_service.h"
+#import "drivers/apple_embedded/view_controller.h"
 #include "core/object/object.h"
 AppActivity _instance;
 #endif
@@ -47,7 +49,7 @@ void Firebase::createApplication() {
     print_line(String("[Firebase] Success creating app"));
 #else
     app_ptr = firebase::App::Create();
-    _instance = (ViewController *)((AppDelegate *)[[UIApplication sharedApplication] delegate]).window.rootViewController.view;
+    _instance = (id)[GDTAppDelegateService viewController].view;
 #endif
 }
 /*

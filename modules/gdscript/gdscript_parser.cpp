@@ -44,6 +44,7 @@
 #endif
 
 #ifdef TOOLS_ENABLED
+#include "editor/settings/editor_settings.h"
 #endif
 
 // This function is used to determine that a type is "built-in" as opposed to native
@@ -193,14 +194,14 @@ void GDScriptParser::push_error(const String &p_message, const Node *p_origin) {
 			errors.push_back({ enhanced_message, previous.start_line, previous.start_column });
 		} else {
 			enhanced_message = vformat("%s:%d: %s", relative_path, p_origin->start_line, p_message);
-			errors.push_back({ enhanced_message, p_origin->start_line, p_origin->leftmost_column });
+			errors.push_back({ enhanced_message, p_origin->start_line, p_origin->start_column });
 		}
 	} else {
 		// Fallback to original behavior if no script_path available
 		if (p_origin == nullptr) {
 			errors.push_back({ p_message, previous.start_line, previous.start_column });
 		} else {
-			errors.push_back({ p_message, p_origin->start_line, p_origin->leftmost_column });
+			errors.push_back({ p_message, p_origin->start_line, p_origin->start_column });
 		}
 	}
 }
