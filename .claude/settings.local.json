@@ -144,7 +144,8 @@
       "Bash(else:*)",
       "Bash(while read ability)",
       "Bash(open:*)",
-      "Bash(col:*)"
+      "Bash(col:*)",
+      "Bash(do backlog tasks edit:*)"
     ],
     "deny": [],
     "ask": [],
