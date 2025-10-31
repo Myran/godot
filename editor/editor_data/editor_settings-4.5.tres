@@ -1,11 +1,7 @@
-[gd_resource type="EditorSettings" load_steps=3 format=3]
+[gd_resource type="EditorSettings" load_steps=2 format=3]
 
 [sub_resource type="InputEventKey" id="InputEventKey_h2syl"]
 keycode = 4194326
-
-[sub_resource type="InputEventKey" id="InputEventKey_jk652"]
-physical_keycode = 81
-unicode = 81
 
 [resource]
 interface/editor/use_native_file_dialogs = true
@@ -45,9 +41,10 @@ text_editor/theme/highlighting/breakpoint_color = Color(1, 0.301961, 0.337255, 1
 text_editor/theme/highlighting/code_folding_color = Color(0.501961, 0.501961, 0.501961, 1)
 text_editor/theme/highlighting/search_result_color = Color(0.407843, 0.223529, 0.105882, 1)
 text_editor/theme/highlighting/search_result_border_color = Color(1, 1, 1, 0)
+text_editor/theme/highlighting/gdscript/function_definition_color = Color(0.721569, 0.733333, 0.14902, 1)
+text_editor/theme/highlighting/gdscript/node_path_color = Color(0.827451, 0.52549, 0.607843, 1)
 text_editor/appearance/gutters/line_numbers_zero_padded = true
 text_editor/behavior/files/trim_trailing_whitespace_on_save = true
-text_editor/behavior/files/auto_reload_scripts_on_external_change = true
 text_editor/behavior/files/open_dominant_script_on_scene_change = true
 text_editor/external/exec_path = "/Users/mattiasmyhrman/repos/gametwo/tools/godot-helix-wezterm-wrapper.sh"
 text_editor/external/exec_flags = "{file}:{line}:{col}"
@@ -80,8 +77,6 @@ network/debug_adapter/sync_breakpoints = true
 editors/3d_gizmos/gizmo_colors/path = Color(0.5, 0.5, 1, 0.8)
 editors/grid_map/editor_side = 1
 network/language_server/show_native_symbols_in_editor = true
-text_editor/theme/highlighting/gdscript/function_definition_color = Color(0.721569, 0.733333, 0.14902, 1)
-text_editor/theme/highlighting/gdscript/node_path_color = Color(0.827451, 0.52549, 0.607843, 1)
 export/android/java_sdk_path = "/opt/homebrew/Cellar/openjdk@17/17.0.15"
 network/language_server/poll_limit_usec = 1000
 _editor_settings_advanced_mode = true
@@ -95,9 +90,6 @@ shortcuts = [{
 }, {
 "name": "spatial_editor/viewport_zoom_modifier_2",
 "shortcuts": []
-}, {
-"name": "spatial_editor/tool_select",
-"shortcuts": [SubResource("InputEventKey_jk652")]
 }]
 metadata/script_setup_templates_dictionary = {
 "ColorRect": "0NodeDefault",
