@@ -149,7 +149,8 @@
       "WebFetch(domain:godotengine.github.io)",
       "Bash(git ls-tree:*)",
       "Bash(git branch:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "WebFetch(domain:godotengine.org)"
     ],
     "deny": [],
     "ask": [],
