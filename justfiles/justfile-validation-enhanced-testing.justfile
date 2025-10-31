@@ -2443,12 +2443,16 @@ _execute-test-with-analysis config_name platform session="":
     # Check if it's a debug config, or try to create wildcard pattern config
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "🔍 Config not found, checking for wildcard pattern: $CONFIG_NAME"
-        
+
+        # NEW: Search recursively in subdirectories first (for archive/generated-replays configs)
+        RECURSIVE_FOUND=$(find "{{DEBUG_CONFIG_DIR}}" -name "${CONFIG_NAME}.json" -type f 2>/dev/null | head -1)
+        if [[ -n "$RECURSIVE_FOUND" ]]; then
+            echo "✅ Found config in subdirectory: $(basename "$(dirname "$RECURSIVE_FOUND")")/${CONFIG_NAME}.json"
+            CONFIG_PATH="$RECURSIVE_FOUND"
         # Try to validate/create config (handles wildcards, single actions, etc.)
-        if just _validate-config-exists "$CONFIG_NAME" >/dev/null 2>&1; then
-            echo "✅ Wildcard pattern config created: $CONFIG_NAME"
-            # Update CONFIG_PATH to point to the created temporary config
-            CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+        elif just _validate-config-exists "$CONFIG_NAME" >/dev/null 2>&1; then
+            echo "✅ Config found or created: $CONFIG_NAME"
+            # The config exists - let the system handle the path (usually creates temp file)
         else
             echo "❌ Neither test list nor config found:"
             echo "   Test list: $TEST_LIST_PATH"

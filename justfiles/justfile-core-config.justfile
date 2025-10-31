@@ -415,6 +415,12 @@ _validate-config-exists CONFIG:
     if [ -f "$ORIGINAL_CONFIG_FILE" ]; then
         exit 0
     fi
+
+    # NEW: Search recursively in subdirectories (for archive/generated-replays configs)
+    RECURSIVE_FOUND=$(find "{{DEBUG_CONFIG_DIR}}" -name "{{CONFIG}}.json" -type f 2>/dev/null | head -1)
+    if [ -f "$RECURSIVE_FOUND" ]; then
+        exit 0
+    fi
     
     # Config file doesn't exist - check if CONFIG is a config pattern or action name
     echo "🔍 Config file not found: $CONFIG_FILE"
@@ -423,10 +429,10 @@ _validate-config-exists CONFIG:
     if [[ "{{CONFIG}}" == *'*'* ]]; then
         echo "🔍 Detected wildcard pattern: {{CONFIG}}"
         
-        # First, try to match config file names
+        # First, try to match config file names (including subdirectories)
         echo "🔍 Checking for matching config files..."
         CONFIG_PATTERN="{{CONFIG}}"
-        MATCHING_CONFIGS=$(ls {{DEBUG_CONFIG_DIR}}/*.json 2>/dev/null | sed 's|{{DEBUG_CONFIG_DIR}}/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20 || true)
+        MATCHING_CONFIGS=$(find {{DEBUG_CONFIG_DIR}} -name "*.json" -type f 2>/dev/null | sed 's|{{DEBUG_CONFIG_DIR}}/||g' | sed 's|\.json||g' | grep -E "^$(echo "$CONFIG_PATTERN" | sed 's/\*/.*/')\$" | head -20 || true)
         
         if [ -n "$MATCHING_CONFIGS" ]; then
             echo "✅ Found matching config files:"
