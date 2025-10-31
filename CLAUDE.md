@@ -89,16 +89,14 @@ just log-run-silent test-android test-all        # Comprehensive silent testing 
 ```
 
 **🚨 CRITICAL CI/Build Rules:**
-- **`just ci-validate`** - MANDATORY before commits (prevents technical debt)
+- **`just ci-validate`** - MANDATORY before commits
 - **`just fastbuild-android`** - MANDATORY after ANY code changes before Android testing
-- **Failure in CI** → Fix immediately → Re-validate → Proceed
-- **CI success** → Proceed to testing phase with confidence
+- **Failure in CI** → Fix → Re-validate → Proceed
 
-**🚨 CRITICAL: GDScript Commit Safety Rule:**
-- **`just development`** - REQUIRED before committing ANY GDScript changes (use with long timeout)
-- **Why**: Combines fastbuild-android + ci-validate + complete testing to prevent broken commits
-- **Pattern**: Code changes → `just development` (wait for completion) → If passes, then commit
-- **Timeout**: Set long timeout (10+ minutes) as this runs the complete pipeline
+**🚨 CRITICAL: GDScript Commit Safety:**
+- **`just development`** - REQUIRED before committing GDScript changes (10+ min timeout)
+- **Pattern**: Code changes → `just development` → If passes, commit
+- Combines fastbuild-android + ci-validate + complete testing
 
 **Debug Decision Tree:**
 1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
@@ -176,35 +174,16 @@ just log-run-silent test-android test-all        # Comprehensive silent testing 
 - `backlog overview` - Show project statistics and metrics
 - `backlog browser` - Interactive task browser (Ctrl+C to exit)
 
-**🚨 CRITICAL INSIGHT: Use Backlog CLI Commands, Not Direct File Editing**
+**🚨 CRITICAL: Use Backlog CLI Commands, Not Direct File Editing**
 
-**Lesson Learned from Tasks 248-252:**
-The backlog system maintains its own database/index that doesn't automatically sync with direct markdown file edits.
-
-**❌ WRONG APPROACH (What we tried first):**
-```bash
-# Direct file editing - DOES NOT sync with backlog system
-vim backlog/tasks/task-XXX.md  # Edit status: Done
-# Result: File shows Done, but backlog board still shows To Do
-```
-
-**✅ CORRECT APPROACH (What actually works):**
-```bash
-# Use backlog CLI commands for status changes
-backlog tasks edit task-XXX --status Done
-# Result: Both file AND backlog system properly synchronized
-```
+The backlog system maintains its own database that doesn't sync with direct markdown file edits.
 
 **Critical Workflow:**
-1. **For Content Changes**: Use `backlog tasks edit task-XXX` (opens editor) or direct file editing
-2. **For Status Changes**: ALWAYS use `backlog tasks edit task-XXX --status Done`
-3. **For Bulk Updates**: Use CLI commands in loops: `for task in 248 249 250; do backlog tasks edit task-$task --status Done; done`
+1. **Content Changes**: `backlog tasks edit task-XXX` (opens editor) or direct file editing
+2. **Status Changes**: ALWAYS use `backlog tasks edit task-XXX --status Done`
+3. **Bulk Updates**: `for task in 248 249 250; do backlog tasks edit task-$task --status Done; done`
 
-**Why This Matters:**
-- The backlog system reads from remote branches and maintains its own indexing
-- Direct file edits only change the markdown, not the backlog's internal state
-- CLI commands update both the file AND the backlog system's database
-- Without CLI commands, tasks remain in original status in board/overview views
+Direct file editing only updates the markdown, not the backlog's internal database.
 
 **Task Management Workflow:**
 ```bash
@@ -249,14 +228,9 @@ Analysis: /tmp/analysis_file.md"
 
 **Pattern 2: Task Status Progression**
 ```bash
-# Open → In Progress → Done workflow
 backlog tasks view task-221 --plain  # Check current status
-
-# Update status by editing task file directly
-# Status: Open → In Progress → Done
-
-# Or use git to track progression
-git log --oneline --grep="task-221" -10
+# Update status: Open → In Progress → Done
+git log --oneline --grep="task-221" -10  # Track progression via git
 ```
 
 **Pattern 3: Bidirectional Linking**
@@ -386,63 +360,59 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## 🤖 Claude Code Preferences
 
 **Essential GameTwo patterns:**
-- **Always use `rg` instead of `grep`** - 10x faster, better regex engine
-- **REQUIRED: `just fastbuild-android`** after ANY GDScript/C++ changes before Android testing
-- **⚡ CRITICAL: Prefix long-running commands with `just log-run-silent`** - Saves context window tokens, output saved to logs/YYYYMMDD_HHMMSS_command-name.log
-- **Link tasks bidirectionally**: Reference task in commit, commit in task
-- **🎯 CRITICAL: Use Advanced OODA Loop Debugging Methodology** - Investigation-first approach with expert panel evaluation (see below)
+- Always use `rg` instead of `grep` (10x faster, better regex)
+- REQUIRED: `just fastbuild-android` after ANY GDScript/C++ changes before Android testing
+- CRITICAL: Prefix long-running commands with `just log-run-silent` (saves context tokens, output to logs/YYYYMMDD_HHMMSS_command-name.log)
+- Link tasks bidirectionally: Reference task in commit, commit in task
+- CRITICAL: Use Advanced OODA Loop Debugging Methodology (investigation-first with expert panel evaluation)
 
-**🚨 CRITICAL FILE SAFETY RULE:**
-- **NEVER remove, delete, or clean up files without explicit user permission**
-- **ALWAYS ask before removing any files, even temporary ones like `*_automated.json`**
-- **File removal is a destructive operation that requires user consent**
+**🚨 CRITICAL FILE SAFETY:**
+- NEVER remove, delete, or clean up files without explicit user permission
+- ALWAYS ask before removing any files, even temporary ones
 
 **🏢 Company Values:**
-- **Simplicity**: Clean, readable code that's easy to understand and maintain
-- **Robustness**: Reliable systems that work consistently and handle edge cases gracefully
-- **Every technical decision should align with these core values**
+- **Simplicity**: Clean, readable code
+- **Robustness**: Reliable systems that handle edge cases
+- Every technical decision aligns with these values
 
-**MCP Tools for GameTwo Development:**
-- **Repomix MCP**: Pack codebase once, search multiple times - ideal for architectural analysis
-- **Godot MCP**: Launch editor, run project, get debug output - direct Godot 4.3 integration
-- **Context7 MCP**: Get up-to-date docs for any library - resolve library patterns and fetch documentation
+**MCP Tools:**
+- **Repomix MCP**: Pack codebase once, search multiple times
+- **Godot MCP**: Launch editor, run project, get debug output
+- **Context7 MCP**: Get up-to-date docs for any library
 
 **Git workflow:**
 - Use `git commit --amend` for related documentation updates
 - Include "Closes: task-XXX" and "Related: backlog/tasks/..." in commits
-
-**Exception**: Use `grep` only for pipeline scripts requiring exact compatibility.
+- Exception: Use `grep` only for pipeline scripts requiring exact compatibility
 
 ## 🔄 OODA Loop Integration (Critical for GameTwo Development)
 
-**Why `just ci-validate` and `just test` are Essential:**
-
 ### **🔍 OBSERVE Phase**
-- **`just ci-validate`** - Observes code quality, formatting, and linting issues in real-time
-- **`just test`** - Observes functional behavior across desktop/Android platforms  
-- **`just logs-errors TEST_ID`** - Observes runtime issues with 98% token efficiency
+- `just ci-validate` - Code quality, formatting, linting issues
+- `just test` - Functional behavior across desktop/Android platforms
+- `just logs-errors TEST_ID` - Runtime issues (98% token efficiency)
 
-### **🧠 ORIENT Phase**  
-- **CI validation results** - Orient to code standards and maintainability requirements
-- **Cross-platform test results** - Orient to Android/desktop compatibility requirements
-- **Error analysis** - Orient to specific technical issues requiring fixes
+### **🧠 ORIENT Phase**
+- CI validation results → Code standards and maintainability
+- Cross-platform test results → Android/desktop compatibility
+- Error analysis → Specific technical issues
 
 ### **⚡ DECIDE Phase**
-- **CI pass/fail** - Drives immediate decisions on code quality and commit readiness
-- **Test pass/fail** - Informs decisions about feature stability and deployment  
-- **Performance metrics** - Guides architectural decisions and optimization priorities
+- CI pass/fail → Code quality and commit readiness
+- Test pass/fail → Feature stability and deployment
+- Performance metrics → Architectural decisions
 
 ### **🚀 ACT Phase**
-- **Failed CI** → Immediate code fixes → `just ci-validate` → Repeat until pass
-- **Failed tests** → `just logs-errors TEST_ID` → Debug → Fix → `just fastbuild-android` → Re-test
-- **All validation passes** → Proceed confidently to next development phase
+- Failed CI → Fix → `just ci-validate` → Repeat until pass
+- Failed tests → `just logs-errors TEST_ID` → Debug → Fix → `just fastbuild-android` → Re-test
+- All validation passes → Proceed to next phase
 
-**🎯 Critical Success Pattern:**
+**Critical Success Pattern:**
 ```bash
-just ci-validate           # ✅ Must pass before proceeding
-just fastbuild-android     # ✅ Required after any code changes  
-just test-android CONFIG   # ✅ Validates changes work on target platform
-just logs-errors TEST_ID   # 🔧 If issues found - 98% token-efficient debugging
+just ci-validate           # Must pass before proceeding
+just fastbuild-android     # Required after any code changes
+just test-android CONFIG   # Validates changes on target platform
+just logs-errors TEST_ID   # 98% token-efficient debugging
 ```
 
 ## 🎯 Advanced OODA Loop Debugging Methodology
@@ -511,36 +481,27 @@ just logs-text TEST_ID "specific_term"     # Targeted search with context
 ### **💡 Key Methodology Insights**
 
 **From TASK-132/131 Resolution**:
-- ✅ **Investigation revealed both issues already resolved** by previous architectural improvements
-- ✅ **Expert panel prevented destructive "fixes"** to working systems
-- ✅ **Evidence-based conclusions** contradicted stale task documentation  
-- ✅ **Timeout architecture improvements** (commits 51090009, 2ff19647) had resolved underlying causes
-- ✅ **Android platform achieved 100% parity** with Desktop functionality
+- Investigation revealed both issues already resolved by architectural improvements (commits 51090009, 2ff19647)
+- Expert panel prevented destructive "fixes" to working systems
+- Evidence-based conclusions contradicted stale task documentation
 
-**Critical Learning**: 
-> *"Sometimes the best debugging reveals that systematic architectural improvements have already solved the problems. Investigation-first methodology prevents fixing working code."*
-
-**Time Investment**: 4-6 hours investigation vs 20-40+ hours architectural changes that risk breaking proven systems.
+**Critical Learning**: Investigation-first methodology prevents fixing working code. Time: 4-6h investigation vs 20-40h risky architectural changes.
 
 ### **💡 Advanced Methodology Insights**
 
 **From TASK-145 Firebase Performance Investigation**:
-- ✅ **Error Message Skepticism**: "Perf: Overhead Test failed (137ms)" implied performance issue, actually functional failure
-- ✅ **Expert Panel Prevented Threshold Adjustment**: Would have masked real functional bug
-- ✅ **Investigation-First Mentality**: Revealed 137ms was actually good performance, not slow
-- ✅ **Evidence Over Assumptions**: Firebase `null` return for missing data is expected, not failure
-- ✅ **Pattern Recognition**: Other operations (127ms, 77ms, 71ms) succeeded - timing wasn't the issue
-
-**🎯 Key Breakthrough Pattern**:
-> *"Systematic skepticism of error messages. Error messages describe symptoms, not always root causes. The OODA Loop's evidence-gathering phase reveals the difference between 'what the message implies' vs 'what is actually happening'."*
+- **Error Message Skepticism**: "Perf: Overhead Test failed (137ms)" implied performance issue, actually functional failure
+- **Expert Panel Prevented Threshold Adjustment**: Would have masked real functional bug
+- **Evidence Over Assumptions**: Firebase `null` return for missing data is expected, not failure
+- Other operations (127ms, 77ms, 71ms) succeeded - timing wasn't the issue
 
 **Error Message Analysis Framework**:
-1. **What the error implies** (surface meaning)
-2. **What is actually happening** (technical reality)
-3. **Why the disconnect exists** (system design vs user expectations)
-4. **What evidence contradicts the implication** (deeper investigation)
+1. What the error implies (surface meaning)
+2. What is actually happening (technical reality)
+3. Why the disconnect exists (system design vs user expectations)
+4. What evidence contradicts the implication
 
-**Meta-Learning**: Investigation-first methodology transforms "performance tuning" into "functional logic" fixes, preventing masking solutions.
+Error messages describe symptoms, not always root causes. Investigation reveals the difference.
 
 ### **🏆 Expert Panel Validation Checklist**
 
@@ -580,17 +541,13 @@ Before implementing any complex fix, ask:
 
 ### **🚨 The Buffer Saturation Problem**
 
-**What Happens:**
-1. **Circular Overwrite**: Android maintains separate buffers (main, system, events, radio) with limited size (~50KB each)
-2. **FIFO Behavior**: New log entries overwrite the oldest entries when buffers are full
-3. **Silent Data Loss**: No warnings when historical data is overwritten
-4. **Cross-Test Contamination**: High-volume testing can overwrite logs from previous test runs
+Android maintains circular buffers (main, system, events, radio, ~50KB each) that overwrite oldest entries when full. No warnings on data loss. High-volume testing can overwrite logs from previous runs.
 
-**Real-World Impact (from Task-242):**
-- **Investigation**: Firebase RTDB performance analysis showed only 2/16 successful operations
-- **Reality**: 14/16 operations were actually successful (proven by historical log analysis)
-- **Root Cause**: Log buffer overwrote 12 success entries with newer test data
-- **Cost**: 4-6 hours wasted investigating non-existent regression
+**Real-World Impact (Task-242):**
+- Investigation showed 2/16 successful Firebase RTDB operations
+- Reality: 14/16 were successful (proven by historical logs)
+- Root cause: Buffer overwrote 12 success entries with newer test data
+- Cost: 4-6h wasted investigating non-existent regression
 
 ### **📊 Buffer Saturation Detection**
 
@@ -710,19 +667,19 @@ backlog tasks create "Fix critical_issue"
 
 ### **🚨 Red Flags That Signal Buffer Issues**
 
-**Immediate Buffer Investigation Required When:**
-- **Expected logs are missing** from recent searches
-- **Test results show fewer entries** than expected
-- **Historical patterns suddenly disappear**
-- **Performance data looks unusually poor**
-- **Error counts don't match test expectations**
+**Immediate investigation required when:**
+- Expected logs missing from recent searches
+- Test results show fewer entries than expected
+- Historical patterns suddenly disappear
+- Performance data looks unusually poor
+- Error counts don't match test expectations
 
 **Response Protocol:**
-1. **Stop current investigation** - findings may be misleading
-2. **Check buffer saturation** using enhanced `android-logs-search`
-3. **Switch to historical sources** if buffer is critical
-4. **Document buffer state** in investigation notes
-5. **Consider re-running tests** with cleared buffer
+1. Stop current investigation - findings may be misleading
+2. Check buffer saturation using `android-logs-search`
+3. Switch to historical sources if buffer critical
+4. Document buffer state in notes
+5. Consider re-running tests with cleared buffer
 
 ### **📚 Quick Reference Commands**
 
