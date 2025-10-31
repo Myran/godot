@@ -45,63 +45,63 @@ class Future;
 
 class FirebaseDatabase;
 
-// --- Weak Reference Handle for Lambda Safety ---
-struct FirebaseDatabaseWeakHandle {
-	std::weak_ptr<FirebaseDatabase> weak_ptr;
-	FirebaseDatabaseWeakHandle(std::weak_ptr<FirebaseDatabase> ptr) : weak_ptr(ptr) {}
-};
-
 // --- Listener Definitions ---
 class FirebaseChildListener : public firebase::database::ChildListener {
-	std::weak_ptr<FirebaseDatabase> database_instance_weak;
+	FirebaseDatabase* singleton;
 
 public:
-	FirebaseChildListener(std::weak_ptr<FirebaseDatabase> db);
+	FirebaseChildListener();
 	virtual ~FirebaseChildListener() {}
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
 	void OnChildAdded(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildChanged(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildMoved(const firebase::database::DataSnapshot &snapshot, const char *previous_sibling) override;
 	void OnChildRemoved(const firebase::database::DataSnapshot &snapshot) override;
+
+	friend class FirebaseDatabase;
 };
 
 class ConnectionStateListener : public firebase::database::ValueListener {
-	std::weak_ptr<FirebaseDatabase> database_instance_weak;
+	FirebaseDatabase* singleton;
 
 public:
-	ConnectionStateListener(std::weak_ptr<FirebaseDatabase> db);
+	ConnectionStateListener();
 	virtual ~ConnectionStateListener() {}
 	void OnValueChanged(const firebase::database::DataSnapshot &snapshot) override;
 	void OnCancelled(const firebase::database::Error &error_code, const char *error_message) override;
+
+	friend class FirebaseDatabase;
 };
 
 // --- Transaction Data ---
 struct TransactionData {
 	int request_id;
 	int increment_by;
-	std::weak_ptr<FirebaseDatabase> database_weak;
+	FirebaseDatabase* database_ptr;
 };
 
 // --- Main Database Class ---
-class FirebaseDatabase : public RefCounted, public std::enable_shared_from_this<FirebaseDatabase> {
+class FirebaseDatabase : public RefCounted {
 	GDCLASS(FirebaseDatabase, RefCounted);
 
 private:
-	// Thread-safe singleton implementation
+	// Thread-safe singleton implementation (Task-213 critical fix)
 	static std::mutex initialization_mutex;
+	static std::atomic<bool> inited;
+	static FirebaseDatabase* singleton_instance;
 	static std::mutex instance_mutex;
-	static std::atomic<bool> is_initialized;
-	static std::shared_ptr<FirebaseDatabase> instance;
 
-	// Instance members (no longer static)
-	firebase::database::Database *database_instance;
-	std::unique_ptr<FirebaseChildListener> child_listener_instance;
-	std::unique_ptr<ConnectionStateListener> connection_listener_instance;
+	// Static Firebase resources (properly managed)
+	static firebase::database::Database *database_instance;
+	static FirebaseChildListener *child_listener_instance;
+	static ConnectionStateListener *connection_listener_instance;
+
+	// Private constructor for singleton pattern
+	FirebaseDatabase();
+
+	// Instance-specific members
 	uint64_t _listener_path_ref_count;
 	firebase::database::DatabaseReference _active_child_listener_ref;
-
-	// Private constructor for singleton
-	FirebaseDatabase();
 
 protected:
 	static void _bind_methods();
@@ -109,19 +109,27 @@ protected:
 	// Helper methods
 	firebase::database::DatabaseReference get_reference_to_path(const Array &keys);
 	firebase::database::Query get_query_from_reference(const firebase::database::DatabaseReference &ref, const Dictionary &query_params);
-	FirebaseDatabaseWeakHandle create_weak_handle();
 
 	static firebase::database::TransactionResult increment_transaction_function(
 			firebase::database::MutableData *data, void *transaction_data);
 	static void transaction_completion_callback(
 			const firebase::Future<firebase::database::DataSnapshot> &result, void *transaction_data);
 
+	// Main thread callback handlers (Task-207 SIGBUS fix)
+	// These methods execute on Godot's main thread via MessageQueue marshalling
+	void _handle_get_value_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+	void _handle_set_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
+	void _handle_push_and_update_on_main_thread(int req_id, String push_key, bool success, int status, int error, String error_msg);
+	void _handle_remove_value_on_main_thread(int req_id, bool success, int status, int error, String error_msg);
+	void _handle_query_ordered_data_on_main_thread(int req_id, String path_str, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+	void _handle_transaction_on_main_thread(int req_id, String key, Variant godot_value, bool exists, bool snapshot_valid, int status, int error, String error_msg);
+
 public:
-	// Thread-safe singleton access
-	static std::shared_ptr<FirebaseDatabase> get_instance();
+	// Thread-safe singleton access methods (Task-213 critical fix)
+	static FirebaseDatabase& get_instance();
 	static void cleanup();
 
-	// Delete copy constructor
+	// Delete copy constructor for singleton pattern (assignment operator handled by GDCLASS)
 	FirebaseDatabase(const FirebaseDatabase&) = delete;
 
 	~FirebaseDatabase();
