@@ -145,7 +145,11 @@
       "Bash(while read ability)",
       "Bash(open:*)",
       "Bash(col:*)",
-      "Bash(do backlog tasks edit:*)"
+      "Bash(do backlog tasks edit:*)",
+      "WebFetch(domain:godotengine.github.io)",
+      "Bash(git ls-tree:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": [],
