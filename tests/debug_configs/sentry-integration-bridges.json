@@ -1,0 +1,19 @@
+{
+  "description": "TDD: Test Sentry integration with existing GameTwo systems",
+  "actions": [
+    "sentry.test_integration_bridges"
+  ],
+  "platforms": [
+    "desktop",
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "integration_bridges"
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "TDD Phase 3: Validate Sentry works with Advanced Logger, Firebase, and Debug Coordinator"
+  }
+}

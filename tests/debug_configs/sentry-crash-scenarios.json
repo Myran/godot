@@ -1,0 +1,19 @@
+{
+  "description": "TDD: Test Sentry crash scenario capture and reporting",
+  "actions": [
+    "sentry.test_crash_scenarios"
+  ],
+  "platforms": [
+    "desktop",
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "crash_reporting"
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "TDD Phase 2: Validate Sentry captures all crash scenarios with proper stack traces"
+  }
+}

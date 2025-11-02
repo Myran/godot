@@ -35,6 +35,8 @@ import "justfiles/justfile-log-cross-validation.justfile"
 
 # Import validation-enhanced-testing LAST to override existing test commands
 import "justfiles/justfile-validation-enhanced-testing.justfile"
+# Import Sentry SDK build commands
+import "justfiles/justfile-sentry-build.justfile"
 
 #import "justfile-test.justfile"
 # Set default shell

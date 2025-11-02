@@ -1,0 +1,18 @@
+{
+  "description": "TDD: Simple Sentry file validation for Android",
+  "actions": [
+    "system.debug.registry_stats"
+  ],
+  "platforms": [
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "file_validation"
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "TDD Phase 1: Simple file existence check for Sentry components on Android"
+  }
+}

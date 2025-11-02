@@ -1,0 +1,217 @@
+{
+  "name": "Sentry Test Implementation Configuration",
+  "description": "Test implementation for Sentry TDD validation framework",
+  "version": "1.0.0",
+
+  "test_actions": {
+    "sentry.test_addon_loading": {
+      "implementation": "tests/sentry/test_addon_loading.gd",
+      "method": "test_sentry_addon_enabled",
+      "description": "Test if Sentry addon is properly enabled in project settings"
+    },
+
+    "sentry.test_manager_autoload": {
+      "implementation": "tests/sentry/test_manager_autoload.gd",
+      "method": "test_sentry_manager_autoload",
+      "description": "Test if SentryManager singleton is properly loaded"
+    },
+
+    "sentry.test_initialization_with_valid_dsn": {
+      "implementation": "tests/sentry/test_initialization.gd",
+      "method": "test_initialization_with_valid_dsn",
+      "description": "Test Sentry initialization with valid DSN configuration"
+    },
+
+    "sentry.test_initialization_with_disabled_env": {
+      "implementation": "tests/sentry/test_initialization.gd",
+      "method": "test_initialization_with_disabled_env",
+      "description": "Test Sentry initialization when disabled via environment"
+    },
+
+    "sentry.test_performance_budget_enforcement": {
+      "implementation": "tests/sentry/test_performance_budgeting.gd",
+      "method": "test_performance_budget_enforcement",
+      "description": "Test if performance budgets are properly enforced"
+    },
+
+    "sentry.test_null_reference_crash": {
+      "implementation": "tests/sentry/test_crash_reporting.gd",
+      "method": "test_null_reference_crash_capture",
+      "description": "Test null reference exception capture and reporting"
+    },
+
+    "sentry.test_bounds_error_crash": {
+      "implementation": "tests/sentry/test_crash_reporting.gd",
+      "method": "test_bounds_error_crash_capture",
+      "description": "Test array bounds error capture and reporting"
+    },
+
+    "sentry.test_resource_loading_error": {
+      "implementation": "tests/sentry/test_crash_reporting.gd",
+      "method": "test_resource_loading_error_capture",
+      "description": "Test resource loading error capture and reporting"
+    },
+
+    "sentry.test_stack_trace_format": {
+      "implementation": "tests/sentry/test_crash_reporting.gd",
+      "method": "test_gdscript_stack_trace_format",
+      "description": "Test GDScript stack trace readability and completeness"
+    },
+
+    "sentry.test_advanced_logger_bridge": {
+      "implementation": "tests/sentry/test_integration_bridges.gd",
+      "method": "test_advanced_logger_bridge_functionality",
+      "description": "Test Advanced Logger to Sentry error forwarding"
+    },
+
+    "sentry.test_firebase_context_integration": {
+      "implementation": "tests/sentry/test_integration_bridges.gd",
+      "method": "test_firebase_context_integration",
+      "description": "Test Firebase user context integration with Sentry"
+    },
+
+    "sentry.test_debug_coordinator_compatibility": {
+      "implementation": "tests/sentry/test_integration_bridges.gd",
+      "method": "test_debug_coordinator_compatibility",
+      "description": "Test Debug Coordinator compatibility with Sentry"
+    },
+
+    "sentry.test_startup_time_impact": {
+      "implementation": "tests/sentry/test_performance_validation.gd",
+      "method": "test_startup_time_impact",
+      "description": "Test Sentry startup time impact measurement"
+    },
+
+    "sentry.test_cpu_overhead_during_gameplay": {
+      "implementation": "tests/sentry/test_performance_validation.gd",
+      "method": "test_cpu_overhead_during_gameplay",
+      "description": "Test CPU overhead during active gameplay"
+    },
+
+    "sentry.test_memory_usage_impact": {
+      "implementation": "tests/sentry/test_performance_validation.gd",
+      "method": "test_memory_usage_impact",
+      "description": "Test memory usage impact from Sentry integration"
+    },
+
+    "sentry.test_emergency_disable": {
+      "implementation": "tests/sentry/test_safety_controls.gd",
+      "method": "test_emergency_disable_functionality",
+      "description": "Test emergency disable functionality"
+    },
+
+    "sentry.test_feature_flag_control": {
+      "implementation": "tests/sentry/test_safety_controls.gd",
+      "method": "test_feature_flag_control",
+      "description": "Test feature flag based Sentry control"
+    },
+
+    "sentry.test_performance_based_auto_disable": {
+      "implementation": "tests/sentry/test_safety_controls.gd",
+      "method": "test_performance_based_auto_disable",
+      "description": "Test automatic disable when performance budgets exceeded"
+    }
+  },
+
+  "android_specific_actions": {
+    "sentry.test_android_native_library_loading": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_native_library_loading",
+      "description": "Test Android native library loading"
+    },
+
+    "sentry.test_android_permissions": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_permissions_validation",
+      "description": "Test Android network permissions validation"
+    },
+
+    "sentry.test_android_platform_context": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_platform_context",
+      "description": "Test Android device info in Sentry context"
+    },
+
+    "sentry.test_memory_pressure_crash_handling": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_memory_pressure_crash_handling",
+      "description": "Test crash handling under memory pressure"
+    },
+
+    "sentry.test_network_connectivity_handling": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_network_connectivity_handling",
+      "description": "Test offline/online connectivity handling"
+    },
+
+    "sentry.test_android_app_lifecycle_integration": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_app_lifecycle_integration",
+      "description": "Test Android app lifecycle integration"
+    },
+
+    "sentry.test_firebase_android_compatibility": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_firebase_android_compatibility",
+      "description": "Test Firebase Android compatibility with Sentry"
+    },
+
+    "sentry.test_android_firebase_context": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_firebase_context",
+      "description": "Test Firebase context on Android platform"
+    },
+
+    "sentry.test_android_battery_impact": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_battery_impact",
+      "description": "Test Android battery impact from Sentry"
+    },
+
+    "sentry.test_android_memory_impact": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_memory_impact",
+      "description": "Test Android memory impact and fragmentation"
+    },
+
+    "sentry.test_android_thread_safety": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_thread_safety",
+      "description": "Test Android thread safety and ANR prevention"
+    },
+
+    "sentry.test_google_play_privacy_compliance": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_google_play_privacy_compliance",
+      "description": "Test Google Play Store privacy compliance"
+    },
+
+    "sentry.test_android_target_sdk_compatibility": {
+      "implementation": "tests/sentry/test_android_specific.gd",
+      "method": "test_android_target_sdk_compatibility",
+      "description": "Test Android target SDK compatibility"
+    }
+  },
+
+  "test_utilities": {
+    "sentry_test_environment": {
+      "implementation": "tests/sentry/test_environment.gd",
+      "description": "Test environment setup and cleanup utilities"
+    },
+
+    "sentry_mock_server": {
+      "implementation": "tests/sentry/test_mock_server.gd",
+      "description": "Mock Sentry server for testing without network dependencies"
+    },
+
+    "sentry_performance_monitor": {
+      "implementation": "tests/sentry/test_performance_monitor.gd",
+      "description": "Performance monitoring utilities for testing"
+    },
+
+    "sentry_test_data_factory": {
+      "implementation": "tests/sentry/test_data_factory.gd",
+      "description": "Test data generation and validation utilities"
+    }
+  }
+}

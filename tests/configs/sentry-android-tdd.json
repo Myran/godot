@@ -1,0 +1,124 @@
+{
+  "name": "Sentry Integration - Android Validation",
+  "description": "Comprehensive TDD test suite for Sentry Android integration with GameTwo",
+  "version": "1.0.0",
+  "platforms": ["android"],
+  "extends": "sentry-desktop-tdd.json",
+  "test_categories": {
+    "platform_specific_initialization": {
+      "description": "Validate Android-specific Sentry initialization",
+      "tests": [
+        {
+          "name": "android_native_library_loading",
+          "action": "sentry.test_android_native_library_loading",
+          "expected_result": "android_libraries_loaded_successfully",
+          "validation": "android_sentry_aar_loaded == true and native_methods_accessible"
+        },
+        {
+          "name": "android_permissions_validation",
+          "action": "sentry.test_android_permissions",
+          "expected_result": "required_network_permissions_present",
+          "validation": "android_has_network_permissions == true and sentry_network_calls_allowed"
+        },
+        {
+          "name": "android_platform_context",
+          "action": "sentry.test_android_platform_context",
+          "expected_result": "android_device_info_in_sentry_events",
+          "validation": "sentry_events_contain_android_device_info and api_level_present"
+        }
+      ]
+    },
+    "mobile_crash_reporting": {
+      "description": "Validate crash reporting in mobile environment",
+      "tests": [
+        {
+          "name": "mobile_memory_pressure_crashes",
+          "action": "sentry.test_memory_pressure_crash_handling",
+          "expected_result": "crashes_captured_under_memory_pressure",
+          "validation": "crash_reports_sent_during_low_memory and app_continues_functioning"
+        },
+        {
+          "name": "network_connectivity_issues",
+          "action": "sentry.test_network_connectivity_handling",
+          "expected_result": "graceful_handling_when_offline",
+          "validation": "sentry_queues_events_when_offline and sends_when_connection_restored"
+        },
+        {
+          "name": "app_lifecycle_events",
+          "action": "sentry.test_android_app_lifecycle_integration",
+          "expected_result": "sentry_handles_app_background_foreground",
+          "validation": "sentry_state_preserved_across_app_lifecycle and no_crashes_on_resume"
+        }
+      ]
+    },
+    "firebase_android_integration": {
+      "description": "Validate Firebase and Sentry coordination on Android",
+      "tests": [
+        {
+          "name": "firebase_android_sdk_compatibility",
+          "action": "sentry.test_firebase_android_compatibility",
+          "expected_result": "no_conflicts_between_firebase_and_sentry",
+          "validation": "firebase_authentication_works and sentry_crash_reporting_works simultaneously"
+        },
+        {
+          "name": "android_firebase_context_sharing",
+          "action": "sentry.test_android_firebase_context",
+          "expected_result": "firebase_auth_data_in_sentry_events",
+          "validation": "sentry_events_contain_android_firebase_uid and user_identification_works"
+        }
+      ]
+    },
+    "android_performance_validation": {
+      "description": "Validate performance impact on Android devices",
+      "tests": [
+        {
+          "name": "android_battery_impact",
+          "action": "sentry.test_android_battery_impact",
+          "expected_result": "minimal_battery_drain_from_sentry",
+          "validation": "battery_usage_percentage < 1.0 and no_excessive_wake_locks"
+        },
+        {
+          "name": "android_memory_fragmentation",
+          "action": "sentry.test_android_memory_impact",
+          "expected_result": "no_significant_memory_fragmentation",
+          "validation": "memory_fragmentation_increase < 5_percent and heap_growth_within_limits"
+        },
+        {
+          "name": "android_thread_safety",
+          "action": "sentry.test_android_thread_safety",
+          "expected_result": "no_threading_issues_or_deadlocks",
+          "validation": "no_anr_reports and main_thread_responsive"
+        }
+      ]
+    },
+    "android_store_compliance": {
+      "description": "Validate Google Play Store compliance",
+      "tests": [
+        {
+          "name": "google_play_privacy_compliance",
+          "action": "sentry.test_google_play_privacy_compliance",
+          "expected_result": "privacy_policy_compliant",
+          "validation": "no_sensitive_data_transmitted and user_consent_mechanisms_work"
+        },
+        {
+          "name": "android_target_sdk_compatibility",
+          "action": "sentry.test_android_target_sdk_compatibility",
+          "expected_result": "compatible_with_current_target_sdk",
+          "validation": "no_deprecation_warnings and modern_android_practices_followed"
+        }
+      ]
+    }
+  },
+  "android_specific_validation": {
+    "limitations_acknowledged": true,
+    "android_missing_screenshots_known_limitation": true,
+    "android_missing_native_crash_logs_known_limitation": true,
+    "mitigation_strategies_implemented": true
+  },
+  "validation_criteria": {
+    "all_tests_must_pass": true,
+    "performance_budgets_stricter_than_desktop": true,
+    "battery_usage_minimized": true,
+    "google_play_store_compliance": true
+  }
+}

@@ -65,6 +65,12 @@ func _register_all_actions() -> void:
 	if firebase_debug_actions_script:
 		firebase_debug_actions_script.register_all(self)
 
+	var sentry_debug_actions_script: GDScript = load(
+		"res://debug/actions/registrations/sentry_debug_actions.gd"
+	)
+	if sentry_debug_actions_script:
+		sentry_debug_actions_script.register_all(self)
+
 
 func register_action(action: DebugAction) -> bool:
 	if not action:

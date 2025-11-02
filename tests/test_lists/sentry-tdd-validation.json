@@ -1,0 +1,14 @@
+{
+  "name": "Sentry TDD Validation Suite",
+  "description": "Complete Test-Driven Development validation for Sentry SDK integration",
+  "configs": [
+    "sentry-addon-validation",
+    "sentry-crash-scenarios",
+    "sentry-integration-bridges"
+  ],
+  "metadata": {
+    "test_suite": "sentry_tdd",
+    "tdd_approach": true,
+    "platform_validation": "desktop_first_then_android"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "description": "TDD: Test real Sentry SDK integration and functionality",
+  "actions": [
+    "sentry.test_sdk_functionality"
+  ],
+  "platforms": [
+    "desktop"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "integration_testing"
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "TDD Phase 2: Test actual SentrySDK class methods and integration"
+  }
+}

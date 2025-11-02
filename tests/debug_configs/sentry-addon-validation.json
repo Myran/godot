@@ -1,0 +1,19 @@
+{
+  "description": "TDD: Validate Sentry GDExtension loading and configuration",
+  "actions": [
+    "sentry.validate_gdextension_loading"
+  ],
+  "platforms": [
+    "desktop",
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "addon_validation"
+  },
+  "test_metadata": {
+    "test_id": "auto-generated",
+    "notes": "TDD Phase 1: Validate Sentry addon installation and configuration before any Sentry functionality"
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "name": "Sentry Integration - Desktop Validation",
+  "description": "Comprehensive TDD test suite for Sentry desktop integration with GameTwo",
+  "version": "1.0.0",
+  "platforms": ["desktop"],
+  "test_categories": {
+    "addon_loading": {
+      "description": "Validate Sentry addon loads correctly",
+      "tests": [
+        {
+          "name": "sentry_addon_enabled",
+          "action": "sentry.test_addon_loading",
+          "expected_result": "addon_loaded_successfully",
+          "validation": "sentry_addon_state == 'enabled'"
+        },
+        {
+          "name": "sentry_manager_autoload",
+          "action": "sentry.test_manager_autoload",
+          "expected_result": "manager_loaded_as_singleton",
+          "validation": "SentryManager != null and SentryManager.is_inside_tree()"
+        }
+      ]
+    },
+    "initialization": {
+      "description": "Validate Sentry SDK initialization with GameTwo configuration",
+      "tests": [
+        {
+          "name": "sentry_initialization_with_env_dsn",
+          "action": "sentry.test_initialization_with_valid_dsn",
+          "setup": {"SENTRY_ENABLED": "true", "SENTRY_DSN": "https://test@test.ingest.sentry.io/123456"},
+          "expected_result": "sentry_initialized_successfully",
+          "validation": "SentryManager.is_initialized() == true"
+        },
+        {
+          "name": "sentry_disabled_when_env_false",
+          "action": "sentry.test_initialization_with_disabled_env",
+          "setup": {"SENTRY_ENABLED": "false"},
+          "expected_result": "sentry_not_initialized",
+          "validation": "SentryManager.is_initialized() == false"
+        },
+        {
+          "name": "sentry_performance_budget_enforced",
+          "action": "sentry.test_performance_budget_enforcement",
+          "expected_result": "performance_budget_within_limits",
+          "validation": "SentryManager.get_cpu_overhead() <= 2.0 and SentryManager.get_memory_overhead() <= 5242880"
+        }
+      ]
+    },
+    "crash_reporting": {
+      "description": "Validate crash capture and reporting functionality",
+      "tests": [
+        {
+          "name": "null_reference_crash_capture",
+          "action": "sentry.test_null_reference_crash",
+          "expected_result": "crash_captured_and_sent",
+          "validation": "sentry_events_count > 0 and last_event_stack_trace != null"
+        },
+        {
+          "name": "bounds_error_crash_capture",
+          "action": "sentry.test_bounds_error_crash",
+          "expected_result": "crash_captured_with_context",
+          "validation": "sentry_events_count > 0 and 'bounds' in last_event_message"
+        },
+        {
+          "name": "resource_loading_error_capture",
+          "action": "sentry.test_resource_loading_error",
+          "expected_result": "resource_error_captured",
+          "validation": "sentry_events_count > 0 and 'resource' in last_event_tags"
+        },
+        {
+          "name": "gdscript_stack_trace_quality",
+          "action": "sentry.test_stack_trace_format",
+          "expected_result": "readable_gdscript_stack_trace",
+          "validation": "gdscript_functions_in_stack_trace > 0 and line_numbers_present"
+        }
+      ]
+    },
+    "integration_bridges": {
+      "description": "Validate integration with existing GameTwo systems",
+      "tests": [
+        {
+          "name": "advanced_logger_bridge_functionality",
+          "action": "sentry.test_advanced_logger_bridge",
+          "expected_result": "logger_errors_forwarded_to_sentry",
+          "validation": "Log.error_calls_forwarded > 0 and sentry_events_from_logger > 0"
+        },
+        {
+          "name": "firebase_context_integration",
+          "action": "sentry.test_firebase_context_integration",
+          "setup": {"firebase_authenticated": true},
+          "expected_result": "firebase_user_context_in_sentry",
+          "validation": "sentry_user_context_has_firebase_data == true"
+        },
+        {
+          "name": "debug_coordinator_compatibility",
+          "action": "sentry.test_debug_coordinator_compatibility",
+          "expected_result": "existing_debug_functionality_unaffected",
+          "validation": "debug_registry_actions_count == original_count + sentry_actions_count"
+        }
+      ]
+    },
+    "performance_validation": {
+      "description": "Validate performance impact is within budgets",
+      "tests": [
+        {
+          "name": "startup_time_impact",
+          "action": "sentry.test_startup_time_impact",
+          "expected_result": "startup_delay_under_100ms",
+          "validation": "sentry_startup_time_ms < 100"
+        },
+        {
+          "name": "cpu_overhead_monitoring",
+          "action": "sentry.test_cpu_overhead_during_gameplay",
+          "expected_result": "cpu_overhead_under_2_percent",
+          "validation": "average_cpu_overhead_percent < 2.0"
+        },
+        {
+          "name": "memory_usage_validation",
+          "action": "sentry.test_memory_usage_impact",
+          "expected_result": "memory_overhead_under_5mb",
+          "validation": "additional_memory_usage_bytes < 5242880"
+        }
+      ]
+    },
+    "safety_and_rollback": {
+      "description": "Validate safety mechanisms and rollback procedures",
+      "tests": [
+        {
+          "name": "emergency_disable_functionality",
+          "action": "sentry.test_emergency_disable",
+          "expected_result": "sentry_immediately_disabled",
+          "validation": "SentryManager.is_enabled() == false and sentry_shutdown_called"
+        },
+        {
+          "name": "feature_flag_instant_rollout",
+          "action": "sentry.test_feature_flag_control",
+          "expected_result": "sentry_respects_environment_flags",
+          "validation": "sentry_state_matches_environment_flag"
+        },
+        {
+          "name": "performance_based_auto_disable",
+          "action": "sentry.test_performance_based_auto_disable",
+          "expected_result": "auto_disable_when_budget_exceeded",
+          "validation": "sentry_auto_disabled_when_performance_budget_exceeded"
+        }
+      ]
+    }
+  },
+  "validation_criteria": {
+    "all_tests_must_pass": true,
+    "performance_budgets_maintained": true,
+    "no_regressions_in_existing_functionality": true,
+    "cross_platform_consistency": true
+  },
+  "cleanup": {
+    "reset_sentry_state": true,
+    "clear_test_events": true,
+    "restore_environment": true
+  }
+}
