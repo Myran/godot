@@ -44,6 +44,10 @@ help-sentry:
     @echo ""
     @echo "🚀 Full Build Pipeline:"
     @echo "  just sentry-build-complete       # Complete build for current platform"
+    @echo ""
+    @echo "🔧 Build Flags:"
+    @echo "  SENTRY_ENABLED=1                 # Enables native iOS Sentry SDK initialization"
+    @echo "                                   # Automatically passed to iOS SCons builds"
 
 # Verify Sentry submodule exists
 sentry-verify:
@@ -117,17 +121,18 @@ sentry-template-android:
     @echo "✅ Sentry Android template build completed"
 
 # iOS builds (device only - no simulator)
+# SENTRY_ENABLED=1 enables native iOS Sentry SDK initialization in Godot's AppDelegate
 sentry-build-ios: sentry-editor-ios-device sentry-template-ios-device
     @echo "✅ Sentry iOS device builds completed"
 
 sentry-editor-ios-device:
     @echo "🏗️  Building Sentry for iOS device (editor)..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no
+    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no SENTRY_ENABLED=1
     @echo "✅ Sentry iOS device editor build completed"
 
 sentry-template-ios-device:
     @echo "🏗️  Building Sentry for iOS device template..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no
+    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no SENTRY_ENABLED=1
     @echo "✅ Sentry iOS device template build completed"
     @echo "📱 Creating device-only GDExtension XCFrameworks..."
     @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then \

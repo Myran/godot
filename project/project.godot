@@ -37,6 +37,7 @@ DebugStartupCoordinator="*res://addons/debug_startup/debug_startup_coordinator.g
 settings/stdout/verbose_stdout=true
 file_logging/enable_file_logging=true
 file_logging/max_log_files=10
+settings/gdscript/always_track_call_stacks=true
 gdscript/warnings/unused_variable=0
 gdscript/warnings/untyped_declaration=1
 gdscript/warnings/inferred_declaration=1
@@ -67,3 +68,14 @@ pointing/emulate_touch_from_mouse=true
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
+
+[sentry]
+
+options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+options/app_hang/tracking=true
+
+# iOS Native Sentry SDK Settings (for native iOS crashes)
+# Use the same DSN as above for unified reporting
+ios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+ios/environment="development"
+ios/release=""
