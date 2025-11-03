@@ -26,19 +26,14 @@ build-ios-executable:
     echo "🔨 Building iOS executable..."
 
     cd {{GODOT_SUBMODULE_PATH}}
-    echo "📦 Building iOS template for arm64 with Sentry SDK..."
-    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes SENTRY_ENABLED=1
+    echo "📦 Building iOS template for arm64 (Sentry SDK always included)..."
+    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes
     
-    # Move to export directory
+    # Move to export directory - update existing XCFramework
     echo "📁 Moving executable to export directory..."
-    cp bin/libgodot.ios.template_release.arm64.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
+    cp misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
 
-    # Also copy to Xcode Build/Products directory for immediate testing
-    echo "📱 Updating Xcode Build/Products directory..."
-    mkdir -p ../export/ios/Build/Products/Debug-iphoneos/
-    cp bin/libgodot.ios.template_release.arm64.a ../export/ios/Build/Products/Debug-iphoneos/libgodot.a
-
-    echo "✅ iOS executable built successfully and Xcode Build/Products updated"
+    echo "✅ iOS executable built successfully and XCFramework updated"
 
 # iOS help information
 help-ios:

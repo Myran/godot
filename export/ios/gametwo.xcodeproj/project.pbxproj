@@ -229,7 +229,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1630;
 				ORGANIZATIONNAME = GodotEngine;
 				TargetAttributes = {
 					D0BCFE3318AEBDA2004A7AAE = {
@@ -456,6 +456,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = KV4ZR772LW;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -515,6 +516,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = KV4ZR772LW;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -543,7 +545,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D8C6D17FC508ABF00A9AED10 /* Pods-gametwo.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = gametwo/gametwo.entitlements;
@@ -551,7 +552,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				CURRENT_PROJECT_VERSION = 1.0.20240731142317;
-				DEVELOPMENT_TEAM = KV4ZR772LW;
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;
@@ -579,7 +579,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 46A8F0B4E32302D87DA7442D /* Pods-gametwo.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = gametwo/gametwo.entitlements;
@@ -587,7 +586,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				CURRENT_PROJECT_VERSION = 1.0.20240731142317;
-				DEVELOPMENT_TEAM = KV4ZR772LW;
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;

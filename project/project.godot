@@ -71,11 +71,10 @@ textures/vram_compression/import_etc2_astc=true
 
 [sentry]
 
-options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
-options/app_hang/tracking=true
-
-# iOS Native Sentry SDK Settings (for native iOS crashes)
-# Use the same DSN as above for unified reporting
-ios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+#iOSNativeSentrySDKSettings(fornativeiOScrashes)#UsethesameDSNasaboveforunifiedreportingios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
 ios/environment="development"
 ios/release=""
+release_name="1.0.0"
+environment="development"
+options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+options/app_hang/tracking=true
