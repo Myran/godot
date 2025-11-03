@@ -32,8 +32,13 @@ build-ios-executable:
     # Move to export directory
     echo "📁 Moving executable to export directory..."
     cp bin/libgodot.ios.template_release.arm64.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
-    
-    echo "✅ iOS executable built successfully"
+
+    # Also copy to Xcode Build/Products directory for immediate testing
+    echo "📱 Updating Xcode Build/Products directory..."
+    mkdir -p ../export/ios/Build/Products/Debug-iphoneos/
+    cp bin/libgodot.ios.template_release.arm64.a ../export/ios/Build/Products/Debug-iphoneos/libgodot.a
+
+    echo "✅ iOS executable built successfully and Xcode Build/Products updated"
 
 # iOS help information
 help-ios:
