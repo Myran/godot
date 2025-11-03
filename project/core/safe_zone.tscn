@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c2nar6vo4gr1y"]
 
-[ext_resource type="Script" path="res://core/safe_zone.gd" id="1"]
+[ext_resource type="Script" uid="uid://cc0sjrg44o5ic" path="res://core/safe_zone.gd" id="1"]
 
 [node name="safe_zone" type="MarginContainer"]
 anchors_preset = 15

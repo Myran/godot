@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://cxw3d0a2n0olk" path="res://assets/testart/ui_test_9.png" id="8_30y4c"]
 [ext_resource type="FontFile" uid="uid://ddg2qxa5w06ai" path="res://assets/fonts/Quintessential/Quintessential-Regular.ttf" id="9_ql8ra"]
 [ext_resource type="Script" uid="uid://cxfcfpbyolru4" path="res://core/card/aspect_container_level.gd" id="10_v2cee"]
-[ext_resource type="PackedScene" path="res://assets/testart/icon_level.tscn" id="11_02h1h"]
+[ext_resource type="PackedScene" uid="uid://dsgxorqkydo20" path="res://assets/testart/icon_level.tscn" id="11_02h1h"]
 [ext_resource type="Texture2D" uid="uid://bwfyr6awi7jce" path="res://assets/testart/ui_test_11.png" id="12_hiu1l"]
 [ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="13_e2qcp"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="14_5eikb"]

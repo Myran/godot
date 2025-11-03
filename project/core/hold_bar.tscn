@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://d2oupj88p1q2k" path="res://core/hold_button.tscn" id="1"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2"]
-[ext_resource type="Script" path="res://core/hold_bar.gd" id="3"]
+[ext_resource type="Script" uid="uid://d3c16h6hitvvi" path="res://core/hold_bar.gd" id="3"]
 
 [node name="hold_bar" type="NinePatchRect" node_paths=PackedStringArray("h_box_container_buttons")]
 anchors_preset = 5

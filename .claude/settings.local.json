@@ -150,7 +150,14 @@
       "Bash(git ls-tree:*)",
       "Bash(git branch:*)",
       "Bash(git show:*)",
-      "WebFetch(domain:godotengine.org)"
+      "WebFetch(domain:godotengine.org)",
+      "WebFetch(domain:docs.sentry.io)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:discord.com)",
+      "Bash(scons:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(otool:*)",
+      "Bash(install_name_tool:*)"
     ],
     "deny": [],
     "ask": [],

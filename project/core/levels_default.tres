@@ -10,7 +10,7 @@
 
 [resource]
 script = ExtResource("1")
-tilemap_levels = {
+tilemap_levels = Dictionary[String, PackedScene]({
 "default": ExtResource("2_p83vp"),
 "level_01": ExtResource("3"),
 "level_02": ExtResource("4"),
@@ -18,4 +18,4 @@ tilemap_levels = {
 "level_04": ExtResource("6"),
 "level_05": ExtResource("7"),
 "tile_level_04": null
-}
+})

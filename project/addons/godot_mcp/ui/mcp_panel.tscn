@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c2kuk5yuiage8"]
 
-[ext_resource type="Script" path="res://addons/godot_mcp/ui/mcp_panel.gd" id="1_3cbiu"]
+[ext_resource type="Script" uid="uid://d2c1roi0jmke1" path="res://addons/godot_mcp/ui/mcp_panel.gd" id="1_3cbiu"]
 
 [node name="MCPPanel" type="Control"]
 layout_mode = 3
@@ -37,7 +37,7 @@ text = "Status:"
 [node name="StatusLabel" type="Label" parent="VBoxContainer/StatusContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Server: Stopped"
+text = "Server: Not initialized"
 
 [node name="PortContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -59,6 +59,7 @@ layout_mode = 2
 [node name="StartButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+disabled = true
 text = "Start Server"
 
 [node name="StopButton" type="Button" parent="VBoxContainer/ButtonsContainer"]

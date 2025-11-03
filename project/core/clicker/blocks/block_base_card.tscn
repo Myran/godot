@@ -20,7 +20,7 @@
 [ext_resource type="StyleBox" path="res://core/card/panel_card.tres" id="18_ju1vn"]
 [ext_resource type="Texture2D" uid="uid://cju8ai550siue" path="res://assets/testart/ui_test_1.png" id="19_3qkbg"]
 [ext_resource type="FontFile" uid="uid://cia25xwlhonbu" path="res://assets/font_card_stat_num.tres" id="20_cni5c"]
-[ext_resource type="PackedScene" path="res://core/card/icon_level_small.tscn" id="21_0y3oy"]
+[ext_resource type="PackedScene" uid="uid://dc2rxjhui1ecq" path="res://core/card/icon_level_small.tscn" id="21_0y3oy"]
 [ext_resource type="Texture2D" uid="uid://4vfnnefppaei" path="res://assets/testart/ui_test_13.png" id="22_g1owo"]
 [ext_resource type="Texture2D" uid="uid://cjadslfp4utgo" path="res://assets/testart/ui_test_8.png" id="23_ip14o"]
 [ext_resource type="Script" uid="uid://botmau3558bg3" path="res://core/card/panel_container_level_top.gd" id="24_48xds"]

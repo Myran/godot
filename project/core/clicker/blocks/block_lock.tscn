@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://tyku3tpybm2i" path="res://assets/testart/tile_test_7.png" id="1"]
 [ext_resource type="PackedScene" uid="uid://lgn87db8aaun" path="res://core/clicker/blocks/base_block.tscn" id="2"]
-[ext_resource type="Script" path="res://core/clicker/blocks/locked_block.gd" id="3"]
+[ext_resource type="Script" uid="uid://b6bkwwnd88qn4" path="res://core/clicker/blocks/locked_block.gd" id="3"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(200, 204)

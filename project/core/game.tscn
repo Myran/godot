@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://ddv8p7xpjy08i"]
+[gd_scene load_steps=40 format=3 uid="uid://ddv8p7xpjy08i"]
 
 [ext_resource type="Script" uid="uid://cpu7frcrrkqbh" path="res://core/game.gd" id="1_xyr2d"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="2_3txpi"]
@@ -117,7 +117,6 @@ script = ExtResource("5_jukdk")
 
 [node name="battle_handler" type="Node" parent="."]
 script = ExtResource("6_8cr3l")
-
 
 [node name="game_handler" type="Node" parent="."]
 script = ExtResource("2_q5x7q")

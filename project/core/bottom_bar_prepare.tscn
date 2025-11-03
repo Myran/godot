@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dp1o5y0achq26" path="res://assets/testart/icon_attacking_3.png" id="1"]
 [ext_resource type="Texture2D" uid="uid://b8rfgb42ejraw" path="res://assets/ui/ui_button_round.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://dk233137wfw45" path="res://assets/ui/ui_bar_2.png" id="3"]
-[ext_resource type="Script" path="res://core/bottom_bar_prepare.gd" id="4"]
+[ext_resource type="Script" uid="uid://csrq081ymraxf" path="res://core/bottom_bar_prepare.gd" id="4"]
 [ext_resource type="FontFile" path="res://assets/font_card_title.tres" id="5"]
 [ext_resource type="Texture2D" uid="uid://bo3h1htu7oiey" path="res://assets/testart/icon_coins.png" id="6"]
 [ext_resource type="Texture2D" uid="uid://dnoxd466j6uer" path="res://assets/testart/icon_upgrade.png" id="7"]
