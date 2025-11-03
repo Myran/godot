@@ -24,10 +24,10 @@ build-ios-executable:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🔨 Building iOS executable..."
-    
+
     cd {{GODOT_SUBMODULE_PATH}}
-    echo "📦 Building iOS template for arm64..."
-    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes
+    echo "📦 Building iOS template for arm64 with Sentry SDK..."
+    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes SENTRY_ENABLED=1
     
     # Move to export directory
     echo "📁 Moving executable to export directory..."
