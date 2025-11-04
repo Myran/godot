@@ -32,9 +32,9 @@ help-sentry:
     @echo "  just native-sentry-complete          # Complete native build + validation"
     @echo ""
     @echo "🎮 GDSCRIPT SENTRY (RUNTIME GDEXTENSION):"
-    @echo "  just gdscript-sentry-help            # Show GDScript Sentry commands"
-    @echo "  just gdscript-sentry-build            # Build GDScript Sentry for all platforms"
-    @echo "  just gdscript-sentry-complete        # Complete GDScript build + validation"
+    @echo "  just sentry-gdscript-help            # Show GDScript Sentry commands"
+    @echo "  just sentry-gdscript-build            # Build GDScript Sentry for all platforms"
+    @echo "  just sentry-gdscript-complete        # Complete GDScript build + validation"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
     @echo "  just sentry-build-all               # Build both native iOS and GDScript Sentry"
@@ -54,8 +54,8 @@ native-sentry-help:
     @just help-native-sentry
 
 # Show GDScript Sentry help
-gdscript-sentry-help:
-    @just help-gdscript-sentry
+sentry-gdscript-help:
+    @just help-sentry-gdscript
 
 # Unified build workflows
 sentry-build-all:
@@ -65,7 +65,7 @@ sentry-build-all:
     @just native-sentry-build
     @echo ""
     @echo "🎮 Building GDScript Sentry for iOS..."
-    @just gdscript-sentry-build-ios
+    @just sentry-gdscript-build-ios
     @echo ""
     @echo "✅ All Sentry integrations built successfully"
 
@@ -92,7 +92,7 @@ sentry-validate-all:
         echo "❌" > /tmp/gdscript_status; \
     else \
         if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then \
-            echo "❌ GDScript Sentry GDExtension not built - run 'just gdscript-sentry-build'"; \
+            echo "❌ GDScript Sentry GDExtension not built - run 'just sentry-gdscript-build'"; \
             echo "❌" > /tmp/gdscript_status; \
         else \
             if [ ! -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then \
@@ -142,7 +142,7 @@ sentry-clean-all:
     @just native-sentry-clean
     @echo ""
     @echo "🎮 Cleaning GDScript Sentry..."
-    @just gdscript-sentry-clean
+    @just sentry-gdscript-clean
     @echo ""
     @echo "✅ All Sentry build artifacts cleaned"
 
@@ -154,4 +154,4 @@ sentry-status-all:
     @just native-sentry-status
     @echo ""
     @echo "🎮 GDSCRIPT SENTRY STATUS:"
-    @just gdscript-sentry-status
+    @just sentry-gdscript-status
