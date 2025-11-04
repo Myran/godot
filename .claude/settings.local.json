@@ -158,7 +158,10 @@
       "Bash(xcodebuild:*)",
       "Bash(otool:*)",
       "Bash(install_name_tool:*)",
-      "WebFetch(domain:scons.org)"
+      "WebFetch(domain:scons.org)",
+      "Bash(unzip:*)",
+      "Bash(jar:*)",
+      "Bash(xxd:*)"
     ],
     "deny": [],
     "ask": [],
