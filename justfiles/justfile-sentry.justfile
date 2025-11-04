@@ -40,7 +40,6 @@ help-sentry:
     @echo "  just sentry-build-all               # Build both native iOS and GDScript Sentry"
     @echo "  just sentry-validate-all             # Validate both Sentry integrations"
     @echo "  just sentry-complete                # Complete build + validation for both"
-    @echo "  just sentry-dev                     # Development workflow (build + validate both)"
     @echo ""
     @echo "🧧 MAINTENANCE:"
     @echo "  just sentry-clean-all                # Clean all Sentry build artifacts"
@@ -57,24 +56,82 @@ sentry-native-ios-help:
 sentry-gdscript-help:
     @just help-sentry-gdscript
 
-# Unified build workflows
-sentry-build-all:
-    @echo "🔥 Building both Sentry integrations..."
+# Smart Sentry rebuild detection
+_check-or-build-sentry-native-ios force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🍎 Checking Native iOS Sentry SDK..."
+
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding Native iOS Sentry..."
+        just sentry-native-ios-build
+    elif [ -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then
+        echo "✅ Native iOS Sentry already built:"
+        echo "   📱 {{IOS_EXPORT_PATH}}/Sentry.xcframework"
+        echo "⏭️  Skipping Native iOS Sentry rebuild (saves 2-5 minutes)"
+    else
+        echo "🔧 Building Native iOS Sentry (this will take 2-5 minutes)..."
+        just sentry-native-ios-build
+    fi
+
+_check-or-build-sentry-gdscript force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🎮 Checking GDScript Sentry SDK..."
+
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
+        just sentry-gdscript-build
+    elif [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
+        echo "✅ GDScript Sentry already built:"
+        echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
+        echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework"
+        echo "⏭️  Skipping GDScript Sentry rebuild (saves 3-8 minutes)"
+    else
+        echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
+        just sentry-gdscript-build
+    fi
+
+# Unified build workflows with smart rebuild detection
+sentry-build-all force="no":
+    @echo "🔥 Building all Sentry SDK components with smart rebuild detection..."
     @echo ""
-    @echo "🍎 Building Native iOS Sentry..."
-    @just native-sentry-build
+
+    @just _check-or-build-sentry-native-ios {{force}}
     @echo ""
-    @echo "🎮 Building GDScript Sentry for iOS..."
-    @just sentry-gdscript-build-ios
+    @just _check-or-build-sentry-gdscript {{force}}
     @echo ""
-    @echo "✅ All Sentry integrations built successfully"
+    @just sentry-validate-all
+    @echo ""
+    @echo "🎉 All Sentry SDK components built and validated successfully!"
+
+# Quick Sentry status check
+sentry-status-quick:
+    @echo "⚡ Quick Sentry status check..."
+    @echo ""
+
+    @echo "🍎 Native iOS Sentry:"
+    @if [ -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then \
+        echo "   ✅ Built (Sentry.xcframework)"; \
+    else \
+        echo "   ❌ Not built - run 'just sentry-build-all'"; \
+    fi
+
+    @echo "🎮 GDScript Sentry:"
+    @if [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then \
+        echo "   ✅ Built (libsentry.ios.release.xcframework)"; \
+    else \
+        echo "   ❌ Not built - run 'just sentry-build-all'"; \
+    fi
 
 sentry-validate-all:
     @echo "🔧 Validating both Sentry integrations..."
     @echo ""
     @echo "🍎 Validating Native iOS Sentry..."
     @if [ ! -d "{{IOS_EXPORT_PATH}}/Sentry.xcframework" ]; then \
-        echo "❌ Native Sentry SDK not built - run 'just native-sentry-build'"; \
+        echo "❌ Native Sentry SDK not built - run 'just sentry-native-ios-build'"; \
         echo "❌" > /tmp/native_status; \
     else \
         if [ ! -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then \
@@ -128,18 +185,13 @@ sentry-complete:
     @echo ""
     @echo "🎉 Complete Sentry workflow finished successfully"
 
-# Development workflow
-sentry-dev:
-    @echo "🔧 Sentry development workflow..."
-    @echo ""
-    @just sentry-complete
 
 # Unified maintenance
 sentry-clean-all:
     @echo "🧹 Cleaning all Sentry build artifacts..."
     @echo ""
     @echo "🍎 Cleaning Native iOS Sentry..."
-    @just native-sentry-clean
+    @just sentry-native-ios-clean
     @echo ""
     @echo "🎮 Cleaning GDScript Sentry..."
     @just sentry-gdscript-clean
@@ -151,7 +203,7 @@ sentry-status-all:
     @echo "================================"
     @echo ""
     @echo "🍎 NATIVE iOS SENTRY STATUS:"
-    @just native-sentry-status
+    @just sentry-native-ios-status
     @echo ""
     @echo "🎮 GDSCRIPT SENTRY STATUS:"
     @just sentry-gdscript-status
