@@ -41,13 +41,36 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		if test_results.sentrysdk_singleton_accessible:
 			# Test actual Sentry functionality - let it fail if not working
 
-			# Test 3: Try init method (will fail if API is wrong)
-			sentry_sdk.init(func(options: SentryOptions) -> void:
-				options.dsn = "https://test@test.ingest.sentry.io/123456"
-				options.debug = true
-				options.environment = "test"
-			)
-			test_results.sentry_init_method_works = true
+			# Test 3: Try init method (platform-specific)
+			var options_init_success = false
+			var platform = OS.get_name()
+
+			if platform == "iOS" or platform == "macOS":
+				# Native Sentry build - use proper SentryOptions
+				print("Testing Native Sentry build on ", platform, " - using SentryOptions")
+				if ClassDB.class_exists("SentryOptions"):
+					# Use untyped parameter to avoid compilation issues
+					sentry_sdk.init(func(options) -> void:
+						options.dsn = "https://test@test.ingest.sentry.io/123456"
+						options.debug = true
+						options.environment = "test"
+						options_init_success = true
+					)
+				else:
+					print("ERROR: SentryOptions not available on ", platform, " - native build failed")
+					test_results.native_build_issues = true
+			else:
+				# GDExtension build (Android) - use Dictionary for options
+				print("Testing GDExtension Sentry build on ", platform, " - using Dictionary")
+				sentry_sdk.init(func(options: Dictionary) -> void:
+					options.dsn = "https://test@test.ingest.sentry.io/123456"
+					options.debug = true
+					options.environment = "test"
+					options_init_success = true
+				)
+
+			test_results.init_method_works = options_init_success
+			print("Sentry init result: ", "SUCCESS" if options_init_success else "FAILED")
 
 			# Test 4: Try configure method
 			sentry_sdk.capture_message("Test message from GameTwo")
