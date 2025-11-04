@@ -157,7 +157,8 @@
       "Bash(scons:*)",
       "Bash(xcodebuild:*)",
       "Bash(otool:*)",
-      "Bash(install_name_tool:*)"
+      "Bash(install_name_tool:*)",
+      "WebFetch(domain:scons.org)"
     ],
     "deny": [],
     "ask": [],

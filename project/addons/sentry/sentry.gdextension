@@ -25,8 +25,8 @@ android.release.arm32 = "res://addons/sentry/bin/android/libsentry.android.relea
 android.debug.x86_64 = "res://addons/sentry/bin/android/libsentry.android.debug.x86_64.so"
 android.release.x86_64 = "res://addons/sentry/bin/android/libsentry.android.release.x86_64.so"
 
-ios.debug = "res://addons/sentry/bin/ios/libsentry.ios.debug.xcframework"
-ios.release = "res://addons/sentry/bin/ios/libsentry.ios.release.xcframework"
+ios.debug = "res://../../../../export/ios/libsentry.ios.debug.xcframework"
+ios.release = "res://../../../../export/ios/libsentry.ios.release.xcframework"
 
 ; noop libs for unsupported platforms
 web.debug.wasm32 = "res://addons/sentry/bin/noop/libsentry.web.debug.wasm32.nothreads.wasm"
