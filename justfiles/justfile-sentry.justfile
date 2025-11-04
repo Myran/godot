@@ -27,9 +27,9 @@ help-sentry:
     @echo "============================"
     @echo ""
     @echo "🍎 NATIVE iOS SENTRY (BUILT-IN):"
-    @echo "  just native-sentry-help              # Show native iOS commands"
-    @echo "  just native-sentry-build              # Build native Sentry for iOS"
-    @echo "  just native-sentry-complete          # Complete native build + validation"
+    @echo "  just sentry-native-ios-help              # Show native iOS commands"
+    @echo "  just sentry-native-ios-build              # Build native Sentry for iOS"
+    @echo "  just sentry-native-ios-complete          # Complete native build + validation"
     @echo ""
     @echo "🎮 GDSCRIPT SENTRY (RUNTIME GDEXTENSION):"
     @echo "  just sentry-gdscript-help            # Show GDScript Sentry commands"
@@ -50,8 +50,8 @@ help-sentry:
     @echo "ℹ️  GDSCRIPT = Runtime GDExtension (script-level functionality)"
 
 # Show native iOS Sentry help
-native-sentry-help:
-    @just help-native-sentry
+sentry-native-ios-help:
+    @just help-sentry-native-ios
 
 # Show GDScript Sentry help
 sentry-gdscript-help:
