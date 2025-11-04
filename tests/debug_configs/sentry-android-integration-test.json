@@ -1,0 +1,13 @@
+{
+  "description": "Test Sentry SDK integration action on Android",
+  "actions": [
+    "sentry.test_sdk_functionality"
+  ],
+  "platforms": [
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": true,
+    "test_category": "sentry_integration"
+  }
+}
