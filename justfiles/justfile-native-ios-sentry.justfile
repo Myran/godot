@@ -37,12 +37,12 @@ native-sentry-build: native-sentry-editor native-sentry-template
 
 native-sentry-editor:
     @echo "🏗️  Building Native Sentry for iOS editor..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no SENTRY_ENABLED=1
+    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no
     @echo "✅ Native Sentry iOS editor build completed"
 
 native-sentry-template:
     @echo "🏗️  Building Native Sentry for iOS template..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no SENTRY_ENABLED=1
+    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no
     @echo "✅ Native Sentry iOS template build completed"
     @echo "📱 Copying Native Sentry SDK to iOS export project..."
     @if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/Sentry.xcframework" ]; then \
