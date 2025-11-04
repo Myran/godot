@@ -38,12 +38,8 @@ help-sentry-gdscript:
     @echo "  just sentry-gdscript-status           # Check build status"
     @echo "  just sentry-gdscript-validate         # Validate Sentry integration"
     @echo ""
-    @echo "⚡ QUICK COMMANDS:"
-    @echo "  just sentry-gdscript-quick           # Quick build (desktop editor only)"
-    @echo ""
     @echo "🚀 WORKFLOWS:"
     @echo "  just sentry-gdscript-complete        # Complete build + validation"
-    @echo "  just sentry-gdscript-dev             # Development workflow (build + validate)"
 
 # All platform GDScript Sentry builds
 sentry-gdscript-build: sentry-gdscript-build-desktop sentry-gdscript-build-android sentry-gdscript-build-ios
@@ -215,17 +211,9 @@ sentry-gdscript-validate:
     fi
     @echo "✅ GDScript Sentry SDK validation passed"
 
-# Quick build (desktop editor only)
-sentry-gdscript-quick: sentry-gdscript-verify sentry-gdscript-editor-desktop
-    @echo "⚡ Quick GDScript Sentry build completed"
-
 # Complete build + validation workflow
 sentry-gdscript-complete:
     @just sentry-gdscript-verify
     @just sentry-gdscript-build
     @just sentry-gdscript-validate
     @echo "🎉 GDScript Sentry complete build workflow finished"
-
-# Development workflow (build + validation)
-sentry-gdscript-dev:
-    @just sentry-gdscript-complete
