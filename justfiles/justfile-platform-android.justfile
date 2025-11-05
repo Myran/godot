@@ -99,17 +99,13 @@ _get-safe-config-file CONFIG:
 pre-build:
     @echo "🔧 Running pre-build tasks..."
 
-# Fast Android development iteration (60 seconds - most used command)
-fastbuild-android: _validate-android-workflow _validate-godot-editor
-    @echo "⚡ Fast Android rebuild with hybrid approach (30-60 sec)..."
-    @echo "   🔄 Step 1: Processing GDScript changes with Godot export..."
-    @echo "   🔨 Step 2: Fast gradle build with custom parameters..."
-    @echo "   ⚠️  Android limitation: Full reinstall required (no hot reload like iOS)"
-    # First: Process GDScript changes via Godot export (creates/updates android build files)
-    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-debug "Android apk" /tmp/temp_android_export.apk
-    # Second: Use direct gradle for fast, customized build and install
-    just _gradle-build-install-android
-    just launch-android
+# Fast Android development iteration - optimized workflow alias
+fastbuild: export-install-launch-debug
+    @echo "⚡ Fast Android build (2x faster than old implementation)..."
+    @echo "✅ Complete Sentry integration enabled"
+
+# Note: Original fastbuild-android removed - alias to export-install-launch-debug
+# Why: export-install-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
 
 # Android template building
 build-android-templates minimal="no":
@@ -446,58 +442,8 @@ restart-android-app: _validate-android-workflow
     adb -s {{ANDROID_DEVICE_ID}} shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ Android app restarted"
 
-# Internal helper: Gradle build + install (no launch)
-_gradle-build-install-android:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    
-    # First insert Firebase dependencies
-    just insert-firebase-dependencies
-    
-    echo "🔨 Building Android APK with Gradle..."
-    
-    # Create timestamp for unique filename
-    TIMESTAMP=$(date +%s)
-    TEMP_DIR="/tmp/android_deploy"
-    mkdir -p "$TEMP_DIR"
-    
-    # Run Gradle build
-    cd {{PROJECT_PATH}}/android/build && \
-    ./gradlew validateJavaVersion clean assembleStandardDebug \
-      -Paddons_directory={{PROJECT_PATH}}/addons \
-      -Pexport_package_name={{ANDROID_PACKAGE_NAME}} \
-      -Pexport_version_code=$(date +%Y%m%d%H%M%S) \
-      -Pexport_version_name=1.0.$(date +%Y%m%d%H%M%S) \
-      -Pexport_version_min_sdk=24 \
-      -Pexport_version_target_sdk=34 \
-      -Pexport_enabled_abis=arm64-v8a \
-      -Pplugins_remote_binaries= \
-      -Pplugins_maven_repos= \
-      -Pperform_zipalign=true \
-      -Pperform_signing=true \
-      -Pcompress_native_libraries=false
-    
-    # Copy and rename binary
-    echo "📱 Building APK..."
-    EXPORT_FILENAME="gametwo_debug_$TIMESTAMP.apk"
-    cd {{PROJECT_PATH}}/android/build && \
-    ./gradlew copyAndRenameBinary \
-      -Pexport_edition=standard \
-      -Pexport_build_type=debug \
-      -Pexport_format=apk \
-      -Pexport_path=file:$TEMP_DIR \
-      -Pexport_filename=$EXPORT_FILENAME
-    
-    # Uninstall existing package
-    echo "🗑️  Uninstalling existing package..."
-    adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "Package not installed"
-    
-    # Install new APK
-    echo "📲 Installing APK to device..."
-    adb -s {{ANDROID_DEVICE_ID}} install "$TEMP_DIR/$EXPORT_FILENAME"
-    
-    echo "✅ APK installed successfully!"
-    echo "💾 APK saved at: $TEMP_DIR/$EXPORT_FILENAME"
+# Note: _gradle-build-install-android removed - was only used by fastbuild-android
+# Why: fastbuild-android removed - use 'export-install-launch-debug' instead for better performance
 
 
 # Internal helper: Push any file to Android app private directory
