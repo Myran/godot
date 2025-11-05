@@ -13,8 +13,6 @@ func _ready() -> void:
 	Log.info("Main scene initialized", {}, [Log.TAG_SYSTEM, Log.TAG_INITIALIZATION])
 	Log.set_debug_filter_logging(false)
 
-
-
 	var cmdline_args: PackedStringArray = OS.get_cmdline_args()
 	var cmdline_user_args: PackedStringArray = OS.get_cmdline_user_args()
 

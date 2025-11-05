@@ -72,7 +72,6 @@ textures/vram_compression/import_etc2_astc=true
 
 [sentry]
 
-options/auto_init=false
 options/environment="development"
 ios/environment="development"
 options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
