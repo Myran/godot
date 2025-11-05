@@ -407,13 +407,19 @@ export-apk-release: _validate-godot-editor (_ensure-directory-exists "export/and
 # Install Android debug APK
 install-apk-debug: _validate-android-workflow
     @echo "📲 Installing Android debug APK..."
-    adb -s {{ANDROID_DEVICE_ID}} install -r export/android/{{GAME_NAME}}_debug.apk
+    # Uninstall existing package first to avoid signature conflicts
+    adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "Package not installed"
+    # Install new APK
+    adb -s {{ANDROID_DEVICE_ID}} install export/android/{{GAME_NAME}}_debug.apk
     echo "✅ Android debug APK installed"
 
 # Install Android release APK
 install-apk-release: _validate-android-workflow
     @echo "📲 Installing Android release APK..."
-    adb -s {{ANDROID_DEVICE_ID}} install -r export/android/{{GAME_NAME}}.apk
+    # Uninstall existing package first to avoid signature conflicts
+    adb -s {{ANDROID_DEVICE_ID}} uninstall {{ANDROID_PACKAGE_NAME}} 2>/dev/null || echo "Package not installed"
+    # Install new APK
+    adb -s {{ANDROID_DEVICE_ID}} install export/android/{{GAME_NAME}}.apk
     echo "✅ Android release APK installed"
 
 # Launch Android app on connected device
