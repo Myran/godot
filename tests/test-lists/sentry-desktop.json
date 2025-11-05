@@ -1,0 +1,20 @@
+{
+  "name": "Sentry Desktop Tests",
+  "description": "Sentry SDK integration testing in editor mode for desktop development (macOS). Validates GDExtension loading, API accessibility, and platform-specific code paths. Note: This tests editor-mode integration, not exported macOS builds.",
+  "configs": [
+    "sentry-addon-validation",
+    "sentry-integration-test",
+    "sentry-crash-scenarios",
+    "sentry-integration-bridges"
+  ],
+  "metadata": {
+    "test_category": "sentry_desktop",
+    "platform_coverage": ["desktop"],
+    "tdd_phases": ["addon_validation", "integration_testing", "crash_reporting", "integration_bridges"],
+    "total_configs": 4,
+    "estimated_duration": "3-5 minutes",
+    "focus_areas": ["GDExtension loading in editor", "SentrySDK API accessibility", "Platform-specific code paths (macOS → SentryOptions)", "Development-time validation"],
+    "testing_mode": "editor_mode",
+    "testing_notes": "Tests Sentry integration in Godot editor mode using just test-desktop-target. Validates development workflow but not exported macOS application behavior."
+  }
+}

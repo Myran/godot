@@ -1,0 +1,19 @@
+{
+  "name": "Sentry Android Tests",
+  "description": "Sentry SDK integration testing for Android platform",
+  "configs": [
+    "sentry-addon-validation",
+    "sentry-android-file-validation",
+    "sentry-android-integration-test",
+    "sentry-crash-scenarios",
+    "sentry-integration-bridges"
+  ],
+  "metadata": {
+    "test_category": "sentry_android",
+    "platform_coverage": ["android"],
+    "tdd_phases": ["addon_validation", "file_validation", "integration_testing", "crash_reporting", "integration_bridges"],
+    "total_configs": 5,
+    "estimated_duration": "3-6 minutes",
+    "focus_areas": ["GDExtension integration", "Dictionary-based API", "Platform-specific compilation"]
+  }
+}

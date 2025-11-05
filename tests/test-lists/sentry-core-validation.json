@@ -1,0 +1,21 @@
+{
+  "name": "Sentry Core Validation",
+  "description": "Essential Sentry SDK validation tests for quick verification. Tests both editor-mode desktop development and mobile device integration.",
+  "configs": [
+    "sentry-addon-validation",
+    "sentry-integration-test",
+    "sentry-android-integration-test"
+  ],
+  "metadata": {
+    "test_category": "sentry_core",
+    "platform_coverage": ["desktop", "android"],
+    "tdd_phases": ["addon_validation", "integration_testing"],
+    "total_configs": 3,
+    "estimated_duration": "2-3 minutes",
+    "focus_areas": ["GDExtension loading", "API accessibility", "Platform-specific code paths"],
+    "testing_modes": {
+      "desktop": "editor_mode_development_testing",
+      "android": "device_testing"
+    }
+  }
+}
