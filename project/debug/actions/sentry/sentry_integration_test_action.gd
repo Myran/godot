@@ -45,29 +45,39 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			var options_init_success = false
 			var platform = OS.get_name()
 
-			if platform == "iOS" or platform == "macOS":
-				# Native Sentry build - use proper SentryOptions
-				print("Testing Native Sentry build on ", platform, " - using SentryOptions")
-				if ClassDB.class_exists("SentryOptions"):
-					# Use untyped parameter to avoid compilation issues
-					sentry_sdk.init(func(options) -> void:
-						options.dsn = "https://test@test.ingest.sentry.io/123456"
+			# Check if Sentry is already initialized before trying to initialize
+			var is_already_initialized = sentry_sdk.is_enabled() if sentry_sdk.has_method("is_enabled") else false
+
+			if is_already_initialized:
+				print("Sentry already initialized from project settings - testing functionality")
+				options_init_success = true
+			else:
+				print("Sentry not initialized - this is unexpected in our configuration")
+				if platform == "iOS" or platform == "macOS":
+					# Native Sentry build - use proper SentryOptions
+					print("Testing Native Sentry build on ", platform, " - using SentryOptions")
+					if ClassDB.class_exists("SentryOptions"):
+						# Use untyped parameter to avoid compilation issues
+						# Test initialization without actually connecting to Sentry
+						# This avoids network timeouts during testing
+						sentry_sdk.init(func(options) -> void:
+							# Don't set DSN to avoid network calls during testing
+							options.debug = true
+							options.environment = "test"
+							options_init_success = true
+						)
+					else:
+						print("ERROR: SentryOptions not available on ", platform, " - native build failed")
+						test_results.native_build_issues = true
+				else:
+					# GDExtension build (Android) - use Dictionary for options
+					print("Testing GDExtension Sentry build on ", platform, " - using Dictionary")
+					sentry_sdk.init(func(options: Dictionary) -> void:
+						# Don't set DSN to avoid network calls during testing
 						options.debug = true
 						options.environment = "test"
 						options_init_success = true
 					)
-				else:
-					print("ERROR: SentryOptions not available on ", platform, " - native build failed")
-					test_results.native_build_issues = true
-			else:
-				# GDExtension build (Android) - use Dictionary for options
-				print("Testing GDExtension Sentry build on ", platform, " - using Dictionary")
-				sentry_sdk.init(func(options: Dictionary) -> void:
-					options.dsn = "https://test@test.ingest.sentry.io/123456"
-					options.debug = true
-					options.environment = "test"
-					options_init_success = true
-				)
 
 			test_results.init_method_works = options_init_success
 			print("Sentry init result: ", "SUCCESS" if options_init_success else "FAILED")
@@ -86,7 +96,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	var all_tests_passed = (
 		test_results.sentrysdk_class_available and
 		test_results.sentrysdk_singleton_accessible and
-		test_results.sentry_init_method_works and
+		test_results.init_method_works and
 		test_results.sentry_capture_message_works
 	)
 
