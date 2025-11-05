@@ -19,24 +19,16 @@ const SentryIntegrationTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	Log.info(
-		"Registering Sentry Debug actions...", {}, ["debug", "sentry_debug", "registration"]
-	)
+	Log.info("Registering Sentry Debug actions...", {}, ["debug", "sentry_debug", "registration"])
 
 	var counters: Array[int] = [0, 0]  # [registered, failed]
 
 	_register_with_count(
-		registry,
-		SentryAddonValidationActionClass.new(),
-		"SentryAddonValidationAction",
-		counters
+		registry, SentryAddonValidationActionClass.new(), "SentryAddonValidationAction", counters
 	)
 
 	_register_with_count(
-		registry,
-		SentryCrashTestingActionClass.new(),
-		"SentryCrashTestingAction",
-		counters
+		registry, SentryCrashTestingActionClass.new(), "SentryCrashTestingAction", counters
 	)
 
 	_register_with_count(
@@ -47,10 +39,7 @@ static func register_all(registry: DebugActionRegistry) -> void:
 	)
 
 	_register_with_count(
-		registry,
-		SentryIntegrationTestActionClass.new(),
-		"SentryIntegrationTestAction",
-		counters
+		registry, SentryIntegrationTestActionClass.new(), "SentryIntegrationTestAction", counters
 	)
 
 	Log.info(

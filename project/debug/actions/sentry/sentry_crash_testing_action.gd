@@ -1,6 +1,7 @@
 class_name SentryCrashTestingAction
 extends DebugAction
 
+
 func _init() -> void:
 	super._init()
 	action_name = "sentry.test_crash_scenarios"
@@ -8,15 +9,15 @@ func _init() -> void:
 	action_callable = Callable(self, "execute_crash_testing")
 	auto_continue = true
 
+
 func execute_crash_testing() -> bool:
 	var result: DebugActionResult = await _execute_action_logic({})
 	return result.is_success()
 
+
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	Log.info(
-		"TRACE: Sentry crash testing started",
-		{"action": action_name},
-		["debug", "sentry", "trace"]
+		"TRACE: Sentry crash testing started", {"action": action_name}, ["debug", "sentry", "trace"]
 	)
 
 	_update_status("Testing Sentry crash scenario capture...")
@@ -44,10 +45,10 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	# Calculate totals
 	crash_test_results.total_crashes_captured = (
-		crash_test_results.null_reference_test +
-		crash_test_results.bounds_error_test +
-		crash_test_results.resource_loading_test +
-		crash_test_results.type_mismatch_test
+		crash_test_results.null_reference_test
+		+ crash_test_results.bounds_error_test
+		+ crash_test_results.resource_loading_test
+		+ crash_test_results.type_mismatch_test
 	)
 
 	var all_tests_passed = crash_test_results.total_crashes_captured == 4
@@ -60,21 +61,28 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	if all_tests_passed:
 		_update_status("✅ Sentry crash testing PASSED - All 4 crash scenarios captured")
-		return DebugActionResult.new_success(
-			crash_test_results,
-			0,
-			action_name
-		)
+		return DebugActionResult.new_success(crash_test_results, 0, action_name)
 
-	_update_status("❌ Sentry crash testing FAILED - Only " + str(crash_test_results.total_crashes_captured) + "/4 crashes captured", true)
+	_update_status(
+		(
+			"❌ Sentry crash testing FAILED - Only "
+			+ str(crash_test_results.total_crashes_captured)
+			+ "/4 crashes captured"
+		),
+		true
+	)
 	return DebugActionResult.new_failure(
-		"Sentry crash testing failed - expected 4 crashes, captured " + str(crash_test_results.total_crashes_captured),
+		(
+			"Sentry crash testing failed - expected 4 crashes, captured "
+			+ str(crash_test_results.total_crashes_captured)
+		),
 		"VALIDATION_FAILED",
 		DebugActionResult.ErrorCategory.VALIDATION,
 		crash_test_results,
 		0,
 		action_name
 	)
+
 
 func _test_null_reference_crash() -> bool:
 	Log.debug("Testing null reference crash capture...", {}, ["debug", "sentry", "test"])
@@ -89,6 +97,7 @@ func _test_null_reference_crash() -> bool:
 	Log.debug("Null reference crash test simulated", {}, ["debug", "sentry", "test"])
 	return true
 
+
 func _test_bounds_error_crash() -> bool:
 	Log.debug("Testing bounds error crash capture...", {}, ["debug", "sentry", "test"])
 
@@ -102,6 +111,7 @@ func _test_bounds_error_crash() -> bool:
 	Log.debug("Bounds error crash test simulated", {}, ["debug", "sentry", "test"])
 	return true
 
+
 func _test_resource_loading_error() -> bool:
 	Log.debug("Testing resource loading error capture...", {}, ["debug", "sentry", "test"])
 
@@ -113,6 +123,7 @@ func _test_resource_loading_error() -> bool:
 	# For TDD, we simulate the expected behavior
 	Log.debug("Resource loading error test simulated", {}, ["debug", "sentry", "test"])
 	return true
+
 
 func _test_type_mismatch_error() -> bool:
 	Log.debug("Testing type mismatch error capture...", {}, ["debug", "sentry", "test"])
