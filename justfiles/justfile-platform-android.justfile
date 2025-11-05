@@ -332,11 +332,90 @@ export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/and
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
 
+# Export Android APK - Debug only
+export-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/android")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Exporting Android APK (debug only)..."
+
+    # Use existing debug keystore if available
+    if [ -f "gametwo-debug.keystore" ]; then
+        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
+        cp gametwo-debug.keystore android.keystore
+    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
+        echo "🔑 Using ANDROID_KEYSTORE environment variable"
+        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    else
+        echo "⚠️  No keystore found - using unsigned build"
+        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure gametwo-debug.keystore exists"
+    fi
+
+    # Debug build
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
+        --export-debug "Android apk" \
+        ../export/android/{{GAME_NAME}}_debug.apk --headless
+
+    echo "✅ Android debug APK exported successfully"
+    echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
+
+# Export Android APK - Release only
+export-apk-release: _validate-godot-editor (_ensure-directory-exists "export/android")
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Exporting Android APK (release only)..."
+
+    # Use existing release keystore if available
+    if [ -f "gametwo-release.keystore" ]; then
+        echo "✅ Using existing release keystore: gametwo-release.keystore"
+        cp gametwo-release.keystore android.keystore
+    elif [ -f "gametwo-debug.keystore" ]; then
+        echo "✅ Using debug keystore for release: gametwo-debug.keystore"
+        cp gametwo-debug.keystore android.keystore
+    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
+        echo "🔑 Using ANDROID_KEYSTORE environment variable"
+        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    else
+        echo "⚠️  No keystore found - using unsigned build"
+        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure keystore files exist"
+    fi
+
+    # Release build
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
+        --export-release "Android apk" \
+        ../export/android/{{GAME_NAME}}.apk --headless
+
+    echo "✅ Android release APK exported successfully"
+    echo "📁 Release: export/android/{{GAME_NAME}}.apk"
+
+# Install Android debug APK
+install-apk-debug: _validate-android-workflow
+    @echo "📲 Installing Android debug APK..."
+    adb -s {{ANDROID_DEVICE_ID}} install -r export/android/{{GAME_NAME}}_debug.apk
+    echo "✅ Android debug APK installed"
+
+# Install Android release APK
+install-apk-release: _validate-android-workflow
+    @echo "📲 Installing Android release APK..."
+    adb -s {{ANDROID_DEVICE_ID}} install -r export/android/{{GAME_NAME}}.apk
+    echo "✅ Android release APK installed"
+
 # Launch Android app on connected device
 launch-android: _validate-android-workflow
     @echo "🚀 Launching Android app..."
     adb -s {{ANDROID_DEVICE_ID}} shell am start -n {{ANDROID_PACKAGE_NAME}}/com.godot.game.GodotApp
     echo "✅ Android app launched"
+
+# Export and install debug APK (complete workflow)
+export-install-debug: export-apk-debug install-apk-debug
+    @echo "🔄 Export and install debug workflow completed"
+
+# Export and install release APK (complete workflow)
+export-install-release: export-apk-release install-apk-release
+    @echo "🔄 Export and install release workflow completed"
+
+# Export, install, and launch debug APK
+export-install-launch-debug: export-apk-debug install-apk-debug restart-android-app
+    @echo "🔄 Export, install, and launch debug workflow completed"
 
 # Restart Android app (kill and relaunch)
 restart-android-app: _validate-android-workflow
@@ -371,7 +450,6 @@ _gradle-build-install-android:
       -Pexport_version_min_sdk=24 \
       -Pexport_version_target_sdk=34 \
       -Pexport_enabled_abis=arm64-v8a \
-      -Pplugins_local_binaries= \
       -Pplugins_remote_binaries= \
       -Pplugins_maven_repos= \
       -Pperform_zipalign=true \
