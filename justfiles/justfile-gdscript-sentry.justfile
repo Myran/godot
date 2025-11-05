@@ -66,6 +66,11 @@ sentry-gdscript-build-android: sentry-gdscript-android-lib sentry-gdscript-edito
 sentry-gdscript-android-lib:
     @echo "🏗️  Building GDScript Sentry Android library..."
     @cd {{SENTRY_PATH}} && ./gradlew assemble
+    @echo "📦 Copying Sentry AAR files to addons directory for automatic discovery..."
+    @mkdir -p project/addons/sentry/
+    @cp project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
+    @cp project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
+    @echo "✅ Sentry AAR files copied to addons directory"
     @echo "✅ GDScript Sentry Android library build completed"
 
 sentry-gdscript-editor-android:
