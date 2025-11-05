@@ -293,6 +293,13 @@ export-aab-android: pre-build
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.aab"
     echo "📁 Release: export/android/{{GAME_NAME}}.aab"
 
+    # Copy Sentry AAR files to addons directory for automatic discovery
+    echo "📦 Copying Sentry AAR files to addons directory..."
+    mkdir -p {{PROJECT_PATH}}/addons/sentry/
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
+    echo "✅ Sentry AAR files copied to addons directory"
+
 # Export all Android formats (APK + AAB)
 export-all-android:
     @echo "📦 Exporting all Android formats (APK + AAB)..."
@@ -355,6 +362,13 @@ export-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/andro
         --export-debug "Android apk" \
         ../export/android/{{GAME_NAME}}_debug.apk --headless
 
+    # Copy Sentry AAR files to addons directory for automatic discovery
+    echo "📦 Copying Sentry AAR files to addons directory..."
+    mkdir -p {{PROJECT_PATH}}/addons/sentry/
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
+    echo "✅ Sentry AAR files copied to addons directory"
+
     echo "✅ Android debug APK exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
 
@@ -383,6 +397,13 @@ export-apk-release: _validate-godot-editor (_ensure-directory-exists "export/and
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "Android apk" \
         ../export/android/{{GAME_NAME}}.apk --headless
+
+    # Copy Sentry AAR files to addons directory for automatic discovery
+    echo "📦 Copying Sentry AAR files to addons directory..."
+    mkdir -p {{PROJECT_PATH}}/addons/sentry/
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
+    cp {{PROJECT_PATH}}/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar {{PROJECT_PATH}}/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
+    echo "✅ Sentry AAR files copied to addons directory"
 
     echo "✅ Android release APK exported successfully"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
