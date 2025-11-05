@@ -38,6 +38,7 @@ settings/stdout/verbose_stdout=true
 file_logging/enable_file_logging=true
 file_logging/max_log_files=10
 settings/gdscript/always_track_call_stacks=true
+settings/gdscript/always_track_local_variables=true
 gdscript/warnings/unused_variable=0
 gdscript/warnings/untyped_declaration=1
 gdscript/warnings/inferred_declaration=1
@@ -71,10 +72,11 @@ textures/vram_compression/import_etc2_astc=true
 
 [sentry]
 
-#iOSNativeSentrySDKSettings(fornativeiOScrashes)#UsethesameDSNasaboveforunifiedreportingios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+options/auto_init=false
+options/environment="development"
 ios/environment="development"
-ios/release=""
-release_name="1.0.0"
-environment="development"
 options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
-options/app_hang/tracking=true
+options/release="1.0.0"
+options/attach_scene_tree=true
+logger/include_variables=true
+experimental/enable_logs=true
