@@ -161,7 +161,13 @@
       "WebFetch(domain:scons.org)",
       "Bash(unzip:*)",
       "Bash(jar:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(./gradlew:*)",
+      "Bash(./editor/godot.macos.editor.arm64 --headless --help:*)",
+      "mcp__godot__run_project",
+      "Bash(./editor/godot.macos.editor.arm64:*)",
+      "Bash(../editor/godot.macos.editor.arm64 --headless --script ../tools/generate_sentry_android_config.gd --quit:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": [],
