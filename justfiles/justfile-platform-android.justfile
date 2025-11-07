@@ -11,13 +11,6 @@
 # ANDROID BUILD COMMANDS
 # ================================
 
-# Quick Android build - Export APK and AAB files (2-3 minutes)
-quick-build-android:
-    @echo "⚡ Quick Android build (2-3 min)..."
-    just insert-firebase-dependencies
-    just export-apk-android
-    just export-aab-android
-    @echo "✅ Quick Android build complete!"
 
 # Complete Android build with templates and all dependencies (20 minutes)
 build-all-android force="no": validate-env
@@ -61,8 +54,8 @@ _build-android-full force="no":
     @echo "===================="
     @echo "📦 [1/4] Checking Android templates..."
     just _check-or-build-android-templates {{force}}
-    @echo "🔥 [2/4] Setting up Firebase..."
-    just insert-firebase-dependencies
+    @echo "🔥🛡️ [2/4] Injecting Firebase + Sentry SDKs..."
+    just android-inject-sdks
     @echo "📱 [3/4] Exporting Android APK..."
     just export-apk-android
     @echo "📦 [4/4] Exporting Android AAB..."

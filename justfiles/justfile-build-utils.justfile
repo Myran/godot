@@ -104,43 +104,137 @@ replace TARGET_FILE PATTERN REPLACEMENT_FILE:
     set -euo pipefail
     python3 tools/replace_content.py "{{TARGET_FILE}}" "{{PATTERN}}" "{{REPLACEMENT_FILE}}"
 
-insert-firebase-dependencies:
+# 🔥🛡️ Inject Android SDKs (Firebase + Sentry)
+# REQUIRED STEP: After installing Android templates, you MUST inject SDKs before building
+android-inject-sdks:
+    @echo "📦 Injecting Android SDKs (Firebase + Sentry) into templates..."
+
+    # Generate Sentry configuration from project settings first
+    @echo "🛡️ Generating Sentry configuration from project settings..."
+    python3 extract_sentry_config.py
+
+    @echo "Inserting Firebase + Sentry configurations..."
+
+    # Firebase: Copy configuration file
+    @echo "🔥 Firebase: Copying google-services.json..."
     cp firebase/google-services.json project/android/build/
 
+    # Firebase: Insert buildscript
+    @echo "🔥 Firebase: Inserting buildscript..."
+    just replace project/android/build/build.gradle //ADD_FIREBASE_BUILDSCRIPT_HERE_ inject/firebase_buildscript.gradle
+
+    # Firebase: Insert dependencies
+    @echo "🔥 Firebase: Inserting dependencies..."
+    just replace project/android/build/build.gradle //ADD_FIREBASE_DEPENDENCIES_HERE_ inject/firebase_dependencies.gradle
+
+    # Firebase: Insert plugin
+    @echo "🔥 Firebase: Inserting plugin..."
+    just replace project/android/build/build.gradle //ADD_FIREBASE_PLUGINS_HERE_ inject/firebase_apply_plugin.gradle
+
+    # Sentry: Insert buildscript
+    @echo "🛡️ Sentry: Inserting buildscript..."
+    just replace project/android/build/build.gradle //ADD_SENTRY_BUILDSCRIPT_HERE_ inject/sentry_buildscript.gradle
+
+    # Sentry: Apply plugin (after plugins block)
+    @echo "🛡️ Sentry: Applying plugin..."
+    just replace project/android/build/build.gradle //ADD_SENTRY_PLUGINS_HERE_ inject/remove_placeholder.gradle
+    just replace project/android/build/build.gradle //ADD_SENTRY_PLUGIN_APPLY_HERE_ inject/sentry_apply_plugin.gradle
+
+    # Sentry: Insert manifest metadata
+    @echo "🛡️ Sentry: Inserting manifest metadata..."
+    just replace project/android/build/AndroidManifest.xml "<!--ADD_SENTRY_METADATA_HERE_-->" inject/sentry_metadata.xml
+
+    @echo ""
+    @echo "✅ Android SDKs injected successfully!"
+    @echo "   🔥 Firebase: Auth, Database, Messaging, Analytics, Config"
+    @echo "   🛡️ Sentry: Error tracking, Performance, Session replay, Crash reporting"
+    @echo ""
+    @echo "📱 Templates now ready for building:"
+    @echo "   just export-apk-debug"
+    @echo "   just export-apk-release"
+
+# 🔥 Firebase Android SDK integration (legacy - kept for compatibility)
+android-insert-firebase-dependencies:
+    @echo "🔥 Preparing Firebase Android SDK dependencies..."
+
     @echo "Preparing Firebase dependencies..."
+    cp firebase/google-services.json project/android/build/
 
-    echo 'implementation platform ("com.google.firebase:firebase-bom:33.1.2")' > temp_dependencies.txt
-    echo 'implementation "com.google.firebase:firebase-auth"' >> temp_dependencies.txt
-    echo 'implementation "com.google.firebase:firebase-messaging"' >> temp_dependencies.txt
-    echo 'implementation "com.google.firebase:firebase-database"' >> temp_dependencies.txt
-    echo 'implementation "com.google.firebase:firebase-config"' >> temp_dependencies.txt
-    echo 'implementation "com.google.firebase:firebase-analytics"' >> temp_dependencies.txt
-    
-    @echo "Preparing Firebase plugin..."
-
-    echo 'apply plugin: "com.google.gms.google-services"' > temp_plugin.txt
-    
-    @echo "Preparing Firebase buildscript..."
-    echo 'buildscript {' > temp_buildscript.txt
-    echo '    repositories {' >> temp_buildscript.txt
-    echo '        google()' >> temp_buildscript.txt
-    echo '        mavenCentral()' >> temp_buildscript.txt
-    echo '    }' >> temp_buildscript.txt
-    echo '    dependencies {' >> temp_buildscript.txt
-    echo '        classpath "com.google.gms:google-services:4.4.2"' >> temp_buildscript.txt
-    echo '    }' >> temp_buildscript.txt
-    echo '}' >> temp_buildscript.txt
-    
     @echo "Inserting Firebase configurations..."
 
-    just replace project/android/build/build.gradle  //ADD_FIREBASE_BUILDSCRIPT_HERE_ temp_buildscript.txt    
-    just replace project/android/build/build.gradle  //ADD_FIREBASE_DEPENDENCIES_HERE_ temp_dependencies.txt
-    just replace project/android/build/build.gradle  //ADD_FIREBASE_PLUGINS_HERE_ temp_plugin.txt
+    # Insert Firebase buildscript into buildscript
+    just replace project/android/build/build.gradle //ADD_FIREBASE_BUILDSCRIPT_HERE_ inject/firebase_buildscript.gradle
 
-    @echo "Cleaning up temporary files..."
+    # Insert Firebase dependencies
+    just replace project/android/build/build.gradle //ADD_FIREBASE_DEPENDENCIES_HERE_ inject/firebase_dependencies.gradle
 
-    rm temp_dependencies.txt temp_plugin.txt temp_buildscript.txt   
+    # Insert Firebase plugin application
+    just replace project/android/build/build.gradle //ADD_FIREBASE_PLUGINS_HERE_ inject/firebase_apply_plugin.gradle
 
-    @echo "Firebase dependencies inserted successfully."
+    @echo "✅ Firebase Android SDK dependencies inserted successfully."
+
+# 🛡️ Sentry Android SDK integration (legacy - kept for compatibility)
+android-insert-sentry-dependencies:
+    @echo "🛡️ Preparing Sentry Android SDK dependencies..."
+
+    # Generate Sentry configuration from project settings first
+    @echo "🔧 Generating Sentry Android configuration from project settings..."
+    python3 extract_sentry_config.py
+
+    @echo "Inserting Sentry configurations..."
+
+    # Insert Sentry classpath into buildscript
+    just replace project/android/build/build.gradle //ADD_SENTRY_BUILDSCRIPT_HERE_ inject/sentry_buildscript.gradle
+
+    # Remove old placeholder and apply Sentry plugin after plugins block
+    just replace project/android/build/build.gradle //ADD_SENTRY_PLUGINS_HERE_ inject/remove_placeholder.gradle
+    just replace project/android/build/build.gradle //ADD_SENTRY_PLUGIN_APPLY_HERE_ inject/sentry_apply_plugin.gradle
+
+    # Insert manifest metadata
+    just replace project/android/build/AndroidManifest.xml "<!--ADD_SENTRY_METADATA_HERE_-->" inject/sentry_metadata.xml
+
+    @echo "✅ Sentry Android SDK dependencies inserted successfully."
+
+# 🔥🛡️ Complete Android Setup (Templates + SDKs + Config Update)
+# ONE-STOP SHOP: Clean install with everything needed
+android-setup-templates:
+    @echo "🚀 COMPLETE ANDROID SETUP (Templates + SDKs + Configuration)"
+
+    # Step 1: Install clean Android templates
+    @echo "📦 Step 1: Installing clean Android templates..."
+    just install-android-template
+
+    # Step 2: Inject all required SDKs
+    @echo "📦 Step 2: Injecting Android SDKs (Firebase + Sentry)..."
+    just android-inject-sdks
+
+    @echo ""
+    @echo "🎉 COMPLETE ANDROID SETUP FINISHED!"
+    @echo "   📦 ✅ Android templates installed"
+    @echo "   🔥 ✅ Firebase SDK injected (Auth, Database, Messaging, Analytics, Config)"
+    @echo "   🛡️ ✅ Sentry SDK injected (Error tracking, Performance, Session replay)"
+    @echo ""
+    @echo "📱 Ready to build APKs:"
+    @echo "   just export-apk-debug"
+    @echo "   just export-apk-release"
+
+# 🔄 Update Android SDK Configuration (when project.godot settings change)
+# Use this when you change SDK settings - faster than full reinstall
+android-update-sdk-config:
+    @echo "🔄 Updating Android SDK configuration from project settings..."
+
+    # Update Sentry configuration
+    @echo "🛡️ Updating Sentry configuration..."
+    python3 extract_sentry_config.py
+    just replace project/android/build/AndroidManifest.xml "<!--ADD_SENTRY_METADATA_HERE_-->" inject/sentry_metadata.xml
+
+    # Update Firebase configuration (copy google-services.json)
+    @echo "🔥 Updating Firebase configuration..."
+    cp firebase/google-services.json project/android/build/
+
+    @echo ""
+    @echo "✅ Android SDK configuration updated successfully!"
+    @echo "   🛡️ Sentry: DSN and settings updated from project.godot"
+    @echo "   🔥 Firebase: google-services.json updated"
 
 # Wildcard patterns and development cycles guide
