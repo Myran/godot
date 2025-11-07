@@ -13,7 +13,7 @@
 
 
 # Complete Android build with templates and all dependencies (20 minutes)
-build-all-android force="no": validate-env
+build-all-android force="no": validate-env validate-android-env
     @echo "🤖 FULL BUILD - ANDROID ONLY"
     @echo "============================"
     @if [ "{{force}}" = "yes" ]; then \
@@ -24,7 +24,7 @@ build-all-android force="no": validate-env
         echo "💡 Use 'just build-all-android force=yes' to force rebuild everything"; \
     fi
     @echo ""
-    
+
     just _build-common {{force}}
     just _build-android-full {{force}}
     
@@ -91,6 +91,53 @@ _get-safe-config-file CONFIG:
 # Pre-build hook
 pre-build:
     @echo "🔧 Running pre-build tasks..."
+
+# Auto-validate and load .env for any Android command
+validate-android-env:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Loading Android environment..."
+
+    # Load .env file
+    if [ ! -f ".env" ]; then
+        echo "❌ .env file not found! Copy .env.template to .env"
+        echo "💡 Run: cp .env.template .env"
+        echo "💡 Then edit .env with your keystore password"
+        exit 1
+    fi
+
+    # Source environment variables
+    set -a
+    source .env
+    set +a
+
+    # Note: Using absolute paths for Godot compatibility
+    # No path resolution needed - paths must be absolute in .env
+
+    # Validate required release keystore environment variables
+    if [ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD:-}" ]; then
+        echo "❌ Missing GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD in .env"
+        echo "💡 Edit .env and add your release keystore password"
+        exit 1
+    fi
+
+    if [ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_USER:-}" ]; then
+        echo "❌ Missing GODOT_ANDROID_KEYSTORE_RELEASE_USER in .env"
+        echo "💡 Add: GODOT_ANDROID_KEYSTORE_RELEASE_USER=gametwo"
+        exit 1
+    fi
+
+    # Validate keystore file exists
+    if [ ! -f "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:-}" ]; then
+        echo "❌ Release keystore not found: ${GODOT_ANDROID_KEYSTORE_RELEASE_PATH}"
+        echo "💡 Copy your keystore file to: keystore/gametwo-release.keystore"
+        echo "💡 Or create one with: keytool -genkey -v -keystore keystore/gametwo-release.keystore -alias gametwo -keyalg RSA -keysize 2048 -validity 10000"
+        exit 1
+    fi
+
+    echo "✅ Release Android environment loaded and validated"
+    echo "  📱 Release keystore: ${GODOT_ANDROID_KEYSTORE_RELEASE_PATH}"
+    echo "  🔑 Release alias: ${GODOT_ANDROID_KEYSTORE_RELEASE_USER}"
 
 # Fast Android development iteration - optimized workflow alias
 fastbuild: export-install-launch-debug
@@ -248,24 +295,20 @@ setup-android:
     echo "✅ Android development environment validated"
 
 # Export Android AAB files (Google Play Store format)
-export-aab-android: pre-build
+export-aab-android: _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android AAB files (debug + release)..."
-    
-    # Use existing keystore files if available, fallback to ANDROID_KEYSTORE variable
-    if [ -f "gametwo-release.keystore" ]; then
-        echo "✅ Using existing release keystore: gametwo-release.keystore"
-        cp gametwo-release.keystore android.keystore
-    elif [ -f "gametwo-debug.keystore" ]; then
-        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
-        cp gametwo-debug.keystore android.keystore
-    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
-        echo "🔑 Using ANDROID_KEYSTORE environment variable"
-        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+
+    # Source environment variables for Godot context
+    if [ -f ".env" ]; then
+        set -a
+        source .env
+        set +a
+        echo "✅ Environment variables loaded for Godot export"
     else
-        echo "⚠️  No keystore found - using unsigned build"
-        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure keystore files exist"
+        echo "❌ .env file not found"
+        exit 1
     fi
     
     # Debug build
@@ -301,25 +344,24 @@ export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/and
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
-    
-    # Use existing keystore files if available, fallback to ANDROID_KEYSTORE variable
-    if [ -f "gametwo-debug.keystore" ]; then
-        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
-        cp gametwo-debug.keystore android.keystore
-    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
-        echo "🔑 Using ANDROID_KEYSTORE environment variable"
-        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+
+    # Source environment variables for Godot context
+    if [ -f ".env" ]; then
+        set -a
+        source .env
+        set +a
+        echo "✅ Environment variables loaded for Godot export"
     else
-        echo "⚠️  No keystore found - using unsigned build"
-        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure gametwo-debug.keystore exists"
+        echo "❌ .env file not found"
+        exit 1
     fi
-    
+
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-debug "Android apk" \
         ../export/android/{{GAME_NAME}}_debug.apk --headless
-    
-    # Release build  
+
+    # Release build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "Android apk" \
         ../export/android/{{GAME_NAME}}.apk --headless
@@ -334,16 +376,15 @@ export-apk-debug: _validate-godot-editor (_ensure-directory-exists "export/andro
     set -euo pipefail
     echo "📦 Exporting Android APK (debug only)..."
 
-    # Use existing debug keystore if available
-    if [ -f "gametwo-debug.keystore" ]; then
-        echo "✅ Using existing debug keystore: gametwo-debug.keystore"
-        cp gametwo-debug.keystore android.keystore
-    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
-        echo "🔑 Using ANDROID_KEYSTORE environment variable"
-        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    # Source environment variables for Godot context
+    if [ -f ".env" ]; then
+        set -a
+        source .env
+        set +a
+        echo "✅ Environment variables loaded for Godot export"
     else
-        echo "⚠️  No keystore found - using unsigned build"
-        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure gametwo-debug.keystore exists"
+        echo "❌ .env file not found"
+        exit 1
     fi
 
     # Debug build
@@ -367,19 +408,15 @@ export-apk-release: _validate-godot-editor (_ensure-directory-exists "export/and
     set -euo pipefail
     echo "📦 Exporting Android APK (release only)..."
 
-    # Use existing release keystore if available
-    if [ -f "gametwo-release.keystore" ]; then
-        echo "✅ Using existing release keystore: gametwo-release.keystore"
-        cp gametwo-release.keystore android.keystore
-    elif [ -f "gametwo-debug.keystore" ]; then
-        echo "✅ Using debug keystore for release: gametwo-debug.keystore"
-        cp gametwo-debug.keystore android.keystore
-    elif [ -n "${ANDROID_KEYSTORE:-}" ]; then
-        echo "🔑 Using ANDROID_KEYSTORE environment variable"
-        echo $ANDROID_KEYSTORE | base64 -d > android.keystore
+    # Source environment variables for Godot context
+    if [ -f ".env" ]; then
+        set -a
+        source .env
+        set +a
+        echo "✅ Environment variables loaded for Godot export"
     else
-        echo "⚠️  No keystore found - using unsigned build"
-        echo "💡 Either set ANDROID_KEYSTORE environment variable or ensure keystore files exist"
+        echo "❌ .env file not found"
+        exit 1
     fi
 
     # Release build
