@@ -1,6 +1,15 @@
 editor/godot.macos.editor.arm64
 .DS_Store
 .aider*
+
+# Environment variables and keystore files (SECURITY: Never commit!)
+.env
+.env.local
+.env.production
+.env.staging
+keystore/
+*.keystore
+*.jks
 # Claude Code / Node.js artifacts
 package.json
 package-lock.json
