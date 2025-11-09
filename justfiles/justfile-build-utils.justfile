@@ -1,8 +1,6 @@
-quick-build-all:
-    @echo "⚡ Quick build for all platforms (5-10 min)..."
-    just quick-build-android
-    just quick-build-ios
-    @echo "✅ Quick build complete!"
+# Legacy quick-build-all removed - use platform-specific commands instead:
+#   just build-all-android   # Android smart rebuild (3-25 min)
+#   just quick-build-ios     # iOS quick build (2-3 min)
 
 # Build status check
 build-status:

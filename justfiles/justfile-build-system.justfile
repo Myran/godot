@@ -88,7 +88,9 @@ build-artifacts: validate-env
     @echo "📦 Building artifacts (all deployable files)..."
     just build-toolchain
     just install-android-template
-    just quick-build-android
+    just android-inject-sdks
+    just export-apk-android
+    just export-aab-android
     just build-pipeline-ios
     @echo "✅ All artifacts complete"
 

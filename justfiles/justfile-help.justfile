@@ -124,7 +124,6 @@ help:
     echo ""
     echo "📦 LEGACY BUILDS (Original Commands)"
     echo "  just build-all                   # Alias for build-toolchain"
-    echo "  just quick-build-android         # Android APK + AAB (2-3 min)"
     echo "  just quick-build-ios             # iOS project (2-3 min)"
     echo ""
     echo "🚀 LAUNCH COMMANDS"

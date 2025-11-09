@@ -52,13 +52,15 @@ _build-android-full force="no":
     @echo ""
     @echo "🤖 ANDROID BUILD STEPS"
     @echo "===================="
-    @echo "📦 [1/4] Checking Android templates..."
+    @echo "📦 [1/5] Checking Android templates..."
     just _check-or-build-android-templates {{force}}
-    @echo "🔥🛡️ [2/4] Injecting Firebase + Sentry SDKs..."
+    @echo "📥 [2/5] Installing Android templates..."
+    just install-android-template
+    @echo "🔥🛡️ [3/5] Injecting Firebase + Sentry SDKs..."
     just android-inject-sdks
-    @echo "📱 [3/4] Exporting Android APK..."
+    @echo "📱 [4/5] Exporting Android APK..."
     just export-apk-android
-    @echo "📦 [4/4] Exporting Android AAB..."
+    @echo "📦 [5/5] Exporting Android AAB..."
     just export-aab-android
 
 # Smart template check - only build if not already built
@@ -143,6 +145,9 @@ validate-android-env:
 fastbuild: export-install-launch-debug
     @echo "⚡ Fast Android build (2x faster than old implementation)..."
     @echo "✅ Complete Sentry integration enabled"
+
+# Alias for backward compatibility
+fastbuild-android: export-install-launch-debug
 
 # Note: Original fastbuild-android removed - alias to export-install-launch-debug
 # Why: export-install-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
