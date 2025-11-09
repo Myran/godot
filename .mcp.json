@@ -1,12 +1,11 @@
 {
   "mcpServers": {
-    "godot-mcp": {
-      "command": "npx",
-      "args": [
-        "kooix-godot-mcp",
-        "--project",
-        "/Users/mattiasmyhrman/repos/gametwo/project"
-      ]
+    "godot": {
+      "command": "node",
+      "args": ["/Users/mattiasmyhrman/repos/godot-mcp/build/index.js"],
+      "env": {
+        "DEBUG": "true"
+      }
     }
   }
 }
