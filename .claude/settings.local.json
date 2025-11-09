@@ -169,7 +169,10 @@
       "Bash(../editor/godot.macos.editor.arm64 --headless --script ../tools/generate_sentry_android_config.gd --quit:*)",
       "Bash(python3:*)",
       "Bash(echo:*)",
-      "Bash(source:*)"
+      "Bash(source:*)",
+      "mcp__godot-mcp__get_project_info",
+      "mcp__godot-mcp__diagnose_project",
+      "Bash(gdlint:*)"
     ],
     "deny": [],
     "ask": [],

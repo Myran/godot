@@ -1,3 +1,12 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "godot-mcp": {
+      "command": "npx",
+      "args": [
+        "kooix-godot-mcp",
+        "--project",
+        "/Users/mattiasmyhrman/repos/gametwo/project"
+      ]
+    }
+  }
 }
