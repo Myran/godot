@@ -172,7 +172,10 @@
       "Bash(source:*)",
       "mcp__godot-mcp__get_project_info",
       "mcp__godot-mcp__diagnose_project",
-      "Bash(gdlint:*)"
+      "Bash(gdlint:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "mcp__godot-mcp__get_debug_session"
     ],
     "deny": [],
     "ask": [],
