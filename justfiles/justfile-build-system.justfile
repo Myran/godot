@@ -87,11 +87,9 @@ build-toolchain: validate-env
 build-artifacts: validate-env
     @echo "📦 Building artifacts (all deployable files)..."
     just build-toolchain
-    just install-android-template
-    just android-inject-sdks
-    just export-apk-android
-    just export-aab-android
-    just build-pipeline-ios
+    just setup-android-templates
+    just export-all-android
+    just export-all-ios
     @echo "✅ All artifacts complete"
 
 # Tier 3: Complete Pipeline (Zero to Device Deployment)

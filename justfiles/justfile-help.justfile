@@ -109,7 +109,7 @@ help:
     echo "  just build-pipeline              # Complete: source to device deployment (46 min)"
     echo ""
     echo "🚀 PLATFORM-SPECIFIC PIPELINES"
-    echo "  just build-pipeline-ios          # iOS: source to ready for device"
+    echo "  just export-all-ios              # iOS: export all artifacts (.app bundle)"
     echo "  just build-all-android           # Android smart rebuild (3-5 min)"
     echo "  just build-all-ios               # iOS smart rebuild (3-5 min)"
     echo ""

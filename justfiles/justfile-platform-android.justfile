@@ -52,16 +52,12 @@ _build-android-full force="no":
     @echo ""
     @echo "🤖 ANDROID BUILD STEPS"
     @echo "===================="
-    @echo "📦 [1/5] Checking Android templates..."
+    @echo "📦 [1/3] Checking Android templates..."
     just _check-or-build-android-templates {{force}}
-    @echo "📥 [2/5] Installing Android templates..."
-    just install-android-template
-    @echo "🔥🛡️ [3/5] Injecting Firebase + Sentry SDKs..."
-    just android-inject-sdks
-    @echo "📱 [4/5] Exporting Android APK..."
-    just export-apk-android
-    @echo "📦 [5/5] Exporting Android AAB..."
-    just export-aab-android
+    @echo "📥 [2/3] Setting up Android templates + SDK injection..."
+    just setup-android-templates
+    @echo "📱 [3/3] Exporting Android builds (APK + AAB)..."
+    just export-all-android
 
 # Smart template check - only build if not already built
 _check-or-build-android-templates force="no":
@@ -217,6 +213,13 @@ rebuild-android-source-zip:
     rm -rf gradle
     
     echo "✅ android_source.zip rebuilt with current Godot source (minSdk 23) and gradlew wrapper"
+
+# Install Android templates and inject Firebase + Sentry SDKs (complete setup)
+setup-android-templates:
+    @echo "📦 Setting up Android templates with SDK injection..."
+    just install-android-template
+    just android-inject-sdks
+    @echo "✅ Android templates ready for export"
 
 # Install Android template from android_source.zip
 install-android-template:

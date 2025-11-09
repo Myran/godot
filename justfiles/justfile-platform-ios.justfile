@@ -45,7 +45,7 @@ help-ios:
     echo "  just build-ios-executable       # Build iOS executable"
     echo "  just build-ios-app              # Build iOS .app with Xcode"
     echo "  just save-ios-to-app            # Save PCK file to .app"
-    echo "  just build-pipeline-ios         # Complete pipeline: source to device ready"
+    echo "  just export-all-ios             # Export all iOS artifacts (.app bundle)"
     echo "  just ios-build                  # iOS build pipeline"
     echo "  just build-install-ios          # Full iOS rebuild & install (smart rebuild)"
     echo "  just build-all-ios              # Build all iOS components (smart rebuild)"
@@ -167,11 +167,14 @@ rebuild-all-ios:
     @echo "✅ All iOS rebuilds complete"
 
 # Complete iOS pipeline - from source to device deployment
-build-pipeline-ios:
-    @echo "🚀 Complete iOS pipeline - source to device..."
+export-all-ios:
+    @echo "📦 Exporting all iOS artifacts (.app bundle)..."
     just _check-or-build-ios-executable
     just build-ios-app
     just save-ios-to-app
-    @echo "✅ iOS pipeline complete - ready for device deployment"
+    @echo "✅ iOS export complete - ready for device deployment"
     @echo "💡 Use 'just launch-ios-iphone' to deploy to iPhone"
     @echo "💡 Use 'just launch-ios-ipad' to deploy to iPad"
+
+# Legacy alias for backward compatibility
+build-pipeline-ios: export-all-ios
