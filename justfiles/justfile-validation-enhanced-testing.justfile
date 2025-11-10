@@ -341,12 +341,12 @@ _extract-checksums-unified log_file test_id:
         TIMESTAMP=$(echo "$TEST_ID" | grep -o '[0-9]\{10\}$' || echo "")
         if [[ -n "$TIMESTAMP" ]]; then
             # Get the most recent session ID that matches the test timing
-            RECENT_SESSION=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -1 | \
+            RECENT_SESSION=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | grep -v "\[Sentry\]" | tail -1 | \
                            sed -n 's/.*"session_id": *"\([^"]*\)".*/\1/p' || echo "")
             if [[ -n "$RECENT_SESSION" ]]; then
                 # Extract checksums from the most recent session only
                 # Get all checksums and take the last N based on expected count
-                ALL_CHECKSUMS=$(echo "$LOG_CONTENT" | grep "$RECENT_SESSION" | grep "SEMANTIC_ACTION" | \
+                ALL_CHECKSUMS=$(echo "$LOG_CONTENT" | grep "$RECENT_SESSION" | grep "SEMANTIC_ACTION" | grep -v "\[Sentry\]" | \
                                sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
                                grep -v "^$")
                 # Take the last EXPECTED_CHECKSUMS_COUNT entries to avoid duplicates
@@ -358,7 +358,7 @@ _extract-checksums-unified log_file test_id:
                 fi
             else
                 # Fallback to all recent SEMANTIC_ACTION logs
-                CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | tail -20 | \
+                CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | grep -v "\[Sentry\]" | tail -20 | \
                            sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
                            grep -v "^$")
             fi
@@ -370,7 +370,7 @@ _extract-checksums-unified log_file test_id:
         fi
     else
         # Desktop logs or fallback: get all SEMANTIC_ACTION checksums
-        CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | \
+        CHECKSUMS=$(echo "$LOG_CONTENT" | grep "SEMANTIC_ACTION" | grep -v "\[Sentry\]" | \
                    sed -n 's/.*"pre_action_checksum": *"\([^"]*\)".*/\1/p' | \
                    grep -v "^$")
     fi
@@ -1345,7 +1345,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
             # Store chunk with format: MSG_ID:CHUNK_NUM:CONTENT
             echo "$MSG_ID:$CHUNK_NUM:$CONTENT" >> "$SUCCESS_CHUNKS_FILE"
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" | grep -v "\[Sentry\]" || true)
 
     # Second pass: Process unchunked DEBUG_TEST_SUCCESS messages and reconstruct chunked ones
     while IFS= read -r line; do
@@ -1382,7 +1382,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
                 fi
             fi
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_SUCCESS" | grep -v "\[BUFFER\]" | grep -v "\[Sentry\]" || true)
 
     # Third pass: Process and reconstruct chunked messages
     if [[ -f "$SUCCESS_CHUNKS_FILE" && -s "$SUCCESS_CHUNKS_FILE" ]]; then
@@ -1446,7 +1446,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
             # Store chunk with format: MSG_ID:CHUNK_NUM:CONTENT
             echo "$MSG_ID:$CHUNK_NUM:$CONTENT" >> "$FAILURE_CHUNKS_FILE"
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" | grep -v "\[Sentry\]" || true)
 
     # Second pass: Process unchunked DEBUG_TEST_FAILURE messages
     while IFS= read -r line; do
@@ -1484,7 +1484,7 @@ _collect-action-results test_id platform config_name="unknown" session="":
                 fi
             fi
         fi
-    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" || true)
+    done < <(echo "$LOGS" | grep "DEBUG_TEST_FAILURE" | grep -v "\[BUFFER\]" | grep -v "\[Sentry\]" || true)
 
     # Third pass: Process and reconstruct chunked failure messages
     if [[ -f "$FAILURE_CHUNKS_FILE" && -s "$FAILURE_CHUNKS_FILE" ]]; then
