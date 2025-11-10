@@ -224,10 +224,16 @@ _test-multi-platform TARGET_CONFIG:
         if DISABLE_TEST_CLEANUP=true MULTI_PLATFORM_MODE=true just "test-${PLATFORM}-target" "$TARGET_CONFIG" 2>/dev/null; then
             PLATFORM_RESULT=0
         else
-            # Always treat as real failure for known platforms (desktop, android)
-            # The commands exist, so any failure is a real test failure
-            PLATFORM_RESULT=1
-            echo "❌ $PLATFORM test failed"
+            EXIT_CODE=$?
+            if [[ $EXIT_CODE -eq 2 ]]; then
+                # Exit code 2 means skipped (platform incompatibility)
+                PLATFORM_RESULT=2
+                # Don't print anything - skip is normal and reported in summary
+            else
+                # Any other non-zero exit code is a real failure
+                PLATFORM_RESULT=1
+                echo "❌ $PLATFORM test failed (exit code: $EXIT_CODE)"
+            fi
         fi
 
         # Store result and find hierarchy file (bash 3.2 compatible)
@@ -243,7 +249,7 @@ _test-multi-platform TARGET_CONFIG:
                 echo "🔧 Creating hierarchy file from action results for ${PLATFORM}"
 
                 # Look for action results file from this platform test (prioritize most recent)
-                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1)
+                ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" -name "test_action_results_${TARGET_CONFIG}_*_${PLATFORM}_*.json" -type f -exec ls -t {} + 2>/dev/null | head -n1 || echo "")
 
                 if [[ -n "$ACTION_RESULTS_FILE" && -f "$ACTION_RESULTS_FILE" ]]; then
                     # Create hierarchy file from action results
@@ -271,10 +277,10 @@ _test-multi-platform TARGET_CONFIG:
                                 "action_results": $actions
                               }
                             ]
-                          }' > "$HIERARCHY_FILE" 2>/dev/null; then
+                          }' > "$HIERARCHY_FILE"; then
                         echo "✅ Created hierarchy file: $(basename "$HIERARCHY_FILE")"
                     else
-                        echo "⚠️ Failed to create hierarchy file from action results" >&2
+                        echo "⚠️ Failed to create hierarchy file from action results (exit code: $?)" >&2
                         HIERARCHY_FILE=""
                     fi
                 else
@@ -343,12 +349,12 @@ _test-multi-platform TARGET_CONFIG:
     # Helper function to get value from string-based storage
     get_platform_result() {
         local platform="$1"
-        echo "$PLATFORM_RESULTS" | grep -o "${platform}:[^;]*" | cut -d: -f2
+        echo "$PLATFORM_RESULTS" | grep -o "${platform}:[^;]*" | cut -d: -f2 || echo ""
     }
 
     get_platform_hierarchy() {
         local platform="$1"
-        echo "$PLATFORM_HIERARCHIES" | grep -o "${platform}:[^;]*" | cut -d: -f2
+        echo "$PLATFORM_HIERARCHIES" | grep -o "${platform}:[^;]*" | cut -d: -f2 || echo ""
     }
 
     # Process each platform's results
