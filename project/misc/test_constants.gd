@@ -88,3 +88,62 @@ static func operation_description(operation: String, context: String = "") -> St
 	if context.is_empty():
 		return "C++ %s" % operation.capitalize()
 	return "C++ %s (%s)" % [operation.capitalize(), context]
+
+# =================================================================
+# CRITICAL LOG MESSAGE CONSTANTS
+# Used by test framework for validation - DO NOT CHANGE without updating tests
+# =================================================================
+
+# Debug test success/failure markers (used in justfile grep patterns)
+const LOG_DEBUG_TEST_SUCCESS: String = "DEBUG_TEST_SUCCESS"
+const LOG_DEBUG_TEST_FAILURE: String = "DEBUG_TEST_FAILURE"
+
+# Session markers (used for test timing and validation)
+const LOG_SESSION_START: String = "SESSION_START"
+const LOG_SESSION_END: String = "SESSION_END"
+
+# Test completion markers (used for automated validation)
+const LOG_TEST_COMPLETE_PREFIX: String = "TEST_COMPLETE_"
+
+# Quit event messages (used for desktop test validation)
+const LOG_QUIT_EVENT_RECEIVED: String = "Quit event received"
+const LOG_QUIT_EVENT_OLD_PATTERN: String = "Quit event received, exiting application"  # Legacy pattern
+const LOG_QUIT_EVENT_NEW_PATTERN: String = "Quit event received - delegating to QuitApplicationEvent for centralized handling"  # New pattern
+
+# Flush completion marker (used for Android log validation)
+const LOG_DEBUG_TEST_FLUSH_COMPLETE: String = "DEBUG_TEST_FLUSH_COMPLETE"
+
+# Checksum validation markers
+const LOG_CHECKSUM_MISMATCH: String = "CHECKSUM_MISMATCH"
+const LOG_STATE_CAPTURED: String = "STATE_CAPTURED"
+
+# Error patterns (used for error analysis)
+const LOG_ERROR_PATTERNS: Array[String] = [
+	"SCRIPT ERROR",
+	"Assertion failed",
+	"CRITICAL",
+	"Parse Error",
+	"DEBUG_TEST_FAILURE",
+	"CHECKSUM_MISMATCH"
+]
+
+# Buffer replay filter (used to exclude test framework internal messages)
+const LOG_BUFFER_TAG: String = "[BUFFER]"
+
+# Helper to get the correct quit event pattern for current version
+static func get_quit_event_pattern() -> String:
+	# Use the newer pattern that works with QuitApplicationEvent
+	return LOG_QUIT_EVENT_RECEIVED
+
+# Helper to get all critical log patterns for grep filtering
+static func get_critical_log_patterns() -> String:
+	var patterns = []
+	patterns.append(LOG_DEBUG_TEST_SUCCESS)
+	patterns.append(LOG_DEBUG_TEST_FAILURE)
+	patterns.append(LOG_TEST_COMPLETE_PREFIX)
+	patterns.append(LOG_SESSION_START)
+	patterns.append(LOG_SESSION_END)
+	patterns.append(LOG_CHECKSUM_MISMATCH)
+	patterns.append(LOG_STATE_CAPTURED)
+
+	return "|".join(patterns)

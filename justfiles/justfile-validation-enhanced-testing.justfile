@@ -924,9 +924,9 @@ _filter-desktop-logs-safely temp_file_path:
     echo ""
     
     # Extract essential test info from filtered logs (exclude buffer replays)
-    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \t\n\r' | head -1 || echo "0")
-    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \t\n\r' | head -1 || echo "0")
-    ERROR_COUNT=$(grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" "$TEMP_FILTERED" | grep -c -E "(ERROR|CRITICAL|FAILED)" 2>/dev/null | tr -d ' \t\n\r' | head -1 || echo "0")
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | awk '{print $1}' | head -1 || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_FILTERED" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | awk '{print $1}' | head -1 || echo "0")
+    ERROR_COUNT=$(grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" "$TEMP_FILTERED" | grep -c -E "(ERROR|CRITICAL|FAILED)" 2>/dev/null | awk '{print $1}' | head -1 || echo "0")
     
     # Extract session info for better reporting
     SESSION_INFO=$(grep "SESSION_END" "$TEMP_FILTERED" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
@@ -2955,8 +2955,9 @@ _execute-test-desktop config_name:
     echo ""
     
     # Extract essential test info from output first (always needed for exit code evaluation)
-    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \n' || echo "0")
-    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -d ' \n' || echo "0")
+    # TARGETED FIX: Ensure absolutely clean single-line integers
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
     
     # Check for any critical errors first (excluding ObjectDB warnings)
     CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
@@ -3001,10 +3002,17 @@ _execute-test-desktop config_name:
         exit 1
     elif [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
         # Check for actual test success indicators despite non-zero exit code
-        TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
-        QUIT_EVENT_FOUND=$(grep -c "Quit event received, exiting application" "$TEMP_OUTPUT" 2>/dev/null || echo "0")
-        
-        
+        # FIXED: Updated quit event pattern to work with new QuitApplicationEvent (task-XXX)
+        TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
+        QUIT_EVENT_FOUND=$(grep -c "Quit event received" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
+
+        # DEBUG: Show variable contents with hex dump to identify newlines
+        echo "🐛 DEBUG: Variable analysis:"
+        echo "  FAILED_COUNT='${FAILED_COUNT:-0}' ($(echo -n "${FAILED_COUNT:-0}" | od -c | head -1))"
+        echo "  ACTION_COUNT='${ACTION_COUNT:-0}' ($(echo -n "${ACTION_COUNT:-0}" | od -c | head -1))"
+        echo "  TEST_COMPLETE_FOUND='${TEST_COMPLETE_FOUND:-0}' ($(echo -n "${TEST_COMPLETE_FOUND:-0}" | od -c | head -1))"
+        echo "  QUIT_EVENT_FOUND='${QUIT_EVENT_FOUND:-0}' ($(echo -n "${QUIT_EVENT_FOUND:-0}" | od -c | head -1))"
+
         if [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
             echo ""
             echo "✅ Test logically successful despite Godot exit code ${TEST_EXIT_CODE}"
