@@ -79,7 +79,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			if is_already_initialized:
 				print("Sentry already initialized (likely via Android AAR) - testing functionality")
 				init_result.success = true
-				print("DEBUG: Lambda capture working - init_result.success set to: ", init_result.success)
 			else:
 				print("Sentry not initialized - attempting manual initialization")
 				if current_platform == "iOS" or current_platform == "macOS":
@@ -123,7 +122,6 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 					)
 
 			test_results.init_method_works = init_result.success
-			print("DEBUG: Reading from mutable container - init_result.success = ", init_result.success)
 			print("Sentry init result: ", "SUCCESS" if init_result.success else "FAILED")
 
 			# Test 4: Try configure method
