@@ -24,7 +24,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Validating Sentry GDExtension loading...")
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"sentry_gdextension_exists": false,
 		"sentry_native_binaries_exist": false,
 		"sentry_sdk_class_available": false
@@ -36,7 +36,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	)
 
 	# Test 2: Check native libraries exist for current platform
-	var current_platform = OS.get_name()
+	var current_platform: String = OS.get_name()
 	if current_platform == "macOS":
 		test_results.sentry_native_binaries_exist = (
 			FileAccess.file_exists("res://addons/sentry/bin/macos/Sentry.framework/Sentry")
@@ -49,8 +49,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		)
 	elif current_platform == "Android":
 		# Check multiple possible paths for Android binaries
-		var debug_path = "res://addons/sentry/bin/android/libsentry.android.debug.arm64.so"
-		var release_path = "res://addons/sentry/bin/android/libsentry.android.release.arm64.so"
+		var debug_path: String = "res://addons/sentry/bin/android/libsentry.android.debug.arm64.so"
+		var release_path: String = "res://addons/sentry/bin/android/libsentry.android.release.arm64.so"
 
 		# Debug: Log the paths we're checking
 		Log.info(
@@ -95,7 +95,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	Log.info("GDExtension validation test results", test_results, ["debug", "sentry", "trace"])
 
 	# Updated validation logic for platform-specific behaviors
-	var all_tests_passed = (
+	var all_tests_passed: bool = (
 		test_results.sentry_gdextension_exists
 		and (
 			test_results.sentry_native_binaries_exist
@@ -132,7 +132,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 # Helper methods for GDExtension validation
 func _get_implementation_notes(conditions: Dictionary) -> Array[String]:
 	var notes: Array[String] = []
-	var current_platform = OS.get_name()
+	var current_platform: String = OS.get_name()
 
 	if not conditions.sentry_gdextension_exists:
 		(

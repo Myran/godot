@@ -24,7 +24,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing Sentry SDK integration...")
 
-	var test_results = {
+	var test_results: Dictionary = {
 		"sentrysdk_class_available": false,
 		"sentrysdk_singleton_accessible": false,
 		"sentry_init_method_works": false,
@@ -37,7 +37,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test 2: Check if SentrySDK singleton is accessible
 	if test_results.sentrysdk_class_available:
 		# Try to access the SentrySDK singleton
-		var sentry_sdk = Engine.get_singleton("SentrySDK")
+		var sentry_sdk: Object = Engine.get_singleton("SentrySDK")
 		test_results.sentrysdk_singleton_accessible = sentry_sdk != null
 
 		# Test 3: Try calling init method
@@ -45,18 +45,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			# Test actual Sentry functionality - let it fail if not working
 
 			# Test 3: Try init method (platform-specific)
-			var options_init_success = false
-			var platform = OS.get_name()
+			var options_init_success: bool = false
+			# platform declared below at function scope
+			var current_platform: String = OS.get_name()
 
 			# Enhanced check for Sentry initialization status
-			var is_already_initialized = false
+			var is_already_initialized: bool = false
 
 			# Try multiple methods to detect if Sentry is already initialized
 			if sentry_sdk.has_method("is_enabled"):
 				is_already_initialized = sentry_sdk.is_enabled()
 			elif sentry_sdk.has_method("get_options"):
 				# If get_options exists and returns non-null, Sentry is likely initialized
-				var options = sentry_sdk.get_options()
+				var options: Variant = sentry_sdk.get_options()
 				is_already_initialized = options != null
 			else:
 				# Fallback: Assume Sentry is initialized if we can access the singleton
@@ -69,7 +70,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 					"has_is_enabled": sentry_sdk.has_method("is_enabled"),
 					"has_get_options": sentry_sdk.has_method("get_options"),
 					"is_already_initialized": is_already_initialized,
-					"platform": platform
+					"platform": current_platform
 				},
 				["debug", "sentry", "trace"]
 			)
@@ -79,15 +80,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 				options_init_success = true
 			else:
 				print("Sentry not initialized - attempting manual initialization")
-				if platform == "iOS" or platform == "macOS":
+				if current_platform == "iOS" or current_platform == "macOS":
 					# Native Sentry build - use proper SentryOptions
-					print("Testing Native Sentry build on ", platform, " - using SentryOptions")
+					print(
+						"Testing Native Sentry build on ",
+						current_platform,
+						" - using SentryOptions"
+					)
 					if ClassDB.class_exists("SentryOptions"):
 						# Use untyped parameter to avoid compilation issues
 						# Test initialization without actually connecting to Sentry
 						# This avoids network timeouts during testing
 						sentry_sdk.init(
-							func(options) -> void:
+							func(options: Variant) -> void:
 								# Don't set DSN to avoid network calls during testing
 								options.debug = true
 								options.environment = "test"
@@ -96,13 +101,17 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 					else:
 						print(
 							"ERROR: SentryOptions not available on ",
-							platform,
+							current_platform,
 							" - native build failed"
 						)
 						test_results.native_build_issues = true
 				else:
 					# GDExtension build (Android) - use Dictionary for options
-					print("Testing GDExtension Sentry build on ", platform, " - using Dictionary")
+					print(
+						"Testing GDExtension Sentry build on ",
+						current_platform,
+						" - using Dictionary"
+					)
 					sentry_sdk.init(
 						func(options: Dictionary) -> void:
 							# Don't set DSN to avoid network calls during testing
@@ -122,8 +131,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	Log.info("Sentry SDK integration test results", test_results, ["debug", "sentry", "trace"])
 
 	# Platform-specific success criteria
-	var platform = OS.get_name()
-	var all_tests_passed = false
+	var platform: String = OS.get_name()
+	var all_tests_passed: bool = false
 
 	if platform == "Android":
 		# Android: AAR integration - message capture working indicates success

@@ -22,7 +22,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing Sentry crash scenario capture...")
 
-	var crash_test_results = {
+	var crash_test_results: Dictionary = {
 		"null_reference_test": false,
 		"bounds_error_test": false,
 		"resource_loading_test": false,
@@ -43,15 +43,15 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test 4: Type mismatch error
 	crash_test_results.type_mismatch_test = await _test_type_mismatch_error()
 
-	# Calculate totals
+	# Calculate totals (convert booleans to int for counting)
 	crash_test_results.total_crashes_captured = (
-		crash_test_results.null_reference_test
-		+ crash_test_results.bounds_error_test
-		+ crash_test_results.resource_loading_test
-		+ crash_test_results.type_mismatch_test
+		int(crash_test_results.null_reference_test)
+		+ int(crash_test_results.bounds_error_test)
+		+ int(crash_test_results.resource_loading_test)
+		+ int(crash_test_results.type_mismatch_test)
 	)
 
-	var all_tests_passed = crash_test_results.total_crashes_captured == 4
+	var all_tests_passed: bool = crash_test_results.total_crashes_captured == 4
 
 	# Generate test success marker
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
@@ -102,8 +102,8 @@ func _test_bounds_error_crash() -> bool:
 	Log.debug("Testing bounds error crash capture...", {}, ["debug", "sentry", "test"])
 
 	# Test bounds error handling
-	var arr = [1, 2, 3]
-	var index = 10
+	var arr: Array[int] = [1, 2, 3]
+	var index: int = 10
 	if index < arr.size():
 		print(arr[index])  # This won't execute, avoiding crash
 
@@ -116,7 +116,7 @@ func _test_resource_loading_error() -> bool:
 	Log.debug("Testing resource loading error capture...", {}, ["debug", "sentry", "test"])
 
 	# Test resource loading error handling
-	var resource_path = "res://non_existent_scene.tscn"
+	var resource_path: String = "res://non_existent_scene.tscn"
 	if FileAccess.file_exists(resource_path):
 		load(resource_path)  # This won't execute, avoiding crash
 
@@ -129,9 +129,9 @@ func _test_type_mismatch_error() -> bool:
 	Log.debug("Testing type mismatch error capture...", {}, ["debug", "sentry", "test"])
 
 	# Test type mismatch error handling
-	var test_value = "hello"
+	var test_value: String = "hello"
 	if test_value.is_valid_int():
-		var num: int = test_value  # This won't execute, avoiding crash
+		var num = test_value  # This won't execute, avoiding crash (untyped to prevent compile error)
 
 	# For TDD, we simulate the expected behavior
 	Log.debug("Type mismatch error test simulated", {}, ["debug", "sentry", "test"])

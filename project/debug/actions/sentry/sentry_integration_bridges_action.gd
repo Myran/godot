@@ -24,7 +24,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 	_update_status("Testing Sentry integration with existing GameTwo systems...")
 
-	var integration_test_results = {
+	var integration_test_results: Dictionary = {
 		"advanced_logger_bridge": false,
 		"firebase_context_integration": false,
 		"debug_coordinator_compatibility": false,
@@ -40,14 +40,14 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test 3: Debug coordinator compatibility
 	integration_test_results.debug_coordinator_compatibility = await _test_debug_coordinator_compatibility()
 
-	# Calculate totals
+	# Calculate totals (convert booleans to int for counting)
 	integration_test_results.total_bridges_working = (
-		integration_test_results.advanced_logger_bridge
-		+ integration_test_results.firebase_context_integration
-		+ integration_test_results.debug_coordinator_compatibility
+		int(integration_test_results.advanced_logger_bridge)
+		+ int(integration_test_results.firebase_context_integration)
+		+ int(integration_test_results.debug_coordinator_compatibility)
 	)
 
-	var all_tests_passed = integration_test_results.total_bridges_working == 3
+	var all_tests_passed: bool = integration_test_results.total_bridges_working == 3
 
 	# Generate test success marker
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
@@ -83,9 +83,9 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 func _test_advanced_logger_bridge() -> bool:
 	Log.debug("Testing Advanced Logger bridge to Sentry...", {}, ["debug", "sentry", "test"])
 
-	# Check if Advanced Logger exists and can forward errors to Sentry
-	if not ClassDB.class_exists("Log"):
-		Log.warn(
+	# Check if Advanced Logger autoload exists and is valid (not a ClassDB class)
+	if not is_instance_valid(Log):
+		Log.warning(
 			"Advanced Logger not available for bridge testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
@@ -99,7 +99,7 @@ func _test_advanced_logger_bridge() -> bool:
 
 	# In a real implementation, we'd check if Sentry received the error
 	# For TDD, we'll check if the bridge structure exists
-	var sentry_manager = _get_sentry_manager()
+	var sentry_manager: Node = _get_sentry_manager()
 	if sentry_manager and sentry_manager.has_method("handle_advanced_logger_error"):
 		Log.debug("Advanced Logger bridge structure validated", {}, ["debug", "sentry", "test"])
 		return true
@@ -112,15 +112,15 @@ func _test_firebase_context_integration() -> bool:
 		"Testing Firebase context integration with Sentry...", {}, ["debug", "sentry", "test"]
 	)
 
-	# Check if Firebase auth system exists
-	if not ClassDB.class_exists("FirebaseService"):
-		Log.warn(
+	# Check if Firebase autoload exists and is valid (not a ClassDB class)
+	if not is_instance_valid(FirebaseService):
+		Log.warning(
 			"Firebase service not available for context testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
 
 	# Check if SentryManager can handle Firebase context
-	var sentry_manager = _get_sentry_manager()
+	var sentry_manager: Node = _get_sentry_manager()
 	if sentry_manager and sentry_manager.has_method("setup_firebase_context"):
 		Log.debug(
 			"Firebase context integration structure validated", {}, ["debug", "sentry", "test"]
@@ -135,15 +135,15 @@ func _test_debug_coordinator_compatibility() -> bool:
 		"Testing Debug Coordinator compatibility with Sentry...", {}, ["debug", "sentry", "test"]
 	)
 
-	# Check if DebugRegistry exists for action registration
-	if not ClassDB.class_exists("DebugRegistry"):
-		Log.warn(
+	# Check if DebugRegistry autoload exists and is valid (not a ClassDB class)
+	if not is_instance_valid(DebugRegistry):
+		Log.warning(
 			"DebugRegistry not available for compatibility testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
 
 	# Check if Sentry actions can be registered with DebugRegistry
-	var sentry_manager = _get_sentry_manager()
+	var sentry_manager: Node = _get_sentry_manager()
 	if sentry_manager and sentry_manager.has_method("register_debug_actions"):
 		Log.debug(
 			"Debug Coordinator compatibility structure validated", {}, ["debug", "sentry", "test"]
