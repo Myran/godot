@@ -1,5 +1,6 @@
 extends SceneTree
 
+
 func _ready():
 	print("=== Testing file access ===")
 
