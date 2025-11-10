@@ -40,12 +40,15 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test 3: Debug coordinator compatibility
 	integration_test_results.debug_coordinator_compatibility = await _test_debug_coordinator_compatibility()
 
-	# Calculate totals (convert booleans to int for counting)
-	integration_test_results.total_bridges_working = (
-		int(integration_test_results.advanced_logger_bridge)
-		+ int(integration_test_results.firebase_context_integration)
-		+ int(integration_test_results.debug_coordinator_compatibility)
-	)
+	# Calculate totals using strongly typed counting pattern
+	var bridges_working: int = 0
+	if integration_test_results.advanced_logger_bridge:
+		bridges_working += 1
+	if integration_test_results.firebase_context_integration:
+		bridges_working += 1
+	if integration_test_results.debug_coordinator_compatibility:
+		bridges_working += 1
+	integration_test_results.total_bridges_working = bridges_working
 
 	var all_tests_passed: bool = integration_test_results.total_bridges_working == 3
 
