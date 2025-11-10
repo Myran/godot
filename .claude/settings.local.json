@@ -175,7 +175,9 @@
       "Bash(gdlint:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "mcp__godot-mcp__get_debug_session"
+      "mcp__godot-mcp__get_debug_session",
+      "Bash(/tmp/test_simple.log)",
+      "Bash(/tmp/test_ansi.log)"
     ],
     "deny": [],
     "ask": [],
