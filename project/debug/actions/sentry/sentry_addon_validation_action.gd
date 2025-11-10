@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute_gdextension_validation() -> bool:
-	var result: DebugActionResult = await _execute_action_logic({})
+	var result: DebugActionResult = _execute_action_logic({})
 	return result.is_success()
 
 

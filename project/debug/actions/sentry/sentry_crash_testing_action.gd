@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute_crash_testing() -> bool:
-	var result: DebugActionResult = await _execute_action_logic({})
+	var result: DebugActionResult = _execute_action_logic({})
 	return result.is_success()
 
 
@@ -32,16 +32,16 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	}
 
 	# Test 1: Null reference crash
-	crash_test_results.null_reference_test = await _test_null_reference_crash()
+	crash_test_results.null_reference_test = _test_null_reference_crash()
 
 	# Test 2: Bounds error crash
-	crash_test_results.bounds_error_test = await _test_bounds_error_crash()
+	crash_test_results.bounds_error_test = _test_bounds_error_crash()
 
 	# Test 3: Resource loading error
-	crash_test_results.resource_loading_test = await _test_resource_loading_error()
+	crash_test_results.resource_loading_test = _test_resource_loading_error()
 
 	# Test 4: Type mismatch error
-	crash_test_results.type_mismatch_test = await _test_type_mismatch_error()
+	crash_test_results.type_mismatch_test = _test_type_mismatch_error()
 
 	# Calculate totals using strongly typed counting pattern
 	var crashes_captured: int = 0
@@ -135,7 +135,7 @@ func _test_type_mismatch_error() -> bool:
 	# Test type mismatch error handling
 	var test_value: String = "hello"
 	if test_value.is_valid_int():
-		var num = test_value  # This won't execute, avoiding crash (untyped to prevent compile error)
+		var num: int = test_value.to_int()  # This won't execute, avoiding crash
 
 	# For TDD, we simulate the expected behavior
 	Log.debug("Type mismatch error test simulated", {}, ["debug", "sentry", "test"])

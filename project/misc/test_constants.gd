@@ -137,7 +137,7 @@ static func get_quit_event_pattern() -> String:
 
 # Helper to get all critical log patterns for grep filtering
 static func get_critical_log_patterns() -> String:
-	var patterns = []
+	var patterns: Array[String] = []
 	patterns.append(LOG_DEBUG_TEST_SUCCESS)
 	patterns.append(LOG_DEBUG_TEST_FAILURE)
 	patterns.append(LOG_TEST_COMPLETE_PREFIX)

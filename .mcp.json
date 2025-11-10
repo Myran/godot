@@ -4,7 +4,8 @@
       "command": "node",
       "args": ["/Users/mattiasmyhrman/repos/godot-mcp/build/index.js"],
       "env": {
-        "DEBUG": "true"
+        "DEBUG": "true",
+        "GODOT_PROJECT_PATH": "/Users/mattiasmyhrman/repos/gametwo/project"
       }
     }
   }

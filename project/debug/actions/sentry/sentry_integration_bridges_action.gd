@@ -11,7 +11,7 @@ func _init() -> void:
 
 
 func execute_integration_bridges() -> bool:
-	var result: DebugActionResult = await _execute_action_logic({})
+	var result: DebugActionResult = _execute_action_logic({})
 	return result.is_success()
 
 
@@ -32,13 +32,13 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	}
 
 	# Test 1: Advanced Logger bridge
-	integration_test_results.advanced_logger_bridge = await _test_advanced_logger_bridge()
+	integration_test_results.advanced_logger_bridge = _test_advanced_logger_bridge()
 
 	# Test 2: Firebase context integration
-	integration_test_results.firebase_context_integration = await _test_firebase_context_integration()
+	integration_test_results.firebase_context_integration = _test_firebase_context_integration()
 
 	# Test 3: Debug coordinator compatibility
-	integration_test_results.debug_coordinator_compatibility = await _test_debug_coordinator_compatibility()
+	integration_test_results.debug_coordinator_compatibility = _test_debug_coordinator_compatibility()
 
 	# Calculate totals using strongly typed counting pattern
 	var bridges_working: int = 0
