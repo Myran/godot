@@ -45,7 +45,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 			# Test actual Sentry functionality - let it fail if not working
 
 			# Test 3: Try init method (platform-specific)
-			var options_init_success: bool = false
+			# Use mutable container to fix lambda capture issue
+			var init_result: Dictionary = {"success": false}
 			# platform declared below at function scope
 			var current_platform: String = OS.get_name()
 
@@ -77,7 +78,8 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 			if is_already_initialized:
 				print("Sentry already initialized (likely via Android AAR) - testing functionality")
-				options_init_success = true
+				init_result.success = true
+				print("DEBUG: Lambda capture working - init_result.success set to: ", init_result.success)
 			else:
 				print("Sentry not initialized - attempting manual initialization")
 				if current_platform == "iOS" or current_platform == "macOS":
@@ -96,7 +98,7 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 								# Don't set DSN to avoid network calls during testing
 								options.debug = true
 								options.environment = "test"
-								options_init_success = true
+								init_result.success = true
 						)
 					else:
 						print(
@@ -117,11 +119,12 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 							# Don't set DSN to avoid network calls during testing
 							options.debug = true
 							options.environment = "test"
-							options_init_success = true
+							init_result.success = true
 					)
 
-			test_results.init_method_works = options_init_success
-			print("Sentry init result: ", "SUCCESS" if options_init_success else "FAILED")
+			test_results.init_method_works = init_result.success
+			print("DEBUG: Reading from mutable container - init_result.success = ", init_result.success)
+			print("Sentry init result: ", "SUCCESS" if init_result.success else "FAILED")
 
 			# Test 4: Try configure method
 			sentry_sdk.capture_message("Test message from GameTwo")
