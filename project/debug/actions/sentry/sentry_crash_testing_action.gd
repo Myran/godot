@@ -43,13 +43,17 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	# Test 4: Type mismatch error
 	crash_test_results.type_mismatch_test = await _test_type_mismatch_error()
 
-	# Calculate totals (convert booleans to int for counting)
-	crash_test_results.total_crashes_captured = (
-		int(crash_test_results.null_reference_test)
-		+ int(crash_test_results.bounds_error_test)
-		+ int(crash_test_results.resource_loading_test)
-		+ int(crash_test_results.type_mismatch_test)
-	)
+	# Calculate totals using strongly typed counting pattern
+	var crashes_captured: int = 0
+	if crash_test_results.null_reference_test:
+		crashes_captured += 1
+	if crash_test_results.bounds_error_test:
+		crashes_captured += 1
+	if crash_test_results.resource_loading_test:
+		crashes_captured += 1
+	if crash_test_results.type_mismatch_test:
+		crashes_captured += 1
+	crash_test_results.total_crashes_captured = crashes_captured
 
 	var all_tests_passed: bool = crash_test_results.total_crashes_captured == 4
 
@@ -116,9 +120,9 @@ func _test_resource_loading_error() -> bool:
 	Log.debug("Testing resource loading error capture...", {}, ["debug", "sentry", "test"])
 
 	# Test resource loading error handling
-	var resource_path: String = "res://non_existent_scene.tscn"
-	if FileAccess.file_exists(resource_path):
-		load(resource_path)  # This won't execute, avoiding crash
+	var non_existent_file_path: String = "res://non_existent_scene.tscn"
+	if FileAccess.file_exists(non_existent_file_path):
+		load(non_existent_file_path)  # This won't execute, avoiding crash
 
 	# For TDD, we simulate the expected behavior
 	Log.debug("Resource loading error test simulated", {}, ["debug", "sentry", "test"])
