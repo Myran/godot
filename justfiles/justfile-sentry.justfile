@@ -37,15 +37,15 @@ help-sentry:
     @echo "  just sentry-gdscript-complete        # Complete GDScript build + validation"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
-    @echo "  just sentry-build-all               # Build both native iOS and GDScript Sentry (smart rebuild)"
-    @echo "  just sentry-build-all yes           # Force rebuild both Sentry integrations"
-    @echo "  just sentry-validate-all             # Validate both Sentry integrations"
-    @echo "  just sentry-complete                # Complete build + validation for both"
+    @echo "  just build-sentry-all               # Build both native iOS and GDScript Sentry (smart rebuild)"
+    @echo "  just build-sentry-all yes           # Force rebuild both Sentry integrations"
+    @echo "  just validate-sentry-all             # Validate both Sentry integrations"
+    @echo "  just complete-sentry                # Complete build + validation for both"
     @echo ""
     @echo "🧧 MAINTENANCE:"
-    @echo "  just sentry-clean-all                # Clean all Sentry build artifacts"
-    @echo "  just sentry-status-quick             # Quick status check (2 lines)"
-    @echo "  just sentry-status-all               # Check status of both integrations"
+    @echo "  just clean-sentry-all                # Clean all Sentry build artifacts"
+    @echo "  just status-sentry-quick             # Quick status check (2 lines)"
+    @echo "  just status-sentry-all               # Check status of both integrations"
     @echo ""
     @echo "ℹ️  NATIVE iOS = Built into Godot executable (crash reporting)"
     @echo "ℹ️  GDSCRIPT = Runtime GDExtension (script-level functionality)"
@@ -97,7 +97,7 @@ _check-or-build-sentry-gdscript force="no":
     fi
 
 # Unified build workflows with smart rebuild detection
-sentry-build-all force="no":
+build-sentry-all force="no":
     @echo "🔥 Building all Sentry SDK components with smart rebuild detection..."
     @echo ""
 
@@ -105,12 +105,12 @@ sentry-build-all force="no":
     @echo ""
     @just _check-or-build-sentry-gdscript {{force}}
     @echo ""
-    @just sentry-validate-all
+    @just validate-sentry-all
     @echo ""
     @echo "🎉 All Sentry SDK components built and validated successfully!"
 
 # Quick Sentry status check
-sentry-status-quick:
+status-sentry-quick:
     @echo "⚡ Quick Sentry status check..."
     @echo ""
 
@@ -118,17 +118,17 @@ sentry-status-quick:
     @if [ -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then \
         echo "   ✅ Built (Sentry.xcframework)"; \
     else \
-        echo "   ❌ Not built - run 'just sentry-build-all'"; \
+        echo "   ❌ Not built - run 'just build-sentry-all'"; \
     fi
 
     @echo "🎮 GDScript Sentry:"
     @if [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then \
         echo "   ✅ Built (libsentry.ios.release.xcframework)"; \
     else \
-        echo "   ❌ Not built - run 'just sentry-build-all'"; \
+        echo "   ❌ Not built - run 'just build-sentry-all'"; \
     fi
 
-sentry-validate-all:
+validate-sentry-all:
     @echo "🔧 Validating both Sentry integrations..."
     @echo ""
     @echo "🍎 Validating Native iOS Sentry..."
@@ -178,18 +178,18 @@ sentry-validate-all:
         exit 1; \
     fi
 
-sentry-complete:
+complete-sentry:
     @echo "🚀 Complete Sentry build and validation workflow..."
     @echo ""
-    @just sentry-build-all
+    @just build-sentry-all
     @echo ""
-    @just sentry-validate-all
+    @just validate-sentry-all
     @echo ""
     @echo "🎉 Complete Sentry workflow finished successfully"
 
 
 # Unified maintenance
-sentry-clean-all:
+clean-sentry-all:
     @echo "🧹 Cleaning all Sentry build artifacts..."
     @echo ""
     @echo "🍎 Cleaning Native iOS Sentry..."
@@ -200,7 +200,7 @@ sentry-clean-all:
     @echo ""
     @echo "✅ All Sentry build artifacts cleaned"
 
-sentry-status-all:
+status-sentry-all:
     @echo "📊 Sentry integration status report"
     @echo "================================"
     @echo ""

@@ -472,7 +472,7 @@ static func _sentry_health_check() -> bool:
 - `sentry-build-desktop` - Desktop editor + template builds
 - `sentry-build-android` - Android library + editor + template builds
 - `sentry-build-ios` - iOS device-only builds with XCFramework creation
-- `sentry-build-all-platforms` - Complete cross-platform build pipeline
+- `build-sentry-all-platforms` - Complete cross-platform build pipeline
 
 **Custom iOS Build Process**:
 - Device-only builds (no simulator support needed)
