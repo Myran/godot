@@ -77,18 +77,6 @@ const TEST_TYPES: Dictionary = {
 	"SYSTEM_VALIDATION": "system_validation"
 }
 
-
-# Simple helper for consistent test value creation
-static func test_value(prefix: String) -> String:
-	return "%s: %d" % [prefix, Time.get_ticks_msec()]
-
-
-# Simple helper for consistent operation descriptions
-static func operation_description(operation: String, context: String = "") -> String:
-	if context.is_empty():
-		return "C++ %s" % operation.capitalize()
-	return "C++ %s (%s)" % [operation.capitalize(), context]
-
 # =================================================================
 # CRITICAL LOG MESSAGE CONSTANTS
 # Used by test framework for validation - DO NOT CHANGE without updating tests
@@ -107,8 +95,10 @@ const LOG_TEST_COMPLETE_PREFIX: String = "TEST_COMPLETE_"
 
 # Quit event messages (used for desktop test validation)
 const LOG_QUIT_EVENT_RECEIVED: String = "Quit event received"
-const LOG_QUIT_EVENT_OLD_PATTERN: String = "Quit event received, exiting application"  # Legacy pattern
-const LOG_QUIT_EVENT_NEW_PATTERN: String = "Quit event received - delegating to QuitApplicationEvent for centralized handling"  # New pattern
+# Legacy pattern
+const LOG_QUIT_EVENT_OLD_PATTERN: String = "Quit event received, exiting application"
+# New pattern for centralized handling
+const LOG_QUIT_EVENT_NEW_PATTERN: String = "Quit event received - delegating to QuitApplicationEvent"
 
 # Flush completion marker (used for Android log validation)
 const LOG_DEBUG_TEST_FLUSH_COMPLETE: String = "DEBUG_TEST_FLUSH_COMPLETE"
@@ -130,10 +120,24 @@ const LOG_ERROR_PATTERNS: Array[String] = [
 # Buffer replay filter (used to exclude test framework internal messages)
 const LOG_BUFFER_TAG: String = "[BUFFER]"
 
+
+# Simple helper for consistent test value creation
+static func test_value(prefix: String) -> String:
+	return "%s: %d" % [prefix, Time.get_ticks_msec()]
+
+
+# Simple helper for consistent operation descriptions
+static func operation_description(operation: String, context: String = "") -> String:
+	if context.is_empty():
+		return "C++ %s" % operation.capitalize()
+	return "C++ %s (%s)" % [operation.capitalize(), context]
+
+
 # Helper to get the correct quit event pattern for current version
 static func get_quit_event_pattern() -> String:
 	# Use the newer pattern that works with QuitApplicationEvent
 	return LOG_QUIT_EVENT_RECEIVED
+
 
 # Helper to get all critical log patterns for grep filtering
 static func get_critical_log_patterns() -> String:

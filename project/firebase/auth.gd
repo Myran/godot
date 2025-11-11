@@ -178,6 +178,10 @@ func log_out_facebook() -> bool:
 		return false
 
 	facebook.logout()
+
+	# Clear Sentry user context on logout
+	_clear_sentry_user_context()
+
 	return !facebook.is_logged_in()
 
 
@@ -219,6 +223,10 @@ func log_out_apple() -> void:
 	Log.info("Apple logout requested", {}, [Log.TAG_FIREBASE, "auth", "apple"])
 	if is_apple_available():
 		godot_apple_auth.sign_out()
+
+	# Clear Sentry user context on logout
+	_clear_sentry_user_context()
+
 	@warning_ignore("redundant_await")
 	await Engine.get_main_loop().process_frame
 
@@ -271,6 +279,10 @@ func apple_credential() -> void:
 func logged_in(res: int) -> void:
 	Log.info("Firebase login completed", {"result_code": res}, [Log.TAG_FIREBASE, "auth"])
 
+	# Update Sentry user context on successful login
+	if res == 0 and firebase_auth and firebase_auth.is_logged_in():
+		_update_sentry_user_context()
+
 
 func login() -> int:
 	var retval: int = 0
@@ -291,3 +303,60 @@ func login() -> int:
 		retval = auth_error_code
 
 	return retval
+
+
+func _update_sentry_user_context() -> void:
+	## Update Sentry user context with Firebase authentication data.
+	##
+	## Called automatically after successful Firebase login.
+	## Silently fails if Sentry unavailable.
+
+	if not firebase_auth or not firebase_auth.is_logged_in():
+		return
+
+	# Build user context from Firebase auth
+	var user_dict: Dictionary = {
+		"id": firebase_auth.uid() if firebase_auth.has_method("uid") else "",
+		"email": "",  # Firebase auth doesn't expose email directly in GDExtension
+		"username": ""  # Could be populated from user profile if available
+	}
+
+	if not SentryHelper.set_user(user_dict):
+		return  # Sentry not available
+
+	# Determine if user is anonymous
+	var is_anonymous: bool = false
+	var providers: Array = (
+		firebase_auth.providers() if firebase_auth.has_method("providers") else []
+	)
+
+	# Check if user only has anonymous provider or no providers
+	if providers.size() == 0:
+		is_anonymous = true
+	elif providers.size() == 1:
+		var provider: Variant = providers[0]
+		if provider is Dictionary and provider.get("name", "") == "":
+			is_anonymous = true
+
+	# Set authentication state tag
+	var auth_state: String = "signed_in" if not is_anonymous else "anonymous"
+	SentryHelper.set_tag("auth_state", auth_state)
+
+	# Set provider tags if available
+	if providers.size() > 0:
+		var provider_names: Array[String] = []
+		for provider: Variant in providers:
+			if provider is Dictionary and provider.has("name"):
+				provider_names.append(provider.name)
+		if provider_names.size() > 0:
+			SentryHelper.set_tag("firebase_providers", ",".join(provider_names))
+
+
+func _clear_sentry_user_context() -> void:
+	## Clear Sentry user context on logout.
+	##
+	## Called automatically when user logs out of Firebase auth.
+	## Silently fails if Sentry unavailable.
+
+	SentryHelper.set_user({})
+	SentryHelper.set_tag("auth_state", "signed_out")

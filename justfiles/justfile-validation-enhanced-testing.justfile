@@ -1090,8 +1090,8 @@ _analyze-test-errors test_id platform config_file="":
                 # Fall back to legacy pattern matching validation
                 echo "🎯 Using legacy log pattern validation"
 
-                # Extract expected error patterns from config
-                EXPECTED_PATTERNS=$(cat "$CONFIG_FILE" | grep -A 10 "expected_result" | grep -o '"[^"]*"' | grep -E "(ERROR|Error)" | tr -d '"' || echo "")
+                # Extract expected error patterns from config using jq
+                EXPECTED_PATTERNS=$(cat "$CONFIG_FILE" | jq -r '.actions[0].expected_result.patterns[]?' 2>/dev/null || echo "")
 
                 if [[ -n "$EXPECTED_PATTERNS" ]]; then
                 echo "🎯 Expected error patterns found:"

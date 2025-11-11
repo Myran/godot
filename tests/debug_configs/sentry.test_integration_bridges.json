@@ -1,0 +1,15 @@
+{
+  "description": "Sentry integration bridges test with intentional error validation",
+  "actions": [
+    {
+      "action": "sentry.test_integration_bridges",
+      "expected_result": {
+        "type": "expected_errors",
+        "description": "Validates intentional test error for Advanced Logger → Sentry integration",
+        "patterns": [
+          "Test error for Sentry direct integration validation"
+        ]
+      }
+    }
+  ]
+}

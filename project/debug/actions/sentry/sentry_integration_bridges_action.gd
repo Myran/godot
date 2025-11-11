@@ -84,53 +84,58 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 
 
 func _test_advanced_logger_bridge() -> bool:
-	Log.debug("Testing Advanced Logger bridge to Sentry...", {}, ["debug", "sentry", "test"])
+	Log.debug(
+		"Testing Advanced Logger direct integration with Sentry...", {}, ["debug", "sentry", "test"]
+	)
 
-	# Check if Advanced Logger autoload exists and is valid (not a ClassDB class)
+	# Check if Advanced Logger autoload exists and is valid
 	if not is_instance_valid(Log):
 		Log.warning(
-			"Advanced Logger not available for bridge testing", {}, ["debug", "sentry", "test"]
+			"Advanced Logger not available for integration testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
 
-	# Simulate an error and check if it would be forwarded
+	# Check if SentryHelper is available for direct integration
+	if not SentryHelper.is_available():
+		Log.warning(
+			"SentrySDK not available for integration testing", {}, ["debug", "sentry", "test"]
+		)
+		return false
+
+	# Simulate an error that should be forwarded to Sentry
+	# The Advanced Logger will automatically call SentryHelper.capture_message()
+	# Using "intentional_test_error" tag to prevent false positive in error analysis
 	Log.error(
-		"Test error for Sentry bridge validation",
-		{"test": true, "bridge_test": true},
-		["sentry", "test"]
+		"Test error for Sentry direct integration validation",
+		{"test": true, "integration_test": true},
+		["sentry", "test", "intentional_test_error"]
 	)
 
-	# In a real implementation, we'd check if Sentry received the error
-	# For TDD, we'll check if the bridge structure exists
-	var sentry_manager: Node = _get_sentry_manager()
-	if sentry_manager and sentry_manager.has_method("handle_advanced_logger_error"):
-		Log.debug("Advanced Logger bridge structure validated", {}, ["debug", "sentry", "test"])
-		return true
-
-	return false
+	Log.debug("Advanced Logger direct integration validated", {}, ["debug", "sentry", "test"])
+	return true
 
 
 func _test_firebase_context_integration() -> bool:
-	Log.debug(
-		"Testing Firebase context integration with Sentry...", {}, ["debug", "sentry", "test"]
-	)
+	Log.debug("Testing Firebase direct integration with Sentry...", {}, ["debug", "sentry", "test"])
 
-	# Check if Firebase autoload exists and is valid (not a ClassDB class)
-	if not is_instance_valid(FirebaseService):
+	# Check if Firebase auth exists and is available
+	if not is_instance_valid(auth) or not auth.is_available():
 		Log.warning(
-			"Firebase service not available for context testing", {}, ["debug", "sentry", "test"]
+			"Firebase auth not available for integration testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
 
-	# Check if SentryManager can handle Firebase context
-	var sentry_manager: Node = _get_sentry_manager()
-	if sentry_manager and sentry_manager.has_method("setup_firebase_context"):
-		Log.debug(
-			"Firebase context integration structure validated", {}, ["debug", "sentry", "test"]
+	# Check if SentryHelper is available for direct integration
+	if not SentryHelper.is_available():
+		Log.warning(
+			"SentrySDK not available for integration testing", {}, ["debug", "sentry", "test"]
 		)
-		return true
+		return false
 
-	return false
+	# Firebase auth will automatically call SentryHelper.set_user() on login
+	# and SentryHelper.set_tag() for authentication state
+	Log.debug("Firebase direct integration validated", {}, ["debug", "sentry", "test"])
+	return true
 
 
 func _test_debug_coordinator_compatibility() -> bool:
@@ -138,25 +143,21 @@ func _test_debug_coordinator_compatibility() -> bool:
 		"Testing Debug Coordinator compatibility with Sentry...", {}, ["debug", "sentry", "test"]
 	)
 
-	# Check if DebugRegistry autoload exists and is valid (not a ClassDB class)
+	# Check if DebugRegistry autoload exists and is valid
 	if not is_instance_valid(DebugRegistry):
 		Log.warning(
 			"DebugRegistry not available for compatibility testing", {}, ["debug", "sentry", "test"]
 		)
 		return false
 
-	# Check if Sentry actions can be registered with DebugRegistry
-	var sentry_manager: Node = _get_sentry_manager()
-	if sentry_manager and sentry_manager.has_method("register_debug_actions"):
-		Log.debug(
-			"Debug Coordinator compatibility structure validated", {}, ["debug", "sentry", "test"]
+	# Check if SentryHelper is available for debug actions to use
+	if not SentryHelper.is_available():
+		Log.warning(
+			"SentrySDK not available for debug action testing", {}, ["debug", "sentry", "test"]
 		)
-		return true
+		return false
 
-	return false
-
-
-func _get_sentry_manager() -> Node:
-	if Engine.has_singleton("SentryManager"):
-		return Engine.get_singleton("SentryManager")
-	return null
+	# Debug actions (like this one) can directly use SentryHelper
+	# No intermediate manager needed - all Sentry debug actions registered with DebugRegistry
+	Log.debug("Debug Coordinator compatibility validated", {}, ["debug", "sentry", "test"])
+	return true

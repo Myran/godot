@@ -7,6 +7,7 @@ signal android_chunks_processing_complete
 const TagManager = preload("res://addons/advanced_logger/utils/tag_manager.gd")
 const ConfigManager = preload("res://addons/advanced_logger/utils/config_manager.gd")
 const LogFormatter = preload("res://addons/advanced_logger/core/log_formatter.gd")
+const SentryHelper = preload("res://utils/sentry_helper.gd")
 var AndroidLoggerHelper: Variant = null
 var IosLoggerHelper: Variant = null
 
@@ -298,12 +299,14 @@ func error(message: String, context: Dictionary = {}, tags: Array[String] = []) 
 	if !_validate_message(message):
 		return
 	_log(LogLevel.ERROR, message, context, tags)
+	_forward_to_sentry(message, "error", context, tags)
 
 
 func critical(message: String, context: Dictionary = {}, tags: Array[String] = []) -> void:
 	if !_validate_message(message):
 		return
 	_log(LogLevel.CRITICAL, message, context, tags)
+	_forward_to_sentry(message, "fatal", context, tags)
 
 
 func _validate_message(message: String) -> bool:
@@ -311,6 +314,28 @@ func _validate_message(message: String) -> bool:
 		push_warning("Empty log message provided")
 		return false
 	return true
+
+
+func _forward_to_sentry(message: String, level: String, context: Dictionary, tags: Array) -> void:
+	## Forward error/critical logs to Sentry if available.
+	##
+	## This method is called automatically by error() and critical() methods.
+	## It silently fails if Sentry is unavailable.
+
+	# Capture message with level
+	if not SentryHelper.capture_message(message, level):
+		return  # Sentry not available
+
+	# Add context if available
+	if context.size() > 0:
+		SentryHelper.set_context("log_context", context)
+
+	# Add tags if available
+	if tags.size() > 0:
+		var tag_dict: Dictionary = {}
+		for tag in tags:
+			tag_dict[tag] = true
+		SentryHelper.set_tags(tag_dict)
 
 
 func _log(level: LogLevel, message: String, context: Dictionary, tags: Array[String]) -> void:
