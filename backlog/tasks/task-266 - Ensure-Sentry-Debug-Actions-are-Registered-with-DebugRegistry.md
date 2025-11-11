@@ -1,10 +1,10 @@
 ---
 id: task-266
 title: Ensure Sentry Debug Actions are Registered with DebugRegistry
-status: Open
+status: Done
 assignee: []
 created_date: '2025-11-10 09:53'
-updated_date: '2025-11-10 23:13'
+updated_date: '2025-11-11 20:57'
 labels:
   - sentry
   - debug-coordinator

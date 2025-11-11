@@ -1,10 +1,10 @@
 ---
 id: task-043
-title: Implement Spearman breakthrough damage mechanics
+title: Spearman breakthrough damage mechanics
 status: To Do
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-11-11 20:25'
 labels:
   - abilities
   - spearman

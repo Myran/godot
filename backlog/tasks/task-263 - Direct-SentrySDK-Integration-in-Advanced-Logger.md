@@ -1,10 +1,10 @@
 ---
 id: task-263
-title: Implement Direct SentrySDK Integration in Advanced Logger
-status: Open
+title: Direct SentrySDK Integration in Advanced Logger
+status: Done
 assignee: []
 created_date: '2025-11-10 09:51'
-updated_date: '2025-11-10 23:10'
+updated_date: '2025-11-11 20:31'
 labels:
   - sentry
   - integration

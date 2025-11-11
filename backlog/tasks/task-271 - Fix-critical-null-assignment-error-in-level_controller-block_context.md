@@ -1,11 +1,10 @@
 ---
 id: task-271
 title: Fix critical null assignment error in level_controller block_context
-status: Open
-priority: critical
+status: To Do
 assignee: []
 created_date: '2025-11-11 08:38'
-updated_date: '2025-11-11 08:38'
+updated_date: '2025-11-11 20:23'
 labels:
   - critical
   - production-bug

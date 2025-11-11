@@ -1,11 +1,10 @@
 ---
 id: task-270
 title: Integrate Sentry MCP Server for Enhanced Error Monitoring and Debugging
-status: Open
-priority: high
+status: Done
 assignee: []
 created_date: '2025-11-10 23:26'
-updated_date: '2025-11-11 10:30'
+updated_date: '2025-11-11 20:30'
 labels:
   - sentry
   - mcp
@@ -13,8 +12,9 @@ labels:
   - error-monitoring
   - developer-tools
 dependencies:
-  - task-257  # Sentry SDK Integration
-  - task-263  # Direct SentrySDK Integration in Advanced Logger
+  - task-257
+  - task-263
+priority: high
 ---
 
 ## Description

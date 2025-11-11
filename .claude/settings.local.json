@@ -193,7 +193,8 @@
       "Bash(git describe:*)",
       "Bash(~/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager:*)",
       "Bash(./build.bash:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "mcp__sentry__find_projects"
     ],
     "deny": [],
     "ask": [],

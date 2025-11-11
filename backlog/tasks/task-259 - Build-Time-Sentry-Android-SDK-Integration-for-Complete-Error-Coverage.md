@@ -1,11 +1,10 @@
 ---
 id: task-259
-title: >-
-  Implement Build-Time Sentry Android SDK Integration for Complete Error
-  Coverage
-status: To Do
+title: Build-Time Sentry Android SDK Integration for Complete Error Coverage
+status: Done
 assignee: []
 created_date: '2025-11-06 10:54'
+updated_date: '2025-11-11 21:00'
 labels: []
 dependencies: []
 ---

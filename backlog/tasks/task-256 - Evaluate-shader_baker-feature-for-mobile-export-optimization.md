@@ -2,15 +2,16 @@
 id: task-256
 title: Evaluate shader_baker feature for mobile export optimization
 status: To Do
-priority: low
 assignee: []
 created_date: '2025-10-31 18:21'
+updated_date: '2025-11-11 20:25'
 labels:
   - performance
   - godot-4.5
   - mobile
   - research
 dependencies: []
+priority: low
 ---
 
 ## Description

@@ -1,10 +1,10 @@
 ---
 id: task-265
 title: Add Firebase User Context to Sentry
-status: Open
+status: Done
 assignee: []
 created_date: '2025-11-10 09:52'
-updated_date: '2025-11-10 23:12'
+updated_date: '2025-11-11 20:57'
 labels:
   - sentry
   - firebase

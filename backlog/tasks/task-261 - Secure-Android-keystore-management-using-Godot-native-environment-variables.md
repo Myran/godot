@@ -1,10 +1,10 @@
 ---
 id: task-261
-title: Implement secure Android keystore management using Godot native environment variables
+title: Secure Android keystore management using Godot native environment variables
 status: To Do
 assignee: []
 created_date: '2025-11-07 08:50'
-updated_date: '2025-11-07 08:51'
+updated_date: '2025-11-11 20:24'
 labels:
   - android
   - security

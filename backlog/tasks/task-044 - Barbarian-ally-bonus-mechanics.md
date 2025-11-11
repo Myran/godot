@@ -1,10 +1,10 @@
 ---
 id: task-044
-title: Implement Barbarian ally bonus mechanics
+title: Barbarian ally bonus mechanics
 status: To Do
 assignee: []
 created_date: '2025-08-12 12:20'
-updated_date: '2025-10-26 14:30'
+updated_date: '2025-11-11 20:25'
 labels:
   - abilities
   - barbarian

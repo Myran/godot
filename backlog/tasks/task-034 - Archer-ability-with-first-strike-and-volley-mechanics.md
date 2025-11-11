@@ -1,10 +1,10 @@
 ---
 id: task-034
-title: Implement Archer ability with first strike and volley mechanics
+title: Archer ability with first strike and volley mechanics
 status: To Do
 assignee: []
 created_date: '2025-08-12 12:18'
-updated_date: '2025-08-12 13:58'
+updated_date: '2025-11-11 20:25'
 labels:
   - complex-abilities
   - archer
@@ -13,6 +13,8 @@ dependencies:
   - task-032
 priority: low
 ---
+
+## Description
 
 **Updated 2025-10-26**: Removed task-040 dependency (archived performance optimization) since event filtering system is already implemented and functional.
 
