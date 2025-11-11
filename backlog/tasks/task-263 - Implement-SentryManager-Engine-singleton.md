@@ -1,84 +1,165 @@
 ---
 id: task-263
-title: Implement SentryManager Engine singleton
+title: Implement Direct SentrySDK Integration in Advanced Logger
 status: Open
 assignee: []
 created_date: '2025-11-10 09:51'
-updated_date: '2025-11-10 09:51'
+updated_date: '2025-11-10 23:10'
 labels:
   - sentry
   - integration
-  - tdd
-  - gdextension
+  - advanced-logger
+  - error-tracking
 dependencies: []
 priority: high
 ---
 
 ## Description
 
-Implement **SentryManager** as an Engine singleton (GDExtension) to bridge Sentry SDK with GameTwo's existing infrastructure systems (Advanced Logger, Firebase, Debug Coordinator).
+Implement **direct SentrySDK integration** in Advanced Logger to automatically forward error and critical logs to Sentry without requiring an intermediate wrapper layer.
 
 ## Context
 
+**Expert Panel Decision (2025-11-10):**
+- Virtual expert panel unanimously rejected SentryManager wrapper approach
+- Recommended direct SentrySDK integration pattern (consistent with user feedback form)
+- Reduces implementation time from 40-60h to 2-4h (83% reduction)
+- Eliminates architectural complexity and technical debt
+
 **Current State:**
 - Sentry SDK integrated via GDExtension addon
-- TDD test `sentry.test_integration_bridges` validates bridge structure
-- Test currently fails (0/3 bridges working) - expected TDD behavior
-- GameTwo infrastructure (Log, FirebaseService, DebugRegistry) fully operational
+- SentrySDK singleton accessible: `Engine.get_singleton("SentrySDK")`
+- User feedback form already uses direct pattern: `SentrySDK.capture_feedback()` (proof of concept)
+- Advanced Logger (`addons/advanced_logger/core/logger.gd`) is autoload
 
-**Test Location:** `project/debug/actions/sentry/sentry_integration_bridges_action.gd`
-
-**Test Expectation:**
-```gdscript
-Engine.get_singleton("SentryManager")  // Should return valid Node
-```
+**Evidence:**
+- See `/tmp/task-263-expert-panel-evaluation.md` for complete analysis
+- User feedback form: `project/addons/sentry/user_feedback/user_feedback_form.gd:71`
 
 ## Required Implementation
 
-SentryManager must be registered as an Engine singleton (not a GDScript autoload) with 3 bridge methods:
+### **Modify Advanced Logger to Call SentrySDK Directly**
 
-1. **`handle_advanced_logger_error()`** - Capture Advanced Logger errors to Sentry
-2. **`setup_firebase_context()`** - Enrich Sentry events with Firebase user context
-3. **`register_debug_actions()`** - Register Sentry debug actions with DebugRegistry
+Add Sentry forwarding to error and critical methods in `logger.gd`:
 
-See subtasks (task-264, task-265, task-266) for detailed specifications of each method.
+```gdscript
+# In addons/advanced_logger/core/logger.gd
+
+func error(message: String, context: Dictionary = {}, tags: Array = []) -> void:
+	_log(LogLevel.ERROR, message, context, tags)
+
+	# Forward to Sentry if enabled
+	_forward_to_sentry(message, "error", context, tags)
+
+func critical(message: String, context: Dictionary = {}, tags: Array = []) -> void:
+	_log(LogLevel.CRITICAL, message, context, tags)
+
+	# Forward to Sentry if enabled
+	_forward_to_sentry(message, "fatal", context, tags)
+
+func _forward_to_sentry(message: String, level: String, context: Dictionary, tags: Array) -> void:
+	# Only forward if Sentry is available
+	if not Engine.has_singleton("SentrySDK"):
+		return
+
+	var sentry: Variant = Engine.get_singleton("SentrySDK")
+	if not sentry:
+		return
+
+	# Check if Sentry forwarding is enabled in config
+	if not _config.get("sentry_enabled", true):
+		return
+
+	# Capture message with level
+	if sentry.has_method("capture_message"):
+		sentry.capture_message(message, level)
+
+	# Add context if available
+	if context.size() > 0 and sentry.has_method("set_context"):
+		sentry.set_context("log_context", context)
+
+	# Add tags if available
+	if tags.size() > 0 and sentry.has_method("set_tags"):
+		var tag_dict: Dictionary = {}
+		for tag in tags:
+			tag_dict[tag] = true
+		sentry.set_tags(tag_dict)
+```
+
+### **Add Configuration Option**
+
+Add to Advanced Logger config to enable/disable Sentry forwarding:
+
+```gdscript
+# In advanced_logger config
+{
+	"sentry_enabled": true,  # Set to false to disable Sentry forwarding
+	# ... existing config
+}
+```
 
 ## Success Criteria
 
-- [ ] SentryManager registered as Engine singleton
-- [ ] Accessible via `Engine.get_singleton("SentryManager")`
-- [ ] Returns valid Node (not null)
-- [ ] All 3 bridge methods implemented (see subtasks)
-- [ ] Test `sentry.test_integration_bridges` passes (3/3 bridges working)
-- [ ] GDExtension properly configured in sentry.gdextension
-- [ ] Works on both desktop and Android platforms
+- [ ] `error()` method forwards to `SentrySDK.capture_message()` with level "error"
+- [ ] `critical()` method forwards to `SentrySDK.capture_message()` with level "fatal"
+- [ ] Context dictionary forwarded to `SentrySDK.set_context()`
+- [ ] Tags array forwarded to `SentrySDK.set_tags()`
+- [ ] Config flag `sentry_enabled` controls forwarding behavior
+- [ ] Graceful handling if SentrySDK not available
+- [ ] Test validation passes on desktop and Android
+- [ ] No performance regression in logging hot path
 
 ## Technical Considerations
 
-**GDExtension Registration:**
-- Likely needs C++/GDNative implementation
-- Must register with ClassDB as singleton
-- Should extend Node or appropriate Godot base class
+**Performance:**
+- Check `Engine.has_singleton()` only once per log call
+- Early return if Sentry not available (minimal overhead)
+- No additional GDExtension compilation required
+
+**Error Handling:**
+- Sentry forwarding failures must not break logging
+- Use `has_method()` checks before calling SDK methods
+- Silent failure if Sentry unavailable
 
 **Platform Compatibility:**
-- Desktop: Use existing Sentry native SDK
-- Android: Use Sentry Android SDK integration
-- Cross-platform singleton registration
+- Works wherever SentrySDK singleton exists
+- No platform-specific code needed (handled by official SDK)
+- Same code for desktop, Android, iOS
 
 ## Related Work
 
-**Test File:** `project/debug/actions/sentry/sentry_integration_bridges_action.gd`
-**Sentry Addon:** `addons/sentry/`
-**Other Sentry Tests:**
-- `sentry_addon_validation_action.gd` - PASSED ✅
-- `sentry_integration_test_action.gd` - PASSED ✅
-- `sentry_crash_testing_action.gd` - Simulated TDD tests
+**Modified Files:**
+- `project/addons/advanced_logger/core/logger.gd` - Add Sentry forwarding
+
+**Test Files:**
+- `project/debug/actions/sentry/sentry_integration_bridges_action.gd` - Update to validate direct integration
+
+**Reference Implementation:**
+- `project/addons/sentry/user_feedback/user_feedback_form.gd:71` - Direct SentrySDK usage pattern
 
 ## Dependencies
 
-This task has 3 subtasks that define the specific bridge method implementations:
-- task-264: Implement handle_advanced_logger_error()
-- task-265: Implement setup_firebase_context()
-- task-266: Implement register_debug_actions()
+This task replaces the previous approach:
+- ~~task-264: Implement handle_advanced_logger_error()~~ - No longer needed (direct integration)
+- task-265: Add Firebase user context (independent task)
+- task-266: Create Sentry debug actions (independent task)
 
-All subtasks must be completed for this parent task to be considered done.
+## Estimated Effort
+
+**2-4 hours** (vs 40-60 hours for GDExtension wrapper approach)
+
+- Implementation: 1-2 hours
+- Testing: 1 hour
+- Documentation: 0.5 hour
+- Cross-platform validation: 0.5 hour
+
+## Expert Panel Recommendation
+
+See `/tmp/task-263-expert-panel-evaluation.md` for complete analysis.
+
+**Key Benefits:**
+- ✅ Consistent with GameTwo's direct-access architecture pattern
+- ✅ No GDExtension wrapper maintenance burden
+- ✅ Zero additional runtime overhead
+- ✅ Automatic updates when official Sentry SDK updates
+- ✅ Simpler testing (one integration point vs two layers)

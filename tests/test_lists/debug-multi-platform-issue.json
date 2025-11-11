@@ -1,0 +1,7 @@
+{
+  "name": "Debug Multi-Platform Issue",
+  "description": "Minimal test list to reproduce system-error-handling multi-platform failure",
+  "configs": [
+    "system-error-handling"
+  ]
+}
