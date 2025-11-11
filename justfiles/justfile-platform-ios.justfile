@@ -27,8 +27,8 @@ build-ios-executable:
 
     cd {{GODOT_SUBMODULE_PATH}}
     echo "📦 Building iOS template for arm64 (Sentry SDK always included)..."
-    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} optimize=size use_lto=yes
-    
+    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} production=yes optimize=size
+
     # Move to export directory - update existing XCFramework
     echo "📁 Moving executable to export directory..."
     cp misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a

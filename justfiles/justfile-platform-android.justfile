@@ -161,7 +161,7 @@ build-android-templates minimal="no":
     else
         echo "📦 Building complete Android templates (debug + release)..."
         scons platform=android target=template_debug arch=arm32 arch=arm64 --jobs={{jobs}}
-        scons platform=android target=template_release arch=arm32 arch=arm64 --jobs={{jobs}}
+        scons platform=android target=template_release arch=arm32 arch=arm64 production=yes optimize=size --jobs={{jobs}}
     fi
 
     echo "📦 Packaging .so files into .aar with Gradle..."

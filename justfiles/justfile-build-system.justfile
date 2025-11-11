@@ -7,7 +7,7 @@
 # Build custom Godot editor from source
 build-editor: validate-env
     @echo "Building Godot editor..."
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor use_lto=yes --jobs={{jobs}} # vulkan_sdk_path=
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor production=yes --jobs={{jobs}} # vulkan_sdk_path=
     mv {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.editor.* editor/
 
 # Build iOS export templates (complete chain)
@@ -28,7 +28,7 @@ templates-all:
 build-macos-templates: validate-env
     @echo "Building export templates..."
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_debug --jobs={{jobs}}
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_release --jobs={{jobs}}
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_release production=yes --jobs={{jobs}}
     mkdir -p templates
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_debug.* templates/
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_release.* templates/
@@ -44,7 +44,7 @@ ios-build-template:
     @echo "BUILDING IOS EXECUTABLES"
     @echo "============================="
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_debug arch=arm64 --jobs={{jobs}}
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_release arch=arm64 --jobs={{jobs}}
+    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_release arch=arm64 production=yes optimize=size --jobs={{jobs}}
 
     @echo "=========================="
     @echo "PREPARING IOS TEMPLATES"
