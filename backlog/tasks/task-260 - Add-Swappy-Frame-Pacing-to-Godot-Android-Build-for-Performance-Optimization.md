@@ -1,10 +1,15 @@
 ---
 id: task-260
 title: Add Swappy Frame Pacing to Godot Android Build for Performance Optimization
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-06 12:01'
-labels: [android, performance, critical, build-optimization]
+updated_date: '2025-11-11 14:26'
+labels:
+  - android
+  - performance
+  - critical
+  - build-optimization
 dependencies: []
 ---
 

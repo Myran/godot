@@ -7,3 +7,6 @@
 [submodule "extras/sentry-godot"]
 	path = extras/sentry-godot
 	url = https://github.com/Myran/sentry-godot.git
+[submodule "extras/godot-swappy"]
+	path = extras/godot-swappy
+	url = https://github.com/Myran/godot-swappy.git
