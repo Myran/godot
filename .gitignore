@@ -34,6 +34,10 @@ export/ios/DerivedData
 export/ios/Pods
 export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a
 export/ios/gametwo.xcframework/ios-arm64/libgodot.a
+
+# Sentry xcframework binary files (track metadata only)
+export/ios/libsentry.ios.*.xcframework/**/*.dylib
+export/ios/Sentry.xcframework/**/*.dylib
 export/android/gametwo.aab
 export/android/gametwo_debug.aab
 export/android/gametwo_debug.apk
