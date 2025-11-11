@@ -4,7 +4,7 @@ title: Fix RenderingServer singleton error in Sentry integration
 status: Done
 assignee: []
 created_date: '2025-11-10 23:11'
-updated_date: '2025-11-11 08:08'
+updated_date: '2025-11-11 10:45'
 labels:
   - sentry
   - headless-mode
