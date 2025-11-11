@@ -3,10 +3,10 @@ id: task-275
 title: >-
   Investigate and fix GLThread segmentation fault crash during multi-platform
   Android testing
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-11 13:05'
-updated_date: '2025-11-11 20:25'
+updated_date: '2025-11-11 21:10'
 labels:
   - critical
   - android

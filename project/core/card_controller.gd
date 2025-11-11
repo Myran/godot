@@ -130,23 +130,22 @@ static func select_id_from_level(lvl: int) -> String:
 			if int(level) == sel_lvl:
 				cards_with_level.append(card)
 
-	if cards_with_level.size() == 0:
-		Log.warning(
-			"No cards found for level %d, using first card as fallback" % sel_lvl, {}, ["debug"]
+	# ASSERT: Must find cards for the requested level
+	assert(
+		cards_with_level.size() > 0,
+		(
+			"select_id_from_level: No cards found for level %d - check level balance and data configuration"
+			% sel_lvl
 		)
-		if all_cards.size() > 0 and all_cards[0].has("id"):
-			return all_cards[0].id
-		return ""
+	)
 
-	var picked_card_id: String = ""
-	if cards_with_level.size() > 0:
-		var selected_card: Dictionary = cards_with_level[
-			rng.seeded_rng.next() % cards_with_level.size()
-		]
-		if selected_card.has("id"):
-			picked_card_id = selected_card.id
-
-	return picked_card_id
+	var selected_card: Dictionary = cards_with_level[
+		rng.seeded_rng.next() % cards_with_level.size()
+	]
+	# ASSERT: Selected card must have valid ID
+	assert(selected_card.has("id"), "select_id_from_level: Selected card missing 'id' field")
+	assert(selected_card.id != "", "select_id_from_level: Selected card has empty ID")
+	return selected_card.id
 
 
 static func select_recruited_unit_level(recruit_lvl: int) -> int:

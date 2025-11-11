@@ -1,10 +1,10 @@
 ---
 id: task-272
 title: Fix invalid card ID validation in card_controller create_unit_from_id
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-11 08:39'
-updated_date: '2025-11-11 20:23'
+updated_date: '2025-11-11 21:19'
 labels:
   - critical
   - production-bug

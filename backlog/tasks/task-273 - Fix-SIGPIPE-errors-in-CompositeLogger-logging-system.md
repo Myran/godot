@@ -1,10 +1,10 @@
 ---
 id: task-273
 title: Fix SIGPIPE errors in CompositeLogger logging system
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-11 08:40'
-updated_date: '2025-11-11 20:25'
+updated_date: '2025-11-11 21:08'
 labels:
   - stability
   - logging

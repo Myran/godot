@@ -115,6 +115,7 @@ func create_block() -> Block:
 		Log.debug("Getting card from pool", {}, [Log.TAG_LEVEL, Log.TAG_CARD])
 		# Use game's card progression level for randomly generated cards
 		random_block = await CardController.get_card_from_pool(game.current_card_level)
+
 	random_block.block_context = Cards.CONTEXT.DRAFT
 	return random_block
 
