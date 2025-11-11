@@ -190,7 +190,10 @@
       "mcp__sentry__search_issues",
       "mcp__sentry__get_issue_details",
       "mcp__sentry__search_events",
-      "Bash(git describe:*)"
+      "Bash(git describe:*)",
+      "Bash(~/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager:*)",
+      "Bash(./build.bash:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": [],
