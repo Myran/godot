@@ -5,8 +5,12 @@
       "args": ["/Users/mattiasmyhrman/repos/godot-mcp/build/index.js"],
       "env": {
         "DEBUG": "true",
-        "GODOT_PROJECT_PATH": "/Users/mattiasmyhrman/repos/gametwo/project"
+        "GODOT_PROJECT_PATH": "/Users/mattiasmyhrman/repos/gametwo/project",
+        "GODOT_PATH": "/Users/mattiasmyhrman/repos/gametwo/editor/godot.macos.editor.arm64"
       }
+    },
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
     }
   }
 }
