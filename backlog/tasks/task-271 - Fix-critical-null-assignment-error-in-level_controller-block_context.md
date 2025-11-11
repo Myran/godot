@@ -4,7 +4,7 @@ title: Fix critical null assignment error in level_controller block_context
 status: Done
 assignee: []
 created_date: '2025-11-11 08:38'
-updated_date: '2025-11-11 21:19'
+updated_date: '2025-11-11 21:36'
 labels:
   - critical
   - production-bug

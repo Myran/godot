@@ -4,7 +4,7 @@ title: Fix invalid card ID validation in card_controller create_unit_from_id
 status: Done
 assignee: []
 created_date: '2025-11-11 08:39'
-updated_date: '2025-11-11 21:19'
+updated_date: '2025-11-11 21:37'
 labels:
   - critical
   - production-bug
