@@ -314,10 +314,3 @@ sentry-windows-complete:
     @just sentry-windows-build-debug
     @just sentry-windows-validate
     @echo "🎉 Windows Sentry complete DLL build workflow finished"
-
-# Quick build for development (x86_64 only)
-sentry-windows-quick:
-    @echo "⚡ Quick Windows Sentry build (x86_64 release only)..."
-    @just sentry-windows-verify
-    @just sentry-windows-build-x86_64
-    @echo "✅ Quick Windows Sentry build completed"

@@ -19,10 +19,11 @@ templates-android minimal="no":
     just build-android-templates minimal={{minimal}}
     just setup-android
 
-# Build all export templates (iOS + Android)
+# Build all export templates (iOS + Android + Windows)
 templates-all:
     just templates-ios
     just templates-android
+    just build-windows-templates
 
 # Build macOS export templates
 build-macos-templates: validate-env

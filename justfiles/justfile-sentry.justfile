@@ -41,7 +41,6 @@ help-sentry:
     @echo "🪟 WINDOWS SENTRY DLLS (GDEXTENSION SUPPORT):"
     @echo "  just sentry-windows-help             # Show Windows DLL commands"
     @echo "  just sentry-windows-build            # Build Windows Sentry DLLs (all archs)"
-    @echo "  just sentry-windows-quick            # Quick build (x86_64 release only)"
     @echo "  just sentry-windows-complete         # Complete Windows build + validation"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"

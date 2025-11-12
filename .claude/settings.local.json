@@ -194,7 +194,8 @@
       "Bash(~/Library/Android/sdk/cmdline-tools/latest/bin/sdkmanager:*)",
       "Bash(./build.bash:*)",
       "Bash(test:*)",
-      "mcp__sentry__find_projects"
+      "mcp__sentry__find_projects",
+      "Bash(x86_64-w64-mingw32-gcc:*)"
     ],
     "deny": [],
     "ask": [],

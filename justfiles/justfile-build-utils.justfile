@@ -25,6 +25,11 @@ build-status:
     else \
         echo "  ❌ iOS: Not built"; \
     fi
+    @if [ -f "templates/windows_debug.zip" ] && [ -f "templates/windows_release.zip" ]; then \
+        echo "  ✅ Windows: Built"; \
+    else \
+        echo "  ❌ Windows: Not built"; \
+    fi
     @echo ""
     @echo "ANDROID EXPORTS:"
     @if [ -f "export/android/{{GAME_NAME}}.apk" ]; then \
