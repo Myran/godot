@@ -4,6 +4,7 @@
 # Sentry SDK paths (shared across both integration types)
 SENTRY_PATH := "extras/sentry-godot"
 SENTRY_ADDON_PATH := "extras/sentry-godot/project/addons/sentry"
+PROJECT_SENTRY_PATH := "project/addons/sentry"
 SENTRY_PROJECT_PATH := "extras/sentry-godot/project"
 IOS_EXPORT_PATH := "export/ios"
 
@@ -117,10 +118,10 @@ _check-or-build-sentry-windows force="no":
     if [ "{{force}}" = "yes" ]; then
         echo "🔥 Force rebuild enabled - rebuilding Windows Sentry DLLs..."
         just sentry-windows-build
-    elif [ -f "{{SENTRY_ADDON_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
+    elif [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
         echo "✅ Windows Sentry DLLs already built:"
-        echo "   🪟 {{SENTRY_ADDON_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
-        echo "   🪟 {{SENTRY_ADDON_PATH}}/bin/windows/x86_32/libsentry.windows.release.x86_32.dll"
+        echo "   🪟 {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
+        echo "   🪟 {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/libsentry.windows.release.x86_32.dll"
         echo "⏭️  Skipping Windows Sentry DLL rebuild (saves 5-10 minutes)"
     else
         echo "🔧 Building Windows Sentry DLLs (this will take 5-10 minutes)..."
@@ -162,7 +163,7 @@ status-sentry-quick:
     fi
 
     @echo "🪟 Windows Sentry:"
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
         echo "   ✅ Built (Windows DLLs)"; \
     else \
         echo "   ❌ Not built - run 'just build-sentry-all'"; \
@@ -209,11 +210,11 @@ validate-sentry-all:
         echo "❌ Sentry GDExtension not found"; \
         echo "❌" > /tmp/windows_status; \
     else \
-        if [ ! -f "{{SENTRY_ADDON_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
+        if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
             echo "❌ Windows Sentry DLL not built - run 'just sentry-windows-build'"; \
             echo "❌" > /tmp/windows_status; \
         else \
-            if [ ! -f "{{SENTRY_ADDON_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
+            if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
                 echo "⚠️  Windows crashpad_handler.exe missing (non-critical)"; \
                 echo "✅" > /tmp/windows_status; \
             else \
