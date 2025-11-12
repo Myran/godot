@@ -69,3 +69,11 @@ logs/
 
 # Temporary automated test configs
 tests/debug_configs/*_automated.json
+
+# Windows binary files and exports (built artifacts)
+export/windows/*.exe
+export/windows/*.pck
+export/windows/*.dll
+project/addons/sentry/bin/windows/**/*.dll
+templates/windows_*.zip
+templates/godot.windows.template_*.exe
