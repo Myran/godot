@@ -16,9 +16,8 @@ help-sentry-windows:
     @echo "==================================="
     @echo ""
     @echo "🔧 WINDOWS DLL BUILDS:"
-    @echo "  just sentry-windows-build            # Build Windows Sentry DLLs for all architectures"
+    @echo "  just sentry-windows-build            # Build Windows Sentry DLL for x86_64"
     @echo "  just sentry-windows-build-x86_64     # Build Windows Sentry DLL for x86_64"
-    @echo "  just sentry-windows-build-x86_32     # Build Windows Sentry DLL for x86_32"
     @echo ""
     @echo "📦 PACKAGING:"
     @echo "  just sentry-windows-package          # Package Windows DLLs with dependencies"
@@ -33,8 +32,8 @@ help-sentry-windows:
     @echo "  just sentry-windows-complete        # Complete build + package + install"
 
 # All architecture Windows Sentry DLL builds
-sentry-windows-build: sentry-windows-build-x86_64 sentry-windows-build-x86_32
-    @echo "✅ Windows Sentry DLL builds for all architectures completed"
+sentry-windows-build: sentry-windows-build-x86_64
+    @echo "✅ Windows Sentry DLL build for x86_64 completed"
 
 # Build Windows Sentry DLL for x86_64 architecture
 sentry-windows-build-x86_64:
@@ -83,12 +82,16 @@ sentry-windows-build-x86_64:
 
     # Copy built files to addon directory
     echo "📦 Copying Windows x86_64 DLL files..."
+    # We're currently in the build directory, file is in current directory
     if [ -f "libsentry.dll" ]; then
         mkdir -p {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/
-        cp libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll
+        cp -v libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll
         echo "✅ Copied libsentry.windows.release.x86_64.dll to project/addons/sentry/bin/windows/x86_64/"
     else
-        echo "⚠️  libsentry.dll not found in build output"
+        echo "❌ libsentry.dll not found in build output"
+        echo "📁 Current directory: $(pwd)"
+        echo "📁 Current directory contents: $(ls -la)"
+        exit 1
     fi
 
     if [ -f "crashpad_handler.exe" ]; then
@@ -102,72 +105,6 @@ sentry-windows-build-x86_64:
     # Look for crashpad_wer.dll
     find . -name "crashpad_wer.dll" -exec cp {} {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/ \; 2>/dev/null || echo "⚠️  crashpad_wer.dll not found"
 
-# Build Windows Sentry DLL for x86_32 architecture
-sentry-windows-build-x86_32:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🏗️  Building Windows Sentry DLL for x86_32..."
-
-    # Check MinGW-w32 cross-compiler
-    if ! command -v i686-w64-mingw32-gcc &> /dev/null; then
-        echo "❌ MinGW-w32 cross-compiler not found"
-        echo "💡 Install with: brew install mingw-w64"
-        exit 1
-    fi
-
-    # Create build directory
-    mkdir -p {{SENTRY_PATH}}/build/windows-x86_32
-    cd {{SENTRY_PATH}}/build/windows-x86_32
-
-    # Configure with CMake for MinGW-w32 cross-compilation
-    echo "🔧 Configuring CMake for Windows x86_32..."
-    cmake ../../modules/sentry-native \
-        -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_SYSTEM_PROCESSOR=x86_32 \
-        -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc \
-        -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ \
-        -DCMAKE_RC_COMPILER=i686-w64-mingw32-windres \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DSENTRY_BUILD_RUNTIMESTD=ON \
-        -DSENTRY_BUILD_SHARED_LIBS=ON \
-        -DSENTRY_BUILD_TESTS=OFF \
-        -DSENTRY_BUILD_EXAMPLES=OFF \
-        -DCMAKE_INSTALL_PREFIX=install \
-        -DSENTRY_TRANSPORT=winhttp \
-        -DSENTRY_BACKEND=inproc \
-        -DSENTRY_TRANSPORT_COMPRESSION=OFF \
-        -G "Unix Makefiles"
-
-    # Build the library
-    echo "🔨 Building Sentry DLL for Windows x86_32..."
-    make -j$(nproc) sentry
-    make -j$(nproc) crashpad_handler
-
-    echo "✅ Windows Sentry DLL x86_32 build completed"
-
-    # Create output directory
-    mkdir -p {{SENTRY_ADDON_PATH}}/bin/windows/x86_32
-
-    # Copy built files to addon directory
-    echo "📦 Copying Windows x86_32 DLL files..."
-    if [ -f "libsentry.dll" ]; then
-        mkdir -p {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/
-        cp libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/libsentry.windows.release.x86_32.dll
-        echo "✅ Copied libsentry.windows.release.x86_32.dll to project/addons/sentry/bin/windows/x86_32/"
-    else
-        echo "⚠️  libsentry.dll not found in build output"
-    fi
-
-    if [ -f "crashpad_handler.exe" ]; then
-        mkdir -p {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/
-        cp crashpad_handler.exe {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/
-        echo "✅ Copied crashpad_handler.exe"
-    else
-        echo "⚠️  crashpad_handler.exe not found in build output"
-    fi
-
-    # Look for crashpad_wer.dll
-    find . -name "crashpad_wer.dll" -exec cp {} {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/ \; 2>/dev/null || echo "⚠️  crashpad_wer.dll not found"
 
 # Build debug variants for both architectures
 sentry-windows-build-debug:
@@ -180,6 +117,8 @@ sentry-windows-build-debug:
     mkdir -p {{SENTRY_PATH}}/build/windows-x86_64-debug
     cd {{SENTRY_PATH}}/build/windows-x86_64-debug
 
+    # Configure with CMake for MinGW-w64 cross-compilation (DEBUG)
+    echo "🔧 Configuring CMake for Windows x86_64 (Debug)..."
     cmake ../../modules/sentry-native \
         -DCMAKE_SYSTEM_NAME=Windows \
         -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
@@ -191,48 +130,42 @@ sentry-windows-build-debug:
         -DSENTRY_BUILD_SHARED_LIBS=ON \
         -DSENTRY_BUILD_TESTS=OFF \
         -DSENTRY_BUILD_EXAMPLES=OFF \
+        -DCMAKE_INSTALL_PREFIX=install \
+        -DSENTRY_TRANSPORT=winhttp \
+        -DSENTRY_BACKEND=inproc \
+        -DSENTRY_TRANSPORT_COMPRESSION=OFF \
         -G "Unix Makefiles"
 
+    # Build the library (DEBUG)
+    echo "🔨 Building Sentry DLL for Windows x86_64 (Debug)..."
     make -j$(nproc) sentry
 
+    echo "✅ Windows Sentry DLL x86_64 (Debug) build completed"
+
+    # Create output directory
+    mkdir -p {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64
+
+    # Copy built files to addon directory (DEBUG)
+    echo "📦 Copying Windows x86_64 DLL files (Debug)..."
+    # We're currently in the debug build directory, file is in current directory
     if [ -f "libsentry.dll" ]; then
-        cp libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll
-        echo "✅ Copied libsentry.windows.debug.x86_64.dll"
+        mkdir -p {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/
+        cp -v libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll
+        echo "✅ Copied libsentry.windows.debug.x86_64.dll to project/addons/sentry/bin/windows/x86_64/"
+    else
+        echo "❌ libsentry.dll not found in debug build output"
+        echo "📁 Current directory: $(pwd)"
+        echo "📁 Current directory contents: $(ls -la)"
+        exit 1
     fi
 
-    # Build x86_32 debug
-    echo "🔨 Building debug variant for x86_32..."
-    mkdir -p {{SENTRY_PATH}}/build/windows-x86_32-debug
-    cd {{SENTRY_PATH}}/build/windows-x86_32-debug
-
-    cmake ../../modules/sentry-native \
-        -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_SYSTEM_PROCESSOR=x86_32 \
-        -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc \
-        -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ \
-        -DCMAKE_RC_COMPILER=i686-w64-mingw32-windres \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DSENTRY_BUILD_RUNTIMESTD=ON \
-        -DSENTRY_BUILD_SHARED_LIBS=ON \
-        -DSENTRY_BUILD_TESTS=OFF \
-        -DSENTRY_BUILD_EXAMPLES=OFF \
-        -G "Unix Makefiles"
-
-    make -j$(nproc) sentry
-
-    if [ -f "libsentry.dll" ]; then
-        cp libsentry.dll {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/libsentry.windows.debug.x86_32.dll
-        echo "✅ Copied libsentry.windows.debug.x86_32.dll"
-    fi
-
-    echo "✅ Windows Sentry debug DLLs build completed"
+    echo "✅ Windows Sentry debug DLL build and copy completed successfully"
 
 # Package Windows DLLs with all dependencies
 sentry-windows-package:
     @echo "📦 Packaging Windows Sentry DLLs..."
     @mkdir -p {{SENTRY_ADDON_PATH}}/bin/windows/x86_64
-    @mkdir -p {{SENTRY_ADDON_PATH}}/bin/windows/x86_32
-    @echo "✅ Windows directories ready for packaging"
+    @echo "✅ Windows x86_64 directory ready for packaging"
 
 # Install Windows DLLs to addon directory (already done by build commands)
 sentry-windows-install: sentry-windows-package
@@ -306,14 +239,6 @@ sentry-windows-validate:
     fi
     @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
         echo "⚠️  crashpad_handler.exe missing for x86_64 (not required with inproc backend)"; \
-    fi
-    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/libsentry.windows.release.x86_32.dll" ]; then \
-        echo "⚠️  Windows x86_32 release DLL not built (MinGW cross-compilation issues)"; \
-    else \
-        echo "✅ Windows x86_32 release DLL built"; \
-    fi
-    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/crashpad_handler.exe" ]; then \
-        echo "ℹ️  crashpad_handler.exe not needed for x86_32 (inproc backend)"; \
     fi
     @echo "✅ Windows Sentry DLL validation passed"
 
