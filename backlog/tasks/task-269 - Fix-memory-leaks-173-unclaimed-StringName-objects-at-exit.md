@@ -1,10 +1,10 @@
 ---
 id: task-269
 title: 'Fix memory leaks: 173 unclaimed StringName objects at exit'
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-10 23:12'
-updated_date: '2025-11-11 21:43'
+updated_date: '2025-11-12 07:51'
 labels: []
 dependencies: []
 ---
