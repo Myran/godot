@@ -10,3 +10,6 @@
 [submodule "extras/godot-swappy"]
 	path = extras/godot-swappy
 	url = https://github.com/Myran/godot-swappy.git
+[submodule "extras/firebase-cpp-sdk"]
+	path = extras/firebase-cpp-sdk
+	url = https://github.com/Myran/firebase-cpp-sdk.git
