@@ -196,7 +196,15 @@
       "Bash(test:*)",
       "mcp__sentry__find_projects",
       "Bash(x86_64-w64-mingw32-gcc:*)",
-      "Bash(brew:*)"
+      "Bash(brew:*)",
+      "WebFetch(domain:medium.com)",
+      "Bash(git check-ignore:*)",
+      "Bash(gh release view:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:dl.google.com)",
+      "WebFetch(domain:tart.run)",
+      "WebFetch(domain:developer.hashicorp.com)",
+      "WebFetch(domain:commandexamples.com)"
     ],
     "deny": [],
     "ask": [],
