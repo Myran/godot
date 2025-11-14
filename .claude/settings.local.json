@@ -204,7 +204,13 @@
       "WebFetch(domain:dl.google.com)",
       "WebFetch(domain:tart.run)",
       "WebFetch(domain:developer.hashicorp.com)",
-      "WebFetch(domain:commandexamples.com)"
+      "WebFetch(domain:commandexamples.com)",
+      "Bash(nm:*)",
+      "Bash(pod:*)",
+      "Bash(swift package resolve:*)",
+      "Bash(while read:*)",
+      "Bash(make:*)",
+      "Bash(clang:*)"
     ],
     "deny": [],
     "ask": [],
