@@ -4,6 +4,114 @@
 
 # Note: Variables and validation functions inherited from imported modules
 
+# ================================
+# BUILD DEPENDENCIES
+# ================================
+
+# Build Swappy Frame Pacing library from source
+build-swappy force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if libraries already exist
+    if [ "{{force}}" != "yes" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a/libswappy_static.a" ]; then
+        echo "✅ Swappy Frame Pacing libraries already installed"
+        echo "   Use 'just build-swappy force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🔨 Building Swappy Frame Pacing from source..."
+
+    # Check prerequisites
+    if [ -z "${ANDROID_HOME:-}" ]; then
+        echo "❌ Error: ANDROID_HOME environment variable not set"
+        exit 1
+    fi
+    if [ -z "${JAVA_HOME:-}" ]; then
+        echo "❌ Error: JAVA_HOME environment variable not set"
+        exit 1
+    fi
+
+    # Set NDK path
+    export ANDROID_NDK="${ANDROID_HOME}/ndk/21.4.7075529"
+    if [ ! -d "$ANDROID_NDK" ]; then
+        echo "❌ Error: NDK 21.4.7075529 not found at $ANDROID_NDK"
+        echo "   Install it using Android Studio SDK Manager"
+        exit 1
+    fi
+
+    cd extras/godot-swappy
+
+    # Clean up stale lock files if they exist
+    if [ -d "build/.repo" ]; then
+        echo "🧹 Cleaning up stale repo lock files..."
+        find build/.repo -name "*.lock" -delete 2>/dev/null || true
+    fi
+
+    # Run build script
+    echo "📦 Running build.bash..."
+    ./build.bash
+
+    # Extract the built libraries
+    echo "📦 Extracting libraries from gamesdk.zip..."
+    cd build/package/local
+    unzip -q gamesdk.zip
+
+    # Extract the AAR file
+    echo "📦 Extracting games-frame-pacing-release.aar..."
+    unzip -q games-frame-pacing-release.aar -d aar_extracted
+
+    # Copy libraries to Godot thirdparty directory
+    echo "📁 Installing libraries to Godot thirdparty..."
+    cd ../../../..
+
+    # Create target directories
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/armeabi-v7a
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86
+    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86_64
+
+    # Copy libraries
+    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.arm64-v8a/libswappy_static.a \
+       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a/
+    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.armeabi-v7a/libswappy_static.a \
+       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/armeabi-v7a/
+    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.x86/libswappy_static.a \
+       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86/
+    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.x86_64/libswappy_static.a \
+       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86_64/
+
+    echo "✅ Swappy Frame Pacing built and installed successfully!"
+    echo "   Libraries installed to {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/"
+
+# Ensure Sentry binaries are available for Android builds
+ensure-sentry-binaries:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔔 Ensuring Sentry binaries are available..."
+
+    # Check if Android AAR files exist
+    if [ -f "project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar" ] && [ -f "project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar" ]; then
+        echo "✅ Sentry Android AAR files already available"
+    else
+        # Try to move from root directory if they exist there
+        if [ -f "project/addons/sentry/sentry_android_godot_plugin.debug.aar" ] && [ -f "project/addons/sentry/sentry_android_godot_plugin.release.aar" ]; then
+            echo "📁 Moving Sentry AAR files to correct location..."
+            mkdir -p project/addons/sentry/bin/android
+            mv project/addons/sentry/sentry_android_godot_plugin.debug.aar project/addons/sentry/bin/android/
+            mv project/addons/sentry/sentry_android_godot_plugin.release.aar project/addons/sentry/bin/android/
+            echo "✅ Sentry Android AAR files moved successfully"
+        else
+            echo "⚠️  Sentry Android AAR files not found"
+            echo "💡 Run 'just build-sentry-all' to build Sentry from source"
+        fi
+    fi
+
+# ================================
+# BUILD GODOT
+# ================================
+
 # Build custom Godot editor from source
 build-editor: validate-env
     @echo "Building Godot editor..."
@@ -14,13 +122,17 @@ build-editor: validate-env
 templates-ios:
     just build-and-package-ios-templates
 
-# Build Android export templates (complete chain)  
-templates-android minimal="no":
+# Build Android export templates (complete chain)
+# Use force_swappy=yes to rebuild Swappy libraries even if they exist
+templates-android minimal="no" force_swappy="no":
+    @[ "{{force_swappy}}" = "yes" ] && just build-swappy force=yes || true
     just build-android-templates minimal={{minimal}}
     just setup-android
 
 # Build all export templates (iOS + Android + Windows)
 templates-all:
+    just ensure-sentry-binaries
+    just ensure-moltenvk
     just templates-ios
     just templates-android
     just build-windows-templates
@@ -36,6 +148,7 @@ build-macos-templates: validate-env
 
 # Build and package iOS templates
 build-and-package-ios-templates: validate-env
+    just ensure-moltenvk
     just ios-build-template
     just package-ios-template
 
@@ -58,6 +171,7 @@ ios-build-template:
 
     # Copying to current xcode framework
     chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*
+    mkdir -p export/ios/{{GAME_NAME}}.xcframework/ios-arm64
     cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
 
 # Package iOS template

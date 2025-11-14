@@ -90,6 +90,41 @@ _get-safe-config-file CONFIG:
 pre-build:
     @echo "🔧 Running pre-build tasks..."
 
+# Setup Android development environment (one-time setup)
+setup-env:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Setting up Android development environment..."
+    echo ""
+
+    # Create .env file if it doesn't exist
+    if [ ! -f ".env" ]; then
+        echo "📝 Creating .env file from template..."
+        cp .env.template .env
+
+        # Update paths automatically based on current directory
+        CURRENT_DIR="$(pwd)"
+        sed -i '' "s|/path/to/your/gametwo/keystore|${CURRENT_DIR}|g" .env
+
+        echo "✅ .env file created at ${CURRENT_DIR}/.env"
+        echo ""
+        echo "🔑 NEXT STEPS:"
+        echo "1. Edit .env and set your keystore password:"
+        echo "   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=\"your_password_here\""
+        echo ""
+        echo "2. The keystore path has been set to:"
+        echo "   ${CURRENT_DIR}/gametwo-release.keystore"
+        echo ""
+        echo "3. Then run: just export-apk-release"
+        echo ""
+    else
+        echo "✅ .env file already exists"
+        echo ""
+        echo "💡 To recreate it, remove the existing file first:"
+        echo "   rm .env && just setup-android"
+    fi
+
 # Auto-validate and load .env for any Android command
 validate-android-env:
     #!/usr/bin/env bash
@@ -152,6 +187,10 @@ fastbuild-android: export-install-launch-debug
 build-android-templates minimal="no":
     #!/usr/bin/env bash
     set -euo pipefail
+
+    # Build Swappy Frame Pacing libraries if not present
+    just build-swappy
+
     echo "🔧 Building Android templates..."
     cd {{GODOT_SUBMODULE_PATH}}
 
@@ -170,8 +209,9 @@ build-android-templates minimal="no":
     cd ../../..
 
     echo "📁 Copying templates to templates/ directory..."
-    cp platform/android/java/app/build/outputs/apk/debug/android_debug.apk ../templates/
-    cp platform/android/java/app/build/outputs/apk/release/android_release.apk ../templates/
+    mkdir -p ../templates
+    cp platform/android/java/app/build/outputs/apk/standard/debug/android_debug.apk ../templates/
+    cp platform/android/java/app/build/outputs/apk/standard/release/android_release.apk ../templates/
 
     # Return to root directory and rebuild android_source.zip
     cd ..

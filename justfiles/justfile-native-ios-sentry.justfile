@@ -55,8 +55,13 @@ sentry-native-ios-verify:
     @echo "🔍 Verifying Native Sentry SDK..."
     @if [ ! -d "{{SENTRY_PATH}}" ]; then \
         echo "❌ Sentry submodule not found at {{SENTRY_PATH}}"; \
-        echo "💡 Run: git submodule add https://github.com/Myran/sentry-godot.git {{SENTRY_PATH}}"; \
-        exit 1; \
+        echo "🔄 Initializing Sentry submodule..."; \
+        git submodule add https://github.com/Myran/sentry-godot.git {{SENTRY_PATH}}; \
+    fi
+    @if [ -d "{{SENTRY_PATH}}" ] && [ ! -d "{{SENTRY_PATH}}/modules/godot-cpp/SConstruct" ]; then \
+        echo "❌ Sentry submodules not initialized"; \
+        echo "🔄 Initializing Sentry submodules recursively..."; \
+        cd {{SENTRY_PATH}} && git submodule update --init --recursive; \
     fi
     @if [ ! -d "{{SENTRY_ADDON_PATH}}" ]; then \
         echo "❌ Sentry addon not found at {{SENTRY_ADDON_PATH}}"; \

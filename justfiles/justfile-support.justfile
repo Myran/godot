@@ -698,9 +698,48 @@ create-release version:
     git tag -a v{{version}} -m "Release {{version}}"
     git push origin main --tags
 
-# Update MoltenVK ios
+# Ensure MoltenVK XCFramework is available for iOS builds
+ensure-moltenvk:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔔 Ensuring MoltenVK XCFramework is available..."
+
+    # Check if MoltenVK XCFramework exists with proper structure
+    if [ -d "export/ios/MoltenVK.xcframework/ios-arm64" ] && [ -f "export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a" ]; then
+        echo "✅ MoltenVK XCFramework already available with correct structure"
+    else
+        echo "❌ MoltenVK XCFramework missing or incomplete"
+
+        # Check if MoltenVK submodule exists
+        if [ ! -d "extras/MoltenVK" ]; then
+            echo "🔄 Initializing MoltenVK submodule..."
+            git submodule update --init extras/MoltenVK
+        fi
+
+        # Build MoltenVK (including copy step as part of build process)
+        echo "🔨 Building MoltenVK for iOS..."
+        cd {{justfile_directory()}}/extras/MoltenVK
+
+        # Fetch dependencies and build
+        ./fetchDependencies --ios
+        make ios
+
+        # Copy XCFramework to export location as part of build process
+        echo "📁 Installing MoltenVK XCFramework..."
+        mkdir -p {{justfile_directory()}}/export/ios
+        cp -R Package/Release/MoltenVK/static/MoltenVK.xcframework {{justfile_directory()}}/export/ios/
+
+        # Verify structure
+        if [ -d "{{justfile_directory()}}/export/ios/MoltenVK.xcframework/ios-arm64" ] && [ -f "{{justfile_directory()}}/export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a" ]; then
+            echo "✅ MoltenVK XCFramework built and installed successfully"
+        else
+            echo "❌ MoltenVK build failed - XCFramework structure incomplete"
+            exit 1
+        fi
+    fi
+
+# Update MoltenVK ios (legacy - kept for compatibility)
 update-moltenvk:
-    @echo "./fetchdepencies --ios needed on fresh build, not included...."
-    cd extras/moltenVK && ./fetchDependencies --ios
-    cd extras/MoltenVK && make ios
-    cp -R extras/MoltenVK/Package/Release/MoltenVK/static/MoltenVK.xcframework export/ios
+    @echo "🔄 Updating MoltenVK (legacy recipe)..."
+    just ensure-moltenvk
