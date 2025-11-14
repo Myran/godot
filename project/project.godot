@@ -74,6 +74,12 @@ textures/vram_compression/import_etc2_astc=true
 
 options/environment="development"
 ios/environment="development"
+ios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
+ios/release="1.0.0"
+ios/debug=true
+ios/send_default_pii=true
+ios/attach_screenshot=true
+ios/traces_sample_rate=1.0
 android/environment="development"
 android/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
 android/release="1.0.0"
