@@ -10,7 +10,8 @@
       }
     },
     "sentry": {
-      "url": "https://mcp.sentry.dev/mcp"
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://mcp.sentry.dev/mcp"]
     }
   }
 }
