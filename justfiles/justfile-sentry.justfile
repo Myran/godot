@@ -10,6 +10,7 @@ IOS_EXPORT_PATH := "export/ios"
 
 # Import specialized Sentry build modules
 import "justfile-native-ios-sentry.justfile"
+import "justfile-native-android-sentry.justfile"
 import "justfile-gdscript-sentry.justfile"
 import "justfile-native-windows-sentry.justfile"
 
@@ -19,6 +20,7 @@ default-sentry:
     @echo ""
     @echo "🔥 Sentry Integration Options:"
     @echo "  🍎 Native iOS Sentry (built into Godot executable)"
+    @echo "  🤖 Native Android Sentry (built into Godot executable)"
     @echo "  🎮 GDScript Sentry (runtime GDExtension)"
     @echo "  🪟 Windows Sentry DLLs (cross-platform GDExtension support)"
     @echo ""
@@ -31,7 +33,7 @@ help-sentry:
     @echo ""
     @echo "🍎 NATIVE iOS SENTRY (BUILT-IN):"
     @echo "  just sentry-native-ios-help              # Show native iOS commands"
-    @echo "  just sentry-native-ios-build              # Build native Sentry for iOS"
+    @echo "  just build-native-ios-all                # Build native Sentry for iOS (debug + release)"
     @echo "  just sentry-native-ios-complete          # Complete native build + validation"
     @echo ""
     @echo "🎮 GDSCRIPT SENTRY (RUNTIME GDEXTENSION):"
@@ -46,9 +48,8 @@ help-sentry:
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
     @echo "  just build-sentry-all               # Build all Sentry integrations (smart rebuild)"
-    @echo "  just build-sentry-all yes           # Force rebuild all Sentry integrations"
+    @echo "  just build-sentry-all force=yes      # Force rebuild all Sentry integrations"
     @echo "  just validate-sentry-all             # Validate all Sentry integrations"
-    @echo "  just complete-sentry                # Complete build + validation for all"
     @echo ""
     @echo "🧧 MAINTENANCE:"
     @echo "  just clean-sentry-all                # Clean all Sentry build artifacts"
@@ -63,6 +64,10 @@ help-sentry:
 sentry-native-ios-help:
     @just help-sentry-native-ios
 
+# Show native Android Sentry help
+sentry-native-android-help:
+    @just help-native-android-sentry
+
 # Show GDScript Sentry help
 sentry-gdscript-help:
     @just help-sentry-gdscript
@@ -72,72 +77,21 @@ sentry-windows-help:
     @just help-sentry-windows
 
 # Smart Sentry rebuild detection
-_check-or-build-sentry-native-ios force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
 
-    echo "🍎 Checking Native iOS Sentry SDK..."
 
-    if [ "{{force}}" = "yes" ]; then
-        echo "🔥 Force rebuild enabled - rebuilding Native iOS Sentry..."
-        just sentry-native-ios-build
-    elif [ -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then
-        echo "✅ Native iOS Sentry already built:"
-        echo "   📱 {{IOS_EXPORT_PATH}}/Sentry.xcframework"
-        echo "⏭️  Skipping Native iOS Sentry rebuild (saves 2-5 minutes)"
-    else
-        echo "🔧 Building Native iOS Sentry (this will take 2-5 minutes)..."
-        just sentry-native-ios-build
-    fi
-
-_check-or-build-sentry-gdscript force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "🎮 Checking GDScript Sentry SDK..."
-
-    if [ "{{force}}" = "yes" ]; then
-        echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
-        just sentry-gdscript-build
-    elif [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
-        echo "✅ GDScript Sentry already built:"
-        echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
-        echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework"
-        echo "⏭️  Skipping GDScript Sentry rebuild (saves 3-8 minutes)"
-    else
-        echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
-        just sentry-gdscript-build
-    fi
-
-_check-or-build-sentry-windows force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "🪟 Checking Windows Sentry DLLs..."
-
-    if [ "{{force}}" = "yes" ]; then
-        echo "🔥 Force rebuild enabled - rebuilding Windows Sentry DLLs..."
-        just sentry-windows-build
-    elif [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
-        echo "✅ Windows Sentry DLLs already built:"
-        echo "   🪟 {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
-        echo "   🪟 {{PROJECT_SENTRY_PATH}}/bin/windows/x86_32/libsentry.windows.release.x86_32.dll"
-        echo "⏭️  Skipping Windows Sentry DLL rebuild (saves 5-10 minutes)"
-    else
-        echo "🔧 Building Windows Sentry DLLs (this will take 5-10 minutes)..."
-        just sentry-windows-build
-    fi
 
 # Unified build workflows with smart rebuild detection
 build-sentry-all force="no":
     @echo "🔥 Building all Sentry SDK components with smart rebuild detection..."
     @echo ""
 
-    @just _check-or-build-sentry-native-ios {{force}}
+    @just build-native-ios-all {{force}}
     @echo ""
-    @just _check-or-build-sentry-gdscript {{force}}
+    @just build-native-android-all {{force}}
     @echo ""
-    @just _check-or-build-sentry-windows {{force}}
+    @just sentry-gdscript-build {{force}}
+    @echo ""
+    @just build-native-windows-x86_64 {{force}}
     @echo ""
     @just validate-sentry-all
     @echo ""
@@ -174,7 +128,7 @@ validate-sentry-all:
     @echo ""
     @echo "🍎 Validating Native iOS Sentry..."
     @if [ ! -d "{{IOS_EXPORT_PATH}}/Sentry.xcframework" ]; then \
-        echo "❌ Native Sentry SDK not built - run 'just sentry-native-ios-build'"; \
+        echo "❌ Native Sentry SDK not built - run 'just build-native-ios-all'"; \
         echo "❌" > /tmp/native_status; \
     else \
         if [ ! -f "{{IOS_EXPORT_PATH}}/Sentry.xcframework/ios-arm64/Sentry.framework/Sentry" ]; then \
@@ -211,7 +165,7 @@ validate-sentry-all:
         echo "❌" > /tmp/windows_status; \
     else \
         if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-            echo "❌ Windows Sentry DLL not built - run 'just sentry-windows-build'"; \
+            echo "❌ Windows Sentry DLL not built - run 'just build-native-windows-x86_64'"; \
             echo "❌" > /tmp/windows_status; \
         else \
             if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
@@ -239,15 +193,6 @@ validate-sentry-all:
         exit 1; \
     fi
 
-complete-sentry:
-    @echo "🚀 Complete Sentry build and validation workflow..."
-    @echo ""
-    @just build-sentry-all
-    @echo ""
-    @just validate-sentry-all
-    @echo ""
-    @echo "🎉 Complete Sentry workflow finished successfully"
-
 
 # Unified maintenance
 clean-sentry-all:
@@ -255,6 +200,9 @@ clean-sentry-all:
     @echo ""
     @echo "🍎 Cleaning Native iOS Sentry..."
     @just sentry-native-ios-clean
+    @echo ""
+    @echo "🤖 Cleaning Native Android Sentry..."
+    @just sentry-native-android-clean
     @echo ""
     @echo "🎮 Cleaning GDScript Sentry..."
     @just sentry-gdscript-clean
