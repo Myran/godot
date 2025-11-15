@@ -60,7 +60,7 @@ build-native-android-release force="no":
     fi
 
     echo "🏗️  Building Native Sentry for Android release builds..."
-    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm32 arch=arm64 build_android_lib=yes android_api_level=24 production=yes optimize=size
+    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm32 arch=arm64 build_android_lib=yes android_api_level=24 optimize=size
     echo "✅ Native Sentry Android release build completed"
 
 # Verify Native Android Sentry SDK

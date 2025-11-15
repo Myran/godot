@@ -126,12 +126,12 @@ sentry-gdscript-build-ios force="no":
 
 sentry-gdscript-editor-ios:
     @echo "🏗️  Building GDScript Sentry for iOS device (editor)..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no production=yes optimize=size
+    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no optimize=size
     @echo "✅ GDScript Sentry iOS device editor build completed"
 
 sentry-gdscript-template-ios:
     @echo "🏗️  Building GDScript Sentry for iOS device template..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no production=yes optimize=size
+    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
     @echo "✅ GDScript Sentry iOS device template build completed"
     @echo "📱 Creating GDExtension XCFrameworks..."
     @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then \
