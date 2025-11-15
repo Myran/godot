@@ -67,13 +67,8 @@ sentry-gdscript-build force="no":
 
 # Desktop builds (current platform)
 sentry-gdscript-build-desktop force="no":
-    if [ "{{force}}" != "no" ]; then \
-        just sentry-gdscript-editor-desktop {{force}}; \
-        just sentry-gdscript-template-desktop {{force}}; \
-    else \
-        just sentry-gdscript-editor-desktop; \
-        just sentry-gdscript-template-desktop; \
-    fi
+    just sentry-gdscript-editor-desktop
+    just sentry-gdscript-template-desktop
     @echo "✅ GDScript Sentry desktop builds completed"
 
 sentry-gdscript-editor-desktop:
