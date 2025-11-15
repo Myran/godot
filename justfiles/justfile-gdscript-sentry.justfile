@@ -110,24 +110,39 @@ sentry-gdscript-template-android:
 
 # iOS builds (device only - no simulator)
 sentry-gdscript-build-ios force="no":
-    if [ "{{force}}" != "no" ]; then \
-        just sentry-gdscript-editor-ios {{force}}; \
-        just sentry-gdscript-template-ios {{force}}; \
-    else \
-        just sentry-gdscript-editor-ios; \
-        just sentry-gdscript-template-ios; \
-    fi
+    just sentry-gdscript-editor-ios {{force}}
+    just sentry-gdscript-template-ios {{force}}
     @echo "✅ GDScript Sentry iOS device builds completed"
 
-sentry-gdscript-editor-ios:
-    @echo "🏗️  Building GDScript Sentry for iOS device (editor)..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no optimize=size
-    @echo "✅ GDScript Sentry iOS device editor build completed"
+sentry-gdscript-editor-ios force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-sentry-gdscript-template-ios:
-    @echo "🏗️  Building GDScript Sentry for iOS device template..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
-    @echo "✅ GDScript Sentry iOS device template build completed"
+    # Check if Sentry iOS editor already built
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib" ]; then
+        echo "✅ GDScript Sentry iOS editor already built"
+        echo "   Use 'just sentry-gdscript-editor-ios force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🏗️  Building GDScript Sentry for iOS device (editor)..."
+    cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no optimize=size
+    echo "✅ GDScript Sentry iOS device editor build completed"
+
+sentry-gdscript-template-ios force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if Sentry iOS template already built
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+        echo "✅ GDScript Sentry iOS template already built"
+        echo "   Use 'just sentry-gdscript-template-ios force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🏗️  Building GDScript Sentry for iOS device template..."
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
+    echo "✅ GDScript Sentry iOS device template build completed"
     @echo "📱 Creating GDExtension XCFrameworks..."
     @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then \
         if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then \
