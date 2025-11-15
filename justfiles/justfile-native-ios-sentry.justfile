@@ -15,9 +15,9 @@ help-sentry-native-ios:
     @echo "======================================"
     @echo ""
     @echo "📱 NATIVE iOS INTEGRATION:"
-    @echo "  just sentry-native-ios-build              # Build native Sentry for iOS (editor + template)"
-    @echo "  just sentry-native-ios-editor             # Build native Sentry for iOS editor only"
-    @echo "  just sentry-native-ios-template          # Build native Sentry for iOS template only"
+    @echo "  just build-native-ios-all                # Build native Sentry for iOS (debug + release)"
+    @echo "  just build-native-ios-debug             # Build native Sentry for iOS debug builds"
+    @echo "  just build-native-ios-release           # Build native Sentry for iOS release builds (production)"
     @echo ""
     @echo "🔧 MAINTENANCE:"
     @echo "  just sentry-native-ios-clean             # Clean build artifacts"
@@ -28,27 +28,49 @@ help-sentry-native-ios:
     @echo "  just sentry-native-ios-complete          # Complete native build + validation"
 
 # Native iOS Sentry builds (compiled into Godot executable)
-sentry-native-ios-build: sentry-native-ios-editor sentry-native-ios-template
+build-native-ios-all force="no":
+    just build-native-ios-debug {{force}}
+    just build-native-ios-release {{force}}
     @echo "✅ Native iOS Sentry builds completed"
 
-sentry-native-ios-editor:
-    @echo "🏗️  Building Native Sentry for iOS editor..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no production=yes optimize=size
-    @echo "✅ Native Sentry iOS editor build completed"
+build-native-ios-debug force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-sentry-native-ios-template:
-    @echo "🏗️  Building Native Sentry for iOS template..."
-    @cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no production=yes optimize=size
-    @echo "✅ Native Sentry iOS template build completed"
-    @echo "📱 Copying Native Sentry SDK to iOS export project..."
-    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/Sentry.xcframework" ]; then \
-        cp -R {{SENTRY_ADDON_PATH}}/bin/ios/Sentry.xcframework {{IOS_EXPORT_PATH}}/; \
+    # Check if Sentry iOS debug already built
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.ios.template_debug.arm64.a" ]; then
+        echo "✅ Native Sentry iOS debug already built"
+        echo "   Use 'just build-native-ios-debug force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🏗️  Building Native Sentry for iOS debug builds..."
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no production=yes optimize=size
+    echo "✅ Native Sentry iOS debug build completed"
+
+build-native-ios-release force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if Sentry iOS release already built and SDK copied
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.ios.template_release.arm64.a" ] && [ -d "{{IOS_EXPORT_PATH}}/Sentry.xcframework" ]; then
+        echo "✅ Native Sentry iOS release already built and SDK integrated"
+        echo "   Use 'just build-native-ios-release force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🏗️  Building Native Sentry for iOS release builds..."
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no production=yes optimize=size
+    echo "✅ Native Sentry iOS release build completed"
+    echo "📱 Copying Native Sentry SDK to iOS export project..."
+    cd {{justfile_directory()}} && if [ -d "project/addons/sentry/bin/ios/Sentry.xcframework" ]; then \
+        cp -R project/addons/sentry/bin/ios/Sentry.xcframework {{IOS_EXPORT_PATH}}/; \
         echo "✅ Native Sentry SDK copied to iOS export project"; \
     else \
-        echo "❌ Native Sentry SDK not found at {{SENTRY_ADDON_PATH}}/bin/ios/Sentry.xcframework"; \
+        echo "❌ Native Sentry SDK not found at project/addons/sentry/bin/ios/Sentry.xcframework"; \
         exit 1; \
     fi
-    @echo "✅ Native iOS Sentry SDK integration complete"
+    echo "✅ Native iOS Sentry SDK integration complete"
 
 # Verify Native Sentry SDK
 sentry-native-ios-verify:
