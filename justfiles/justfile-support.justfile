@@ -698,18 +698,30 @@ create-release version:
     git tag -a v{{version}} -m "Release {{version}}"
     git push origin main --tags
 
-# Ensure MoltenVK XCFramework is available for iOS builds
-ensure-moltenvk:
+# Build MoltenVK XCFramework for iOS builds
+build-moltenvk force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🔔 Ensuring MoltenVK XCFramework is available..."
+    echo "🔔 Building MoltenVK XCFramework..."
 
     # Check if MoltenVK XCFramework exists with proper structure
-    if [ -d "export/ios/MoltenVK.xcframework/ios-arm64" ] && [ -f "export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a" ]; then
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -d "export/ios/MoltenVK.xcframework/ios-arm64" ] && [ -f "export/ios/MoltenVK.xcframework/ios-arm64/libMoltenVK.a" ]; then
         echo "✅ MoltenVK XCFramework already available with correct structure"
+        echo "   Use 'just build-moltenvk force=yes' to rebuild"
     else
-        echo "❌ MoltenVK XCFramework missing or incomplete"
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+            echo "🔥 Force rebuild enabled - rebuilding MoltenVK XCFramework..."
+        else
+            echo "❌ MoltenVK XCFramework missing or incomplete"
+        fi
+
+        # Clean existing MoltenVK artifacts if force rebuild
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+            echo "🗑️  Cleaning existing MoltenVK artifacts..."
+            rm -rf {{justfile_directory()}}/export/ios/MoltenVK.xcframework
+            make -C {{justfile_directory()}}/extras/MoltenVK clean 2>/dev/null || true
+        fi
 
         # Check if MoltenVK submodule exists
         if [ ! -d "extras/MoltenVK" ]; then
@@ -742,4 +754,4 @@ ensure-moltenvk:
 # Update MoltenVK ios (legacy - kept for compatibility)
 update-moltenvk:
     @echo "🔄 Updating MoltenVK (legacy recipe)..."
-    just ensure-moltenvk
+    just build-moltenvk

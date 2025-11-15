@@ -45,7 +45,7 @@ build-native-ios-debug force="no":
     fi
 
     echo "🏗️  Building Native Sentry for iOS debug builds..."
-    cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no production=yes optimize=size
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no optimize=size
     echo "✅ Native Sentry iOS debug build completed"
 
 build-native-ios-release force="no":
@@ -60,7 +60,7 @@ build-native-ios-release force="no":
     fi
 
     echo "🏗️  Building Native Sentry for iOS release builds..."
-    cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no production=yes optimize=size
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
     echo "✅ Native Sentry iOS release build completed"
     echo "📱 Copying Native Sentry SDK to iOS export project..."
     cd {{justfile_directory()}} && if [ -d "project/addons/sentry/bin/ios/Sentry.xcframework" ]; then \
