@@ -42,11 +42,38 @@ help-sentry-gdscript:
     @echo "  just sentry-gdscript-complete        # Complete build + validation"
 
 # All platform GDScript Sentry builds
-sentry-gdscript-build: sentry-gdscript-build-desktop sentry-gdscript-build-android sentry-gdscript-build-ios
-    @echo "✅ GDScript Sentry builds for all platforms completed"
+sentry-gdscript-build force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🎮 Checking GDScript Sentry SDK..."
+
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
+        just sentry-gdscript-build-desktop {{force}}
+        just sentry-gdscript-build-android {{force}}
+        just sentry-gdscript-build-ios {{force}}
+    elif [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
+        echo "✅ GDScript Sentry already built:"
+        echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
+        echo "⏭️  Skipping GDScript Sentry rebuild (saves 3-8 minutes)"
+    else
+        echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
+        just sentry-gdscript-build-desktop {{force}}
+        just sentry-gdscript-build-android {{force}}
+        just sentry-gdscript-build-ios {{force}}
+    fi
+    echo "✅ GDScript Sentry builds for all platforms completed"
 
 # Desktop builds (current platform)
-sentry-gdscript-build-desktop: sentry-gdscript-editor-desktop sentry-gdscript-template-desktop
+sentry-gdscript-build-desktop force="no":
+    if [ "{{force}}" != "no" ]; then \
+        just sentry-gdscript-editor-desktop {{force}}; \
+        just sentry-gdscript-template-desktop {{force}}; \
+    else \
+        just sentry-gdscript-editor-desktop; \
+        just sentry-gdscript-template-desktop; \
+    fi
     @echo "✅ GDScript Sentry desktop builds completed"
 
 sentry-gdscript-editor-desktop:
@@ -60,7 +87,10 @@ sentry-gdscript-template-desktop:
     @echo "✅ GDScript Sentry desktop template build completed"
 
 # Android builds
-sentry-gdscript-build-android: sentry-gdscript-android-lib sentry-gdscript-editor-android sentry-gdscript-template-android
+sentry-gdscript-build-android force="no":
+    just sentry-gdscript-android-lib
+    just sentry-gdscript-editor-android
+    just sentry-gdscript-template-android
     @echo "✅ GDScript Sentry Android builds completed"
 
 sentry-gdscript-android-lib:
@@ -84,7 +114,14 @@ sentry-gdscript-template-android:
     @echo "✅ GDScript Sentry Android template build completed"
 
 # iOS builds (device only - no simulator)
-sentry-gdscript-build-ios: sentry-gdscript-editor-ios sentry-gdscript-template-ios
+sentry-gdscript-build-ios force="no":
+    if [ "{{force}}" != "no" ]; then \
+        just sentry-gdscript-editor-ios {{force}}; \
+        just sentry-gdscript-template-ios {{force}}; \
+    else \
+        just sentry-gdscript-editor-ios; \
+        just sentry-gdscript-template-ios; \
+    fi
     @echo "✅ GDScript Sentry iOS device builds completed"
 
 sentry-gdscript-editor-ios:
