@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Required: set your sentry.io project identifier (DSN) -->
+    <key>io.sentry.dsn</key>
+    <string>https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984</string>
+
+    <!-- Environment and release information -->
+    <key>io.sentry.environment</key>
+    <string>development</string>
+    <key>io.sentry.release</key>
+    <string>1.0.0</string>
+
+    <!-- Debug mode -->
+    <key>io.sentry.debug</key>
+    <true />
+
+    <!-- Add data like request headers, user ip address and device name -->
+    <key>io.sentry.send-default-pii</key>
+    <true />
+
+    <!-- enable screenshot for crashes -->
+    <key>io.sentry.attach-screenshot</key>
+    <true />
+
+    <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+    <key>io.sentry.traces.sample-rate</key>
+    <real>1.0</real>
+</dict>
+</plist>
