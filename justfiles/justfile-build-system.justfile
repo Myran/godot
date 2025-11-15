@@ -14,10 +14,16 @@ build-swappy force="no":
     set -euo pipefail
 
     # Check if libraries already exist
-    if [ "{{force}}" != "yes" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a/libswappy_static.a" ]; then
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a/libswappy_static.a" ]; then
         echo "✅ Swappy Frame Pacing libraries already installed"
         echo "   Use 'just build-swappy force=yes' to rebuild"
         exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding Swappy Frame Pacing libraries..."
+    else
+        echo "❌ Swappy Frame Pacing libraries not found, building..."
     fi
 
     echo "🔨 Building Swappy Frame Pacing from source..."
@@ -55,7 +61,7 @@ build-swappy force="no":
     # Extract the built libraries
     echo "📦 Extracting libraries from gamesdk.zip..."
     cd build/package/local
-    unzip -q gamesdk.zip
+    unzip -q -o gamesdk.zip
 
     # Extract the AAR file
     echo "📦 Extracting games-frame-pacing-release.aar..."
@@ -63,79 +69,113 @@ build-swappy force="no":
 
     # Copy libraries to Godot thirdparty directory
     echo "📁 Installing libraries to Godot thirdparty..."
+
+    # Define source and destination paths (relative to current dir: build/package/local)
+    SOURCE_DIR="aar_extracted/prefab/modules/swappy_static/libs"
+    DEST_DIR="{{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing"
+
+    # Create target directories if they don't exist
+    mkdir -p "$DEST_DIR/arm64-v8a"
+    mkdir -p "$DEST_DIR/armeabi-v7a"
+    mkdir -p "$DEST_DIR/x86"
+    mkdir -p "$DEST_DIR/x86_64"
+
+    # Copy libraries with proper error handling
+    echo "  Copying ARM64-v8a library..."
+    if [ -f "$SOURCE_DIR/android.arm64-v8a/libswappy_static.a" ]; then
+        cp "$SOURCE_DIR/android.arm64-v8a/libswappy_static.a" "$DEST_DIR/arm64-v8a/"
+        echo "  ✅ ARM64-v8a library copied successfully"
+    else
+        echo "  ❌ ARM64-v8a library not found: $SOURCE_DIR/android.arm64-v8a/libswappy_static.a"
+        ls -la "$SOURCE_DIR/android.arm64-v8a/" 2>/dev/null || echo "  🐍 Directory contents: NOT FOUND"
+        exit 1
+    fi
+
+    echo "  Copying ARMv7-a library..."
+    if [ -f "$SOURCE_DIR/android.armeabi-v7a/libswappy_static.a" ]; then
+        cp "$SOURCE_DIR/android.armeabi-v7a/libswappy_static.a" "$DEST_DIR/armeabi-v7a/"
+        echo "  ✅ ARMv7-a library copied successfully"
+    else
+        echo "  ❌ ARMv7-a library not found: $SOURCE_DIR/android.armeabi-v7a/libswappy_static.a"
+        ls -la "$SOURCE_DIR/android.armeabi-v7a/" 2>/dev/null || echo "  🐍 Directory contents: NOT FOUND"
+    fi
+
+    echo "  Copying x86 library..."
+    if [ -f "$SOURCE_DIR/android.x86/libswappy_static.a" ]; then
+        cp "$SOURCE_DIR/android.x86/libswappy_static.a" "$DEST_DIR/x86/"
+        echo "  ✅ x86 library copied successfully"
+    else
+        echo "  ❌ x86 library not found: $SOURCE_DIR/android.x86/libswappy_static.a"
+        ls -la "$SOURCE_DIR/android.x86/" 2>/dev/null || echo "  🐍 Directory contents: NOT FOUND"
+    fi
+
+    echo "  Copying x86_64 library..."
+    if [ -f "$SOURCE_DIR/android.x86_64/libswappy_static.a" ]; then
+        cp "$SOURCE_DIR/android.x86_64/libswappy_static.a" "$DEST_DIR/x86_64/"
+        echo "  ✅ x86_64 library copied successfully"
+    else
+        echo "  ❌ x86_64 library not found: $SOURCE_DIR/android.x86_64/libswappy_static.a"
+        ls -la "$SOURCE_DIR/android.x86_64/" 2>/dev/null || echo "  🐍 Directory contents: NOT FOUND"
+    fi
+
     cd ../../../..
-
-    # Create target directories
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/armeabi-v7a
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86_64
-
-    # Copy libraries
-    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.arm64-v8a/libswappy_static.a \
-       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/arm64-v8a/
-    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.armeabi-v7a/libswappy_static.a \
-       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/armeabi-v7a/
-    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.x86/libswappy_static.a \
-       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86/
-    cp extras/godot-swappy/build/package/local/aar_extracted/prefab/modules/swappy_static/libs/android.x86_64/libswappy_static.a \
-       {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/x86_64/
 
     echo "✅ Swappy Frame Pacing built and installed successfully!"
     echo "   Libraries installed to {{GODOT_SUBMODULE_PATH}}/thirdparty/swappy-frame-pacing/"
 
-# Ensure Sentry binaries are available for Android builds
-ensure-sentry-binaries:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "🔔 Ensuring Sentry binaries are available..."
-
-    # Check if Android AAR files exist
-    if [ -f "project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar" ] && [ -f "project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar" ]; then
-        echo "✅ Sentry Android AAR files already available"
-    else
-        # Try to move from root directory if they exist there
-        if [ -f "project/addons/sentry/sentry_android_godot_plugin.debug.aar" ] && [ -f "project/addons/sentry/sentry_android_godot_plugin.release.aar" ]; then
-            echo "📁 Moving Sentry AAR files to correct location..."
-            mkdir -p project/addons/sentry/bin/android
-            mv project/addons/sentry/sentry_android_godot_plugin.debug.aar project/addons/sentry/bin/android/
-            mv project/addons/sentry/sentry_android_godot_plugin.release.aar project/addons/sentry/bin/android/
-            echo "✅ Sentry Android AAR files moved successfully"
-        else
-            echo "⚠️  Sentry Android AAR files not found"
-            echo "💡 Run 'just build-sentry-all' to build Sentry from source"
-        fi
-    fi
+# ================================
 
 # ================================
 # BUILD GODOT
 # ================================
 
 # Build custom Godot editor from source
-build-editor: validate-env
-    @echo "Building Godot editor..."
+build-editor force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "editor/{{GODOT_EXECUTABLE}}" ]; then
+        echo "✅ Godot editor already built: editor/{{GODOT_EXECUTABLE}}"
+        echo "⏭️  Skipping editor rebuild (saves 20+ minutes)"
+        echo "   Use 'just build-editor force=yes' to rebuild"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding Godot editor..."
+    else
+        echo "🔨 Building Godot editor (this will take 20+ minutes)..."
+    fi
+
+    echo "🔨 Building Godot editor..."
     cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=editor production=yes --jobs={{jobs}} # vulkan_sdk_path=
-    mv {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.editor.* editor/
+    mv bin/godot.macos.editor.arm64 ../editor/{{GODOT_EXECUTABLE}}
 
 # Build iOS export templates (complete chain)
-templates-ios:
-    just build-and-package-ios-templates
+templates-ios force="no":
+    just ios-build-template {{force}}
+    just package-ios-template {{force}}
 
 # Build Android export templates (complete chain)
-# Use force_swappy=yes to rebuild Swappy libraries even if they exist
-templates-android minimal="no" force_swappy="no":
-    @[ "{{force_swappy}}" = "yes" ] && just build-swappy force=yes || true
-    just build-android-templates minimal={{minimal}}
+# Use force=yes to rebuild Swappy libraries even if they exist
+templates-android minimal="no" force="no":
+    # Check if minimal parameter looks like a force flag
+    if [ "{{minimal}}" = "force=yes" ] || [ "{{minimal}}" = "force" ]; then \
+        echo "🔥 Force rebuild detected - treating as force=yes"; \
+        just build-swappy force=yes; \
+        just build-android-templates minimal=no force=yes; \
+    else \
+        @[ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] && just build-swappy {{force}} || true; \
+        just build-android-templates minimal={{minimal}} force={{force}}; \
+    fi
     just setup-android
 
 # Build all export templates (iOS + Android + Windows)
-templates-all:
-    just ensure-sentry-binaries
-    just ensure-moltenvk
-    just templates-ios
-    just templates-android
-    just build-windows-templates
+templates-all force="no":
+    just build-moltenvk {{force}}
+    just templates-ios {{force}}
+    just templates-android {{force}}
+    just build-windows-templates {{force}}
 
 # Build macOS export templates
 build-macos-templates: validate-env
@@ -147,70 +187,161 @@ build-macos-templates: validate-env
     cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_release.* templates/
 
 # Build and package iOS templates
-build-and-package-ios-templates: validate-env
-    just ensure-moltenvk
-    just ios-build-template
-    just package-ios-template
+build-and-package-ios-templates force="no": validate-env
+    just build-moltenvk {{force}}
+    just ios-build-template {{force}}
+    just package-ios-template {{force}}
 
 # Build iOS template
-ios-build-template:
-    @echo "============================="
-    @echo "BUILDING IOS EXECUTABLES"
-    @echo "============================="
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_debug arch=arm64 --jobs={{jobs}}
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_release arch=arm64 production=yes optimize=size --jobs={{jobs}}
+ios-build-template force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-    @echo "=========================="
-    @echo "PREPARING IOS TEMPLATES"
-    @echo "=========================="
-    chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*.a
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64
-    mkdir -p {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64
-    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a
-    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_debug.arm64.a {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64/libgodot.a
+    # Check if iOS template artifacts already exist
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_debug.arm64.a" ]; then
+        echo "✅ iOS templates already built"
+        echo "   Use 'just ios-build-template force=yes' to rebuild"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding iOS templates..."
+    else
+        echo "❌ iOS templates not found, building..."
+    fi
+
+    echo "🔨 Building iOS templates..."
+    echo "============================="
+    echo "BUILDING IOS EXECUTABLES"
+    echo "============================="
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_debug arch=arm64 --jobs={{jobs}}
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && scons platform=ios target=template_release arch=arm64 production=yes optimize=size --jobs={{jobs}}
+
+    echo "=========================="
+    echo "PREPARING IOS TEMPLATES"
+    echo "=========================="
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && chmod +x bin/libgodot*.a
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && mkdir -p misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && mkdir -p misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && cp bin/libgodot.ios.template_release.arm64.a misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && cp bin/libgodot.ios.template_debug.arm64.a misc/dist/ios_xcode/libgodot.ios.template_debug.xcframework/ios-arm64/libgodot.a
 
     # Copying to current xcode framework
-    chmod +x {{GODOT_SUBMODULE_PATH}}/bin/libgodot*
-    mkdir -p export/ios/{{GAME_NAME}}.xcframework/ios-arm64
-    cp {{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
+    cd {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}} && chmod +x bin/libgodot*
+    mkdir -p {{justfile_directory()}}/export/ios/{{GAME_NAME}}.xcframework/ios-arm64
+    cp {{justfile_directory()}}/{{GODOT_SUBMODULE_PATH}}/bin/libgodot.ios.template_release.arm64.a {{justfile_directory()}}/export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
 
 # Package iOS template
-package-ios-template:
-    @echo "=========================="
-    @echo "PACKAGING IOS TEMPLATES"
-    @echo "=========================="
+package-ios-template force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if iOS template package already exists
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "templates/ios.zip" ]; then
+        echo "✅ iOS template package already built"
+        echo "   Use 'just package-ios-template force=yes' to rebuild"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - rebuilding iOS template package..."
+    else
+        echo "❌ iOS template package not found, building..."
+    fi
+
+    echo "📦 Packaging iOS templates..."
+    echo "=========================="
+    echo "PACKAGING IOS TEMPLATES"
+    echo "=========================="
     rm -f templates/ios.zip
     mkdir -p templates
     cd {{GODOT_SUBMODULE_PATH}}/misc/dist/ios_xcode && zip -9 -r ../../../../templates/ios.zip *
 
-    @echo "iOS templates built and packaged successfully."
+    echo "iOS templates built and packaged successfully."
 
 # Note: build-ios-executable is provided by justfile-platform-ios.justfile
+
+# ================================
+# FORCE PARAMETER VALIDATION
+# ================================
+
+# Validate force parameter consistency across build system
+validate-force-usage:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔍 Validating force parameter consistency across build system..."
+    echo ""
+
+    FORCE_PATTERNS=(
+        "templates-ios.*force="
+        "templates-android.*force="
+        "templates-all.*force="
+        "build-toolchain.*force="
+        "build-artifacts.*force="
+        "build-pipeline.*force="
+        "ios-build-template.*force="
+        "package-ios-template.*force="
+        "build-and-package-ios-templates.*force="
+        "sentry-native-ios-build.*force="
+        "build-native-ios-development.*force="
+        "build-native-ios-release.*force="
+        "sentry-windows-build.*force="
+        "build-native-windows-x86_64.*force="
+    )
+
+    echo "Checking for consistent force parameter patterns..."
+    for pattern in "${FORCE_PATTERNS[@]}"; do
+        if rg -q "$pattern" justfiles/; then
+            echo "✅ Found: $pattern"
+        else
+            echo "❌ Missing: $pattern"
+        fi
+    done
+
+    echo ""
+    echo "Checking for deprecated patterns..."
+    if rg -q "force_swappy" justfiles/; then
+        echo "❌ Found deprecated 'force_swappy' pattern - should be 'force'"
+        rg "force_swappy" justfiles/
+    else
+        echo "✅ No deprecated 'force_swappy' patterns found"
+    fi
+
+    if rg -q "_check-or-build-" justfiles/; then
+        echo "❌ Found deprecated '_check-or-build-' patterns - should use direct build recipes with force parameter"
+        rg "_check-or-build-" justfiles/
+    else
+        echo "✅ No deprecated '_check-or-build-' patterns found"
+    fi
+
+    echo ""
+    echo "🎉 Force parameter validation complete!"
 
 # ================================
 # THREE-TIER BUILD SYSTEM
 # ================================
 
 # Tier 1: Build Toolchain (Foundation) - Editor + Templates
-build-toolchain: validate-env
+build-toolchain force="no": validate-env
     @echo "🔧 Building toolchain (editor + templates)..."
-    just build-editor
-    just templates-all
+    just build-editor {{force}}
+    just templates-all {{force}}
     @echo "✅ Toolchain complete"
 
 # Tier 2: Build Artifacts (Deployable Files) - All distribution files
-build-artifacts: validate-env
+build-artifacts force="no": validate-env
     @echo "📦 Building artifacts (all deployable files)..."
-    just build-toolchain
+    just build-toolchain {{force}}
     just setup-android-templates
     just export-all-android
-    just export-all-ios
+    just export-all-ios {{force}}
     @echo "✅ All artifacts complete"
 
 # Tier 3: Complete Pipeline (Zero to Device Deployment)
-build-pipeline: validate-env
+build-pipeline force="no": validate-env
     @echo "🚀 Complete pipeline - source to device deployment..."
-    just build-artifacts
+    just build-artifacts {{force}}
     just install-apk-android
     @echo "✅ Complete pipeline finished!"
 

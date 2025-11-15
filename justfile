@@ -49,7 +49,8 @@ default:
     @just help
 
 # Main build command - complete pipeline from source to device deployment
-build: build-pipeline
+build force="no":
+    just build-pipeline {{force}}
 
 # Complete validation - format, syntax check, and runtime validation  
 validate:
@@ -574,8 +575,7 @@ help-build:
     @echo "🏗️  just build-all-android - 3-25 min (Android-only pipeline)"
     @echo "   ├─── just _build-common"
     @echo "   └─── just _build-android-full"
-    @echo "        ├─── just _check-or-build-android-templates"
-    @echo "        │    └─ Calls templates-android if needed"
+    @echo "        ├─── just templates-android"
     @echo "        ├─── just insert-firebase-dependencies"
     @echo "        ├─── just export-apk-android"
     @echo "        │    Godot --export-debug (Gradle runs internally)"

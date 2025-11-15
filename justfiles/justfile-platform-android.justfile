@@ -53,28 +53,13 @@ _build-android-full force="no":
     @echo "🤖 ANDROID BUILD STEPS"
     @echo "===================="
     @echo "📦 [1/3] Checking Android templates..."
-    just _check-or-build-android-templates {{force}}
+    just templates-android {{force}}
     @echo "📥 [2/3] Setting up Android templates + SDK injection..."
     just setup-android-templates
     @echo "📱 [3/3] Exporting Android builds (APK + AAB)..."
     just export-all-android
 
 # Smart template check - only build if not already built
-_check-or-build-android-templates force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ "{{force}}" = "yes" ]; then
-        echo "🔥 Force rebuild enabled - rebuilding Android templates..."
-        just templates-android
-    elif [ -f "templates/android_debug.apk" ] && [ -f "templates/android_release.apk" ]; then
-        echo "✅ Android templates already built:"
-        echo "   📱 templates/android_debug.apk"
-        echo "   📱 templates/android_release.apk"
-        echo "⏭️  Skipping template rebuild (saves 10+ minutes)"
-    else
-        echo "🔧 Building Android templates (this will take 10+ minutes)..."
-        just templates-android
-    fi
 
 # Config workflow validation for Android
 _validate-android-config-workflow CONFIG:
@@ -184,12 +169,12 @@ fastbuild-android: export-install-launch-debug
 # Why: export-install-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
 
 # Android template building
-build-android-templates minimal="no":
+build-android-templates minimal="no" force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Build Swappy Frame Pacing libraries if not present
-    just build-swappy
+    just build-swappy {{force}}
 
     echo "🔧 Building Android templates..."
     cd {{GODOT_SUBMODULE_PATH}}

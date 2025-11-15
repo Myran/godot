@@ -4,25 +4,23 @@
 
 # Note: Variables and build functions inherited from imported modules
 
-# Check if iOS executable exists or build it
-_check-or-build-ios-executable force="no":
+
+# Build iOS executable with optimized settings
+build-ios-executable force="no":
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ "{{force}}" = "yes" ]; then
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
         echo "🔥 Force rebuild enabled - rebuilding iOS executable..."
-        just build-ios-executable
     elif [ -f "export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a" ]; then
         echo "✅ iOS executable already built: export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a"
         echo "⏭️  Skipping iOS executable rebuild (saves 20+ minutes)"
+        echo "   Use 'just build-ios-executable force=yes' to rebuild"
+        exit 0
     else
         echo "❌ iOS executable not found, building..."
-        just build-ios-executable
     fi
 
-# Build iOS executable with optimized settings
-build-ios-executable:
-    #!/usr/bin/env bash
-    set -euo pipefail
     echo "🔨 Building iOS executable..."
 
     cd {{GODOT_SUBMODULE_PATH}}
@@ -132,7 +130,7 @@ build-install-ios:
     rm -rf export/ios/{{GAME_NAME}}.pck
     
     # Smart check for iOS executable
-    just _check-or-build-ios-executable
+    just build-ios-executable force=no
     
     # Export PCK
     echo "📦 Exporting iOS PCK..."
@@ -144,7 +142,7 @@ build-install-ios:
 # Build all iOS components
 build-all-ios force="no": validate-env
     @echo "🍎 Building all iOS components..."
-    just _check-or-build-ios-executable {{force}}
+    just build-ios-executable {{force}}
     just ios-export-pck
     @echo "✅ All iOS builds complete"
 
@@ -167,9 +165,9 @@ rebuild-all-ios:
     @echo "✅ All iOS rebuilds complete"
 
 # Complete iOS pipeline - from source to device deployment
-export-all-ios:
+export-all-ios force="no":
     @echo "📦 Exporting all iOS artifacts (.app bundle)..."
-    just _check-or-build-ios-executable
+    just build-ios-executable {{force}}
     just build-ios-app
     just save-ios-to-app
     @echo "✅ iOS export complete - ready for device deployment"

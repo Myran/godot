@@ -7,10 +7,18 @@
 # ================================
 
 # Build Windows export templates (complete chain)
-build-windows-templates:
+build-windows-templates force="no":
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🔧 Building Windows export templates..."
+
+    # Check if Windows templates already exist
+    if [ "{{force}}" != "force=yes" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/bin/godot.windows.template_release.x86_64.exe" ] && [ -f "{{GODOT_SUBMODULE_PATH}}/bin/godot.windows.template_debug.x86_64.exe" ]; then
+        echo "✅ Windows templates already built"
+        echo "   Use 'just build-windows-templates force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🔨 Building Windows export templates..."
     cd {{GODOT_SUBMODULE_PATH}}
 
     echo "📦 Building Windows debug template (x86_64)..."
