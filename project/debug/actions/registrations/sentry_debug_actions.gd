@@ -9,6 +9,10 @@ const SentryCrashTestingActionClass = preload(
 	"res://debug/actions/sentry/sentry_crash_testing_action.gd"
 )
 
+const SentryRealCrashTestActionClass = preload(
+	"res://debug/actions/sentry/sentry_real_crash_test_action.gd"
+)
+
 const SentryIntegrationBridgesActionClass = preload(
 	"res://debug/actions/sentry/sentry_integration_bridges_action.gd"
 )
@@ -29,6 +33,10 @@ static func register_all(registry: DebugActionRegistry) -> void:
 
 	_register_with_count(
 		registry, SentryCrashTestingActionClass.new(), "SentryCrashTestingAction", counters
+	)
+
+	_register_with_count(
+		registry, SentryRealCrashTestActionClass.new(), "SentryRealCrashTestAction", counters
 	)
 
 	_register_with_count(
