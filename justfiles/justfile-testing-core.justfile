@@ -1631,10 +1631,19 @@ test-android-list-checksum:
 test-android target="":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     # If arguments provided, delegate to test-android-target (automated mode)
     if [ -n "{{target}}" ]; then
         echo "🎯 Automated mode execution: {{target}}"
+
+        # Fix for Task-282: Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
         just test-android-target "{{target}}"
         exit $?
     fi
@@ -1642,6 +1651,14 @@ test-android target="":
     # Use shared fzf selection for all configs (automatic mode)
     selected=$(just _fzf-select-config "android" "all")
     if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        # Fix for Task-282: Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
         echo "Running automatic mode: just test-android-target '$selected'"
         just test-android-target "$selected"
     else
