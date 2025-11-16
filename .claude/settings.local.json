@@ -210,7 +210,8 @@
       "Bash(swift package resolve:*)",
       "Bash(while read:*)",
       "Bash(make:*)",
-      "Bash(clang:*)"
+      "Bash(clang:*)",
+      "WebFetch(domain:forum.godotengine.org)"
     ],
     "deny": [],
     "ask": [],
