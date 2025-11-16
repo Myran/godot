@@ -169,9 +169,26 @@ fastbuild-android: export-install-launch-debug
 # Why: export-install-launch-debug is 2x faster (36s vs 75s) and has complete Sentry integration
 
 # Android template building
-build-android-templates minimal="no" force="no":
+build-android-templates force="no":
     #!/usr/bin/env bash
     set -euo pipefail
+
+    # Check if Android templates already exist
+    DEBUG_APK="templates/android_debug.apk"
+    RELEASE_APK="templates/android_release.apk"
+    SOURCE_ZIP="templates/android_source.zip"
+
+    # Check if all outputs exist
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "$DEBUG_APK" ] && [ -f "$RELEASE_APK" ] && [ -f "$SOURCE_ZIP" ]; then
+        echo "✅ Android templates already built"
+        echo "   Use 'just build-android-templates force=yes' to rebuild"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - cleaning existing Android templates..."
+        rm -f "$DEBUG_APK" "$RELEASE_APK" "$SOURCE_ZIP"
+    fi
 
     # Build Swappy Frame Pacing libraries if not present
     just build-swappy {{force}}
@@ -179,14 +196,9 @@ build-android-templates minimal="no" force="no":
     echo "🔧 Building Android templates..."
     cd {{GODOT_SUBMODULE_PATH}}
 
-    if [[ "{{minimal}}" == "yes" ]]; then
-        echo "📦 Building minimal Android templates (debug only)..."
-        scons platform=android target=template_debug arch=arm64 --jobs={{jobs}}
-    else
-        echo "📦 Building complete Android templates (debug + release)..."
-        scons platform=android target=template_debug arch=arm32 arch=arm64 --jobs={{jobs}}
-        scons platform=android target=template_release arch=arm32 arch=arm64 production=yes optimize=size --jobs={{jobs}}
-    fi
+    echo "📦 Building complete Android templates (debug + release)..."
+    scons platform=android target=template_debug arch=arm32 arch=arm64 --jobs={{jobs}}
+    scons platform=android target=template_release arch=arm32 arch=arm64 production=yes optimize=size --jobs={{jobs}}
 
     echo "📦 Packaging .so files into .aar with Gradle..."
     cd platform/android/java
@@ -194,9 +206,9 @@ build-android-templates minimal="no" force="no":
     cd ../../..
 
     echo "📁 Copying templates to templates/ directory..."
-    mkdir -p ../templates
-    cp platform/android/java/app/build/outputs/apk/standard/debug/android_debug.apk ../templates/
-    cp platform/android/java/app/build/outputs/apk/standard/release/android_release.apk ../templates/
+    mkdir -p templates
+    cp platform/android/java/app/build/outputs/apk/standard/debug/android_debug.apk templates/
+    cp platform/android/java/app/build/outputs/apk/standard/release/android_release.apk templates/
 
     # Return to root directory and rebuild android_source.zip
     cd ..
@@ -240,11 +252,28 @@ rebuild-android-source-zip:
     echo "✅ android_source.zip rebuilt with current Godot source (minSdk 23) and gradlew wrapper"
 
 # Install Android templates and inject Firebase + Sentry SDKs (complete setup)
-setup-android-templates:
-    @echo "📦 Setting up Android templates with SDK injection..."
+setup-android-templates force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📦 Setting up Android templates with SDK injection..."
+
+    # Check if templates already set up
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "project/android/.build_version" ] && [ -f "project/android/build/google-services.json" ] && [ -f "project/android/build/sentry.properties" ]; then
+        echo "✅ Android templates already set up with SDK injection"
+        echo "   Use 'just setup-android-templates force=yes' to rebuild"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force rebuild enabled - resetting Android templates..."
+        rm -rf project/android
+    fi
+
     just install-android-template
     just android-inject-sdks
-    @echo "✅ Android templates ready for export"
+    just android-setup-sentry-libraries
+    echo "✅ Android templates ready for export"
 
 # Install Android template from android_source.zip
 install-android-template:
@@ -328,10 +357,27 @@ setup-android:
     echo "✅ Android development environment validated"
 
 # Export Android AAB files (Google Play Store format)
-export-aab-android: _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
+export-aab-android force="no": _validate-godot-editor (_ensure-directory-exists "export/android") pre-build
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android AAB files (debug + release)..."
+
+    # Check if AAB files already exist
+    DEBUG_AAB="export/android/{{GAME_NAME}}_debug.aab"
+    RELEASE_AAB="export/android/{{GAME_NAME}}.aab"
+
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "$DEBUG_AAB" ] && [ -f "$RELEASE_AAB" ]; then
+        echo "✅ Android AAB files already exported:"
+        echo "   📁 Debug: $DEBUG_AAB"
+        echo "   📁 Release: $RELEASE_AAB"
+        echo "   Use 'just export-aab-android force=yes' to re-export"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force re-export enabled - removing existing AAB files..."
+        rm -f "$DEBUG_AAB" "$RELEASE_AAB"
+    fi
 
     # Source environment variables for Godot context
     if [ -f ".env" ]; then
@@ -343,17 +389,17 @@ export-aab-android: _validate-godot-editor (_ensure-directory-exists "export/and
         echo "❌ .env file not found"
         exit 1
     fi
-    
+
     # Debug build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-debug "Android aab" \
         ../export/android/{{GAME_NAME}}_debug.aab --headless
-    
+
     # Release build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "Android aab" \
         ../export/android/{{GAME_NAME}}.aab --headless
-    
+
     echo "✅ Android AAB files exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.aab"
     echo "📁 Release: export/android/{{GAME_NAME}}.aab"
@@ -366,17 +412,34 @@ export-aab-android: _validate-godot-editor (_ensure-directory-exists "export/and
     echo "✅ Sentry AAR files copied to addons directory"
 
 # Export all Android formats (APK + AAB)
-export-all-android:
+export-all-android force="no":
     @echo "📦 Exporting all Android formats (APK + AAB)..."
-    just export-apk-android
-    just export-aab-android
+    just export-apk-android {{force}}
+    just export-aab-android {{force}}
     @echo "✅ All Android exports complete"
 
 # Export Android APK files
-export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/android")
+export-apk-android force="no": _validate-godot-editor (_ensure-directory-exists "export/android")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting Android APK files (debug + release)..."
+
+    # Check if APK files already exist
+    DEBUG_APK="export/android/{{GAME_NAME}}_debug.apk"
+    RELEASE_APK="export/android/{{GAME_NAME}}.apk"
+
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "$DEBUG_APK" ] && [ -f "$RELEASE_APK" ]; then
+        echo "✅ Android APK files already exported:"
+        echo "   📁 Debug: $DEBUG_APK"
+        echo "   📁 Release: $RELEASE_APK"
+        echo "   Use 'just export-apk-android force=yes' to re-export"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force re-export enabled - removing existing APK files..."
+        rm -f "$DEBUG_APK" "$RELEASE_APK"
+    fi
 
     # Source environment variables for Godot context
     if [ -f ".env" ]; then
@@ -398,7 +461,7 @@ export-apk-android: _validate-godot-editor (_ensure-directory-exists "export/and
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "Android apk" \
         ../export/android/{{GAME_NAME}}.apk --headless
-    
+
     echo "✅ Android APK files exported successfully"
     echo "📁 Debug: export/android/{{GAME_NAME}}_debug.apk"
     echo "📁 Release: export/android/{{GAME_NAME}}.apk"
@@ -763,3 +826,80 @@ clear-android-test-cache:
     echo "💡 Run test commands to apply fresh configuration"
     
     echo "💡 App will use embedded config on next restart"
+
+# Copy Sentry native libraries (.so files) from extras to project directory
+android-setup-sentry-libraries:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔧 Setting up Sentry native libraries for Android..."
+
+    # Source and destination paths
+    SOURCE_DIR="extras/sentry-godot/project/addons/sentry/bin/android"
+    DEST_DIR="project/addons/sentry/bin/android"
+
+    # Check if source files exist
+    if [ ! -d "$SOURCE_DIR" ]; then
+        echo "❌ Sentry source directory not found: $SOURCE_DIR"
+        echo "💡 Make sure sentry-godot submodule is properly initialized"
+        exit 1
+    fi
+
+    # Create destination directory if missing
+    mkdir -p "$DEST_DIR"
+
+    # List of required .so files
+    SO_FILES=(
+        "libsentry.android.debug.arm64.so"
+        "libsentry.android.release.arm64.so"
+    )
+
+    # Copy each .so file if it exists in source
+    FILES_COPIED=0
+    for so_file in "${SO_FILES[@]}"; do
+        source_path="$SOURCE_DIR/$so_file"
+        dest_path="$DEST_DIR/$so_file"
+
+        if [ -f "$source_path" ]; then
+            echo "📦 Copying $so_file..."
+            cp "$source_path" "$dest_path"
+            chmod 644 "$dest_path"
+            echo "✅ Copied: $dest_path"
+            FILES_COPIED=$((FILES_COPIED + 1))
+        else
+            echo "⚠️  Source file not found: $source_path"
+        fi
+    done
+
+    # Also copy debug variants if they exist
+    DEBUG_SO_FILES=(
+        "libsentry.android.debug.arm64.so.debug"
+        "libsentry.android.release.arm64.so.debug"
+    )
+
+    for so_file in "${DEBUG_SO_FILES[@]}"; do
+        source_path="$SOURCE_DIR/$so_file"
+        dest_path="$DEST_DIR/$so_file"
+
+        if [ -f "$source_path" ]; then
+            echo "📦 Copying debug symbols $so_file..."
+            cp "$source_path" "$dest_path"
+            chmod 644 "$dest_path"
+            echo "✅ Copied debug symbols: $dest_path"
+            FILES_COPIED=$((FILES_COPIED + 1))
+        fi
+    done
+
+    # Validate results
+    if [ $FILES_COPIED -gt 0 ]; then
+        echo "✅ Sentry native libraries setup complete ($FILES_COPIED files copied)"
+        echo "📁 Destination: $DEST_DIR"
+
+        # List final directory contents
+        echo "📋 Contents:"
+        ls -la "$DEST_DIR"/libsentry*.so 2>/dev/null || echo "   No .so files found"
+    else
+        echo "⚠️  No Sentry libraries were copied"
+        echo "💡 This may indicate missing Sentry build artifacts"
+        echo "💡 Run: just build-native-android-all to build native Sentry libraries"
+    fi

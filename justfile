@@ -52,6 +52,10 @@ default:
 build force="no":
     just build-pipeline {{force}}
 
+# Complete rebuild command - forces rebuild of all components
+rebuild:
+    just build force=yes
+
 # Complete validation - format, syntax check, and runtime validation  
 validate:
     #!/usr/bin/env bash

@@ -247,11 +247,11 @@ run-android:
 # ANDROID COMMANDS (Using Generic Functions)
 # ================================
 
-# LEVEL 2a: Install existing APK + launch (30 sec, requires pre-built APK)
-install-apk-android: (_android-install-apk "release")
+# LEVEL 2a: Install existing Release APK + launch (30 sec, requires pre-built APK)
+install-apk-android-release: (_android-install-apk "release")
 
-# LEVEL 2a: Install existing debug APK + launch (30 sec, requires pre-built APK)  
-install-apk-debug-android: (_android-install-apk "debug")
+# LEVEL 2a: Install existing Debug APK + launch (30 sec, requires pre-built APK)
+install-apk-android-debug: (_android-install-apk "debug")
 
 # ================================
 # HOT RELOAD COMMANDS (Using Generic Functions)

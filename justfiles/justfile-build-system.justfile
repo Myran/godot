@@ -158,23 +158,17 @@ templates-ios force="no":
 
 # Build Android export templates (complete chain)
 # Use force=yes to rebuild Swappy libraries even if they exist
-templates-android minimal="no" force="no":
-    # Check if minimal parameter looks like a force flag
-    if [ "{{minimal}}" = "force=yes" ] || [ "{{minimal}}" = "force" ]; then \
-        echo "🔥 Force rebuild detected - treating as force=yes"; \
-        just build-swappy force=yes; \
-        just build-android-templates minimal=no force=yes; \
-    else \
-        @[ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] && just build-swappy {{force}} || true; \
-        just build-android-templates minimal={{minimal}} force={{force}}; \
-    fi
+templates-android force="no":
+    # Build Android templates with proper parameters
+    just build-android-templates force={{force}}
+
     just setup-android
 
 # Build all export templates (iOS + Android + Windows)
 templates-all force="no":
     just build-moltenvk {{force}}
     just templates-ios {{force}}
-    just templates-android {{force}}
+    just templates-android force={{force}}
     just build-windows-templates {{force}}
 
 # Build macOS export templates
@@ -333,8 +327,8 @@ build-toolchain force="no": validate-env
 build-artifacts force="no": validate-env
     @echo "📦 Building artifacts (all deployable files)..."
     just build-toolchain {{force}}
-    just setup-android-templates
-    just export-all-android
+    just setup-android-templates {{force}}
+    just export-all-android {{force}}
     just export-all-ios {{force}}
     @echo "✅ All artifacts complete"
 
@@ -342,7 +336,7 @@ build-artifacts force="no": validate-env
 build-pipeline force="no": validate-env
     @echo "🚀 Complete pipeline - source to device deployment..."
     just build-artifacts {{force}}
-    just install-apk-android
+    just install-apk-android-release
     @echo "✅ Complete pipeline finished!"
 
 # ================================
