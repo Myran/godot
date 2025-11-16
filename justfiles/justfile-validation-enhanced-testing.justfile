@@ -2355,25 +2355,53 @@ _generate-comprehensive-breakdown hierarchy_file:
     if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
         # Use session-specific pattern to avoid including stale results
         SESSION_PATTERN="_${MULTI_PLATFORM_SESSION}_"
-        echo "🔍 Filtering action results to session: $MULTI_PLATFORM_SESSION"
+        echo "🔍 DEBUG: Filtering action results to session: $MULTI_PLATFORM_SESSION"
+        echo "🔍 DEBUG: Session pattern: '$SESSION_PATTERN'"
     fi
-    
+
+    echo "🔍 DEBUG: Starting action results processing loop..."
+    echo "🔍 DEBUG: STANDARD_LOGS_DIR: '{{STANDARD_LOGS_DIR}}'"
+
+    PROCESSED_FILES=0
+    FILTERED_FILES=0
     for results_file in /tmp/test_action_results_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
+            echo "🔍 DEBUG: Found valid results file: $(basename "$results_file")"
+
             # Skip files that don't belong to current session
             if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then
+                echo "🔍 DEBUG: FILTERED OUT (wrong session): $(basename "$results_file")"
+                FILTERED_FILES=$((FILTERED_FILES + 1))
                 continue
             fi
+
+            echo "🔍 DEBUG: PROCESSING (correct session): $(basename "$results_file")"
+            PROCESSED_FILES=$((PROCESSED_FILES + 1))
             
             # Check if this config was part of our test list with error handling
             CONFIG_FROM_FILE=$(jq -r '.[0].config_name // ""' "$results_file" 2>/dev/null)
             PLATFORM_FROM_FILE=$(jq -r '.[0].platform // ""' "$results_file" 2>/dev/null)
-            
-            if [[ -n "$CONFIG_FROM_FILE" ]] && jq -e '.config_results[] | select(.config == "'"$CONFIG_FROM_FILE"'")' "$HIERARCHY_FILE" >/dev/null 2>&1; then
-                # Count actions excluding replay_complete with error handling
-                ACTIONS_PASSED=$(jq '[.[] | select(.success == true and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
-                ACTIONS_FAILED=$(jq '[.[] | select(.success == false and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
-                ACTIONS_TOTAL=$(jq '[.[] | select(.action | contains("replay_complete") | not)] | length' "$results_file" 2>/dev/null || echo 0)
+
+            echo "🔍 DEBUG: Config from file: '$CONFIG_FROM_FILE', Platform: '$PLATFORM_FROM_FILE'"
+            echo "🔍 DEBUG: Hierarchy file: '$HIERARCHY_FILE'"
+
+            if [[ -n "$CONFIG_FROM_FILE" ]]; then
+                if jq -e '.config_results[] | select(.config == "'"$CONFIG_FROM_FILE"'")' "$HIERARCHY_FILE" >/dev/null 2>&1; then
+                    echo "🔍 DEBUG: Config found in hierarchy file - processing actions"
+                    # Count actions excluding replay_complete with error handling
+                    ACTIONS_PASSED=$(jq '[.[] | select(.success == true and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
+                    ACTIONS_FAILED=$(jq '[.[] | select(.success == false and (.action | contains("replay_complete") | not))] | length' "$results_file" 2>/dev/null || echo 0)
+                    ACTIONS_TOTAL=$(jq '[.[] | select(.action | contains("replay_complete") | not)] | length' "$results_file" 2>/dev/null || echo 0)
+
+                    echo "🔍 DEBUG: Action counts - Passed: $ACTIONS_PASSED, Failed: $ACTIONS_FAILED, Total: $ACTIONS_TOTAL"
+                else
+                    echo "🔍 DEBUG: Config NOT found in hierarchy file - skipping"
+                    continue
+                fi
+            else
+                echo "🔍 DEBUG: No config name found in file - skipping"
+                continue
+            fi
                 
                 PASSED_ACTIONS=$((PASSED_ACTIONS + ACTIONS_PASSED))
                 FAILED_ACTIONS=$((FAILED_ACTIONS + ACTIONS_FAILED))
@@ -2390,10 +2418,30 @@ _generate-comprehensive-breakdown hierarchy_file:
                     done < "$TEMP_FAILED"
                     rm -f "$TEMP_FAILED"
                 fi
-            fi
+            
+                PASSED_ACTIONS=$((PASSED_ACTIONS + ACTIONS_PASSED))
+                FAILED_ACTIONS=$((FAILED_ACTIONS + ACTIONS_FAILED))
+                TOTAL_ACTIONS=$((TOTAL_ACTIONS + ACTIONS_TOTAL))
+
+                # Collect failed action details for debugging
+                if [[ $ACTIONS_FAILED -gt 0 ]]; then
+                    TEMP_FAILED="/tmp/failed_actions_$$"
+                    jq -r '.[] | select(.success == false and (.action | contains("replay_complete") | not)) | "\(.action)|\(.error_message // "No error message")"' "$results_file" 2>/dev/null > "$TEMP_FAILED"
+                    while IFS='|' read -r failed_action error_msg || [[ -n "$failed_action" ]]; do
+                        if [[ -n "$failed_action" ]]; then
+                            FAILED_ACTIONS_DETAILS="${FAILED_ACTIONS_DETAILS}      ❌ $failed_action ($PLATFORM_FROM_FILE) - $error_msg\n"
+                        fi
+                    done < "$TEMP_FAILED"
+                    rm -f "$TEMP_FAILED"
+                fi
         fi
     done 2>/dev/null || true
-    
+
+    echo "🔍 DEBUG: File processing summary:"
+    echo "🔍 DEBUG:   Processed files: $PROCESSED_FILES"
+    echo "🔍 DEBUG:   Filtered files: $FILTERED_FILES"
+    echo "🔍 DEBUG:   Final totals - Passed: $PASSED_ACTIONS, Failed: $FAILED_ACTIONS, Total: $TOTAL_ACTIONS"
+
     if [[ $TOTAL_ACTIONS -gt 0 ]]; then
         echo "Total Debug Actions: $TOTAL_ACTIONS"
         echo "✅ Passed Actions: $PASSED_ACTIONS ($(( PASSED_ACTIONS * 100 / TOTAL_ACTIONS ))%)"
