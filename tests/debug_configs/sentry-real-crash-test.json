@@ -1,0 +1,19 @@
+{
+  "description": "TDD: Validate REAL Sentry crash reporting with actual crashes",
+  "actions": [
+    "sentry.test_real_crashes"
+  ],
+  "platforms": [
+    "desktop",
+    "android"
+  ],
+  "metadata": {
+    "auto_quit": false,
+    "test_category": "sentry_tdd",
+    "tdd_phase": "real_crash_validation"
+  },
+  "test_metadata": {
+    "test_id": "sentry-real-crash-validation",
+    "notes": "TDD Phase 3: Generate REAL crashes to validate actual Sentry crash reporting with proper stack traces and native frame preservation"
+  }
+}
