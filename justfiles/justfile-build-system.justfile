@@ -336,7 +336,7 @@ build-artifacts force="no": validate-env
 build-pipeline force="no": validate-env
     @echo "🚀 Complete pipeline - source to device deployment..."
     just build-artifacts {{force}}
-    just install-apk-android-release
+    just install-apk-android-debug
     @echo "✅ Complete pipeline finished!"
 
 # ================================
