@@ -128,7 +128,7 @@ ios-deploy-config config_name:
     cp "$CONFIG_FILE" "$TARGET_PATH"
 
     echo "✅ Test config deployed to iOS app bundle"
-    echo "💡 Next: 'just launch-ios-iphone' or 'just launch-ios-ipad'"
+    echo "💡 Next: 'just run-ios-iphone' or 'just run-ios-ipad'"
 
 # Test iOS file access by building with placeholder config
 ios-test-file-access:
@@ -263,8 +263,8 @@ export-all-ios force="no":
     just build-ios-app
     just save-ios-to-app
     @echo "✅ iOS export complete - ready for device deployment"
-    @echo "💡 Use 'just launch-ios-iphone' to deploy to iPhone"
-    @echo "💡 Use 'just launch-ios-ipad' to deploy to iPad"
+    @echo "💡 Use 'just run-ios-iphone' to deploy to iPhone"
+    @echo "💡 Use 'just run-ios-ipad' to deploy to iPad"
 
 # Legacy alias for backward compatibility
 build-pipeline-ios: export-all-ios

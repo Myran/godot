@@ -182,16 +182,17 @@ run-desktop-debug VERBOSE="":
 # ================================
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-launch-ios-iphone: (_ios-launch-app "iphone")
+run-ios-iphone: (_ios-launch-app "iphone")
 
 # LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-launch-ios-iphone-debug: (_ios-launch-app "iphone" "true")
+run-ios-iphone-debug: (_ios-launch-app "iphone" "true")
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-launch-ios-ipad: (_ios-launch-app "ipad")
+run-ios-ipad: (_ios-launch-app "ipad")
 
 # LEVEL 1: Launch existing app in debug (1-2 sec, no changes)
-launch-ios-ipad-debug: (_ios-launch-app "ipad" "true")
+run-ios-ipad-debug: (_ios-launch-app "ipad" "true")
+
 
 
 # LEVEL 1: Launch existing app in debug mode (1-2 sec, no install/build)  

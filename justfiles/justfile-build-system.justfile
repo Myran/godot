@@ -360,8 +360,8 @@ cpp-dev:
     @echo "✅ C++ development workflow complete - app deployed to device"
     @echo "📱 Android: Deployed to device"
     @echo "🍎 iOS: Ready for device deployment"
-    @echo "💡 Use 'just launch-ios-iphone' to deploy iOS to iPhone"
-    @echo "💡 Use 'just launch-ios-ipad' to deploy iOS to iPad"
+    @echo "💡 Use 'just run-ios-iphone' to deploy iOS to iPhone"
+    @echo "💡 Use 'just run-ios-ipad' to deploy iOS to iPad"
 
 # Legacy: Original build-all (now alias for build-toolchain)
 build-all: build-toolchain
