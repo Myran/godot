@@ -17,10 +17,8 @@ help-ios:
     echo "  just export-pck-build-ipad       # Export PCK to iPad .app"
     echo "  just ios-deploy-config CONFIG   # Deploy test config to app bundle"
     echo "  just ios-test-file-access       # Test iOS file reading mechanism"
-    echo "  just export-all-ios             # Export all iOS artifacts (.app bundle)"
     echo "  just export-pck-ios              # Export iOS PCK file"
-    echo "  just build-install-ios          # Full iOS rebuild & install (smart rebuild)"
-    echo "  just build-all-ios              # Build all iOS components (smart rebuild)"
+    echo "  just build-ios-all               # Full iOS build pipeline (templates + app + PCK)"
     echo "  just rebuild-all-ios            # Force rebuild all iOS components"
     echo ""
     echo "Testing Commands:"
@@ -186,47 +184,34 @@ ios-update-pck: pre-build
     just export-pck-ios
     @echo "✅ iOS PCK updated"
 
-# Full iOS rebuild & install (2-5 min, complete project rebuild)
-build-install-ios:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🔨 Full iOS rebuild & install..."
-    
-    # Clean previous builds
-    echo "🧹 Cleaning previous builds..."
-    rm -rf export/ios/{{GAME_NAME}}.pck
-    
-    # Smart check for iOS templates and executables
-    just templates-ios force=no
-    
-    # Export PCK
-    echo "📦 Exporting iOS PCK..."
-    just export-pck-ios
-    
-    echo "✅ iOS build & install complete"
-    echo "💡 Open Xcode project in export/ios/ to deploy"
-
-# Build all iOS components
-build-all-ios force="no": validate-env
-    @echo "🍎 Building all iOS components..."
-    just templates-ios {{force}}
-    just export-pck-ios
-    @echo "✅ All iOS builds complete"
+# REMOVED: build-install-ios - duplicate of build-ios-all (incomplete, no .app build)
+# REMOVED: build-all-ios - duplicate of build-ios-all (same functionality)
+# Use: just build-ios-all for complete iOS build pipeline (templates + app + PCK)
 
 
 # Force rebuild all iOS components (ignores existing builds)
 rebuild-all-ios:
     @echo "🔥 Force rebuilding all iOS components..."
-    just build-all-ios force=yes
+    just build-ios-all force=yes
     @echo "✅ All iOS rebuilds complete"
 
 # Complete iOS pipeline - from source to device deployment
-export-all-ios force="no":
-    @echo "📦 Exporting all iOS artifacts (.app bundle)..."
+build-ios-all force="no":
+    @echo "🤖 FULL BUILD - iOS ONLY"
+    @echo "======================"
+    @if [ "{{force}}" = "yes" ]; then \
+        echo "⏱️  Estimated time: 30-40 minutes (FORCE REBUILD)"; \
+        echo "🔥 Force rebuild enabled - will rebuild everything from scratch"; \
+    else \
+        echo "⏱️  Estimated time: 5-15 minutes (smart rebuild)"; \
+        echo "💡 Use 'just build-ios-all force=yes' to force rebuild everything"; \
+    fi
+    @echo ""
+
     just templates-ios {{force}}
     just build-ios-app
     just export-pck-ios
-    @echo "✅ iOS export complete - ready for device deployment"
+    @echo "✅ iOS full build complete - ready for device deployment"
     @echo "💡 Use 'just run-ios-iphone' to deploy to iPhone"
     @echo "💡 Use 'just run-ios-ipad' to deploy to iPad"
 

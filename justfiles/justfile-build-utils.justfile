@@ -72,8 +72,8 @@ _build-common force="no":
 # Android full build steps
 # REMOVED: _build-android-full - moved to justfile-platform-android.justfile
 
-# REMOVED: _build-ios-full - duplicate of export-all-ios in justfile-platform-ios.justfile
-# Use: just export-all-ios for iOS build pipeline
+# REMOVED: _build-ios-full - duplicate of build-ios-all in justfile-platform-ios.justfile
+# Use: just build-ios-all for iOS build pipeline
 
 # ================================
 # OLD BUILD-ALL BUGFIX
