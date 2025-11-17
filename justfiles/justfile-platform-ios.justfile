@@ -4,35 +4,6 @@
 
 # Note: Variables and build functions inherited from imported modules
 
-
-# Build iOS executable with optimized settings
-build-ios-executable force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
-        echo "🔥 Force rebuild enabled - rebuilding iOS executable..."
-    elif [ -f "export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a" ]; then
-        echo "✅ iOS executable already built: export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a"
-        echo "⏭️  Skipping iOS executable rebuild (saves 20+ minutes)"
-        echo "   Use 'just build-ios-executable force=yes' to rebuild"
-        exit 0
-    else
-        echo "❌ iOS executable not found, building..."
-    fi
-
-    echo "🔨 Building iOS executable..."
-
-    cd {{GODOT_SUBMODULE_PATH}}
-    echo "📦 Building iOS template for arm64 (Sentry SDK always included)..."
-    scons platform=ios target=template_release arch=arm64 --jobs={{jobs}} production=yes optimize=size
-
-    # Move to export directory - update existing XCFramework
-    echo "📁 Moving executable to export directory..."
-    cp misc/dist/ios_xcode/libgodot.ios.template_release.xcframework/ios-arm64/libgodot.a ../export/ios/{{GAME_NAME}}.xcframework/ios-arm64/libgodot.a
-
-    echo "✅ iOS executable built successfully and XCFramework updated"
-
 # iOS help information
 help-ios:
     #!/usr/bin/env bash
@@ -40,13 +11,14 @@ help-ios:
     echo "=========================="
     echo ""
     echo "Build Commands:"
-    echo "  just build-ios-executable       # Build iOS executable"
+    echo "  just templates-ios               # Build iOS templates and executables"
     echo "  just build-ios-app              # Build iOS .app with Xcode"
-    echo "  just save-ios-to-app            # Save PCK file to .app"
+    echo "  just export-pck-build-iphone     # Export PCK to iPhone .app"
+    echo "  just export-pck-build-ipad       # Export PCK to iPad .app"
     echo "  just ios-deploy-config CONFIG   # Deploy test config to app bundle"
     echo "  just ios-test-file-access       # Test iOS file reading mechanism"
     echo "  just export-all-ios             # Export all iOS artifacts (.app bundle)"
-    echo "  just ios-build                  # iOS build pipeline"
+    echo "  just export-pck-ios              # Export iOS PCK file"
     echo "  just build-install-ios          # Full iOS rebuild & install (smart rebuild)"
     echo "  just build-all-ios              # Build all iOS components (smart rebuild)"
     echo "  just rebuild-all-ios            # Force rebuild all iOS components"
@@ -55,7 +27,7 @@ help-ios:
     echo "  just test-ios-target CONFIG     # iOS equivalent of test-android-target (NEW!)"
     echo ""
     echo "Export & Deploy:"
-    echo "  just ios-export-pck              # Export iOS PCK file"
+    echo "  just export-pck-ios              # Export iOS PCK file"
     echo "  just ios-update-pck              # Update iOS PCK file"
     echo ""
     echo "Device Management:"
@@ -78,7 +50,7 @@ help-ios:
     echo "  just quick-build-ios             # Quick iOS build"
 
 # Export iOS PCK file
-ios-export-pck: pre-build
+export-pck-ios: pre-build
     @echo "📦 Exporting iOS PCK file..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "ios" ../export/ios/{{GAME_NAME}}.pck --headless
 
@@ -91,9 +63,14 @@ build-ios-app: pre-build
                                 -destination "generic/platform=iOS" \
                                 -allowProvisioningUpdates
 
-# Save iOS PCK file directly to app
-save-ios-to-app: pre-build
-    @echo "💾 Saving iOS PCK file directly to app..."
+# Export PCK file directly to iPhone app bundle
+export-pck-build-iphone: pre-build
+    @echo "💾 Exporting iOS PCK file to iPhone app bundle..."
+    ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
+
+# Export PCK file directly to iPad app bundle
+export-pck-build-ipad: pre-build
+    @echo "💾 Exporting iOS PCK file to iPad app bundle..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
 # Deploy test config to iOS app bundle (overwrites file in app bundle)
@@ -172,9 +149,7 @@ ios-test-file-access:
     echo "💡 Use 'just ios-deploy-config CONFIG' to overwrite with test configs"
 
 # iOS build pipeline
-ios-build: pre-build
-    @echo "🍎 iOS build pipeline..."
-    just ios-export-pck
+# Duplicate removed - use export-pck-ios instead
 
 # iOS launch help
 ios-launch-help:
@@ -208,7 +183,7 @@ ios-restart-help:
 # Update iOS PCK file
 ios-update-pck: pre-build
     @echo "🔄 Updating iOS PCK file..."
-    just ios-export-pck
+    just export-pck-ios
     @echo "✅ iOS PCK updated"
 
 # Full iOS rebuild & install (2-5 min, complete project rebuild)
@@ -221,12 +196,12 @@ build-install-ios:
     echo "🧹 Cleaning previous builds..."
     rm -rf export/ios/{{GAME_NAME}}.pck
     
-    # Smart check for iOS executable
-    just build-ios-executable force=no
+    # Smart check for iOS templates and executables
+    just templates-ios force=no
     
     # Export PCK
     echo "📦 Exporting iOS PCK..."
-    just ios-export-pck
+    just export-pck-ios
     
     echo "✅ iOS build & install complete"
     echo "💡 Open Xcode project in export/ios/ to deploy"
@@ -234,21 +209,10 @@ build-install-ios:
 # Build all iOS components
 build-all-ios force="no": validate-env
     @echo "🍎 Building all iOS components..."
-    just build-ios-executable {{force}}
-    just ios-export-pck
+    just templates-ios {{force}}
+    just export-pck-ios
     @echo "✅ All iOS builds complete"
 
-# Quick iOS build for development iteration
-quick-build-ios:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "⚡ Quick iOS build..."
-    
-    # Only export PCK for faster iteration
-    just ios-export-pck
-    
-    echo "✅ Quick iOS build complete"
-    echo "💡 Use build-ios-executable for full rebuild"
 
 # Force rebuild all iOS components (ignores existing builds)
 rebuild-all-ios:
@@ -259,15 +223,13 @@ rebuild-all-ios:
 # Complete iOS pipeline - from source to device deployment
 export-all-ios force="no":
     @echo "📦 Exporting all iOS artifacts (.app bundle)..."
-    just build-ios-executable {{force}}
+    just templates-ios {{force}}
     just build-ios-app
-    just save-ios-to-app
+    just export-pck-ios
     @echo "✅ iOS export complete - ready for device deployment"
     @echo "💡 Use 'just run-ios-iphone' to deploy to iPhone"
     @echo "💡 Use 'just run-ios-ipad' to deploy to iPad"
 
-# Legacy alias for backward compatibility
-build-pipeline-ios: export-all-ios
 
 # ================================
 # iOS DEVICE LOGGING

@@ -253,7 +253,7 @@ package-ios-template force="no":
 
     echo "iOS templates built and packaged successfully."
 
-# Note: build-ios-executable is provided by justfile-platform-ios.justfile
+# Note: iOS executable building is now handled by templates-ios function
 
 # ================================
 # FORCE PARAMETER VALIDATION

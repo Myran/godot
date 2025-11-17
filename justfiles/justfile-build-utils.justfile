@@ -80,9 +80,9 @@ _build-ios-full:
     @echo "📦 [1/3] Building iOS templates..."
     just templates-ios
     @echo "📱 [2/3] Exporting iOS project..."
-    just ios-export-pck
+    just export-pck-ios
     @echo "🔨 [3/3] Building with Xcode..."
-    just ios-build
+    just build-ios-app
 
 # ================================
 # OLD BUILD-ALL BUGFIX
