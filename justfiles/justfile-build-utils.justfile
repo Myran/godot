@@ -72,17 +72,8 @@ _build-common force="no":
 # Android full build steps
 # REMOVED: _build-android-full - moved to justfile-platform-android.justfile
 
-# iOS full build steps
-_build-ios-full:
-    @echo ""
-    @echo "🍎 iOS BUILD STEPS"
-    @echo "================="
-    @echo "📦 [1/3] Building iOS templates..."
-    just templates-ios
-    @echo "📱 [2/3] Exporting iOS project..."
-    just export-pck-ios
-    @echo "🔨 [3/3] Building with Xcode..."
-    just build-ios-app
+# REMOVED: _build-ios-full - duplicate of export-all-ios in justfile-platform-ios.justfile
+# Use: just export-all-ios for iOS build pipeline
 
 # ================================
 # OLD BUILD-ALL BUGFIX
