@@ -452,6 +452,68 @@ _deploy-config-ios config_path:
 
     echo "✅ iOS config deployed successfully"
 
+# Clean up old iOS test logs
+clean-ios-logs days="7":
+    #!/usr/bin/env/bash
+    set -euo pipefail
+
+    if [[ ! -z "{{days}}" ]]; then
+        DAYS="{{days}}"
+    fi
+
+    echo "🧹 Cleaning iOS test logs older than $DAYS days..."
+
+    # Clean iOS device logs
+    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    if [[ -d "$IOS_LOG_DIR" ]]; then
+        echo "📱 Cleaning iOS device logs..."
+        find "$IOS_LOG_DIR" -name "ios_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old iOS device logs to clean"
+
+        echo "📊 Cleaning iOS action results..."
+        find "$IOS_LOG_DIR" -name "test_action_results_*.json" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old iOS action results to clean"
+    else
+        echo "ℹ️  iOS log directory not found: $IOS_LOG_DIR"
+    fi
+
+    echo "✅ iOS log cleanup completed"
+
+# Cross-platform log cleanup (Android + iOS + Desktop)
+clean-all-logs days="7":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [[ ! -z "{{days}}" ]]; then
+        DAYS="{{days}}"
+    fi
+
+    echo "🧹 Cleaning all platform test logs older than $DAYS days..."
+
+    # Clean iOS logs
+    echo "🍎 Cleaning iOS logs..."
+    just clean-ios-logs {{days}}
+
+    # Clean Android logs
+    echo "🤖 Cleaning Android logs..."
+    ANDROID_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    if [[ -d "$ANDROID_LOG_DIR" ]]; then
+        find "$ANDROID_LOG_DIR" -name "android_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Android logs to clean"
+        find "$ANDROID_LOG_DIR" -name "test_action_results_*.json" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Android action results to clean"
+    fi
+
+    # Clean Desktop logs
+    echo "🖥️  Cleaning Desktop logs..."
+    if [[ -d "$ANDROID_LOG_DIR" ]]; then
+        find "$ANDROID_LOG_DIR" -name "desktop_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Desktop logs to clean"
+    fi
+
+    # Clean main logs directory
+    echo "📁 Cleaning main logs directory..."
+    if [[ -d "logs" ]]; then
+        find logs -name "*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old main logs to clean"
+    fi
+
+    echo "✅ All platform log cleanup completed"
+
 # iOS test execution function - integrates with existing hotreload-ios-ipad recipe
 _execute-test-ios config_name:
     #!/usr/bin/env bash
