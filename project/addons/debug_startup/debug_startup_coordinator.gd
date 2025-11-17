@@ -47,6 +47,15 @@ func startDebugCoordinator() -> void:
 		},
 		["debug", "startup", "task218", "coordinator", "critical"]
 	)
+
+	# Set unique Sentry test context for ALL tests - IMMEDIATELY at startup
+	var test_id: String = _set_global_sentry_test_context()
+
+	Log.info("🔍 SENTRY TEST CONTEXT - All tests will use ID: " + test_id,
+		{"test_session_id": test_id},
+		["debug", "startup", "sentry", "test_id"]
+	)
+
 	Log.info("DebugStartupCoordinator initializing...", {}, ["debug", "startup"])
 
 	_log_verbose("Getting DebugRegistry actions...", {}, ["debug", "startup"])
@@ -710,3 +719,63 @@ func _apply_rng_seed_from_config() -> void:
 			{"default_seed": 12345, "source": "autoload_ready"},  # DEFAULT_SEED fallback
 			["debug", "startup", "rng", "verification"]
 		)
+
+
+# Set global Sentry test context for all test runs using existing test ID
+func _set_global_sentry_test_context() -> String:
+	var test_id: String = DebugAction.get_current_test_id()
+
+	# If no test ID available, generate a fallback for non-test contexts
+	if test_id.is_empty():
+		var timestamp: int = Time.get_unix_time_from_system()
+		var random_suffix: String = str(randi() % 10000).pad_zeros(4)
+		test_id = "debug-session-" + str(timestamp) + "-" + random_suffix
+
+	# Set Sentry context if available (for all platforms)
+	if SentryHelper.is_available():
+		# Set as a searchable tag for easy filtering in Sentry - use the existing test ID
+		SentryHelper.set_tag("test_session_id", test_id)
+		SentryHelper.set_tag("test_platform", OS.get_name())
+		SentryHelper.set_tag("test_type", "debug_coordinator")
+		SentryHelper.set_tag("godot_version", Engine.get_version_info()["string"])
+
+		# Set structured context for better crash analysis
+		SentryHelper.set_context("test_session", {
+			"test_session_id": test_id,
+			"platform": OS.get_name(),
+			"test_type": "debug_coordinator",
+			"timestamp": Time.get_datetime_string_from_system(),
+			"godot_version": Engine.get_version_info(),
+			"debug_build": OS.is_debug_build(),
+			"actions_executed": _get_action_names().size(),
+			"test_id": test_id
+		})
+
+		# Set user context to distinguish test runs from production users
+		SentryHelper.set_user({
+			"id": test_id,
+			"username": "debug_test_session",
+			"email": "test-session@debug-validation.local"
+		})
+
+		Log.info(
+			"🔍 Global Sentry test context set: " + test_id,
+			{
+				"test_session_id": test_id,
+				"platform": OS.get_name(),
+				"actions_count": _get_action_names().size(),
+				"sentry_available": true
+			},
+			["debug", "startup", "sentry", "test_id", "coordinator"]
+		)
+	else:
+		Log.info(
+			"🔍 Test session ID generated (Sentry unavailable): " + test_id,
+			{
+				"test_session_id": test_id,
+				"sentry_available": false
+			},
+			["debug", "startup", "test_id", "coordinator"]
+		)
+
+	return test_id

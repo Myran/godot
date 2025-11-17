@@ -30,20 +30,36 @@ logs-tags TEST_ID *TAGS:
     # Filter logs by tags and show only matching lines
     grep "$tag_pattern" "$LOG_FILE" | head -50
 
+
 # Show only errors and failures
 logs-errors TEST_ID:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{TEST_ID}}"
-    
+
     # Use unified log retrieval function
     LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
-    
+
+    # Extract and display test session information for Sentry correlation
+    echo "🔍 Test Session Information for Sentry:"
+    echo "======================================"
+    test_session_id=$(rg -o '"test_session_id": "[^"]*"' "$LOG_FILE" | cut -d'"' -f4 | head -1 || echo "Not found")
+
+    # Use the provided TEST_ID for Sentry correlation
+    echo "📋 Test ID: $TEST_ID"
+    echo "🌐 Search in Sentry: test_session_id:$TEST_ID"
+
+    if [ "$test_session_id" != "Not found" ] && [ "$test_session_id" != "$TEST_ID" ]; then
+        echo "🏷️  Test Session ID: $test_session_id"
+        echo "🌐 Alternative Sentry search: test_session_id:$test_session_id"
+    fi
+    echo ""
+
     echo "🚨 Errors and Failures Only:"
     echo "=============================="
     echo ""
-    
+
     # Show errors, failures, warnings, and critical issues (exclude "error": false)
     grep -E "ERROR|FAILURE|WARNING.*⚠️|RESTART_NEEDED" "$LOG_FILE" | grep -v '"error": false' || echo "✅ No errors found"
 
@@ -72,6 +88,32 @@ logs-last:
     # Platform detection and log retrieval
     if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
         echo "🤖 Getting latest Android logs..."
+
+        # Get recent Android logs and extract test session information
+        ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+
+        # Extract test session information from recent logs
+        TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+        LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+
+        echo ""
+        if [ "$LATEST_TEST_ID" != "Not found" ]; then
+            echo "🔍 Test Session Information:"
+            echo "──────────────────────────"
+            echo "📋 Test ID: $LATEST_TEST_ID"
+            echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
+        fi
+        if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
+            echo "🏷️  Test Session ID: $TEST_SESSION_ID"
+            echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
+        fi
+        if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
+            echo "⚠️  No test context found in recent logs"
+        fi
+        echo ""
+
+        echo "🤖 Latest Android logs:"
+        echo "────────────────────"
         LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
         [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
     else

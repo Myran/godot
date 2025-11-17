@@ -24,10 +24,11 @@ _inject-auto-quit-metadata source_config target_config auto_quit_value:
     # Use jq to inject/update the auto_quit metadata and test_id if TEST_ID is set
     if [ -n "${TEST_ID:-}" ]; then
         jq --arg auto_quit "$AUTO_QUIT" --arg test_id "$TEST_ID" '
-            .metadata = (.metadata // {}) | 
+            .metadata = (.metadata // {}) |
             .metadata.auto_quit = ($auto_quit | test("true")) |
             .test_metadata = (.test_metadata // {}) |
-            .test_metadata.test_id = $test_id
+            .test_metadata.test_id = $test_id |
+            if .sentry_test_id then del(.sentry_test_id) else . end
         ' "$SOURCE_CONFIG" > "$TARGET_CONFIG"
         echo "✅ Config updated with auto_quit: $AUTO_QUIT and test_id: $TEST_ID"
     else

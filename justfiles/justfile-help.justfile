@@ -192,7 +192,7 @@ help:
     echo "📊 LOG ANALYSIS"
     echo "  just logs-errors TEST_ID         # Quick error scan (98% token savings)"
     echo "  just logs-last                   # Show most recent test run"
-    echo ""
+        echo ""
     echo "📱 REAL-TIME ANDROID MONITORING"
     echo "  just android-logs-errors 30      # Live device error monitoring"
     echo "  just android-logs-search \"term\" # Search Android logs for specific terms (full inspection)"

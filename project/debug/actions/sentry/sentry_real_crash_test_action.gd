@@ -17,7 +17,9 @@ func execute_real_crash_testing() -> bool:
 
 func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 	Log.info(
-		"TRACE: Real Sentry crash testing started", {"action": action_name}, ["debug", "sentry", "trace", "crash_test"]
+		"🔍 Real Sentry crash testing started (global test context already set)",
+		{"action": action_name, "platform": OS.get_name()},
+		["debug", "sentry", "trace", "crash_test"]
 	)
 
 	_update_status("Testing REAL Sentry crash scenario capture...")
@@ -79,19 +81,19 @@ func _execute_action_logic(_params: Dictionary = {}) -> DebugActionResult:
 		["debug", "sentry", "crash_test"]
 	)
 
-	_update_status("✅ Real crash testing complete - triggered " + str(crashes_triggered) + " crashes")
-
-	return DebugActionResult.new_success(
-		"Real crash testing completed - triggered " + str(crashes_triggered) + " crashes for Sentry validation",
-		crash_test_results,
-		action_name
+	_update_status(
+		"✅ Real crash testing complete - triggered " + str(crashes_triggered) + " crashes"
 	)
+
+	return DebugActionResult.new_success(crash_test_results, 0, action_name)
 
 
 func _trigger_null_dereference_crash() -> bool:
 	# GUARANTEED null dereference - no safety checks
 	# This WILL crash and should be captured by Sentry
-	Log.debug("EXECUTING: Forced null dereference - THIS WILL CRASH", {}, ["debug", "sentry", "crash"])
+	Log.debug(
+		"EXECUTING: Forced null dereference - THIS WILL CRASH", {}, ["debug", "sentry", "crash"]
+	)
 
 	var obj: Node = null
 	# UNCONDITIONAL dereference - no safety check to prevent crash
@@ -104,7 +106,11 @@ func _trigger_null_dereference_crash() -> bool:
 
 func _trigger_bounds_access_crash() -> bool:
 	# GUARANTEED bounds violation - no safety checks
-	Log.debug("EXECUTING: Forced array bounds violation - THIS WILL CRASH", {}, ["debug", "sentry", "crash"])
+	Log.debug(
+		"EXECUTING: Forced array bounds violation - THIS WILL CRASH",
+		{},
+		["debug", "sentry", "crash"]
+	)
 
 	var arr: Array[String] = ["a", "b", "c"]
 	# UNCONDITIONAL out-of-bounds access - this will crash
@@ -116,7 +122,9 @@ func _trigger_bounds_access_crash() -> bool:
 
 func _trigger_type_violation_crash() -> bool:
 	# GUARANTEED type violation - no safety checks
-	Log.debug("EXECUTING: Forced type violation - THIS WILL CRASH", {}, ["debug", "sentry", "crash"])
+	Log.debug(
+		"EXECUTING: Forced type violation - THIS WILL CRASH", {}, ["debug", "sentry", "crash"]
+	)
 
 	var node: Node = Node.new()
 	# Force type violation through unsafe casting
@@ -129,19 +137,15 @@ func _trigger_type_violation_crash() -> bool:
 
 func _trigger_resource_corruption_crash() -> bool:
 	# GUARANTEED resource corruption - no safety checks
-	Log.debug("EXECUTING: Forced resource corruption - THIS WILL CRASH", {}, ["debug", "sentry", "crash"])
+	Log.debug(
+		"EXECUTING: Forced resource corruption - THIS WILL CRASH", {}, ["debug", "sentry", "crash"]
+	)
 
-	# Force invalid resource access that should crash
-	var texture: Texture2D = null
-	var sprite: Sprite2D = Sprite2D.new()
-	sprite.texture = texture  # Setting null texture might cause issues
-	sprite.call_deferred("queue_free")
-
-	# Force corruption through invalid node tree access
+	# Force corruption through invalid node tree access - THIS WILL CRASH
+	# Create a node that gets deleted while still being accessed
 	var invalid_node: Node = Node.new()
-	add_child(invalid_node)  # Add to scene tree
 	invalid_node.queue_free()  # Queue for deletion
-	invalid_node.name = "corrupted_node"  # Access after deletion - should crash
+	invalid_node.name = "corrupted_node"  # Access after queuing - should crash
 
 	# This should never be reached
 	return true

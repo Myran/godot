@@ -1,11 +1,24 @@
 {
   "description": "TDD: Validate REAL Sentry crash reporting with actual crashes",
   "actions": [
-    "sentry.test_real_crashes"
+    {
+      "action": "sentry.test_real_crashes",
+      "expected_result": {
+        "type": "expected_errors",
+        "description": "Validates intentional crashes for Sentry crash reporting",
+        "patterns": [
+          "Invalid call. Nonexistent function 'some_method_that_does_not_exist' in base 'Nil'",
+          "Out of bounds get index '999'",
+          "Trying to assign value of type 'Node' to a variable of type 'Button'",
+          "Cannot get path of node as it is not in a scene tree"
+        ]
+      }
+    }
   ],
   "platforms": [
     "desktop",
-    "android"
+    "android",
+    "ios"
   ],
   "metadata": {
     "auto_quit": false,
