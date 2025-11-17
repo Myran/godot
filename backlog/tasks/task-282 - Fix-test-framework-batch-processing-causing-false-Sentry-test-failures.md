@@ -1,10 +1,10 @@
 ---
 id: task-282
 title: Fix test framework batch processing causing false Sentry test failures
-status: Open
+status: Done
 assignee: []
 created_date: '2025-11-16 14:13'
-updated_date: '2025-11-16 14:13'
+updated_date: '2025-11-16 21:40'
 labels: []
 dependencies: []
 ---
