@@ -198,9 +198,15 @@ static func _reset_cache() -> void:
 static func _get_config_path() -> String:
 	"""Get the appropriate config file path based on platform."""
 	if OS.has_feature("mobile"):
-		var external_path: String = "user://debug_startup_actions.json"
-		if FileAccess.file_exists(external_path):
-			return external_path
+		# Android: Try external user:// directory first (writable), fallback to embedded res://
+		if OS.has_feature("android"):
+			var external_path: String = "user://debug_startup_actions.json"
+			if FileAccess.file_exists(external_path):
+				return external_path
+			return "res://debug_startup_actions.json"
+
+		# iOS: Only has read-only app bundle, always use embedded res://
+		# Files are overwritten in app bundle post-build for testing
 		return "res://debug_startup_actions.json"
 
 	return "user://debug_startup_actions.json"

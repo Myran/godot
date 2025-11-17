@@ -68,9 +68,13 @@ _validate-ios-device DEVICE_TYPE:
         exit 1
     fi
     
-    if ! xcrun simctl list devices | grep -q "$DEVICE_ID"; then
+    # Check both physical devices (devicectl) and simulators (simctl)
+    if ! xcrun devicectl list devices | grep -q "$DEVICE_ID" && ! xcrun simctl list devices | grep -q "$DEVICE_ID"; then
         echo "❌ iOS {{DEVICE_TYPE}} device not found: $DEVICE_ID"
         echo "💡 Check device ID in core config"
+        echo "💡 Available devices:"
+        echo "   Physical: xcrun devicectl list devices"
+        echo "   Simulators: xcrun simctl list devices"
         exit 1
     fi
 

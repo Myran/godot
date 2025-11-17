@@ -534,7 +534,7 @@ _handle-checksum-validation config_path platform test_id:
             USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
             LOGS_DIR="$USER_DATA_DIR/logs"
             DESKTOP_LOG_FILE="$LOGS_DIR/desktop_${TEST_ID}.log"
-            
+
             if [[ -f "$DESKTOP_LOG_FILE" ]]; then
                 if just _extract-checksums-unified "$DESKTOP_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
                     EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
@@ -545,6 +545,23 @@ _handle-checksum-validation config_path platform test_id:
             else
                 echo "⚠️  Desktop test log file not found: $DESKTOP_LOG_FILE"
                 echo "💡 Expected file name pattern: desktop_\${TEST_ID}.log"
+            fi
+            ;;
+        "ios")
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            LOGS_DIR="$USER_DATA_DIR/logs"
+            IOS_LOG_FILE="$LOGS_DIR/ios_${TEST_ID}.log"
+
+            if [[ -f "$IOS_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$IOS_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from iOS test log:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
+            else
+                echo "⚠️  iOS test log file not found: $IOS_LOG_FILE"
+                echo "💡 Expected file name pattern: ios_\${TEST_ID}.log"
             fi
             ;;
         *)
@@ -742,6 +759,103 @@ _extract-logs test_id platform temp_output_file="":
                 exit 1
             fi
             ;;
+        "ios")
+            echo "🍎 Extracting iOS logs for test: $TEST_ID"
+
+            # Get device logs using libimobiledevice for direct iOS device log access
+            echo "🍎 Fetching iOS device console logs using idevicesyslog..."
+
+            # First check if idevicesyslog is available
+            if command -v idevicesyslog >/dev/null 2>&1; then
+                echo "🍎 Using libimobiledevice for direct iOS device log access..."
+
+                # Check device connection
+                DEVICE_NAME=$(idevicename 2>/dev/null | head -1 || echo "")
+                if [[ -n "$DEVICE_NAME" ]]; then
+                    echo "🍎 Connected to iOS device: $DEVICE_NAME"
+
+                    # Try to capture device logs using idevicesyslog
+                    echo "🍎 Capturing iOS device logs with idevicesyslog..."
+
+                    # Method 1: Capture recent device logs
+                    timeout 30s idevicesyslog > "$LOG_FILE" 2>&1 || {
+                        echo "🍎 idevicesyslog completed or timed out"
+                    }
+
+                    # Filter for gametwo-related content if we got logs
+                    if [[ -f "$LOG_FILE" && -s "$LOG_FILE" ]]; then
+                        # Extract only relevant logs and save back to file
+                        LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+                        echo "🍎 Raw iOS logs captured: $LOG_LINES lines"
+
+                        if [[ $LOG_LINES -gt 0 ]]; then
+                            echo "🍎 Filtering for gametwo/Godot/debug content..."
+                            # Filter for relevant content but keep the full file for analysis
+                            grep -i "gametwo\|godot\|debug.*test.*success\|sentry\|battle.*test\|hide.*debug\|populate.*enemy" "$LOG_FILE" > "${LOG_FILE}.filtered" 2>/dev/null || echo "No specific matches found" > "${LOG_FILE}.filtered"
+
+                            FILTERED_LINES=$(wc -l < "${LOG_FILE}.filtered" 2>/dev/null || echo "0")
+                            echo "🍎 Filtered relevant logs: $FILTERED_LINES lines"
+
+                            # If we have filtered content, use it; otherwise keep original
+                            if [[ $FILTERED_LINES -gt 0 ]]; then
+                                cp "${LOG_FILE}.filtered" "$LOG_FILE"
+                                rm "${LOG_FILE}.filtered"
+                            else
+                                echo "🍎 Keeping full log stream for analysis (no specific matches found)"
+                            fi
+                        fi
+                    else
+                        echo "🍎 No logs captured via idevicesyslog - device may need passcode confirmation"
+                    fi
+
+                else
+                    echo "❌ No iOS device detected via idevicesyslog"
+                    exit 1
+                fi
+
+            else
+                echo "❌ idevicesyslog not available - falling back to macOS log access"
+                echo "💡 Install libimobiledevice tools: brew install ideviceinstaller"
+
+                # Fallback: try macOS log approaches (previous method)
+                DEVICE_ID="38A3A7F3-6C49-5C54-B86E-D84C81ABD10C"  # iPad device ID
+                if command -v xcrun >/dev/null 2>&1; then
+                    echo "🍎 Fallback: Checking for gametwo process on iOS device..."
+                    GAME_PROCESS=$(xcrun devicectl device info processes --device "$DEVICE_ID" 2>/dev/null | grep "gametwo.app/gametwo" | head -1 || echo "")
+
+                    if [[ -n "$GAME_PROCESS" ]]; then
+                        echo "🍎 Found gametwo process on device: $GAME_PROCESS"
+                        echo "🍎 Attempting macOS-based log access..."
+
+                        # Try macOS log show as fallback
+                        log show --predicate 'processImagePath CONTAINS "gametwo"' --style compact --last 10m > "$LOG_FILE" 2>/dev/null || {
+                            echo "🍎 No device logs accessible via macOS log system"
+                            echo "" > "$LOG_FILE"  # Create empty file
+                        }
+                    else
+                        echo "🍎 No gametwo process found on device"
+                        echo "" > "$LOG_FILE"  # Create empty file
+                    fi
+                else
+                    echo "❌ Neither idevicesyslog nor xcrun available"
+                    exit 1
+                fi
+            fi
+
+            # Final verification and reporting
+            LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+            echo "🍎 iOS log extraction complete: $LOG_LINES lines captured"
+
+            if [[ $LOG_LINES -lt 2 ]]; then
+                echo "🍎 WARNING: Limited logs captured."
+                echo "💡 iOS device may require:"
+                echo "   - Passcode confirmation for syslog access"
+                echo "   - 'Trust This Computer' on device"
+                echo "   - Godot iOS app configured to use os_log"
+            else
+                echo "🍎 ✅ iOS device logs successfully captured"
+            fi
+            ;;
         *)
             echo "❌ Unsupported platform: $PLATFORM"
             exit 1
@@ -772,9 +886,11 @@ _extract-logs test_id platform temp_output_file="":
             # Wait for completion events to match dispatches (with timeout safety)
             # ENHANCED: Android-specific timeout and retry logic for task-190
             WAIT_COUNT=0
-            # Platform-specific timeout: Android gets 45s (buffer delays), Desktop gets 30s
+            # Platform-specific timeout: Android gets 45s (buffer delays), iOS gets 40s (device delays), Desktop gets 30s
             if [[ "$PLATFORM" == "android" ]]; then
                 MAX_WAIT_SECONDS=45
+            elif [[ "$PLATFORM" == "ios" ]]; then
+                MAX_WAIT_SECONDS=40
             else
                 MAX_WAIT_SECONDS=30
             fi
@@ -1005,6 +1121,9 @@ _analyze-test-errors test_id platform config_file="":
             ;;
         "desktop")
             # Desktop platform supported
+            ;;
+        "ios")
+            # iOS platform supported
             ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
@@ -1260,10 +1379,10 @@ _collect-action-results test_id platform config_name="unknown" session="":
     # Create persistent results file alongside log files for consistency
     # Each test creates a unique file using session timestamp to avoid conflicts
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${TEST_ID}.json"
     fi
     echo "[]" > "$RESULTS_FILE"
     
@@ -1303,6 +1422,19 @@ _collect-action-results test_id platform config_name="unknown" session="":
             else
                 echo "⚠️  Desktop log file not found: $PLATFORM_LOG_FILE"
                 echo "💡 Desktop logs should be extracted by _execute-test-desktop"
+                LOGS=""
+            fi
+            ;;
+        "ios")
+            # For iOS, extract logs using unified function
+            just _extract-logs "$TEST_ID" "$PLATFORM" || echo "⚠️  Failed to extract iOS logs"
+
+            # Read from the saved file
+            if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+                LOGS=$(cat "$PLATFORM_LOG_FILE")
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from iOS log file"
+            else
+                echo "⚠️  iOS log file not found: $PLATFORM_LOG_FILE"
                 LOGS=""
             fi
             ;;
@@ -1560,10 +1692,10 @@ _generate-action-summary-from-file test_id config_name platform session="":
     USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
     LOGS_DIR="$USER_DATA_DIR/logs"
     if [[ -n "$SESSION" ]]; then
-        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${SESSION}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${TEST_ID}.json"
     else
         # Fallback to old naming for backwards compatibility
-        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${CONFIG_NAME}_${PLATFORM}_${TEST_ID}.json"
+        RESULTS_FILE="{{STANDARD_LOGS_DIR}}/test_action_results_${TEST_ID}.json"
     fi
     
     echo ""
@@ -2592,10 +2724,17 @@ _execute-test-with-analysis config_name platform session="":
             fi
             ;;
         "desktop")
-            # Deploy and execute Desktop test  
+            # Deploy and execute Desktop test
             just _deploy-config-desktop "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
                 just _execute-test-desktop "$CONFIG_NAME" || TEST_RESULT=$?
+            fi
+            ;;
+        "ios")
+            # Deploy and execute iOS test
+            just _deploy-config-ios "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-ios "$CONFIG_NAME" || TEST_RESULT=$?
             fi
             ;;
         *)
@@ -3684,6 +3823,8 @@ _update-checksum-baseline platform config_name:
         just test-android-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
     elif [[ "$PLATFORM" == "desktop" ]]; then
         just test-desktop-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
+    elif [[ "$PLATFORM" == "ios" ]]; then
+        just test-ios-target "$CONFIG_NAME" || echo "Test execution completed (ignoring validation failure for update)"
     else
         echo "❌ Unknown platform: $PLATFORM"
         exit 1
