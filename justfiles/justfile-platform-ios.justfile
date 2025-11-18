@@ -28,6 +28,10 @@ help-ios:
     echo "  just test-ios-ipad CONFIG       # iOS testing on iPad device (NEW!)"
     echo "    • Default: iPad (configurable via IOS_TEST_DEVICE)"
     echo ""
+    echo "Log Cleanup:"
+    echo "  just clean-ios-logs [days]      # Clean iOS logs older than N days (default: 7)"
+    echo "  just clean-ios-logs-now         # Immediate iOS log cleanup (all ages)"
+    echo ""
     echo "Export & Deploy:"
     echo "  just export-pck-ios              # Export iOS PCK file"
     echo "  just ios-update-pck              # Update iOS PCK file"
@@ -462,6 +466,49 @@ clean-ios-logs days="7":
     fi
 
     echo "✅ iOS log cleanup completed"
+
+# Quick iOS log cleanup for immediate needs (cleans all iOS logs regardless of age)
+clean-ios-logs-now:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🧹 Immediate iOS log cleanup (all ages)..."
+
+    FILES_DELETED=0
+
+    # Clean all iOS logs from app userdata directory
+    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    if [[ -d "$IOS_LOG_DIR" ]]; then
+        echo "📱 Removing all iOS logs from $IOS_LOG_DIR..."
+
+        IOS_FILES_DELETED=$(find "$IOS_LOG_DIR" -name "ios_*.log" -print -delete 2>/dev/null | wc -l)
+        ACTION_FILES_DELETED=$(find "$IOS_LOG_DIR" -name "test_action_results_*.json" -print -delete 2>/dev/null | wc -l)
+        TOTAL_IOS=$((IOS_FILES_DELETED + ACTION_FILES_DELETED))
+        FILES_DELETED=$((FILES_DELETED + TOTAL_IOS))
+
+        if [[ $TOTAL_IOS -gt 0 ]]; then
+            echo "  🗑️  Deleted $TOTAL_IOS iOS log files from app directory"
+        else
+            echo "  ℹ️  No iOS files found in app directory"
+        fi
+    else
+        echo "ℹ️  iOS log directory not found: $IOS_LOG_DIR"
+    fi
+
+    # Clean all temporary iOS logs
+    echo "🗂️  Removing all temporary iOS logs..."
+    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -print -delete 2>/dev/null | wc -l)
+    TMP_JSON_DELETED=$(find /tmp -name "test_action_results_*ios*.json" -print -delete 2>/dev/null | wc -l)
+    TMP_TOTAL=$((TMP_FILES_DELETED + TMP_JSON_DELETED))
+    FILES_DELETED=$((FILES_DELETED + TMP_TOTAL))
+
+    if [[ $TMP_TOTAL -gt 0 ]]; then
+        echo "  🗑️  Deleted $TMP_TOTAL temporary iOS files"
+    else
+        echo "  ℹ️  No temporary iOS files found"
+    fi
+
+    echo "✅ Immediate iOS log cleanup completed - $FILES_DELETED files deleted"
 
 # Cross-platform log cleanup (Android + iOS + Desktop)
 clean-all-logs days="7":
