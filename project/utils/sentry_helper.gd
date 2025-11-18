@@ -105,10 +105,25 @@ static func set_user(user_dict: Dictionary) -> bool:
 	if not sentry:
 		return false
 
+	# Handle empty dict case (clear user context)
+	if user_dict.is_empty():
+		if sentry.has_method("remove_user"):
+			sentry.remove_user()
+		return true
+
 	if not sentry.has_method("set_user"):
 		return false
 
-	sentry.set_user(user_dict)
+	# Create SentryUser object from Dictionary (fixes type conversion error)
+	var user = SentryUser.new()
+	if user_dict.has("id"):
+		user.id = user_dict.get("id", "")
+	if user_dict.has("email"):
+		user.email = user_dict.get("email", "")
+	if user_dict.has("username"):
+		user.username = user_dict.get("username", "")
+
+	sentry.set_user(user)
 	return true
 
 
