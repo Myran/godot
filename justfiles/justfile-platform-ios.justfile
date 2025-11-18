@@ -29,8 +29,8 @@ help-ios:
     echo "    • Default: iPad (configurable via IOS_TEST_DEVICE)"
     echo ""
     echo "Log Cleanup:"
-    echo "  just clean-ios-logs [days]      # Clean iOS logs older than N days (default: 7)"
-    echo "  just clean-ios-logs-now         # Immediate iOS log cleanup (all ages)"
+    echo "  just clean-ios-logs              # Clean all iOS test logs (default)"
+    echo "  just clean-ios-logs-by-age [days] # Clean iOS logs older than N days (default: 7)"
     echo ""
     echo "Export & Deploy:"
     echo "  just export-pck-ios              # Export iOS PCK file"
@@ -442,8 +442,8 @@ _deploy-config-ios config_path:
 
     echo "✅ iOS config deployed successfully"
 
-# Clean up old iOS test logs
-clean-ios-logs days="7":
+# Clean up old iOS test logs by age
+clean-ios-logs-by-age days="7":
     #!/usr/bin/env/bash
     set -euo pipefail
 
@@ -467,12 +467,12 @@ clean-ios-logs days="7":
 
     echo "✅ iOS log cleanup completed"
 
-# Quick iOS log cleanup for immediate needs (cleans all iOS logs regardless of age)
-clean-ios-logs-now:
+# Clean up all iOS test logs (default behavior)
+clean-ios-logs:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🧹 Immediate iOS log cleanup (all ages)..."
+    echo "🧹 Cleaning all iOS test logs..."
 
     FILES_DELETED=0
 
@@ -508,7 +508,7 @@ clean-ios-logs-now:
         echo "  ℹ️  No temporary iOS files found"
     fi
 
-    echo "✅ Immediate iOS log cleanup completed - $FILES_DELETED files deleted"
+    echo "✅ iOS log cleanup completed - $FILES_DELETED files deleted"
 
 # Cross-platform log cleanup (Android + iOS + Desktop)
 clean-all-logs days="7":
@@ -523,7 +523,7 @@ clean-all-logs days="7":
 
     # Clean iOS logs
     echo "🍎 Cleaning iOS logs..."
-    just clean-ios-logs {{days}}
+    just clean-ios-logs-by-age {{days}}
 
     # Clean Android logs
     echo "🤖 Cleaning Android logs..."
