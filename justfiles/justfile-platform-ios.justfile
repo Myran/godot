@@ -22,15 +22,15 @@ help-ios:
     echo "  just rebuild-all-ios            # Force rebuild all iOS components"
     echo ""
     echo "Testing Commands:"
-    echo "  just test-ios-target CONFIG     # iOS equivalent of test-android-target (NEW!)"
+    echo "  just test-ios CONFIG            # iOS testing with fzf selection (NEW!)"
+    echo "  just test-ios-target CONFIG     # iOS automated testing (NEW!)"
+    echo "  just test-ios-iphone CONFIG     # iOS testing on iPhone device (NEW!)"
+    echo "  just test-ios-ipad CONFIG       # iOS testing on iPad device (NEW!)"
+    echo "    • Default: iPad (configurable via IOS_TEST_DEVICE)"
     echo ""
     echo "Export & Deploy:"
     echo "  just export-pck-ios              # Export iOS PCK file"
     echo "  just ios-update-pck              # Update iOS PCK file"
-    echo ""
-    echo "Device Management:"
-    echo "  just ios-launch-help             # iOS launch help"
-    echo "  just ios-restart-help            # iOS restart help"
     echo ""
     echo "Device Logging:"
     echo "  just ios-device-logs-iphone      # Monitor live logs from iPhone"
@@ -149,34 +149,6 @@ ios-test-file-access:
 # iOS build pipeline
 # Duplicate removed - use export-pck-ios instead
 
-# iOS launch help
-ios-launch-help:
-    #!/usr/bin/env bash
-    echo "🚀 iOS Launch Instructions"
-    echo "========================="
-    echo ""
-    echo "To launch on iOS device/simulator:"
-    echo "1. Open Xcode project in export/ios/"
-    echo "2. Select target device/simulator"
-    echo "3. Build and run (Cmd+R)"
-    echo ""
-    echo "For command line deployment:"
-    echo "- ios-deploy --bundle export/ios/{{GAME_NAME}}.app"
-
-# iOS restart help
-ios-restart-help:
-    #!/usr/bin/env bash
-    echo "🔄 iOS Restart Instructions"
-    echo "=========================="
-    echo ""
-    echo "To restart iOS app:"
-    echo "1. Background the app (home button/gesture)"
-    echo "2. Open app switcher"
-    echo "3. Swipe up on app to close"
-    echo "4. Relaunch from home screen"
-    echo ""
-    echo "For development:"
-    echo "- Xcode: Stop and restart debug session"
 
 # Update iOS PCK file
 ios-update-pck: pre-build
@@ -345,6 +317,45 @@ ios-config-logs-iphone:
 ios-config-logs-ipad:
     just _ios-config-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
+# iOS testing interface - manual mode with fzf selection
+test-ios target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If arguments provided, delegate to test-ios-target (automated mode)
+    if [ -n "{{target}}" ]; then
+        echo "🎯 Automated mode execution: {{target}}"
+
+        # Fix for Task-282: Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        just test-ios-target "{{target}}"
+        exit $?
+    fi
+
+    # Use shared fzf selection for all configs (automatic mode)
+    selected=$(just _fzf-select-config "ios" "all")
+    if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+        # Fix for Task-282: Set MULTI_PLATFORM_SESSION for individual tests to enable session filtering
+        if [[ -z "${MULTI_PLATFORM_SESSION:-}" ]]; then
+            export MULTI_PLATFORM_SESSION="$(date +%s)"
+            echo "🔧 Setting individual test session for filtering: $MULTI_PLATFORM_SESSION"
+        else
+            echo "🔧 Using existing MULTI_PLATFORM_SESSION: $MULTI_PLATFORM_SESSION"
+        fi
+
+        echo "Running automatic mode: just test-ios-target '$selected'"
+        just test-ios-target "$selected"
+    else
+        echo "❌ No selection made"
+        exit 1
+    fi
+
 # iOS equivalent of test-android-target - complete test workflow with device logging
 test-ios-target config_name="":
     #!/usr/bin/env bash
@@ -373,6 +384,34 @@ test-ios-target config_name="":
 
     # Use the unified execution pattern - same as Android!
     just _execute-test-with-analysis "$CONFIG_NAME" "ios" "$TEST_SESSION"
+
+# iOS testing wrapper for iPhone device
+test-ios-iphone target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Setting test device to iPhone: {{IOS_IPHONE_DEVICE_ID}}"
+    export IOS_TEST_DEVICE="{{IOS_IPHONE_DEVICE_ID}}"
+
+    if [ -n "{{target}}" ]; then
+        just test-ios "{{target}}"
+    else
+        just test-ios
+    fi
+
+# iOS testing wrapper for iPad device
+test-ios-ipad target="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Setting test device to iPad: {{IOS_IPAD_DEVICE_ID}}"
+    export IOS_TEST_DEVICE="{{IOS_IPAD_DEVICE_ID}}"
+
+    if [ -n "{{target}}" ]; then
+        just test-ios "{{target}}"
+    else
+        just test-ios
+    fi
 
 # iOS deployment function - integrates with existing ios-deploy-config recipe
 _deploy-config-ios config_path:
@@ -461,18 +500,43 @@ clean-all-logs days="7":
 
     echo "✅ All platform log cleanup completed"
 
-# iOS test execution function - integrates with existing hotreload-ios-ipad recipe
+# iOS test execution function - uses configured device identifier from IOS_TEST_DEVICE variable
 _execute-test-ios config_name:
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG_NAME="{{config_name}}"
-    echo "🍎 Executing iOS test: $CONFIG_NAME"
+    IOS_DEVICE_ID="{{IOS_TEST_DEVICE}}"
 
-    # Use existing hotreload-ios-ipad recipe (launches app with deployed config)
-    if ! just hotreload-ios-ipad; then
-        echo "❌ Failed to execute iOS test"
+    # Determine device type based on device ID
+    if [[ "$IOS_DEVICE_ID" == "{{IOS_IPHONE_DEVICE_ID}}" ]]; then
+        IOS_DEVICE_TYPE="iphone"
+        DEVICE_NAME="iPhone"
+    elif [[ "$IOS_DEVICE_ID" == "{{IOS_IPAD_DEVICE_ID}}" ]]; then
+        IOS_DEVICE_TYPE="ipad"
+        DEVICE_NAME="iPad"
+    else
+        echo "❌ Invalid IOS_TEST_DEVICE identifier: $IOS_DEVICE_ID"
+        echo "💡 Valid options:"
+        echo "   • iPhone: {{IOS_IPHONE_DEVICE_ID}}"
+        echo "   • iPad: {{IOS_IPAD_DEVICE_ID}}"
+        echo "💡 Configure in core config or environment"
         exit 1
     fi
 
-    echo "✅ iOS test execution completed"
+    echo "🍎 Executing iOS test: $CONFIG_NAME on $DEVICE_NAME ($IOS_DEVICE_ID)"
+
+    # Use appropriate hotreload recipe based on device type
+    if [[ "$IOS_DEVICE_TYPE" == "iphone" ]]; then
+        if ! just hotreload-ios-iphone; then
+            echo "❌ Failed to execute iOS test on iPhone"
+            exit 1
+        fi
+    else
+        if ! just hotreload-ios-ipad; then
+            echo "❌ Failed to execute iOS test on iPad"
+            exit 1
+        fi
+    fi
+
+    echo "✅ iOS test execution completed on $DEVICE_NAME"
