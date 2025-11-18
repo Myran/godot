@@ -29,8 +29,9 @@ help-ios:
     echo "    • Default: iPad (configurable via IOS_TEST_DEVICE)"
     echo ""
     echo "Log Cleanup:"
-    echo "  just clean-ios-logs              # Clean all iOS test logs (default)"
-    echo "  just clean-ios-logs-by-age [days] # Clean iOS logs older than N days (default: 7)"
+    echo "  just clean-godot-logs            # Clean all Godot test logs (iOS, Android, Desktop)"
+    echo "  just clean-godot-logs-by-age [days] # Clean Godot logs older than N days (default: 7)"
+    echo "  just clean-all-logs [days]       # Clean all logs (Godot + main directory) older than N days (default: 7)"
     echo ""
     echo "Export & Deploy:"
     echo "  just export-pck-ios              # Export iOS PCK file"
@@ -447,9 +448,7 @@ clean-ios-logs-by-age days="7":
     #!/usr/bin/env/bash
     set -euo pipefail
 
-    if [[ ! -z "{{days}}" ]]; then
-        DAYS="{{days}}"
-    fi
+    DAYS="{{days}}"
 
     echo "🧹 Cleaning iOS test logs older than $DAYS days..."
 
@@ -510,34 +509,137 @@ clean-ios-logs:
 
     echo "✅ iOS log cleanup completed - $FILES_DELETED files deleted"
 
-# Cross-platform log cleanup (Android + iOS + Desktop)
+# Clean up old Godot test logs by age
+clean-godot-logs-by-age days="7":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    DAYS="{{days}}"
+    echo "🧹 Cleaning Godot test logs older than $DAYS days..."
+
+    FILES_DELETED=0
+
+    # Clean all platform logs from app userdata directory
+    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    if [[ -d "$GODOT_LOG_DIR" ]]; then
+        echo "📱 Cleaning iOS logs..."
+        IOS_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "ios_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + IOS_FILES_DELETED))
+
+        if [[ $IOS_FILES_DELETED -gt 0 ]]; then
+            echo "  🗑️  Deleted $IOS_FILES_DELETED iOS log files"
+        else
+            echo "  ℹ️  No old iOS logs to clean"
+        fi
+
+        echo "🤖 Cleaning Android logs..."
+        ANDROID_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "android_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + ANDROID_FILES_DELETED))
+
+        if [[ $ANDROID_FILES_DELETED -gt 0 ]]; then
+            echo "  🗑️  Deleted $ANDROID_FILES_DELETED Android log files"
+        else
+            echo "  ℹ️  No old Android logs to clean"
+        fi
+
+        echo "🖥️  Cleaning Desktop logs..."
+        DESKTOP_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "desktop_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + DESKTOP_FILES_DELETED))
+
+        if [[ $DESKTOP_FILES_DELETED -gt 0 ]]; then
+            echo "  🗑️  Deleted $DESKTOP_FILES_DELETED Desktop log files"
+        else
+            echo "  ℹ️  No old Desktop logs to clean"
+        fi
+
+        echo "📊 Cleaning test action results..."
+        ACTION_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "test_action_results_*.json" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + ACTION_FILES_DELETED))
+
+        if [[ $ACTION_FILES_DELETED -gt 0 ]]; then
+            echo "  🗑️  Deleted $ACTION_FILES_DELETED test action result files"
+        else
+            echo "  ℹ️  No old test action results to clean"
+        fi
+    else
+        echo "ℹ️  Godot log directory not found: $GODOT_LOG_DIR"
+    fi
+
+    # Clean temporary Godot logs from /tmp
+    echo "🗂️  Cleaning temporary Godot logs..."
+    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*desktop*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+    TMP_JSON_DELETED=$(find /tmp -name "test_action_results_*.json" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
+    TMP_TOTAL=$((TMP_FILES_DELETED + TMP_JSON_DELETED))
+    FILES_DELETED=$((FILES_DELETED + TMP_TOTAL))
+
+    if [[ $TMP_TOTAL -gt 0 ]]; then
+        echo "  🗑️  Deleted $TMP_TOTAL temporary Godot files"
+    else
+        echo "  ℹ️  No old temporary Godot files to clean"
+    fi
+
+    echo "✅ Godot log cleanup completed - $FILES_DELETED files deleted"
+
+# Clean up all Godot test logs (default behavior)
+clean-godot-logs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🧹 Cleaning all Godot test logs..."
+
+    FILES_DELETED=0
+
+    # Clean all platform logs from app userdata directory
+    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    if [[ -d "$GODOT_LOG_DIR" ]]; then
+        echo "📱 Removing all iOS logs..."
+        IOS_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "ios_*.log" -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + IOS_FILES_DELETED))
+
+        echo "🤖 Removing all Android logs..."
+        ANDROID_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "android_*.log" -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + ANDROID_FILES_DELETED))
+
+        echo "🖥️  Removing all Desktop logs..."
+        DESKTOP_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "desktop_*.log" -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + DESKTOP_FILES_DELETED))
+
+        echo "📊 Removing all test action results..."
+        ACTION_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "test_action_results_*.json" -print -delete 2>/dev/null | wc -l)
+        FILES_DELETED=$((FILES_DELETED + ACTION_FILES_DELETED))
+
+        PLATFORM_TOTAL=$((IOS_FILES_DELETED + ANDROID_FILES_DELETED + DESKTOP_FILES_DELETED + ACTION_FILES_DELETED))
+        echo "  🗑️  Deleted $PLATFORM_TOTAL Godot log files from app directory"
+    else
+        echo "ℹ️  Godot log directory not found: $GODOT_LOG_DIR"
+    fi
+
+    # Clean all temporary Godot logs
+    echo "🗂️  Removing all temporary Godot logs..."
+    TMP_FILES_DELETED=$(find /tmp -name "*ios*.log" -o -name "*android*.log" -o -name "*desktop*.log" -print -delete 2>/dev/null | wc -l)
+    TMP_JSON_DELETED=$(find /tmp -name "test_action_results_*.json" -print -delete 2>/dev/null | wc -l)
+    TMP_TOTAL=$((TMP_FILES_DELETED + TMP_JSON_DELETED))
+    FILES_DELETED=$((FILES_DELETED + TMP_TOTAL))
+
+    if [[ $TMP_TOTAL -gt 0 ]]; then
+        echo "  🗑️  Deleted $TMP_TOTAL temporary Godot files"
+    else
+        echo "  ℹ️  No temporary Godot files found"
+    fi
+
+    echo "✅ Godot log cleanup completed - $FILES_DELETED files deleted"
+
+# Clean all logs (Godot + main logs directory)
 clean-all-logs days="7":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    if [[ ! -z "{{days}}" ]]; then
-        DAYS="{{days}}"
-    fi
+    DAYS="{{days}}"
+    echo "🧹 Cleaning all logs older than $DAYS days..."
 
-    echo "🧹 Cleaning all platform test logs older than $DAYS days..."
-
-    # Clean iOS logs
-    echo "🍎 Cleaning iOS logs..."
-    just clean-ios-logs-by-age {{days}}
-
-    # Clean Android logs
-    echo "🤖 Cleaning Android logs..."
-    ANDROID_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
-    if [[ -d "$ANDROID_LOG_DIR" ]]; then
-        find "$ANDROID_LOG_DIR" -name "android_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Android logs to clean"
-        find "$ANDROID_LOG_DIR" -name "test_action_results_*.json" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Android action results to clean"
-    fi
-
-    # Clean Desktop logs
-    echo "🖥️  Cleaning Desktop logs..."
-    if [[ -d "$ANDROID_LOG_DIR" ]]; then
-        find "$ANDROID_LOG_DIR" -name "desktop_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old Desktop logs to clean"
-    fi
+    # Clean all Godot platform logs
+    echo "🎮 Cleaning all Godot platform logs..."
+    just clean-godot-logs-by-age {{days}}
 
     # Clean main logs directory
     echo "📁 Cleaning main logs directory..."
@@ -545,7 +647,7 @@ clean-all-logs days="7":
         find logs -name "*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old main logs to clean"
     fi
 
-    echo "✅ All platform log cleanup completed"
+    echo "✅ All log cleanup completed"
 
 # iOS test execution function - uses configured device identifier from IOS_TEST_DEVICE variable
 _execute-test-ios config_name:
