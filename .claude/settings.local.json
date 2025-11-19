@@ -235,7 +235,15 @@
       "Bash(ideviceinfo:*)",
       "Bash(idevicelist:*)",
       "Bash(logs-tree:*)",
-      "mcp__gemini-cli__ping"
+      "mcp__gemini-cli__ping",
+      "Bash(npx gemini-mcp-tool:*)",
+      "Bash(npm info:*)",
+      "Bash(gemini:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "mcp__gemini-cli__ask-gemini",
+      "Bash(GEMINI_API_KEY=AIzaSyCh4sy473WTJEWSVcV4qxpX76eWdaxTYQQ gemini:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm view:*)"
     ],
     "deny": [],
     "ask": [],
