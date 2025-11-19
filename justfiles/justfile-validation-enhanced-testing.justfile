@@ -731,8 +731,9 @@ _extract-logs test_id platform temp_output_file="":
                     adb logcat -b main,system,crash -d --pid="$APP_PID" -t 10000 "*:V" 2>/dev/null > "$LOG_FILE" || true
                 else
                     echo "📱 App not running - using TEST_ID and SEMANTIC_ACTION filtering with extended capture"
-                    # Capture from all buffers, get more history, then filter with verbose logging including all godot logs
-                    adb logcat -b main,system,crash -d -t 20000 "*:V" 2>/dev/null | grep -E "($TEST_ID|SEMANTIC_ACTION|gametwo|godot.*:)" > "$LOG_FILE" || true
+                    # Capture from all buffers, get more history, then filter with CROSS-PLATFORM TEST FILTER
+                    # Use sort -u to prevent duplicate log lines from multiple pattern matches (fixes double counting)
+                    adb logcat -b main,system,crash -d -t 20000 "*:V" 2>/dev/null | grep -E "($TEST_ID|{{CROSS_PLATFORM_TEST_BASE}})" | sort -u > "$LOG_FILE" || true
                     
                     # If that produces no results, try a broader time-based approach
                     if [[ ! -s "$LOG_FILE" ]]; then
@@ -791,8 +792,9 @@ _extract-logs test_id platform temp_output_file="":
 
                         if [[ $LOG_LINES -gt 0 ]]; then
                             echo "🍎 Filtering for gametwo/Godot/debug content..."
-                            # Filter for relevant content but keep the full file for analysis
-                            grep -i "gametwo\|godot\|debug.*test.*success\|sentry\|battle.*test\|hide.*debug\|populate.*enemy" "$LOG_FILE" > "${LOG_FILE}.filtered" 2>/dev/null || echo "No specific matches found" > "${LOG_FILE}.filtered"
+                            # Filter for relevant content using SHARED CROSS-PLATFORM filter for guaranteed parity
+                            # Use sort -u to prevent duplicate log lines from multiple pattern matches (fixes double counting)
+                            grep -E "($TEST_ID|{{CROSS_PLATFORM_TEST_BASE}})" "$LOG_FILE" | sort -u > "${LOG_FILE}.filtered" 2>/dev/null || echo "No specific matches found" > "${LOG_FILE}.filtered"
 
                             FILTERED_LINES=$(wc -l < "${LOG_FILE}.filtered" 2>/dev/null || echo "0")
                             echo "🍎 Filtered relevant logs: $FILTERED_LINES lines"
@@ -819,7 +821,7 @@ _extract-logs test_id platform temp_output_file="":
                 echo "💡 Install libimobiledevice tools: brew install ideviceinstaller"
 
                 # Fallback: try macOS log approaches (previous method)
-                DEVICE_ID="38A3A7F3-6C49-5C54-B86E-D84C81ABD10C"  # iPad device ID
+                DEVICE_ID="{{IOS_DEPLOY_DEVICE}}"  # iPad device ID (UDID format for xcrun devicectl)
                 if command -v xcrun >/dev/null 2>&1; then
                     echo "🍎 Fallback: Checking for gametwo process on iOS device..."
                     GAME_PROCESS=$(xcrun devicectl device info processes --device "$DEVICE_ID" 2>/dev/null | grep "gametwo.app/gametwo" | head -1 || echo "")
@@ -953,12 +955,13 @@ _extract-logs test_id platform temp_output_file="":
         
         # Enhanced reporting for sequential action coverage
         if [[ -f "$LOG_FILE" ]]; then
-            DEBUG_SUCCESS_COUNT=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+            # Count only actual game DEBUG_TEST_SUCCESS entries, exclude Sentry duplicates
+            DEBUG_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -v "Sentry" | wc -l 2>/dev/null || echo "0")
             DEBUG_SUCCESS_COUNT=$(echo "$DEBUG_SUCCESS_COUNT" | tr -d ' \t\n\r' | head -1)
             echo "🎯 DEBUG_TEST_SUCCESS entries: $DEBUG_SUCCESS_COUNT"
             
-            # Report on sequential actions specifically
-            SEQUENTIAL_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -E "(rtdb\.advanced\.transaction|rtdb\.advanced\.concurrent_ops|rtdb\.testing\.large_data|cpp\.firebase\.|backend\.firebase\.)" | wc -l 2>/dev/null || echo "0")
+            # Report on sequential actions specifically (exclude Sentry logs)
+            SEQUENTIAL_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -v "Sentry" | grep -E "(rtdb\.advanced\.transaction|rtdb\.advanced\.concurrent_ops|rtdb\.testing\.large_data|cpp\.firebase\.|backend\.firebase\.)" | wc -l 2>/dev/null || echo "0")
             SEQUENTIAL_SUCCESS_COUNT=$(echo "$SEQUENTIAL_SUCCESS_COUNT" | tr -d ' \t\n\r' | head -1)
             if [[ "${SEQUENTIAL_SUCCESS_COUNT:-0}" -gt 0 ]]; then
                 echo "⚡ Sequential action successes: $SEQUENTIAL_SUCCESS_COUNT"
@@ -3062,8 +3065,9 @@ _execute-test-android config_name:
         echo "📡 Using background captured logs for better accuracy..."
         # Filter background logs for our test and copy to main log file
         mkdir -p "$LOGS_DIR"
-        # Include all godot logs and chunk patterns to capture chunked debug logs
-        grep -E "($TEST_ID|SEMANTIC_ACTION|gametwo|com\.primaryhive|godot.*:)" "$BACKGROUND_LOG_FILE" > "$ANDROID_LOG_FILE" 2>/dev/null || true
+        # Use CROSS-PLATFORM TEST FILTER for identical log capture between Android and iOS
+        # Use sort -u to prevent duplicate log lines from multiple pattern matches (fixes double counting)
+        grep -E "($TEST_ID|{{CROSS_PLATFORM_TEST_BASE}})" "$BACKGROUND_LOG_FILE" | sort -u > "$ANDROID_LOG_FILE" 2>/dev/null || true
         # Clean up background file
         rm -f "$BACKGROUND_LOG_FILE" 2>/dev/null || true
         

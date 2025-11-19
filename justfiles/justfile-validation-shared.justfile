@@ -56,12 +56,12 @@ _validate-android-package-installed:
 _validate-ios-device DEVICE_TYPE:
     #!/usr/bin/env bash
     set -euo pipefail
-    
-    # Get device ID based on type
+
+    # Get device UDID based on type (xcrun devicectl uses UDID format)
     if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
-        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_ID="{{IOS_IPHONE_UDID}}"
     elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
-        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_ID="{{IOS_IPAD_UDID}}"
     else
         echo "❌ Invalid device type: {{DEVICE_TYPE}}"
         echo "💡 Use: iphone or ipad"

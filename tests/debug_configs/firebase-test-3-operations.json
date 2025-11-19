@@ -5,7 +5,7 @@
     "backend.firebase.async_pattern",
     "backend.firebase.async_pattern"
   ],
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "metadata": {
     "auto_quit": true
   },
