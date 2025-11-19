@@ -161,10 +161,21 @@ _validate-and-prepare-config config_name platform:
 _is-platform-supported config_path platform:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_PATH="{{config_path}}"
     PLATFORM="{{platform}}"
-    
+
+    # Check if this is an action name (not a config file)
+    # Action names follow patterns like: backend.firebase.*, sentry.*, rtdb.*, cpp.firebase.*, system.*
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        # Extract the base name from the path (remove directory and .json extension)
+        BASE_NAME=$(basename "$CONFIG_PATH" .json)
+        if [[ "$BASE_NAME" =~ ^[a-z]+\.[a-z_]+\.[a-z_]+$ ]]; then
+            echo "true"  # Actions are platform-agnostic by design
+            exit 0
+        fi
+    fi
+
     # Check if config file exists
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "false"
@@ -188,9 +199,20 @@ _is-platform-supported config_path platform:
 _get-supported-platforms config_path:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     CONFIG_PATH="{{config_path}}"
-    
+
+    # Check if this is an action name (not a config file)
+    # Action names follow patterns like: backend.firebase.*, sentry.*, rtdb.*, cpp.firebase.*, system.*
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        # Extract the base name from the path (remove directory and .json extension)
+        BASE_NAME=$(basename "$CONFIG_PATH" .json)
+        if [[ "$BASE_NAME" =~ ^[a-z]+\.[a-z_]+\.[a-z_]+$ ]]; then
+            echo "desktop, android, ios"  # Actions are cross-platform by design
+            exit 0
+        fi
+    fi
+
     # Check if config file exists
     if [[ ! -f "$CONFIG_PATH" ]]; then
         echo "unknown"

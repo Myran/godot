@@ -211,8 +211,8 @@ _ios-device-logs-internal device_id device_name:
     echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
-    # Use log stream --debug for device console access
-    log stream --debug --predicate 'processImagePath contains "gametwo"' --style compact
+    # Use idevicesyslog for actual iOS device log access
+    idevicesyslog -u "$DEVICE_ID" -p gametwo --no-colors
 
 # Stream live logs from iPhone device
 ios-device-logs-iphone:
@@ -232,12 +232,15 @@ _ios-recent-logs-internal device_id device_name:
 
     echo "🔍 Searching recent logs from ${DEVICE_NAME} device..."
     echo "📱 Device ID: $DEVICE_ID"
-    echo "📊 Time range: Last 10 minutes"
+    echo "📊 Time range: Recent logs (no time filter - idevicesyslog shows live)"
     echo "🎯 Monitoring process: gametwo"
+    echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
-    # Use log show for recent device logs
-    log show --predicate 'processImagePath contains "gametwo"' --last 10m --style compact
+    # Use idevicesyslog for actual iOS device log access
+    # Note: idevicesyslog doesn't have time-based filtering like macOS log show
+    # It shows recent logs from the device buffer
+    idevicesyslog -u "$DEVICE_ID" -p gametwo --no-colors
 
 # Search recent logs from iPhone device (last 10 minutes)
 ios-recent-logs-iphone:
@@ -258,11 +261,12 @@ _ios-search-logs-internal pattern device_id device_name:
 
     echo "🔍 Searching for pattern: ${PATTERN}"
     echo "📱 Device ID: $DEVICE_ID"
-    echo "📊 Time range: Last 15 minutes"
+    echo "📊 Time range: Live stream (shows recent logs containing pattern)"
+    echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
-    # Use log show for pattern search in device logs
-    log show --predicate "processImagePath contains \"gametwo\" and (category contains \"${PATTERN}\" or message contains \"${PATTERN}\")" --last 15m --style compact
+    # Use idevicesyslog with pattern matching
+    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "$PATTERN" --no-colors
 
 # Search for specific patterns in iPhone device logs
 ios-search-logs-iphone pattern:
@@ -286,8 +290,9 @@ _ios-sentry-logs-internal device_id device_name:
     echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
-    # Use log stream for Sentry-specific monitoring
-    log stream --debug --predicate 'processImagePath contains "gametwo" and (message contains "Sentry" or message contains "sentry" or message contains "debug_startup")' --style compact
+    # Use idevicesyslog with Sentry pattern matching
+    # Using general pattern that matches all Sentry-related terms and debug startup
+    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "entr" -m "debug_startup" --no-colors
 
 # Monitor Sentry-related logs specifically from iPhone
 ios-sentry-logs-iphone:
@@ -311,8 +316,9 @@ _ios-config-logs-internal device_id device_name:
     echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
-    # Use log stream for JSON config monitoring
-    log stream --debug --predicate 'processImagePath contains "gametwo" and (message contains "debug_startup_actions" or message contains "config_reader" or message contains "DebugConfigReader" or message contains "DebugStartupCoordinator")' --style compact
+    # Use idevicesyslog with config pattern matching
+    # Match config-related terms - prioritize most specific patterns first
+    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "debug_startup_actions" -m "config_reader" -m "DebugConfigReader" -m "DebugStartupCoordinator" --no-colors
 
 # Monitor JSON config reading specifically from iPhone
 ios-config-logs-iphone:

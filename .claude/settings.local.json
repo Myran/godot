@@ -227,7 +227,15 @@
       "Bash(xcrun devicectl device log stream:*)",
       "Bash(xcrun devicectl device log --help:*)",
       "Bash(xcrun:*)",
-      "Bash(idevicename:*)"
+      "Bash(idevicename:*)",
+      "Bash(Count Sentry debug messages in old Android log)",
+      "Bash(idevicesyslog --help:*)",
+      "Bash(idevicesyslog:*)",
+      "Bash(idevice_id:*)",
+      "Bash(ideviceinfo:*)",
+      "Bash(idevicelist:*)",
+      "Bash(logs-tree:*)",
+      "mcp__gemini-cli__ping"
     ],
     "deny": [],
     "ask": [],

@@ -6,6 +6,12 @@ import "justfiles/justfile-core-config.justfile"
 import "justfiles/justfile-build-system.justfile"
 import "justfiles/justfile-dev-tools.justfile"
 import "justfiles/justfile-platform-ios.justfile"
+
+# New unified logging components (replaces justfile-ios-device-logs.justfile)
+import "justfiles/justfile-filter-configs.justfile"
+import "justfiles/justfile-device-logging-core.justfile"
+# Legacy iOS device logs (kept for backward compatibility during transition)
+import "justfiles/justfile-ios-device-logs.justfile"
 import "justfiles/justfile-sentry.justfile"
 import "justfiles/justfile-help.justfile"
 import "justfiles/justfile-run.justfile"

@@ -72,18 +72,18 @@ textures/vram_compression/import_etc2_astc=true
 
 [sentry]
 
-options/environment="development"
-ios/environment="development"
+options/environment="production"
+ios/environment="production"
 ios/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
 ios/release="1.0.0"
-ios/debug=true
+ios/debug=false
 ios/send_default_pii=true
 ios/attach_screenshot=true
 ios/traces_sample_rate=1.0
-android/environment="development"
+android/environment="production"
 android/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.de.sentry.io/4510290070011984"
 android/release="1.0.0"
-android/debug=true
+android/debug=false
 android/send_default_pii=true
 android/user_interaction_breadcrumbs=true
 android/attach_screenshot=true
@@ -98,4 +98,3 @@ options/dsn="https://3f084e8be7d8e0aa07d43789a5f410aa@o4510290068570112.ingest.d
 options/release="1.0.0"
 options/attach_scene_tree=true
 logger/include_variables=true
-experimental/enable_logs=true

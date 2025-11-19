@@ -30,6 +30,11 @@ func execute() -> void:
 		["debug", "quit", "core_event"]
 	)
 
+	# iOS-specific handling (Task-290): Do not call quit() on iOS as it appears as a crash
+	if OS.get_name() == "iOS":
+		_handle_ios_quit()
+		return
+
 	# Enhanced Firebase cleanup for Android test isolation (Task-230)
 	# Perform active Firebase cleanup before logger shutdown
 	_perform_firebase_cleanup()
@@ -62,8 +67,46 @@ func execute() -> void:
 		# NOW emit the final marker - after all chunking has completed and logcat buffer is stable
 		print_rich("[DEBUG_TEST_FLUSH_COMPLETE]")
 
-	# Actual application termination
+	# Actual application termination (safe for Android and Desktop)
 	Engine.get_main_loop().quit()
+
+
+func _handle_ios_quit() -> void:
+	## iOS-specific quit handling for development/testing (Task-290)
+	##
+	## iOS does not provide an API for gracefully terminating applications.
+	## For development/testing purposes, we use abort() which is the recommended
+	## approach for terminating iOS apps during testing.
+	##
+	## Note: This is ONLY used in development/testing workflows, not in production.
+
+	Log.info(
+		"QuitApplicationEvent: iOS development/testing termination",
+		{
+			"platform": "iOS",
+			"action": "development_quit",
+			"test_id": DebugAction.get_current_test_id(),
+			"note": "Using abort() for development/testing purposes only"
+		},
+		["debug", "quit", "ios", "development"]
+	)
+
+	# Perform ConfigManager cleanup for iOS
+	SingletonCleanup.cleanup_config_manager()
+
+	# Use logger's graceful shutdown for iOS to ensure all logs are captured
+	await Log.shutdown_gracefully()
+
+	# Log final message before assert crash
+	Log.info(
+		"QuitApplicationEvent: iOS development quit - using assert() crash",
+		{"platform": "iOS", "termination_method": "assert_crash", "test_completion": true},
+		["debug", "quit", "ios", "development"]
+	)
+
+	# Development/testing termination using assertion crash (Task-290 recommendation)
+	# This is safe for development but should not be used in production
+	assert(false, "iOS development testing quit - intentional assertion crash for test completion")
 
 
 func _perform_firebase_cleanup() -> void:

@@ -11,17 +11,19 @@
   ],
   "metadata": {
     "test_category": "sentry_comprehensive",
-    "platform_coverage": ["desktop", "android"],
+    "platform_coverage": ["desktop", "android", "ios"],
     "tdd_phases": ["addon_validation", "file_validation", "integration_testing", "crash_reporting", "integration_bridges"],
     "total_configs": 6,
     "estimated_duration": "5-10 minutes",
     "testing_modes": {
       "desktop": "editor_mode_development_testing",
-      "android": "device_testing"
+      "android": "device_testing",
+      "ios": "device_testing"
     },
     "platform_notes": {
       "desktop": "Editor-mode testing for development validation (macOS)",
-      "android": "Real device testing with AAR integration"
+      "android": "Real device testing with AAR integration",
+      "ios": "Real device testing with iOS SDK integration"
     }
   }
 }
