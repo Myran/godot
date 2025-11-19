@@ -1,266 +1,166 @@
 # CLAUDE.md
 
-GameTwo is a sophisticated mobile game built with a custom Godot 4.3 engine featuring Firebase integration, advanced data management, and comprehensive debugging systems.
+GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debugging systems.
 
-## 🚨 CRITICAL COMMANDS (Emergency Reference)
+## 🚨 CRITICAL COMMANDS
 
 ```bash
-# Emergency Debugging (Use First) 
-just logs-errors TEST_ID                   # Find errors fast (98% token savings)
-just logs-text TEST_ID "search_term"       # ⭐ NEW: Simple text search - any string (99% token savings)
-just logs-last                             # Latest test results (99% token savings)
+# Emergency Debugging
+just logs-errors TEST_ID                   # Find errors (98% token savings)
+just logs-text TEST_ID "search_term"       # Text search (99% token savings)
+just logs-last                             # Latest results (99% token savings)
 
-# 🚨 CRITICAL: Full Android Log Inspection (Not Test Results)
-just android-logs-search "search_term"    # ⭐ FULL Android logs - sees EVERYTHING including initialization
-adb logcat -d | rg "search_term" -i       # Alternative direct approach for full log access
+# Full Android Logs (Not Test Results)
+just android-logs-search "search_term"    # Complete device logs including startup
+adb logcat -d | rg "search_term" -i       # Direct full log access
 
-# ⚠️  IMPORTANT LOG DISTINCTION:
-# - just logs-* TEST_ID          → FILTERED test results only (missing app initialization logs)
-# - just android-logs-search     → FULL device logs (sees all app activity including startup)
-# - When logs don't appear in test results, ALWAYS use android-logs-search for complete view
+# Log Types:
+# - just logs-* TEST_ID      → Filtered test results only
+# - just android-logs-search → Full device logs
+# Missing logs? Use android-logs-search
 
-# 🚨 CRITICAL: Android Development Rule
-just fastbuild-android                     # REQUIRED after ANY code changes before Android testing
+# Android Development
+just fastbuild-android                     # REQUIRED after ANY code changes
 
-# 📝 NEW: Complete Command Logging (Long-Running Commands)
-just log-run-silent test                   # ⭐ PREFERRED: Silent logging (saves context window tokens)
-just log-run test                          # Save complete test output to timestamped logs/ files
-just log-run-silent test-android firebase-all  # Silent comprehensive testing (token-efficient)
-# All log-run-silent commands save to: logs/YYYYMMDD_HHMMSS_command-name.log
+# Command Logging (Long-Running)
+just log-run-silent COMMAND                # Silent logging (saves context tokens)
+just log-run COMMAND                       # Verbose logging
+# Saves to: logs/YYYYMMDD_HHMMSS_command-name.log
 
-# 🚀 NEW: Wildcard Pattern Debugging (10x Faster)
-just logs-tree TEST_ID                     # Explore log structure (2 sec)
-just logs-pattern TEST_ID "*.error"        # All errors with precision
-just logs-pattern TEST_ID "firebase.*"     # All Firebase operations
-just help-wildcards                        # Complete pattern guide
-just help                                  # Interactive command browser (Claude can read directly)
+# Pattern Debugging
+just logs-tree TEST_ID                     # Explore log structure
+just logs-pattern TEST_ID "pattern"        # Pattern matching
+just help-wildcards                        # Pattern guide
+just help                                  # Interactive command browser
 
-# Enhanced Testing with Automatic Validation (NEW)
-just test-android-target CONFIG            # Automated testing with built-in error analysis & checksum validation
-just test-desktop-target CONFIG            # Desktop automated testing with comprehensive validation
+# Testing
+just test-android-target CONFIG            # Automated testing with validation
+just test-desktop-target CONFIG            # Desktop automated testing
+just test-android '/archive/generated-replays/'  # All battle replay configs
+just test-android '/archive/generated-replays/merge-*'  # Merge scenarios
 
-# 🚀 NEW: Battle Replay Integration (Instant Access)
-just test-android '/archive/generated-replays/'        # All 25+ battle replay configs
-just test-android '/archive/generated-replays/merge-*' # Merge scenarios (merge-20 through merge-25)
-just test-android comprehensive-with-replays           # Full regression + replay validation
-
-# Daily Workflow (Primary Commands)
-just ci-validate                           # 🚨 CRITICAL: CI validation pipeline (format + lint + syntax)
+# Daily Workflow
+just ci-validate                           # CI validation (format + lint + syntax)
 just validate                              # Complete validation (format + syntax + runtime)
-just fastbuild-android                     # 🚨 CRITICAL: Smart rebuild & deploy (15-60 sec) - REQUIRED after code changes
-just test-android development-workflow     # Daily development validation
-just config-restart-android ACTION         # Ultra-fast testing (5 sec)
-just development                           # 🚀 NEW: Complete development workflow (fastbuild-android + ci-validate + log-run test)
+just test-android development-workflow     # Daily validation
+just config-restart-android ACTION         # Quick testing (5 sec)
+just development                           # Complete workflow (fastbuild-android + ci-validate + test)
 
-# 🎮 NEW: Cross-Platform Gamestate Save/Load System (Instant Scenario Reproduction)
-just capture-gamestate-desktop NAME      # Desktop-specific extraction from logs
-just capture-gamestate-android NAME      # Android-specific extraction from logs (auto-detects TEST_ID)
-just list-saved-states                   # Show all available saved states
-just help-gamestate                      # Complete cross-platform workflow guide
-# Desktop: Debug menu → "Save State" → Exit → capture-gamestate-desktop NAME → Load via debug menu
-# Android: Manual test → Debug menu → "Save State" → Exit → capture-gamestate-android NAME
+# Gamestate System
+just capture-gamestate-desktop NAME       # Desktop extraction
+just capture-gamestate-android NAME       # Android extraction
+just list-saved-states                    # Show saved states
+just help-gamestate                       # Workflow guide
 
-# Debug Decision Tree: logs-tree → logs-pattern → logs-text → logs-exclude → logs-errors (traditional backup)
+# Debug Flow: logs-tree → logs-pattern → logs-text → logs-errors
 ```
 
-## 🎯 GameTwo Daily Workflow
+## 🎯 Daily Workflow
 
-**Essential Development Pattern (OODA Loop Integration):**
+**OODA Loop Development Pattern:**
 ```bash
-# 🔄 OBSERVE → ORIENT → DECIDE → ACT Cycle
-just ci-validate                # OBSERVE: Code quality, formatting, linting issues
-just log-run-silent test        # OBSERVE: Complete test run with silent logging (token-efficient)
-                               # 🚀 NOW INCLUDES: Gamestate validation as part of system-infrastructure
-just logs-errors TEST_ID        # ORIENT: 98% token-efficient issue analysis
-# → DECIDE: Strategic fixes based on feedback
-just fastbuild-android          # ACT: REQUIRED after any GDScript/C++ changes
-just log-run-silent test-android-target CONFIG # ACT: Automated testing with silent logging (saves tokens)
-# → Repeat cycle for continuous improvement
-
-# 📝 LOGGING WORKFLOW: Use log-run-silent for long commands (token-efficient)
-just log-run-silent test-android firebase-all    # ⭐ PREFERRED: Silent logging (saves context tokens)
-just log-run test-android firebase-all            # Alternative: Verbose logging (consumes context)
-just log-run-silent test-android test-all        # Comprehensive silent testing (15+ configs)
-
-# 📁 Log File Output (Both log-run and log-run-silent):
-# - Saved to: logs/YYYYMMDD_HHMMSS_command-name.log
-# - Example: logs/20251017_143022_test-android_firebase-all.log
-# ⚡ TOKEN EFFICIENCY: log-run-silent suppresses terminal output but still saves complete logs
+# OBSERVE → ORIENT → DECIDE → ACT
+just ci-validate                # Code quality, formatting, linting
+just log-run-silent test        # Complete test with silent logging
+just logs-errors TEST_ID        # Issue analysis (98% token savings)
+just fastbuild-android          # REQUIRED after GDScript/C++ changes
+just log-run-silent test-android-target CONFIG  # Automated testing
 ```
 
-**🚨 CRITICAL CI/Build Rules:**
+**🚨 CRITICAL Rules:**
 - **`just ci-validate`** - MANDATORY before commits
-- **`just fastbuild-android`** - MANDATORY after ANY code changes before Android testing
-- **Failure in CI** → Fix → Re-validate → Proceed
-
-**🚨 CRITICAL: GDScript Commit Safety:**
-- **`just development`** - REQUIRED before committing GDScript changes (10+ min timeout)
-- **Pattern**: Code changes → `just development` → If passes, commit
-- Combines fastbuild-android + ci-validate + complete testing
+- **`just fastbuild-android`** - MANDATORY after code changes before Android testing
+- **`just development`** - REQUIRED before GDScript commits (fastbuild-android + ci-validate + test)
 
 **Debug Decision Tree:**
-1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors` (fallback)
+1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors`
 2. **Full Android Logs**: `android-logs-search "term"` → `adb logcat -d | rg "term" -i`
 
-**🚨 CRITICAL: When to Use Full Android Logs vs Test Results**
-- **Missing initialization logs?** → Use `android-logs-search` (sees app startup, game._ready(), etc.)
-- **Testing validation/fastbuild?** → Use `android-logs-search` (test results filter out non-debug logs)
-- **Debugging specific test actions?** → Use `logs-text TEST_ID` (focused on test actions only)
-- **General app debugging?** → Use `android-logs-search` (complete device log view)
+**When to Use Full Android Logs:**
+- Missing initialization logs? → `android-logs-search` (sees startup)
+- Testing validation/fastbuild? → `android-logs-search` (non-debug logs)
+- Specific test actions? → `logs-text TEST_ID` (focused)
+- General debugging? → `android-logs-search` (complete view)
 
-## 📋 Command Quick Reference
+## 📋 Command Reference
 
-**Testing Commands:**
-- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` - Enhanced automated testing
-- `just test-android TARGET` | `just test-desktop TARGET` - Manual testing (stays open)
+**Testing:**
+- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` - Automated testing
+- `just test-android TARGET` | `just test-desktop TARGET` - Manual testing
 - `just validate` - Complete validation (format + syntax + runtime)
 
-**🚀 Command Integration in Test Lists (NEW):**
-- Test lists now support `commands` array for just command execution
-- Commands run after configs with platform filtering (desktop/android)
-- Context inheritance: TEST_ID and session data passed to commands  
-- `just test-command-integration` - Demo with platform filtering
-- `just help-command-integration` - Complete integration guide
-
-**🎯 Test List Structure & @ References:**
-- `configs` array: Individual test configurations or @ references
-- `commands` array: Platform-filtered just command execution  
+**Test Lists:**
+- Test lists support `commands` array for platform-filtered execution
+- Context inheritance: TEST_ID and session data passed to commands
 - `@gamestate-system-validation` - Reference to gamestate test list
-- `@system-infrastructure` - Now includes gamestate validation
-- `just help-at-symbols` - Complete @ reference and /folder/ pattern guide
+- `just help-at-symbols` - Complete @ reference guide
 
-**Debugging Commands:**
-- `just log-run-silent COMMAND` - **⭐ PREFERRED: Silent logging (saves to logs/YYYYMMDD_HHMMSS_command-name.log, saves context tokens)**
-- `just log-run COMMAND` - Run any command with timestamped logging (verbose, uses more tokens)
-- `just logs-errors TEST_ID` - Error-focused analysis (98% token savings)
-- `just logs-tree TEST_ID` - Explore log structure (2 sec)
-- `just logs-pattern TEST_ID "firebase.*"` - Pattern matching
-- `just logs-text TEST_ID "search_term"` - Simple text search
+**Debugging:**
+- `just log-run-silent COMMAND` - Silent logging (saves tokens)
+- `just log-run COMMAND` - Verbose logging
+- `just logs-errors TEST_ID` - Error analysis (98% savings)
+- `just logs-tree TEST_ID` - Explore log structure
+- `just logs-pattern TEST_ID "pattern"` - Pattern matching
+- `just logs-text TEST_ID "search_term"` - Text search
 
-**Build Commands:**
-- `just development` - **🚀 NEW: Complete development workflow (fastbuild-android + ci-validate + log-run test) - MANDATORY before GDScript commits**
-- `just cpp-dev` - **🔧 C++ development workflow (build-android-templates + install-android-template + fastbuild-android)**
-- `just ci-validate` - **🚨 CI validation pipeline (format + lint + syntax) - MANDATORY before commits**
-- `just fastbuild-android` - Smart rebuild (15-60 sec) **REQUIRED after code changes**
-- `just build-all-android` - Android smart rebuild (3-25 min) **Complete Android pipeline**
+**Build:**
+- `just development` - Complete workflow (MANDATORY before GDScript commits)
+- `just cpp-dev` - C++ workflow (build + install + fastbuild)
+- `just ci-validate` - CI validation (MANDATORY before commits)
+- `just fastbuild-android` - Smart rebuild (15-60 sec, REQUIRED)
+- `just build-all-android` - Android pipeline (3-25 min)
 - `just build` - Complete pipeline (46 min)
-- `just build-status` - Check what would be rebuilt
 
-**Config Commands:**
+**Config:**
 - `just config-restart-android ACTION` - Deploy + restart (5 sec)
-- `just config-push-android CONFIG` - Deploy config only (2 sec)
-- `just config-list` - List available configs
+- `just config-push-android CONFIG` - Deploy config (2 sec)
+- `just config-list` - List configs
 
-**Gamestate Commands:**
+**Gamestate:**
 - `just capture-gamestate-desktop NAME` | `just capture-gamestate-android NAME`
 - `just list-saved-states` | `just clean-saved-states`
-- `just test-save-load-cycle-with-test-capture-50-desktop` - CLI wrapper for testing
-- `just test-save-load-cycle-with-test-capture-50-android` - Android CLI wrapper
 
-> 📚 **For detailed command help**: Use `just help` and `just help-[topic]` - Claude can read these outputs directly for comprehensive explanations and examples.
+> 📚 **For detailed help**: Use `just help` and `just help-[topic]` - Claude can read these directly
 
-## 📝 Backlog Task Management
+## 📝 Backlog Management
 
-**Essential Backlog Commands:**
-- `backlog tasks list --plain` - List all tasks grouped by status (plain text format)
-- `backlog tasks view task-XXX --plain` - View specific task details in plain text
-- `backlog tasks create "Title"` - Create new task (opens editor)
-- `backlog tasks edit task-XXX` - Edit existing task (opens editor)
-- `backlog tasks edit task-XXX --status Done` - **Update task status via CLI (REQUIRED for proper sync)**
-- `backlog doc list` - List all project documents
-- `backlog doc view DOC_ID` - View a specific document
-- `backlog board` - Display tasks in Kanban board view
-- `backlog board --vertical` - Vertical Kanban layout
-- `backlog overview` - Show project statistics and metrics
-- `backlog browser` - Interactive task browser (Ctrl+C to exit)
+**Essential Commands:**
+- `backlog tasks list --plain` - List tasks by status
+- `backlog tasks view task-XXX --plain` - View task details
+- `backlog tasks create "Title"` - Create task
+- `backlog tasks edit task-XXX` - Edit task
+- `backlog tasks edit task-XXX --status Done` - **Update status (REQUIRED for sync)**
+- `backlog doc list` - List documents
+- `backlog doc view DOC_ID` - View document
+- `backlog board` - Kanban view
+- `backlog overview` - Project statistics
+- `backlog browser` - Interactive browser
 
-**🚨 CRITICAL: Use Backlog CLI Commands, Not Direct File Editing**
+**🚨 CRITICAL: Use CLI Commands, Not Direct File Editing**
 
-The backlog system maintains its own database that doesn't sync with direct markdown file edits.
+Backlog maintains separate database that doesn't sync with direct markdown edits.
 
-**Critical Workflow:**
-1. **Content Changes**: `backlog tasks edit task-XXX` (opens editor) or direct file editing
+**Workflow:**
+1. **Content Changes**: `backlog tasks edit task-XXX` (opens editor)
 2. **Status Changes**: ALWAYS use `backlog tasks edit task-XXX --status Done`
 3. **Bulk Updates**: `for task in 248 249 250; do backlog tasks edit task-$task --status Done; done`
 
-Direct file editing only updates the markdown, not the backlog's internal database.
-
-**Task Management Workflow:**
+**Task Creation & Linking:**
 ```bash
-# List all tasks to see current state
-backlog tasks list --plain
-
-# View a specific task for details
-backlog tasks view task-221 --plain
-
-# Search for tasks by keyword
-backlog tasks list --plain | rg -i "firebase|sigbus"
-
-# Check project status and metrics
-backlog overview
-
-# Browse tasks interactively with Kanban view
-backlog browser
-```
-
-**🎯 Productivity Patterns (From Task-221 Session)**
-
-**Pattern 1: Investigation → Documentation → Task Creation**
-```bash
-# 1. Investigate issue thoroughly
+# Investigation → Documentation → Task Creation
 just logs-errors TEST_ID
 just logs-text TEST_ID "pattern"
-
-# 2. Document findings in /tmp/ for analysis
-# Create comprehensive analysis documents
-
-# 3. Create task with full context
 backlog tasks create "Fix discovered issue"
-# Opens editor with frontmatter template
-# Add all investigation context and analysis links
+# Add investigation context and links
 
-# 4. Link task in commits
+# Link in commits
 git commit -m "fix: description
 
 Related: task-XXX
 Analysis: /tmp/analysis_file.md"
 ```
 
-**Pattern 2: Task Status Progression**
-```bash
-backlog tasks view task-221 --plain  # Check current status
-# Update status: Open → In Progress → Done
-git log --oneline --grep="task-221" -10  # Track progression via git
-```
-
-**Pattern 3: Bidirectional Linking**
-```bash
-# In task file:
-# Related: task-152, task-222, task-223
-# Analysis: /tmp/task221_analysis.md
-
-# In commit message:
-git commit -m "fix(firebase): Memory barriers
-
-Closes: task-221
-Related: backlog/tasks/task-221"
-```
-
-**Pattern 4: Multi-Issue Triage**
-```bash
-# After comprehensive test run, triage failures
-backlog tasks list --plain | rg "Open|In Progress"
-
-# Create separate tasks for distinct issues
-# task-222: Android checksum race (test framework)
-# task-223: Firebase SIGBUS crashes (production bug)
-
-# Link related tasks
-# task-221 → task-223 (SIGBUS separate from memory ordering)
-```
-
-**🎯 Task Frontmatter Best Practices**
-
+**Task Frontmatter:**
 ```yaml
 ---
 id: task-222
@@ -271,248 +171,199 @@ labels:
   - critical
   - test-framework
   - android
-  - race-condition
 dependencies:
-  - task-221             # Tasks this depends on
+  - task-221
 created_date: '2025-10-15 19:45'
 updated_date: '2025-10-15 19:45'
 ---
 ```
 
-**Key Status Values:**
-- **Open**: Active issues requiring investigation
-- **In Progress**: Currently being worked on
-- **Done**: Completed and validated
-- **Completed**: Historical archive (use backlog cleanup)
-
-**Document Access:**
-- Use `backlog doc list` to find available documentation
-- Use `backlog doc view DOC_ID` to read specific documents
-- Documents contain technical specifications, implementation plans, and decision records
-
-**Key Documents:**
-- **`backlog doc view doc-002`** - Build System Architecture & Workflows (complete build flows reference)
-
-**🔧 Advanced Backlog Usage**
-
-**Searching Tasks:**
-```bash
-# Find all Firebase-related tasks
-backlog tasks list --plain | rg -i "firebase"
-
-# Find high-priority open tasks
-backlog tasks list --plain | rg "Priority.*high" -A 5
-
-# Find tasks with specific labels
-rg "labels:" backlog/tasks/*.md | rg "critical"
-```
-
-**Task Creation Template:**
-```bash
-# Create task with comprehensive context
-backlog tasks create "Descriptive Title"
-
-# Include in task body:
-## Description
-- Clear problem statement
-- Business impact assessment
-- Evidence from logs/tests
-
-## Root Cause Analysis
-- Hypothesis with evidence
-- Investigation steps
-- Analysis documents
-
-## Proposed Solutions
-- Multiple options with pros/cons
-- Recommended approach
-- Timeline estimates
-
-## Success Criteria
-- Acceptance criteria (checkboxes)
-- Validation tests
-- Performance metrics
-
-## Related Tasks and Documents
-- Dependencies
-- Related issues
-- Analysis files in /tmp/
-```
-
-**Linking Tasks in Git:**
-```bash
-# Commit message format
-git commit -m "fix: description
-
-Root cause explanation.
-
-Solution approach.
-
-Closes: task-XXX
-Related: task-YYY, task-ZZZ
-Analysis: /tmp/analysis.md
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
+**Key Document:**
+- `backlog doc view doc-002` - Build System Architecture & Workflows
 
 ## 🤖 Claude Code Preferences
 
-**Essential GameTwo patterns:**
-- Always use `rg` instead of `grep` (10x faster, better regex)
+**Essential Patterns:**
+- Use `rg` instead of `grep` (10x faster)
 - REQUIRED: `just fastbuild-android` after ANY GDScript/C++ changes before Android testing
-- CRITICAL: Prefix long-running commands with `just log-run-silent` (saves context tokens, output to logs/YYYYMMDD_HHMMSS_command-name.log)
+- CRITICAL: Prefix long-running commands with `just log-run-silent` (saves tokens)
 - Link tasks bidirectionally: Reference task in commit, commit in task
-- CRITICAL: Use Advanced OODA Loop Debugging Methodology (investigation-first with expert panel evaluation)
+- Use Advanced OODA Loop Debugging (investigation-first with expert panel)
 
-**🚨 CRITICAL FILE SAFETY:**
-- NEVER remove, delete, or clean up files without explicit user permission
+**🚨 FILE SAFETY:**
+- NEVER remove/delete files without explicit permission
 - ALWAYS ask before removing any files, even temporary ones
 
-**🏢 Company Values:**
+**Values:**
 - **Simplicity**: Clean, readable code
-- **Robustness**: Reliable systems that handle edge cases
-- Every technical decision aligns with these values
+- **Robustness**: Handle edge cases reliably
 
 **MCP Tools:**
 - **Repomix MCP**: Pack codebase once, search multiple times
 - **Godot MCP**: Launch editor, run project, get debug output
 - **Context7 MCP**: Get up-to-date docs for any library
 
+**📚 Repomix Codebase Analysis (Complete Context Generation)**
+```bash
+# Generate comprehensive codebase XML for AI analysis
+just generate-repofile                    # Creates repomix-output.xml (276+ files)
+just generate-claude-context             # Optimized for Claude Code consumption
+```
+
+**What's Included in Repomix Output:**
+- **Complete Firebase C++ Module**: SCsub, config.py, headers, implementations (13 files)
+- **Advanced Logger System**: Runtime debugging infrastructure with UI components
+- **Battle System**: Core game mechanics and combat logic (453+ references)
+- **Gamestate System**: Save/load functionality and cross-platform state management
+- **Checksum Validation**: Determinism testing and platform consistency
+- **Core GDScript Systems**: 200+ game logic and utility files
+
+**🎯 How to Leverage Repomix Output:**
+
+**1. Complete Architecture Understanding**
+- **Firebase Integration**: Full C++ SDK → GDScript → Game systems pipeline
+- **Build System Mastery**: SCons module configuration, platform-specific library linking
+- **Platform Build Strategy**: iOS/Android implementations, macOS exclusion patterns
+- **Extension Points**: Where to add new modules or modify existing ones
+
+**2. Cross-Platform Development Patterns**
+- **Platform Detection Logic**: How systems adapt to iOS/Android/desktop
+- **Library Linking Strategies**: Firebase SDK integration for each platform
+- **Testing Infrastructure**: Advanced logger platform testing utilities
+- **Gamestate Reproduction**: Cross-platform scenario capture and replay
+
+**3. Debugging & Testing Infrastructure**
+- **Advanced Logger**: Runtime debugging with tag filtering and platform detection
+- **Checksum Validation**: Determinism testing across platforms (126+ references)
+- **Gamestate System**: Scenario reproduction and state management (261+ references)
+- **Battle Replay System**: Automated testing and regression detection (453+ references)
+
+**4. Development Workflow Integration**
+```bash
+# Before major architectural changes:
+just generate-repofile                    # Get complete current state
+# Claude analyzes repomix-output.xml → provides expert recommendations
+# Make informed decisions with full context
+
+# For complex debugging:
+just generate-repofile                    # Capture current system state
+# Claude analyzes complete system → identifies root causes across components
+# Provides comprehensive solutions affecting all affected systems
+
+# For feature development:
+just generate-repofile                    # Understand existing patterns
+# Claude identifies integration points, suggests implementation approaches
+# Ensures new features follow established architectural patterns
+```
+
+**5. Advanced Use Cases**
+- **C++ Module Development**: Complete Firebase build configuration understanding
+- **Platform Expansion**: Add new platforms using existing iOS/Android patterns
+- **Performance Optimization**: Identify bottlenecks across complete system architecture
+- **Testing Enhancement**: Leverage sophisticated checksum/gamestate testing frameworks
+- **Documentation Generation**: Auto-generate system architecture documentation
+
+**Key Benefits:**
+- **Complete Context Visibility**: 276+ files in single searchable XML
+- **Cross-Reference Capability**: See how Firebase integrates with game systems
+- **Pattern Recognition**: Identify established architectural patterns
+- **Impact Analysis**: Understand ripple effects of changes across systems
+- **Knowledge Transfer**: Rapid onboarding for complex system architectures
+
+**💡 Pro Tip**: The repomix output is especially valuable when:
+- Starting work on unfamiliar system components
+- Planning major architectural changes
+- Debugging complex cross-platform issues
+- Documenting system architecture for team collaboration
+- Onboarding new developers to complex codebase
+
 **Git workflow:**
 - Use `git commit --amend` for related documentation updates
 - Include "Closes: task-XXX" and "Related: backlog/tasks/..." in commits
 - Exception: Use `grep` only for pipeline scripts requiring exact compatibility
 
-## 🔄 OODA Loop Integration (Critical for GameTwo Development)
+## 🔄 OODA Loop Development
 
-### **🔍 OBSERVE Phase**
-- `just ci-validate` - Code quality, formatting, linting issues
-- `just test` - Functional behavior across desktop/Android platforms
-- `just logs-errors TEST_ID` - Runtime issues (98% token efficiency)
+**OBSERVE:**
+- `just ci-validate` - Code quality, formatting, linting
+- `just test` - Cross-platform functionality
+- `just logs-errors TEST_ID` - Runtime issues (98% efficiency)
 
-### **🧠 ORIENT Phase**
-- CI validation results → Code standards and maintainability
-- Cross-platform test results → Android/desktop compatibility
-- Error analysis → Specific technical issues
+**ORIENT:**
+- CI results → Code standards assessment
+- Test results → Platform compatibility
+- Error analysis → Technical issues
 
-### **⚡ DECIDE Phase**
-- CI pass/fail → Code quality and commit readiness
-- Test pass/fail → Feature stability and deployment
-- Performance metrics → Architectural decisions
+**DECIDE:**
+- CI pass/fail → Commit readiness
+- Test pass/fail → Feature stability
+- Performance → Architectural decisions
 
-### **🚀 ACT Phase**
-- Failed CI → Fix → `just ci-validate` → Repeat until pass
-- Failed tests → `just logs-errors TEST_ID` → Debug → Fix → `just fastbuild-android` → Re-test
-- All validation passes → Proceed to next phase
+**ACT:**
+- Failed CI → Fix → `just ci-validate` → Repeat
+- Failed tests → `just logs-errors TEST_ID` → Debug → `just fastbuild-android` → Re-test
+- All pass → Continue
 
-**Critical Success Pattern:**
+**Critical Pattern:**
 ```bash
-just ci-validate           # Must pass before proceeding
-just fastbuild-android     # Required after any code changes
-just test-android CONFIG   # Validates changes on target platform
-just logs-errors TEST_ID   # 98% token-efficient debugging
+just ci-validate           # Must pass
+just fastbuild-android     # Required after code changes
+just test-android CONFIG   # Validate on platform
+just logs-errors TEST_ID   # Debug efficiently
 ```
 
-## 🎯 Advanced OODA Loop Debugging Methodology
+## 🎯 Advanced OODA Debugging
 
-**Critical GameTwo debugging approach discovered through TASK-132/131 resolution:**
-
-### **🔍 OBSERVE Phase - Evidence-First Investigation**
+**Evidence-First Investigation (OBSERVE):**
 ```bash
-# Step 1: Gather empirical evidence before forming theories
-just android-logs-search "SEARCH_TERM"     # Full device logs - sees everything
-just logs-errors TEST_ID                   # 98% token-efficient issue analysis  
-just logs-text TEST_ID "specific_term"     # Targeted search with context
+just android-logs-search "SEARCH_TERM"     # Full device logs
+just logs-errors TEST_ID                   # 98% efficient analysis
+just logs-text TEST_ID "specific_term"     # Targeted search
 ```
 
-**🚨 CRITICAL**: Always gather actual current evidence, not rely on stale documentation or assumptions.
+**🚨 CRITICAL**: Gather current evidence, not rely on stale documentation.
 
-### **🧠 ORIENT Phase - Expert Panel Evaluation**
+**Expert Panel Evaluation (ORIENT):**
 
-**🚨 CRITICAL: Virtual Expert Panel is the most important debugging step**
+**Virtual Expert Panel** for complex issues:
+- **Systems Architect** - Mobile/game engine expertise
+- **Platform Specialist** - Android/Firebase/GDScript integration
+- **Test Infrastructure Lead** - Testing patterns, CI/CD impact
+- **Performance Engineer** - Timing, threading, optimization
+- **Debt Reviewer** - Architecture decisions, maintainability
 
-**Assemble Virtual Expert Panel** for complex issues:
-- **Senior Systems Architect** - Mobile/game engine expertise, architectural coherence
-- **Platform Integration Specialist** - Android/Firebase/GDScript, cross-platform compatibility
-- **Test Infrastructure Lead** - Testing patterns, validation frameworks, CI/CD impact
-- **Performance Engineer** - Timing, race conditions, threading, optimization trade-offs
-- **Technical Debt Reviewer** - Architecture decisions, long-term maintainability, intent preservation
+**Core Questions:**
+1. "What would this expert think is the REAL problem?"
+2. "What would this expert warn against fixing?"
+3. "What evidence would this expert demand?"
+4. "What dangerous oversimplification exists?"
 
-**🎯 Expert Panel Core Questions** (Ask each perspective):
-1. **"What would this expert think is the REAL problem here?"**
-2. **"What would this expert warn against fixing?"**
-3. **"What evidence would this expert demand before acting?"**
-4. **"What would this expert consider a dangerous oversimplification?"**
+**Investigation-First Decisions:**
+❌ Avoid: Symptom-based fixes that break working systems
+✅ Prefer: Evidence-gathering reveals true state
 
-**Panel Evaluation Framework**:
-1. **Historical Context Analysis** - `git log --oneline --grep="PATTERN" -n 20`
-2. **Architectural Intent Review** - Recent commits show design decisions
-3. **Cross-Option Impact Assessment** - Each solution's effect on existing systems
-4. **Risk vs Benefit Analysis** - Preserve working functionality
-5. **Error Message Skepticism** - Challenge what error messages actually mean vs what they imply
+**Priority:**
+1. Investigation (always start here)
+2. Targeted Fix (only after understanding)
+3. Architecture Review (last resort)
+4. Workarounds (avoid - creates debt)
 
-### **⚡ DECIDE Phase - Investigation-First Approach** 
+**Minimal Risk Implementation:**
+1. Add targeted logging
+2. Test and gather evidence
+3. Analyze with expert panel mindset
+4. Apply minimal fix based on evidence
+5. Remove investigation code
+6. Document with evidence
 
-**NEVER fix without investigation**:
+**Key Insights:**
+- Investigation-first prevents fixing working code
+- Error messages show symptoms, not root causes
+- Evidence reveals reality vs. assumptions
+- Time: 4-6h investigation vs 20-40h risky changes
 
-❌ **Avoid**: Symptom-based fixes that might break working systems
-✅ **Prefer**: Evidence-gathering that reveals true current state
-
-**Decision Priority**:
-1. **Option 1: Investigation** - Always start here for complex issues
-2. **Option 2: Targeted Fix** - Only after understanding root cause  
-3. **Option 3: Architecture Review** - Last resort for systemic issues
-4. **Option 4: Platform Workarounds** - Avoid - creates technical debt
-
-### **🚀 ACT Phase - Minimal Risk Implementation**
-
-**Critical Success Pattern**:
-```bash
-# 1. Add targeted logging (investigation code)
-# 2. Test and gather evidence  
-# 3. Analyze results with expert panel mindset
-# 4. Apply minimal fix based on evidence
-# 5. Remove investigation code
-# 6. Document resolution with evidence
-```
-
-### **💡 Key Methodology Insights**
-
-**From TASK-132/131 Resolution**:
-- Investigation revealed both issues already resolved by architectural improvements (commits 51090009, 2ff19647)
-- Expert panel prevented destructive "fixes" to working systems
-- Evidence-based conclusions contradicted stale task documentation
-
-**Critical Learning**: Investigation-first methodology prevents fixing working code. Time: 4-6h investigation vs 20-40h risky architectural changes.
-
-### **💡 Advanced Methodology Insights**
-
-**From TASK-145 Firebase Performance Investigation**:
-- **Error Message Skepticism**: "Perf: Overhead Test failed (137ms)" implied performance issue, actually functional failure
-- **Expert Panel Prevented Threshold Adjustment**: Would have masked real functional bug
-- **Evidence Over Assumptions**: Firebase `null` return for missing data is expected, not failure
-- Other operations (127ms, 77ms, 71ms) succeeded - timing wasn't the issue
-
-**Error Message Analysis Framework**:
-1. What the error implies (surface meaning)
-2. What is actually happening (technical reality)
-3. Why the disconnect exists (system design vs user expectations)
-4. What evidence contradicts the implication
-
-Error messages describe symptoms, not always root causes. Investigation reveals the difference.
-
-### **🏆 Expert Panel Validation Checklist**
-
-Before implementing any complex fix, ask:
-- [ ] **Systems Architect**: Does this align with recent architectural decisions?
-- [ ] **Integration Specialist**: Will this break platform compatibility patterns?
-- [ ] **Test Lead**: Does this preserve existing test infrastructure?
-- [ ] **Performance Engineer**: Are we solving the actual bottleneck?
-- [ ] **Debt Reviewer**: Does this contradict recent architectural investments?
-
-**Unanimous expert agreement required** for architectural changes.
+**Expert Panel Validation:**
+Before complex fixes, require unanimous agreement from all expert perspectives on architectural compatibility.
 
 ## 🔧 Common Issues Quick Fix
 
@@ -533,207 +384,88 @@ Before implementing any complex fix, ask:
 - Performance issues: `just test-android '*.*.performance'`
 - **Fastbuild validation**: `just android-logs-search "FASTBUILD_VALIDATION_TEST"`
 
-## 🚨 CRITICAL: Android Log Buffer Limitations
+## 🚨 Android Log Buffer Limitations
 
-### **Understanding the Root Cause of Misdiagnosis**
+**Root Cause**: Android logcat uses circular buffers (~50KB each) that overwrite older entries when full, causing misdiagnosis.
 
-**Android logcat uses circular buffers** that automatically overwrite older entries when full. This creates a **fundamental limitation** that can cause serious misdiagnosis during investigations.
-
-### **🚨 The Buffer Saturation Problem**
-
-Android maintains circular buffers (main, system, events, radio, ~50KB each) that overwrite oldest entries when full. No warnings on data loss. High-volume testing can overwrite logs from previous runs.
-
-**Real-World Impact (Task-242):**
-- Investigation showed 2/16 successful Firebase RTDB operations
-- Reality: 14/16 were successful (proven by historical logs)
-- Root cause: Buffer overwrote 12 success entries with newer test data
+**Real-World Impact (Task-242)**:
+- Investigation showed 2/16 successful Firebase operations
+- Reality: 14/16 successful (proven by historical logs)
+- Buffer overwrote 12 success entries with newer data
 - Cost: 4-6h wasted investigating non-existent regression
 
-### **📊 Buffer Saturation Detection**
-
-**Enhanced Tooling Protection:**
-```bash
-# NEW: Buffer-aware search with saturation warnings
-just android-logs-search "search_term"
-# Now shows buffer usage and cross-validation suggestions
-```
-
 **Buffer Status Indicators:**
-- **🟢 Safe**: <30,000 total lines (≤60% buffer usage)
-- **🟡 Caution**: 30,000-50,000 lines (60-90% buffer usage)
-- **🔴 Critical**: >50,000 lines (>90% buffer usage)
+- **🟢 Safe**: <30,000 lines (≤60% usage)
+- **🟡 Caution**: 30,000-50,000 lines (60-90% usage)
+- **🔴 Critical**: >50,000 lines (>90% usage)
 
-**Critical Warning Signs:**
-```
-⚠️  🚨 CRITICAL BUFFER SATURATION DETECTED!
-   💡 Log buffer is >90% full
-   🔥 Older entries may be overwritten by new logs
-   📝 Recent test runs may have overwritten historical data
-```
+**Buffer-Safe Investigation:**
 
-### **🎯 Buffer-Safe Investigation Methodology**
-
-#### **Phase 1: Buffer Assessment**
+**Phase 1: Assessment**
 ```bash
-# Step 1: Always check buffer status first
-just android-logs-search "your_search_term"
-# Look for saturation warnings in the output
+just android-logs-search "search_term"  # Check buffer status first
 ```
 
-#### **Phase 2: Cross-Validation Strategy**
+**Phase 2: Cross-Validation (if saturation detected)**
 ```bash
-# If buffer saturation detected:
-# 1. Search historical log files (most reliable)
-find logs/ -name "*.log" -exec grep -l "your_search_term" {} \;
-
-# 2. Cross-reference with test results
-just logs-last | grep "your_search_term"
-
-# 3. Check saved Android logs in app userdata
-ls "/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/" | head -5
+find logs/ -name "*.log" -exec grep -l "search_term" {} \;  # Historical logs
+just logs-last | grep "search_term"                           # Recent results
 ```
 
-#### **Phase 3: Fresh Data Collection**
+**Phase 3: Fresh Collection**
 ```bash
-# If historical search fails:
-# 1. Clear buffer for clean investigation
-just android-logs-clear
-
-# 2. Re-run test with fresh buffer
-just test-android-target CONFIG
-
-# 3. Use live monitoring during execution
-just android-logs-live 30 "*:I" 50
+just android-logs-clear                    # Clear buffer
+just test-android-target CONFIG           # Re-run test
+just android-logs-live 30 "*:I" 50       # Live monitoring
 ```
 
-### **🔄 Decision Tree: Buffer vs Historical Logs**
+**Decision Tree:**
+- **Buffer Safe (<60%)** → Use live buffer tools
+- **Buffer Caution (60-90%)** → Cross-validate required
+- **Buffer Critical (>90%)** → Use historical logs only
 
-```
-🔍 Start Investigation
-    ↓
-📊 Check Buffer Status (android-logs-search)
-    ↓
-🟢 Buffer Safe (<60%) → 📱 Use Live Buffer Tools
-    ├── just android-logs-search "term"
-    ├── just logs-errors TEST_ID
-    └── Standard investigation workflow
-    ↓
-🟡 Buffer Caution (60-90%) → ⚠️ Cross-Validate Required
-    ├── Use live buffer + historical logs
-    ├── Verify findings across sources
-    └── Document potential data loss
-    ↓
-🔴 Buffer Critical (>90%) → 🚨 Live Buffer Unreliable
-    ├── ❌ AVOID: android-logs-search for critical data
-    ├── ✅ USE: Historical log files only
-    ├── ✅ USE: Test result files (just logs-*)
-    └── 🔄 Clear buffer + re-run test if needed
-```
-
-### **💡 Prevention Strategies**
-
-#### **Before High-Volume Testing:**
+**Prevention:**
 ```bash
-# Clear buffers to prevent cross-test contamination
-just android-logs-clear
-
-# Use log-run-silent to save complete output
-just log-run-silent test-android CONFIG
+just android-logs-clear                    # Clear before testing
+just log-run-silent test-android CONFIG   # Save complete output
 ```
 
-#### **During Investigation:**
-```bash
-# Always cross-validate findings
-# 1. Live buffer search (if safe)
-just android-logs-search "critical_error"
-
-# 2. Historical log verification
-find logs/ -name "*.log" -exec grep -l "critical_error" {} \;
-
-# 3. Test result confirmation
-just logs-errors TEST_ID
-```
-
-#### **After Critical Discoveries:**
-```bash
-# Document findings in multiple sources
-# 1. Save specific logs for reference
-adb logcat -d | rg "critical_pattern" > investigation_backup.log
-
-# 2. Create task with evidence
-backlog tasks create "Fix critical_issue"
-# Include log file references and cross-validation results
-```
-
-### **🚨 Red Flags That Signal Buffer Issues**
-
-**Immediate investigation required when:**
-- Expected logs missing from recent searches
-- Test results show fewer entries than expected
-- Historical patterns suddenly disappear
-- Performance data looks unusually poor
-- Error counts don't match test expectations
+**Red Flags (Buffer Issues):**
+- Expected logs missing
+- Fewer entries than expected
+- Historical patterns disappeared
+- Unusually poor performance data
 
 **Response Protocol:**
-1. Stop current investigation - findings may be misleading
-2. Check buffer saturation using `android-logs-search`
-3. Switch to historical sources if buffer critical
-4. Document buffer state in notes
-5. Consider re-running tests with cleared buffer
+1. Stop investigation (findings may be misleading)
+2. Check buffer saturation
+3. Switch to historical sources if critical
+4. Re-run tests with cleared buffer
 
-### **📚 Quick Reference Commands**
-
-**Buffer Status & Health:**
-```bash
-just android-logs-search "test"          # Shows buffer status + warnings
-just android-logs-status                  # Device & app connection info
-just android-logs-clear                   # Clear all buffers safely
-```
-
-**Historical Log Access:**
-```bash
-find logs/ -name "*.log" -exec grep -l "pattern" {} \;    # Search all saved logs
-just logs-last                            # Most recent test results
-just logs-errors TEST_ID                  # Focused error analysis
-```
-
-**Live Monitoring (when buffer safe):**
-```bash
-just android-logs-live 30 "*:I" 50       # 30s live monitoring
-just android-logs-errors 30              # 30s error monitoring
-just android-logs-tagged "firebase" 30 50 # Tag-specific monitoring
-```
-
-**🎯 Golden Rule: When in doubt, cross-validate with historical logs. Live buffer data may be incomplete due to saturation.**
+**Golden Rule**: Cross-validate with historical logs when in doubt. Live buffer data may be incomplete.
 
 ## 📋 Android Device Logs
 
-**Live device monitoring:**
-- `just android-logs-errors 30` - Live error monitoring (30s, filtered)
-- `just android-logs-tagged "firebase" 30 50` - Tag filtering (30s, 50 lines)
+**Live Monitoring:**
+- `just android-logs-errors 30` - Error monitoring (30s)
+- `just android-logs-tagged "firebase" 30 50` - Tag filtering
 - `just android-logs-status` - Device & app status
-
-**All commands filter out noise and focus on Firebase, debug, errors, performance.**
 
 ## 🔧 Testing Modes
 
-**Automated (quits after completion):**
+**Automated:**
 - `just test-android-target CONFIG` - Enhanced with validation
 - `just test-desktop-target CONFIG` - Cross-platform testing
 
-**Manual (stays open):**
-- `just test-android-manual CONFIG` - Android inspection mode
-- `just test-desktop-manual CONFIG` - Desktop inspection mode
-
-**Workflows:**
-- `just test-android development-workflow` - Daily development
-- `just test-android pre-commit` - Pre-commit validation
+**Manual:**
+- `just test-android-manual CONFIG` - Android inspection
+- `just test-desktop-manual CONFIG` - Desktop inspection
 
 ## 🎯 Pattern Examples
 
 **Layer patterns:**
 - `'cpp.*'` - C++ Firebase SDK
-- `'system.*'` - System utilities  
+- `'system.*'` - System utilities
 - `'game.*'` - Game logic
 
 **Cross-layer patterns:**
@@ -742,34 +474,34 @@ just android-logs-tagged "firebase" 30 50 # Tag-specific monitoring
 
 ## 📁 Test Organization
 
-**@ Symbol references:**
-- `"@system-all"` - Include all configs from system-all.json
-- `"@*-all"` - Include ALL test lists ending with "-all"
+**@ References:**
+- `"@system-all"` - All configs from system-all.json
+- `"@*-all"` - All test lists ending with "-all"
 
 **Folder references:**
-- `"/archive/generated-replays/"` - All 25+ battle replay configs
-- `"/archive/generated-replays/merge-*"` - Specific replay patterns
+- `"/archive/generated-replays/"` - All battle replay configs
+- `"/archive/generated-replays/merge-*"` - Merge scenarios
 
-**Input auto-detection:**
+**Auto-detection:**
 - Actions: `'system.debug.registry_stats'` → Direct execution
-- Wildcards: `'cpp.*'` → Auto-discovery  
+- Wildcards: `'cpp.*'` → Auto-discovery
 - Configs: `system-testing` → Load configuration
 
-## 🚨 Critical Safety Rules
+## 🚨 Safety Rules
 
 **Debug Actions:**
 - ✅ Use `just test-*` commands (enables debug coordinator)
-- ❌ Never use `just run-desktop` (skips state capture, validation)
+- ❌ Never use `just run-desktop` (skips state capture)
 
 **Android Development:**
 - **MANDATORY**: `just fastbuild-android` after ANY code changes before testing
-- **Why**: Android uses compiled/cached code that doesn't auto-update
+- **Reason**: Android uses compiled/cached code that doesn't auto-update
 
 ## 📱 Android Configuration
 
-**Core debug configs (9 active):**
-- `battle-logic-only` - Battle without visual effects
-- `firebase-cpp-layer` - C++ Firebase SDK  
+**Debug configs (9 active):**
+- `battle-logic-only` - Battle without effects
+- `firebase-cpp-layer` - C++ Firebase SDK
 - `system-layer-all` - Complete system utilities
 - `production-ready` - Release validation
 - Use `just config-list` for complete list
@@ -783,70 +515,64 @@ just android-logs-tagged "firebase" 30 50 # Tag-specific monitoring
 - `just screenshot-android` - Quick screenshot
 - `just screenshot-android error-state` - Named screenshot
 
-## 🚫 FORBIDDEN PATTERNS (GDScript Anti-Patterns)
+## 🚫 GDScript Anti-Patterns
 
-**NEVER use timing-based waits - they create race conditions:**
-
+**NEVER use timing-based waits:**
 ```gdscript
-# ❌ FORBIDDEN - Never use these patterns
+# ❌ FORBIDDEN
 await Engine.get_main_loop().process_frame
-await Engine.get_main_loop().create_timer(0.3).timeout
 await get_tree().create_timer(1.0).timeout
 
-# ✅ Use proper signal-based completion instead
+# ✅ Use signals
 await some_operation_completed
-await signal_emitted
 ```
 
-**CRITICAL: GDScript doesn't have `async` keyword:**
-
+**No `async` keyword:**
 ```gdscript
-# ❌ FORBIDDEN - async keyword doesn't exist in GDScript
+# ❌ FORBIDDEN - async doesn't exist
 async func my_function() -> void:
 
-# ✅ CORRECT - Functions that await are automatically async
+# ✅ CORRECT
 func my_function() -> void:
-    await some_signal
-    # Function becomes async when it contains await
+    await some_signal  # Function becomes async
 ```
 
-## 💪 Strong Typing Requirements
+## 💪 Strong Typing
 
-**Always use fail-fast typing:**
-
+**Use fail-fast typing:**
 ```gdscript
-# ✅ Required patterns
+# ✅ Required
 var firebase_backend: FirebaseBackend = get_backend()
 var cards: Array[Card] = []
 func create_card(id: String, level: int = 1) -> Card:
     return card_scene.instantiate() as Card
 
-# ❌ Never use runtime checking or untyped variables
-if backend is FirebaseBackend: # Runtime checking
-var data = {}                  # No type
+# ❌ Forbidden
+if backend is FirebaseBackend:  # Runtime checking
+var data = {}                   # No type
 ```
 
 **Validation:**
-- `just validate` - Complete pipeline (format + syntax + runtime)
-- `just show-warnings` - GDScript warnings with file:line
+- `just validate` - Complete pipeline
+- `just show-warnings` - GDScript warnings
 
 ## 🎬 Replay Testing
 
-**Simple workflow: Play → Generate → Test**
-1. `just run-desktop` (shows session ID when finished)
+**Workflow: Play → Generate → Test**
+1. `just run-desktop` (shows session ID)
 2. `just replay-generate-desktop SESSION_ID my-test`
-3. `just test-android-target my-test` (automated with validation)
+3. `just test-android-target my-test` (automated)
 
 ## 🧪 Checksum Testing
 
 **Automatic validation:**
-- `just test-android-target CONFIG` - Auto-creates baseline + validates  
-- `just test-android-update CONFIG` - Update baseline (legitimate changes)
-- `just logs-errors TEST_ID` - Debug checksum failures
+- `just test-android-target CONFIG` - Auto-creates baseline + validates
+- `just test-android-update CONFIG` - Update baseline
+- `just logs-errors TEST_ID` - Debug failures
 
-**RNG Determinism:** Seeds auto-initialize from debug configs during autoload.
+**RNG Determinism:** Seeds auto-initialize from debug configs.
 
-**Adding seeds to configs:**
+**Config seed format:**
 ```json
 {
   "checksum_config": {
@@ -855,63 +581,52 @@ var data = {}                  # No type
   }
 }
 ```
-**Never use:** `"game.battle.set_seed"` action (causes timing issues)
 
-## 🎮 Cross-Platform Gamestate System
+**Never use:** `"game.battle.set_seed"` action
 
-**Quick workflow for scenario reproduction:**
-1. Play game → Debug menu → "Save State" → Exit  
+## 🎮 Gamestate System
+
+**Scenario reproduction:**
+1. Play → Debug menu → "Save State" → Exit
 2. `just capture-gamestate-desktop "scenario_name"`
-3. `just run-desktop` → Debug menu → "Saved States" → Load scenario
+3. Run → Debug menu → "Saved States" → Load scenario
 
 **Management:**
-- `just list-saved-states` - Show available states
-- `just clean-saved-states` - Remove all states  
-- `just capture-gamestate-android NAME` - Android extraction (auto-detects TEST_ID)
+- `just list-saved-states` - Show states
+- `just clean-saved-states` - Remove all states
+- `just capture-gamestate-android NAME` - Android extraction
 
-**🚀 NEW: Test List Integration & Validation:**
-- `just test-save-load-cycle-with-test-capture-50-desktop` - CLI wrapper for testing
-- `just test-save-load-cycle-with-test-capture-50-android` - Android CLI wrapper
-- `just test-desktop-target gamestate-system-validation` - Complete gamestate validation via test lists
-- `just test-android-target gamestate-system-validation` - Cross-platform consistency testing
+**Test Integration:**
+- `just test` - Includes gamestate validation
+- `just test-desktop-target gamestate-system-validation` - Complete validation
+- `just test-android-target gamestate-system-validation` - Cross-platform testing
 
-**📁 File Organization:**
-- `./project/debug/saved_states/` - User-created gamestate saves (runtime)
-- `tests/test-states/` - **NEW**: Dedicated directory for test gamestate files
-- `tests/test-states/test-capture-50.json` - Reference test state for validation
-
-**🎯 Main Test Suite Integration:**
-- `just test` - **NOW INCLUDES** gamestate validation as part of system-infrastructure testing
-- Automatic save-load cycle validation ensures gamestate integrity in daily development
-
-**90% faster scenario reproduction - capture from Android, load on desktop or vice versa.**
+**90% faster scenario reproduction - capture Android, load desktop.**
 
 ## 🔧 Advanced Features
 
 **Desktop debugging:**
-- `just run-desktop-debug` - Normal debug mode
+- `just run-desktop-debug` - Normal debug
 - `just run-desktop-debug verbose` - ObjectDB leak detection
 
-**For comprehensive command details:**
-- `just help` - **Interactive command browser with clickable links**
-- `just help-debug` - Complete debug & testing workflows  
-- `just help-logs` - Token efficiency & log analysis guide
-- `just help-build` - Build system architecture & timing
-- `just help-workflows` - Detailed workflow patterns & best practices
+**Command help:**
+- `just help` - Interactive browser
+- `just help-debug` - Debug workflows
+- `just help-logs` - Log analysis
+- `just help-build` - Build system
+- `just help-workflows` - Workflow patterns
 
-> 💡 **Claude can read `just help` output directly** - use these commands to get detailed explanations and examples for any GameTwo workflow.
+> 💡 **Claude can read `just help` output directly** - use for detailed explanations.
 
-## 🚀 Test List Command Integration Example
+## 🚀 Test List Command Integration
 
-**Enhanced test lists now support command execution:**
+**Test lists support command execution:**
 
 ```json
 {
   "name": "Gamestate Validation with Commands",
   "description": "Config testing + command validation",
-  "configs": [
-    "gamestate-save-load-test"
-  ],
+  "configs": ["gamestate-save-load-test"],
   "commands": [
     {
       "command": "test-save-load-cycle-desktop",
@@ -919,7 +634,7 @@ var data = {}                  # No type
       "description": "Desktop save/load consistency"
     },
     {
-      "command": "test-save-load-cycle-android", 
+      "command": "test-save-load-cycle-android",
       "platforms": ["android"],
       "description": "Android save/load consistency"
     }
@@ -928,31 +643,33 @@ var data = {}                  # No type
 ```
 
 **Usage:**
-- `just test-desktop-target my-enhanced-test` - Runs configs + desktop commands
-- `just test-android-target my-enhanced-test` - Runs configs + android commands
-- Platform filtering: Only compatible commands execute automatically
+- `just test-desktop-target my-test` - Runs configs + desktop commands
+- `just test-android-target my-test` - Runs configs + android commands
+- Platform filtering: Only compatible commands execute
 - Context inheritance: Commands receive TEST_ID and session data
 
 ## 📖 Advanced Topics
 
-**See [CLAUDE-ADVANCED.md](CLAUDE-ADVANCED.md) for detailed information on:**
-- Wildcard pattern system deep dive & examples
-- Git workflow & backlog integration patterns
-- Repomix MCP best practices for GameTwo
-- Project architecture & directory structure
+**See [CLAUDE-ADVANCED.md](CLAUDE-ADVANCED.md) for:**
+- Wildcard pattern system deep dive
+- Git workflow & backlog integration
+- Repomix MCP best practices
+- Project architecture & structure
 - Performance optimization strategies
-- Complete command reference with examples
+- Complete command reference
 
-**See backlog documents for technical references:**
-- **Build System**: `backlog doc view doc-002` - Complete build flows, timing, and when to use each command
+**Key Documents:**
+- **Build System**: `backlog doc view doc-002` - Complete build flows and timing
 
-**MCP Tools Integration:**
-- **Repomix MCP**: Strategic codebase analysis patterns for GameTwo's 248-file architecture
-- **Godot MCP**: Direct Godot 4.3 engine integration and project management
-- **Context7 MCP**: Library documentation for Firebase, GDScript, and mobile development patterns
+**MCP Tools:**
+- **Repomix MCP**: Strategic codebase analysis for GameTwo's architecture
+- **Godot MCP**: Direct Godot 4.3 integration and project management
+- **Context7 MCP**: Library documentation for Firebase and GDScript
 
-**For complex development tasks:**
-- `just generate-claude-context` - Generate optimized project context (250k tokens)
+**For complex tasks:**
+- `just generate-claude-context` - Optimized project context (250k tokens)
 - Creates `claude-project-context.xml` for full codebase analysis
 
-**This CLAUDE.md focuses on daily GameTwo development essentials.**
+---
+
+*This CLAUDE.md focuses on daily GameTwo development essentials.*

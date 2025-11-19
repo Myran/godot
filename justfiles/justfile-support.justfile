@@ -75,7 +75,7 @@ clean-xcode:
 
 # Generate a repofile with repomix
 generate-repofile:
-    repomix --include 'project/**/*.gd','project/docs/*.md','godot/modules/firebase/*.mm','godot/modules/firebase/*.cpp','godot/modules/firebase/*.h'
+    repomix --include 'project/**/*.gd','project/docs/*.md','godot/modules/firebase/*.mm','godot/modules/firebase/*.cpp','godot/modules/firebase/*.h','godot/modules/firebase/SCsub','godot/modules/firebase/config.py'
 
 # Generate Claude Code-optimized project context
 generate-claude-context:
