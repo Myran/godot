@@ -12,7 +12,7 @@
     "backend.firebase.lifecycle",
     "system.debug.firebase_rate_limiter_status"
   ],
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "metadata": {
     "test_type": "rate_limiter_validation",
     "expected_rate_limits": 3,

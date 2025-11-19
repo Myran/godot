@@ -3,5 +3,5 @@
   "actions": [
     "rtdb.advanced.transaction"
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }

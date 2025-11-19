@@ -9,7 +9,7 @@
     "backend.firebase.request_tracking",
     "backend.firebase.timer_manager"
   ],
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "metadata": {
     "concurrent_test": true,
     "sigbus_reproduction": true,

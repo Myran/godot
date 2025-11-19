@@ -9,5 +9,5 @@
       }
     }
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }

@@ -3,5 +3,5 @@
   "actions": [
     "rtdb.*"
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }

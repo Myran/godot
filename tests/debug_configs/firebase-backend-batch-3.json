@@ -3,5 +3,5 @@
   "actions": [
     "backend.firebase.timer_manager"
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }

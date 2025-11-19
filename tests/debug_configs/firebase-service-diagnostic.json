@@ -3,5 +3,5 @@
   "actions": [
     "firebase.service.diagnostic"
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }

@@ -5,7 +5,7 @@
     "backend.firebase.method_mapping",
     "backend.firebase.error_handling"
   ],
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "metadata": {
     "auto_quit": true
   },

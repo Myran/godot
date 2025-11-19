@@ -5,7 +5,8 @@
   ],
   "platforms": [
     "desktop",
-    "android"
+    "android",
+    "ios"
   ],
   "metadata": {
     "auto_quit": true,

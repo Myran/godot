@@ -3,7 +3,7 @@
   "actions": [
     "backend.firebase.method_mapping"
   ],
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "metadata": {
     "auto_quit": true
   }

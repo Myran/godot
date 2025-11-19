@@ -202,7 +202,7 @@ _test-multi-platform TARGET_CONFIG:
     echo "🎯 Auto-detected platforms: $SUPPORTED_PLATFORMS"
 
     # Define the platforms and configs to test (desktop first as requested)
-    TEST_PLATFORMS="desktop android"
+    TEST_PLATFORMS="$SUPPORTED_PLATFORMS"
 
     # Initialize tracking arrays (bash 3.2 compatible)
     PLATFORM_RESULTS=""

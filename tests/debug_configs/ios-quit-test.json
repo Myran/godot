@@ -1,0 +1,9 @@
+{
+  "description": "Test iOS quit mechanism directly",
+  "actions": [
+    "app.quit_application"
+  ],
+  "metadata": {
+    "auto_quit": true
+  }
+}

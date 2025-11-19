@@ -8,5 +8,5 @@
     "backend.firebase.request_tracking",
     "backend.firebase.timer_manager"
   ],
-  "platforms": ["android"]
+  "platforms": ["android", "ios"]
 }
