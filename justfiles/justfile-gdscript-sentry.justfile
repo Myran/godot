@@ -42,7 +42,8 @@ build-sentry-gdscript-all force="no":
 
     echo "🎮 Checking GDScript Sentry SDK..."
 
-    if [ "{{force}}" = "yes" ]; then
+    # Force rebuild if explicitly requested OR if submodule changed
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
         echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
         just build-sentry-gdscript-desktop {{force}}
         just build-sentry-gdscript-android {{force}}
@@ -51,6 +52,7 @@ build-sentry-gdscript-all force="no":
         echo "✅ GDScript Sentry already built:"
         echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
         echo "⏭️  Skipping GDScript Sentry rebuild (saves 3-8 minutes)"
+        echo "💡 Use 'just build-sentry-gdscript-all force=yes' to force rebuild"
     else
         echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
         just build-sentry-gdscript-desktop {{force}}
@@ -225,12 +227,18 @@ sentry-gdscript-verify:
 # Clean build artifacts
 sentry-gdscript-clean:
     @echo "🧹 Cleaning GDScript Sentry build artifacts..."
-    @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/
+    # Remove built GDExtension libraries (NOT the pre-packaged native SDK frameworks)
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/macos/libsentry.macos.*.framework/libsentry.macos.*
+    @rm -rf {{SENTRY_PATH}}/project/addons/sentry/bin/macos/dSYMs/libsentry.macos.*.framework.dSYM
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.*.so.debug
+    @rm -f {{SENTRY_PATH}}/project/addons/sentry/bin/ios/libsentry.ios.*.dylib
+    # Remove exported xcframeworks
     @rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework
     @rm -rf {{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework
     @rm -rf {{IOS_EXPORT_PATH}}/Build/Products/Debug-iphoneos/gametwo.app/Frameworks/libsentry.ios.*
     @rm -rf {{IOS_EXPORT_PATH}}/Build/Products/Release-iphoneos/gametwo.app/Frameworks/libsentry.ios.*
-    @echo "✅ GDScript Sentry build artifacts cleaned"
+    @echo "✅ GDScript Sentry build artifacts cleaned (native SDK frameworks preserved)"
 
 # Check build status
 sentry-gdscript-status:
