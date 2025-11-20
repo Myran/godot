@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: cpp.firebase.concurrent_ops","actions":["cpp.firebase.concurrent_ops"]}
+{
+  "description": "Temporary config for single action: cpp.firebase.concurrent_ops",
+  "actions": [
+    "cpp.firebase.concurrent_ops"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

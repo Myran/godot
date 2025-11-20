@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: cpp.firebase.signal_integrity","actions":["cpp.firebase.signal_integrity"]}
+{
+  "description": "Temporary config for single action: cpp.firebase.signal_integrity",
+  "actions": [
+    "cpp.firebase.signal_integrity"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

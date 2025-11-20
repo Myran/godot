@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: backend.firebase.method_mapping","actions":["backend.firebase.method_mapping"]}
+{
+  "description": "Temporary config for single action: backend.firebase.method_mapping",
+  "actions": [
+    "backend.firebase.method_mapping"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

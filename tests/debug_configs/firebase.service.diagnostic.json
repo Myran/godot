@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: firebase.service.diagnostic","actions":["firebase.service.diagnostic"]}
+{
+  "description": "Temporary config for single action: firebase.service.diagnostic",
+  "actions": [
+    "firebase.service.diagnostic"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

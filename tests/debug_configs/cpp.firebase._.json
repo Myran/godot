@@ -1,1 +1,10 @@
-{"description":"Temporary config for wildcard pattern: cpp.firebase.*","actions":["cpp.firebase.*"]}
+{
+  "description": "Temporary config for wildcard pattern: cpp.firebase.*",
+  "actions": [
+    "cpp.firebase.*"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

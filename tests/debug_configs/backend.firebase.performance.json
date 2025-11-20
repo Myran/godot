@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: backend.firebase.performance","actions":["backend.firebase.performance"]}
+{
+  "description": "Temporary config for single action: backend.firebase.performance",
+  "actions": [
+    "backend.firebase.performance"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

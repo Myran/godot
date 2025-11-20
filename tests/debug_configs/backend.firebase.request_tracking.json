@@ -1,1 +1,10 @@
-{"description":"Temporary config for single action: backend.firebase.request_tracking","actions":["backend.firebase.request_tracking"]}
+{
+  "description": "Temporary config for single action: backend.firebase.request_tracking",
+  "actions": [
+    "backend.firebase.request_tracking"
+  ],
+  "platforms": [
+    "android",
+    "ios"
+  ]
+}

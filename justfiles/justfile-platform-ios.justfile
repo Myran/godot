@@ -52,10 +52,22 @@ help-ios:
     echo "Quick Commands:"
     echo "  just quick-build-ios             # Quick iOS build"
 
+# Copy iOS PCK to app bundle (internal helper)
+_copy-pck-to-ios-app-bundle:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    APP_BUNDLE_PATH="export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app"
+    if [ -d "$APP_BUNDLE_PATH" ]; then
+        echo "📦 Copying PCK to iOS app bundle..."
+        cp export/ios/{{GAME_NAME}}.pck "$APP_BUNDLE_PATH/{{GAME_NAME}}.pck"
+        echo "✅ PCK copied to app bundle"
+    fi
+
 # Export iOS PCK file
 export-pck-ios: pre-build
     @echo "📦 Exporting iOS PCK file..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "ios" ../export/ios/{{GAME_NAME}}.pck --headless
+    @just _copy-pck-to-ios-app-bundle
 
 # Build iOS app with Xcode (creates .app file)
 build-ios-app: pre-build
