@@ -3,35 +3,29 @@
 
 # GDScript Sentry SDK paths (shared variables defined in main Sentry justfile)
 
-# Default GDScript Sentry build target
-default-sentry-gdscript:
-    @echo "🎯 GDScript Sentry SDK Build Commands for GameTwo"
-    @echo ""
-    @just help-sentry-gdscript
-
 # Show GDScript Sentry build help
 help-sentry-gdscript:
     @echo "🎮 GDScript Sentry SDK Build Commands"
     @echo "===================================="
     @echo ""
     @echo "🎮 GDSCRIPT INTEGRATION:"
-    @echo "  just sentry-gdscript-build            # Build GDScript Sentry for all platforms"
-    @echo "  just sentry-gdscript-build-desktop    # Build GDScript Sentry for desktop"
-    @echo "  just sentry-gdscript-build-android    # Build GDScript Sentry for Android"
-    @echo "  just sentry-gdscript-build-ios        # Build GDScript Sentry for iOS"
+    @echo "  just build-sentry-gdscript-all         # Build GDScript Sentry for all platforms"
+    @echo "  just build-sentry-gdscript-desktop    # Build GDScript Sentry for desktop"
+    @echo "  just build-sentry-gdscript-android    # Build GDScript Sentry for Android"
+    @echo "  just build-sentry-gdscript-ios        # Build GDScript Sentry for iOS"
     @echo ""
     @echo "🖥️  DESKTOP BUILDS:"
-    @echo "  just sentry-gdscript-editor-desktop   # Desktop editor build"
-    @echo "  just sentry-gdscript-template-desktop # Desktop template build"
+    @echo "  just build-sentry-gdscript-editor-desktop   # Desktop editor build"
+    @echo "  just build-sentry-gdscript-template-desktop # Desktop template build"
     @echo ""
     @echo "📱 ANDROID BUILDS:"
-    @echo "  just sentry-gdscript-android-lib      # Android library build"
-    @echo "  just sentry-gdscript-editor-android   # Android editor build"
-    @echo "  just sentry-gdscript-template-android # Android template build"
+    @echo "  just build-sentry-gdscript-android-lib   # Android library build"
+    @echo "  just build-sentry-gdscript-editor-android   # Android editor build"
+    @echo "  just build-sentry-gdscript-template-android # Android template build"
     @echo ""
     @echo "🍎 iOS BUILDS:"
-    @echo "  just sentry-gdscript-editor-ios       # iOS editor build"
-    @echo "  just sentry-gdscript-template-ios     # iOS template build"
+    @echo "  just build-sentry-gdscript-editor-ios       # iOS editor build"
+    @echo "  just build-sentry-gdscript-template-ios     # iOS template build"
     @echo ""
     @echo "🔧 MAINTENANCE:"
     @echo "  just sentry-gdscript-clean            # Clean build artifacts"
@@ -42,7 +36,7 @@ help-sentry-gdscript:
     @echo "  just sentry-gdscript-complete        # Complete build + validation"
 
 # All platform GDScript Sentry builds
-sentry-gdscript-build force="no":
+build-sentry-gdscript-all force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -50,45 +44,45 @@ sentry-gdscript-build force="no":
 
     if [ "{{force}}" = "yes" ]; then
         echo "🔥 Force rebuild enabled - rebuilding GDScript Sentry..."
-        just sentry-gdscript-build-desktop {{force}}
-        just sentry-gdscript-build-android {{force}}
-        just sentry-gdscript-build-ios {{force}}
+        just build-sentry-gdscript-desktop {{force}}
+        just build-sentry-gdscript-android {{force}}
+        just build-sentry-gdscript-ios {{force}}
     elif [ -f "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
         echo "✅ GDScript Sentry already built:"
         echo "   📱 {{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework"
         echo "⏭️  Skipping GDScript Sentry rebuild (saves 3-8 minutes)"
     else
         echo "🔧 Building GDScript Sentry (this will take 3-8 minutes)..."
-        just sentry-gdscript-build-desktop {{force}}
-        just sentry-gdscript-build-android {{force}}
-        just sentry-gdscript-build-ios {{force}}
+        just build-sentry-gdscript-desktop {{force}}
+        just build-sentry-gdscript-android {{force}}
+        just build-sentry-gdscript-ios {{force}}
     fi
     echo "✅ GDScript Sentry builds for all platforms completed"
 
 # Desktop builds (current platform)
-sentry-gdscript-build-desktop force="no":
-    just sentry-gdscript-editor-desktop
-    just sentry-gdscript-template-desktop
+build-sentry-gdscript-desktop force="no":
+    just build-sentry-gdscript-editor-desktop
+    just build-sentry-gdscript-template-desktop
     @echo "✅ GDScript Sentry desktop builds completed"
 
-sentry-gdscript-editor-desktop:
+build-sentry-gdscript-editor-desktop:
     @echo "🏗️  Building GDScript Sentry for desktop editor..."
     @cd {{SENTRY_PATH}} && scons target=editor debug_symbols=yes
     @echo "✅ GDScript Sentry desktop editor build completed"
 
-sentry-gdscript-template-desktop:
+build-sentry-gdscript-template-desktop:
     @echo "🏗️  Building GDScript Sentry for desktop template..."
     @cd {{SENTRY_PATH}} && scons target=template_release debug_symbols=yes
     @echo "✅ GDScript Sentry desktop template build completed"
 
 # Android builds
-sentry-gdscript-build-android force="no":
-    just sentry-gdscript-android-lib
-    just sentry-gdscript-editor-android
-    just sentry-gdscript-template-android
+build-sentry-gdscript-android force="no":
+    just build-sentry-gdscript-android-lib
+    just build-sentry-gdscript-editor-android
+    just build-sentry-gdscript-template-android
     @echo "✅ GDScript Sentry Android builds completed"
 
-sentry-gdscript-android-lib:
+build-sentry-gdscript-android-lib:
     @echo "🏗️  Building GDScript Sentry Android library..."
     @cd {{SENTRY_PATH}} && ./gradlew assemble
     @echo "📦 Copying Sentry AAR files to addons directory for automatic discovery..."
@@ -98,30 +92,30 @@ sentry-gdscript-android-lib:
     @echo "✅ Sentry AAR files copied to addons directory"
     @echo "✅ GDScript Sentry Android library build completed"
 
-sentry-gdscript-editor-android:
+build-sentry-gdscript-editor-android:
     @echo "🏗️  Building GDScript Sentry for Android editor..."
     @cd {{SENTRY_PATH}} && scons target=editor debug_symbols=yes platform=android build_android_lib=yes
     @echo "✅ GDScript Sentry Android editor build completed"
 
-sentry-gdscript-template-android:
+build-sentry-gdscript-template-android:
     @echo "🏗️  Building GDScript Sentry for Android template..."
     @cd {{SENTRY_PATH}} && scons target=template_release debug_symbols=yes platform=android build_android_lib=yes
     @echo "✅ GDScript Sentry Android template build completed"
 
 # iOS builds (device only - no simulator)
-sentry-gdscript-build-ios force="no":
-    just sentry-gdscript-editor-ios {{force}}
-    just sentry-gdscript-template-ios {{force}}
+build-sentry-gdscript-ios force="no":
+    just build-sentry-gdscript-editor-ios {{force}}
+    just build-sentry-gdscript-template-ios {{force}}
     @echo "✅ GDScript Sentry iOS device builds completed"
 
-sentry-gdscript-editor-ios force="no":
+build-sentry-gdscript-editor-ios force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry iOS editor already built
     if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib" ]; then
         echo "✅ GDScript Sentry iOS editor already built"
-        echo "   Use 'just sentry-gdscript-editor-ios force=yes' to rebuild"
+        echo "   Use 'just build-sentry-gdscript-editor-ios force=yes' to rebuild"
         exit 0
     fi
 
@@ -129,85 +123,85 @@ sentry-gdscript-editor-ios force="no":
     cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no optimize=size
     echo "✅ GDScript Sentry iOS device editor build completed"
 
-sentry-gdscript-template-ios force="no":
+build-sentry-gdscript-template-ios force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry iOS template already built
     if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
         echo "✅ GDScript Sentry iOS template already built"
-        echo "   Use 'just sentry-gdscript-template-ios force=yes' to rebuild"
+        echo "   Use 'just build-sentry-gdscript-template-ios force=yes' to rebuild"
         exit 0
     fi
 
     echo "🏗️  Building GDScript Sentry for iOS device template..."
     cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
     echo "✅ GDScript Sentry iOS device template build completed"
-    @echo "📱 Creating GDExtension XCFrameworks..."
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then \
-        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then \
-            echo "📦 Creating release XCFramework..."; \
+    echo "📱 Creating GDExtension XCFrameworks..."
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
+            echo "📦 Creating release XCFramework..."
             xcodebuild -create-xcframework \
                 -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib \
-                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework; \
-            echo "✅ GDScript Sentry GDExtension XCFramework (release) created"; \
-        else \
-            echo "✅ Release XCFramework already exists and is up to date"; \
-        fi; \
-    else \
-        echo "⚠️  Release dylib not found - skipping release XCFramework"; \
+                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
+            echo "✅ GDScript Sentry GDExtension XCFramework (release) created"
+        else
+            echo "✅ Release XCFramework already exists and is up to date"
+        fi
+    else
+        echo "⚠️  Release dylib not found - skipping release XCFramework"
     fi
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then \
-        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then \
-            echo "📦 Creating debug XCFramework..."; \
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
+        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
+            echo "📦 Creating debug XCFramework..."
             xcodebuild -create-xcframework \
                 -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib \
-                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework; \
-            echo "✅ GDScript Sentry GDExtension XCFramework (debug) created"; \
-        else \
-            echo "✅ Debug XCFramework already exists and is up to date"; \
-        fi; \
-    else \
-        echo "⚠️  Debug dylib not found - skipping debug XCFramework"; \
+                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
+            echo "✅ GDScript Sentry GDExtension XCFramework (debug) created"
+        else
+            echo "✅ Debug XCFramework already exists and is up to date"
+        fi
+    else
+        echo "⚠️  Debug dylib not found - skipping debug XCFramework"
     fi
-    @echo "🔧 Fixing embedded dylib paths in XCFrameworks..."
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then \
-        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib; \
-        echo "✅ Fixed release dylib embedded path"; \
+    echo "🔧 Fixing embedded dylib paths in XCFrameworks..."
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib
+        echo "✅ Fixed release dylib embedded path"
     fi
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then \
-        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib; \
-        echo "✅ Fixed debug dylib embedded path"; \
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib
+        echo "✅ Fixed debug dylib embedded path"
     fi
-    @echo "📱 Copying GDScript Sentry XCFrameworks to iOS export project..."
-    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then \
-        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then \
-            echo "📦 Copying release XCFramework to export..."; \
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework {{IOS_EXPORT_PATH}}/; \
-            echo "✅ GDScript Sentry GDExtension XCFramework (release) copied to iOS export project"; \
-        else \
-            echo "✅ Release XCFramework already exists in export and is up to date"; \
-        fi; \
-    else \
-        echo "⚠️  Release XCFramework not found in addon directory - skipping copy"; \
+    echo "📱 Copying GDScript Sentry XCFrameworks to iOS export project..."
+    if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
+        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then
+            echo "📦 Copying release XCFramework to export..."
+            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework {{IOS_EXPORT_PATH}}/
+            echo "✅ GDScript Sentry GDExtension XCFramework (release) copied to iOS export project"
+        else
+            echo "✅ Release XCFramework already exists in export and is up to date"
+        fi
+    else
+        echo "⚠️  Release XCFramework not found in addon directory - skipping copy"
     fi
-    @if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then \
-        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ]; then \
-            echo "📦 Copying debug XCFramework to export..."; \
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{IOS_EXPORT_PATH}}/; \
-            echo "✅ GDScript Sentry GDExtension XCFramework (debug) copied to iOS export project"; \
-        else \
-            echo "✅ Debug XCFramework already exists in export and is up to date"; \
-        fi; \
-    else \
-        echo "⚠️  Debug XCFramework not found in addon directory - skipping copy"; \
+    if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
+        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ]; then
+            echo "📦 Copying debug XCFramework to export..."
+            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{IOS_EXPORT_PATH}}/
+            echo "✅ GDScript Sentry GDExtension XCFramework (debug) copied to iOS export project"
+        else
+            echo "✅ Debug XCFramework already exists in export and is up to date"
+        fi
+    else
+        echo "⚠️  Debug XCFramework not found in addon directory - skipping copy"
     fi
-    @echo "🗑️  Removing libsentry XCFrameworks from addon directory (complete deduplication)..."
+    echo "🗑️  Removing libsentry XCFrameworks from addon directory (complete deduplication)..."
     # Remove duplicates since .gdextension already points to export/ios
-    @rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
-    @rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
-    @echo "✅ Removed libsentry XCFrameworks from addon directory - no duplication"
-    @echo "✅ GDScript Sentry iOS GDExtension integration complete"
+    rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
+    rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
+    echo "✅ Removed libsentry XCFrameworks from addon directory - no duplication"
+    echo "✅ GDScript Sentry iOS GDExtension integration complete"
 
 # Verify GDScript Sentry SDK
 sentry-gdscript-verify:

@@ -3,21 +3,15 @@
 
 # Native Android Sentry paths (shared variables defined in main Sentry justfile)
 
-# Default Native Android Sentry build target
-default-native-android-sentry:
-    @echo "🤖 Native Android Sentry Build Commands for GameTwo"
-    @echo ""
-    @just help-native-android-sentry
-
 # Show Native Android Sentry build help
 help-native-android-sentry:
     @echo "🤖 Native Android Sentry SDK Build Commands"
     @echo "=========================================="
     @echo ""
     @echo "📱 NATIVE ANDROID INTEGRATION:"
-    @echo "  just build-native-android-debug         # Build native Sentry for Android debug builds"
-    @echo "  just build-native-android-release       # Build native Sentry for Android release builds (production)"
-    @echo "  just build-native-android-all           # Build native Sentry for Android (debug + release)"
+    @echo "  just build-sentry-native-android-debug   # Build native Sentry for Android debug builds"
+    @echo "  just build-sentry-native-android-release # Build native Sentry for Android release builds (production)"
+    @echo "  just build-sentry-native-android-all     # Build native Sentry for Android (debug + release)"
     @echo ""
     @echo "🔧 MAINTENANCE:"
     @echo "  just sentry-native-android-clean        # Clean build artifacts"
@@ -28,39 +22,39 @@ help-native-android-sentry:
     @echo "  just sentry-native-android-complete     # Complete native build + validation"
 
 # Native Android Sentry builds (compiled into Godot executable)
-build-native-android-all force="no":
-    just build-native-android-debug {{force}}
-    just build-native-android-release {{force}}
+build-sentry-native-android-all force="no":
+    just build-sentry-native-android-debug {{force}}
+    just build-sentry-native-android-release {{force}}
     @echo "✅ Native Android Sentry builds completed"
 
-build-native-android-debug force="no":
+build-sentry-native-android-debug force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry Android debug already built
-    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_debug.arm64.a" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_debug.arm32.a" ]; then
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_debug.arm64.a" ]; then
         echo "✅ Native Sentry Android debug already built"
-        echo "   Use 'just build-native-android-debug force=yes' to rebuild"
+        echo "   Use 'just build-sentry-native-android-debug force=yes' to rebuild"
         exit 0
     fi
 
     echo "🏗️  Building Native Sentry for Android debug builds..."
-    cd {{SENTRY_PATH}} && scons platform=android target=template_debug arch=arm32 arch=arm64 build_android_lib=yes android_api_level=24
+    cd {{SENTRY_PATH}} && scons platform=android target=template_debug arch=arm64 build_android_lib=yes android_api_level=24
     echo "✅ Native Sentry Android debug build completed"
 
-build-native-android-release force="no":
+build-sentry-native-android-release force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry Android release already built
-    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_release.arm64.a" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_release.arm32.a" ]; then
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_release.arm64.a" ]; then
         echo "✅ Native Sentry Android release already built"
-        echo "   Use 'just build-native-android-release force=yes' to rebuild"
+        echo "   Use 'just build-sentry-native-android-release force=yes' to rebuild"
         exit 0
     fi
 
     echo "🏗️  Building Native Sentry for Android release builds..."
-    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm32 arch=arm64 build_android_lib=yes android_api_level=24 optimize=size
+    cd {{SENTRY_PATH}} && scons platform=android target=template_release arch=arm64 build_android_lib=yes android_api_level=24 optimize=size
     echo "✅ Native Sentry Android release build completed"
 
 # Verify Native Android Sentry SDK
@@ -115,12 +109,12 @@ sentry-native-android-status:
 # Validate native Sentry integration
 sentry-native-android-validate:
     @echo "🔧 Validating Native Android Sentry integration..."
-    @if [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_debug.arm32.a" ] && [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_debug.arm64.a" ]; then \
-        echo "❌ Native Android Sentry debug not built - run 'just build-native-android-debug'"; \
+    @if [ ! -f "{{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.debug.arm64.so" ]; then \
+        echo "❌ Native Android Sentry debug not built - run 'just build-sentry-native-android-debug'"; \
         exit 1; \
     fi
-    @if [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_release.arm32.a" ] && [ ! -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libsentry.android.template_release.arm64.a" ]; then \
-        echo "❌ Native Android Sentry release not built - run 'just build-native-android-release'"; \
+    @if [ ! -f "{{SENTRY_PATH}}/project/addons/sentry/bin/android/libsentry.android.release.arm64.so" ]; then \
+        echo "❌ Native Android Sentry release not built - run 'just build-sentry-native-android-release'"; \
         exit 1; \
     fi
     @echo "✅ Native Android Sentry SDK validation passed"

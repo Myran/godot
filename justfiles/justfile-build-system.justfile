@@ -278,10 +278,10 @@ validate-force-usage:
         "package-ios-template.*force="
         "build-and-package-ios-templates.*force="
         "sentry-native-ios-build.*force="
-        "build-native-ios-development.*force="
-        "build-native-ios-release.*force="
+        "build-sentry-native-ios-debug.*force="
+        "build-sentry-native-ios-release.*force="
         "sentry-windows-build.*force="
-        "build-native-windows-x86_64.*force="
+        "build-sentry-native-windows-release.*force="
     )
 
     echo "Checking for consistent force parameter patterns..."

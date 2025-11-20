@@ -3,21 +3,15 @@
 
 # Sentry Native iOS paths (shared variables defined in main Sentry justfile)
 
-# Default Sentry Native iOS build target
-default-sentry-native:
-    @echo "🎯 Sentry Native iOS Build Commands for GameTwo"
-    @echo ""
-    @just help-sentry-native-ios
-
 # Show Sentry Native iOS build help
 help-sentry-native-ios:
     @echo "🍎 Native iOS Sentry SDK Build Commands"
     @echo "======================================"
     @echo ""
     @echo "📱 NATIVE iOS INTEGRATION:"
-    @echo "  just build-native-ios-all                # Build native Sentry for iOS (debug + release)"
-    @echo "  just build-native-ios-debug             # Build native Sentry for iOS debug builds"
-    @echo "  just build-native-ios-release           # Build native Sentry for iOS release builds (production)"
+    @echo "  just build-sentry-native-ios-all         # Build native Sentry for iOS (debug + release)"
+    @echo "  just build-sentry-native-ios-debug      # Build native Sentry for iOS debug builds"
+    @echo "  just build-sentry-native-ios-release    # Build native Sentry for iOS release builds (production)"
     @echo ""
     @echo "🔧 MAINTENANCE:"
     @echo "  just sentry-native-ios-clean             # Clean build artifacts"
@@ -28,19 +22,19 @@ help-sentry-native-ios:
     @echo "  just sentry-native-ios-complete          # Complete native build + validation"
 
 # Native iOS Sentry builds (compiled into Godot executable)
-build-native-ios-all force="no":
-    just build-native-ios-debug {{force}}
-    just build-native-ios-release {{force}}
+build-sentry-native-ios-all force="no":
+    just build-sentry-native-ios-debug {{force}}
+    just build-sentry-native-ios-release {{force}}
     @echo "✅ Native iOS Sentry builds completed"
 
-build-native-ios-debug force="no":
+build-sentry-native-ios-debug force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry iOS debug already built
     if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.ios.template_debug.arm64.a" ]; then
         echo "✅ Native Sentry iOS debug already built"
-        echo "   Use 'just build-native-ios-debug force=yes' to rebuild"
+        echo "   Use 'just build-sentry-native-ios-debug force=yes' to rebuild"
         exit 0
     fi
 
@@ -48,14 +42,14 @@ build-native-ios-debug force="no":
     cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no optimize=size
     echo "✅ Native Sentry iOS debug build completed"
 
-build-native-ios-release force="no":
+build-sentry-native-ios-release force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Sentry iOS release already built and SDK copied
     if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_PATH}}/modules/godot-cpp/bin/libgodot-cpp.ios.template_release.arm64.a" ] && [ -d "{{IOS_EXPORT_PATH}}/Sentry.xcframework" ]; then
         echo "✅ Native Sentry iOS release already built and SDK integrated"
-        echo "   Use 'just build-native-ios-release force=yes' to rebuild"
+        echo "   Use 'just build-sentry-native-ios-release force=yes' to rebuild"
         exit 0
     fi
 

@@ -4,19 +4,14 @@
 
 # Windows Sentry DLL paths (shared variables defined in main Sentry justfile)
 
-# Default Windows Sentry DLL build target
-default-sentry-windows:
-    @echo "🪟 Windows Sentry DLL Build Commands for GameTwo"
-    @echo ""
-    @just help-sentry-windows
-
 # Show Windows Sentry DLL build help
 help-sentry-windows:
     @echo "🪟 Windows Sentry DLL Build Commands (x86_64 only)"
     @echo "==============================================="
     @echo ""
     @echo "🔧 WINDOWS DLL BUILDS:"
-    @echo "  just build-native-windows-x86_64     # Build Windows Sentry DLL for x86_64"
+    @echo "  just build-sentry-native-windows-release   # Build Windows Sentry DLL (Release) for x86_64"
+    @echo "  just build-sentry-native-windows-debug     # Build Windows Sentry DLL (Debug) for x86_64"
     @echo ""
     @echo "📦 PACKAGING:"
     @echo "  just sentry-windows-package          # Package Windows DLLs with dependencies"
@@ -30,21 +25,15 @@ help-sentry-windows:
     @echo "🚀 WORKFLOWS:"
     @echo "  just sentry-windows-complete        # Complete build + package + install"
 
-# All architecture Windows Sentry DLL builds
-# Build Windows Sentry DLL for x86_64 architecture (alias for backwards compatibility)
-sentry-windows-build-x86_64 force="no":
-    just build-native-windows-x86_64 {{force}}
-    @echo "✅ Windows Sentry DLL build for x86_64 completed (legacy recipe)"
-
-# Build Windows Sentry DLL for x86_64 architecture
-build-native-windows-x86_64 force="no":
+# Build Windows Sentry DLL for x86_64 architecture (Release)
+build-sentry-native-windows-release force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
     # Check if Windows Sentry DLL already exists
     if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
         echo "✅ Windows Sentry DLL x86_64 already built"
-        echo "   Use 'just build-native-windows-x86_64 force=yes' to rebuild"
+        echo "   Use 'just build-sentry-native-windows-release force=yes' to rebuild"
         exit 0
     fi
 
@@ -116,7 +105,7 @@ build-native-windows-x86_64 force="no":
 
 
 # Build debug variant for x86_64
-sentry-windows-build-debug:
+build-sentry-native-windows-debug:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🐛 Building Windows Sentry Debug DLL (x86_64 only)..."
@@ -232,7 +221,7 @@ sentry-windows-validate:
         exit 1; \
     fi
     @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-        echo "❌ Windows x86_64 release DLL not built - run 'just build-native-windows-x86_64'"; \
+        echo "❌ Windows x86_64 release DLL not built - run 'just build-sentry-native-windows-release'"; \
         exit 1; \
     fi
     @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
