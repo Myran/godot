@@ -135,8 +135,9 @@ static func end_gameplay_session() -> void:
 static func _capture_pre_action_checksum(action_type: String, sequence: int) -> String:
 	"""Capture game state checksum before semantic action execution, including sequence number"""
 
-	# CRITICAL FIX: Skip checksum capture for system debug actions to prevent Android StateExtractor hang
-	if action_type.begins_with("system.debug."):
+	# CRITICAL FIX: Skip checksum capture for system debug actions on Android only to prevent StateExtractor hang
+	# This optimization is Android-specific and should not affect desktop/iOS checksum validation
+	if action_type.begins_with("system.debug.") and OS.get_name() == "Android":
 		Log.debug(
 			"Skipping checksum capture for UI debug action (Android performance optimization)",
 			{"action_type": action_type, "sequence": sequence},

@@ -4,10 +4,10 @@
     "initial_seed": 12345,
     "state_type": "save_load_cycle_validation",
     "expected_checksums": [
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM",
-      "SKIP_SYSTEM_DEBUG_CHECKSUM"
+      "06bd1ab025566ebbda16909e17f934b1709dced3924cf8c2fdf6f4c1c1799413",
+      "06bd1ab025566ebbda16909e17f934b1709dced3924cf8c2fdf6f4c1c1799413",
+      "c21dd74a1f1535278fbf18cf3003ddfdefee75d3c96404805f236dbae879a786",
+      "c21dd74a1f1535278fbf18cf3003ddfdefee75d3c96404805f236dbae879a786"
     ]
   },
   "actions": [
