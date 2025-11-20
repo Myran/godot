@@ -141,8 +141,11 @@ build-sentry-gdscript-template-ios force="no":
     echo "✅ GDScript Sentry iOS device template build completed"
     echo "📱 Creating GDExtension XCFrameworks..."
     if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
-        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
+        # Force recreation if force=yes OR if xcframework doesn't exist OR dylib is newer
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
             echo "📦 Creating release XCFramework..."
+            # Remove existing xcframework first to ensure clean creation
+            rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
             xcodebuild -create-xcframework \
                 -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib \
                 -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
@@ -154,8 +157,11 @@ build-sentry-gdscript-template-ios force="no":
         echo "⚠️  Release dylib not found - skipping release XCFramework"
     fi
     if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
-        if [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
+        # Force recreation if force=yes OR if xcframework doesn't exist OR dylib is newer
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
             echo "📦 Creating debug XCFramework..."
+            # Remove existing xcframework first to ensure clean creation
+            rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
             xcodebuild -create-xcframework \
                 -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib \
                 -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
