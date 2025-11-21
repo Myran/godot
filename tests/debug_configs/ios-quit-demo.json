@@ -1,0 +1,14 @@
+{
+  "description": "iOS Quit Action Demo",
+  "test_metadata": {
+    "test_id": "ios_quit_demo",
+    "platform": "ios",
+    "test_type": "quit_automation"
+  },
+  "actions": [
+    "app.quit_application"
+  ],
+  "metadata": {
+    "auto_quit": true
+  }
+}
