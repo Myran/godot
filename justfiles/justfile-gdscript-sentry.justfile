@@ -139,6 +139,18 @@ build-sentry-gdscript-template-ios force="no":
     echo "🏗️  Building GDScript Sentry for iOS device template..."
     cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
     echo "✅ GDScript Sentry iOS device template build completed"
+
+    # Fix install name to use @rpath instead of absolute temp path
+    echo "🔧 Fixing dylib install names for xcframework packaging..."
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib"
+        echo "✅ Fixed release dylib install name"
+    fi
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib"
+        echo "✅ Fixed debug dylib install name"
+    fi
+
     echo "📱 Creating GDExtension XCFrameworks..."
     if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
         # Force recreation if force=yes OR if xcframework doesn't exist OR dylib is newer
