@@ -136,16 +136,19 @@ build-sentry-gdscript-template-ios force="no":
     #!/usr/bin/env bash
     set -euo pipefail
 
-    # Check if Sentry iOS template already built
-    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
-        echo "✅ GDScript Sentry iOS template already built"
+    # Check if Sentry iOS templates already built (both debug and release)
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && \
+       [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ] && \
+       [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+        echo "✅ GDScript Sentry iOS templates already built (debug + release)"
         echo "   Use 'just build-sentry-gdscript-template-ios force=yes' to rebuild"
         exit 0
     fi
 
-    echo "🏗️  Building GDScript Sentry for iOS device template..."
+    echo "🏗️  Building GDScript Sentry for iOS device templates (debug + release)..."
+    cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no
     cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
-    echo "✅ GDScript Sentry iOS device template build completed"
+    echo "✅ GDScript Sentry iOS device template builds completed"
 
     # Fix install name to use @rpath instead of absolute temp path
     echo "🔧 Fixing dylib install names for xcframework packaging..."
