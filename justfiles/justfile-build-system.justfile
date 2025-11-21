@@ -316,9 +316,10 @@ validate-force-usage:
 # THREE-TIER BUILD SYSTEM
 # ================================
 
-# Tier 1: Build Toolchain (Foundation) - Editor + Templates
+# Tier 1: Build Toolchain (Foundation) - Sentry + Editor + Templates
 build-toolchain force="no": validate-env
-    @echo "🔧 Building toolchain (editor + templates)..."
+    @echo "🔧 Building toolchain (sentry + editor + templates)..."
+    just build-sentry-all {{force}}
     just build-editor {{force}}
     just templates-all {{force}}
     @echo "✅ Toolchain complete"

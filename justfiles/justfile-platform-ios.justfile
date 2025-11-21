@@ -69,14 +69,32 @@ export-pck-ios: pre-build
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --export-pack "ios" ../export/ios/{{GAME_NAME}}.pck --headless
     @just _copy-pck-to-ios-app-bundle
 
-# Build iOS app with Xcode (creates .app file)
-build-ios-app: pre-build
-    @echo "🔨 Building iOS app with Xcode..."
+# Base iOS app builder - handles debug/release configurations
+_ios-build-app BUILD_TYPE: pre-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Validate build type
+    if [ "{{BUILD_TYPE}}" != "Debug" ] && [ "{{BUILD_TYPE}}" != "Release" ]; then
+        echo "❌ Invalid build type: {{BUILD_TYPE}}. Use 'Debug' or 'Release'"
+        exit 1
+    fi
+
+    echo "🔨 Building iOS app ({{BUILD_TYPE}}) with Xcode..."
     cd export/ios && xcodebuild -workspace {{GAME_NAME}}.xcworkspace \
                                 -scheme {{GAME_NAME}} \
-                                -configuration Debug \
+                                -configuration {{BUILD_TYPE}} \
                                 -destination "generic/platform=iOS" \
                                 -allowProvisioningUpdates
+
+# Build iOS debug app with Xcode (creates .app file)
+build-ios-app-debug: (_ios-build-app "Debug")
+
+# Build iOS release app with Xcode (creates .app file)
+build-ios-app-release: (_ios-build-app "Release")
+
+# Build iOS app with Xcode (default: debug, backward compatible)
+build-ios-app: build-ios-app-debug
 
 # Export PCK file directly to iPhone app bundle
 export-pck-build-iphone: pre-build

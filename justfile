@@ -54,9 +54,9 @@ set shell := ["bash", "-c"]
 default:
     @just help
 
-# Main build command - complete pipeline from source to device deployment
+# Main build command - build all artifacts without device deployment
 build force="no":
-    just build-pipeline {{force}}
+    just build-artifacts {{force}}
 
 # Complete rebuild command - forces rebuild of all components
 rebuild:

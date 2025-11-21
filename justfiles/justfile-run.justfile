@@ -4,11 +4,11 @@
 # PLATFORM ABSTRACTION FUNCTIONS
 # ================================
 
-# Generic iOS app launcher - handles device selection and debug modes
-_ios-launch-app DEVICE_TYPE DEBUG_MODE="false": (_validate-ios-workflow DEVICE_TYPE) pre-build
+# Generic iOS app launcher - handles device selection, build type, and debug modes
+_ios-launch-app DEVICE_TYPE BUILD_TYPE="debug" DEBUG_MODE="false": (_validate-ios-workflow DEVICE_TYPE) pre-build
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     # Device selection
     if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
         DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
@@ -20,26 +20,46 @@ _ios-launch-app DEVICE_TYPE DEBUG_MODE="false": (_validate-ios-workflow DEVICE_T
         echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
         exit 1
     fi
-    
+
+    # Build type selection
+    if [ "{{BUILD_TYPE}}" = "debug" ]; then
+        BUILD_PATH="Debug-iphoneos"
+        BUILD_NAME="debug"
+    elif [ "{{BUILD_TYPE}}" = "release" ]; then
+        BUILD_PATH="Release-iphoneos"
+        BUILD_NAME="release"
+    else
+        echo "❌ Invalid build type: {{BUILD_TYPE}}. Use 'debug' or 'release'"
+        exit 1
+    fi
+
     BUNDLE_ID="{{IOS_BUNDLE_IDENTIFIER}}"
-    
+    APP_PATH="export/ios/build/products/${BUILD_PATH}/{{GAME_NAME}}.app"
+
     # Debug mode selection
     if [ "{{DEBUG_MODE}}" = "true" ]; then
-        echo "Running on $DEVICE_NAME in debug mode..."
+        echo "Running $BUILD_NAME build on $DEVICE_NAME in debug mode..."
         LAUNCH_FLAGS="--start-stopped"
         DEBUG_TEXT=" in debug mode"
     else
-        echo "Running on $DEVICE_NAME..."
+        echo "Running $BUILD_NAME build on $DEVICE_NAME..."
         LAUNCH_FLAGS="--activate"
         DEBUG_TEXT=""
     fi
-    
+
+    # Validate app exists
+    if [ ! -d "$APP_PATH" ]; then
+        echo "❌ iOS app not found: $APP_PATH"
+        echo "💡 Build the app first: just build-ios-app"
+        exit 1
+    fi
+
     # Install the app
-    echo "Installing app on $DEVICE_NAME..."
-    xcrun devicectl device install app --device ${DEVICE_ID} export/ios/build/products/debug-iphoneos/{{GAME_NAME}}.app
-    
+    echo "Installing $BUILD_NAME app on $DEVICE_NAME..."
+    xcrun devicectl device install app --device ${DEVICE_ID} ${APP_PATH}
+
     # Launch the app
-    echo "Launching app on $DEVICE_NAME$DEBUG_TEXT..."
+    echo "Launching $BUILD_NAME app on $DEVICE_NAME$DEBUG_TEXT..."
     xcrun devicectl device process launch --device ${DEVICE_ID} ${LAUNCH_FLAGS} ${BUNDLE_ID}
 
 # Generic Android APK installer - handles debug/release variants
@@ -83,10 +103,10 @@ _android-install-apk APK_TYPE="release": _validate-android-workflow
     echo "✅ $APK_NAME APK installed and launched!"
 
 # Generic iOS hot reload - handles device selection
-_ios-hotreload DEVICE_TYPE:
+_ios-hotreload DEVICE_TYPE BUILD_TYPE="debug":
     @echo "Updating game content and running on {{DEVICE_TYPE}}..."
     just ios-update-pck
-    just _ios-launch-app {{DEVICE_TYPE}}
+    just _ios-launch-app {{DEVICE_TYPE}} {{BUILD_TYPE}}
 
 # ================================
 # DESKTOP COMMANDS
@@ -182,10 +202,28 @@ run-desktop-debug VERBOSE="":
 # ================================
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-run-ios-iphone: (_ios-launch-app "iphone")
+run-ios-iphone: (_ios-launch-app "iphone" "debug")
 
 # LEVEL 1: Launch existing app (1-2 sec, no changes)
-run-ios-ipad: (_ios-launch-app "ipad")
+run-ios-ipad: (_ios-launch-app "ipad" "debug")
+
+# Install and launch debug app on iPhone (installs + launches)
+install-ios-iphone: install-ios-iphone-debug
+
+# Install and launch debug app on iPad (installs + launches)
+install-ios-ipad: install-ios-ipad-debug
+
+# Install and launch debug build on iPhone
+install-ios-iphone-debug: (_ios-launch-app "iphone" "debug")
+
+# Install and launch release build on iPhone
+install-ios-iphone-release: (_ios-launch-app "iphone" "release")
+
+# Install and launch debug build on iPad
+install-ios-ipad-debug: (_ios-launch-app "ipad" "debug")
+
+# Install and launch release build on iPad
+install-ios-ipad-release: (_ios-launch-app "ipad" "release")
 
 
 
@@ -248,14 +286,17 @@ install-apk-android-release: (_android-install-apk "release")
 # LEVEL 2a: Install existing Debug APK + launch (30 sec, requires pre-built APK)
 install-apk-android-debug: (_android-install-apk "debug")
 
+# Install and launch debug APK on Android (default for development)
+install-android: install-apk-android-debug
+
 # ================================
 # HOT RELOAD COMMANDS (Using Generic Functions)
 # ================================
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-hotreload-ios-iphone: (_ios-hotreload "iphone")
+hotreload-ios-iphone: (_ios-hotreload "iphone" "debug")
 
 # LEVEL 2: Update game content & launch (5-10 sec, exports .pck to existing app)
-hotreload-ios-ipad: (_ios-hotreload "ipad")
+hotreload-ios-ipad: (_ios-hotreload "ipad" "debug")
 
 
