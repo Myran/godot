@@ -146,8 +146,9 @@ build-sentry-gdscript-template-ios force="no":
     fi
 
     echo "🏗️  Building GDScript Sentry for iOS device templates (debug + release)..."
-    cd {{SENTRY_PATH}} && scons platform=ios target=template_debug arch=arm64 ios_simulator=no
-    cd {{SENTRY_PATH}} && scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
+    cd {{SENTRY_PATH}} && \
+        scons platform=ios target=template_debug arch=arm64 ios_simulator=no && \
+        scons platform=ios target=template_release arch=arm64 ios_simulator=no optimize=size
     echo "✅ GDScript Sentry iOS device template builds completed"
 
     # Fix install name to use @rpath instead of absolute temp path
@@ -204,10 +205,10 @@ build-sentry-gdscript-template-ios force="no":
         echo "✅ Fixed debug dylib embedded path"
     fi
     echo "📱 Copying GDScript Sentry XCFrameworks to iOS export project..."
-    if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
-        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then
+    if [ -d "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework" ]; then
+        if [ ! -d "../../{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ] || [ "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework" -nt "../../{{IOS_EXPORT_PATH}}/libsentry.ios.release.xcframework" ]; then
             echo "📦 Copying release XCFramework to export..."
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework {{IOS_EXPORT_PATH}}/
+            cp -R project/addons/sentry/bin/ios/libsentry.ios.release.xcframework ../../{{IOS_EXPORT_PATH}}/
             echo "✅ GDScript Sentry GDExtension XCFramework (release) copied to iOS export project"
         else
             echo "✅ Release XCFramework already exists in export and is up to date"
@@ -215,10 +216,10 @@ build-sentry-gdscript-template-ios force="no":
     else
         echo "⚠️  Release XCFramework not found in addon directory - skipping copy"
     fi
-    if [ -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
-        if [ ! -d "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" -nt "{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ]; then
+    if [ -d "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework" ]; then
+        if [ ! -d "../../{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ] || [ "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework" -nt "../../{{IOS_EXPORT_PATH}}/libsentry.ios.debug.xcframework" ]; then
             echo "📦 Copying debug XCFramework to export..."
-            cp -R {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework {{IOS_EXPORT_PATH}}/
+            cp -R project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework ../../{{IOS_EXPORT_PATH}}/
             echo "✅ GDScript Sentry GDExtension XCFramework (debug) copied to iOS export project"
         else
             echo "✅ Debug XCFramework already exists in export and is up to date"
@@ -228,8 +229,8 @@ build-sentry-gdscript-template-ios force="no":
     fi
     echo "🗑️  Removing libsentry XCFrameworks from addon directory (complete deduplication)..."
     # Remove duplicates since .gdextension already points to export/ios
-    rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
-    rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
+    rm -rf project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework
+    rm -rf project/addons/sentry/bin/ios/libsentry.ios.release.xcframework
     echo "✅ Removed libsentry XCFrameworks from addon directory - no duplication"
     echo "✅ GDScript Sentry iOS GDExtension integration complete"
 
