@@ -125,6 +125,13 @@ build-sentry-gdscript-editor-ios force="no":
     cd {{SENTRY_PATH}} && scons platform=ios target=editor arch=arm64 ios_simulator=no optimize=size
     echo "✅ GDScript Sentry iOS device editor build completed"
 
+    # Fix install name to use @rpath instead of absolute temp path
+    echo "🔧 Fixing editor dylib install name for xcframework packaging..."
+    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.editor.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib"
+        echo "✅ Fixed editor dylib install name"
+    fi
+
 build-sentry-gdscript-template-ios force="no":
     #!/usr/bin/env bash
     set -euo pipefail
