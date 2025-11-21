@@ -244,7 +244,9 @@
       "Bash(GEMINI_API_KEY=AIzaSyCh4sy473WTJEWSVcV4qxpX76eWdaxTYQQ gemini:*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(npm view:*)",
-      "WebFetch(domain:partner.steamgames.com)"
+      "WebFetch(domain:partner.steamgames.com)",
+      "Bash(ideviceinstaller:*)",
+      "Bash(plutil:*)"
     ],
     "deny": [],
     "ask": [],

@@ -8,13 +8,13 @@
 
     <!-- Environment and release information -->
     <key>io.sentry.environment</key>
-    <string>development</string>
+    <string>production</string>
     <key>io.sentry.release</key>
     <string>1.0.0</string>
 
     <!-- Debug mode -->
     <key>io.sentry.debug</key>
-    <true />
+    <false />
 
     <!-- Add data like request headers, user ip address and device name -->
     <key>io.sentry.send-default-pii</key>
