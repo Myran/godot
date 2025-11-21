@@ -127,8 +127,8 @@ build-sentry-gdscript-editor-ios force="no":
 
     # Fix install name to use @rpath instead of absolute temp path
     echo "🔧 Fixing editor dylib install name for xcframework packaging..."
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.editor.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.editor.arm64.dylib"
+    if [ -f "project/addons/sentry/bin/ios/temp/libsentry.ios.editor.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.editor.arm64.dylib" "project/addons/sentry/bin/ios/temp/libsentry.ios.editor.arm64.dylib"
         echo "✅ Fixed editor dylib install name"
     fi
 
@@ -149,25 +149,25 @@ build-sentry-gdscript-template-ios force="no":
 
     # Fix install name to use @rpath instead of absolute temp path
     echo "🔧 Fixing dylib install names for xcframework packaging..."
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib"
+    if [ -f "project/addons/sentry/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" "project/addons/sentry/bin/ios/temp/libsentry.ios.release.arm64.dylib"
         echo "✅ Fixed release dylib install name"
     fi
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib"
+    if [ -f "project/addons/sentry/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" "project/addons/sentry/bin/ios/temp/libsentry.ios.debug.arm64.dylib"
         echo "✅ Fixed debug dylib install name"
     fi
 
     echo "📱 Creating GDExtension XCFrameworks..."
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
+    if [ -f "project/addons/sentry/bin/ios/temp/libsentry.ios.release.arm64.dylib" ]; then
         # Force recreation if force=yes OR if xcframework doesn't exist OR dylib is newer
-        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework" ]; then
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework" ] || [ "project/addons/sentry/bin/ios/temp/libsentry.ios.release.arm64.dylib" -nt "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework" ]; then
             echo "📦 Creating release XCFramework..."
             # Remove existing xcframework first to ensure clean creation
-            rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
+            rm -rf project/addons/sentry/bin/ios/libsentry.ios.release.xcframework
             xcodebuild -create-xcframework \
-                -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.release.arm64.dylib \
-                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework
+                -library project/addons/sentry/bin/ios/temp/libsentry.ios.release.arm64.dylib \
+                -output project/addons/sentry/bin/ios/libsentry.ios.release.xcframework
             echo "✅ GDScript Sentry GDExtension XCFramework (release) created"
         else
             echo "✅ Release XCFramework already exists and is up to date"
@@ -175,15 +175,15 @@ build-sentry-gdscript-template-ios force="no":
     else
         echo "⚠️  Release dylib not found - skipping release XCFramework"
     fi
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
+    if [ -f "project/addons/sentry/bin/ios/temp/libsentry.ios.debug.arm64.dylib" ]; then
         # Force recreation if force=yes OR if xcframework doesn't exist OR dylib is newer
-        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ] || [ "{{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework" ]; then
+        if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ] || [ ! -d "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework" ] || [ "project/addons/sentry/bin/ios/temp/libsentry.ios.debug.arm64.dylib" -nt "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework" ]; then
             echo "📦 Creating debug XCFramework..."
             # Remove existing xcframework first to ensure clean creation
-            rm -rf {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
+            rm -rf project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework
             xcodebuild -create-xcframework \
-                -library {{SENTRY_ADDON_PATH}}/bin/ios/temp/libsentry.ios.debug.arm64.dylib \
-                -output {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework
+                -library project/addons/sentry/bin/ios/temp/libsentry.ios.debug.arm64.dylib \
+                -output project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework
             echo "✅ GDScript Sentry GDExtension XCFramework (debug) created"
         else
             echo "✅ Debug XCFramework already exists and is up to date"
@@ -192,12 +192,12 @@ build-sentry-gdscript-template-ios force="no":
         echo "⚠️  Debug dylib not found - skipping debug XCFramework"
     fi
     echo "🔧 Fixing embedded dylib paths in XCFrameworks..."
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib
+    if [ -f "project/addons/sentry/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.release.arm64.dylib" project/addons/sentry/bin/ios/libsentry.ios.release.xcframework/ios-arm64/libsentry.ios.release.arm64.dylib
         echo "✅ Fixed release dylib embedded path"
     fi
-    if [ -f "{{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then
-        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" {{SENTRY_ADDON_PATH}}/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib
+    if [ -f "project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib" ]; then
+        install_name_tool -id "@rpath/libsentry.ios.debug.arm64.dylib" project/addons/sentry/bin/ios/libsentry.ios.debug.xcframework/ios-arm64/libsentry.ios.debug.arm64.dylib
         echo "✅ Fixed debug dylib embedded path"
     fi
     echo "📱 Copying GDScript Sentry XCFrameworks to iOS export project..."
