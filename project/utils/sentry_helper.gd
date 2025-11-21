@@ -115,7 +115,7 @@ static func set_user(user_dict: Dictionary) -> bool:
 		return false
 
 	# Create SentryUser object from Dictionary (fixes type conversion error)
-	var user : SentryUser = SentryUser.new()
+	var user: SentryUser = SentryUser.new()
 	if user_dict.has("id"):
 		user.id = user_dict.get("id", "")
 	if user_dict.has("email"):
