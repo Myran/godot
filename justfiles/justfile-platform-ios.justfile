@@ -106,11 +106,15 @@ export-pck-build-ipad: pre-build
     @echo "💾 Exporting iOS PCK file to iPad app bundle..."
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} --headless --export-pack ios ../export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app/{{GAME_NAME}}.pck
 
-# Deploy test config to iOS app bundle (overwrites file in app bundle)
+# Deploy test config to iOS app bundle (DEPRECATED - for backward compatibility only)
+# This deploys to res:// (read-only) - use ios-push-config-to-device for user:// (writable)
 ios-deploy-config config_name:
     #!/usr/bin/env bash
     set -euo pipefail
 
+    echo "⚠️  WARNING: This deploys to res:// (read-only app bundle)"
+    echo "   For determinism tests, use 'just ios-push-config-to-device' instead"
+    echo ""
     echo "📱 Deploying test config to iOS app bundle..."
     CONFIG_FILE="tests/debug_configs/{{config_name}}.json"
     APP_BUNDLE_PATH="export/ios/build/products/Debug-iphoneos/{{GAME_NAME}}.app"
@@ -139,6 +143,83 @@ ios-deploy-config config_name:
 
     echo "✅ Test config deployed to iOS app bundle"
     echo "💡 Next: 'just run-ios-iphone' or 'just run-ios-ipad'"
+
+# Push config file to iOS device's user:// directory (writable Documents folder)
+# This enables determinism tests to update the config with expectedHash
+_push-file-ios DEVICE_ID SOURCE_FILE TARGET_FILENAME:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "📱 Pushing file to iOS device user:// directory..."
+    echo "   📄 Source: {{SOURCE_FILE}}"
+    echo "   🎯 Target: {{TARGET_FILENAME}} (in Documents/)"
+    echo "   📱 Device: {{DEVICE_ID}}"
+
+    # Use xcrun devicectl to copy file to app's Documents directory (user://)
+    # --domain-type appDataContainer gives us access to the app's sandbox
+    # --domain-identifier is the bundle ID
+    if xcrun devicectl device copy to \
+        --device "{{DEVICE_ID}}" \
+        --source "{{SOURCE_FILE}}" \
+        --destination "Documents/{{TARGET_FILENAME}}" \
+        --domain-type appDataContainer \
+        --domain-identifier "{{IOS_BUNDLE_IDENTIFIER}}" \
+        --quiet; then
+        echo "✅ File pushed to user://{{TARGET_FILENAME}}"
+    else
+        echo "❌ Failed to push file to iOS device"
+        echo "💡 Make sure the app is installed and the device is unlocked"
+        exit 1
+    fi
+
+# Push config to iOS device for testing (writable location - user://)
+ios-push-config-to-device DEVICE_TYPE CONFIG_NAME_OR_PATH:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Determine device ID based on type
+    if [ "{{DEVICE_TYPE}}" = "iphone" ]; then
+        DEVICE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+        DEVICE_NAME="iPhone"
+    elif [ "{{DEVICE_TYPE}}" = "ipad" ]; then
+        DEVICE_ID="{{IOS_IPAD_DEVICE_ID}}"
+        DEVICE_NAME="iPad"
+    else
+        echo "❌ Invalid device type: {{DEVICE_TYPE}}. Use 'iphone' or 'ipad'"
+        exit 1
+    fi
+
+    CONFIG_INPUT="{{CONFIG_NAME_OR_PATH}}"
+
+    echo "📱 Pushing config to $DEVICE_NAME..."
+
+    # Auto-detect: file path vs config name
+    if [[ -f "$CONFIG_INPUT" ]]; then
+        # File path provided - use directly (for temp configs with injected metadata)
+        CONFIG_FILE="$CONFIG_INPUT"
+        echo "📄 Using file path: $CONFIG_FILE"
+    else
+        # Config name provided - resolve to file
+        CONFIG_FILE="tests/debug_configs/${CONFIG_INPUT}.json"
+        if [[ ! -f "$CONFIG_FILE" ]]; then
+            # Try with _ios_automated suffix
+            CONFIG_FILE="tests/debug_configs/${CONFIG_INPUT}_ios_automated.json"
+        fi
+        echo "📄 Resolved config name to: $CONFIG_FILE"
+    fi
+
+    # Validate resolved file exists
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "❌ Config file not found: $CONFIG_FILE"
+        echo "💡 Available configs:"
+        ls tests/debug_configs/*.json 2>/dev/null | xargs -n 1 basename | sed 's/.json$//' || echo "No configs found"
+        exit 1
+    fi
+
+    # Push config to device
+    just _push-file-ios "$DEVICE_ID" "$CONFIG_FILE" "debug_startup_actions.json"
+
+    echo "✅ Config pushed to $DEVICE_NAME successfully"
 
 # Test iOS file access by building with placeholder config
 ios-test-file-access:
@@ -468,16 +549,22 @@ _deploy-config-ios config_path:
         exit 1
     fi
 
-    # Extract config name for deployment
-    CONFIG_NAME=$(basename "$CONFIG_PATH" .json)
-
-    # Use existing ios-deploy-config recipe (handles file copying to app bundle)
-    if ! just ios-deploy-config "$CONFIG_NAME"; then
-        echo "❌ Failed to deploy iOS config"
+    # Use IOS_TEST_DEVICE environment variable (set by test-ios-iphone/ipad commands)
+    if [[ -z "${IOS_TEST_DEVICE:-}" ]]; then
+        echo "❌ IOS_TEST_DEVICE not set. Use test-ios-iphone or test-ios-ipad"
         exit 1
     fi
 
-    echo "✅ iOS config deployed successfully"
+    echo "📱 Pushing config to iOS device: $IOS_TEST_DEVICE"
+    echo "   📄 Config: $CONFIG_PATH"
+
+    # Push config directly to device's user:// directory (writable Documents folder)
+    if ! just _push-file-ios "$IOS_TEST_DEVICE" "$CONFIG_PATH" "debug_startup_actions.json"; then
+        echo "❌ Failed to push iOS config to device"
+        exit 1
+    fi
+
+    echo "✅ iOS config pushed to device successfully (user:// writable location)"
 
 # Clean up old iOS test logs by age
 clean-ios-logs-by-age days="7":
