@@ -218,7 +218,11 @@ static func _log_test_success(
 	params: Dictionary = {}
 ) -> void:
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-	var config_test_id: String = test_metadata.get("test_id", "")
+	# Fix for Task-301: Use current test context first, fallback to cached config test_id
+	# This prevents iOS test_id caching bug where stale cached test_id is used instead of current test_id
+	var config_test_id: String = (
+		current_test_id if current_test_id != "" else test_metadata.get("test_id", "")
+	)
 
 	if config_test_id != "":
 		test_success_count += 1
@@ -333,7 +337,11 @@ func _execute_core(
 
 	# UNIFIED TEST REPORTING
 	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-	var config_test_id: String = test_metadata.get("test_id", "")
+	# Fix for Task-301: Use current test context first, fallback to cached config test_id
+	# This prevents iOS test_id caching bug where stale cached test_id is used instead of current test_id
+	var config_test_id: String = (
+		current_test_id if current_test_id != "" else test_metadata.get("test_id", "")
+	)
 
 	if config_test_id != "":
 		if success:

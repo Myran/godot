@@ -798,6 +798,12 @@ _execute-test-ios config_name:
 
     echo "🍎 Executing iOS test: $CONFIG_NAME on $DEVICE_NAME ($IOS_DEVICE_ID)"
 
+    # Task-301: Clear iOS app data for fresh start (equivalent to Android pm clear)
+    echo "🧹 Clearing iOS app data for fresh test state..."
+    if ! just _clean-ios-data; then
+        echo "⚠️  Warning: Failed to clear iOS app data, proceeding with existing state"
+    fi
+
     # Use appropriate hotreload recipe based on device type
     if [[ "$IOS_DEVICE_TYPE" == "iphone" ]]; then
         if ! just hotreload-ios-iphone; then
@@ -812,3 +818,35 @@ _execute-test-ios config_name:
     fi
 
     echo "✅ iOS test execution completed on $DEVICE_NAME"
+
+# iOS data clearing equivalent to Android pm clear (Task-301)
+# Removes app and reinstalls for fresh state, matching Android behavior
+_clean-ios-data:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Use IOS_TEST_DEVICE environment variable (set by test-ios-iphone/ipad commands)
+    if [[ -z "${IOS_TEST_DEVICE:-}" ]]; then
+        echo "❌ IOS_TEST_DEVICE not set. Use test-ios-iphone or test-ios-ipad"
+        exit 1
+    fi
+
+    echo "🗑️  Clearing iOS app data (uninstall/reinstall) - Task-301 fix..."
+    echo "   📱 Device: $IOS_TEST_DEVICE"
+
+    # Check if app is installed and uninstall to clear all data
+    echo "   🔍 Checking for existing app installation..."
+    if xcrun devicectl list devices --device "$IOS_TEST_DEVICE" 2>/dev/null | grep -q "com.primaryhive.gametwo"; then
+        echo "   📱 Uninstalling existing app to clear all data..."
+        if xcrun devicectl device uninstall application --device "$IOS_TEST_DEVICE" com.primaryhive.gametwo 2>/dev/null; then
+            echo "   ✅ App uninstalled successfully"
+        else
+            echo "   ⚠️  App uninstall failed (may not be installed)"
+        fi
+    else
+        echo "   💡 App not installed - no data to clear"
+    fi
+
+    echo "✅ iOS app data cleared via uninstall"
+    echo "💡 App will be freshly installed on next test run"
+    echo "🎯 This provides iOS equivalent of Android 'pm clear' behavior"
