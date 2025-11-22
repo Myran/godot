@@ -75,8 +75,8 @@ func _handle_ios_quit() -> void:
 	## iOS-specific quit handling for development/testing (Task-290)
 	##
 	## iOS does not provide an API for gracefully terminating applications.
-	## For development/testing purposes, we use abort() which is the recommended
-	## approach for terminating iOS apps during testing.
+	## For development/testing purposes, we use _exit(0) which terminates immediately
+	## without running cleanup handlers, ensuring the test framework detects completion.
 	##
 	## Note: This is ONLY used in development/testing workflows, not in production.
 
@@ -86,7 +86,7 @@ func _handle_ios_quit() -> void:
 			"platform": "iOS",
 			"action": "development_quit",
 			"test_id": DebugAction.get_current_test_id(),
-			"note": "Using abort() for development/testing purposes only"
+			"note": "Using _exit(0) for immediate termination in development/testing"
 		},
 		["debug", "quit", "ios", "development"]
 	)
@@ -97,16 +97,18 @@ func _handle_ios_quit() -> void:
 	# Use logger's graceful shutdown for iOS to ensure all logs are captured
 	await Log.shutdown_gracefully()
 
-	# Log final message before assert crash
+	# Log final message before quit
 	Log.info(
-		"QuitApplicationEvent: iOS development quit - using assert() crash",
-		{"platform": "iOS", "termination_method": "assert_crash", "test_completion": true},
+		"QuitApplicationEvent: iOS development quit - using Firebase.quit_app()",
+		{"platform": "iOS", "termination_method": "_exit(0)", "test_completion": true},
 		["debug", "quit", "ios", "development"]
 	)
 
-	# Development/testing termination using assertion crash (Task-290 recommendation)
-	# This is safe for development but should not be used in production
-	assert(false, "iOS development testing quit - intentional assertion crash for test completion")
+	# Development/testing termination using Firebase module quit (Task-290)
+	# This calls _exit(0) which bypasses cleanup handlers for immediate termination
+	# Use ClassDB to instantiate the C++ Firebase class (following project pattern)
+	var firebase: Object = ClassDB.instantiate("Firebase")
+	firebase.quit_app()
 
 
 func _perform_firebase_cleanup() -> void:
