@@ -669,9 +669,18 @@ _handle-checksum-validation config_path platform test_id:
                 MATCH_STATUS="FAIL"
             fi
             
-            # Truncate checksums for display (first 12 chars)
-            EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
-            ACTUAL_SHORT="${ACTUAL_CHECKSUM:0:12}..."
+            # Smart truncation - show full special values, truncate long hashes
+            if [[ "$EXPECTED_CHECKSUM" == SKIP_* ]] || [[ ${#EXPECTED_CHECKSUM} -lt 30 ]]; then
+                EXPECTED_SHORT="$EXPECTED_CHECKSUM"
+            else
+                EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
+            fi
+
+            if [[ "$ACTUAL_CHECKSUM" == SKIP_* ]] || [[ ${#ACTUAL_CHECKSUM} -lt 30 ]]; then
+                ACTUAL_SHORT="$ACTUAL_CHECKSUM"
+            else
+                ACTUAL_SHORT="${ACTUAL_CHECKSUM:0:12}..."
+            fi
             
             echo "| $EXPECTED_SEQ | $EXPECTED_ACTION | $EXPECTED_SHORT | $ACTUAL_SHORT | $STATUS |"
             INDEX=$((INDEX + 1))
@@ -690,7 +699,12 @@ _handle-checksum-validation config_path platform test_id:
                 EXPECTED_ACTION="checksum_validation"
             fi
             
-            EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
+            # Smart truncation for missing checksums too
+            if [[ "$EXPECTED_CHECKSUM" == SKIP_* ]] || [[ ${#EXPECTED_CHECKSUM} -lt 30 ]]; then
+                EXPECTED_SHORT="$EXPECTED_CHECKSUM"
+            else
+                EXPECTED_SHORT="${EXPECTED_CHECKSUM:0:12}..."
+            fi
             echo "| $EXPECTED_SEQ | $EXPECTED_ACTION | $EXPECTED_SHORT | MISSING... | ❌ |"
             MATCH_STATUS="FAIL"
             INDEX=$((INDEX + 1))
