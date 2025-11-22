@@ -27,6 +27,7 @@ public:
 	Firebase();
 	static firebase::App *AppId();
 	static AppActivity GetAppActivity();
+	void quit_app();
 };
 
 #endif // Firebase_h

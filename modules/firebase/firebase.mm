@@ -62,7 +62,19 @@ AppActivity Firebase::GetAppActivity() {
 #endif
 }
 */
+void Firebase::quit_app() {
+#if defined(__APPLE__)
+    // iOS quit for testing/CI only
+    // Use _exit() instead of exit() to bypass cleanup handlers and terminate immediately
+    // This is necessary because exit() allows cleanup code to run, which can delay termination
+    _exit(0);
+#else
+    // Android/other platforms: no-op (they use Engine.get_main_loop().quit())
+#endif
+}
+
 void Firebase::_bind_methods() {
     //ClassDB::bind_method(D_METHOD("AppId"), &Firebase::AppId);
+    ClassDB::bind_method(D_METHOD("quit_app"), &Firebase::quit_app);
 }
 
