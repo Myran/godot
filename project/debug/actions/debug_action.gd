@@ -310,29 +310,8 @@ func _execute_core(
 			error_message = _extract_error_message(result)
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 
-		# Sequential action completion - unified event for all action types
-		# CRITICAL: Emit completion events even on failure for test framework detection
-		# CRITICAL: Include test_id for Android logcat filtering (grep requires TEST_ID match)
-		if not auto_continue:
-			Log.info(
-				"Sequential action completed - emitting completion event",
-				{
-					"action": action_name,
-					"success": success,
-					"category": category,
-					"auto_continue": auto_continue,
-					"completion_event": "SequentialActionCompleteEvent",
-					"test_id": current_test_id
-				},
-				["debug", "sequential", "completion", "unified"]
-			)
-			core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
-	else:
-		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
-		success = false
-		error_message = "No execute method defined for " + action_name
-		_update_status("ERROR: No execute method defined for " + action_name, true)
-
+		# Calculate duration and prepare test metadata for success/failure logging
+	# This must happen BEFORE sequential completion events to prevent race conditions
 	var duration_ms: int = Time.get_ticks_msec() - start_time
 
 	# UNIFIED TEST REPORTING
@@ -343,6 +322,7 @@ func _execute_core(
 		current_test_id if current_test_id != "" else test_metadata.get("test_id", "")
 	)
 
+	# SUCCESS/FAILURE LOGGING - Moved BEFORE sequential completion events to fix Task-302 race condition
 	if config_test_id != "":
 		if success:
 			# SINGLE POINT: Success logging (eliminates race condition)
@@ -359,17 +339,40 @@ func _execute_core(
 					"action": action_name,
 					"category": category,
 					"group": group,
-					"error": error_message,
 					"duration_ms": duration_ms,
+					"error_message": error_message,
 					"params": params,
 					"pid": OS.get_process_id(),
 					"sequence": test_failure_count,
-					"timestamp": Time.get_datetime_string_from_system(),
-					"success_count_before_failure": test_success_count,
-					"execution_context": ExecutionContext.keys()[context]
+					"timestamp":
+					Time.get_datetime_string_from_system().replace("T", " ").split(".")[0]
 				},
-				["debug", "test", "failure", "pid", "sequence", "unified"]
+				["debug", "test", "failure", "pid", "sequence"]
 			)
+
+	# Sequential action completion - unified event for all action types
+	# CRITICAL: Emit completion events even on failure for test framework detection
+	# CRITICAL: Include test_id for Android logcat filtering (grep requires TEST_ID match)
+	# NOTE: Success/failure logging already completed above to prevent race conditions
+	if not auto_continue:
+		Log.info(
+			"Sequential action completed - emitting completion event",
+			{
+				"action": action_name,
+				"success": success,
+				"category": category,
+				"auto_continue": auto_continue,
+				"completion_event": "SequentialActionCompleteEvent",
+				"test_id": current_test_id
+			},
+			["debug", "sequential", "completion", "unified"]
+		)
+		core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
+	else:
+		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
+		success = false
+		error_message = "No execute method defined for " + action_name
+		_update_status("ERROR: No execute method defined for " + action_name, true)
 
 # Removed execution guard system - was causing issues
 
