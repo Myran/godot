@@ -31,10 +31,21 @@ var _queue_continuation_requested: bool = false
 
 
 func _input(event: InputEvent) -> void:
+	# Block all input until game initialization is complete
+	if ui_state == core.UIState.INITIALIZING:
+		Log.debug(
+			"Input blocked during initialization",
+			{"event_type": event.get_class()},
+			[Log.TAG_UI, Log.TAG_INITIALIZATION, "input_blocked"]
+		)
+		return
 	input_handler.input(event)
 
 
 func _process(delta: float) -> void:
+	# Block process input until game initialization is complete
+	if ui_state == core.UIState.INITIALIZING:
+		return
 	input_handler.process(delta)
 
 
@@ -72,16 +83,18 @@ func intitialize_game() -> void:
 	await data_source.activate_card_cache()
 	# RNG is now auto-initialized during autoload _ready() phase
 
+	# Transition from INITIALIZING to LOCKED after card cache is populated
+	ui_state = core.UIState.LOCKED
+	Log.info(
+		"Card cache populated - UI transitioned from INITIALIZING to LOCKED",
+		{"ui_state": "LOCKED"},
+		[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, Log.TAG_UI]
+	)
+
 	Log.info(
 		"Normal initialization, starting fresh game", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
 	)
 	game_handler.set_gamestate(core.GameState.START)
-
-	Log.info(
-		"Game initialization complete - UI remains LOCKED until state transition",
-		{},
-		[Log.TAG_INITIALIZATION, Log.TAG_SYSTEM, Log.TAG_UI]
-	)
 
 	Log.info(
 		"Emitting initialization_complete signal", {}, [Log.TAG_INITIALIZATION, Log.TAG_SYSTEM]
