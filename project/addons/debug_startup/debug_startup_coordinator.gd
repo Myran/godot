@@ -186,6 +186,9 @@ func _get_action_names() -> Array:
 		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
 			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
+			# CRITICAL FIX: Reset DebugConfigReader cache before using external config
+			# This prevents stale cached config from early autoload execution (Task-303)
+			DebugConfigReader._reset_cache()
 			var external_actions := _parse_config_file(external_config_path)
 			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
 			return external_actions
@@ -203,6 +206,9 @@ func _get_action_names() -> Array:
 		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
 			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
+			# CRITICAL FIX: Reset DebugConfigReader cache before using external config
+			# This prevents stale cached config from early autoload execution (Task-303)
+			DebugConfigReader._reset_cache()
 			var external_actions := _parse_config_file(external_config_path)
 			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
 			return external_actions

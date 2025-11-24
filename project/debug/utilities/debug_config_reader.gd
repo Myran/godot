@@ -189,24 +189,25 @@ static func _read_config_file() -> Dictionary:
 
 static func _reset_cache() -> void:
 	"""Reset the process-scoped cache. For testing purposes only."""
-	_cached_config_data.clear()
+	# Initialize with common debug structure to prevent 'array is empty' crashes
+	_cached_config_data = {"actions": [], "metadata": {}, "platforms": ["ios", "android"]}
 	_has_loaded = false
 	if Log:
-		Log.debug("Debug config cache reset", {}, ["debug", "config", "cache", "testing"])
+		Log.debug(
+			"Debug config cache reset with safe defaults",
+			{},
+			["debug", "config", "cache", "testing"]
+		)
 
 
 static func _get_config_path() -> String:
 	"""Get the appropriate config file path based on platform."""
 	if OS.has_feature("mobile"):
-		# Android: Try external user:// directory first (writable), fallback to embedded res://
-		if OS.has_feature("android"):
-			var external_path: String = "user://debug_startup_actions.json"
-			if FileAccess.file_exists(external_path):
-				return external_path
-			return "res://debug_startup_actions.json"
-
-		# iOS: Only has read-only app bundle, always use embedded res://
-		# Files are overwritten in app bundle post-build for testing
+		# Mobile (Android/iOS): Try external user:// directory first (writable), fallback to embedded res://
+		# iOS Documents/ directory IS writable despite old comments saying otherwise
+		var external_path: String = "user://debug_startup_actions.json"
+		if FileAccess.file_exists(external_path):
+			return external_path
 		return "res://debug_startup_actions.json"
 
 	return "user://debug_startup_actions.json"
