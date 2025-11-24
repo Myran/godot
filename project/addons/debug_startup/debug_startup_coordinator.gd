@@ -72,7 +72,14 @@ func startDebugCoordinator() -> void:
 	)
 
 	if actions.is_empty():
-		Log.info("No debug startup actions to execute", {}, ["debug", "startup"])
+		Log.info("=== MANUAL MODE DETECTED ===", {
+			"reason": "empty_actions_array",
+			"mode": "manual_testing",
+			"auto_quit": false,
+			"completion_actions": false,
+			"test_infrastructure": false
+		}, ["debug", "startup", "manual_mode"])
+		Log.info("App running in manual mode - no test infrastructure activated", {}, ["debug", "startup"])
 		return
 	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	DebugManager.action(DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST)
@@ -316,6 +323,16 @@ func _parse_config_file(path: String) -> Array:
 
 	if data.has("actions"):
 		var raw_actions := data.actions as Array
+
+		# Check for manual mode (empty actions array)
+		if raw_actions.is_empty():
+			Log.info("Config has empty actions array - manual testing mode", {
+				"path": path,
+				"has_metadata": data.has("metadata"),
+				"has_test_metadata": data.has("test_metadata")
+			}, ["debug", "startup", "manual_mode"])
+			return []
+
 		var actions: Array = []
 
 		for action: Variant in raw_actions:
@@ -388,7 +405,13 @@ func _parse_config_file(path: String) -> Array:
 		Log.debug("Parsed actions from config", {"actions": actions, "count": actions.size()}, ["debug", "startup"])
 		return actions
 
-	Log.debug("No actions found in config", {"path": path}, ["debug", "startup"])
+	# No actions key in config - manual testing mode
+	Log.info("Config has no actions key - manual testing mode", {
+		"path": path,
+		"config_keys": data.keys(),
+		"has_metadata": data.has("metadata"),
+		"has_test_metadata": data.has("test_metadata")
+	}, ["debug", "startup", "manual_mode"])
 	return []
 
 
