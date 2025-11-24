@@ -439,6 +439,38 @@ ios-config-logs-iphone:
 ios-config-logs-ipad:
     just _ios-config-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
+# Retrieve stored logs from iOS device Documents/logs/ directory
+_ios-retrieve-logs-internal device_id device_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    DEVICE_ID="{{device_id}}"
+    DEVICE_NAME="{{device_name}}"
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    DEST_DIR="/tmp/ios_logs_${TIMESTAMP}"
+
+    echo "📱 Retrieving logs from ${DEVICE_NAME} (${DEVICE_ID})"
+    echo "📂 Destination: ${DEST_DIR}"
+
+    xcrun devicectl device copy from \
+        --device "$DEVICE_ID" \
+        --source "Documents/logs/" \
+        --destination "$DEST_DIR" \
+        --domain-type appDataContainer \
+        --domain-identifier com.primaryhive.gametwo
+
+    echo "✅ Logs retrieved to: ${DEST_DIR}"
+    echo "📄 Available logs:"
+    ls -lh "$DEST_DIR"
+
+# Retrieve stored logs from iPhone device
+ios-retrieve-logs-iphone:
+    just _ios-retrieve-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
+
+# Retrieve stored logs from iPad device
+ios-retrieve-logs-ipad:
+    just _ios-retrieve-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
+
 # iOS testing interface - manual mode with fzf selection
 test-ios target="":
     #!/usr/bin/env bash
