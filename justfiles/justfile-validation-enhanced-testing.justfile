@@ -800,37 +800,25 @@ _extract-logs test_id platform temp_output_file="":
         "ios")
             echo "🍎 Extracting iOS logs for test: $TEST_ID"
 
-            # Get device logs using libimobiledevice for direct iOS device log access
-            echo "🍎 Fetching iOS device console logs using idevicesyslog..."
+            # Check if background-captured log file exists (from _execute-test-ios)
+            if [[ -f "/tmp/ios_last_log_file.txt" ]]; then
+                BACKGROUND_LOG_FILE=$(cat /tmp/ios_last_log_file.txt)
 
-            # First check if idevicesyslog is available
-            if command -v idevicesyslog >/dev/null 2>&1; then
-                echo "🍎 Using libimobiledevice for direct iOS device log access..."
+                if [[ -f "$BACKGROUND_LOG_FILE" ]]; then
+                    echo "🍎 Using background-captured logs from: $BACKGROUND_LOG_FILE"
 
-                # Check device connection
-                DEVICE_NAME=$(idevicename 2>/dev/null | head -1 || echo "")
-                if [[ -n "$DEVICE_NAME" ]]; then
-                    echo "🍎 Connected to iOS device: $DEVICE_NAME"
+                    # Copy raw logs
+                    cp "$BACKGROUND_LOG_FILE" "$LOG_FILE"
 
-                    # Try to capture device logs using idevicesyslog
-                    echo "🍎 Capturing iOS device logs with idevicesyslog..."
-
-                    # Method 1: Capture recent device logs
-                    timeout 30s idevicesyslog > "$LOG_FILE" 2>&1 || {
-                        echo "🍎 idevicesyslog completed or timed out"
-                    }
-
-                    # Filter for gametwo-related content if we got logs
+                    # Filter for relevant content if we got logs
                     if [[ -f "$LOG_FILE" && -s "$LOG_FILE" ]]; then
-                        # Extract only relevant logs and save back to file
                         LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
                         echo "🍎 Raw iOS logs captured: $LOG_LINES lines"
 
                         if [[ $LOG_LINES -gt 0 ]]; then
-                            echo "🍎 Filtering for gametwo/Godot/debug content..."
-                            # Filter for relevant content using SHARED CROSS-PLATFORM filter for guaranteed parity
-                            # Use sort -u to prevent duplicate log lines from multiple pattern matches (fixes double counting)
-                            grep -E "($TEST_ID|{{CROSS_PLATFORM_TEST_BASE}})" "$LOG_FILE" | sort -u > "${LOG_FILE}.filtered" 2>/dev/null || echo "No specific matches found" > "${LOG_FILE}.filtered"
+                            echo "🍎 Filtering for test-specific content..."
+                            # iOS logs are already clean from timestamped files - just filter for current TEST_ID
+                            grep "$TEST_ID" "$LOG_FILE" > "${LOG_FILE}.filtered" 2>/dev/null || echo "No matches for TEST_ID" > "${LOG_FILE}.filtered"
 
                             FILTERED_LINES=$(wc -l < "${LOG_FILE}.filtered" 2>/dev/null || echo "0")
                             echo "🍎 Filtered relevant logs: $FILTERED_LINES lines"
@@ -844,41 +832,20 @@ _extract-logs test_id platform temp_output_file="":
                             fi
                         fi
                     else
-                        echo "🍎 No logs captured via idevicesyslog - device may need passcode confirmation"
+                        echo "🍎 No logs in background capture file"
                     fi
 
+                    # DEBUG: Keep temporary log file for debugging
+                    # rm -f "$BACKGROUND_LOG_FILE" "/tmp/ios_last_log_file.txt"
+                    echo "🔍 DEBUG: Log file preserved at: $BACKGROUND_LOG_FILE"
                 else
-                    echo "❌ No iOS device detected via idevicesyslog"
+                    echo "❌ Background log file not found: $BACKGROUND_LOG_FILE"
                     exit 1
                 fi
-
             else
-                echo "❌ idevicesyslog not available - falling back to macOS log access"
-                echo "💡 Install libimobiledevice tools: brew install ideviceinstaller"
-
-                # Fallback: try macOS log approaches (previous method)
-                DEVICE_ID="{{IOS_DEPLOY_DEVICE}}"  # iPad device ID (UDID format for xcrun devicectl)
-                if command -v xcrun >/dev/null 2>&1; then
-                    echo "🍎 Fallback: Checking for gametwo process on iOS device..."
-                    GAME_PROCESS=$(xcrun devicectl device info processes --device "$DEVICE_ID" 2>/dev/null | grep "gametwo.app/gametwo" | head -1 || echo "")
-
-                    if [[ -n "$GAME_PROCESS" ]]; then
-                        echo "🍎 Found gametwo process on device: $GAME_PROCESS"
-                        echo "🍎 Attempting macOS-based log access..."
-
-                        # Try macOS log show as fallback
-                        log show --predicate 'processImagePath CONTAINS "gametwo"' --style compact --last 10m > "$LOG_FILE" 2>/dev/null || {
-                            echo "🍎 No device logs accessible via macOS log system"
-                            echo "" > "$LOG_FILE"  # Create empty file
-                        }
-                    else
-                        echo "🍎 No gametwo process found on device"
-                        echo "" > "$LOG_FILE"  # Create empty file
-                    fi
-                else
-                    echo "❌ Neither idevicesyslog nor xcrun available"
-                    exit 1
-                fi
+                echo "❌ No background iOS log capture found"
+                echo "💡 iOS logs must be captured during test execution"
+                exit 1
             fi
 
             # Final verification and reporting

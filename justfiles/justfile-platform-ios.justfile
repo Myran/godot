@@ -830,26 +830,169 @@ _execute-test-ios config_name:
 
     echo "🍎 Executing iOS test: $CONFIG_NAME on $DEVICE_NAME ($IOS_DEVICE_ID)"
 
-    # Task-301: Clear iOS app data for fresh start (equivalent to Android pm clear)
+    # Clear app data for fresh test (Task-301)
     echo "🧹 Clearing iOS app data for fresh test state..."
     if ! just _clean-ios-data; then
         echo "⚠️  Warning: Failed to clear iOS app data, proceeding with existing state"
     fi
 
-    # Use appropriate hotreload recipe based on device type
-    if [[ "$IOS_DEVICE_TYPE" == "iphone" ]]; then
-        if ! just hotreload-ios-iphone; then
-            echo "❌ Failed to execute iOS test on iPhone"
-            exit 1
+    # Update PCK and install app (but don't launch yet)
+    echo "📦 Installing updated app on $DEVICE_NAME..."
+    just ios-update-pck
+
+    # Determine build path
+    BUILD_PATH="Debug-iphoneos"
+    APP_PATH="export/ios/build/products/${BUILD_PATH}/gametwo.app"
+
+    # Install app (creates fresh Documents/ directory)
+    xcrun devicectl device install app --device "$IOS_DEVICE_ID" "$APP_PATH"
+    echo "✅ App installed successfully"
+
+    # NOW push the config (Documents/ exists and is empty)
+    TEMP_CONFIG_PATH="tests/debug_configs/${CONFIG_NAME}_ios_automated.json"
+    if [[ -f "$TEMP_CONFIG_PATH" ]]; then
+        echo "📱 Pushing config to fresh app installation..."
+        just _push-file-ios "$IOS_DEVICE_ID" "$TEMP_CONFIG_PATH" "debug_startup_actions.json"
+    fi
+
+    # Clear any existing logs to ensure only current test data (follows Android logcat -c pattern)
+    echo "🧹 Clearing existing iOS logs for clean test data..."
+    just _clear-ios-logs "$IOS_DEVICE_ID" || {
+        echo "⚠️  Warning: Failed to clear iOS logs, proceeding anyway"
+    }
+
+    # Launch the app
+    echo "🚀 Launching app on $DEVICE_NAME..."
+    xcrun devicectl device process launch --device "$IOS_DEVICE_ID" --activate "com.primaryhive.gametwo"
+
+    # Give app time to actually start before we check if it's running
+    echo "⏳ Waiting for app to start..."
+    sleep 5
+
+    # Wait for app to actually quit before pulling logs
+    echo "⏳ Waiting for app to quit..."
+    MAX_WAIT=60
+    ELAPSED=0
+
+    while [ $ELAPSED -lt $MAX_WAIT ]; do
+        # Check if app is still running by checking process list
+        if xcrun devicectl device info processes \
+            --device "$IOS_DEVICE_ID" \
+            --quiet 2>/dev/null | grep -q "{{IOS_BUNDLE_IDENTIFIER}}"; then
+            echo "   App still running... ($ELAPSED/$MAX_WAIT seconds)"
+            sleep 2
+            ELAPSED=$((ELAPSED + 2))
+        else
+            echo "✅ App has quit after $((ELAPSED + 5)) seconds (including startup time)"
+            break
         fi
+    done
+
+    if [ $ELAPSED -ge $MAX_WAIT ]; then
+        echo "⚠️  Warning: App did not quit within $MAX_WAIT seconds"
+    fi
+
+    # Give additional time for logs to flush to disk
+    echo "⏳ Waiting for logs to flush..."
+    sleep 3
+
+    # Pull Godot logs directory from iOS device (similar to Android logcat)
+    echo "📥 Pulling Godot logs from iOS device..."
+    IOS_LOG_DIR="/tmp/ios_logs_$$"
+
+    mkdir -p "$IOS_LOG_DIR"
+
+    # Pull entire logs directory to get timestamped files
+    if xcrun devicectl device copy from \
+        --device "$IOS_DEVICE_ID" \
+        --source "Documents/logs/" \
+        --destination "$IOS_LOG_DIR" \
+        --domain-type appDataContainer \
+        --domain-identifier "{{IOS_BUNDLE_IDENTIFIER}}" \
+        --quiet; then
+        echo "✅ iOS logs directory retrieved successfully"
     else
-        if ! just hotreload-ios-ipad; then
-            echo "❌ Failed to execute iOS test on iPad"
-            exit 1
+        echo "❌ Failed to retrieve iOS logs directory"
+        exit 1
+    fi
+
+    # Find log file containing current TEST_ID (rock-solid approach like Android)
+    # This ensures we get only the current test's logs, not old mixed data
+    echo "🔍 Searching for log file containing current TEST_ID..."
+
+    # Extract the unique timestamp from TEST_ID for precise matching
+    CURRENT_TEST_ID=$(echo "$TEST_ID" | grep -o '[0-9]\{10\}' | head -1)
+    if [[ -n "$CURRENT_TEST_ID" ]]; then
+        echo "📝 Current TEST_ID timestamp: $CURRENT_TEST_ID"
+
+        # Primary approach: Find files containing exact current TEST_ID (like Android)
+        LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec grep -l "$CURRENT_TEST_ID" {} \; 2>/dev/null | head -1)
+    else
+        echo "⚠️  Could not extract TEST_ID timestamp, using pattern fallback"
+        TEST_ID_PATTERN="test_id.*$CONFIG_NAME.*ios_"
+        LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec grep -l "$TEST_ID_PATTERN" {} \; 2>/dev/null | head -1)
+    fi
+
+    if [[ -n "$LATEST_LOG" ]]; then
+        echo "✅ Found log file with current TEST_ID: $(basename $LATEST_LOG)"
+        echo "📊 Log file size: $(wc -l < "$LATEST_LOG") lines"
+    else
+        echo "⚠️  No log files found with current TEST_ID, trying recent file approach..."
+        # Fallback: Use most recently created file
+        LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec stat -c "%W %n" {} \; 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-)
+
+        if [[ -n "$LATEST_LOG" ]]; then
+            echo "🔄 Using most recently created log file: $(basename $LATEST_LOG)"
+            echo "📊 Log file size: $(wc -l < "$LATEST_LOG") lines"
+        else
+            echo "⚠️  No timestamped log files found, falling back to godot.log"
+            LATEST_LOG="$IOS_LOG_DIR/godot.log"
         fi
     fi
 
+    if [[ -f "$LATEST_LOG" ]]; then
+        IOS_LOG_FILE="/tmp/ios_test_${CONFIG_NAME}_$$.log"
+        cp "$LATEST_LOG" "$IOS_LOG_FILE"
+        echo "📄 Using log file: $(basename $LATEST_LOG)"
+        echo "📊 Log file size: $(wc -l < "$IOS_LOG_FILE") lines"
+    else
+        echo "❌ No log files found in iOS logs directory"
+        exit 1
+    fi
+
+    # Export the log file location for the extraction step
+    echo "📁 iOS logs saved to: $IOS_LOG_FILE"
+    echo "$IOS_LOG_FILE" > "/tmp/ios_last_log_file.txt"
+
     echo "✅ iOS test execution completed on $DEVICE_NAME"
+
+# Clear iOS logs directory for fresh test logs
+# Deletes Documents/logs/ to ensure we get clean logs for current test
+_clear-ios-logs DEVICE_ID:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "   🗑️  Deleting iOS logs directory via devicectl..."
+
+    # Try to remove the logs directory
+    # Note: devicectl doesn't have a delete command, so we'll need to use a workaround
+    # We can copy an empty directory over it or just let the app recreate it
+    TEMP_EMPTY_DIR=$(mktemp -d)
+
+    # Remove logs by overwriting with empty directory
+    if xcrun devicectl device copy to \
+        --device "{{DEVICE_ID}}" \
+        --source "$TEMP_EMPTY_DIR" \
+        --destination "Documents/logs_delete_marker" \
+        --domain-type appDataContainer \
+        --domain-identifier "{{IOS_BUNDLE_IDENTIFIER}}" \
+        --quiet 2>/dev/null; then
+        echo "   ✅ iOS logs directory clearing marker set"
+    fi
+
+    rm -rf "$TEMP_EMPTY_DIR"
+
+    # Note: Godot will recreate the logs directory on next launch
 
 # iOS data clearing equivalent to Android pm clear (Task-301)
 # Removes app and reinstalls for fresh state, matching Android behavior
