@@ -26,7 +26,7 @@
 		0D6A9FD52EB9673800CB424A /* libsentry.ios.release.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0D1814562EB77596001329A0 /* libsentry.ios.release.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0D75CFD92C89961500E28041 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D75CFD82C89961500E28041 /* AdSupport.framework */; };
 		0DB9E7D62D5BAFD700CB12ED /* MetalFX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DB9E7D52D5BAFD700CB12ED /* MetalFX.framework */; };
-		0DCAB4C02ECA8339001B3B7A /* debug_startup_actions.json in Resources */ = {isa = PBXBuildFile; fileRef = 0DCAB4BF2ECA8339001B3B7A /* debug_startup_actions.json */; };
+		0DCAB4C22ED4BF78001B3B7A /* debug_startup_actions.json in Resources */ = {isa = PBXBuildFile; fileRef = 0DCAB4C12ED4BF78001B3B7A /* debug_startup_actions.json */; };
 		1FF8DBB11FBA9DE1009DE660 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FF8DBB01FBA9DE1009DE660 /* dummy.cpp */; };
 		9039D3BE24C093AC0020482C /* MoltenVK in Frameworks */ = {isa = PBXBuildFile; fileRef = 9039D3BD24C093AC0020482C /* MoltenVK */; };
 		90DD2D9E24B36E8000717FE1 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DD2D9D24B36E8000717FE1 /* Launch Screen.storyboard */; };
@@ -71,7 +71,7 @@
 		0D6A9FD12EB81AE400CB424A /* Sentry.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Sentry.xcframework; sourceTree = "<group>"; };
 		0D75CFD82C89961500E28041 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		0DB9E7D52D5BAFD700CB12ED /* MetalFX.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalFX.framework; path = System/Library/Frameworks/MetalFX.framework; sourceTree = SDKROOT; };
-		0DCAB4BF2ECA8339001B3B7A /* debug_startup_actions.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = debug_startup_actions.json; sourceTree = "<group>"; };
+		0DCAB4C12ED4BF78001B3B7A /* debug_startup_actions.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = debug_startup_actions.json; sourceTree = "<group>"; };
 		18C59E812FCFAFA9D93021C2 /* Pods_gametwo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_gametwo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F1575711F582BE20003B888 /* dylibs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dylibs; path = gametwo/dylibs; sourceTree = "<group>"; };
 		1FF4C1881F584E6300A41E41 /* gametwo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = gametwo.entitlements; sourceTree = "<group>"; };
@@ -121,7 +121,6 @@
 		D0BCFE2B18AEBDA2004A7AAE = {
 			isa = PBXGroup;
 			children = (
-				0DCAB4BF2ECA8339001B3B7A /* debug_startup_actions.json */,
 				0D6A9FD12EB81AE400CB424A /* Sentry.xcframework */,
 				0D1814552EB77596001329A0 /* libsentry.ios.debug.xcframework */,
 				0D1814562EB77596001329A0 /* libsentry.ios.release.xcframework */,
@@ -169,6 +168,7 @@
 		D0BCFE4118AEBDA2004A7AAE /* gametwo */ = {
 			isa = PBXGroup;
 			children = (
+				0DCAB4C12ED4BF78001B3B7A /* debug_startup_actions.json */,
 				90DD2D9D24B36E8000717FE1 /* Launch Screen.storyboard */,
 				1FF4C1881F584E6300A41E41 /* gametwo.entitlements */,
 				D07CD44D1C5D589C00B7FB28 /* Images.xcassets */,
@@ -263,7 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D07CD44E1C5D589C00B7FB28 /* Images.xcassets in Resources */,
-				0DCAB4C02ECA8339001B3B7A /* debug_startup_actions.json in Resources */,
+				0DCAB4C22ED4BF78001B3B7A /* debug_startup_actions.json in Resources */,
 				D0BCFE7818AEBFEB004A7AAE /* gametwo.pck in Resources */,
 				90DD2D9E24B36E8000717FE1 /* Launch Screen.storyboard in Resources */,
 				D0BCFE4618AEBDA2004A7AAE /* InfoPlist.strings in Resources */,
@@ -552,6 +552,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				CURRENT_PROJECT_VERSION = 1.0.20240731142317;
+				DEVELOPMENT_TEAM = KV4ZR772LW;
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;
@@ -586,6 +587,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				CURRENT_PROJECT_VERSION = 1.0.20240731142317;
+				DEVELOPMENT_TEAM = KV4ZR772LW;
 				EXECUTABLE_NAME = gametwo;
 				INFOPLIST_FILE = "gametwo/gametwo-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = gametwo;
