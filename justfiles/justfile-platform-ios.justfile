@@ -510,6 +510,57 @@ test-ios target="":
         exit 1
     fi
 
+# Detect connected iOS device (returns first connected device ID)
+_detect-ios-device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Try to get first connected iOS device by extracting UUID
+    DEVICE=$(xcrun devicectl list devices 2>/dev/null | grep -i "connected" | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}' | head -1 || echo "")
+
+    if [[ -z "$DEVICE" ]]; then
+        echo "❌ No connected iOS devices found" >&2
+        echo "💡 Connect an iOS device and ensure it's trusted" >&2
+        exit 1
+    fi
+
+    # Output the device ID
+    echo "$DEVICE"
+
+# Auto-select iOS device (prefers iPad if both connected, fallback to iPhone or first device)
+_auto-select-ios-device:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if iPad is connected (using configured ID)
+    IPAD_ID="{{IOS_IPAD_DEVICE_ID}}"
+    IPHONE_ID="{{IOS_IPHONE_DEVICE_ID}}"
+
+    # Get all connected device UUIDs
+    CONNECTED_DEVICES=$(xcrun devicectl list devices 2>/dev/null | grep -i "connected" | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}' || echo "")
+
+    if [[ -z "$CONNECTED_DEVICES" ]]; then
+        echo "❌ No connected iOS devices found" >&2
+        echo "💡 Connect an iOS device and ensure it's trusted" >&2
+        exit 1
+    fi
+
+    # Prefer iPad if connected (case-insensitive match)
+    if echo "$CONNECTED_DEVICES" | grep -qi "$IPAD_ID"; then
+        echo "$IPAD_ID"
+        exit 0
+    fi
+
+    # Fallback to iPhone if connected
+    if echo "$CONNECTED_DEVICES" | grep -qi "$IPHONE_ID"; then
+        echo "$IPHONE_ID"
+        exit 0
+    fi
+
+    # Fallback to first connected device
+    FIRST_DEVICE=$(echo "$CONNECTED_DEVICES" | head -1)
+    echo "$FIRST_DEVICE"
+
 # iOS equivalent of test-android-target - complete test workflow with device logging
 test-ios-target config_name="":
     #!/usr/bin/env bash

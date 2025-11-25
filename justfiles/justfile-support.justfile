@@ -209,6 +209,22 @@ _test-multi-platform TARGET_CONFIG:
     PLATFORM_HIERARCHIES=""
     HIERARCHY_FILES=""
 
+    # Auto-detect and set iOS device if iOS is in the platform list
+    if echo "$TEST_PLATFORMS" | grep -q "ios"; then
+        echo "📱 Detecting iOS device for multi-platform testing..."
+        if IOS_DEVICE=$(just _auto-select-ios-device 2>&1); then
+            export IOS_TEST_DEVICE="$IOS_DEVICE"
+            echo "✅ iOS device auto-selected: $IOS_TEST_DEVICE"
+        else
+            echo "⚠️  iOS device detection failed:"
+            echo "$IOS_DEVICE"
+            echo "💡 iOS tests will be skipped"
+            # Remove ios from platforms list
+            TEST_PLATFORMS=$(echo "$TEST_PLATFORMS" | sed 's/ios//g' | tr -s ' ')
+        fi
+        echo ""
+    fi
+
     # Run tests on each platform
     PLATFORM_NUM=1
     for PLATFORM in $TEST_PLATFORMS; do
