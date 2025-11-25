@@ -350,10 +350,17 @@ func _execute_core(
 				["debug", "test", "failure", "pid", "sequence"]
 			)
 
+	else:
+		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
+		success = false
+		error_message = "No execute method defined for " + action_name
+		_update_status("ERROR: No execute method defined for " + action_name, true)
+
 	# Sequential action completion - unified event for all action types
 	# CRITICAL: Emit completion events even on failure for test framework detection
 	# CRITICAL: Include test_id for Android logcat filtering (grep requires TEST_ID match)
 	# NOTE: Success/failure logging already completed above to prevent race conditions
+	# Only emit sequential completion for validly executed actions
 	if not auto_continue:
 		Log.info(
 			"Sequential action completed - emitting completion event",
@@ -368,11 +375,6 @@ func _execute_core(
 			["debug", "sequential", "completion", "unified"]
 		)
 		core.action(core.SequentialActionCompleteEvent.new(action_name, success, category))
-	else:
-		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
-		success = false
-		error_message = "No execute method defined for " + action_name
-		_update_status("ERROR: No execute method defined for " + action_name, true)
 
 # Removed execution guard system - was causing issues
 
