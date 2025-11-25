@@ -20,7 +20,7 @@ GODOT_BUILD_VERSION := "4.3.rc"
 # iOS Devices - Both ID formats supported
 # Hash format for idevicesyslog logging
 IOS_IPHONE_DEVICE_ID := env_var_or_default("IOS_IPHONE_DEVICE_ID", "c9a2c197b5e75b8386c22d1edf2ceb48")
-IOS_IPAD_DEVICE_ID := env_var_or_default("IOS_IPAD_DEVICE_ID", "7fb6c66bb671ed19676ad6ec794ab8a2d255180c")
+IOS_IPAD_DEVICE_ID := env_var_or_default("IOS_IPAD_DEVICE_ID", "38A3A7F3-6C49-5C54-B86E-D84C81ABD10C")
 # UDID format for xcrun devicectl deployment
 IOS_IPHONE_UDID := env_var_or_default("IOS_IPHONE_UDID", "C9A2C197-B5E7-5B83-86C2-2D1EDF2CEB48")
 IOS_IPAD_UDID := env_var_or_default("IOS_IPAD_UDID", "38A3A7F3-6C49-5C54-B86E-D84C81ABD10C")
