@@ -971,15 +971,15 @@ _execute-test-ios config_name:
     # This ensures we get only the current test's logs, not old mixed data
     echo "🔍 Searching for log file containing current TEST_ID..."
 
-    # Extract the unique timestamp from TEST_ID for precise matching
-    CURRENT_TEST_ID=$(echo "$TEST_ID" | grep -o '[0-9]\{10\}' | head -1)
-    if [[ -n "$CURRENT_TEST_ID" ]]; then
-        echo "📝 Current TEST_ID timestamp: $CURRENT_TEST_ID"
+    # Search for log file containing the full TEST_ID (not just timestamp)
+    # This ensures unique matching even when multiple tests share the same session timestamp
+    echo "🔍 Searching for log file with TEST_ID: $TEST_ID"
 
-        # Primary approach: Find files containing exact current TEST_ID (like Android)
-        LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec grep -l "$CURRENT_TEST_ID" {} \; 2>/dev/null | head -1)
-    else
-        echo "⚠️  Could not extract TEST_ID timestamp, using pattern fallback"
+    # Primary approach: Find files containing exact full TEST_ID (like Android)
+    LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec grep -l "$TEST_ID" {} \; 2>/dev/null | head -1)
+
+    if [[ -z "$LATEST_LOG" ]]; then
+        echo "⚠️  No log file found with full TEST_ID, trying pattern fallback"
         TEST_ID_PATTERN="test_id.*$CONFIG_NAME.*ios_"
         LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot20*.log" -type f -exec grep -l "$TEST_ID_PATTERN" {} \; 2>/dev/null | head -1)
     fi
