@@ -71,15 +71,19 @@ func startDebugCoordinator() -> void:
 		"Actions retrieved", {"count": actions.size(), "actions": actions}, ["debug", "startup"]
 	)
 
-	if actions.is_empty():
-		Log.info("=== MANUAL MODE DETECTED ===", {
-			"reason": "empty_actions_array",
+	# CRITICAL: Check if we should skip test infrastructure entirely
+	# This prevents empty configs from triggering test mode when they should be manual
+	if _should_skip_test_infrastructure(actions):
+		Log.info("=== MANUAL MODE: SKIPPING TEST INFRASTRUCTURE ===", {
+			"reason": "empty_config_no_testing",
+			"actions_count": actions.size(),
+			"actions": actions,
 			"mode": "manual_testing",
 			"auto_quit": false,
 			"completion_actions": false,
 			"test_infrastructure": false
 		}, ["debug", "startup", "manual_mode"])
-		Log.info("App running in manual mode - no test infrastructure activated", {}, ["debug", "startup"])
+		Log.info("App running in manual mode - test infrastructure skipped entirely", {}, ["debug", "startup"])
 		return
 	DebugManager.action(DebugManager.DebugEventType.EVENT_OPEN_DEBUG_MENU)
 	DebugManager.action(DebugManager.DebugEventType.EVENT_TOGGLE_DEBUG_MENU_LIST)
@@ -422,7 +426,16 @@ func _is_current_config_test_recipe() -> bool:
 
 func _should_auto_add_completion(has_completion: bool, action_count: int, is_test_recipe: bool) -> bool:
 	"""Determine if we should automatically add a completion action"""
-	return not has_completion and action_count > 0 and is_test_recipe
+	# CRITICAL FIX: Only auto-add completion for legitimate test recipes with test_metadata
+	# This prevents replay_complete from being added to configs that don't have proper test metadata
+	var should_add := not has_completion and action_count > 0 and is_test_recipe
+	Log.debug("Auto-completion check", {
+		"has_completion": has_completion,
+		"action_count": action_count,
+		"is_test_recipe": is_test_recipe,
+		"should_add": should_add
+	}, ["debug", "startup", "auto_completion"])
+	return should_add
 
 
 func _dispatch_auto_completion_action(registry: DebugActionRegistry, original_action_count: int) -> void:
@@ -808,3 +821,34 @@ func _set_global_sentry_test_context() -> String:
 		)
 
 	return test_id
+
+
+func _should_skip_test_infrastructure(actions: Array) -> bool:
+	"""
+	Determine if we should skip test infrastructure entirely.
+
+	This provides a clean separation between manual mode and test mode:
+	- Empty configs = manual mode (no test infrastructure)
+	- Non-empty configs = potentially test mode (normal test flow)
+
+	Returns:
+		true: Skip ALL test infrastructure (manual mode)
+		false: Continue with normal test flow
+	"""
+	if actions.is_empty():
+		Log.debug("Empty actions array detected - manual mode", {
+			"actions_count": actions.size(),
+			"reason": "empty_config"
+		}, ["debug", "startup", "manual_mode"])
+		return true
+
+	# Future: Additional checks if needed
+	# - Check for explicit manual mode flags
+	# - Check for manual-only actions
+	# - Check config metadata for manual mode indication
+
+	Log.debug("Actions present - continuing with test infrastructure", {
+		"actions_count": actions.size(),
+		"actions": actions.slice(0, 5)  # First 5 actions to avoid log spam
+	}, ["debug", "startup"])
+	return false
