@@ -28,6 +28,7 @@ var current_card_level: int = 1  # Progression level for randomly generated card
 var _idle_action_queue: Array[Dictionary] = []
 var _processing_idle_action: bool = false
 var _queue_continuation_requested: bool = false
+var _batch_dispatch_in_progress: bool = false  # Prevents queue processing during batch dispatch
 
 
 func _input(event: InputEvent) -> void:

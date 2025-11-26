@@ -119,6 +119,15 @@ func startDebugCoordinator() -> void:
 	var dispatch_start_time := Time.get_unix_time_from_system()
 	var dispatch_start_frame := Engine.get_process_frames()
 
+	# CRITICAL FIX (Task-314): Pause queue processing during batch dispatch
+	# This prevents synchronous queue processing from running while we're still adding actions
+	var game_node: Node = get_tree().root.get_node_or_null("Game")
+	if game_node and game_node.has_method("_process_one_queue_item"):
+		game_node._batch_dispatch_in_progress = true
+		Log.info("Batch dispatch mode ENABLED - queue processing paused", {
+			"test_id": DebugAction.get_current_test_id()
+		}, ["debug", "startup", "batch_dispatch", "diagnostic"])
+
 	Log.info("=== BATCH DISPATCH START ===", {
 		"total_actions": expanded_actions.size(),
 		"dispatch_start_time": dispatch_start_time,
@@ -167,6 +176,13 @@ func startDebugCoordinator() -> void:
 				"available_actions": _get_available_action_names(registry).slice(0, 10)
 			}, ["debug", "startup", "error"])
 
+	Log.info("=== BATCH DISPATCH LOOP COMPLETE ===", {
+		"actions_dispatched": expanded_actions.size(),
+		"has_completion_action": has_completion_action,
+		"is_test_recipe": is_test_recipe,
+		"test_id": DebugAction.get_current_test_id()
+	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
+
 	if _should_auto_add_completion(has_completion_action, expanded_actions.size(), is_test_recipe):
 		_dispatch_auto_completion_action(registry, expanded_actions.size())
 	elif not has_completion_action and expanded_actions.size() > 0:
@@ -187,6 +203,17 @@ func startDebugCoordinator() -> void:
 		"test_id": DebugAction.get_current_test_id(),
 		"idle_queue_execution_starts_now": true
 	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
+
+	# CRITICAL FIX (Task-314): Re-enable queue processing and trigger execution
+	# Now that all actions are queued, allow processing to begin
+	if game_node and game_node.has_method("_process_one_queue_item"):
+		game_node._batch_dispatch_in_progress = false
+		Log.info("Batch dispatch mode DISABLED - queue processing resumed", {
+			"queued_actions": game_node._idle_action_queue.size(),
+			"test_id": DebugAction.get_current_test_id()
+		}, ["debug", "startup", "batch_dispatch", "diagnostic"])
+		# Trigger queue processing now that batch dispatch is complete
+		core.action(core.ProcessQueueEvent.new())
 
 
 

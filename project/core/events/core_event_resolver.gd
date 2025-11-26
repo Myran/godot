@@ -424,6 +424,19 @@ static func resolve_core_event(
 		core.action(core.ProcessQueueEvent.new())
 
 	elif event is core.ProcessQueueEvent:
+		# CRITICAL FIX (Task-314): Prevent queue processing during batch dispatch
+		# This ensures all actions are added to the queue before any processing starts
+		if game._batch_dispatch_in_progress:
+			Log.info(
+				"Queue processing paused during batch dispatch",
+				{
+					"queue_size": game._idle_action_queue.size(),
+					"batch_dispatch_active": true,
+					"test_id": DebugAction.get_current_test_id()
+				},
+				[Log.TAG_SYSTEM, Log.TAG_EVENT, "queue_paused", Log.TAG_DIAGNOSTIC]
+			)
+			return
 		# If processing an action, remember the continuation request for after completion
 		if game._processing_idle_action:
 			game._queue_continuation_requested = true
