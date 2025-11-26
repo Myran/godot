@@ -409,29 +409,42 @@ static func _replay_complete() -> bool:
 
 	# For automated mode: wait for action completion, then trigger quit
 	if execution_context.mode == "automated":
-		# CRITICAL: Ensure all queued actions complete before quit
-		# This prevents success logging interruption (fixes missing registry_stats DEBUG_TEST_SUCCESS)
+		# CRITICAL: Ensure all queued actions complete AND async operations finish before quit
+		# This prevents success logging interruption (fixes missing DEBUG_TEST_SUCCESS for single async actions)
 		var main_node: Node = Engine.get_main_loop().current_scene
 		var game_node: Game = main_node.get_node_or_null("Game") if main_node else null
 		var queue_empty: bool = true
+		var async_processing: bool = false
 
 		if game_node:
 			queue_empty = game_node._idle_action_queue.size() == 0
+			async_processing = game_node._processing_idle_action
 
 		Log.info(
-			"Waiting for all queued actions to complete before quit",
-			{"queue_empty": queue_empty},
+			"Waiting for all queued actions and async operations to complete before quit",
+			{
+				"queue_empty": queue_empty,
+				"async_processing": async_processing,
+				"waiting_for": "queue_empty AND NOT async_processing"
+			},
 			["debug", "replay", "automated", "queue_sync"]
 		)
 
-		# Wait for queue to empty (all actions including registry_stats complete their success logging)
+		# CRITICAL FIX (Task-314): Wait for BOTH queue empty AND async operations complete
+		# Single async actions (auto_continue=false) are removed from queue immediately but continue executing
+		# We must wait for _processing_idle_action=false to ensure DEBUG_TEST_SUCCESS is logged
 		if game_node:
-			while game_node._idle_action_queue.size() > 0:
+			while game_node._idle_action_queue.size() > 0 or game_node._processing_idle_action:
 				await Engine.get_main_loop().process_frame
 
 		Log.info(
-			"All actions completed - proceeding with quit",
-			{"actions_completed": true},
+			"All actions and async operations completed - proceeding with quit",
+			{
+				"actions_completed": true,
+				"async_operations_completed": true,
+				"queue_size": game_node._idle_action_queue.size() if game_node else 0,
+				"processing_idle_action": game_node._processing_idle_action if game_node else false
+			},
 			["debug", "replay", "automated", "quit_ready"]
 		)
 
