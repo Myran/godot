@@ -26,7 +26,11 @@
       "WebFetch(domain:github.com)",
       "Bash(xcodebuild:*)",
       "Bash(pod update:*)",
-      "WebFetch(domain:firebase.google.com)"
+      "WebFetch(domain:firebase.google.com)",
+      "Bash(done)",
+      "Bash(bash -n:*)",
+      "Bash(bash -c:*)",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": [
