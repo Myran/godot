@@ -21,7 +21,12 @@
       "Bash(adb shell:*)",
       "Bash(adb install:*)",
       "Bash(xargs:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(xcodebuild:*)",
+      "Bash(pod update:*)",
+      "WebFetch(domain:firebase.google.com)"
     ],
     "deny": [],
     "ask": [

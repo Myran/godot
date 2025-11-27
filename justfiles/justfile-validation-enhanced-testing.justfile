@@ -2720,7 +2720,7 @@ _execute-test-with-analysis config_name platform session="":
             # Deploy and execute iOS test
             just _deploy-config-ios "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
-                just _execute-test-ios "$CONFIG_NAME" || TEST_RESULT=$?
+                just _execute-test-ios "$CONFIG_NAME" "$TEST_ID" || TEST_RESULT=$?
             fi
             ;;
         *)

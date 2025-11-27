@@ -856,11 +856,12 @@ clean-all-logs days="7":
     echo "✅ All log cleanup completed"
 
 # iOS test execution function - uses configured device identifier from IOS_TEST_DEVICE variable
-_execute-test-ios config_name:
+_execute-test-ios config_name test_id="":
     #!/usr/bin/env bash
     set -euo pipefail
 
     CONFIG_NAME="{{config_name}}"
+    TEST_ID="{{test_id}}"
     IOS_DEVICE_ID="{{IOS_TEST_DEVICE}}"
 
     # Determine device type based on device ID
@@ -1002,7 +1003,12 @@ _execute-test-ios config_name:
     fi
 
     if [[ -f "$LATEST_LOG" ]]; then
-        IOS_LOG_FILE="/tmp/ios_test_${CONFIG_NAME}_$$.log"
+        # Use TEST_ID in filename if available, otherwise fall back to CONFIG_NAME + PID
+        if [[ -n "$TEST_ID" ]]; then
+            IOS_LOG_FILE="/tmp/ios_test_${TEST_ID}.log"
+        else
+            IOS_LOG_FILE="/tmp/ios_test_${CONFIG_NAME}_$$.log"
+        fi
         cp "$LATEST_LOG" "$IOS_LOG_FILE"
         echo "📄 Using log file: $(basename $LATEST_LOG)"
         echo "📊 Log file size: $(wc -l < "$IOS_LOG_FILE") lines"
