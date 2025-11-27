@@ -1,10 +1,10 @@
 ---
 id: task-314
 title: Investigate and fix 4 remaining iOS test failures (78.9% → 100% parity)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-11-25'
-updated_date: '2025-11-26 17:17'
+updated_date: '2025-11-27 17:11'
 labels:
   - ios
   - testing
@@ -242,11 +242,53 @@ The fix IS working! Direct log evidence shows:
 - ✅ Platform-agnostic fix (benefits all platforms)
 - ⚠️ iOS log capture needs investigation (separate issue)
 
+### Fix 3: iOS Log Retrieval Retry Logic
+**Date**: 2025-11-27
+**Commit**: 57d9271d
+**File Modified**: `justfiles/justfile-platform-ios.justfile`
+
+**Root Cause Discovered:**
+The "iOS log capture inconsistency" was caused by Godot log rotation timing:
+- Godot rotates log files when `godot.log` exceeds ~500KB-1MB during app shutdown
+- Log rotation locks `Documents/logs/` directory for 20-30 seconds for large files (5MB+)
+- Tests with heavy logging triggered rotation that exceeded the 3-second wait period
+- `firebase-rtdb-layer` generated 5.6MB of logs → 24-second rotation delay
+
+**Timeline Evidence (firebase-rtdb-layer):**
+```
+13:55:50 - App quit
+13:55:53 - Log retrieval attempted (3s wait) → ❌ FAILED
+13:56:17 - Log file finalized (24 seconds later)
+```
+
+**Solution Implemented:**
+1. **Retry logic with exponential backoff** (5 attempts max):
+   - Attempt 1: 3s wait (fast tests succeed here)
+   - Attempt 2: 3s additional (total 6s)
+   - Attempt 3: 6s additional (total 12s)
+   - Attempt 4: 9s additional (total 21s)
+   - Attempt 5: 12s additional (total 33s max)
+
+2. **Removed ineffective `_clear-ios-logs` call**:
+   - App uninstall/reinstall already clears Documents/
+   - Marker file approach didn't actually delete anything
+   - Reduced code complexity
+
+**Validation Results:**
+- ✅ `firebase-rtdb-layer`: PASSED (needed 4 retry attempts, ~18s)
+- ✅ `system-performance`: PASSED (needed 3 retry attempts, ~12s)
+- ✅ **Full iOS test suite: 19/19 PASSED (100%)**
+
+**Impact:**
+- Fast tests still complete in 3s (no performance impact)
+- Heavy tests get time needed (up to 33s for log rotation)
+- No false failures from log retrieval timing issues
+
 ## Current Status
 
-**Functional Fix**: ✅ COMPLETE (both fixes working on iOS)
-**Validation Issue**: ⚠️ iOS log extraction incomplete in some test runs
-**Next Steps**: Investigate iOS log capture inconsistency (17 vs 30 lines)
+**Functional Fix**: ✅ COMPLETE (all 3 fixes working on iOS)
+**Validation Issue**: ✅ RESOLVED (log retrieval retry logic)
+**iOS Test Pass Rate**: ✅ 19/19 (100% - parity achieved!)
 
 ## Success Criteria
 
