@@ -322,7 +322,7 @@ This is a **platform-specific iOS Firebase C++ SDK bug** where `Future<void>::On
 - This is the **final blocker** for 100% iOS test parity
 - **CRITICAL**: Diagnostic testing confirms Firebase C++ SDK iOS bug - NOT our code
 
----
+***
 
 ## ✅ RESOLUTION (2025-11-27)
 
