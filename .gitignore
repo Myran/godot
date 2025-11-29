@@ -390,3 +390,5 @@ $RECYCLE.BIN/
 *.msp
 *.lnk
 *.generated.props
+templates/android_debug.apk
+templates/android_release.apk
