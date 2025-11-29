@@ -474,60 +474,29 @@ func _ensure_main_thread() -> void:
 # (e.g., 0x533b000bdf mod 8 = 7) that cause SIGBUS crashes on ARM64
 # when accessed by GDScript. This function ensures proper memory alignment.
 func _safe_copy_variant(variant: Variant) -> Variant:
-	Log.debug(
-		"FirebaseService: _safe_copy_variant called",
-		{"input_type": typeof(variant)},
-		[Log.TAG_FIREBASE, "alignment_debug"]
-	)
-
 	# Handle null or empty variants safely
 	if variant == null:
-		Log.debug(
-			"FirebaseService: _safe_copy_variant returning null",
-			{},
-			[Log.TAG_FIREBASE, "alignment_debug"]
-		)
 		return null
 
 	match typeof(variant):
 		TYPE_DICTIONARY:
-			Log.debug(
-				"FirebaseService: _safe_copy_variant processing DICTIONARY",
-				{},
-				[Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			var dict: Dictionary = variant
 			var safe_dict: Dictionary = {}
 			for key: Variant in dict.keys():
 				safe_dict[key] = _safe_copy_variant(dict[key])
 			return safe_dict
 		TYPE_ARRAY:
-			Log.debug(
-				"FirebaseService: _safe_copy_variant processing ARRAY",
-				{},
-				[Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			var arr: Array = variant
 			var safe_arr: Array = []
 			for item: Variant in arr:
 				safe_arr.append(_safe_copy_variant(item))
 			return safe_arr
 		TYPE_STRING:
-			Log.debug(
-				"FirebaseService: _safe_copy_variant processing STRING",
-				{},
-				[Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			# Strings might have misaligned memory internally, create a safe copy
 			var str_variant: String = variant
 			return String(str_variant)
 		_:
 			# Primitives (int, float, bool) are safe to return directly
-			Log.debug(
-				"FirebaseService: _safe_copy_variant returning primitive",
-				{"type": typeof(variant), "value": str(variant)},
-				[Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			return variant
 
 

@@ -159,19 +159,7 @@ func push_data(path: Array[Variant], data_to_push: Variant) -> String:
 	# CRITICAL SAFETY: Deep copy IMMEDIATELY after Firebase response
 	# Firebase C++ SDK returns misaligned memory that causes SIGBUS crashes
 	# when accessed by GDScript in GLThread. Deep copy must happen before ANY access.
-	Log.debug(
-		"DatabaseService: About to apply _safe_copy_variant to Firebase response",
-		{"result_type": typeof(raw_result)},
-		[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-	)
-
 	var result: Variant = _safe_copy_variant(raw_result)
-
-	Log.debug(
-		"DatabaseService: _safe_copy_variant completed successfully",
-		{"result_type": typeof(result)},
-		[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-	)
 
 	if result.get("status") == "ok":
 		var push_id: String = str(result.get("payload"))
@@ -450,40 +438,18 @@ func _on_child_removed(key: String, value: Variant) -> void:
 # (e.g., 0x533b000bdf mod 8 = 7) that cause SIGBUS crashes on ARM64
 # when accessed by GDScript. This function ensures proper memory alignment.
 func _safe_copy_variant(variant: Variant) -> Variant:
-	# CRITICAL: Add logging to track function execution
-	Log.debug(
-		"DatabaseService: _safe_copy_variant called",
-		{"input_type": typeof(variant)},
-		[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-	)
-
 	# Handle null or empty variants safely
 	if variant == null:
-		Log.debug(
-			"DatabaseService: _safe_copy_variant returning null",
-			{},
-			[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-		)
 		return null
 
 	match typeof(variant):
 		TYPE_DICTIONARY:
-			Log.debug(
-				"DatabaseService: _safe_copy_variant processing DICTIONARY",
-				{},
-				[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			var dict: Dictionary = variant
 			var safe_dict: Dictionary = {}
 			for key: Variant in dict.keys():
 				safe_dict[key] = _safe_copy_variant(dict[key])
 			return safe_dict
 		TYPE_ARRAY:
-			Log.debug(
-				"DatabaseService: _safe_copy_variant processing ARRAY",
-				{},
-				[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			var arr: Array = variant
 			var safe_arr: Array = []
 			for item: Variant in arr:
@@ -491,9 +457,4 @@ func _safe_copy_variant(variant: Variant) -> Variant:
 			return safe_arr
 		_:
 			# Primitives (int, float, string, bool) are safe to return directly
-			Log.debug(
-				"DatabaseService: _safe_copy_variant returning primitive",
-				{"type": typeof(variant), "value": str(variant)},
-				[Log.TAG_DB, Log.TAG_FIREBASE, "alignment_debug"]
-			)
 			return variant
