@@ -55,9 +55,9 @@ _build-android-full force="no":
     @echo "📦 [1/3] Checking Android templates..."
     just templates-android {{force}}
     @echo "📥 [2/3] Setting up Android templates + SDK injection..."
-    just setup-android-templates
+    just setup-android-templates {{force}}
     @echo "📱 [3/3] Exporting Android builds (APK + AAB)..."
-    just export-all-android
+    just export-all-android {{force}}
 
 # Smart template check - only build if not already built
 
