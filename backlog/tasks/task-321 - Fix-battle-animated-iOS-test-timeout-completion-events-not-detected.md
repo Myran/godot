@@ -1,10 +1,10 @@
 ---
 id: task-321
 title: Fix battle-animated iOS test timeout - completion events not detected
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-29 17:09'
-updated_date: '2025-11-29 17:10'
+updated_date: '2025-11-29 18:40'
 labels: []
 dependencies: []
 ---
