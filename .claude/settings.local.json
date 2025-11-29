@@ -38,7 +38,10 @@
       "Bash(grep:*)",
       "Bash(kill:*)",
       "Bash(adb logcat:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(timeout 30 xcrun devicectl device copy:*)",
+      "Bash(echo:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": [
