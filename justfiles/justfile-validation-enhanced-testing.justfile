@@ -892,11 +892,9 @@ _extract-logs test_id platform temp_output_file="":
             # Wait for completion events to match dispatches (with timeout safety)
             # ENHANCED: Android-specific timeout and retry logic for task-190
             WAIT_COUNT=0
-            # Platform-specific timeout: Android gets 45s (buffer delays), iOS gets 40s (device delays), Desktop gets 30s
-            if [[ "$PLATFORM" == "android" ]]; then
+            # Platform-specific timeout: Mobile platforms (iOS/Android) get 45s (buffer/device delays), Desktop gets 30s
+            if [[ "$PLATFORM" == "android" || "$PLATFORM" == "ios" ]]; then
                 MAX_WAIT_SECONDS=45
-            elif [[ "$PLATFORM" == "ios" ]]; then
-                MAX_WAIT_SECONDS=40
             else
                 MAX_WAIT_SECONDS=30
             fi
@@ -930,15 +928,19 @@ _extract-logs test_id platform temp_output_file="":
             if [[ $COMPLETION_EVENTS -ge $SEQUENTIAL_DISPATCHES ]]; then
                 echo "✅ All sequential actions completed ($COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES)"
             elif [[ $WAIT_COUNT -ge $MAX_WAIT_SECONDS ]]; then
-                echo "⚠️  Timeout waiting for sequential actions (after ${MAX_WAIT_SECONDS}s)"
-                echo "   Completed: $COMPLETION_EVENTS/$SEQUENTIAL_DISPATCHES"
-                echo "   Proceeding with available logs (timeout safety)"
+                echo "❌ TIMEOUT: Sequential action completion events not detected (${MAX_WAIT_SECONDS}s)"
+                echo "   Expected: $SEQUENTIAL_DISPATCHES completion events"
+                echo "   Received: $COMPLETION_EVENTS completion events"
+                echo "   Missing: $((SEQUENTIAL_DISPATCHES - COMPLETION_EVENTS)) events"
 
                 # Track timeout for summary reporting (use test list session for aggregation)
                 # Extract config name from TEST_ID (format: configname_platform_timestamp)
                 CONFIG_NAME=$(echo "$TEST_ID" | sed -E "s/_${PLATFORM}_[0-9]+$//")
                 TIMEOUT_TRACKER="/tmp/test_timeout_tracker_testlist.txt"
                 echo "${CONFIG_NAME}|${PLATFORM}|${COMPLETION_EVENTS}/${SEQUENTIAL_DISPATCHES}" >> "$TIMEOUT_TRACKER"
+
+                echo "❌ Test FAILED due to completion event timeout"
+                exit 1
             fi
             
             # Give a small additional buffer for DEBUG_TEST_SUCCESS logging
