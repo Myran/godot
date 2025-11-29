@@ -79,6 +79,9 @@ func _handle_ios_quit() -> void:
 	## without running cleanup handlers, ensuring the test framework detects completion.
 	##
 	## Note: This is ONLY used in development/testing workflows, not in production.
+	##
+	## IMPORTANT: Simplified to avoid hanging awaits - flush_stdout_on_print=true
+	## handles log flushing automatically, so we can quit immediately.
 
 	Log.info(
 		"QuitApplicationEvent: iOS development/testing termination",
@@ -94,18 +97,19 @@ func _handle_ios_quit() -> void:
 	# Perform ConfigManager cleanup for iOS
 	SingletonCleanup.cleanup_config_manager()
 
-	# Use logger's graceful shutdown for iOS to ensure all logs are captured
-	await Log.shutdown_gracefully()
-
 	# Log final message before quit
 	Log.info(
-		"QuitApplicationEvent: iOS development quit - using Firebase.quit_app()",
+		"QuitApplicationEvent: iOS development quit - calling Firebase.quit_app()",
 		{"platform": "iOS", "termination_method": "_exit(0)", "test_completion": true},
 		["debug", "quit", "ios", "development"]
 	)
 
+	# Emit flush complete marker for test framework verification
+	print_rich("[DEBUG_TEST_FLUSH_COMPLETE]")
+
 	# Development/testing termination using Firebase module quit (Task-290)
 	# This calls _exit(0) which bypasses cleanup handlers for immediate termination
+	# Since flush_stdout_on_print=true, all logs are already flushed to disk
 	# Use ClassDB to instantiate the C++ Firebase class (following project pattern)
 	var firebase: Object = ClassDB.instantiate("Firebase")
 	firebase.quit_app()

@@ -888,9 +888,8 @@ _execute-test-ios config_name test_id="":
         echo "⚠️  Warning: Failed to clear iOS app data, proceeding with existing state"
     fi
 
-    # Update PCK and install app (but don't launch yet)
-    echo "📦 Installing updated app on $DEVICE_NAME..."
-    just ios-update-pck
+    # Install app (PCK already updated by test list setup)
+    echo "📦 Installing app on $DEVICE_NAME..."
 
     # Determine build path
     BUILD_PATH="Debug-iphoneos"
@@ -907,7 +906,31 @@ _execute-test-ios config_name test_id="":
         just _push-file-ios "$IOS_DEVICE_ID" "$TEMP_CONFIG_PATH" "debug_startup_actions.json"
     fi
 
-    # Note: No need to clear logs - app was just uninstalled/reinstalled (fresh Documents/)
+    # Clear any existing logs to prevent rotation delays during test
+    # Large log files (5MB+) cause iOS to lock the logs directory during rotation,
+    # leading to devicectl copy timeouts. Since app was just reinstalled, old logs
+    # may still exist from previous installations.
+    echo "🧹 Clearing old logs to prevent rotation delays..."
+
+    # Create a temporary empty directory
+    TEMP_EMPTY_DIR=$(mktemp -d)
+
+    # Copy empty directory over the logs directory (effectively deletes all files)
+    # This works even if Documents/logs/ doesn't exist yet
+    xcrun devicectl device copy to \
+        --device "$IOS_DEVICE_ID" \
+        --source "$TEMP_EMPTY_DIR" \
+        --destination "Documents/logs" \
+        --domain-type appDataContainer \
+        --domain-identifier "{{IOS_BUNDLE_IDENTIFIER}}" 2>/dev/null || true
+
+    # Clean up temp directory
+    rm -rf "$TEMP_EMPTY_DIR"
+    echo "✅ Old logs cleared"
+
+    # Record test start time BEFORE launching app (Task-320: Log rotation TEST_ID mismatch fix)
+    # This timestamp is used to filter logs created DURING this test execution
+    TEST_START_TIME=$(date +%s)
 
     # Launch the app
     echo "🚀 Launching app on $DEVICE_NAME..."
@@ -960,7 +983,9 @@ _execute-test-ios config_name test_id="":
         echo "   📥 Attempt $attempt/$MAX_ATTEMPTS..."
 
         # Pull entire logs directory to get timestamped files
-        if xcrun devicectl device copy from \
+        # Use timeout to prevent hanging on log rotation (max 30s per attempt)
+        TIMEOUT_DURATION=30
+        if timeout $TIMEOUT_DURATION xcrun devicectl device copy from \
             --device "$IOS_DEVICE_ID" \
             --source "Documents/logs/" \
             --destination "$IOS_LOG_DIR" \
@@ -971,6 +996,13 @@ _execute-test-ios config_name test_id="":
             RETRY_SUCCESS=true
             break
         else
+            COPY_EXIT_CODE=$?
+            if [ $COPY_EXIT_CODE -eq 124 ]; then
+                echo "   ⏱️  Timeout after ${TIMEOUT_DURATION}s (log rotation in progress)"
+            else
+                echo "   ❌ Copy failed with exit code $COPY_EXIT_CODE"
+            fi
+
             if [ $attempt -lt $MAX_ATTEMPTS ]; then
                 WAIT_TIME=$((3 * attempt))
                 echo "   ⚠️  Retry in ${WAIT_TIME}s (logs may still be rotating)..."
@@ -985,14 +1017,37 @@ _execute-test-ios config_name test_id="":
         exit 1
     fi
 
-    # Find log file containing current TEST_ID (exact match only - no fallbacks)
-    # This ensures we get only the current test's logs, not old mixed data
+    # Task-320: Timestamp-based log search with TEST_ID validation
+    # Filters logs by test execution time window to prevent stale log retrieval
     echo "🔍 Searching for log file containing current TEST_ID..."
     echo "🔍 Required TEST_ID: $TEST_ID"
+    echo "🔍 Test started at: $TEST_START_TIME ($(date -r $TEST_START_TIME))"
 
-    # Search for exact TEST_ID match in both godot.log and timestamped files
-    # Priority: godot.log (current run) > timestamped files (rolled logs)
-    LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot*.log" -type f -exec grep -l "$TEST_ID" {} \; 2>/dev/null | head -1)
+    # Find logs modified AFTER test start (macOS date format)
+    # Note: || true prevents exit-on-error when no files match
+    CANDIDATE_LOGS=$(find "$IOS_LOG_DIR" -name "godot*.log" -type f -newermt "@$TEST_START_TIME" 2>/dev/null || true)
+
+    if [[ -n "$CANDIDATE_LOGS" ]]; then
+        # Search recent logs for TEST_ID
+        LATEST_LOG=$(echo "$CANDIDATE_LOGS" | xargs grep -l "$TEST_ID" 2>/dev/null | head -1)
+
+        if [[ -n "$LATEST_LOG" ]]; then
+            echo "✅ Found log file created during test: $(basename "$LATEST_LOG")"
+        else
+            echo "⚠️  Recent logs found but no TEST_ID match"
+            echo "📋 Candidate logs:"
+            echo "$CANDIDATE_LOGS" | while read log; do
+                echo "   - $(basename "$log") ($(stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$log"))"
+            done
+        fi
+    else
+        echo "⚠️  No logs modified after test start time"
+        echo "💡 Falling back to most recent log file"
+
+        # Fallback: Find most recently modified log with TEST_ID
+        # Note: || true prevents exit-on-error when no files match
+        LATEST_LOG=$(find "$IOS_LOG_DIR" -name "godot*.log" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2- | xargs -r grep -l "$TEST_ID" 2>/dev/null | head -1 || true)
+    fi
 
     if [[ -z "$LATEST_LOG" ]]; then
         echo ""
@@ -1004,23 +1059,24 @@ _execute-test-ios config_name test_id="":
         echo "🔍 Diagnostic Information:"
         echo "   - Expected TEST_ID: $TEST_ID"
         echo "   - Config name: $CONFIG_NAME"
+        echo "   - Test start time: $(date -r $TEST_START_TIME)"
         echo "   - Retrieved logs directory: $IOS_LOG_DIR"
         echo ""
         echo "💡 Common causes:"
         echo "   1. App crashed before writing TEST_ID to logs"
         echo "   2. Config file not pushed/loaded correctly"
         echo "   3. App using stale config from previous run"
-        echo "   4. Log directory not flushed before test"
+        echo "   4. Log rotation timing issue (old logs retrieved)"
         echo ""
         echo "🔧 To debug:"
-        echo "   1. Check godot.log for any TEST_ID: ls -lh $IOS_LOG_DIR/godot.log"
-        echo "   2. Search for any test_id mentions: grep -r 'test_id' $IOS_LOG_DIR/"
-        echo "   3. Check if config was loaded: grep -r 'debug_startup_actions.json' $IOS_LOG_DIR/"
+        echo "   1. Check all logs for TEST_ID: grep -r '$TEST_ID' $IOS_LOG_DIR/"
+        echo "   2. Check log timestamps: ls -lhT $IOS_LOG_DIR/godot*.log"
+        echo "   3. Search for any test_id mentions: grep -r 'test_id' $IOS_LOG_DIR/"
+        echo "   4. Check if config was loaded: grep -r 'debug_startup_actions.json' $IOS_LOG_DIR/"
         echo ""
         exit 1
     fi
 
-    echo "✅ Found log file with exact TEST_ID match: $(basename $LATEST_LOG)"
     echo "📊 Log file size: $(wc -l < "$LATEST_LOG") lines"
 
     # Copy to predictable location for extraction

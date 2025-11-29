@@ -188,6 +188,7 @@ class NetworkTiming:
 	const CHUNK_PROCESSING_TIMEOUT_SEC: float = 2.0
 	const LOGGER_SHUTDOWN_TIMEOUT_SEC: float = 2.0
 	const ANDROID_LOGCAT_FLUSH_DELAY_SEC: float = 3.0
+	const IOS_LOG_FLUSH_DELAY_SEC: float = 3.0
 	const BATTLE_SEQUENCE_DELAY_SEC: float = 1.25
 
 
