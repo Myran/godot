@@ -827,7 +827,7 @@ static func _battle_test_determinism() -> DebugActionResult:
 
 		core.action(
 			core.SequentialActionCompleteEvent.new(
-				"game.battle.test_determinism_animated", true, "Gameplay"
+				"game.battle.test_determinism_animated", true, "Gameplay", true
 			)
 		)
 
