@@ -1991,7 +1991,16 @@ _test-list-generic test_list platform:
     echo ""
     echo "🚀 Starting test execution..."
     echo "============================="
-    
+
+    # Platform-specific setup before test loop
+    if [[ "$PLATFORM" == "ios" ]]; then
+        echo ""
+        echo "📦 Preparing iOS PCK (one-time for all configs)..."
+        just ios-update-pck
+        echo "✅ iOS PCK ready"
+        echo ""
+    fi
+
     # Execute each configuration using array-based iteration
     TOTAL_CONFIGS=0
     PASSED_CONFIGS=0
@@ -2695,11 +2704,19 @@ _execute-test-with-analysis config_name platform session="":
     
     echo "📋 Creating temporary config with auto_quit=${AUTO_QUIT_VALUE} for ${TEST_MODE} mode..."
     echo ""
-    
-    # Phase 2: Platform-specific deployment and execution  
+
+    # Platform-specific preparation (for single configs not in test list)
+    if [[ "$PLATFORM" == "ios" && "${INSIDE_TEST_LIST_EXECUTION:-false}" != "true" ]]; then
+        echo "📦 Preparing iOS PCK..."
+        just ios-update-pck
+        echo "✅ iOS PCK ready"
+        echo ""
+    fi
+
+    # Phase 2: Platform-specific deployment and execution
     echo "🚀 Starting $PLATFORM test execution..."
     echo "$(printf '=%.0s' {1..35})"
-    
+
     TEST_RESULT=0
     case "$PLATFORM" in
         "android")
