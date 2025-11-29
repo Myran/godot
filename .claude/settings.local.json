@@ -30,7 +30,15 @@
       "Bash(done)",
       "Bash(bash -n:*)",
       "Bash(bash -c:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(do if ! grep -q ^---$ $file)",
+      "Bash(then echo 'Missing frontmatter: $file' elif ! head -20 $file)",
+      "WebFetch(domain:docs.godotengine.org)",
+      "Bash(/tasks)",
+      "Bash(grep:*)",
+      "Bash(kill:*)",
+      "Bash(adb logcat:*)",
+      "Bash(unzip:*)"
     ],
     "deny": [],
     "ask": [
