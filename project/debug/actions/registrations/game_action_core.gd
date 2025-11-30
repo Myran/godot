@@ -253,16 +253,24 @@ static func _await_state_transition_to(target_state: core.GameState) -> void:
 	state_awaiter.add(timeout_awaiter.finished)
 
 	var completed: Array = [false]
+	var handler_ref: Array[Callable] = []
+	handler_ref.append(Callable())
 
 	var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
 		if event_data is core.TransitionEvent:
 			var transition: core.TransitionEvent = event_data as core.TransitionEvent
 			if transition.new_state == target_state:
 				completed[0] = true
+				# Disconnect handler before emitting to prevent re-entry
+				if handler_ref[0].is_valid():
+					core.event.disconnect(handler_ref[0])
 				signal_emitter.target_reached.emit()
 				signal_emitter.queue_free()
 
-	core.event.connect(transition_handler, CONNECT_ONE_SHOT)
+	handler_ref[0] = transition_handler
+	# REMOVED CONNECT_ONE_SHOT - allows handler to receive multiple events
+	# Only disconnects when correct TransitionEvent is received (see handler above)
+	core.event.connect(transition_handler, CONNECT_DEFERRED)
 	await state_awaiter.finished
 
 	if not completed[0]:
