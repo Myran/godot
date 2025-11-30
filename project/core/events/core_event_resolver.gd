@@ -426,7 +426,7 @@ static func resolve_core_event(
 	elif event is core.ProcessQueueEvent:
 		# CRITICAL FIX (Task-314): Prevent queue processing during batch dispatch
 		# This ensures all actions are added to the queue before any processing starts
-		if game._batch_dispatch_in_progress:
+		if game._queue_paused:
 			Log.info(
 				"Queue processing paused during batch dispatch",
 				{

@@ -123,8 +123,8 @@ func startDebugCoordinator() -> void:
 	# This prevents synchronous queue processing from running while we're still adding actions
 	var game_node: Node = get_tree().root.get_node_or_null("Game")
 	if game_node and game_node.has_method("_process_one_queue_item"):
-		game_node._batch_dispatch_in_progress = true
-		Log.info("Batch dispatch mode ENABLED - queue processing paused", {
+		game_node._queue_paused = true
+		Log.info("Queue processing PAUSED - batch dispatch mode", {
 			"test_id": DebugAction.get_current_test_id()
 		}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
@@ -204,11 +204,11 @@ func startDebugCoordinator() -> void:
 		"idle_queue_execution_starts_now": true
 	}, ["debug", "startup", "batch_dispatch", "diagnostic"])
 
-	# CRITICAL FIX (Task-314): Re-enable queue processing and trigger execution
-	# Now that all actions are queued, allow processing to begin
+	# CRITICAL FIX (Task-314 + Task-322): Resume queue processing and trigger execution
+	# Now that all actions (including replay_complete) are queued, allow processing to begin
 	if game_node and game_node.has_method("_process_one_queue_item"):
-		game_node._batch_dispatch_in_progress = false
-		Log.info("Batch dispatch mode DISABLED - queue processing resumed", {
+		game_node._queue_paused = false
+		Log.info("Queue processing RESUMED - batch dispatch complete", {
 			"queued_actions": game_node._idle_action_queue.size(),
 			"test_id": DebugAction.get_current_test_id()
 		}, ["debug", "startup", "batch_dispatch", "diagnostic"])

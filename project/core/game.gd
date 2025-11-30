@@ -28,7 +28,7 @@ var current_card_level: int = 1  # Progression level for randomly generated card
 var _idle_action_queue: Array[Dictionary] = []
 var _processing_idle_action: bool = false
 var _queue_continuation_requested: bool = false
-var _batch_dispatch_in_progress: bool = false  # Prevents queue processing during batch dispatch
+var _queue_paused: bool = false  # Pauses queue processing (e.g., during batch action dispatch)
 
 
 func _input(event: InputEvent) -> void:
@@ -242,7 +242,14 @@ func _process_one_queue_item() -> void:
 		[Log.TAG_SYSTEM, Log.TAG_EVENT, Log.TAG_IDLE_ACTION, "queue_item_start", Log.TAG_DIAGNOSTIC]
 	)
 
-	if ui_state != core.UIState.WAITING or _processing_idle_action or _idle_action_queue.is_empty():
+	# CRITICAL FIX (Task-322): Check _queue_paused to prevent queue processing during batch dispatch
+	# This ensures all actions (including replay_complete) are queued BEFORE any execution starts
+	if (
+		ui_state != core.UIState.WAITING
+		or _processing_idle_action
+		or _idle_action_queue.is_empty()
+		or _queue_paused
+	):
 		Log.info(
 			"Queue item processing skipped",
 			{
@@ -250,6 +257,7 @@ func _process_one_queue_item() -> void:
 				"ui_state": ["INITIALIZING", "WAITING", "HOLDING", "LOCKED"][ui_state],
 				"processing_idle_action": _processing_idle_action,
 				"queue_empty": _idle_action_queue.is_empty(),
+				"queue_paused": _queue_paused,
 				"timestamp": timestamp,
 				"test_id": current_test_id,
 				"system_frame": Engine.get_process_frames(),
@@ -257,7 +265,8 @@ func _process_one_queue_item() -> void:
 				{
 					"ui_not_waiting": ui_state != core.UIState.WAITING,
 					"already_processing": _processing_idle_action,
-					"queue_empty": _idle_action_queue.is_empty()
+					"queue_empty": _idle_action_queue.is_empty(),
+					"queue_paused": _queue_paused
 				}
 			},
 			[
@@ -651,6 +660,8 @@ func _get_queue_skip_reason() -> String:
 		return "ui_state_not_waiting"
 	if _processing_idle_action:
 		return "already_processing"
+	if _queue_paused:
+		return "queue_paused"
 	return "queue_empty"
 
 
