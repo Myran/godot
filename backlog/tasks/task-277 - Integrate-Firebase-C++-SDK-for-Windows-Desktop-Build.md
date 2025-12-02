@@ -2,10 +2,9 @@
 id: task-277
 title: Integrate Firebase C++ SDK for Windows Desktop Build
 status: To Do
-priority: high
 assignee: []
 created_date: '2025-11-12 16:41'
-updated_date: '2025-11-12 16:41'
+updated_date: '2025-12-02 16:58'
 labels:
   - firebase
   - windows
@@ -13,6 +12,7 @@ labels:
   - cross-platform
   - cpp
 dependencies: []
+priority: high
 ---
 
 ## Description

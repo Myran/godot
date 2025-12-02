@@ -4,7 +4,7 @@ title: Implement macOS export pipeline with Sentry and Firebase integration
 status: To Do
 assignee: []
 created_date: '2025-11-19 21:42'
-updated_date: '2025-11-19 21:44'
+updated_date: '2025-12-02 16:57'
 labels:
   - macos
   - export
@@ -13,8 +13,7 @@ labels:
   - integration
   - high-priority
   - build-system
-dependencies:
-  - task-294
+dependencies: []
 priority: high
 ---
 
