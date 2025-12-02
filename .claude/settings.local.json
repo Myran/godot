@@ -41,7 +41,10 @@
       "Bash(unzip:*)",
       "Bash(timeout 30 xcrun devicectl device copy:*)",
       "Bash(echo:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(sort:*)",
+      "Bash(xattr:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": [
