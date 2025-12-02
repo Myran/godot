@@ -893,7 +893,7 @@ _execute-test-ios config_name test_id="":
 
     # Determine build path
     BUILD_PATH="Debug-iphoneos"
-    APP_PATH="export/ios/build/products/${BUILD_PATH}/gametwo.app"
+    APP_PATH="export/ios/build/products/${BUILD_PATH}/{{GAME_NAME}}.app"
 
     # Install app (creates fresh Documents/ directory)
     xcrun devicectl device install app --device "$IOS_DEVICE_ID" "$APP_PATH"
@@ -950,7 +950,7 @@ _execute-test-ios config_name test_id="":
         # Task-322: Search for .app path in executable list for reliable detection
         if xcrun devicectl device info processes \
             --device "$IOS_DEVICE_ID" \
-            2>/dev/null | grep -q "gametwo.app"; then
+            2>/dev/null | grep -q "{{GAME_NAME}}.app"; then
             echo "   App still running... ($ELAPSED/$MAX_WAIT seconds)"
             sleep 2
             ELAPSED=$((ELAPSED + 2))
