@@ -947,9 +947,10 @@ _execute-test-ios config_name test_id="":
 
     while [ $ELAPSED -lt $MAX_WAIT ]; do
         # Check if app is still running by checking process list
+        # Task-322: Search for .app path in executable list for reliable detection
         if xcrun devicectl device info processes \
             --device "$IOS_DEVICE_ID" \
-            --quiet 2>/dev/null | grep -q "{{IOS_BUNDLE_IDENTIFIER}}"; then
+            2>/dev/null | grep -q "gametwo.app"; then
             echo "   App still running... ($ELAPSED/$MAX_WAIT seconds)"
             sleep 2
             ELAPSED=$((ELAPSED + 2))
