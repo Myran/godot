@@ -161,7 +161,8 @@ static func deterministic_hash(dict: Dictionary) -> String:
 	for key: Variant in sorted_keys:
 		var value: Variant = dict[key]
 		var key_str: String = str(key)
-		var value_str: String = str(value)
+		# Use JSON for arrays/dicts to ensure deterministic serialization, str() for primitives
+		var value_str: String = JSON.stringify(value) if (value is Dictionary or value is Array) else str(value)
 		hash_parts.append("%s:%s" % [key_str, value_str])
 
 	var combined: String = "|".join(hash_parts)
