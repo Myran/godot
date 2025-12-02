@@ -6,6 +6,47 @@
 
 Complete reference for GameTwo justfile commands, patterns, and workflows.
 
+## 🎯 Checksum Baseline Management
+
+**Essential Commands for Baseline Updates:**
+- `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
+- `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
+- `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
+
+**When to Update vs Reset:**
+- ✅ **Update** (`test-*-update`): Legitimate system/card changes, new features, balance updates, engine optimizations
+- 🔄 **Reset** (`test-*-reset`): Starting over, baseline corruption, major refactoring
+
+**Common Update Scenarios:**
+```bash
+# Card/Balance Changes
+just test-android-update battle-animated      # After card stat changes
+just test-android-update battle-logic-only    # After ability changes
+just test-desktop-update battle-animated       # Cross-platform consistency
+
+# System Changes
+just test-android-update firebase-backend-layer  # After Firebase changes
+just test-android-update system-performance     # After system optimizations
+
+# Replay Tests
+just test-android-update merge-20              # After replay system changes
+just test-android-update draft-10              # After draft system modifications
+```
+
+**Interactive Usage:**
+```bash
+just test-android-update    # Shows menu of available configs
+just test-desktop-update    # Shows menu of available configs
+```
+
+**Workflow Integration:**
+1. **Run test with changes** → Detects checksum mismatch
+2. **Review changes** → Confirm they're legitimate
+3. **Update baseline** → `just test-android-update CONFIG_NAME`
+4. **Re-run test** → Validates new baseline
+5. **Commit** → Both code and updated baseline
+
 ## 🚨 CRITICAL COMMANDS
 
 ```bash

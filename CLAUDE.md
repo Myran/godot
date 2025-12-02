@@ -21,6 +21,38 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `backlog overview` - Project statistics
 - `backlog browser` - Interactive browser
 
+## 🎯 Checksum Baseline Management
+
+**Essential Commands:**
+- `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
+- `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
+- `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
+
+**When to Update Baselines:**
+- ✅ **Legitimate system changes** (new features, balance updates)
+- ✅ **Card stat changes** (intentional balance modifications)
+- ✅ **Expected gameplay changes** (new mechanics, animations)
+- ✅ **Engine optimization changes** (improved performance, new rendering)
+
+**When to Reset Baselines:**
+- 🔄 **Starting over** (completely new test setup)
+- 🔄 **Baseline corruption** (damaged checksum files)
+- 🔄 **Major refactoring** (fundamental system changes)
+
+**Workflow Integration:**
+1. **Run test** → Detects checksum mismatch
+2. **Review changes** → Confirm they're legitimate
+3. **Update baseline** → `just test-android-update CONFIG_NAME`
+4. **Re-run test** → Validates new baseline
+5. **Commit** → Both code and updated baseline
+
+**Interactive Usage:**
+```bash
+just test-android-update    # Shows menu of available configs
+just test-desktop-update    # Shows menu of available configs
+```
+
 **🚨 CRITICAL: Use CLI Commands, Not Direct File Editing**
 
 Backlog maintains separate database that doesn't sync with direct markdown edits.

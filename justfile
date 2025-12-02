@@ -831,6 +831,7 @@ help-logs:
     @echo "just logs-benchmark TEST_ID PATTERN     # Pattern performance testing"
     @echo ""
 
+
 # Workflow patterns and best practices help
 help-workflows:
     @echo "Common Workflow Patterns & Best Practices"
