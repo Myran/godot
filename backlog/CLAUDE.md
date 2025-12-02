@@ -425,7 +425,7 @@ just logs-last            # Latest test results
 
 **ORIENT (Task Analysis):**
 ```bash
-just search-tasks TERM="firebase"  # Find relevant tasks
+just backlog-search-tasks TERM="firebase"  # Find relevant tasks
 backlog tasks view task-XXX --plain  # Detailed task analysis
 just logs-errors TEST_ID               # Debug analysis
 ```
@@ -438,7 +438,7 @@ just task-investigation TITLE="Investigate Firebase timeout" \
   AC="Root cause identified,Fix implemented,Tests pass"
 
 # Start work on existing task
-just task-start TASK=123
+just backlog-task-start TASK=123
 ```
 
 **ACT (Implementation + Testing):**
@@ -447,7 +447,7 @@ just task-start TASK=123
 just ci-validate                    # Code quality
 just fastbuild-android              # Build
 just test-android-target CONFIG     # Test
-just task-done TASK=123            # Mark complete
+just backlog-task-done TASK=123            # Mark complete
 ```
 
 ### **Git Integration Patterns**
@@ -506,7 +506,7 @@ validate-task-completion:
     @echo "Running tests for task-$(TASK) with config: $(CONFIG)"
     @just test-android-target $(CONFIG)
     @echo "Check test results with: just logs-errors $$(just logs-last | tail -1)"
-    @echo "If tests pass, run: just task-done TASK=$(TASK)"
+    @echo "If tests pass, run: just backlog-task-done TASK=$(TASK)"
 ```
 
 ---
