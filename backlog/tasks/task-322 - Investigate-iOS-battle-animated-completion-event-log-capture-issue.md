@@ -1,17 +1,17 @@
 ---
 id: task-322
 title: Investigate iOS battle-animated completion event log capture issue
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-29 21:36'
-updated_date: '2025-11-29 21:36'
+updated_date: '2025-12-02 10:56'
 labels:
   - ios
   - test-framework
   - battle
-priority: high
 dependencies:
   - task-321
+priority: high
 ---
 
 ## Description
@@ -72,11 +72,40 @@ This issue was discovered during task-321 validation. Task-321 fixes (unified ti
 
 ## Success Criteria
 
-- [ ] iOS battle-animated test detects 2/2 completion events
-- [ ] Test completes without timeout (within 45s)
-- [ ] Behavior matches Android (both platforms consistent)
+- [x] iOS battle-animated test detects 2/2 completion events
+- [x] Test completes without timeout (within 45s)
+- [x] Behavior matches Android (both platforms consistent)
+
+## Solution
+
+**Root Cause:** iOS test framework's process detection was broken, causing premature log extraction.
+
+The test framework checked if the app was still running by grepping for the bundle ID:
+```bash
+grep -q "com.primaryhive.gametwo"
+```
+
+However, `xcrun devicectl device info processes` outputs **executable paths**, not bundle IDs. The grep failed immediately, so the framework thought the app quit after only 5 seconds (startup time), and extracted logs while the battle was still animating - missing the completion event.
+
+**Fix:** Changed process detection pattern from bundle ID to executable path:
+```bash
+grep -q "{{GAME_NAME}}.app"
+```
+
+**Results:**
+- iOS now properly waits for app to quit (~13 seconds total, 6-7s for battle)
+- All 4 actions complete successfully
+- Both completion events detected (2/2)
+- iOS test passes: ✅
+
+**Additional Improvements:**
+- Replaced all 17 hardcoded "gametwo" references with `{{GAME_NAME}}` and `{{IOS_BUNDLE_IDENTIFIER}}` variables
+- Makes justfile work with any game name/bundle configuration
 
 ## Related
 
 - Closes: task-321 (partial - timeout behavior fixed, log capture issue remains)
 - Commit: 6b7d4b2b (task-321 fixes)
+- Commit: 63d5c6e3 (fix iOS process detection)
+- Commit: 40a60812 (use GAME_NAME variable)
+- Commit: a8770ae2 (replace all hardcoded references)
