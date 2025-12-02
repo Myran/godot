@@ -318,12 +318,12 @@ _ios-device-logs-internal device_id device_name:
 
     echo "🔍 Streaming live logs from ${DEVICE_NAME} device..."
     echo "📱 Device ID: $DEVICE_ID"
-    echo "🎯 Monitoring process: gametwo"
+    echo "🎯 Monitoring process: {{GAME_NAME}}"
     echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
     # Use idevicesyslog for actual iOS device log access
-    idevicesyslog -u "$DEVICE_ID" -p gametwo --no-colors
+    idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} --no-colors
 
 # Stream live logs from iPhone device
 ios-device-logs-iphone:
@@ -344,14 +344,14 @@ _ios-recent-logs-internal device_id device_name:
     echo "🔍 Searching recent logs from ${DEVICE_NAME} device..."
     echo "📱 Device ID: $DEVICE_ID"
     echo "📊 Time range: Recent logs (no time filter - idevicesyslog shows live)"
-    echo "🎯 Monitoring process: gametwo"
+    echo "🎯 Monitoring process: {{GAME_NAME}}"
     echo "⏹️  Press Ctrl+C to stop streaming"
     echo ""
 
     # Use idevicesyslog for actual iOS device log access
     # Note: idevicesyslog doesn't have time-based filtering like macOS log show
     # It shows recent logs from the device buffer
-    idevicesyslog -u "$DEVICE_ID" -p gametwo --no-colors
+    idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} --no-colors
 
 # Search recent logs from iPhone device (last 10 minutes)
 ios-recent-logs-iphone:
@@ -377,7 +377,7 @@ _ios-search-logs-internal pattern device_id device_name:
     echo ""
 
     # Use idevicesyslog with pattern matching
-    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "$PATTERN" --no-colors
+    idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "$PATTERN" --no-colors
 
 # Search for specific patterns in iPhone device logs
 ios-search-logs-iphone pattern:
@@ -403,7 +403,7 @@ _ios-sentry-logs-internal device_id device_name:
 
     # Use idevicesyslog with Sentry pattern matching
     # Using general pattern that matches all Sentry-related terms and debug startup
-    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "entr" -m "debug_startup" --no-colors
+    idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "entr" -m "debug_startup" --no-colors
 
 # Monitor Sentry-related logs specifically from iPhone
 ios-sentry-logs-iphone:
@@ -429,7 +429,7 @@ _ios-config-logs-internal device_id device_name:
 
     # Use idevicesyslog with config pattern matching
     # Match config-related terms - prioritize most specific patterns first
-    idevicesyslog -u "$DEVICE_ID" -p gametwo -m "debug_startup_actions" -m "config_reader" -m "DebugConfigReader" -m "DebugStartupCoordinator" --no-colors
+    idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "debug_startup_actions" -m "config_reader" -m "DebugConfigReader" -m "DebugStartupCoordinator" --no-colors
 
 # Monitor JSON config reading specifically from iPhone
 ios-config-logs-iphone:
@@ -457,7 +457,7 @@ _ios-retrieve-logs-internal device_id device_name:
         --source "Documents/logs/" \
         --destination "$DEST_DIR" \
         --domain-type appDataContainer \
-        --domain-identifier com.primaryhive.gametwo
+        --domain-identifier "{{IOS_BUNDLE_IDENTIFIER}}"
 
     echo "✅ Logs retrieved to: ${DEST_DIR}"
     echo "📄 Available logs:"
@@ -659,7 +659,7 @@ clean-ios-logs-by-age days="7":
     echo "🧹 Cleaning iOS test logs older than $DAYS days..."
 
     # Clean iOS device logs
-    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}/logs"
     if [[ -d "$IOS_LOG_DIR" ]]; then
         echo "📱 Cleaning iOS device logs..."
         find "$IOS_LOG_DIR" -name "ios_*.log" -mtime +${DAYS} -delete -print 2>/dev/null || echo "  No old iOS device logs to clean"
@@ -682,7 +682,7 @@ clean-ios-logs:
     FILES_DELETED=0
 
     # Clean all iOS logs from app userdata directory
-    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    IOS_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}/logs"
     if [[ -d "$IOS_LOG_DIR" ]]; then
         echo "📱 Removing all iOS logs from $IOS_LOG_DIR..."
 
@@ -726,7 +726,7 @@ clean-godot-logs-by-age days="7":
     FILES_DELETED=0
 
     # Clean all platform logs from app userdata directory
-    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}/logs"
     if [[ -d "$GODOT_LOG_DIR" ]]; then
         echo "📱 Cleaning iOS logs..."
         IOS_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "ios_*.log" -mtime +${DAYS} -print -delete 2>/dev/null | wc -l)
@@ -796,7 +796,7 @@ clean-godot-logs:
     FILES_DELETED=0
 
     # Clean all platform logs from app userdata directory
-    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    GODOT_LOG_DIR="$HOME/Library/Application Support/Godot/app_userdata/{{GAME_NAME}}/logs"
     if [[ -d "$GODOT_LOG_DIR" ]]; then
         echo "📱 Removing all iOS logs..."
         IOS_FILES_DELETED=$(find "$GODOT_LOG_DIR" -name "ios_*.log" -print -delete 2>/dev/null | wc -l)
@@ -934,7 +934,7 @@ _execute-test-ios config_name test_id="":
 
     # Launch the app
     echo "🚀 Launching app on $DEVICE_NAME..."
-    xcrun devicectl device process launch --device "$IOS_DEVICE_ID" --activate "com.primaryhive.gametwo"
+    xcrun devicectl device process launch --device "$IOS_DEVICE_ID" --activate "{{IOS_BUNDLE_IDENTIFIER}}"
 
     # Give app time to actually start before we check if it's running
     echo "⏳ Waiting for app to start..."
@@ -1137,9 +1137,9 @@ _clean-ios-data:
 
     # Check if app is installed and uninstall to clear all data
     echo "   🔍 Checking for existing app installation..."
-    if xcrun devicectl list devices --device "$IOS_TEST_DEVICE" 2>/dev/null | grep -q "com.primaryhive.gametwo"; then
+    if xcrun devicectl list devices --device "$IOS_TEST_DEVICE" 2>/dev/null | grep -q "{{IOS_BUNDLE_IDENTIFIER}}"; then
         echo "   📱 Uninstalling existing app to clear all data..."
-        if xcrun devicectl device uninstall application --device "$IOS_TEST_DEVICE" com.primaryhive.gametwo 2>/dev/null; then
+        if xcrun devicectl device uninstall application --device "$IOS_TEST_DEVICE" "{{IOS_BUNDLE_IDENTIFIER}}" 2>/dev/null; then
             echo "   ✅ App uninstalled successfully"
         else
             echo "   ⚠️  App uninstall failed (may not be installed)"
