@@ -128,6 +128,91 @@ logs-last:
         cat "$LATEST_LOG"
     fi
 
+# Platform-specific versions of logs-last for explicit targeting
+logs-last-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🤖 Getting latest Android logs (explicit)..."
+
+    # Get recent Android logs and extract test session information
+    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+
+    # Extract test session information from recent logs
+    TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+
+    echo ""
+    if [ "$LATEST_TEST_ID" != "Not found" ]; then
+        echo "🔍 Test Session Information:"
+        echo "──────────────────────────"
+        echo "📋 Test ID: $LATEST_TEST_ID"
+        echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
+    fi
+    if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
+        echo "🏷️  Test Session ID: $TEST_SESSION_ID"
+        echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
+    fi
+    if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
+        echo "⚠️  No test context found in recent logs"
+    fi
+    echo ""
+
+    echo "🤖 Latest Android logs:"
+    echo "────────────────────"
+    LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
+    [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
+
+logs-last-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🖥️  Getting latest Desktop logs (explicit)..."
+
+    # Use unified log retrieval function
+    LATEST_LOG=$(just _get-desktop-log-file)
+
+    echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+    echo "📁 Location: $(dirname "$LATEST_LOG")"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    cat "$LATEST_LOG"
+
+logs-last-ios:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🍎 Getting latest iOS logs (explicit)..."
+
+    # iOS logs are stored in standard Godot logs directory
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+
+    # Look for iOS log files first
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IOS_LOG=$(ls -t "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iOS log: $(basename "$LATEST_IOS_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IOS_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IOS_LOG"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IOS_LOG=$(ls -t "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iOS log: $(basename "$LATEST_IOS_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IOS_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IOS_LOG"
+    else
+        echo "❌ No iOS logs found"
+        echo "💡 Try running an iOS test first, or check:"
+        echo "   - $STANDARD_LOGS_DIR"
+        echo "   - $PROJECT_LOGS_DIR"
+        echo ""
+        echo "🔍 Available iOS log commands:"
+        echo "   - just ios-retrieve-logs-iphone"
+        echo "   - just ios-retrieve-logs-ipad"
+        echo "   - just ios-device-logs-iphone"
+        echo "   - just ios-device-logs-ipad"
+    fi
+
 # Show only performance/timing info
 logs-performance TEST_ID:
     #!/usr/bin/env bash
