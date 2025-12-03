@@ -2753,19 +2753,46 @@ _execute-test-with-analysis config_name platform session="":
     
     echo ""
     echo "📊 Test Execution: $(if [[ $TEST_RESULT -eq 0 ]]; then echo "✅ PASSED"; else echo "❌ FAILED"; fi)"
-    
+
     # Phase 3: Unified post-test validation (shared logic)
     if [[ $TEST_RESULT -eq 0 ]]; then
+        # Track validation results separately
+        ERROR_ANALYSIS_RESULT=0
+        CHECKSUM_VALIDATION_RESULT=0
+
         # Run error analysis
-        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" "$CONFIG_PATH" || TEST_RESULT=$?
-        
-        # Run checksum validation if applicable
-        if [[ $TEST_RESULT -eq 0 ]]; then
-            HAS_CHECKSUM="$HAS_CHECKSUM" EXPECTED_CHECKSUMS_COUNT="$EXPECTED_CHECKSUMS_COUNT" just _handle-checksum-validation "$CONFIG_PATH" "$PLATFORM" "$TEST_ID" || TEST_RESULT=$?
+        just _post-test-validation "$TEST_ID" "$PLATFORM" "$CONFIG_NAME" "$SESSION" "$CONFIG_PATH" || ERROR_ANALYSIS_RESULT=$?
+
+        # Run checksum validation ALWAYS (not conditional on error analysis)
+        # Checksum validation is PRIMARY - if configured and fails, overall test MUST fail
+        if [[ -n "$HAS_CHECKSUM" && "$HAS_CHECKSUM" == "true" ]]; then
+            echo ""
+            echo "🔍 Running checksum validation (primary validation)..."
+
+            # Explicitly capture exit code using command substitution pattern
+            set +e  # Temporarily disable exit-on-error to capture exit code
+            HAS_CHECKSUM="$HAS_CHECKSUM" EXPECTED_CHECKSUMS_COUNT="$EXPECTED_CHECKSUMS_COUNT" just _handle-checksum-validation "$CONFIG_PATH" "$PLATFORM" "$TEST_ID"
+            CHECKSUM_VALIDATION_RESULT=$?
+            set -e  # Re-enable exit-on-error
+
+            # Checksum validation failure is CRITICAL - always fails the test
+            if [[ $CHECKSUM_VALIDATION_RESULT -ne 0 ]]; then
+                echo ""
+                echo "❌ CRITICAL: Checksum validation FAILED"
+                echo "Test result: FAILED (checksum validation is mandatory)"
+                TEST_RESULT=1
+            elif [[ $ERROR_ANALYSIS_RESULT -ne 0 ]]; then
+                echo ""
+                echo "⚠️  Error analysis found issues, but checksums passed"
+                TEST_RESULT=$ERROR_ANALYSIS_RESULT
+            fi
+        elif [[ $ERROR_ANALYSIS_RESULT -ne 0 ]]; then
+            # No checksum validation configured, only error analysis matters
+            TEST_RESULT=$ERROR_ANALYSIS_RESULT
         fi
     else
         echo ""
-        echo "❌ OVERALL RESULT: FAILED"  
+        echo "❌ OVERALL RESULT: FAILED"
         echo "💡 Test execution failed - skipping validation"
         exit 1
     fi
@@ -2779,14 +2806,34 @@ _execute-test-with-analysis config_name platform session="":
         echo "🔄 Preserving session files for multi-platform summary..."
     fi
     
-    # Final result
+    # Final result with detailed validation status
     if [[ $TEST_RESULT -eq 0 ]]; then
         echo ""
         echo "🎉 $PLATFORM test execution complete!"
-        echo "✅ All validations passed"
+        echo "✅ OVERALL RESULT: PASSED"
+        echo ""
+        echo "Validation Summary:"
+        echo "  • Test execution: ✅ Passed"
+        echo "  • Error analysis: ✅ Passed"
+        if [[ -n "$HAS_CHECKSUM" && "$HAS_CHECKSUM" == "true" ]]; then
+            echo "  • Checksum validation: ✅ Passed"
+        else
+            echo "  • Checksum validation: ⊘ Not configured"
+        fi
     else
         echo ""
         echo "❌ OVERALL RESULT: FAILED"
+        echo ""
+        echo "Validation Summary:"
+        echo "  • Test execution: $(if [[ $TEST_RESULT -eq 1 && $CHECKSUM_VALIDATION_RESULT -eq 1 ]]; then echo "✅ Passed"; else echo "❌ Failed"; fi)"
+        if [[ $CHECKSUM_VALIDATION_RESULT -ne 0 ]]; then
+            echo "  • Checksum validation: ❌ FAILED (PRIMARY CAUSE)"
+        elif [[ -n "$HAS_CHECKSUM" && "$HAS_CHECKSUM" == "true" ]]; then
+            echo "  • Checksum validation: ✅ Passed"
+        fi
+        if [[ $ERROR_ANALYSIS_RESULT -ne 0 ]]; then
+            echo "  • Error analysis: ❌ Failed"
+        fi
         exit 1
     fi
 

@@ -1,0 +1,18 @@
+{
+  "description": "Task-324 validation: Real game action with intentionally wrong checksum",
+  "checksum_config": {
+    "initial_seed": 42,
+    "state_type": "seed_validation",
+    "expected_checksums": [
+      "c03f4e17c2e201a621c9d7a3b278b27f8bef392d9e2aad1f906b9d9cd33b6377",
+      "SKIP_SYSTEM_DEBUG_CHECKSUM"
+    ]
+  },
+  "actions": [
+    "game.lineup.populate_enemy"
+  ],
+  "platforms": [
+    "desktop",
+    "android"
+  ]
+}
