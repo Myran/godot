@@ -211,6 +211,86 @@ logs-last-ios:
         echo "   - just ios-retrieve-logs-ipad"
         echo "   - just ios-device-logs-iphone"
         echo "   - just ios-device-logs-ipad"
+        echo "   - just logs-last-ios-iphone"
+        echo "   - just logs-last-ios-ipad"
+    fi
+
+# iOS device-specific versions for logs-last-ios-iphone
+logs-last-ios-iphone:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🍎 Getting latest iPhone logs..."
+
+    # iOS logs are stored in standard Godot logs directory
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+
+    # Look for iPhone log files first
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IPHONE_LOG=$(ls -t "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iPhone log: $(basename "$LATEST_IPHONE_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IPHONE_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IPHONE_LOG"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IPHONE_LOG=$(ls -t "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iPhone log: $(basename "$LATEST_IPHONE_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IPHONE_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IPHONE_LOG"
+    else
+        echo "❌ No iPhone logs found"
+        echo "💡 Try running an iPhone test first, or check:"
+        echo "   - $STANDARD_LOGS_DIR"
+        echo "   - $PROJECT_LOGS_DIR"
+        echo ""
+        echo "🔍 Available iPhone log commands:"
+        echo "   - just ios-retrieve-logs-iphone"
+        echo "   - just ios-device-logs-iphone"
+        echo "   - just ios-recent-logs-iphone"
+        echo "   - just ios-search-logs-iphone \"pattern\""
+        echo "   - just ios-sentry-logs-iphone"
+        echo "   - just ios-config-logs-iphone"
+    fi
+
+# iOS device-specific versions for logs-last-ios-ipad
+logs-last-ios-ipad:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🍎 Getting latest iPad logs..."
+
+    # iOS logs are stored in standard Godot logs directory
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+
+    # Look for iPad log files first
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IPAD_LOG=$(ls -t "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iPad log: $(basename "$LATEST_IPAD_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IPAD_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IPAD_LOG"
+    elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+        LATEST_IPAD_LOG=$(ls -t "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+        echo "📄 Latest iPad log: $(basename "$LATEST_IPAD_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_IPAD_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_IPAD_LOG"
+    else
+        echo "❌ No iPad logs found"
+        echo "💡 Try running an iPad test first, or check:"
+        echo "   - $STANDARD_LOGS_DIR"
+        echo "   - $PROJECT_LOGS_DIR"
+        echo ""
+        echo "🔍 Available iPad log commands:"
+        echo "   - just ios-retrieve-logs-ipad"
+        echo "   - just ios-device-logs-ipad"
+        echo "   - just ios-recent-logs-ipad"
+        echo "   - just ios-search-logs-ipad \"pattern\""
+        echo "   - just ios-sentry-logs-ipad"
+        echo "   - just ios-config-logs-ipad"
     fi
 
 # Show only performance/timing info
