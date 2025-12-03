@@ -84,10 +84,86 @@ logs-lifecycle TEST_ID:
 logs-last:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
+    # Android logs are stored in standard Godot logs directory
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+
     # Platform detection and log retrieval
     if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
         echo "🤖 Getting latest Android logs..."
+
+        # Look for Android log files first (saved test results)
+        if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null)" ]; then
+            LATEST_ANDROID_LOG=$(ls -t "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null | head -1)
+            echo "📄 Latest Android log: $(basename "$LATEST_ANDROID_LOG")"
+            echo "📁 Location: $(dirname "$LATEST_ANDROID_LOG")"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            cat "$LATEST_ANDROID_LOG"
+        else
+            # Fallback to live device buffer if no saved logs exist
+            echo "⚠️  No saved Android logs found, trying live device buffer..."
+            echo ""
+            # Get recent Android logs and extract test session information
+            ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+
+            # Extract test session information from recent logs
+            TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+            LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+
+            echo ""
+            if [ "$LATEST_TEST_ID" != "Not found" ]; then
+                echo "🔍 Test Session Information:"
+                echo "──────────────────────────"
+                echo "📋 Test ID: $LATEST_TEST_ID"
+                echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
+            fi
+            if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
+                echo "🏷️  Test Session ID: $TEST_SESSION_ID"
+                echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
+            fi
+            if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
+                echo "⚠️  No test context found in recent logs"
+            fi
+            echo ""
+
+            echo "🤖 Latest Android logs:"
+            echo "────────────────────"
+            LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
+            [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
+        fi
+    else
+        echo "🖥️  Getting latest Desktop logs..."
+
+        # Use unified log retrieval function
+        LATEST_LOG=$(just _get-desktop-log-file)
+
+        echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_LOG"
+    fi
+
+# Platform-specific versions of logs-last for explicit targeting
+logs-last-android:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🤖 Getting latest Android logs (explicit)..."
+
+    # Android logs are stored in standard Godot logs directory
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+
+    # Look for Android log files first (saved test results)
+    if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null)" ]; then
+        LATEST_ANDROID_LOG=$(ls -t "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null | head -1)
+        echo "📄 Latest Android log: $(basename "$LATEST_ANDROID_LOG")"
+        echo "📁 Location: $(dirname "$LATEST_ANDROID_LOG")"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        cat "$LATEST_ANDROID_LOG"
+    else
+        # Fallback to live device buffer if no saved logs exist
+        echo "⚠️  No saved Android logs found, trying live device buffer..."
+        echo ""
 
         # Get recent Android logs and extract test session information
         ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
@@ -116,52 +192,7 @@ logs-last:
         echo "────────────────────"
         LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
         [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
-    else
-        echo "🖥️  Getting latest Desktop logs..."
-        
-        # Use unified log retrieval function
-        LATEST_LOG=$(just _get-desktop-log-file)
-        
-        echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
-        echo "📁 Location: $(dirname "$LATEST_LOG")"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        cat "$LATEST_LOG"
     fi
-
-# Platform-specific versions of logs-last for explicit targeting
-logs-last-android:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "🤖 Getting latest Android logs (explicit)..."
-
-    # Get recent Android logs and extract test session information
-    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
-
-    # Extract test session information from recent logs
-    TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
-    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
-
-    echo ""
-    if [ "$LATEST_TEST_ID" != "Not found" ]; then
-        echo "🔍 Test Session Information:"
-        echo "──────────────────────────"
-        echo "📋 Test ID: $LATEST_TEST_ID"
-        echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
-    fi
-    if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
-        echo "🏷️  Test Session ID: $TEST_SESSION_ID"
-        echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
-    fi
-    if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
-        echo "⚠️  No test context found in recent logs"
-    fi
-    echo ""
-
-    echo "🤖 Latest Android logs:"
-    echo "────────────────────"
-    LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
-    [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
 
 logs-last-desktop:
     #!/usr/bin/env bash
@@ -350,9 +381,9 @@ logs-summary TEST_ID:
     echo "============================="
     echo ""
     
-    # Extract key facts
-    start_line=$(grep "DEBUG_TEST_START" "$LOG_FILE" | head -1)
-    complete_line=$(grep "DEBUG_TEST_COMPLETE" "$LOG_FILE" | head -1)
+    # Extract key facts (|| true prevents SIGPIPE from failing with pipefail)
+    start_line=$(grep "DEBUG_TEST_START" "$LOG_FILE" | head -1 || true)
+    complete_line=$(grep "DEBUG_TEST_COMPLETE" "$LOG_FILE" | head -1 || true)
     success_count=$(grep -c "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
     failure_count=$(grep -c "DEBUG_TEST_FAILURE" "$LOG_FILE" 2>/dev/null || echo "0")
     restart_count=$(grep -c "RESTART" "$LOG_FILE" 2>/dev/null || echo "0")
@@ -375,7 +406,7 @@ logs-summary TEST_ID:
     if [ "$error_count" -gt 0 ]; then
         echo ""
         echo "🚨 Critical Issues:"
-        grep -E "ERROR\|error" "$LOG_FILE" | head -3
+        grep -E "ERROR\|error" "$LOG_FILE" | head -3 || true
     fi
 
 # List available tags in a log file
