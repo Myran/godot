@@ -6,28 +6,33 @@
 _reassemble-android-chunks:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     # Read Android logs from stdin instead of parameter to avoid shell escaping issues
     LOG_CONTENT=$(cat)
-    
-    # Extract all CHUNK lines for DEBUG_GAMESTATE_CAPTURE
-    CHUNK_LINES=$(echo "$LOG_CONTENT" | grep "DEBUG_GAMESTATE_CAPTURE" | grep "\[CHUNK")
-    
-    if [ -z "$CHUNK_LINES" ]; then
-        echo "❌ No chunk lines found" >&2
+
+    # Find the latest message ID from chunks containing DEBUG_GAMESTATE_CAPTURE
+    # (Only chunk 1 contains this, but that's enough to get the MSG_ID)
+    FIRST_CHUNK=$(echo "$LOG_CONTENT" | grep "DEBUG_GAMESTATE_CAPTURE" | grep "\[CHUNK" | tail -1)
+
+    if [ -z "$FIRST_CHUNK" ]; then
+        echo "❌ No chunk lines found with DEBUG_GAMESTATE_CAPTURE" >&2
         exit 1
     fi
-    
-    # Find the most recent message ID (in case there are multiple chunked messages)
-    LATEST_MSG_ID=$(echo "$CHUNK_LINES" | grep -o "\[MSG_ID: [^]]*\]" | sed 's/.*MSG_ID: \([^]]*\).*/\1/' | tail -1)
-    
+
+    # Extract the message ID from the first chunk
+    LATEST_MSG_ID=$(echo "$FIRST_CHUNK" | grep -o "\[MSG_ID: [^]]*\]" | sed 's/.*MSG_ID: \([^]]*\).*/\1/')
+
     if [ -z "$LATEST_MSG_ID" ]; then
         echo "❌ No message ID found in chunk lines" >&2
         exit 1
     fi
-    
-    # Get all chunks for this message ID, sorted by chunk number
-    MSG_CHUNKS=$(echo "$CHUNK_LINES" | grep "MSG_ID: $LATEST_MSG_ID" | sort -t'/' -k1.8n)
+
+    # Get ALL chunks for this message ID (not just ones containing DEBUG_GAMESTATE_CAPTURE)
+    # This is the key fix - we search for MSG_ID in all log lines, not just DEBUG_GAMESTATE_CAPTURE lines
+    # Filter to only "godot" tag to avoid Sentry duplicates (Sentry logs have escaped quotes)
+    # Sort by chunk number: extract chunk number from [CHUNK X/Y] pattern and sort numerically
+    MSG_CHUNKS=$(echo "$LOG_CONTENT" | grep "godot" | grep "CHUNK.*MSG_ID: $LATEST_MSG_ID" | \
+        perl -pe 's/.*\[CHUNK (\d+)\/(\d+)\].*/sprintf("%04d %s", $1, $_)/e' | sort -n | cut -d' ' -f2-)
     
     if [ -z "$MSG_CHUNKS" ]; then
         echo "❌ No chunks found for message ID $LATEST_MSG_ID" >&2
@@ -382,14 +387,19 @@ _capture-from-android-logs SEARCH_PATTERN FILE_PREFIX NAME:
         
         if [ -n "$CHUNK_LINES" ]; then
             echo "📦 Detected chunked message - reassembling..."
-            JSON_DATA=$(echo "$CAPTURE_OUTPUT" | just _reassemble-android-chunks)
-            
-            if [ $? -ne 0 ] || [ -z "$JSON_DATA" ]; then
+            # Pass full LOG_CONTENT to reassembler, not just CAPTURE_OUTPUT
+            # (chunks 2-14 don't contain DEBUG_GAMESTATE_CAPTURE)
+            REASSEMBLED=$(echo "$LOG_CONTENT" | just _reassemble-android-chunks)
+
+            if [ $? -ne 0 ] || [ -z "$REASSEMBLED" ]; then
                 echo "❌ Failed to reassemble chunked gamestate data"
                 exit 1
             fi
-            
+
             echo "✅ Successfully reassembled chunked message"
+
+            # Extract JSON from reassembled message (strip log prefix)
+            JSON_DATA=$(echo "$REASSEMBLED" | grep -o '{.*}' | tail -1)
         else
             # Legacy single-message handling (backward compatibility)
             echo "📄 Using legacy single-message extraction..."

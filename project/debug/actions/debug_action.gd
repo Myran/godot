@@ -311,46 +311,49 @@ func _execute_core(
 			_update_status("ERROR: " + action_name + " - " + error_message, true)
 
 		# Calculate duration and prepare test metadata for success/failure logging
-	# This must happen BEFORE sequential completion events to prevent race conditions
-	var duration_ms: int = Time.get_ticks_msec() - start_time
+		# This must happen BEFORE sequential completion events to prevent race conditions
+		var duration_ms: int = Time.get_ticks_msec() - start_time
 
-	# UNIFIED TEST REPORTING
-	var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
-	# Fix for Task-301: Use current test context first, fallback to cached config test_id
-	# This prevents iOS test_id caching bug where stale cached test_id is used instead of current test_id
-	var config_test_id: String = (
-		current_test_id if current_test_id != "" else test_metadata.get("test_id", "")
-	)
+		# UNIFIED TEST REPORTING
+		var test_metadata: Dictionary = DebugConfigReader.get_test_metadata()
+		# Fix for Task-301: Use current test context first, fallback to cached config test_id
+		# This prevents iOS test_id caching bug where stale cached test_id is used instead of current test_id
+		var config_test_id: String = (
+			current_test_id if current_test_id != "" else test_metadata.get("test_id", "")
+		)
 
-	# SUCCESS/FAILURE LOGGING - Moved BEFORE sequential completion events to fix Task-302 race condition
-	if config_test_id != "":
-		if success:
-			# SINGLE POINT: Success logging (eliminates race condition)
-			# Actions can opt out of automatic success logging via use_auto_success_logging property
-			if use_auto_success_logging:
-				DebugAction._log_test_success(action_name, category, group, duration_ms, params)
-				# Note: Android protection is now handled inside _log_test_success via shared function
-		else:
-			test_failure_count += 1
-			Log.error(
-				"DEBUG_TEST_FAILURE",
-				{
-					"test_id": config_test_id,
-					"action": action_name,
-					"category": category,
-					"group": group,
-					"duration_ms": duration_ms,
-					"error_message": error_message,
-					"params": params,
-					"pid": OS.get_process_id(),
-					"sequence": test_failure_count,
-					"timestamp":
-					Time.get_datetime_string_from_system().replace("T", " ").split(".")[0]
-				},
-				["debug", "test", "failure", "pid", "sequence"]
-			)
+		# SUCCESS/FAILURE LOGGING - Moved BEFORE sequential completion events to fix Task-302 race condition
+		if config_test_id != "":
+			if success:
+				# SINGLE POINT: Success logging (eliminates race condition)
+				# Actions can opt out of automatic success logging via use_auto_success_logging property
+				if use_auto_success_logging:
+					DebugAction._log_test_success(action_name, category, group, duration_ms, params)
+					# Note: Android protection is now handled inside _log_test_success via shared function
+			else:
+				test_failure_count += 1
+				Log.error(
+					"DEBUG_TEST_FAILURE",
+					{
+						"test_id": config_test_id,
+						"action": action_name,
+						"category": category,
+						"group": group,
+						"duration_ms": duration_ms,
+						"error_message": error_message,
+						"params": params,
+						"pid": OS.get_process_id(),
+						"sequence": test_failure_count,
+						"timestamp":
+						Time.get_datetime_string_from_system().replace("T", " ").split(".")[0]
+					},
+					["debug", "test", "failure", "pid", "sequence"]
+				)
+		# Note: When config_test_id is empty (manual debug menu usage), simply skip test logging
+		# This is expected behavior and not an error
 
 	else:
+		# Only show error when action_callable is actually invalid
 		Log.error("Action callable invalid", {"action": action_name}, ["debug", "error"])
 		success = false
 		error_message = "No execute method defined for " + action_name
