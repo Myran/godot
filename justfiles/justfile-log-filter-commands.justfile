@@ -338,8 +338,8 @@ logs-performance TEST_ID:
     echo "========================="
     echo ""
     
-    # Extract timing information
-    grep -E "duration_ms\|memory_mb\|performance" "$LOG_FILE" | head -20
+    # Extract timing information (|| true prevents SIGPIPE from failing with pipefail)
+    grep -E "duration_ms\|memory_mb\|performance" "$LOG_FILE" | head -20 || true
 
 # Show detailed checksum content for state comparison debugging
 logs-checksum-detail TEST_ID:
@@ -357,12 +357,12 @@ logs-checksum-detail TEST_ID:
     echo "Critical for debugging checksum mismatches between recording and replay."
     echo ""
     
-    # Show CHECKSUM_CONTENT_DETAIL entries
-    grep "CHECKSUM_CONTENT_DETAIL" "$LOG_FILE"
-    
+    # Show CHECKSUM_CONTENT_DETAIL entries (|| true prevents SIGPIPE from failing with pipefail)
+    grep "CHECKSUM_CONTENT_DETAIL" "$LOG_FILE" || true
+
     echo ""
     echo "=== Generated Checksums ==="
-    grep "Generated checksum" "$LOG_FILE"
+    grep "Generated checksum" "$LOG_FILE" || true
 
 
 
