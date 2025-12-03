@@ -48,7 +48,8 @@
       "Bash(tree:*)",
       "mcp__gemini-cli__ask-gemini",
       "Bash(diff:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(adb:*)"
     ],
     "deny": [],
     "ask": [
