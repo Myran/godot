@@ -251,7 +251,12 @@ run-android:
     # Note: Android logs come through adb logcat, but for semantic sessions we need the desktop logs
     STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
     PROJECT_LOGS_DIR="./logs"
-    
+    # Initialize SESSION_ID only if not already set (prevents unbound variable error)
+    # when called as sub-recipe with existing SESSION_ID
+    if [ -z "${SESSION_ID:-}" ]; then
+        SESSION_ID=""
+    fi
+
     # Check both log locations for the most recent session
     if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/*.log 2>/dev/null)" ]; then
         LATEST_LOG=$(ls -t "$STANDARD_LOGS_DIR"/*.log 2>/dev/null | head -1)
