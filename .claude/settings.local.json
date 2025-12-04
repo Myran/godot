@@ -49,7 +49,12 @@
       "mcp__gemini-cli__ask-gemini",
       "Bash(diff:*)",
       "Bash(ls:*)",
-      "Bash(adb:*)"
+      "Bash(adb:*)",
+      "Bash(LOG_DIR=\"$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs\":*)",
+      "Bash(if [ -d \"$LOG_DIR\" ])",
+      "Bash(then ls -lht \"$LOG_DIR\")",
+      "Bash(else echo \"Directory does not exist: $LOG_DIR\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": [
