@@ -56,7 +56,9 @@
       "Bash(else echo \"Directory does not exist: $LOG_DIR\")",
       "Bash(fi)",
       "Bash(bash)",
-      "Bash(timeout 10 just logs-android-clear:*)"
+      "Bash(timeout 10 just logs-android-clear:*)",
+      "mcp__Context7__resolve-library-id",
+      "mcp__Context7__get-library-docs"
     ],
     "deny": [],
     "ask": [
