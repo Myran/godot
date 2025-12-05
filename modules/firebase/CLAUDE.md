@@ -551,8 +551,8 @@ just logs-pattern TEST_ID "cpp.firebase.*"
 
 ```bash
 # Android native logs
-just android-logs-search "Firebase"
-just android-logs-search "FATAL"
+just logs-android-device "Firebase"
+just logs-android-device "FATAL"
 
 # Look for crashes
 just android-logs-tagged "DEBUG" 30 100
