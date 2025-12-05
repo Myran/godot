@@ -6,8 +6,8 @@ signal execution_completed(success: bool, result: Variant)
 
 enum ExecutionContext { STANDARD, VALIDATION }
 
-const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
-const DebugActionResultClass = preload("res://debug/debug_action_result.gd")
+const DebugOutputServiceClass = preload("res://addons/debug_framework/output/debug_output_service.gd")
+const DebugActionResultClass = preload("res://addons/debug_framework/core/debug_action_result.gd")
 
 static var current_test_id: String = ""
 static var test_action_count: int = 0

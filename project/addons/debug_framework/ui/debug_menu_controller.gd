@@ -1,7 +1,7 @@
 extends Control
 enum ViewLevel {MAIN_CATEGORIES, GROUP_LIST, TEST_LIST, SAVED_STATES, ALLIED_LINEUPS, ENEMY_LINEUPS}
 
-const DebugOutputServiceClass = preload("res://debug/debug_output_service.gd")
+const DebugOutputServiceClass = preload("res://addons/debug_framework/output/debug_output_service.gd")
 const SaveDebugStateActionClass = preload("res://debug/actions/system/save_debug_state_action.gd")
 const LoadDebugStateActionClass = preload("res://debug/actions/system/load_debug_state_action.gd")
 const SaveAlliedLineupActionClass = preload(

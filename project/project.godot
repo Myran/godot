@@ -19,7 +19,7 @@ config/icon="res://assets/frame.png"
 [autoload]
 
 DebugManager="*res://autoloads/debug_manager.gd"
-DebugRegistry="*res://debug/debug_action_registry.gd"
+DebugRegistry="*res://addons/debug_framework/core/debug_action_registry.gd"
 internet_status="*res://autoloads/internet_status.gd"
 FirebaseService="*res://firebase/firebase_service.gd"
 auth="*res://firebase/auth.gd"
@@ -59,7 +59,7 @@ window/handheld/orientation=5
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/advanced_logger/plugin.cfg", "res://addons/gdLinter/plugin.cfg", "res://addons/godot_mcp/plugin.cfg", "res://addons/open-external-editor/plugin.cfg")
+enabled=PackedStringArray("res://addons/advanced_logger/plugin.cfg", "res://addons/debug_framework/plugin.cfg", "res://addons/gdLinter/plugin.cfg", "res://addons/godot_mcp/plugin.cfg", "res://addons/open-external-editor/plugin.cfg")
 
 [input_devices]
 

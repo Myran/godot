@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://y4ioxs4m5le2"]
 
-[ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://debug/theme_debugmenu.tres" id="1_vvkks"]
+[ext_resource type="Theme" uid="uid://bwcg8tn7on4fu" path="res://addons/debug_framework/themes/theme_debugmenu.tres" id="1_vvkks"]
 
 [node name="Button" type="Button"]
 offset_right = 321.0
