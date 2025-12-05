@@ -189,7 +189,7 @@ _place-gamestate-for-loading PLATFORM GAMESTATE_FILE:
 _get-desktop-logs:
     #!/usr/bin/env bash
     set -euo pipefail
-    just logs-desktop-last 2>/dev/null || echo ""
+    just logs-latest desktop 2>/dev/null || echo ""
 
 _get-android-logs:
     #!/usr/bin/env bash
@@ -673,7 +673,7 @@ gamestate-status:
     echo "🔍 Recent gamestate captures in logs:"
     
     # Use existing logs-desktop-last command to search for captures
-    CAPTURE_OUTPUT=$(just logs-desktop-last 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
+    CAPTURE_OUTPUT=$(just logs-latest desktop 2>/dev/null | grep "DEBUG_GAMESTATE_CAPTURE" || echo "")
     
     if [ -n "$CAPTURE_OUTPUT" ]; then
         RECENT_CAPTURES=$(echo "$CAPTURE_OUTPUT" | grep -c "DEBUG_GAMESTATE_CAPTURE" || echo "0")
@@ -695,8 +695,8 @@ gamestate-status:
         # Check if Save State action has been used recently
         echo ""
         echo "🔍 Save State action usage:"
-        if just logs-desktop-last 2>/dev/null | grep -q "Save State"; then
-            SAVE_STATE_COUNT=$(just logs-desktop-last 2>/dev/null | grep -c "Save State" 2>/dev/null || echo "0")
+        if just logs-latest desktop 2>/dev/null | grep -q "Save State"; then
+            SAVE_STATE_COUNT=$(just logs-latest desktop 2>/dev/null | grep -c "Save State" 2>/dev/null || echo "0")
             echo "   ✅ Save State found in recent logs ($SAVE_STATE_COUNT times)"
         else
             echo "   ❌ No Save State action found"

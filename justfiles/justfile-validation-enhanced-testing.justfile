@@ -2937,11 +2937,11 @@ _execute-test-android config_name:
     
     # Clear logcat buffer for clean monitoring
     echo "🧹 Clearing Android logcat buffer for clean test monitoring..."
-    just android-logs-clear-lightweight
+    just logs-android-clear
 
     # 🚨 CRITICAL: Check buffer health to detect saturation issues
     echo "📊 Checking buffer health to prevent misdiagnosis..."
-    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+    BUFFER_HEALTH_OUTPUT=$(just logs-android-health 2>/dev/null || echo "Health check failed")
 
     # Extract buffer status from health check
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then

@@ -54,7 +54,9 @@
       "Bash(if [ -d \"$LOG_DIR\" ])",
       "Bash(then ls -lht \"$LOG_DIR\")",
       "Bash(else echo \"Directory does not exist: $LOG_DIR\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(bash)",
+      "Bash(timeout 10 just logs-android-clear:*)"
     ],
     "deny": [],
     "ask": [

@@ -52,17 +52,17 @@ just test-desktop-update    # Shows menu of available configs
 ```bash
 # Emergency Debugging
 just logs-errors TEST_ID                   # Find errors (98% token savings)
-just logs-text TEST_ID "search_term"       # Text search (99% token savings)
-just logs-last                             # Latest results (99% token savings)
+just logs-search TEST_ID "search_term"     # Text search (99% token savings - replaced logs-text)
+just logs-latest [PLATFORM]                # Latest results (99% token savings - replaced logs-last)
 
 # Full Android Logs (Not Test Results)
-just android-logs-search "search_term"    # Complete device logs including startup
+just logs-android-device "search_term"    # Complete device logs including startup (consolidated)
 adb logcat -d | rg "search_term" -i       # Direct full log access
 
 # Log Types:
 # - just logs-* TEST_ID      → Filtered test results only
-# - just android-logs-search → Full device logs
-# Missing logs? Use android-logs-search
+# - just logs-android-device → Full device logs (replaced android-logs-search)
+# Missing logs? Use logs-android-device
 
 # Android Development
 just fastbuild-android                     # REQUIRED after ANY code changes
@@ -97,7 +97,7 @@ just capture-gamestate-android NAME       # Android extraction
 just list-saved-states                    # Show saved states
 just help-gamestate                       # Workflow guide
 
-# Debug Flow: logs-tree → logs-pattern → logs-text → logs-errors
+# Debug Flow: logs-tree → logs-pattern → logs-search → logs-errors
 ```
 
 ## 🎯 Daily Workflow
@@ -118,14 +118,14 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - **`just development`** - REQUIRED before GDScript commits (fastbuild-android + ci-validate + test)
 
 **Debug Decision Tree:**
-1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-text` → `logs-errors`
-2. **Full Android Logs**: `android-logs-search "term"` → `adb logcat -d | rg "term" -i`
+1. **Test Results**: `logs-tree` → `logs-pattern` → `logs-search` → `logs-errors`
+2. **Full Android Logs**: `logs-android-device "term"` → `adb logcat -d | rg "term" -i`
 
 **When to Use Full Android Logs:**
-- Missing initialization logs? → `android-logs-search` (sees startup)
-- Testing validation/fastbuild? → `android-logs-search` (non-debug logs)
-- Specific test actions? → `logs-text TEST_ID` (focused)
-- General debugging? → `android-logs-search` (complete view)
+- Missing initialization logs? → `logs-android-device` (sees startup)
+- Testing validation/fastbuild? → `logs-android-device` (non-debug logs)
+- Specific test actions? → `logs-search TEST_ID` (focused)
+- General debugging? → `logs-android-device` (complete view)
 
 ## 📋 Command Reference
 
@@ -146,7 +146,8 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just logs-errors TEST_ID` - Error analysis (98% savings)
 - `just logs-tree TEST_ID` - Explore log structure
 - `just logs-pattern TEST_ID "pattern"` - Pattern matching
-- `just logs-text TEST_ID "search_term"` - Text search
+- `just logs-search TEST_ID "search_term"` - Text search (replaced logs-text)
+- `just logs-latest [PLATFORM]` - Latest logs (replaced logs-last)
 
 **Build:**
 - `just development` - Complete workflow (MANDATORY before GDScript commits)
@@ -171,20 +172,20 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 
 **Debugging pattern (token-efficient):**
 1. `just logs-errors TEST_ID` (98% token savings - start here)
-2. `just logs-text TEST_ID "firebase"` (specific search)
+2. `just logs-search TEST_ID "firebase"` (specific search - replaced logs-text)
 3. `just logs-pattern TEST_ID "firebase.*"` (pattern matching)
 
 **⚠️  If logs are missing or incomplete:**
-4. `just android-logs-search "search_term"` (FULL device logs - sees initialization, startup, everything)
+4. `just logs-android-device "search_term"` (FULL device logs - sees initialization, startup, everything)
 5. `adb logcat -d | rg "search_term" -i` (direct approach for complete log access)
 
-**🎯 Quick Rule**: Missing logs in test results? → Use `android-logs-search` for complete view
+**🎯 Quick Rule**: Missing logs in test results? → Use `logs-android-device` for complete view
 
 **Common fixes:**
 - Firebase issues: `just test-android 'system.network.*'`
 - Checksum failures: `just test-android 'game.match.reset_level'`
 - Performance issues: `just test-android '*.*.performance'`
-- **Fastbuild validation**: `just android-logs-search "FASTBUILD_VALIDATION_TEST"`
+- **Fastbuild validation**: `just logs-android-device "FASTBUILD_VALIDATION_TEST"`
 
 ## 📋 Android Device Logs
 

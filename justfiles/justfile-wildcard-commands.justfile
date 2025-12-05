@@ -5,17 +5,51 @@
 # Provides 10x productivity improvement for log analysis
 
 # Smart pattern-based log filtering with wildcard support
-logs-pattern TEST_ID PATTERN:
+logs-pattern TEST_ID PATTERN PLATFORM="auto":
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{TEST_ID}}"
     PATTERN="{{PATTERN}}"
-    
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
-    
+    PLATFORM="{{PLATFORM}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+
+    # Auto-detect platform from TEST_ID if platform is "auto"
+    if [ "$PLATFORM" = "auto" ]; then
+        if [[ "$TEST_ID" == android_* ]]; then
+            PLATFORM="android"
+        elif [[ "$TEST_ID" == desktop_* ]]; then
+            PLATFORM="desktop"
+        elif [[ "$TEST_ID" == ios_* ]]; then
+            PLATFORM="ios"
+        else
+            # Default to desktop for backwards compatibility
+            PLATFORM="desktop"
+        fi
+    fi
+
+    # Find log file based on platform
+    case "$PLATFORM" in
+        android|ios)
+            # Use filename-based search for Android/iOS
+            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            if [ -z "$LOG_FILE" ]; then
+                echo "❌ No log file found for test ID: $TEST_ID" >&2
+                exit 1
+            fi
+            ;;
+        desktop)
+            # Use existing desktop infrastructure
+            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            ;;
+        *)
+            echo "❌ Invalid platform: $PLATFORM" >&2
+            exit 1
+            ;;
+    esac
+
     echo "🔍 Filtering logs by pattern: $PATTERN"
+    echo "🖥️  Platform: $PLATFORM ($([ "{{PLATFORM}}" = "auto" ] && echo "auto-detected" || echo "explicit"))"
     echo "📄 Log file: $LOG_FILE"
     echo ""
     

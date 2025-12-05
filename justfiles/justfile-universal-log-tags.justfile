@@ -15,7 +15,7 @@ logs-android TEST_ID *TAGS:
     echo "==============================================="
 
     # Check current buffer health to provide context
-    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+    BUFFER_HEALTH_OUTPUT=$(just logs-android-health 2>/dev/null || echo "Health check failed")
 
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
         echo "⚠️  🚨 CURRENT BUFFER IS CRITICAL - Live data unreliable!"
@@ -104,7 +104,7 @@ logs-android-errors TEST_ID *TAGS:
     echo "============================================="
 
     # Check current buffer health to provide reliability context
-    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+    BUFFER_HEALTH_OUTPUT=$(just logs-android-health 2>/dev/null || echo "Health check failed")
 
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
         echo "⚠️  🚨 LIVE BUFFER CRITICAL - This saved log analysis is ESSENTIAL!"

@@ -24,9 +24,9 @@ This document ensures correct recipe selection during development, testing, and 
 
 ### Debug & Analyze
 - **Error scan**: `just logs-errors TEST_ID` (98% token savings) ⚡
-- **Text search**: `just logs-text TEST_ID "search_term"` (99% savings) ⚡
+- **Text search**: `just logs-search TEST_ID "search_term"` (99% savings) ⚡
 - **Pattern matching**: `just logs-pattern TEST_ID "firebase.*"`
-- **Full Android logs**: `just android-logs-search "term"` (sees startup)
+- **Full Android logs**: `just logs-android-device "term"` (sees startup)
 
 ### Deploy & Run
 - **Android deploy**: `just fastbuild-android` (builds + installs + launches)
@@ -168,15 +168,15 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-logs.justfile`
 - **Purpose**: Core log extraction and analysis
 - **Critical Recipes**:
-  - `logs-errors TEST_ID` ⚡ (98% token savings)
-  - `logs-text TEST_ID "search_term"` ⚡ (99% savings)
-  - `logs-last` - Latest test results
+  - `logs-errors TEST_ID [PLATFORM]` ⚡ (98% token savings)
+  - `logs-search TEST_ID "search_term" [PLATFORM]` ⚡ (99% savings)
+  - `logs-latest [PLATFORM]` - Latest test results
   - `logs-android TEST_ID [TAGS...]` - Android log extraction
   - `logs-desktop TEST_ID [TAGS...]` - Desktop log extraction
   - `logs-tags TEST_ID TAGS...` - Precision tag filtering
 - **Progressive Debugging**:
   1. `logs-errors` - Quick error scan
-  2. `logs-text` - Simple text search
+  2. `logs-search` - Simple text search
   3. `logs-android`/`logs-desktop` - Component analysis
   4. `logs-tags` - Precision debugging
 
@@ -219,15 +219,16 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-android-device-logs.justfile`
 - **Purpose**: Android device log monitoring
 - **Critical Recipes**:
-  - `android-logs-search "SEARCH_TERM"` ⚡ **Complete device logs**
+  - `logs-android-device "SEARCH_TERM" [LINES]` ⚡ **Complete device logs**
+  - `logs-android-clear` - Clear device buffers
+  - `logs-android-health` - Buffer health monitoring
+  - `logs-android-status` - Device & app diagnostics
   - `android-logs-errors [DURATION]` - Error monitoring
   - `android-logs-tagged "TAG" [DURATION] [COUNT]` - Tag filtering
   - `android-logs-live [DURATION] [FILTER] [COUNT]` - Live monitoring
-  - `android-logs-status` - Device & app status
-  - `android-logs-clear` - Clear logcat buffer
 - **When to Use**:
-  - Missing logs in test results → Use `android-logs-search`
-  - Startup/initialization logs → Use `android-logs-search`
+  - Missing logs in test results → Use `logs-android-device`
+  - Startup/initialization logs → Use `logs-android-device`
   - Live monitoring → Use `android-logs-live`
 
 #### `justfile-ios-device-logs.justfile`
@@ -403,7 +404,7 @@ just logs-discover TEST_ID firebase # Find firebase-related tags
 
 # 2. QUICK ERROR SCAN (98% savings)
 just logs-errors TEST_ID            # Show only errors
-just logs-text TEST_ID "search_term" # ⚡ Simple text search
+just logs-search TEST_ID "search_term" # ⚡ Simple text search
 
 # 3. COMPONENT ANALYSIS (87-95% savings)
 just logs-pattern TEST_ID "firebase.*" # Pattern matching
@@ -452,12 +453,12 @@ just test-desktop-manual CONFIG  # Desktop inspection
 
 1. **Start with token-efficient commands**:
    - `logs-errors` (98% savings) - Quick error scan
-   - `logs-text` (99% savings) - Simple text search
+   - `logs-search` (99% savings) - Simple text search
    - `logs-pattern` - Wildcard matching
 
 2. **Use full Android logs when needed**:
-   - Missing logs → `just android-logs-search "term"`
-   - Startup logs → `just android-logs-search "term"`
+   - Missing logs → `just logs-android-device "term"`
+   - Startup logs → `just logs-android-device "term"`
 
 3. **Buffer safety**: Check buffer saturation before trusting live logs
 
@@ -557,11 +558,11 @@ justfile (main entry)
 | Scenario | Recipe | Token Savings |
 |----------|--------|---------------|
 | Quick error scan | `just logs-errors TEST_ID` ⚡ | 98% |
-| Simple text search | `just logs-text TEST_ID "term"` ⚡ | 99% |
+| Simple text search | `just logs-search TEST_ID "term"` ⚡ | 99% |
 | Pattern matching | `just logs-pattern TEST_ID "firebase.*"` | 90-95% |
 | Component analysis | `just logs-android TEST_ID firebase` | 87-95% |
 | Precision filtering | `just logs-tags TEST_ID firebase auth` | <200 tokens |
-| Full device logs | `just android-logs-search "term"` | Complete view |
+| Full device logs | `just logs-android-device "term"` | Complete view |
 | Log structure | `just logs-tree TEST_ID` | Hierarchical view |
 
 ### **I need to validate...**
@@ -605,9 +606,9 @@ justfile (main entry)
 
 ### **Debugging Decisions**
 
-1. **Start efficient** → `logs-errors` or `logs-text` (98-99% token savings)
+1. **Start efficient** → `logs-errors` or `logs-search` (98-99% token savings)
 2. **Pattern matching** → Use `logs-pattern` for wildcard searches
-3. **Missing logs** → Switch to `android-logs-search` (full device logs)
+3. **Missing logs** → Switch to `logs-android-device` (full device logs)
 4. **Explore structure** → Use `logs-tree` to discover tag hierarchy
 
 ### **Validation Decisions**
@@ -655,9 +656,9 @@ just test-all [CONFIG]                # Cross-platform unified
 
 # Debug
 just logs-errors TEST_ID              # ⚡ Error scan (98% savings)
-just logs-text TEST_ID "term"         # ⚡ Text search (99% savings)
+just logs-search TEST_ID "term"       # ⚡ Text search (99% savings)
 just logs-pattern TEST_ID "firebase.*" # Pattern matching
-just android-logs-search "term"       # Full device logs
+just logs-android-device "term"       # Full device logs
 
 # Config
 just config-list                      # List available configs

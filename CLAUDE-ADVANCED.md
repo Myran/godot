@@ -301,14 +301,14 @@ Provide specific optimizations with before/after code examples.
 
 | Symptom | Best Debug Command | Alternative Commands | Fix Command |
 |---------|-------------------|---------------------|-------------|
-| Firebase timeout/auth | `logs-text TEST_ID "firebase"` | `logs-pattern TEST_ID "firebase.*"` | `test-android 'system.network.*'` |
-| All error types | `logs-text TEST_ID "error"` | `logs-pattern TEST_ID "*.error"` | Investigate specific errors |
-| Hash mismatch/validation | `logs-text TEST_ID "checksum"` | `logs-pattern TEST_ID "*.checksum"` | `test-android 'game.match.reset_level'` |
-| Performance/timeouts | `logs-text TEST_ID "timeout"` | `logs-pattern TEST_ID "performance.*"` | `test-android '*.*.performance'` |
-| Integration failures | `logs-text TEST_ID "integration"` | `logs-pattern TEST_ID "*.integrity"` | Fix specific integration issue |
-| System warnings | `logs-text TEST_ID "warning"` | `logs-pattern TEST_ID "*.warning"` | Investigate warnings |
-| Database issues | `logs-text TEST_ID "database"` | `logs-pattern TEST_ID "database.*"` | `test-android 'database.*'` |
-| Network problems | `logs-text TEST_ID "network"` | `logs-multi TEST_ID "*.timeout" "*.error"` | `test-android 'network.*'` |
+| Firebase timeout/auth | `logs-search TEST_ID "firebase"` | `logs-pattern TEST_ID "firebase.*"` | `test-android 'system.network.*'` |
+| All error types | `logs-search TEST_ID "error"` | `logs-pattern TEST_ID "*.error"` | Investigate specific errors |
+| Hash mismatch/validation | `logs-search TEST_ID "checksum"` | `logs-pattern TEST_ID "*.checksum"` | `test-android 'game.match.reset_level'` |
+| Performance/timeouts | `logs-search TEST_ID "timeout"` | `logs-pattern TEST_ID "performance.*"` | `test-android '*.*.performance'` |
+| Integration failures | `logs-search TEST_ID "integration"` | `logs-pattern TEST_ID "*.integrity"` | Fix specific integration issue |
+| System warnings | `logs-search TEST_ID "warning"` | `logs-pattern TEST_ID "*.warning"` | Investigate warnings |
+| Database issues | `logs-search TEST_ID "database"` | `logs-pattern TEST_ID "database.*"` | `test-android 'database.*'` |
+| Network problems | `logs-search TEST_ID "network"` | `logs-multi TEST_ID "*.timeout" "*.error"` | `test-android 'network.*'` |
 
 ### Complete Command Reference
 
@@ -352,8 +352,11 @@ just android-logs-tagged "firebase" 30 50  # Custom tag monitoring (30s, max 50 
 just android-logs-performance 60 30       # Live performance monitoring (60s, max 30 lines)
 just android-logs-monitor-restart 120 20  # App restart monitoring (120s, max 20 lines)
 
-# Device management
-just android-logs-clear                   # Clear device log buffer
+# Device management (NEW CONSOLIDATED)
+just logs-android-device "SEARCH_TERM"   # Device log search (replaces android-logs-search)
+just logs-android-clear                    # Clear device buffers (consolidated)
+just logs-android-health                   # Buffer health monitoring (new)
+just logs-android-status                    # Device & app diagnostics (new)
 ```
 
 **Smart Filtering Details:**
@@ -380,10 +383,10 @@ just logs-pattern TEST_ID "game.*.start"   # All start events
 just logs-pattern TEST_ID "database.query" # Exact match
 just logs-exclude TEST_ID "firebase.*" "firebase.debug" # Firebase without debug noise
 
-# Traditional Commands (Still Available)
+# Core Commands (Streamlined)
 just logs-errors TEST_ID                   # Error-focused (98% savings)
-just logs-text TEST_ID "search_term"       # Simple text search (case-insensitive, token-efficient)
-just logs-last                             # Latest run (99% savings)
+just logs-search TEST_ID "search_term"     # Simple text search (replaced logs-text)
+just logs-latest [PLATFORM]                # Latest run (replaced logs-last, 99% savings)
 just logs-android TEST_ID [component]      # Component analysis (87-95% savings)
 just logs-desktop TEST_ID [component]      # Desktop component analysis
 

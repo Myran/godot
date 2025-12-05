@@ -76,8 +76,8 @@ test-gamestate-cycle:
     echo "📄 Checking restoration logs for: $LATEST_TEST_ID"
     
     # Check for gamestate restoration evidence
-    RESTORATION_LOGS=$(just logs-text "$LATEST_TEST_ID" "gamestate_restore" 2>/dev/null || echo "")
-    LOADED_SESSION_LOGS=$(just logs-text "$LATEST_TEST_ID" "loaded_state_recording" 2>/dev/null || echo "")
+    RESTORATION_LOGS=$(just logs-search "$LATEST_TEST_ID" "gamestate_restore" 2>/dev/null || echo "")
+    LOADED_SESSION_LOGS=$(just logs-search "$LATEST_TEST_ID" "loaded_state_recording" 2>/dev/null || echo "")
     
     echo ""
     echo "📊 Test Results Summary"
@@ -90,7 +90,7 @@ test-gamestate-cycle:
     if [ -n "$RESTORATION_LOGS" ]; then
         echo "✅ Gamestate restoration evidence found:"
         echo "$RESTORATION_LOGS" | head -5
-        echo "... (see full logs with: just logs-text $LATEST_TEST_ID gamestate_restore)"
+        echo "... (see full logs with: just logs-search $LATEST_TEST_ID gamestate_restore)"
     else
         echo "❌ No gamestate restoration evidence found"
     fi
@@ -110,7 +110,7 @@ test-gamestate-cycle:
         exit 0
     else
         echo "❌ GAMESTATE SAVE/LOAD CYCLE: FAILED"
-        echo "💡 Check logs with: just logs-text $LATEST_TEST_ID gamestate_restore"
+        echo "💡 Check logs with: just logs-search $LATEST_TEST_ID gamestate_restore"
         exit 1
     fi
 

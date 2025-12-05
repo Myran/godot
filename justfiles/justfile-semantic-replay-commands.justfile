@@ -388,7 +388,7 @@ create-demo-interactive:
     
     if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
         echo "🤖 Searching Android logs..."
-        RECENT_LOGS=$(just logs-last 2>/dev/null | grep -v "Getting latest" || echo "")
+        RECENT_LOGS=$(just logs-latest 2>/dev/null | grep -v "Getting latest" || echo "")
     else
         echo "🖥️  Searching Desktop logs..."
         # Check for self-contained mode first (logs in project directory)
@@ -1110,7 +1110,7 @@ _generate-debug-actions-inline OUTPUT_CONFIG SESSION_ID CLEAN_CONFIG_NAME ACTION
     if [ "$PLATFORM" = "android" ]; then
         # Android: get from logs-last
         echo "   Using Android logs (logs-last command)"
-        SEMANTIC_ACTIONS=$(just logs-last 2>/dev/null | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
+        SEMANTIC_ACTIONS=$(just logs-latest 2>/dev/null | grep "SEMANTIC_ACTION" | grep "\"session_id\": \"${SESSION_ID}\"" || echo "")
     else
         # Desktop: get from desktop logs using unified retrieval
         echo "   Using Desktop logs"
@@ -1377,7 +1377,7 @@ _extract-checksums-to-android-config SESSION_ID CONFIG_NAME:
     fi
     
     # Get Android logs
-    ANDROID_LOGS=$(just logs-last 2>/dev/null || echo "")
+    ANDROID_LOGS=$(just logs-latest 2>/dev/null || echo "")
     
     if [ -z "$ANDROID_LOGS" ]; then
         echo "❌ No Android logs found"
@@ -1813,7 +1813,7 @@ replay-generate-from-last-session-android config_name:
     fi
     
     echo "📋 Getting most recent session from Android logs..."
-    SESSION_ID=$(just logs-last 2>/dev/null | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1 || echo "")
+    SESSION_ID=$(just logs-latest 2>/dev/null | grep "SESSION_START" | grep -o '"session_id": *"[^"]*"' | sed 's/"session_id": *"//' | sed 's/"//' | tail -1 || echo "")
     
     if [ -z "$SESSION_ID" ]; then
         echo "❌ No recent session found in Android logs"
@@ -2209,8 +2209,8 @@ replay-test-logging:
     echo ""
     
     echo "2️⃣ Checking for semantic actions in logs..."
-    SEMANTIC_COUNT=$(just logs-last | grep -c "SEMANTIC_ACTION" 2>/dev/null || echo "0")
-    SESSION_COUNT=$(just logs-last | grep -c "SESSION_START\|SESSION_END" 2>/dev/null || echo "0")
+    SEMANTIC_COUNT=$(just logs-latest | grep -c "SEMANTIC_ACTION" 2>/dev/null || echo "0")
+    SESSION_COUNT=$(just logs-latest | grep -c "SESSION_START\|SESSION_END" 2>/dev/null || echo "0")
     
     echo "📊 Results:"
     echo "   Semantic Actions: $SEMANTIC_COUNT"
@@ -2221,10 +2221,10 @@ replay-test-logging:
         echo "✅ Semantic action logging is working!"
         echo ""
         echo "🔍 Sample semantic actions:"
-        just logs-last | grep "SEMANTIC_ACTION" | head -3
+        just logs-latest | grep "SEMANTIC_ACTION" | head -3
         echo ""
         echo "💡 To generate replay config:"
-        SESSION_ID=$(just logs-last | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1)
+        SESSION_ID=$(just logs-latest | grep "SESSION_START" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 | tail -1)
         if [ -n "$SESSION_ID" ]; then
             echo "   just replay-generate $SESSION_ID my-test-replay"
         else
@@ -2234,10 +2234,10 @@ replay-test-logging:
         echo "❌ No semantic actions found in logs"
         echo ""
         echo "🔍 Check logs for debugging:"
-        echo "   just logs-last | grep -i semantic"
+        echo "   just logs-latest | grep -i semantic"
         echo ""
         echo "🔍 Recent log sample:"
-        just logs-last | tail -10
+        just logs-latest | tail -10
     fi
 
 # Quick test to validate end-to-end workflow
@@ -2310,7 +2310,7 @@ replay-test-e2e:
         echo "❌ End-to-end validation FAILED!"
         echo ""
         echo "🔍 Check logs for debugging:"
-        echo "   just logs-last"
+        echo "   just logs-latest"
     fi
 
 # ================================
@@ -2392,14 +2392,18 @@ test-desktop target="":
 
 
 # Desktop log access - equivalent of logs-last for desktop platform
+# ⚠️  DEPRECATED: Use 'logs-latest desktop' instead
 logs-desktop-last:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
+    echo "⚠️  DEPRECATED: 'logs-desktop-last' is deprecated. Use 'logs-latest desktop' instead"
+    echo ""
+
     # Find desktop logs in Godot user data directory
     USER_DATA_DIR="{{USER_DATA_DIR}}"
     LOGS_DIR="{{STANDARD_LOGS_DIR}}"
-    
+
     echo "🖥️  Accessing desktop logs..."
     echo "   Directory: $LOGS_DIR"
     echo ""

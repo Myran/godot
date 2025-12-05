@@ -32,18 +32,52 @@ logs-tags TEST_ID *TAGS:
 
 
 # Show only errors and failures
-logs-errors TEST_ID:
+logs-errors TEST_ID PLATFORM="auto":
     #!/usr/bin/env bash
     set -euo pipefail
 
     TEST_ID="{{TEST_ID}}"
+    PLATFORM="{{PLATFORM}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
 
-    # Use unified log retrieval function
-    LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+    # Auto-detect platform from TEST_ID if platform is "auto"
+    if [ "$PLATFORM" = "auto" ]; then
+        if [[ "$TEST_ID" == android_* ]]; then
+            PLATFORM="android"
+        elif [[ "$TEST_ID" == desktop_* ]]; then
+            PLATFORM="desktop"
+        elif [[ "$TEST_ID" == ios_* ]]; then
+            PLATFORM="ios"
+        else
+            # Default to desktop for backwards compatibility
+            PLATFORM="desktop"
+        fi
+    fi
+
+    # Find log file based on platform
+    case "$PLATFORM" in
+        android|ios)
+            # Use filename-based search for Android/iOS
+            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            if [ -z "$LOG_FILE" ]; then
+                echo "❌ No log file found for test ID: $TEST_ID" >&2
+                exit 1
+            fi
+            ;;
+        desktop)
+            # Use existing desktop infrastructure
+            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            ;;
+        *)
+            echo "❌ Invalid platform: $PLATFORM" >&2
+            exit 1
+            ;;
+    esac
 
     # Extract and display test session information for Sentry correlation
     echo "🔍 Test Session Information for Sentry:"
     echo "======================================"
+    echo "🖥️  Platform: $PLATFORM ($([ "{{PLATFORM}}" = "auto" ] && echo "auto-detected" || echo "explicit"))"
     test_session_id=$(rg -o '"test_session_id": "[^"]*"' "$LOG_FILE" | cut -d'"' -f4 | head -1 || echo "Not found")
 
     # Use the provided TEST_ID for Sentry correlation
@@ -81,9 +115,14 @@ logs-lifecycle TEST_ID:
     grep -E "DEBUG_TEST_START\|DEBUG_TEST_SUCCESS\|DEBUG_TEST_FAILURE\|DEBUG_TEST_COMPLETE\|DEBUG_TEST_RESTART" "$LOG_FILE" || echo "⚠️ No lifecycle events found"
 
 # Show logs from most recent test run only (platform-agnostic)
+# ⚠️  DEPRECATED: Use 'logs-latest' instead - supports platform auto-detection and explicit override
 logs-last:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last' is deprecated. Use 'logs-latest [PLATFORM]' instead"
+    echo "   → New command supports: logs-latest (auto), logs-latest android, logs-latest desktop"
+    echo ""
 
     # Android logs are stored in standard Godot logs directory
     STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
@@ -144,9 +183,13 @@ logs-last:
     fi
 
 # Platform-specific versions of logs-last for explicit targeting
+# ⚠️  DEPRECATED: Use 'logs-latest android' instead
 logs-last-android:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last-android' is deprecated. Use 'logs-latest android' instead"
+    echo ""
 
     echo "🤖 Getting latest Android logs (explicit)..."
 
@@ -194,9 +237,13 @@ logs-last-android:
         [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
     fi
 
+# ⚠️  DEPRECATED: Use 'logs-latest desktop' instead
 logs-last-desktop:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last-desktop' is deprecated. Use 'logs-latest desktop' instead"
+    echo ""
 
     echo "🖥️  Getting latest Desktop logs (explicit)..."
 
@@ -208,9 +255,13 @@ logs-last-desktop:
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     cat "$LATEST_LOG"
 
+# ⚠️  DEPRECATED: Use 'logs-latest ios' instead
 logs-last-ios:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last-ios' is deprecated. Use 'logs-latest ios' instead"
+    echo ""
 
     echo "🍎 Getting latest iOS logs (explicit)..."
 
@@ -247,9 +298,13 @@ logs-last-ios:
     fi
 
 # iOS device-specific versions for logs-last-ios-iphone
+# ⚠️  DEPRECATED: Use 'logs-latest ios' instead
 logs-last-ios-iphone:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last-ios-iphone' is deprecated. Use 'logs-latest ios' instead"
+    echo ""
 
     echo "🍎 Getting latest iPhone logs..."
 
@@ -286,9 +341,13 @@ logs-last-ios-iphone:
     fi
 
 # iOS device-specific versions for logs-last-ios-ipad
+# ⚠️  DEPRECATED: Use 'logs-latest ios' instead
 logs-last-ios-ipad:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'logs-last-ios-ipad' is deprecated. Use 'logs-latest ios' instead"
+    echo ""
 
     echo "🍎 Getting latest iPad logs..."
 
@@ -427,13 +486,18 @@ logs-list-tags TEST_ID:
     grep -o '\["[^"]*"[^]]*\]' "$LOG_FILE" | sort | uniq | head -20
 
 # Simple free-text search in logs (case-insensitive)
+# ⚠️  DEPRECATED: Use 'logs-search' instead - supports platform auto-detection
 logs-text TEST_ID SEARCH_TERM:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
+    echo "⚠️  DEPRECATED: 'logs-text' is deprecated. Use 'logs-search TEST_ID \"SEARCH_TERM\"' instead"
+    echo "   → New command supports platform auto-detection from TEST_ID"
+    echo ""
+
     TEST_ID="{{TEST_ID}}"
     SEARCH_TERM="{{SEARCH_TERM}}"
-    
+
     # Use existing infrastructure
     LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
     
@@ -443,3 +507,262 @@ logs-text TEST_ID SEARCH_TERM:
     
     # Case-insensitive search with limit for token efficiency
     grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
+# ================================
+# NEW CONSOLIDATED COMMAND
+# ================================
+# Unified log retrieval with optional platform parameter
+# Replaces: logs-last, logs-last-android, logs-last-desktop, logs-last-ios
+logs-latest PLATFORM="auto":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    PLATFORM="{{PLATFORM}}"
+    STANDARD_LOGS_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo/logs"
+    PROJECT_LOGS_DIR="./logs"
+    
+    case "$PLATFORM" in
+        android)
+            echo "🤖 Getting latest Android logs (explicit)..."
+            
+            # Look for Android log files first (saved test results)
+            if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null)" ]; then
+                LATEST_ANDROID_LOG=$(ls -t "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null | head -1)
+                echo "📄 Latest Android log: $(basename "$LATEST_ANDROID_LOG")"
+                echo "📁 Location: $(dirname "$LATEST_ANDROID_LOG")"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                cat "$LATEST_ANDROID_LOG"
+            else
+                # Fallback to live device buffer if no saved logs exist
+                echo "⚠️  No saved Android logs found, trying live device buffer..."
+                echo ""
+                
+                # Get recent Android logs and extract test session information
+                ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+                
+                # Extract test session information from recent logs
+                TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+                LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+                
+                echo ""
+                if [ "$LATEST_TEST_ID" != "Not found" ]; then
+                    echo "🔍 Test Session Information:"
+                    echo "──────────────────────────"
+                    echo "📋 Test ID: $LATEST_TEST_ID"
+                    echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
+                fi
+                if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
+                    echo "🏷️  Test Session ID: $TEST_SESSION_ID"
+                    echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
+                fi
+                if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
+                    echo "⚠️  No test context found in recent logs"
+                fi
+                echo ""
+                
+                echo "🤖 Latest Android logs:"
+                echo "────────────────────"
+                LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
+                [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
+            fi
+            ;;
+        
+        desktop)
+            echo "🖥️  Getting latest Desktop logs (explicit)..."
+            
+            # Use unified log retrieval function
+            LATEST_LOG=$(just _get-desktop-log-file)
+            
+            echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+            echo "📁 Location: $(dirname "$LATEST_LOG")"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            cat "$LATEST_LOG"
+            ;;
+        
+        ios)
+            echo "🍎 Getting latest iOS logs (explicit)..."
+            
+            # Look for iOS log files first
+            if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+                LATEST_IOS_LOG=$(ls -t "$STANDARD_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+                echo "📄 Latest iOS log: $(basename "$LATEST_IOS_LOG")"
+                echo "📁 Location: $(dirname "$LATEST_IOS_LOG")"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                cat "$LATEST_IOS_LOG"
+            elif [ -d "$PROJECT_LOGS_DIR" ] && [ -n "$(ls -A "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null)" ]; then
+                LATEST_IOS_LOG=$(ls -t "$PROJECT_LOGS_DIR"/ios_*.log 2>/dev/null | head -1)
+                echo "📄 Latest iOS log: $(basename "$LATEST_IOS_LOG")"
+                echo "📁 Location: $(dirname "$LATEST_IOS_LOG")"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                cat "$LATEST_IOS_LOG"
+            else
+                echo "❌ No iOS logs found"
+                echo "💡 Try running an iOS test first, or check:"
+                echo "   - $STANDARD_LOGS_DIR"
+                echo "   - $PROJECT_LOGS_DIR"
+            fi
+            ;;
+        
+        auto)
+            echo "🔍 Auto-detecting platform..."
+            
+            # Platform detection and log retrieval
+            if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
+                echo "🤖 Getting latest Android logs..."
+                
+                # Look for Android log files first (saved test results)
+                if [ -d "$STANDARD_LOGS_DIR" ] && [ -n "$(ls -A "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null)" ]; then
+                    LATEST_ANDROID_LOG=$(ls -t "$STANDARD_LOGS_DIR"/android_*.log 2>/dev/null | head -1)
+                    echo "📄 Latest Android log: $(basename "$LATEST_ANDROID_LOG")"
+                    echo "📁 Location: $(dirname "$LATEST_ANDROID_LOG")"
+                    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                    cat "$LATEST_ANDROID_LOG"
+                else
+                    # Fallback to live device buffer if no saved logs exist
+                    echo "⚠️  No saved Android logs found, trying live device buffer..."
+                    echo ""
+                    # Get recent Android logs and extract test session information
+                    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
+                    
+                    # Extract test session information from recent logs
+                    TEST_SESSION_ID=$(echo "$ANDROID_LOGS" | rg -o '"test_session_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+                    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | rg '"test_id":' | rg -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "Not found")
+                    
+                    echo ""
+                    if [ "$LATEST_TEST_ID" != "Not found" ]; then
+                        echo "🔍 Test Session Information:"
+                        echo "──────────────────────────"
+                        echo "📋 Test ID: $LATEST_TEST_ID"
+                        echo "🌐 Search in Sentry: test_session_id:$LATEST_TEST_ID"
+                    fi
+                    if [ "$TEST_SESSION_ID" != "Not found" ] && [ "$TEST_SESSION_ID" != "$LATEST_TEST_ID" ]; then
+                        echo "🏷️  Test Session ID: $TEST_SESSION_ID"
+                        echo "🌐 Alternative Sentry search: test_session_id:$TEST_SESSION_ID"
+                    fi
+                    if [ "$LATEST_TEST_ID" = "Not found" ] && [ "$TEST_SESSION_ID" = "Not found" ]; then
+                        echo "⚠️  No test context found in recent logs"
+                    fi
+                    echo ""
+                    
+                    echo "🤖 Latest Android logs:"
+                    echo "────────────────────"
+                    LAST_LINE=$(adb logcat -d | grep -n "ActivityManager.*Start proc.*gametwo" | tail -1 | cut -d: -f1)
+                    [ -n "$LAST_LINE" ] && adb logcat -d | tail -n +$LAST_LINE || echo "❌ No recent Android runs"
+                fi
+            else
+                echo "🖥️  Getting latest Desktop logs..."
+                
+                # Use unified log retrieval function
+                LATEST_LOG=$(just _get-desktop-log-file)
+                
+                echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
+                echo "📁 Location: $(dirname "$LATEST_LOG")"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                cat "$LATEST_LOG"
+            fi
+            ;;
+        
+        *)
+            echo "❌ Invalid platform: $PLATFORM"
+            echo "Valid options: auto, android, desktop, ios"
+            echo ""
+            echo "Usage:"
+            echo "  just logs-latest          # Auto-detect platform"
+            echo "  just logs-latest android  # Explicit Android"
+            echo "  just logs-latest desktop  # Explicit Desktop"
+            echo "  just logs-latest ios      # Explicit iOS"
+            exit 1
+            ;;
+    esac
+
+# Text search with optional platform parameter
+# Replaces: logs-text
+logs-search TEST_ID SEARCH_TERM PLATFORM="auto":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    TEST_ID="{{TEST_ID}}"
+    SEARCH_TERM="{{SEARCH_TERM}}"
+    PLATFORM="{{PLATFORM}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+    
+    # Auto-detect platform from TEST_ID if platform is "auto"
+    if [ "$PLATFORM" = "auto" ]; then
+        if [[ "$TEST_ID" == android_* ]]; then
+            PLATFORM="android"
+        elif [[ "$TEST_ID" == desktop_* ]]; then
+            PLATFORM="desktop"
+        elif [[ "$TEST_ID" == ios_* ]]; then
+            PLATFORM="ios"
+        else
+            # Default to desktop for backwards compatibility with logs-text
+            PLATFORM="desktop"
+        fi
+    fi
+    
+    echo "🔍 Searching for: $SEARCH_TERM"
+    echo "📋 Test ID: $TEST_ID"
+    echo "🖥️  Platform: $PLATFORM ($([ "{{PLATFORM}}" = "auto" ] && echo "auto-detected" || echo "explicit"))"
+    echo ""
+    
+    case "$PLATFORM" in
+        android)
+            # Use Android log file search
+            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            
+            if [ -z "$LOG_FILE" ]; then
+                echo "❌ No Android log file found for test ID: $TEST_ID" >&2
+                echo "" >&2
+                echo "💡 Try:" >&2
+                echo "   just logs-latest android" >&2
+                exit 1
+            fi
+            
+            echo "📄 Log file: $LOG_FILE"
+            echo ""
+            
+            # Case-insensitive search with limit for token efficiency
+            grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
+            ;;
+        
+        desktop)
+            # Use existing desktop infrastructure
+            LOG_FILE=$(just _find-desktop-log-with-test-id "$TEST_ID")
+            
+            echo "📄 Log file: $LOG_FILE"
+            echo ""
+            
+            # Case-insensitive search with limit for token efficiency
+            grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
+            ;;
+        
+        ios)
+            # Use iOS log file search
+            LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+            
+            if [ -z "$LOG_FILE" ]; then
+                echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
+                echo "" >&2
+                echo "💡 Try:" >&2
+                echo "   just logs-latest ios" >&2
+                exit 1
+            fi
+            
+            echo "📄 Log file: $LOG_FILE"
+            echo ""
+            
+            # Case-insensitive search with limit for token efficiency
+            grep -i "$SEARCH_TERM" "$LOG_FILE" | head -50 || echo "❌ No matches found for: $SEARCH_TERM"
+            ;;
+        
+        *)
+            echo "❌ Invalid platform: $PLATFORM"
+            echo "Valid options: auto, android, desktop, ios"
+            echo ""
+            echo "Usage:"
+            echo "  just logs-search TEST_ID \"term\"          # Auto-detect platform from TEST_ID"
+            echo "  just logs-search TEST_ID \"term\" android  # Explicit Android"
+            echo "  just logs-search TEST_ID \"term\" desktop  # Explicit Desktop"
+            echo "  just logs-search TEST_ID \"term\" ios      # Explicit iOS"
+            exit 1
+            ;;
+    esac

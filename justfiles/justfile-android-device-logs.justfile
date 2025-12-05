@@ -1,6 +1,317 @@
 # Android Device Log Commands - Real adb logcat monitoring
 # These commands read ACTUAL Android device logs, not saved test result files
 
+# ================================================================
+# CONSOLIDATED DEVICE LOG SEARCH (Task-327)
+# ================================================================
+# Unified device log search command consolidating multiple specialized commands
+logs-android-device SEARCH_TERM LINES="100":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    SEARCH_TERM="{{SEARCH_TERM}}"
+    LINES="{{LINES}}"
+    ANDROID_DEVICE_ID="{{ANDROID_DEVICE_ID}}"
+
+    echo "🔍 Searching Android device logs for: $SEARCH_TERM"
+    echo "📱 Device: $ANDROID_DEVICE_ID"
+    echo "📊 Lines to search: $LINES"
+    echo ""
+
+    # Check device connectivity
+    if ! adb -s "$ANDROID_DEVICE_ID" shell echo "connected" >/dev/null 2>&1; then
+        echo "❌ Device $ANDROID_DEVICE_ID not connected"
+        echo "💡 Run 'adb devices' to check connected devices"
+        exit 1
+    fi
+
+    # 🚨 CRITICAL: Buffer safety checks (Task-242 lessons)
+    echo "📊 Analyzing log buffer state..."
+
+    # Get buffer statistics
+    MAIN_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b main -d 2>/dev/null | wc -l || echo "0")
+    SYSTEM_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b system -d 2>/dev/null | wc -l || echo "0")
+    EVENTS_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b events -d 2>/dev/null | wc -l || echo "0")
+    TOTAL_BUFFER_COUNT=$((MAIN_BUFFER_COUNT + SYSTEM_BUFFER_COUNT + EVENTS_BUFFER_COUNT))
+
+    echo "   📱 Main: $MAIN_BUFFER_COUNT | ⚙️  System: $SYSTEM_BUFFER_COUNT | 📡 Events: $EVENTS_BUFFER_COUNT"
+    echo "   📊 Total buffer: $TOTAL_BUFFER_COUNT lines"
+    echo ""
+
+    # Buffer saturation warnings
+    BUFFER_WARNING_THRESHOLD=50000
+    if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+        echo "⚠️  🚨 CRITICAL BUFFER SATURATION DETECTED!"
+        echo "   💡 Buffer >90% full - older entries may be overwritten"
+        echo "   🎯 Consider: just android-logs-clear (clear buffer)"
+        echo ""
+    elif [ "$TOTAL_BUFFER_COUNT" -gt 30000 ]; then
+        echo "⚠️  Buffer usage high ($(echo "scale=0; $TOTAL_BUFFER_COUNT * 100 / $BUFFER_WARNING_THRESHOLD" | bc)%)"
+        echo "   💡 Some historical entries may have been overwritten"
+        echo ""
+    fi
+
+    # Progressive search: recent → all
+    echo "🔍 Searching recent $LINES log entries..."
+    RECENT_RESULTS=$(adb -s "$ANDROID_DEVICE_ID" logcat -t "$LINES" | rg "$SEARCH_TERM" -i || echo "")
+
+    if [[ -n "$RECENT_RESULTS" ]]; then
+        echo "✅ Found matches in recent logs:"
+        echo ""
+        echo "$RECENT_RESULTS" | head -50
+        echo ""
+        RECENT_COUNT=$(echo "$RECENT_RESULTS" | wc -l)
+        echo "📊 Recent matches: $RECENT_COUNT"
+
+        if [[ $RECENT_COUNT -gt 50 ]]; then
+            echo "💡 Showing first 50 matches. Full results available via: adb logcat -t $LINES | rg \"$SEARCH_TERM\" -i"
+        fi
+
+        # Buffer saturation warning if applicable
+        if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+            echo ""
+            echo "⚠️  BUFFER SATURATION: Results may be incomplete!"
+            echo "   💡 Cross-validate with: just logs-latest | rg \"$SEARCH_TERM\" -i"
+        fi
+    else
+        echo "❌ No matches in recent $LINES entries"
+        echo ""
+        echo "🔍 Searching all buffered logs..."
+        ALL_RESULTS=$(adb -s "$ANDROID_DEVICE_ID" logcat -d | rg "$SEARCH_TERM" -i || echo "")
+
+        if [[ -n "$ALL_RESULTS" ]]; then
+            echo "✅ Found matches in full buffer:"
+            echo ""
+            echo "$ALL_RESULTS" | tail -20
+            echo ""
+            TOTAL_MATCHES=$(echo "$ALL_RESULTS" | wc -l)
+            echo "📊 Total matches: $TOTAL_MATCHES"
+            if [[ $TOTAL_MATCHES -gt 20 ]]; then
+                echo "💡 Showing last 20. Full results: adb logcat -d | rg \"$SEARCH_TERM\" -i"
+            fi
+        else
+            echo "❌ No matches found in any buffered logs"
+            echo ""
+
+            # Enhanced troubleshooting
+            if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+                echo "🚨 LIKELY CAUSE: Buffer saturation has overwritten relevant entries"
+                echo ""
+                echo "🎯 RECOMMENDED ACTIONS:"
+                echo "   1️⃣  Search historical: find logs/ -name \"*.log\" -exec rg -l \"$SEARCH_TERM\" {} \\;"
+                echo "   2️⃣  Check recent tests: just logs-latest | rg \"$SEARCH_TERM\" -i"
+                echo "   3️⃣  Clear buffer and re-test: just android-logs-clear"
+            else
+                echo "💡 Suggestions:"
+                echo "   - Verify search term spelling"
+                echo "   - Run app/test to generate fresh logs"
+                echo "   - Search historical: find logs/ -name \"*.log\" -exec rg -l \"$SEARCH_TERM\" {} \\;"
+            fi
+        fi
+    fi
+
+# Clear Android device log buffers (Task-327)
+logs-android-clear:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ANDROID_DEVICE_ID="{{ANDROID_DEVICE_ID}}"
+
+    echo "🧹 Clearing Android device logs..."
+
+    # Check if device is available
+    if ! adb -s "$ANDROID_DEVICE_ID" get-state >/dev/null 2>&1; then
+        echo "❌ Android device $ANDROID_DEVICE_ID not available"
+        echo "💡 Check device connection: adb devices"
+        exit 1
+    fi
+
+    # Kill any existing adb server connections that might block clearing
+    echo "🔄 Restarting ADB server to ensure clean logcat access..."
+    adb kill-server 2>/dev/null || true
+    adb start-server 2>/dev/null || true
+    sleep 1
+
+    # Attempt multiple clearing methods with retries
+    RETRY_COUNT=0
+    MAX_RETRIES=3
+
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        # Method 1: Clear all buffers explicitly (main, events, radio)
+        echo "🧹 Clearing all log buffers (main, events, radio)..."
+        adb -s "$ANDROID_DEVICE_ID" logcat -b all -c 2>/dev/null || true
+
+        # Method 2: Clear individual buffers as fallback
+        adb -s "$ANDROID_DEVICE_ID" logcat -b main -c 2>/dev/null || true
+        adb -s "$ANDROID_DEVICE_ID" logcat -b events -c 2>/dev/null || true
+        adb -s "$ANDROID_DEVICE_ID" logcat -b radio -c 2>/dev/null || true
+
+        # Method 3: Alternative shell command approach
+        adb -s "$ANDROID_DEVICE_ID" shell "logcat -b all -c" 2>/dev/null || true
+
+        # Brief pause to let clearing take effect
+        sleep 1
+
+        # Verify clearing worked by checking all buffers
+        MAIN_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b main -d 2>/dev/null | wc -l || echo "999")
+        EVENTS_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b events -d 2>/dev/null | wc -l || echo "999")
+        RADIO_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b radio -d 2>/dev/null | wc -l || echo "999")
+        TOTAL_COUNT=$((MAIN_COUNT + EVENTS_COUNT + RADIO_COUNT))
+
+        echo "   📊 Buffer state: Main=$MAIN_COUNT, Events=$EVENTS_COUNT, Radio=$RADIO_COUNT (Total=$TOTAL_COUNT)"
+
+        # Success if total is reasonably small
+        if [ "$TOTAL_COUNT" -lt 100 ]; then
+            echo "✅ Log buffers cleared successfully"
+            break
+        fi
+
+        # Increment retry counter
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⚠️  Buffers not fully cleared ($TOTAL_COUNT lines remaining). Retrying ($RETRY_COUNT/$MAX_RETRIES)..."
+            sleep 2
+        else
+            echo "⚠️  Warning: Buffers not fully cleared after $MAX_RETRIES attempts"
+            echo "   💡 This may be due to system-level logging. App logs should still be clean."
+        fi
+    done
+
+# Check Android log buffer health (Task-327)
+logs-android-health:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ANDROID_DEVICE_ID="{{ANDROID_DEVICE_ID}}"
+
+    echo "🏥 Android Log Buffer Health Check"
+    echo "================================="
+    echo ""
+
+    # Check device connectivity
+    if ! adb -s "$ANDROID_DEVICE_ID" shell echo "connected" >/dev/null 2>&1; then
+        echo "❌ Device $ANDROID_DEVICE_ID not connected"
+        echo "💡 Run 'adb devices' to check connected devices"
+        exit 1
+    fi
+
+    # Analyze all buffer types
+    echo "📊 Buffer Analysis:"
+    MAIN_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b main -d 2>/dev/null | wc -l || echo "0")
+    SYSTEM_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b system -d 2>/dev/null | wc -l || echo "0")
+    EVENTS_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b events -d 2>/dev/null | wc -l || echo "0")
+    RADIO_BUFFER_COUNT=$(adb -s "$ANDROID_DEVICE_ID" logcat -b radio -d 2>/dev/null | wc -l || echo "0")
+    TOTAL_BUFFER_COUNT=$((MAIN_BUFFER_COUNT + SYSTEM_BUFFER_COUNT + EVENTS_BUFFER_COUNT + RADIO_BUFFER_COUNT))
+
+    echo "   📱 Main:     $MAIN_BUFFER_COUNT lines"
+    echo "   ⚙️  System:   $SYSTEM_BUFFER_COUNT lines"
+    echo "   📡 Events:   $EVENTS_BUFFER_COUNT lines"
+    echo "   📻 Radio:    $RADIO_BUFFER_COUNT lines"
+    echo "   📊 TOTAL:    $TOTAL_BUFFER_COUNT lines"
+    echo ""
+
+    # Health assessment
+    BUFFER_WARNING_THRESHOLD=50000
+    BUFFER_CAUTION_THRESHOLD=30000
+    HEALTH_SCORE=$((100 - (TOTAL_BUFFER_COUNT * 100 / BUFFER_WARNING_THRESHOLD)))
+
+    if [ "$HEALTH_SCORE" -lt 0 ]; then
+        HEALTH_SCORE=0
+    fi
+
+    echo "🏥 Health Assessment:"
+    if [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_WARNING_THRESHOLD" ]; then
+        echo "   🔴 CRITICAL: Buffer is >90% full"
+        echo "   📊 Health Score: $HEALTH_SCORE%"
+        echo "   ⚠️  Immediate action required"
+        STATUS="CRITICAL"
+    elif [ "$TOTAL_BUFFER_COUNT" -gt "$BUFFER_CAUTION_THRESHOLD" ]; then
+        echo "   🟡 CAUTION: Buffer is 60-90% full"
+        echo "   📊 Health Score: $HEALTH_SCORE%"
+        echo "   ⚠️  Cross-validation recommended"
+        STATUS="CAUTION"
+    else
+        echo "   🟢 HEALTHY: Buffer is <60% full"
+        echo "   📊 Health Score: $HEALTH_SCORE%"
+        echo "   ✅ Normal operation"
+        STATUS="HEALTHY"
+    fi
+    echo ""
+
+    # Recommendations based on status
+    echo "💡 Recommendations:"
+    if [ "$STATUS" = "CRITICAL" ]; then
+        echo "   1️⃣  Clear buffer: just logs-android-clear"
+        echo "   2️⃣  Use historical logs: find logs/ -name \"*.log\""
+        echo "   3️⃣  Cross-validate: just logs-latest"
+    elif [ "$STATUS" = "CAUTION" ]; then
+        echo "   1️⃣  Consider clearing: just logs-android-clear"
+        echo "   2️⃣  Cross-validate important findings"
+        echo "   3️⃣  Monitor buffer growth"
+    else
+        echo "   ✅ Buffer is healthy - no action needed"
+    fi
+    echo ""
+
+# Check Android device & app status (Task-327)
+logs-android-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    ANDROID_DEVICE_ID="{{ANDROID_DEVICE_ID}}"
+    ANDROID_PACKAGE_NAME="{{ANDROID_PACKAGE_NAME}}"
+
+    echo "📱 Android Device & App Status"
+    echo "============================="
+    echo ""
+
+    # Device connectivity
+    echo "🔌 Device Connectivity:"
+    if adb -s "$ANDROID_DEVICE_ID" shell echo "connected" >/dev/null 2>&1; then
+        echo "  ✅ Device $ANDROID_DEVICE_ID connected"
+
+        # Device info
+        device_model=$(adb -s "$ANDROID_DEVICE_ID" shell getprop ro.product.model)
+        android_version=$(adb -s "$ANDROID_DEVICE_ID" shell getprop ro.build.version.release)
+        echo "  📱 Model: $device_model"
+        echo "  🤖 Android: $android_version"
+    else
+        echo "  ❌ Device $ANDROID_DEVICE_ID not connected"
+        echo "  💡 Available devices:"
+        adb devices
+        exit 1
+    fi
+
+    echo ""
+    echo "📦 App Status:"
+
+    # App process info
+    app_pid=$(adb -s "$ANDROID_DEVICE_ID" shell pidof "$ANDROID_PACKAGE_NAME" 2>/dev/null || echo "")
+    if [[ -n "$app_pid" ]]; then
+        echo "  ✅ App $ANDROID_PACKAGE_NAME running (PID: $app_pid)"
+
+        # Memory usage
+        memory_info=$(adb -s "$ANDROID_DEVICE_ID" shell dumpsys meminfo $app_pid | head -3 | tail -1)
+        echo "  💾 $memory_info"
+    else
+        echo "  ⚠️  App $ANDROID_PACKAGE_NAME not running"
+    fi
+
+    # Check if app is installed
+    if adb -s "$ANDROID_DEVICE_ID" shell pm list packages | grep -q "$ANDROID_PACKAGE_NAME"; then
+        echo "  ✅ App installed"
+        app_version=$(adb -s "$ANDROID_DEVICE_ID" shell dumpsys package "$ANDROID_PACKAGE_NAME" | grep "versionName" | head -1)
+        echo "  📋 $app_version"
+    else
+        echo "  ❌ App not installed"
+    fi
+    echo ""
+
+# ================================================================
+# LEGACY SPECIALIZED COMMANDS (To be deprecated)
+# ================================================================
+
 # Live Android device error monitoring with app filtering
 android-logs-errors DURATION="30":
     #!/usr/bin/env bash
@@ -14,7 +325,7 @@ android-logs-errors DURATION="30":
 
     # 🚨 CRITICAL: Check buffer health before monitoring
     echo "📊 Checking buffer health before error monitoring..."
-    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+    BUFFER_HEALTH_OUTPUT=$(just logs-android-health 2>/dev/null || echo "Health check failed")
 
     # Provide buffer awareness context
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
@@ -57,7 +368,7 @@ android-logs-live DURATION="60" LEVEL="*:I" LINES="50":
 
     # 🚨 CRITICAL: Check buffer health before live monitoring
     echo "📊 Checking buffer health before live monitoring..."
-    BUFFER_HEALTH_OUTPUT=$(just android-logs-health-check 2>/dev/null || echo "Health check failed")
+    BUFFER_HEALTH_OUTPUT=$(just logs-android-health 2>/dev/null || echo "Health check failed")
 
     # Provide buffer awareness context for live monitoring
     if echo "$BUFFER_HEALTH_OUTPUT" | grep -q "CRITICAL"; then
@@ -334,10 +645,14 @@ android-logs-clear:
     exit 0
 
 # Lightweight logcat clearing optimized for PID-based filtering
+# ⚠️  DEPRECATED: Use 'logs-android-clear' instead - consolidated device buffer management
 android-logs-clear-lightweight:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
+    echo "⚠️  DEPRECATED: 'android-logs-clear-lightweight' is deprecated. Use 'logs-android-clear' instead"
+    echo ""
+
     echo "🧹 Performing lightweight logcat clear (optimized for PID filtering)..."
     
     # Check if device is available
@@ -481,9 +796,14 @@ android-latest-test-id:
     echo "   just capture-gamestate-android \$TEST_ID my_state"
 
 # Search Android device logs for specific terms (full log inspection)
+# ⚠️  DEPRECATED: Use 'logs-android-device' instead - consolidated device log management
 android-logs-search SEARCH_TERM LINES="100":
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'android-logs-search' is deprecated. Use 'logs-android-device \"{{SEARCH_TERM}}\" {{LINES}}' instead"
+    echo "   → New command consolidates 6 Android device log commands into unified interface"
+    echo ""
 
     echo "🔍 Searching Android logs for: {{SEARCH_TERM}}"
     echo "📱 Device: {{ANDROID_DEVICE_ID}}"

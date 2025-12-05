@@ -7,6 +7,35 @@
 
 GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debugging systems.
 
+## 🔍 Streamlined Logging System
+
+**Core Logging Commands (13 commands → 4 core commands, 72% reduction)**
+
+**Essential Test Result Analysis:**
+- `just logs-latest [PLATFORM]` - Latest test results (auto-detect platform)
+- `just logs-search TEST_ID "pattern" [PLATFORM]` - Text search (replaced logs-text)
+- `just logs-errors TEST_ID [PLATFORM]` - Error-focused analysis (98% savings)
+- `just logs-pattern TEST_ID "wildcard*" [PLATFORM]` - Wildcard pattern matching
+
+**Android Device Log Management:**
+- `just logs-android-device "SEARCH_TERM" [LINES]` - Device log search (consolidated 6 commands)
+- `just logs-android-clear` - Clear device buffers (replaced android-logs-clear-lightweight)
+- `just logs-android-health` - Buffer health monitoring (replaced android-logs-health-check)
+- `just logs-android-status` - Device & app diagnostics
+
+**Platform Auto-Detection:**
+- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`)
+- Explicit platform available: `PLATFORM="android|desktop|ios"`
+- Backwards compatible: defaults to "auto" if no platform specified
+
+**🚨 Migration Guide (Old → New):**
+- `logs-last` → `logs-latest`
+- `logs-text TEST_ID "pattern"` → `logs-search TEST_ID "pattern"`
+- `logs-desktop-last` → `logs-latest desktop`
+- `android-logs-search` → `logs-android-device`
+- `android-logs-clear-lightweight` → `logs-android-clear`
+- `android-logs-health-check` → `logs-android-health`
+
 ## 📝 Backlog Management
 
 **Essential Commands:**
@@ -66,7 +95,7 @@ Backlog maintains separate database that doesn't sync with direct markdown edits
 ```bash
 # Investigation → Documentation → Task Creation
 just logs-errors TEST_ID
-just logs-text TEST_ID "pattern"
+just logs-search TEST_ID "pattern"
 backlog tasks create "Fix discovered issue"
 # Add investigation context and links
 
@@ -165,9 +194,9 @@ just logs-errors TEST_ID   # Debug efficiently
 
 **Evidence-First Investigation (OBSERVE):**
 ```bash
-just android-logs-search "SEARCH_TERM"     # Full device logs
+just logs-android-device "SEARCH_TERM"     # Full device logs (consolidated)
 just logs-errors TEST_ID                   # 98% efficient analysis
-just logs-text TEST_ID "specific_term"     # Targeted search
+just logs-search TEST_ID "specific_term"   # Targeted search (replaced logs-text)
 ```
 
 **🚨 CRITICAL**: Gather current evidence, not rely on stale documentation.
@@ -233,20 +262,20 @@ Before complex fixes, require unanimous agreement from all expert perspectives o
 
 **Phase 1: Assessment**
 ```bash
-just android-logs-search "search_term"  # Check buffer status first
+just logs-android-health                   # Check buffer health first
 ```
 
 **Phase 2: Cross-Validation (if saturation detected)**
 ```bash
 find logs/ -name "*.log" -exec grep -l "search_term" {} \;  # Historical logs
-just logs-last | grep "search_term"                           # Recent results
+just logs-latest | grep "search_term"                          # Recent results
 ```
 
 **Phase 3: Fresh Collection**
 ```bash
-just android-logs-clear                    # Clear buffer
+just logs-android-clear                    # Clear buffer (consolidated)
 just test-android-target CONFIG           # Re-run test
-just android-logs-live 30 "*:I" 50       # Live monitoring
+just logs-android-device "*" 50          # Live monitoring (consolidated)
 ```
 
 **Decision Tree:**
@@ -256,7 +285,7 @@ just android-logs-live 30 "*:I" 50       # Live monitoring
 
 **Prevention:**
 ```bash
-just android-logs-clear                    # Clear before testing
+just logs-android-clear                    # Clear before testing (consolidated)
 just log-run-silent test-android CONFIG   # Save complete output
 ```
 

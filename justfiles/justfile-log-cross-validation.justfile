@@ -109,9 +109,13 @@ android-logs-cross-validate SEARCH_TERM:
     echo "   - Consider re-running tests with cleared buffer if data seems incomplete"
 
 # Quick buffer health check with recommendations
+# ⚠️  DEPRECATED: Use 'logs-android-health' instead - consolidated health monitoring
 android-logs-health-check:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    echo "⚠️  DEPRECATED: 'android-logs-health-check' is deprecated. Use 'logs-android-health' instead"
+    echo ""
 
     echo "🏥 Android Log Buffer Health Check"
     echo "================================="
@@ -256,7 +260,7 @@ create-buffer-validation-scenarios:
     echo 'echo ""' >> "$TEST_SCRIPT"
     echo '' >> "$TEST_SCRIPT"
     echo 'echo "📋 PRE-TEST: Check buffer health..."' >> "$TEST_SCRIPT"
-    echo 'just android-logs-health-check' >> "$TEST_SCRIPT"
+    echo 'just logs-android-health' >> "$TEST_SCRIPT"
     echo 'echo ""' >> "$TEST_SCRIPT"
     echo '' >> "$TEST_SCRIPT"
     echo 'echo "🎯 STEP 1: Clear buffers for clean baseline..."' >> "$TEST_SCRIPT"
@@ -264,7 +268,7 @@ create-buffer-validation-scenarios:
     echo 'echo ""' >> "$TEST_SCRIPT"
     echo '' >> "$TEST_SCRIPT"
     echo 'echo "📊 STEP 2: Check buffer status after clearing..."' >> "$TEST_SCRIPT"
-    echo 'just android-logs-health-check' >> "$TEST_SCRIPT"
+    echo 'just logs-android-health' >> "$TEST_SCRIPT"
     echo 'echo ""' >> "$TEST_SCRIPT"
 
     chmod +x "$TEST_SCRIPT"

@@ -488,8 +488,8 @@ just test-desktop CONFIG
 just logs-errors TEST_ID
 
 # 2. TEXT SEARCH (99% token savings)
-just logs-text TEST_ID "firebase"
-just logs-text TEST_ID "checksum"
+just logs-search TEST_ID "firebase"
+just logs-search TEST_ID "checksum"
 
 # 3. PATTERN MATCHING
 just logs-pattern TEST_ID "game.battle.*"
@@ -500,7 +500,7 @@ just logs-tree TEST_ID  # Discover tag hierarchy
 just logs-discover TEST_ID firebase  # Find firebase tags
 
 # 5. FULL DEVICE LOGS (if missing data)
-just android-logs-search "SEARCH_TERM"
+just logs-android-device "SEARCH_TERM"
 ```
 
 ### **Checksum Debugging**
@@ -601,7 +601,7 @@ just clean-saved-states
 
 # Debugging
 just logs-errors TEST_ID
-just logs-text TEST_ID "search"
+just logs-search TEST_ID "search"
 just logs-pattern TEST_ID "pattern"
 just logs-checksum-detail TEST_ID
 ```
