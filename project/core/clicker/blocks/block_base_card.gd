@@ -7,8 +7,13 @@ const CARD_IMAGE_PREFIX: String = "card_image_"
 @export var shield: Sprite2D
 @export var level: int = 1
 @export var unit_info: UnitData = null
-@export var card_definition: CardDefinition = null
 @export var card_name: String = ""
+
+## CardDefinition is owned by unit_info - this is a convenience accessor
+## that ensures single source of truth (no duplicate storage)
+var card_definition: CardDefinition:
+	get:
+		return unit_info.card_definition if unit_info else null
 
 
 func show_shield() -> void:
@@ -21,10 +26,10 @@ func hide_shield() -> void:
 
 func init_card(_card_def: CardDefinition, _card_level: int = 1) -> void:
 	"""Initialize card with strongly-typed CardDefinition."""
-	card_definition = _card_def
 	level = _card_level
 	card_name = _card_def.card_name if not _card_def.card_name.is_empty() else "Unknown"
 
+	# Create UnitData first - card_definition is accessed through unit_info
 	unit_info = UnitData.new()
 	unit_info.init_with_definition(_card_def)
 	unit_info.upgrade_unit_to_level(_card_level)
