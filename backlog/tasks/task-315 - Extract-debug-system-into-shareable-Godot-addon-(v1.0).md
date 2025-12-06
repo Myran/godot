@@ -1,10 +1,10 @@
 ---
 id: task-315
 title: Extract debug system into shareable Godot addon (v1.0)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-11-26 09:49'
-updated_date: '2025-12-05 21:12'
+updated_date: '2025-12-06 09:52'
 labels:
   - architecture
   - addon
