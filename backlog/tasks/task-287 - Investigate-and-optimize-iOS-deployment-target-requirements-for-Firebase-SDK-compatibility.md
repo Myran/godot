@@ -10,6 +10,17 @@ labels: []
 dependencies: []
 ---
 
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - Broader iOS device compatibility.
+
+**Recommendation: KEEP** - iOS 16.6 requirement is restrictive. Lowering to 15.0 would support more devices including the iPad test device. Investigation task to find minimum viable iOS version while maintaining Firebase compatibility.
+
+**Effort**: Small (research + build configuration)
+**Impact**: Enables testing on older devices, broader user reach
+
+---
+
 ## Description
 
 Investigate why iOS deployment target is set to 16.6 and optimize for broader device compatibility. Current requirement prevents testing on iPad running iOS 15.6.1.

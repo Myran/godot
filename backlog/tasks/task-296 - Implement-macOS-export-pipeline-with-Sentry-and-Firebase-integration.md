@@ -17,6 +17,17 @@ dependencies: []
 priority: high
 ---
 
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - Production macOS distribution requires this.
+
+**Recommendation: KEEP but DEFER** - Important for macOS App Store or notarized distribution, but lower priority than Windows/mobile platforms. Consider implementing when macOS becomes a distribution priority.
+
+**Effort**: Medium-Large (notarization, code signing, App Store requirements)
+**Note**: Could be combined with task-294 (macOS testing infrastructure)
+
+---
+
 ## Description
 
 Implement comprehensive macOS export pipeline that properly integrates Sentry crash reporting and Firebase services. This builds upon existing macOS build capabilities to ensure production-ready macOS exports with full monitoring, analytics, and backend connectivity. The pipeline must handle macOS-specific deployment requirements including app bundle creation, code signing, notarization, and App Store distribution support.

@@ -1,10 +1,10 @@
 ---
 id: task-300
 title: Simplify debug actions using lambda-based registrations
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-11-20 09:17'
+updated_date: '2025-12-06 09:58'
 labels:
   - debugging
   - code-reduction

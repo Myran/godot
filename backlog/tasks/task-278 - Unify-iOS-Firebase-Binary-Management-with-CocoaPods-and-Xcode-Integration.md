@@ -17,6 +17,17 @@ dependencies:
   - task-277
 ---
 
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - iOS Firebase management consistency.
+
+**Recommendation: KEEP but DEFER** - Important for iOS build consistency, but iOS already works. This is a "nice to have" unification once Windows (task-277) is done. Lower priority than getting new platforms working.
+
+**Effort**: Medium (CocoaPods integration, Xcode project changes)
+**Blocker**: Depends on task-277
+
+---
+
 ## Description
 
 Unify iOS Firebase binary management to work consistently with the new pre-built library system established in task-277. Currently, iOS Firebase integration uses a hybrid approach with Godot module C++ code (.mm files) and CocoaPods dependencies, leading to potential version mismatches and complexity. This task will align iOS Firebase management with the unified justfile-based approach used for Windows and Android.

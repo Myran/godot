@@ -16,6 +16,17 @@ dependencies: []
 priority: high
 ---
 
+## Assessment (2025-12-06)
+
+**Value: MEDIUM** - Part of desktop platform expansion strategy.
+
+**Recommendation: KEEP but DEFER** - macOS testing infrastructure is useful but you already have desktop testing working on the primary development machine. This becomes more valuable when macOS becomes a distribution target. Lower priority than Windows (task-293) since macOS development is already functional locally.
+
+**Effort**: Medium
+**Note**: Consider merging with task-296 (macOS export pipeline) for efficiency
+
+---
+
 ## Description
 
 Create macOS desktop testing infrastructure equivalent to iOS's test-ios-target and Android's test-android-target systems, including app bundle deployment, log capture, automated testing, and debug config compatibility. This is foundational work required for cross-platform validation and macOS Sentry crash reporting integration, leveraging existing macOS build capabilities.

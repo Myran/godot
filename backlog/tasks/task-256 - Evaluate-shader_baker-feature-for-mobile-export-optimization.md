@@ -14,6 +14,17 @@ dependencies: []
 priority: low
 ---
 
+## Assessment (2025-12-06)
+
+**Value: LOW** - Research task for future optimization.
+
+**Recommendation: KEEP but DEFER** - Good to track, but shader_baker has known issues in Godot 4.5. Re-evaluate when Godot patches address mobile export issues. Not actionable until upstream fixes land.
+
+**Effort**: Small (research/testing only)
+**Trigger**: Wait for Godot 4.5.x patches that fix Android headless export issues
+
+---
+
 ## Description
 
 Evaluate and test Godot 4.5's new **shader_baker** feature for potential startup performance improvements on mobile platforms (iOS/Android).

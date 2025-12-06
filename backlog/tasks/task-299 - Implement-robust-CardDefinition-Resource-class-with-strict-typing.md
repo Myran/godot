@@ -1,10 +1,10 @@
 ---
 id: task-299
 title: Implement robust CardDefinition Resource class with strict typing
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-11-20 09:16'
+updated_date: '2025-12-06 14:31'
 labels:
   - robustness
   - typing
@@ -14,6 +14,40 @@ labels:
   - editor-completion
 dependencies: []
 priority: medium
+---
+
+## Description
+
+## Assessment (2025-12-06) - DETAILED INVESTIGATION
+
+**Value: MEDIUM-HIGH** - Eliminates silent fallbacks that hide bugs.
+
+**Recommendation: KEEP** - After detailed codebase analysis with fail-fast philosophy:
+
+### Current State Analysis
+- **~100+ usages** of `card_info: Dictionary` across 20+ files
+- **Two inconsistent access patterns**:
+  - Direct: `card_info.id` (~40 usages) - ✅ crashes if missing (good)
+  - Fallback: `card_info.get("id", "unknown")` (~30 usages) - ❌ hides issues silently
+
+### Problem: Silent Fallbacks Hide Bugs
+The ~30 `.get("id", "unknown")` usages **actively hide malformed data** instead of crashing. This violates fail-fast principles and makes debugging harder.
+
+### Why CardDefinition Resource Helps
+1. **Fail at boundary**: Conversion from Firebase Dictionary → Resource crashes immediately on malformed data
+2. **Eliminate fallbacks**: No more `.get()` with silent defaults throughout codebase
+3. **Single validation point**: Validate once at conversion, trust typed properties everywhere else
+4. **Consistent access**: All code uses `card_definition.id` - no inconsistent patterns
+
+### Implementation Priority
+1. Create CardDefinition Resource with required properties (no defaults)
+2. Add strict `from_dictionary()` that throws on missing fields
+3. Migrate high-traffic files first (unit_behavior.gd, core_event_resolver.gd)
+4. Remove all `.get()` fallbacks during migration
+
+**Effort**: Medium (100+ usages, phased migration)
+**Risk**: Low-Medium (fail-fast at boundary prevents downstream issues)
+
 ---
 
 ## Description
