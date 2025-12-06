@@ -5,6 +5,9 @@ const PRE_EVENT_RESPONSE: String = "pre_event_response"
 const DRAFT_POST_EVENT_RESPONSE: String = "draft_post_event_response"
 const DRAFT_PRE_EVENT_RESPONSE: String = "draft_pre_event_response"
 
+## CardDefinition reference - exported to ensure proper Resource.duplicate() behavior
+@export var card_definition: CardDefinition = null
+
 var max_health: int = 1  # DEFAULT_HEALTH
 var max_attack: int = 1  # DEFAULT_ATTACK
 var base_health: int = 1  # DEFAULT_HEALTH
@@ -15,7 +18,6 @@ var current_health: int = 1:  # DEFAULT_HEALTH
 var current_attack: int = 1:  # DEFAULT_ATTACK
 	set = set_current_attack
 var level: int = 0
-var card_definition: CardDefinition = null
 var effects_temp: Array[Variant] = []
 var effects_perm: Array[Variant] = []
 var abilities: Array[Ability] = []
