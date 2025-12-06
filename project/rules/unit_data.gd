@@ -213,7 +213,7 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 			if not stat_effect:
 				Log.error(
 					"Invalid StatEffect during duplication",
-					{"card_id": card_definition.id if card_definition else "unknown"},
+					{"card_id": card_definition.id},
 					[Log.TAG_ERROR]
 				)
 				continue

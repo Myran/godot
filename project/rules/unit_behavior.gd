@@ -16,7 +16,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 	Log.debug(
 		"STAT REAPPLICATION CALLED - Before applying effects",
 		{
-			"card_id": unit.card_definition.id if unit.card_definition else "unknown",
+			"card_id": unit.card_definition.id,
 			"level": unit.level,
 			"current_attack_before": stats_before_attack,
 			"current_health_before": stats_before_health,
@@ -34,7 +34,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 			if not stat_effect:
 				Log.error(
 					"Invalid StatEffect in effects_perm array",
-					{"card_id": unit.card_definition.id if unit.card_definition else "unknown"},
+					{"card_id": unit.card_definition.id},
 					[Log.TAG_ERROR]
 				)
 				continue
@@ -44,7 +44,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 			Log.debug(
 				"Processing StatEffect for reapplication",
 				{
-					"card_id": unit.card_definition.id if unit.card_definition else "unknown",
+					"card_id": unit.card_definition.id,
 					"effect_health": stat_effect.health_bonus,
 					"effect_attack": stat_effect.attack_bonus,
 					"running_health_total": total_health_bonus,
@@ -61,7 +61,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 	Log.info(
 		"STAT REAPPLICATION COMPLETED - Stats updated",
 		{
-			"card_id": unit.card_definition.id if unit.card_definition else "unknown",
+			"card_id": unit.card_definition.id,
 			"level": unit.level,
 			"stats_before_attack": stats_before_attack,
 			"stats_before_health": stats_before_health,

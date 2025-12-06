@@ -548,10 +548,7 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		if battle_unit.battle_original_reference == null:
 			Log.warning(
 				"Battle unit has no original reference - skipping reconciliation",
-				{
-					"unit_id":
-					battle_unit.card_definition.id if battle_unit.card_definition else "unknown"
-				},
+				{"unit_id": battle_unit.card_definition.id},
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ERROR]
 			)
 			continue
@@ -570,10 +567,8 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		Log.debug(
 			"Applied reference-based battle reconciliation",
 			{
-				"original_unit_id":
-				original_unit.card_definition.id if original_unit.card_definition else "unknown",
-				"battle_unit_id":
-				battle_unit.card_definition.id if battle_unit.card_definition else "unknown",
+				"original_unit_id": original_unit.card_definition.id,
+				"battle_unit_id": battle_unit.card_definition.id,
 				"survived": unit_survived,
 				"had_permanent_effects": battle_unit.effects_perm.size() > 0,
 				"had_acquired_abilities": battle_unit.get_acquired_abilities().size() > 0,

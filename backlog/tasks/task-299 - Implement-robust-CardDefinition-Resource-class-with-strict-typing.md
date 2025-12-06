@@ -1,10 +1,10 @@
 ---
 id: task-299
 title: Implement robust CardDefinition Resource class with strict typing
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-12-06 15:17'
+updated_date: '2025-12-06 19:35'
 labels:
   - robustness
   - typing

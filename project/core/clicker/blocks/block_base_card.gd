@@ -68,7 +68,7 @@ func get_card_name() -> String:
 
 func refresh_ui_from_unit_data() -> void:
 	"""Updates card UI to reflect current unit_info stats"""
-	var current_id: String = card_definition.id if card_definition else "unknown"
+	var current_id: String = card_definition.id
 	Log.debug(
 		"UI REFRESH - Updating card display stats",
 		{
@@ -93,7 +93,7 @@ func serialize_to_dict() -> Dictionary:
 	var base_data: Dictionary = super.serialize_to_dict()
 
 	# Add Card-specific data
-	base_data["card_id"] = card_definition.id if card_definition else ""
+	base_data["card_id"] = card_definition.id
 	base_data["level"] = level
 	base_data["card_name"] = card_name
 	base_data["unit_checksum"] = (unit_info.get_state_checksum() if unit_info else "")
@@ -364,9 +364,7 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 	# Without this call, effects exist in arrays but aren't applied to current_attack/current_health
 	if unit_data.effects_perm.size() > 0:
 		unit_data.apply_permanent_effects_to_current_stats()
-		var restored_card_id: String = (
-			unit_data.card_definition.id if unit_data.card_definition else "unknown"
-		)
+		var restored_card_id: String = unit_data.card_definition.id
 		Log.debug(
 			"Applied permanent effects to current stats after deserialization",
 			{
