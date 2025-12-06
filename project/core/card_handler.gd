@@ -8,7 +8,7 @@ func change_health(card: Card, health_amount: int) -> void:
 	Log.debug(
 		"CARD HANDLER: Direct health change bypassing StatEffect system",
 		{
-			"card_id": card.card_info.id,
+			"card_id": card.card_definition.id,
 			"health_before": current_health_before,
 			"health_change": health_amount,
 			"health_after": new_health,
@@ -29,7 +29,7 @@ func change_attack(card: Card, attack_amount: int) -> void:
 	Log.debug(
 		"CARD HANDLER: Direct attack change bypassing StatEffect system",
 		{
-			"card_id": card.card_info.id,
+			"card_id": card.card_definition.id,
 			"attack_before": current_attack_before,
 			"attack_change": attack_amount,
 			"attack_after": new_attack,

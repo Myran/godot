@@ -30,7 +30,7 @@ static func resolve_core_event(
 			var health: int = event.health
 			Log.debug(
 				"Changing card health",
-				{"card": card.card_info.id, "health_change": health},
+				{"card": card.card_definition.id, "health_change": health},
 				[Log.TAG_CARD]
 			)
 			card_handler.change_health(card, health)
@@ -39,7 +39,7 @@ static func resolve_core_event(
 			var attack: int = event.attack
 			Log.debug(
 				"Changing card attack",
-				{"card": card.card_info.id, "attack_change": attack},
+				{"card": card.card_definition.id, "attack_change": attack},
 				[Log.TAG_CARD]
 			)
 			card_handler.change_attack(card, attack)
@@ -62,7 +62,7 @@ static func resolve_core_event(
 		if not target_card.unit_info:
 			Log.error(
 				"Target card unit_info is null",
-				{"card_id": target_card.card_info.id},
+				{"card_id": target_card.card_definition.id},
 				[Log.TAG_ERROR]
 			)
 			return
@@ -76,7 +76,7 @@ static func resolve_core_event(
 		Log.debug(
 			"StatEffect stored in card's effects_perm array",
 			{
-				"card_id": target_card.card_info.id,
+				"card_id": target_card.card_definition.id,
 				"effect_description": permanent_effect.get_description(),
 				"effects_perm_count": target_card.unit_info.effects_perm.size(),
 				"health_bonus": stat_effect_event.health_bonus,
@@ -89,7 +89,7 @@ static func resolve_core_event(
 		Log.debug(
 			"APPLYING STATEFFECTS - About to call apply_permanent_effects_to_current_stats()",
 			{
-				"card_id": target_card.card_info.id,
+				"card_id": target_card.card_definition.id,
 				"effects_perm_count_before": target_card.unit_info.effects_perm.size(),
 				"current_attack_before": target_card.unit_info.current_attack,
 				"current_health_before": target_card.unit_info.current_health,
@@ -108,7 +108,7 @@ static func resolve_core_event(
 		Log.info(
 			"APPLIED STATEFFECTS - Stats updated via unified method",
 			{
-				"card_id": target_card.card_info.id,
+				"card_id": target_card.card_definition.id,
 				"effects_perm_count_after": target_card.unit_info.effects_perm.size(),
 				"current_attack_after": target_card.unit_info.current_attack,
 				"current_health_after": target_card.unit_info.current_health,
@@ -119,7 +119,10 @@ static func resolve_core_event(
 
 		Log.info(
 			"Added permanent stat effect",
-			{"effect": permanent_effect.get_description(), "target": target_card.card_info.id},
+			{
+				"effect": permanent_effect.get_description(),
+				"target": target_card.card_definition.id
+			},
 			[Log.TAG_DEBUG, Log.TAG_STATS, Log.TAG_EFFECT]
 		)
 
@@ -144,7 +147,7 @@ static func resolve_core_event(
 		var card: Card = event.card
 		Log.debug(
 			"Adding card to enemy lineup",
-			{"card": card.card_info.id, "position": pos},
+			{"card": card.card_definition.id, "position": pos},
 			[Log.TAG_CARD, Log.TAG_BATTLE]
 		)
 		var holder: Holder = holder_enemy.get_holder(pos)
@@ -162,7 +165,7 @@ static func resolve_core_event(
 		var to_pos: int = event.to_position
 
 		if event.source == core.EventSource.PLAYER:
-			var card_id: String = card.card_info.id
+			var card_id: String = card.card_definition.id
 			SemanticLogger.log_draft_to_lineup_move(card_id, from_pos, to_pos)
 
 		var remove_event: core.RemoveBlockFromDraft = core.RemoveBlockFromDraft.new(card, false)
@@ -197,7 +200,7 @@ static func resolve_core_event(
 				"TRIPPLE MATCH FOUND - Creating LineupMergeEvent",
 				{
 					"tripple_count": tripples.size(),
-					"card_id": tripples[0].card_info.id,
+					"card_id": tripples[0].card_definition.id,
 					"card_level": tripples[0].level
 				},
 				[Log.TAG_CARD, Log.TAG_RULES, Log.TAG_MERGE]
@@ -220,7 +223,7 @@ static func resolve_core_event(
 		Log.info(
 			"LINEUP MERGE EVENT RECEIVED - Starting card merge",
 			{
-				"base_card_id": card.card_info.id,
+				"base_card_id": card.card_definition.id,
 				"base_card_level": card.level,
 				"tripple_count": tripples.size(),
 				"merge_type": "lineup_merge"
@@ -233,7 +236,7 @@ static func resolve_core_event(
 		Log.info(
 			"LINEUP MERGE COMPLETED - New card created",
 			{
-				"new_card_id": new_card.card_info.id,
+				"new_card_id": new_card.card_definition.id,
 				"new_card_level": new_card.level,
 				"merge_successful": true
 			},
@@ -251,12 +254,12 @@ static func resolve_core_event(
 
 		Log.info(
 			"Processing lineup card move action",
-			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+			{"card": card.card_definition.id, "from_position": from_pos, "to_position": to_pos},
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 
 		if event.source == core.EventSource.PLAYER:
-			var card_id: String = card.card_info.id
+			var card_id: String = card.card_definition.id
 			SemanticLogger.log_lineup_move_card(card_id, from_pos, to_pos)
 
 		var from_holder: Holder = lineup_handler.holder_container.get_holder(from_pos)
@@ -275,13 +278,17 @@ static func resolve_core_event(
 			else:
 				Log.warning(
 					"Cannot move card - destination occupied",
-					{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+					{
+						"card": card.card_definition.id,
+						"from_position": from_pos,
+						"to_position": to_pos
+					},
 					[Log.TAG_CARD, Log.TAG_LINEUP]
 				)
 		else:
 			Log.warning(
 				"Invalid lineup card move action - card not at expected position",
-				{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+				{"card": card.card_definition.id, "from_position": from_pos, "to_position": to_pos},
 				[Log.TAG_CARD, Log.TAG_LINEUP]
 			)
 
@@ -292,7 +299,7 @@ static func resolve_core_event(
 
 		Log.info(
 			"Lineup card move event (system cascade)",
-			{"card": card.card_info.id, "from_position": from_pos, "to_position": to_pos},
+			{"card": card.card_definition.id, "from_position": from_pos, "to_position": to_pos},
 			[Log.TAG_CARD, Log.TAG_LINEUP]
 		)
 

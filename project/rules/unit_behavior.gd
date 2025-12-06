@@ -16,7 +16,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 	Log.debug(
 		"STAT REAPPLICATION CALLED - Before applying effects",
 		{
-			"card_id": unit.card_info.get("id", "unknown"),
+			"card_id": unit.card_definition.id if unit.card_definition else "unknown",
 			"level": unit.level,
 			"current_attack_before": stats_before_attack,
 			"current_health_before": stats_before_health,
@@ -34,7 +34,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 			if not stat_effect:
 				Log.error(
 					"Invalid StatEffect in effects_perm array",
-					{"card_id": unit.card_info.get("id", "unknown")},
+					{"card_id": unit.card_definition.id if unit.card_definition else "unknown"},
 					[Log.TAG_ERROR]
 				)
 				continue
@@ -44,7 +44,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 			Log.debug(
 				"Processing StatEffect for reapplication",
 				{
-					"card_id": unit.card_info.get("id", "unknown"),
+					"card_id": unit.card_definition.id if unit.card_definition else "unknown",
 					"effect_health": stat_effect.health_bonus,
 					"effect_attack": stat_effect.attack_bonus,
 					"running_health_total": total_health_bonus,
@@ -61,7 +61,7 @@ static func apply_permanent_effects_to_stats(unit: UnitData) -> void:
 	Log.info(
 		"STAT REAPPLICATION COMPLETED - Stats updated",
 		{
-			"card_id": unit.card_info.get("id", "unknown"),
+			"card_id": unit.card_definition.id if unit.card_definition else "unknown",
 			"level": unit.level,
 			"stats_before_attack": stats_before_attack,
 			"stats_before_health": stats_before_health,
@@ -219,8 +219,8 @@ static func apply_permanent_changes_from_battle(
 # Upgrade unit stats to a new level
 # Extracted from UnitData.upgrade_stats_to_new_level()
 static func upgrade_unit_stats(unit: UnitData, new_level: int) -> void:
-	var health: int = unit.card_info.health.to_int()
-	var attack: int = unit.card_info.attack.to_int()
+	var health: int = unit.card_definition.base_health
+	var attack: int = unit.card_definition.base_attack
 
 	unit.base_health = health * new_level
 	unit.base_attack = attack * new_level
@@ -234,7 +234,7 @@ static func transfer_stat_effects(unit: UnitData, source_units: Array[UnitData])
 	Log.debug(
 		"Starting StatEffect transfer",
 		{
-			"target_card_id": unit.card_info.get("id", ""),
+			"target_card_id": unit.card_definition.id,
 			"source_units_count": source_units.size(),
 			"target_effects_before": unit.effects_perm.size()
 		},
@@ -243,7 +243,7 @@ static func transfer_stat_effects(unit: UnitData, source_units: Array[UnitData])
 
 	for i: int in range(source_units.size()):
 		var source_unit: UnitData = source_units[i]
-		var source_card_id: String = source_unit.card_info.get("id", "")
+		var source_card_id: String = source_unit.card_definition.id
 
 		Log.debug(
 			"Processing source unit for StatEffect transfer",
@@ -273,7 +273,7 @@ static func transfer_stat_effects(unit: UnitData, source_units: Array[UnitData])
 					"Transferred StatEffect from source unit",
 					{
 						"source_card_id": source_card_id,
-						"target_card_id": unit.card_info.get("id", ""),
+						"target_card_id": unit.card_definition.id,
 						"effect_description": stat_effect.get_description(),
 						"health_bonus": stat_effect.health_bonus,
 						"attack_bonus": stat_effect.attack_bonus,
@@ -295,7 +295,7 @@ static func transfer_stat_effects(unit: UnitData, source_units: Array[UnitData])
 	Log.debug(
 		"Completed StatEffect transfer",
 		{
-			"target_card_id": unit.card_info.get("id", ""),
+			"target_card_id": unit.card_definition.id,
 			"target_effects_after": unit.effects_perm.size(),
 			"effects_transferred":
 			unit.effects_perm.size() - GameConstants.BattleSystem.ZERO_STAT_VALUE
@@ -310,7 +310,7 @@ static func transfer_merge_effects(unit: UnitData, source_units: Array[UnitData]
 	Log.debug(
 		"Starting merge effects transfer",
 		{
-			"target_card_id": unit.card_info.get("id", ""),
+			"target_card_id": unit.card_definition.id,
 			"source_units_count": source_units.size(),
 			"target_abilities_before": unit.abilities.size(),
 			"target_effects_before": unit.effects_perm.size()
@@ -320,7 +320,7 @@ static func transfer_merge_effects(unit: UnitData, source_units: Array[UnitData]
 
 	for i: int in range(source_units.size()):
 		var source_unit: UnitData = source_units[i]
-		var source_card_id: String = source_unit.card_info.get("id", "")
+		var source_card_id: String = source_unit.card_definition.id
 
 		Log.debug(
 			"Source unit ability inventory (ALL abilities)",
@@ -370,7 +370,7 @@ static func transfer_merge_effects(unit: UnitData, source_units: Array[UnitData]
 				"Transferring ability",
 				{
 					"source_card_id": source_card_id,
-					"target_card_id": unit.card_info.get("id", ""),
+					"target_card_id": unit.card_definition.id,
 					"ability_class": Utils.get_type(ability),
 					"persistence_type": ability.persistence_type,
 					"persistence_name": persistence_type_name(ability.persistence_type)
@@ -384,7 +384,7 @@ static func transfer_merge_effects(unit: UnitData, source_units: Array[UnitData]
 	Log.debug(
 		"Completed merge effects transfer",
 		{
-			"target_card_id": unit.card_info.get("id", ""),
+			"target_card_id": unit.card_definition.id,
 			"target_abilities_after": unit.abilities.size(),
 			"target_effects_after": unit.effects_perm.size()
 		},
@@ -396,7 +396,7 @@ static func transfer_merge_effects(unit: UnitData, source_units: Array[UnitData]
 # Extracted from UnitData.get_state_checksum()
 static func get_state_checksum(unit: UnitData) -> String:
 	var state_data: Dictionary = {
-		"card_id": unit.card_info.get("id", ""),
+		"card_id": unit.card_definition.id,
 		"level": unit.level,
 		"current_health": unit.current_health,
 		"current_attack": unit.current_attack,

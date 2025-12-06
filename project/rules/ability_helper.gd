@@ -301,11 +301,11 @@ static func get_all_tags_from_card(card: Card) -> Array[String]:
 	Returns:
 		Array[String]: All tags including tribe (empty array if no tags/tribe)
 	"""
-	if not card or not card.unit_info or not card.unit_info.card_info:
+	if not card or not card.unit_info or not card.unit_info.card_definition:
 		return []
 
-	var card_tags: String = card.unit_info.card_info.get("tags", "")
-	var card_tribe: String = card.unit_info.card_info.get("tribe", "")
+	var card_tags: String = card.unit_info.card_definition.tags
+	var card_tribe: String = card.unit_info.card_definition.tribe
 
 	var all_tags: Array[String] = []
 

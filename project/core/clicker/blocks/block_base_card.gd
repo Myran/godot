@@ -7,7 +7,7 @@ const CARD_IMAGE_PREFIX: String = "card_image_"
 @export var shield: Sprite2D
 @export var level: int = 1
 @export var unit_info: UnitData = null
-@export var card_info: Dictionary = {}  # CardInfo data structure
+@export var card_definition: CardDefinition = null
 @export var card_name: String = ""
 
 
@@ -19,33 +19,24 @@ func hide_shield() -> void:
 	shield.hide()
 
 
-func init_card(_card_info: Dictionary, _card_level: int = 1) -> void:
-	card_info = _card_info
+func init_card(_card_def: CardDefinition, _card_level: int = 1) -> void:
+	"""Initialize card with strongly-typed CardDefinition."""
+	card_definition = _card_def
 	level = _card_level
-	var card_name_value: String = _card_info.get("card_name", "Unknown")
-	card_name = card_name_value
+	card_name = _card_def.card_name if not _card_def.card_name.is_empty() else "Unknown"
 
 	unit_info = UnitData.new()
-	unit_info.init_with_info(_card_info)
+	unit_info.init_with_definition(_card_def)
 	unit_info.upgrade_unit_to_level(_card_level)
 
-	var id: String = ""
-	if _card_info.has("id"):
-		var id_value: String = _card_info.id
-		id = id_value
-	else:
-		Log.warning("Card info missing 'id' field", {"card_info": _card_info}, ["debug"])
+	if _card_def.id.is_empty():
+		Log.warning(
+			"Card definition missing 'id' field", {"card_name": _card_def.card_name}, ["debug"]
+		)
 
-	var img_string: String = CardUtilsClass.get_card_image_name(id)
-	var upgrade_level: String = unit_info.card_info.upgrade_level
+	var img_string: String = CardUtilsClass.get_card_image_name(_card_def.id)
 	base.set_card_img(img_string)
-
-	var upgrade_level_int: int = 1
-	if unit_info.card_info.has("upgrade_level"):
-		var upgrade_level_str: String = unit_info.card_info.upgrade_level
-		upgrade_level_int = upgrade_level_str.to_int()
-
-	base.set_upgrade_level(upgrade_level_int)
+	base.set_upgrade_level(_card_def.upgrade_level)
 	base.set_card_health(unit_info.current_health)
 	base.set_card_attack(unit_info.current_attack)
 	base.set_card_level(unit_info.level)
@@ -55,7 +46,9 @@ func init_battle_reenactment(source_card: Card) -> void:
 	level = source_card.level
 	card_name = source_card.card_name
 
-	var card_id: String = source_card.unit_info.card_info.id
+	var card_id: String = ""
+	if source_card.unit_info and source_card.unit_info.card_definition:
+		card_id = source_card.unit_info.card_definition.id
 
 	var img_string: String = CardUtilsClass.get_card_image_name(card_id)
 	base.set_card_img(img_string)
@@ -70,10 +63,11 @@ func get_card_name() -> String:
 
 func refresh_ui_from_unit_data() -> void:
 	"""Updates card UI to reflect current unit_info stats"""
+	var current_id: String = card_definition.id if card_definition else "unknown"
 	Log.debug(
 		"UI REFRESH - Updating card display stats",
 		{
-			"card_id": card_info.get("id", "unknown"),
+			"card_id": current_id,
 			"level": level,
 			"attack_displayed": unit_info.current_attack,
 			"health_displayed": unit_info.current_health,
@@ -94,14 +88,14 @@ func serialize_to_dict() -> Dictionary:
 	var base_data: Dictionary = super.serialize_to_dict()
 
 	# Add Card-specific data
-	base_data["card_id"] = card_info.get("id", "") if card_info else ""
+	base_data["card_id"] = card_definition.id if card_definition else ""
 	base_data["level"] = level
 	base_data["card_name"] = card_name
 	base_data["unit_checksum"] = (unit_info.get_state_checksum() if unit_info else "")
 
-	# Include card_info for complete restoration if needed
-	if not card_info.is_empty():
-		base_data["card_info"] = card_info
+	# Include card_info dictionary for complete restoration if needed
+	if card_definition:
+		base_data["card_info"] = card_definition.to_dictionary()
 
 	# CRITICAL: Serialize complete UnitData state for effects and abilities
 	if unit_info:
@@ -365,10 +359,13 @@ static func _restore_unit_data_state(unit_data: UnitData, unit_state: Dictionary
 	# Without this call, effects exist in arrays but aren't applied to current_attack/current_health
 	if unit_data.effects_perm.size() > 0:
 		unit_data.apply_permanent_effects_to_current_stats()
+		var restored_card_id: String = (
+			unit_data.card_definition.id if unit_data.card_definition else "unknown"
+		)
 		Log.debug(
 			"Applied permanent effects to current stats after deserialization",
 			{
-				"card_id": unit_data.card_info.get("id", "unknown"),
+				"card_id": restored_card_id,
 				"effects_applied": unit_data.effects_perm.size(),
 				"final_current_attack": unit_data.current_attack,
 				"final_current_health": unit_data.current_health,

@@ -86,8 +86,8 @@ static func _extract_card_ids(lineup: Array[Card]) -> Array[String]:
 	"""Extract card IDs from lineup for logging"""
 	var card_ids: Array[String] = []
 	for card: Card in lineup:
-		if card and card.card_info:
-			var card_id: String = card.card_info.id
+		if card and card.card_definition:
+			var card_id: String = card.card_definition.id
 			card_ids.append(card_id if card_id != "" else "unknown_card")
 		else:
 			card_ids.append("unknown_card")

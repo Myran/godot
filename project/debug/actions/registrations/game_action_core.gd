@@ -64,16 +64,12 @@ static func _populate_enemy_lineup() -> bool:
 			"ASSERT 5 FAILED: Cast card instance invalid for ID: " + card_id
 		)
 		assert(
-			typed_card.card_info != null,
-			"ASSERT 6 FAILED: card_info is null for position: " + str(i)
+			typed_card.card_definition != null,
+			"ASSERT 6 FAILED: card_definition is null for position: " + str(i)
 		)
 		assert(
-			typed_card.card_info.has("id"),
-			"ASSERT 7 FAILED: card_info missing 'id' key for position: " + str(i)
-		)
-		assert(
-			typed_card.card_info.id != "",
-			"ASSERT 8 FAILED: card_info['id'] is empty for position: " + str(i)
+			not typed_card.card_definition.id.is_empty(),
+			"ASSERT 7 FAILED: card_definition.id is empty for position: " + str(i)
 		)
 
 		typed_card.block_context = Cards.CONTEXT.LINEUP
@@ -94,7 +90,9 @@ static func _populate_enemy_lineup() -> bool:
 		)
 
 		typed_card.block_context = Cards.CONTEXT.LINEUP
-		assert(typed_card.card_info.id != "", "Debug card has empty ID for position: " + str(n))
+		assert(
+			typed_card.card_definition.id != "", "Debug card has empty ID for position: " + str(n)
+		)
 		core.action(core.DebugLineupAddCardEvent.new(typed_card, n))
 
 	var dwarf_card: Card = await CardController.create_unit_from_id(str(4), 1)
@@ -105,7 +103,7 @@ static func _populate_enemy_lineup() -> bool:
 	assert(typed_dwarf != null, "Type cast to Card returned null for dwarf")
 	assert(typed_dwarf is Card, "Dwarf card is not Card type")
 	assert(is_instance_valid(typed_dwarf), "Dwarf card became invalid after casting")
-	assert(typed_dwarf.card_info.id != "", "Dwarf card_info['id'] is empty")
+	assert(typed_dwarf.card_definition.id != "", "Dwarf card_definition.id is empty")
 
 	typed_dwarf.block_context = Cards.CONTEXT.LINEUP
 
