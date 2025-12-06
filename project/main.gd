@@ -104,7 +104,7 @@ func _ready() -> void:
 		return
 
 	await _wait_for_game_initialization()
-	DebugStartupCoordinator.startDebugCoordinator()
+	DebugStartupCoordinator.start_debug_coordinator()
 
 
 func _wait_for_game_initialization() -> void:

@@ -2,16 +2,14 @@ extends Node
 
 const DebugConfigReader = preload("res://debug/utilities/debug_config_reader.gd")
 const VERBOSE_LOGGING := true
-
-var _current_config_is_test_recipe: bool = false
-
 const COMPLETION_ACTIONS: Array[String] = [
 	"system.debug.replay_complete",
 	"app.quit_application",
 	"system.debug.finalize_replay_validation"
 ]
-
 const DEFAULT_COMPLETION_ACTION: String = "system.debug.replay_complete"
+
+var _current_config_is_test_recipe: bool = false
 
 func _init() -> void:
 	pass  # Logging not available in _init - Log autoload not ready yet
@@ -37,7 +35,7 @@ func _log_verbose(message: String, metadata: Dictionary = {}, tags: Array[String
 		verbose_tags.append("verbose")
 		Log.debug(message, metadata, verbose_tags)
 
-func startDebugCoordinator() -> void:
+func start_debug_coordinator() -> void:
 	Log.info(
 		"TASK218_COORDINATOR_START",
 		{
