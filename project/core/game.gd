@@ -166,7 +166,9 @@ func resolve_ui_event(_event: ui.UIEvent, current_context: DraftContext) -> void
 		draft_handler.hold_toggle(col, new_state)
 	elif _event is ui.ShowCardEvent:
 		var card: Card = _event.card_to_show
-		Log.debug("Showing card details", {"card": card.card_info.id}, [Log.TAG_UI, Log.TAG_CARD])
+		Log.debug(
+			"Showing card details", {"card": card.card_definition.id}, [Log.TAG_UI, Log.TAG_CARD]
+		)
 		card_pop.show_card(card)
 
 	elif _event is ui.TransitionEvent:
@@ -546,7 +548,7 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		if battle_unit.battle_original_reference == null:
 			Log.warning(
 				"Battle unit has no original reference - skipping reconciliation",
-				{"unit_id": battle_unit.card_info.get("id", "unknown")},
+				{"unit_id": battle_unit.card_definition.id},
 				[Log.TAG_BATTLE, Log.TAG_RECONCILIATION, Log.TAG_ERROR]
 			)
 			continue
@@ -565,8 +567,8 @@ func apply_battle_reconciliation(battle_result: Battle.BattleResult) -> void:
 		Log.debug(
 			"Applied reference-based battle reconciliation",
 			{
-				"original_unit_id": original_unit.card_info.get("id", "unknown"),
-				"battle_unit_id": battle_unit.card_info.get("id", "unknown"),
+				"original_unit_id": original_unit.card_definition.id,
+				"battle_unit_id": battle_unit.card_definition.id,
 				"survived": unit_survived,
 				"had_permanent_effects": battle_unit.effects_perm.size() > 0,
 				"had_acquired_abilities": battle_unit.get_acquired_abilities().size() > 0,
@@ -673,7 +675,7 @@ func _capture_lineup_state() -> Dictionary:
 		var card: Card = lineup[lineup_position]
 		if card:
 			lineup_data[str(lineup_position)] = {
-				"card_id": card.card_info.id,
+				"card_id": card.card_definition.id,
 				"level": card.unit_info.level,
 				"health": card.unit_info.health,
 				"attack": card.unit_info.attack
@@ -693,7 +695,7 @@ func _refresh_lineup_card_ui_after_battle() -> void:
 			Log.debug(
 				"Refreshed card UI after battle reconciliation",
 				{
-					"card_id": card.card_info.id,
+					"card_id": card.card_definition.id,
 					"current_attack": card.unit_info.current_attack,
 					"current_health": card.unit_info.current_health,
 					"effects_count": card.unit_info.effects_perm.size()

@@ -243,7 +243,7 @@ static func _remove_block_player(params: Dictionary = {}) -> bool:
 		return false
 
 	if actual_block.object_type == core.ObjectType.CARD:
-		var actual_card_id: String = actual_block.card_info.id
+		var actual_card_id: String = actual_block.card_definition.id
 		if actual_card_id != card_id:
 			Log.error(
 				"Card ID mismatch at position",
@@ -702,8 +702,13 @@ static func _can_move_card(card_id: String, from_position: int) -> String:
 	if not card_at_position:
 		return "no card found at from_position " + str(from_position)
 
-	if card_at_position.card_info.id != card_id:
-		return "card_id mismatch: expected " + card_id + ", found " + card_at_position.card_info.id
+	if card_at_position.card_definition.id != card_id:
+		return (
+			"card_id mismatch: expected "
+			+ card_id
+			+ ", found "
+			+ card_at_position.card_definition.id
+		)
 
 	return ""
 
@@ -731,12 +736,12 @@ static func _can_remove_block(card_id: String, position: Dictionary) -> String:
 			return "card_id should be empty for locked blocks, got: " + card_id
 	elif block_at_position.object_type == core.ObjectType.CARD:
 		if not card_id.is_empty():
-			if block_at_position.card_info.id != card_id:
+			if block_at_position.card_definition.id != card_id:
 				return (
 					"card_id mismatch: expected "
 					+ card_id
 					+ ", found "
-					+ block_at_position.card_info.id
+					+ block_at_position.card_definition.id
 				)
 	else:
 		return (

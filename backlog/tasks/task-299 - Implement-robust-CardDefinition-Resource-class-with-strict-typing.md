@@ -1,10 +1,10 @@
 ---
 id: task-299
 title: Implement robust CardDefinition Resource class with strict typing
-status: In Progress
+status: Done
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-12-06 14:31'
+updated_date: '2025-12-06 19:35'
 labels:
   - robustness
   - typing
@@ -75,6 +75,172 @@ var attack = card_definition.base_attack       # Editor completion
 - Editor auto-completion improves developer productivity
 - Clear property definitions improve code documentation
 - Better IDE support for refactoring and navigation
+
+## Implementation Complete (2025-12-06)
+
+### Phase 1 & 2: Full Implementation ✅
+
+**Files Created:**
+- `project/rules/card_definition.gd` - New CardDefinition Resource class with @export properties
+
+**Files Modified (Primary):**
+- `project/rules/unit_data.gd` - Replaced `card_info: Dictionary` with `card_definition: CardDefinition`
+- `project/core/clicker/blocks/block_base_card.gd` - Replaced `card_info: Dictionary` with `card_definition: CardDefinition`
+- `project/core/card_controller.gd` - Creates CardDefinition from Dictionary, passes to `init_card()`
+
+**Files Modified (Secondary - 16 files):**
+- `project/rules/unit_behavior.gd` - Updated all `card_info` references to `card_definition`
+- `project/rules/battle.gd` - Updated logging to use `card_definition`
+- `project/core/game.gd` - Updated reconciliation logging
+- `project/core/lineup_handler.gd` - Updated card serialization
+- `project/core/clicker/clicker.gd` - Updated merge/draft logging
+- `project/rules/ability_helper.gd` - Updated ability processing
+- `project/rules/merge_bonus_ability.gd` - Updated merge bonus calculations
+- `project/core/holder_base.gd` - Updated card duplication
+- `project/core/card/card.gd` - Updated UI setup
+- `project/debug/actions/registrations/game_action_core.gd` - Updated debug logging
+- `project/debug/actions/game/validate_combat_only_abilities_action.gd` - Updated validation
+- Additional files with `card_info` → `card_definition` property updates
+
+**Key Implementation Details:**
+
+1. **No Backward Compatibility Layer** (per user request):
+   - Direct replacement: `card_info: Dictionary` → `card_definition: CardDefinition`
+   - No computed properties or wrapper methods
+   - Clean, direct access to strongly-typed properties
+
+2. **Initialization Flow**:
+   - `CardController.create_unit_from_id()` fetches Dictionary from data source
+   - Immediately converts to `CardDefinition` via `CardDefinition.from_dictionary()`
+   - Passes `CardDefinition` to `Card.init_card()`
+   - `Card.init_card()` stores `card_definition` and passes to `UnitData.init_with_definition()`
+
+3. **Property Access Pattern** (before → after):
+   - `unit.card_info.get("id", "unknown")` → `unit.card_definition.id if unit.card_definition else "unknown"`
+   - `card.card_info.id` → `card.card_definition.id`
+   - `info.card_info["base_attack"]` → `info.card_definition.base_attack`
+
+**Validation:**
+- ✅ `just ci-validate` - All checks passed (formatting, linting, runtime validation)
+- ✅ `just test-desktop-target battle-logic-only` - 4/4 actions passed (100%)
+  - `game.lineup.populate_enemy` - ✅ PASSED (75ms)
+  - `game.battle.test_determinism_logic_only` - ✅ PASSED (25ms)
+  - `game.debug.hide_debug_menu` - ✅ PASSED (9ms)
+  - `system.debug.replay_complete` - ✅ PASSED (1ms)
+
+**Branch:** `feature/task-299-card-definition-resource`
+
+## Analysis Results (2025-12-06)
+
+### Current card_info Dictionary Structure
+
+From JSON data source (`resources/gameone-577cb-export.json`), the card_info dictionary contains:
+
+| Field | JSON Type | GDScript Access | Usage |
+|-------|-----------|-----------------|-------|
+| `id` | String | `card_info.id` or `card_info.get("id")` | Card unique identifier |
+| `card_name` | String | `card_info.card_name` | Display name |
+| `name` | String | `card_info.name` | Internal/technical name |
+| `description` | String | `card_info.description` | Card flavor text |
+| `health` | String | `card_info.health` | Base health (stored as string) |
+| `attack` | String | `card_info.attack` | Base attack (stored as string) |
+| `abilities` | String | `card_info.abilities` | Ability string (e.g., "guard:1;1") |
+| `tags` | String | `card_info.tags` | Comma-separated tags (e.g., "knight,evil") |
+| `tribe` | String | `card_info.tribe` | Tribe classification |
+| `upgrade_level` | String | `card_info.upgrade_level` | Card tier (stored as string) |
+
+### Files Affected (Primary)
+
+1. **`project/rules/unit_data.gd`** - Core usage, stores `card_info: Dictionary`
+2. **`project/core/card_controller.gd`** - Creates cards, passes `card_info` dictionary
+3. **`project/core/clicker/blocks/block_base_card.gd`** - Card scene, stores `card_info: Dictionary`
+
+### Files Affected (Secondary - Access Only)
+
+- `project/rules/unit_behavior.gd` - 15+ access points
+- `project/core/events/core_event_resolver.gd` - 15+ access points (logging)
+- `project/core/lineup_handler.gd` - 8+ access points
+- `project/core/clicker/clicker.gd` - 6+ access points
+- `project/rules/battle.gd` - 2+ access points
+- `project/core/game.gd` - 5+ access points
+- `project/core/card/card.gd` - 8+ access points (UI card details)
+- `project/debug/actions/` - Various debug actions
+
+### Access Patterns Identified
+
+1. **Direct property access**: `card_info.id`, `card_info.card_name`
+2. **Safe get with default**: `card_info.get("id", "unknown")`
+3. **Has check**: `card_info.has("abilities")`
+4. **Chained access**: `unit_info.card_info.id`
+
+### CardDefinition Resource Class Design
+
+```gdscript
+class_name CardDefinition
+extends Resource
+
+## Card unique identifier
+@export var id: String = ""
+
+## Display name shown to players
+@export var card_name: String = ""
+
+## Internal/technical name
+@export var name: String = ""
+
+## Card flavor/description text
+@export var description: String = ""
+
+## Base health value
+@export var base_health: int = 1
+
+## Base attack value
+@export var base_attack: int = 1
+
+## Ability definition string (e.g., "guard:1;1")
+@export var abilities_string: String = ""
+
+## Comma-separated tags (e.g., "knight,evil")
+@export var tags: String = ""
+
+## Tribe classification
+@export var tribe: String = ""
+
+## Card tier/upgrade level
+@export var upgrade_level: int = 1
+
+
+static func from_dictionary(data: Dictionary) -> CardDefinition:
+    """Create CardDefinition from legacy Dictionary format"""
+    var def := CardDefinition.new()
+    def.id = data.get("id", "")
+    def.card_name = data.get("card_name", "")
+    def.name = data.get("name", "")
+    def.description = data.get("description", "")
+    def.base_health = int(data.get("health", "1"))
+    def.base_attack = int(data.get("attack", "1"))
+    def.abilities_string = data.get("abilities", "")
+    def.tags = data.get("tags", "")
+    def.tribe = data.get("tribe", "")
+    def.upgrade_level = int(data.get("upgrade_level", "1"))
+    return def
+
+
+func to_dictionary() -> Dictionary:
+    """Convert back to Dictionary for backward compatibility"""
+    return {
+        "id": id,
+        "card_name": card_name,
+        "name": name,
+        "description": description,
+        "health": str(base_health),
+        "attack": str(base_attack),
+        "abilities": abilities_string,
+        "tags": tags,
+        "tribe": tribe,
+        "upgrade_level": str(upgrade_level)
+    }
+```
 
 ## Implementation Strategy & Risk Mitigation
 

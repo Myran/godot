@@ -40,14 +40,19 @@ static func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 	assert(data_source != null, "create_unit_from_id: Data source is null")
 	assert(data_source.cards != null, "create_unit_from_id: Data source cards is null")
 
-	var card_info: Dictionary = await data_source.cards.get_by_id(id, true)
+	var card_info_dict: Dictionary = await data_source.cards.get_by_id(id, true)
 	# ASSERT: Card info must be found
-	assert(not card_info.is_empty(), "create_unit_from_id: No card info found for ID: " + id)
-	assert(card_info.has("id"), "create_unit_from_id: Card info missing 'id' field for ID: " + id)
+	assert(not card_info_dict.is_empty(), "create_unit_from_id: No card info found for ID: " + id)
+	assert(
+		card_info_dict.has("id"), "create_unit_from_id: Card info missing 'id' field for ID: " + id
+	)
+
+	# Convert to strongly-typed CardDefinition
+	var card_def: CardDefinition = CardDefinition.from_dictionary(card_info_dict)
 
 	Log.debug(
-		"Card info retrieved",
-		{"card_id": id, "has_info": !card_info.is_empty()},
+		"Card definition created",
+		{"card_id": id, "card_name": card_def.card_name},
 		[Log.TAG_DEBUG, "card_creation"]
 	)
 
@@ -103,7 +108,7 @@ static func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 		card_instanced.has_method("init_card"),
 		"create_unit_from_id: Card missing init_card method for ID: " + id
 	)
-	card_instanced.init_card(card_info, unit_level)
+	card_instanced.init_card(card_def, unit_level)
 
 	# ASSERT: Final validation - card must be properly initialized
 	assert(
@@ -111,7 +116,7 @@ static func create_unit_from_id(id: String, unit_level: int = 1) -> Card:
 		"create_unit_from_id: Card became invalid after initialization for ID: " + id
 	)
 	assert(
-		card_instanced.card_info.has("id") and card_instanced.card_info.id != "",
+		card_instanced.card_definition != null and not card_instanced.card_definition.id.is_empty(),
 		"create_unit_from_id: Card has empty ID after initialization"
 	)
 

@@ -61,7 +61,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			var current_cards: Array = []
 			for block: Block in level.all_blocks():
 				if block.object_type == core.ObjectType.CARD:
-					var card_id: String = block.card_info.id
+					var card_id: String = block.card_definition.id
 					current_cards.append(card_id)
 			SemanticLogger.log_draft_reroll(0, current_cards, rng.seeded_rng._initial_seed)
 
@@ -94,7 +94,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			var block_pos: Vector2i = level.get_grid_pos(block)
 			var card_id: String = ""
 			if block.object_type == core.ObjectType.CARD:
-				card_id = block.card_info.id
+				card_id = block.card_definition.id
 			SemanticLogger.log_draft_remove_card(card_id, block_pos)
 
 		if level.get_grid_pos(block) != Clicker.NO_POS:
@@ -108,7 +108,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 
 		var matched_card_ids: Array[String] = []
 		for card: Card in matches:
-			matched_card_ids.append(card.unit_info.card_info.get("id", ""))
+			matched_card_ids.append(card.unit_info.card_definition.id)
 
 		Log.debug(
 			"DraftMergeEvent: Starting merge process",
@@ -131,7 +131,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 				"Pre-merge card StatEffect status",
 				{
 					"card_index": i,
-					"card_id": match_card.card_info.id,
+					"card_id": match_card.card_definition.id,
 					"effects_perm_count": match_card.unit_info.effects_perm.size(),
 					"card_level": match_card.level
 				},
@@ -148,7 +148,7 @@ func on_core_event(event: core.CoreEvent, _current_context: Context) -> void:
 			Log.debug(
 				"Post-merge card StatEffect status",
 				{
-					"merged_card_id": merged_card.card_info.id,
+					"merged_card_id": merged_card.card_definition.id,
 					"merged_card_level": merged_card.level,
 					"effects_perm_count": merged_card.unit_info.effects_perm.size(),
 					"current_attack": merged_card.unit_info.current_attack,
@@ -212,7 +212,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 		return {}
 
 	var first_card: Card = cluster[0] as Card
-	if not first_card or not first_card.card_info:
+	if not first_card or not first_card.card_definition:
 		Log.error(
 			"Invalid first card in cluster",
 			{"cluster_size": cluster.size()},
@@ -220,7 +220,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 		)
 		return {}
 
-	var card_id: String = first_card.card_info.id
+	var card_id: String = first_card.card_definition.id
 	var cluster_level: int = first_card.level
 	var new_level: int = cluster_level + 1
 
@@ -263,7 +263,7 @@ func merge_matched_cards(cluster: Array[Card]) -> Dictionary:
 			"Source unit StatEffect inventory",
 			{
 				"source_index": i,
-				"source_card_id": source_unit.card_info.get("id", ""),
+				"source_card_id": source_unit.card_definition.id,
 				"effects_perm_count": source_unit.effects_perm.size()
 			},
 			[Log.TAG_MERGE, Log.TAG_EFFECT, Log.TAG_DEBUG]
@@ -341,7 +341,10 @@ func add_neighbour_cards(block: Block, cluster: Array[Card] = []) -> Array[Card]
 		if level.has_pos(neighbour_pos):
 			var neighbour: Block = level.get_block(neighbour_pos)
 			if neighbour.object_type == core.ObjectType.CARD and not cluster.has(neighbour):
-				if neighbour.level == block.level and neighbour.card_info.id == block.card_info.id:
+				if (
+					neighbour.level == block.level
+					and neighbour.card_definition.id == block.card_definition.id
+				):
 					cluster.append(neighbour)
 					cluster = add_neighbour_cards(neighbour, cluster)
 

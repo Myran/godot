@@ -5,6 +5,9 @@ const PRE_EVENT_RESPONSE: String = "pre_event_response"
 const DRAFT_POST_EVENT_RESPONSE: String = "draft_post_event_response"
 const DRAFT_PRE_EVENT_RESPONSE: String = "draft_pre_event_response"
 
+## CardDefinition reference - exported to ensure proper Resource.duplicate() behavior
+@export var card_definition: CardDefinition = null
+
 var max_health: int = 1  # DEFAULT_HEALTH
 var max_attack: int = 1  # DEFAULT_ATTACK
 var base_health: int = 1  # DEFAULT_HEALTH
@@ -15,7 +18,6 @@ var current_health: int = 1:  # DEFAULT_HEALTH
 var current_attack: int = 1:  # DEFAULT_ATTACK
 	set = set_current_attack
 var level: int = 0
-var card_info: Dictionary
 var effects_temp: Array[Variant] = []
 var effects_perm: Array[Variant] = []
 var abilities: Array[Ability] = []
@@ -38,16 +40,19 @@ func set_current_attack(new_attack: int) -> void:
 	current_attack = new_attack
 
 
-func init_with_info(_card_info: Dictionary) -> void:
-	card_info = _card_info
+func init_with_definition(_card_def: CardDefinition) -> void:
+	"""Initialize unit with strongly-typed CardDefinition."""
+	card_definition = _card_def
 
-	var abilities_string: String = ""
-	if card_info.has("abilities"):
-		abilities_string = card_info.abilities
-	else:
-		Log.warning("Card info missing 'abilities' field", {"card_info": card_info}, ["debug"])
+	var abilities_str: String = card_definition.abilities_string
+	if abilities_str.is_empty():
+		Log.warning(
+			"Card definition missing abilities",
+			{"card_id": card_definition.id, "card_name": card_definition.card_name},
+			["debug"]
+		)
 
-	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_string)
+	var new_abilities: Array[Ability] = AbilitiesHandler.parse_ability_string(abilities_str)
 	for _ab: Ability in new_abilities:
 		if _ab != null:
 			_ab.persistence_type = Ability.PersistenceType.TEMPLATE
@@ -57,24 +62,24 @@ func init_with_info(_card_info: Dictionary) -> void:
 	# TESTING SCAFFOLDING: Give archer (ID 1) a shield ability for testing shield mechanics
 	# This is temporary scaffolding to test DamageShieldAbility functionality
 	# The archer will not have this ability in the final game
-	if card_info.id == str(1):
+	if card_definition.id == "1":
 		ability = DamageShieldAbility.new()
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
 		Log.info(
 			"Archer scaffolding: Added DamageShieldAbility for testing",
-			{"card_id": card_info.id, "card_name": card_info.get("card_name", "unknown")},
+			{"card_id": card_definition.id, "card_name": card_definition.card_name},
 			["ability", "scaffolding", "archer", "shield", "testing"]
 		)
-	if card_info.id == str(2):
+	if card_definition.id == "2":
 		ability = DeathTriggerHealthAbility.new(2)
 		ability.persistence_type = Ability.PersistenceType.TEMPORARY  # Combat-only, doesn't persist
 		add_ability(ability)
-	if card_info.id == str(12):
+	if card_definition.id == "12":
 		ability = EvilSynergyAbility.new()
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
-	if card_info.id == str(4):
+	if card_definition.id == "4":
 		ability = MergeBonusAbility.new(1, 1)  # DEFAULT_HEALTH, DEFAULT_ATTACK
 		ability.persistence_type = Ability.PersistenceType.TEMPLATE
 		add_ability(ability)
@@ -210,7 +215,7 @@ func deep_duplicate_effects_perm() -> Array[Variant]:
 			if not stat_effect:
 				Log.error(
 					"Invalid StatEffect during duplication",
-					{"card_id": card_info.get("id", "unknown")},
+					{"card_id": card_definition.id},
 					[Log.TAG_ERROR]
 				)
 				continue

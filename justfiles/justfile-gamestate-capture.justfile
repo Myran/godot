@@ -194,26 +194,12 @@ _get-desktop-logs:
 _get-android-logs:
     #!/usr/bin/env bash
     set -euo pipefail
-    
-    # Automatically get the latest Android TEST_ID
+
+    # Always use adb logcat directly for gamestate captures
+    # Chunked messages (DEBUG_GAMESTATE_CAPTURE) are only in logcat buffer,
+    # not in the device's godot.log file
     just _check-android-prerequisites >/dev/null
-    ANDROID_LOGS=$(adb logcat -d 2>/dev/null | tail -20000 || echo "")
-    LATEST_TEST_ID=$(echo "$ANDROID_LOGS" | grep '"test_id"' | grep -o '"test_id": "[^"]*"' | cut -d'"' -f4 | tail -1 || echo "")
-    
-    if [ -z "$LATEST_TEST_ID" ]; then
-        # For manual captures (not from test sessions), get logs directly
-        adb logcat -d 2>/dev/null | tail -20000 || echo ""
-    else
-        # Use Android log system to get test results for test sessions
-        ANDROID_LOG_CONTENT=$(just _find-android-log-with-test-id $LATEST_TEST_ID 2>/dev/null || echo "")
-        
-        if [ -z "$ANDROID_LOG_CONTENT" ]; then
-            # Fallback to manual capture search
-            adb logcat -d 2>/dev/null | tail -20000 || echo ""
-        else
-            echo "$ANDROID_LOG_CONTENT"
-        fi
-    fi
+    adb logcat -d 2>/dev/null | tail -20000 || echo ""
 
 # Shared capture function - eliminates 95% code duplication
 _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
@@ -225,8 +211,10 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
     
     # Get logs from specified source
     echo "1️⃣ Searching for {{SEARCH_PATTERN}} in logs..."
-    
-    LOG_CONTENT=$(just {{LOG_SOURCE_CMD}} || echo "")
+
+    # Get logs and strip ANSI color codes (desktop logs contain color sequences)
+    # Using $'...' syntax for proper escape sequence handling
+    LOG_CONTENT=$(just {{LOG_SOURCE_CMD}} | sed $'s/\x1b\[[0-9;]*m//g' || echo "")
     CAPTURE_OUTPUT=$(echo "$LOG_CONTENT" | grep "{{SEARCH_PATTERN}}" || echo "")
     
     if [ -z "$CAPTURE_OUTPUT" ]; then
@@ -263,7 +251,8 @@ _capture-from-logs SEARCH_PATTERN FILE_PREFIX LOG_SOURCE_CMD NAME:
     fi
     
     # Extract the most recent capture line
-    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | tail -1)
+    # Filter out Sentry duplicate lines (they have escaped quotes that break JSON parsing)
+    CAPTURE_LINE=$(echo "$CAPTURE_OUTPUT" | grep "{{SEARCH_PATTERN}}" | grep -v 'message = "' | tail -1)
     
     if [ -z "$CAPTURE_LINE" ]; then
         echo "❌ No valid {{SEARCH_PATTERN}} entry found"
@@ -964,11 +953,11 @@ test-save-load-cycle-android:
         echo "❌ Initial save test failed"
         exit 1
     }
-    
+
     echo ""
     echo "📋 Step 2: Extract first saved state"
     echo "-----------------------------------"
-    just capture-gamestate-desktop cycle_test_first || {
+    just capture-gamestate-android cycle_test_first || {
         echo "❌ Failed to extract first gamestate"
         exit 1
     }
@@ -996,11 +985,11 @@ test-save-load-cycle-android:
         echo "❌ Load and save test failed"
         exit 1
     }
-    
+
     echo ""
     echo "📋 Step 4: Extract second saved state"
     echo "------------------------------------"
-    just capture-gamestate-desktop cycle_test_second || {
+    just capture-gamestate-android cycle_test_second || {
         echo "❌ Failed to extract second gamestate"
         exit 1
     }

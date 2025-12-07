@@ -41,10 +41,10 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 	var merge_event: core.DraftMergeEvent = event.event
 	var card: Card = event.unit
 
-	var card_id: String = card.unit_info.card_info.get("id", "")
+	var card_id: String = card.unit_info.card_definition.id
 	var merged_card_ids: Array[String] = []
 	for match_card: Card in merge_event.matches:
-		merged_card_ids.append(match_card.unit_info.card_info.get("id", ""))
+		merged_card_ids.append(match_card.unit_info.card_definition.id)
 	var level: int = card.level
 	var calc_attack_bonus: int = base_attack_bonus * level
 	var calc_health_bonus: int = base_health_bonus * level

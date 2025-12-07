@@ -15,7 +15,7 @@ func add_card(card: Card, pos: int) -> void:
 	Log.info(
 		"Lineup handler adding card",
 		{
-			"card_id": card.card_info.id,
+			"card_id": card.card_definition.id,
 			"card_level": card.unit_info.level,
 			"target_position": pos,
 			"handler": "lineup_handler"
@@ -36,7 +36,7 @@ func find_tripples() -> Array[Card]:
 	for pos: int in lineup.keys():
 		var card: Card = lineup[pos]
 		lineup_summary.append(
-			{"position": pos, "card_id": card.card_info.id, "card_level": card.level}
+			{"position": pos, "card_id": card.card_definition.id, "card_level": card.level}
 		)
 
 	Log.debug(
@@ -55,7 +55,7 @@ func find_tripples() -> Array[Card]:
 		position_order.append(str(pos))
 	var card_iteration_order: Array[String] = []
 	for card: Card in sorted_cards:
-		card_iteration_order.append("%s_L%d" % [card.card_info.id, card.level])
+		card_iteration_order.append("%s_L%d" % [card.card_definition.id, card.level])
 
 	Log.debug(
 		"DETERMINISM DEBUG - Position-based iteration order",
@@ -72,14 +72,17 @@ func find_tripples() -> Array[Card]:
 	var processed_types: Array[String] = []
 
 	for card: Card in sorted_cards:
-		var card_type_key: String = "%s_L%d" % [card.card_info.id, card.level]
+		var card_type_key: String = "%s_L%d" % [card.card_definition.id, card.level]
 
 		if processed_types.has(card_type_key):
 			continue
 
 		var tripples: Array[Card] = []
 		for lineup_card: Card in sorted_cards:
-			if lineup_card.card_info.id == card.card_info.id and lineup_card.level == card.level:
+			if (
+				lineup_card.card_definition.id == card.card_definition.id
+				and lineup_card.level == card.level
+			):
 				if not tripples.has(lineup_card):
 					tripples.append(lineup_card)
 
@@ -98,14 +101,14 @@ func find_tripples() -> Array[Card]:
 
 		if tripples.size() >= core.CARD_MERGE_AMOUNT:
 			tripple_found = true
-			found_card_id = card.card_info.id
+			found_card_id = card.card_definition.id
 			found_level = card.level
 
 			var merge_card_details: Array[String] = []
 			for merge_card: Card in tripples:
 				var card_pos: int = holder_container.get_card_position(merge_card)
 				merge_card_details.append(
-					"pos_%d:%s_L%d" % [card_pos, merge_card.card_info.id, merge_card.level]
+					"pos_%d:%s_L%d" % [card_pos, merge_card.card_definition.id, merge_card.level]
 				)
 
 			Log.info(
@@ -139,7 +142,7 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 	Log.info(
 		"Starting lineup merge",
 		{
-			"card_id": base_card.card_info.id,
+			"card_id": base_card.card_definition.id,
 			"level": base_card.level,
 			"sources": source_cards.size()
 		},
@@ -152,7 +155,10 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 
 	Log.info(
 		"Lineup merge completed",
-		{"card_id": base_card.card_info.id, "effects": new_card.unit_info.effects_perm.size()},
+		{
+			"card_id": base_card.card_definition.id,
+			"effects": new_card.unit_info.effects_perm.size()
+		},
 		[Log.TAG_MERGE]
 	)
 
@@ -160,7 +166,7 @@ func merge(base_card: Card, source_cards: Array[Card]) -> Card:
 
 
 func _create_merged_card(base_card: Card, source_cards: Array[Card]) -> Card:
-	var card_id: String = base_card.card_info.get("id", "")
+	var card_id: String = base_card.card_definition.id
 	var new_card: Card = await CardController.create_unit_from_id(card_id, base_card.level + 1)
 	new_card.block_context = Cards.CONTEXT.LINEUP
 

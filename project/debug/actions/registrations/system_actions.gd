@@ -483,7 +483,7 @@ static func _log_lineup_final_state() -> void:
 		if card and card.unit_info:
 			var card_state: Dictionary = {
 				"position": position,
-				"card_id": card.card_info.id,
+				"card_id": card.card_definition.id,
 				"level": card.level,
 				"current_attack": card.unit_info.current_attack,
 				"current_health": card.unit_info.current_health,

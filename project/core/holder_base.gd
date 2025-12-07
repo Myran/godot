@@ -15,7 +15,7 @@ func get_current_lineup(
 			new_card = card
 			if duplicate_card:
 				new_card = card.duplicate()
-				new_card.init_card(card.card_info, card.level)
+				new_card.init_card(card.card_definition, card.level)
 			if new_layer != null:
 				new_layer.add_child(new_card)
 				new_card.global_position = card.global_position

@@ -132,7 +132,7 @@ static func _capture_lineup_stats(game: Game) -> Dictionary:
 
 
 static func _capture_unit_stats(unit: UnitData, side: String) -> Dictionary:
-	var card_id: String = unit.card_info.get("id", "unknown")
+	var card_id: String = unit.card_definition.id
 	var has_temporary_ability: bool = false
 	var temporary_abilities: Array[String] = []
 

@@ -141,7 +141,7 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 									var to_pos: int = interacted_holder.get_index()
 
 									if interacted_holder.get_card() == null:
-										var card_id: String = dragging_card.card_info.id
+										var card_id: String = dragging_card.card_definition.id
 										SemanticLogger.log_lineup_move_card(
 											card_id, from_pos, to_pos
 										)
@@ -160,7 +160,9 @@ func touch_handler(event: InputEvent, interacted_object: Object, current_context
 												var draft_pos: Vector2i = (
 													clicker.level.get_grid_pos(dragging_card)
 												)
-												var card_id: String = dragging_card.card_info.id
+												var card_id: String = (
+													dragging_card.card_definition.id
+												)
 												var holder_index: int = (
 													interacted_holder.get_index()
 												)

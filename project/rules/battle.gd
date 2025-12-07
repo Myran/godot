@@ -147,10 +147,7 @@ static func solve_event(event: Context.Event, context: BattleContext) -> void:
 		context.mark_unit_activated(sel_unit)
 		Log.debug(
 			"Unit activated",
-			{
-				"unit": sel_unit.card_info.get("id", "unknown"),
-				"position": data.selected_unit_position
-			},
+			{"unit": sel_unit.card_definition.id, "position": data.selected_unit_position},
 			[Log.TAG_BATTLE, Log.TAG_COMBAT, Log.TAG_STATE_TRANSITION]
 		)
 		context.active_unit = sel_unit
@@ -271,7 +268,7 @@ static func find_next_unactive_on_side(side: Side) -> int:
 static func create_combat_event(attacker_unit: UnitData, context: BattleContext) -> Context.Event:
 	Log.debug(
 		"Creating combat event",
-		{"attacker": attacker_unit.card_info.get("id", "unknown")},
+		{"attacker": attacker_unit.card_definition.id},
 		[Log.TAG_BATTLE, Log.TAG_COMBAT]
 	)
 	var target_lineup: Dictionary[int, UnitData] = context.get_inactive_side().lineup
