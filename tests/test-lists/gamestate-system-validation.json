@@ -7,14 +7,14 @@
   ],
   "commands": [
     {
-      "command": "test-save-load-cycle-with-test-capture-50-desktop",
+      "command": "test-save-load-cycle-desktop",
       "platforms": ["desktop"],
-      "description": "Desktop save/load cycle with test-capture-50 state validation"
+      "description": "Desktop save/load cycle validation"
     },
     {
-      "command": "test-save-load-cycle-with-test-capture-50-android",
+      "command": "test-save-load-cycle-android",
       "platforms": ["android"],
-      "description": "Android save/load cycle with test-capture-50 state validation"
+      "description": "Android save/load cycle validation"
     }
   ]
 }
