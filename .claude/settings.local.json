@@ -63,7 +63,13 @@
       "Bash(wc:*)",
       "Bash(rebuild)",
       "Bash(index)",
-      "Bash(then echo \"$f\")"
+      "Bash(then echo \"$f\")",
+      "Bash(awk:*)",
+      "Bash(gdlint:*)",
+      "Bash(git -C /Users/mattiasmyhrman/repos/gametwo log --oneline -1 -- gdlintrc)",
+      "Bash(git -C /Users/mattiasmyhrman/repos/gametwo status gdlintrc project/gdlintrc)",
+      "Bash(git -C /Users/mattiasmyhrman/repos/gametwo status --short)",
+      "Bash(git -C /Users/mattiasmyhrman/repos/gametwo log --oneline -5)"
     ],
     "deny": [],
     "ask": [
