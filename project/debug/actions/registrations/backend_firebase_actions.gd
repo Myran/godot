@@ -34,86 +34,17 @@ const BackendIsolatedSetValueTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	Log.info(
-		"Registering Backend Firebase debug actions...",
-		{},
-		["debug", "backend_firebase", "registration"]
-	)
+	var helper := RegistrationHelper.new(registry, "Backend Firebase")
 
-	var counters: Array[int] = [0, 0]  # [registered, failed]
+	helper.register(BackendAsyncPatternTestActionClass.new())
+	helper.register(BackendTimerManagerTestActionClass.new())
+	helper.register(BackendMethodMappingTestActionClass.new())
+	helper.register(BackendLifecycleTestActionClass.new())
+	helper.register(BackendErrorHandlingTestActionClass.new())
+	helper.register(BackendPerformanceTestActionClass.new())
+	helper.register(BackendRequestTrackingTestActionClass.new())
+	helper.register(BackendIsolatedPushOnlyTestActionClass.new())
+	helper.register(BackendIsolatedGetOnlyTestActionClass.new())
+	helper.register(BackendIsolatedSetValueTestActionClass.new())
 
-	_register_with_count(
-		registry,
-		BackendAsyncPatternTestActionClass.new(),
-		"BackendAsyncPatternTestAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		BackendTimerManagerTestActionClass.new(),
-		"BackendTimerManagerTestAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		BackendMethodMappingTestActionClass.new(),
-		"BackendMethodMappingTestAction",
-		counters
-	)
-	_register_with_count(
-		registry, BackendLifecycleTestActionClass.new(), "BackendLifecycleTestAction", counters
-	)
-
-	_register_with_count(
-		registry,
-		BackendErrorHandlingTestActionClass.new(),
-		"BackendErrorHandlingTestAction",
-		counters
-	)
-	_register_with_count(
-		registry, BackendPerformanceTestActionClass.new(), "BackendPerformanceTestAction", counters
-	)
-	_register_with_count(
-		registry,
-		BackendRequestTrackingTestActionClass.new(),
-		"BackendRequestTrackingTestAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		BackendIsolatedPushOnlyTestActionClass.new(),
-		"BackendIsolatedPushOnlyTestAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		BackendIsolatedGetOnlyTestActionClass.new(),
-		"BackendIsolatedGetOnlyTestAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		BackendIsolatedSetValueTestActionClass.new(),
-		"BackendIsolatedSetValueTestAction",
-		counters
-	)
-
-	Log.info(
-		"Backend Firebase debug actions registration completed",
-		{"total_actions": counters[0], "failed_actions": counters[1]},
-		["debug", "backend_firebase", "registration"]
-	)
-
-
-static func _register_with_count(
-	registry: DebugActionRegistry, action: DebugAction, name: String, counters: Array[int]
-) -> void:
-	if registry.register_action(action):
-		counters[0] += 1
-	else:
-		counters[1] += 1
-		Log.error(
-			"Failed to register Backend Firebase action: " + name,
-			{},
-			["debug", "backend_firebase", "registration"]
-		)
+	helper.complete()

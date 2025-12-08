@@ -31,63 +31,16 @@ const CPPDatabaseAvailabilityActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	Log.info(
-		"Registering C++ Firebase debug actions...", {}, ["debug", "cpp_firebase", "registration"]
-	)
+	var helper := RegistrationHelper.new(registry, "C++ Firebase")
 
-	var counters: Array[int] = [0, 0]  # [registered, failed]
+	helper.register(CPPSetValueTestActionClass.new())
+	helper.register(CPPGetValueTestActionClass.new())
+	helper.register(CPPRemoveValueTestActionClass.new())
+	helper.register(CPPSignalIntegrityTestActionClass.new())
+	helper.register(CPPErrorHandlingTestActionClass.new())
+	helper.register(CPPConcurrentOperationsTestActionClass.new())
+	helper.register(CPPLargeDataTestActionClass.new())
+	helper.register(CPPTimeoutBehaviorTestActionClass.new())
+	helper.register(CPPDatabaseAvailabilityActionClass.new())
 
-	_register_with_count(
-		registry, CPPSetValueTestActionClass.new(), "CPPSetValueTestAction", counters
-	)
-	_register_with_count(
-		registry, CPPGetValueTestActionClass.new(), "CPPGetValueTestAction", counters
-	)
-	_register_with_count(
-		registry, CPPRemoveValueTestActionClass.new(), "CPPRemoveValueTestAction", counters
-	)
-	_register_with_count(
-		registry, CPPSignalIntegrityTestActionClass.new(), "CPPSignalIntegrityTestAction", counters
-	)
-
-	_register_with_count(
-		registry, CPPErrorHandlingTestActionClass.new(), "CPPErrorHandlingTestAction", counters
-	)
-	_register_with_count(
-		registry,
-		CPPConcurrentOperationsTestActionClass.new(),
-		"CPPConcurrentOperationsTestAction",
-		counters
-	)
-	_register_with_count(
-		registry, CPPLargeDataTestActionClass.new(), "CPPLargeDataTestAction", counters
-	)
-	_register_with_count(
-		registry, CPPTimeoutBehaviorTestActionClass.new(), "CPPTimeoutBehaviorTestAction", counters
-	)
-	_register_with_count(
-		registry,
-		CPPDatabaseAvailabilityActionClass.new(),
-		"CPPDatabaseAvailabilityAction",
-		counters
-	)
-
-	Log.info(
-		"C++ Firebase debug actions registration completed",
-		{"total_actions": counters[0], "failed_actions": counters[1]},
-		["debug", "cpp_firebase", "registration"]
-	)
-
-
-static func _register_with_count(
-	registry: DebugActionRegistry, action: DebugAction, name: String, counters: Array[int]
-) -> void:
-	if registry.register_action(action):
-		counters[0] += 1
-	else:
-		counters[1] += 1
-		Log.error(
-			"Failed to register C++ Firebase action: " + name,
-			{},
-			["debug", "cpp_firebase", "registration"]
-		)
+	helper.complete()

@@ -53,96 +53,26 @@ const RTDBLargeDataTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	Log.info("Registering RTDB debug actions...", {}, ["debug", "rtdb", "registration"])
+	var helper := RegistrationHelper.new(registry, "RTDB")
 
-	var counters: Array[int] = [0, 0]  # [registered, failed]
+	helper.register(RTDBGetSimpleValueActionClass.new())
+	helper.register(RTDBSetSimpleValueActionClass.new())
+	helper.register(RTDBDeleteValueActionClass.new())
+	helper.register(RTDBUpdateValueActionClass.new())
+	helper.register(RTDBGetNestedPathActionClass.new())
+	helper.register(RTDBSetNestedPathActionClass.new())
+	helper.register(RTDBListChildrenActionClass.new())
+	helper.register(RTDBPushItemActionClass.new())
+	helper.register(RTDBSingleValueListenerActionClass.new())
+	helper.register(RTDBChildAddedListenerActionClass.new())
+	helper.register(RTDBChildChangedListenerActionClass.new())
+	helper.register(RTDBChildRemovedListenerActionClass.new())
+	helper.register(RTDBRemoveAllListenersActionClass.new())
+	helper.register(RTDBTransactionTestActionClass.new())
+	helper.register(RTDBConcurrentOperationsActionClass.new())
+	helper.register(RTDBBatchOperationsActionClass.new())
+	helper.register(RTDBPathValidationActionClass.new())
+	helper.register(RTDBErrorHandlingTestActionClass.new())
+	helper.register(RTDBLargeDataTestActionClass.new())
 
-	_register_with_count(
-		registry, RTDBGetSimpleValueActionClass.new(), "RTDBGetSimpleValueAction", counters
-	)
-	_register_with_count(
-		registry, RTDBSetSimpleValueActionClass.new(), "RTDBSetSimpleValueAction", counters
-	)
-	_register_with_count(
-		registry, RTDBDeleteValueActionClass.new(), "RTDBDeleteValueAction", counters
-	)
-	_register_with_count(
-		registry, RTDBUpdateValueActionClass.new(), "RTDBUpdateValueAction", counters
-	)
-	_register_with_count(
-		registry, RTDBGetNestedPathActionClass.new(), "RTDBGetNestedPathAction", counters
-	)
-	_register_with_count(
-		registry, RTDBSetNestedPathActionClass.new(), "RTDBSetNestedPathAction", counters
-	)
-	_register_with_count(
-		registry, RTDBListChildrenActionClass.new(), "RTDBListChildrenAction", counters
-	)
-	_register_with_count(registry, RTDBPushItemActionClass.new(), "RTDBPushItemAction", counters)
-
-	_register_with_count(
-		registry,
-		RTDBSingleValueListenerActionClass.new(),
-		"RTDBSingleValueListenerAction",
-		counters
-	)
-	_register_with_count(
-		registry, RTDBChildAddedListenerActionClass.new(), "RTDBChildAddedListenerAction", counters
-	)
-	_register_with_count(
-		registry,
-		RTDBChildChangedListenerActionClass.new(),
-		"RTDBChildChangedListenerAction",
-		counters
-	)
-	_register_with_count(
-		registry,
-		RTDBChildRemovedListenerActionClass.new(),
-		"RTDBChildRemovedListenerAction",
-		counters
-	)
-	_register_with_count(
-		registry, RTDBRemoveAllListenersActionClass.new(), "RTDBRemoveAllListenersAction", counters
-	)
-
-	_register_with_count(
-		registry, RTDBTransactionTestActionClass.new(), "RTDBTransactionTestAction", counters
-	)
-	_register_with_count(
-		registry,
-		RTDBConcurrentOperationsActionClass.new(),
-		"RTDBConcurrentOperationsAction",
-		counters
-	)
-	_register_with_count(
-		registry, RTDBBatchOperationsActionClass.new(), "RTDBBatchOperationsAction", counters
-	)
-
-	_register_with_count(
-		registry, RTDBPathValidationActionClass.new(), "RTDBPathValidationAction", counters
-	)
-	_register_with_count(
-		registry, RTDBErrorHandlingTestActionClass.new(), "RTDBErrorHandlingTestAction", counters
-	)
-	_register_with_count(
-		registry, RTDBLargeDataTestActionClass.new(), "RTDBLargeDataTestAction", counters
-	)
-
-	Log.info(
-		"RTDB debug actions registration completed",
-		{"total_actions": counters[0], "failed_actions": counters[1]},
-		["debug", "rtdb", "registration"]
-	)
-
-
-static func _register_with_count(
-	registry: DebugActionRegistry, action: DebugAction, name: String, counters: Array[int]
-) -> void:
-	if registry.register_action(action):
-		counters[0] += 1  # registered count
-	else:
-		counters[1] += 1  # failed count
-		var action_name: String = name if name else (action.action_name if action else "Unknown")
-		Log.error(
-			"Failed to register RTDB action: " + action_name, {}, ["debug", "rtdb", "registration"]
-		)
+	helper.complete()

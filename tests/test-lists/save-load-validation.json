@@ -1,0 +1,17 @@
+{
+  "name": "Save/Load Validation",
+  "description": "Platform-specific save/load cycle consistency testing",
+  "configs": [],
+  "commands": [
+    {
+      "command": "test-save-load-cycle-desktop",
+      "platforms": ["desktop"],
+      "description": "Desktop save/load cycle consistency validation"
+    },
+    {
+      "command": "test-save-load-cycle-android",
+      "platforms": ["android"],
+      "description": "Android save/load cycle consistency validation"
+    }
+  ]
+}
