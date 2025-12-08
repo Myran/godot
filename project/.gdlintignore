@@ -1,0 +1,6 @@
+# Third-party addons (not maintained by us)
+addons/advanced_logger/
+addons/gdLinter/
+addons/godot_mcp/
+addons/open-external-editor/
+addons/sentry/

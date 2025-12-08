@@ -120,10 +120,10 @@ install-ios-deps:
     cp -R {{justfile_directory()}}/extras/MoltenVK/Package/Latest/MoltenVK/Static/MoltenVK.xcframework {{justfile_directory()}}/export/ios/
     @echo "iOS dependencies installed successfully."
     
-# Lint GDScript files
+# Lint GDScript files (includes addons for parity with GDLint Plugin)
 lint:
     @echo "Linting GDScript files..."
-    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f -not -path "./addons/*" | grep -v -f .gdlintignore | xargs gdlint
+    cd {{PROJECT_PATH}} && find . -name "*.gd" -type f | grep -v -f .gdlintignore | xargs gdlint
 # REMOVED: format - moved to justfile-dev-tools.justfile
 
 format-test:
