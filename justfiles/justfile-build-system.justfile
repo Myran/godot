@@ -164,21 +164,20 @@ templates-android force="no":
 
     just setup-android
 
-# Build all export templates (iOS + Android + Windows)
+# Build all export templates (iOS + Android + Windows + macOS)
 templates-all force="no":
     just build-moltenvk {{force}}
     just templates-ios {{force}}
     just templates-android force={{force}}
     just build-windows-templates {{force}}
+    just templates-macos {{force}}
 
-# Build macOS export templates
-build-macos-templates: validate-env
-    @echo "Building export templates..."
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_debug --jobs={{jobs}}
-    cd {{GODOT_SUBMODULE_PATH}} && scons platform=macos target=template_release production=yes --jobs={{jobs}}
-    mkdir -p templates
-    cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_debug.* templates/
-    cp {{GODOT_SUBMODULE_PATH}}/bin/godot.macos.template_release.* templates/
+# Build macOS export templates (legacy alias - use templates-macos instead)
+# See justfile-platform-macos.justfile for full macOS template commands
+build-macos-templates force="no":
+    @echo "💡 Note: Use 'just templates-macos' for Universal 2 templates (ARM64 + x86_64)"
+    @echo "        Use 'just templates-macos-arm64' for ARM64-only templates (faster)"
+    just templates-macos {{force}}
 
 # Build and package iOS templates
 build-and-package-ios-templates force="no": validate-env
