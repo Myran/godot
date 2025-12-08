@@ -77,3 +77,4 @@ export/windows/*.dll
 project/addons/sentry/bin/windows/**/*.dll
 templates/windows_*.zip
 templates/godot.windows.template_*.exe
+export/macos
