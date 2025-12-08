@@ -108,7 +108,7 @@ func start_debug_coordinator() -> void:
 	# CRITICAL FIX: Expand wildcards AFTER registry is ready
 	# This fixes the race condition where wildcards were expanded during config parsing
 	# before the registry was initialized, resulting in empty action lists.
-	var expanded_actions := _expand_all_wildcards(actions, registry)
+	var expanded_actions := _expand_all_wildcards(actions)
 	Log.info("Wildcard expansion complete", {
 		"original_count": actions.size(),
 		"expanded_count": expanded_actions.size()
@@ -216,43 +216,59 @@ func start_debug_coordinator() -> void:
 
 
 func _get_action_names() -> Array:
-	Log.debug("Getting action names", {"platform": "mobile" if OS.has_feature("mobile") else "desktop"}, ["debug", "startup"])
+	var platform: String = "mobile" if OS.has_feature("mobile") else "desktop"
+	Log.debug("Getting action names", {"platform": platform}, ["debug", "startup"])
 	if OS.has_feature("mobile"):
 		var external_config_path := "user://debug_startup_actions.json"
-		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
+		var exists: bool = FileAccess.file_exists(external_config_path)
+		_log_verbose("Checking external config path", {
+			"path": external_config_path, "exists": exists
+		}, ["debug", "startup"])
 		if FileAccess.file_exists(external_config_path):
 			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
 			# CRITICAL FIX: Reset DebugConfigReader cache before using external config
 			# This prevents stale cached config from early autoload execution (Task-303)
 			DebugConfigReader._reset_cache()
 			var external_actions := _parse_config_file(external_config_path)
-			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
+			_log_verbose("Parsed external config", {
+				"action_count": external_actions.size(), "actions": external_actions
+			}, ["debug", "startup"])
 			return external_actions
 
 		Log.info("Using embedded config", {"reason": "no_external_config"}, ["debug", "startup"])
 		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
-		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
+		_log_verbose("Parsed embedded config", {
+			"action_count": embedded_actions.size(), "actions": embedded_actions
+		}, ["debug", "startup"])
 		return embedded_actions
-	else:
-		var cmd_actions := _parse_command_line()
-		if not cmd_actions.is_empty():
-			return cmd_actions
 
-		var external_config_path := "user://debug_startup_actions.json"
-		_log_verbose("Checking external config path", {"path": external_config_path, "exists": FileAccess.file_exists(external_config_path)}, ["debug", "startup"])
-		if FileAccess.file_exists(external_config_path):
-			Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
-			# CRITICAL FIX: Reset DebugConfigReader cache before using external config
-			# This prevents stale cached config from early autoload execution (Task-303)
-			DebugConfigReader._reset_cache()
-			var external_actions := _parse_config_file(external_config_path)
-			_log_verbose("Parsed external config", {"action_count": external_actions.size(), "actions": external_actions}, ["debug", "startup"])
-			return external_actions
+	# Desktop path (not mobile)
+	var cmd_actions := _parse_command_line()
+	if not cmd_actions.is_empty():
+		return cmd_actions
 
-		Log.info("Using embedded config", {"reason": "no_external_config"}, ["debug", "startup"])
-		var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
-		_log_verbose("Parsed embedded config", {"action_count": embedded_actions.size(), "actions": embedded_actions}, ["debug", "startup"])
-		return embedded_actions
+	var external_config_path := "user://debug_startup_actions.json"
+	var exists: bool = FileAccess.file_exists(external_config_path)
+	_log_verbose("Checking external config path", {
+		"path": external_config_path, "exists": exists
+	}, ["debug", "startup"])
+	if FileAccess.file_exists(external_config_path):
+		Log.info("Using external config", {"path": external_config_path}, ["debug", "startup"])
+		# CRITICAL FIX: Reset DebugConfigReader cache before using external config
+		# This prevents stale cached config from early autoload execution (Task-303)
+		DebugConfigReader._reset_cache()
+		var external_actions := _parse_config_file(external_config_path)
+		_log_verbose("Parsed external config", {
+			"action_count": external_actions.size(), "actions": external_actions
+		}, ["debug", "startup"])
+		return external_actions
+
+	Log.info("Using embedded config", {"reason": "no_external_config"}, ["debug", "startup"])
+	var embedded_actions := _parse_config_file("res://debug_startup_actions.json")
+	_log_verbose("Parsed embedded config", {
+		"action_count": embedded_actions.size(), "actions": embedded_actions
+	}, ["debug", "startup"])
+	return embedded_actions
 
 
 
@@ -334,11 +350,15 @@ func _parse_config_file(path: String) -> Array:
 			Log.info("Test context set", {"test_id": test_id}, ["debug", "startup", "test"])
 		Log.info("Test recipe detected", {"test_metadata": test_metadata}, ["debug", "startup", "test_recipe"])
 
-	Log.info("Checking for metadata in config", {"has_metadata": data.has("metadata"), "all_keys": data.keys()}, ["debug", "startup", "metadata"])
+	Log.info("Checking for metadata in config", {
+		"has_metadata": data.has("metadata"), "all_keys": data.keys()
+	}, ["debug", "startup", "metadata"])
 	if data.has("metadata"):
 		var metadata := data.metadata as Dictionary
 		Log.info("Config metadata found", {"metadata": metadata}, ["debug", "startup", "metadata"])
-		Log.info("Metadata will be accessed directly by debug actions", {"auto_quit": metadata.get("auto_quit", "not_found")}, ["debug", "startup", "metadata"])
+		Log.info("Metadata will be accessed directly by debug actions", {
+			"auto_quit": metadata.get("auto_quit", "not_found")
+		}, ["debug", "startup", "metadata"])
 	else:
 		Log.info("No metadata found in config", {"config_keys": data.keys()}, ["debug", "startup", "metadata"])
 
@@ -373,7 +393,9 @@ func _parse_config_file(path: String) -> Array:
 				TYPE_ARRAY: type_name = "Array"
 				_: type_name = "Other(" + str(action_type) + ")"
 
-			_log_verbose("Processing raw action", {"action": action, "type": action_type, "type_name": type_name}, ["startup", "parser"])
+			_log_verbose("Processing raw action", {
+				"action": action, "type": action_type, "type_name": type_name
+			}, ["startup", "parser"])
 
 			if action_type == TYPE_STRING:
 				var action_str := str(action)
@@ -393,7 +415,9 @@ func _parse_config_file(path: String) -> Array:
 				else:
 					Log.warning("Invalid action object missing 'action' key", {"action_object": action_dict}, ["debug", "startup"])
 			else:
-				Log.warning("Invalid action type, must be String or Dictionary", {"action": action, "type": typeof(action)}, ["debug", "startup"])
+				Log.warning("Invalid action type, must be String or Dictionary", {
+					"action": action, "type": typeof(action)
+				}, ["debug", "startup"])
 
 		if data.has("action_params"):
 			var action_params := data.action_params as Dictionary
@@ -581,14 +605,13 @@ func _expand_wildcard_pattern(pattern: String) -> Array[String]:
 	return expanded_actions
 
 
-func _expand_all_wildcards(action_list: Array, registry: DebugActionRegistry) -> Array:
+func _expand_all_wildcards(action_list: Array) -> Array:
 	"""
 	Expand all wildcard patterns in the action list.
 	Called AFTER registry is ready to ensure patterns can be matched.
 
 	Args:
 		action_list: Array of action items (strings or dictionaries with action/params)
-		registry: The initialized DebugActionRegistry
 
 	Returns:
 		New array with all wildcard patterns expanded to concrete action names
@@ -727,7 +750,9 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 	var rng_state: String = gamestate_data.get("rng_state", "")
 	if not rng_state.is_empty():
 		# Note: RNG state will be handled by DeterministicRNG system during game initialization
-		Log.debug("RNG state available for restoration", {"rng_state_length": rng_state.length()}, ["debug", "startup", "gamestate"])
+		Log.debug("RNG state available for restoration", {
+			"rng_state_length": rng_state.length()
+		}, ["debug", "startup", "gamestate"])
 
 	# Store full gamestate data for explicit loading via debug action
 	var temp_path: String = DebugConfigReader.get_temp_gamestate_path("pending_gamestate_load")
@@ -735,7 +760,9 @@ func _apply_gamestate_at_startup(gamestate_data: Dictionary) -> bool:
 	if gamestate_file:
 		gamestate_file.store_string(JSON.stringify(gamestate_data))
 		gamestate_file.close()
-		Log.info("Full gamestate data saved for debug action loading", {"file": "pending_gamestate_load.json"}, ["debug", "startup", "gamestate"])
+		Log.info("Full gamestate data saved for debug action loading", {
+			"file": "pending_gamestate_load.json"
+		}, ["debug", "startup", "gamestate"])
 
 	Log.info(
 		"Startup gamestate loading completed - RNG applied, data ready for debug action",
