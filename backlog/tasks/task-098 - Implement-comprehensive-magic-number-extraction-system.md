@@ -1,8 +1,21 @@
+---
+id: task-098
+title: Implement comprehensive magic number extraction system
+status: To Do
+priority: medium
+labels:
+  - code-quality
+  - refactoring
+  - technical-debt
+created_date: '2025-09-13'
+updated_date: '2025-09-13'
+---
+
 # task-098 - Implement comprehensive magic number extraction system
 
 ## Context
 
-**Priority**: 🔧 MEDIUM - Technical Debt  
+**Priority**: 🔧 MEDIUM - Technical Debt
 **Status**: Open  
 **Complexity**: MEDIUM - Codebase-wide refactoring  
 **Category**: Code Quality - Constants Management  

@@ -1,8 +1,20 @@
+---
+id: task-096
+title: Create justfile dependency graph visualization
+status: To Do
+priority: high
+labels:
+  - devops
+  - documentation
+created_date: '2025-09-13'
+updated_date: '2025-09-13'
+---
+
 # task-096 - Create justfile dependency graph visualization
 
 ## Context
 
-**Priority**: 🔥 HIGH  
+**Priority**: 🔥 HIGH
 **Status**: Open  
 **Estimated Effort**: 2-3 days  
 **Category**: DevOps - Architecture Documentation  

@@ -1,8 +1,21 @@
+---
+id: task-094
+title: Fix async card recreation order for gamestate determinism
+status: In Progress
+priority: critical
+labels:
+  - gamestate
+  - determinism
+  - bug-fix
+created_date: '2025-09-13'
+updated_date: '2025-09-13'
+---
+
 # task-094 - Fix async card recreation order for gamestate determinism
 
 ## Context
 
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Status**: In Progress  
 **Estimated Effort**: 3-5 days  
 **Category**: Bug Fix - Gamestate System  

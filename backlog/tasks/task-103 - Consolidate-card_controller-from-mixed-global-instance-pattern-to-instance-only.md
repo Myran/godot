@@ -1,8 +1,21 @@
+---
+id: task-103
+title: Consolidate card_controller from mixed global/instance pattern to instance-only
+status: In Progress
+priority: medium
+labels:
+  - architecture
+  - refactoring
+  - technical-debt
+created_date: '2025-08-27'
+updated_date: '2025-08-27'
+---
+
 # Task-103: Consolidate card_controller from mixed global/instance pattern to instance-only
 
-**Status**: 🔄 In Progress  
-**Priority**: Medium (Architectural Debt)  
-**Effort**: 3-4 days  
+**Status**: 🔄 In Progress
+**Priority**: Medium (Architectural Debt)
+**Effort**: 3-4 days
 **Created**: 2025-08-27  
 
 ## Problem Statement

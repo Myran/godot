@@ -1,8 +1,20 @@
+---
+id: task-095
+title: Create automated file size limit monitoring system
+status: To Do
+priority: high
+labels:
+  - quality-assurance
+  - infrastructure
+created_date: '2025-09-13'
+updated_date: '2025-09-13'
+---
+
 # task-095 - Create automated file size limit monitoring system
 
 ## Context
 
-**Priority**: 🔥 HIGH  
+**Priority**: 🔥 HIGH
 **Status**: Open  
 **Estimated Effort**: 2-3 days  
 **Category**: Quality Assurance - Code Standards  

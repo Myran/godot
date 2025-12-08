@@ -1,8 +1,21 @@
+---
+id: task-097
+title: Implement firebase backend domain service extraction
+status: To Do
+priority: high
+labels:
+  - architecture
+  - firebase
+  - refactoring
+created_date: '2025-09-13'
+updated_date: '2025-09-13'
+---
+
 # task-097 - Implement firebase backend domain service extraction
 
 ## Context
 
-**Priority**: 🚀 SPRINT GOAL  
+**Priority**: 🚀 SPRINT GOAL
 **Status**: Open  
 **Complexity**: HIGH - Large-scale architectural refactoring  
 **Category**: Architecture - Service Extraction  
