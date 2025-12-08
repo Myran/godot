@@ -53,7 +53,7 @@ const RTDBLargeDataTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	var helper := RegistrationHelper.new(registry, "RTDB")
+	var helper: RegistrationHelper = RegistrationHelper.new(registry, "RTDB")
 
 	helper.register(RTDBGetSimpleValueActionClass.new())
 	helper.register(RTDBSetSimpleValueActionClass.new())

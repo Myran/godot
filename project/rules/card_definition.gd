@@ -43,7 +43,7 @@ extends Resource
 
 static func from_dictionary(data: Dictionary) -> CardDefinition:
 	"""Create CardDefinition from legacy Dictionary format (Firebase/JSON data)."""
-	var def := CardDefinition.new()
+	var def: CardDefinition = CardDefinition.new()
 	def.id = str(data.get("id", ""))
 	def.card_name = str(data.get("card_name", ""))
 	def.name = str(data.get("name", ""))

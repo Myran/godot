@@ -34,7 +34,7 @@ const BackendIsolatedSetValueTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	var helper := RegistrationHelper.new(registry, "Backend Firebase")
+	var helper: RegistrationHelper = RegistrationHelper.new(registry, "Backend Firebase")
 
 	helper.register(BackendAsyncPatternTestActionClass.new())
 	helper.register(BackendTimerManagerTestActionClass.new())

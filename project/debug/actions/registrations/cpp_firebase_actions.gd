@@ -31,7 +31,7 @@ const CPPDatabaseAvailabilityActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	var helper := RegistrationHelper.new(registry, "C++ Firebase")
+	var helper: RegistrationHelper = RegistrationHelper.new(registry, "C++ Firebase")
 
 	helper.register(CPPSetValueTestActionClass.new())
 	helper.register(CPPGetValueTestActionClass.new())

@@ -7,7 +7,7 @@ const FirebaseServiceDiagnosticActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	var helper := RegistrationHelper.new(registry, "Firebase Debug")
+	var helper: RegistrationHelper = RegistrationHelper.new(registry, "Firebase Debug")
 
 	helper.register(FirebaseServiceDiagnosticActionClass.new())
 

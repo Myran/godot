@@ -23,7 +23,7 @@ const SentryIntegrationTestActionClass = preload(
 
 
 static func register_all(registry: DebugActionRegistry) -> void:
-	var helper := RegistrationHelper.new(registry, "Sentry Debug")
+	var helper: RegistrationHelper = RegistrationHelper.new(registry, "Sentry Debug")
 
 	helper.register(SentryAddonValidationActionClass.new())
 	helper.register(SentryCrashTestingActionClass.new())
