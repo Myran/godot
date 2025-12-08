@@ -60,7 +60,9 @@
       "mcp__Context7__resolve-library-id",
       "mcp__Context7__get-library-docs",
       "Bash(git checkout:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(rebuild)",
+      "Bash(index)"
     ],
     "deny": [],
     "ask": [
