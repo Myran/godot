@@ -418,6 +418,31 @@ run-macos-release:
     "$APP_PATH/Contents/MacOS/{{GAME_NAME}}"
 
 # ================================
+# macOS TEST CACHE MANAGEMENT
+# ================================
+
+# Clear macOS test config to allow normal run-macos without debug actions
+# This removes stale debug_startup_actions.json that exported apps auto-run
+clear-test-macos:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing macOS test configuration..."
+
+    CONFIG_PATH="$HOME/Library/Application Support/Godot/app_userdata/gametwo/debug_startup_actions.json"
+
+    if [ -f "$CONFIG_PATH" ]; then
+        rm -f "$CONFIG_PATH"
+        echo "✅ macOS test config cleared"
+        echo "   Removed: debug_startup_actions.json"
+        echo "💡 run-macos will now start without debug actions"
+    else
+        echo "ℹ️  No macOS test config found - already clean"
+    fi
+
+# Clear macOS test cache (alias for consistency with other platforms)
+clear-macos-test-cache: clear-test-macos
+
+# ================================
 # macOS HELP
 # ================================
 
@@ -450,6 +475,16 @@ help-macos:
     echo "  just run-macos                     # Run debug build (with console output)"
     echo "  just run-macos-background          # Run debug build (no console, background)"
     echo "  just run-macos-release             # Run release build (with console output)"
+    echo ""
+    echo "Testing Commands:"
+    echo "  just test-macos-target CONFIG      # Automated testing with validation"
+    echo "  just test-macos-manual CONFIG      # Manual testing (app stays open)"
+    echo "  just test-macos-update CONFIG      # Update checksum baseline"
+    echo "  just test-macos-reset CONFIG       # Reset checksum baseline"
+    echo ""
+    echo "Test Cache Management:"
+    echo "  just clear-test-macos              # Clear debug_startup_actions.json"
+    echo "  just clear-macos-test-cache        # Alias for clear-test-macos"
     echo ""
     echo "Template Types:"
     echo "  Universal 2: Supports both Apple Silicon (ARM64) and Intel (x86_64) Macs"

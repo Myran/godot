@@ -862,6 +862,23 @@ _extract-logs test_id platform temp_output_file="":
                 echo "🍎 ✅ iOS device logs successfully captured"
             fi
             ;;
+        "macos")
+            echo "🍎 Extracting macOS exported app logs for test: $TEST_ID"
+
+            # Temp output file is required for macOS logs (same pattern as desktop)
+            if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
+                echo "🍎 Using provided temp output file: $TEMP_OUTPUT_FILE"
+                cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
+            else
+                echo "❌ No temp output file provided for macOS log extraction"
+                echo "💡 macOS logs must be extracted from test execution output"
+                exit 1
+            fi
+
+            # Final verification and reporting
+            LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+            echo "🍎 macOS log extraction complete: $LOG_LINES lines captured"
+            ;;
         *)
             echo "❌ Unsupported platform: $PLATFORM"
             exit 1
@@ -1134,12 +1151,15 @@ _analyze-test-errors test_id platform config_file="":
         "ios")
             # iOS platform supported
             ;;
+        "macos")
+            # macOS platform supported (same log location as desktop)
+            ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
             exit 1
             ;;
     esac
-    
+
     # Read from the unified platform-specific log file
     if [[ -f "$PLATFORM_LOG_FILE" ]]; then
         echo "📄 Analyzing: $(basename "$PLATFORM_LOG_FILE")"
@@ -1444,6 +1464,18 @@ _collect-action-results test_id platform config_name="unknown" session="":
                 echo "📄 Read $(echo "$LOGS" | wc -l) lines from iOS log file"
             else
                 echo "⚠️  iOS log file not found: $PLATFORM_LOG_FILE"
+                LOGS=""
+            fi
+            ;;
+        "macos")
+            # For macOS, the extraction should have happened in _execute-test-macos
+            # Here we just read the file that should already exist (same pattern as desktop)
+            if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+                LOGS=$(cat "$PLATFORM_LOG_FILE")
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from macOS log file"
+            else
+                echo "⚠️  macOS log file not found: $PLATFORM_LOG_FILE"
+                echo "💡 macOS logs should be extracted by _execute-test-macos"
                 LOGS=""
             fi
             ;;
@@ -2742,6 +2774,13 @@ _execute-test-with-analysis config_name platform session="":
                 just _execute-test-ios "$CONFIG_NAME" "$TEST_ID" || TEST_RESULT=$?
             fi
             ;;
+        "macos")
+            # Deploy and execute macOS exported app test
+            just _deploy-config-macos "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-macos "$CONFIG_NAME" || TEST_RESULT=$?
+            fi
+            ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
             TEST_RESULT=1
@@ -2862,6 +2901,29 @@ _stop-app-desktop:
     
     echo "✅ Desktop test instances stopped (editor preserved)"
 
+_stop-app-macos:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🛑 Stopping macOS exported app instances (preserving editor)..."
+
+    # CRITICAL: Only kill exported app instances, NEVER the Godot editor
+    # Editor runs as: godot.macos.editor.universal
+    # Exported app runs as: GameTwo (inside GameTwo_debug.app bundle)
+
+    # Kill exported debug app instances
+    pkill -f "GameTwo_debug.app" 2>/dev/null || true
+
+    # Kill exported release app instances
+    pkill -f "GameTwo.app/Contents/MacOS/GameTwo" 2>/dev/null || true
+
+    # DO NOT match these patterns (editor processes):
+    # - godot.macos.editor.universal
+    # - godot.macos.editor.arm64
+    # - Any process with --editor flag
+
+    echo "✅ macOS exported app instances stopped (editor preserved)"
+
 # Platform-specific deployment functions
 _deploy-config-android temp_config_path:
     #!/usr/bin/env bash
@@ -2919,6 +2981,45 @@ _deploy-config-desktop temp_config_path:
         exit 1
     fi
     
+    echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch ($(wc -c < "$STARTUP_CONFIG") bytes)"
+
+_deploy-config-macos temp_config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEMP_CONFIG_PATH="{{temp_config_path}}"
+
+    echo "🍎 Deploying configuration to macOS exported app..."
+
+    # Stop any running macOS exported app instances for consistent state
+    just _stop-app-macos
+
+    # macOS exported app uses the same app_userdata location as desktop
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+
+    echo "📂 macOS logs will be saved to: $LOGS_DIR"
+
+    # Copy config to the expected location for macOS app startup
+    # Exported apps auto-load debug_startup_actions.json (no --test-mode needed)
+    STARTUP_CONFIG="$USER_DATA_DIR/debug_startup_actions.json"
+
+    # Remove old config file if it exists to prevent stale data
+    if [ -f "$STARTUP_CONFIG" ]; then
+        echo "🧹 Removing old config file: $STARTUP_CONFIG"
+        rm "$STARTUP_CONFIG"
+    fi
+
+    echo "📋 Copying config for macOS app startup..."
+    cp "$TEMP_CONFIG_PATH" "$STARTUP_CONFIG"
+
+    # Verify the copy was successful
+    if [ ! -f "$STARTUP_CONFIG" ] || [ ! -s "$STARTUP_CONFIG" ]; then
+        echo "❌ Failed to create config file: $STARTUP_CONFIG"
+        exit 1
+    fi
+
     echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch ($(wc -c < "$STARTUP_CONFIG") bytes)"
 
 # Platform-specific execution functions
@@ -3287,6 +3388,139 @@ _execute-test-desktop config_name:
     echo ""
     echo "✅ Desktop test execution completed"
 
+_execute-test-macos config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    echo "🍎 Starting macOS exported app test execution..."
+
+    # Validate exported app exists
+    MACOS_APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
+    MACOS_BINARY_PATH="$MACOS_APP_PATH/Contents/MacOS/{{GAME_NAME}}"
+
+    if [ ! -d "$MACOS_APP_PATH" ]; then
+        echo "❌ macOS app not found at: $MACOS_APP_PATH"
+        echo "💡 Run 'just export-macos-debug' first to build the app"
+        exit 1
+    fi
+
+    if [ ! -f "$MACOS_BINARY_PATH" ]; then
+        echo "❌ macOS binary not found at: $MACOS_BINARY_PATH"
+        echo "💡 The app bundle may be corrupted. Run 'just export-macos-debug' to rebuild"
+        exit 1
+    fi
+
+    # Clear quarantine attributes for Gatekeeper (may fail silently if already cleared)
+    echo "🔓 Clearing quarantine attributes for Gatekeeper..."
+    xattr -cr "$MACOS_APP_PATH" 2>/dev/null || true
+
+    echo "🚀 Starting macOS test in automated mode..."
+    echo ""
+
+    # Capture all output to a temporary file for filtering
+    TEMP_OUTPUT=$(mktemp)
+
+    # Execute test - exported apps auto-load debug config (no --test-mode required, but we include it for consistency)
+    # Support external PCK loading via TEST_MACOS_PCK environment variable
+    MACOS_ARGS="--test-mode --minimized"
+    if [[ -n "${TEST_MACOS_PCK:-}" ]]; then
+        echo "📦 Using external PCK: $TEST_MACOS_PCK"
+        MACOS_ARGS="$MACOS_ARGS --main-pack $TEST_MACOS_PCK"
+    fi
+
+    {
+        "$MACOS_BINARY_PATH" $MACOS_ARGS 2>&1
+        TEST_EXIT_CODE=$?
+    } > "$TEMP_OUTPUT" || TEST_EXIT_CODE=$?
+
+    # Show minimal, clean output for macOS testing
+    echo "📊 macOS Test Execution Summary"
+    echo "================================"
+    echo ""
+
+    # Extract essential test info from output
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
+
+    # Check for any critical errors first (excluding ObjectDB warnings)
+    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
+
+    if [[ -n "$CRITICAL_ERRORS" ]]; then
+        echo "⚠️  ERRORS DETECTED - Showing relevant output:"
+        echo ""
+        echo "$CRITICAL_ERRORS" | head -10
+        TEST_EXIT_CODE=1
+    else
+        # Extract session duration if available
+        SESSION_INFO=$(grep "SESSION_END" "$TEMP_OUTPUT" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
+        if [[ "$SESSION_INFO" != "0" ]]; then
+            DURATION_SECONDS=$((SESSION_INFO / 1000))
+            DURATION_DISPLAY="${DURATION_SECONDS}s"
+        else
+            DURATION_DISPLAY="completed"
+        fi
+
+        echo "**Actions Executed**: $ACTION_COUNT"
+        echo "**Actions Failed**: $FAILED_COUNT"
+        echo "**Status**: ✅ COMPLETED"
+        echo "**Duration**: $DURATION_DISPLAY"
+        echo ""
+
+        # Show key test events in a concise format
+        echo "📋 Key Test Events:"
+        grep -E "(SESSION_START|SESSION_END|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE)" "$TEMP_OUTPUT" | grep -v "\[BUFFER\]" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
+
+        echo ""
+        echo "🎯 Test completed successfully with clean output"
+    fi
+
+    # Handle exit codes with intelligent success detection
+    if [[ ${TEST_EXIT_CODE:-0} -eq 124 ]]; then
+        echo ""
+        echo "❌ macOS test timed out"
+        echo "📄 Extracting macOS logs for analysis..."
+        just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
+        rm -f "$TEMP_OUTPUT"
+        exit 1
+    elif [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
+        # Check for actual test success indicators despite non-zero exit code
+        TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
+        QUIT_EVENT_FOUND=$(grep -c "Quit event received" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
+
+        if [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
+            echo ""
+            echo "✅ Test logically successful despite app exit code ${TEST_EXIT_CODE}"
+            echo "💡 All actions completed successfully with proper completion signals"
+            echo "📄 Extracting macOS logs for analysis..."
+            just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
+            rm -f "$TEMP_OUTPUT"
+            echo ""
+            echo "✅ macOS test execution completed"
+            exit 0
+        else
+            echo ""
+            echo "⚠️  macOS test completed with exit code ${TEST_EXIT_CODE}"
+            echo "📄 Extracting macOS logs for analysis..."
+            just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
+            rm -f "$TEMP_OUTPUT"
+            if [[ ${TEST_EXIT_CODE} -ne 0 ]]; then
+                exit ${TEST_EXIT_CODE}
+            fi
+        fi
+    fi
+
+    # Extract and save macOS logs using unified function before cleanup
+    echo "📄 Extracting macOS logs for analysis..."
+    just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
+
+    # Cleanup temp file
+    rm -f "$TEMP_OUTPUT"
+
+    echo ""
+    echo "✅ macOS test execution completed"
+
 # ================================
 # ENHANCED EXISTING COMMANDS
 # ================================
@@ -3443,6 +3677,88 @@ test-desktop-target config_name="":
 
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "desktop" "$TEST_SESSION"
+
+# macOS manual mode test command
+test-macos-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    echo "🎯 macOS Testing (Manual Mode - stays open): $CONFIG_NAME"
+    echo "========================================================"
+
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+
+    # Validate exported app exists
+    MACOS_APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
+
+    if [ ! -d "$MACOS_APP_PATH" ]; then
+        echo "❌ macOS app not found at: $MACOS_APP_PATH"
+        echo "💡 Run 'just export-macos-debug' first to build the app"
+        exit 1
+    fi
+
+    # Clear quarantine attributes for Gatekeeper
+    echo "🔓 Clearing quarantine attributes for Gatekeeper..."
+    xattr -cr "$MACOS_APP_PATH" 2>/dev/null || true
+
+    # Create temporary config with auto_quit=false for manual mode
+    echo "🍎 Creating temporary config with auto_quit=false for manual mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_macos_manual"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+
+    # Deploy config to macOS (this stops any running exported app instances)
+    echo "🍎 Deploying configuration to macOS..."
+    just _deploy-config-macos "$TEMP_CONFIG_PATH"
+    rm -f "$TEMP_CONFIG_PATH"
+
+    # Start macOS app in manual mode using 'open' command (proper macOS app launching)
+    # Exported apps auto-load debug config, --test-mode included for consistency
+    echo "🚀 Starting macOS app in manual mode..."
+    open "$MACOS_APP_PATH" --args --test-mode &
+
+    echo "✅ macOS test started in manual mode (app will stay open for verification)"
+
+# Enhanced version of test-macos-target that includes automatic error analysis
+test-macos-target config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "macos" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
+
+    # Validate exported app exists early
+    MACOS_APP_PATH="export/macos/{{GAME_NAME}}_debug.app"
+    if [ ! -d "$MACOS_APP_PATH" ]; then
+        echo "❌ macOS app not found at: $MACOS_APP_PATH"
+        echo "💡 Run 'just export-macos-debug' first to build the app"
+        exit 1
+    fi
+
+    # Create session timestamp for individual test
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
+
+    # Use the new unified execution pattern
+    just _execute-test-with-analysis "$CONFIG_NAME" "macos" "$TEST_SESSION"
 
 # ================================
 # ORIGINAL COMMAND PRESERVATION
@@ -4047,6 +4363,156 @@ test-desktop-update config_name="":
     
     # Call shared update function
     just _update-checksum-baseline "desktop" "$CONFIG_NAME"
+
+# Update checksum baseline for macOS - runs test and captures new baseline values
+test-macos-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-macos-update CONFIG_NAME"
+            echo ""
+            echo "Available configurations:"
+            echo -e "$CHECKSUM_CONFIGS" | sed 's/📸 \([^ ]*\) .*/  • \1/'
+            exit 1
+        fi
+    fi
+
+    # Call shared update function
+    just _update-checksum-baseline "macos" "$CONFIG_NAME"
+
+# Reset checksum baseline for macOS - clears baseline to start fresh
+test-macos-reset config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration to reset..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE"
+                    else
+                        status="✅ HAS BASELINE ($expected_checksums_count)"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to RESET: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-macos-reset CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    echo "🔄 Resetting checksum baseline for: $CONFIG_NAME (macOS)"
+    echo "========================================================"
+
+    # Clear the expected_checksums array
+    TEMP_FILE=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$CONFIG_PATH"
+
+    echo "✅ Checksum baseline reset for $CONFIG_NAME"
+    echo "💡 Next test run will create a new baseline"
 
 # ================================
 # FUTURE-PROOF PLATFORM SUPPORT
