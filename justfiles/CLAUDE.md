@@ -11,8 +11,10 @@ Complete reference for GameTwo justfile commands, patterns, and workflows.
 **Essential Commands for Baseline Updates:**
 - `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
 - `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
 - `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
 - `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
+- `just test-macos-reset CONFIG_NAME` - Reset macOS checksum baseline
 
 **When to Update vs Reset:**
 - ✅ **Update** (`test-*-update`): Legitimate system/card changes, new features, balance updates, engine optimizations
@@ -38,6 +40,7 @@ just test-android-update draft-10              # After draft system modification
 ```bash
 just test-android-update    # Shows menu of available configs
 just test-desktop-update    # Shows menu of available configs
+just test-macos-update      # Shows menu of available configs
 ```
 
 **Workflow Integration:**
@@ -81,6 +84,7 @@ just help                                  # Interactive command browser
 # Testing
 just test-android-target CONFIG            # Automated testing with validation
 just test-desktop-target CONFIG            # Desktop automated testing
+just test-macos-target CONFIG              # macOS automated testing
 just test-android '/archive/generated-replays/'  # All battle replay configs
 just test-android '/archive/generated-replays/merge-*'  # Merge scenarios
 
@@ -130,8 +134,8 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 ## 📋 Command Reference
 
 **Testing:**
-- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` - Automated testing
-- `just test-android TARGET` | `just test-desktop TARGET` - Manual testing
+- `just test-android-target CONFIG` | `just test-desktop-target CONFIG` | `just test-macos-target CONFIG` - Automated testing
+- `just test-android TARGET` | `just test-desktop TARGET` | `just test-macos TARGET` - Manual testing
 - `just validate` - Complete validation (format + syntax + runtime)
 
 **Test Lists:**
@@ -199,10 +203,12 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 **Automated:**
 - `just test-android-target CONFIG` - Enhanced with validation
 - `just test-desktop-target CONFIG` - Cross-platform testing
+- `just test-macos-target CONFIG` - macOS testing (exported app)
 
 **Manual:**
 - `just test-android-manual CONFIG` - Android inspection
 - `just test-desktop-manual CONFIG` - Desktop inspection
+- `just test-macos-manual CONFIG` - macOS inspection
 
 ## 🎯 Pattern Examples
 

@@ -24,8 +24,8 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `just logs-android-status` - Device & app diagnostics
 
 **Platform Auto-Detection:**
-- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`)
-- Explicit platform available: `PLATFORM="android|desktop|ios"`
+- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`, `macos_*`)
+- Explicit platform available: `PLATFORM="android|desktop|ios|macos"`
 - Backwards compatible: defaults to "auto" if no platform specified
 
 **🚨 Migration Guide (Old → New):**
@@ -55,8 +55,10 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 **Essential Commands:**
 - `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
 - `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
+- `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
 - `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
 - `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
+- `just test-macos-reset CONFIG_NAME` - Reset macOS checksum baseline
 
 **When to Update Baselines:**
 - ✅ **Legitimate system changes** (new features, balance updates)
@@ -80,6 +82,7 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 ```bash
 just test-android-update    # Shows menu of available configs
 just test-desktop-update    # Shows menu of available configs
+just test-macos-update      # Shows menu of available configs
 ```
 
 **🚨 CRITICAL: Use CLI Commands, Not Direct File Editing**

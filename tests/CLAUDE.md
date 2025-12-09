@@ -60,7 +60,7 @@ tests/
 |-------|------|----------|-------------|
 | `description` | string | ✅ | Human-readable config purpose |
 | `actions` | array | ✅ | Debug actions to execute (in order) |
-| `platforms` | array | ✅ | Supported platforms: `android`, `ios`, `desktop` |
+| `platforms` | array | ✅ | Supported platforms: `android`, `ios`, `desktop`, `macos` |
 | `checksum_config` | object | ❌ | Checksum validation settings |
 | `checksum_config.initial_seed` | int | ❌ | RNG seed for determinism |
 | `checksum_config.state_type` | string | ❌ | `seed_validation` or `gamestate_replay` |
@@ -439,6 +439,9 @@ just test-android-target CONFIG
 # Desktop automated with validation
 just test-desktop-target CONFIG
 
+# macOS automated with validation
+just test-macos-target CONFIG
+
 # Benefits:
 # - Automatic checksum validation
 # - Error analysis included
@@ -453,6 +456,9 @@ just test-android-manual CONFIG
 
 # Desktop manual (stays open)
 just test-desktop-manual CONFIG
+
+# macOS manual (stays open)
+just test-macos-manual CONFIG
 
 # Benefits:
 # - Inspect game state after test
@@ -541,10 +547,12 @@ just list-saved-states
 # ✅ CORRECT - Use test commands (enables debug coordinator)
 just test-android-target CONFIG
 just test-desktop-target CONFIG
+just test-macos-target CONFIG
 
 # ❌ FORBIDDEN - Don't use run commands for test actions
 just run-android    # Debug actions won't execute
 just run-desktop    # Skips state capture system
+just run-macos      # Debug actions won't execute
 ```
 
 ### **Inter-Config Delay**
@@ -579,11 +587,13 @@ just test-prepare-desktop  # Clear desktop cache only
 # Automated testing
 just test-android-target CONFIG
 just test-desktop-target CONFIG
+just test-macos-target CONFIG
 just test-all [CONFIG]
 
 # Manual testing
 just test-android-manual CONFIG
 just test-desktop-manual CONFIG
+just test-macos-manual CONFIG
 
 # Validation
 just validate                    # Complete validation

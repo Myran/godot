@@ -1,6 +1,6 @@
 # Justfile Architecture Guide
 
-**CRITICAL BUSINESS INFRASTRUCTURE** - 21,358 lines across 39 modules powering GameTwo development.
+**CRITICAL BUSINESS INFRASTRUCTURE** - 22,000+ lines across 40 modules powering GameTwo development.
 
 This document ensures correct recipe selection during development, testing, and deployment workflows.
 
@@ -18,7 +18,7 @@ This document ensures correct recipe selection during development, testing, and 
 
 ### Test & Validate
 - **Before commit**: `just ci-validate` 🚨 **MANDATORY**
-- **Automated testing**: `just test-android-target CONFIG` or `just test-desktop-target CONFIG`
+- **Automated testing**: `just test-android-target CONFIG`, `just test-desktop-target CONFIG`, or `just test-macos-target CONFIG`
 - **Quick iteration**: `just config-restart-android CONFIG` (5 sec) ⚡
 - **Cross-platform**: `just test-all [CONFIG]` (unified summary)
 
@@ -35,7 +35,7 @@ This document ensures correct recipe selection during development, testing, and 
 
 ---
 
-## 📋 Module Architecture (39 Modules)
+## 📋 Module Architecture (40 Modules)
 
 ### **Foundation Layer** (Load Order: First)
 
@@ -101,6 +101,24 @@ This document ensures correct recipe selection during development, testing, and 
 #### `justfile-platform-windows.justfile`
 - **Purpose**: Windows-specific build configuration
 
+#### `justfile-platform-macos.justfile`
+- **Purpose**: macOS-specific build, deployment, and testing
+- **Critical Recipes**:
+  - `test-macos-target CONFIG` - Automated macOS testing (exported .app)
+  - `test-macos-manual CONFIG` - Manual testing (stays open)
+  - `test-macos-update CONFIG` - Update checksum baseline
+  - `test-macos-reset CONFIG` - Reset checksum baseline
+  - `run-macos` - Launch exported macOS app
+  - `clear-test-macos` - Clear test configuration
+- **Key Features**:
+  - Tests exported `.app` bundle (not editor)
+  - Editor preservation: NEVER kills Godot editor
+  - Gatekeeper quarantine handling with `xattr -cr`
+  - Config deployment to `~/Library/Application Support/Godot/app_userdata/gametwo/`
+- **When to Use**:
+  - macOS-specific testing with exported app
+  - Cross-platform validation alongside Android/desktop
+
 ---
 
 ### **Testing & Validation Layer**
@@ -118,8 +136,10 @@ This document ensures correct recipe selection during development, testing, and 
 - **Critical Recipes**:
   - `test-android-target CONFIG` - Automated Android testing
   - `test-desktop-target CONFIG` - Automated desktop testing
+  - `test-macos-target CONFIG` - Automated macOS testing
   - `test-android-manual CONFIG` - Manual testing (stays open)
   - `test-desktop-manual CONFIG` - Manual desktop testing
+  - `test-macos-manual CONFIG` - Manual macOS testing
 - **Features**: Checksum validation, error analysis, baseline management
 - **Load Order**: **LAST** to override existing test commands
 
@@ -476,6 +496,7 @@ justfile (main entry)
     │   ├─→ justfile-build-utils.justfile
     │   ├─→ justfile-platform-android.justfile
     │   ├─→ justfile-platform-ios.justfile
+    │   ├─→ justfile-platform-macos.justfile
     │   └─→ justfile-platform-windows.justfile
     │
     ├─→ TESTING & VALIDATION
@@ -548,9 +569,11 @@ justfile (main entry)
 |----------|--------|----------|
 | Automated Android | `just test-android-target CONFIG` | Checksum validation, error analysis |
 | Automated Desktop | `just test-desktop-target CONFIG` | Cross-platform testing |
+| Automated macOS | `just test-macos-target CONFIG` | Exported app testing |
 | Cross-platform | `just test-all [CONFIG]` | Unified summary, consistency |
 | Quick iteration | `just config-restart-android CONFIG` ⚡ | 5-second cycles |
 | Manual inspection | `just test-android-manual CONFIG` | Stays open, manual control |
+| macOS inspection | `just test-macos-manual CONFIG` | Exported app, stays open |
 | Comprehensive | `just test-android test-all` | 15 configs, all domains |
 
 ### **I need to debug...**
