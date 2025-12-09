@@ -3,7 +3,7 @@
   "actions": [
     "backend.firebase.isolated_push_only"
   ],
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "ios", "macos"],
   "metadata": {
     "auto_quit": true,
     "isolated_test": true,

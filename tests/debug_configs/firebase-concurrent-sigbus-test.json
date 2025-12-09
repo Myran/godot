@@ -4,7 +4,7 @@
     "backend.firebase.async_pattern",
     "backend.firebase.error_handling"
   ],
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "ios", "macos"],
   "metadata": {
     "concurrent_test": true,
     "sigbus_reproduction": true

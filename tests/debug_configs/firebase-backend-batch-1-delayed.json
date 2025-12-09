@@ -6,5 +6,5 @@
     "backend.firebase.lifecycle",
     "backend.firebase.method_mapping"
   ],
-  "platforms": ["android", "ios"]
+  "platforms": ["android", "ios", "macos"]
 }

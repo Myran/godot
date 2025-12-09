@@ -1,11 +1,13 @@
 {
-  "description": "Direct diagnostic test for Firebase C++ class availability on Android",
+  "description": "Direct diagnostic test for Firebase C++ class availability",
   "actions": [
     "firebase.service.diagnostic",
     "cpp.firebase.database_availability"
   ],
   "platforms": [
-    "android"
+    "android",
+    "ios",
+    "macos"
   ],
   "metadata": {
     "auto_quit": true

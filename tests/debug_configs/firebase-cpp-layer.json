@@ -3,5 +3,5 @@
   "actions": [
     "cpp.*"
   ],
-  "platforms": ["android", "ios"]
+  "platforms": ["android", "ios", "macos"]
 }
