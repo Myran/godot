@@ -2391,42 +2391,6 @@ test-desktop target="":
 # 
 
 
-# Desktop log access - equivalent of logs-last for desktop platform
-# ⚠️  DEPRECATED: Use 'logs-latest desktop' instead
-logs-desktop-last:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    echo "⚠️  DEPRECATED: 'logs-desktop-last' is deprecated. Use 'logs-latest desktop' instead"
-    echo ""
-
-    # Find desktop logs in Godot user data directory
-    USER_DATA_DIR="{{USER_DATA_DIR}}"
-    LOGS_DIR="{{STANDARD_LOGS_DIR}}"
-
-    echo "🖥️  Accessing desktop logs..."
-    echo "   Directory: $LOGS_DIR"
-    echo ""
-    
-    if [ -d "$LOGS_DIR" ]; then
-        # Get latest Godot desktop log file (not Android test logs)
-        LATEST_LOG=$(ls -t "$LOGS_DIR"/godot*.log 2>/dev/null | head -1)
-        if [ -n "$LATEST_LOG" ]; then
-            echo "📄 Latest desktop log: $(basename "$LATEST_LOG")"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            cat "$LATEST_LOG"
-        else
-            echo "❌ No desktop log files found in $LOGS_DIR"
-            echo ""
-            echo "💡 To generate desktop logs:"
-            echo "   just test-desktop system-quit-only"
-        fi
-    else
-        echo "❌ Desktop logs directory not found: $LOGS_DIR"
-        echo ""
-        echo "💡 Directory will be created on first desktop test run"
-        echo "   Try: just test-desktop system-quit-only"
-    fi
 
 # ================================
 # CHECKSUM VALIDATION SYSTEM

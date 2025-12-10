@@ -153,19 +153,19 @@ logs-android-errors TEST_ID *TAGS:
 logs-desktop-errors TEST_ID *TAGS:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     TEST_ID="{{TEST_ID}}"
     TAGS="{{TAGS}}"
-    
+
     LOG_CONTENT=$(just _find-desktop-log-with-test-id "$TEST_ID")
-    
+
     echo "🚨 Desktop Errors and Failures:"
     echo "==============================="
-    
+
     if [ -n "$TAGS" ]; then
         echo "🏷️  Filtered by tags: $TAGS"
         echo ""
-        
+
         # Convert tags to pattern
         tag_pattern=""
         for tag in $TAGS; do
@@ -175,7 +175,185 @@ logs-desktop-errors TEST_ID *TAGS:
                 tag_pattern="$tag_pattern\|$tag"
             fi
         done
-        
+
+        # Filter by tags first, then by errors (excludes test successes)
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
+    else
+        echo "📊 All error types:"
+        echo ""
+        echo "$LOG_CONTENT" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors found"
+    fi
+
+# iOS log display with optional tag filtering
+logs-ios TEST_ID *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEST_ID="{{TEST_ID}}"
+    TAGS="{{TAGS}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+
+    # Find iOS log file by TEST_ID
+    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
+        echo "💡 Try running an iOS test first: just test-ios-target CONFIG" >&2
+        exit 1
+    fi
+
+    LOG_CONTENT=$(cat "$LOG_FILE")
+
+    echo "📋 iOS Logs for Test: $TEST_ID"
+    echo "📄 Log file: $LOG_FILE"
+
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtering by tags: $TAGS"
+        echo ""
+
+        # Convert space-separated tags to grep pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+
+        # Filter logs by tags
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | head -100
+    else
+        echo "📊 Full logs (first 50 lines):"
+        echo ""
+        echo "$LOG_CONTENT" | head -50
+    fi
+
+# iOS errors with optional tag filtering
+logs-ios-errors TEST_ID *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEST_ID="{{TEST_ID}}"
+    TAGS="{{TAGS}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+
+    # Find iOS log file by TEST_ID
+    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No iOS log file found for test ID: $TEST_ID" >&2
+        echo "💡 Try running an iOS test first: just test-ios-target CONFIG" >&2
+        exit 1
+    fi
+
+    LOG_CONTENT=$(cat "$LOG_FILE")
+
+    echo "🚨 iOS Errors and Failures:"
+    echo "==========================="
+    echo "📄 Log file: $LOG_FILE"
+
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtered by tags: $TAGS"
+        echo ""
+
+        # Convert tags to pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+
+        # Filter by tags first, then by errors (excludes test successes)
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
+    else
+        echo "📊 All error types:"
+        echo ""
+        echo "$LOG_CONTENT" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors found"
+    fi
+
+# macOS log display with optional tag filtering
+logs-macos TEST_ID *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEST_ID="{{TEST_ID}}"
+    TAGS="{{TAGS}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+
+    # Find macOS log file by TEST_ID
+    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
+        echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
+        exit 1
+    fi
+
+    LOG_CONTENT=$(cat "$LOG_FILE")
+
+    echo "📋 macOS Logs for Test: $TEST_ID"
+    echo "📄 Log file: $LOG_FILE"
+
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtering by tags: $TAGS"
+        echo ""
+
+        # Convert space-separated tags to grep pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+
+        # Filter logs by tags
+        echo "$LOG_CONTENT" | grep "$tag_pattern" | head -100
+    else
+        echo "📊 Full logs (first 50 lines):"
+        echo ""
+        echo "$LOG_CONTENT" | head -50
+    fi
+
+# macOS errors with optional tag filtering
+logs-macos-errors TEST_ID *TAGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEST_ID="{{TEST_ID}}"
+    TAGS="{{TAGS}}"
+    DESKTOP_LOG_DIR="{{DESKTOP_LOG_DIR}}"
+
+    # Find macOS log file by TEST_ID
+    LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
+    if [ -z "$LOG_FILE" ]; then
+        echo "❌ No macOS log file found for test ID: $TEST_ID" >&2
+        echo "💡 Try running a macOS test first: just test-macos-target CONFIG" >&2
+        exit 1
+    fi
+
+    LOG_CONTENT=$(cat "$LOG_FILE")
+
+    echo "🚨 macOS Errors and Failures:"
+    echo "============================="
+    echo "📄 Log file: $LOG_FILE"
+
+    if [ -n "$TAGS" ]; then
+        echo "🏷️  Filtered by tags: $TAGS"
+        echo ""
+
+        # Convert tags to pattern
+        tag_pattern=""
+        for tag in $TAGS; do
+            if [ -z "$tag_pattern" ]; then
+                tag_pattern="$tag"
+            else
+                tag_pattern="$tag_pattern\|$tag"
+            fi
+        done
+
         # Filter by tags first, then by errors (excludes test successes)
         echo "$LOG_CONTENT" | grep "$tag_pattern" | grep -E "ERROR:|FAILURE:|⚠️.*ERROR|❌|failed.*error.*true" | head -20 || echo "✅ No errors in filtered logs"
     else
