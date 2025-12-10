@@ -56,7 +56,18 @@ just test-macos-update      # Shows menu of available configs
 # Emergency Debugging
 just logs-errors TEST_ID                   # Find errors (98% token savings)
 just logs-search TEST_ID "search_term"     # Text search (99% token savings - replaced logs-text)
-just logs-latest [PLATFORM]                # Latest results (99% token savings - replaced logs-last)
+
+# Platform-specific log retrieval
+just logs-android TEST_ID [TAGS]          # Android logs with optional tag filtering
+just logs-desktop TEST_ID [TAGS]          # Desktop logs with optional tag filtering
+just logs-ios TEST_ID [TAGS]              # iOS logs with optional tag filtering (NEW)
+just logs-macos TEST_ID [TAGS]            # macOS logs with optional tag filtering (NEW)
+
+# Platform-specific error analysis
+just logs-android-errors TEST_ID         # Android errors with tag filtering
+just logs-desktop-errors TEST_ID         # Desktop errors with tag filtering
+just logs-ios-errors TEST_ID             # iOS errors with tag filtering (NEW)
+just logs-macos-errors TEST_ID           # macOS errors with tag filtering (NEW)
 
 # Full Android Logs (Not Test Results)
 just logs-android-device "search_term"    # Complete device logs including startup (consolidated)
@@ -151,7 +162,6 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just logs-tree TEST_ID` - Explore log structure
 - `just logs-pattern TEST_ID "pattern"` - Pattern matching
 - `just logs-search TEST_ID "search_term"` - Text search (replaced logs-text)
-- `just logs-latest [PLATFORM]` - Latest logs (replaced logs-last)
 
 **Build:**
 - `just development` - Complete workflow (MANDATORY before GDScript commits)

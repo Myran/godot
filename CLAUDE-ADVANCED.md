@@ -386,18 +386,24 @@ just logs-exclude TEST_ID "firebase.*" "firebase.debug" # Firebase without debug
 # Core Commands (Streamlined)
 just logs-errors TEST_ID                   # Error-focused (98% savings)
 just logs-search TEST_ID "search_term"     # Simple text search (replaced logs-text)
-just logs-latest [PLATFORM]                # Latest run (replaced logs-last, 99% savings)
 just logs-android TEST_ID [component]      # Component analysis (87-95% savings)
 just logs-desktop TEST_ID [component]      # Desktop component analysis
+just logs-ios TEST_ID [component]          # iOS component analysis (NEW)
+just logs-macos TEST_ID [component]        # macOS component analysis (NEW)
 
-# Performance & Specialized  
+# Performance & Specialized
 just logs-performance TEST_ID              # Performance data
+just logs-android-errors TEST_ID           # Android errors only
 just logs-desktop-errors TEST_ID           # Desktop errors only
+just logs-ios-errors TEST_ID                # iOS errors only (NEW)
+just logs-macos-errors TEST_ID              # macOS errors only (NEW)
 just logs-lifecycle TEST_ID                # App lifecycle events
 
 # Full logs (avoid unless necessary)
 just logs-android TEST_ID                  # Complete logs (high token cost)
 just logs-desktop TEST_ID                  # Complete logs (high token cost)
+just logs-ios TEST_ID                      # Complete logs (high token cost) (NEW)
+just logs-macos TEST_ID                    # Complete logs (high token cost) (NEW)
 ```
 
 ## 📁 Detailed Test Organization
