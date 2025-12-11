@@ -742,7 +742,11 @@ func shutdown_firebase_connections() -> void:
 	# CRITICAL FIX: Flush CallQueue BEFORE cleanup to prevent callbacks during shutdown
 	# This prevents stale Firebase callbacks from being processed after objects are freed
 	if OS.get_name() == "macOS":
-		Log.info("🧹 Flushing CallQueue before Firebase cleanup (macOS crash prevention)", {}, [Log.TAG_FIREBASE])
+		Log.info(
+			"🧹 Flushing CallQueue before Firebase cleanup (macOS crash prevention)",
+			{},
+			[Log.TAG_FIREBASE]
+		)
 		# Force CallQueue flush to process any pending callbacks before we start cleanup
 		# This ensures no Firebase callbacks are left in the queue during Main::cleanup()
 		var call_queue_flushed: bool = _flush_call_queue_safely()
@@ -792,9 +796,9 @@ func _flush_call_queue_safely() -> bool:
 		call_queue.flush()
 		Log.debug("✅ CallQueue flush completed successfully", {}, [Log.TAG_FIREBASE])
 		return true
-	else:
-		Log.warning("⚠️ CallQueue is not valid during flush", {}, [Log.TAG_FIREBASE])
-		return false
+
+	Log.warning("⚠️ CallQueue is not valid during flush", {}, [Log.TAG_FIREBASE])
+	return false
 
 
 func _cleanup_pending_requests() -> void:

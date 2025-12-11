@@ -344,7 +344,7 @@ static func _get_hierarchical_tags_for_semantic_action(action_type: String) -> A
 		"draft.upgrade":
 			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"draft.toggle_line":
-			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_TOGGLE_LINE, Log.TAG_SEMANTIC_ACTION]
+			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"draft.remove_card":
 			return [Log.TAG_GAME, Log.TAG_DRAFT, Log.TAG_SEMANTIC_ACTION]
 		"lineup.move_card":
