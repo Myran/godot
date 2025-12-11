@@ -40,7 +40,7 @@ def can_build(env, platform):
 **Platform Support:**
 - ✅ **Android**: Full support (arm32, arm64, x86_64)
 - ✅ **iOS**: Full support (arm64 device)
-- ❌ **macOS**: Disabled (Firebase SDK linking issues with Godot build system - no timeline for fix)
+- ✅ **macOS**: POC support (arm64, x86_64) - App initialization only, services pending
 - ❌ **Windows**: Not supported (no Firebase C++ SDK integration)
 - ❌ **Linux**: Not supported (no Firebase C++ SDK integration)
 

@@ -3,6 +3,8 @@ def can_build(env, platform):
   return True
  if platform == "ios":
   return True
+ if platform == "macos":
+  return True
  return False
 
 def configure(env):

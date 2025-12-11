@@ -1,48 +1,62 @@
 # SCsub
 Import('env')
-# Temporarily disable Firebase module for macOS builds until we fix the linking issue
-if env['platform'] != 'macos':
-    print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
-    env.add_source_files(env.modules_sources,"*.cpp")
-    env.add_source_files(env.modules_sources,"*.mm")
 
-    #env.Append(CPPPATH="#modules/firebase")
-    env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
-    #env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk")
-    #env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
+print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
+env.add_source_files(env.modules_sources,"*.cpp")
+env.add_source_files(env.modules_sources,"*.mm")
 
-    if env['platform'] == 'iphone':
-        print("iphone")
-        # Link Firebase C++ SDK libraries for iOS
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_app.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_analytics.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_remote_config.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_database.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_auth.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_functions.a")])
-        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_messaging.a")])
+env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 
-    if env['platform'] == 'android':
-        print("android")
-        if env['arch'] == 'arm32':
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_app.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_analytics.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_remote_config.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_database.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_auth.a")])
-    #       env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_admob.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_functions.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_messaging.a")])
-        elif env['arch'] == 'arm64':
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_app.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_analytics.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_remote_config.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_database.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_auth.a")])
-    #        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_admob.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_functions.a")])
-            env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_messaging.a")])
-        else:
-            print('WARN: Unsupported architecture for firebase module: '+env['android_arch'])
-else:
-    print("Firebase SCsub: skipping Firebase module on macOS for now")
+if env['platform'] == 'iphone':
+    print("Firebase: iOS platform")
+    # Link Firebase C++ SDK libraries for iOS
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_app.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_analytics.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_remote_config.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_database.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_auth.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_functions.a")])
+    env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/ios/device-arm64/libfirebase_messaging.a")])
+
+elif env['platform'] == 'macos':
+    print("Firebase: macOS platform")
+    # Link Firebase C++ SDK libraries for macOS (darwin)
+    if env['arch'] == 'arm64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_auth.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/arm64/libfirebase_messaging.a")])
+    elif env['arch'] == 'x86_64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_auth.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/darwin/x86_64/libfirebase_messaging.a")])
+    else:
+        print('WARN: Unsupported architecture for Firebase macOS: ' + env['arch'])
+
+elif env['platform'] == 'android':
+    print("Firebase: Android platform")
+    if env['arch'] == 'arm32':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_auth.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/armeabi-v7a/libfirebase_messaging.a")])
+    elif env['arch'] == 'arm64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_app.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_analytics.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_remote_config.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_database.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_auth.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_functions.a")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_messaging.a")])
+    else:
+        print('WARN: Unsupported architecture for firebase module: '+env['android_arch'])

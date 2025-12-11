@@ -2,7 +2,11 @@
 #include "firebase/auth.h"
 #include "firebase/auth/user.h"
 #if defined(__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+// iOS-specific headers (not needed on macOS)
 #import "drivers/apple_embedded/godot_app_delegate.h"
+#endif
 #endif
 #include "core/object/object.h"
 
