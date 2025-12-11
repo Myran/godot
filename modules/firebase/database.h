@@ -91,6 +91,9 @@ private:
 	static FirebaseDatabase* singleton_instance;
 	static std::mutex instance_mutex;
 
+	// macOS crash prevention - shutdown flag to prevent callbacks during cleanup
+	static std::atomic<bool> is_shutting_down;
+
 	// Static Firebase resources (properly managed)
 	static firebase::database::Database *database_instance;
 	static FirebaseChildListener *child_listener_instance;
@@ -129,6 +132,11 @@ public:
 	static FirebaseDatabase& get_instance();
 	static void cleanup();
 
+	// macOS crash prevention - shutdown control methods
+	static void begin_shutdown();
+	static bool is_app_shutting_down();
+
+	
 	// Delete copy constructor for singleton pattern (assignment operator handled by GDCLASS)
 	FirebaseDatabase(const FirebaseDatabase&) = delete;
 

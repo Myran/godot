@@ -31,6 +31,7 @@
 // --- Thread-Safe Singleton Member Initialization (Task-213 critical fix) ---
 std::mutex FirebaseDatabase::initialization_mutex;
 std::atomic<bool> FirebaseDatabase::inited(false);
+std::atomic<bool> FirebaseDatabase::is_shutting_down(false);
 FirebaseDatabase* FirebaseDatabase::singleton_instance = nullptr;
 std::mutex FirebaseDatabase::instance_mutex;
 
@@ -188,6 +189,27 @@ void FirebaseDatabase::cleanup() {
 		delete singleton_instance;
 		singleton_instance = nullptr;
 	}
+}
+
+// macOS crash prevention - shutdown control methods
+void FirebaseDatabase::begin_shutdown() {
+	is_shutting_down.store(true);
+	print_line("[RTDB C++] FirebaseDatabase shutdown initiated - blocking further callbacks");
+
+	// Part 1 of crash fix: Nullify singleton pointers in listeners to block call_deferred callbacks
+	// The listener callbacks check `if (singleton)` before calling call_deferred, so this blocks them at source
+	if (child_listener_instance) {
+		child_listener_instance->singleton = nullptr;
+		print_line("[RTDB C++] Child listener singleton pointer nullified");
+	}
+	if (connection_listener_instance) {
+		connection_listener_instance->singleton = nullptr;
+		print_line("[RTDB C++] Connection listener singleton pointer nullified");
+	}
+}
+
+bool FirebaseDatabase::is_app_shutting_down() {
+	return is_shutting_down.load();
 }
 
 // Private constructor (Task-213 critical fix)
@@ -769,6 +791,12 @@ void FirebaseDatabase::monitor_connection_state() {
 }
 
 void FirebaseDatabase::on_connection_state_changed(const firebase::database::DataSnapshot &snapshot) {
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] on_connection_state_changed skipped - app shutting down");
+		return;
+	}
+
 	if (snapshot.exists() && snapshot.value().is_bool()) {
 		bool connected = snapshot.value().bool_value();
 		print_verbose(String("[RTDB C++] Connection state changed: ") + (connected ? "Connected" : "Disconnected"));
@@ -794,6 +822,12 @@ void FirebaseDatabase::_handle_get_value_on_main_thread(
 		int error,
 		String error_msg) {
 	// NOW ON MAIN THREAD - Safe for all Godot operations
+
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_get_value_on_main_thread skipped - app shutting down");
+		return;
+	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
 		if (snapshot_valid && exists) {
@@ -835,6 +869,12 @@ void FirebaseDatabase::_handle_set_value_on_main_thread(
 		String error_msg) {
 	// NOW ON MAIN THREAD
 
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_set_value_on_main_thread skipped - app shutting down");
+		return;
+	}
+
 	if (success) {
 		print_verbose(String("[RTDB C++] SetValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
 		call_deferred(SNAME("emit_signal"), SNAME("set_value_completed"), req_id, true, "");
@@ -856,6 +896,12 @@ void FirebaseDatabase::_handle_push_and_update_on_main_thread(
 		int error,
 		String error_msg) {
 	// NOW ON MAIN THREAD
+
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_push_and_update_on_main_thread skipped - app shutting down");
+		return;
+	}
 
 	// CRITICAL SAFETY: Deep copy to prevent ARM64 alignment crashes
 	// Firebase C++ SDK returns misaligned memory that causes SIGBUS when accessed by GDScript
@@ -882,6 +928,12 @@ void FirebaseDatabase::_handle_remove_value_on_main_thread(
 		String error_msg) {
 	// NOW ON MAIN THREAD
 
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_remove_value_on_main_thread skipped - app shutting down");
+		return;
+	}
+
 	if (success) {
 		print_verbose(String("[RTDB C++] RemoveValue ReqID:") + itos(req_id) + " Main thread handler - Success.");
 		call_deferred(SNAME("emit_signal"), SNAME("remove_value_completed"), req_id, true, "");
@@ -906,6 +958,12 @@ void FirebaseDatabase::_handle_query_ordered_data_on_main_thread(
 		int error,
 		String error_msg) {
 	// NOW ON MAIN THREAD
+
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_query_ordered_data_on_main_thread skipped - app shutting down");
+		return;
+	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
 		if (snapshot_valid) {
@@ -943,6 +1001,12 @@ void FirebaseDatabase::_handle_transaction_on_main_thread(
 		int error,
 		String error_msg) {
 	// NOW ON MAIN THREAD
+
+	// Part 2 of crash fix: Skip callback if app is shutting down (Task-331)
+	if (is_app_shutting_down()) {
+		print_line("[RTDB C++] _handle_transaction_on_main_thread skipped - app shutting down");
+		return;
+	}
 
 	if (status == firebase::kFutureStatusComplete && error == firebase::database::kErrorNone) {
 		if (snapshot_valid && exists) {
