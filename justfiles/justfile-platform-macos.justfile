@@ -343,13 +343,25 @@ _copy-firebase-config-to-macos-bundle app_path:
 # ================================
 
 # Export macOS Desktop - Debug only
-export-macos-debug:
+export-macos-debug force="yes": _validate-godot-editor (_ensure-directory-exists "export/macos")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting macOS Desktop (debug only)..."
 
-    # Ensure export directory exists
-    mkdir -p export/macos
+    # Check if .app bundle already exists (DIRECTORY check, not file)
+    DEBUG_APP="export/macos/{{GAME_NAME}}_debug.app"
+
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -d "$DEBUG_APP" ]; then
+        echo "✅ macOS debug export already exists:"
+        echo "   📁 Debug: $DEBUG_APP"
+        echo "   Use 'just export-macos-debug force=yes' to re-export"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force re-export enabled - removing existing debug export..."
+        rm -rf "$DEBUG_APP"
+    fi
 
     # Source environment variables for Godot context
     if [ -f ".env" ]; then
@@ -357,6 +369,9 @@ export-macos-debug:
         source .env
         set +a
         echo "✅ Environment variables loaded for Godot export"
+    else
+        echo "❌ .env file not found"
+        exit 1
     fi
 
     # Debug export
@@ -372,13 +387,25 @@ export-macos-debug:
     echo "📁 Debug: export/macos/{{GAME_NAME}}_debug.app"
 
 # Export macOS Desktop - Release only
-export-macos-release:
+export-macos-release force="yes": _validate-godot-editor (_ensure-directory-exists "export/macos")
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Exporting macOS Desktop (release only)..."
 
-    # Ensure export directory exists
-    mkdir -p export/macos
+    # Check if .app bundle already exists (DIRECTORY check)
+    RELEASE_APP="export/macos/{{GAME_NAME}}.app"
+
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -d "$RELEASE_APP" ]; then
+        echo "✅ macOS release export already exists:"
+        echo "   📁 Release: $RELEASE_APP"
+        echo "   Use 'just export-macos-release force=yes' to re-export"
+        exit 0
+    fi
+
+    if [ "{{force}}" = "yes" ] || [ "{{force}}" = "force=yes" ]; then
+        echo "🔥 Force re-export enabled - removing existing release export..."
+        rm -rf "$RELEASE_APP"
+    fi
 
     # Source environment variables for Godot context
     if [ -f ".env" ]; then
@@ -386,6 +413,9 @@ export-macos-release:
         source .env
         set +a
         echo "✅ Environment variables loaded for Godot export"
+    else
+        echo "❌ .env file not found"
+        exit 1
     fi
 
     # Release export
@@ -401,7 +431,10 @@ export-macos-release:
     echo "📁 Release: export/macos/{{GAME_NAME}}.app"
 
 # Export macOS Desktop - Both debug and release
-export-macos-all: export-macos-debug export-macos-release
+export-macos-all force="yes":
+    @echo "📦 Exporting all macOS formats (Debug + Release)..."
+    just export-macos-debug {{force}}
+    just export-macos-release {{force}}
     @echo "✅ All macOS exports completed successfully"
     @echo "📁 Debug: export/macos/{{GAME_NAME}}_debug.app"
     @echo "📁 Release: export/macos/{{GAME_NAME}}.app"

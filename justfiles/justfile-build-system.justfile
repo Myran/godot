@@ -329,6 +329,7 @@ build-artifacts force="no": validate-env
     just build-toolchain {{force}}
     just setup-android-templates {{force}}
     just export-all-android {{force}}
+    just export-macos-all {{force}}
     just build-ios-all {{force}}
     @echo "✅ All artifacts complete"
 
