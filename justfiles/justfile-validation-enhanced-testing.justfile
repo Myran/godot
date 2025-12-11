@@ -2187,7 +2187,7 @@ _test-list-generic test_list platform:
     
     # Generate comprehensive breakdown showing complete traceability
     if [[ -f "$HIERARCHY_FILE" ]]; then
-        just _generate-comprehensive-breakdown "$HIERARCHY_FILE"
+        just _generate-comprehensive-breakdown "$HIERARCHY_FILE" "$TEST_SESSION"
     fi
     
     # Cleanup session-specific test result files after summary generation
@@ -2247,11 +2247,12 @@ _test-list-generic test_list platform:
 # ================================
 
 # Generate comprehensive hierarchical breakdown showing test list → configs → actions
-_generate-comprehensive-breakdown hierarchy_file:
+_generate-comprehensive-breakdown hierarchy_file test_session:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     HIERARCHY_FILE="{{hierarchy_file}}"
+    TEST_SESSION="{{test_session}}"
     
     # Check if hierarchy file exists
     if [[ ! -f "$HIERARCHY_FILE" ]]; then
@@ -2272,8 +2273,8 @@ _generate-comprehensive-breakdown hierarchy_file:
     # Extract basic info from hierarchy file with error handling
     TEST_LIST=$(jq -r '.test_list // "unknown"' "$HIERARCHY_FILE" 2>/dev/null || echo "unknown")
     
-    # Get all platforms from action results (more accurate than hierarchy file)
-    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
+    # Get all platforms from action results for current session only (avoid stale results)
+    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
     TOTAL_CONFIGS=$(jq '.config_results | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
     
     echo "Test List: $TEST_LIST ($PLATFORMS_FROM_RESULTS) - $TOTAL_CONFIGS configs executed"
@@ -2282,8 +2283,8 @@ _generate-comprehensive-breakdown hierarchy_file:
     # NEW: Platform-first breakdown - group by platform, then by test list/config
     set +e  # Disable exit on error for this section to handle jq failures gracefully
     
-    # Get all platforms that ran tests
-    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_*_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
+    # Get all platforms that ran tests for current session only
+    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
     
     if [[ -n "$ALL_PLATFORMS" ]]; then
         # Process each platform separately
@@ -2533,15 +2534,11 @@ _generate-comprehensive-breakdown hierarchy_file:
     fi
     
     # Action-level analysis (only process files from current test session)
-    SESSION_PATTERN=""
-    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
-        # Use session-specific pattern to avoid including stale results
-        SESSION_PATTERN="_${MULTI_PLATFORM_SESSION}_"
-    fi
+    SESSION_PATTERN="_${TEST_SESSION}_"
 
     PROCESSED_FILES=0
     FILTERED_FILES=0
-    for results_file in /tmp/test_action_results_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*.json; do
+    for results_file in /tmp/test_action_results_*_${TEST_SESSION}_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*_${TEST_SESSION}_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
             # Skip files that don't belong to current session
             if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then

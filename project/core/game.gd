@@ -313,6 +313,10 @@ func _process_one_queue_item() -> void:
 	var metadata: Dictionary = DebugConfigReader.get_metadata() if DebugConfigReader != null else {}
 	var is_auto_quit: bool = metadata.get("auto_quit", false) == true
 
+	# Removed: Firebase shutdown should only happen when app is actually quitting,
+	# not when auto_quit is first detected. Firebase operations may still be in progress.
+	# Let the natural quit process handle cleanup via QuitApplicationEvent.
+
 	if OS.get_name() == "Android" and is_auto_quit and Log.has_pending_android_chunks():
 		Log.info(
 			"QUEUE_SYNC: Waiting for Android logging completion before queue progression",
