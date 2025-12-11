@@ -4,16 +4,25 @@
 #include "core/object/ref_counted.h"
 #include "firebase/app.h"
 #include "firebase/gma/types.h"
+
 #if defined(__ANDROID__)
 /// An Android Activity from Java.
 typedef jobject AppActivity;
 #elif defined(__APPLE__)
-/// A pointer to an iOS UIView.
-typedef id AppActivity;
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+/// A pointer to an iOS UIView (Objective-C id type, only for .mm files).
+typedef void *AppActivity;
+#elif TARGET_OS_OSX
+/// macOS doesn't need UI context for Firebase desktop initialization.
+typedef void *AppActivity;
+#else
+typedef void *AppActivity;
+#endif
 #else
 /// A void pointer for stub classes.
 typedef void *AppActivity;
-#endif // __ANDROID__, TARGET_OS_IPHONE
+#endif // __ANDROID__, __APPLE__
 
 class Firebase : public RefCounted {
 	GDCLASS(Firebase, RefCounted);
@@ -27,6 +36,7 @@ public:
 	Firebase();
 	static firebase::App *AppId();
 	static AppActivity GetAppActivity();
+	void cleanup_firebase();
 	void quit_app();
 };
 
