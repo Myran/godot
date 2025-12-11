@@ -1016,14 +1016,14 @@ _filter-desktop-logs-safely temp_file_path:
     
     # CRITICAL ERROR DETECTION FIRST - Whitelist approach for maximum safety
     # Check for any critical error patterns BEFORE applying any filtering
-    CRITICAL_PATTERNS="SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error"
+    CRITICAL_PATTERNS="SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error|KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT"
     
     # Check for critical errors, excluding known safe warnings
     if grep -i -E "$CRITICAL_PATTERNS" "$TEMP_FILE" >/dev/null 2>&1; then
         # Check specifically for known safe warnings that contain "WARNING" pattern
         SAFE_WARNINGS=$(grep -E "(ObjectDB instances leaked|WARNING.*ObjectDB|WARNING.*deprecated|WARNING.*Viewport)" "$TEMP_FILE" | wc -l)
         # Count only actual critical errors (excluding the WARNING pattern entirely for this check)
-        REAL_CRITICAL_ERRORS=$(grep -i -E "(SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error)" "$TEMP_FILE" | wc -l)
+        REAL_CRITICAL_ERRORS=$(grep -i -E "(SCRIPT ERROR|Assertion failed|CRITICAL|FAILED|Exception.*Error|CRASH|ABORT|CHECKSUM_MISMATCH|Parse Error|KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT)" "$TEMP_FILE" | wc -l)
         
         if [[ $SAFE_WARNINGS -gt 0 ]] && [[ $REAL_CRITICAL_ERRORS -eq 0 ]]; then
             # Only safe warnings found - proceed with filtering
@@ -2187,7 +2187,7 @@ _test-list-generic test_list platform:
     
     # Generate comprehensive breakdown showing complete traceability
     if [[ -f "$HIERARCHY_FILE" ]]; then
-        just _generate-comprehensive-breakdown "$HIERARCHY_FILE"
+        just _generate-comprehensive-breakdown "$HIERARCHY_FILE" "$TEST_SESSION"
     fi
     
     # Cleanup session-specific test result files after summary generation
@@ -2247,11 +2247,12 @@ _test-list-generic test_list platform:
 # ================================
 
 # Generate comprehensive hierarchical breakdown showing test list → configs → actions
-_generate-comprehensive-breakdown hierarchy_file:
+_generate-comprehensive-breakdown hierarchy_file test_session:
     #!/usr/bin/env bash
     set -euo pipefail
-    
+
     HIERARCHY_FILE="{{hierarchy_file}}"
+    TEST_SESSION="{{test_session}}"
     
     # Check if hierarchy file exists
     if [[ ! -f "$HIERARCHY_FILE" ]]; then
@@ -2272,8 +2273,8 @@ _generate-comprehensive-breakdown hierarchy_file:
     # Extract basic info from hierarchy file with error handling
     TEST_LIST=$(jq -r '.test_list // "unknown"' "$HIERARCHY_FILE" 2>/dev/null || echo "unknown")
     
-    # Get all platforms from action results (more accurate than hierarchy file)
-    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
+    # Get all platforms from action results for current session only (avoid stale results)
+    PLATFORMS_FROM_RESULTS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq | paste -sd ', ' - || echo "unknown")
     TOTAL_CONFIGS=$(jq '.config_results | length' "$HIERARCHY_FILE" 2>/dev/null || echo "0")
     
     echo "Test List: $TEST_LIST ($PLATFORMS_FROM_RESULTS) - $TOTAL_CONFIGS configs executed"
@@ -2282,8 +2283,8 @@ _generate-comprehensive-breakdown hierarchy_file:
     # NEW: Platform-first breakdown - group by platform, then by test list/config
     set +e  # Disable exit on error for this section to handle jq failures gracefully
     
-    # Get all platforms that ran tests
-    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_*_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
+    # Get all platforms that ran tests for current session only
+    ALL_PLATFORMS=$(ls /tmp/test_action_results_*_${TEST_SESSION}_*.json 2>/dev/null | sed 's/.*_\([^_]*\)_[^_]*\.json$/\1/' | sort | uniq)
     
     if [[ -n "$ALL_PLATFORMS" ]]; then
         # Process each platform separately
@@ -2533,15 +2534,11 @@ _generate-comprehensive-breakdown hierarchy_file:
     fi
     
     # Action-level analysis (only process files from current test session)
-    SESSION_PATTERN=""
-    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
-        # Use session-specific pattern to avoid including stale results
-        SESSION_PATTERN="_${MULTI_PLATFORM_SESSION}_"
-    fi
+    SESSION_PATTERN="_${TEST_SESSION}_"
 
     PROCESSED_FILES=0
     FILTERED_FILES=0
-    for results_file in /tmp/test_action_results_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*.json; do
+    for results_file in /tmp/test_action_results_*_${TEST_SESSION}_*.json "{{STANDARD_LOGS_DIR}}"/test_action_results_*_${TEST_SESSION}_*.json; do
         if [[ -f "$results_file" ]] && jq -e . "$results_file" >/dev/null 2>&1; then
             # Skip files that don't belong to current session
             if [[ -n "$SESSION_PATTERN" && "$results_file" != *"$SESSION_PATTERN"* ]]; then
@@ -3300,9 +3297,9 @@ _execute-test-desktop config_name:
     ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
     FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
     
-    # Check for any critical errors first (excluding ObjectDB warnings)
-    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
-    
+    # Check for any critical errors first (excluding ObjectDB warnings and Sentry normal operations)
+    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed|KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" | grep -v "SentryCrashMonitor" | grep -v "SentryCrash Exception Handler" | grep -v "\[Sentry\] \[debug\]" || echo "")
+
     if [[ -n "$CRITICAL_ERRORS" ]]; then
         echo "⚠️  ERRORS DETECTED - Showing relevant output:"
         echo ""
@@ -3347,14 +3344,23 @@ _execute-test-desktop config_name:
         TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
         QUIT_EVENT_FOUND=$(grep -c "Quit event received" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
 
-        # DEBUG: Show variable contents with hex dump to identify newlines
-        echo "🐛 DEBUG: Variable analysis:"
-        echo "  FAILED_COUNT='${FAILED_COUNT:-0}' ($(echo -n "${FAILED_COUNT:-0}" | od -c | head -1))"
-        echo "  ACTION_COUNT='${ACTION_COUNT:-0}' ($(echo -n "${ACTION_COUNT:-0}" | od -c | head -1))"
-        echo "  TEST_COMPLETE_FOUND='${TEST_COMPLETE_FOUND:-0}' ($(echo -n "${TEST_COMPLETE_FOUND:-0}" | od -c | head -1))"
-        echo "  QUIT_EVENT_FOUND='${QUIT_EVENT_FOUND:-0}' ($(echo -n "${QUIT_EVENT_FOUND:-0}" | od -c | head -1))"
+        # Check for crash patterns - these should ALWAYS fail the test
+        CRASH_PATTERNS="KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT"
+        CRASH_FOUND=$(grep -c -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" 2>/dev/null | tr -cd '0-9' | head -c 5 || echo "0")
+        CRASH_FOUND=${CRASH_FOUND:-0}
 
-        if [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
+        if [[ "$CRASH_FOUND" -gt 0 ]]; then
+            echo ""
+            echo "❌ CRASH DETECTED during test execution!"
+            echo "🔍 Crash indicators found in output:"
+            grep -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" | head -5 | sed 's/^/   /'
+            echo "📄 Extracting desktop logs for analysis..."
+            just _extract-logs "$TEST_ID" "desktop" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract desktop logs"
+            rm -f "$TEMP_OUTPUT"
+            echo ""
+            echo "❌ Desktop test FAILED due to crash"
+            exit 1
+        elif [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
             echo ""
             echo "✅ Test logically successful despite Godot exit code ${TEST_EXIT_CODE}"
             echo "💡 All actions completed successfully with proper completion signals"
@@ -3444,8 +3450,8 @@ _execute-test-macos config_name:
     ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
     FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
 
-    # Check for any critical errors first (excluding ObjectDB warnings)
-    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
+    # Check for any critical errors first (excluding ObjectDB warnings and Sentry normal operations)
+    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed|KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" | grep -v "SentryCrashMonitor" | grep -v "SentryCrash Exception Handler" | grep -v "\[Sentry\] \[debug\]" || echo "")
 
     if [[ -n "$CRITICAL_ERRORS" ]]; then
         echo "⚠️  ERRORS DETECTED - Showing relevant output:"
@@ -3489,7 +3495,23 @@ _execute-test-macos config_name:
         TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
         QUIT_EVENT_FOUND=$(grep -c "Quit event received" "$TEMP_OUTPUT" 2>/dev/null | head -1 || echo "0")
 
-        if [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
+        # Check for crash patterns - these should ALWAYS fail the test
+        CRASH_PATTERNS="KERN_INVALID_ADDRESS|EXC_BAD_ACCESS|Abort trap|SIGBUS|SIGSEGV|SIGABRT"
+        CRASH_FOUND=$(grep -c -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" 2>/dev/null | tr -cd '0-9' | head -c 5 || echo "0")
+        CRASH_FOUND=${CRASH_FOUND:-0}
+
+        if [[ "$CRASH_FOUND" -gt 0 ]]; then
+            echo ""
+            echo "❌ CRASH DETECTED during test execution!"
+            echo "🔍 Crash indicators found in output:"
+            grep -E "$CRASH_PATTERNS" "$TEMP_OUTPUT" | head -5 | sed 's/^/   /'
+            echo "📄 Extracting macOS logs for analysis..."
+            just _extract-logs "$TEST_ID" "macos" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract macOS logs"
+            rm -f "$TEMP_OUTPUT"
+            echo ""
+            echo "❌ macOS test FAILED due to crash"
+            exit 1
+        elif [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 && "${QUIT_EVENT_FOUND:-0}" -gt 0 ]]; then
             echo ""
             echo "✅ Test logically successful despite app exit code ${TEST_EXIT_CODE}"
             echo "💡 All actions completed successfully with proper completion signals"

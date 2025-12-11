@@ -4,7 +4,7 @@
     "backend.firebase.async_pattern",
     "backend.firebase.request_tracking"
   ],
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "ios", "macos"],
   "metadata": {
     "auto_quit": true
   },

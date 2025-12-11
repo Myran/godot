@@ -119,33 +119,50 @@ func _perform_firebase_cleanup() -> void:
 	## Enhanced Firebase cleanup as final step before app termination
 	## This replaces separate debug action approach (Task-230) with integrated cleanup
 
-	# Only perform Firebase cleanup on Android where resource accumulation occurs
-	if OS.get_name() != "Android":
+	# Perform Firebase cleanup on Android and macOS to prevent use-after-free crashes
+	if OS.get_name() != "Android" and OS.get_name() != "macOS":
 		Log.debug(
-			"QuitApplicationEvent: Skipping Firebase cleanup on non-Android platform",
+			"QuitApplicationEvent: Skipping Firebase cleanup on non-Android/non-macOS platform",
 			{"platform": OS.get_name()},
 			["debug", "quit", "firebase"]
 		)
 		return
 
 	Log.info(
-		"QuitApplicationEvent: Performing Firebase cleanup (Android test isolation)",
+		"QuitApplicationEvent: Performing Firebase cleanup (test isolation & crash prevention)",
 		{"platform": OS.get_name()},
 		["debug", "quit", "firebase"]
 	)
 
-	# Call FirebaseService cleanup method if available
+	# Call FirebaseService cleanup method if available (GDScript layer)
 	if FirebaseService != null and FirebaseService.has_method("shutdown_firebase_connections"):
 		# GDScript doesn't have try-catch, use conditional safety checks
 		FirebaseService.shutdown_firebase_connections()
 		Log.info(
-			"QuitApplicationEvent: Firebase cleanup completed successfully",
+			"QuitApplicationEvent: FirebaseService cleanup completed successfully",
 			{"platform": OS.get_name()},
 			["debug", "quit", "firebase"]
 		)
 	else:
 		Log.debug(
 			"QuitApplicationEvent: FirebaseService not available or missing cleanup method",
+			{"platform": OS.get_name()},
+			["debug", "quit", "firebase"]
+		)
+
+	# Also call native Firebase cleanup (C++ layer) to prevent use-after-free
+	# This is critical for macOS where Firebase callbacks in CallQueue can crash during shutdown
+	var firebase: Object = ClassDB.instantiate("Firebase")
+	if firebase != null and firebase.has_method("cleanup_firebase"):
+		firebase.cleanup_firebase()
+		Log.info(
+			"QuitApplicationEvent: Native Firebase cleanup completed successfully",
+			{"platform": OS.get_name()},
+			["debug", "quit", "firebase"]
+		)
+	else:
+		Log.debug(
+			"QuitApplicationEvent: Native Firebase cleanup method not available",
 			{"platform": OS.get_name()},
 			["debug", "quit", "firebase"]
 		)

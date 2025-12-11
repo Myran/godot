@@ -6,7 +6,7 @@
     "backend.firebase.request_tracking",
     "backend.firebase.timer_manager"
   ],
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "ios", "macos"],
   "metadata": {
     "auto_quit": true
   }

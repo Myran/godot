@@ -22,6 +22,8 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
             PLATFORM="desktop"
         elif [[ "$TEST_ID" == ios_* ]]; then
             PLATFORM="ios"
+        elif [[ "$TEST_ID" == macos_* ]]; then
+            PLATFORM="macos"
         else
             # Default to desktop for backwards compatibility
             PLATFORM="desktop"
@@ -30,8 +32,8 @@ logs-pattern TEST_ID PATTERN PLATFORM="auto":
 
     # Find log file based on platform
     case "$PLATFORM" in
-        android|ios)
-            # Use filename-based search for Android/iOS
+        android|ios|macos)
+            # Use filename-based search for Android/iOS/macOS
             LOG_FILE=$(find "$DESKTOP_LOG_DIR" -name "*${TEST_ID}*.log" -type f | head -1)
             if [ -z "$LOG_FILE" ]; then
                 echo "❌ No log file found for test ID: $TEST_ID" >&2

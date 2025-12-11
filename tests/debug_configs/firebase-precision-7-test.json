@@ -10,7 +10,9 @@
     "backend.firebase.async_pattern"
   ],
   "platforms": [
-    "android"
+    "android",
+    "ios",
+    "macos"
   ],
   "metadata": {
     "auto_quit": true

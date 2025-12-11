@@ -734,10 +734,19 @@ func _process_server_timestamp_on_main_thread(
 # Enhanced Firebase cleanup for Android test isolation (Task-230)
 # SAFETY: This method is called during app quit, uses conditional checks to prevent errors
 func shutdown_firebase_connections() -> void:
-	if OS.get_name() != "Android":
-		return  # Only needed on Android where resource accumulation occurs
+	if OS.get_name() != "Android" and OS.get_name() != "macOS":
+		return  # Only needed on Android and macOS where resource accumulation occurs
 
-	Log.info("🔧 Starting Firebase cleanup (Android)", {}, [Log.TAG_FIREBASE])
+	Log.info("🔧 Starting Firebase cleanup (" + OS.get_name() + ")", {}, [Log.TAG_FIREBASE])
+
+	# CRITICAL FIX: Flush CallQueue BEFORE cleanup to prevent callbacks during shutdown
+	# This prevents stale Firebase callbacks from being processed after objects are freed
+	if OS.get_name() == "macOS":
+		Log.info("🧹 Flushing CallQueue before Firebase cleanup (macOS crash prevention)", {}, [Log.TAG_FIREBASE])
+		# Force CallQueue flush to process any pending callbacks before we start cleanup
+		# This ensures no Firebase callbacks are left in the queue during Main::cleanup()
+		var call_queue_flushed: bool = _flush_call_queue_safely()
+		Log.info("✅ CallQueue flush completed", {"success": call_queue_flushed}, [Log.TAG_FIREBASE])
 
 	# SAFETY: Listener cleanup is handled automatically by C++ FirebaseDatabase destructor
 	# The destructor checks _listener_path_ref_count > 0 and removes active listeners
@@ -753,6 +762,39 @@ func shutdown_firebase_connections() -> void:
 		{},
 		[Log.TAG_FIREBASE]
 	)
+
+
+# macOS-specific CallQueue flush to prevent callback crashes during shutdown
+func _flush_call_queue_safely() -> bool:
+	"""Safely flush Godot's CallQueue to process any pending callbacks before cleanup.
+
+	This prevents Firebase callbacks from being processed after objects are freed
+	during Main::cleanup(), which causes the KERN_INVALID_ADDRESS crash.
+	"""
+	if Engine.get_main_loop() == null:
+		Log.warning("⚠️ Engine main loop not available for CallQueue flush", {}, [Log.TAG_FIREBASE])
+		return false
+
+	# Get the CallQueue singleton
+	var call_queue: Object = Engine.get_main_loop().get("call_queue")
+	if call_queue == null:
+		Log.debug("ℹ️ CallQueue not found - may already be cleaned up", {}, [Log.TAG_FIREBASE])
+		return true  # Not an error if it's already cleaned up
+
+	# Check if flush method exists
+	if not call_queue.has_method("flush"):
+		Log.debug("ℹ️ CallQueue flush method not available", {}, [Log.TAG_FIREBASE])
+		return true
+
+	# Force flush to process all pending callbacks
+	# Note: GDScript doesn't have try-catch - use conditional safety instead
+	if is_instance_valid(call_queue):
+		call_queue.flush()
+		Log.debug("✅ CallQueue flush completed successfully", {}, [Log.TAG_FIREBASE])
+		return true
+	else:
+		Log.warning("⚠️ CallQueue is not valid during flush", {}, [Log.TAG_FIREBASE])
+		return false
 
 
 func _cleanup_pending_requests() -> void:

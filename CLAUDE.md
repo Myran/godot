@@ -9,13 +9,24 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 
 ## 🔍 Streamlined Logging System
 
-**Core Logging Commands (13 commands → 4 core commands, 72% reduction)**
+**Core Logging Commands (Platform-specific log retrieval)**
 
 **Essential Test Result Analysis:**
-- `just logs-latest [PLATFORM]` - Latest test results (auto-detect platform)
-- `just logs-search TEST_ID "pattern" [PLATFORM]` - Text search (replaced logs-text)
+- `just logs-search TEST_ID "pattern" [PLATFORM]` - Text search (98% savings, replaces logs-text)
 - `just logs-errors TEST_ID [PLATFORM]` - Error-focused analysis (98% savings)
 - `just logs-pattern TEST_ID "wildcard*" [PLATFORM]` - Wildcard pattern matching
+
+**Platform-Specific Log Retrieval:**
+- `just logs-android TEST_ID [TAGS]` - Android logs with optional tag filtering
+- `just logs-desktop TEST_ID [TAGS]` - Desktop logs with optional tag filtering
+- `just logs-ios TEST_ID [TAGS]` - iOS logs with optional tag filtering (NEW)
+- `just logs-macos TEST_ID [TAGS]` - macOS logs with optional tag filtering (NEW)
+
+**Platform-Specific Error Analysis:**
+- `just logs-android-errors TEST_ID [TAGS]` - Android errors with optional tag filtering
+- `just logs-desktop-errors TEST_ID [TAGS]` - Desktop errors with optional tag filtering
+- `just logs-ios-errors TEST_ID [TAGS]` - iOS errors with optional tag filtering (NEW)
+- `just logs-macos-errors TEST_ID [TAGS]` - macOS errors with optional tag filtering (NEW)
 
 **Android Device Log Management:**
 - `just logs-android-device "SEARCH_TERM" [LINES]` - Device log search (consolidated 6 commands)
@@ -29,9 +40,8 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - Backwards compatible: defaults to "auto" if no platform specified
 
 **🚨 Migration Guide (Old → New):**
-- `logs-last` → `logs-latest`
+- `logs-last*` commands → Removed (use platform-specific logs commands)
 - `logs-text TEST_ID "pattern"` → `logs-search TEST_ID "pattern"`
-- `logs-desktop-last` → `logs-latest desktop`
 - `android-logs-search` → `logs-android-device`
 - `android-logs-clear-lightweight` → `logs-android-clear`
 - `android-logs-health-check` → `logs-android-health`
@@ -271,7 +281,7 @@ just logs-android-health                   # Check buffer health first
 **Phase 2: Cross-Validation (if saturation detected)**
 ```bash
 find logs/ -name "*.log" -exec grep -l "search_term" {} \;  # Historical logs
-just logs-latest | grep "search_term"                          # Recent results
+just logs-search TEST_ID "search_term"                        # Search saved test logs
 ```
 
 **Phase 3: Fresh Collection**

@@ -3,7 +3,7 @@
   "actions": [
     "backend.firebase.lifecycle"
   ],
-  "platforms": ["android", "ios"],
+  "platforms": ["android", "ios", "macos"],
   "metadata": {
     "auto_quit": true
   },

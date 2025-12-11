@@ -280,6 +280,65 @@ validate-macos-templates:
     fi
 
 # ================================
+# macOS FIREBASE CONFIG
+# ================================
+
+# Generate Firebase desktop config from iOS plist
+generate-firebase-macos-config:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔥 Generating Firebase desktop config for macOS..."
+
+    PLIST_FILE="firebase/GoogleService-Info.plist"
+    GENERATOR="firebase/firebase_cpp_sdk/generate_xml_from_google_services_json.py"
+    OUTPUT_FILE="firebase/google-services-desktop.json"
+
+    if [ ! -f "$PLIST_FILE" ]; then
+        echo "❌ iOS plist not found: $PLIST_FILE"
+        echo "💡 Download GoogleService-Info.plist from Firebase Console"
+        exit 1
+    fi
+
+    if [ ! -f "$GENERATOR" ]; then
+        echo "❌ Generator script not found: $GENERATOR"
+        echo "💡 Ensure Firebase C++ SDK is installed"
+        exit 1
+    fi
+
+    echo "📄 Converting: $PLIST_FILE → $OUTPUT_FILE"
+    python3 "$GENERATOR" --plist -i "$PLIST_FILE" -o "$OUTPUT_FILE"
+
+    if [ -f "$OUTPUT_FILE" ]; then
+        echo "✅ Firebase desktop config generated successfully"
+        echo "   📁 Output: $OUTPUT_FILE"
+    else
+        echo "❌ Failed to generate config"
+        exit 1
+    fi
+
+# Copy Firebase config to macOS app bundle (internal helper)
+_copy-firebase-config-to-macos-bundle app_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_FILE="firebase/google-services-desktop.json"
+    DEST_DIR="{{app_path}}/Contents/Resources"
+
+    # Generate config if it doesn't exist
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "📦 Firebase config not found, generating..."
+        just generate-firebase-macos-config
+    fi
+
+    if [ -d "$DEST_DIR" ]; then
+        cp "$CONFIG_FILE" "$DEST_DIR/"
+        echo "✅ Firebase config copied to app bundle"
+        echo "   📁 $DEST_DIR/google-services-desktop.json"
+    else
+        echo "⚠️  App bundle Resources not found: $DEST_DIR"
+    fi
+
+# ================================
 # macOS DESKTOP EXPORTS
 # ================================
 
@@ -306,6 +365,9 @@ export-macos-debug:
         --export-debug "macOS" \
         ../export/macos/{{GAME_NAME}}_debug.app --headless
 
+    # Copy Firebase config to app bundle
+    just _copy-firebase-config-to-macos-bundle "export/macos/{{GAME_NAME}}_debug.app"
+
     echo "✅ macOS debug export completed successfully"
     echo "📁 Debug: export/macos/{{GAME_NAME}}_debug.app"
 
@@ -331,6 +393,9 @@ export-macos-release:
     ./editor/{{GODOT_EXECUTABLE}} --path {{PROJECT_PATH}} \
         --export-release "macOS" \
         ../export/macos/{{GAME_NAME}}.app --headless
+
+    # Copy Firebase config to app bundle
+    just _copy-firebase-config-to-macos-bundle "export/macos/{{GAME_NAME}}.app"
 
     echo "✅ macOS release export completed successfully"
     echo "📁 Release: export/macos/{{GAME_NAME}}.app"

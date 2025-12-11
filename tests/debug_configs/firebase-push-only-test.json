@@ -3,5 +3,5 @@
   "actions": [
     "backend.firebase.push_only_test"
   ],
-  "platforms": ["android", "ios"]
+  "platforms": ["android", "ios", "macos"]
 }
