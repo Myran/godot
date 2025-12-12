@@ -17,6 +17,12 @@
 #
 # IMPORTANT: Run from "Developer Command Prompt for VS 2022" or after running:
 #   call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+#
+# USAGE: Run this justfile directly (not via main justfile):
+#   just --justfile justfiles/justfile-windows-native.justfile windows-native-verify
+
+# Use cmd.exe as the shell for Windows compatibility
+set shell := ["cmd.exe", "/c"]
 
 # ================================
 # CONFIGURATION
