@@ -2,8 +2,14 @@
 Import('env')
 
 print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
+
+# Add C++ source files (all platforms)
 env.add_source_files(env.modules_sources,"*.cpp")
-env.add_source_files(env.modules_sources,"*.mm")
+
+# Add Objective-C++ source files (Apple platforms only - iOS/macOS)
+# Windows and Android don't have Objective-C++ compilers
+if env['platform'] in ['iphone', 'macos']:
+    env.add_source_files(env.modules_sources,"*.mm")
 
 env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 
