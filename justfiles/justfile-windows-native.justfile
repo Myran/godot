@@ -23,15 +23,16 @@
 # ================================
 
 # Windows-specific paths (relative, works with shared folder from macOS)
-GODOT_PATH := "godot"
-FIREBASE_SDK_PATH := "firebase/firebase_cpp_sdk"
-PROJECT_PATH := "project"
-TEMPLATES_PATH := "templates"
-EXPORT_PATH := "export/windows"
+# Using WIN_ prefix to avoid conflicts with main justfile variables
+WIN_GODOT_PATH := "godot"
+WIN_FIREBASE_SDK_PATH := "firebase/firebase_cpp_sdk"
+WIN_PROJECT_PATH := "project"
+WIN_TEMPLATES_PATH := "templates"
+WIN_EXPORT_PATH := "export/windows"
 
 # Build configuration
-WINDOWS_ARCH := "x86_64"
-MSVC_RUNTIME := "MT"  # MT = static runtime, MD = dynamic runtime
+WIN_ARCH := "x86_64"
+WIN_MSVC_RUNTIME := "MT"  # MT = static runtime, MD = dynamic runtime
 
 # ================================
 # ENVIRONMENT VERIFICATION
@@ -52,10 +53,10 @@ windows-native-verify:
     @where git >nul 2>&1 && echo "  [OK] Git found" || echo "  [ERROR] Git not found"
     @echo.
     @echo "Checking Firebase SDK..."
-    @if exist "{{FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{MSVC_RUNTIME}}\x64\Release\firebase_app.lib" (echo "  [OK] Firebase Windows libraries found") else (echo "  [ERROR] Firebase Windows libraries not found")
+    @if exist "{{WIN_FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{WIN_MSVC_RUNTIME}}\x64\Release\firebase_app.lib" (echo "  [OK] Firebase Windows libraries found") else (echo "  [ERROR] Firebase Windows libraries not found")
     @echo.
     @echo "Checking Godot source..."
-    @if exist "{{GODOT_PATH}}\SConstruct" (echo "  [OK] Godot source found") else (echo "  [ERROR] Godot source not found")
+    @if exist "{{WIN_GODOT_PATH}}\SConstruct" (echo "  [OK] Godot source found") else (echo "  [ERROR] Godot source not found")
 
 # Show Windows native build help
 windows-native-help:
@@ -97,47 +98,47 @@ windows-native-help:
 # Build Windows release template with Firebase integration
 windows-native-template-release jobs="6":
     @echo "Building Windows release template with Firebase (MSVC)..."
-    @echo "Architecture: {{WINDOWS_ARCH}}"
-    @echo "Runtime: {{MSVC_RUNTIME}}"
+    @echo "Architecture: {{WIN_ARCH}}"
+    @echo "Runtime: {{WIN_MSVC_RUNTIME}}"
     @echo "Jobs: {{jobs}}"
     @echo.
-    cd {{GODOT_PATH}} && scons platform=windows target=template_release arch={{WINDOWS_ARCH}} production=yes optimize=size -j{{jobs}}
+    cd {{WIN_GODOT_PATH}} && scons platform=windows target=template_release arch={{WIN_ARCH}} production=yes optimize=size -j{{jobs}}
     @echo.
     @echo "[OK] Windows release template built successfully"
-    @echo "Output: {{GODOT_PATH}}/bin/godot.windows.template_release.{{WINDOWS_ARCH}}.exe"
+    @echo "Output: {{WIN_GODOT_PATH}}/bin/godot.windows.template_release.{{WIN_ARCH}}.exe"
 
 # Build Windows debug template with Firebase integration
 windows-native-template-debug jobs="6":
     @echo "Building Windows debug template with Firebase (MSVC)..."
-    @echo "Architecture: {{WINDOWS_ARCH}}"
-    @echo "Runtime: {{MSVC_RUNTIME}}"
+    @echo "Architecture: {{WIN_ARCH}}"
+    @echo "Runtime: {{WIN_MSVC_RUNTIME}}"
     @echo "Jobs: {{jobs}}"
     @echo.
-    cd {{GODOT_PATH}} && scons platform=windows target=template_debug arch={{WINDOWS_ARCH}} -j{{jobs}}
+    cd {{WIN_GODOT_PATH}} && scons platform=windows target=template_debug arch={{WIN_ARCH}} -j{{jobs}}
     @echo.
     @echo "[OK] Windows debug template built successfully"
-    @echo "Output: {{GODOT_PATH}}/bin/godot.windows.template_debug.{{WINDOWS_ARCH}}.exe"
+    @echo "Output: {{WIN_GODOT_PATH}}/bin/godot.windows.template_debug.{{WIN_ARCH}}.exe"
 
 # Build both Windows templates
 windows-native-templates jobs="6": (windows-native-template-debug jobs) (windows-native-template-release jobs)
     @echo.
     @echo "[OK] Both Windows templates built successfully"
-    @echo "Debug:   {{GODOT_PATH}}/bin/godot.windows.template_debug.{{WINDOWS_ARCH}}.exe"
-    @echo "Release: {{GODOT_PATH}}/bin/godot.windows.template_release.{{WINDOWS_ARCH}}.exe"
+    @echo "Debug:   {{WIN_GODOT_PATH}}/bin/godot.windows.template_debug.{{WIN_ARCH}}.exe"
+    @echo "Release: {{WIN_GODOT_PATH}}/bin/godot.windows.template_release.{{WIN_ARCH}}.exe"
 
 # Copy templates to templates directory and package
 windows-native-templates-package:
     @echo "Packaging Windows templates..."
-    @if not exist "{{TEMPLATES_PATH}}" mkdir "{{TEMPLATES_PATH}}"
-    @copy "{{GODOT_PATH}}\bin\godot.windows.template_debug.{{WINDOWS_ARCH}}.exe" "{{TEMPLATES_PATH}}\" /Y
-    @copy "{{GODOT_PATH}}\bin\godot.windows.template_release.{{WINDOWS_ARCH}}.exe" "{{TEMPLATES_PATH}}\" /Y
-    @echo [OK] Templates copied to {{TEMPLATES_PATH}}/
+    @if not exist "{{WIN_TEMPLATES_PATH}}" mkdir "{{WIN_TEMPLATES_PATH}}"
+    @copy "{{WIN_GODOT_PATH}}\bin\godot.windows.template_debug.{{WIN_ARCH}}.exe" "{{WIN_TEMPLATES_PATH}}\" /Y
+    @copy "{{WIN_GODOT_PATH}}\bin\godot.windows.template_release.{{WIN_ARCH}}.exe" "{{WIN_TEMPLATES_PATH}}\" /Y
+    @echo [OK] Templates copied to {{WIN_TEMPLATES_PATH}}/
 
 # Clean template build artifacts
 windows-native-templates-clean:
     @echo "Cleaning Windows template build artifacts..."
-    @if exist "{{GODOT_PATH}}\bin\godot.windows.template_*.exe" del /Q "{{GODOT_PATH}}\bin\godot.windows.template_*.exe"
-    @if exist "{{TEMPLATES_PATH}}\godot.windows.template_*.exe" del /Q "{{TEMPLATES_PATH}}\godot.windows.template_*.exe"
+    @if exist "{{WIN_GODOT_PATH}}\bin\godot.windows.template_*.exe" del /Q "{{WIN_GODOT_PATH}}\bin\godot.windows.template_*.exe"
+    @if exist "{{WIN_TEMPLATES_PATH}}\godot.windows.template_*.exe" del /Q "{{WIN_TEMPLATES_PATH}}\godot.windows.template_*.exe"
     @echo [OK] Windows template artifacts cleaned
 
 # ================================
@@ -152,9 +153,9 @@ windows-native-sentry-release:
     cd sentry\build\windows-msvc-release && cmake --build . --config Release --parallel
     @echo.
     @echo "Copying Sentry DLL to addon directory..."
-    @if not exist "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
-    @copy "sentry\build\windows-msvc-release\Release\sentry.dll" "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" /Y
-    @if exist "sentry\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" copy "sentry\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\" /Y
+    @if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
+    @copy "sentry\build\windows-msvc-release\Release\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" /Y
+    @if exist "sentry\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" copy "sentry\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\" /Y
     @echo [OK] Sentry Release DLL built and installed
 
 # Build Sentry native SDK for Windows (Debug) using MSVC
@@ -165,8 +166,8 @@ windows-native-sentry-debug:
     cd sentry\build\windows-msvc-debug && cmake --build . --config Debug --parallel
     @echo.
     @echo "Copying Sentry Debug DLL to addon directory..."
-    @if not exist "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
-    @copy "sentry\build\windows-msvc-debug\Debug\sentry.dll" "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" /Y
+    @if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
+    @copy "sentry\build\windows-msvc-debug\Debug\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" /Y
     @echo [OK] Sentry Debug DLL built and installed
 
 # Build both Sentry variants
@@ -187,24 +188,24 @@ windows-native-sentry-clean:
 # Export Windows debug build
 windows-native-export-debug:
     @echo "Exporting Windows debug build..."
-    @if not exist "{{EXPORT_PATH}}" mkdir "{{EXPORT_PATH}}"
-    editor\godot.windows.editor.x86_64.exe --path {{PROJECT_PATH}} --export-debug "Windows Desktop" ..\{{EXPORT_PATH}}\gametwo_debug.exe --headless
+    @if not exist "{{WIN_EXPORT_PATH}}" mkdir "{{WIN_EXPORT_PATH}}"
+    editor\godot.windows.editor.x86_64.exe --path {{WIN_PROJECT_PATH}} --export-debug "Windows Desktop" ..\{{WIN_EXPORT_PATH}}\gametwo_debug.exe --headless
     @echo [OK] Windows debug export completed
-    @echo Output: {{EXPORT_PATH}}\gametwo_debug.exe
+    @echo Output: {{WIN_EXPORT_PATH}}\gametwo_debug.exe
 
 # Export Windows release build
 windows-native-export-release:
     @echo "Exporting Windows release build..."
-    @if not exist "{{EXPORT_PATH}}" mkdir "{{EXPORT_PATH}}"
-    editor\godot.windows.editor.x86_64.exe --path {{PROJECT_PATH}} --export-release "Windows Desktop" ..\{{EXPORT_PATH}}\gametwo.exe --headless
+    @if not exist "{{WIN_EXPORT_PATH}}" mkdir "{{WIN_EXPORT_PATH}}"
+    editor\godot.windows.editor.x86_64.exe --path {{WIN_PROJECT_PATH}} --export-release "Windows Desktop" ..\{{WIN_EXPORT_PATH}}\gametwo.exe --headless
     @echo [OK] Windows release export completed
-    @echo Output: {{EXPORT_PATH}}\gametwo.exe
+    @echo Output: {{WIN_EXPORT_PATH}}\gametwo.exe
 
 # Export both debug and release
 windows-native-export-all: windows-native-export-debug windows-native-export-release
     @echo [OK] All Windows exports completed
-    @echo Debug:   {{EXPORT_PATH}}\gametwo_debug.exe
-    @echo Release: {{EXPORT_PATH}}\gametwo.exe
+    @echo Debug:   {{WIN_EXPORT_PATH}}\gametwo_debug.exe
+    @echo Release: {{WIN_EXPORT_PATH}}\gametwo.exe
 
 # ================================
 # COMPLETE WORKFLOWS
@@ -235,8 +236,8 @@ windows-native-full-pipeline jobs="6":
     @echo "=========================================="
     @echo.
     @echo "Outputs:"
-    @echo "  Templates: {{TEMPLATES_PATH}}/"
-    @echo "  Exports:   {{EXPORT_PATH}}/"
+    @echo "  Templates: {{WIN_TEMPLATES_PATH}}/"
+    @echo "  Exports:   {{WIN_EXPORT_PATH}}/"
 
 # Quick dev iteration (debug builds only)
 windows-native-dev-iteration jobs="6":
@@ -245,7 +246,7 @@ windows-native-dev-iteration jobs="6":
     just windows-native-sentry-debug
     just windows-native-export-debug
     @echo [OK] Dev iteration completed
-    @echo Output: {{EXPORT_PATH}}\gametwo_debug.exe
+    @echo Output: {{WIN_EXPORT_PATH}}\gametwo_debug.exe
 
 # ================================
 # FIREBASE SDK VERIFICATION
@@ -256,7 +257,7 @@ windows-native-firebase-verify:
     @echo "Verifying Firebase C++ SDK for Windows..."
     @echo.
     @echo "Checking library paths..."
-    @set "FB_PATH={{FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{MSVC_RUNTIME}}\x64\Release"
+    @set "FB_PATH={{WIN_FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{WIN_MSVC_RUNTIME}}\x64\Release"
     @if exist "%FB_PATH%\firebase_app.lib" (echo "  [OK] firebase_app.lib") else (echo "  [MISSING] firebase_app.lib")
     @if exist "%FB_PATH%\firebase_auth.lib" (echo "  [OK] firebase_auth.lib") else (echo "  [MISSING] firebase_auth.lib")
     @if exist "%FB_PATH%\firebase_database.lib" (echo "  [OK] firebase_database.lib") else (echo "  [MISSING] firebase_database.lib")
@@ -265,8 +266,8 @@ windows-native-firebase-verify:
     @if exist "%FB_PATH%\firebase_functions.lib" (echo "  [OK] firebase_functions.lib") else (echo "  [MISSING] firebase_functions.lib")
     @if exist "%FB_PATH%\firebase_messaging.lib" (echo "  [OK] firebase_messaging.lib") else (echo "  [MISSING] firebase_messaging.lib")
     @echo.
-    @echo "Firebase SDK include path: {{FIREBASE_SDK_PATH}}\include"
-    @if exist "{{FIREBASE_SDK_PATH}}\include\firebase\app.h" (echo "  [OK] Headers found") else (echo "  [MISSING] Headers not found")
+    @echo "Firebase SDK include path: {{WIN_FIREBASE_SDK_PATH}}\include"
+    @if exist "{{WIN_FIREBASE_SDK_PATH}}\include\firebase\app.h" (echo "  [OK] Headers found") else (echo "  [MISSING] Headers not found")
 
 # ================================
 # STATUS AND DIAGNOSTICS
@@ -278,13 +279,13 @@ windows-native-status:
     @echo "============================"
     @echo.
     @echo "Templates:"
-    @if exist "{{GODOT_PATH}}\bin\godot.windows.template_debug.{{WINDOWS_ARCH}}.exe" (echo "  [OK] Debug template built") else (echo "  [--] Debug template not built")
-    @if exist "{{GODOT_PATH}}\bin\godot.windows.template_release.{{WINDOWS_ARCH}}.exe" (echo "  [OK] Release template built") else (echo "  [--] Release template not built")
+    @if exist "{{WIN_GODOT_PATH}}\bin\godot.windows.template_debug.{{WIN_ARCH}}.exe" (echo "  [OK] Debug template built") else (echo "  [--] Debug template not built")
+    @if exist "{{WIN_GODOT_PATH}}\bin\godot.windows.template_release.{{WIN_ARCH}}.exe" (echo "  [OK] Release template built") else (echo "  [--] Release template not built")
     @echo.
     @echo "Sentry DLLs:"
-    @if exist "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" (echo "  [OK] Release DLL") else (echo "  [--] Release DLL not built")
-    @if exist "{{PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" (echo "  [OK] Debug DLL") else (echo "  [--] Debug DLL not built")
+    @if exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" (echo "  [OK] Release DLL") else (echo "  [--] Release DLL not built")
+    @if exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" (echo "  [OK] Debug DLL") else (echo "  [--] Debug DLL not built")
     @echo.
     @echo "Exports:"
-    @if exist "{{EXPORT_PATH}}\gametwo.exe" (echo "  [OK] Release export") else (echo "  [--] Release not exported")
-    @if exist "{{EXPORT_PATH}}\gametwo_debug.exe" (echo "  [OK] Debug export") else (echo "  [--] Debug not exported")
+    @if exist "{{WIN_EXPORT_PATH}}\gametwo.exe" (echo "  [OK] Release export") else (echo "  [--] Release not exported")
+    @if exist "{{WIN_EXPORT_PATH}}\gametwo_debug.exe" (echo "  [OK] Debug export") else (echo "  [--] Debug not exported")
