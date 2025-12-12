@@ -3,13 +3,25 @@ Import('env')
 
 print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
 
-# Add C++ source files (all platforms)
-env.add_source_files(env.modules_sources,"*.cpp")
+# Platform-specific source file selection
+# - Windows: Use firebase_windows.cpp (MSVC can't compile .mm Objective-C++ files)
+# - All other platforms (Android/iOS/macOS): Use firebase.mm (contains platform-specific code
+#   for Android JNI, iOS UIKit, and macOS NSBundle via preprocessor directives)
 
-# Add Objective-C++ source files (Apple platforms only - iOS/macOS)
-# Windows and Android don't have Objective-C++ compilers
-if env['platform'] in ['iphone', 'macos']:
-    env.add_source_files(env.modules_sources,"*.mm")
+# Shared C++ source files (all platforms)
+env.add_source_files(env.modules_sources, "convertor.cpp")
+env.add_source_files(env.modules_sources, "database.cpp")
+env.add_source_files(env.modules_sources, "messaging.cpp")
+env.add_source_files(env.modules_sources, "register_types.cpp")
+env.add_source_files(env.modules_sources, "remote_config.cpp")
+
+# Platform-specific Firebase initialization
+if env['platform'] == 'windows':
+    # Windows: Use dedicated Windows implementation
+    env.add_source_files(env.modules_sources, "firebase_windows.cpp")
+else:
+    # Android/iOS/macOS: Use .mm file (Android compiler handles .mm, just ignores Obj-C parts)
+    env.add_source_files(env.modules_sources, "*.mm")
 
 env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 
@@ -79,5 +91,10 @@ elif env['platform'] == 'windows':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_functions.lib")])
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_messaging.lib")])
+        # Windows system libraries required by Firebase SDK
+        env.Append(LIBS=['Userenv'])  # For GetUserProfileDirectoryW (used by firebase_database)
+        # ICU libraries for timezone/locale functions (u_errorName, ucal_getTimeZoneIDForWindowsID)
+        # Windows 10 1903+ uses icu.lib, older versions use icuuc.lib + icuin.lib
+        env.Append(LIBS=['icu'])      # Modern unified ICU library (Windows 10 1903+)
     else:
         print('WARN: Unsupported architecture for Firebase Windows: ' + env['arch'] + ' (only x86_64 supported)')
