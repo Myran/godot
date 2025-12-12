@@ -148,14 +148,7 @@ windows-native-templates-clean:
 windows-native-sentry-release:
     @echo "Building Sentry native SDK for Windows (Release, MSVC)..."
     @if not exist "sentry\build\windows-msvc-release" mkdir "sentry\build\windows-msvc-release"
-    cd sentry\build\windows-msvc-release && cmake ..\..\modules\sentry-native ^
-        -DCMAKE_BUILD_TYPE=Release ^
-        -DSENTRY_BUILD_SHARED_LIBS=ON ^
-        -DSENTRY_BUILD_TESTS=OFF ^
-        -DSENTRY_BUILD_EXAMPLES=OFF ^
-        -DSENTRY_BACKEND=crashpad ^
-        -G "Visual Studio 17 2022" ^
-        -A x64
+    cd sentry\build\windows-msvc-release && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G "Visual Studio 17 2022" -A x64
     cd sentry\build\windows-msvc-release && cmake --build . --config Release --parallel
     @echo.
     @echo "Copying Sentry DLL to addon directory..."
@@ -168,14 +161,7 @@ windows-native-sentry-release:
 windows-native-sentry-debug:
     @echo "Building Sentry native SDK for Windows (Debug, MSVC)..."
     @if not exist "sentry\build\windows-msvc-debug" mkdir "sentry\build\windows-msvc-debug"
-    cd sentry\build\windows-msvc-debug && cmake ..\..\modules\sentry-native ^
-        -DCMAKE_BUILD_TYPE=Debug ^
-        -DSENTRY_BUILD_SHARED_LIBS=ON ^
-        -DSENTRY_BUILD_TESTS=OFF ^
-        -DSENTRY_BUILD_EXAMPLES=OFF ^
-        -DSENTRY_BACKEND=crashpad ^
-        -G "Visual Studio 17 2022" ^
-        -A x64
+    cd sentry\build\windows-msvc-debug && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G "Visual Studio 17 2022" -A x64
     cd sentry\build\windows-msvc-debug && cmake --build . --config Debug --parallel
     @echo.
     @echo "Copying Sentry Debug DLL to addon directory..."
