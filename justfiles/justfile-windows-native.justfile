@@ -46,23 +46,23 @@ WIN_MSVC_RUNTIME := "MT"  # MT = static runtime, MD = dynamic runtime
 
 # Verify Windows native build environment
 windows-native-verify:
-    @echo "Verifying Windows native build environment..."
-    @echo.
-    @echo "Checking Visual Studio/MSVC..."
-    @where cl >nul 2>&1 && echo "  [OK] MSVC compiler (cl.exe) found" || echo "  [ERROR] MSVC compiler not found - run from Developer Command Prompt"
-    @echo.
-    @echo "Checking Python and SCons..."
-    @where python >nul 2>&1 && echo "  [OK] Python found" || echo "  [ERROR] Python not found"
-    @where scons >nul 2>&1 && echo "  [OK] SCons found" || echo "  [ERROR] SCons not found - run: pip install scons"
-    @echo.
-    @echo "Checking Git..."
-    @where git >nul 2>&1 && echo "  [OK] Git found" || echo "  [ERROR] Git not found"
-    @echo.
-    @echo "Checking Firebase SDK..."
-    @if exist "{{WIN_FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{WIN_MSVC_RUNTIME}}\x64\Release\firebase_app.lib" (echo "  [OK] Firebase Windows libraries found") else (echo "  [ERROR] Firebase Windows libraries not found")
-    @echo.
-    @echo "Checking Godot source..."
-    @if exist "{{WIN_GODOT_PATH}}\SConstruct" (echo "  [OK] Godot source found") else (echo "  [ERROR] Godot source not found")
+    echo Verifying Windows native build environment...
+    echo.
+    echo Checking Visual Studio/MSVC...
+    where cl >nul 2>&1 && echo   [OK] MSVC compiler found || echo   [ERROR] MSVC compiler not found
+    echo.
+    echo Checking Python and SCons...
+    where python >nul 2>&1 && echo   [OK] Python found || echo   [ERROR] Python not found
+    where scons >nul 2>&1 && echo   [OK] SCons found || echo   [ERROR] SCons not found
+    echo.
+    echo Checking Git...
+    where git >nul 2>&1 && echo   [OK] Git found || echo   [ERROR] Git not found
+    echo.
+    echo Checking Firebase SDK...
+    if exist {{WIN_FIREBASE_SDK_PATH}}\libs\windows\VS2019\{{WIN_MSVC_RUNTIME}}\x64\Release\firebase_app.lib (echo   [OK] Firebase libraries found) else (echo   [ERROR] Firebase libraries not found)
+    echo.
+    echo Checking Godot source...
+    if exist {{WIN_GODOT_PATH}}\SConstruct (echo   [OK] Godot source found) else (echo   [ERROR] Godot source not found)
 
 # Show Windows native build help
 windows-native-help:
