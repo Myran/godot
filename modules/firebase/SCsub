@@ -60,3 +60,18 @@ elif env['platform'] == 'android':
         env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/android/arm64-v8a/libfirebase_messaging.a")])
     else:
         print('WARN: Unsupported architecture for firebase module: '+env['android_arch'])
+
+elif env['platform'] == 'windows':
+    print("Firebase: Windows platform")
+    # Link Firebase C++ SDK libraries for Windows (MSVC)
+    # Libraries built with VS2019/MT (static runtime) for x64
+    if env['arch'] == 'x86_64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_app.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_analytics.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_remote_config.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_database.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_functions.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_messaging.lib")])
+    else:
+        print('WARN: Unsupported architecture for Firebase Windows: ' + env['arch'] + ' (only x86_64 supported)')
