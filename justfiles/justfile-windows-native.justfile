@@ -28,13 +28,13 @@ set shell := ["cmd.exe", "/c"]
 # CONFIGURATION
 # ================================
 
-# Windows-specific paths (relative, works with shared folder from macOS)
+# Windows-specific paths (relative, using backslashes for Windows)
 # Using WIN_ prefix to avoid conflicts with main justfile variables
 WIN_GODOT_PATH := "godot"
-WIN_FIREBASE_SDK_PATH := "firebase/firebase_cpp_sdk"
+WIN_FIREBASE_SDK_PATH := "firebase\\firebase_cpp_sdk"
 WIN_PROJECT_PATH := "project"
 WIN_TEMPLATES_PATH := "templates"
-WIN_EXPORT_PATH := "export/windows"
+WIN_EXPORT_PATH := "export\\windows"
 
 # Build configuration
 WIN_ARCH := "x86_64"
