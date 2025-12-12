@@ -4,30 +4,21 @@ title: Integrate Firebase C++ SDK for Windows Desktop Build
 status: To Do
 assignee: []
 created_date: '2025-11-12 16:41'
-updated_date: '2025-12-02 16:58'
+updated_date: '2025-12-12 05:34'
 labels:
   - firebase
   - windows
   - build-system
   - cross-platform
   - cpp
-dependencies: []
+dependencies:
+  - task-333
 priority: high
----
-
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Critical infrastructure for faster development cycles.
-
-**Recommendation: KEEP** - Desktop Firebase testing would dramatically speed up iteration vs mobile-only testing. Currently all Firebase tests require Android/iOS device deployment. Windows desktop build with Firebase would enable 10x faster test cycles. Well-planned with detailed implementation phases.
-
-**Effort**: Large (5 phases, C++ module changes, build system integration)
-**Impact**: High (enables local Firebase testing without device deployment)
-
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Integrate Firebase C++ SDK support for Windows desktop builds in the GameTwo Godot project. Currently, Firebase integration exists only for Android and iOS through a custom Godot module (`godot/modules/firebase/`). This task will extend the module to support Windows desktop using Firebase C++ SDK pre-built libraries with a unified fetch system via justfile commands, eliminating the need for cross-compilation.
 
 ## Context
@@ -56,15 +47,17 @@ Integrate Firebase C++ SDK support for Windows desktop builds in the GameTwo God
 - **Version Management**: Centralized version variable in justfile
 - **No External Scripts**: All functionality embedded in justfile
 - **Build Integration**: Automatic fetching before Windows builds
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Optimize Current SDK & Setup Pre-built System
 
 **1.1 Optimize Current Firebase SDK**
 - [x] Firebase C++ SDK 12.2.0 libraries restored including Windows VS2019 libraries
 - [ ] Remove unused platforms to reduce size: `rm -rf firebase/firebase_cpp_sdk/libs/linux firebase/firebase_cpp_sdk/libs/tvos`
-- [ ] Verify Windows libraries are available: `firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/`
+- [x] Verify Windows libraries are available: `firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/`
 - [ ] Document current SDK state: 8.7GB total, Firebase C++ SDK 12.2.0
 
 **1.2 Update .gitignore**
@@ -152,7 +145,8 @@ elif env['platform'] == 'windows':
     runtime_variant = 'MT'  # Static runtime (MD also available)
 
     # Construct library path using pre-built libraries
-    lib_path = f"#/../firebase/firebase_cpp_sdk/libs/windows/{arch}/{build_config}/{runtime_variant}"
+    # Actual Firebase SDK structure: libs/windows/VS2019/{runtime_variant}/{arch}/{build_config}/
+    lib_path = f"#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/{runtime_variant}/{arch}/{build_config}"
 
     # ROBUSTNESS: Verify library directory exists
     if not Dir(lib_path).exists():
@@ -311,89 +305,39 @@ test-firebase-windows:
 - [ ] Document Windows-specific setup requirements
 - [ ] Add Windows build commands to CLAUDE.md
 - [ ] Update build system documentation (doc-002)
+<!-- SECTION:PLAN:END -->
 
-## Technical Decisions
+## Implementation Notes
 
-### Pre-built Libraries Approach (Chosen Strategy)
-**Pros:**
-- **No Cross-Compilation**: Eliminates MinGW-w64 complexity completely
-- **Official Libraries**: Uses Google's pre-built Visual Studio libraries
-- **Version Control**: Managed via justfile commands, not git bloat
-- **Team Friendly**: Simple setup with `just firebase-fetch-libraries`
-- **CI/CD Ready**: Automated fetching in build pipelines
-- **Platform Coverage**: Single source for all platforms (Windows, Android, iOS, Linux, macOS)
-- **Quick Setup**: No build time, just download and integrate
+<!-- SECTION:NOTES:BEGIN -->
+## Critical Update (2025-12-11)
 
-**Cons:**
-- **Internet Required**: Need download during setup/build
-- **Fixed Versions**: Limited to official pre-built library variants
-- **Binary Size**: Includes all Firebase modules even if unused
+**MinGW Cross-Compilation is NOT viable** for Firebase Windows integration:
 
-**Decision:** Pre-built libraries approach is optimal because it eliminates cross-complication complexity while providing a unified, maintainable system for all platforms. Git provides version control and rollback capability, eliminating the need for complex version management in the justfile.
+1. Firebase C++ SDK provides only MSVC-compiled `.lib` files for Windows
+2. MSVC and MinGW have incompatible C++ ABIs (name mangling, class layout)
+3. Linking MSVC libraries with MinGW-compiled code causes linker errors or runtime crashes
+4. Building Firebase SDK from source with MinGW would require significant effort and is unsupported
 
-## Risks & Considerations
+**Solution:** Use Windows VM (UTM) with native MSVC compilation (task-333)
 
-1. **Internet Dependency**
-   - Build process requires downloading Firebase libraries
-   - **Mitigation**: Libraries cached after first download; justfile checks for existing files; git provides offline capability after initial download
+**Updated Approach:**
+- Set up Windows 11 ARM VM with Visual Studio 2022
+- Compile Godot Windows templates natively with MSVC
+- Firebase `.lib` files link correctly with MSVC-compiled Godot
+- Transfer built templates back to macOS for use in Godot editor
+<!-- SECTION:NOTES:END -->
 
-2. **Desktop Beta Status**
-   - Firebase explicitly states desktop support is beta and for development only
-   - **Mitigation**: Document this limitation; use for testing only, not production Windows releases
+## Assessment (2025-12-06)
 
-3. **Library Path Changes**
-   - Firebase SDK structure could change in future versions
-   - **Mitigation**: Robust error handling with existence checks; clear error messages guide users to run fetch command
+**Value: HIGH** - Critical infrastructure for faster development cycles.
 
-4. **Library Size**
-   - Firebase C++ SDK adds significant size to Windows templates
-   - **Mitigation**: Accept size increase; pre-built approach eliminates build overhead; selective module fetching available
+**Recommendation: KEEP** - Desktop Firebase testing would dramatically speed up iteration vs mobile-only testing. Currently all Firebase tests require Android/iOS device deployment. Windows desktop build with Firebase would enable 10x faster test cycles. Well-planned with detailed implementation phases.
 
-5. **Build System Integration**
-   - Need to ensure just commands integrate with existing SCons build system
-   - **Mitigation**: Follow existing Sentry integration patterns; add library validation to existing build commands
+**Effort**: Large (5 phases, C++ module changes, build system integration)
+**Impact**: High (enables local Firebase testing without device deployment)
 
-6. **Configuration Management**
-   - Windows desktop requires proper `desktop_config.json` setup
-   - **Mitigation**: Automated config generation from existing `google-services.json`; validation during build process
-
-## Success Criteria
-
-- [ ] Firebase submodule removed and replaced with pre-built library system
-- [ ] `just firebase-fetch-libraries` successfully downloads all platform libraries (Windows, Android, iOS, Linux, macOS)
-- [ ] `just firebase-status` shows available libraries for all platforms
-- [ ] `just firebase-version-check` validates current version vs latest available
-- [ ] `just firebase-fetch-modules database auth` downloads selective modules (size optimization)
-- [ ] `just firebase-setup-desktop-config` generates Windows desktop configuration
-- [ ] Windows Godot templates build successfully with Firebase module enabled
-- [ ] `just build-windows-templates` completes without errors (with automatic Firebase fetch)
-- [ ] `just test-firebase-windows` validates Firebase functionality using existing test framework
-- [ ] `ClassDB.class_exists("FirebaseDatabase")` returns `true` on Windows builds
-- [ ] Firebase initialization succeeds on Windows desktop export
-- [ ] Realtime Database operations (read/write) work on Windows
-- [ ] Firebase libraries are properly included in Windows exports (static linking)
-- [ ] Windows desktop configuration (`desktop_config.json`) is included in exports
-- [ ] Existing Android/iOS Firebase functionality remains unaffected
-- [ ] Justfile Firebase commands follow project naming conventions (kebab-case)
-- [ ] No external script dependencies - all functionality in justfile
-- [ ] Firebase libraries properly excluded from git (.gitignore)
-- [ ] Robust error handling prevents build failures when libraries missing
-- [ ] At least one test configuration validates Firebase on Windows
-
-## References
-
-- **Firebase C++ SDK Pre-built Libraries**: https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_13.2.0.zip
-- **Firebase C++ SDK Setup**: https://firebase.google.com/docs/cpp/setup
-- **Firebase C++ SDK Release Notes**: https://firebase.google.com/support/release-notes/cpp-relnotes
-- **Firebase C++ SDK GitHub**: https://github.com/firebase/firebase-cpp-sdk/releases
-- **Project Justfile Conventions**: Existing justfile commands in repository
-- **Project Windows Platform Support**: `justfiles/justfile-platform-windows.justfile`
-- **Firebase Module Location**: `godot/modules/firebase/`
-- **Firebase Libraries Location**: `firebase/firebase_cpp_sdk/`
-
-## Related Tasks
-
-- None currently (first Windows Firebase integration task)
+---
 
 ## Notes
 
