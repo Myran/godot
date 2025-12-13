@@ -1,12 +1,8 @@
-// Windows-specific implementation of FirebaseAuth class
-// This is a copy of auth.mm without iOS-specific imports (which aren't used anyway)
-
-#ifdef _WIN32
-
 #include "auth.h"
 #include "firebase/auth.h"
 #include "firebase/auth/user.h"
 #include "core/object/object.h"
+
 
 #if !defined(TRUE)
     #define TRUE	1
@@ -15,6 +11,7 @@
 #if !defined(FALSE)
     #define FALSE	0
 #endif
+
 
 bool FirebaseAuth::inited = false;
 firebase::auth::Auth* FirebaseAuth::auth = NULL;
@@ -33,12 +30,46 @@ FirebaseAuth::FirebaseAuth() {
         }
     }
 }
+/*
+void FirebaseAuth::OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
+    // The callback is called when the Future enters the `complete` state.
+   // assert(result.status() == firebase::kFutureStatusComplete);
+    if (result.error() == firebase::auth::kAuthErrorNone) {
+         const firebase::auth::AuthResult* auth_result = result.result();
+        firebase::auth::User* user = result.user;
+        print_line(String("[Auth] Create/ Sign in user succeeded with name ") + user->display_name().c_str());
+        user->UpdateUserProfile(profile);
+    } else {
+        print_line(String("[Auth] Created user failed with error ") + result.error_message());
+    }
+    emit_signal("logged_in",result.error());
+}
 
 void FirebaseAuth::OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
     if (result.error() == firebase::auth::kAuthErrorNone) {
         const firebase::auth::AuthResult* auth_result = result.result();
         if (auth_result) {
-          firebase::auth::User* user = const_cast<firebase::auth::User*>(&(auth_result->user));
+            const firebase::auth::User &user = auth_result->user;
+            if (user) {
+                print_line(String("[Auth] Create/ Sign in user succeeded with name ") + user.display_name().c_str());
+                user->UpdateUserProfile(profile);
+            } else {
+                print_line(String("[Auth] User is null after successful creation"));
+            }
+        } else {
+            print_line(String("[Auth] AuthResult is null after successful creation"));
+        }
+    } else {
+        print_line(String("[Auth] Created user failed with error ") + result.error_message());
+    }
+    emit_signal("logged_in", result.error());
+}
+*/
+void FirebaseAuth::OnCreateUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
+    if (result.error() == firebase::auth::kAuthErrorNone) {
+        const firebase::auth::AuthResult* auth_result = result.result();
+        if (auth_result) {
+          firebase::auth::User* user = const_cast<firebase::auth::User*>(&(auth_result->user));  
             if (user != nullptr) {
                 print_line(String("[Auth] Create/ Sign in user succeeded with name ") + user->display_name().c_str());
                 user->UpdateUserProfile(profile);
@@ -53,20 +84,23 @@ void FirebaseAuth::OnCreateUserCallback(const firebase::Future<firebase::auth::A
     }
     emit_signal("logged_in", result.error());
 }
-
 void FirebaseAuth::OnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
+    // The callback is called when the Future enters the `complete` state.
+   // assert(result.status() == firebase::kFutureStatusComplete);
     if (result.error() == firebase::auth::kAuthErrorNone) {
         firebase::auth::User user = result.result()->user;
         print_line(String("[Auth] Link user succeeded"));
         user.UpdateUserProfile(profile);
         emit_signal("account_linked",result.error());
     } else {
+        
         print_line(String("[Auth] Link user failed with error message: ") + result.error_message());
     }
     emit_signal("account_linked",result.error());
 }
-
 void FirebaseAuth::OnUnLinkUserCallback(const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
+    // The callback is called when the Future enters the `complete` state.
+   // assert(result.status() == firebase::kFutureStatusComplete);
     if (result.error() == firebase::auth::kAuthErrorNone) {
         firebase::auth::User user = result.result()->user;
         print_line(String("[Auth] UnLink user succeeded"));
@@ -86,6 +120,7 @@ void FirebaseAuth::sign_in_anonymously()
                         }, this);
 }
 
+
 void FirebaseAuth::sign_in_apple(String token,String nonce)
 {
     print_line("[Auth] Start sign in to firebase with apple account");
@@ -94,16 +129,17 @@ void FirebaseAuth::sign_in_apple(String token,String nonce)
         /*provider_id=*/"apple.com", token.utf8().get_data(), nonce.utf8().get_data(),
         /*access_token=*/nullptr);
     sign_in_provider(credential);
+    
 }
-
 void FirebaseAuth::link_to_apple(String token,String nonce)
 {
-    print_line("[Auth] Start link firebase in to Apple");
-    firebase::auth::Credential credential = firebase::auth::OAuthProvider::GetCredential(
+        print_line("[Auth] Start link firebase in to Apple");
+        firebase::auth::Credential credential = firebase::auth::OAuthProvider::GetCredential(
         /*provider_id=*/"apple.com", token.utf8().get_data(), nonce.utf8().get_data(),
         /*access_token=*/nullptr);
-    link_to_provider(credential);
+        link_to_provider(credential);
 }
+
 
 void FirebaseAuth::sign_in_facebook(String token)
 {
@@ -111,14 +147,12 @@ void FirebaseAuth::sign_in_facebook(String token)
     firebase::auth::Credential credential = firebase::auth::FacebookAuthProvider::GetCredential(token.utf8().get_data());
     sign_in_provider(credential);
 }
-
 void FirebaseAuth::link_to_facebook(String token)
 {
     print_line("[Auth] Start link firebase in to Facebook");
     firebase::auth::Credential credential = firebase::auth::FacebookAuthProvider::GetCredential(token.utf8().get_data());
     link_to_provider(credential);
-}
-
+} 
 void FirebaseAuth::sign_in_provider(firebase::auth::Credential credential)
 {
     firebase::Future<firebase::auth::AuthResult> result = auth->SignInAndRetrieveDataWithCredential(credential);
@@ -140,29 +174,36 @@ void FirebaseAuth::link_to_provider(firebase::auth::Credential credential)
     }
 }
 
+
 void FirebaseAuth::unlink_provider(String provider_name)
 {
     firebase::auth::User current_user = auth->current_user();
-    print_line(String("[Auth] unlink attempt with provider: ") + provider_name);
+     print_line(String("[Auth] unlink attempt with provider: ") + provider_name);
     firebase::Future<firebase::auth::AuthResult> result = current_user.Unlink(provider_name.utf8().get_data());
     result.OnCompletion([](const firebase::Future<firebase::auth::AuthResult>& result, void* user_data) {
                             ((FirebaseAuth*)user_data)->OnUnLinkUserCallback(result, user_data);
                             }, this);
 }
 
+
 Array FirebaseAuth::providers()
 {
     Array retArray;
     firebase::auth::User current_user = auth->current_user();
-    for (std::size_t i = 0; i < current_user.provider_data().size(); ++i)
-    {
-        print_line(String("[Auth] provider: ") + current_user.provider_data()[i].provider_id().c_str());
+   for (std::size_t i = 0; i < current_user.provider_data().size(); ++i)
+   {
+       print_line(String("[Auth] provider: ") + current_user.provider_data()[i].provider_id().c_str());
         Dictionary tempDict;
         tempDict["name"] = current_user.provider_data()[i].provider_id().c_str();
         retArray.append(tempDict);
-    }
+   }
+   
     return retArray;
 }
+
+
+
+
 
 bool FirebaseAuth::is_logged_in()
 {
@@ -197,6 +238,9 @@ String FirebaseAuth::photo_url()
 void FirebaseAuth::sign_out()
 {
     auth->SignOut();
+   /* if ([FBSDKAccessToken currentAccessToken]) {
+    [FBSDKAccessToken refreshCurrentAccessToken];
+    }*/
 }
 
 void FirebaseAuth::_bind_methods() {
@@ -218,4 +262,3 @@ void FirebaseAuth::_bind_methods() {
     ADD_SIGNAL(MethodInfo("account_unlinked"));
 }
 
-#endif // _WIN32

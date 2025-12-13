@@ -3,26 +3,23 @@ Import('env')
 
 print("Firebase SCsub: platform=" + env['platform'] + ", arch=" + env['arch'])
 
-# Platform-specific source file selection
-# - Windows: Use firebase_windows.cpp (MSVC can't compile .mm Objective-C++ files)
-# - All other platforms (Android/iOS/macOS): Use firebase.mm (contains platform-specific code
-#   for Android JNI, iOS UIKit, and macOS NSBundle via preprocessor directives)
-
 # Shared C++ source files (all platforms)
+# These contain platform-agnostic logic
+env.add_source_files(env.modules_sources, "auth.cpp")           # Pure C++ - works on all platforms
 env.add_source_files(env.modules_sources, "convertor.cpp")
 env.add_source_files(env.modules_sources, "database.cpp")
+env.add_source_files(env.modules_sources, "firebase_common.cpp") # Shared Firebase logic
 env.add_source_files(env.modules_sources, "messaging.cpp")
 env.add_source_files(env.modules_sources, "register_types.cpp")
 env.add_source_files(env.modules_sources, "remote_config.cpp")
 
-# Platform-specific Firebase initialization
+# Platform-specific Firebase initialization (createApplication, quit_app)
 if env['platform'] == 'windows':
-    # Windows: Use dedicated Windows implementations (MSVC can't compile .mm)
+    # Windows: Use C++ implementation (MSVC can't compile .mm)
     env.add_source_files(env.modules_sources, "firebase_windows.cpp")
-    env.add_source_files(env.modules_sources, "auth_windows.cpp")
 else:
-    # Android/iOS/macOS: Use .mm files (Android compiler handles .mm, just ignores Obj-C parts)
-    env.add_source_files(env.modules_sources, "*.mm")
+    # Android/iOS/macOS: Use Objective-C++ for platform-specific APIs
+    env.add_source_files(env.modules_sources, "firebase_platform.mm")
 
 env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 

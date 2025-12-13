@@ -1,5 +1,7 @@
+// firebase_platform.mm - Platform-specific Firebase initialization for Android/iOS/macOS
+// Shared logic is in firebase_common.cpp
+
 #include "firebase.h"
-#include "database.h"  // For FirebaseDatabase::begin_shutdown()
 
 #if defined(__ANDROID__)
 #include "platform/android/java_godot_wrapper.h"
@@ -23,21 +25,6 @@ AppActivity _instance;
 #include "core/object/object.h"
 #endif
 #endif
-
-firebase::App* Firebase::app_ptr = NULL;
-
-Firebase::Firebase() {
-    if(app_ptr == NULL) {
-        createApplication();
-    }
-}
-
-firebase::App* Firebase::AppId() {
-    if(app_ptr == NULL) {
-        createApplication();
-    }
-    return app_ptr;
-}
 
 void Firebase::createApplication() {
 #if defined(__ANDROID__)
@@ -87,35 +74,6 @@ void Firebase::createApplication() {
     }
 #endif
 }
-/*
-AppActivity Firebase::GetAppActivity() {
-#if defined(__ANDROID__)
-    return _godot_instance;
-#endif
-#if defined(__APPLE__)
-    return _instance;
-#endif
-}
-*/
-void Firebase::cleanup_firebase() {
-    print_line(String("[Firebase] Starting cleanup sequence..."));
-
-    if (app_ptr != NULL) {
-        print_line(String("[Firebase] Cleaning up Firebase resources..."));
-
-        // CRITICAL FIX: Call begin_shutdown() to prevent further Firebase callbacks
-        // This prevents call_deferred emissions during app shutdown, avoiding use-after-free crashes
-        FirebaseDatabase::begin_shutdown();
-
-        // Note: firebase::App::Terminate() is not available in all SDK versions
-        // The main cleanup needed is ensuring all listeners and pending operations are cleared
-
-        print_line(String("[Firebase] Firebase cleanup completed"));
-        app_ptr = NULL;
-    } else {
-        print_line(String("[Firebase] No active Firebase app to clean up"));
-    }
-}
 
 void Firebase::quit_app() {
     // Perform Firebase cleanup before quitting
@@ -124,7 +82,6 @@ void Firebase::quit_app() {
 #if TARGET_OS_IPHONE
     // iOS quit for testing/CI only
     // Use _exit() instead of exit() to bypass cleanup handlers and terminate immediately
-    // This is necessary because exit() allows cleanup code to run, which can delay termination
     _exit(0);
 #elif TARGET_OS_OSX
     // macOS: Use _exit() for immediate termination (same as iOS for testing/CI)
@@ -133,10 +90,3 @@ void Firebase::quit_app() {
     // Android/other platforms: no-op (they use Engine.get_main_loop().quit())
 #endif
 }
-
-void Firebase::_bind_methods() {
-    //ClassDB::bind_method(D_METHOD("AppId"), &Firebase::AppId);
-    ClassDB::bind_method(D_METHOD("quit_app"), &Firebase::quit_app);
-    ClassDB::bind_method(D_METHOD("cleanup_firebase"), &Firebase::cleanup_firebase);
-}
-
