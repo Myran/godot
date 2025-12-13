@@ -315,9 +315,10 @@ validate-force-usage:
 # THREE-TIER BUILD SYSTEM
 # ================================
 
-# Tier 1: Build Toolchain (Foundation) - Sentry + Editor + Templates
+# Tier 1: Build Toolchain (Foundation) - Firebase SDK + Sentry + Editor + Templates
 build-toolchain force="no": validate-env
-    @echo "🔧 Building toolchain (sentry + editor + templates)..."
+    @echo "🔧 Building toolchain (firebase-sdk + sentry + editor + templates)..."
+    just firebase-sdk-setup
     just build-sentry-all {{force}}
     just build-editor {{force}}
     just templates-all {{force}}
@@ -396,7 +397,8 @@ firebase-sdk-setup force="no":
     echo "   Required version: $REQUIRED_VERSION"
 
     # Check if SDK already exists with correct version
-    if [ "{{force}}" != "yes" ] && [ -d "$SDK_DIR" ]; then
+    FORCE_FLAG="{{force}}"
+    if [ "$FORCE_FLAG" != "yes" ] && [ "$FORCE_FLAG" != "force=yes" ] && [ -d "$SDK_DIR" ]; then
         if [ -f "$SDK_DIR/include/firebase/version.h" ]; then
             # Extract version from header
             MAJOR=$(grep "FIREBASE_VERSION_MAJOR" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
@@ -414,7 +416,7 @@ firebase-sdk-setup force="no":
         fi
     fi
 
-    if [ "{{force}}" = "yes" ]; then
+    if [ "$FORCE_FLAG" = "yes" ] || [ "$FORCE_FLAG" = "force=yes" ]; then
         echo "🔥 Force download enabled"
     fi
 
