@@ -107,9 +107,28 @@ win-vm-sentry-all:
 win-vm-sync:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "🔄 Syncing repository to Windows VM..."
-    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'cd {{WIN_VM_REPO}} && git pull'
-    echo "✅ Repository synced"
+
+    # Get current local branch and commit
+    LOCAL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    LOCAL_COMMIT=$(git rev-parse --short HEAD)
+
+    echo "🔄 Syncing Windows VM to local state..."
+    echo "   Branch: ${LOCAL_BRANCH}"
+    echo "   Commit: ${LOCAL_COMMIT}"
+    echo ""
+
+    # Fetch and hard reset to match origin (avoids merge commits)
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
+
+    # Verify alignment
+    VM_COMMIT=$(ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git rev-parse --short HEAD")
+    if [ "${LOCAL_COMMIT}" = "${VM_COMMIT}" ]; then
+        echo "✅ VM synced to ${VM_COMMIT} (matches local)"
+    else
+        echo "⚠️  WARNING: VM at ${VM_COMMIT}, local at ${LOCAL_COMMIT}"
+        echo "   Push local changes first: git push origin ${LOCAL_BRANCH}"
+        exit 1
+    fi
 
 # Full Windows native pipeline: sync → templates → sentry → package
 win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) win-vm-sentry-all win-vm-templates-package
