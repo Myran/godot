@@ -62,7 +62,9 @@ win-vm-template-release jobs="6":
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-template-release {{jobs}}'
 
 # Build both Windows templates natively on VM
-win-vm-templates jobs="6": (win-vm-template-debug jobs) (win-vm-template-release jobs)
+win-vm-templates jobs="6":
+    just win-vm-template-debug "{{jobs}}"
+    just win-vm-template-release "{{jobs}}"
     @echo "✅ Both Windows templates built successfully on VM"
 
 # Package templates from VM (copy to macOS templates/ directory)
@@ -129,7 +131,7 @@ build-all-windows force="no" jobs="6": win-vm-verify
     @echo "📡 Building on Windows VM: {{WIN_VM_HOST}}"
     @echo ""
     just win-vm-sync
-    just win-vm-templates jobs={{jobs}}
+    just win-vm-templates "{{jobs}}"
     just win-vm-sentry-all
     just win-vm-templates-package
     @echo ""
@@ -139,7 +141,7 @@ build-all-windows force="no" jobs="6": win-vm-verify
 # Build Windows templates (aligned with build-android-templates, build-macos-templates)
 build-windows-templates force="no" jobs="6": win-vm-verify
     @echo "🔨 Building Windows templates on VM..."
-    just win-vm-templates jobs={{jobs}}
+    just win-vm-templates "{{jobs}}"
     just win-vm-templates-package
 
 # Export Windows Desktop - Debug only (aligned with export-macos-debug)
