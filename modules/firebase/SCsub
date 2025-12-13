@@ -17,10 +17,11 @@ env.add_source_files(env.modules_sources, "remote_config.cpp")
 
 # Platform-specific Firebase initialization
 if env['platform'] == 'windows':
-    # Windows: Use dedicated Windows implementation
+    # Windows: Use dedicated Windows implementations (MSVC can't compile .mm)
     env.add_source_files(env.modules_sources, "firebase_windows.cpp")
+    env.add_source_files(env.modules_sources, "auth_windows.cpp")
 else:
-    # Android/iOS/macOS: Use .mm file (Android compiler handles .mm, just ignores Obj-C parts)
+    # Android/iOS/macOS: Use .mm files (Android compiler handles .mm, just ignores Obj-C parts)
     env.add_source_files(env.modules_sources, "*.mm")
 
 env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
