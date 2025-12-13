@@ -367,4 +367,151 @@ cpp-dev:
 # Legacy: Original build-all (now alias for build-toolchain)
 build-all: build-toolchain
 
+# ================================
+# FIREBASE C++ SDK MANAGEMENT
+# ================================
+
+# Firebase SDK download URL pattern
+FIREBASE_SDK_URL_BASE := "https://dl.google.com/firebase/sdk/cpp"
+FIREBASE_SDK_DIR := "firebase/firebase_cpp_sdk"
+FIREBASE_VERSION_FILE := "firebase/VERSION"
+
+# Download and extract Firebase C++ SDK if missing or version mismatch
+firebase-sdk-setup force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    VERSION_FILE="{{FIREBASE_VERSION_FILE}}"
+    SDK_DIR="{{FIREBASE_SDK_DIR}}"
+
+    # Check version file exists
+    if [ ! -f "$VERSION_FILE" ]; then
+        echo "❌ Firebase VERSION file not found: $VERSION_FILE"
+        echo "   Create it with the required SDK version (e.g., '12.2.0')"
+        exit 1
+    fi
+
+    REQUIRED_VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+    echo "📦 Firebase C++ SDK Setup"
+    echo "   Required version: $REQUIRED_VERSION"
+
+    # Check if SDK already exists with correct version
+    if [ "{{force}}" != "yes" ] && [ -d "$SDK_DIR" ]; then
+        if [ -f "$SDK_DIR/include/firebase/version.h" ]; then
+            # Extract version from header
+            MAJOR=$(grep "FIREBASE_VERSION_MAJOR" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+            MINOR=$(grep "FIREBASE_VERSION_MINOR" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+            REVISION=$(grep "FIREBASE_VERSION_REVISION" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+            INSTALLED_VERSION="${MAJOR}.${MINOR}.${REVISION}"
+
+            if [ "$INSTALLED_VERSION" = "$REQUIRED_VERSION" ]; then
+                echo "✅ Firebase C++ SDK $INSTALLED_VERSION already installed"
+                echo "   Use 'just firebase-sdk-setup force=yes' to re-download"
+                exit 0
+            else
+                echo "⚠️  Version mismatch: installed=$INSTALLED_VERSION, required=$REQUIRED_VERSION"
+            fi
+        fi
+    fi
+
+    if [ "{{force}}" = "yes" ]; then
+        echo "🔥 Force download enabled"
+    fi
+
+    # Download URL
+    DOWNLOAD_URL="{{FIREBASE_SDK_URL_BASE}}/firebase_cpp_sdk_${REQUIRED_VERSION}.zip"
+    TEMP_ZIP="/tmp/firebase_cpp_sdk_${REQUIRED_VERSION}.zip"
+
+    echo "📥 Downloading Firebase C++ SDK $REQUIRED_VERSION..."
+    echo "   URL: $DOWNLOAD_URL"
+
+    # Download with progress
+    if command -v curl &> /dev/null; then
+        curl -L --progress-bar -o "$TEMP_ZIP" "$DOWNLOAD_URL"
+    elif command -v wget &> /dev/null; then
+        wget --progress=bar:force -O "$TEMP_ZIP" "$DOWNLOAD_URL"
+    else
+        echo "❌ Neither curl nor wget found. Please install one."
+        exit 1
+    fi
+
+    # Verify download
+    if [ ! -f "$TEMP_ZIP" ]; then
+        echo "❌ Download failed"
+        exit 1
+    fi
+
+    FILESIZE=$(stat -f%z "$TEMP_ZIP" 2>/dev/null || stat -c%s "$TEMP_ZIP" 2>/dev/null)
+    echo "   Downloaded: $(echo "scale=1; $FILESIZE/1048576" | bc)MB"
+
+    # Remove existing SDK directory
+    if [ -d "$SDK_DIR" ]; then
+        echo "🗑️  Removing existing SDK..."
+        rm -rf "$SDK_DIR"
+    fi
+
+    # Extract
+    echo "📦 Extracting to $SDK_DIR..."
+    mkdir -p "$(dirname "$SDK_DIR")"
+    unzip -q "$TEMP_ZIP" -d "$(dirname "$SDK_DIR")"
+
+    # Cleanup
+    rm -f "$TEMP_ZIP"
+
+    # Verify extraction
+    if [ -f "$SDK_DIR/include/firebase/version.h" ]; then
+        echo "✅ Firebase C++ SDK $REQUIRED_VERSION installed successfully"
+        echo "   Location: $SDK_DIR"
+    else
+        echo "❌ Extraction failed - version.h not found"
+        exit 1
+    fi
+
+# Check Firebase SDK status and version alignment
+firebase-sdk-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔍 Firebase SDK Status"
+    echo "======================"
+
+    VERSION_FILE="{{FIREBASE_VERSION_FILE}}"
+    SDK_DIR="{{FIREBASE_SDK_DIR}}"
+
+    # Required version
+    if [ -f "$VERSION_FILE" ]; then
+        REQUIRED_VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+        echo "📋 Required C++ SDK: $REQUIRED_VERSION"
+    else
+        echo "❌ VERSION file not found: $VERSION_FILE"
+        REQUIRED_VERSION="unknown"
+    fi
+
+    # Installed version
+    if [ -d "$SDK_DIR" ] && [ -f "$SDK_DIR/include/firebase/version.h" ]; then
+        MAJOR=$(grep "FIREBASE_VERSION_MAJOR" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+        MINOR=$(grep "FIREBASE_VERSION_MINOR" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+        REVISION=$(grep "FIREBASE_VERSION_REVISION" "$SDK_DIR/include/firebase/version.h" | grep -o '[0-9]*' | head -1)
+        INSTALLED_VERSION="${MAJOR}.${MINOR}.${REVISION}"
+        echo "✅ Installed C++ SDK: $INSTALLED_VERSION"
+
+        if [ "$INSTALLED_VERSION" != "$REQUIRED_VERSION" ]; then
+            echo "⚠️  VERSION MISMATCH - run 'just firebase-sdk-setup'"
+        fi
+    else
+        echo "❌ C++ SDK not installed"
+        echo "   Run: just firebase-sdk-setup"
+    fi
+
+    # Android BOM version
+    GRADLE_FILE="project/android/build/build.gradle"
+    if [ -f "$GRADLE_FILE" ]; then
+        ANDROID_BOM=$(grep "firebase-bom:" "$GRADLE_FILE" | sed 's/.*firebase-bom:\([0-9.]*\).*/\1/')
+        echo "📱 Android BOM: $ANDROID_BOM"
+    fi
+
+    echo ""
+    echo "📚 Version compatibility reference:"
+    echo "   https://firebase.google.com/support/release-notes/cpp-relnotes"
+
 # Note: Platform-specific commands provided by platform justfiles
