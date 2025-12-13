@@ -1,10 +1,10 @@
 ---
 id: task-277
 title: Integrate Firebase C++ SDK for Windows Desktop Build
-status: To Do
+status: Done
 assignee: []
 created_date: '2025-11-12 16:41'
-updated_date: '2025-12-12 05:34'
+updated_date: '2025-12-13 10:33'
 labels:
   - firebase
   - windows
@@ -48,6 +48,43 @@ Integrate Firebase C++ SDK support for Windows desktop builds in the GameTwo God
 - **No External Scripts**: All functionality embedded in justfile
 - **Build Integration**: Automatic fetching before Windows builds
 <!-- SECTION:DESCRIPTION:END -->
+
+## Assessment (2025-12-06)
+
+**Value: HIGH** - Critical infrastructure for faster development cycles.
+
+**Recommendation: KEEP** - Desktop Firebase testing would dramatically speed up iteration vs mobile-only testing. Currently all Firebase tests require Android/iOS device deployment. Windows desktop build with Firebase would enable 10x faster test cycles. Well-planned with detailed implementation phases.
+
+**Effort**: Large (5 phases, C++ module changes, build system integration)
+**Impact**: High (enables local Firebase testing without device deployment)
+
+---
+
+## Notes
+
+- **All-at-once Strategy**: Single command `firebase-fetch-libraries` downloads everything for all platforms (Windows, Android, iOS, Linux, macOS)
+- **Selective Module Support**: `firebase-fetch-modules database auth` allows downloading only required Firebase modules
+- **Enhanced Commands**: Additional commands for version checking, desktop config setup, and selective fetching
+- **No Platform-Specific Commands**: Since we fetch everything at once, no need for `firebase-fetch-windows`, `firebase-fetch-android`, etc.
+- **No Build Commands**: Integration happens through existing build commands (e.g., `build-windows-templates`) that check for Firebase libraries
+- **No Aliases**: Follow just naming conventions strictly, avoid convenience aliases
+- **No External Scripts**: All functionality embedded directly in justfile
+- **Automatic Integration**: Build commands automatically trigger `firebase-fetch-libraries` if libraries missing
+- **Robust Error Handling**: Build continues without Firebase if libraries missing, with clear error messages
+- **Git Version Control**: Git handles version rollback and history, eliminating need for complex version management
+- **Desktop Configuration**: Windows requires `desktop_config.json` generated from existing Firebase config files
+- **Development Focus**: Windows build is for development/testing workflow validation only
+- **Production Scope**: Production releases remain Android/iOS focused
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Windows platform enabled in config.py can_build()
+- [x] #2 SCsub links Firebase Windows libraries correctly
+- [x] #3 Shared code architecture eliminates duplication
+- [x] #4 Windows debug template builds successfully with MSVC
+- [x] #5 All other platforms (Android/iOS/macOS) still build correctly
+- [x] #6 Firebase module CLAUDE.md updated with Windows support
+<!-- AC:END -->
 
 ## Implementation Plan
 
@@ -310,47 +347,69 @@ test-firebase-windows:
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-## Critical Update (2025-12-11)
+## Completion Summary (2025-12-13)
 
-**MinGW Cross-Compilation is NOT viable** for Firebase Windows integration:
+**Firebase C++ SDK successfully integrated for Windows desktop builds.**
 
-1. Firebase C++ SDK provides only MSVC-compiled `.lib` files for Windows
-2. MSVC and MinGW have incompatible C++ ABIs (name mangling, class layout)
-3. Linking MSVC libraries with MinGW-compiled code causes linker errors or runtime crashes
-4. Building Firebase SDK from source with MinGW would require significant effort and is unsupported
+### Architecture: Shared + Platform-Specific Code
 
-**Solution:** Use Windows VM (UTM) with native MSVC compilation (task-333)
+Refactored the Firebase module to minimize code duplication across all platforms:
 
-**Updated Approach:**
-- Set up Windows 11 ARM VM with Visual Studio 2022
-- Compile Godot Windows templates natively with MSVC
-- Firebase `.lib` files link correctly with MSVC-compiled Godot
-- Transfer built templates back to macOS for use in Godot editor
+| File | Purpose | Platforms |
+|------|---------|-----------|
+| `firebase_common.cpp` | Shared Firebase init/cleanup, _bind_methods | ALL |
+| `firebase_platform.mm` | Platform-specific createApplication/quit_app | Android/iOS/macOS |
+| `firebase_windows.cpp` | Platform-specific createApplication/quit_app | Windows MSVC |
+| `auth.cpp` | Authentication (pure C++) | ALL |
+| `database.cpp` | Realtime Database (pure C++) | ALL |
+| Other .cpp files | Various services | ALL |
+
+### Key Changes Made
+
+**1. config.py** - Added Windows platform support:
+```python
+if platform == "windows":
+    return True
+```
+
+**2. SCsub** - Refactored for shared architecture:
+- Shared source files compiled for ALL platforms
+- Platform-specific file selection:
+  - Windows: `firebase_windows.cpp`
+  - Others: `firebase_platform.mm`
+- Windows library linking with MSVC `.lib` files
+- System libraries via LINKFLAGS (Userenv.lib, icu.lib)
+
+**3. New Files Created:**
+- `firebase_common.cpp` - Shared logic (AppId, cleanup_firebase, _bind_methods)
+- `firebase_windows.cpp` - Windows createApplication/quit_app
+- `firebase_platform.mm` - Renamed from firebase.mm, Apple/Android specifics
+
+**4. Files Refactored:**
+- `auth.mm` → `auth.cpp` - Was already pure C++, now shared across all platforms
+
+### Build Verification
+
+All platforms build successfully with refactored structure:
+
+| Platform | Status | Build Time |
+|----------|--------|------------|
+| Windows (MSVC) | ✅ Built | ~9 sec (incremental) |
+| Android (arm32/arm64/x86_64) | ✅ Built | ~3 min |
+| iOS (arm64) | ✅ Built | (cached) |
+| macOS (Universal 2) | ✅ Built | ~19 sec |
+
+### Windows-Specific Notes
+
+- Requires Windows VM with VS2022 for MSVC compilation
+- Firebase libraries: `firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/`
+- System dependencies: Userenv.lib (GetUserProfileDirectoryW), icu.lib (ICU timezone)
+- Uses LINKFLAGS instead of LIBS to avoid SCons name mangling
+
+### Integration with Build System
+
+Windows is now included in `just templates-all` and `just build`:
+- `just build-windows-templates` - Builds via Windows VM SSH
+- `just win-vm-templates` - Direct VM build command
+- `just win-vm-templates-package` - Copy templates back to macOS
 <!-- SECTION:NOTES:END -->
-
-## Assessment (2025-12-06)
-
-**Value: HIGH** - Critical infrastructure for faster development cycles.
-
-**Recommendation: KEEP** - Desktop Firebase testing would dramatically speed up iteration vs mobile-only testing. Currently all Firebase tests require Android/iOS device deployment. Windows desktop build with Firebase would enable 10x faster test cycles. Well-planned with detailed implementation phases.
-
-**Effort**: Large (5 phases, C++ module changes, build system integration)
-**Impact**: High (enables local Firebase testing without device deployment)
-
----
-
-## Notes
-
-- **All-at-once Strategy**: Single command `firebase-fetch-libraries` downloads everything for all platforms (Windows, Android, iOS, Linux, macOS)
-- **Selective Module Support**: `firebase-fetch-modules database auth` allows downloading only required Firebase modules
-- **Enhanced Commands**: Additional commands for version checking, desktop config setup, and selective fetching
-- **No Platform-Specific Commands**: Since we fetch everything at once, no need for `firebase-fetch-windows`, `firebase-fetch-android`, etc.
-- **No Build Commands**: Integration happens through existing build commands (e.g., `build-windows-templates`) that check for Firebase libraries
-- **No Aliases**: Follow just naming conventions strictly, avoid convenience aliases
-- **No External Scripts**: All functionality embedded directly in justfile
-- **Automatic Integration**: Build commands automatically trigger `firebase-fetch-libraries` if libraries missing
-- **Robust Error Handling**: Build continues without Firebase if libraries missing, with clear error messages
-- **Git Version Control**: Git handles version rollback and history, eliminating need for complex version management
-- **Desktop Configuration**: Windows requires `desktop_config.json` generated from existing Firebase config files
-- **Development Focus**: Windows build is for development/testing workflow validation only
-- **Production Scope**: Production releases remain Android/iOS focused
