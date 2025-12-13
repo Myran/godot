@@ -14,8 +14,12 @@ godot/modules/firebase/
 ├── SCsub                  # SCons build script
 ├── register_types.h/cpp   # Module registration
 ├── convertor.h/cpp        # Type conversion (GDScript ↔ Firebase)
-├── firebase.h/mm          # Core Firebase initialization
-├── auth.h/mm              # Authentication service
+├── firebase.h             # Core Firebase header
+├── firebase_common.cpp    # Shared Firebase logic (ALL platforms)
+├── firebase_platform.mm   # Platform-specific init (Android/iOS/macOS)
+├── firebase_windows.cpp   # Platform-specific init (Windows MSVC)
+├── auth.h                 # Authentication header
+├── auth.cpp               # Authentication service (ALL platforms)
 ├── database.h/cpp         # Realtime Database service
 ├── functions.h            # Cloud Functions service
 ├── messaging.h/cpp        # Cloud Messaging service
@@ -34,28 +38,44 @@ def can_build(env, platform):
         return True
     if platform == "ios":
         return True
-    return False  # Disabled for desktop platforms
+    if platform == "macos":
+        return True
+    if platform == "windows":
+        return True
+    return False
 ```
 
 **Platform Support:**
 - ✅ **Android**: Full support (arm32, arm64, x86_64)
 - ✅ **iOS**: Full support (arm64 device)
-- ✅ **macOS**: POC support (arm64, x86_64) - App initialization only, services pending
-- ❌ **Windows**: Not supported (no Firebase C++ SDK integration)
+- ✅ **macOS**: Full support (arm64, x86_64 Universal 2)
+- ✅ **Windows**: Full support (x86_64 MSVC) - Requires Windows VM with VS2022
 - ❌ **Linux**: Not supported (no Firebase C++ SDK integration)
 
 ### **SCsub - Build Configuration**
 
-**Key patterns:**
+**Architecture: Shared + Platform-Specific Code**
+
+The module uses a shared architecture to minimize code duplication:
 
 ```python
-# Platform-specific compilation
-if env['platform'] != 'macos':
-    env.add_source_files(env.modules_sources, "*.cpp")
-    env.add_source_files(env.modules_sources, "*.mm")  # Objective-C++
+# Shared C++ source files (ALL platforms)
+env.add_source_files(env.modules_sources, "auth.cpp")
+env.add_source_files(env.modules_sources, "convertor.cpp")
+env.add_source_files(env.modules_sources, "database.cpp")
+env.add_source_files(env.modules_sources, "firebase_common.cpp")  # Shared Firebase logic
+env.add_source_files(env.modules_sources, "messaging.cpp")
+env.add_source_files(env.modules_sources, "register_types.cpp")
+env.add_source_files(env.modules_sources, "remote_config.cpp")
 
-    # Include Firebase SDK headers
-    env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
+# Platform-specific Firebase initialization (createApplication, quit_app)
+if env['platform'] == 'windows':
+    env.add_source_files(env.modules_sources, "firebase_windows.cpp")  # Windows MSVC
+else:
+    env.add_source_files(env.modules_sources, "firebase_platform.mm")  # Android/iOS/macOS
+
+# Include Firebase SDK headers
+env.Append(CPPPATH="#/../firebase/firebase_cpp_sdk/include")
 ```
 
 **iOS Library Linking:**
@@ -79,6 +99,21 @@ if env['platform'] == 'android':
 ```
 
 **Critical**: Architecture must match device (arm64 for modern devices, x86_64 for emulators).
+
+**Windows Library Linking (MSVC):**
+```python
+if env['platform'] == 'windows':
+    if env['arch'] == 'x86_64':
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_app.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_auth.lib")])
+        env.Prepend(LIBS=[File("#/../firebase/firebase_cpp_sdk/libs/windows/VS2019/MT/x64/Release/firebase_database.lib")])
+        # ... additional Firebase services
+        # Windows system libraries (passed via LINKFLAGS to avoid SCons name mangling)
+        env.Append(LINKFLAGS=['Userenv.lib'])  # For GetUserProfileDirectoryW
+        env.Append(LINKFLAGS=['icu.lib'])      # For ICU timezone functions
+```
+
+**Note**: Windows requires MSVC build (VS2019/VS2022) - MinGW is NOT supported due to Firebase SDK ABI incompatibility.
 
 ---
 
