@@ -120,6 +120,12 @@ win-vm-sync:
     # Fetch and hard reset to match origin (avoids merge commits)
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git fetch origin && git checkout ${LOCAL_BRANCH} && git reset --hard origin/${LOCAL_BRANCH}"
 
+    # Sync essential submodules for Windows builds (godot is required, others optional)
+    echo "📦 Syncing submodules..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule sync && git submodule update --init godot" || true
+    # Try other submodules but don't fail if they have unavailable commits
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule update --init extras/firebase-cpp-sdk extras/sentry-godot" 2>/dev/null || echo "   (some optional submodules skipped)"
+
     # Verify alignment
     VM_COMMIT=$(ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git rev-parse --short HEAD")
     if [ "${LOCAL_COMMIT}" = "${VM_COMMIT}" ]; then
