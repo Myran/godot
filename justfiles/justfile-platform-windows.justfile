@@ -76,14 +76,17 @@ win-vm-templates-package:
     # Ensure local templates directory exists
     mkdir -p templates
 
+    # SCP path format for Windows: /C:/path/to/file (forward slashes with drive letter)
+    WIN_BIN_PATH="/C:/gametwo/godot/bin"
+
     # Copy debug template
     echo "📥 Copying debug template..."
-    scp {{WIN_VM_USER}}@{{WIN_VM_HOST}}:{{WIN_VM_REPO}}/godot/bin/godot.windows.template_debug.x86_64.exe templates/
+    scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_debug.x86_64.exe" templates/
 
     # Copy release template if it exists
     if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} 'if exist {{WIN_VM_REPO}}\godot\bin\godot.windows.template_release.x86_64.exe echo exists'; then
         echo "📥 Copying release template..."
-        scp {{WIN_VM_USER}}@{{WIN_VM_HOST}}:{{WIN_VM_REPO}}/godot/bin/godot.windows.template_release.x86_64.exe templates/
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_BIN_PATH}/godot.windows.template_release.x86_64.exe" templates/
     fi
 
     echo "✅ Windows templates packaged in templates/ directory"
