@@ -115,12 +115,13 @@ win-vm-sentry-package:
     # Ensure local directory exists
     mkdir -p project/addons/sentry/bin/windows/x86_64
 
-    # Define remote path
-    WIN_SENTRY_PATH="{{WIN_VM_REPO}}/project/addons/sentry/bin/windows/x86_64"
+    # SCP path format for Windows: /C:/path/to/file (forward slashes with drive letter)
+    WIN_SENTRY_PATH="/C:/gametwo/project/addons/sentry/bin/windows/x86_64"
+    WIN_CMD_PATH="C:\\gametwo\\project\\addons\\sentry\\bin\\windows\\x86_64"
 
     # Copy release DLL
     echo "📥 Copying release DLL..."
-    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\libsentry.windows.release.x86_64.dll echo exists" | grep -q exists; then
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\libsentry.windows.release.x86_64.dll echo exists" | grep -q exists; then
         scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.release.x86_64.dll" project/addons/sentry/bin/windows/x86_64/
         echo "✅ Copied libsentry.windows.release.x86_64.dll"
     else
@@ -129,7 +130,7 @@ win-vm-sentry-package:
 
     # Copy debug DLL
     echo "📥 Copying debug DLL..."
-    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\libsentry.windows.debug.x86_64.dll echo exists" | grep -q exists; then
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\libsentry.windows.debug.x86_64.dll echo exists" | grep -q exists; then
         scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.debug.x86_64.dll" project/addons/sentry/bin/windows/x86_64/
         echo "✅ Copied libsentry.windows.debug.x86_64.dll"
     else
@@ -138,7 +139,7 @@ win-vm-sentry-package:
 
     # Copy crashpad_handler.exe (critical for crashpad backend)
     echo "📥 Copying crashpad_handler.exe..."
-    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\crashpad_handler.exe echo exists" | grep -q exists; then
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\crashpad_handler.exe echo exists" | grep -q exists; then
         scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/crashpad_handler.exe" project/addons/sentry/bin/windows/x86_64/
         echo "✅ Copied crashpad_handler.exe"
     else
