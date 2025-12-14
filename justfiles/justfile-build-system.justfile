@@ -369,6 +369,33 @@ cpp-dev:
 build-all: build-toolchain
 
 # ================================
+# CROSS-PLATFORM EXPORTS
+# ================================
+
+# Export all platforms (macOS, iOS, Android, Windows)
+export-all force="no":
+    @echo "📦 Exporting all platforms..."
+    @echo ""
+    @echo "🍎 Exporting macOS..."
+    just export-macos-all {{force}}
+    @echo ""
+    @echo "📱 Exporting iOS..."
+    just export-pck-ios
+    @echo ""
+    @echo "🤖 Exporting Android..."
+    just export-all-android {{force}}
+    @echo ""
+    @echo "🪟 Exporting Windows..."
+    just export-windows-all
+    @echo ""
+    @echo "✅ All platform exports complete!"
+    @echo "📁 Artifacts:"
+    @echo "   macOS:   export/macos/"
+    @echo "   iOS:     export/ios/"
+    @echo "   Android: export/android/"
+    @echo "   Windows: export/windows/"
+
+# ================================
 # FIREBASE C++ SDK MANAGEMENT
 # ================================
 
