@@ -106,6 +106,52 @@ win-vm-sentry-all:
     echo "🔨 Building Sentry DLLs on Windows VM..."
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-sentry-all'
 
+# Package Sentry DLLs from VM to macOS
+win-vm-sentry-package:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Copying Sentry DLLs from Windows VM..."
+
+    # Ensure local directory exists
+    mkdir -p project/addons/sentry/bin/windows/x86_64
+
+    # Define remote path
+    WIN_SENTRY_PATH="{{WIN_VM_REPO}}/project/addons/sentry/bin/windows/x86_64"
+
+    # Copy release DLL
+    echo "📥 Copying release DLL..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\libsentry.windows.release.x86_64.dll echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.release.x86_64.dll" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied libsentry.windows.release.x86_64.dll"
+    else
+        echo "⚠️  Release DLL not found on VM"
+    fi
+
+    # Copy debug DLL
+    echo "📥 Copying debug DLL..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\libsentry.windows.debug.x86_64.dll echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/libsentry.windows.debug.x86_64.dll" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied libsentry.windows.debug.x86_64.dll"
+    else
+        echo "⚠️  Debug DLL not found on VM"
+    fi
+
+    # Copy crashpad_handler.exe (critical for crashpad backend)
+    echo "📥 Copying crashpad_handler.exe..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_SENTRY_PATH}\\crashpad_handler.exe echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/crashpad_handler.exe" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied crashpad_handler.exe"
+    else
+        echo "⚠️  crashpad_handler.exe not found on VM"
+    fi
+
+    echo "✅ Windows Sentry DLLs packaged"
+    ls -la project/addons/sentry/bin/windows/x86_64/
+
+# Build and package Sentry from VM (complete workflow)
+win-vm-sentry-complete: win-vm-verify win-vm-sentry-all win-vm-sentry-package
+    @echo "✅ Windows Sentry build complete with crashpad backend"
+
 # Sync repository to Windows VM
 win-vm-sync:
     #!/usr/bin/env bash
