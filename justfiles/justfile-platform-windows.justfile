@@ -174,6 +174,9 @@ win-vm-sync:
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule sync && git submodule update --init godot" || true
     # Try other submodules but don't fail if they have unavailable commits
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git submodule update --init extras/firebase-cpp-sdk extras/sentry-godot" 2>/dev/null || echo "   (some optional submodules skipped)"
+    # Sentry-godot requires recursive submodule init for crashpad backend
+    echo "   Initializing sentry-godot nested submodules (crashpad)..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}}/extras/sentry-godot && git submodule update --init --recursive" 2>/dev/null || echo "   (sentry-godot submodules skipped)"
 
     # Verify alignment
     VM_COMMIT=$(ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd {{WIN_VM_REPO}} && git rev-parse --short HEAD")
