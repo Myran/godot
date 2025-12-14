@@ -156,8 +156,8 @@ windows-native-templates-clean:
 windows-native-sentry-release:
     @echo "Building Sentry native SDK for Windows (Release, MSVC)..."
     if not exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" mkdir "{{WIN_SENTRY_PATH}}\build\windows-msvc-release"
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" && cmake --build . --config Release --parallel
+    cmake -S "{{WIN_SENTRY_PATH}}\modules\sentry-native" -B "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
+    cmake --build "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" --config Release --parallel
     @echo.
     @echo "Copying Sentry DLL to addon directory..."
     if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
@@ -169,8 +169,8 @@ windows-native-sentry-release:
 windows-native-sentry-debug:
     @echo "Building Sentry native SDK for Windows (Debug, MSVC)..."
     if not exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" mkdir "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug"
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" && cmake --build . --config Debug --parallel
+    cmake -S "{{WIN_SENTRY_PATH}}\modules\sentry-native" -B "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
+    cmake --build "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" --config Debug --parallel
     @echo.
     @echo "Copying Sentry Debug DLL to addon directory..."
     if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
