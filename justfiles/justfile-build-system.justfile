@@ -379,7 +379,9 @@ export-all force="no":
     @echo "🍎 Exporting macOS..."
     just export-macos-all {{force}}
     @echo ""
-    @echo "📱 Exporting iOS..."
+    @echo "📱 Exporting iOS (debug + release + PCK)..."
+    just build-ios-app-debug
+    just build-ios-app-release
     just export-pck-ios
     @echo ""
     @echo "🤖 Exporting Android..."
@@ -391,7 +393,7 @@ export-all force="no":
     @echo "✅ All platform exports complete!"
     @echo "📁 Artifacts:"
     @echo "   macOS:   export/macos/"
-    @echo "   iOS:     export/ios/"
+    @echo "   iOS:     project/ios/build/ (debug + release .app)"
     @echo "   Android: export/android/"
     @echo "   Windows: export/windows/"
 
