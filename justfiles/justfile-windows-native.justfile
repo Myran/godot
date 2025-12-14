@@ -156,7 +156,7 @@ windows-native-templates-clean:
 windows-native-sentry-release:
     @echo "Building Sentry native SDK for Windows (Release, MSVC)..."
     if not exist {{WIN_SENTRY_PATH}}\build\windows-msvc-release mkdir {{WIN_SENTRY_PATH}}\build\windows-msvc-release
-    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-release -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad
+    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-release -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -A x64
     cmake --build {{WIN_SENTRY_PATH}}\build\windows-msvc-release --config Release --parallel
     @echo.
     @echo "Copying Sentry DLL to addon directory..."
@@ -169,7 +169,7 @@ windows-native-sentry-release:
 windows-native-sentry-debug:
     @echo "Building Sentry native SDK for Windows (Debug, MSVC)..."
     if not exist {{WIN_SENTRY_PATH}}\build\windows-msvc-debug mkdir {{WIN_SENTRY_PATH}}\build\windows-msvc-debug
-    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-debug -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad
+    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-debug -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -A x64
     cmake --build {{WIN_SENTRY_PATH}}\build\windows-msvc-debug --config Debug --parallel
     @echo.
     @echo "Copying Sentry Debug DLL to addon directory..."
