@@ -1,10 +1,10 @@
 ---
 id: task-295
 title: Implement Windows export pipeline with Sentry and Firebase integration
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2025-11-19 21:42'
-updated_date: '2025-12-13 18:20'
+updated_date: '2025-12-14 00:13'
 labels:
   - windows
   - export
@@ -91,4 +91,23 @@ Implement comprehensive Windows export pipeline that properly integrates Sentry 
 - Windows VM: 192.168.50.92 (SSH access)
 - Just recipes: `win-vm-*` commands
 - Sentry Windows DLLs ready (task-276)
+
+## Session 2025-12-14
+
+**Commits Made:**
+- `fee5ea9f` - fix(build): Correct SCP path format for Windows VM template packaging
+- `23d3604f` - feat(export): Enable embedded PCK for Windows and DMG for macOS
+- `f16df8ae` - feat(build): Add Firebase C++ SDK download and version management
+- `6b16cbfa` - feat(build): Add firebase-sdk-setup to build-toolchain
+
+**Key Improvements:**
+1. Fixed SCP path format for copying templates from Windows VM (was `C:gametwo/...`, now `/C:/gametwo/...`)
+2. Windows exports now embed PCK into executable for cleaner distribution
+3. Added `just firebase-sdk-setup` to auto-download Firebase C++ SDK 12.2.0 if missing
+4. Firebase SDK download integrated into `build-toolchain` pipeline
+5. Added `firebase/VERSION` file as single source of truth for SDK version
+
+**New Commands:**
+- `just firebase-sdk-setup` - Downloads Firebase C++ SDK if missing or version mismatch
+- `just firebase-sdk-status` - Shows installed vs required versions and Android BOM alignment
 <!-- SECTION:NOTES:END -->
