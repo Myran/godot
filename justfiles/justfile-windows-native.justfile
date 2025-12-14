@@ -156,25 +156,25 @@ windows-native-templates-clean:
 windows-native-sentry-release:
     @echo "Building Sentry native SDK for Windows (Release, MSVC)..."
     if not exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" mkdir "{{WIN_SENTRY_PATH}}\build\windows-msvc-release"
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G "Visual Studio 17 2022" -A x64
+    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
     cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" && cmake --build . --config Release --parallel
     @echo.
     @echo "Copying Sentry DLL to addon directory..."
     if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
-    copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\Release\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" /Y
-    if exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\" /Y
+    copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll" /Y
+    if exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\crashpad_handler.exe" copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\crashpad_handler.exe" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\" /Y
     @echo [OK] Sentry Release DLL built and installed
 
 # Build Sentry native SDK for Windows (Debug) using MSVC
 windows-native-sentry-debug:
     @echo "Building Sentry native SDK for Windows (Debug, MSVC)..."
     if not exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" mkdir "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug"
-    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G "Visual Studio 17 2022" -A x64
+    cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" && cmake ..\..\modules\sentry-native -DCMAKE_BUILD_TYPE=Debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -G Ninja
     cd /d "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" && cmake --build . --config Debug --parallel
     @echo.
     @echo "Copying Sentry Debug DLL to addon directory..."
     if not exist "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64" mkdir "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64"
-    copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug\Debug\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" /Y
+    copy "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug\sentry.dll" "{{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll" /Y
     @echo [OK] Sentry Debug DLL built and installed
 
 # Build both Sentry variants
