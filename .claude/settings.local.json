@@ -67,7 +67,21 @@
       "Bash(just help-build:*)",
       "Bash(just test-macos-target:*)",
       "Bash(do:*)",
-      "Bash(seq:*)"
+      "Bash(seq:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:trinovantes.github.io)",
+      "mcp__backlog__task_search",
+      "mcp__claude-historian-mcp__search_conversations",
+      "mcp__claude-historian-mcp__search_plans",
+      "mcp__claude-historian-mcp__list_recent_sessions",
+      "Bash(ssh:*)",
+      "Bash(ssh-copy-id:*)",
+      "Bash(git push:*)",
+      "Bash(git submodule:*)",
+      "WebFetch(domain:docs.github.com)",
+      "mcp__backlog__task_list",
+      "mcp__backlog__task_archive",
+      "mcp__backlog__document_search"
     ],
     "deny": [],
     "ask": [
