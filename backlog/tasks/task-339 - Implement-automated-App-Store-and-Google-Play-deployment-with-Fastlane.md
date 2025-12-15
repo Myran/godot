@@ -4,6 +4,7 @@ title: Implement automated App Store and Google Play deployment with Fastlane
 status: Consider
 assignee: []
 created_date: '2025-12-14 00:35'
+updated_date: '2025-12-15 09:35'
 labels:
   - ci-cd
   - deployment
@@ -14,7 +15,7 @@ labels:
   - android
   - automation
 dependencies:
-  - task-337
+  - task-336
 priority: medium
 ---
 
@@ -28,7 +29,7 @@ Implement automated deployment pipeline to iOS App Store and Google Play Store u
 - **Android**: Google Play Console upload, internal/beta/production tracks
 
 **Integration:**
-- Triggered via GitHub Actions workflows (task-337)
+- Triggered via GitHub Actions workflows (task-336 - UTM VM runner)
 - Uses existing `just` export recipes for building artifacts
 - Fastlane handles signing, metadata, screenshots, and store uploads
 
