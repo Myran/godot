@@ -287,6 +287,28 @@ export-windows-all: export-windows-debug export-windows-release
     @echo "📁 Release: export/windows/{{GAME_NAME}}.exe"
 
 # ================================
+# WINDOWS VM TESTING
+# ================================
+
+# Clear debug_startup_actions.json from Windows VM
+clear-test-windows:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🧹 Clearing Windows VM test configuration..."
+
+    WIN_USER_DATA_DIR='C:\Users\{{WIN_VM_USER}}\AppData\Roaming\Godot\app_userdata\gametwo'
+    CONFIG_FILE="${WIN_USER_DATA_DIR}\\debug_startup_actions.json"
+
+    # Check if config exists and remove it
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist \"${CONFIG_FILE}\" (del \"${CONFIG_FILE}\" && echo Removed: debug_startup_actions.json) else (echo No config found - already clean)"
+
+    echo "✅ Windows VM test config cleared"
+    echo "💡 run-windows will now start without debug actions"
+
+# Clear Windows test cache (alias for consistency with other platforms)
+clear-windows-test-cache: clear-test-windows
+
+# ================================
 # WINDOWS VM HELPERS
 # ================================
 
@@ -301,6 +323,13 @@ help-windows:
     @echo "  just export-windows-debug    - Export debug build"
     @echo "  just export-windows-release  - Export release build"
     @echo "  just export-windows-all      - Export both debug and release"
+    @echo ""
+    @echo "TESTING (VM):"
+    @echo "  just test-windows-target CONFIG  - Run automated test on Windows VM"
+    @echo "  just test-windows-manual CONFIG  - Run test manually (stays open)"
+    @echo "  just test-windows-update CONFIG  - Update checksum baseline"
+    @echo "  just test-windows-reset CONFIG   - Reset checksum baseline"
+    @echo "  just clear-test-windows          - Clear test config on VM"
     @echo ""
     @echo "VM MANAGEMENT:"
     @echo "  just win-vm-verify           - Verify VM connectivity and environment"
