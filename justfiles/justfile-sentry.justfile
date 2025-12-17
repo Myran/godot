@@ -1,12 +1,18 @@
 # Unified Sentry SDK Build Commands for GameTwo
 # Import split Sentry justfiles for modular access
 
+# Sentry SDK version (used for submodule and GDExtension downloads)
+# Update this when upgrading sentry-godot
+SENTRY_VERSION := "1.2.0"
+SENTRY_GDEXT_COMMIT := "241f16b"  # Commit hash in GDExtension release filename
+
 # Sentry SDK paths (shared across both integration types)
 SENTRY_PATH := "extras/sentry-godot"
 SENTRY_ADDON_PATH := "extras/sentry-godot/project/addons/sentry"
 PROJECT_SENTRY_PATH := "project/addons/sentry"
 SENTRY_PROJECT_PATH := "extras/sentry-godot/project"
 IOS_EXPORT_PATH := "export/ios"
+SENTRY_GDEXT_DIR := "extras/sentry-godot-gdextension-" + SENTRY_VERSION + "+" + SENTRY_GDEXT_COMMIT
 
 # Import specialized Sentry build modules
 import "justfile-native-ios-sentry.justfile"

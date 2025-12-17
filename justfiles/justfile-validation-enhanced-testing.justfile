@@ -3706,6 +3706,14 @@ _execute-test-windows config_name:
     echo "📦 Copying Windows export folder to VM..."
     scp -r export/windows/* "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SCP_TEST_DIR}/"
 
+    # Copy Firebase config to VM test directory (required for Firebase initialization)
+    if [ -f "firebase/google-services-desktop.json" ]; then
+        echo "🔥 Copying Firebase config to VM test directory..."
+        scp firebase/google-services-desktop.json "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SCP_TEST_DIR}/"
+    else
+        echo "⚠️  Warning: firebase/google-services-desktop.json not found - Firebase will not work on Windows"
+    fi
+
     # Verify executable exists on VM
     if ! ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist \"${WIN_TEST_EXE}\" echo exists" | grep -q exists; then
         echo "❌ Failed to copy executable to VM"

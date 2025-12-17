@@ -78,3 +78,5 @@ project/addons/sentry/bin/windows/**/*.dll
 templates/windows_*.zip
 templates/godot.windows.template_*.exe
 export/macos
+# Sentry GDExtension pre-built binaries (downloaded from GitHub releases)
+extras/sentry-godot-gdextension-*/
