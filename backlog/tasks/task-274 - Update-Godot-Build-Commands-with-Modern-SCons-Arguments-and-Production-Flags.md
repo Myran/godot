@@ -4,7 +4,7 @@ title: Update Godot Build Commands with Modern SCons Arguments and Production Fl
 status: Done
 assignee: []
 created_date: '2025-11-11 10:26'
-updated_date: '2025-11-11 13:24'
+updated_date: '2025-12-18 10:37'
 labels:
   - build-system
   - godot-engine
@@ -12,10 +12,12 @@ labels:
   - technical-debt
 dependencies: []
 priority: medium
+ordinal: 50000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Update Godot Engine SCons build commands across all justfile recipes to use modern Godot 4.5 arguments and production optimization flags. Current build commands are missing critical optimization flags like `production=yes` for release builds, which can result in suboptimal binary performance and larger binary sizes.
 
 **Current State:**
@@ -876,6 +878,7 @@ Using LTO: full      # iOS (may use full LTO)
 - justfiles/justfile-build-system.justfile - Core build commands
 - justfiles/justfile-platform-android.justfile - Android-specific builds
 - backlog/docs/doc-002 - Build System Architecture reference
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Notes
 

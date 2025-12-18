@@ -4,8 +4,7 @@ title: Investigate Persistent Firebase SIGBUS Crashes Post Memory Barrier Fix
 status: Done
 assignee: []
 created_date: '2025-10-15 19:50'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - firebase
@@ -17,10 +16,12 @@ labels:
 dependencies:
   - task-221
 priority: high
+ordinal: 93000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Firebase SIGBUS crashes persist after memory barrier fix (task-221)**. These crashes are a **separate issue** from the ARM64 memory ordering problem that was successfully resolved.
 
 **Key Finding**: Memory barriers are working perfectly (42/42 executed successfully), but SIGBUS crashes continue due to **misaligned memory access** in Firebase C++ SDK, NOT memory ordering.
@@ -463,3 +464,4 @@ Comprehensive test validation (logs/20251022_211336_test.log):
 
 Test log: logs/20251022_211336_test.log
 Resolution analysis: Comprehensive architectural improvements resolved entire class of Firebase synchronization issues
+<!-- SECTION:DESCRIPTION:END -->

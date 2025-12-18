@@ -4,22 +4,26 @@ title: Validate dwarf ability does not transfer on upgrade
 status: Done
 assignee: []
 created_date: '2025-08-07 09:05'
-updated_date: '2025-08-08 09:18'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 251000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 validate that the dwarf ability.
 Ability is a template ability and therefore should not transfer on upgrade.
 Bonus effect should be +1 attack and +1 health for each level the dwarf is.
 Bonus effect is granted to the dwarf (owner of the ability) when a merge happens on the board
 bonus effects gathered should be transfered on upgrade to the upgraded cards.
-bonus effect should be granted once for each merge on the board, no matter the amount of cards involved in the merge 
+bonus effect should be granted once for each merge on the board, no matter the amount of cards involved in the merge
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 inspect the dwarf ability 
 use dwarf-10 test replay to inspect the outcome
 
@@ -295,3 +299,4 @@ Card ID "13" merge (3x level 1 → 1x level 2):
 4. Verify fixes with dwarf-10 test replay
 
 **Impact**: Medium - affects game balance (dwarf bonus effectiveness)
+<!-- SECTION:NOTES:END -->

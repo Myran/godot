@@ -4,7 +4,7 @@ title: Implement Debug State Loading
 status: Done
 assignee: []
 created_date: '2025-08-21 06:49'
-updated_date: '2025-08-21 07:42'
+updated_date: '2025-12-18 10:37'
 labels:
   - gamestate
   - debug
@@ -13,11 +13,14 @@ dependencies:
   - task-75.07
 parent_task_id: task-75
 priority: high
+ordinal: 212000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Create LoadDebugStateAction and debug menu integration for loading saved states as recording starting points. Complete the developer workflow for scenario reproduction.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

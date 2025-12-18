@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-18'
-updated_date: '2025-11-18 14:55'
+updated_date: '2025-12-18 10:37'
 labels:
   - ios
   - logging
@@ -14,10 +14,12 @@ labels:
   - reliability
   - cross-platform
 dependencies: []
+ordinal: 37000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ### 🚨 CRITICAL INFRASTRUCTURE ISSUE
 
 iOS logging system is unreliable and cannot capture debug application logs, making iOS testing and debugging impossible. Current iOS logs only show macOS editor processes, not actual iOS device application logs, while Android provides comprehensive device log capture.
@@ -286,3 +288,4 @@ DEBUG_SUCCESS_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$LOG_FILE" 2>/dev/null | grep -
 - iOS testing infrastructure remains unreliable
 - Cross-platform parity cannot be achieved
 - iOS development speed severely limited
+<!-- SECTION:DESCRIPTION:END -->

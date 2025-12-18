@@ -4,7 +4,7 @@ title: Fix battle-animated test to emit sequential action completion event
 status: Done
 assignee: []
 created_date: '2025-10-02 13:49'
-updated_date: '2025-10-21'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - battle
@@ -12,10 +12,12 @@ labels:
   - timeout
 dependencies: []
 priority: medium
+ordinal: 114000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The `game.battle.test_determinism_animated` action triggers a battle and waits for it to complete, but doesn't emit a sequential action completion event. This causes a 30-second timeout in the test framework.
 
 **⚠️ CRITICAL DISCOVERY (2025-10-02):**
@@ -142,3 +144,4 @@ Check **task-162** (Done) - test WAS working before. What changed?
 **Solution:** Removed `CONNECT_ONE_SHOT` flag, added manual disconnect logic that only triggers when the correct TransitionEvent is detected.
 
 **Impact:** Battle-animated test now fully functional for regression testing and determinism validation.
+<!-- SECTION:DESCRIPTION:END -->

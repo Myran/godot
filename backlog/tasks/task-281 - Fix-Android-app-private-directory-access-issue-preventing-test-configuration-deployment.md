@@ -6,13 +6,15 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-16 09:46'
-updated_date: '2025-11-16 13:15'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 45000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Critical Issue**: Android test configuration deployment is failing with "App private directory not accessible" error, preventing all Android automated tests from running.
 
 **Current Error Pattern**:
@@ -411,3 +413,4 @@ adb -s {{ANDROID_DEVICE_ID}} shell "run-as {{ANDROID_PACKAGE_NAME}} cp /dev/null
 1. Revert commit 0e01f43e verification changes
 2. Test original working pattern on current Android version
 3. Verify that stale config issue (original reason for 0e01f43e) doesn't reappear
+<!-- SECTION:DESCRIPTION:END -->

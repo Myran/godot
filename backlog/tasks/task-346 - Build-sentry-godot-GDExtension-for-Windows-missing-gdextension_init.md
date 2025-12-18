@@ -4,7 +4,7 @@ title: Build sentry-godot GDExtension for Windows (missing gdextension_init)
 status: Done
 assignee: []
 created_date: '2025-12-16 18:35'
-updated_date: '2025-12-17 20:53'
+updated_date: '2025-12-18 10:37'
 labels:
   - windows
   - sentry
@@ -14,6 +14,7 @@ labels:
 dependencies:
   - task-341
 priority: high
+ordinal: 3000
 ---
 
 ## Description

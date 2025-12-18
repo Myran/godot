@@ -4,27 +4,32 @@ title: Document Archer unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 244000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Archer unit (ID: 5) with First Strike and Arrows abilities providing pre-combat advantage and ranged attacks
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Archer unit has correct base stats (1/2, soldier tribe)
-- [ ] First Strike ability gives combat priority
-- [ ] Arrows ability scales with friendly forest units
-- [ ] Implementation for abilities_archer.gd and battle interaction is accurate
+<!-- AC:BEGIN -->
+- [ ] #1 Archer unit has correct base stats (1/2, soldier tribe)
+- [ ] #2 First Strike ability gives combat priority
+- [ ] #3 Arrows ability scales with friendly forest units
+- [ ] #4 Implementation for abilities_archer.gd and battle interaction is accurate
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🔴 Complex
 **Current System**: ⚠️ Needs priority system and projectile mechanics
 
@@ -145,3 +150,4 @@ func sort_attacks_by_priority(attacks: Array[AttackEvent]) -> Array[AttackEvent]
 - Test arrows vs enemies that die from arrows (target filtering)
 - Test animation timing and visual effects
 - Test interaction with enemy shields/damage prevention
+<!-- SECTION:PLAN:END -->

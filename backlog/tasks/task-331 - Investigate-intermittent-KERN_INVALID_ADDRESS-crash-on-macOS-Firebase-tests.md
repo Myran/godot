@@ -4,7 +4,7 @@ title: Investigate intermittent KERN_INVALID_ADDRESS crash on macOS Firebase tes
 status: Done
 assignee: []
 created_date: '2025-12-09 19:21'
-updated_date: '2025-12-10 18:21'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - macos
@@ -14,6 +14,7 @@ labels:
 dependencies:
   - task-330
 priority: medium
+ordinal: 8000
 ---
 
 ## Description

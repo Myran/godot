@@ -4,7 +4,7 @@ title: Flatten data layer architecture by removing DatabaseService middleware
 status: Done
 assignee: []
 created_date: '2025-11-20 09:10'
-updated_date: '2025-12-06 11:24'
+updated_date: '2025-12-18 10:37'
 labels:
   - architecture
   - refactoring
@@ -13,10 +13,12 @@ labels:
   - code-reduction
 dependencies: []
 priority: medium
+ordinal: 36000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Assessment (2025-12-06)
 
 **Value: LOW-MEDIUM** - Simplification refactoring with modest benefits.
@@ -118,3 +120,4 @@ Remove the redundant DatabaseService middleware to reduce call stack depth and c
 - [ ] **CI Integration**: Migration validation added to `just ci-validate` pipeline
 - [ ] **Rollback Procedure**: Automated rollback capability if validation fails
 <!-- AC:END -->
+<!-- SECTION:DESCRIPTION:END -->

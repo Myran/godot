@@ -4,17 +4,18 @@ title: Fix Android Test Suite Isolation - App State Bleeds Between Configs
 status: Done
 assignee: []
 created_date: '2025-10-13 10:39'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - resolved
 dependencies: []
 parent_task_id: task-216
 priority: high
+ordinal: 100000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android test suite fails to isolate app state between consecutive config tests, causing first actions to execute before log capture starts. Isolated tests work perfectly (both sequences captured), but full suite runs miss sequence 1 because app remains running from previous test.
 
 EVIDENCE:
@@ -28,6 +29,7 @@ IMPACT:
 - Missing test data (sequence 1 logs)
 - False checksum failures in gamestate tests
 - Test results differ between isolated and suite runs
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -41,6 +43,7 @@ IMPACT:
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ## Implementation Plan - Android Test Suite Isolation Fix
 
 ### Overview
@@ -255,9 +258,11 @@ echo "✅ Both gamestate tests pass with proper isolation"
 - Fix directly addresses mechanism (stop clears buffer)
 - Evidence supports solution (timeline analysis)
 - Expert panel validation complete
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 IMPLEMENTATION PATTERN:
 
 ```bash
@@ -749,7 +754,6 @@ sleep 5  # Instead of sleep 2
 
 **Solution**: Must target Firebase system services, not just app process.
 
-
 ---
 
 ## ✅ RESOLUTION (2025-10-22 22:30)
@@ -810,3 +814,4 @@ Comprehensive test validation (logs/20251022_211336_test.log):
 Test log: logs/20251022_211336_test.log
 Test suite validation: 100% pass rate (23/23 configs, 88/88 actions)
 Isolation confirmed: Suite behavior matches isolated test behavior exactly
+<!-- SECTION:NOTES:END -->

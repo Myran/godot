@@ -4,7 +4,7 @@ title: Implement action-level expected result validation system
 status: Done
 assignee: []
 created_date: '2025-09-15 23:30'
-updated_date: '2025-09-15 23:58'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - framework
@@ -13,10 +13,12 @@ labels:
   - configuration
 dependencies: []
 priority: high
+ordinal: 147000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **CRITICAL**: Implement action-level expected result validation to properly handle error handling tests that intentionally generate error messages as part of their correct operation.
 
 **Problem**: Current test framework treats all error messages as failures, causing false positives for error handling tests that are working correctly by generating expected error patterns.
@@ -70,19 +72,22 @@ priority: high
 - Validate expected error patterns are present for error handling actions
 - Maintain current behavior for actions without expected_result specification
 - Report granular success: "Action X: Expected errors found ✅"
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] #1 Support both string and object action formats in test configurations
-- [ ] #2 Implement expected_result validation for actions with error expectations
-- [ ] #3 Preserve current "no errors = success" behavior for default actions
-- [ ] #4 Validate expected error patterns are found in logs for error handling actions
-- [ ] #5 Report granular action-level validation results
-- [ ] #6 Backward compatibility: All existing test configurations work unchanged
-- [ ] #7 Fix system-error-handling false positive using new validation system
+<!-- AC:BEGIN -->
+- [ ] #1 #1 Support both string and object action formats in test configurations
+- [ ] #2 #2 Implement expected_result validation for actions with error expectations
+- [ ] #3 #3 Preserve current "no errors = success" behavior for default actions
+- [ ] #4 #4 Validate expected error patterns are found in logs for error handling actions
+- [ ] #5 #5 Report granular action-level validation results
+- [ ] #6 #6 Backward compatibility: All existing test configurations work unchanged
+- [ ] #7 #7 Fix system-error-handling false positive using new validation system
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### **Phase 1: Configuration Parser Enhancement**
 - Update test configuration loading to support action objects
 - Maintain backward compatibility with string action format
@@ -163,3 +168,4 @@ High priority as this affects the accuracy of our entire test validation system 
 - ✅ **False positive elimination**: Error handling tests no longer incorrectly flagged as failures
 
 **Resolution**: Successfully resolves task-150 false positive issue and establishes robust foundation for all future error handling test validation.
+<!-- SECTION:PLAN:END -->

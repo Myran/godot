@@ -4,6 +4,7 @@ title: Validate and fix Firebase strong typing compatibility issues
 status: Done
 assignee: []
 created_date: '2025-09-10 13:28'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - critical
@@ -11,11 +12,14 @@ labels:
   - strong-typing
 dependencies: []
 priority: high
+ordinal: 160000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Critical infrastructure issue: Strong typing on Firebase signal parameters and Dictionary variables causes silent callback failures and partial operation failures. This affects Firebase C++ signal emissions to GDScript handlers and could be impacting many Firebase operations throughout the codebase silently.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

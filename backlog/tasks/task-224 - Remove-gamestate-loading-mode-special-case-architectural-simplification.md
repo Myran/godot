@@ -4,8 +4,7 @@ title: Remove gamestate loading mode special case - architectural simplification
 status: Done
 assignee: []
 created_date: '2025-10-16 17:53'
-updated_date: '2025-10-16 21:37'
-priority: medium
+updated_date: '2025-12-18 10:37'
 labels:
   - architecture
   - refactoring
@@ -13,10 +12,13 @@ labels:
   - gamestate
 dependencies:
   - task-218
+priority: medium
+ordinal: 92000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Architectural Issue**: Production code (level_controller.gd) currently depends on debug infrastructure (DebugConfigReader) to detect gamestate loading actions and skip tilemap block creation. This creates unnecessary coupling and special-case initialization logic.
 
 **Discovery Context**: During Task-218 post-mortem review, we questioned why gamestate loading needs special handling instead of being treated as a regular action. Investigation revealed the special case is an optimization (~10-50ms), not a correctness requirement.
@@ -76,9 +78,11 @@ dependencies:
 **The special case adds ~90 lines of complexity for marginal performance gain (~10-50ms) in debug-only testing scenarios.**
 
 If we value clean architecture over micro-optimization, the alternative design is superior. The 10-50ms overhead during debug-only testing is acceptable trade-off for better separation of concerns.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Code Removal
 
 **File: project/core/clicker/level_controller.gd**
@@ -273,3 +277,4 @@ The gamestate loading system now treats loading as a regular action that clears 
 - [x] Performance overhead acceptable (<100ms increase)
 - [x] Code review confirms cleaner architecture
 - [x] Documentation created with findings
+<!-- SECTION:PLAN:END -->

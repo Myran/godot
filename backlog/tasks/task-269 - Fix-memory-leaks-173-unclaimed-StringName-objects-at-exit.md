@@ -4,13 +4,15 @@ title: 'Fix memory leaks: 173 unclaimed StringName objects at exit'
 status: Done
 assignee: []
 created_date: '2025-11-10 23:12'
-updated_date: '2025-11-12 07:51'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 55000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Memory leak confirmed**: 135 unclaimed StringName objects detected at Godot editor exit (down from 173 originally reported).
 
 **Evidence**: Build log `20251111_155255_build.log` shows consistent StringName leaks during Android export process, repeating 6 times with 135 unclaimed objects each occurrence.
@@ -38,19 +40,22 @@ dependencies: []
 4. **Godot editor vs runtime**: Determine if this is purely an editor issue or affects runtime builds
 
 **Hypothesis**: The recent Sentry integration (task-267) introduced StringName registrations that aren't properly cleaned up during editor shutdown, causing memory leaks in the build process.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Reduce unclaimed StringName objects from 135 to < 50 at editor exit
-- [ ] Fix Sentry integration StringName cleanup during editor shutdown
-- [ ] Verify no StringName leaks in runtime (non-editor) builds
-- [ ] Test with verbose StringName debugging to confirm cleanup
-- [ ] Document StringName cleanup best practices for editor plugins
-- [ ] Validate fix doesn't break Sentry functionality
-- [ ] Ensure build process completes without memory leak warnings
+<!-- AC:BEGIN -->
+- [ ] #1 Reduce unclaimed StringName objects from 135 to < 50 at editor exit
+- [ ] #2 Fix Sentry integration StringName cleanup during editor shutdown
+- [ ] #3 Verify no StringName leaks in runtime (non-editor) builds
+- [ ] #4 Test with verbose StringName debugging to confirm cleanup
+- [ ] #5 Document StringName cleanup best practices for editor plugins
+- [ ] #6 Validate fix doesn't break Sentry functionality
+- [ ] #7 Ensure build process completes without memory leak warnings
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Investigation (Day 1)
 1. **Analyze Sentry integration code**
    - Review Sentry singleton cleanup patterns
@@ -79,3 +84,4 @@ dependencies: []
    - Verify no regressions in Sentry functionality
    - Validate memory leak reduction targets met
    - Document cleanup procedures
+<!-- SECTION:PLAN:END -->

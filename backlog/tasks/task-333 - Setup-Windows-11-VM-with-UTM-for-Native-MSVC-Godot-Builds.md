@@ -4,7 +4,7 @@ title: Setup Windows 11 VM with UTM for Native MSVC Godot Builds
 status: Done
 assignee: []
 created_date: '2025-12-11 21:04'
-updated_date: '2025-12-12 16:10'
+updated_date: '2025-12-18 10:37'
 labels:
   - windows
   - vm
@@ -14,6 +14,7 @@ labels:
   - msvc
 dependencies: []
 priority: high
+ordinal: 7000
 ---
 
 ## Description

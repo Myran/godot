@@ -4,7 +4,7 @@ title: Investigate Firebase backend sequential action timeout on Android
 status: Done
 assignee: []
 created_date: '2025-10-03 06:20'
-updated_date: '2025-10-03 08:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - firebase
@@ -13,10 +13,12 @@ labels:
   - timeout
 dependencies: []
 priority: medium
+ordinal: 111000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Three Firebase backend test configs on Android are experiencing partial completion event detection:
 1. **firebase-backend-batch-1**: 2/3 completion events detected
 2. **firebase-backend-layer**: 2/3 completion events detected
@@ -81,15 +83,16 @@ Firebase SDK on Android might execute callbacks on different threads, causing ev
 - Run same configs on Desktop if supported
 - Compare completion event behavior
 - Identify Android-specific differences
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Specific missing actions identified for each config
-- [ ] Root cause determined for missing completion events
-- [ ] Firebase backend actions emit all expected completion events
-- [ ] No 30s timeout warnings for firebase-backend-batch-1
-- [ ] No 30s timeout warnings for firebase-backend-layer
-- [ ] No 30s timeout warnings for system-performance
+<!-- AC:BEGIN -->
+- [ ] #1 Specific missing actions identified for each config
+- [ ] #2 Root cause determined for missing completion events
+- [ ] #3 Firebase backend actions emit all expected completion events
+- [ ] #4 No 30s timeout warnings for firebase-backend-batch-1
+- [ ] #5 No 30s timeout warnings for firebase-backend-layer
+- [ ] #6 No 30s timeout warnings for system-performance
 
 ## ✅ ROOT CAUSE IDENTIFIED (2025-10-03 11:15)
 
@@ -179,4 +182,4 @@ This is a **native code bug** in either:
 - **task-195**: Event-driven completion fix (Desktop working)
 - **task-196**: Android battle test hang investigation (RESOLVED - different issue)
 - **task-193**: Sequential action completion events (original implementation)
-
+<!-- AC:END -->

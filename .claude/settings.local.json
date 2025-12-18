@@ -81,7 +81,19 @@
       "WebFetch(domain:docs.github.com)",
       "mcp__backlog__task_list",
       "mcp__backlog__task_archive",
-      "mcp__backlog__document_search"
+      "mcp__backlog__document_search",
+      "Bash(timeout 30 ssh:*)",
+      "Bash(timeout 120 ssh:*)",
+      "Bash(timeout 120 just test-macos-target:*)",
+      "Bash(scp:*)",
+      "Bash(nm:*)",
+      "Bash(xxd:*)",
+      "Bash(git read-tree:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh release view:*)",
+      "Bash(otool -L:*)",
+      "Bash(mcp__backlog__task_view:*)",
+      "Bash(/Users/mattiasmyhrman/repos/Backlog.md/dist/backlog:*)"
     ],
     "deny": [],
     "ask": [

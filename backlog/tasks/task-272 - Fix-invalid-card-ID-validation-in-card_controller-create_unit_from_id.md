@@ -4,17 +4,19 @@ title: Fix invalid card ID validation in card_controller create_unit_from_id
 status: Done
 assignee: []
 created_date: '2025-11-11 08:39'
-updated_date: '2025-11-11 21:37'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - production-bug
   - validation
   - card-system
 dependencies: []
+ordinal: 52000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **🚨 CRITICAL PRODUCTION BUG** - Card/unit creation system broken due to invalid card ID validation failing.
 
 **Sentry Issue**: [GODOT-Z](https://primary-hive.sentry.io/issues/GODOT-Z)
@@ -95,17 +97,18 @@ func create_unit_from_id(card_id: String) -> Node:
         push_error("Invalid card ID '" + card_id + "', using default unit")
         return create_default_unit()
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] **Issue Identification**: Bug identified via Sentry MCP integration
-- [ ] **Root Cause Fixed**: Invalid card IDs handled gracefully without crashes
-- [ ] **Proper Error Logging**: Add detailed logging for invalid card ID scenarios
-- [ ] **Unit Creation Works**: Players can successfully create units from valid cards
-- [ ] **Graceful Degradation**: Invalid IDs handled without game crashes
-- [ ] **Sentry Validation**: No more GODOT-Z errors after fix deployment
-- [ ] **Data Integrity**: Fix doesn't corrupt existing card data or save files
-- [ ] **Cross-Platform**: Fix works on both desktop and Android platforms
+<!-- AC:BEGIN -->
+- [x] #1 **Issue Identification**: Bug identified via Sentry MCP integration
+- [ ] #2 **Root Cause Fixed**: Invalid card IDs handled gracefully without crashes
+- [ ] #3 **Proper Error Logging**: Add detailed logging for invalid card ID scenarios
+- [ ] #4 **Unit Creation Works**: Players can successfully create units from valid cards
+- [ ] #5 **Graceful Degradation**: Invalid IDs handled without game crashes
+- [ ] #6 **Sentry Validation**: No more GODOT-Z errors after fix deployment
+- [ ] #7 **Data Integrity**: Fix doesn't corrupt existing card data or save files
+- [ ] #8 **Cross-Platform**: Fix works on both desktop and Android platforms
 
 ## Testing Requirements
 
@@ -129,9 +132,11 @@ func create_unit_from_id(card_id: String) -> Node:
 - **Backlog**: task-271 (similar null/reference error pattern)
 - **Code Location**: `res://core/card_controller.gd:21`
 - **Related Systems**: Level creation, card database, unit management
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Investigation Method**: Discovered through Sentry MCP server integration showing real-time production errors.
 
 **Priority**: Critical - completely blocks unit creation and core gameplay functionality.
@@ -139,3 +144,4 @@ func create_unit_from_id(card_id: String) -> Node:
 **Estimated Complexity**: Medium - requires investigation of card ID validation logic and possibly card database integrity.
 
 **Data Safety**: Ensure fix doesn't lose or corrupt existing player card collections.
+<!-- SECTION:NOTES:END -->

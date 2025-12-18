@@ -6,16 +6,18 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-23 15:54'
-updated_date: '2025-11-25 09:34'
+updated_date: '2025-12-18 10:37'
 labels:
   - ios
   - test-framework
   - critical
 dependencies: []
+ordinal: 31000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS tests were failing because the app loaded CACHED debug configs instead of freshly pushed ones, causing tests to run with wrong test_id values.
 
 ## Investigation Summary
@@ -155,3 +157,4 @@ just test-ios-ipad 'system.debug.registry_stats'
 - `project/addons/debug_startup/debug_startup_coordinator.gd`: Call reset before external config reads
 
 **Result**: iOS automated tests now correctly load pushed configs without stale data contamination.
+<!-- SECTION:DESCRIPTION:END -->

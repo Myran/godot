@@ -4,7 +4,7 @@ title: Investigate Firebase Await Heisenbug - ARM64 Memory Ordering Issue
 status: Done
 assignee: []
 created_date: '2025-10-15 13:01'
-updated_date: '2025-10-15 19:15'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - firebase
@@ -16,15 +16,18 @@ labels:
   - production-ready
 dependencies: []
 priority: high
+ordinal: 95000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Critical investigation of Firebase request await hang on Android that was fixed by adding logging statements. This is a heisenbug indicating underlying ARM64 memory ordering issue.
-
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ## CTO Expert Review Findings (2025-10-15)
 
 ### VERDICT: NOT PRODUCTION READY AS-IS
@@ -441,3 +444,4 @@ If bug returns in production: Game hangs at startup -> 45s timeout -> User unins
 ## Related Tasks
 - task-132: Android DataSource hang (resolved by timeout architecture)
 - task-134: Initialization hang (resolved by timeout improvements)
+<!-- SECTION:NOTES:END -->

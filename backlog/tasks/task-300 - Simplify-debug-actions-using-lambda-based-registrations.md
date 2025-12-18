@@ -4,7 +4,7 @@ title: Simplify debug actions using lambda-based registrations
 status: Done
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-12-06 09:58'
+updated_date: '2025-12-18 10:37'
 labels:
   - debugging
   - code-reduction
@@ -13,10 +13,12 @@ labels:
   - maintenance
 dependencies: []
 priority: low
+ordinal: 34000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Reduce the file count and simplify maintenance by converting simple, single-purpose debug action scripts into inline lambda registrations within the registration files. This refactoring eliminates boilerplate code while maintaining all debug functionality through cleaner, more maintainable lambda-based implementations.
 
 **Current Problem:**
@@ -142,3 +144,4 @@ registry.register_action(
 - [ ] **Conversion Documentation**: Document lambda conversion patterns for future reference
 - [ ] **CI Integration**: Lambda action validation added to `just ci-validate` pipeline
 <!-- AC:END -->
+<!-- SECTION:DESCRIPTION:END -->

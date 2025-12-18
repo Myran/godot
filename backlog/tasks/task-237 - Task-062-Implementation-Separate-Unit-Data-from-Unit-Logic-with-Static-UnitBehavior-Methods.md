@@ -5,7 +5,8 @@ title: >-
   UnitBehavior Methods
 status: Done
 assignee: []
-priority: high
+created_date: '2025-10-24 06:29'
+updated_date: '2025-12-18 10:37'
 labels:
   - refactoring
   - architecture
@@ -13,12 +14,13 @@ labels:
   - unit-data
   - static-methods
 dependencies: []
-created_date: '2025-10-24 06:29'
-updated_date: '2025-10-24 06:40'
+priority: high
+ordinal: 79000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement Task-062 using Option A approach: Separate UnitData class responsibilities by creating a new UnitBehavior class with static methods for game logic, while keeping UnitData as a pure data container. **CRITICAL: Preserve all testing scaffolding code that is essential for ability system functionality.**
 
 ## Current State Analysis
@@ -41,9 +43,11 @@ Implement Task-062 using Option A approach: Separate UnitData class responsibili
   - Card ID 2: DeathTriggerHealthAbility (axe man testing)
   - Card ID 12: EvilSynergyAbility (troll testing)
   - Card ID 4: MergeBonusAbility (dwarf testing)
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Create UnitBehavior Class
 **File**: `/project/rules/unit_behavior.gd`
 
@@ -153,9 +157,11 @@ Implement Task-062 using Option A approach: Separate UnitData class responsibili
 - **Testing Scaffolding**: ✅ Preserved (cards 1, 2, 12, 4 abilities intact)
 - **Code Quality**: ✅ Validated through CI pipeline
 - **Functionality**: ✅ Zero regressions confirmed
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **CRITICAL REQUIREMENTS:**
 - **DO NOT REMOVE testing scaffolding code** (lines 57-82) - essential for ability system validation
 - **Preserve all existing functionality** through careful method extraction
@@ -182,3 +188,4 @@ Implement Task-062 using Option A approach: Separate UnitData class responsibili
 - Created for this implementation
 - Allows safe iteration and rollback
 - Will be merged after comprehensive testing validation
+<!-- SECTION:NOTES:END -->

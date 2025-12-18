@@ -4,7 +4,7 @@ title: Extract Unit Stat Calculations
 status: Done
 assignee: []
 created_date: '2025-08-17 08:10'
-updated_date: '2025-10-24 12:26'
+updated_date: '2025-12-18 10:37'
 labels:
   - architecture
   - refactoring
@@ -12,22 +12,27 @@ labels:
   - functional
 dependencies: []
 priority: high
+ordinal: 219000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Move stat calculations from UnitData to UnitStatCalculator to create pure functions for stat computations. Current implementation mixes calculation logic with data storage.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] UnitStatCalculator class created with pure calculation methods
-- [ ] All stat calculation logic moved from UnitData
-- [ ] Calculation functions are stateless and deterministic
-- [ ] UnitData uses calculator for stat computations
-- [ ] Unit tests validate calculation accuracy and purity
+<!-- AC:BEGIN -->
+- [ ] #1 UnitStatCalculator class created with pure calculation methods
+- [ ] #2 All stat calculation logic moved from UnitData
+- [ ] #3 Calculation functions are stateless and deterministic
+- [ ] #4 UnitData uses calculator for stat computations
+- [ ] #5 Unit tests validate calculation accuracy and purity
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Part of Comprehensive Refactoring Initiative (task-074)** 
 Phase 1: Critical Architecture Decoupling - UnitData Class Refactoring
 This task extracts stat calculations from UnitData into a UnitStatCalculator with pure functions for stat computations.
@@ -48,3 +53,4 @@ Recent UnitData/UnitBehavior refactoring (task-062) completed this work:
 • No need for separate UnitStatCalculator - UnitBehavior serves this role
 
 Root cause: Task objectives already accomplished by recent architectural refactoring.
+<!-- SECTION:NOTES:END -->

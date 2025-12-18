@@ -4,29 +4,34 @@ title: Document Old Man unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 247000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Old Man unit (ID: 11) with upgrade bonus ability providing defensive capabilities and growth through upgrades
 
 **Updated 2025-10-26**: Corrected unit ID from 2 to 11 based on current game data. Old Man has "onanyupgrade:bonus;1;1" ability, not shield/merge abilities as originally documented.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Old Man unit has correct base stats (3/5, no tribe)
-- [ ] Upgrade bonus ability grants +1/+1 when ANY unit upgrades
-- [ ] Starts combat with shield (per description)
-- [ ] Implementation matches onanyupgrade:bonus;1;1 ability string
+<!-- AC:BEGIN -->
+- [ ] #1 Old Man unit has correct base stats (3/5, no tribe)
+- [ ] #2 Upgrade bonus ability grants +1/+1 when ANY unit upgrades
+- [ ] #3 Starts combat with shield (per description)
+- [ ] #4 Implementation matches onanyupgrade:bonus;1;1 ability string
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟢 Simple
 **Current System**: ✅ Already has both required abilities implemented
 
@@ -63,3 +68,4 @@ old_man_abilities = [
 - Test shield consumption after taking damage
 - Test multiple merge operations (shield + cumulative stat bonuses)
 - Verify shield visual indicator appears correctly
+<!-- SECTION:PLAN:END -->

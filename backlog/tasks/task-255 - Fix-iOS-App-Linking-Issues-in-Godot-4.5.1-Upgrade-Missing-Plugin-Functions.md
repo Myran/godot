@@ -4,7 +4,7 @@ title: Fix iOS App Linking Issues in Godot 4.5.1 Upgrade - Missing Plugin Functi
 status: Done
 assignee: []
 created_date: '2025-10-30 16:29'
-updated_date: '2025-10-30 20:04'
+updated_date: '2025-12-18 10:37'
 labels:
   - ios
   - godot-upgrade
@@ -12,10 +12,12 @@ labels:
   - linking
   - apple-embedded
 dependencies: []
+ordinal: 68000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS app builds successfully at template stage but fails at final app linking with missing Apple embedded plugin symbols. This is a critical blocker for iOS deployment in the Godot 4.5.1 upgrade.
 
 **Specific Errors:**
@@ -46,17 +48,21 @@ The export system should generate a `.cpp` file containing the plugin initializa
 
 **Current State:**
 Functions are declared and called but never defined/compiled, causing linker errors.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-- [ ] iOS app builds and links successfully without missing symbol errors
-- [ ] Export system generates required plugin initialization functions automatically
-- [ ] Plugin system investigation identifies root cause in Godot 4.5 changes
-- [ ] Fix preserves existing plugin functionality
-- [ ] iOS app runs successfully on device/simulator after fix
-- [ ] SwiftUICore framework warnings are resolved
+<!-- AC:BEGIN -->
+- [ ] #1 iOS app builds and links successfully without missing symbol errors
+- [ ] #2 Export system generates required plugin initialization functions automatically
+- [ ] #3 Plugin system investigation identifies root cause in Godot 4.5 changes
+- [ ] #4 Fix preserves existing plugin functionality
+- [ ] #5 iOS app runs successfully on device/simulator after fix
+- [ ] #6 SwiftUICore framework warnings are resolved
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Investigation and Root Cause Analysis
 1. **Examine Godot 4.5 Changes**
    - Research changes in Apple embedded plugin system between 4.3 and 4.5
@@ -105,8 +111,11 @@ Functions are declared and called but never defined/compiled, causing linker err
    - Document the root cause and solution
    - Update any relevant build/configuration documentation
    - Ensure fix is reproducible and maintainable
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
 This task requires deep understanding of Godot's export system and Apple embedded plugin architecture. The issue appears to be a regression in Godot 4.5 where the auto-generation of plugin initialization functions is not working properly.
 
 The fix must ensure that:
@@ -116,3 +125,4 @@ The fix must ensure that:
 - The solution is compatible with the upgraded Godot 4.5.1 architecture
 
 Priority: Critical - This completely blocks iOS deployment and must be resolved before the Godot 4.5.1 upgrade can be considered complete.
+<!-- SECTION:NOTES:END -->

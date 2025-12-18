@@ -4,7 +4,7 @@ title: Extract DatabaseService from FirebaseBackend monolithic class
 status: Done
 assignee: []
 created_date: '2025-08-30 16:09'
-updated_date: '2025-08-30 21:26'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - architecture
@@ -12,11 +12,14 @@ labels:
 dependencies: []
 parent_task_id: task-107
 priority: high
+ordinal: 192000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Create a focused DatabaseService class containing all database operations from the current 968-line FirebaseBackend. This service will use the FirebaseRequest pattern for async operations and integrate with the existing firebase_service.gd Anti-Corruption Layer.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -25,8 +28,7 @@ Create a focused DatabaseService class containing all database operations from t
 
 ## Implementation Notes
 
-
-
+<!-- SECTION:NOTES:BEGIN -->
 🚨 CRITICAL DISCOVERY IMPACT: This subtask is based on false premise
 
 ## The Reality
@@ -52,3 +54,4 @@ Instead of extraction and implementation, this subtask needs:
 
 ## Status Change Required
 This subtask cannot be completed as written because the premise is incorrect. The DatabaseService already exists as firebase_service.gd.
+<!-- SECTION:NOTES:END -->

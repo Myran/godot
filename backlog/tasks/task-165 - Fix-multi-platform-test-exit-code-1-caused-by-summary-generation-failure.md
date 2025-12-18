@@ -4,14 +4,16 @@ title: Fix multi-platform test exit code 1 caused by summary generation failure
 status: Done
 assignee: []
 created_date: '2025-09-19 10:20'
-updated_date: '2025-09-19 12:30'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
 priority: medium
+ordinal: 138000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Multi-platform tests (`just _test-multi-platform CONFIG`) are failing with exit code 1 despite individual platform tests executing successfully. The issue occurs during the final summary generation phase, not during test execution.
 
 ## Problem Analysis
@@ -60,14 +62,15 @@ just _test-multi-platform battle-animated
 - "⚠️ No hierarchy file found for android - metrics will show 0"
 - Execution reaches final summary but exits with code 1
 - No errors in individual test execution phases
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] #1 Multi-platform tests with successful individual platform tests return exit code 0
-- [ ] #2 Multi-platform tests with platform skips (exit code 2) return exit code 0
-- [ ] #3 Multi-platform tests with actual platform failures return exit code 1
-- [ ] #4 Summary generation works correctly without requiring hierarchy files
-- [ ] #5 Test output clearly distinguishes between test failures and summary issues
+<!-- AC:BEGIN -->
+- [ ] #1 #1 Multi-platform tests with successful individual platform tests return exit code 0
+- [ ] #2 #2 Multi-platform tests with platform skips (exit code 2) return exit code 0
+- [ ] #3 #3 Multi-platform tests with actual platform failures return exit code 1
+- [ ] #4 #4 Summary generation works correctly without requiring hierarchy files
+- [ ] #5 #5 Test output clearly distinguishes between test failures and summary issues
 
 ## Implementation Strategy
 
@@ -127,11 +130,11 @@ echo "$PLATFORM_RESULTS" | grep -o "${platform}:[^;]*" | cut -d: -f2 2>/dev/null
 
 ### 🎯 All Acceptance Criteria Validated
 
-- [x] #1 Multi-platform tests with successful individual platform tests return exit code 0 ✅ **CONFIRMED**
-- [x] #2 Multi-platform tests with platform skips (exit code 2) return exit code 0 ✅ **CONFIRMED**
-- [x] #3 Multi-platform tests with actual platform failures return exit code 1 ✅ **CONFIRMED** (tested separately)
-- [x] #4 Summary generation works correctly without requiring hierarchy files ✅ **CONFIRMED**
-- [x] #5 Test output clearly distinguishes between test failures and summary issues ✅ **CONFIRMED**
+- [x] #6 #1 Multi-platform tests with successful individual platform tests return exit code 0 ✅ **CONFIRMED**
+- [x] #7 #2 Multi-platform tests with platform skips (exit code 2) return exit code 0 ✅ **CONFIRMED**
+- [x] #8 #3 Multi-platform tests with actual platform failures return exit code 1 ✅ **CONFIRMED** (tested separately)
+- [x] #9 #4 Summary generation works correctly without requiring hierarchy files ✅ **CONFIRMED**
+- [x] #10 #5 Test output clearly distinguishes between test failures and summary issues ✅ **CONFIRMED**
 
 ### 🔧 Technical Validation
 
@@ -142,3 +145,4 @@ echo "$PLATFORM_RESULTS" | grep -o "${platform}:[^;]*" | cut -d: -f2 2>/dev/null
 **Log Analysis**: Post-test error analysis completed successfully on all platforms
 
 **Real-world stress test under comprehensive conditions confirms the fix is production-ready.**
+<!-- AC:END -->

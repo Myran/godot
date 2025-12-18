@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-10-23 07:31'
-updated_date: '2025-10-23 20:03'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - android
@@ -14,12 +14,14 @@ labels:
   - race-condition
   - firebase
   - intermittent
-priority: high
 dependencies: []
+priority: high
+ordinal: 80000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android test `battle-logic-only` exhibits intermittent failures with three distinct outcomes observed across multiple test runs. The core issue is a **test results file writing race condition** where `auto_quit` triggers before results are flushed to disk, combined with intermittent **Firebase timeout errors** causing partial test execution.
 
 ## Evidence from Investigation (2025-10-23)
@@ -202,24 +204,25 @@ rg "auto_quit" project/ --type gd -C 5
 - Why does `battle-logic-only` need Firebase `rules_0` data?
 - Can battle logic tests run with mock/local data?
 - Is this a test design issue vs Firebase issue?
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
+<!-- AC:BEGIN -->
 ### For Issue 1: Results File Writing
-- [ ] #1 Identify exact code location where test results are written to file
-- [ ] #2 Add explicit `file.flush()` and `file.close()` before `auto_quit`
-- [ ] #3 Run `battle-logic-only` test 10 consecutive times
-- [ ] #4 Verify 0 instances of empty `[]` results files (0% failure rate)
-- [ ] #5 All 10 runs collect expected number of actions (4/4)
-- [ ] #6 Desktop tests continue to pass (no regression)
+- [ ] #1 #1 Identify exact code location where test results are written to file
+- [ ] #2 #2 Add explicit `file.flush()` and `file.close()` before `auto_quit`
+- [ ] #3 #3 Run `battle-logic-only` test 10 consecutive times
+- [ ] #4 #4 Verify 0 instances of empty `[]` results files (0% failure rate)
+- [ ] #5 #5 All 10 runs collect expected number of actions (4/4)
+- [ ] #6 #6 Desktop tests continue to pass (no regression)
 
 ### For Issue 2: Firebase Timeouts
-- [ ] #7 Identify why `battle-logic-only` requires Firebase `rules_0` data
-- [ ] #8 Determine if Firebase dependency can be removed for deterministic tests
-- [ ] #9 If Firebase required: Increase timeout or improve connection reliability
-- [ ] #10 If Firebase optional: Implement mock data for battle-logic-only tests
-- [ ] #11 Run `battle-logic-only` test 10 consecutive times after fix
-- [ ] #12 Verify 0 Firebase timeout errors (100% success rate)
+- [ ] #7 #7 Identify why `battle-logic-only` requires Firebase `rules_0` data
+- [ ] #8 #8 Determine if Firebase dependency can be removed for deterministic tests
+- [ ] #9 #9 If Firebase required: Increase timeout or improve connection reliability
+- [ ] #10 #10 If Firebase optional: Implement mock data for battle-logic-only tests
+- [ ] #11 #11 Run `battle-logic-only` test 10 consecutive times after fix
+- [ ] #12 #12 Verify 0 Firebase timeout errors (100% success rate)
 
 ## Investigation Steps
 
@@ -329,12 +332,12 @@ This prevents critical test result messages from being chunked, ensuring the tes
 ### Acceptance Criteria Status
 
 **Issue 1: Results File Writing** - ✅ RESOLVED
-- [x] #1 Identified root cause: JSON extraction failure from chunked messages
-- [x] #2 Added chunking exception for `DEBUG_TEST_SUCCESS/FAILURE` messages
-- [x] #3 Validated fix with multiple test runs (100% success rate)
-- [x] #4 Verified 0 instances of missing action results
-- [x] #5 All runs collect expected actions when they execute
-- [x] #6 Desktop tests continue to pass (no regression)
+- [x] #13 #1 Identified root cause: JSON extraction failure from chunked messages
+- [x] #14 #2 Added chunking exception for `DEBUG_TEST_SUCCESS/FAILURE` messages
+- [x] #15 #3 Validated fix with multiple test runs (100% success rate)
+- [x] #16 #4 Verified 0 instances of missing action results
+- [x] #17 #5 All runs collect expected actions when they execute
+- [x] #18 #6 Desktop tests continue to pass (no regression)
 
 **Issue 2: Firebase Timeouts** - ✅ RESOLVED INDIRECTLY
 - Firebase timeouts were determined to be separate test execution variability, not related to the core collection issue. The primary race condition has been resolved.
@@ -358,6 +361,9 @@ This prevents critical test result messages from being chunked, ensuring the tes
 - Race condition failures: 0% (file flush guarantee)
 - Firebase timeout failures: 0% (mock data or increased timeout)
 - Combined success rate: 100% (10/10 runs)
+<!-- AC:END -->
+
+
 
 ## Notes
 

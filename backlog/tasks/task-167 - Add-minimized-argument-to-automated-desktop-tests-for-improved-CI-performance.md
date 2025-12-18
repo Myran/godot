@@ -6,14 +6,16 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-09-19 20:53'
-updated_date: '2025-09-19 21:21'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
 priority: medium
+ordinal: 136000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Context
 
 Recent commits added support for --minimized flag to project/main.gd (lines 27-30) which sets DisplayServer.WINDOW_MODE_MINIMIZED when the flag is detected in command line arguments.
@@ -43,9 +45,11 @@ Add --minimized argument to automated desktop test execution to improve CI perfo
 - Improves CI performance by avoiding window rendering overhead
 - Maintains visual consistency with headless testing approach
 - No impact on test functionality - only affects window visibility
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 - Only applies to automated tests (test-desktop-target)
 - Manual desktop tests (test-desktop-manual) should remain visible
 - Verify --minimized flag works correctly with --test-mode combination
@@ -71,3 +75,4 @@ Successfully implemented --minimized argument for automated desktop tests in jus
 - Clean separation between manual (visible) and automated (minimized) tests
 
 Implementation follows simplicity and robustness principles: minimal changes with clear separation of concerns.
+<!-- SECTION:NOTES:END -->

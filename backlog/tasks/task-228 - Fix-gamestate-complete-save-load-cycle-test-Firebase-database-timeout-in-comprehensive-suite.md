@@ -4,11 +4,9 @@ title: >-
   Fix gamestate-complete-save-load-cycle-test Firebase database timeout in
   comprehensive suite
 status: Done
-priority: medium
 assignee: []
 created_date: '2025-10-17 14:05'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - database
@@ -19,10 +17,13 @@ labels:
   - resolved
 dependencies:
   - task-226
+priority: medium
+ordinal: 88000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **TEST SUITE ISSUE**: `gamestate-complete-save-load-cycle-test` fails with Firebase database timeout errors in comprehensive test suite execution. Test attempts to fetch rules data from Firebase but times out, causing cascade failure.
 
 ### Failure Pattern
@@ -119,16 +120,17 @@ just test-desktop-target gamestate-complete-save-load-cycle-test
 # 5. Check if related to test order (what runs before this test?)
 rg "gamestate-complete-save-load-cycle-test" logs/20251017_134504_test.log -B 50 | rg "🎯.*Testing"
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] `gamestate-complete-save-load-cycle-test` passes consistently in comprehensive suite (10/10 runs)
-- [ ] No Firebase database timeout errors in test logs
-- [ ] Rules data fetched successfully during gamestate operations
-- [ ] Test passes on both Android and desktop platforms in suite execution
-- [ ] No regression in individual test execution (already passing)
-- [ ] Firebase SDK properly reset/isolated between test configs (task-216.01)
-- [ ] Timeout handling improvements prevent false failures
+<!-- AC:BEGIN -->
+- [ ] #1 `gamestate-complete-save-load-cycle-test` passes consistently in comprehensive suite (10/10 runs)
+- [ ] #2 No Firebase database timeout errors in test logs
+- [ ] #3 Rules data fetched successfully during gamestate operations
+- [ ] #4 Test passes on both Android and desktop platforms in suite execution
+- [ ] #5 No regression in individual test execution (already passing)
+- [ ] #6 Firebase SDK properly reset/isolated between test configs (task-216.01)
+- [ ] #7 Timeout handling improvements prevent false failures
 
 ## Debug Commands
 
@@ -201,3 +203,4 @@ Comprehensive test validation (logs/20251022_211336_test.log):
 Test log: logs/20251022_211336_test.log
 Cross-platform validation: gamestate-complete-save-load-cycle-test passed on both Desktop and Android
 No timeout errors detected in comprehensive suite execution
+<!-- AC:END -->

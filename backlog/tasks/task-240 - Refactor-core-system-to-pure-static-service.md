@@ -4,17 +4,19 @@ title: Refactor core system to pure static service
 status: Done
 assignee: []
 created_date: '2025-10-26 09:57'
-updated_date: '2025-10-29 22:15'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
   - static-service
   - risk-assessment
 dependencies: []
+ordinal: 77000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -116,3 +118,4 @@ Task-240 is properly closed as "WILL NOT DO" to protect the stability and robust
 **Related Files:**
 - Original analysis: `backlog/tasks/task-241` (on `refactor/core-system-static-service` branch)
 - Technical analysis: Commit `fe68bae2` in `refactor/core-system-static-service` branch
+<!-- SECTION:DESCRIPTION:END -->

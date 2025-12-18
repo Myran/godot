@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-09-17 21:12'
-updated_date: '2025-09-18 08:43'
+updated_date: '2025-12-18 10:37'
 labels:
   - framework
   - architecture
@@ -15,10 +15,12 @@ labels:
   - technical-debt-elimination
 dependencies: []
 priority: high
+ordinal: 142000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Based on comprehensive expert panel review, the system-error-handling test failure reveals a fundamental architectural issue: external validation contradicting internal test results. The solution is to trust DebugActionResult.is_success() and build an extensible framework for all future error testing.
 
 **ROOT CAUSE ANALYSIS (COMPLETE REWRITE)**:
@@ -89,9 +91,16 @@ validate_error_handling_results() {
   }
 }
 ```
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Framework supports multiple validation strategies (trust_action_result implemented ✅),system-error-handling test passes using trust_action_result strategy (debug needed 🔄),Backward compatibility maintained with existing tests ✅,Clear extension points documented for future error types ✅,Framework eliminates timing-dependent validation ✅,Documentation provided for adding new validation strategies ✅,Technical debt from log pattern matching eliminated ✅
+<!-- AC:END -->
+
 ## Implementation Plan
 
-
+<!-- SECTION:PLAN:BEGIN -->
 ## ✅ COMPLETED PHASES
 
 **Phase 1: Framework Design ✅**
@@ -168,28 +177,12 @@ validate_error_handling_results() {
 3. Add support for network, auth, validation error types
 4. Migrate other error handling tests to framework
 5. Create migration guide and documentation
-
-
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 Framework supports multiple validation strategies (trust_action_result implemented ✅),system-error-handling test passes using trust_action_result strategy (debug needed 🔄),Backward compatibility maintained with existing tests ✅,Clear extension points documented for future error types ✅,Framework eliminates timing-dependent validation ✅,Documentation provided for adding new validation strategies ✅,Technical debt from log pattern matching eliminated ✅
-<!-- AC:END -->
-
-
-## Benefits & Technical Debt Elimination
-
-✅ **Immediate Fix**: Solves current system-error-handling failure
-✅ **Future-Proof**: Easy to add new error testing patterns
-✅ **Backward Compatible**: Existing tests continue working
-✅ **Simple Foundation**: Builds on existing DebugActionResult infrastructure
-✅ **Eliminates Brittleness**: Removes timing-dependent log pattern matching
-✅ **Clear Debugging**: Uses structured test results instead of log parsing
-✅ **Maintenance Reduction**: Single source of truth for test success
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 Framework implementation details and extension patterns. Start with trust_action_result strategy to immediately solve the system-error-handling failure, then build out extensible infrastructure for future error testing needs.
-
 
 ## ✅ IMPLEMENTATION PROGRESS (90% COMPLETE)
 
@@ -240,7 +233,6 @@ Framework implementation details and extension patterns. Start with trust_action
 
 **Status**: Framework implemented, minor bash execution debugging needed for completion
 
-
 ## Technical Notes
 
 **Framework Architecture**:
@@ -266,3 +258,14 @@ Framework implementation details and extension patterns. Start with trust_action
 - task-116: ○ Redesign Firebase C++ error handling test (Will benefit from new framework)
 
 **Impact**: Transforms system-error-handling from blocker into foundation for extensible error testing architecture.
+<!-- SECTION:NOTES:END -->
+
+## Benefits & Technical Debt Elimination
+
+✅ **Immediate Fix**: Solves current system-error-handling failure
+✅ **Future-Proof**: Easy to add new error testing patterns
+✅ **Backward Compatible**: Existing tests continue working
+✅ **Simple Foundation**: Builds on existing DebugActionResult infrastructure
+✅ **Eliminates Brittleness**: Removes timing-dependent log pattern matching
+✅ **Clear Debugging**: Uses structured test results instead of log parsing
+✅ **Maintenance Reduction**: Single source of truth for test success

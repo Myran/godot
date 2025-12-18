@@ -4,17 +4,19 @@ title: Add Swappy Frame Pacing to Godot Android Build for Performance Optimizati
 status: Done
 assignee: []
 created_date: '2025-11-06 12:01'
-updated_date: '2025-11-11 14:26'
+updated_date: '2025-12-18 10:37'
 labels:
   - android
   - performance
   - critical
   - build-optimization
 dependencies: []
+ordinal: 64000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Add Google Swappy Frame Pacing library to Godot Android build to eliminate stutter and achieve consistent 30/60/90/120 FPS on Android devices. This is **critical for game performance** as without Swappy, Godot apps will inevitably suffer stutter even on the best phones and the most simple scenes.
 
 ## Current Issue
@@ -50,9 +52,11 @@ godot/thirdparty/swappy-frame-pacing/x86_64/libswappy_static.a
 - Run `just build-android-templates` to confirm no Swappy warnings
 - Ensure Swappy is detected and integrated into Android build
 - Test performance improvements on actual Android devices
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### **Option 1: Manual Download (Recommended)**
 1. Visit https://github.com/godotengine/godot-swappy/releases
 2. Download the latest release (compatible with Godot 4.3)
@@ -145,3 +149,4 @@ git submodule add https://github.com/godotengine/godot-swappy.git godot/thirdpar
 - **task-259**: Sentry Android SDK integration (also uses build-android-templates)
 - **task-258**: Android build system investigation
 - Android performance optimization initiatives
+<!-- SECTION:PLAN:END -->

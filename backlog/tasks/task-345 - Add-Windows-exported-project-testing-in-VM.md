@@ -4,7 +4,7 @@ title: Add Windows exported project testing in VM
 status: Done
 assignee: []
 created_date: '2025-12-15 09:55'
-updated_date: '2025-12-16 18:39'
+updated_date: '2025-12-18 10:37'
 labels:
   - windows
   - testing
@@ -13,6 +13,7 @@ labels:
   - code-sharing
 dependencies: []
 priority: medium
+ordinal: 4000
 ---
 
 ## Description

@@ -4,7 +4,7 @@ title: Fix Firebase Data Integrity and Strong Typing Issues
 status: Done
 assignee: []
 created_date: '2025-09-10 22:15'
-updated_date: '2025-10-23 07:25'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - data-integrity
@@ -15,10 +15,12 @@ dependencies:
   - task-138
   - task-139
 priority: high
+ordinal: 158000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Multiple Firebase data integrity and strong typing issues detected during testing that prevent clean test execution. While core functionality works (actions now complete successfully after task-137 fixes), these data validation errors cause test failures and indicate potential runtime issues.
 
 ## Issues Identified
@@ -82,6 +84,7 @@ SCRIPT ERROR: Invalid access to property or key 'upgrade_level' on a base object
 - Desktop system-infrastructure: 99% pass rate
 
 **Closes**: task-140
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -92,39 +95,3 @@ SCRIPT ERROR: Invalid access to property or key 'upgrade_level' on a base object
 - [x] #5 Test execution passes without Firebase data errors
 - [x] #6 Error handling graceful - no script errors for missing data scenarios
 <!-- AC:END -->
-
-## Investigation Areas
-
-### **File Locations (from stack traces)**
-- `rules_collection.gd:75` - `_get_stack_trace()` 
-- `rules_collection.gd:41` - `get_rules()` 
-- `firebase_service_backend.gd:0` - `get_data()`
-
-### **Potential Root Causes**
-1. **Strong typing compatibility**: After task-137 signal handler fixes, data typing might need similar adjustments
-2. **Firebase data structure changes**: Data format in Firebase may not match GDScript expectations
-3. **Test environment data**: Missing or incomplete test data in Firebase database
-4. **Dictionary vs Class confusion**: Code expecting class properties but receiving plain Dictionary
-
-## Related Tasks
-- **task-137**: Firebase signal handler strong typing fixes (completed)
-- **task-138**: Validate Firebase strong typing compatibility (completed)  
-- **task-139**: Comprehensive Firebase strong typing audit (in progress)
-
-## Testing Commands
-```bash
-# Test current issue
-just test-android system.debug.registry_stats
-
-# Debug Firebase data errors specifically  
-just logs-errors TEST_ID
-
-# Test broader Firebase functionality
-just test-android 'system.firebase.*'
-```
-
-## Success Metrics
-- ✅ `just test-android system.debug.registry_stats` passes without errors
-- ✅ Firebase data operations complete without script errors
-- ✅ Rules collection loads successfully
-- ✅ Card data resolves with proper IDs and properties

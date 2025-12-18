@@ -4,7 +4,7 @@ title: Refactor FirebaseBackend to use domain services architecture
 status: Done
 assignee: []
 created_date: '2025-08-30 16:10'
-updated_date: '2025-09-04 20:44'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - architecture
@@ -12,11 +12,14 @@ labels:
 dependencies: []
 parent_task_id: task-107
 priority: high
+ordinal: 195000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Transform the monolithic FirebaseBackend class into a lightweight facade that delegates operations to the specialized domain services (AuthService, DatabaseService, StorageService). This maintains API compatibility while implementing clean architecture principles.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

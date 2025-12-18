@@ -4,7 +4,7 @@ title: Secure Android keystore management using Godot native environment variabl
 status: Done
 assignee: []
 created_date: '2025-11-07 08:50'
-updated_date: '2025-11-11 21:38'
+updated_date: '2025-12-18 10:37'
 labels:
   - android
   - security
@@ -12,10 +12,12 @@ labels:
   - godot
   - keystore
 dependencies: []
+ordinal: 63000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Replace the current insecure Android keystore setup (keystores committed to repository, no password protection) with Godot's native environment variable system for professional-grade security while maintaining excellent developer experience and CI/CD integration.
 
 **Current Security Issues:**
@@ -104,9 +106,61 @@ Implement environment-based keystore management using Godot's built-in environme
 - [ ] Security best practices documentation
 - [ ] Troubleshooting guide for common issues
 - [ ] CI/CD configuration documentation
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+### Must-Have Requirements
+- [ ] #1 All keystore files removed from version control
+- [ ] #2 Local development uses `.env` file with Godot variables
+- [ ] #3 CI/CD pipeline uses GitHub secrets for keystore data
+- [ ] #4 Build system validates environment before building
+- [ ] #5 Both debug and release APK/AAB generation works
+- [ ] #6 New developer onboarding takes < 10 minutes
+
+### Should-Have Requirements
+- [ ] #7 Keystore rotation process documented and tested
+- [ ] #8 Integration with existing Firebase/Sentry SDK injection
+- [ ] #9 Automatic keystore creation in setup script
+- [ ] #10 Environment-specific build configurations
+- [ ] #11 Security audit checklist for team reviews
+
+### Could-Have Requirements
+- [ ] #12 Multiple keystore support (different team members)
+- [ ] #13 Keystore backup and recovery procedures
+- [ ] #14 Integration with external secret management systems
+- [ ] #15 Automated security scanning of build artifacts
+
+## Definition of Done
+
+The task is complete when:
+1. **Security**: No sensitive keystore data in repository, all credentials in environment variables
+2. **Functionality**: Both local development and CI/CD builds work with new system
+3. **Documentation**: Complete setup and security guides available
+4. **Testing**: Comprehensive testing of all build scenarios
+5. **Team Readiness**: All team members trained on new workflow
+6. **Migration**: Clean migration from old system with no data loss
+
+## Related Tasks & Documents
+
+### Dependencies
+- **task-259**: Firebase + Sentry Android SDK integration system (uses same build pipeline)
+- **doc-002**: Build System Architecture & Workflows (reference for build recipes)
+
+### Related Documentation
+- `CLAUDE.md`: Update with new Android build workflows
+- Build system documentation: Keystore security guidelines
+- Team onboarding: Android development setup instructions
+
+### External References
+- Godot 4.x Export Documentation: Environment variable support
+- Android App Signing Best Practices: Security guidelines
+- GitHub Actions Security: Secrets management documentation
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Foundation (Day 1 - 3 hours)
 1. **Environment Setup**
    - Create `.env.template` with Godot variables
@@ -223,52 +277,4 @@ justfiles/
   - **Mitigation**: Thorough testing, fallback to manual configuration
 - **Risk**: Existing tool integration problems
   - **Mitigation**: Gradual migration, maintain legacy options temporarily
-
-## Acceptance Criteria
-
-### Must-Have Requirements
-- [ ] All keystore files removed from version control
-- [ ] Local development uses `.env` file with Godot variables
-- [ ] CI/CD pipeline uses GitHub secrets for keystore data
-- [ ] Build system validates environment before building
-- [ ] Both debug and release APK/AAB generation works
-- [ ] New developer onboarding takes < 10 minutes
-
-### Should-Have Requirements
-- [ ] Keystore rotation process documented and tested
-- [ ] Integration with existing Firebase/Sentry SDK injection
-- [ ] Automatic keystore creation in setup script
-- [ ] Environment-specific build configurations
-- [ ] Security audit checklist for team reviews
-
-### Could-Have Requirements
-- [ ] Multiple keystore support (different team members)
-- [ ] Keystore backup and recovery procedures
-- [ ] Integration with external secret management systems
-- [ ] Automated security scanning of build artifacts
-
-## Definition of Done
-
-The task is complete when:
-1. **Security**: No sensitive keystore data in repository, all credentials in environment variables
-2. **Functionality**: Both local development and CI/CD builds work with new system
-3. **Documentation**: Complete setup and security guides available
-4. **Testing**: Comprehensive testing of all build scenarios
-5. **Team Readiness**: All team members trained on new workflow
-6. **Migration**: Clean migration from old system with no data loss
-
-## Related Tasks & Documents
-
-### Dependencies
-- **task-259**: Firebase + Sentry Android SDK integration system (uses same build pipeline)
-- **doc-002**: Build System Architecture & Workflows (reference for build recipes)
-
-### Related Documentation
-- `CLAUDE.md`: Update with new Android build workflows
-- Build system documentation: Keystore security guidelines
-- Team onboarding: Android development setup instructions
-
-### External References
-- Godot 4.x Export Documentation: Environment variable support
-- Android App Signing Best Practices: Security guidelines
-- GitHub Actions Security: Secrets management documentation
+<!-- SECTION:PLAN:END -->

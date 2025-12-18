@@ -4,7 +4,7 @@ title: Fix battle-animated test infrastructure failure - zero actions collected
 status: Done
 assignee: []
 created_date: '2025-09-18 11:55'
-updated_date: '2025-09-18 12:23'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - battle-system
@@ -13,11 +13,9 @@ labels:
   - flaky-test
   - success-logging
   - race-condition
-priority: High
-description: >-
-  RESOLVED: Fixed intermittent success logging failure in system.debug.replay_complete
-  action that caused 0/3 action collection despite successful execution. Root cause was
-  _quit_application() terminating execution before success logging could complete.
+dependencies: []
+priority: high
+ordinal: 141000
 ---
 
 # Task 162: Fix battle-animated test infrastructure failure - zero actions collected

@@ -4,13 +4,15 @@ title: Add Battle replays to test
 status: Done
 assignee: []
 created_date: '2025-08-07 09:05'
-updated_date: '2025-08-15 12:30'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 250000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Add a system which allows us to add replays to the regression test suite, enabling both selective replay inclusion and comprehensive test coverage while maintaining the validity that is paramount to company survival.
 
 ## 🎯 Executive Summary
@@ -797,3 +799,4 @@ just test-android replay-testing                         # 18 mixed patterns
 ```
 
 The implementation delivers immediate business value with zero learning curve, providing teams instant access to comprehensive battle replay testing while preserving the test validity paramount to company survival.
+<!-- SECTION:DESCRIPTION:END -->

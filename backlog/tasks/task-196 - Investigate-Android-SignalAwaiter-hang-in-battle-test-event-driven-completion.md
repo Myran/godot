@@ -4,7 +4,7 @@ title: Investigate Android SignalAwaiter hang in battle test event-driven comple
 status: Done
 assignee: []
 created_date: '2025-10-03 06:20'
-updated_date: '2025-10-03 08:35'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - battle
@@ -15,10 +15,12 @@ labels:
 dependencies:
   - task-195
 priority: high
+ordinal: 112000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The event-driven battle completion fix (task-195) works perfectly on Desktop but **hangs indefinitely on Android**. The `await _await_state_transition_to(core.GameState.POSTBATTLE)` call never completes on Android, preventing the `test_determinism_animated` action from finishing and emitting completion events.
 
 ## 🔍 OODA Loop Root Cause Analysis
@@ -141,15 +143,16 @@ var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
         "timestamp": Time.get_ticks_msec()
     }, ["debug", "diagnostic", "handler"])
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Root cause of Android SignalAwaiter hang identified
-- [ ] Event emission timing verified with diagnostic logging
-- [ ] Signal connection timing confirmed
-- [ ] Platform-specific behavior documented
-- [ ] Solution strategy chosen based on evidence
-- [ ] Android test completes without hanging
+<!-- AC:BEGIN -->
+- [ ] #1 Root cause of Android SignalAwaiter hang identified
+- [ ] #2 Event emission timing verified with diagnostic logging
+- [ ] #3 Signal connection timing confirmed
+- [ ] #4 Platform-specific behavior documented
+- [ ] #5 Solution strategy chosen based on evidence
+- [ ] #6 Android test completes without hanging
 
 ## Related Evidence
 
@@ -164,9 +167,11 @@ var transition_handler: Callable = func(event_data: core.CoreEvent) -> void:
 **Action Results JSON:**
 - Android missing `game.battle.test_determinism_animated` from results
 - Only 3 actions logged instead of 4
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Expert Panel Consensus:**
 > "Investigation-first methodology is critical. Adding diagnostic logging to verify event emission timing will reveal whether this is a race condition, threading issue, or fundamental platform difference in signal handling. Do NOT jump to solutions until evidence confirms the exact failure mode."
 
@@ -258,4 +263,4 @@ Resolved in commit: `bdf90b02` - "Fix Android signal propagation race condition 
 
 - **task-195**: Original event-driven implementation (Desktop working, Android broken)
 - **task-197**: Firebase backend timeout investigation (may benefit from same fix)
-
+<!-- SECTION:NOTES:END -->

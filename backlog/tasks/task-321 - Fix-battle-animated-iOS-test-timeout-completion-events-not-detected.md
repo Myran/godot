@@ -4,13 +4,15 @@ title: Fix battle-animated iOS test timeout - completion events not detected
 status: Done
 assignee: []
 created_date: '2025-11-29 17:09'
-updated_date: '2025-11-29 18:40'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 17000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Description
 During iOS testing, the battle-animated configuration experiences a 30-second timeout while waiting for completion events, but all actions actually execute successfully (100% pass rate). This appears to be a test framework logging pattern issue rather than a functional problem.
 
@@ -25,13 +27,18 @@ During iOS testing, the battle-animated configuration experiences a 30-second ti
 2. Identify missing log patterns or event markers
 3. Add or modify completion detection patterns for animated battle sequences
 4. Ensure consistent behavior across all platforms (Android/Desktop pass, iOS times out)
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-- [ ] battle-animated iOS test completes without 30s timeout
-- [ ] All actions execute successfully (current behavior)
-- [ ] Test framework correctly detects completion for animated battles
-- [ ] Consistent behavior across iOS, Android, and Desktop platforms
-- [ ] No regression in other battle test configurations
+<!-- AC:BEGIN -->
+- [ ] #1 battle-animated iOS test completes without 30s timeout
+- [ ] #2 All actions execute successfully (current behavior)
+- [ ] #3 Test framework correctly detects completion for animated battles
+- [ ] #4 Consistent behavior across iOS, Android, and Desktop platforms
+- [ ] #5 No regression in other battle test configurations
+<!-- AC:END -->
+
+
 
 ## Notes
 - Android and Desktop versions pass without timeout issues

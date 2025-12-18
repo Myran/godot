@@ -4,28 +4,33 @@ title: Integrate lineup system with existing capture-gamestate infrastructure
 status: Done
 assignee: []
 created_date: '2025-08-30 07:19'
-updated_date: '2025-09-04 20:44'
+updated_date: '2025-12-18 10:37'
 labels:
   - integration
   - infrastructure
 dependencies: []
 parent_task_id: task-108
+ordinal: 190000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Integrate lineup save/load system with existing capture-gamestate infrastructure to leverage existing file management, naming conventions, and cross-platform compatibility
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Lineup system uses same directory structure as existing saved states
-- [ ] System leverages existing file management utilities and error handling
-- [ ] Integration maintains cross-platform compatibility (desktop/android)
-- [ ] Lineup saves work with existing 'just list-saved-states' and 'just clean-saved-states' commands
-- [ ] System follows established patterns for save file validation and integrity checks
+<!-- AC:BEGIN -->
+- [ ] #1 Lineup system uses same directory structure as existing saved states
+- [ ] #2 System leverages existing file management utilities and error handling
+- [ ] #3 Integration maintains cross-platform compatibility (desktop/android)
+- [ ] #4 Lineup saves work with existing 'just list-saved-states' and 'just clean-saved-states' commands
+- [ ] #5 System follows established patterns for save file validation and integrity checks
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 EXPERT TECHNICAL ANALYSIS - CLI Infrastructure Integration:
 
 Existing Justfile Architecture (Perfect Foundation):
@@ -46,7 +51,6 @@ Log Extraction Pattern Integration:
 - Error handling for missing/incomplete captures already implemented
 
 Command Implementation (Copy-Paste Ready):
-
 
 File Management Integration:
 - 'line-' prefix integrates seamlessly with existing file discovery
@@ -79,3 +83,4 @@ Integration Benefits:
 - Identical error handling and troubleshooting patterns
 - Same performance characteristics and reliability
 - Automatic compatibility with future infrastructure improvements
+<!-- SECTION:NOTES:END -->

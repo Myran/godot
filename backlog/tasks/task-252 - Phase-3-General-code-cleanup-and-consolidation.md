@@ -4,7 +4,7 @@ title: 'Phase 3: General code cleanup and consolidation'
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
@@ -13,10 +13,12 @@ labels:
   - code-quality
 dependencies:
   - task-251
+ordinal: 71000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -252,17 +254,19 @@ func perform_operation() -> Result:
 - **Consistent code patterns** across entire codebase
 - **Better debugging** capabilities with standardized patterns
 - **Simplified maintenance** and future development
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Battle.gd reduced from 456 to <400 lines
-- [ ] AbilityHelper.gd reduced from 505 to <450 lines
-- [ ] Consistent naming conventions applied across codebase
-- [ ] Standardized error handling patterns implemented
-- [ ] Improved documentation added to key methods
-- [ ] Unused code removed and imports optimized
-- [ ] All functionality preserved with identical behavior
-- [ ] No performance degradation in any system
-- [ ] Code quality standards met across all refactored classes
-- [ ] Complete refactoring initiative successfully delivered
-- [ ] Codebase ready for enhanced maintainability and future development
+<!-- AC:BEGIN -->
+- [ ] #1 Battle.gd reduced from 456 to <400 lines
+- [ ] #2 AbilityHelper.gd reduced from 505 to <450 lines
+- [ ] #3 Consistent naming conventions applied across codebase
+- [ ] #4 Standardized error handling patterns implemented
+- [ ] #5 Improved documentation added to key methods
+- [ ] #6 Unused code removed and imports optimized
+- [ ] #7 All functionality preserved with identical behavior
+- [ ] #8 No performance degradation in any system
+- [ ] #9 Code quality standards met across all refactored classes
+- [ ] #10 Complete refactoring initiative successfully delivered
+- [ ] #11 Codebase ready for enhanced maintainability and future development
+<!-- AC:END -->

@@ -4,7 +4,7 @@ title: Add Firebase User Context to Sentry
 status: Done
 assignee: []
 created_date: '2025-11-10 09:52'
-updated_date: '2025-11-11 20:57'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - firebase
@@ -12,10 +12,12 @@ labels:
   - user-context
 dependencies: []
 priority: medium
+ordinal: 59000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Enrich Sentry events with Firebase user and session context by adding **direct SentrySDK calls** to FirebaseService authentication flow. No intermediate bridge layer needed.
 
 ## Context
@@ -52,7 +54,6 @@ func _on_user_authenticated(user_data: Dictionary) -> void:
 	# Direct Sentry user context - no bridge needed
 	_update_sentry_user_context(user_data)
 
-
 func _on_user_signed_out() -> void:
 	# Existing Firebase logic
 	_current_user = null
@@ -60,7 +61,6 @@ func _on_user_signed_out() -> void:
 
 	# Clear Sentry user context
 	_clear_sentry_user_context()
-
 
 func _update_sentry_user_context(user_data: Dictionary) -> void:
 	# Only update if Sentry is available
@@ -85,7 +85,6 @@ func _update_sentry_user_context(user_data: Dictionary) -> void:
 		var auth_state: String = "signed_in" if user_data.get("is_anonymous", false) == false else "anonymous"
 		sentry.set_tag("auth_state", auth_state)
 		sentry.set_tag("firebase_provider", user_data.get("provider_id", "unknown"))
-
 
 func _clear_sentry_user_context() -> void:
 	if not Engine.has_singleton("SentrySDK"):
@@ -191,3 +190,4 @@ See `/tmp/task-263-expert-panel-evaluation.md` for complete analysis.
 Can be implemented in parallel with:
 - task-263: Direct Advanced Logger integration
 - task-266: Sentry debug actions
+<!-- SECTION:DESCRIPTION:END -->

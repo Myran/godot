@@ -4,33 +4,37 @@ title: Implement lineup loading system with allied/enemy slot assignment
 status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-09-04 20:45'
+updated_date: '2025-12-18 10:37'
 labels:
   - battle
   - loading
   - core
 dependencies: []
 parent_task_id: task-108
+ordinal: 188000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement lineup loading system that can restore saved lineups to specific battle slots (allied or enemy) independently, allowing battle scenario testing with mixed lineup configurations
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] System can load saved lineups with 'line-' prefix from existing save directory
-- [ ] Loading system can target specific battle slots (allied or enemy)
-- [ ] Any lineup file can be loaded into either allied or enemy slot
-- [ ] Loading lineup to allied slot does not affect enemy lineup
-- [ ] Loading lineup to enemy slot does not affect allied lineup
-- [ ] Loaded lineups maintain all original properties (cards, positions, levels, abilities, equipment)
-- [ ] Loading integrates with existing file management and validation systems
-- [ ] System enables flexible testing by allowing same lineup in either battle slot
+- [ ] #1 System can load saved lineups with 'line-' prefix from existing save directory
+- [ ] #2 Loading system can target specific battle slots (allied or enemy)
+- [ ] #3 Any lineup file can be loaded into either allied or enemy slot
+- [ ] #4 Loading lineup to allied slot does not affect enemy lineup
+- [ ] #5 Loading lineup to enemy slot does not affect allied lineup
+- [ ] #6 Loaded lineups maintain all original properties (cards, positions, levels, abilities, equipment)
+- [ ] #7 Loading integrates with existing file management and validation systems
+- [ ] #8 System enables flexible testing by allowing same lineup in either battle slot
 <!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 EXPERT TECHNICAL ANALYSIS - Surgical State Replacement:
 
 LoadDebugStateAction Extension Pattern:
@@ -70,3 +74,4 @@ Key Implementation Decisions:
 - Validate lineup data compatibility with current game version
 
 Complexity Assessment: Medium - requires careful state management but leverages existing infrastructure extensively
+<!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: Fix firebase-backend-layer intermittent Android initialization failure
 status: Done
 assignee: []
 created_date: '2025-09-16 09:25'
-updated_date: '2025-09-19 06:45'
+updated_date: '2025-12-18 10:37'
 labels:
   - android
   - firebase
@@ -15,11 +15,12 @@ labels:
   - memory-corruption
 dependencies:
   - task-152
-priority: critical
+ordinal: 144000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **ACTUAL ROOT CAUSE IDENTIFIED** (2025-09-16): Through Advanced OODA Loop debugging methodology, investigation reveals the issue is **NOT Firebase C++ module architecture flaws** but **Firebase GDScript await signal handling timing issues** on Android.
 
 **🔍 EVIDENCE-BASED ANALYSIS**:
@@ -731,3 +732,4 @@ just android-logs-search "firebase"          # Full device logs for C++ initiali
 - 🔄 **REQUIRES SEPARATE TASK**: Firebase GDScript await signal handling timing investigation on Android
 
 **Investigation Result**: Original task description was **incorrect** - Firebase C++ architecture is working correctly. Real issue is Firebase await signal timing on Android causing test collection gaps.
+<!-- SECTION:DESCRIPTION:END -->

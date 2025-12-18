@@ -4,8 +4,7 @@ title: Fix Android Checksum Collection Race Condition in Automated Tests
 status: Done
 assignee: []
 created_date: '2025-10-15 19:45'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - test-framework
@@ -15,11 +14,12 @@ labels:
   - auto-quit
   - resolved
 dependencies: []
-priority: critical
+ordinal: 94000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **CRITICAL TEST FRAMEWORK BUG**: Android automated tests with `auto_quit: true` consistently drop the final action's checksum, causing false negative test failures for gamestate validation.
 
 **Business Impact**: ⚠️ **Company survival risk** - Cannot validate game state consistency on production platform (Android). Regressions could slip through to production undetected.
@@ -522,3 +522,4 @@ Test log: logs/20251022_211336_test.log
 Gamestate tests: All passed on both Desktop and Android platforms
 Checksum validation: 100% collection rate across all automated tests with `auto_quit: true`
 Business risk: ELIMINATED - Android gamestate validation now trustworthy
+<!-- SECTION:DESCRIPTION:END -->

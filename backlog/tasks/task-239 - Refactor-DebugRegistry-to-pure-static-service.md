@@ -4,17 +4,19 @@ title: Refactor DebugRegistry to pure static service
 status: Done
 assignee: []
 created_date: '2025-10-26 09:57'
-updated_date: '2025-10-29 22:16'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
   - static-service
   - debug-system
 dependencies: []
+ordinal: 78000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -85,3 +87,4 @@ System became non-functional despite appearing to work initially
 Task-239 is properly closed as "WILL NOT DO" to protect the stability and functionality of debug systems. The analysis demonstrates that static service patterns introduced critical bugs without providing meaningful benefits.
 
 **Final Recommendation**: Maintain current Node-based debug registry architecture and focus on functional improvements rather than architectural changes.
+<!-- SECTION:DESCRIPTION:END -->

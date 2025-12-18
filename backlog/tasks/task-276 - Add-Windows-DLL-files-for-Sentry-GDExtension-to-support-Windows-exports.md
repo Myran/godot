@@ -4,13 +4,15 @@ title: Add Windows DLL files for Sentry GDExtension to support Windows exports
 status: Done
 assignee: []
 created_date: '2025-11-12 11:02'
-updated_date: '2025-11-21 13:24'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 48000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Windows Sentry GDExtension DLL files have been successfully integrated into the build system.
 
 **Completed Implementation:**
@@ -34,3 +36,4 @@ Windows Sentry builds are now part of Tier 1 (build-toolchain) in the three-tier
 ## Related Commits
 - Commit f9b3560f: feat(build): integrate Sentry into build pipeline and add iOS debug/release variants
 - Windows DLL builds included in unified Sentry build system
+<!-- SECTION:DESCRIPTION:END -->

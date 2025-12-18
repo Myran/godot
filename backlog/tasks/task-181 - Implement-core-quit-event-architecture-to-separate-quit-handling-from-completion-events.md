@@ -4,16 +4,22 @@ title: >-
   Implement core quit event architecture to separate quit handling from
   completion events
 status: Done
-assignee: [Claude]
+assignee:
+  - Claude
 created_date: '2025-09-26 14:26'
-completed_date: '2025-09-26 14:30'
-labels: [architecture, refactoring, async-handling]
+updated_date: '2025-12-18 10:37'
+labels:
+  - architecture
+  - refactoring
+  - async-handling
 dependencies: []
 priority: high
+ordinal: 124000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Refactor quit handling from system.debug.replay_complete into a dedicated core event system to improve separation of concerns and eliminate async logging complexity. This will centralize Android chunk processing synchronization and create a reusable quit mechanism for the entire system.
 
 ## Problem Statement
@@ -31,17 +37,18 @@ Implement a core `QuitApplicationEvent` that:
 - Handles Android chunk processing waits properly
 - Creates reusable quit mechanism for entire system
 - Maintains backward compatibility during transition
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] Create `QuitApplicationEvent` class extending core Event system
-- [x] Integrate with existing `core.action()` event handling
-- [x] Centralize Android chunk processing synchronization logic
-- [x] Simplify `_quit_application()` to use core event
-- [x] Refactor `_replay_complete()` to remove quit branching logic
-- [x] All existing tests pass without config changes
-- [x] No regressions in automated/manual mode behavior
-- [x] Verify Android chunk processing race conditions eliminated
+<!-- AC:BEGIN -->
+- [x] #1 Create `QuitApplicationEvent` class extending core Event system
+- [x] #2 Integrate with existing `core.action()` event handling
+- [x] #3 Centralize Android chunk processing synchronization logic
+- [x] #4 Simplify `_quit_application()` to use core event
+- [x] #5 Refactor `_replay_complete()` to remove quit branching logic
+- [x] #6 All existing tests pass without config changes
+- [x] #7 No regressions in automated/manual mode behavior
+- [x] #8 Verify Android chunk processing race conditions eliminated
 
 ## Implementation Results
 
@@ -81,9 +88,11 @@ All acceptance criteria have been implemented and validated:
 - **✅ Runtime Validation**: Godot project loads without errors
 - **✅ Code Formatting**: All files properly formatted
 - **✅ Backward Compatibility**: No existing config changes required
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Core Event Creation
 1. Create `project/core/events/quit_application_event.gd`
 2. Implement proper async logging synchronization
@@ -103,3 +112,4 @@ All acceptance criteria have been implemented and validated:
 1. Run existing test suite
 2. Verify no regressions in platform behavior
 3. Test Android chunk processing synchronization
+<!-- SECTION:PLAN:END -->

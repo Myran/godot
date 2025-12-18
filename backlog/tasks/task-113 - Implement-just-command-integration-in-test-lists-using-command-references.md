@@ -4,18 +4,21 @@ title: Implement just command integration in test lists using command references
 status: Done
 assignee: []
 created_date: '2025-09-03 16:23'
-updated_date: '2025-09-03 18:08'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - just-commands
   - integration
 dependencies: []
 priority: high
+ordinal: 181000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Add support for executing just commands within test lists by extending the JSON format to include a 'commands' array alongside existing 'configs'. This enables platform-specific command execution while maintaining clean separation between config-based and command-based testing approaches.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -24,6 +27,7 @@ Add support for executing just commands within test lists by extending the JSON 
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 COMPLETED - TDD Red Phase:
 1. ✅ Created test configuration: tests/test-lists/command-integration-test.json with commands array format
 2. ✅ Implemented test command: just test-command-integration for validation  
@@ -40,9 +44,11 @@ CURRENT - TDD Green Phase Implementation:
 11. Implement error handling and validation for command sequences
 12. Update test to verify full end-to-end functionality
 13. Validate integration with existing test infrastructure
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 TDD red phase complete - test fails as expected. Created test configuration with new commands array format. JSON parsing and platform filtering logic verified. Command integration with existing infrastructure confirmed. Ready to begin green phase implementation of command execution and TEST_ID context inheritance.
 
 IMPLEMENTATION COMPLETE ✅
@@ -68,3 +74,4 @@ DELIVERABLES COMPLETED:
 - Documentation: Complete status in backlog/research/tdd-command-integration-final-status.md
 
 Ready for production use. Task complete with full TDD cycle validation.
+<!-- SECTION:NOTES:END -->

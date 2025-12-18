@@ -4,7 +4,7 @@ title: Create Automated Checksum Validation
 status: Done
 assignee: []
 created_date: '2025-08-21 06:50'
-updated_date: '2025-08-21 07:42'
+updated_date: '2025-12-18 10:37'
 labels:
   - gamestate
   - validation
@@ -16,11 +16,14 @@ dependencies:
   - task-75.08
 parent_task_id: task-75
 priority: high
+ordinal: 209000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement VerifyGamestateRestorationAction with SHA256 checksum validation for perfect state preservation. Ensure loaded states exactly match saved states.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

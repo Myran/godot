@@ -4,7 +4,7 @@ title: Create Debug State Capture System
 status: Done
 assignee: []
 created_date: '2025-08-21 06:49'
-updated_date: '2025-08-21 07:42'
+updated_date: '2025-12-18 10:37'
 labels:
   - gamestate
   - debug
@@ -14,11 +14,14 @@ dependencies:
   - task-75.02
 parent_task_id: task-75
 priority: high
+ordinal: 214000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement SaveDebugStateAction to capture gamestate during gameplay to logs with special markers. Enable developers to extract any game state for testing purposes.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

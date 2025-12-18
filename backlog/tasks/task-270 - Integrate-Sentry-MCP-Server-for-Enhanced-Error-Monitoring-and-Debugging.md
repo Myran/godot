@@ -4,7 +4,7 @@ title: Integrate Sentry MCP Server for Enhanced Error Monitoring and Debugging
 status: Done
 assignee: []
 created_date: '2025-11-10 23:26'
-updated_date: '2025-11-11 20:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - mcp
@@ -15,10 +15,12 @@ dependencies:
   - task-257
   - task-263
 priority: high
+ordinal: 54000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Integrate Sentry's Model Context Protocol (MCP) server to bring comprehensive Sentry error monitoring, issue analysis, and debugging capabilities directly into Claude Code conversations. This integration will provide real-time access to Sentry issues, automated error analysis, and seamless debugging workflows within the GameTwo development environment.
 
 ## Background
@@ -106,9 +108,11 @@ npx @sentry/mcp-server@latest --access-token=token --host=sentry.example.com
 - [ ] Seer AI integration for automated fix suggestions
 - [ ] Documentation of Sentry MCP workflow patterns for GameTwo development
 - [ ] Integration testing with existing Sentry debug actions
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: MCP Server Configuration
 1. Configure Sentry MCP server using OAuth integration
 2. Authenticate with existing GameTwo Sentry organization
@@ -179,9 +183,11 @@ npx @sentry/mcp-server@latest --access-token=token --host=sentry.example.com
 - Sentry MCP Server Documentation: https://docs.sentry.io/product/sentry-mcp/
 - MCP Protocol Documentation: https://modelcontextprotocol.io/
 - GameTwo Sentry Integration Documentation
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Prerequisites:**
 - Existing Sentry organization with project access
 - Claude Code MCP client compatibility
@@ -223,3 +229,4 @@ Claude: [Searches for errors in specific files and provides analysis]
 User: "Correlate with recent changes to the authentication flow"
 Claude: [Cross-references issues with git history and recent commits]
 ```
+<!-- SECTION:NOTES:END -->

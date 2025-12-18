@@ -4,29 +4,34 @@ title: Document Wizard unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 238000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Wizard unit (ID: 16) with Zap ability that attacks one enemy per level instead of normal attack
 
 **Updated 2025-10-26**: Corrected unit ID from 10 to 16 based on current game data. Wizard has "alternateattack:zap;1" ability for multi-target damage.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Wizard unit has correct base stats (2/6, no tribe)
-- [ ] Zap ability attacks one enemy per level instead of normal attack
-- [ ] Each zap deals 2 damage (matches ability string "alternateattack:zap;1")
-- [ ] Implementation matches alternateattack:zap;1 ability string
+<!-- AC:BEGIN -->
+- [ ] #1 Wizard unit has correct base stats (2/6, no tribe)
+- [ ] #2 Zap ability attacks one enemy per level instead of normal attack
+- [ ] #3 Each zap deals 2 damage (matches ability string "alternateattack:zap;1")
+- [ ] #4 Implementation matches alternateattack:zap;1 ability string
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🔴 Complex
 **Current System**: ⚠️ Needs instant-kill mechanics and projectile system
 
@@ -121,3 +126,4 @@ func resolve_zap_attack(zap_data: Dictionary):
 - Test when no enemies available (edge case handling)
 - Test zap animation timing and visual effects
 - Test interaction with shields/damage prevention abilities
+<!-- SECTION:PLAN:END -->

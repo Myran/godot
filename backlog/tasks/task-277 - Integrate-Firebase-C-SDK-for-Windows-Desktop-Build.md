@@ -4,7 +4,7 @@ title: Integrate Firebase C++ SDK for Windows Desktop Build
 status: Done
 assignee: []
 created_date: '2025-11-12 16:41'
-updated_date: '2025-12-13 10:33'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - windows
@@ -14,6 +14,7 @@ labels:
 dependencies:
   - task-333
 priority: high
+ordinal: 47000
 ---
 
 ## Description

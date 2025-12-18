@@ -4,27 +4,32 @@ title: Document Guard unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-08-14 12:07'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 248000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Guard unit (ID: 0) with Soldier Bonus ability that gains +1/+1 for each friendly soldier unit when recruited
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] Guard unit has correct base stats (1/1, soldier tribe) - ID: 0
-- [x] Soldier Bonus ability is properly documented
-- [x] Implementation details for SoldierBonusAbility are accurate
-- [x] Unit behavior is consistent with description
+<!-- AC:BEGIN -->
+- [x] #1 Guard unit has correct base stats (1/1, soldier tribe) - ID: 0
+- [x] #2 Soldier Bonus ability is properly documented
+- [x] #3 Implementation details for SoldierBonusAbility are accurate
+- [x] #4 Unit behavior is consistent with description
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟢 Simple
 **Current System**: ✅ Perfect fit for existing event-driven architecture
 
@@ -57,9 +62,11 @@ func handle_draft_event(phase: core.Tempus, unit_position: int, unit: Block, dra
 - Verify stat bonuses apply correctly on recruitment
 - Ensure no bonuses when no soldiers present
 - Validate behavior with mixed tribe/tag soldier combinations
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ✅ **SYSTEM UPGRADE COMPLETED**: All implementation discrepancies have been resolved:
 
 1. ✅ **Corrected Guard ID**: Guard unit properly identified as ID '0' (not '1')
@@ -192,3 +199,4 @@ func handle_draft_event(event: DraftAbilityEvent) -> void:
 - ✅ Clean Guard ability logic using natural game events  
 - ✅ Proper context preservation for all merged units
 - ✅ Solid foundation for other synergy abilities
+<!-- SECTION:NOTES:END -->

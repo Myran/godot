@@ -4,17 +4,19 @@ title: Optimize iOS testing by moving ios-update-pck to run once upfront
 status: Done
 assignee: []
 created_date: '2025-11-27 19:09'
-updated_date: '2025-11-27 21:02'
+updated_date: '2025-12-18 10:37'
 labels:
   - ios
   - testing
   - performance
 dependencies: []
 priority: medium
+ordinal: 20000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Currently, `ios-update-pck` (PCK export) runs inside `_execute-test-ios` for every single test configuration. When running test lists with multiple configs, this causes redundant PCK exports even though the game code hasn't changed between tests.
 
 **Problem Example:**
@@ -118,9 +120,11 @@ After implementation:
 
 - `/Users/mattiasmyhrman/repos/gametwo/justfiles/justfile-validation-enhanced-testing.justfile`
 - `/Users/mattiasmyhrman/repos/gametwo/justfiles/justfile-platform-ios.justfile`
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Completed: 2025-11-27**
 
 ### Changes Made
@@ -341,3 +345,4 @@ fi
 ## Follow-Up Issues
 
 - **task-319**: Fix iOS log buffer flushing delay causing incomplete log retrieval - While task-318 optimized PCK export, a separate timing issue was discovered where iOS log buffers aren't flushed to disk before retrieval, causing "No actions found" test failures.
+<!-- SECTION:NOTES:END -->

@@ -4,27 +4,32 @@ title: Document Mooseman unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 246000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Mooseman unit (ID: 3) with Merge Shield ability that provides defensive capability when merged
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Mooseman unit has correct base stats (2/3, evil tribe)
-- [ ] Merge Shield ability properly documented
-- [ ] Shield activation occurs only when merged
-- [ ] Implementation for abilities_mooseman.gd is accurate
+<!-- AC:BEGIN -->
+- [ ] #1 Mooseman unit has correct base stats (2/3, evil tribe)
+- [ ] #2 Merge Shield ability properly documented
+- [ ] #3 Shield activation occurs only when merged
+- [ ] #4 Implementation for abilities_mooseman.gd is accurate
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟢 Simple
 **Current System**: ✅ Perfect fit for existing event-driven architecture
 
@@ -69,3 +74,4 @@ func handle_draft_event(phase: core.Tempus, unit_position: int, unit: Block, dra
 - Test shield functionality after merge (blocks one damage)
 - Test visual shield indicator appears correctly
 - Test persistence through battle transitions
+<!-- SECTION:PLAN:END -->

@@ -4,7 +4,7 @@ title: Use native Windows VM Sentry build with crashpad backend
 status: Done
 assignee: []
 created_date: '2025-12-14 15:40'
-updated_date: '2025-12-15 08:13'
+updated_date: '2025-12-18 10:37'
 labels:
   - windows
   - sentry
@@ -12,6 +12,7 @@ labels:
   - vm
 dependencies: []
 priority: medium
+ordinal: 5000
 ---
 
 ## Description

@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-09-25 12:20'
-updated_date: '2025-09-26 14:04'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - isolation
@@ -15,10 +15,12 @@ labels:
   - critical
 dependencies: []
 priority: high
+ordinal: 125000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 # Fix test suite isolation: ensure identical execution environment as individual tests
 
 ## Problem Statement
@@ -79,18 +81,20 @@ This changes execution behavior compared to individual tests which don't have th
 2. **State Contamination**: Previous tests affect subsequent test execution
 3. **Inconsistent Reporting**: Same test reports different action counts (4 vs 2)
 4. **False Positives**: Tests marked as "PASSED" despite silent failures
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Each test in a test suite MUST execute under identical conditions as when run individually
-- [ ] No shared session state between tests in a suite
-- [ ] Each test gets fresh environment isolation (app restart, cache clear, unique session ID)
-- [ ] DEBUG_TEST_SUCCESS logging must be consistent between individual and suite execution
-- [ ] Same test must report identical action counts regardless of execution context
-
+<!-- AC:BEGIN -->
+- [ ] #1 Each test in a test suite MUST execute under identical conditions as when run individually
+- [ ] #2 No shared session state between tests in a suite
+- [ ] #3 Each test gets fresh environment isolation (app restart, cache clear, unique session ID)
+- [ ] #4 DEBUG_TEST_SUCCESS logging must be consistent between individual and suite execution
+- [ ] #5 Same test must report identical action counts regardless of execution context
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ✅ RESOLVED: Test suite isolation successfully implemented. Evidence from 20250926_155152_test.log shows each test running in unique process (PIDs: 63465, 64479, 67380, 68503, 69747) with fresh environment isolation, unique session IDs, and consistent action counts. All acceptance criteria met.
 ## Implementation Options
 
@@ -139,3 +143,4 @@ just test-android system-layer-all && just test-android-target battle-logic-only
 - Key functions: `_test-list-generic`, `_execute-test-with-analysis`
 - Session management: Lines 1525-1533
 - Test execution loop: Lines 1622-1679
+<!-- SECTION:NOTES:END -->
