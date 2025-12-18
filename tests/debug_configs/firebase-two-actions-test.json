@@ -4,7 +4,7 @@
     "backend.firebase.async_pattern",
     "backend.firebase.performance"
   ],
-  "platforms": ["android", "ios", "macos"],
+  "platforms": ["android", "ios", "macos", "windows"],
   "metadata": {
     "auto_quit": true
   }

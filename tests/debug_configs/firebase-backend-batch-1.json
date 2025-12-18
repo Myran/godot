@@ -4,5 +4,5 @@
     "backend.firebase.async_pattern",
     "backend.firebase.lifecycle"
   ],
-  "platforms": ["android", "ios", "macos"]
+  "platforms": ["android", "ios", "macos", "windows"]
 }
