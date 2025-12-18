@@ -146,6 +146,20 @@ build-sentry-gdscript-ios:
 
     echo "   ✅ Copied xcframeworks to $DEST_EXPORT"
 
+    # Fix iOS dylib install names (pre-built binaries have incorrect paths)
+    # The dylibs need @rpath/libname.dylib instead of build-time paths
+    echo "🔧 Fixing iOS dylib install names..."
+    for location in "$DEST_ADDON" "$DEST_EXPORT"; do
+        for dylib in "$location"/libsentry.ios.*.xcframework/ios-arm64/*.dylib 2>/dev/null; do
+            if [ -f "$dylib" ]; then
+                name=$(basename "$dylib")
+                install_name_tool -id "@rpath/$name" "$dylib" 2>/dev/null || true
+                echo "   Fixed: $name"
+            fi
+        done
+    done
+    echo "   ✅ iOS dylib install names fixed"
+
 # Install Android binaries
 build-sentry-gdscript-android:
     #!/usr/bin/env bash
