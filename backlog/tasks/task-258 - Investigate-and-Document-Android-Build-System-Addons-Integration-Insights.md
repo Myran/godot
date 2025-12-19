@@ -4,13 +4,15 @@ title: Investigate and Document Android Build System Addons Integration Insights
 status: Done
 assignee: []
 created_date: '2025-11-05 17:43'
-updated_date: '2025-11-05 23:08'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 66000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 This task investigates Godot's Android build system to understand how addons integration works, particularly for Sentry SDK AAR files. The investigation revealed critical insights about Android deployment workflows and the root cause of Sentry AAR integration issues.
 
 ## Key Findings
@@ -235,3 +237,4 @@ just export-install-launch-debug # Export + install + launch
 - `project/android/build/build.gradle` - Build dependencies
 - `justfiles/justfile-platform-android.justfile` - Android deployment recipes
 - `project/addons/sentry/` - Sentry SDK AAR files
+<!-- SECTION:DESCRIPTION:END -->

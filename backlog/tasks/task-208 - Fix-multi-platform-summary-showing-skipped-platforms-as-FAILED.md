@@ -4,13 +4,15 @@ title: Fix multi-platform summary showing skipped platforms as FAILED
 status: Done
 assignee: []
 created_date: '2025-10-10 07:14'
-completed_date: '2025-10-10'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 107000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The multi-platform test summary shows skipped platforms as "❌ FAILED" instead of "⏭️ SKIPPED" when configs are not compatible with certain platforms.
 
 **Example from firebase-backend-batch-1 (android-only config):**
@@ -170,3 +172,4 @@ This fix ensures:
 ### Additional Finding
 
 Discovered that the fallback code at lines 489-514 could pick up old action result files from previous test runs when no hierarchy entry existed. This has been addressed as part of the platform filtering fix - now when there's no hierarchy entry, it correctly shows "⚫ NOT RUN" without falling back to stale data.
+<!-- SECTION:DESCRIPTION:END -->

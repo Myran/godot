@@ -4,14 +4,22 @@ title: >-
   Fix Android batch test action completion sequencing - 0 actions collected
   failures persist
 status: Done
-assignee: [claude]
+assignee:
+  - claude
 created_date: '2025-09-22 10:15'
-labels: [critical, android, testing, batch-execution]
+updated_date: '2025-12-18 10:37'
+labels:
+  - critical
+  - android
+  - testing
+  - batch-execution
 dependencies: []
+ordinal: 129000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android batch test execution continues to show "0 actions collected" and "CRITICAL TEST FAILURE: No actions found" for multiple tests, even after implementing early success logging for gamestate actions.
 
 ## Root Cause Analysis (COMPLETED)
@@ -146,3 +154,4 @@ if success and auto_continue:
 
 ## Priority
 **✅ RESOLVED** - Critical issue fixed, daily development workflow restored
+<!-- SECTION:DESCRIPTION:END -->

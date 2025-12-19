@@ -4,7 +4,7 @@ title: Integrate macOS into test system with aligned just recipes
 status: Done
 assignee: []
 created_date: '2025-12-08 18:46'
-updated_date: '2025-12-09 08:15'
+updated_date: '2025-12-18 10:37'
 labels:
   - macos
   - testing
@@ -12,6 +12,7 @@ labels:
   - just-recipes
 dependencies: []
 priority: medium
+ordinal: 10000
 ---
 
 ## Description

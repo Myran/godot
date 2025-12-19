@@ -2,10 +2,9 @@
 id: task-226
 title: Fix gamestate-complete-save-load-cycle-test checksum validation MISMATCH
 status: Done
-priority: medium
 assignee: []
 created_date: '2025-10-17 11:26'
-updated_date: '2025-10-17 13:37'
+updated_date: '2025-12-18 10:37'
 labels:
   - gamestate
   - checksum
@@ -14,6 +13,8 @@ labels:
   - determinism
   - duplicate
 dependencies: []
+priority: medium
+ordinal: 90000
 ---
 
 ## RESOLUTION ✅
@@ -188,14 +189,14 @@ rg "checksum_validation" tests/debug_configs/gamestate-complete-save-load-cycle-
 ```
 
 ## Acceptance Criteria
-
-- [ ] `gamestate-complete-save-load-cycle-test` passes on desktop (10/10 runs)
-- [ ] `gamestate-complete-save-load-cycle-test` passes on Android (10/10 runs)
-- [ ] All 4 checksums validated if config expects 4, or config updated to expect 3
-- [ ] Checksum validation table shows correct number of checksums
-- [ ] No MISMATCH errors when actual matches expected
-- [ ] `load_gamestate` action appears in Android results table
-- [ ] Validation logic clearly handles `replay_complete` checksum (or lack thereof)
+<!-- AC:BEGIN -->
+- [ ] #1 `gamestate-complete-save-load-cycle-test` passes on desktop (10/10 runs)
+- [ ] #2 `gamestate-complete-save-load-cycle-test` passes on Android (10/10 runs)
+- [ ] #3 All 4 checksums validated if config expects 4, or config updated to expect 3
+- [ ] #4 Checksum validation table shows correct number of checksums
+- [ ] #5 No MISMATCH errors when actual matches expected
+- [ ] #6 `load_gamestate` action appears in Android results table
+- [ ] #7 Validation logic clearly handles `replay_complete` checksum (or lack thereof)
 
 ## Evidence
 
@@ -203,3 +204,4 @@ rg "checksum_validation" tests/debug_configs/gamestate-complete-save-load-cycle-
 **Test Session:** `1760688404`
 **Date:** 2025-10-17 10:08 (desktop), 10:08 (android)
 **Status:** Both platforms failed with identical MISMATCH pattern
+<!-- AC:END -->

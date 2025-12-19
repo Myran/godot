@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-23 07:41'
-updated_date: '2025-11-23 08:09'
+updated_date: '2025-12-18 10:37'
 labels:
   - bug
   - test-framework
@@ -14,10 +14,12 @@ labels:
   - result-collection
 dependencies: []
 priority: high
+ordinal: 32000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Discovered during:** Task-301 iOS test validation when investigating why `backend.firebase.error_handling` test showed only `system.debug.replay_complete` in results instead of the Firebase action.
 
 **Core Issue:** Sequential actions (actions with `auto_continue = false`) execute successfully but do not generate `DEBUG_TEST_SUCCESS` log messages, causing the test result collection infrastructure to miss them entirely.
@@ -170,3 +172,4 @@ DEBUG_TEST_SUCCESS count: 2
 - [x] No regression in non-sequential action logging
 - [x] Cross-platform consistency (Android/Desktop confirmed, iOS pending due to code signing issue)
 - [x] All existing sequential action tests pass with complete results
+<!-- SECTION:DESCRIPTION:END -->

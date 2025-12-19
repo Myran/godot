@@ -1,14 +1,16 @@
 ---
 id: task-094
 title: Fix async card recreation order for gamestate determinism
-status: In Progress
-priority: critical
+status: Done
+assignee: []
+created_date: '2025-09-13'
+updated_date: '2025-12-18 10:37'
 labels:
   - gamestate
   - determinism
   - bug-fix
-created_date: '2025-09-13'
-updated_date: '2025-09-13'
+dependencies: []
+ordinal: 1000
 ---
 
 # task-094 - Fix async card recreation order for gamestate determinism
@@ -105,26 +107,28 @@ for position in sorted_positions:
 - Replay integrity validation with existing battle scenarios
 
 ## Acceptance Criteria
-
+<!-- AC:BEGIN -->
 ### Must Have
-- [ ] 100% checksum validation success rate across platforms
-- [ ] Deterministic card order in all gamestate loading scenarios
-- [ ] All existing debug configs continue to pass
-- [ ] Performance maintained within 50ms target
-- [ ] Cross-platform consistency verified
+- [ ] #1 100% checksum validation success rate across platforms
+- [ ] #2 Deterministic card order in all gamestate loading scenarios
+- [ ] #3 All existing debug configs continue to pass
+- [ ] #4 Performance maintained within 50ms target
+- [ ] #5 Cross-platform consistency verified
 
 ### Should Have
-- [ ] Improved error messages for recreation failures
-- [ ] Debug logging for recreation order validation
-- [ ] Automated regression testing integrated into CI/CD
+- [ ] #6 Improved error messages for recreation failures
+- [ ] #7 Debug logging for recreation order validation
+- [ ] #8 Automated regression testing integrated into CI/CD
 
 ### Nice to Have
-- [ ] Performance improvements beyond current baseline
-- [ ] Enhanced debugging tools for gamestate analysis
-- [ ] Documentation of deterministic patterns for future development
+- [ ] #9 Performance improvements beyond current baseline
+- [ ] #10 Enhanced debugging tools for gamestate analysis
+- [ ] #11 Documentation of deterministic patterns for future development
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Key Technical Considerations**:
 - Use `Array.sort()` for guaranteed deterministic ordering
 - Implement field-by-field state comparison logging for debugging
@@ -138,3 +142,4 @@ for position in sorted_positions:
 - Battle system (project/game/battle/)
 
 This task directly addresses the critical gamestate reliability issues identified in the comprehensive assessment and is essential for maintaining GameTwo's industry-leading debugging and testing capabilities.
+<!-- SECTION:NOTES:END -->

@@ -4,6 +4,7 @@ title: Fix polling loop anti-pattern in replay completion action sequencing
 status: Done
 assignee: []
 created_date: '2025-09-26 17:09'
+updated_date: '2025-12-18 10:37'
 labels:
   - code-quality
   - architecture
@@ -11,10 +12,12 @@ labels:
   - replay
 dependencies: []
 priority: high
+ordinal: 123000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Replace the temporary polling loop in _replay_complete() with proper signal-based await pattern for reliable action completion before quit.
 
 ## Context
@@ -38,14 +41,16 @@ if game_node:
 2. **Code Quality**: Not the proper Godot/async pattern
 3. **Reliability**: Potential race conditions and timing issues
 4. **Performance**: Unnecessary frame polling when signals could be used
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-- [x] Replace polling loop with proper signal-based await mechanism
-- [x] Maintain 100% test pass rate across all platforms
-- [x] Ensure `system.debug.registry_stats` success logging continues to work
-- [x] No regression in replay completion timing or functionality
-- [x] Code follows Godot async best practices
-- [x] Solution is cross-platform compatible (Desktop + Android)
+<!-- AC:BEGIN -->
+- [x] #1 Replace polling loop with proper signal-based await mechanism
+- [x] #2 Maintain 100% test pass rate across all platforms
+- [x] #3 Ensure `system.debug.registry_stats` success logging continues to work
+- [x] #4 No regression in replay completion timing or functionality
+- [x] #5 Code follows Godot async best practices
+- [x] #6 Solution is cross-platform compatible (Desktop + Android)
 
 ## Resolution
 
@@ -82,3 +87,4 @@ if game_node:
 - Maintained or improved test reliability
 - Cleaner, more maintainable code
 - Proper async/await patterns throughout
+<!-- AC:END -->

@@ -4,7 +4,7 @@ title: Fix SIGPIPE errors in CompositeLogger logging system
 status: Done
 assignee: []
 created_date: '2025-11-11 08:40'
-updated_date: '2025-11-11 21:08'
+updated_date: '2025-12-18 10:37'
 labels:
   - stability
   - logging
@@ -12,10 +12,12 @@ labels:
   - mobile-app
 dependencies: []
 priority: high
+ordinal: 51000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **🚨 HIGH PRIORITY STABILITY ISSUE** - Logging system experiencing SIGPIPE errors causing potential app crashes.
 
 **Sentry Issue**: [GODOT-S](https://primary-hive.sentry.io/issues/GODOT-S)
@@ -119,17 +121,18 @@ class LifecycleAwareLogger {
     }
 };
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] **Issue Identification**: SIGPIPE errors identified via Sentry MCP integration
-- [ ] **SIGPIPE Handling**: Implement proper SIGPIPE signal handling to prevent crashes
-- [ ] **Graceful Degradation**: Logging system handles broken pipes without app termination
-- [ ] **Mobile Stability**: Fix works reliably on Android/iOS platforms
-- [ ] **Preserve Logging**: Core logging functionality remains intact when app is active
-- [ ] **Sentry Validation**: No more GODOT-S SIGPIPE errors after fix deployment
-- [ ] **Performance**: Minimal performance impact from signal handling
-- [ ] **Testing**: Validate fix with app backgrounding/foregrounding scenarios
+<!-- AC:BEGIN -->
+- [x] #1 **Issue Identification**: SIGPIPE errors identified via Sentry MCP integration
+- [ ] #2 **SIGPIPE Handling**: Implement proper SIGPIPE signal handling to prevent crashes
+- [ ] #3 **Graceful Degradation**: Logging system handles broken pipes without app termination
+- [ ] #4 **Mobile Stability**: Fix works reliably on Android/iOS platforms
+- [ ] #5 **Preserve Logging**: Core logging functionality remains intact when app is active
+- [ ] #6 **Sentry Validation**: No more GODOT-S SIGPIPE errors after fix deployment
+- [ ] #7 **Performance**: Minimal performance impact from signal handling
+- [ ] #8 **Testing**: Validate fix with app backgrounding/foregrounding scenarios
 
 ## Testing Requirements
 
@@ -163,9 +166,11 @@ class LifecycleAwareLogger {
 - **Backlog**: task-166 (SIGPIPE in test pipeline - similar pattern)
 - **Code Location**: `CompositeLogger::logv` (C++ logging infrastructure)
 - **Related Systems**: App lifecycle management, logging infrastructure
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Investigation Method**: Discovered through Sentry MCP server integration showing real-time production stability issues.
 
 **Priority**: High - causes app crashes and poor user experience, though not blocking core functionality.
@@ -175,3 +180,4 @@ class LifecycleAwareLogger {
 **Estimated Complexity**: Medium - requires C++ signal handling and mobile lifecycle awareness.
 
 **Safety**: Signal handling must be carefully implemented to avoid side effects.
+<!-- SECTION:NOTES:END -->

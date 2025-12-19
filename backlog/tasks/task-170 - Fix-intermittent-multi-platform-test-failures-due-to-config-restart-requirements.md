@@ -6,17 +6,19 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-09-20 19:04'
-updated_date: '2025-10-24 11:46'
+updated_date: '2025-12-18 10:37'
 labels:
   - test-infrastructure
   - reliability
   - multi-platform
 dependencies: []
 priority: medium
+ordinal: 133000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Multi-platform test runs (`just test`) intermittently fail with `RESTART_NEEDED` errors for individual test configurations, while direct test execution succeeds. This indicates a test infrastructure issue with configuration management rather than functional code problems.
 
 ## Problem Analysis
@@ -61,15 +63,16 @@ ERROR: system.debug.load_gamestate - Invalid capture data format
 - CI pipeline potential instability
 
 **Risk Level:** Medium - affects test reliability but not production functionality
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] #1 Multi-platform test runs achieve 100% reliability (no intermittent RESTART_NEEDED failures)
-- [ ] #2 Configuration change detection mechanism works consistently across platforms
-- [ ] #3 Restart validation process completes successfully for config updates
-- [ ] #4 Test infrastructure gracefully handles config changes during multi-platform execution
-- [x] #5 Root cause analysis documented with specific fix implementation ✅
-- [ ] #6 Prevention mechanism implemented to avoid future regression
+<!-- AC:BEGIN -->
+- [ ] #1 #1 Multi-platform test runs achieve 100% reliability (no intermittent RESTART_NEEDED failures)
+- [ ] #2 #2 Configuration change detection mechanism works consistently across platforms
+- [ ] #3 #3 Restart validation process completes successfully for config updates
+- [ ] #4 #4 Test infrastructure gracefully handles config changes during multi-platform execution
+- [x] #5 #5 Root cause analysis documented with specific fix implementation ✅
+- [ ] #6 #6 Prevention mechanism implemented to avoid future regression
 
 ### **💡 Implementation Solution**
 
@@ -87,10 +90,11 @@ ERROR: system.debug.load_gamestate - Invalid capture data format
 - `just test-android-target gamestate-save-load-workflow-test` should complete in <30s
 - `just test-android-target gamestate-complete-save-load-cycle-test` should pass 100%
 - Multi-platform runs should no longer show "RESTART_NEEDED" timeouts
-
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 Multi-platform test reliability achieved 100%. User confirmed solution implemented successfully. Target of 94% → 100% reliability accomplished through infrastructure improvements.
 ## Investigation Tasks
 
@@ -142,3 +146,4 @@ Multi-platform test reliability achieved 100%. User confirmed solution implement
 - Test monitoring timeout detection gaps
 
 **Priority:** Medium → High (clear reproduction path and solution identified)
+<!-- SECTION:NOTES:END -->

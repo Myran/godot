@@ -4,7 +4,7 @@ title: Sentry SDK Integration
 status: Done
 assignee: []
 created_date: '2025-11-01 00:36'
-updated_date: '2025-11-11 20:24'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - monitoring
@@ -14,10 +14,12 @@ labels:
   - performance
 dependencies: []
 priority: high
+ordinal: 67000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement Sentry SDK integration across all GameTwo target platforms (desktop, Android, iOS) to provide comprehensive crash reporting, performance monitoring, user feedback, and structured logging. This will replace and enhance existing custom error tracking systems with a professional, actively maintained solution.
 
 ### 📊 Research Findings
@@ -110,6 +112,7 @@ Implement Sentry SDK integration across all GameTwo target platforms (desktop, A
 - [ ] **Configuration reference** - all Sentry options and GameTwo-specific settings
 - [ ] **Maintenance procedures** - ongoing monitoring and update workflows
 - [ ] **Team training materials** - Sentry usage and response procedures
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria - Integration Focused
 

@@ -4,13 +4,18 @@ title: Implement enhanced save-load cycle testing with state parameter
 status: Done
 assignee: []
 created_date: '2025-08-26 17:47'
-completion_date: '2025-08-26 17:47'
-labels: [enhancement, testing, gamestate]
+updated_date: '2025-12-18 10:37'
+labels:
+  - enhancement
+  - testing
+  - gamestate
 dependencies: []
+ordinal: 202000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Extend the existing `just test-save-load-cycle` command to accept an optional state parameter. When provided, the workflow should be: load specified state → save state → load state → compare states.
 
 This enables testing save/load consistency for any captured game scenario, instead of just creating a fresh state for testing.
@@ -80,3 +85,4 @@ just test-save-load-cycle-with-state test-capture-31
 - Automation: ✅ Test completes successfully with full reporting
 
 The core functionality is working correctly. The checksum differences are expected and indicate where full restoration would provide exact state matching.
+<!-- SECTION:DESCRIPTION:END -->

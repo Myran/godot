@@ -6,14 +6,21 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-09-21 06:49'
-priority: high
-labels: [android, testing, determinism, race-condition, critical]
-estimate: 2-4 hours
+updated_date: '2025-12-18 10:37'
+labels:
+  - android
+  - testing
+  - determinism
+  - race-condition
+  - critical
 dependencies: []
+priority: high
+ordinal: 132000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **CRITICAL:** Android automated tests for `battle-logic-only` configuration fail with "No actions found in results file" due to a race condition between `DEBUG_TEST_SUCCESS` logging and restart mechanism in determinism validation.
 
 ### Problem Summary
@@ -352,3 +359,4 @@ just logs-text <TEST_ID> "DEBUG_TEST_SUCCESS"  # ✅ Success entries confirmed
 **Priority:** HIGH - Blocking Android test automation → **RESOLVED**
 **Complexity:** LOW - Well-defined implementation with expert analysis → **CONFIRMED**
 **Risk:** LOW - Minimal changes to existing code paths → **VALIDATED**
+<!-- SECTION:DESCRIPTION:END -->

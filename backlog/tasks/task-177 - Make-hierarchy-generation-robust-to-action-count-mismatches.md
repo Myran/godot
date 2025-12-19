@@ -4,13 +4,18 @@ title: Make hierarchy generation robust to action count mismatches
 status: Done
 assignee: []
 created_date: '2025-09-23 09:22'
-completed_date: '2025-09-23 11:58'
-labels: [robustness, testing, infrastructure]
+updated_date: '2025-12-18 10:37'
+labels:
+  - robustness
+  - testing
+  - infrastructure
 dependencies: []
+ordinal: 127000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Issue**: Multi-platform test suite crashes during hierarchy generation when configs have mismatched action counts between platforms, preventing visibility into the full scope of issues.
 
 **Current Behavior**:
@@ -37,6 +42,7 @@ error: Recipe `test` failed on line 578 with exit code 1
 ```
 
 **Impact**: Prevents comprehensive issue analysis and forces sequential debugging instead of parallel issue identification.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
@@ -60,6 +66,7 @@ error: Recipe `test` failed on line 578 with exit code 1
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 - Locate hierarchy generation script (Python/Shell) that handles `🔧` config summaries
 - Add try-catch around mismatch scenarios
 - Implement warning system for platform inconsistencies
@@ -113,3 +120,4 @@ Fix revealed that original "action count mismatch" was actually resolved by othe
 - Android: ✅ 3 actions (matching desktop exactly)
 
 **Impact**: Enables comprehensive parallel debugging instead of sequential issue resolution.
+<!-- SECTION:NOTES:END -->

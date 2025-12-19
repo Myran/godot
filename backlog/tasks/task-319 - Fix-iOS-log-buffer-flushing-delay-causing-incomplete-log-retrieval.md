@@ -4,7 +4,7 @@ title: Fix iOS log buffer flushing delay causing incomplete log retrieval
 status: Done
 assignee: []
 created_date: '2025-11-28 08:27'
-updated_date: '2025-11-28 15:35'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - ios
@@ -13,10 +13,12 @@ labels:
 dependencies:
   - task-317
   - task-318
+ordinal: 19000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS log retrieval is failing because buffered logs haven't been flushed to disk by the time log retrieval occurs, causing "No actions found" test failures.
 
 **Follow-up to task-317** (log rotation retry logic) and **task-318** (PCK optimization). While task-317 handles log rotation delays, this issue is about log buffer flushing delays.
@@ -201,16 +203,17 @@ done
 
 **Cons:**
 - Moderate complexity increase
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] iOS tests retrieve complete logs including `DEBUG_TEST_SUCCESS` entries
-- [ ] No "No actions found" errors for valid tests
-- [ ] `just test-ios-ipad system-performance` passes
-- [ ] `just test-ios-ipad firebase-rtdb-layer` passes
-- [ ] Test lists complete successfully without false negatives
-- [ ] Fast tests don't wait unnecessarily long
-- [ ] Solution handles iOS buffer flush timing variations
+<!-- AC:BEGIN -->
+- [ ] #1 iOS tests retrieve complete logs including `DEBUG_TEST_SUCCESS` entries
+- [ ] #2 No "No actions found" errors for valid tests
+- [ ] #3 `just test-ios-ipad system-performance` passes
+- [ ] #4 `just test-ios-ipad firebase-rtdb-layer` passes
+- [ ] #5 Test lists complete successfully without false negatives
+- [ ] #6 Fast tests don't wait unnecessarily long
+- [ ] #7 Solution handles iOS buffer flush timing variations
 
 ## Testing Plan
 
@@ -239,6 +242,9 @@ just logs-text TEST_ID "DEBUG_TEST_SUCCESS"
 ## Files to Modify
 
 - `justfiles/justfile-platform-ios.justfile:945-1005` - `_execute-test-ios` recipe log retrieval logic
+<!-- AC:END -->
+
+
 
 ## Notes
 

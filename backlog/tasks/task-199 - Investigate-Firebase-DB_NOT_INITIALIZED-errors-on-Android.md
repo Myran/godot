@@ -4,13 +4,19 @@ title: Investigate Firebase DB_NOT_INITIALIZED errors on Android
 status: Done
 assignee: []
 created_date: '2025-10-05 15:24'
-updated_date: '2025-10-06 15:06'
-labels: [critical, android, firebase, resolved]
+updated_date: '2025-12-18 10:37'
+labels:
+  - critical
+  - android
+  - firebase
+  - resolved
 dependencies: []
+ordinal: 110000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Firebase database showing DB_NOT_INITIALIZED errors when loading rules_0 and cards_0 collections. DatabaseService get_data operations failing.
 
 **Root Cause CONFIRMED**: GDScript's ClassDB.instantiate() calls empty constructor, NOT get_instance() where initialization logic exists. FirebaseDatabase never initializes.
@@ -40,9 +46,25 @@ just fastbuild-android
 just test-android-target battle-animated
 just test-android-target backend.firebase.async_pattern
 ```
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 - [ ] Constructor initializes Firebase Database on first instantiation
+- [ ] #2 Logs show "[RTDB C++] Initializing Firebase RTDB Module..." on startup
+- [ ] #3 Logs show "[RTDB C++] Firebase RTDB Module initialized successfully."
+- [ ] #4 No "DB_NOT_INITIALIZED" errors in any Firebase tests
+- [ ] #5 battle-animated test passes (previously failing)
+- [ ] #6 backend.firebase.async_pattern test passes (previously failing)
+- [ ] #7 All 10+ Firebase Android tests pass
+- [ ] #8 Dictionary property access errors resolved (task-198)
+- [ ] #9 No GDScript changes required
+- [ ] #10 Pattern matches FirebaseMessaging/Auth/RemoteConfig implementations
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ## ✅ RESOLUTION (2025-10-06 15:06)
 
 **Status**: SUCCESSFULLY RESOLVED with Option A (Simple Constructor Pattern)
@@ -742,17 +764,4 @@ Add explicit `initialize_database()` method:
 1. `just ci-validate` - Syntax check
 2. `just build-android` - Full C++ rebuild
 3. `just test-android-target battle-animated` - Verify initialization
-
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 - [ ] Constructor initializes Firebase Database on first instantiation
-- [ ] Logs show "[RTDB C++] Initializing Firebase RTDB Module..." on startup
-- [ ] Logs show "[RTDB C++] Firebase RTDB Module initialized successfully."
-- [ ] No "DB_NOT_INITIALIZED" errors in any Firebase tests
-- [ ] battle-animated test passes (previously failing)
-- [ ] backend.firebase.async_pattern test passes (previously failing)
-- [ ] All 10+ Firebase Android tests pass
-- [ ] Dictionary property access errors resolved (task-198)
-- [ ] No GDScript changes required
-- [ ] Pattern matches FirebaseMessaging/Auth/RemoteConfig implementations
-<!-- AC:END -->
+<!-- SECTION:NOTES:END -->

@@ -4,7 +4,7 @@ title: Fix RenderingServer singleton error in Sentry integration
 status: Done
 assignee: []
 created_date: '2025-11-10 23:11'
-updated_date: '2025-11-11 10:45'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - headless-mode
@@ -12,10 +12,12 @@ labels:
   - bug-fix
   - completed
 dependencies: []
+ordinal: 57000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ### **🎯 Problem Statement**
 When running Godot in headless mode (`--headless --quit`), Sentry integration was generating misleading error messages:
 ```
@@ -123,16 +125,17 @@ Sentry: DEBUG: starting Sentry SDK version 1.1.0+38967ec...
 - **CI/CD**: Headless test runs no longer show false error messages
 - **Automated Testing**: Cleaner test output for headless validation suites
 - **Monitoring**: Sentry still works correctly for real errors in both modes
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] **No RenderingServer Errors**: Headless mode execution no longer generates `ERROR: Failed to retrieve non-existent singleton 'RenderingServer'` messages
-- [x] **Sentry Integration Works**: Sentry SDK initializes correctly in both GUI and headless modes
-- [x] **Context Collection**: GPU and performance contexts collected normally in GUI mode, gracefully skipped in headless mode
-- [x] **Backward Compatibility**: No breaking changes to existing Sentry functionality
-- [x] **Performance**: Negligible performance impact from additional null checks
-- [x] **Code Quality**: Clear documentation explaining headless mode behavior
-- [x] **Testing**: Fix validated with both GUI and headless execution modes
+<!-- AC:BEGIN -->
+- [x] #1 **No RenderingServer Errors**: Headless mode execution no longer generates `ERROR: Failed to retrieve non-existent singleton 'RenderingServer'` messages
+- [x] #2 **Sentry Integration Works**: Sentry SDK initializes correctly in both GUI and headless modes
+- [x] #3 **Context Collection**: GPU and performance contexts collected normally in GUI mode, gracefully skipped in headless mode
+- [x] #4 **Backward Compatibility**: No breaking changes to existing Sentry functionality
+- [x] #5 **Performance**: Negligible performance impact from additional null checks
+- [x] #6 **Code Quality**: Clear documentation explaining headless mode behavior
+- [x] #7 **Testing**: Fix validated with both GUI and headless execution modes
 
 ## Implementation Summary
 
@@ -150,3 +153,4 @@ Sentry: DEBUG: starting Sentry SDK version 1.1.0+38967ec...
 **Status**: ✅ **COMPLETED** - Successfully implemented and tested
 
 The RenderingServer singleton error has been completely resolved. The fix provides graceful handling for headless mode while maintaining full functionality in GUI mode. Sentry integration now works correctly across all execution modes without generating misleading error messages.
+<!-- AC:END -->

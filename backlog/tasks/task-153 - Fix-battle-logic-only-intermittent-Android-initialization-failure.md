@@ -4,7 +4,7 @@ title: Fix battle-logic-only intermittent Android initialization failure
 status: Done
 assignee: []
 created_date: '2025-09-16 09:20'
-updated_date: '2025-09-18 22:20'
+updated_date: '2025-12-18 10:37'
 labels:
   - android
   - battle
@@ -15,10 +15,12 @@ labels:
 dependencies:
   - task-152
 priority: medium
+ordinal: 145000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **REGRESSION**: `battle-logic-only` configuration showing intermittent failure on Android with "Actions collected: 0" pattern, despite previously working correctly. This is a manifestation of the broader Android initialization stability issue (task-152).
 
 **Status Timeline**:
@@ -137,14 +139,15 @@ if OS.get_name() == "Android" and metadata.get("auto_quit", false) == true:
 - **Before fix**: `🎯 DEBUG_TEST_SUCCESS entries: 2` (missing battle action)
 - **After fix**: `🎯 DEBUG_TEST_SUCCESS entries: 4` (all actions logged)
 - **Log proof**: `android_logs_search "DEBUG_TEST_SUCCESS.*game.battle.test_determinism_logic_only"` now returns success
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] #1 battle-logic-only consistently executes on Android (95%+ success rate) ✅ **ACHIEVED**
-- [x] #2 All 3 actions collected and executed successfully ✅ **ACHIEVED**
-- [x] #3 DEBUG_TEST_SUCCESS entries logged for all actions ✅ **ACHIEVED**
-- [x] #4 Cross-platform consistency (Android matches Desktop behavior) ✅ **ACHIEVED**
-- [x] #5 No regression in deterministic battle testing functionality ✅ **ACHIEVED**
+<!-- AC:BEGIN -->
+- [x] #1 #1 battle-logic-only consistently executes on Android (95%+ success rate) ✅ **ACHIEVED**
+- [x] #2 #2 All 3 actions collected and executed successfully ✅ **ACHIEVED**
+- [x] #3 #3 DEBUG_TEST_SUCCESS entries logged for all actions ✅ **ACHIEVED**
+- [x] #4 #4 Cross-platform consistency (Android matches Desktop behavior) ✅ **ACHIEVED**
+- [x] #5 #5 No regression in deterministic battle testing functionality ✅ **ACHIEVED**
 
 ## Dependencies
 
@@ -212,3 +215,4 @@ just test-desktop-target battle-logic-only  # Should always work
 **MEDIUM**: While this affects important battle testing functionality, it's a manifestation of the high-priority root cause (task-152). Once the initialization stability is resolved, this should automatically work consistently.
 
 **Impact**: Blocks reliable Android battle testing, but workarounds exist (desktop testing, manual verification when Android initializes correctly).
+<!-- AC:END -->

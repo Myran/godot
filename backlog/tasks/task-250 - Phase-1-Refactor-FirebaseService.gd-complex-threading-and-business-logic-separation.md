@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
@@ -14,10 +14,12 @@ labels:
   - architecture
   - phase-1
 dependencies: []
+ordinal: 73000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -334,17 +336,19 @@ func perform_storage_operation(operation: StorageOperation) -> Dictionary:
 - **Better error monitoring** and recovery capabilities
 - **Improved cross-platform compatibility**
 - **Reduced technical debt** in Firebase integration
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] FirebaseService.gd reduced from 835 to <300 lines
-- [ ] FirebaseThreadingManager extracted with <200 lines and thread safety
-- [ ] ARM64AlignmentHandler extracted with <200 lines and platform isolation
-- [ ] FirebaseErrorHandler extracted with <200 lines and centralized error handling
-- [ ] All extracted classes have no methods >50 lines
-- [ ] All Firebase functionality preserved with identical behavior
-- [ ] ARM64 platform operations work correctly
-- [ ] Thread safety maintained across all operations
-- [ ] Error handling improved with centralized management
-- [ ] No performance degradation in Firebase operations
-- [ ] Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:BEGIN -->
+- [ ] #1 FirebaseService.gd reduced from 835 to <300 lines
+- [ ] #2 FirebaseThreadingManager extracted with <200 lines and thread safety
+- [ ] #3 ARM64AlignmentHandler extracted with <200 lines and platform isolation
+- [ ] #4 FirebaseErrorHandler extracted with <200 lines and centralized error handling
+- [ ] #5 All extracted classes have no methods >50 lines
+- [ ] #6 All Firebase functionality preserved with identical behavior
+- [ ] #7 ARM64 platform operations work correctly
+- [ ] #8 Thread safety maintained across all operations
+- [ ] #9 Error handling improved with centralized management
+- [ ] #10 No performance degradation in Firebase operations
+- [ ] #11 Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:END -->

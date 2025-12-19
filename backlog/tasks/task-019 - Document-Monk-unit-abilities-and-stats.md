@@ -4,27 +4,32 @@ title: Document Monk unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:10'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 233000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Monk unit (ID: 15) with Harmony ability that strengthens diverse tribal allies when recruited
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Monk unit has correct base stats (3/5, monk tribe)
-- [ ] Harmony ability affects specific tribes (soldier, forest, evil, magic)
-- [ ] Each tribe gets one random unit boosted +2/+2
-- [ ] Implementation for abilities_monk.gd tribal selection is accurate
+<!-- AC:BEGIN -->
+- [ ] #1 Monk unit has correct base stats (3/5, monk tribe)
+- [ ] #2 Harmony ability affects specific tribes (soldier, forest, evil, magic)
+- [ ] #3 Each tribe gets one random unit boosted +2/+2
+- [ ] #4 Implementation for abilities_monk.gd tribal selection is accurate
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟡 Moderate
 **Current System**: ✅ Good fit - similar to existing tribal abilities
 
@@ -104,3 +109,4 @@ static func select_random_unit_with_tribe(lineup: Dictionary[int, Card], target_
 - Test with empty lineup except monk (should apply no bonuses)
 - Test stat change application (+2/+2 per selected unit)
 - Verify monk itself is never selected as target
+<!-- SECTION:PLAN:END -->

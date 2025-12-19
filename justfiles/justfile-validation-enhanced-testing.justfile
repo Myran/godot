@@ -587,12 +587,29 @@ _handle-checksum-validation config_path platform test_id:
                 echo "💡 Expected file name pattern: ios_\${TEST_ID}.log"
             fi
             ;;
+        "windows")
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            LOGS_DIR="$USER_DATA_DIR/logs"
+            WINDOWS_LOG_FILE="$LOGS_DIR/windows_${TEST_ID}.log"
+
+            if [[ -f "$WINDOWS_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$WINDOWS_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from Windows test log:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
+            else
+                echo "⚠️  Windows test log file not found: $WINDOWS_LOG_FILE"
+                echo "💡 Expected file name pattern: windows_\${TEST_ID}.log"
+            fi
+            ;;
         *)
             echo "❌ Unknown platform for checksum validation: $PLATFORM"
             exit 1
             ;;
     esac
-    
+
     if [[ -z "$EXTRACTED_CHECKSUMS" ]]; then
         echo "⚠️  No checksums found in test logs"
         echo "This could indicate:"
@@ -879,12 +896,29 @@ _extract-logs test_id platform temp_output_file="":
             LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
             echo "🍎 macOS log extraction complete: $LOG_LINES lines captured"
             ;;
+        "windows")
+            echo "🪟 Extracting Windows VM logs for test: $TEST_ID"
+
+            # Windows logs are retrieved via SCP from VM and stored in temp output file
+            if [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
+                echo "🪟 Using provided temp output file: $TEMP_OUTPUT_FILE"
+                cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
+            else
+                echo "❌ No temp output file provided for Windows log extraction"
+                echo "💡 Windows logs must be retrieved via SCP from VM"
+                exit 1
+            fi
+
+            # Final verification and reporting
+            LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+            echo "🪟 Windows log extraction complete: $LOG_LINES lines captured"
+            ;;
         *)
             echo "❌ Unsupported platform: $PLATFORM"
             exit 1
             ;;
     esac
-    
+
     # ================================
     # SEQUENTIAL ACTION WAIT MECHANISM - Fix for task-143
     # ================================
@@ -1154,6 +1188,9 @@ _analyze-test-errors test_id platform config_file="":
         "macos")
             # macOS platform supported (same log location as desktop)
             ;;
+        "windows")
+            # Windows platform supported (logs retrieved via SCP from VM)
+            ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
             exit 1
@@ -1289,7 +1326,8 @@ _analyze-test-errors test_id platform config_file="":
     
     # Filter out intentional test errors (error handling validation actions)
     # These actions deliberately generate errors to test error handling
-    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout|ERROR.*Remote Debugger: Unable to connect)" || echo "")
+    # Also filter out known Sentry cleanup error that occurs during app restart
+    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout|ERROR.*Remote Debugger: Unable to connect|Parameter \"android_plugin\" is null)" || echo "")
     
     # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
     ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
@@ -1326,7 +1364,7 @@ _analyze-test-errors test_id platform config_file="":
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Test-Related Errors Found:"
-        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit|Parameter \"android_plugin\" is null.*Sentry.*Unable to locate SentryAndroidGodotPlugin singleton)" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then
@@ -1344,8 +1382,17 @@ _analyze-test-errors test_id platform config_file="":
             "android")
                 echo "🔧 Debug: just logs-android-errors $TEST_ID"
                 ;;
-            "desktop") 
+            "desktop")
                 echo "🔧 Debug: just logs-desktop-errors $TEST_ID"
+                ;;
+            "macos")
+                echo "🔧 Debug: just logs-macos-errors $TEST_ID"
+                ;;
+            "windows")
+                echo "🔧 Debug: just logs-windows-errors $TEST_ID"
+                ;;
+            "ios")
+                echo "🔧 Debug: just logs-ios-errors $TEST_ID"
                 ;;
         esac
         exit 1
@@ -1479,12 +1526,24 @@ _collect-action-results test_id platform config_name="unknown" session="":
                 LOGS=""
             fi
             ;;
+        "windows")
+            # For Windows, the extraction should have happened in _execute-test-windows
+            # Here we just read the file that was retrieved via SCP from VM
+            if [[ -f "$PLATFORM_LOG_FILE" ]]; then
+                LOGS=$(cat "$PLATFORM_LOG_FILE")
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from Windows log file"
+            else
+                echo "⚠️  Windows log file not found: $PLATFORM_LOG_FILE"
+                echo "💡 Windows logs should be retrieved by _execute-test-windows via SCP"
+                LOGS=""
+            fi
+            ;;
         *)
             echo "⚠️  Unsupported platform: $PLATFORM"
             LOGS=""
             ;;
     esac
-    
+
     if [[ -z "$LOGS" ]]; then
         echo "❌ CRITICAL TEST FAILURE: No logs found for action collection"
         echo "💡 This indicates the test execution did not produce logs properly"
@@ -2778,6 +2837,13 @@ _execute-test-with-analysis config_name platform session="":
                 just _execute-test-macos "$CONFIG_NAME" || TEST_RESULT=$?
             fi
             ;;
+        "windows")
+            # Deploy and execute Windows test via VM
+            just _deploy-config-windows "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-windows "$CONFIG_NAME" || TEST_RESULT=$?
+            fi
+            ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
             TEST_RESULT=1
@@ -2921,6 +2987,18 @@ _stop-app-macos:
 
     echo "✅ macOS exported app instances stopped (editor preserved)"
 
+_stop-app-windows:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🛑 Stopping Windows app instances on VM..."
+
+    # SSH to VM and kill any running gametwo processes
+    # Use taskkill with /F for force, /IM for image name pattern matching
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "taskkill /IM {{GAME_NAME}}*.exe /F 2>nul || echo No processes to kill" || true
+
+    echo "✅ Windows app instances stopped on VM"
+
 # Platform-specific deployment functions
 _deploy-config-android temp_config_path:
     #!/usr/bin/env bash
@@ -3018,6 +3096,49 @@ _deploy-config-macos temp_config_path:
     fi
 
     echo "✅ Configuration deployed successfully - app stopped and ready for fresh launch ($(wc -c < "$STARTUP_CONFIG") bytes)"
+
+_deploy-config-windows temp_config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TEMP_CONFIG_PATH="{{temp_config_path}}"
+
+    echo "🪟 Deploying configuration to Windows VM..."
+
+    # Stop any running Windows app instances for consistent state
+    just _stop-app-windows
+
+    # Windows app_userdata location (Godot standard on Windows)
+    # Note: gametwo is lowercase as Godot uses project name in lowercase
+    WIN_USER_DATA_DIR='C:\Users\{{WIN_VM_USER}}\AppData\Roaming\Godot\app_userdata\gametwo'
+    WIN_LOGS_DIR='C:\Users\{{WIN_VM_USER}}\AppData\Roaming\Godot\app_userdata\gametwo\logs'
+
+    # Create user data directory on VM if needed
+    echo "📂 Creating Windows user data directory..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if not exist \"${WIN_USER_DATA_DIR}\" mkdir \"${WIN_USER_DATA_DIR}\""
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if not exist \"${WIN_LOGS_DIR}\" mkdir \"${WIN_LOGS_DIR}\""
+
+    echo "📂 Windows logs will be saved to: ${WIN_LOGS_DIR}"
+
+    # SCP path format for Windows: /C:/path/to/file (forward slashes with drive letter)
+    WIN_SCP_USER_DATA="/C:/Users/{{WIN_VM_USER}}/AppData/Roaming/Godot/app_userdata/gametwo"
+    STARTUP_CONFIG="${WIN_SCP_USER_DATA}/debug_startup_actions.json"
+
+    # Remove old config file if it exists
+    echo "🧹 Clearing old config on VM..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "del \"${WIN_USER_DATA_DIR}\\debug_startup_actions.json\" 2>nul || echo No old config to remove"
+
+    # Copy config to Windows VM
+    echo "📋 Copying config to Windows VM..."
+    scp "$TEMP_CONFIG_PATH" "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${STARTUP_CONFIG}"
+
+    # Verify the copy was successful
+    if ! ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist \"${WIN_USER_DATA_DIR}\\debug_startup_actions.json\" echo exists" | grep -q exists; then
+        echo "❌ Failed to create config file on VM: ${WIN_USER_DATA_DIR}\\debug_startup_actions.json"
+        exit 1
+    fi
+
+    echo "✅ Configuration deployed successfully to Windows VM"
 
 # Platform-specific execution functions
 _execute-test-android config_name:
@@ -3543,6 +3664,168 @@ _execute-test-macos config_name:
     echo ""
     echo "✅ macOS test execution completed"
 
+_execute-test-windows config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    echo "🪟 Starting Windows VM test execution..."
+
+    # Validate Windows export exists locally
+    WIN_EXE_PATH="export/windows/{{GAME_NAME}}_debug.exe"
+    WIN_PCK_PATH="export/windows/{{GAME_NAME}}_debug.pck"
+
+    if [ ! -f "$WIN_EXE_PATH" ]; then
+        echo "❌ Windows executable not found at: $WIN_EXE_PATH"
+        echo "💡 Run 'just export-windows-debug' first to build the Windows export"
+        exit 1
+    fi
+
+    if [ ! -f "$WIN_PCK_PATH" ]; then
+        echo "❌ Windows PCK not found at: $WIN_PCK_PATH"
+        echo "💡 Ensure export_presets.cfg has binary_format/embed_pck=false"
+        exit 1
+    fi
+
+    # Define paths on Windows VM
+    WIN_TEST_DIR="C:\\gametwo\\test"
+    WIN_TEST_EXE="${WIN_TEST_DIR}\\{{GAME_NAME}}_debug.exe"
+    WIN_TEST_PCK="${WIN_TEST_DIR}\\{{GAME_NAME}}_debug.pck"
+    WIN_USER_DATA_DIR='C:\Users\{{WIN_VM_USER}}\AppData\Roaming\Godot\app_userdata\gametwo'
+    WIN_LOGS_DIR="${WIN_USER_DATA_DIR}\\logs"
+
+    # SCP paths (forward slashes with drive letter)
+    WIN_SCP_TEST_DIR="/C:/gametwo/test"
+    WIN_SCP_LOGS="/C:/Users/{{WIN_VM_USER}}/AppData/Roaming/Godot/app_userdata/gametwo/logs"
+
+    # Create/clear test directory on VM
+    echo "📂 Preparing test directory on Windows VM..."
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist \"${WIN_TEST_DIR}\" (rmdir /S /Q \"${WIN_TEST_DIR}\" && mkdir \"${WIN_TEST_DIR}\") else (mkdir \"${WIN_TEST_DIR}\")"
+
+    # Copy entire export/windows folder to VM (includes exe, pck, Sentry DLLs, crashpad_handler)
+    echo "📦 Copying Windows export folder to VM..."
+    scp -r export/windows/* "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SCP_TEST_DIR}/"
+
+    # Copy Firebase config to VM test directory (required for Firebase initialization)
+    if [ -f "firebase/google-services-desktop.json" ]; then
+        echo "🔥 Copying Firebase config to VM test directory..."
+        scp firebase/google-services-desktop.json "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SCP_TEST_DIR}/"
+    else
+        echo "⚠️  Warning: firebase/google-services-desktop.json not found - Firebase will not work on Windows"
+    fi
+
+    # Verify executable exists on VM
+    if ! ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist \"${WIN_TEST_EXE}\" echo exists" | grep -q exists; then
+        echo "❌ Failed to copy executable to VM"
+        exit 1
+    fi
+
+    # Show what was deployed
+    echo "📋 Deployed files:"
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "dir \"${WIN_TEST_DIR}\" /B" 2>/dev/null | sed 's/^/   /'
+
+    echo "🚀 Starting Windows test in automated mode..."
+    echo ""
+
+    # Capture all output to a temporary file for filtering
+    TEMP_OUTPUT=$(mktemp)
+
+    # Execute test on Windows VM
+    # Run via SSH, capture output, and handle Windows console output
+    # NOTE: --headless is REQUIRED for SSH execution (no GPU access in SSH sessions)
+    {
+        ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd ${WIN_TEST_DIR} && {{GAME_NAME}}_debug.exe --headless --test-mode --auto-quit 2>&1"
+        TEST_EXIT_CODE=$?
+    } > "$TEMP_OUTPUT" 2>&1 || TEST_EXIT_CODE=$?
+
+    # Show minimal, clean output for Windows testing
+    echo "📊 Windows Test Execution Summary"
+    echo "=================================="
+    echo ""
+
+    # Extract essential test info from output
+    ACTION_COUNT=$(grep "DEBUG_TEST_SUCCESS" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
+    FAILED_COUNT=$(grep "DEBUG_TEST_FAILURE" "$TEMP_OUTPUT" 2>/dev/null | grep -v "\[BUFFER\]" | wc -l | tr -cd '0-9' | head -c 5 || echo "0")
+
+    # Check for any critical errors
+    CRITICAL_ERRORS=$(grep -E "(SCRIPT ERROR|CRITICAL|FAILED|Exception|Assertion failed)" "$TEMP_OUTPUT" | grep -v "ObjectDB instances leaked" || echo "")
+
+    if [[ -n "$CRITICAL_ERRORS" ]]; then
+        echo "⚠️  ERRORS DETECTED - Showing relevant output:"
+        echo ""
+        echo "$CRITICAL_ERRORS" | head -10
+        TEST_EXIT_CODE=1
+    else
+        # Extract session duration if available
+        SESSION_INFO=$(grep "SESSION_END" "$TEMP_OUTPUT" | head -1 | grep -o '"duration_ms":[0-9]*' | cut -d: -f2 2>/dev/null || echo "0")
+        if [[ "$SESSION_INFO" != "0" ]]; then
+            DURATION_SECONDS=$((SESSION_INFO / 1000))
+            DURATION_DISPLAY="${DURATION_SECONDS}s"
+        else
+            DURATION_DISPLAY="completed"
+        fi
+
+        echo "**Actions Executed**: $ACTION_COUNT"
+        echo "**Actions Failed**: $FAILED_COUNT"
+        echo "**Status**: ✅ COMPLETED"
+        echo "**Duration**: $DURATION_DISPLAY"
+        echo ""
+
+        # Show key test events
+        echo "📋 Key Test Events:"
+        grep -E "(SESSION_START|SESSION_END|DEBUG_TEST_SUCCESS|DEBUG_TEST_FAILURE)" "$TEMP_OUTPUT" | grep -v "\[BUFFER\]" | head -5 | sed 's/^/  /' 2>/dev/null || echo "  Test execution completed"
+
+        echo ""
+        echo "🎯 Test completed successfully with clean output"
+    fi
+
+    # Retrieve logs from Windows VM
+    echo ""
+    echo "📄 Retrieving Windows logs from VM..."
+
+    # Create local logs directory
+    USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+    LOGS_DIR="$USER_DATA_DIR/logs"
+    mkdir -p "$LOGS_DIR"
+
+    # Save the captured output as the Windows log
+    WINDOWS_LOG_FILE="$LOGS_DIR/windows_${TEST_ID}.log"
+    cp "$TEMP_OUTPUT" "$WINDOWS_LOG_FILE"
+
+    # Also try to retrieve any log files from the VM's user data
+    scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SCP_LOGS}/*.log" "$LOGS_DIR/" 2>/dev/null || echo "   (No additional logs on VM)"
+
+    LOG_LINES=$(wc -l < "$WINDOWS_LOG_FILE" 2>/dev/null || echo "0")
+    echo "📄 Windows log saved: windows_${TEST_ID}.log ($LOG_LINES lines)"
+
+    # Call unified log extraction for analysis
+    just _extract-logs "$TEST_ID" "windows" "$TEMP_OUTPUT" || echo "⚠️  Failed to extract Windows logs"
+
+    # Cleanup temp file
+    rm -f "$TEMP_OUTPUT"
+
+    # Handle exit codes
+    if [[ ${TEST_EXIT_CODE:-0} -ne 0 ]]; then
+        # Check for actual test success indicators despite non-zero exit code
+        TEST_COMPLETE_FOUND=$(grep -c "TEST_COMPLETE_" "$WINDOWS_LOG_FILE" 2>/dev/null | head -1 || echo "0")
+        QUIT_EVENT_FOUND=$(grep -c "Quit event received" "$WINDOWS_LOG_FILE" 2>/dev/null | head -1 || echo "0")
+
+        if [[ "${FAILED_COUNT:-0}" -eq 0 && "${ACTION_COUNT:-0}" -gt 0 && "${TEST_COMPLETE_FOUND:-0}" -gt 0 ]]; then
+            echo ""
+            echo "✅ Test logically successful despite app exit code ${TEST_EXIT_CODE}"
+            echo "💡 All actions completed successfully with proper completion signals"
+            exit 0
+        else
+            echo ""
+            echo "⚠️  Windows test completed with exit code ${TEST_EXIT_CODE}"
+            exit ${TEST_EXIT_CODE}
+        fi
+    fi
+
+    echo ""
+    echo "✅ Windows test execution completed"
+
 # ================================
 # ENHANCED EXISTING COMMANDS
 # ================================
@@ -3781,6 +4064,122 @@ test-macos-target config_name="":
 
     # Use the new unified execution pattern
     just _execute-test-with-analysis "$CONFIG_NAME" "macos" "$TEST_SESSION"
+
+# ================================
+# WINDOWS VM TESTING
+# ================================
+
+# test-windows-target - Run automated Windows test via VM
+# This command deploys the Windows export to a VM via SSH/SCP and runs automated tests
+test-windows-target config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # If no config provided, show fzf selection
+    if [ -z "{{config_name}}" ]; then
+        selected=$(just _fzf-select-config "windows" "all")
+        if [ "$?" -eq 0 ] && [ -n "$selected" ]; then
+            CONFIG_NAME="$selected"
+        else
+            echo "❌ No selection made"
+            exit 1
+        fi
+    else
+        CONFIG_NAME="{{config_name}}"
+    fi
+
+    # Validate Windows export exists early
+    WINDOWS_EXE_PATH="export/windows/{{GAME_NAME}}_debug.exe"
+    WINDOWS_PCK_PATH="export/windows/{{GAME_NAME}}_debug.pck"
+
+    if [ ! -f "$WINDOWS_EXE_PATH" ]; then
+        echo "❌ Windows executable not found at: $WINDOWS_EXE_PATH"
+        echo "💡 Run 'just export-windows-debug' first to build the executable"
+        exit 1
+    fi
+
+    if [ ! -f "$WINDOWS_PCK_PATH" ]; then
+        echo "❌ Windows PCK not found at: $WINDOWS_PCK_PATH"
+        echo "💡 Run 'just export-windows-debug' first to build the PCK file"
+        echo "💡 Ensure export_presets.cfg has embed_pck=false for Windows preset"
+        exit 1
+    fi
+
+    # Create session timestamp for individual test
+    # Use multi-platform session if available to ensure coordination
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
+    else
+        TEST_SESSION="$(date +%s)"
+    fi
+
+    # Use the new unified execution pattern
+    just _execute-test-with-analysis "$CONFIG_NAME" "windows" "$TEST_SESSION"
+
+# test-windows-manual - Run Windows test on VM in manual mode (stays open)
+# This command deploys and runs the game on Windows VM but keeps it open for inspection
+test-windows-manual config_name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    echo "🎯 Windows Testing (Manual Mode - stays open): $CONFIG_NAME"
+    echo "========================================================"
+
+    # Validate configuration exists
+    just _validate-config-exists "$CONFIG_NAME"
+
+    # Validate Windows export exists
+    WINDOWS_EXE_PATH="export/windows/{{GAME_NAME}}_debug.exe"
+    WINDOWS_PCK_PATH="export/windows/{{GAME_NAME}}_debug.pck"
+
+    if [ ! -f "$WINDOWS_EXE_PATH" ]; then
+        echo "❌ Windows executable not found at: $WINDOWS_EXE_PATH"
+        echo "💡 Run 'just export-windows-debug' first to build the executable"
+        exit 1
+    fi
+
+    if [ ! -f "$WINDOWS_PCK_PATH" ]; then
+        echo "❌ Windows PCK not found at: $WINDOWS_PCK_PATH"
+        echo "💡 Run 'just export-windows-debug' first to build the PCK file"
+        echo "💡 Ensure export_presets.cfg has embed_pck=false for Windows preset"
+        exit 1
+    fi
+
+    # Create temporary config with auto_quit=false for manual mode
+    echo "🪟 Creating temporary config with auto_quit=false for manual mode..."
+    TEMP_CONFIG_NAME="${CONFIG_NAME}_windows_manual"
+    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${TEMP_CONFIG_NAME}.json"
+    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "false"
+
+    # Deploy config to Windows VM
+    echo "🪟 Deploying configuration to Windows VM..."
+    just _deploy-config-windows "$TEMP_CONFIG_PATH"
+    rm -f "$TEMP_CONFIG_PATH"
+
+    # Deploy exe + pck to VM
+    echo "🪟 Deploying Windows executable and PCK to VM..."
+    WIN_TEST_DIR='C:\gametwo\test'
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if not exist \"${WIN_TEST_DIR}\" mkdir \"${WIN_TEST_DIR}\""
+
+    echo "📤 Copying executable to VM..."
+    scp "$WINDOWS_EXE_PATH" "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:/C:/gametwo/test/{{GAME_NAME}}_debug.exe"
+
+    echo "📤 Copying PCK to VM..."
+    scp "$WINDOWS_PCK_PATH" "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:/C:/gametwo/test/{{GAME_NAME}}_debug.pck"
+
+    # Launch app on VM in manual mode (--test-mode without --auto-quit)
+    echo "🚀 Launching Windows app on VM in manual mode..."
+    echo "💡 The app will stay open for manual inspection"
+    echo "💡 Connect via RDP to interact with the app: {{WIN_VM_HOST}}"
+    ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "cd ${WIN_TEST_DIR} && start /b {{GAME_NAME}}_debug.exe --test-mode"
+
+    echo ""
+    echo "✅ Windows app launched in manual mode on VM"
+    echo "📺 Connect via RDP: {{WIN_VM_HOST}}"
+    echo "🛑 To stop the app: just _stop-app-windows"
 
 # ================================
 # ORIGINAL COMMAND PRESERVATION
@@ -4526,6 +4925,153 @@ test-macos-reset config_name="":
     fi
 
     echo "🔄 Resetting checksum baseline for: $CONFIG_NAME (macOS)"
+    echo "========================================================"
+
+    # Clear the expected_checksums array
+    TEMP_FILE=$(mktemp)
+    jq '.checksum_config.expected_checksums = []' "$CONFIG_PATH" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$CONFIG_PATH"
+
+    echo "✅ Checksum baseline reset for $CONFIG_NAME"
+    echo "💡 Next test run will create a new baseline"
+
+# Update checksum baseline for Windows - runs test and captures new baseline values
+test-windows-update config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE SET"
+                    else
+                        status="✅ BASELINE SET"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            echo ""
+            echo "To enable checksum testing, add a checksum_config section to your configuration."
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to update: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-windows-update CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    # Call shared update function
+    just _update-checksum-baseline "windows" "$CONFIG_NAME"
+
+# Reset checksum baseline for Windows - clears baseline to start fresh
+test-windows-reset config_name="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+
+    # If no config name provided, show interactive selector for checksum-enabled configs
+    if [[ -z "$CONFIG_NAME" ]]; then
+        echo "🔍 Selecting checksum test configuration to reset..."
+
+        # Find all checksum-enabled configs
+        CHECKSUM_CONFIGS=""
+
+        if [[ -d "{{DEBUG_CONFIG_DIR}}" ]]; then
+            while IFS= read -r -d '' config_file; do
+                if [[ -f "$config_file" ]] && jq -e '.checksum_config' "$config_file" >/dev/null 2>&1; then
+                    basename=$(basename "$config_file" .json)
+                    state_type=$(jq -r '.checksum_config.state_type // "unknown"' "$config_file")
+                    expected_checksums_count=$(jq -r '.checksum_config.expected_checksums | length' "$config_file")
+                    description=$(jq -r '.description // "No description"' "$config_file")
+
+                    # Determine status
+                    if [[ "$expected_checksums_count" -eq 0 ]]; then
+                        status="❌ NO BASELINE"
+                    else
+                        status="✅ HAS BASELINE ($expected_checksums_count)"
+                    fi
+
+                    # Format for fzf
+                    CHECKSUM_CONFIGS="${CHECKSUM_CONFIGS}📸 ${basename} (${state_type}) ${status} - ${description}\n"
+                fi
+            done < <(find "{{DEBUG_CONFIG_DIR}}" -name "*.json" -type f -print0)
+        fi
+
+        if [[ -z "$CHECKSUM_CONFIGS" ]]; then
+            echo "❌ No checksum-enabled configurations found"
+            exit 1
+        fi
+
+        echo "📸 Available checksum configurations:"
+        echo "===================================="
+
+        # Use fzf for selection if available, otherwise show list
+        if command -v fzf >/dev/null 2>&1; then
+            SELECTED=$(echo -e "$CHECKSUM_CONFIGS" | fzf --prompt="Select checksum config to RESET: " --height=10 --layout=reverse)
+            if [[ -z "$SELECTED" ]]; then
+                echo "❌ No configuration selected"
+                exit 1
+            fi
+
+            # Extract config name from selection
+            CONFIG_NAME=$(echo "$SELECTED" | sed 's/📸 \([^ ]*\) .*/\1/')
+        else
+            echo -e "$CHECKSUM_CONFIGS"
+            echo ""
+            echo "❌ fzf not available for interactive selection"
+            echo "Please specify a configuration name: just test-windows-reset CONFIG_NAME"
+            exit 1
+        fi
+    fi
+
+    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
+
+    if [[ ! -f "$CONFIG_PATH" ]]; then
+        echo "❌ Config not found: $CONFIG_PATH"
+        exit 1
+    fi
+
+    echo "🔄 Resetting checksum baseline for: $CONFIG_NAME (Windows)"
     echo "========================================================"
 
     # Clear the expected_checksums array

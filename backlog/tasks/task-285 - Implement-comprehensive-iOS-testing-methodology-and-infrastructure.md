@@ -4,13 +4,15 @@ title: Implement comprehensive iOS testing methodology and infrastructure
 status: Done
 assignee: []
 created_date: '2025-11-16 21:47'
-updated_date: '2025-12-02 20:15'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 42000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement comprehensive iOS testing methodology and infrastructure to enable automated testing on real iOS devices, mirroring the robust Android testing capabilities already established.
 
 **Key Insights from Android Validation:**
@@ -168,3 +170,4 @@ save-test-config-ios config_name:
 - **SentryRealCrashTestAction**: Already implemented and platform-agnostic
 - **DebugAction Framework**: Cross-platform test execution system
 - **Gamestate System**: Save/load testing across platforms
+<!-- SECTION:DESCRIPTION:END -->

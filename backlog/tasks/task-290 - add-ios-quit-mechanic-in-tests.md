@@ -4,12 +4,15 @@ title: add ios quit mechanic in tests
 status: Done
 assignee: []
 created_date: '2025-11-17 22:49'
-updated_date: '2025-11-22 10:55'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 39000
 ---
 
 ## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Q: How do I programmatically quit my iOS application?
 There is no API provided for gracefully terminating an iOS application.
 
@@ -157,3 +160,4 @@ We implemented iOS quit functionality using `_exit(0)` instead of `exit(0)` in t
 - ✅ Immediate termination confirmed via logs
 - ✅ No Firebase SDK errors after termination
 - ✅ Test framework detects app completion correctly
+<!-- SECTION:DESCRIPTION:END -->

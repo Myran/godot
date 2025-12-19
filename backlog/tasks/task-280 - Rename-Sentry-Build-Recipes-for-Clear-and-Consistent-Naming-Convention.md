@@ -4,13 +4,15 @@ title: Rename Sentry Build Recipes for Clear and Consistent Naming Convention
 status: Done
 assignee: []
 created_date: '2025-11-15 10:00'
-updated_date: '2025-11-15 10:22'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 46000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Rename all Sentry build recipes to follow a clear, consistent naming convention that reflects:
 - **Type**: `native` (C++ GDExtension) vs `gdscript` (Pure GDScript + downloaded binaries)
 - **Platform**: `ios`, `android`, `windows`, `macos`, `desktop` (collective term for macOS+Linux+Windows)
@@ -43,6 +45,7 @@ build-{native|gdscript}-{platform|desktop}-{build_type|architecture}
 - `build-native-all` (all native platforms)
 - `build-gdscript-all` (all GDScript platforms)
 - `build-sentry-all` (complete build pipeline - already exists and correct)
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 
@@ -55,6 +58,7 @@ build-{native|gdscript}-{platform|desktop}-{build_type|architecture}
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Inventory and Mapping
 - [ ] Document all current recipe names and their new equivalents
 - [ ] Identify all cross-references between recipes
@@ -130,3 +134,4 @@ just help-sentry-native-ios
 just help-sentry-windows
 just help-sentry-gdscript
 ```
+<!-- SECTION:PLAN:END -->

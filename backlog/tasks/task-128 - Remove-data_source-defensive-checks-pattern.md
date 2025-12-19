@@ -4,17 +4,21 @@ title: Remove data_source defensive checks pattern
 status: Done
 assignee: []
 created_date: '2025-09-07 08:24'
+updated_date: '2025-12-18 10:37'
 labels:
   - defensive-code
   - cleanup
   - architecture
 dependencies: []
 priority: medium
+ordinal: 170000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Eliminate defensive null checking and has_method() patterns for data_source objects throughout the codebase. These checks add complexity and may indicate architectural issues where data_source lifecycle is not properly managed. Consider whether data_source should be promoted to core autoload pattern like Game class.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

@@ -4,7 +4,7 @@ title: Ensure Sentry Debug Actions are Registered with DebugRegistry
 status: Done
 assignee: []
 created_date: '2025-11-10 09:53'
-updated_date: '2025-11-11 20:57'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - debug-coordinator
@@ -12,10 +12,12 @@ labels:
   - testing
 dependencies: []
 priority: low
+ordinal: 58000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Verify Sentry debug actions are properly registered with DebugRegistry and accessible via debug menu. No intermediate bridge layer needed - debug actions already exist and follow GameTwo's patterns.
 
 ## Context
@@ -214,3 +216,4 @@ Additional diagnostic actions that could be added:
 4. **`sentry.toggle_enabled`** - Runtime enable/disable
 
 **Note:** Only add if needed - existing 4 actions may be sufficient for current requirements.
+<!-- SECTION:DESCRIPTION:END -->

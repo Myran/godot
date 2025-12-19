@@ -4,7 +4,7 @@ title: Migrate DamageShieldAbility to new architecture
 status: Done
 assignee: []
 created_date: '2025-08-12 12:19'
-updated_date: '2025-08-12 13:56'
+updated_date: '2025-12-18 10:37'
 labels:
   - migration
   - abilities
@@ -12,27 +12,33 @@ labels:
 dependencies:
   - task-032
 priority: high
+ordinal: 224000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Migrate the complex DamageShieldAbility from legacy 5-parameter API to revolutionary single-parameter architecture. This migration demonstrates advanced UnitContext usage with state management and event targeting, following the template pattern established in task-032.
-## Acceptance Criteria
+<!-- SECTION:DESCRIPTION:END -->
 
-- [ ] Revolutionary single-parameter API implemented (handle_battle_event(unit: UnitContext) replaces 5-parameter method)
-- [ ] Event filtering optimization using get_handled_event_classes() method for DamageEvent
-- [ ] UnitContext.is_event_targeting_this_unit() method utilized for smart targeting
-- [ ] AbilityHelper methods for shield activation and state management
-- [ ] Complex state management (shield_used) properly integrated with UnitContext
-- [ ] Template migration pattern from task-032 applied and extended
-- [ ] Behavioral compatibility verified through comprehensive regression testing
-- [ ] 50-80% code reduction measured and documented
-- [ ] All existing tests continue to pass without modification
-- [ ] Shield visual effects trigger at correct moments
-- [ ] Performance metrics within 5% of original implementation
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Revolutionary single-parameter API implemented (handle_battle_event(unit: UnitContext) replaces 5-parameter method)
+- [ ] #2 Event filtering optimization using get_handled_event_classes() method for DamageEvent
+- [ ] #3 UnitContext.is_event_targeting_this_unit() method utilized for smart targeting
+- [ ] #4 AbilityHelper methods for shield activation and state management
+- [ ] #5 Complex state management (shield_used) properly integrated with UnitContext
+- [ ] #6 Template migration pattern from task-032 applied and extended
+- [ ] #7 Behavioral compatibility verified through comprehensive regression testing
+- [ ] #8 50-80% code reduction measured and documented
+- [ ] #9 All existing tests continue to pass without modification
+- [ ] #10 Shield visual effects trigger at correct moments
+- [ ] #11 Performance metrics within 5% of original implementation
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Complex State Management Migration
 
 **BEFORE (Legacy 5-parameter API with Manual Targeting - 12+ lines):**
@@ -109,3 +115,4 @@ Following task-032 migration template with additional features:
 - ✅ **Smart Delegation**: UnitContext handles all targeting complexity
 - ✅ **Helper Integration**: AbilityHelper manages shield-specific operations
 - ✅ **State Preservation**: `shield_used` state properly maintained across battle events
+<!-- SECTION:PLAN:END -->

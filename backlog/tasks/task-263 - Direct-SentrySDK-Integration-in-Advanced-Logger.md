@@ -4,7 +4,7 @@ title: Direct SentrySDK Integration in Advanced Logger
 status: Done
 assignee: []
 created_date: '2025-11-10 09:51'
-updated_date: '2025-11-11 20:31'
+updated_date: '2025-12-18 10:37'
 labels:
   - sentry
   - integration
@@ -12,10 +12,12 @@ labels:
   - error-tracking
 dependencies: []
 priority: high
+ordinal: 61000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement **direct SentrySDK integration** in Advanced Logger to automatically forward error and critical logs to Sentry without requiring an intermediate wrapper layer.
 
 ## Context
@@ -163,3 +165,4 @@ See `/tmp/task-263-expert-panel-evaluation.md` for complete analysis.
 - ✅ Zero additional runtime overhead
 - ✅ Automatic updates when official Sentry SDK updates
 - ✅ Simpler testing (one integration point vs two layers)
+<!-- SECTION:DESCRIPTION:END -->

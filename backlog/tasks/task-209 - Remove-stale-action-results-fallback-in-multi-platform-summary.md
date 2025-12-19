@@ -4,13 +4,18 @@ title: Remove stale action results fallback in multi-platform summary
 status: Done
 assignee: []
 created_date: '2025-10-10'
-completed_date: '2025-10-10'
-labels: [bug, test-framework, critical]
+updated_date: '2025-12-18 10:37'
+labels:
+  - bug
+  - test-framework
+  - critical
 dependencies: []
+ordinal: 106000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The multi-platform summary generation has a fallback mechanism (lines 489-514 in `justfile-support.justfile`) that searches for action result files when the hierarchy file doesn't contain action_results. This fallback picks up OLD files from previous test runs, showing stale data.
 
 **Code Location:**
@@ -153,14 +158,15 @@ ACTION_RESULTS_FILE=$(find "{{USER_DATA_DIR}}/logs" /tmp -name "test_action_resu
 - TASK-208 fixed cross-platform contamination but not stale file fallback
 - This is a separate bug that affects test framework validity
 - Critical for CTO's emphasis on test framework accuracy
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Fallback code removed or session-filtered
-- [ ] Multi-platform summaries only show current session data
-- [ ] No stale action counts/details from previous runs
-- [ ] Test with multiple sequential runs to verify no cross-contamination
-- [ ] Document why action_results might be missing from hierarchy
+<!-- AC:BEGIN -->
+- [ ] #1 Fallback code removed or session-filtered
+- [ ] #2 Multi-platform summaries only show current session data
+- [ ] #3 No stale action counts/details from previous runs
+- [ ] #4 Test with multiple sequential runs to verify no cross-contamination
+- [ ] #5 Document why action_results might be missing from hierarchy
 
 ## Resolution
 
@@ -228,3 +234,4 @@ Following the "no fallbacks" principle:
 **Test Framework Validity**: As CTO emphasized, accurate results are critical for informed decisions. This fix eliminates a major source of data contamination.
 
 Status: Completed
+<!-- AC:END -->

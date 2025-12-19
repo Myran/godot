@@ -4,7 +4,7 @@ title: Simplify Debug Actions System Through Simple GDScript Utilities
 status: Done
 assignee: []
 created_date: '2025-09-28 09:39'
-updated_date: '2025-09-28 16:27'
+updated_date: '2025-12-18 10:37'
 labels:
   - code-cleanup
   - technical-debt
@@ -12,10 +12,12 @@ labels:
   - debug-actions
 dependencies: []
 priority: high
+ordinal: 120000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Remove 80-90% of repetition from 68 debug action files (12,181 total lines) through simple GDScript utility functions, following CLAUDE.md principles of simplicity and strong typing. Current analysis shows massive code duplication across Firebase C++, RTDB, and system test actions.
 
 Problem Statement:
@@ -36,6 +38,7 @@ Expected Outcome:
 - Maintain 100% functional compatibility
 - Improve maintainability through shared utilities
 - Follow CLAUDE.md strong typing and performance principles
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -49,6 +52,7 @@ Expected Outcome:
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1 (Week 1): Create Simple Utility Files
 1. Create `project/misc/test_utils.gd` - Simple timing, path generation, result creation helpers
 2. Create `project/misc/test_constants.gd` - Shared constants and string literals
@@ -68,10 +72,11 @@ Expected Outcome:
 10. Comprehensive test suite validation
 11. Performance regression testing
 12. Code cleanup and documentation
-
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Phase 1 COMPLETED**: Created 3 simple utility files successfully
 - ✅ `project/misc/test_utils.gd` - 70 lines with timing, path generation, result creation helpers
 - ✅ `project/misc/test_constants.gd` - 57 lines with shared constants and error codes  
@@ -361,3 +366,4 @@ This task represents the **highest-impact code simplification opportunity** iden
 - **Improved maintainability** through shared utilities
 - **Reduced copy-paste errors** and maintenance burden
 - **Enhanced code consistency** across all debug actions
+<!-- SECTION:NOTES:END -->

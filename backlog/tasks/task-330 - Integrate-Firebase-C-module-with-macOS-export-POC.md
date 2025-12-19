@@ -4,7 +4,7 @@ title: Integrate Firebase C++ module with macOS export (POC)
 status: Done
 assignee: []
 created_date: '2025-12-09 09:38'
-updated_date: '2025-12-09 16:23'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - macos
@@ -12,6 +12,7 @@ labels:
   - poc
 dependencies: []
 priority: high
+ordinal: 9000
 ---
 
 ## Description

@@ -4,7 +4,7 @@ title: Fix iOS log rotation TEST_ID mismatch in test list mode
 status: Done
 assignee: []
 created_date: '2025-11-28 15:33'
-updated_date: '2025-11-28 15:42'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - ios
@@ -13,10 +13,12 @@ labels:
 dependencies:
   - task-317
   - task-319
+ordinal: 18000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS test lists fail because log retrieval gets STALE log files containing previous test's TEST_ID instead of current test's TEST_ID, causing "No log file found containing TEST_ID" errors.
 
 **Impact:** Test lists with multiple configs fail at 0% success rate even though tests execute successfully.
@@ -473,3 +475,4 @@ Config 2: firebase-two-actions-test
 2. Test with larger test lists (3+ configs)
 3. ✅ Validate single config tests still work - **VALIDATED - 100% PASS**
 4. Document any edge cases discovered
+<!-- SECTION:DESCRIPTION:END -->

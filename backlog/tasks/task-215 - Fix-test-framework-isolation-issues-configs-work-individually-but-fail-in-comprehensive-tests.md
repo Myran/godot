@@ -6,16 +6,17 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-10-11 15:13'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - resolved
 dependencies: []
 priority: high
+ordinal: 102000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Investigate and resolve test framework isolation issues where configurations work perfectly when tested individually but show sequential action timeouts in comprehensive test runs.
 
 **Critical Discovery:**
@@ -119,3 +120,4 @@ Comprehensive test validation (logs/20251022_211336_test.log):
 Test log: logs/20251022_211336_test.log
 Comprehensive suite validation: 23/23 configs, 88/88 actions passed
 Individual test parity: Confirmed configs work identically in isolation and suite execution
+<!-- SECTION:DESCRIPTION:END -->

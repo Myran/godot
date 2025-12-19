@@ -6,13 +6,15 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-24 14:48'
-updated_date: '2025-12-06 11:24'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 26000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Assessment (2025-12-06)
 
 **Value: MEDIUM** - Infrastructure improvement, but lacks detail.
@@ -29,3 +31,4 @@ Good candidate for improvement once properly scoped.
 ---
 
 ## Description
+<!-- SECTION:DESCRIPTION:END -->

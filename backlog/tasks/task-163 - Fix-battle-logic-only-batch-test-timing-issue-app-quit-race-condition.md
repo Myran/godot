@@ -4,13 +4,22 @@ title: Fix battle-logic-only batch test timing issue - app quit race condition
 status: Done
 assignee: []
 created_date: '2025-09-18 12:40'
-updated_date: '2025-09-19 06:47'
-labels: ['testing', 'batch-tests', 'timing', 'race-condition', 'system-infrastructure', 'android']
-dependencies: ['task-162']
+updated_date: '2025-12-18 10:37'
+labels:
+  - testing
+  - batch-tests
+  - timing
+  - race-condition
+  - system-infrastructure
+  - android
+dependencies:
+  - task-162
+ordinal: 140000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The `battle-logic-only` test fails in batch mode with "No actions found in results file" but works perfectly when run individually. This is caused by a race condition where the auto-added `system.debug.replay_complete` action calls `get_tree().quit(0)` mid-batch, terminating the app before subsequent tests can run.
 
 ### Root Cause Analysis
@@ -79,20 +88,23 @@ Replace immediate `get_tree().quit(0)` with completion signal, let external proc
 **Key Environment Variables**:
 - `MULTI_PLATFORM_SESSION`: Set by batch test harness
 - Used to detect batch vs individual test execution context
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] `just test` (batch mode) passes all tests including `battle-logic-only`
-- [ ] `just test-android-target battle-logic-only` (individual mode) continues to work
-- [ ] Solution maintains single code path (no special batch-specific logic branches)
-- [ ] No changes required to existing test configs
-- [ ] Firebase sequential processing behavior unchanged
-- [ ] Task 162 success logging timing fix preserved
-- [ ] All existing automated tests continue to pass
-- [ ] Success rate improves from 94% to 100% in batch mode
+<!-- AC:BEGIN -->
+- [ ] #1 `just test` (batch mode) passes all tests including `battle-logic-only`
+- [ ] #2 `just test-android-target battle-logic-only` (individual mode) continues to work
+- [ ] #3 Solution maintains single code path (no special batch-specific logic branches)
+- [ ] #4 No changes required to existing test configs
+- [ ] #5 Firebase sequential processing behavior unchanged
+- [ ] #6 Task 162 success logging timing fix preserved
+- [ ] #7 All existing automated tests continue to pass
+- [ ] #8 Success rate improves from 94% to 100% in batch mode
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Recommended Approach**: Solution 1 (Environment-Based Detection)
 
 **File to modify**: `project/debug/actions/registrations/system_actions.gd`
@@ -139,3 +151,4 @@ The batch testing infrastructure now properly handles the app quit timing across
 - ✅ Batch test summary shows: "✅ Passed: 21, ❌ Failed: 0"
 - ✅ No "CRITICAL TEST FAILURE: No actions found" messages in logs
 - ✅ All test configurations working consistently in batch mode
+<!-- SECTION:NOTES:END -->

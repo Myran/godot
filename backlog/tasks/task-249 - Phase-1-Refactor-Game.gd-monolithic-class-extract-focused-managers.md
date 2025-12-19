@@ -4,17 +4,19 @@ title: 'Phase 1: Refactor Game.gd monolithic class - extract focused managers'
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-10-29 21:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
   - architecture
   - phase-1
 dependencies: []
+ordinal: 74000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -276,17 +278,19 @@ func _process(delta: float) -> void:
 - **Better test coverage** potential
 - **Improved onboarding** for new developers
 - **Reduced technical debt accumulation**
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Game.gd reduced from 688 to <200 lines
-- [ ] BattleQueueManager extracted with <200 lines and single responsibility
-- [ ] BattleReconciler extracted with <200 lines and single responsibility
-- [ ] DebugCoordinator extracted with <200 lines and single responsibility
-- [ ] GameStateManager extracted with <200 lines and single responsibility
-- [ ] All extracted classes have no methods >50 lines
-- [ ] All existing functionality preserved with identical behavior
-- [ ] All battle tests pass without regression
-- [ ] Debug system remains fully functional
-- [ ] No performance degradation in battle processing
-- [ ] Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:BEGIN -->
+- [ ] #1 Game.gd reduced from 688 to <200 lines
+- [ ] #2 BattleQueueManager extracted with <200 lines and single responsibility
+- [ ] #3 BattleReconciler extracted with <200 lines and single responsibility
+- [ ] #4 DebugCoordinator extracted with <200 lines and single responsibility
+- [ ] #5 GameStateManager extracted with <200 lines and single responsibility
+- [ ] #6 All extracted classes have no methods >50 lines
+- [ ] #7 All existing functionality preserved with identical behavior
+- [ ] #8 All battle tests pass without regression
+- [ ] #9 Debug system remains fully functional
+- [ ] #10 No performance degradation in battle processing
+- [ ] #11 Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:END -->

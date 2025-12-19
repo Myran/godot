@@ -4,7 +4,7 @@ title: Fix Firebase performance test threshold violations after timeout optimiza
 status: Done
 assignee: []
 created_date: '2025-09-13 10:12'
-updated_date: '2025-09-14 22:06'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - performance
@@ -14,10 +14,12 @@ labels:
 dependencies:
   - task-142
 priority: medium
+ordinal: 153000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Firebase performance tests failing after timeout optimization with threshold violations indicating performance regression**
 
 Following the successful resolution of Firebase timeout issues in task-142 (10s → 45s timeout), the `system-performance` test is now failing due to performance threshold violations. The Firebase backend operations are completing successfully but exceeding performance test expectations.
@@ -126,14 +128,16 @@ Backend async pattern test failed { "method": "get_data", "duration_ms": 87 }
 - `tests/debug_configs/system-performance.json` - Performance test configuration
 - Performance threshold configuration files
 - Firebase backend service performance optimizations
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-- [ ] #1 Firebase performance tests pass consistently (95%+ success rate)
-- [ ] #2 Performance thresholds reflect realistic production expectations
-- [ ] #3 No false negative performance failures in CI pipeline
-- [ ] #4 Performance regression detection maintained
-- [ ] #5 Documentation of performance expectations and thresholds
-- [ ] #6 System-performance test configuration updated and validated
+<!-- AC:BEGIN -->
+- [ ] #1 #1 Firebase performance tests pass consistently (95%+ success rate)
+- [ ] #2 #2 Performance thresholds reflect realistic production expectations
+- [ ] #3 #3 No false negative performance failures in CI pipeline
+- [ ] #4 #4 Performance regression detection maintained
+- [ ] #5 #5 Documentation of performance expectations and thresholds
+- [ ] #6 #6 System-performance test configuration updated and validated
 
 ## Implementation Strategy
 
@@ -142,7 +146,6 @@ Backend async pattern test failed { "method": "get_data", "duration_ms": 87 }
 **Phase 3 (Long Term)**: Performance optimization and comprehensive monitoring
 
 **Priority**: Medium (functional tests passing, performance optimization opportunity)
-
 
 ## Resolution Summary (2025-09-15)
 
@@ -164,3 +167,4 @@ Backend async pattern test failed { "method": "get_data", "duration_ms": 87 }
 - ✅ All performance tests maintain realistic thresholds
 
 **Status**: ✅ **RESOLVED** - Ready to close task-145
+<!-- AC:END -->

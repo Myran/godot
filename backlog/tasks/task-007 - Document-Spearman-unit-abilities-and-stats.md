@@ -4,27 +4,32 @@ title: Document Spearman unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
 dependencies: []
+ordinal: 245000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Spearman unit (ID: 4) with Breakthrough ability that attacks both primary target and unit behind it
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Spearman unit has correct base stats (1/3, soldier tribe)
-- [ ] Breakthrough ability mechanics are clearly documented
-- [ ] Implementation details for abilities_spearman.gd and battle.gd interaction are accurate
-- [ ] Attack pattern targets primary and rear units correctly
+<!-- AC:BEGIN -->
+- [ ] #1 Spearman unit has correct base stats (1/3, soldier tribe)
+- [ ] #2 Breakthrough ability mechanics are clearly documented
+- [ ] #3 Implementation details for abilities_spearman.gd and battle.gd interaction are accurate
+- [ ] #4 Attack pattern targets primary and rear units correctly
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟡 Moderate
 **Current System**: ⚠️ Needs custom battle action system extension
 
@@ -88,3 +93,4 @@ func resolve_breakthrough_attack(attack_event: AttackEvent):
 - Test breakthrough when rear position is empty (should hit primary only)
 - Test breakthrough damage calculation (same damage to both targets)
 - Test with various lineup configurations and positions
+<!-- SECTION:PLAN:END -->

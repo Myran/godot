@@ -1,1 +1,1 @@
-{"description":"Temporary config for single action: backend.firebase.error_handling","actions":["backend.firebase.error_handling"],"platforms": ["android", "ios", "macos"]}
+{"description":"Temporary config for single action: backend.firebase.error_handling","actions":["backend.firebase.error_handling"],"platforms": ["android", "ios", "macos", "windows"]}

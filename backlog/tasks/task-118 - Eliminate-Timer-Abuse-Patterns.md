@@ -4,17 +4,21 @@ title: Eliminate Timer Abuse Patterns
 status: Done
 assignee: []
 created_date: '2025-09-05 21:27'
+updated_date: '2025-12-18 10:37'
 labels:
   - performance
   - godot
   - critical
 dependencies: []
 priority: high
+ordinal: 176000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Replace 24 instances of timing-based waits that violate Godot best practices (await get_tree().create_timer() patterns) with proper signal-based completion patterns to achieve 25-40% frame time reduction
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

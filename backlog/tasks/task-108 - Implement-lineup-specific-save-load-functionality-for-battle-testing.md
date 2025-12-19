@@ -4,7 +4,7 @@ title: Implement lineup-specific save/load functionality for battle testing
 status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-08-30 11:27'
+updated_date: '2025-12-18 10:37'
 labels:
   - battle
   - debug
@@ -12,11 +12,14 @@ labels:
   - lineup
 dependencies: []
 priority: medium
+ordinal: 185000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement comprehensive lineup save/load system with dual approach: (1) Surgical lineup save/load leveraging existing gamestate infrastructure for immediate designer testing needs, and (2) Debug lineup presets system for long-term workflow efficiency and team collaboration. System provides both rapid testing flexibility and organized preset management for battle composition testing.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -36,6 +39,7 @@ Implement comprehensive lineup save/load system with dual approach: (1) Surgical
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 EXPERT ANALYSIS SUMMARY:
 
 ### Expert Game Developer #1 - State Management Analysis:
@@ -256,3 +260,4 @@ Phase 2 implementation can proceed with confidence. The foundation is solid and 
 - **Log Extraction**: Extend existing grep/chunk reassembly for lineup markers
 - **File Management**: 'line-' prefix integrates with existing list/clean commands
 - **Cross-platform**: Android/desktop workflows work unchanged
+<!-- SECTION:NOTES:END -->

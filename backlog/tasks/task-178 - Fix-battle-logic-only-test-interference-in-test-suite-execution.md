@@ -4,7 +4,7 @@ title: Fix battle-logic-only test interference in test suite execution
 status: Done
 assignee: []
 created_date: '2025-09-24 19:35'
-updated_date: '2025-09-26 14:03'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - battle-logic
@@ -12,11 +12,14 @@ labels:
   - determinism
 dependencies: []
 priority: high
+ordinal: 126000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Resolve inconsistent behavior where battle-logic-only test passes individually but fails in test suite due to determinism test entering Recording Mode instead of Validation Mode, causing RESTART_NEEDED response that test framework treats as failure
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -28,15 +31,18 @@ Resolve inconsistent behavior where battle-logic-only test passes individually b
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 1. Analyze determinism test behavior patterns - investigate why hash validation fails in suite vs individual execution
 2. Research command integration pattern used by test-save-load-cycle commands for handling multi-step validation cycles
 3. Implement Solution 1: Create test-battle-determinism-cycle-desktop/android commands to handle recording/validation cycle properly
 4. Alternative: Implement Solution 2: Update test framework to treat RESTART_NEEDED as success in automated mode when action correctly identifies need for clean restart
 5. Test both individual and suite execution to ensure consistent behavior
 6. Document determinism test recording vs validation mode behavior for future maintenance
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **PROBLEM ANALYSIS:**
 - Individual test: ❌ RESTART_NEEDED (never enters validation mode)
 - Full test suite: ❌ RESTART_NEEDED (same issue, masked as passing)
@@ -113,3 +119,4 @@ just log-run-silent test
 - Evidence: expectedHash written by test framework but missing when read by determinism test
 
 ✅ RESOLVED: Latest test run (20250926_155152_test.log) shows battle-logic-only test passing consistently in both individual and full suite execution. All 36 configs passed across all platforms. The determinism test interference issue has been resolved through the unified async implementation work.
+<!-- SECTION:NOTES:END -->

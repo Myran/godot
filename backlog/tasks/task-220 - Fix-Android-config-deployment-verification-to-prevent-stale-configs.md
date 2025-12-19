@@ -4,14 +4,16 @@ title: Fix Android config deployment verification to prevent stale configs
 status: Done
 assignee: []
 created_date: '2025-10-14 07:42'
-updated_date: '2025-10-14 07:42'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
 priority: high
+ordinal: 96000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Root Cause
 Android test framework's _push-file-android recipe reports success without verifying deployed file content. This allows stale configurations to persist on device, causing tests to execute with wrong action sequences.
 
@@ -39,3 +41,4 @@ After: 4 actions correct order, 3/3 checksums, verified deployment
 - Root cause of multiple test isolation issues
 
 ## Description
+<!-- SECTION:DESCRIPTION:END -->

@@ -4,29 +4,34 @@ title: Add lineup data extraction and serialization system
 status: Done
 assignee: []
 created_date: '2025-08-30 07:18'
-updated_date: '2025-09-03 07:05'
+updated_date: '2025-12-18 10:37'
 labels:
   - battle
   - serialization
   - core
 dependencies: []
 parent_task_id: task-108
+ordinal: 186000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Create comprehensive lineup data extraction system that captures complete lineup state including cards/units, positions, levels, abilities, equipment, and all other relevant lineup properties for accurate battle scenario reproduction
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] System extracts complete lineup data including cards/units with full properties
-- [ ] Captures unit positions, levels, abilities, and equipment states
-- [ ] Serializes lineup data in format compatible with existing save system
-- [ ] Uses 'line-' prefix naming convention for saved files
-- [ ] Integrates with existing GameState serialization infrastructure
+<!-- AC:BEGIN -->
+- [ ] #1 System extracts complete lineup data including cards/units with full properties
+- [ ] #2 Captures unit positions, levels, abilities, and equipment states
+- [ ] #3 Serializes lineup data in format compatible with existing save system
+- [ ] #4 Uses 'line-' prefix naming convention for saved files
+- [ ] #5 Integrates with existing GameState serialization infrastructure
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 EXPERT TECHNICAL ANALYSIS - 90% Code Reuse Opportunity:
 
 StateExtractor Foundation (Existing Infrastructure):
@@ -64,3 +69,4 @@ Testing Integration:
 - Leverage existing StateExtractor unit tests
 - Reuse JSON validation patterns from GameState tests
 - File I/O patterns already validated in production
+<!-- SECTION:NOTES:END -->

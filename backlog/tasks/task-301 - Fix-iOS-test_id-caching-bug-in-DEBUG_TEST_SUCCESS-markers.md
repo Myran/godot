@@ -4,7 +4,7 @@ title: Fix iOS test_id caching bug in DEBUG_TEST_SUCCESS markers
 status: Done
 assignee: []
 created_date: '2025-11-22 18:29'
-updated_date: '2025-11-23 11:53'
+updated_date: '2025-12-18 10:37'
 labels:
   - bug
   - ios
@@ -12,10 +12,12 @@ labels:
   - cosmetic
 dependencies: []
 priority: medium
+ordinal: 33000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS tests are using stale/cached test_id values in DEBUG_TEST_SUCCESS log markers instead of the current test_id. This makes log analysis confusing and breaks test_id-based log filtering.
 
 **Discovered during:** Task-290 iOS quit mechanism validation while comparing iOS vs Android test logs
@@ -122,15 +124,16 @@ grep "Test context set" ios_gamestate-complete-save-load-cycle-test_ios_17638346
 # Compare with Android
 grep "DEBUG_TEST_SUCCESS" android_gamestate-complete-save-load-cycle-test_android_1763835727.log
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] DEBUG_TEST_SUCCESS markers on iOS use the current test_id
-- [ ] test_id matches between DEBUG_TEST_START and DEBUG_TEST_SUCCESS
-- [ ] Running consecutive iOS tests shows different test_ids in each test's logs
-- [ ] iOS DEBUG_TEST_SUCCESS format matches Android format exactly
-- [ ] No regression in Android test_id behavior
-- [ ] Test results JSON continues to have correct test_id
+<!-- AC:BEGIN -->
+- [ ] #1 DEBUG_TEST_SUCCESS markers on iOS use the current test_id
+- [ ] #2 test_id matches between DEBUG_TEST_START and DEBUG_TEST_SUCCESS
+- [ ] #3 Running consecutive iOS tests shows different test_ids in each test's logs
+- [ ] #4 iOS DEBUG_TEST_SUCCESS format matches Android format exactly
+- [ ] #5 No regression in Android test_id behavior
+- [ ] #6 Test results JSON continues to have correct test_id
 
 ## Proposed Solutions
 
@@ -176,9 +179,11 @@ Investigate why DebugAction isn't receiving the updated test_id from DebugStartu
 **Cons:**
 - More investigation required
 - May be timing-related
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 **Files to Check:**
 - `debug/debug_action.gd` or `debug/debug_action_registry.gd` - Where DEBUG_TEST_SUCCESS is logged
 - `addons/debug_startup/debug_startup_coordinator.gd` - Where test_id is set
@@ -262,3 +267,4 @@ var config_test_id: String = (
 - Discovered during: task-290 (iOS quit mechanism implementation)
 - May be related to broader iOS state persistence patterns
 - **Implementation:** A+B+C comprehensive solution (code + infrastructure + testing)
+<!-- SECTION:NOTES:END -->

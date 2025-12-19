@@ -4,29 +4,34 @@ title: Eliminate duplicate validation functions across justfiles
 status: Done
 assignee: []
 created_date: '2025-08-09 06:44'
-updated_date: '2025-08-11 18:45'
+updated_date: '2025-12-18 10:37'
 labels:
   - refactor
   - justfiles
   - validation
 dependencies: []
 priority: high
+ordinal: 231000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 There are 19+ duplicate validation functions scattered across multiple justfile modules, creating maintenance issues and inconsistent behavior. Functions like _validate-android-device, _validate-ios-tools, _validate-godot-editor, and _validate-path-exists appear multiple times with identical implementations.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] All duplicate validation functions are identified and catalogued
-- [x] Central validation module justfile-validation-shared.justfile is created with consolidated functions
-- [x] All justfiles import validation functions from the shared module instead of duplicating them
-- [x] No validation function appears in more than one file
-- [x] All existing validation behavior is preserved after consolidation
+<!-- AC:BEGIN -->
+- [x] #1 All duplicate validation functions are identified and catalogued
+- [x] #2 Central validation module justfile-validation-shared.justfile is created with consolidated functions
+- [x] #3 All justfiles import validation functions from the shared module instead of duplicating them
+- [x] #4 No validation function appears in more than one file
+- [x] #5 All existing validation behavior is preserved after consolidation
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 1. Create comprehensive testing baseline to validate current functionality
 2. Map all duplicate validation functions and their dependencies
 3. Design consolidated validation module architecture
@@ -62,3 +67,4 @@ There are 19+ duplicate validation functions scattered across multiple justfile 
 - **justfile-validation-shared.justfile**: 25 consolidated validation functions (11 core + 14 helpers)
 - **Zero duplicates**: No validation function appears in more than one file
 - **Full test coverage**: All commands pass dry-run validation
+<!-- SECTION:PLAN:END -->

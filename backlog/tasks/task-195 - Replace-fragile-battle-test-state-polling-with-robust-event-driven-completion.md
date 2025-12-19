@@ -4,7 +4,7 @@ title: Replace fragile battle test state polling with robust event-driven comple
 status: Done
 assignee: []
 created_date: '2025-10-02 18:32'
-updated_date: '2025-10-03 00:12'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - battle
@@ -13,22 +13,27 @@ labels:
 dependencies:
   - task-193
 priority: high
+ordinal: 113000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The current test_determinism_animated function uses a fragile while loop to wait for battle completion that creates race conditions and goes against the existing event-driven architecture. This improvement will replace the polling mechanism with a proper event-driven approach using the existing TransitionEvent system for more robust and maintainable test infrastructure.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-- [x] Replace while loop polling with event-driven TransitionEvent listening
-- [x] Battle completion detection no longer relies on brief POSTBATTLE state polling
-- [x] Test uses existing event-driven architecture patterns
-- [x] Battle animation runs successfully and test completes reliably
-- [x] Race conditions with state transitions are eliminated
-
+<!-- AC:BEGIN -->
+- [x] #1 Replace while loop polling with event-driven TransitionEvent listening
+- [x] #2 Battle completion detection no longer relies on brief POSTBATTLE state polling
+- [x] #3 Test uses existing event-driven architecture patterns
+- [x] #4 Battle animation runs successfully and test completes reliably
+- [x] #5 Race conditions with state transitions are eliminated
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 1. Locate the test_determinism_animated function in the codebase
 2. Analyze the current while loop polling mechanism for POSTBATTLE state
 3. Identify where TransitionEvent is already used for state transitions
@@ -36,8 +41,11 @@ The current test_determinism_animated function uses a fragile while loop to wait
 5. Test the new implementation to ensure battle completion is properly detected
 6. Verify the test runs reliably without race conditions
 7. Validate that the solution follows existing event-driven patterns in the codebase
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 This is a follow-up improvement to task-193 which addressed sequential action completion. While task-193 fixed the immediate issue, the underlying polling mechanism remains fragile and should be replaced with proper event-driven architecture.
 
 ## 🔍 Root Cause Investigation (2025-10-02)
@@ -240,3 +248,4 @@ battle-animated_desktop_1759442808:
 - Event-driven battle completion using SignalAwaiter (this implementation)
 - Closes: task-195
 - Related: task-193 (sequential action completion events)
+<!-- SECTION:NOTES:END -->

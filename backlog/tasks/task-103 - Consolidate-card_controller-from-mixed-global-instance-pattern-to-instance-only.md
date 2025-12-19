@@ -1,50 +1,24 @@
 ---
 id: task-103
-title: Consolidate card_controller from mixed global/instance pattern to instance-only
-status: In Progress
-priority: medium
+title: >-
+  Consolidate card_controller from mixed global/instance pattern to
+  instance-only
+status: Done
+assignee: []
+created_date: '2025-08-27'
+updated_date: '2025-12-18 10:38'
 labels:
   - architecture
   - refactoring
   - technical-debt
-created_date: '2025-08-27'
-updated_date: '2025-08-27'
+dependencies: []
+priority: medium
+ordinal: 500
 ---
-
-# Task-103: Consolidate card_controller from mixed global/instance pattern to instance-only
-
-**Status**: 🔄 In Progress
-**Priority**: Medium (Architectural Debt)
-**Effort**: 3-4 days
-**Created**: 2025-08-27  
-
-## Problem Statement
-
-GameTwo currently has a problematic mixed pattern for `card_controller` access:
-- **Global Autoload**: Defined in `project.godot` as singleton 
-- **16 files** using global `card_controller.*` calls
-- **1 file** using instance-based `game.card_controller.*` calls  
-- **No actual card_controller property** in Game class (works via Godot's autoload access)
-
-This creates architectural confusion and inconsistency:
-```gdscript
-# Confusing - which card_controller am I getting?
-var card1 = card_controller.create_unit_from_id("1", 1)  # Global singleton
-var card2 = game.card_controller.create_unit_from_id("1", 1)  # Same global via node access
-```
-
-## Solution Overview
-
-**Decision**: Remove global autoload, consolidate to instance-based pattern only.
-
-**Rationale**: 
-- Card state should be tied to specific game instances for better isolation
-- Improves testability and supports multiple game instances
-- Makes dependencies explicit and reduces architectural confusion
-- Future-proof for game modes or multi-instance scenarios
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Game Class Enhancement ⏳
 - [ ] Add `@export var card_controller: CardController` to Game class
 - [ ] Wire up card_controller instance in Game.tscn scene
@@ -142,3 +116,36 @@ Task is complete when:
 ---
 
 **Notes**: This task builds on the recent save/load state improvements and represents a significant architectural cleanup that will improve code maintainability and testability going forward.
+<!-- SECTION:PLAN:END -->
+
+# Task-103: Consolidate card_controller from mixed global/instance pattern to instance-only
+
+**Status**: 🔄 In Progress
+**Priority**: Medium (Architectural Debt)
+**Effort**: 3-4 days
+**Created**: 2025-08-27  
+
+## Problem Statement
+
+GameTwo currently has a problematic mixed pattern for `card_controller` access:
+- **Global Autoload**: Defined in `project.godot` as singleton 
+- **16 files** using global `card_controller.*` calls
+- **1 file** using instance-based `game.card_controller.*` calls  
+- **No actual card_controller property** in Game class (works via Godot's autoload access)
+
+This creates architectural confusion and inconsistency:
+```gdscript
+# Confusing - which card_controller am I getting?
+var card1 = card_controller.create_unit_from_id("1", 1)  # Global singleton
+var card2 = game.card_controller.create_unit_from_id("1", 1)  # Same global via node access
+```
+
+## Solution Overview
+
+**Decision**: Remove global autoload, consolidate to instance-based pattern only.
+
+**Rationale**: 
+- Card state should be tied to specific game instances for better isolation
+- Improves testability and supports multiple game instances
+- Makes dependencies explicit and reduces architectural confusion
+- Future-proof for game modes or multi-instance scenarios

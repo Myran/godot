@@ -1,12 +1,18 @@
 # Unified Sentry SDK Build Commands for GameTwo
 # Import split Sentry justfiles for modular access
 
+# Sentry SDK version (used for submodule and GDExtension downloads)
+# Update this when upgrading sentry-godot
+SENTRY_VERSION := "1.2.0"
+SENTRY_GDEXT_COMMIT := "241f16b"  # Commit hash in GDExtension release filename
+
 # Sentry SDK paths (shared across both integration types)
 SENTRY_PATH := "extras/sentry-godot"
 SENTRY_ADDON_PATH := "extras/sentry-godot/project/addons/sentry"
 PROJECT_SENTRY_PATH := "project/addons/sentry"
 SENTRY_PROJECT_PATH := "extras/sentry-godot/project"
 IOS_EXPORT_PATH := "export/ios"
+SENTRY_GDEXT_DIR := "extras/sentry-godot-gdextension-" + SENTRY_VERSION + "+" + SENTRY_GDEXT_COMMIT
 
 # Import specialized Sentry build modules
 import "justfile-native-ios-sentry.justfile"
@@ -35,10 +41,10 @@ help-sentry:
     @echo "  just build-sentry-gdscript-all         # Build GDScript Sentry for all platforms"
     @echo "  just sentry-gdscript-complete        # Complete GDScript build + validation"
     @echo ""
-    @echo "🪟 WINDOWS SENTRY DLLS (GDEXTENSION SUPPORT):"
-    @echo "  just help-sentry-windows              # Show Windows DLL commands"
-    @echo "  just sentry-windows-build            # Build Windows Sentry DLLs (all archs)"
-    @echo "  just sentry-windows-complete         # Complete Windows build + validation"
+    @echo "🪟 WINDOWS SENTRY (VM NATIVE BUILD):"
+    @echo "  just build-sentry-windows-vm         # Build Windows Sentry on VM (crashpad backend)"
+    @echo "  just win-vm-sentry-complete          # Build + package from VM"
+    @echo "  just win-vm-sentry-package           # Copy built DLLs from VM"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
     @echo "  just build-sentry-all               # Build all Sentry integrations (smart rebuild)"
@@ -53,7 +59,7 @@ help-sentry:
     @echo "ℹ️  NATIVE iOS = Built into Godot executable (crash reporting)"
     @echo "ℹ️  NATIVE ANDROID = Built into Godot executable (crash reporting)"
     @echo "ℹ️  GDSCRIPT = Runtime GDExtension (script-level functionality)"
-    @echo "ℹ️  WINDOWS = Cross-compiled DLLs for Windows export support"
+    @echo "ℹ️  WINDOWS = Native MSVC build on VM with crashpad backend"
 
 
 # Smart Sentry rebuild detection
@@ -69,13 +75,30 @@ build-sentry-all force="no":
     @echo ""
     @just build-sentry-native-android-all {{force}}
     @echo ""
-    @just build-sentry-gdscript-all {{force}}
+    @just build-sentry-gdscript-all
     @echo ""
-    @just build-sentry-native-windows-release {{force}}
+    @just build-sentry-windows-vm {{force}}
     @echo ""
     @just validate-sentry-all
     @echo ""
     @echo "🎉 All Sentry SDK components built and validated successfully!"
+
+# Build Windows Sentry on VM with crashpad backend (MSVC native)
+build-sentry-windows-vm force="no":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Check if Windows Sentry DLL already exists and crashpad_handler is present
+    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && \
+       [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ] && \
+       [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then
+        echo "✅ Windows Sentry (crashpad) already built"
+        echo "   Use 'just build-sentry-windows-vm force=yes' to rebuild"
+        exit 0
+    fi
+
+    echo "🪟 Building Windows Sentry with crashpad backend on VM..."
+    just win-vm-sentry-complete
 
 # Quick Sentry status check
 status-sentry-quick:
@@ -97,10 +120,13 @@ status-sentry-quick:
     fi
 
     @echo "🪟 Windows Sentry:"
-    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-        echo "   ✅ Built (Windows DLLs)"; \
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ] && \
+       [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
+        echo "   ✅ Built (crashpad backend)"; \
+    elif [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
+        echo "   ⚠️  DLL built but crashpad_handler.exe missing - run 'just build-sentry-windows-vm force=yes'"; \
     else \
-        echo "   ❌ Not built - run 'just build-sentry-all'"; \
+        echo "   ❌ Not built - run 'just build-sentry-windows-vm'"; \
     fi
 
 validate-sentry-all:
@@ -145,14 +171,14 @@ validate-sentry-all:
         echo "❌" > /tmp/windows_status; \
     else \
         if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-            echo "❌ Windows Sentry DLL not built - run 'just build-sentry-native-windows-release'"; \
+            echo "❌ Windows Sentry DLL not built - run 'just build-sentry-windows-vm'"; \
             echo "❌" > /tmp/windows_status; \
         else \
             if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
-                echo "⚠️  Windows crashpad_handler.exe missing (non-critical)"; \
-                echo "✅" > /tmp/windows_status; \
+                echo "❌ Windows crashpad_handler.exe missing - run 'just build-sentry-windows-vm force=yes'"; \
+                echo "❌" > /tmp/windows_status; \
             else \
-                echo "✅ Windows Sentry DLL validation passed"; \
+                echo "✅ Windows Sentry (crashpad backend) validation passed"; \
                 echo "✅" > /tmp/windows_status; \
             fi; \
         fi; \

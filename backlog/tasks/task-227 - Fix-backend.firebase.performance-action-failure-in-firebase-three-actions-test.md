@@ -2,11 +2,9 @@
 id: task-227
 title: Fix backend.firebase.performance action failure in firebase-three-actions-test
 status: Done
-priority: high
 assignee: []
 created_date: '2025-10-17 14:03'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - performance
@@ -15,10 +13,13 @@ labels:
   - regression
   - resolved
 dependencies: []
+priority: high
+ordinal: 89000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **TEST SUITE REGRESSION**: The `backend.firebase.performance` action fails in `firebase-three-actions-test` when run as part of comprehensive test suite, despite passing individually.
 
 ### Failure Pattern
@@ -76,15 +77,16 @@ just test  # Run full suite, compare performance action timing
 # 4. Check for state accumulation issues
 just android-logs-search "firebase-three-actions-test" | rg -i "performance|timeout"
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] `firebase-three-actions-test` passes consistently in comprehensive test suite (10/10 runs)
-- [ ] `backend.firebase.performance` action completes in <3 seconds (not 27 seconds)
-- [ ] All 5 actions in config pass (100% success rate)
-- [ ] Performance metrics match individual run timings (909-1085ms range)
-- [ ] No regression in other Firebase test configurations
-- [ ] Test suite isolation improvements prevent state accumulation
+<!-- AC:BEGIN -->
+- [ ] #1 `firebase-three-actions-test` passes consistently in comprehensive test suite (10/10 runs)
+- [ ] #2 `backend.firebase.performance` action completes in <3 seconds (not 27 seconds)
+- [ ] #3 All 5 actions in config pass (100% success rate)
+- [ ] #4 Performance metrics match individual run timings (909-1085ms range)
+- [ ] #5 No regression in other Firebase test configurations
+- [ ] #6 Test suite isolation improvements prevent state accumulation
 
 ## Debug Commands
 
@@ -147,3 +149,4 @@ Comprehensive test validation (logs/20251022_211336_test.log):
 
 Test log: logs/20251022_211336_test.log
 Performance validation: Multiple configs showing consistent sub-second performance
+<!-- AC:END -->

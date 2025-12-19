@@ -4,13 +4,15 @@ title: move configs and tests out of project
 status: Done
 assignee: []
 created_date: '2025-08-07 09:06'
-updated_date: '2025-08-08 20:40'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 249000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Research and implement how we can move config and tests folder outside of projects folder to prevent them from being packaged in the final game build.
 
 **Current State:** Both `project/debug_configs/` and `project/test-lists/` are inside the project folder and will be included in packaged builds.
@@ -79,9 +81,11 @@ Research and implement how we can move config and tests folder outside of projec
 - Uses `res://debug_configs` (points to root level)
 - Uses `res://test-lists` (points to root level)
 - **No GDScript changes needed** after folder move
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Path Centralization (Risk: Low)
 1. Add centralized variables to `justfile-core-config.justfile`
 2. Replace hardcoded references with centralized variables
@@ -233,3 +237,4 @@ Research and implement how we can move config and tests folder outside of projec
 **Task successfully completed with zero breaking changes and significant architectural improvements.**
 
 **Company's test framework integrity preserved and enhanced for future maintainability.**
+<!-- SECTION:PLAN:END -->

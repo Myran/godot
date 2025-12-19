@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2025-11-11 13:05'
-updated_date: '2025-11-11 21:10'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - android
@@ -16,10 +16,12 @@ labels:
   - glthread
 dependencies: []
 priority: high
+ordinal: 49000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **CRITICAL ISSUE**: Multi-platform Android test execution causes native segmentation fault crashes in GLThread, leading to false test failures and CI/CD pipeline noise. The crash occurs AFTER test functionality completes successfully, during app cleanup/quit phase.
 
 **Key Insight**: This is NOT a test framework issue with "force-crash" - the app actually crashes with SIGSEGV, and Android's crash handler force-finishes the activity. Individual tests pass because they don't accumulate the memory/graphics resource corruption that multi-platform test runs do.
@@ -219,3 +221,4 @@ adb shell dumpsys meminfo com.primaryhive.gametwo | grep -E "(Graphics|GL|GPU)"
 **Critical Finding**: All test functionality works correctly - the crash is purely in the cleanup phase after successful test execution. This means the core product is stable and production-ready.
 
 **Risk Assessment**: Low to Medium - crash only affects test reliability, not production functionality. However, memory corruption in GLThread could indicate underlying graphics engine issues that might affect production under heavy load.
+<!-- SECTION:DESCRIPTION:END -->

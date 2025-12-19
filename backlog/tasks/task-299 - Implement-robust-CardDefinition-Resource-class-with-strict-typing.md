@@ -4,7 +4,7 @@ title: Implement robust CardDefinition Resource class with strict typing
 status: Done
 assignee: []
 created_date: '2025-11-20 09:11'
-updated_date: '2025-12-06 19:35'
+updated_date: '2025-12-18 10:37'
 labels:
   - robustness
   - typing
@@ -14,10 +14,12 @@ labels:
   - editor-completion
 dependencies: []
 priority: medium
+ordinal: 35000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Assessment (2025-12-06) - DETAILED INVESTIGATION
 
 **Value: MEDIUM-HIGH** - Eliminates silent fallbacks that hide bugs.
@@ -209,7 +211,6 @@ extends Resource
 ## Card tier/upgrade level
 @export var upgrade_level: int = 1
 
-
 static func from_dictionary(data: Dictionary) -> CardDefinition:
     """Create CardDefinition from legacy Dictionary format"""
     var def := CardDefinition.new()
@@ -224,7 +225,6 @@ static func from_dictionary(data: Dictionary) -> CardDefinition:
     def.tribe = data.get("tribe", "")
     def.upgrade_level = int(data.get("upgrade_level", "1"))
     return def
-
 
 func to_dictionary() -> Dictionary:
     """Convert back to Dictionary for backward compatibility"""
@@ -326,3 +326,4 @@ func to_dictionary() -> Dictionary:
 - [ ] **Rollback Procedure**: Automated rollback capability if CardDefinition issues arise
 - [ ] **CI Integration**: CardDefinition validation added to `just ci-validate` pipeline
 <!-- AC:END -->
+<!-- SECTION:DESCRIPTION:END -->

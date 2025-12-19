@@ -4,7 +4,7 @@ title: Implement no-focus background launch for automated Godot tests on macOS
 status: Done
 assignee: []
 created_date: '2025-09-20 07:34'
-updated_date: '2025-10-24 21:01'
+updated_date: '2025-12-18 10:37'
 labels:
   - enhancement
   - macos
@@ -12,10 +12,12 @@ labels:
   - automation
 dependencies: []
 priority: high
+ordinal: 135000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 ## Context
 
 Current automated desktop tests launch Godot with --minimized flag which minimizes the window but still captures focus, interrupting developer workflow during CI/testing.
@@ -44,9 +46,25 @@ Based on GitHub research and macOS automation analysis:
 - Postman Issue #7112: Ignores -g flag and steals focus  
 - UTM Issue #2280: No native headless mode
 - Electron apps generally don't respect macOS background launch flags
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Automated desktop tests on macOS launch without stealing focus from terminal/IDE
+- [x] #2 Manual tests remain visible for verification when needed
+- [x] #3 Cross-platform compatibility maintained (macOS-specific enhancement only)
+- [x] #4 Implementation is minimal and safe (no breaking changes to existing workflows)
+
+## Success Criteria
+- Automated desktop tests launch without stealing focus from terminal/IDE
+- Manual tests remain visible for verification
+- Cross-platform compatibility maintained (macOS-specific enhancement)
+- Fallback mechanisms work when primary method fails
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Test Native macOS Support
 1. Test if Godot respects `open -gj` background launch flags
 2. Modify justfile-validation-enhanced-testing.justfile automated test commands:
@@ -62,10 +80,11 @@ Based on GitHub research and macOS automation analysis:
 1. Add detection to verify background launch worked (focus not stolen)
 2. Implement automatic fallback from macOS `open` to Godot flags
 3. Add platform detection (macOS-only feature)
-
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 INVESTIGATION COMPLETE - NOT FEASIBLE WITH CURRENT CONSTRAINTS
 
 ## Investigation Results
@@ -120,18 +139,7 @@ Achieving true no-focus background launch would require:
 1. `justfiles/justfile-validation-enhanced-testing.justfile` (lines 2618, 3216)
 2. `project/main.gd` (add --no-focus flag support)
 3. Test validation scripts
-
-## Acceptance Criteria
-- [x] Automated desktop tests on macOS launch without stealing focus from terminal/IDE
-- [x] Manual tests remain visible for verification when needed
-- [x] Cross-platform compatibility maintained (macOS-specific enhancement only)
-- [x] Implementation is minimal and safe (no breaking changes to existing workflows)
-
-## Success Criteria
-- Automated desktop tests launch without stealing focus from terminal/IDE
-- Manual tests remain visible for verification
-- Cross-platform compatibility maintained (macOS-specific enhancement)
-- Fallback mechanisms work when primary method fails
+<!-- SECTION:NOTES:END -->
 
 ## Implementation Notes (Completed)
 

@@ -4,7 +4,7 @@ title: Implement Android chunk processing fix for automated test logging
 status: Done
 assignee: []
 created_date: '2025-09-04 07:09'
-updated_date: '2025-09-04 20:42'
+updated_date: '2025-12-18 10:37'
 labels:
   - android
   - logging
@@ -12,11 +12,14 @@ labels:
   - automation
 dependencies: []
 priority: high
+ordinal: 180000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Fix missing DEBUG_TEST_SUCCESS logs in Android automated tests by implementing chunk-aware completion logic that waits for AndroidLoggerHelper's Timer-based chunk processing queue to complete before test termination
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->

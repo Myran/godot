@@ -4,32 +4,36 @@ title: Fix folder expansion syntax in test system for auto-discovery of configs
 status: Done
 assignee: []
 created_date: '2025-10-30 14:42'
-updated_date: '2025-10-31 08:50'
+updated_date: '2025-12-18 10:37'
 labels:
   - test-framework
   - bug-fix
   - critical
 dependencies: []
 priority: high
+ordinal: 69000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 The test list comprehensive-with-replays.json uses folder expansion syntax '/archive/generated-replays/' which should auto-discover configs in tests/debug_configs/archive/generated-replays/, but the test system incorrectly looks for configs directly in tests/debug_configs/ instead, causing 8+ test configurations to fail with 'Neither test list nor config found' errors.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Folder expansion syntax '/folder/' correctly discovers configs in tests/debug_configs/archive/generated-replays/ subdirectory
-- [x] Test system properly handles nested directory discovery for folder expansion patterns
-- [x] All 25+ battle replay configurations in comprehensive-with-replays.json execute successfully without manual file copying
-- [x] Error messages clearly indicate correct config paths when folder expansion fails
-- [x] Folder expansion syntax documentation is updated with correct usage examples
-- [x] Platform validation works correctly for archive configs
-- [x] Single canonical config lookup path maintained across all test components
+- [x] #2 Test system properly handles nested directory discovery for folder expansion patterns
+- [x] #3 All 25+ battle replay configurations in comprehensive-with-replays.json execute successfully without manual file copying
+- [x] #4 Error messages clearly indicate correct config paths when folder expansion fails
+- [x] #5 Folder expansion syntax documentation is updated with correct usage examples
+- [x] #6 Platform validation works correctly for archive configs
+- [x] #7 Single canonical config lookup path maintained across all test components
 <!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 Investigate folder expansion syntax issue in test system
 
 ## Root Cause Analysis
@@ -97,3 +101,4 @@ if [[ -n "$RECURSIVE_FOUND" ]]; then
 - Clear error messages for path resolution failures
 - CONFIG_PATH correctly points to recursive config locations
 - Shared config lookup architecture maintained across all test components
+<!-- SECTION:PLAN:END -->

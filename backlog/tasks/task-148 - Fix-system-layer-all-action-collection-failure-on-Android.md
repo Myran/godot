@@ -4,7 +4,7 @@ title: Fix system-layer-all action collection failure on Android
 status: Done
 assignee: []
 created_date: '2025-09-13 13:20'
-updated_date: '2025-09-14 22:03'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - android
@@ -20,10 +20,12 @@ labels:
   - context7-research
 dependencies: []
 priority: high
+ordinal: 150000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **UPDATED 2025-09-13**: Critical system-layer-all test exhibits race condition on Android causing inconsistent action collection (2/4 vs 4/4 actions) despite successful Desktop execution.
 
 Initial report showed "Actions collected: 0" during session 1757761309, but investigation revealed the actual issue is a **race condition in success logging** causing variable action collection results (2/4 to 4/4 actions) rather than complete failure.
@@ -109,6 +111,7 @@ func _log_test_success(action_name: String, category: String, group: String, dur
 - **Mobile Experience**: Android-specific system issues could degrade user experience
 - **Integration Problems**: System layer failures could cascade to other game systems
 - **Platform Reliability**: Android platform stability compromised by system layer issues
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -122,6 +125,7 @@ func _log_test_success(action_name: String, category: String, group: String, dur
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### Phase 1: Immediate Fix (Solution 1)
 1. **Remove investigation logging** - Clean up RACE_CONDITION_DEBUG code
 2. **Implement unified logging function** - Create `_log_test_success()` in debug_action.gd
@@ -142,10 +146,11 @@ func _log_test_success(action_name: String, category: String, group: String, dur
 just test-android-target system-layer-all
 just test-desktop-target system-layer-all
 ```
-
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 FINAL SOLUTION IMPLEMENTED - 2025-09-14 23:54
 
 ROOT CAUSE RESOLVED - Simple Await Signal Solution
@@ -714,3 +719,4 @@ if action_type.begins_with("system.debug."):
 **Remaining Work**: The missing `replay_complete` action should be investigated and fixed using the same callable debugging infrastructure to achieve full 100% Android/Desktop parity.
 
 **Expert Assessment**: Task demonstrates successful application of Advanced OODA Loop methodology with Context7 compliance research. The comprehensive debugging infrastructure built during this investigation provides the tools needed to quickly resolve the remaining action variance.
+<!-- SECTION:NOTES:END -->

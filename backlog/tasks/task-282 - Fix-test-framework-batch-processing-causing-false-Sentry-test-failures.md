@@ -4,13 +4,15 @@ title: Fix test framework batch processing causing false Sentry test failures
 status: Done
 assignee: []
 created_date: '2025-11-16 14:13'
-updated_date: '2025-11-16 21:40'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 44000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **Test Framework Issue**: Sentry tests show 81% pass rate in batch runs but 100% success when run individually, indicating a test framework batch processing problem rather than Sentry functionality issues.
 
 ## Problem Analysis
@@ -206,3 +208,4 @@ done
 - Test framework source code access
 - Sentry test configurations for validation
 - Batch test execution environment for testing fixes
+<!-- SECTION:DESCRIPTION:END -->

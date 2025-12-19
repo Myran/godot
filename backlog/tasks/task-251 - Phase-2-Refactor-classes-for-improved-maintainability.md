@@ -4,7 +4,7 @@ title: 'Phase 2: Refactor classes for improved maintainability'
 status: Done
 assignee: []
 created_date: '2025-10-29 16:58'
-updated_date: '2025-11-11 20:24'
+updated_date: '2025-12-18 10:37'
 labels:
   - will-not-do
   - refactoring
@@ -14,10 +14,12 @@ labels:
 dependencies:
   - task-249
   - task-250
+ordinal: 72000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **STATUS: WILL NOT DO - CLOSED**
 
 ### Reason for Closure
@@ -425,16 +427,18 @@ func validate_platform_context(action: DebugAction, context: Dictionary) -> bool
 - **Easier platform support** for debugging tools
 - **Reduced risk** when modifying UI or card systems
 - **Better code organization** for future development
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] DebugMenuController.gd reduced from 958 to <300 lines
-- [ ] Card.gd reduced from 571 to <350 lines
-- [ ] DebugAction.gd reduced from 772 to <400 lines
-- [ ] All extracted classes have single responsibilities
-- [ ] UI and debug logic properly separated
-- [ ] Card serialization/deserialization works perfectly
-- [ ] Platform-specific debug actions work on respective platforms
-- [ ] All existing debug functionality preserved
-- [ ] No regression in card behavior or save/load
-- [ ] Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:BEGIN -->
+- [ ] #1 DebugMenuController.gd reduced from 958 to <300 lines
+- [ ] #2 Card.gd reduced from 571 to <350 lines
+- [ ] #3 DebugAction.gd reduced from 772 to <400 lines
+- [ ] #4 All extracted classes have single responsibilities
+- [ ] #5 UI and debug logic properly separated
+- [ ] #6 Card serialization/deserialization works perfectly
+- [ ] #7 Platform-specific debug actions work on respective platforms
+- [ ] #8 All existing debug functionality preserved
+- [ ] #9 No regression in card behavior or save/load
+- [ ] #10 Code follows Godot best practices and company values of simplicity and robustness
+<!-- AC:END -->

@@ -4,8 +4,7 @@ title: Fix SIGBUS crashes in Firebase backend tests on Android
 status: Done
 assignee: []
 created_date: '2025-10-21 22:10'
-updated_date: '2025-10-22 22:30'
-resolved_date: '2025-10-22 22:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - firebase
@@ -14,10 +13,12 @@ labels:
   - sigbus
   - resolved
 dependencies: []
+ordinal: 82000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android Firebase backend tests are crashing with SIGBUS (Signal 7) fatal errors during or after test execution. The crashes occur in the GLThread, suggesting potential memory alignment or access issues related to graphics/rendering operations that happen concurrently with Firebase operations.
 
 **Impact**: Prevents validation of Firebase backend layer functionality on Android.
@@ -95,14 +96,15 @@ diff tests/debug_configs/firebase-backend-batch-1.json \
 - task-223: Firebase SIGBUS crashes
 
 Check git history to see if SIGBUS crashes in these specific tests are new or pre-existing.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] firebase-backend-batch-1 passes on Android without crashes
-- [ ] firebase-backend-layer passes on Android without crashes  
-- [ ] No SIGBUS errors in test logs
-- [ ] All Firebase backend actions execute successfully
-- [ ] Graphics thread remains stable during Firebase operations
+<!-- AC:BEGIN -->
+- [ ] #1 firebase-backend-batch-1 passes on Android without crashes
+- [ ] #2 firebase-backend-layer passes on Android without crashes  
+- [ ] #3 No SIGBUS errors in test logs
+- [ ] #4 All Firebase backend actions execute successfully
+- [ ] #5 Graphics thread remains stable during Firebase operations
 
 ## Priority Justification
 
@@ -328,9 +330,9 @@ feat: Add comprehensive SIGBUS debugging infrastructure and test configurations
 ### Immediate Action Required
 
 **DECISION NEEDED**: Should we:
-- [ ] Remove `backend.firebase.method_mapping` from `firebase-backend-batch-1` config?
-- [ ] Keep investigating the timeout + GLThread crash?
-- [ ] Consider this test obsolete after previous SIGBUS fixes?
+- [ ] #6 Remove `backend.firebase.method_mapping` from `firebase-backend-batch-1` config?
+- [ ] #7 Keep investigating the timeout + GLThread crash?
+- [ ] #8 Consider this test obsolete after previous SIGBUS fixes?
 
 **Test configs created for isolation**:
 - `tests/debug_configs/firebase-backend-async-only.json`
@@ -383,10 +385,10 @@ Duration: ~2 seconds
 
 ### Acceptance Criteria
 
-- [x] firebase-backend-batch-1 passes on Android without crashes
-- [x] No SIGBUS errors in test logs
-- [x] All Firebase backend actions execute successfully
-- [x] Graphics thread remains stable during Firebase operations
+- [x] #9 firebase-backend-batch-1 passes on Android without crashes
+- [x] #10 No SIGBUS errors in test logs
+- [x] #11 All Firebase backend actions execute successfully
+- [x] #12 Graphics thread remains stable during Firebase operations
 
 **Task completed successfully by removing unnecessary SIGBUS reproduction test.**
 
@@ -437,3 +439,4 @@ The same commits that resolved task-225 (Firebase crash signals) also addressed 
 Test log: logs/20251022_211336_test.log
 Initial investigation: Extensive OODA Loop analysis documented above
 Final resolution: Comprehensive architectural improvements + intentional test removal
+<!-- AC:END -->

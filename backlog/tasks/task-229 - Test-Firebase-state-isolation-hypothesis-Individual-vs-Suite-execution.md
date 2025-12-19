@@ -2,10 +2,9 @@
 id: task-229
 title: Test Firebase state isolation hypothesis - Individual vs Suite execution
 status: Done
-priority: high
 assignee: []
 created_date: '2025-10-17 14:33'
-updated_date: '2025-10-17 20:30'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - test-isolation
@@ -17,10 +16,13 @@ dependencies:
   - task-225
   - task-227
   - task-228
+priority: high
+ordinal: 87000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **DIAGNOSTIC INVESTIGATION**: Systematically test whether Firebase state isolation failures occur due to rapid test execution in comprehensive suite vs. timing differences when running tests individually.
 
 ### Background
@@ -1040,18 +1042,19 @@ just logs-text TEST_ID "timeout|timed out"
 # Check Firebase performance
 just logs-text TEST_ID "backend.firebase.performance"
 ```
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] Phase 1 completed - Individual rapid-fire tests (9 runs total, 3x each config) ✅ 100% pass rate
-- [x] Phase 2 completed if Phase 1 failed - Individual tests with delays (SKIPPED - Phase 1 passed)
-- [x] Phase 3 completed - Single-config test list (3 runs) ✅ 100% pass rate
-- [x] Phase 4 completed - Two-config test list (3 runs) ✅ 100% pass rate
-- [x] Phase 5 completed - Three-config test list (3 runs) ❌ 33% pass rate - Issue reproduced
-- [x] Phase 6 completed - Longer delays tested (10s vs 2s) ✅ 100% pass rate - Problem resolved
-- [x] Phase 7 completed if needed - Firebase process cleanup tested ✅ Not needed - delays solved the issue
-- [x] Root cause narrowed down based on which phase shows change in behavior ✅ Firebase resource accumulation confirmed
-- [x] Solution proposed and documented ✅ 10-second inter-config delays identified as solution
+<!-- AC:BEGIN -->
+- [x] #1 Phase 1 completed - Individual rapid-fire tests (9 runs total, 3x each config) ✅ 100% pass rate
+- [x] #2 Phase 2 completed if Phase 1 failed - Individual tests with delays (SKIPPED - Phase 1 passed)
+- [x] #3 Phase 3 completed - Single-config test list (3 runs) ✅ 100% pass rate
+- [x] #4 Phase 4 completed - Two-config test list (3 runs) ✅ 100% pass rate
+- [x] #5 Phase 5 completed - Three-config test list (3 runs) ❌ 33% pass rate - Issue reproduced
+- [x] #6 Phase 6 completed - Longer delays tested (10s vs 2s) ✅ 100% pass rate - Problem resolved
+- [x] #7 Phase 7 completed if needed - Firebase process cleanup tested ✅ Not needed - delays solved the issue
+- [x] #8 Root cause narrowed down based on which phase shows change in behavior ✅ Firebase resource accumulation confirmed
+- [x] #9 Solution proposed and documented ✅ 10-second inter-config delays identified as solution
 
 ## Expected Outcomes (Quick Reference)
 
@@ -1068,3 +1071,4 @@ just logs-text TEST_ID "backend.firebase.performance"
 - **task-225**: Firebase crashes (SIGBUS, SIGSEGV) in comprehensive suite
 - **task-227**: `backend.firebase.performance` 27x slowdown
 - **task-228**: Firebase database timeouts in gamestate test
+<!-- AC:END -->

@@ -4,28 +4,33 @@ title: Document Knight Gold unit abilities and stats
 status: Done
 assignee: []
 created_date: '2025-08-08 23:09'
-updated_date: '2025-10-29 09:52'
+updated_date: '2025-12-18 10:37'
 labels:
   - creature
   - documentation
   - abilities
   - knight
 dependencies: []
+ordinal: 240000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Document and validate the Knight Gold unit (ID: 8) with Shield Aura ability that protects all friendly knight units at battle start
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Knight Gold unit has correct base stats (4/4, soldier tribe)
-- [ ] Shield Aura ability grants shields to all friendly knights
-- [ ] Ability activates at start of battle
-- [ ] Implementation for abilities_knight_gold.gd is accurate
+<!-- AC:BEGIN -->
+- [ ] #1 Knight Gold unit has correct base stats (4/4, soldier tribe)
+- [ ] #2 Shield Aura ability grants shields to all friendly knights
+- [ ] #3 Ability activates at start of battle
+- [ ] #4 Implementation for abilities_knight_gold.gd is accurate
+<!-- AC:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 **Complexity**: 🟡 Moderate
 **Current System**: ✅ Good fit with minor extension for battle events
 
@@ -101,3 +106,4 @@ func start_battle():
 - Test visual shield indicators appear correctly
 - Test interaction with existing shield abilities (stacking behavior)
 - Test with multiple Knight Gold units (verify shield stacking or limits)
+<!-- SECTION:PLAN:END -->

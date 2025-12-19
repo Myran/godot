@@ -4,13 +4,15 @@ title: Build-Time Sentry Android SDK Integration for Complete Error Coverage
 status: Done
 assignee: []
 created_date: '2025-11-06 10:54'
-updated_date: '2025-11-11 21:00'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 65000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Implement build-time injection of Sentry Android SDK into Godot's Android export system to provide complete error coverage including GDScript, native C++, Java/Kotlin, ANR monitoring, profiling, and session replay.
 
 ## Current State Analysis
@@ -18,9 +20,11 @@ Implement build-time injection of Sentry Android SDK into Godot's Android export
 **Investigation completed** - Godot's Android build system uses SCons to generate `android_source.zip` from source templates. The build recipe `build-android-templates` creates templates that are used during Godot's export process.
 
 **Key Discovery**: `android_source.zip` is built dynamically from `godot/platform/android/java/` source files, not a static template. This enables build-time injection of Sentry Android SDK into the generated templates.
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Plan
 
+<!-- SECTION:PLAN:BEGIN -->
 ### **Phase 1: Firebase-Style Template Injection Integration**
 
 #### **Key Insight: Use Proven Firebase Template Injection Pattern**
@@ -367,3 +371,4 @@ Implement build-time injection of Sentry Android SDK into Godot's Android export
 - **Configuration management** - Sentry settings are well-documented
 - **Testing framework integration** - Existing debug action infrastructure
 - **Documentation requirements** - Standard integration documentation
+<!-- SECTION:PLAN:END -->

@@ -4,7 +4,7 @@ title: Fix system-error-handling action collection failure on Android
 status: Done
 assignee: []
 created_date: '2025-09-13 13:18'
-updated_date: '2025-10-29 10:11'
+updated_date: '2025-12-18 10:37'
 labels:
   - critical
   - android
@@ -15,10 +15,12 @@ labels:
   - test-framework
 dependencies: []
 priority: high
+ordinal: 151000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 **REOPENED: Issue persists despite previous investigation**
 
 **Original Context (2025-09-13)**: The `system-error-handling` test fails on Android with "Error handling actions: 0/0 passed" when it should discover multiple error handling actions using the `*.*.error_handling` wildcard pattern.
@@ -101,6 +103,7 @@ priority: high
 - **Production Errors**: Android error handling issues could reach users
 - **System Stability**: No validation of error recovery mechanisms on target platform
 - **Debug Capability**: Error handling debugging tools unvalidated on Android
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
@@ -111,9 +114,9 @@ priority: high
 - [x] #5 Test infrastructure properly processes wildcard patterns and collects actions on Android
 <!-- AC:END -->
 
-
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 Task resolved - Android error handling action collection now working correctly with proper wildcard pattern expansion. All acceptance criteria met with comprehensive test validation.
 ## Resolution Evidence (2025-10-29)
 
@@ -167,3 +170,4 @@ Task resolved - Android error handling action collection now working correctly w
 **Relation to CardController Refactoring**: This issue is completely unrelated to the recent CardController refactoring (completed successfully 2025-10-25). The CardController refactoring passes all tests, and this system-error-handling failure existed before the refactoring.
 
 **Priority**: High - Error handling validation critical for production Android stability and user experience quality.
+<!-- SECTION:NOTES:END -->

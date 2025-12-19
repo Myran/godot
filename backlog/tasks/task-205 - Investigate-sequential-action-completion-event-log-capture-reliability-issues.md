@@ -4,7 +4,7 @@ title: Investigate sequential action completion event log capture reliability is
 status: Done
 assignee: []
 created_date: '2025-10-07 14:54'
-updated_date: '2025-10-07 15:53'
+updated_date: '2025-12-18 10:37'
 labels:
   - testing
   - logging
@@ -12,10 +12,12 @@ labels:
   - test-framework
 dependencies: []
 priority: high
+ordinal: 108000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Sequential action completion events are emitted by code but not consistently captured by test framework.
 
 ## Root Cause Analysis Required
@@ -152,3 +154,4 @@ func execute_backend_action() -> bool:
 - ✅ No 30-second timeouts
 - ✅ No duplication (N/N, not 2N/N)
 - ✅ 100% test pass rate maintained
+<!-- SECTION:DESCRIPTION:END -->

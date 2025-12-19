@@ -4,7 +4,7 @@ title: Investigate iOS battle-animated completion event log capture issue
 status: Done
 assignee: []
 created_date: '2025-11-29 21:36'
-updated_date: '2025-12-02 10:56'
+updated_date: '2025-12-18 10:37'
 labels:
   - ios
   - test-framework
@@ -12,10 +12,12 @@ labels:
 dependencies:
   - task-321
 priority: high
+ordinal: 16000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 iOS battle-animated test detects only 1/2 completion events (missing the battle action completion event), while Android properly detects 2/2 events.
 
 ## Problem
@@ -109,3 +111,4 @@ grep -q "{{GAME_NAME}}.app"
 - Commit: 63d5c6e3 (fix iOS process detection)
 - Commit: 40a60812 (use GAME_NAME variable)
 - Commit: a8770ae2 (replace all hardcoded references)
+<!-- SECTION:DESCRIPTION:END -->

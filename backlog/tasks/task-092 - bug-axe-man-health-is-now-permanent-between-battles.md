@@ -4,13 +4,15 @@ title: bug axe man health is now permanent between battles
 status: Done
 assignee: []
 created_date: '2025-08-22 12:51'
-updated_date: '2025-08-29 19:16'
+updated_date: '2025-12-18 10:37'
 labels: []
 dependencies: []
+ordinal: 205000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 axe man in test line up now retains bonus between combat. why
 
 ## Root Cause Analysis (2025-08-29)
@@ -65,3 +67,4 @@ Filter the persistence logic to exclude combat-only abilities like `DeathTrigger
 - ✅ No regressions introduced
 
 **Expected Result**: Axe man's death trigger health bonuses will now be combat-only and will NOT carry over between battles.
+<!-- SECTION:DESCRIPTION:END -->

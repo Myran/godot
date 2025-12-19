@@ -4,7 +4,7 @@ title: Fix test summary tree view display bug hiding replay_complete actions
 status: Done
 assignee: []
 created_date: '2025-09-21 22:06'
-updated_date: '2025-09-22 20:23'
+updated_date: '2025-12-18 10:37'
 labels:
   - tree-view
   - replay_complete
@@ -15,10 +15,12 @@ labels:
   - code-duplication
 dependencies: []
 priority: high
+ordinal: 130000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 # TEST SUMMARY TREE VIEW DISPLAY BUG - TASK 173
 
 ## 🎯 CRITICAL UPDATE: 2025-09-22 19:58
@@ -212,17 +214,20 @@ Investigation reveals that **execution is correct** but **display is inconsisten
 - **Desktop summary**: `✅ PASSED (4 actions)` with `replay_complete` shown
 - **Android summary**: `✅ PASSED (3 actions)` with `replay_complete` missing
 - **Both action files**: Contain 4 actions including `replay_complete`
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [x] #1 **Consistent Tree Display**: All automated tests show `replay_complete` in tree summary when it executes ✅ COMPLETED
-- [x] #2 **Platform Parity**: Desktop and Android summaries show identical action lists for same test ✅ COMPLETED
-- [x] #3 **Accurate Action Counts**: Summary action counts match actual executed actions in results files ✅ COMPLETED
-- [x] #4 **No Functional Impact**: Fix is cosmetic only - don't break existing execution logic ✅ COMPLETED
-- [x] #5 **Preserve Action Collection**: Ensure action results files continue to capture all actions correctly ✅ COMPLETED
+<!-- AC:BEGIN -->
+- [x] #1 #1 **Consistent Tree Display**: All automated tests show `replay_complete` in tree summary when it executes ✅ COMPLETED
+- [x] #2 #2 **Platform Parity**: Desktop and Android summaries show identical action lists for same test ✅ COMPLETED
+- [x] #3 #3 **Accurate Action Counts**: Summary action counts match actual executed actions in results files ✅ COMPLETED
+- [x] #4 #4 **No Functional Impact**: Fix is cosmetic only - don't break existing execution logic ✅ COMPLETED
+- [x] #5 #5 **Preserve Action Collection**: Ensure action results files continue to capture all actions correctly ✅ COMPLETED
+<!-- AC:END -->
 
 ## Implementation Notes
 
+<!-- SECTION:NOTES:BEGIN -->
 ### 🔧 Investigation Areas
 
 #### 1. Summary Generation Logic
@@ -269,3 +274,4 @@ just test-android-target gamestate-complete-save-load-cycle-test
 - **Related issue**: Task-172 was misdiagnosed due to this display bug
 - **Action files location**: `/Users/mattiasmyhrman/Library/Application Support/Godot/app_userdata/gametwo/logs/test_action_results_*`
 - **Example test run**: `logs/20250921_225348_test.log` contains examples of both correct and incorrect displays
+<!-- SECTION:NOTES:END -->

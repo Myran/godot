@@ -475,10 +475,7 @@
 				LD_CLASSIC_1501 = "-ld_classic";
 				LD_CLASSIC_1510 = "-ld_classic";
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(LD_CLASSIC_$(XCODE_VERSION_ACTUAL))",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(LD_CLASSIC_$(XCODE_VERSION_ACTUAL))  ";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -533,10 +530,7 @@
 				LD_CLASSIC_1500 = "-ld_classic";
 				LD_CLASSIC_1501 = "-ld_classic";
 				LD_CLASSIC_1510 = "-ld_classic";
-				OTHER_LDFLAGS = (
-					"$(LD_CLASSIC_$(XCODE_VERSION_ACTUAL))",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(LD_CLASSIC_$(XCODE_VERSION_ACTUAL))  ";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;

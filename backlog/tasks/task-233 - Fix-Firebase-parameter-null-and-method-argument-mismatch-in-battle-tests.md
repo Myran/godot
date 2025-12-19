@@ -4,7 +4,7 @@ title: Fix Firebase parameter null and method argument mismatch in battle tests
 status: Done
 assignee: []
 created_date: '2025-10-21 17:44'
-updated_date: '2025-10-21 22:10'
+updated_date: '2025-12-18 10:37'
 labels:
   - firebase
   - android
@@ -12,10 +12,12 @@ labels:
   - critical
 dependencies: []
 priority: high
+ordinal: 83000
 ---
 
 ## Description
 
+<!-- SECTION:DESCRIPTION:BEGIN -->
 Android battle tests (battle-animated, battle-logic-only) are failing due to Firebase-related errors that occur during test execution. While the sequential action completion events now work correctly (fixed in task-193), the tests fail due to Firebase parameter and method call issues.
 
 **Impact**: Prevents Android battle test validation despite core sequential action logic being fixed.
@@ -124,14 +126,15 @@ After fixing CONNECT_ONE_SHOT issue in task-193:
 - **task-193** (Done): Fixed sequential action completion events - unblocked this issue
 - Tests now properly emit completion events, revealing underlying Firebase cleanup issues
 - Commits: `5423bbf3` (task-193 fix), `3f1b0bd5` (task-233 creation)
+<!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
-- [ ] Android battle tests pass without Firebase parameter errors
-- [ ] `remove_listener_at_path()` called with correct arguments
-- [ ] No resource leaks at test exit
-- [ ] Config validation passes without triggering restart
-- [ ] Both `battle-animated` and `battle-logic-only` pass on Android
+<!-- AC:BEGIN -->
+- [ ] #1 Android battle tests pass without Firebase parameter errors
+- [ ] #2 `remove_listener_at_path()` called with correct arguments
+- [ ] #3 No resource leaks at test exit
+- [ ] #4 Config validation passes without triggering restart
+- [ ] #5 Both `battle-animated` and `battle-logic-only` pass on Android
 
 ## Resolution
 
@@ -177,3 +180,4 @@ battle-logic-only:   ✅ PASSED (Desktop + Android, 4/4 actions, 0 errors)
 Resource leak and config validation restart issues persist but are unrelated to the Firebase errors that were the focus of this task. These appear to be pre-existing issues that could be addressed separately if needed.
 
 **Related**: Created task-234 for SIGBUS crashes in other Firebase backend tests (firebase-backend-batch-1, firebase-backend-layer).
+<!-- AC:END -->
