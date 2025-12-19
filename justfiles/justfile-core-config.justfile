@@ -29,9 +29,18 @@ IOS_TEST_DEVICE := env_var_or_default("IOS_TEST_DEVICE", IOS_IPAD_DEVICE_ID)
 # Default deployment device (uses UDID format for xcrun devicectl)
 IOS_DEPLOY_DEVICE := env_var_or_default("IOS_DEPLOY_DEVICE", IOS_IPAD_UDID)
 
-# Android Devices  
+# Android Devices
 ANDROID_DEVICE_ID := env_var_or_default("ANDROID_DEVICE_ID", "246d2c533a037ece")
 ANDROID_DEVICE_IP := env_var_or_default("ANDROID_DEVICE_IP", "192.168.1.100")
+
+# Windows Machines
+# win-vm-* recipes use WIN_VM (building templates)
+# win-physical-* recipes use WIN_PHYSICAL (testing exports)
+WIN_VM_HOST := env_var_or_default("WIN_VM_HOST", "192.168.50.92")
+WIN_VM_USER := env_var_or_default("WIN_VM_USER", "runner")
+WIN_PHYSICAL_HOST := env_var_or_default("WIN_PHYSICAL_HOST", "192.168.50.80")
+WIN_PHYSICAL_USER := env_var_or_default("WIN_PHYSICAL_USER", "matti")
+WIN_PHYSICAL_MAC := env_var_or_default("WIN_PHYSICAL_MAC", "74:56:3C:CC:80:1D")
 
 # ================================
 # PLATFORM IDENTIFIERS

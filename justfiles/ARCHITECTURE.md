@@ -99,7 +99,28 @@ This document ensures correct recipe selection during development, testing, and 
   - `ios-deploy` - Device deployment via xcrun devicectl
 
 #### `justfile-platform-windows.justfile`
-- **Purpose**: Windows-specific build configuration
+- **Purpose**: Windows-specific build, VM building, and physical machine testing
+- **Critical Recipes (VM - Building)**:
+  - `win-vm-verify` - Verify VM connectivity
+  - `win-vm-template-debug` - Build debug template on VM
+  - `win-vm-template-release` - Build release template on VM
+  - `win-vm-templates-package` - Copy templates from VM to Mac
+- **Critical Recipes (Physical - Testing)**:
+  - `win-physical-status` - Check physical machine status
+  - `win-physical-wake` - Wake via Wake-on-LAN
+  - `win-physical-deploy` - Deploy Windows export
+  - `test-windows-physical-target CONFIG` - Automated testing with GUI
+  - `test-windows-physical-manual CONFIG` - Manual testing (stays open)
+  - `logs-windows-physical TEST_ID` - Retrieve logs
+  - `logs-windows-physical-errors TEST_ID` - Error analysis
+- **Key Features**:
+  - **VM (192.168.50.92)**: MSVC builds, template compilation
+  - **Physical (192.168.50.80)**: GUI testing, no headless mode
+  - Auto Wake-on-LAN before deploy/test operations
+  - Python-based WoL (no external dependencies)
+- **Naming Convention**:
+  - `win-vm-*` → Windows VM for BUILDING
+  - `win-physical-*` → Windows physical for TESTING
 
 #### `justfile-platform-macos.justfile`
 - **Purpose**: macOS-specific build, deployment, and testing
@@ -570,10 +591,12 @@ justfile (main entry)
 | Automated Android | `just test-android-target CONFIG` | Checksum validation, error analysis |
 | Automated Desktop | `just test-desktop-target CONFIG` | Cross-platform testing |
 | Automated macOS | `just test-macos-target CONFIG` | Exported app testing |
+| Automated Windows | `just test-windows-physical-target CONFIG` | GUI mode on physical machine |
 | Cross-platform | `just test-all [CONFIG]` | Unified summary, consistency |
 | Quick iteration | `just config-restart-android CONFIG` ⚡ | 5-second cycles |
 | Manual inspection | `just test-android-manual CONFIG` | Stays open, manual control |
 | macOS inspection | `just test-macos-manual CONFIG` | Exported app, stays open |
+| Windows inspection | `just test-windows-physical-manual CONFIG` | GUI mode, stays open |
 | Comprehensive | `just test-android test-all` | 15 configs, all domains |
 
 ### **I need to debug...**
@@ -687,6 +710,13 @@ just logs-android-device "term"       # Full device logs
 just config-list                      # List available configs
 just capture-gamestate-desktop NAME   # Capture scenario
 just list-saved-states                # Show saved states
+
+# Windows Physical Machine (192.168.50.80)
+just win-physical-status              # Check machine status
+just win-physical-wake                # Wake via Wake-on-LAN
+just win-physical-deploy              # Deploy Windows export
+just test-windows-physical-target CONFIG  # Run test with GUI
+just logs-windows-physical TEST_ID    # Retrieve logs
 
 # Help
 just help                             # Interactive browser

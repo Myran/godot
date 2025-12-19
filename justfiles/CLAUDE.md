@@ -96,8 +96,16 @@ just help                                  # Interactive command browser
 just test-android-target CONFIG            # Automated testing with validation
 just test-desktop-target CONFIG            # Desktop automated testing
 just test-macos-target CONFIG              # macOS automated testing
+just test-windows-physical-target CONFIG   # Windows physical machine (GUI mode)
 just test-android '/archive/generated-replays/'  # All battle replay configs
 just test-android '/archive/generated-replays/merge-*'  # Merge scenarios
+
+# Windows Physical Machine (192.168.50.80)
+just win-physical-status                   # Check machine status
+just win-physical-wake                     # Wake via Wake-on-LAN
+just win-physical-deploy                   # Deploy Windows export
+just test-windows-physical-target CONFIG   # Run test with GUI
+just logs-windows-physical TEST_ID         # Retrieve logs
 
 # Daily Workflow
 just ci-validate                           # CI validation (format + lint + syntax)
@@ -214,11 +222,13 @@ just log-run-silent test-android-target CONFIG  # Automated testing
 - `just test-android-target CONFIG` - Enhanced with validation
 - `just test-desktop-target CONFIG` - Cross-platform testing
 - `just test-macos-target CONFIG` - macOS testing (exported app)
+- `just test-windows-physical-target CONFIG` - Windows physical (GUI mode)
 
 **Manual:**
 - `just test-android-manual CONFIG` - Android inspection
 - `just test-desktop-manual CONFIG` - Desktop inspection
 - `just test-macos-manual CONFIG` - macOS inspection
+- `just test-windows-physical-manual CONFIG` - Windows physical inspection
 
 ## 🎯 Pattern Examples
 
