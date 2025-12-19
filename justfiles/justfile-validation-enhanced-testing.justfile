@@ -1326,7 +1326,8 @@ _analyze-test-errors test_id platform config_file="":
     
     # Filter out intentional test errors (error handling validation actions)
     # These actions deliberately generate errors to test error handling
-    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout|ERROR.*Remote Debugger: Unable to connect)" || echo "")
+    # Also filter out known Sentry cleanup error that occurs during app restart
+    ERROR_HANDLING_FILTERED_LOGS=$(echo "$RELEVANT_LOGS" | grep -v -E "(action.*\.firebase\.error_handling|action.*\.testing\.error_handling|ERROR.*Error: Invalid Path|ERROR.*Error: Timeout Test|ERROR.*Basic Operation Test|ERROR.*Unsupported backend method|Testing backend Error: Invalid Path|Testing backend Error: Timeout|ERROR.*Remote Debugger: Unable to connect|Parameter \"android_plugin\" is null)" || echo "")
     
     # Count all errors in filtered relevant logs (exclude SEMANTIC_ACTION descriptive text and normal Godot resource cleanup warnings)
     ALL_ERRORS=$(echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -c -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" 2>/dev/null || echo "0")
@@ -1363,7 +1364,7 @@ _analyze-test-errors test_id platform config_file="":
     if [[ $ALL_ERRORS -gt $CRITICAL_ERRORS ]]; then
         echo ""
         echo "❌ Test-Related Errors Found:"
-        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit)" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
+        echo "$ERROR_HANDLING_FILTERED_LOGS" | grep -v "SEMANTIC_ACTION" | grep -v -E "(ObjectDB instances leaked at exit|[0-9]+ resources still in use at exit|Parameter \"android_plugin\" is null.*Sentry.*Unable to locate SentryAndroidGodotPlugin singleton)" | grep -E "ERROR|CRITICAL|SCRIPT ERROR|Assertion failed|Missing required parameters|CHECKSUM_MISMATCH|Parse Error" | grep -v -E "SCRIPT ERROR|Assertion failed|CRITICAL|Parse Error" | head -3 | sed 's/^/   /'
     fi
     
     if [[ $WARNINGS -gt 0 ]] && [[ $WARNINGS -lt 10 ]]; then

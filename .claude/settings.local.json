@@ -93,7 +93,10 @@
       "Bash(gh release view:*)",
       "Bash(otool -L:*)",
       "Bash(mcp__backlog__task_view:*)",
-      "Bash(/Users/mattiasmyhrman/repos/Backlog.md/dist/backlog:*)"
+      "Bash(/Users/mattiasmyhrman/repos/Backlog.md/dist/backlog:*)",
+      "Bash(md5sum:*)",
+      "Bash(md5:*)",
+      "Bash(jar:*)"
     ],
     "deny": [],
     "ask": [

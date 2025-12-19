@@ -75,7 +75,7 @@ build-sentry-all force="no":
     @echo ""
     @just build-sentry-native-android-all {{force}}
     @echo ""
-    @just build-sentry-gdscript-all {{force}}
+    @just build-sentry-gdscript-all
     @echo ""
     @just build-sentry-windows-vm {{force}}
     @echo ""

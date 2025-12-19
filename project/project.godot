@@ -18,9 +18,6 @@ config/icon="res://assets/frame.png"
 
 [autoload]
 
-# Log MUST be first - ensures it's freed LAST during shutdown
-# Prevents "previously freed" errors when other autoloads log during cleanup
-Log="*res://addons/advanced_logger/core/logger.gd"
 LoggerIOSLoader="*res://addons/advanced_logger/ios_loader.gd"
 DebugManager="*res://autoloads/debug_manager.gd"
 DebugRegistry="*res://addons/debug_framework/core/debug_action_registry.gd"
@@ -33,6 +30,7 @@ rng="*res://autoloads/seeded_rng_singleton.gd"
 ui="*res://autoloads/ui.gd"
 core="*res://autoloads/core.gd"
 DebugStartupCoordinator="*res://addons/debug_startup/debug_startup_coordinator.gd"
+Log="*res://addons/advanced_logger/core/logger.gd"
 
 [debug]
 

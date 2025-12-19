@@ -834,14 +834,14 @@ android-setup-sentry-libraries:
 
     echo "🔧 Setting up Sentry native libraries for Android..."
 
-    # Source and destination paths
-    SOURCE_DIR="extras/sentry-godot/project/addons/sentry/bin/android"
+    # Source and destination paths (using prebuilt GDExtension binaries)
+    SOURCE_DIR="{{SENTRY_GDEXT_DIR}}/addons/sentry/bin/android"
     DEST_DIR="project/addons/sentry/bin/android"
 
     # Check if source files exist
     if [ ! -d "$SOURCE_DIR" ]; then
-        echo "❌ Sentry source directory not found: $SOURCE_DIR"
-        echo "💡 Make sure sentry-godot submodule is properly initialized"
+        echo "❌ Sentry prebuilt binaries not found: $SOURCE_DIR"
+        echo "💡 Run 'just download-sentry-gdscript' to get prebuilt binaries"
         exit 1
     fi
 
@@ -890,6 +890,27 @@ android-setup-sentry-libraries:
         fi
     done
 
+    # Copy AAR files to addon root (required by Godot Android plugin system)
+    AAR_FILES=(
+        "sentry_android_godot_plugin.debug.aar"
+        "sentry_android_godot_plugin.release.aar"
+    )
+
+    # Copy AAR files to the location expected by the export plugin
+    # SentryEditorExportPluginAndroid expects them in project/addons/sentry/bin/android/
+    echo "📦 Copying Sentry AAR files to bin/android directory..."
+    if [ -f "$SOURCE_DIR/sentry_android_godot_plugin.debug.aar" ]; then
+        cp "$SOURCE_DIR/sentry_android_godot_plugin.debug.aar" "$DEST_DIR/sentry_android_godot_plugin.debug.aar"
+        echo "✅ Copied: $DEST_DIR/sentry_android_godot_plugin.debug.aar"
+        FILES_COPIED=$((FILES_COPIED + 1))
+    fi
+
+    if [ -f "$SOURCE_DIR/sentry_android_godot_plugin.release.aar" ]; then
+        cp "$SOURCE_DIR/sentry_android_godot_plugin.release.aar" "$DEST_DIR/sentry_android_godot_plugin.release.aar"
+        echo "✅ Copied: $DEST_DIR/sentry_android_godot_plugin.release.aar"
+        FILES_COPIED=$((FILES_COPIED + 1))
+    fi
+
     # Validate results
     if [ $FILES_COPIED -gt 0 ]; then
         echo "✅ Sentry native libraries setup complete ($FILES_COPIED files copied)"
@@ -900,6 +921,6 @@ android-setup-sentry-libraries:
         ls -la "$DEST_DIR"/libsentry*.so 2>/dev/null || echo "   No .so files found"
     else
         echo "⚠️  No Sentry libraries were copied"
-        echo "💡 This may indicate missing Sentry build artifacts"
-        echo "💡 Run: just build-native-android-all to build native Sentry libraries"
+        echo "💡 This may indicate missing Sentry prebuilt binaries"
+        echo "💡 Run: just download-sentry-gdscript && just build-sentry-gdscript-all"
     fi

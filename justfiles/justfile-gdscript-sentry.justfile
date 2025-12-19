@@ -150,7 +150,7 @@ build-sentry-gdscript-ios:
     # The dylibs need @rpath/libname.dylib instead of build-time paths
     echo "🔧 Fixing iOS dylib install names..."
     for location in "$DEST_ADDON" "$DEST_EXPORT"; do
-        for dylib in "$location"/libsentry.ios.*.xcframework/ios-arm64/*.dylib 2>/dev/null; do
+        for dylib in "$location"/libsentry.ios.*.xcframework/ios-arm64/*.dylib; do
             if [ -f "$dylib" ]; then
                 name=$(basename "$dylib")
                 install_name_tool -id "@rpath/$name" "$dylib" 2>/dev/null || true
