@@ -99,14 +99,14 @@ win-vm-status:
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-status'
 
 # Build Sentry DLLs natively on VM
-win-vm-sentry-all:
+sentry-windows-vm-build-all:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "🔨 Building Sentry DLLs on Windows VM..."
     ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} '{{WIN_VM_VCVARS}} && cd {{WIN_VM_REPO}} && just --justfile justfiles\justfile-windows-native.justfile --working-directory . windows-native-sentry-all'
 
 # Package Sentry DLLs from VM to macOS
-win-vm-sentry-package:
+sentry-windows-vm-package:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "📦 Copying Sentry DLLs from Windows VM..."
@@ -158,7 +158,7 @@ win-vm-sentry-package:
     ls -la project/addons/sentry/bin/windows/x86_64/
 
 # Build and package Sentry from VM (complete workflow)
-win-vm-sentry-complete: win-vm-verify win-vm-sentry-all win-vm-sentry-package
+sentry-windows-vm-complete: win-vm-verify sentry-windows-vm-build-all sentry-windows-vm-package
     @echo "✅ Windows Sentry build complete with crashpad backend"
 
 # Sync repository to Windows VM
@@ -198,7 +198,7 @@ win-vm-sync:
     fi
 
 # Full Windows native pipeline: sync → templates → sentry → package
-win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) win-vm-sentry-all win-vm-templates-package
+win-vm-full-pipeline jobs="6": win-vm-sync (win-vm-templates jobs) sentry-windows-vm-build-all win-vm-templates-package
     @echo ""
     @echo "✅ Full Windows native pipeline completed!"
     @echo "   Templates and Sentry DLLs built with MSVC + Firebase support"
@@ -218,7 +218,7 @@ build-all-windows force="no" jobs="6": win-vm-verify
     @echo ""
     just win-vm-sync
     just win-vm-templates "{{jobs}}"
-    just win-vm-sentry-all
+    just sentry-windows-vm-build-all
     just win-vm-templates-package
     @echo ""
     @echo "✅ Windows full build complete!"
@@ -294,6 +294,112 @@ export-windows-all: export-windows-debug export-windows-release
     @echo "📁 Debug: export/windows/{{GAME_NAME}}_debug.exe"
     @echo "📁 Release: export/windows/{{GAME_NAME}}.exe"
 
+# Validate Windows export with Firebase and Sentry integration
+validate-windows-export:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔍 Validating Windows Export"
+    echo "================================"
+    echo ""
+
+    # Check if exports exist
+    DEBUG_EXE="export/windows/{{GAME_NAME}}_debug.exe"
+    RELEASE_EXE="export/windows/{{GAME_NAME}}.exe"
+
+    if [ ! -f "$DEBUG_EXE" ]; then
+        echo "❌ Debug export not found: $DEBUG_EXE"
+        echo "💡 Run 'just export-windows-debug' first"
+        exit 1
+    fi
+
+    if [ ! -f "$RELEASE_EXE" ]; then
+        echo "❌ Release export not found: $RELEASE_EXE"
+        echo "💡 Run 'just export-windows-release' first"
+        exit 1
+    fi
+
+    echo "✅ Executables found"
+
+    # Check PCK files
+    if [ ! -f "export/windows/{{GAME_NAME}}_debug.pck" ]; then
+        echo "⚠️ Debug PCK file missing"
+    fi
+
+    if [ ! -f "export/windows/{{GAME_NAME}}.pck" ]; then
+        echo "⚠️ Release PCK file missing"
+    fi
+
+    echo "✅ PCK files checked"
+
+    # Check Firebase config
+    if [ ! -f "firebase/google-services-desktop.json" ]; then
+        echo "⚠️ Firebase config missing: firebase/google-services-desktop.json"
+        echo "   Firebase features will not work without this"
+    else
+        echo "✅ Firebase config found"
+    fi
+
+    # Check Sentry DLLs
+    SENTRY_DIR="project/addons/sentry/bin/windows/x86_64"
+    MISSING_SENTRY=()
+
+    if [ ! -f "$SENTRY_DIR/libsentry.windows.debug.x86_64.dll" ]; then
+        MISSING_SENTRY+=("libsentry.windows.debug.x86_64.dll")
+    fi
+
+    if [ ! -f "$SENTRY_DIR/libsentry.windows.release.x86_64.dll" ]; then
+        MISSING_SENTRY+=("libsentry.windows.release.x86_64.dll")
+    fi
+
+    if [ ! -f "$SENTRY_DIR/crashpad_handler.exe" ]; then
+        MISSING_SENTRY+=("crashpad_handler.exe")
+    fi
+
+    if [ ! -f "$SENTRY_DIR/crashpad_wer.dll" ]; then
+        MISSING_SENTRY+=("crashpad_wer.dll")
+    fi
+
+    if [ ${#MISSING_SENTRY[@]} -gt 0 ]; then
+        echo "❌ Missing Sentry files:"
+        printf '   %s\n' "${MISSING_SENTRY[@]}"
+        echo "💡 Run 'just sentry-windows-vm-complete' to build missing files"
+        exit 1
+    else
+        echo "✅ Sentry DLLs found"
+    fi
+
+    # Check file sizes (basic integrity check)
+    DEBUG_SIZE=$(stat -f%z "$DEBUG_EXE" 2>/dev/null || echo 0)
+    RELEASE_SIZE=$(stat -f%z "$RELEASE_EXE" 2>/dev/null || echo 0)
+
+    if [ "$DEBUG_SIZE" -lt 1000000 ]; then  # Less than 1MB
+        echo "⚠️ Debug executable seems small ($DEBUG_SIZE bytes)"
+    fi
+
+    if [ "$RELEASE_SIZE" -lt 1000000 ]; then  # Less than 1MB
+        echo "⚠️ Release executable seems small ($RELEASE_SIZE bytes)"
+    fi
+
+    echo ""
+    echo "✅ Windows export validation completed successfully"
+    echo ""
+    echo "📋 Summary:"
+    echo "   Debug: $DEBUG_EXE ($(printf '%.1f' $(echo "$DEBUG_SIZE/1048576" | bc -l)) MB)"
+    echo "   Release: $RELEASE_EXE ($(printf '%.1f' $(echo "$RELEASE_SIZE/1048576" | bc -l)) MB)"
+    echo "   Firebase: $([ -f firebase/google-services-desktop.json ] && echo '✅' || echo '❌')"
+    echo "   Sentry: ✅"
+
+# Complete Windows export pipeline (build + export + validate)
+windows-export-pipeline: export-windows-all validate-windows-export win-physical-deploy
+    @echo ""
+    @echo "🎉 Complete Windows export pipeline finished!"
+    @echo ""
+    @echo "Next steps:"
+    @echo "1. Test on physical machine: just test-windows-physical-target <config>"
+    @echo "2. View logs: just logs-windows-physical <test_id>"
+    @echo "3. Manual testing: just test-windows-physical-manual <config>"
+
 # ================================
 # WINDOWS VM TESTING
 # ================================
@@ -362,6 +468,7 @@ help-windows:
     @echo "  just export-windows-debug    - Export debug build"
     @echo "  just export-windows-release  - Export release build"
     @echo "  just export-windows-all      - Export both debug and release"
+    @echo "  just validate-windows-export - Validate Firebase/Sentry integration"
     @echo ""
     @echo "TESTING (VM, headless):"
     @echo "  just test-windows-target CONFIG  - Run automated test on Windows VM"
@@ -380,7 +487,7 @@ help-windows:
     @echo "  just win-vm-template-release - Build release template (~18 min)"
     @echo "  just win-vm-templates        - Build both templates"
     @echo "  just win-vm-templates-package - Copy templates to macOS"
-    @echo "  just win-vm-sentry-all       - Build Sentry DLLs on VM"
+    @echo "  just sentry-windows-vm-build-all - Build Sentry DLLs on VM"
     @echo "  just win-vm-full-pipeline    - Full pipeline: sync → build → package"
     @echo ""
     @echo "─────────────────────────────────────────────────────────────"
@@ -589,6 +696,13 @@ win-physical-deploy:
         scp firebase/google-services-desktop.json "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
     fi
 
+    # Copy Sentry DLLs if they exist
+    if [ -d "project/addons/sentry/bin/windows/x86_64" ]; then
+        echo "🛡️ Copying Sentry DLLs..."
+        scp project/addons/sentry/bin/windows/x86_64/*.dll "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+        scp project/addons/sentry/bin/windows/x86_64/*.exe "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:/C:/GameTwoTests/builds/"
+    fi
+
     # Verify deployment
     echo ""
     echo "📋 Deployed files:"
@@ -667,12 +781,13 @@ test-windows-physical-target config_name="":
         exit 1
     fi
 
-    # Generate test ID
+    # Generate test ID and export for _inject-auto-quit-metadata to add test_metadata
     TEST_ID="${CONFIG_NAME}_windows-physical_$(date +%s)"
+    export TEST_ID
     echo "🔍 Test ID: $TEST_ID"
     echo ""
 
-    # Create temp config with auto_quit=true
+    # Create temp config with auto_quit=true and test_metadata
     TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_physical_automated.json"
     just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
 

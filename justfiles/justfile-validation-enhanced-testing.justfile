@@ -5106,6 +5106,7 @@ _get-platform-icon platform:
         "macos") echo "🍎" ;;
         "linux") echo "🐧" ;;
         "windows") echo "🪟" ;;
+        "windows-physical") echo "💻" ;;
         *) echo "⚙️" ;;  # Generic fallback for any future platform
     esac
 
@@ -5120,8 +5121,9 @@ _get-all-platforms:
     
     # Check for platform-specific test functions
     if command -v just >/dev/null 2>&1; then
-        # Look for test-*-target functions
-        PLATFORM_FUNCTIONS=$(just --list 2>/dev/null | rg "test-([^-]+)-target" -o -r '$1' | sort | uniq)
+        # Look for test-*-target functions (including hyphenated platforms like windows-physical)
+        # The regex captures platform names between "test-" and "-target " (with trailing space)
+        PLATFORM_FUNCTIONS=$(just --list 2>/dev/null | rg "test-([a-z-]+)-target " -o -r '$1' | sort | uniq)
         if [[ -n "$PLATFORM_FUNCTIONS" ]]; then
             PLATFORMS="$PLATFORM_FUNCTIONS"
         fi
@@ -5167,7 +5169,8 @@ _get-platform-display-name platform:
         "steam") echo "Steam Deck" ;;
         "macos") echo "macOS" ;;
         "linux") echo "Linux" ;;
-        "windows") echo "Windows" ;;
+        "windows") echo "Windows VM" ;;
+        "windows-physical") echo "Windows Physical" ;;
         *) echo "$PLATFORM" ;;  # Use platform name as-is for unknown platforms
     esac
 
