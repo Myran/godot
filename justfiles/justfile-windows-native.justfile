@@ -80,10 +80,11 @@ windows-native-help:
     @echo "  just windows-native-template-debug         - Build debug template only"
     @echo "  just windows-native-templates-clean        - Clean template build artifacts"
     @echo.
-    @echo "SENTRY BUILDS:"
-    @echo "  just windows-native-sentry-release         - Build Sentry DLL (release)"
-    @echo "  just windows-native-sentry-debug           - Build Sentry DLL (debug)"
+    @echo "SENTRY GDEXTENSION BUILDS (SCons + MSVC):"
+    @echo "  just windows-native-sentry-release         - Build Sentry GDExtension (release)"
+    @echo "  just windows-native-sentry-debug           - Build Sentry GDExtension (debug)"
     @echo "  just windows-native-sentry-all             - Build both Sentry variants"
+    @echo "  just windows-native-sentry-clean           - Clean Sentry build artifacts"
     @echo.
     @echo "EXPORTS:"
     @echo "  just windows-native-export-debug           - Export Windows debug build"
@@ -149,44 +150,50 @@ windows-native-templates-clean:
     @echo [OK] Windows template artifacts cleaned
 
 # ================================
-# SENTRY NATIVE SDK BUILDS (MSVC)
+# SENTRY GDEXTENSION BUILDS (SCONS + MSVC)
 # ================================
+# Builds the full sentry-godot GDExtension with crashpad backend.
+# Uses SCons which internally calls CMake for sentry-native, then compiles
+# the GDExtension wrapper with proper gdextension_init entry point.
+#
+# Requires: SENTRY_WIN_X64_TOOLCHAIN environment variable pointing to
+# the x64 toolchain file (C:\gametwo\win_x64.cmake) for ARM64 cross-compilation.
 
-# Build Sentry native SDK for Windows (Release) using MSVC
+# Build Sentry GDExtension for Windows (Release) using SCons + MSVC
 windows-native-sentry-release:
-    @echo "Building Sentry native SDK for Windows (Release, MSVC)..."
-    if not exist {{WIN_SENTRY_PATH}}\build\windows-msvc-release mkdir {{WIN_SENTRY_PATH}}\build\windows-msvc-release
-    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-release -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -A x64 -T host=x64 -DCMAKE_TOOLCHAIN_FILE=C:\gametwo\x64-toolchain.cmake
-    cmake --build {{WIN_SENTRY_PATH}}\build\windows-msvc-release --config Release --parallel
+    @echo "Building Sentry GDExtension for Windows (Release, SCons + MSVC)..."
+    @echo "Using toolchain: C:\gametwo\win_x64.cmake"
+    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_release arch=x86_64 -j6
     @echo.
-    @echo "Copying Sentry DLL to addon directory..."
+    @echo "Copying Sentry GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy {{WIN_SENTRY_PATH}}\build\windows-msvc-release\Release\sentry.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll /Y
-    if exist {{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe copy {{WIN_SENTRY_PATH}}\build\windows-msvc-release\crashpad_build\handler\Release\crashpad_handler.exe {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
-    @echo [OK] Sentry Release DLL built and installed
+    copy {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.release.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    copy {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_handler.exe {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    if exist {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll copy {{WIN_SENTRY_PATH}}\modules\sentry-native\install\bin\crashpad_wer.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    @echo [OK] Sentry Release GDExtension built and installed
 
-# Build Sentry native SDK for Windows (Debug) using MSVC
+# Build Sentry GDExtension for Windows (Debug) using SCons + MSVC
 windows-native-sentry-debug:
-    @echo "Building Sentry native SDK for Windows (Debug, MSVC)..."
-    if not exist {{WIN_SENTRY_PATH}}\build\windows-msvc-debug mkdir {{WIN_SENTRY_PATH}}\build\windows-msvc-debug
-    cmake -S {{WIN_SENTRY_PATH}}\modules\sentry-native -B {{WIN_SENTRY_PATH}}\build\windows-msvc-debug -DSENTRY_BUILD_SHARED_LIBS=ON -DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BACKEND=crashpad -A x64 -T host=x64 -DCMAKE_TOOLCHAIN_FILE=C:\gametwo\x64-toolchain.cmake
-    cmake --build {{WIN_SENTRY_PATH}}\build\windows-msvc-debug --config Debug --parallel
+    @echo "Building Sentry GDExtension for Windows (Debug, SCons + MSVC)..."
+    @echo "Using toolchain: C:\gametwo\win_x64.cmake"
+    set SENTRY_WIN_X64_TOOLCHAIN=C:\gametwo\win_x64.cmake && cd {{WIN_SENTRY_PATH}} && scons platform=windows target=template_debug arch=x86_64 -j6
     @echo.
-    @echo "Copying Sentry Debug DLL to addon directory..."
+    @echo "Copying Sentry Debug GDExtension to addon directory..."
     if not exist {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64 mkdir {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64
-    copy {{WIN_SENTRY_PATH}}\build\windows-msvc-debug\Debug\sentry.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll /Y
-    @echo [OK] Sentry Debug DLL built and installed
+    copy {{WIN_SENTRY_PATH}}\project\addons\sentry\bin\windows\x86_64\libsentry.windows.debug.x86_64.dll {{WIN_PROJECT_PATH}}\addons\sentry\bin\windows\x86_64\ /Y
+    @echo [OK] Sentry Debug GDExtension built and installed
 
 # Build both Sentry variants
 windows-native-sentry-all: windows-native-sentry-release windows-native-sentry-debug
-    @echo [OK] Both Sentry DLL variants built successfully
+    @echo [OK] Both Sentry GDExtension variants built successfully
 
 # Clean Sentry build artifacts
 windows-native-sentry-clean:
-    @echo "Cleaning Sentry MSVC build artifacts..."
-    @if exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-release" rmdir /S /Q "{{WIN_SENTRY_PATH}}\build\windows-msvc-release"
-    @if exist "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug" rmdir /S /Q "{{WIN_SENTRY_PATH}}\build\windows-msvc-debug"
-    @echo [OK] Sentry MSVC build artifacts cleaned
+    @echo "Cleaning Sentry build artifacts..."
+    @if exist "{{WIN_SENTRY_PATH}}\modules\sentry-native\build" rmdir /S /Q "{{WIN_SENTRY_PATH}}\modules\sentry-native\build"
+    @if exist "{{WIN_SENTRY_PATH}}\modules\sentry-native\install" rmdir /S /Q "{{WIN_SENTRY_PATH}}\modules\sentry-native\install"
+    @if exist "{{WIN_SENTRY_PATH}}\.sconsign.dblite" del /Q "{{WIN_SENTRY_PATH}}\.sconsign.dblite"
+    @echo [OK] Sentry build artifacts cleaned
 
 # ================================
 # WINDOWS EXPORTS

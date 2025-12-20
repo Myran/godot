@@ -1,238 +1,147 @@
-# Windows Sentry DLL Build Commands for GameTwo
-# Cross-compilation from macOS to Windows using MinGW-w64
-# Runtime GDExtension loaded by Godot at runtime
+# Windows Sentry GDExtension Build Commands for GameTwo
+# =====================================================
+# Builds sentry-godot GDExtension with crashpad backend using native MSVC on Windows VM.
+# The crashpad backend provides out-of-process crash capture for reliable crash reporting.
+#
+# Architecture:
+# - Build happens on Windows VM (192.168.50.92) via SSH
+# - Uses SCons which internally calls CMake for sentry-native with crashpad
+# - ARM64→x64 cross-compilation supported via SENTRY_WIN_X64_TOOLCHAIN
+# - Results are copied back to macOS development machine
+#
+# Key files:
+# - justfile-windows-native.justfile: Runs ON Windows (SCons build commands)
+# - justfile-platform-windows.justfile: VM orchestration (SSH, file copy)
+# - This file: Help and status commands for macOS
 
-# Windows Sentry DLL paths (shared variables defined in main Sentry justfile)
-
-# Show Windows Sentry DLL build help
+# Show Windows Sentry build help
 help-sentry-windows:
-    @echo "🪟 Windows Sentry DLL Build Commands (x86_64 only)"
-    @echo "==============================================="
+    @echo "🪟 Windows Sentry GDExtension Build Commands"
+    @echo "============================================="
     @echo ""
-    @echo "🔧 WINDOWS DLL BUILDS:"
-    @echo "  just build-sentry-native-windows-release   # Build Windows Sentry DLL (Release) for x86_64"
-    @echo "  just build-sentry-native-windows-debug     # Build Windows Sentry DLL (Debug) for x86_64"
+    @echo "🔧 VM BUILD COMMANDS (from macOS):"
+    @echo "  just win-vm-sentry-all              # Build release + debug on VM"
+    @echo "  just win-vm-sentry-package          # Copy built DLLs from VM to macOS"
+    @echo "  just win-vm-sentry-complete         # Full workflow: build + package"
     @echo ""
-    @echo "📦 PACKAGING:"
-    @echo "  just sentry-windows-package          # Package Windows DLLs with dependencies"
-    @echo "  just sentry-windows-install          # Install Windows DLLs to addon directory"
+    @echo "🔧 DIRECT WINDOWS COMMANDS (run ON Windows VM):"
+    @echo "  just windows-native-sentry-release  # Build release GDExtension"
+    @echo "  just windows-native-sentry-debug    # Build debug GDExtension"
+    @echo "  just windows-native-sentry-all      # Build both variants"
+    @echo "  just windows-native-sentry-clean    # Clean build artifacts"
     @echo ""
-    @echo "🔧 MAINTENANCE:"
-    @echo "  just sentry-windows-clean            # Clean build artifacts"
-    @echo "  just sentry-windows-status           # Check build status"
-    @echo "  just sentry-windows-validate         # Validate Windows DLL integration"
+    @echo "📊 STATUS & VALIDATION:"
+    @echo "  just sentry-windows-status          # Check build status"
+    @echo "  just sentry-windows-validate        # Validate DLL integration"
     @echo ""
-    @echo "🚀 WORKFLOWS:"
-    @echo "  just sentry-windows-complete        # Complete build + package + install"
-
-# Build Windows Sentry DLL for x86_64 architecture (Release)
-build-sentry-native-windows-release force="no":
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Check if Windows Sentry DLL already exists
-    if [ "{{force}}" != "yes" ] && [ "{{force}}" != "force=yes" ] && [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
-        echo "✅ Windows Sentry DLL x86_64 already built"
-        echo "   Use 'just build-sentry-native-windows-release force=yes' to rebuild"
-        exit 0
-    fi
-
-    echo "🏗️  Building Windows Sentry DLL for x86_64..."
-
-    # Check MinGW-w64 cross-compiler
-    if ! command -v x86_64-w64-mingw32-gcc &> /dev/null; then
-        echo "❌ MinGW-w64 x86_64 cross-compiler not found"
-        echo "💡 Install with: brew install mingw-w64"
-        exit 1
-    fi
-
-    # Create build directory
-    mkdir -p {{SENTRY_PATH}}/build/windows-x86_64
-    cd {{SENTRY_PATH}}/build/windows-x86_64
-
-    # Configure with CMake for MinGW-w64 cross-compilation
-    echo "🔧 Configuring CMake for Windows x86_64..."
-    cmake ../../modules/sentry-native \
-        -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
-        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
-        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
-        -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DSENTRY_BUILD_RUNTIMESTD=ON \
-        -DSENTRY_BUILD_SHARED_LIBS=ON \
-        -DSENTRY_BUILD_TESTS=OFF \
-        -DSENTRY_BUILD_EXAMPLES=OFF \
-        -DCMAKE_INSTALL_PREFIX=install \
-        -DSENTRY_TRANSPORT=winhttp \
-        -DSENTRY_BACKEND=inproc \
-        -DSENTRY_TRANSPORT_COMPRESSION=OFF \
-        -G "Unix Makefiles"
-
-    # Build the library
-    echo "🔨 Building Sentry DLL for Windows x86_64..."
-    make -j$(nproc) sentry
-
-    echo "✅ Windows Sentry DLL x86_64 build completed"
-
-    # Create necessary directories
-    echo "📁 Creating output directories..."
-    mkdir -p {{justfile_directory()}}/{{SENTRY_ADDON_PATH}}/bin/windows/x86_64
-    mkdir -p {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64
-
-    # Copy built files to addon directory
-    echo "📦 Copying Windows x86_64 DLL files..."
-    # We're currently in the build directory, file is in current directory
-    if [ -f "libsentry.dll" ]; then
-        cp -v libsentry.dll {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll
-        echo "✅ Copied libsentry.windows.release.x86_64.dll to project/addons/sentry/bin/windows/x86_64/"
-    else
-        echo "❌ libsentry.dll not found in build output"
-        echo "📁 Current directory: $(pwd)"
-        echo "📁 Current directory contents: $(ls -la)"
-        exit 1
-    fi
-
-    if [ -f "crashpad_handler.exe" ]; then
-        cp crashpad_handler.exe {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/
-        echo "✅ Copied crashpad_handler.exe"
-    else
-        echo "⚠️  crashpad_handler.exe not found in build output"
-    fi
-
-    # Look for crashpad_wer.dll
-    find . -name "crashpad_wer.dll" -exec cp {} {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/ \; 2>/dev/null || echo "⚠️  crashpad_wer.dll not found"
-
-
-# Build debug variant for x86_64
-build-sentry-native-windows-debug:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "🐛 Building Windows Sentry Debug DLL (x86_64 only)..."
-
-    # Build x86_64 debug
-    echo "🔨 Building debug variant for x86_64..."
-    mkdir -p {{SENTRY_PATH}}/build/windows-x86_64-debug
-    cd {{SENTRY_PATH}}/build/windows-x86_64-debug
-
-    # Configure with CMake for MinGW-w64 cross-compilation (DEBUG)
-    echo "🔧 Configuring CMake for Windows x86_64 (Debug)..."
-    cmake ../../modules/sentry-native \
-        -DCMAKE_SYSTEM_NAME=Windows \
-        -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
-        -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
-        -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
-        -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DSENTRY_BUILD_RUNTIMESTD=ON \
-        -DSENTRY_BUILD_SHARED_LIBS=ON \
-        -DSENTRY_BUILD_TESTS=OFF \
-        -DSENTRY_BUILD_EXAMPLES=OFF \
-        -DCMAKE_INSTALL_PREFIX=install \
-        -DSENTRY_TRANSPORT=winhttp \
-        -DSENTRY_BACKEND=inproc \
-        -DSENTRY_TRANSPORT_COMPRESSION=OFF \
-        -G "Unix Makefiles"
-
-    # Build the library (DEBUG)
-    echo "🔨 Building Sentry DLL for Windows x86_64 (Debug)..."
-    make -j$(nproc) sentry
-
-    echo "✅ Windows Sentry DLL x86_64 (Debug) build completed"
-
-    # Create necessary directories
-    echo "📁 Creating output directories for debug build..."
-    mkdir -p {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64
-
-    # Copy built files to addon directory (DEBUG)
-    echo "📦 Copying Windows x86_64 DLL files (Debug)..."
-    # We're currently in the debug build directory, file is in current directory
-    if [ -f "libsentry.dll" ]; then
-        cp -v libsentry.dll {{justfile_directory()}}/{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll
-        echo "✅ Copied libsentry.windows.debug.x86_64.dll to project/addons/sentry/bin/windows/x86_64/"
-    else
-        echo "❌ libsentry.dll not found in debug build output"
-        echo "📁 Current directory: $(pwd)"
-        echo "📁 Current directory contents: $(ls -la)"
-        exit 1
-    fi
-
-    echo "✅ Windows Sentry debug DLL build and copy completed successfully"
-
-# Package Windows DLLs with all dependencies
-sentry-windows-package:
-    @echo "📦 Packaging Windows Sentry DLLs..."
-    @mkdir -p {{SENTRY_ADDON_PATH}}/bin/windows/x86_64
-    @echo "✅ Windows x86_64 directory ready for packaging"
-
-# Install Windows DLLs to addon directory (already done by build commands)
-sentry-windows-install: sentry-windows-package
-    @echo "📥 Windows Sentry DLLs are already installed during build process"
-    @if [ -f "{{SENTRY_ADDON_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-        echo "✅ Windows x86_64 release DLL installed"; \
-    else \
-        echo "⚠️  Windows x86_64 release DLL missing - run build first"; \
-    fi
-
-# Verify Windows Sentry SDK
-sentry-windows-verify:
-    @echo "🔍 Verifying Windows Sentry SDK setup (x86_64 only)..."
-    @if ! command -v x86_64-w64-mingw32-gcc &> /dev/null; then \
-        echo "❌ MinGW-w64 x86_64 cross-compiler not found"; \
-        echo "💡 Install with: brew install mingw-w64"; \
-        exit 1; \
-    fi
-    @if [ ! -d "{{SENTRY_PATH}}" ]; then \
-        echo "❌ Sentry submodule not found at {{SENTRY_PATH}}"; \
-        exit 1; \
-    fi
-    @if [ ! -d "{{SENTRY_ADDON_PATH}}" ]; then \
-        echo "❌ Sentry addon not found at {{SENTRY_ADDON_PATH}}"; \
-        exit 1; \
-    fi
-    @echo "✅ Windows Sentry SDK setup verified"
-
-# Clean build artifacts
-sentry-windows-clean:
-    @echo "🧹 Cleaning Windows Sentry build artifacts..."
-    @rm -rf {{SENTRY_PATH}}/build/windows-*
-    @rm -rf {{SENTRY_ADDON_PATH}}/bin/windows/
-    @echo "✅ Windows Sentry build artifacts cleaned"
+    @echo "🧹 MAINTENANCE:"
+    @echo "  just sentry-windows-clean           # Clean local build artifacts"
+    @echo ""
+    @echo "ℹ️  ARCHITECTURE:"
+    @echo "   • Uses SCons + MSVC for proper GDExtension with gdextension_init"
+    @echo "   • Crashpad backend for out-of-process crash capture"
+    @echo "   • ARM64→x64 cross-compilation via toolchain file"
 
 # Check build status
 sentry-windows-status:
-    @echo "📊 Windows Sentry DLL Build Status (x86_64 only)"
-    @echo "=============================================="
-    @echo "🔧 MinGW-w64 x86_64: $(x86_64-w64-mingw32-gcc --version | head -1 || echo '❌ Not found')"
-    @echo "📂 Sentry submodule: {{SENTRY_PATH}}"
-    @if [ -d "{{SENTRY_PATH}}" ]; then echo "✅ Found"; else echo "❌ Missing"; fi
-    @echo "📂 Sentry addon: {{SENTRY_ADDON_PATH}}"
-    @if [ -d "{{SENTRY_ADDON_PATH}}" ]; then echo "✅ Found"; else echo "❌ Missing"; fi
-    @echo "📂 Windows x86_64 Release DLL: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
-    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then echo "✅ Built"; else echo "❌ Not built"; fi
-    @echo "📂 Windows x86_64 Debug DLL: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll"
-    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll" ]; then echo "✅ Built"; else echo "❌ Not built"; fi
+    @echo "📊 Windows Sentry GDExtension Build Status"
+    @echo "==========================================="
+    @echo ""
+    @echo "📂 Release DLL: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll"
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
+        echo "   ✅ Built"; \
+        ls -lh "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" | awk '{print "   Size:", $5, " Modified:", $6, $7, $8}'; \
+    else \
+        echo "   ❌ Not built"; \
+    fi
+    @echo ""
+    @echo "📂 Debug DLL: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll"
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll" ]; then \
+        echo "   ✅ Built"; \
+        ls -lh "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll" | awk '{print "   Size:", $5, " Modified:", $6, $7, $8}'; \
+    else \
+        echo "   ❌ Not built"; \
+    fi
+    @echo ""
+    @echo "📂 Crashpad Handler: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe"
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
+        echo "   ✅ Present (crashpad backend enabled)"; \
+        ls -lh "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" | awk '{print "   Size:", $5, " Modified:", $6, $7, $8}'; \
+    else \
+        echo "   ❌ Missing (crashpad backend will not work)"; \
+    fi
+    @echo ""
+    @echo "📂 WER DLL: {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_wer.dll"
+    @if [ -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_wer.dll" ]; then \
+        echo "   ✅ Present (Windows Error Reporting integration)"; \
+    else \
+        echo "   ⚠️  Missing (optional, WER integration disabled)"; \
+    fi
 
 # Validate Windows DLL integration
 sentry-windows-validate:
-    @echo "🔧 Validating Windows Sentry DLL integration..."
-    @if [ ! -f "{{SENTRY_ADDON_PATH}}/sentry.gdextension" ]; then \
-        echo "❌ Sentry GDExtension not found"; \
-        exit 1; \
-    fi
-    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then \
-        echo "❌ Windows x86_64 release DLL not built - run 'just build-sentry-native-windows-release'"; \
-        exit 1; \
-    fi
-    @if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then \
-        echo "⚠️  crashpad_handler.exe missing for x86_64 (not required with inproc backend)"; \
-    fi
-    @echo "✅ Windows Sentry DLL validation passed"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Validating Windows Sentry GDExtension integration..."
+    echo ""
 
-# Complete build + package + install workflow
-sentry-windows-complete:
-    @just sentry-windows-verify
-    @just sentry-windows-build
-    @just sentry-windows-build-debug
-    @just sentry-windows-validate
-    @echo "🎉 Windows Sentry complete DLL build workflow finished"
+    ERRORS=0
+
+    # Check GDExtension file
+    if [ ! -f "{{SENTRY_ADDON_PATH}}/sentry.gdextension" ]; then
+        echo "❌ Sentry GDExtension config not found"
+        ERRORS=$((ERRORS + 1))
+    else
+        echo "✅ Sentry GDExtension config found"
+    fi
+
+    # Check release DLL
+    if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" ]; then
+        echo "❌ Windows release DLL not built"
+        ERRORS=$((ERRORS + 1))
+    else
+        echo "✅ Windows release DLL present"
+        # Verify it has gdextension_init symbol
+        if command -v nm &> /dev/null; then
+            if nm "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.release.x86_64.dll" 2>/dev/null | grep -q "gdextension_init"; then
+                echo "   ✅ Has gdextension_init entry point"
+            else
+                echo "   ⚠️  Cannot verify gdextension_init (nm may not work on Windows DLLs)"
+            fi
+        fi
+    fi
+
+    # Check debug DLL
+    if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/libsentry.windows.debug.x86_64.dll" ]; then
+        echo "❌ Windows debug DLL not built"
+        ERRORS=$((ERRORS + 1))
+    else
+        echo "✅ Windows debug DLL present"
+    fi
+
+    # Check crashpad handler (required for crashpad backend)
+    if [ ! -f "{{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/crashpad_handler.exe" ]; then
+        echo "❌ crashpad_handler.exe missing (required for crash reporting)"
+        ERRORS=$((ERRORS + 1))
+    else
+        echo "✅ crashpad_handler.exe present"
+    fi
+
+    echo ""
+    if [ $ERRORS -eq 0 ]; then
+        echo "✅ Windows Sentry GDExtension validation passed"
+    else
+        echo "❌ Validation failed with $ERRORS error(s)"
+        echo "   Run 'just win-vm-sentry-complete' to build"
+        exit 1
+    fi
+
+# Clean local build artifacts
+sentry-windows-clean:
+    @echo "🧹 Cleaning Windows Sentry local artifacts..."
+    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/*.dll
+    @rm -rf {{PROJECT_SENTRY_PATH}}/bin/windows/x86_64/*.exe
+    @echo "✅ Windows Sentry local artifacts cleaned"
+    @echo ""
+    @echo "ℹ️  To clean VM build artifacts, run on Windows:"
+    @echo "   just windows-native-sentry-clean"

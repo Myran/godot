@@ -145,7 +145,16 @@ win-vm-sentry-package:
         echo "⚠️  crashpad_handler.exe not found on VM"
     fi
 
-    echo "✅ Windows Sentry DLLs packaged"
+    # Copy crashpad_wer.dll (optional, for Windows Error Reporting integration)
+    echo "📥 Copying crashpad_wer.dll..."
+    if ssh {{WIN_VM_USER}}@{{WIN_VM_HOST}} "if exist ${WIN_CMD_PATH}\\crashpad_wer.dll echo exists" | grep -q exists; then
+        scp "{{WIN_VM_USER}}@{{WIN_VM_HOST}}:${WIN_SENTRY_PATH}/crashpad_wer.dll" project/addons/sentry/bin/windows/x86_64/
+        echo "✅ Copied crashpad_wer.dll"
+    else
+        echo "⚠️  crashpad_wer.dll not found on VM (optional)"
+    fi
+
+    echo "✅ Windows Sentry GDExtension packaged"
     ls -la project/addons/sentry/bin/windows/x86_64/
 
 # Build and package Sentry from VM (complete workflow)
