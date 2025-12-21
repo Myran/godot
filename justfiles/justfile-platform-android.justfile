@@ -272,7 +272,7 @@ setup-android-templates force="no":
 
     just install-android-template
     just android-inject-sdks
-    just android-setup-sentry-libraries
+    just sentry-android-setup-libraries
     echo "✅ Android templates ready for export"
 
 # Install Android template from android_source.zip
@@ -827,100 +827,30 @@ clear-android-test-cache:
     
     echo "💡 App will use embedded config on next restart"
 
-# Copy Sentry native libraries (.so files) from extras to project directory
-android-setup-sentry-libraries:
+# Build Sentry native libraries (.so files) from source using SCons
+sentry-android-setup-libraries:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    echo "🔧 Setting up Sentry native libraries for Android..."
+    echo "🔧 Building Sentry native libraries for Android from source..."
 
-    # Source and destination paths (using prebuilt GDExtension binaries)
-    SOURCE_DIR="{{SENTRY_GDEXT_DIR}}/addons/sentry/bin/android"
-    DEST_DIR="project/addons/sentry/bin/android"
+    # Build Sentry Android libraries from source using SCons
+    echo "🏗️  Building Sentry for Android (debug + release)..."
+    cd {{SENTRY_PATH}}
 
-    # Check if source files exist
-    if [ ! -d "$SOURCE_DIR" ]; then
-        echo "❌ Sentry prebuilt binaries not found: $SOURCE_DIR"
-        echo "💡 Run 'just download-sentry-gdscript' to get prebuilt binaries"
-        exit 1
-    fi
+    # Build debug version
+    echo "🔨 Building debug libraries..."
+    scons platform=android target=template_debug arch=arm64 debug_symbols=yes
 
-    # Create destination directory if missing
-    mkdir -p "$DEST_DIR"
+    # Build release version
+    echo "🔨 Building release libraries..."
+    scons platform=android target=template_release arch=arm64 debug_symbols=yes optimize=size
 
-    # List of required .so files
-    SO_FILES=(
-        "libsentry.android.debug.arm64.so"
-        "libsentry.android.release.arm64.so"
-    )
+    # Copy AAR files built by Gradle to addon directory
+    echo "📦 Copying Sentry AAR files to addon directory..."
+    mkdir -p project/addons/sentry/
+    cp project/addons/sentry/bin/android/sentry_android_godot_plugin.debug.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Debug AAR file not found in build output"
+    cp project/addons/sentry/bin/android/sentry_android_godot_plugin.release.aar project/addons/sentry/ 2>/dev/null || echo "⚠️  Release AAR file not found in build output"
 
-    # Copy each .so file if it exists in source
-    FILES_COPIED=0
-    for so_file in "${SO_FILES[@]}"; do
-        source_path="$SOURCE_DIR/$so_file"
-        dest_path="$DEST_DIR/$so_file"
-
-        if [ -f "$source_path" ]; then
-            echo "📦 Copying $so_file..."
-            cp "$source_path" "$dest_path"
-            chmod 644 "$dest_path"
-            echo "✅ Copied: $dest_path"
-            FILES_COPIED=$((FILES_COPIED + 1))
-        else
-            echo "⚠️  Source file not found: $source_path"
-        fi
-    done
-
-    # Also copy debug variants if they exist
-    DEBUG_SO_FILES=(
-        "libsentry.android.debug.arm64.so.debug"
-        "libsentry.android.release.arm64.so.debug"
-    )
-
-    for so_file in "${DEBUG_SO_FILES[@]}"; do
-        source_path="$SOURCE_DIR/$so_file"
-        dest_path="$DEST_DIR/$so_file"
-
-        if [ -f "$source_path" ]; then
-            echo "📦 Copying debug symbols $so_file..."
-            cp "$source_path" "$dest_path"
-            chmod 644 "$dest_path"
-            echo "✅ Copied debug symbols: $dest_path"
-            FILES_COPIED=$((FILES_COPIED + 1))
-        fi
-    done
-
-    # Copy AAR files to addon root (required by Godot Android plugin system)
-    AAR_FILES=(
-        "sentry_android_godot_plugin.debug.aar"
-        "sentry_android_godot_plugin.release.aar"
-    )
-
-    # Copy AAR files to the location expected by the export plugin
-    # SentryEditorExportPluginAndroid expects them in project/addons/sentry/bin/android/
-    echo "📦 Copying Sentry AAR files to bin/android directory..."
-    if [ -f "$SOURCE_DIR/sentry_android_godot_plugin.debug.aar" ]; then
-        cp "$SOURCE_DIR/sentry_android_godot_plugin.debug.aar" "$DEST_DIR/sentry_android_godot_plugin.debug.aar"
-        echo "✅ Copied: $DEST_DIR/sentry_android_godot_plugin.debug.aar"
-        FILES_COPIED=$((FILES_COPIED + 1))
-    fi
-
-    if [ -f "$SOURCE_DIR/sentry_android_godot_plugin.release.aar" ]; then
-        cp "$SOURCE_DIR/sentry_android_godot_plugin.release.aar" "$DEST_DIR/sentry_android_godot_plugin.release.aar"
-        echo "✅ Copied: $DEST_DIR/sentry_android_godot_plugin.release.aar"
-        FILES_COPIED=$((FILES_COPIED + 1))
-    fi
-
-    # Validate results
-    if [ $FILES_COPIED -gt 0 ]; then
-        echo "✅ Sentry native libraries setup complete ($FILES_COPIED files copied)"
-        echo "📁 Destination: $DEST_DIR"
-
-        # List final directory contents
-        echo "📋 Contents:"
-        ls -la "$DEST_DIR"/libsentry*.so 2>/dev/null || echo "   No .so files found"
-    else
-        echo "⚠️  No Sentry libraries were copied"
-        echo "💡 This may indicate missing Sentry prebuilt binaries"
-        echo "💡 Run: just download-sentry-gdscript && just build-sentry-gdscript-all"
-    fi
+    echo "✅ Sentry Android libraries built from source"
+    echo "   Libraries located in: project/addons/sentry/bin/android/"

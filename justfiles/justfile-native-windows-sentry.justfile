@@ -20,9 +20,9 @@ help-sentry-windows:
     @echo "============================================="
     @echo ""
     @echo "🔧 VM BUILD COMMANDS (from macOS):"
-    @echo "  just win-vm-sentry-all              # Build release + debug on VM"
-    @echo "  just win-vm-sentry-package          # Copy built DLLs from VM to macOS"
-    @echo "  just win-vm-sentry-complete         # Full workflow: build + package"
+    @echo "  just sentry-windows-vm-build-all      # Build release + debug on VM"
+    @echo "  just sentry-windows-vm-package       # Copy built DLLs from VM to macOS"
+    @echo "  just sentry-windows-vm-complete      # Full workflow: build + package"
     @echo ""
     @echo "🔧 DIRECT WINDOWS COMMANDS (run ON Windows VM):"
     @echo "  just windows-native-sentry-release  # Build release GDExtension"
@@ -132,7 +132,7 @@ sentry-windows-validate:
         echo "✅ Windows Sentry GDExtension validation passed"
     else
         echo "❌ Validation failed with $ERRORS error(s)"
-        echo "   Run 'just win-vm-sentry-complete' to build"
+        echo "   Run 'just sentry-windows-vm-complete' to build"
         exit 1
     fi
 

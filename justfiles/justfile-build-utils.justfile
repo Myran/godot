@@ -154,7 +154,7 @@ android-insert-firebase-dependencies:
     @echo "✅ Firebase Android SDK dependencies inserted successfully."
 
 # 🛡️ Sentry Android SDK integration (legacy - kept for compatibility)
-android-insert-sentry-dependencies:
+sentry-android-insert-dependencies:
     @echo "🛡️ Preparing Sentry Android SDK dependencies..."
 
     # Generate Sentry configuration from project settings first

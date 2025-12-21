@@ -44,8 +44,8 @@ help-ios:
     echo "  just ios-recent-logs-ipad        # Recent logs from iPad (10 min)"
     echo "  just ios-search-logs-iphone \"pattern\"  # Search logs on iPhone"
     echo "  just ios-search-logs-ipad \"pattern\"    # Search logs on iPad"
-    echo "  just ios-sentry-logs-iphone      # Sentry-specific logs from iPhone"
-    echo "  just ios-sentry-logs-ipad        # Sentry-specific logs from iPad"
+    echo "  just sentry-ios-logs-iphone      # Sentry-specific logs from iPhone"
+    echo "  just sentry-ios-logs-ipad        # Sentry-specific logs from iPad"
     echo "  just ios-config-logs-iphone      # JSON config logs from iPhone"
     echo "  just ios-config-logs-ipad        # JSON config logs from iPad"
     echo ""
@@ -406,11 +406,11 @@ _ios-sentry-logs-internal device_id device_name:
     idevicesyslog -u "$DEVICE_ID" -p {{GAME_NAME}} -m "entr" -m "debug_startup" --no-colors
 
 # Monitor Sentry-related logs specifically from iPhone
-ios-sentry-logs-iphone:
+sentry-ios-logs-iphone:
     just _ios-sentry-logs-internal "{{IOS_IPHONE_DEVICE_ID}}" "iPhone"
 
 # Monitor Sentry-related logs specifically from iPad
-ios-sentry-logs-ipad:
+sentry-ios-logs-ipad:
     just _ios-sentry-logs-internal "{{IOS_IPAD_DEVICE_ID}}" "iPad"
 
 # Core JSON config monitoring function - takes device ID as argument

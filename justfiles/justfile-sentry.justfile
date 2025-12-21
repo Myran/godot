@@ -43,8 +43,8 @@ help-sentry:
     @echo ""
     @echo "🪟 WINDOWS SENTRY (VM NATIVE BUILD):"
     @echo "  just build-sentry-windows-vm         # Build Windows Sentry on VM (crashpad backend)"
-    @echo "  just win-vm-sentry-complete          # Build + package from VM"
-    @echo "  just win-vm-sentry-package           # Copy built DLLs from VM"
+    @echo "  just sentry-windows-vm-complete      # Build + package from VM"
+    @echo "  just sentry-windows-vm-package       # Copy built DLLs from VM"
     @echo ""
     @echo "🚀 UNIFIED WORKFLOWS:"
     @echo "  just build-sentry-all               # Build all Sentry integrations (smart rebuild)"
@@ -98,7 +98,7 @@ build-sentry-windows-vm force="no":
     fi
 
     echo "🪟 Building Windows Sentry with crashpad backend on VM..."
-    just win-vm-sentry-complete
+    just sentry-windows-vm-complete
 
 # Quick Sentry status check
 status-sentry-quick:
