@@ -604,6 +604,39 @@ _handle-checksum-validation config_path platform test_id:
                 echo "💡 Expected file name pattern: windows_\${TEST_ID}.log"
             fi
             ;;
+        "windows-physical")
+            # Windows physical machine logs are saved locally after retrieval
+            WIN_PHYSICAL_LOG_FILE="logs/${TEST_ID}.log"
+
+            if [[ -f "$WIN_PHYSICAL_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$WIN_PHYSICAL_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from Windows physical test log:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
+            else
+                echo "⚠️  Windows physical test log file not found: $WIN_PHYSICAL_LOG_FILE"
+                echo "💡 Expected file name pattern: logs/\${TEST_ID}.log"
+            fi
+            ;;
+        "macos")
+            USER_DATA_DIR="$HOME/Library/Application Support/Godot/app_userdata/gametwo"
+            LOGS_DIR="$USER_DATA_DIR/logs"
+            MACOS_LOG_FILE="$LOGS_DIR/macos_${TEST_ID}.log"
+
+            if [[ -f "$MACOS_LOG_FILE" ]]; then
+                if just _extract-checksums-unified "$MACOS_LOG_FILE" "$TEST_ID" > /tmp/checksum_extraction.log 2>&1; then
+                    EXTRACTED_CHECKSUMS=$(cat /tmp/checksum_extraction.log)
+                else
+                    echo "⚠️  Checksum extraction failed from macOS test log:"
+                    cat /tmp/checksum_extraction.log | sed 's/^/  /'
+                fi
+            else
+                echo "⚠️  macOS test log file not found: $MACOS_LOG_FILE"
+                echo "💡 Expected file name pattern: macos_\${TEST_ID}.log"
+            fi
+            ;;
         *)
             echo "❌ Unknown platform for checksum validation: $PLATFORM"
             exit 1
@@ -913,6 +946,27 @@ _extract-logs test_id platform temp_output_file="":
             LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
             echo "🪟 Windows log extraction complete: $LOG_LINES lines captured"
             ;;
+        "windows-physical")
+            echo "🪟 Extracting Windows physical machine logs for test: $TEST_ID"
+
+            # Windows physical machine logs are retrieved via SCP and saved to logs/${TEST_ID}.log
+            WIN_PHYSICAL_LOG="logs/${TEST_ID}.log"
+            if [[ -f "$WIN_PHYSICAL_LOG" ]]; then
+                echo "🪟 Using Windows physical log file: $WIN_PHYSICAL_LOG"
+                cp "$WIN_PHYSICAL_LOG" "$LOG_FILE"
+            elif [[ -n "$TEMP_OUTPUT_FILE" && -f "$TEMP_OUTPUT_FILE" ]]; then
+                echo "🪟 Using provided temp output file: $TEMP_OUTPUT_FILE"
+                cp "$TEMP_OUTPUT_FILE" "$LOG_FILE"
+            else
+                echo "❌ No log file found for Windows physical machine"
+                echo "💡 Windows physical logs should be at: $WIN_PHYSICAL_LOG"
+                exit 1
+            fi
+
+            # Final verification and reporting
+            LOG_LINES=$(wc -l < "$LOG_FILE" 2>/dev/null || echo "0")
+            echo "🪟 Windows physical log extraction complete: $LOG_LINES lines captured"
+            ;;
         *)
             echo "❌ Unsupported platform: $PLATFORM"
             exit 1
@@ -1191,6 +1245,11 @@ _analyze-test-errors test_id platform config_file="":
         "windows")
             # Windows platform supported (logs retrieved via SCP from VM)
             ;;
+        "windows-physical")
+            # Windows physical machine supported (logs retrieved via SCP from physical machine)
+            # Override log file path - windows-physical saves logs directly to logs/${TEST_ID}.log
+            PLATFORM_LOG_FILE="logs/${TEST_ID}.log"
+            ;;
         *)
             echo "❌ Unknown platform: $PLATFORM"
             exit 1
@@ -1391,6 +1450,9 @@ _analyze-test-errors test_id platform config_file="":
             "windows")
                 echo "🔧 Debug: just logs-windows-errors $TEST_ID"
                 ;;
+            "windows-physical")
+                echo "🔧 Debug: just logs-windows-physical-errors $TEST_ID"
+                ;;
             "ios")
                 echo "🔧 Debug: just logs-ios-errors $TEST_ID"
                 ;;
@@ -1535,6 +1597,19 @@ _collect-action-results test_id platform config_name="unknown" session="":
             else
                 echo "⚠️  Windows log file not found: $PLATFORM_LOG_FILE"
                 echo "💡 Windows logs should be retrieved by _execute-test-windows via SCP"
+                LOGS=""
+            fi
+            ;;
+        "windows-physical")
+            # For Windows physical machine, logs are retrieved via SCP in _execute-test-windows-physical
+            # The log file is saved to logs/${TEST_ID}.log
+            WIN_PHYSICAL_LOG_FILE="logs/${TEST_ID}.log"
+            if [[ -f "$WIN_PHYSICAL_LOG_FILE" ]]; then
+                LOGS=$(cat "$WIN_PHYSICAL_LOG_FILE")
+                echo "📄 Read $(echo "$LOGS" | wc -l) lines from Windows physical log file"
+            else
+                echo "⚠️  Windows physical log file not found: $WIN_PHYSICAL_LOG_FILE"
+                echo "💡 Windows physical logs should be retrieved by _execute-test-windows-physical via SCP"
                 LOGS=""
             fi
             ;;
@@ -2842,6 +2917,13 @@ _execute-test-with-analysis config_name platform session="":
             just _deploy-config-windows "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
             if [[ $TEST_RESULT -eq 0 ]]; then
                 just _execute-test-windows "$CONFIG_NAME" || TEST_RESULT=$?
+            fi
+            ;;
+        "windows-physical")
+            # Deploy and execute Windows test on physical machine (GUI mode)
+            just _deploy-config-windows-physical "$TEMP_CONFIG_PATH" || TEST_RESULT=$?
+            if [[ $TEST_RESULT -eq 0 ]]; then
+                just _execute-test-windows-physical "$CONFIG_NAME" "$TEST_ID" || TEST_RESULT=$?
             fi
             ;;
         *)

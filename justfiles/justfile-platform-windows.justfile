@@ -740,7 +740,95 @@ _win-physical-deploy-config config_path:
 _win-physical-stop-app:
     @ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "taskkill /IM {{GAME_NAME}}*.exe /F 2>nul || echo No processes to kill" || true
 
+# ================================
+# SHARED PLATFORM HELPERS
+# ================================
+# These follow the naming convention used by _execute-test-with-analysis
+# to enable windows-physical to use the shared config resolution logic
+
+# Deploy config to Windows physical machine (shared helper interface)
+_deploy-config-windows-physical config_path:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_PATH="{{config_path}}"
+
+    echo "🪟 Deploying configuration to Windows physical machine..."
+
+    # Ensure physical machine is awake
+    just _win-physical-ensure-awake
+
+    # Check export is deployed
+    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe\" echo exists" | grep -q exists; then
+        echo "❌ Windows export not deployed to physical machine"
+        echo "💡 Run 'just win-physical-deploy' first"
+        exit 1
+    fi
+
+    # Use existing deploy helper
+    just _win-physical-deploy-config "$CONFIG_PATH"
+
+    # Clear old logs
+    echo "🧹 Clearing old logs..."
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "del \"{{WIN_PHYSICAL_USER_DATA}}\\logs\\*.log\" 2>nul || echo No old logs"
+
+# Execute test on Windows physical machine (shared helper interface)
+_execute-test-windows-physical config_name test_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    CONFIG_NAME="{{config_name}}"
+    TEST_ID="{{test_id}}"
+
+    echo "🪟 Starting Windows physical machine test execution..."
+    echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode)"
+    echo ""
+
+    # Run test with GUI using PowerShell Start-Process
+    echo "🚀 Starting test with GUI..."
+    echo ""
+
+    # Use PowerShell to start the process and wait for it
+    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Start-Process -FilePath '{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe' -ArgumentList '--test-mode','--auto-quit' -WorkingDirectory '{{WIN_PHYSICAL_DIR}}\\builds' -Wait\""
+
+    TEST_EXIT_CODE=$?
+
+    echo ""
+    echo "📊 Windows Physical Test Execution Summary"
+    echo "================================"
+    echo ""
+    echo "**Status**: $(if [[ $TEST_EXIT_CODE -eq 0 ]]; then echo '✅ COMPLETED'; else echo '❌ FAILED'; fi)"
+
+    # Retrieve logs
+    echo ""
+    echo "📥 Retrieving logs..."
+    mkdir -p logs
+    LOG_FILE="logs/${TEST_ID}.log"
+
+    # Get the latest log file from the physical machine
+    REMOTE_LOG=$(ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Get-ChildItem '{{WIN_PHYSICAL_USER_DATA}}\\logs\\*.log' | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName\"" 2>/dev/null | tr -d '\r')
+
+    if [ -n "$REMOTE_LOG" ]; then
+        # Convert Windows path to SCP format
+        SCP_PATH=$(echo "$REMOTE_LOG" | sed 's/\\/\//g' | sed 's/C:/\/C:/')
+        scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:${SCP_PATH}" "$LOG_FILE" 2>/dev/null || echo "Warning: Could not retrieve log file"
+        echo "📄 Log saved: $LOG_FILE"
+
+        # Also save with windows-physical prefix for log analysis tools
+        PREFIXED_LOG="logs/windows-physical_${TEST_ID}.log"
+        cp "$LOG_FILE" "$PREFIXED_LOG" 2>/dev/null || true
+    else
+        echo "⚠️  No log file found on physical machine"
+    fi
+
+    echo ""
+    echo "🎯 Test completed on Windows physical machine"
+
+    exit $TEST_EXIT_CODE
+
 # Run test on physical machine with GUI (automated mode)
+# Uses shared _execute-test-with-analysis for consistent config resolution
+# Supports: debug configs, test lists, @ references, folder patterns
 test-windows-physical-target config_name="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -762,77 +850,19 @@ test-windows-physical-target config_name="":
     echo "=================================================="
     echo ""
     echo "📍 Target: {{WIN_PHYSICAL_HOST}} (GUI mode)"
+    echo "📦 Using shared config resolution (supports test lists, @ refs, folders)"
     echo ""
 
-    # Ensure physical machine is awake
-    just _win-physical-ensure-awake
-
-    # Validate config exists
-    CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}.json"
-    if [ ! -f "$CONFIG_PATH" ]; then
-        echo "❌ Config not found: $CONFIG_PATH"
-        exit 1
-    fi
-
-    # Check export is deployed
-    if ! ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "if exist \"{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe\" echo exists" | grep -q exists; then
-        echo "❌ Windows export not deployed to physical machine"
-        echo "💡 Run 'just win-physical-deploy' first"
-        exit 1
-    fi
-
-    # Generate test ID and export for _inject-auto-quit-metadata to add test_metadata
-    TEST_ID="${CONFIG_NAME}_windows-physical_$(date +%s)"
-    export TEST_ID
-    echo "🔍 Test ID: $TEST_ID"
-    echo ""
-
-    # Create temp config with auto_quit=true and test_metadata
-    TEMP_CONFIG_PATH="{{DEBUG_CONFIG_DIR}}/${CONFIG_NAME}_physical_automated.json"
-    just _inject-auto-quit-metadata "$CONFIG_PATH" "$TEMP_CONFIG_PATH" "true"
-
-    # Deploy config
-    just _win-physical-deploy-config "$TEMP_CONFIG_PATH"
-    rm -f "$TEMP_CONFIG_PATH"
-
-    # Clear old logs
-    echo "🧹 Clearing old logs..."
-    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "del \"{{WIN_PHYSICAL_USER_DATA}}\\logs\\*.log\" 2>nul || echo No old logs"
-
-    # Run test with GUI using PowerShell Start-Process
-    # This allows the process to run with GUI even over SSH
-    echo "🚀 Starting test with GUI..."
-    echo ""
-
-    # Use PowerShell to start the process and wait for it
-    ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Start-Process -FilePath '{{WIN_PHYSICAL_DIR}}\\builds\\{{GAME_NAME}}_debug.exe' -ArgumentList '--test-mode','--auto-quit' -WorkingDirectory '{{WIN_PHYSICAL_DIR}}\\builds' -Wait\""
-
-    TEST_EXIT_CODE=$?
-
-    echo ""
-    echo "📊 Test Execution: $(if [[ $TEST_EXIT_CODE -eq 0 ]]; then echo '✅ COMPLETED'; else echo '❌ FAILED'; fi)"
-
-    # Retrieve logs
-    echo ""
-    echo "📥 Retrieving logs..."
-    mkdir -p logs
-    LOG_FILE="logs/${TEST_ID}.log"
-
-    # Get the latest log file from the physical machine
-    REMOTE_LOG=$(ssh {{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}} "powershell -Command \"Get-ChildItem '{{WIN_PHYSICAL_USER_DATA}}\\logs\\*.log' | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName\"" 2>/dev/null | tr -d '\r')
-
-    if [ -n "$REMOTE_LOG" ]; then
-        # Convert Windows path to SCP format
-        SCP_PATH=$(echo "$REMOTE_LOG" | sed 's/\\/\//g' | sed 's/C:/\/C:/')
-        scp "{{WIN_PHYSICAL_USER}}@{{WIN_PHYSICAL_HOST}}:${SCP_PATH}" "$LOG_FILE" 2>/dev/null || echo "Warning: Could not retrieve log file"
-        echo "📄 Log saved: $LOG_FILE"
+    # Create session timestamp for multi-config orchestration
+    if [[ -n "${MULTI_PLATFORM_SESSION:-}" ]]; then
+        TEST_SESSION="$MULTI_PLATFORM_SESSION"
     else
-        echo "⚠️  No log file found on physical machine"
+        TEST_SESSION="$(date +%s)"
     fi
 
-    echo ""
-    echo "✅ Test completed on Windows physical machine"
-    echo "📋 Test ID: $TEST_ID"
+    # Use the shared unified execution pattern
+    # This handles: debug configs, test lists, @ references, folder patterns
+    just _execute-test-with-analysis "$CONFIG_NAME" "windows-physical" "$TEST_SESSION"
 
 # Run test on physical machine in manual mode (stays open)
 test-windows-physical-manual config_name:

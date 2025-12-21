@@ -4,7 +4,7 @@ title: Fix Android GLThread SIGSEGV crash occurring after test completion
 status: Open
 assignee: []
 created_date: '2025-12-19 11:03'
-updated_date: '2025-12-19 11:04'
+updated_date: '2025-12-21 15:27'
 labels:
   - critical
   - android
@@ -131,4 +131,40 @@ Multiple Android tests are experiencing SIGSEGV crashes after successful executi
 - Tests "pass" functionality-wise but fail validation due to crash
 - Manual testing avoids the issue
 - Issue only affects automated testing workflow
+
+## Full Pipeline Analysis (2025-12-21)
+
+### Scope Confirmation
+- **19 crashes** in single full-pipeline run
+- **100% Android test failure rate** due to this crash
+- All crashes have identical signature - highly reproducible
+
+### Timing Confirmation
+Crashes occur specifically AFTER `system.debug.replay_complete` action passes:
+```
+| `system.debug.replay_complete` | System | ✅ **PASSED** | 3ms |
+❌ CRASH DETECTED
+```
+
+This confirms the crash happens during app shutdown/cleanup phase, not during test execution.
+
+### Crash Timestamps (sample from log)
+```
+12-21 12:08:26.732 - GLThread 137087
+12-21 12:08:58.866 - GLThread 137212
+12-21 12:09:36.359 - GLThread 137353
+12-21 12:10:11.218 - GLThread 137512
+... (19 total)
+```
+
+### Configurations Blocked
+All Android tests affected including:
+- `backend.firebase.*` (async_pattern, error_handling)
+- `battle-*` (animated, logic-only, combat-only-validation)
+- `firebase-*` (all backend/cpp/rtdb layers)
+- `gamestate-*` (save-load tests)
+- `system-*` (error-handling, layer-all, performance)
+
+### Key Observation
+Desktop and macOS tests for the same configurations pass without crashes, confirming this is Android-specific GLThread issue during shutdown.
 <!-- SECTION:NOTES:END -->
