@@ -107,3 +107,48 @@ development:
     echo ""
 
     echo "🎉 Development workflow completed successfully!"
+
+# Full pipeline: rebuild + export-all + test
+# Complete validation workflow for release preparation
+full-pipeline:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    echo "🔄 Running full pipeline: rebuild → export-all → test"
+    echo "⏱️  This may take 30-60 minutes depending on cache state"
+    echo ""
+
+    # Step 1: Rebuild all components
+    echo "1️⃣ Rebuilding all components..."
+    if ! just rebuild; then
+        echo "❌ Rebuild failed"
+        exit 1
+    fi
+    echo "✅ Rebuild completed"
+    echo ""
+
+    # Step 2: Export all platforms
+    echo "2️⃣ Exporting all platforms (macOS, iOS, Android, Windows)..."
+    if ! just export-all; then
+        echo "❌ Export failed"
+        exit 1
+    fi
+    echo "✅ All exports completed"
+    echo ""
+
+    # Step 3: Run tests with logging
+    echo "3️⃣ Running cross-platform tests..."
+    if ! just log-run test; then
+        echo "❌ Tests failed"
+        exit 1
+    fi
+    echo "✅ Tests completed"
+    echo ""
+
+    echo "🎉 Full pipeline completed successfully!"
+    echo ""
+    echo "📁 Exports available:"
+    echo "   macOS:   export/macos/"
+    echo "   iOS:     project/ios/build/"
+    echo "   Android: export/android/"
+    echo "   Windows: export/windows/"
