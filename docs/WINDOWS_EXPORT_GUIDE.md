@@ -1,267 +1,264 @@
-# Windows Export Template Guide
+# Windows Export Pipeline Guide
 
-This guide covers building and using Windows export templates for GameTwo, enabling cross-platform game exports from macOS to Windows.
+Complete guide for building, exporting, and testing GameTwo on Windows with Firebase and Sentry integration.
 
 ## Overview
 
-GameTwo now supports Windows desktop exports through custom export templates built with MinGW-w64 cross-compilation. This allows development on macOS while targeting Windows as a deployment platform.
+GameTwo supports Windows desktop exports through a **two-machine architecture**:
+- **Windows VM (192.168.50.92)** - Native MSVC template building
+- **Windows Physical (192.168.50.80)** - GUI testing with Wake-on-LAN
 
-## Prerequisites
+**Key Features:**
+- Firebase C++ SDK integration (shared code architecture)
+- Sentry GDExtension with crashpad backend (out-of-process crash handling)
+- Native MSVC builds (ARM64→x64 cross-compilation on VM)
+- Full automated and manual testing infrastructure
 
-### Cross-Compilation Environment
-- **MinGW-w64**: Cross-compiler for Windows builds on macOS
-- **Rosetta 2**: Required for Intel-based tools on Apple Silicon
-- **SCons**: Build system (already configured for GameTwo)
-- **Custom Godot 4.3**: GameTwo's custom engine with all modules
+## Quick Start
 
-### Installation (if needed)
 ```bash
-# Install MinGW-w64 cross-compiler
-brew install mingw-w64
+# 1. Build Windows templates and Sentry on VM
+just build-all-windows
 
-# Install Rosetta 2 (Apple Silicon only)
-softwareupdate --install-rosetta --agree-to-license
+# 2. Export Windows build
+just export-windows-debug
+
+# 3. Deploy to physical machine
+just win-physical-deploy
+
+# 4. Run automated test
+just test-windows-physical-target firebase-cpp-layer
 ```
 
-## Available Commands
+## Machine Architecture
 
-### Template Building Commands
+### Windows VM (Building)
+- **Host**: 192.168.50.92
+- **Purpose**: Template compilation with native MSVC
+- **Environment**: Windows 11 ARM64 + Visual Studio 2022 Build Tools
+- **Cross-compilation**: ARM64→x64 via cmake toolchain file
+- **Commands**: `win-vm-*` prefixed recipes
 
-#### Complete Windows Templates
+### Windows Physical (Testing)
+- **Host**: 192.168.50.80
+- **Purpose**: GUI testing (Windows doesn't support headless Godot)
+- **Features**: Wake-on-LAN, automated test execution, log retrieval
+- **Commands**: `win-physical-*` prefixed recipes
+
+## Build Commands
+
+### Complete Build Pipeline
 ```bash
-just build-windows-templates
+just build-all-windows           # Full pipeline: sync → templates → sentry → package
+just build-windows-templates     # Build templates only
 ```
-- Builds both debug and release Windows templates
-- Targets x86_64 architecture
-- Creates packaged zip files in `templates/`
-- **Time**: 15-30 minutes
 
-#### Minimal Debug Template (Fast)
+### Export Commands
 ```bash
-just build-windows-templates-minimal
+just export-windows-debug        # Export debug build
+just export-windows-release      # Export release build
+just export-windows-all          # Export both debug and release
+just validate-windows-export     # Validate Firebase/Sentry integration
 ```
-- Builds only debug template
-- Faster iteration for testing
-- **Time**: 10-15 minutes
 
-### Template Management Commands
-
-#### Check Template Status
+### Windows Export Pipeline
 ```bash
-just check-windows-templates
+just windows-export-pipeline     # Complete: export → validate → deploy
 ```
-Shows current Windows template build status and file locations.
 
-#### Validate Template Integrity
+## Testing Commands
+
+### Physical Machine Management
 ```bash
-just validate-windows-templates
+just win-physical-status         # Check machine status (awake/sleeping)
+just win-physical-wake           # Send Wake-on-LAN packet
+just win-physical-wake-wait      # Wake and wait for SSH availability
+just win-physical-verify         # Full connectivity verification
+just win-physical-deploy         # Deploy Windows export to machine
 ```
-Verifies Windows template zip files are properly formed and contain expected files.
 
-#### Clean Template Artifacts
+### Automated Testing (GUI Mode)
 ```bash
-just clean-windows-templates
+just test-windows-physical-target CONFIG  # Run test with auto-quit
+just test-windows-physical-manual CONFIG  # Run test, stays open for inspection
 ```
-Removes all Windows template build artifacts and zip files.
 
-### Testing Commands
-
-#### Test Export Configuration
+### Log Retrieval
 ```bash
-just test-windows-export
+just logs-windows-physical TEST_ID        # Retrieve test logs
+just logs-windows-physical-errors TEST_ID # Error-focused analysis
 ```
-Validates Windows export template setup and provides instructions for testing in Godot Editor.
 
-### Build System Integration
-
-#### Build All Platform Templates
+### Checksum Baseline Management
 ```bash
-just templates-all
+just test-windows-update CONFIG   # Update checksum baseline
+just test-windows-reset CONFIG    # Reset checksum baseline
 ```
-Builds templates for all platforms: iOS, Android, and Windows.
 
-#### Build Status Check
+## VM Build Commands
+
+### Template Building
 ```bash
-just build-status
-```
-Shows build status for editor and all platform templates including Windows.
-
-## Template Files
-
-After successful build, Windows templates are created in the `templates/` directory:
-
-```
-templates/
-├── windows_debug.zip          # Debug template (development builds)
-├── windows_release.zip        # Release template (production builds)
-└── windows_templates.zip      # Combined debug + release (convenience)
+just win-vm-verify               # Verify VM connectivity and environment
+just win-vm-sync                 # Sync repository to VM
+just win-vm-template-debug       # Build debug template (~14 min)
+just win-vm-template-release     # Build release template (~18 min)
+just win-vm-templates            # Build both templates
+just win-vm-templates-package    # Copy templates from VM to macOS
+just win-vm-status               # Check build status on VM
 ```
 
-### Template Contents
-Each zip file contains:
-- `godot.windows.template_debug.x86_64.exe` - Debug executable
-- `godot.windows.template_release.x86_64.exe` - Release executable
-
-## Export Configuration
-
-### Project Settings
-The `project/export_presets.cfg` has been updated with Windows template paths:
-
-```ini
-[preset.3.options]
-custom_template/debug="/Users/mattiasmyhrman/repos/gametwo/templates/windows_debug.zip"
-custom_template/release="/Users/mattiasmyhrman/repos/gametwo/templates/windows_release.zip"
-```
-
-### Export Settings
-- **Platform**: Windows Desktop
-- **Architecture**: x86_64
-- **Target**: Debug and Release templates
-- **Texture Format**: S3TC/BPTC (Windows native compression)
-
-## Export Workflow
-
-### 1. Build Templates
+### Sentry Building
 ```bash
-# First time or after C++ changes
-just build-windows-templates
-
-# For quick debug testing
-just build-windows-templates-minimal
+just sentry-windows-vm-build-all   # Build Sentry DLLs on VM
+just sentry-windows-vm-package     # Copy Sentry files from VM
+just sentry-windows-vm-complete    # Full workflow: verify → build → package
 ```
 
-### 2. Test Export in Godot Editor
-1. Open `project/project.godot` in Godot Editor
-2. Navigate to **Project > Export**
-3. Select **Windows Desktop** preset
-4. Verify custom template paths are set correctly
-5. Test export with **Export** button
+### Status & Validation
+```bash
+just sentry-windows-status       # Check Sentry build status
+just sentry-windows-validate     # Validate DLL integration
+```
 
-### 3. Validate Exported Executable
-Run the exported Windows executable on a Windows machine to verify:
-- Game launches correctly
-- Core functionality works (Firebase/Sentry integration optional)
-- Performance is acceptable
+## Integration Status
 
-## Technical Details
+### Firebase C++ SDK
+- **Status**: Fully integrated and tested
+- **Architecture**: Shared code (firebase_common.cpp) + Windows-specific (firebase_windows.cpp)
+- **Libraries**: Statically linked MSVC libraries
+- **Tests**: 8/8 cpp-layer tests pass on Windows
 
-### Cross-Compilation Process
-1. **SCons Build**: Uses MinGW-w64 to compile Godot for Windows
-2. **Module Integration**: All GameTwo custom modules included
-3. **Packaging**: Creates zip files for easy template management
+### Sentry GDExtension
+- **Status**: Fully integrated with crashpad backend
+- **Backend**: crashpad (out-of-process crash handling)
+- **Files**:
+  - `libsentry.windows.release.x86_64.dll` (340KB)
+  - `libsentry.windows.debug.x86_64.dll` (1.9MB)
+  - `crashpad_handler.exe` (682KB)
+- **Build**: Native MSVC on Windows VM
 
-### Architecture Support
-- **Target**: Windows x86_64 (64-bit)
-- **Compiler**: MinGW-w64 GCC 15.2.0
-- **Platform APIs**: Windows-specific implementations used
-
-### Custom Modules Included
-- Firebase integration (ready for future implementation)
-- Sentry error reporting (ready for future implementation)
-- All GameTwo-specific systems and utilities
-
-## Build Times (Estimates)
+## Build Times
 
 | Command | Time | Description |
 |---------|------|-------------|
-| `build-windows-templates-minimal` | 10-15 min | Debug template only |
-| `build-windows-templates` | 15-30 min | Debug + Release templates |
-| `templates-all` | 45-60 min | All platform templates |
+| `win-vm-template-debug` | ~14 min | Debug template |
+| `win-vm-template-release` | ~18 min | Release template |
+| `build-all-windows` | 25-40 min | Full pipeline |
+| `export-windows-debug` | ~2 min | Export debug build |
+| `win-physical-deploy` | ~30 sec | Deploy to physical machine |
+
+## Workflow Examples
+
+### Development Workflow
+```bash
+# After code changes, rebuild and test
+just export-windows-debug
+just win-physical-deploy
+just test-windows-physical-target firebase-cpp-layer
+just logs-windows-physical-errors TEST_ID
+```
+
+### Full Validation
+```bash
+# Complete Windows validation
+just build-all-windows
+just export-windows-all
+just validate-windows-export
+just win-physical-deploy
+just test-windows-physical-target production-ready
+```
+
+### Quick Iteration
+```bash
+# For GDScript changes only (no template rebuild needed)
+just export-windows-debug
+just win-physical-deploy
+just test-windows-physical-target CONFIG
+```
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Build Fails with Missing Tools
+### VM Connection Issues
 ```bash
-# Verify MinGW-w64 installation
-x86_64-w64-mingw32-gcc --version
+# Verify VM is running and accessible
+just win-vm-verify
 
-# Should output: x86_64-w64-mingw32-gcc (GCC) 15.2.0
+# Check SSH connectivity
+ssh gametwo@192.168.50.92 "echo Connected"
 ```
 
-#### Export Templates Not Found
+### Physical Machine Not Responding
 ```bash
-# Check template status
-just check-windows-templates
+# Check status
+just win-physical-status
+
+# Wake machine
+just win-physical-wake-wait
+
+# Verify connectivity
+just win-physical-verify
+```
+
+### Missing Sentry DLLs
+```bash
+# Check Sentry status
+just sentry-windows-status
 
 # Rebuild if missing
-just build-windows-templates
+just sentry-windows-vm-complete
 ```
 
-#### Export Fails in Godot Editor
-1. Verify template paths in `export_presets.cfg`
-2. Check zip files exist and are not corrupted
-3. Ensure Godot Editor can access the templates directory
-
-### Verification Steps
-
-#### Template Integrity
+### Export Validation Failures
 ```bash
-just validate-windows-templates
+# Run validation
+just validate-windows-export
+
+# Check specific components:
+# - Executables exist
+# - PCK files present
+# - Firebase config found
+# - Sentry DLLs present
 ```
 
-#### Build System Integration
-```bash
-just build-status
+## File Locations
+
+### Templates (macOS)
+```
+templates/
+├── godot.windows.template_debug.x86_64.exe
+└── godot.windows.template_release.x86_64.exe
 ```
 
-#### Cross-Compilation Test
-```bash
-# Test MinGW-w64 with simple program
-echo 'int main() { return 0; }' > test.c
-x86_64-w64-mingw32-gcc -o test.exe test.c
-file test.exe  # Should show "PE32+ executable (console) x86-64, for MS Windows"
-rm test.c test.exe
+### Exports (macOS)
+```
+export/windows/
+├── gametwo_debug.exe
+├── gametwo_debug.pck
+├── gametwo.exe
+└── gametwo.pck
 ```
 
-## Integration with Existing Workflows
-
-### Development Pipeline
-Windows template building integrates with existing GameTwo workflows:
-
-```bash
-# Complete development workflow
-just development
+### Sentry DLLs (macOS)
+```
+project/addons/sentry/bin/windows/x86_64/
+├── libsentry.windows.release.x86_64.dll
+├── libsentry.windows.debug.x86_64.dll
+├── crashpad_handler.exe
+└── crashpad_wer.dll (optional)
 ```
 
-### CI/CD Integration
-Windows templates are included in:
-- `just build-toolchain` - Foundation: editor + all templates
-- `just build-pipeline` - Complete: source to deployment
-
-### Maintenance
-- Template rebuilding required after C++ module changes
-- GDScript changes don't require template rebuilds
-- Template files should be committed to version control
-
-## Future Enhancements
-
-### Planned Features
-- **Firebase Integration**: Full Windows Firebase support
-- **Sentry Integration**: Windows error reporting
-- **Code Signing**: Windows executable signing
-- **Installer Creation**: Windows installer generation
-
-### Wine Integration (Optional)
-For Windows-specific testing tools:
-```bash
-# Install Wine (requires password)
-brew install --cask wine-stable
+### Physical Machine
 ```
-
-## Support
-
-For issues with Windows export templates:
-1. Check this guide for common solutions
-2. Verify build environment setup
-3. Test with minimal debug template first
-4. Review build logs for specific error messages
-5. Use `just check-windows-templates` for diagnostic information
+C:\GameTwoTests\
+├── builds/           # Deployed exports
+├── logs/             # Test logs
+└── configs/          # Debug configurations
+```
 
 ## Related Documentation
 
-- **Main Build Guide**: See `just help-build` for complete build system
-- **Android Export**: See platform-specific Android documentation
-- **iOS Export**: See platform-specific iOS documentation
-- **Development Workflow**: See `just help-workflows` for daily patterns
+- **Quick Reference**: `just help-windows`
+- **Justfile Architecture**: `justfiles/ARCHITECTURE.md`
+- **Build System**: `backlog doc view doc-002`
+- **Main CLAUDE.md**: Windows section

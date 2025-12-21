@@ -19,14 +19,16 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 **Platform-Specific Log Retrieval:**
 - `just logs-android TEST_ID [TAGS]` - Android logs with optional tag filtering
 - `just logs-desktop TEST_ID [TAGS]` - Desktop logs with optional tag filtering
-- `just logs-ios TEST_ID [TAGS]` - iOS logs with optional tag filtering (NEW)
-- `just logs-macos TEST_ID [TAGS]` - macOS logs with optional tag filtering (NEW)
+- `just logs-ios TEST_ID [TAGS]` - iOS logs with optional tag filtering
+- `just logs-macos TEST_ID [TAGS]` - macOS logs with optional tag filtering
+- `just logs-windows-physical TEST_ID` - Windows physical machine logs
 
 **Platform-Specific Error Analysis:**
 - `just logs-android-errors TEST_ID [TAGS]` - Android errors with optional tag filtering
 - `just logs-desktop-errors TEST_ID [TAGS]` - Desktop errors with optional tag filtering
-- `just logs-ios-errors TEST_ID [TAGS]` - iOS errors with optional tag filtering (NEW)
-- `just logs-macos-errors TEST_ID [TAGS]` - macOS errors with optional tag filtering (NEW)
+- `just logs-ios-errors TEST_ID [TAGS]` - iOS errors with optional tag filtering
+- `just logs-macos-errors TEST_ID [TAGS]` - macOS errors with optional tag filtering
+- `just logs-windows-physical-errors TEST_ID` - Windows physical machine errors
 
 **Android Device Log Management:**
 - `just logs-android-device "SEARCH_TERM" [LINES]` - Device log search (consolidated 6 commands)
@@ -35,8 +37,8 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `just logs-android-status` - Device & app diagnostics
 
 **Platform Auto-Detection:**
-- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`, `macos_*`)
-- Explicit platform available: `PLATFORM="android|desktop|ios|macos"`
+- Commands auto-detect platform from TEST_ID prefix (`android_*`, `desktop_*`, `ios_*`, `macos_*`, `windows-physical_*`)
+- Explicit platform available: `PLATFORM="android|desktop|ios|macos|windows"`
 - Backwards compatible: defaults to "auto" if no platform specified
 
 **🚨 Migration Guide (Old → New):**
@@ -66,9 +68,11 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 - `just test-android-update CONFIG_NAME` - Update checksum baseline (after legitimate changes)
 - `just test-desktop-update CONFIG_NAME` - Update desktop checksum baseline
 - `just test-macos-update CONFIG_NAME` - Update macOS checksum baseline
+- `just test-windows-update CONFIG_NAME` - Update Windows checksum baseline
 - `just test-android-reset CONFIG_NAME` - Reset checksum baseline (start fresh)
 - `just test-desktop-reset CONFIG_NAME` - Reset desktop checksum baseline
 - `just test-macos-reset CONFIG_NAME` - Reset macOS checksum baseline
+- `just test-windows-reset CONFIG_NAME` - Reset Windows checksum baseline
 
 **When to Update Baselines:**
 - ✅ **Legitimate system changes** (new features, balance updates)
@@ -93,6 +97,7 @@ GameTwo mobile game with custom Godot 4.3 engine, Firebase integration, and debu
 just test-android-update    # Shows menu of available configs
 just test-desktop-update    # Shows menu of available configs
 just test-macos-update      # Shows menu of available configs
+just test-windows-update    # Shows menu of available configs
 ```
 
 **🚨 CRITICAL: Use CLI Commands, Not Direct File Editing**
@@ -315,6 +320,40 @@ just log-run-silent test-android CONFIG   # Save complete output
 4. Re-run tests with cleared buffer
 
 **Golden Rule**: Cross-validate with historical logs when in doubt. Live buffer data may be incomplete.
+
+## 🪟 Windows Development
+
+**Windows uses a two-machine architecture:**
+- **Windows VM (192.168.50.92)** - Template building with native MSVC
+- **Windows Physical (192.168.50.80)** - GUI testing with Wake-on-LAN
+
+**Essential Commands:**
+```bash
+# Build & Export
+just build-all-windows           # Complete build: templates + sentry + package
+just export-windows-debug        # Export debug build
+just export-windows-release      # Export release build
+just validate-windows-export     # Validate Firebase/Sentry integration
+
+# Physical Machine Testing
+just win-physical-status         # Check if machine is awake
+just win-physical-wake           # Send Wake-on-LAN packet
+just win-physical-deploy         # Deploy Windows export
+just test-windows-physical-target CONFIG  # Automated GUI testing
+just test-windows-physical-manual CONFIG  # Manual testing (stays open)
+
+# Logs
+just logs-windows-physical TEST_ID        # Retrieve test logs
+just logs-windows-physical-errors TEST_ID # Error analysis
+```
+
+**Key Features:**
+- ✅ Firebase C++ SDK integration (shared code architecture)
+- ✅ Sentry GDExtension with crashpad backend (out-of-process crash handling)
+- ✅ Native MSVC builds (ARM64→x64 cross-compilation on VM)
+- ✅ Full testing infrastructure with GUI mode
+
+**See**: `just help-windows` for complete Windows command reference
 
 ## 📂 Directory-Specific Documentation
 
