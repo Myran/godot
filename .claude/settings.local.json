@@ -96,7 +96,11 @@
       "Bash(/Users/mattiasmyhrman/repos/Backlog.md/dist/backlog:*)",
       "Bash(md5sum:*)",
       "Bash(md5:*)",
-      "Bash(jar:*)"
+      "Bash(jar:*)",
+      "Bash(ping:*)",
+      "Bash(timeout 5 ssh:*)",
+      "Bash(perl:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": [
