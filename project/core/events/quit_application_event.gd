@@ -35,12 +35,8 @@ func execute() -> void:
 		_handle_ios_quit()
 		return
 
-	# Enhanced Firebase cleanup for Android test isolation (Task-230)
-	# Perform active Firebase cleanup before logger shutdown
-	_perform_firebase_cleanup()
-
-	# Perform ConfigManager cleanup (moved from singleton_cleanup autoload)
-	SingletonCleanup.cleanup_config_manager()
+	# Perform common cleanup (Firebase, ConfigManager, Sentry)
+	_perform_common_cleanup()
 
 	# Wait for buffer processing completion before logger shutdown (task-236 fix)
 	# This ensures all pending log chunks are processed before we shut down the logger
@@ -94,8 +90,8 @@ func _handle_ios_quit() -> void:
 		["debug", "quit", "ios", "development"]
 	)
 
-	# Perform ConfigManager cleanup for iOS
-	SingletonCleanup.cleanup_config_manager()
+	# Perform common cleanup (Firebase, ConfigManager, Sentry)
+	_perform_common_cleanup()
 
 	# Log final message before quit
 	Log.info(
@@ -113,6 +109,24 @@ func _handle_ios_quit() -> void:
 	# Use ClassDB to instantiate the C++ Firebase class (following project pattern)
 	var firebase: Object = ClassDB.instantiate("Firebase")
 	firebase.quit_app()
+
+
+func _perform_common_cleanup() -> void:
+	## Common cleanup for all platforms before app termination
+	## Called by both main quit path and iOS quit path
+
+	# Firebase cleanup (Task-230) - prevents use-after-free crashes
+	_perform_firebase_cleanup()
+
+	# ConfigManager cleanup
+	SingletonCleanup.cleanup_config_manager()
+
+	# Close Sentry SDK before shutdown to prevent GLThread crash (task-352)
+	# Must happen before logger shutdown since SentryGodotLogger is registered with OS
+	if Engine.has_singleton("SentrySDK"):
+		var sentry: Object = Engine.get_singleton("SentrySDK")
+		if sentry.is_enabled():
+			sentry.close()
 
 
 func _perform_firebase_cleanup() -> void:
