@@ -9,5 +9,5 @@
       }
     }
   ],
-  "platforms": ["android", "ios", "macos", "windows"]
+  "platforms": ["android", "ios", "macos", "windows", "windows-physical"]
 }

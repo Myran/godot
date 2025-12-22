@@ -5,7 +5,7 @@
     "backend.firebase.performance",
     "backend.firebase.lifecycle"
   ],
-  "platforms": ["android", "ios", "macos", "windows"],
+  "platforms": ["android", "ios", "macos", "windows", "windows-physical"],
   "metadata": {
     "auto_quit": true
   }
