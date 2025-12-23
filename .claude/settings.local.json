@@ -100,7 +100,19 @@
       "Bash(ping:*)",
       "Bash(timeout 5 ssh:*)",
       "Bash(perl:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(while true)",
+      "Bash(if grep -q \"Pipeline completed\" logs/20251221_164042_test.log)",
+      "Bash(then)",
+      "Bash(break)",
+      "Bash(fi)",
+      "mcp__backlog__document_create",
+      "Bash(file=\"/Users/mattiasmyhrman/repos/gametwo/tests/debug_configs/$config.json\")",
+      "Bash(if rg -q 'windows-physical' \"$file\")",
+      "Bash(else)",
+      "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent:*)",
+      "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent test-ios-target battle-animated:*)",
+      "Bash(IOS_TEST_DEVICE=\"38A3A7F3-6C49-5C54-B86E-D84C81ABD10C\" just log-run-silent test-ios-target gamestate-save-load-test:*)"
     ],
     "deny": [],
     "ask": [
