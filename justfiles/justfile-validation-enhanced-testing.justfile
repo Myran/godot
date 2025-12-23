@@ -867,8 +867,10 @@ _extract-logs test_id platform temp_output_file="":
 
                         if [[ $LOG_LINES -gt 0 ]]; then
                             echo "🍎 Filtering for test-specific content..."
-                            # iOS logs are already clean from timestamped files - just filter for current TEST_ID
-                            grep "$TEST_ID" "$LOG_FILE" > "${LOG_FILE}.filtered" 2>/dev/null || echo "No matches for TEST_ID" > "${LOG_FILE}.filtered"
+                            # Use CROSS-PLATFORM TEST FILTER for identical log capture between Android and iOS
+                            # This ensures SEMANTIC_ACTION logs (required for checksum extraction) are preserved
+                            # Fixes task-359: iOS checksum extraction was broken by TEST_ID-only filtering
+                            grep -E "($TEST_ID|{{CROSS_PLATFORM_TEST_BASE}})" "$LOG_FILE" | sort -u > "${LOG_FILE}.filtered" 2>/dev/null || echo "No matches" > "${LOG_FILE}.filtered"
 
                             FILTERED_LINES=$(wc -l < "${LOG_FILE}.filtered" 2>/dev/null || echo "0")
                             echo "🍎 Filtered relevant logs: $FILTERED_LINES lines"
